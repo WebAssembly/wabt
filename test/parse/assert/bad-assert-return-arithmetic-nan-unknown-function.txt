@@ -1,9 +1,0 @@
-;;; TOOL: wast2json
-;;; ERROR: 1
-(module)
-(assert_return_arithmetic_nan (invoke "foo"))
-(;; STDERR ;;;
-out/test/parse/assert/bad-assert-return-arithmetic-nan-unknown-function.txt:4:32: error: unknown function export "foo"
-(assert_return_arithmetic_nan (invoke "foo"))
-                               ^^^^^^
-;;; STDERR ;;)

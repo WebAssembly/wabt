@@ -1,58 +1,58 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/call.wast
 (;; STDOUT ;;;
-out/test/spec/call.wast:289: assert_trap passed: undefined table index
-out/test/spec/call.wast:314: assert_invalid passed:
+out/test/spec/call.wast:299: assert_trap passed: undefined table index
+out/test/spec/call.wast:326: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
   000001b: error: OnConvertExpr callback failed
-out/test/spec/call.wast:321: assert_invalid passed:
+out/test/spec/call.wast:333: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [i64]
   000001f: error: OnConvertExpr callback failed
-out/test/spec/call.wast:329: assert_invalid passed:
+out/test/spec/call.wast:341: assert_invalid passed:
   error: type mismatch in call, expected [i32] but got []
   000001e: error: OnCallExpr callback failed
-out/test/spec/call.wast:336: assert_invalid passed:
+out/test/spec/call.wast:348: assert_invalid passed:
   error: type mismatch in call, expected [f64, i32] but got []
   000001f: error: OnCallExpr callback failed
-out/test/spec/call.wast:343: assert_invalid passed:
+out/test/spec/call.wast:355: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
   000001d: error: EndFunctionBody callback failed
-out/test/spec/call.wast:350: assert_invalid passed:
+out/test/spec/call.wast:362: assert_invalid passed:
   error: type mismatch in function, expected [] but got [f64, i32]
   0000026: error: EndFunctionBody callback failed
-out/test/spec/call.wast:358: assert_invalid passed:
+out/test/spec/call.wast:370: assert_invalid passed:
   error: type mismatch in call, expected [i32, i32] but got [i32]
   0000022: error: OnCallExpr callback failed
-out/test/spec/call.wast:365: assert_invalid passed:
+out/test/spec/call.wast:377: assert_invalid passed:
   error: type mismatch in call, expected [i32, i32] but got [i32]
   0000022: error: OnCallExpr callback failed
-out/test/spec/call.wast:372: assert_invalid passed:
+out/test/spec/call.wast:384: assert_invalid passed:
   error: type mismatch in call, expected [i32, f64] but got [f64, i32]
   000002a: error: OnCallExpr callback failed
-out/test/spec/call.wast:379: assert_invalid passed:
+out/test/spec/call.wast:391: assert_invalid passed:
   error: type mismatch in call, expected [f64, i32] but got [i32, f64]
   000002a: error: OnCallExpr callback failed
-out/test/spec/call.wast:387: assert_invalid passed:
+out/test/spec/call.wast:399: assert_invalid passed:
   error: type mismatch in call, expected [i32] but got []
   0000020: error: OnCallExpr callback failed
-out/test/spec/call.wast:396: assert_invalid passed:
+out/test/spec/call.wast:408: assert_invalid passed:
   error: type mismatch in call, expected [i32, i32] but got [i32]
   0000023: error: OnCallExpr callback failed
-out/test/spec/call.wast:405: assert_invalid passed:
+out/test/spec/call.wast:417: assert_invalid passed:
   error: type mismatch in call, expected [i32] but got []
   0000020: error: OnCallExpr callback failed
-out/test/spec/call.wast:414: assert_invalid passed:
+out/test/spec/call.wast:426: assert_invalid passed:
   error: type mismatch in call, expected [i32, i32] but got [i32]
   0000023: error: OnCallExpr callback failed
-out/test/spec/call.wast:423: assert_invalid passed:
+out/test/spec/call.wast:435: assert_invalid passed:
   error: type mismatch in call, expected [i32] but got []
   0000022: error: OnCallExpr callback failed
-out/test/spec/call.wast:432: assert_invalid passed:
+out/test/spec/call.wast:444: assert_invalid passed:
   error: type mismatch in call, expected [i32, i32] but got [i32]
   0000025: error: OnCallExpr callback failed
-out/test/spec/call.wast:445: assert_invalid passed:
+out/test/spec/call.wast:457: assert_invalid passed:
   0000019: error: invalid call function index: 1
-out/test/spec/call.wast:449: assert_invalid passed:
+out/test/spec/call.wast:461: assert_invalid passed:
   000001d: error: invalid call function index: 1012321300
-81/81 tests passed.
+82/82 tests passed.
 ;;; STDOUT ;;)

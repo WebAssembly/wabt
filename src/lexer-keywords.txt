@@ -19,8 +19,6 @@ anyref, Type::Anyref
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
 assert_malformed, TokenType::AssertMalformed
-assert_return_arithmetic_nan, TokenType::AssertReturnArithmeticNan
-assert_return_canonical_nan, TokenType::AssertReturnCanonicalNan
 assert_return, TokenType::AssertReturn
 assert_return_func, TokenType::AssertReturnFunc
 assert_trap, TokenType::AssertTrap
@@ -441,6 +439,8 @@ memory.size, TokenType::MemorySize, Opcode::MemorySize
 memory, TokenType::Memory
 module, TokenType::Module
 mut, TokenType::Mut
+nan:arithmetic, TokenType::NanArithmetic
+nan:canonical, TokenType::NanCanonical
 nop, TokenType::Nop, Opcode::Nop
 nullref, Type::Nullref
 offset, TokenType::Offset

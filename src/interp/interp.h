@@ -66,10 +66,6 @@ namespace interp {
   V(TrapHostResultTypeMismatch, "host result type mismatch")                \
   /* we called an import function, but it didn't complete succesfully */    \
   V(TrapHostTrapped, "host function trapped")                               \
-  /* the data segment has been dropped. */                                  \
-  V(TrapDataSegmentDropped, "data segment dropped")                         \
-  /* the element segment has been dropped. */                               \
-  V(TrapElemSegmentDropped, "element segment dropped")                      \
   /* table access is out of bounds */                                       \
   V(TrapTableAccessOutOfBounds, "out of bounds table access")               \
   /* we attempted to call a function with the an argument list that doesn't \
@@ -150,14 +146,12 @@ struct DataSegment {
   DataSegment() = default;
 
   std::vector<char> data;
-  bool dropped = false;
 };
 
 struct ElemSegment {
   ElemSegment() = default;
 
   std::vector<Ref> elems;
-  bool dropped = false;
 };
 
 struct ElemSegmentInfo {
@@ -208,7 +202,7 @@ union Value {
 };
 
 struct TypedValue {
-  TypedValue() {}
+  TypedValue() = default;
   explicit TypedValue(Type type) : type(type) {}
   TypedValue(Type basetype, const Value& value) : type(basetype), value(value) {
     UpdateType();
@@ -779,8 +773,6 @@ std::string RefTypeToString(RefType t);
 std::string TypedValueToString(const TypedValue&);
 std::string ResultToString(Result);
 const char* ResultTypeToString(ResultType);
-
-bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max);
 
 void WriteTypedValue(Stream* stream, const TypedValue&);
 void WriteTypedValues(Stream* stream, const TypedValues&);

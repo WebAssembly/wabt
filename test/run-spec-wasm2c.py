@@ -196,8 +196,6 @@ class CWriter(object):
             'assert_uninstantiable': self._WriteAssertUninstantiableCommand,
             'action': self._WriteActionCommand,
             'assert_return': self._WriteAssertReturnCommand,
-            'assert_return_canonical_nan': self._WriteAssertReturnNanCommand,
-            'assert_return_arithmetic_nan': self._WriteAssertReturnNanCommand,
             'assert_trap': self._WriteAssertActionCommand,
             'assert_exhaustion': self._WriteAssertActionCommand,
         }
@@ -222,37 +220,39 @@ class CWriter(object):
     def _WriteAssertReturnCommand(self, command):
         expected = command['expected']
         if len(expected) == 1:
-            assert_map = {
-                'i32': 'ASSERT_RETURN_I32',
-                'f32': 'ASSERT_RETURN_F32',
-                'i64': 'ASSERT_RETURN_I64',
-                'f64': 'ASSERT_RETURN_F64',
-            }
-
             type_ = expected[0]['type']
-            assert_macro = assert_map[type_]
-            self.out_file.write('%s(%s, %s);\n' %
-                                (assert_macro,
-                                 self._Action(command),
-                                 self._ConstantList(expected)))
+            value = expected[0]['value']
+            if value == 'nan:canonical':
+                assert_map = {
+                    'f32': 'ASSERT_RETURN_CANONICAL_NAN_F32',
+                    'f64': 'ASSERT_RETURN_CANONICAL_NAN_F64',
+                }
+                assert_macro = assert_map[(type_)]
+                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+            elif value == 'nan:arithmetic':
+                assert_map = {
+                    'f32': 'ASSERT_RETURN_ARITHMETIC_NAN_F32',
+                    'f64': 'ASSERT_RETURN_ARITHMETIC_NAN_F64',
+                }
+                assert_macro = assert_map[(type_)]
+                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+            else:
+                assert_map = {
+                    'i32': 'ASSERT_RETURN_I32',
+                    'f32': 'ASSERT_RETURN_F32',
+                    'i64': 'ASSERT_RETURN_I64',
+                    'f64': 'ASSERT_RETURN_F64',
+                }
+
+                assert_macro = assert_map[type_]
+                self.out_file.write('%s(%s, %s);\n' %
+                                    (assert_macro,
+                                     self._Action(command),
+                                     self._ConstantList(expected)))
         elif len(expected) == 0:
             self._WriteAssertActionCommand(command)
         else:
             raise Error('Unexpected result with multiple values: %s' % expected)
-
-    def _WriteAssertReturnNanCommand(self, command):
-        assert_map = {
-            ('assert_return_canonical_nan', 'f32'): 'ASSERT_RETURN_CANONICAL_NAN_F32',
-            ('assert_return_canonical_nan', 'f64'): 'ASSERT_RETURN_CANONICAL_NAN_F64',
-            ('assert_return_arithmetic_nan', 'f32'): 'ASSERT_RETURN_ARITHMETIC_NAN_F32',
-            ('assert_return_arithmetic_nan', 'f64'): 'ASSERT_RETURN_ARITHMETIC_NAN_F64',
-        }
-
-        expected = command['expected']
-        type_ = expected[0]['type']
-        assert_macro = assert_map[(command['type'], type_)]
-
-        self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
 
     def _WriteAssertActionCommand(self, command):
         assert_map = {
@@ -266,15 +266,17 @@ class CWriter(object):
 
     def _Constant(self, const):
         type_ = const['type']
-        value = int(const['value'])
+        value = const['value']
+        if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
+            assert False
         if type_ == 'i32':
-            return '%su' % value
+            return '%su' % int(value)
         elif type_ == 'i64':
-            return '%sull' % value
+            return '%sull' % int(value)
         elif type_ == 'f32':
-            return F32ToC(value)
+            return F32ToC(int(value))
         elif type_ == 'f64':
-            return F64ToC(value)
+            return F64ToC(int(value))
         else:
             assert False
 

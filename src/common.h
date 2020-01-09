@@ -235,6 +235,12 @@ enum class SegmentKind {
   Declared,
 };
 
+// Used in test asserts for special expected values "nan:canonical" and "nan:arithmetic"
+enum class ExpectedNan {
+  Canonical,
+  Arithmetic,
+};
+
 // Matches binary format, do not change.
 enum SegmentFlags : uint8_t {
   SegFlagsNone = 0,

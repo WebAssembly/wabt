@@ -515,8 +515,6 @@ void NameResolver::VisitCommand(Command* command) {
     case CommandType::Action:
     case CommandType::AssertReturn:
     case CommandType::AssertReturnFunc:
-    case CommandType::AssertReturnCanonicalNan:
-    case CommandType::AssertReturnArithmeticNan:
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:
     case CommandType::Register:

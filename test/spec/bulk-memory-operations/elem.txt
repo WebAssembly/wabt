@@ -2,19 +2,18 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/elem.wast
 ;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
-error initializing module: out of bounds table access: elem segment is out of bounds: [1, 1) >= max value 0
-out/test/spec/bulk-memory-operations/elem.wast:299: assert_invalid passed:
+out/test/spec/bulk-memory-operations/elem.wast:300: assert_invalid passed:
   0000015: error: elem section without table section
-out/test/spec/bulk-memory-operations/elem.wast:309: assert_invalid passed:
+out/test/spec/bulk-memory-operations/elem.wast:310: assert_invalid passed:
   0000014: error: expected i32 init_expr
-out/test/spec/bulk-memory-operations/elem.wast:317: assert_invalid passed:
+out/test/spec/bulk-memory-operations/elem.wast:318: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/bulk-memory-operations/elem.wast:325: assert_invalid passed:
+out/test/spec/bulk-memory-operations/elem.wast:326: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/bulk-memory-operations/elem.wast:333: assert_invalid passed:
+out/test/spec/bulk-memory-operations/elem.wast:334: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/bulk-memory-operations/elem.wast:341: assert_invalid passed:
+out/test/spec/bulk-memory-operations/elem.wast:342: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/bulk-memory-operations/elem.wast:404: assert_trap passed: uninitialized table element
-30/30 tests passed.
+out/test/spec/bulk-memory-operations/elem.wast:405: assert_trap passed: uninitialized table element
+31/31 tests passed.
 ;;; STDOUT ;;)

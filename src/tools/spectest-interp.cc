@@ -150,10 +150,6 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
 };
 
 typedef ActionCommandBase<CommandType::Action> ActionCommand;
-typedef ActionCommandBase<CommandType::AssertReturnCanonicalNan>
-    AssertReturnCanonicalNanCommand;
-typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
-    AssertReturnArithmeticNanCommand;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
@@ -161,10 +157,16 @@ class RegisterCommand : public CommandMixin<CommandType::Register> {
   std::string name;
 };
 
+struct ExpectedValue {
+  bool is_expected_nan;
+  TypedValue value;
+  ExpectedNan expectedNan;
+};
+
 class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
  public:
   Action action;
-  TypedValues expected;
+  std::vector<ExpectedValue> expected;
 };
 
 class AssertReturnFuncCommand
@@ -226,7 +228,12 @@ class JSONParser {
   wabt::Result ParseTypeObject(Type* out_type);
   wabt::Result ParseTypeVector(TypeVector* out_types);
   wabt::Result ParseConst(TypedValue* out_value);
+  wabt::Result ParseConstValue(TypedValue* out_value,
+                               string_view type_str,
+                               string_view value_str);
   wabt::Result ParseConstVector(TypedValues* out_values);
+  wabt::Result ParseExpectedValue(ExpectedValue* out_value);
+  wabt::Result ParseExpectedValues(std::vector<ExpectedValue>* out_values);
   wabt::Result ParseAction(Action* out_action);
   wabt::Result ParseActionResult();
   wabt::Result ParseModuleType(ModuleType* out_type);
@@ -496,9 +503,14 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
   PARSE_KEY_STRING_VALUE("value", &value_str);
   EXPECT("}");
 
+  return ParseConstValue(out_value, type_str, value_str);
+}
+
+wabt::Result JSONParser::ParseConstValue(TypedValue* out_value,
+                                         string_view type_str,
+                                         string_view value_str) {
   const char* value_start = value_str.data();
   const char* value_end = value_str.data() + value_str.size();
-
   if (type_str == "i32") {
     uint32_t value;
     if (Failed((ParseInt32(value_start, value_end, &value,
@@ -564,10 +576,53 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
     out_value->type = Type::Funcref;
     out_value->value.ref = {RefType::Func, value};
   } else {
-    PrintError("unknown concrete type: \"%s\"", type_str.c_str());
+    PrintError("unknown concrete type: \"%s\"", type_str.to_string().c_str());
     return wabt::Result::Error;
   }
 
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value) {
+  std::string type_str;
+  std::string value_str;
+  EXPECT("{");
+  PARSE_KEY_STRING_VALUE("type", &type_str);
+  EXPECT(",");
+  PARSE_KEY_STRING_VALUE("value", &value_str);
+  EXPECT("}");
+
+  if (type_str == "f32" || type_str == "f64") {
+    if (value_str == "nan:canonical") {
+      out_value->value.type = type_str == "f32" ? Type::F32 : Type::F64;
+      out_value->is_expected_nan = true;
+      out_value->expectedNan = ExpectedNan::Canonical;
+      return wabt::Result::Ok;
+    } else if (value_str == "nan:arithmetic") {
+      out_value->value.type = type_str == "f32" ? Type::F32 : Type::F64;
+      out_value->is_expected_nan = true;
+      out_value->expectedNan = ExpectedNan::Arithmetic;
+      return wabt::Result::Ok;
+    }
+  }
+
+  out_value->is_expected_nan = false;
+  return ParseConstValue(&out_value->value, type_str, value_str);
+}
+
+wabt::Result JSONParser::ParseExpectedValues(std::vector<ExpectedValue>* out_values) {
+  out_values->clear();
+  EXPECT("[");
+  bool first = true;
+  while (!Match("]")) {
+    if (!first) {
+      EXPECT(",");
+    }
+    ExpectedValue value;
+    CHECK_RESULT(ParseExpectedValue(&value));
+    out_values->push_back(value);
+    first = false;
+  }
   return wabt::Result::Ok;
 }
 
@@ -759,7 +814,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
     EXPECT_KEY("expected");
-    CHECK_RESULT(ParseConstVector(&command->expected));
+    CHECK_RESULT(ParseExpectedValues(&command->expected));
     *out_command = std::move(command);
   } else if (Match("\"assert_return_func\"")) {
     auto command = MakeUnique<AssertReturnFuncCommand>();
@@ -767,24 +822,6 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
-    *out_command = std::move(command);
-  } else if (Match("\"assert_return_canonical_nan\"")) {
-    auto command = MakeUnique<AssertReturnCanonicalNanCommand>();
-    EXPECT(",");
-    CHECK_RESULT(ParseLine(&command->line));
-    EXPECT(",");
-    CHECK_RESULT(ParseAction(&command->action));
-    EXPECT(",");
-    CHECK_RESULT(ParseActionResult());
-    *out_command = std::move(command);
-  } else if (Match("\"assert_return_arithmetic_nan\"")) {
-    auto command = MakeUnique<AssertReturnArithmeticNanCommand>();
-    EXPECT(",");
-    CHECK_RESULT(ParseLine(&command->line));
-    EXPECT(",");
-    CHECK_RESULT(ParseAction(&command->action));
-    EXPECT(",");
-    CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else if (Match("\"assert_trap\"")) {
     auto command = MakeUnique<AssertTrapCommand>();
@@ -862,8 +899,6 @@ class CommandRunner {
       const AssertUninstantiableCommand*);
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
   wabt::Result OnAssertReturnFuncCommand(const AssertReturnFuncCommand*);
-  template <typename NanCommand>
-  wabt::Result OnAssertReturnNanCommand(const NanCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
 
@@ -972,16 +1007,6 @@ wabt::Result CommandRunner::Run(const Script& script) {
       case CommandType::AssertReturnFunc:
         TallyCommand(
             OnAssertReturnFuncCommand(cast<AssertReturnFuncCommand>(command.get())));
-        break;
-
-      case CommandType::AssertReturnCanonicalNan:
-        TallyCommand(OnAssertReturnNanCommand(
-            cast<AssertReturnCanonicalNanCommand>(command.get())));
-        break;
-
-      case CommandType::AssertReturnArithmeticNan:
-        TallyCommand(OnAssertReturnNanCommand(
-            cast<AssertReturnArithmeticNanCommand>(command.get())));
         break;
 
       case CommandType::AssertTrap:
@@ -1364,73 +1389,43 @@ wabt::Result CommandRunner::OnAssertReturnCommand(
 
   wabt::Result result = wabt::Result::Ok;
   for (size_t i = 0; i < exec_result.values.size(); ++i) {
-    const TypedValue& expected_tv = command->expected[i];
-    const TypedValue& actual_tv = exec_result.values[i];
-    if (!TypedValuesAreEqual(expected_tv, actual_tv)) {
-      PrintError(command->line,
-                 "mismatch in result %" PRIzd
-                 " of assert_return: expected %s, got %s",
-                 i, TypedValueToString(expected_tv).c_str(),
-                 TypedValueToString(actual_tv).c_str());
-      result = wabt::Result::Error;
+    const ExpectedValue& expected = command->expected[i];
+    const TypedValue& actual = exec_result.values[i];
+    if (expected.is_expected_nan) {
+      bool is_nan;
+      if (expected.expectedNan == ExpectedNan::Arithmetic) {
+        if (expected.value.type == Type::F64) {
+          is_nan = IsArithmeticNan(actual.value.f64_bits);
+        } else {
+          is_nan = IsArithmeticNan(actual.value.f32_bits);
+        }
+      } else if (expected.expectedNan == ExpectedNan::Canonical) {
+        if (expected.value.type == Type::F64) {
+          is_nan = IsCanonicalNan(actual.value.f64_bits);
+        } else {
+          is_nan = IsCanonicalNan(actual.value.f32_bits);
+        }
+      } else {
+        WABT_UNREACHABLE;
+      }
+      if (!is_nan) {
+        PrintError(command->line, "expected result to be nan, got %s",
+                   TypedValueToString(actual).c_str());
+        result = wabt::Result::Error;
+      }
+    } else {
+      if (!TypedValuesAreEqual(expected.value, actual)) {
+        PrintError(command->line,
+                   "mismatch in result %" PRIzd
+                   " of assert_return: expected %s, got %s",
+                   i, TypedValueToString(expected.value).c_str(),
+                   TypedValueToString(actual).c_str());
+        result = wabt::Result::Error;
+      }
     }
   }
 
   return result;
-}
-
-template <typename NanCommand>
-wabt::Result CommandRunner::OnAssertReturnNanCommand(
-    const NanCommand* command) {
-  ExecResult exec_result =
-      RunAction(command->line, &command->action, RunVerbosity::Quiet);
-
-  if (!exec_result.ok()) {
-    PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result).c_str());
-    return wabt::Result::Error;
-  }
-
-  if (exec_result.values.size() != 1) {
-    PrintError(command->line, "expected one result, got %" PRIzd,
-               exec_result.values.size());
-    return wabt::Result::Error;
-  }
-
-  const bool is_canonical =
-      command->type == CommandType::AssertReturnCanonicalNan;
-
-  const TypedValue& actual = exec_result.values[0];
-  switch (actual.type) {
-    case Type::F32: {
-      bool is_nan = is_canonical ? IsCanonicalNan(actual.value.f32_bits)
-                                 : IsArithmeticNan(actual.value.f32_bits);
-      if (!is_nan) {
-        PrintError(command->line, "expected result to be nan, got %s",
-                   TypedValueToString(actual).c_str());
-        return wabt::Result::Error;
-      }
-      break;
-    }
-
-    case Type::F64: {
-      bool is_nan = is_canonical ? IsCanonicalNan(actual.value.f64_bits)
-                                 : IsArithmeticNan(actual.value.f64_bits);
-      if (!is_nan) {
-        PrintError(command->line, "expected result to be nan, got %s",
-                   TypedValueToString(actual).c_str());
-        return wabt::Result::Error;
-      }
-      break;
-    }
-
-    default:
-      PrintError(command->line, "expected result type to be f32 or f64, got %s",
-                 GetTypeName(actual.type));
-      return wabt::Result::Error;
-  }
-
-  return wabt::Result::Ok;
 }
 
 wabt::Result CommandRunner::OnAssertTrapCommand(

@@ -131,8 +131,6 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "assert_uninstantiable",
       "assert_return",
       "assert_return_func",
-      "assert_return_canonical_nan",
-      "assert_return_arithmetic_nan",
       "assert_trap",
       "assert_exhaustion",
   };
@@ -189,7 +187,15 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("f32");
       WriteSeparator();
       WriteKey("value");
-      json_stream_->Writef("\"%u\"", const_.f32_bits);
+      if (const_.is_expected_nan) {
+        if (const_.expected == ExpectedNan::Arithmetic) {
+          WriteString("nan:arithmetic");
+        } else {
+          WriteString("nan:canonical");
+        }
+      } else {
+        json_stream_->Writef("\"%u\"", const_.f32_bits);
+      }
       break;
     }
 
@@ -198,7 +204,15 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("f64");
       WriteSeparator();
       WriteKey("value");
-      json_stream_->Writef("\"%" PRIu64 "\"", const_.f64_bits);
+      if (const_.is_expected_nan) {
+        if (const_.expected == ExpectedNan::Arithmetic) {
+          WriteString("nan:arithmetic");
+        } else {
+          WriteString("nan:canonical");
+        }
+      } else {
+        json_stream_->Writef("\"%" PRIu64 "\"", const_.f64_bits);
+      }
       break;
     }
 
@@ -487,30 +501,6 @@ void BinaryWriterSpec::WriteCommands() {
         WriteLocation(assert_return_command->action->loc);
         WriteSeparator();
         WriteAction(*assert_return_command->action);
-        break;
-      }
-
-      case CommandType::AssertReturnCanonicalNan: {
-        auto* assert_return_canonical_nan_command =
-            cast<AssertReturnCanonicalNanCommand>(command);
-        WriteLocation(assert_return_canonical_nan_command->action->loc);
-        WriteSeparator();
-        WriteAction(*assert_return_canonical_nan_command->action);
-        WriteSeparator();
-        WriteKey("expected");
-        WriteActionResultType(*assert_return_canonical_nan_command->action);
-        break;
-      }
-
-      case CommandType::AssertReturnArithmeticNan: {
-        auto* assert_return_arithmetic_nan_command =
-            cast<AssertReturnArithmeticNanCommand>(command);
-        WriteLocation(assert_return_arithmetic_nan_command->action->loc);
-        WriteSeparator();
-        WriteAction(*assert_return_arithmetic_nan_command->action);
-        WriteSeparator();
-        WriteKey("expected");
-        WriteActionResultType(*assert_return_arithmetic_nan_command->action);
         break;
       }
 
