@@ -243,7 +243,7 @@ enum SegmentFlags : uint8_t {
   SegDeclared = 3,       // Only used for declared segments
   SegUseElemExprs = 4,   // bit 2: Is elemexpr (Or else index sequence)
 
-  SegFlagMax = SegUseElemExprs,
+  SegFlagMax = (SegUseElemExprs << 1) - 1,  // All bits set.
 };
 
 enum class RelocType {

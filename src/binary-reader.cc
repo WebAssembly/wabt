@@ -2168,8 +2168,9 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
   for (Index i = 0; i < num_elem_segments; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "elem segment flags"));
-    ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid elem segment flags: %#x",
-             flags);
+    ERROR_IF(flags > SegFlagMax, "invalid elem segment flags: %#x", flags);
+    ERROR_IF((flags & SegDeclared) == SegDeclared,
+             "declared segments aren't supported");
     Index table_index(0);
     if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
@@ -2287,8 +2288,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   for (Index i = 0; i < num_data_segments; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
-    ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid data segment flags: %#x",
-             flags);
+    ERROR_IF(flags > SegFlagMax, "invalid data segment flags: %#x", flags);
     Index memory_index(0);
     if (flags & SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));

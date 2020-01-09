@@ -933,12 +933,12 @@ Result WastParser::ParseDataModuleField(Module* module) {
   } else if (ParseVarOpt(&field->data_segment.memory_var, Var(0, loc))) {
     CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
   } else if (!ParseOffsetExprOpt(&field->data_segment.offset)) {
-    if (options_->features.bulk_memory_enabled()) {
-      field->data_segment.kind = SegmentKind::Passive;
-    } else {
+    if (!options_->features.bulk_memory_enabled()) {
       Error(loc, "passive data segments are not allowed");
       return Result::Error;
     }
+
+    field->data_segment.kind = SegmentKind::Passive;
   }
 
   ParseTextListOpt(&field->data_segment.data);
