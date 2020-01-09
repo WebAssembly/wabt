@@ -49,7 +49,7 @@ TOOLS = {
     ],
     'wast2json': [
         ('RUN', '%(wast2json)s'),
-        ('ARGS', ['%(in_file)s']),
+        ('ARGS', ['%(in_file)s', '-o', '%(out_dir)s/out.json']),
         ('VERBOSE-ARGS', ['-v']),
     ],
     'wat-desugar': [
