@@ -39,7 +39,7 @@
 using namespace wabt;
 
 static const char* s_infile;
-static const char* s_outfile;
+static std::string s_outfile;
 static int s_verbose;
 static WriteBinaryOptions s_write_binary_options;
 static bool s_validate = true;
@@ -68,7 +68,7 @@ static void ParseOptions(int argc, char* argv[]) {
   parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
                    []() { s_debug_parsing = true; });
   s_features.AddOptions(&parser);
-  parser.AddOption('o', "output", "FILE", "output wasm binary file",
+  parser.AddOption('o', "output", "FILE", "output JSON file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption(
       'r', "relocatable",
@@ -87,6 +87,14 @@ static void ParseOptions(int argc, char* argv[]) {
                      [](const char* argument) { s_infile = argument; });
 
   parser.Parse(argc, argv);
+}
+
+static std::string DefaultOuputName(string_view input_name) {
+  // Strip existing extension and add .json
+  std::string result(StripExtension(GetBasename(input_name)));
+  result += ".json";
+
+  return result;
 }
 
 int ProgramMain(int argc, char** argv) {
@@ -116,19 +124,20 @@ int ProgramMain(int argc, char** argv) {
     }
 
     if (Succeeded(result)) {
+      if (s_outfile.empty()) {
+        s_outfile = DefaultOuputName(s_infile);
+      }
+
       std::vector<FilenameMemoryStreamPair> module_streams;
       MemoryStream json_stream;
 
-      std::string module_filename_noext =
-          StripExtension(s_outfile ? s_outfile : s_infile).to_string();
+      std::string output_basename = StripExtension(s_outfile).to_string();
       s_write_binary_options.features = s_features;
       result = WriteBinarySpecScript(
-          &json_stream, script.get(), s_infile, module_filename_noext,
+          &json_stream, script.get(), s_infile, output_basename,
           s_write_binary_options, &module_streams, s_log_stream.get());
 
-      if (s_outfile) {
-        json_stream.WriteToFile(s_outfile);
-      }
+      json_stream.WriteToFile(s_outfile);
 
       for (auto iter = module_streams.begin(); iter != module_streams.end();
            ++iter) {
