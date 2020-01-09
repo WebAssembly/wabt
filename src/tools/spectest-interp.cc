@@ -501,60 +501,74 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
 
   if (type_str == "i32") {
     uint32_t value;
-    CHECK_RESULT(
-        ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly));
+    if (Failed((ParseInt32(value_start, value_end, &value,
+                           ParseIntType::UnsignedOnly)))) {
+      PrintError("invalid i32 literal");
+      return wabt::Result::Error;
+    }
     out_value->type = Type::I32;
     out_value->value.i32 = value;
-    return wabt::Result::Ok;
   } else if (type_str == "f32") {
     uint32_t value_bits;
-    CHECK_RESULT(ParseInt32(value_start, value_end, &value_bits,
-                            ParseIntType::UnsignedOnly));
+    if (Failed(ParseInt32(value_start, value_end, &value_bits,
+                            ParseIntType::UnsignedOnly))) {
+      PrintError("invalid f32 literal");
+      return wabt::Result::Error;
+    }
     out_value->type = Type::F32;
     out_value->value.f32_bits = value_bits;
-    return wabt::Result::Ok;
   } else if (type_str == "i64") {
     uint64_t value;
-    CHECK_RESULT(
-        ParseInt64(value_start, value_end, &value, ParseIntType::UnsignedOnly));
+    if (Failed(ParseInt64(value_start, value_end, &value,
+                          ParseIntType::UnsignedOnly))) {
+      PrintError("invalid i64 literal");
+      return wabt::Result::Error;
+    }
     out_value->type = Type::I64;
     out_value->value.i64 = value;
-    return wabt::Result::Ok;
   } else if (type_str == "f64") {
     uint64_t value_bits;
-    CHECK_RESULT(ParseInt64(value_start, value_end, &value_bits,
-                            ParseIntType::UnsignedOnly));
+    if (Failed((ParseInt64(value_start, value_end, &value_bits,
+                           ParseIntType::UnsignedOnly)))) {
+      PrintError("invalid f64 literal");
+      return wabt::Result::Error;
+    }
     out_value->type = Type::F64;
     out_value->value.f64_bits = value_bits;
-    return wabt::Result::Ok;
   } else if (type_str == "v128") {
     v128 value_bits;
-    CHECK_RESULT(ParseUint128(value_start, value_end, &value_bits));
+    if (Failed(ParseUint128(value_start, value_end, &value_bits))) {
+      PrintError("invalid v128 literal");
+      return wabt::Result::Error;
+    }
     out_value->type = Type::V128;
     out_value->value.vec128 = value_bits;
-    return wabt::Result::Ok;
   } else if (type_str == "nullref") {
     out_value->type = Type::Nullref;
     out_value->value.ref = {RefType::Null, 0};
-    return wabt::Result::Ok;
   } else if (type_str == "hostref") {
     uint32_t value;
-    CHECK_RESULT(
-        ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly));
+    if (Failed(ParseInt32(value_start, value_end, &value,
+                          ParseIntType::UnsignedOnly))) {
+      PrintError("invalid hostref literal");
+      return wabt::Result::Error;
+    }
     out_value->type = Type::Hostref;
     out_value->value.ref = {RefType::Host, value};
-    return wabt::Result::Ok;
   } else if (type_str == "funcref") {
     uint32_t value;
-    CHECK_RESULT(
-        ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly));
+    if (Failed(ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly))) {
+      PrintError("invalid funcref literal");
+      return wabt::Result::Error;
+    }
     out_value->type = Type::Funcref;
     out_value->value.ref = {RefType::Func, value};
-    return wabt::Result::Ok;
   } else {
     PrintError("unknown concrete type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
   }
+
+  return wabt::Result::Ok;
 }
 
 wabt::Result JSONParser::ParseConstVector(TypedValues* out_values) {
