@@ -110,7 +110,8 @@ struct Decompiler {
     }
   }
 
-  Value WrapChild(Value &child, string_view prefix, string_view postfix) {
+  Value WrapChild(Value &child, string_view prefix, string_view postfix,
+                  Precedence precedence) {
     auto width = prefix.size() + postfix.size() + child.width();
     auto &v = child.v;
     if (width < target_exp_width ||
@@ -130,6 +131,7 @@ struct Decompiler {
       v.insert(v.begin(), std::string(prefix));
       v.back().append(postfix.data(), postfix.size());
     }
+    child.precedence = precedence;
     return std::move(child);
   }
 
@@ -137,8 +139,7 @@ struct Decompiler {
     if (parent_precedence < val.precedence ||
         (parent_precedence == val.precedence &&
          Associative(parent_precedence))) return;
-    val = WrapChild(val, "(", ")");
-    val.precedence = Precedence::Atomic;
+    val = WrapChild(val, "(", ")", Precedence::Atomic);
   }
 
   Value WrapBinary(std::vector<Value>& args, string_view infix,
@@ -208,8 +209,7 @@ struct Decompiler {
   }
 
   template<ExprType T> Value Set(Value& child, const VarExpr<T>& ve) {
-    child.precedence = Precedence::Assign;
-    return WrapChild(child, ve.var.name() + " = ", "");
+    return WrapChild(child, ve.var.name() + " = ", "", Precedence::Assign);
   }
 
   std::string TempVarName(Index n) {
@@ -220,18 +220,25 @@ struct Decompiler {
   }
 
   std::string LocalDecl(const std::string& name, Type t) {
-    auto struc = lst.GenStruct(name);
+    auto struc = lst.GenTypeDecl(name);
     return cat(name, ":", struc.empty() ? GetDecompTypeName(t) : struc);
   }
 
   void LoadStore(Value &val, const Node& addr_exp, uint32_t offset,
                   Opcode opc, Address align, Type op_type) {
+    bool append_type = true;
     auto access = lst.GenAccess(offset, addr_exp);
     if (!access.empty()) {
-      // We can do this load/store as a struct access.
-      BracketIfNeeded(val, Precedence::Indexing);
-      val.v.back() += "." + access;
-      return;
+      if (access == "*") {
+        // The variable was declared as a typed pointer, so this access
+        // doesn't need a type.
+        append_type = false;
+      } else {
+        // We can do this load/store as a struct access.
+        BracketIfNeeded(val, Precedence::Indexing);
+        val.v.back() += "." + access;
+        return;
+      }
     }
     // Do the load/store as a generalized indexing operation.
     // The offset is divisible by the alignment in 99.99% of
@@ -277,11 +284,13 @@ struct Decompiler {
       }
     }
     BracketIfNeeded(val, Precedence::Indexing);
-    val.v.back() +=
-        cat("[", index, "]:", GetDecompTypeName(GetMemoryType(op_type, opc)),
-            opc.IsNaturallyAligned(align)
-              ? ""
-              : cat("@", std::to_string(align)));
+    val.v.back() += cat("[", index, "]");
+    if (append_type) {
+      val.v.back() +=
+        cat(":", GetDecompTypeName(GetMemoryType(op_type, opc)),
+            lst.GenAlign(align, opc));
+    }
+    val.precedence = Precedence::Indexing;
   }
 
   Value DecompileExpr(const Node& n, const Node* parent) {
@@ -328,7 +337,7 @@ struct Decompiler {
             cat("var ",
                 LocalDecl(n.u.var->name(), cur_func->GetLocalType(*n.u.var)),
                 " = "),
-            "");
+            "", Precedence::None);
       }
       case NodeType::Expr:
         // We're going to fall thru to the second switch to deal with ExprType.
@@ -406,7 +415,8 @@ struct Decompiler {
         auto& ue = *cast<UnaryExpr>(n.e);
         //BracketIfNeeded(stack.back());
         // TODO: also version without () depending on precedence.
-        return WrapChild(args[0], OpcodeToToken(ue.opcode) + "(", ")");
+        return WrapChild(args[0], OpcodeToToken(ue.opcode) + "(", ")",
+                         Precedence::Atomic);
       }
       case ExprType::Load: {
         auto& le = *cast<LoadExpr>(n.e);
@@ -471,6 +481,7 @@ struct Decompiler {
           val.v.insert(val.v.begin(), "{");
           val.v.push_back("}");
         }
+        val.precedence = Precedence::Atomic;
         return std::move(val);
       }
       case ExprType::Loop: {
@@ -479,6 +490,7 @@ struct Decompiler {
         IndentValue(val, indent_amount, {});
         val.v.insert(val.v.begin(), cat("loop ", block.label, " {"));
         val.v.push_back("}");
+        val.precedence = Precedence::Atomic;
         return std::move(val);
       }
       case ExprType::Br: {
@@ -490,7 +502,8 @@ struct Decompiler {
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
         auto jmp = n.u.lt == LabelType::Loop ? "continue" : "goto";
-        return WrapChild(args[0], "if (", cat(") ", jmp, " ", bie->var.name()));
+        return WrapChild(args[0], "if (", cat(") ", jmp, " ", bie->var.name()),
+                         Precedence::None);
       }
       case ExprType::Return: {
         return WrapNAry(args, "return ", "", Precedence::None);
@@ -522,7 +535,7 @@ struct Decompiler {
         ts += "..";
         ts += bte->default_target.name();
         ts += "](";
-        return WrapChild(args[0], ts, ")");
+        return WrapChild(args[0], ts, ")", Precedence::Atomic);
       }
       default: {
         // Everything that looks like a function call.

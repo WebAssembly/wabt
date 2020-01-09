@@ -108,7 +108,7 @@ export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
   var e:int;
   var f:int;
   var g:int;
-  var h:int;
+  var h:float_ptr@1;
   a.a + c.a + a.b + c.b;
   b.a + d.a + b.b + d.b;
   e[0]:int;
@@ -117,7 +117,7 @@ export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
   f[0]:short;
   g[0]:int;
   g[0]:int@1;
-  h[1]:float@1;
+  h[1];
   a[b]:int = a[b]:int;
   a[b + 1]:int = a[b + 1]:int;
   (a + (b << 3))[1]:int = a[b + 1]:int;

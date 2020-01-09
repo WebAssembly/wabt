@@ -79,7 +79,10 @@ struct LoadStoreTracking {
 
   struct LSVar {
     std::map<uint32_t, LSAccess> accesses;
-    bool default_layout = true;
+    bool struct_layout = true;
+    Type same_type = Type::Any;
+    Address same_align = kInvalidAddress;
+    Opcode last_opc;
   };
 
   void Track(const Node& n) {
@@ -102,36 +105,56 @@ struct LoadStoreTracking {
     }
   }
 
+  const std::string AddrExpName(const Node& addr_exp) const {
+    // TODO: expand this to more kinds of address expressions.
+    switch (addr_exp.etype) {
+      case ExprType::LocalGet:
+        return cast<LocalGetExpr>(addr_exp.e)->var.name();
+        break;
+      case ExprType::LocalTee:
+        return cast<LocalTeeExpr>(addr_exp.e)->var.name();
+        break;
+      default:
+        return "";
+    }
+  }
+
   void LoadStore(uint32_t offset, Opcode opc, Type type, Address align,
                  const Node& addr_exp) {
     auto byte_size = opc.GetMemorySize();
     type = GetMemoryType(type, opc);
     // We want to associate memory ops of a certain offset & size as being
     // relative to a uniquely identifiable pointer, such as a local.
-    // TODO: expand this to more kinds of address expressions.
-    // NOTE: types supported here must be same as in GenAccess below.
-    switch (addr_exp.etype) {
-      case ExprType::LocalGet: {
-        auto& lg = *cast<LocalGetExpr>(addr_exp.e);
-        auto& var = vars[lg.var.name()];
-        auto& access = var.accesses[offset];
-        // Check if previous access at this offset (if any) is of same size
-        // and type (see Checklayouts below).
-        if (access.byte_size &&
-            ((access.byte_size != byte_size) ||
-             (access.type != type) ||
-             (access.align != align)))
-          access.is_uniform = false;
-        // Also exclude weird alignment accesses from structs.
-        if (!opc.IsNaturallyAligned(align))
-          access.is_uniform = false;
-        access.byte_size = byte_size;
-        access.type = type;
-        access.align = align;
-        break;
-      }
-      default:
-        break;
+    auto name = AddrExpName(addr_exp);
+    if (name.empty()) {
+      return;
+    }
+    auto& var = vars[name];
+    auto& access = var.accesses[offset];
+    // Check if previous access at this offset (if any) is of same size
+    // and type (see Checklayouts below).
+    if (access.byte_size &&
+        ((access.byte_size != byte_size) ||
+         (access.type != type) ||
+         (access.align != align)))
+      access.is_uniform = false;
+    // Also exclude weird alignment accesses from structs.
+    if (!opc.IsNaturallyAligned(align))
+      access.is_uniform = false;
+    access.byte_size = byte_size;
+    access.type = type;
+    access.align = align;
+    // Additionally, check if all accesses are to the same type, so
+    // if layout check fails, we can at least declare it as pointer to
+    // a type.
+    if ((var.same_type == type || var.same_type == Type::Any) &&
+        (var.same_align == align || var.same_align == kInvalidAddress)) {
+      var.same_type = type;
+      var.same_align = align;
+      var.last_opc = opc;
+    } else {
+      var.same_type = Type::Void;
+      var.same_align = kInvalidAddress;
     }
   }
 
@@ -149,12 +172,18 @@ struct LoadStoreTracking {
     // given that they are rare and confusing, and thus do not benefit from
     // being represented as if they were structs.
     for (auto& var : vars) {
+      if (var.second.accesses.size() == 1) {
+        // If we have just one access, this is better represented as a pointer
+        // than a struct.
+        var.second.struct_layout = false;
+        continue;
+      }
       uint32_t cur_offset = 0;
       uint32_t idx = 0;
       for (auto& access : var.second.accesses) {
         access.second.idx = idx++;
         if (!access.second.is_uniform) {
-          var.second.default_layout = false;
+          var.second.struct_layout = false;
           break;
         }
         // Align to next access: all elements are expected to be aligned to
@@ -162,7 +191,7 @@ struct LoadStoreTracking {
         auto mask = access.second.byte_size - 1;
         cur_offset = (cur_offset + mask) & ~mask;
         if (cur_offset != access.first) {
-          var.second.default_layout = false;
+          var.second.struct_layout = false;
           break;
         }
         cur_offset += access.second.byte_size;
@@ -174,35 +203,54 @@ struct LoadStoreTracking {
     return IndexToAlphaName(idx);  // TODO: more descriptive names?
   }
 
-  std::string GenStruct(const std::string& name) const {
+  std::string GenAlign(Address align, Opcode opc) const {
+    return opc.IsNaturallyAligned(align)
+      ? ""
+      : cat("@", std::to_string(align));
+  }
+
+  std::string GenTypeDecl(const std::string& name) const {
     auto it = vars.find(name);
-    if (it == vars.end() || !it->second.default_layout) return "";
-    std::string s = "{ ";
-    for (auto& access : it->second.accesses) {
-      if (access.second.idx) s += ", ";
-      s += IdxToName(access.second.idx);
-      s += ':';
-      s += GetDecompTypeName(access.second.type);
+    if (it == vars.end()) {
+      return "";
     }
-    s += " }";
-    return s;
+    if (it->second.struct_layout) {
+      std::string s = "{ ";
+      for (auto& access : it->second.accesses) {
+        if (access.second.idx) s += ", ";
+        s += IdxToName(access.second.idx);
+        s += ':';
+        s += GetDecompTypeName(access.second.type);
+      }
+      s += " }";
+      return s;
+    }
+    // We don't have a struct layout, or the struct has just one field,
+    // so maybe we can just declare it as a pointer to one type?
+    if (it->second.same_type != Type::Void) {
+      return cat(GetDecompTypeName(it->second.same_type), "_ptr",
+                 GenAlign(it->second.same_align, it->second.last_opc));
+    }
+    return "";
   }
 
   std::string GenAccess(uint32_t offset, const Node& addr_exp) const {
-    // NOTE: types supported here must be same as in LoadStore above.
-    switch (addr_exp.etype) {
-      case ExprType::LocalGet: {
-        auto& lg = *cast<LocalGetExpr>(addr_exp.e);
-        auto it = vars.find(lg.var.name());
-        if (it != vars.end() && it->second.default_layout) {
-          auto ait = it->second.accesses.find(offset);
-          assert (ait != it->second.accesses.end());
-          return IdxToName(ait->second.idx);
-        }
-        break;
-      }
-      default:
-        break;
+    auto name = AddrExpName(addr_exp);
+    if (name.empty()) {
+      return "";
+    }
+    auto it = vars.find(name);
+    if (it == vars.end()) {
+      return "";
+    }
+    if (it->second.struct_layout) {
+      auto ait = it->second.accesses.find(offset);
+      assert (ait != it->second.accesses.end());
+      return IdxToName(ait->second.idx);
+    }
+    // Not a struct, see if it is a typed pointer.
+    if (it->second.same_type != Type::Void) {
+      return "*";
     }
     return "";
   }
