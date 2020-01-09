@@ -88,6 +88,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result VisitExport(Index export_index, Export* export_);
   Result VisitElemSegment(Index elem_segment_index, ElemSegment* segment);
   Result VisitDataSegment(Index data_segment_index, DataSegment* segment);
+  Result VisitStart(Var* start_var);
 
   Module* module_ = nullptr;
   Func* current_func_ = nullptr;
@@ -453,6 +454,11 @@ Result NameApplier::VisitDataSegment(Index data_segment_index,
   return Result::Ok;
 }
 
+Result NameApplier::VisitStart(Var* start_var) {
+  CHECK_RESULT(UseNameForFuncVar(start_var));
+  return Result::Ok;
+}
+
 Result NameApplier::VisitModule(Module* module) {
   module_ = module;
   for (size_t i = 0; i < module->funcs.size(); ++i)
@@ -467,6 +473,8 @@ Result NameApplier::VisitModule(Module* module) {
     CHECK_RESULT(VisitElemSegment(i, module->elem_segments[i]));
   for (size_t i = 0; i < module->data_segments.size(); ++i)
     CHECK_RESULT(VisitDataSegment(i, module->data_segments[i]));
+  for (size_t i = 0; i < module->starts.size(); ++i)
+    CHECK_RESULT(VisitStart(module->starts[i]));
   module_ = nullptr;
   return Result::Ok;
 }
