@@ -95,13 +95,14 @@ def MangleTypes(types):
 
 
 def MangleName(s):
-    result = 'Z_'
-    for c in s.encode('utf-8'):
-        # NOTE(binji): Z is not allowed.
-        if c in '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY0123456789':
-            result += c
-        else:
-            result += 'Z%02X' % ord(c)
+    def Mangle(match):
+        s = match.group(0)
+        c = ord(s) if isinstance(s, str) else s[0]  # Python2 vs Python3
+        return b'Z%02X' % c
+
+    # NOTE(binji): Z is not allowed.
+    pattern = b'([^_a-zA-Y0-9])'
+    result = 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
     return result
 
 
