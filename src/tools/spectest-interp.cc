@@ -558,7 +558,7 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
   } else if (type_str == "funcref") {
     uint32_t value;
     if (Failed(ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly))) {
-      PrintError("invalid hostref literal");
+      PrintError("invalid funcref literal");
       return wabt::Result::Error;
     }
     out_value->type = Type::Funcref;
