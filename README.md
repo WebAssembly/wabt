@@ -9,6 +9,7 @@ WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
  - [**wasm2wat**](https://webassembly.github.io/wabt/doc/wasm2wat.1.html): the inverse of wat2wasm, translate from the binary format back to the text format (also known as a .wat)
  - [**wasm-objdump**](https://webassembly.github.io/wabt/doc/wasm-objdump.1.html): print information about a wasm binary. Similiar to objdump.
  - [**wasm-interp**](https://webassembly.github.io/wabt/doc/wasm-interp.1.html): decode and run a WebAssembly binary file using a stack-based interpreter
+ - [**wasm-decompile**](https://webassembly.github.io/wabt/doc/wasm-decompile.1.html): decompile a wasm binary into readable C-like syntax.
  - [**wat-desugar**](https://webassembly.github.io/wabt/doc/wat-desugar.1.html): parse .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and print "canonical" flat format
  - [**wasm2c**](https://webassembly.github.io/wabt/doc/wasm2c.1.html): convert a WebAssembly binary file to a C source and header
  - [**wasm-strip**](https://webassembly.github.io/wabt/doc/wasm-strip.1.html): remove sections of a WebAssembly binary file
@@ -104,8 +105,8 @@ executable called `wasm2c` which conflicts with the `wasm2c` directory.
 On some systems (typically macOS), this doesn't build properly. If you see these errors,
 you can build using CMake directly as described above.
 
-You'll need [CMake](https://cmake.org). If you just run `make`, it will run CMake for you, 
-and put the result in `out/clang/Debug/` by default:
+You'll need [CMake](https://cmake.org). If you just run `make`, it will run CMake for you,
+and put the result in `bin/clang/Debug/` by default:
 
 > Note: If you are on macOS, you will need to use CMake version 3.2 or higher
 
@@ -189,24 +190,24 @@ Some examples:
 
 ```sh
 # parse and typecheck test.wat
-$ out/wat2wasm test.wat
+$ bin/wat2wasm test.wat
 
 # parse test.wat and write to binary file test.wasm
-$ out/wat2wasm test.wat -o test.wasm
+$ bin/wat2wasm test.wat -o test.wasm
 
 # parse spec-test.wast, and write verbose output to stdout (including the
 # meaning of every byte)
-$ out/wat2wasm spec-test.wast -v
+$ bin/wat2wasm spec-test.wast -v
 
 # parse spec-test.wast, and write files to spec-test.json. Modules are written
 # to spec-test.0.wasm, spec-test.1.wasm, etc.
-$ out/wast2json spec-test.wast -o spec-test.json
+$ bin/wast2json spec-test.wast -o spec-test.json
 ```
 
 You can use `--help` to get additional help:
 
 ```console
-$ out/wat2wasm --help
+$ bin/wat2wasm --help
 ```
 
 Or try the [online demo](https://webassembly.github.io/wabt/demo/wat2wasm/).
@@ -217,16 +218,16 @@ Some examples:
 
 ```sh
 # parse binary file test.wasm and write text file test.wat
-$ out/wasm2wat test.wasm -o test.wat
+$ bin/wasm2wat test.wasm -o test.wat
 
 # parse test.wasm and write test.wat
-$ out/wasm2wat test.wasm -o test.wat
+$ bin/wasm2wat test.wasm -o test.wat
 ```
 
 You can use `--help` to get additional help:
 
 ```console
-$ out/wasm2wat --help
+$ bin/wasm2wat --help
 ```
 
 Or try the [online demo](https://webassembly.github.io/wabt/demo/wasm2wat/).
@@ -237,27 +238,45 @@ Some examples:
 
 ```sh
 # parse binary file test.wasm, and type-check it
-$ out/wasm-interp test.wasm
+$ bin/wasm-interp test.wasm
 
 # parse test.wasm and run all its exported functions
-$ out/wasm-interp test.wasm --run-all-exports
+$ bin/wasm-interp test.wasm --run-all-exports
 
 # parse test.wasm, run the exported functions and trace the output
-$ out/wasm-interp test.wasm --run-all-exports --trace
+$ bin/wasm-interp test.wasm --run-all-exports --trace
 
 # parse test.json and run the spec tests
-$ out/wasm-interp test.json --spec
+$ bin/wasm-interp test.json --spec
 
 # parse test.wasm and run all its exported functions, setting the value stack
 # size to 100 elements
-$ out/wasm-interp test.wasm -V 100 --run-all-exports
+$ bin/wasm-interp test.wasm -V 100 --run-all-exports
 ```
 
 You can use `--help` to get additional help:
 
 ```console
-$ out/wasm-interp --help
+$ bin/wasm-interp --help
 ```
+
+## Running wasm-decompile
+
+For example:
+
+```sh
+# parse binary file test.wasm and write text file test.dcmp
+$ bin/wasm-decompile test.wasm -o test.dcmp
+```
+
+You can use `--help` to get additional help:
+
+```console
+$ bin/wasm-decompile --help
+```
+
+See [decompiler.md](docs/decompiler.md) for more information on the language
+being generated.
 
 ## Running wasm2c
 
@@ -283,7 +302,7 @@ There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
 (MSAN), Leak Sanitizer (LSAN) and Undefine Behavior Sanitizer (UBSAN). You can
 read about the behaviors of the sanitizers in the link above, but essentially
 the Address Sanitizer finds invalid memory accesses (use after free, access
-out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory, 
+out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory,
 the Leak Sanitizer finds memory leaks, and the Undefined Behavior Sanitizer
 finds undefined behavior (surprise!).
 
