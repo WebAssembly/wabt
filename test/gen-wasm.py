@@ -255,6 +255,15 @@ NAMED_VALUES = {
     "i64.reinterpret/f64": 0xbd,
     "f32.reinterpret/i32": 0xbe,
     "f64.reinterpret/i64": 0xbf,
+
+    # bulk memory
+    "memory.init": (0xfc, 0x08),
+    "data.drop": (0xfc, 0x09),
+    "memory.copy": (0xfc, 0x0a),
+    "memory.fill": (0xfc, 0x0b),
+    "table.init": (0xfc, 0x0c),
+    "elem.drop": (0xfc, 0x0d),
+    "table.copy": (0xfc, 0x0e),
 }
 
 keywords = {
