@@ -623,6 +623,7 @@ struct Decompiler {
   // FIXME: Merge with WatWriter::WriteQuotedData somehow.
   std::string BinaryToString(const std::vector<uint8_t> &in) {
     std::string s = "\"";
+    size_t line_start = 0;
     static const char s_hexdigits[] = "0123456789abcdef";
     for (auto c : in) {
       if (c >= ' ' && c <= '~') {
@@ -631,6 +632,14 @@ struct Decompiler {
         s += '\\';
         s += s_hexdigits[c >> 4];
         s += s_hexdigits[c & 0xf];
+      }
+      if (s.size() - line_start > target_exp_width) {
+        if (line_start == 0) {
+          s = "  " + s;
+        }
+        s += "\"\n  ";
+        line_start = s.size();
+        s += "\"";
       }
     }
     s += '\"';
@@ -688,8 +697,14 @@ struct Decompiler {
 
     // Data.
     for (auto dat : mc.module.data_segments) {
-      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset),
-               ") = ", BinaryToString(dat->data), ";\n");
+
+      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset), ") = ");
+      auto ds = BinaryToString(dat->data);
+      if (ds.size() > target_exp_width / 2) {
+        s += "\n";
+      }
+      s += ds;
+      s += ";\n";
     }
     if (!mc.module.data_segments.empty())
       s += "\n";
