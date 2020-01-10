@@ -1433,8 +1433,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::MemoryInit: {
         Index segment;
-        ERROR_UNLESS(data_count_ != kInvalidIndex,
-                     "memory.init requires data count section");
+        ERROR_IF(data_count_ == kInvalidIndex,
+                 "memory.init requires data count section");
         CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
@@ -1445,8 +1445,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::DataDrop:
-        ERROR_UNLESS(data_count_ != kInvalidIndex,
-                     "data.drop requires data count section");
+        ERROR_IF(data_count_ == kInvalidIndex,
+                 "data.drop requires data count section");
         // Fallthrough.
       case Opcode::ElemDrop: {
         Index segment;
