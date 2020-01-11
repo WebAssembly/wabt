@@ -1,0 +1,31 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-bulk-memory
+;;; ARGS2: --enable-bulk-memory
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[leb_u32(0)]
+}
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.const leb_i32(0)
+    i32.const leb_i32(0)
+    i32.const leb_i32(0)
+    memory.init 0 0
+  }
+}
+section(DATA) {
+  count[1]
+  flags[1]
+  data[str("")]
+}
+(;; STDERR ;;;
+0000024: error: memory.init requires data count section
+0000024: error: memory.init requires data count section
+;;; STDERR ;;)

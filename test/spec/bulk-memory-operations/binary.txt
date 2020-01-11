@@ -133,11 +133,9 @@ out/test/spec/bulk-memory-operations/binary.wast:664: assert_malformed passed:
 out/test/spec/bulk-memory-operations/binary.wast:674: assert_malformed passed:
   000000e: error: data section without memory section
 out/test/spec/bulk-memory-operations/binary.wast:684: assert_malformed passed:
-  error: invalid data_segment_index: 0 (max 0)
-  0000026: error: OnMemoryInitExpr callback failed
+  0000024: error: memory.init requires data count section
 out/test/spec/bulk-memory-operations/binary.wast:706: assert_malformed passed:
-  error: invalid data_segment_index: 0 (max 0)
-  000001f: error: OnDataDropExpr callback failed
+  000001e: error: data.drop requires data count section
 out/test/spec/bulk-memory-operations/binary.wast:725: assert_malformed passed:
   0000024: error: expected ref.null or ref.func in passive element segment
   0000025: error: expected END opcode after element expression
