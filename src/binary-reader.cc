@@ -1014,6 +1014,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F32X4Mul:
       case Opcode::F64X2Mul:
       case Opcode::V8X16Swizzle:
+      case Opcode::I8X16NarrowI16X8S:
+      case Opcode::I8X16NarrowI16X8U:
+      case Opcode::I16X8NarrowI32X4S:
+      case Opcode::I16X8NarrowI32X4U:
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1141,6 +1145,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Abs:
       case Opcode::F32X4Sqrt:
       case Opcode::F64X2Sqrt:
+      case Opcode::I16X8WidenLowI8X16S:
+      case Opcode::I16X8WidenHighI8X16S:
+      case Opcode::I16X8WidenLowI8X16U:
+      case Opcode::I16X8WidenHighI8X16U:
+      case Opcode::I32X4WidenLowI16X8S:
+      case Opcode::I32X4WidenHighI16X8S:
+      case Opcode::I32X4WidenLowI16X8U:
+      case Opcode::I32X4WidenHighI16X8U:
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;

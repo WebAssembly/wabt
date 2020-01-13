@@ -510,7 +510,15 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32X4TruncSatF32X4S:
     case Opcode::I32X4TruncSatF32X4U:
     case Opcode::I64X2TruncSatF64X2S:
-    case Opcode::I64X2TruncSatF64X2U: {
+    case Opcode::I64X2TruncSatF64X2U:
+    case Opcode::I16X8WidenLowI8X16S:
+    case Opcode::I16X8WidenHighI8X16S:
+    case Opcode::I16X8WidenLowI8X16U:
+    case Opcode::I16X8WidenHighI8X16U:
+    case Opcode::I32X4WidenLowI16X8S:
+    case Opcode::I32X4WidenHighI16X8S:
+    case Opcode::I32X4WidenLowI16X8U:
+    case Opcode::I32X4WidenHighI16X8U: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x\n", opcode.GetName(),
                      Top().vec128.v[0], Top().vec128.v[1],
                      Top().vec128.v[2], Top().vec128.v[3]);
@@ -667,7 +675,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F64X2Div:
     case Opcode::F32X4Mul:
     case Opcode::F64X2Mul:
-    case Opcode::V8X16Swizzle: {
+    case Opcode::V8X16Swizzle:
+    case Opcode::I8X16NarrowI16X8S:
+    case Opcode::I8X16NarrowI16X8U:
+    case Opcode::I16X8NarrowI32X4S:
+    case Opcode::I16X8NarrowI32X4U: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n",
                      opcode.GetName(), Pick(2).vec128.v[0],
                      Pick(2).vec128.v[1], Pick(2).vec128.v[2],

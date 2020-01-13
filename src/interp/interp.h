@@ -74,7 +74,9 @@ namespace interp {
   /* we tried to get an export by name that doesn't exist */                \
   V(UnknownExport, "unknown export")                                        \
   /* the expected export kind doesn't match. */                             \
-  V(ExportKindMismatch, "export kind mismatch")
+  V(ExportKindMismatch, "export kind mismatch")                             \
+  /* instruction not implemented in the interpreter */                      \
+  V(NotImplemented, "not implemented")
 
 enum class ResultType {
 #define V(Name, str) Name,
