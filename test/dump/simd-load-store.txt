@@ -87,10 +87,10 @@ Code Disassembly:
  000104: 0b                         | end
 000106 func[6] <i64x2.load32x2_s>:
  000107: 41 00                      | i32.const 0
- 000109: fd d6 01 03 00             | i64x4.load32x2_s 3 0
+ 000109: fd d6 01 03 00             | i64x2.load32x2_s 3 0
  00010e: 0b                         | end
 000110 func[7] <i64x2.load32x2_u>:
  000111: 41 00                      | i32.const 0
- 000113: fd d7 01 03 00             | i64x4.load32x2_u 3 0
+ 000113: fd d7 01 03 00             | i64x2.load32x2_u 3 0
  000118: 0b                         | end
 ;;; STDOUT ;;)
