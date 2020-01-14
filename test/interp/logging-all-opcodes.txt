@@ -6885,7 +6885,7 @@
 00039e3: 41                                        ; i32.const
 00039e4: 00                                        ; i32 literal
 00039e5: fd                                        ; prefix
-00039e6: d601                                      ; i64x4.load32x2_s
+00039e6: d601                                      ; i64x2.load32x2_s
 00039e8: 03                                        ; alignment
 00039e9: 00                                        ; load offset
 00039ea: 1a                                        ; drop
@@ -6897,7 +6897,7 @@
 00039ee: 41                                        ; i32.const
 00039ef: 00                                        ; i32 literal
 00039f0: fd                                        ; prefix
-00039f1: d701                                      ; i64x4.load32x2_u
+00039f1: d701                                      ; i64x2.load32x2_u
 00039f3: 03                                        ; alignment
 00039f4: 00                                        ; load offset
 00039f5: 1a                                        ; drop
@@ -11070,13 +11070,13 @@ BeginModule(version: 1)
     BeginFunctionBody(356, size:10)
     OnLocalDeclCount(0)
     OnI32ConstExpr(0 (0x0))
-    OnLoadExpr(opcode: "i64x4.load32x2_s" (214), align log2: 3, offset: 0)
+    OnLoadExpr(opcode: "i64x2.load32x2_s" (214), align log2: 3, offset: 0)
     OnDropExpr
     EndFunctionBody(356)
     BeginFunctionBody(357, size:10)
     OnLocalDeclCount(0)
     OnI32ConstExpr(0 (0x0))
-    OnLoadExpr(opcode: "i64x4.load32x2_u" (215), align log2: 3, offset: 0)
+    OnLoadExpr(opcode: "i64x2.load32x2_u" (215), align log2: 3, offset: 0)
     OnDropExpr
     EndFunctionBody(357)
     BeginFunctionBody(358, size:42)
@@ -13151,11 +13151,11 @@ EndModule
 12214| drop
 12218| return
 12222| i32.const 0
-12230| i64x4.load32x2_s $0:%[-1]+$0
+12230| i64x2.load32x2_s $0:%[-1]+$0
 12242| drop
 12246| return
 12250| i32.const 0
-12258| i64x4.load32x2_u $0:%[-1]+$0
+12258| i64x2.load32x2_u $0:%[-1]+$0
 12270| drop
 12274| return
 12278| v128.const i32x4 0x00000001 0x00000001 0x00000001 0x00000001
