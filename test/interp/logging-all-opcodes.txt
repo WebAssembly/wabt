@@ -6794,7 +6794,7 @@
 0003954: 02                                        ; v128.const
 0003955: 0100 0000 0100 0000 0100 0000 0100 0000   ; v128 literal
 0003965: fd                                        ; prefix
-0003966: ce01                                      ; i16x8.widen_low_i16x8_s
+0003966: ce01                                      ; i32x4.widen_low_i16x8_s
 0003968: 1a                                        ; drop
 0003969: 0b                                        ; end
 0003951: 18                                        ; FIXUP func body size
@@ -6805,7 +6805,7 @@
 000396d: 02                                        ; v128.const
 000396e: 0100 0000 0100 0000 0100 0000 0100 0000   ; v128 literal
 000397e: fd                                        ; prefix
-000397f: cf01                                      ; i16x8.widen_high_i16x8_s
+000397f: cf01                                      ; i32x4.widen_high_i16x8_s
 0003981: 1a                                        ; drop
 0003982: 0b                                        ; end
 000396a: 18                                        ; FIXUP func body size
@@ -6816,7 +6816,7 @@
 0003986: 02                                        ; v128.const
 0003987: 0100 0000 0100 0000 0100 0000 0100 0000   ; v128 literal
 0003997: fd                                        ; prefix
-0003998: d001                                      ; i16x8.widen_low_i16x8_u
+0003998: d001                                      ; i32x4.widen_low_i16x8_u
 000399a: 1a                                        ; drop
 000399b: 0b                                        ; end
 0003983: 18                                        ; FIXUP func body size
@@ -6827,7 +6827,7 @@
 000399f: 02                                        ; v128.const
 00039a0: 0100 0000 0100 0000 0100 0000 0100 0000   ; v128 literal
 00039b0: fd                                        ; prefix
-00039b1: d101                                      ; i16x8.widen_high_i16x8_u
+00039b1: d101                                      ; i32x4.widen_high_i16x8_u
 00039b3: 1a                                        ; drop
 00039b4: 0b                                        ; end
 000399c: 18                                        ; FIXUP func body size
@@ -11022,25 +11022,25 @@ BeginModule(version: 1)
     BeginFunctionBody(348, size:24)
     OnLocalDeclCount(0)
     OnV128ConstExpr(0x00000001 0x00000001 0x00000001 0x00000001)
-    OnUnaryExpr("i16x8.widen_low_i16x8_s" (206))
+    OnUnaryExpr("i32x4.widen_low_i16x8_s" (206))
     OnDropExpr
     EndFunctionBody(348)
     BeginFunctionBody(349, size:24)
     OnLocalDeclCount(0)
     OnV128ConstExpr(0x00000001 0x00000001 0x00000001 0x00000001)
-    OnUnaryExpr("i16x8.widen_high_i16x8_s" (207))
+    OnUnaryExpr("i32x4.widen_high_i16x8_s" (207))
     OnDropExpr
     EndFunctionBody(349)
     BeginFunctionBody(350, size:24)
     OnLocalDeclCount(0)
     OnV128ConstExpr(0x00000001 0x00000001 0x00000001 0x00000001)
-    OnUnaryExpr("i16x8.widen_low_i16x8_u" (208))
+    OnUnaryExpr("i32x4.widen_low_i16x8_u" (208))
     OnDropExpr
     EndFunctionBody(350)
     BeginFunctionBody(351, size:24)
     OnLocalDeclCount(0)
     OnV128ConstExpr(0x00000001 0x00000001 0x00000001 0x00000001)
-    OnUnaryExpr("i16x8.widen_high_i16x8_u" (209))
+    OnUnaryExpr("i32x4.widen_high_i16x8_u" (209))
     OnDropExpr
     EndFunctionBody(351)
     BeginFunctionBody(352, size:10)
@@ -13119,19 +13119,19 @@ EndModule
 11974| drop
 11978| return
 11982| v128.const i32x4 0x00000001 0x00000001 0x00000001 0x00000001
-12002| i16x8.widen_low_i16x8_s %[-1]
+12002| i32x4.widen_low_i16x8_s %[-1]
 12006| drop
 12010| return
 12014| v128.const i32x4 0x00000001 0x00000001 0x00000001 0x00000001
-12034| i16x8.widen_high_i16x8_s %[-1]
+12034| i32x4.widen_high_i16x8_s %[-1]
 12038| drop
 12042| return
 12046| v128.const i32x4 0x00000001 0x00000001 0x00000001 0x00000001
-12066| i16x8.widen_low_i16x8_u %[-1]
+12066| i32x4.widen_low_i16x8_u %[-1]
 12070| drop
 12074| return
 12078| v128.const i32x4 0x00000001 0x00000001 0x00000001 0x00000001
-12098| i16x8.widen_high_i16x8_u %[-1]
+12098| i32x4.widen_high_i16x8_u %[-1]
 12102| drop
 12106| return
 12110| i32.const 0

@@ -576,22 +576,22 @@ Code Disassembly:
 000a90 func[42] <i32x4.widen_low_i16x8_s>:
  000a91: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
  000a9a: 00 03 00 00 00 04 00 00 00 | 
- 000aa3: fd ce 01                   | i16x8.widen_low_i16x8_s
+ 000aa3: fd ce 01                   | i32x4.widen_low_i16x8_s
  000aa6: 0b                         | end
 000aa8 func[43] <i32x4.widen_high_i16x8_s>:
  000aa9: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
  000ab2: 00 03 00 00 00 04 00 00 00 | 
- 000abb: fd cf 01                   | i16x8.widen_high_i16x8_s
+ 000abb: fd cf 01                   | i32x4.widen_high_i16x8_s
  000abe: 0b                         | end
 000ac0 func[44] <i32x4.widen_low_i16x8_u>:
  000ac1: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
  000aca: 00 03 00 00 00 04 00 00 00 | 
- 000ad3: fd d0 01                   | i16x8.widen_low_i16x8_u
+ 000ad3: fd d0 01                   | i32x4.widen_low_i16x8_u
  000ad6: 0b                         | end
 000ad8 func[45] <i32x4.widen_high_i16x8_u>:
  000ad9: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
  000ae2: 00 03 00 00 00 04 00 00 00 | 
- 000aeb: fd d1 01                   | i16x8.widen_high_i16x8_u
+ 000aeb: fd d1 01                   | i32x4.widen_high_i16x8_u
  000aee: 0b                         | end
 000af0 func[46] <v128.andnot>:
  000af1: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
