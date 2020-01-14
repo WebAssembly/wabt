@@ -3685,6 +3685,15 @@ Result Thread::Run(int num_instructions) {
       case Opcode::I32X4WidenHighI16X8S:
       case Opcode::I32X4WidenLowI16X8U:
       case Opcode::I32X4WidenHighI16X8U:
+      case Opcode::I16X8Load8X8S:
+      case Opcode::I16X8Load8X8U:
+      case Opcode::I32X4Load16X4S:
+      case Opcode::I32X4Load16X4U:
+      case Opcode::I64X2Load32X2S:
+      case Opcode::I64X2Load32X2U:
+      case Opcode::V128Andnot:
+      case Opcode::I8X16AvgrU:
+      case Opcode::I16X8AvgrU:
         return ResultType::NotImplemented;
 
       // The following opcodes are either never generated or should never be

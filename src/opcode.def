@@ -417,6 +417,15 @@ WABT_OPCODE(V128, V128,  ___, ___,  0, 0xfd, 0xce, I32X4WidenLowI16X8S, "i16x8.w
 WABT_OPCODE(V128, V128,  ___, ___,  0, 0xfd, 0xcf, I32X4WidenHighI16X8S, "i16x8.widen_high_i16x8_s", "")
 WABT_OPCODE(V128, V128,  ___, ___,  0, 0xfd, 0xd0, I32X4WidenLowI16X8U, "i16x8.widen_low_i16x8_u", "")
 WABT_OPCODE(V128, V128,  ___, ___,  0, 0xfd, 0xd1, I32X4WidenHighI16X8U, "i16x8.widen_high_i16x8_u", "")
+WABT_OPCODE(V128, I32,   ___, ___,  8, 0xfd, 0xd2, I16X8Load8X8S, "i16x8.load8x8_s", "")
+WABT_OPCODE(V128, I32,   ___, ___,  8, 0xfd, 0xd3, I16X8Load8X8U, "i16x8.load8x8_u", "")
+WABT_OPCODE(V128, I32,   ___, ___,  8, 0xfd, 0xd4, I32X4Load16X4S, "i32x4.load16x4_s", "")
+WABT_OPCODE(V128, I32,   ___, ___,  8, 0xfd, 0xd5, I32X4Load16X4U, "i32x4.load16x4_u", "")
+WABT_OPCODE(V128, I32,   ___, ___,  8, 0xfd, 0xd6, I64X2Load32X2S, "i64x4.load32x2_s", "")
+WABT_OPCODE(V128, I32,   ___, ___,  8, 0xfd, 0xd7, I64X2Load32X2U, "i64x4.load32x2_u", "")
+WABT_OPCODE(V128, V128, V128, ___,  0, 0xfd, 0xd8, V128Andnot, "v128.andnot", "")
+WABT_OPCODE(V128, V128, V128, ___,  0, 0xfd, 0xd9, I8X16AvgrU, "i8x16.avgr_u", "")
+WABT_OPCODE(V128, V128, V128, ___,  0, 0xfd, 0xda, I16X8AvgrU, "i16x8.avgr_u", "")
 
 /* Thread opcodes (--enable-threads) */
 WABT_OPCODE(I32,  I32,  I32,  ___,  4,  0xfe, 0x00, AtomicNotify, "atomic.notify", "")

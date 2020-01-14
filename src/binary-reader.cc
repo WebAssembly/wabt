@@ -874,12 +874,17 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64Load:
       case Opcode::F32Load:
       case Opcode::F64Load:
-      case Opcode::V128Load: {
+      case Opcode::V128Load:
+      case Opcode::I16X8Load8X8S:
+      case Opcode::I16X8Load8X8U:
+      case Opcode::I32X4Load16X4S:
+      case Opcode::I32X4Load16X4U:
+      case Opcode::I64X2Load32X2S:
+      case Opcode::I64X2Load32X2U: {
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
-
         CALLBACK(OnLoadExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
         break;
@@ -1018,6 +1023,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I8X16NarrowI16X8U:
       case Opcode::I16X8NarrowI32X4S:
       case Opcode::I16X8NarrowI32X4U:
+      case Opcode::V128Andnot:
+      case Opcode::I8X16AvgrU:
+      case Opcode::I16X8AvgrU:
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;

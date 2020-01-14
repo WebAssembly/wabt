@@ -166,6 +166,8 @@ i16x8.gt_s, TokenType::Compare, Opcode::I16X8GtS
 i16x8.gt_u, TokenType::Compare, Opcode::I16X8GtU
 i16x8.le_s, TokenType::Compare, Opcode::I16X8LeS
 i16x8.le_u, TokenType::Compare, Opcode::I16X8LeU
+i16x8.load8x8_s, TokenType::Load, Opcode::I16X8Load8X8S
+i16x8.load8x8_u, TokenType::Load, Opcode::I16X8Load8X8U
 i16x8.load_splat, TokenType::Load, Opcode::I16X8LoadSplat
 i16x8.lt_s, TokenType::Compare, Opcode::I16X8LtS
 i16x8.lt_u, TokenType::Compare, Opcode::I16X8LtU
@@ -276,6 +278,8 @@ i32x4.gt_s, TokenType::Compare, Opcode::I32X4GtS
 i32x4.gt_u, TokenType::Compare, Opcode::I32X4GtU
 i32x4.le_s, TokenType::Compare, Opcode::I32X4LeS
 i32x4.le_u, TokenType::Compare, Opcode::I32X4LeU
+i32x4.load16x4_s, TokenType::Load, Opcode::I32X4Load16X4S
+i32x4.load16x4_u, TokenType::Load, Opcode::I32X4Load16X4U
 i32x4.load_splat, TokenType::Load, Opcode::I32X4LoadSplat
 i32x4.lt_s, TokenType::Compare, Opcode::I32X4LtS
 i32x4.lt_u, TokenType::Compare, Opcode::I32X4LtU
@@ -392,6 +396,8 @@ i64x2.add, TokenType::Binary, Opcode::I64X2Add
 i64x2.all_true, TokenType::Unary, Opcode::I64X2AllTrue
 i64x2.any_true, TokenType::Unary, Opcode::I64X2AnyTrue
 i64x2.extract_lane, TokenType::SimdLaneOp, Opcode::I64X2ExtractLane
+i64x2.load32x2_s, TokenType::Load, Opcode::I64X2Load32X2S
+i64x2.load32x2_u, TokenType::Load, Opcode::I64X2Load32X2U
 i64x2.load_splat, TokenType::Load, Opcode::I64X2LoadSplat
 i64x2.neg, TokenType::Unary, Opcode::I64X2Neg
 i64x2.replace_lane, TokenType::SimdLaneOp, Opcode::I64X2ReplaceLane
@@ -409,6 +415,8 @@ i8x16.add_saturate_u, TokenType::Binary, Opcode::I8X16AddSaturateU
 i8x16.add, TokenType::Binary, Opcode::I8X16Add
 i8x16.all_true, TokenType::Unary, Opcode::I8X16AllTrue
 i8x16.any_true, TokenType::Unary, Opcode::I8X16AnyTrue
+i8x16.avgr_u, TokenType::Binary, Opcode::I8X16AvgrU
+i16x8.avgr_u, TokenType::Binary, Opcode::I16X8AvgrU
 i8x16.eq, TokenType::Compare, Opcode::I8X16Eq
 i8x16.extract_lane_s, TokenType::SimdLaneOp, Opcode::I8X16ExtractLaneS
 i8x16.extract_lane_u, TokenType::SimdLaneOp, Opcode::I8X16ExtractLaneU
@@ -485,6 +493,7 @@ try, TokenType::Try, Opcode::Try
 type, TokenType::Type
 unreachable, TokenType::Unreachable, Opcode::Unreachable
 v128.and, TokenType::Binary, Opcode::V128And
+v128.andnot, TokenType::Binary, Opcode::V128Andnot
 v128.bitselect, TokenType::Ternary, Opcode::V128BitSelect
 v128.const, TokenType::Const, Opcode::V128Const
 v128.load, TokenType::Load, Opcode::V128Load

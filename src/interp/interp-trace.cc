@@ -142,7 +142,13 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I8X16LoadSplat:
     case Opcode::I16X8LoadSplat:
     case Opcode::I32X4LoadSplat:
-    case Opcode::I64X2LoadSplat: {
+    case Opcode::I64X2LoadSplat:
+    case Opcode::I16X8Load8X8S:
+    case Opcode::I16X8Load8X8U:
+    case Opcode::I32X4Load16X4S:
+    case Opcode::I32X4Load16X4U:
+    case Opcode::I64X2Load32X2S:
+    case Opcode::I64X2Load32X2U: {
       const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u\n", opcode.GetName(),
                      memory_index, Top().i32, ReadU32At(pc));
@@ -679,7 +685,10 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I8X16NarrowI16X8S:
     case Opcode::I8X16NarrowI16X8U:
     case Opcode::I16X8NarrowI32X4S:
-    case Opcode::I16X8NarrowI32X4U: {
+    case Opcode::I16X8NarrowI32X4U:
+    case Opcode::V128Andnot:
+    case Opcode::I8X16AvgrU:
+    case Opcode::I16X8AvgrU: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n",
                      opcode.GetName(), Pick(2).vec128.v[0],
                      Pick(2).vec128.v[1], Pick(2).vec128.v[2],
