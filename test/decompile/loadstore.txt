@@ -3,6 +3,8 @@
 (module
   (memory $m1 1)
 
+  (data 0 (offset (i32.const 10)) "Hello, World!\n\00")
+
   (func $f (param i32 i32) (result) (local i32 i32 i32 i32 i32 i32)
     ;; Test regular accesses that become a struct.
     get_local 0
@@ -95,12 +97,18 @@
     i32.add
     i32.load offset=4
     i32.store offset=4
+    ;; Test naming of absolute addresses referring to data sections.
+    i32.const 16
+    i32.load8_u offset=1  ;; Refers to the 'W'
+    drop
   )
   (export "f" (func $f))
 )
 
 (;; STDOUT ;;;
 memory M_a(initial: 1, max: 0);
+
+data d_a(offset: 10) = "Hello, World!\0a\00";
 
 export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
   var c:{ a:float, b:float }
@@ -121,6 +129,7 @@ export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
   a[b]:int = a[b]:int;
   a[b + 1]:int = a[b + 1]:int;
   (a + (b << 3))[1]:int = a[b + 1]:int;
+  d_a[7]:ubyte;
 }
 
 ;;; STDOUT ;;)

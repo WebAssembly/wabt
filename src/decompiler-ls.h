@@ -78,7 +78,7 @@ struct LoadStoreTracking {
   };
 
   struct LSVar {
-    std::map<uint32_t, LSAccess> accesses;
+    std::map<uint64_t, LSAccess> accesses;
     bool struct_layout = true;
     Type same_type = Type::Any;
     Address same_align = kInvalidAddress;
@@ -119,7 +119,7 @@ struct LoadStoreTracking {
     }
   }
 
-  void LoadStore(uint32_t offset, Opcode opc, Type type, Address align,
+  void LoadStore(uint64_t offset, Opcode opc, Type type, Address align,
                  const Node& addr_exp) {
     auto byte_size = opc.GetMemorySize();
     type = GetMemoryType(type, opc);
@@ -178,7 +178,7 @@ struct LoadStoreTracking {
         var.second.struct_layout = false;
         continue;
       }
-      uint32_t cur_offset = 0;
+      uint64_t cur_offset = 0;
       uint32_t idx = 0;
       for (auto& access : var.second.accesses) {
         access.second.idx = idx++;
@@ -234,7 +234,7 @@ struct LoadStoreTracking {
     return "";
   }
 
-  std::string GenAccess(uint32_t offset, const Node& addr_exp) const {
+  std::string GenAccess(uint64_t offset, const Node& addr_exp) const {
     auto name = AddrExpName(addr_exp);
     if (name.empty()) {
       return "";

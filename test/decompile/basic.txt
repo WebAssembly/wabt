@@ -132,7 +132,7 @@ export function f(a:int, b:int):int {
   var c:long = 8L;
   var d:float = 6.0f;
   var e:double = 7.0;
-  if (e < 10.0) { 1[1]:int = 2[3]:int@1 + 5 }
+  if (e < 10.0) { d_a[5@4]:int = d_a[5]:int@1 + 5 }
   f(a + g_b, 9);
   loop L_b {
     if (if (0) { 1 } else { 2 }) goto B_c;

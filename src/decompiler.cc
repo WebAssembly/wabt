@@ -224,7 +224,16 @@ struct Decompiler {
     return cat(name, ":", struc.empty() ? GetDecompTypeName(t) : struc);
   }
 
-  void LoadStore(Value &val, const Node& addr_exp, uint32_t offset,
+  bool ConstIntVal(const Expr* e, uint64_t &dest) {
+    dest = 0;
+    if (!e || e->type() != ExprType::Const) return false;
+    auto& c = cast<ConstExpr>(e)->const_;
+    if (c.type != Type::I32 && c.type != Type::I64) return false;
+    dest = c.type == Type::I32 ? c.u32 : c.u64;
+    return true;
+  }
+
+  void LoadStore(Value &val, const Node& addr_exp, uint64_t offset,
                   Opcode opc, Address align, Type op_type) {
     bool append_type = true;
     auto access = lst.GenAccess(offset, addr_exp);
@@ -238,6 +247,30 @@ struct Decompiler {
         BracketIfNeeded(val, Precedence::Indexing);
         val.v.back() += "." + access;
         return;
+      }
+    }
+    // Detect absolute addressing, which we try to turn into references to the
+    // data section when possible.
+    uint64_t abs_base;
+    if (ConstIntVal(addr_exp.e, abs_base)) {
+      // We don't care what part of the absolute address was stored where,
+      // 1[0] and 0[1] are the same.
+      abs_base += offset;
+      // FIXME: make this less expensive with a binary search or whatever.
+      for (auto dat : mc.module.data_segments) {
+        uint64_t dat_base;
+        if (dat->offset.size() == 1 &&
+            ConstIntVal(&dat->offset.front(), dat_base) &&
+            abs_base >= dat_base &&
+            abs_base < dat_base + dat->data.size()) {
+          // We are inside the range of this data segment!
+          // Turn expression into data_name[index]
+          val = Value { { dat->name }, Precedence::Atomic };
+          // The new offset is from the start of the data segment, instead of
+          // whatever it was.. this may be a different value from both the
+          // original const and offset!
+          offset = abs_base - dat_base;
+        }
       }
     }
     // Do the load/store as a generalized indexing operation.
@@ -697,7 +730,6 @@ struct Decompiler {
 
     // Data.
     for (auto dat : mc.module.data_segments) {
-
       s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset), ") = ");
       auto ds = BinaryToString(dat->data);
       if (ds.size() > target_exp_width / 2) {
