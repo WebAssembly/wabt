@@ -3673,6 +3673,20 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(TableCopy(&pc));
         break;
 
+      case Opcode::I8X16NarrowI16X8S:
+      case Opcode::I8X16NarrowI16X8U:
+      case Opcode::I16X8NarrowI32X4S:
+      case Opcode::I16X8NarrowI32X4U:
+      case Opcode::I16X8WidenLowI8X16S:
+      case Opcode::I16X8WidenHighI8X16S:
+      case Opcode::I16X8WidenLowI8X16U:
+      case Opcode::I16X8WidenHighI8X16U:
+      case Opcode::I32X4WidenLowI16X8S:
+      case Opcode::I32X4WidenHighI16X8S:
+      case Opcode::I32X4WidenLowI16X8U:
+      case Opcode::I32X4WidenHighI16X8U:
+        return ResultType::NotImplemented;
+
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:

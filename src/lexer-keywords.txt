@@ -170,6 +170,8 @@ i16x8.load_splat, TokenType::Load, Opcode::I16X8LoadSplat
 i16x8.lt_s, TokenType::Compare, Opcode::I16X8LtS
 i16x8.lt_u, TokenType::Compare, Opcode::I16X8LtU
 i16x8.mul, TokenType::Binary, Opcode::I16X8Mul
+i16x8.narrow_i32x4_s, TokenType::Binary, Opcode::I16X8NarrowI32X4S
+i16x8.narrow_i32x4_u, TokenType::Binary, Opcode::I16X8NarrowI32X4U
 i16x8.neg, TokenType::Unary, Opcode::I16X8Neg
 i16x8.ne, TokenType::Compare, Opcode::I16X8Ne
 i16x8.replace_lane, TokenType::SimdLaneOp, Opcode::I16X8ReplaceLane
@@ -180,6 +182,10 @@ i16x8.splat, TokenType::Unary, Opcode::I16X8Splat
 i16x8.sub_saturate_s, TokenType::Binary, Opcode::I16X8SubSaturateS
 i16x8.sub_saturate_u, TokenType::Binary, Opcode::I16X8SubSaturateU
 i16x8.sub, TokenType::Binary, Opcode::I16X8Sub
+i16x8.widen_high_i8x16_s, TokenType::Unary, Opcode::I16X8WidenHighI8X16S
+i16x8.widen_high_i8x16_u, TokenType::Unary, Opcode::I16X8WidenHighI8X16U
+i16x8.widen_low_i8x16_s, TokenType::Unary, Opcode::I16X8WidenLowI8X16S
+i16x8.widen_low_i8x16_u, TokenType::Unary, Opcode::I16X8WidenLowI8X16U
 i16x8, TokenType::I16X8
 i32.add, TokenType::Binary, Opcode::I32Add
 i32.and, TokenType::Binary, Opcode::I32And
@@ -285,6 +291,10 @@ i32x4.sub, TokenType::Binary, Opcode::I32X4Sub
 i32x4, TokenType::I32X4
 i32x4.trunc_sat_f32x4_s, TokenType::Unary, Opcode::I32X4TruncSatF32X4S
 i32x4.trunc_sat_f32x4_u, TokenType::Unary, Opcode::I32X4TruncSatF32X4U
+i32x4.widen_high_i16x8_s, TokenType::Unary, Opcode::I32X4WidenHighI16X8S
+i32x4.widen_high_i16x8_u, TokenType::Unary, Opcode::I32X4WidenHighI16X8U
+i32x4.widen_low_i16x8_s, TokenType::Unary, Opcode::I32X4WidenLowI16X8S
+i32x4.widen_low_i16x8_u, TokenType::Unary, Opcode::I32X4WidenLowI16X8U
 i32.xor, TokenType::Binary, Opcode::I32Xor
 i64.add, TokenType::Binary, Opcode::I64Add
 i64.and, TokenType::Binary, Opcode::I64And
@@ -412,6 +422,8 @@ i8x16.load_splat, TokenType::Load, Opcode::I8X16LoadSplat
 i8x16.lt_s, TokenType::Compare, Opcode::I8X16LtS
 i8x16.lt_u, TokenType::Compare, Opcode::I8X16LtU
 i8x16.mul, TokenType::Binary, Opcode::I8X16Mul
+i8x16.narrow_i16x8_s, TokenType::Binary, Opcode::I8X16NarrowI16X8S
+i8x16.narrow_i16x8_u, TokenType::Binary, Opcode::I8X16NarrowI16X8U
 i8x16.neg, TokenType::Unary, Opcode::I8X16Neg
 i8x16.ne, TokenType::Compare, Opcode::I8X16Ne
 i8x16.replace_lane, TokenType::SimdLaneOp, Opcode::I8X16ReplaceLane

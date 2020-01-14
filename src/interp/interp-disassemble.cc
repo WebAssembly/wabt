@@ -401,6 +401,10 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32X4Mul:
       case Opcode::F64X2Mul:
       case Opcode::V8X16Swizzle:
+      case Opcode::I8X16NarrowI16X8S:
+      case Opcode::I8X16NarrowI16X8U:
+      case Opcode::I16X8NarrowI32X4S:
+      case Opcode::I16X8NarrowI32X4U:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
@@ -497,6 +501,14 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32X4TruncSatF32X4U:
       case Opcode::I64X2TruncSatF64X2S:
       case Opcode::I64X2TruncSatF64X2U:
+      case Opcode::I16X8WidenLowI8X16S:
+      case Opcode::I16X8WidenHighI8X16S:
+      case Opcode::I16X8WidenLowI8X16U:
+      case Opcode::I16X8WidenHighI8X16U:
+      case Opcode::I32X4WidenLowI16X8S:
+      case Opcode::I32X4WidenHighI16X8S:
+      case Opcode::I32X4WidenLowI16X8U:
+      case Opcode::I32X4WidenHighI16X8U:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
