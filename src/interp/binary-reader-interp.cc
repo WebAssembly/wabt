@@ -779,7 +779,7 @@ wabt::Result BinaryReaderInterp::ResolveImport(Index import_index,
                                                Index sig_index,
                                                Export** out_export) {
   Export* export_ = nullptr;
-  if (imports_.size()) {
+  if (!imports_.empty()) {
     export_ = imports_[import_index];
   } else {
     Module* module;

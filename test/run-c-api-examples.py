@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2016 WebAssembly Community Group participants
+# Copyright 2020 WebAssembly Community Group participants
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,16 +66,17 @@ def error(msg):
     sys.exit(1)
 
 
-def check_for_missing(found):
+def check_for_missing(upstream_examples):
     # Check that all the expected examples are found
 
-    basenames = [os.path.splitext(f)[0] for f in found]
-    for e in ALL_EXAMPLES:
-        if e not in basenames:
-            error('Example binary not found: %s' % e)
-    for e in basenames:
-        if e not in ALL_EXAMPLES:
-            error('Unexpected example found: %s' % e)
+    upstream_examples = set(upstream_examples)
+    all_examples = set(ALL_EXAMPLES)
+    unexpected = upstream_examples - all_examples
+    if unexpected:
+        error('Unexpected examples found: %s' % str(unexpected))
+    missing = all_examples - upstream_examples
+    if missing:
+        error('Missing example binaries not found: %s' % str(missing))
 
 
 def main(args):

@@ -41,7 +41,7 @@ Result ReadBinaryInterp(interp::Environment* env,
                         interp::DefinedModule** out_module);
 
 // Read and instantiate a module in the given environment. Similar to above but
-// using using fixed set of exports to resolve the module exports.
+// using using a fixed set of exports to resolve the module exports.
 Result ReadBinaryInterp(interp::Environment* env,
                         const void* data,
                         size_t size,
