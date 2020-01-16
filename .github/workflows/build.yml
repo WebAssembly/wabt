@@ -31,5 +31,7 @@ jobs:
       run: cmake --build out
     - name: unittests
       run: cmake --build out --target run-unittests
+    - name: c-api-tests
+      run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
