@@ -2,34 +2,34 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table_set.wast
 ;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
-out/test/spec/reference-types/table_set.wast:40: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
-out/test/spec/reference-types/table_set.wast:41: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
-out/test/spec/reference-types/table_set.wast:42: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 1
-out/test/spec/reference-types/table_set.wast:43: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 2
-out/test/spec/reference-types/table_set.wast:45: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
-out/test/spec/reference-types/table_set.wast:46: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
-out/test/spec/reference-types/table_set.wast:47: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 1
-out/test/spec/reference-types/table_set.wast:48: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 2
-out/test/spec/reference-types/table_set.wast:54: assert_invalid passed:
+out/test/spec/reference-types/table_set.wast:41: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
+out/test/spec/reference-types/table_set.wast:42: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
+out/test/spec/reference-types/table_set.wast:43: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 1
+out/test/spec/reference-types/table_set.wast:44: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 2
+out/test/spec/reference-types/table_set.wast:46: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
+out/test/spec/reference-types/table_set.wast:47: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
+out/test/spec/reference-types/table_set.wast:48: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 1
+out/test/spec/reference-types/table_set.wast:49: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 2
+out/test/spec/reference-types/table_set.wast:55: assert_invalid passed:
   error: type mismatch in table.set, expected [i32, anyref] but got []
-  000001f: error: OnTableSetExpr callback failed
-out/test/spec/reference-types/table_set.wast:63: assert_invalid passed:
+  0000022: error: OnTableSetExpr callback failed
+out/test/spec/reference-types/table_set.wast:64: assert_invalid passed:
   error: type mismatch in table.set, expected [i32, anyref] but got [nullref]
-  0000020: error: OnTableSetExpr callback failed
-out/test/spec/reference-types/table_set.wast:72: assert_invalid passed:
+  0000023: error: OnTableSetExpr callback failed
+out/test/spec/reference-types/table_set.wast:73: assert_invalid passed:
   error: type mismatch in table.set, expected [i32, anyref] but got [i32]
-  0000021: error: OnTableSetExpr callback failed
-out/test/spec/reference-types/table_set.wast:81: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, anyref] but got [f32, nullref]
-  0000025: error: OnTableSetExpr callback failed
-out/test/spec/reference-types/table_set.wast:90: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, funcref] but got [i32, anyref]
   0000024: error: OnTableSetExpr callback failed
-out/test/spec/reference-types/table_set.wast:100: assert_invalid passed:
+out/test/spec/reference-types/table_set.wast:82: assert_invalid passed:
+  error: type mismatch in table.set, expected [i32, anyref] but got [f32, nullref]
+  0000028: error: OnTableSetExpr callback failed
+out/test/spec/reference-types/table_set.wast:91: assert_invalid passed:
   error: type mismatch in table.set, expected [i32, funcref] but got [i32, anyref]
   0000027: error: OnTableSetExpr callback failed
-out/test/spec/reference-types/table_set.wast:111: assert_invalid passed:
+out/test/spec/reference-types/table_set.wast:101: assert_invalid passed:
+  error: type mismatch in table.set, expected [i32, funcref] but got [i32, anyref]
+  000002a: error: OnTableSetExpr callback failed
+out/test/spec/reference-types/table_set.wast:112: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
-  0000024: error: EndFunctionBody callback failed
+  0000027: error: EndFunctionBody callback failed
 25/25 tests passed.
 ;;; STDOUT ;;)

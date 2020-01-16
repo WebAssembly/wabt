@@ -36,4 +36,11 @@ void Features::AddOptions(OptionParser* parser) {
                     [this]() { EnableAll(); });
 }
 
+void Features::UpdateDependencies() {
+  // Reference types requires bulk memory.
+  if (reference_types_enabled_) {
+    bulk_memory_enabled_ = true;
+  }
+}
+
 }  // namespace wabt

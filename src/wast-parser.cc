@@ -222,7 +222,6 @@ bool IsCommand(TokenTypePair pair) {
     case TokenType::AssertInvalid:
     case TokenType::AssertMalformed:
     case TokenType::AssertReturn:
-    case TokenType::AssertReturnFunc:
     case TokenType::AssertTrap:
     case TokenType::AssertUnlinkable:
     case TokenType::Get:
@@ -1733,8 +1732,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Var dst(0);
       Var src(0);
       if (options_->features.reference_types_enabled()) {
+      // TODO: disabled for now, since the spec tests don't currently use.
+#if 0
         CHECK_RESULT(ParseVar(&dst));
         CHECK_RESULT(ParseVar(&src));
+#endif
       }
       out_expr->reset(new TableCopyExpr(dst, src, loc));
       break;
@@ -2174,7 +2176,8 @@ Result WastParser::ParseHostRef(Const* const_) {
 Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
   WABT_TRACE(ParseConstList);
   while (PeekMatchLpar(TokenType::Const) || PeekMatchLpar(TokenType::RefNull) ||
-         PeekMatchLpar(TokenType::RefHost)) {
+         PeekMatchLpar(TokenType::RefHost) ||
+         PeekMatchLpar(TokenType::RefFunc)) {
     Consume();
     Const const_;
     switch (Peek()) {
@@ -2186,6 +2189,14 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         ErrorUnlessOpcodeEnabled(token);
         const_.loc = GetLocation();
         const_.type = Type::Nullref;
+        const_.ref_bits = 0;
+        break;
+      }
+      case TokenType::RefFunc: {
+        auto token = Consume();
+        ErrorUnlessOpcodeEnabled(token);
+        const_.loc = GetLocation();
+        const_.type = Type::Funcref;
         const_.ref_bits = 0;
         break;
       }
@@ -2476,9 +2487,6 @@ Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
     case TokenType::AssertReturn:
       return ParseAssertReturnCommand(out_command);
 
-    case TokenType::AssertReturnFunc:
-      return ParseAssertReturnFuncCommand(out_command);
-
     case TokenType::AssertTrap:
       return ParseAssertTrapCommand(out_command);
 
@@ -2526,17 +2534,6 @@ Result WastParser::ParseAssertReturnCommand(CommandPtr* out_command) {
   auto command = MakeUnique<AssertReturnCommand>();
   CHECK_RESULT(ParseAction(&command->action));
   CHECK_RESULT(ParseConstList(&command->expected, ConstType::Expectation));
-  EXPECT(Rpar);
-  *out_command = std::move(command);
-  return Result::Ok;
-}
-
-Result WastParser::ParseAssertReturnFuncCommand(CommandPtr* out_command) {
-  WABT_TRACE(ParseAssertReturnFuncCommand);
-  EXPECT(Lpar);
-  EXPECT(AssertReturnFunc);
-  auto command = MakeUnique<AssertReturnFuncCommand>();
-  CHECK_RESULT(ParseAction(&command->action));
   EXPECT(Rpar);
   *out_command = std::move(command);
   return Result::Ok;

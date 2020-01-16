@@ -20,7 +20,6 @@ assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
 assert_malformed, TokenType::AssertMalformed
 assert_return, TokenType::AssertReturn
-assert_return_func, TokenType::AssertReturnFunc
 assert_trap, TokenType::AssertTrap
 assert_unlinkable, TokenType::AssertUnlinkable
 atomic.notify, TokenType::AtomicNotify, Opcode::AtomicNotify
