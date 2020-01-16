@@ -78,10 +78,16 @@ struct wasm_memorytype_t : wasm_externtype_t {
 struct wasm_importtype_t {};
 
 struct wasm_exporttype_t {
-  ~wasm_exporttype_t() { delete type; }
+  wasm_exporttype_t(wasm_name_t name, wasm_externtype_t* type)
+      : name(name), type(type) {}
+
+  wasm_exporttype_t(const wasm_exporttype_t& other) {
+    name = other.name;
+    type = MakeUnique<wasm_externtype_t>(*other.type.get());
+  }
 
   wasm_name_t name;
-  wasm_externtype_t* type;
+  std::unique_ptr<wasm_externtype_t> type;
 };
 
 struct wasm_engine_t {};
@@ -92,11 +98,10 @@ struct wasm_store_t {
 
   ~wasm_store_t() {
     TRACE("~store\n");
-    delete executor;
   }
 
   Environment* env;
-  Executor* executor;
+  std::unique_ptr<Executor> executor;
 };
 
 enum class WasmRefType { Extern, Module, Instance, Trap, Foreign };
@@ -180,14 +185,14 @@ struct WasmInstance {
 
   ~WasmInstance() {
     TRACE("~WasmInstance\n");
-    delete module;
   }
+
   wasm_store_t* store;
-  DefinedModule* module;
+  std::unique_ptr<DefinedModule> module;
 };
 
 struct wasm_instance_t : wasm_ref_t {
-  wasm_instance_t(wasm_store_t* store, interp::DefinedModule* module)
+  wasm_instance_t(wasm_store_t* store, DefinedModule* module)
       : wasm_ref_t(WasmRefType::Instance),
         ptr(std::make_shared<WasmInstance>(store, module)) {}
 
@@ -220,12 +225,11 @@ struct wasm_module_t : wasm_ref_t {
   ~wasm_module_t() {
     TRACE("~module\n");
     wasm_byte_vec_delete(&binary);
-    delete metadata;
   }
 
   wasm_store_t* store;
   wasm_byte_vec_t binary;
-  ModuleMetadata* metadata;
+  std::unique_ptr<ModuleMetadata> metadata;
 };
 
 struct wasm_shared_module_t : wasm_module_t {};
@@ -771,7 +775,7 @@ const wasm_name_t* wasm_exporttype_name(const wasm_exporttype_t* ex) {
 const wasm_externtype_t* wasm_exporttype_type(const wasm_exporttype_t* ex) {
   TRACE("wasm_exporttype_type %p\n", ex);
   assert(ex);
-  return ex->type;
+  return ex->type.get();
 }
 
 // wasm_instance
@@ -787,7 +791,7 @@ wasm_instance_t* wasm_instance_new(wasm_store_t* store,
   assert(store->env);
 
   Errors errors;
-  interp::DefinedModule* interp_module = nullptr;
+  DefinedModule* interp_module = nullptr;
   std::vector<interp::Export> wabt_imports;
   std::vector<interp::Export*> wabt_import_ptrs;
 
@@ -824,8 +828,7 @@ wasm_instance_t* wasm_instance_new(wasm_store_t* store,
 void wasm_instance_exports(const wasm_instance_t* instance,
                            wasm_extern_vec_t* out) {
   WasmInstance& wasm_instance = *instance->ptr.get();
-  interp::DefinedModule* module =
-      const_cast<interp::DefinedModule*>(wasm_instance.module);
+  DefinedModule* module = wasm_instance.module.get();
   size_t num_exports = module->exports.size();
   wasm_extern_vec_new_uninitialized(out, num_exports);
   TRACE("wasm_instance_exports: %" PRIzx "\n", num_exports);
@@ -972,13 +975,12 @@ wasm_trap_t* wasm_func_call(const wasm_func_t* f,
   assert(f);
   wasm_store_t* store = f->instance.get()->store;
   assert(store);
-  Executor* exec = store->executor;
   wasm_functype_t* functype = wasm_func_type(f);
   TypedValues wabt_args;
   ToWabtValues(wabt_args, args, functype->params.size);
   wasm_functype_delete(functype);
   assert(f->kind == ExternalKind::Func);
-  ExecResult res = exec->RunFunction(f->index, wabt_args);
+  ExecResult res = store->executor->RunFunction(f->index, wabt_args);
   if (!res.ok()) {
     std::string msg = ResultToString(res.result);
     TRACE("wasm_func_call failed: %s\n", msg.c_str());
