@@ -4,5 +4,5 @@
 (;; STDOUT ;;;
 init(hostref:0) =>
 deinit() =>
-13/13 tests passed.
+18/18 tests passed.
 ;;; STDOUT ;;)

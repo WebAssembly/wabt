@@ -227,7 +227,7 @@
   (; 0xfc 0x0b ;) (func (export "memory.fill") i32.const 1 i32.const 2 i32.const 3 memory.fill)
   (; 0xfc 0x0c ;) (func (export "table.init") i32.const 1 i32.const 2 i32.const 3 table.init 0)
   (; 0xfc 0x0d ;) (func (export "elem.drop") elem.drop 0)
-  (; 0xfc 0x0e ;) (func (export "table.copy") i32.const 1 i32.const 2 i32.const 3 table.copy $table1 $table1)
+  (; 0xfc 0x0e ;) (func (export "table.copy") i32.const 1 i32.const 2 i32.const 3 table.copy)
 
   ;; --enable-simd
   (; 0xfd 0x00 ;) (func (export "v128.load") i32.const 1 v128.load offset=3 drop)

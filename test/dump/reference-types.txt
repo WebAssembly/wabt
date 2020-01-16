@@ -84,10 +84,12 @@ Table[3]:
  - table[1] type=anyref initial=1
  - table[2] type=funcref initial=1
 Elem[2]:
- - segment[0] flags=2 table=2 count=1 - init i32=0
+ - segment[0] flags=0 table=0 count=1 - init i32=0
   - elem[0] = func[0]
  - segment[1] flags=5 table=0 count=1
   - elem[0] = nullref
+DataCount:
+ - data count: 0
 Code[10]:
  - func[0] size=6
  - func[1] size=6
@@ -102,45 +104,45 @@ Code[10]:
 
 Code Disassembly:
 
-000049 func[0]:
- 00004a: 41 00                      | i32.const 0
- 00004c: 25 00                      | table.get 0
- 00004e: 0b                         | end
-000050 func[1]:
- 000051: 41 00                      | i32.const 0
- 000053: 25 01                      | table.get 1
- 000055: 0b                         | end
-000057 func[2]:
- 000058: 41 00                      | i32.const 0
- 00005a: 20 00                      | local.get 0
- 00005c: 26 00                      | table.set 0
- 00005e: 0b                         | end
-000060 func[3]:
- 000061: 41 00                      | i32.const 0
- 000063: 20 00                      | local.get 0
- 000065: 26 01                      | table.set 1
- 000067: 0b                         | end
-000069 func[4]:
- 00006a: d0                         | ref.null
- 00006b: 41 00                      | i32.const 0
- 00006d: fc 0f 00                   | table.grow 0
- 000070: 0b                         | end
-000072 func[5]:
- 000073: d0                         | ref.null
- 000074: 41 00                      | i32.const 0
- 000076: fc 0f 01                   | table.grow 1
- 000079: 0b                         | end
-00007b func[6]:
- 00007c: 20 00                      | local.get 0
- 00007e: d1                         | ref.is_null
- 00007f: 0b                         | end
-000081 func[7]:
- 000082: fc 10 00                   | table.size 0
- 000085: 0b                         | end
-000087 func[8]:
- 000088: fc 10 01                   | table.size 1
- 00008b: 0b                         | end
-00008d func[9]:
- 00008e: fc 10 02                   | table.size 2
- 000091: 0b                         | end
+00004a func[0]:
+ 00004b: 41 00                      | i32.const 0
+ 00004d: 25 00                      | table.get 0
+ 00004f: 0b                         | end
+000051 func[1]:
+ 000052: 41 00                      | i32.const 0
+ 000054: 25 01                      | table.get 1
+ 000056: 0b                         | end
+000058 func[2]:
+ 000059: 41 00                      | i32.const 0
+ 00005b: 20 00                      | local.get 0
+ 00005d: 26 00                      | table.set 0
+ 00005f: 0b                         | end
+000061 func[3]:
+ 000062: 41 00                      | i32.const 0
+ 000064: 20 00                      | local.get 0
+ 000066: 26 01                      | table.set 1
+ 000068: 0b                         | end
+00006a func[4]:
+ 00006b: d0                         | ref.null
+ 00006c: 41 00                      | i32.const 0
+ 00006e: fc 0f 00                   | table.grow 0
+ 000071: 0b                         | end
+000073 func[5]:
+ 000074: d0                         | ref.null
+ 000075: 41 00                      | i32.const 0
+ 000077: fc 0f 01                   | table.grow 1
+ 00007a: 0b                         | end
+00007c func[6]:
+ 00007d: 20 00                      | local.get 0
+ 00007f: d1                         | ref.is_null
+ 000080: 0b                         | end
+000082 func[7]:
+ 000083: fc 10 00                   | table.size 0
+ 000086: 0b                         | end
+000088 func[8]:
+ 000089: fc 10 01                   | table.size 1
+ 00008c: 0b                         | end
+00008e func[9]:
+ 00008f: fc 10 02                   | table.size 2
+ 000092: 0b                         | end
 ;;; STDOUT ;;)

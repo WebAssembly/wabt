@@ -1018,23 +1018,6 @@ Result Thread::AtomicRmwCmpxchg(const uint8_t** pc) {
   return Push<ResultValueType>(static_cast<ExtendedType>(read));
 }
 
-// This function is used to clanp the bound for table.fill operations.  This
-// can be removed once the behaviour of table.fill is updated to match the
-// new bulk meory semantics, which is to trap early on OOB.
-// See: https://github.com/webassembly/bulk-memory-operations/issues/111
-static bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max) {
-  if (start > max) {
-    *length = 0;
-    return false;
-  }
-  uint32_t avail = max - start;
-  if (*length > avail) {
-    *length = avail;
-    return false;
-  }
-  return true;
-}
-
 static bool CheckBounds(uint32_t start, uint32_t length, uint32_t max) {
   if (start > max) {
     return false;
@@ -1144,15 +1127,16 @@ Result Thread::TableGet(const uint8_t** pc) {
 
 Result Thread::TableFill(const uint8_t** pc) {
   Table* table = ReadTable(pc);
-  uint32_t table_size = table->size();
   uint32_t size = Pop<uint32_t>();
   Ref value = static_cast<Ref>(Pop<Ref>());
   uint32_t dst = Pop<uint32_t>();
-  bool ok = ClampToBounds(dst, &size, table_size);
+  bool ok = CheckBounds(dst, size, table->size());
+  if (!ok) {
+    TRAP_MSG(TableAccessOutOfBounds, "table.fill out of bounds");
+  }
   for (uint32_t i = 0; i < size; i++) {
     table->entries[dst+i] = value;
   }
-  TRAP_IF(!ok, TableAccessOutOfBounds);
   return ResultType::Ok;
 }
 

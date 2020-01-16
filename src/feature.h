@@ -35,13 +35,18 @@ class Features {
 
 #define WABT_FEATURE(variable, flag, default_, help)              \
   bool variable##_enabled() const { return variable##_enabled_; } \
-  void enable_##variable() { variable##_enabled_ = true; }        \
-  void disable_##variable() { variable##_enabled_ = false; }      \
-  void set_##variable##_enabled(bool value) { variable##_enabled_ = value; }
+  void enable_##variable() { set_##variable##_enabled(true); }    \
+  void disable_##variable() { set_##variable##_enabled(false); }  \
+  void set_##variable##_enabled(bool value) {                     \
+    variable##_enabled_ = value;                                  \
+    UpdateDependencies();                                         \
+  }
 #include "src/feature.def"
 #undef WABT_FEATURE
 
  private:
+  void UpdateDependencies();
+
 #define WABT_FEATURE(variable, flag, default_, help) \
   bool variable##_enabled_ = default_;
 #include "src/feature.def"

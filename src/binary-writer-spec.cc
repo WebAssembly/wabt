@@ -130,7 +130,6 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "assert_unlinkable",
       "assert_uninstantiable",
       "assert_return",
-      "assert_return_func",
       "assert_trap",
       "assert_exhaustion",
   };
@@ -493,14 +492,6 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteKey("expected");
         WriteConstVector(assert_return_command->expected);
-        break;
-      }
-
-      case CommandType::AssertReturnFunc: {
-        auto* assert_return_command = cast<AssertReturnFuncCommand>(command);
-        WriteLocation(assert_return_command->action->loc);
-        WriteSeparator();
-        WriteAction(*assert_return_command->action);
         break;
       }
 

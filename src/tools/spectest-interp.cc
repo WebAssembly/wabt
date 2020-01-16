@@ -169,12 +169,6 @@ class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
   std::vector<ExpectedValue> expected;
 };
 
-class AssertReturnFuncCommand
-    : public CommandMixin<CommandType::AssertReturnFunc> {
- public:
-  Action action;
-};
-
 template <CommandType TypeEnum>
 class AssertTrapCommandBase : public CommandMixin<TypeEnum> {
  public:
@@ -816,13 +810,6 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT_KEY("expected");
     CHECK_RESULT(ParseExpectedValues(&command->expected));
     *out_command = std::move(command);
-  } else if (Match("\"assert_return_func\"")) {
-    auto command = MakeUnique<AssertReturnFuncCommand>();
-    EXPECT(",");
-    CHECK_RESULT(ParseLine(&command->line));
-    EXPECT(",");
-    CHECK_RESULT(ParseAction(&command->action));
-    *out_command = std::move(command);
   } else if (Match("\"assert_trap\"")) {
     auto command = MakeUnique<AssertTrapCommand>();
     EXPECT(",");
@@ -898,7 +885,6 @@ class CommandRunner {
   wabt::Result OnAssertUninstantiableCommand(
       const AssertUninstantiableCommand*);
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
-  wabt::Result OnAssertReturnFuncCommand(const AssertReturnFuncCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
 
@@ -1002,11 +988,6 @@ wabt::Result CommandRunner::Run(const Script& script) {
       case CommandType::AssertReturn:
         TallyCommand(
             OnAssertReturnCommand(cast<AssertReturnCommand>(command.get())));
-        break;
-
-      case CommandType::AssertReturnFunc:
-        TallyCommand(
-            OnAssertReturnFuncCommand(cast<AssertReturnFuncCommand>(command.get())));
         break;
 
       case CommandType::AssertTrap:
@@ -1339,35 +1320,6 @@ static bool TypedValuesAreEqual(const TypedValue& tv1, const TypedValue& tv2) {
   }
 }
 
-wabt::Result CommandRunner::OnAssertReturnFuncCommand(
-    const AssertReturnFuncCommand* command) {
-  ExecResult exec_result =
-      RunAction(command->line, &command->action, RunVerbosity::Quiet);
-
-  if (!exec_result.ok()) {
-    PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result).c_str());
-    return wabt::Result::Error;
-  }
-
-  if (exec_result.values.size() != 1) {
-    PrintError(command->line,
-               "expected 1 result in assert_return_func, got %" PRIzd,
-               exec_result.values.size());
-    return wabt::Result::Error;
-  }
-
-  const TypedValue& result = exec_result.values[0];
-  if (result.type != Type::Funcref) {
-    PrintError(command->line,
-               "mismatch in result of assert_return_func: expected %s, got %s",
-               GetTypeName(Type::Funcref), TypedValueToString(result).c_str());
-    return wabt::Result::Error;
-  }
-
-  return wabt::Result::Ok;
-}
-
 wabt::Result CommandRunner::OnAssertReturnCommand(
     const AssertReturnCommand* command) {
   ExecResult exec_result =
@@ -1412,6 +1364,13 @@ wabt::Result CommandRunner::OnAssertReturnCommand(
         PrintError(command->line, "expected result to be nan, got %s",
                    TypedValueToString(actual).c_str());
         result = wabt::Result::Error;
+      }
+    } else if (expected.value.type == Type::Funcref) {
+      if (actual.type != Type::Funcref) {
+        PrintError(command->line,
+                   "mismatch in result %" PRIzd
+                   " of assert_return: expected funcref, got %s",
+                   i, TypedValueToString(actual).c_str());
       }
     } else {
       if (!TypedValuesAreEqual(expected.value, actual)) {
