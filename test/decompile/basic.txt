@@ -16,6 +16,8 @@
 
   (data 0 (offset (i32.const 0)) "Hello, World!\n\00")
   (data 0 (offset (i32.const 100)) "abcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyz")
+  (data 0 (offset (i32.const 200)) "hi")  ;; Too short for data derived name
+  (data 0 (offset (i32.const 300)) "Hello, World!\n\00")  ;; Duplicate.
 
   (func $f (param i32 i32) (result i32) (local i64 f32 f64)
     i64.const 8
@@ -119,12 +121,14 @@ import table ns_tab3:funcref;
 table T_b:funcref(min: 0, max: 10);
 export table tab2:funcref(min: 0, max: 11);
 
-data d_a(offset: 0) = "Hello, World!\0a\00";
-data d_b(offset: 100) = 
+data d_HelloWorld(offset: 0) = "Hello, World!\0a\00";
+data d_abcdefghijklmnoqrstuvwxyzabc(offset: 100) = 
   "abcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstu"
   "vwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmno"
   "qrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghij"
   "klmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyz";
+data d_c(offset: 200) = "hi";
+data d_d(offset: 300) = "Hello, World!\0a\00";
 
 import function ns_fi();
 
@@ -132,7 +136,7 @@ export function f(a:int, b:int):int {
   var c:long = 8L;
   var d:float = 6.0f;
   var e:double = 7.0;
-  if (e < 10.0) { d_a[5@4]:int = d_a[5]:int@1 + 5 }
+  if (e < 10.0) { d_HelloWorld[5@4]:int = d_HelloWorld[5]:int@1 + 5 }
   f(a + g_b, 9);
   loop L_b {
     if (if (0) { 1 } else { 2 }) goto B_c;
