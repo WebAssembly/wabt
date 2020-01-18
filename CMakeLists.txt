@@ -589,7 +589,7 @@ if (NOT EMSCRIPTEN)
       if (NOT CMAKE_INSTALL_MANDIR)
         include(GNUInstallDirs)
       endif ()
-      file(GLOB MAN_FILES "${CMAKE_CURRENT_SOURCE_DIR}/docs/doc/*.1")
+      file(GLOB MAN_FILES "${CMAKE_CURRENT_SOURCE_DIR}/man/*.1")
       foreach(MAN_FILE ${MAN_FILES})
         install(FILES ${MAN_FILE}
           DESTINATION ${CMAKE_INSTALL_MANDIR}/man1/)
