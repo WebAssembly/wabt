@@ -5,7 +5,7 @@
 out/test/spec/reference-types/globals.wast:226: assert_trap passed: undefined table index
 out/test/spec/reference-types/globals.wast:248: assert_invalid passed:
   error: can't global.set on immutable global at index 0.
-  000002c: error: OnGlobalSetExpr callback failed
+  0000029: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:257: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
 out/test/spec/reference-types/globals.wast:262: assert_invalid passed:
@@ -43,39 +43,39 @@ out/test/spec/reference-types/globals.wast:357: assert_malformed passed:
   0000011: error: global mutability must be 0 or 1
 out/test/spec/reference-types/globals.wast:371: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000024: error: OnGlobalSetExpr callback failed
+  0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:380: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000028: error: OnGlobalSetExpr callback failed
+  0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:390: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000028: error: OnGlobalSetExpr callback failed
+  0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:400: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  000002a: error: OnGlobalSetExpr callback failed
+  0000027: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:410: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  000002d: error: OnGlobalSetExpr callback failed
+  000002a: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:420: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000028: error: OnGlobalSetExpr callback failed
+  0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:430: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000028: error: OnGlobalSetExpr callback failed
+  0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:440: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000028: error: OnGlobalSetExpr callback failed
+  0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:450: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000024: error: OnGlobalSetExpr callback failed
+  0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:459: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000024: error: OnGlobalSetExpr callback failed
+  0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:468: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  000002a: error: OnGlobalSetExpr callback failed
+  0000027: error: OnGlobalSetExpr callback failed
 out/test/spec/reference-types/globals.wast:478: assert_invalid passed:
   error: type mismatch in global.set, expected [i32] but got []
-  0000041: error: OnGlobalSetExpr callback failed
+  000003e: error: OnGlobalSetExpr callback failed
 75/75 tests passed.
 ;;; STDOUT ;;)

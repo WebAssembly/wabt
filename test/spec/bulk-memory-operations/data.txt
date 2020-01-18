@@ -3,16 +3,16 @@
 ;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 out/test/spec/bulk-memory-operations/data.wast:293: assert_invalid passed:
-  000000e: error: data section without memory section
+  000000b: error: data section without memory section
 out/test/spec/bulk-memory-operations/data.wast:302: assert_invalid passed:
-  0000016: error: expected i32 init_expr
+  0000013: error: expected i32 init_expr
 out/test/spec/bulk-memory-operations/data.wast:310: assert_invalid passed:
-  0000017: error: expected END opcode after initializer expression
+  0000014: error: expected END opcode after initializer expression
 out/test/spec/bulk-memory-operations/data.wast:318: assert_invalid passed:
-  0000015: error: unexpected opcode in initializer expression: 0x1
+  0000012: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/bulk-memory-operations/data.wast:326: assert_invalid passed:
-  0000015: error: unexpected opcode in initializer expression: 0x1
+  0000012: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/bulk-memory-operations/data.wast:334: assert_invalid passed:
-  0000017: error: expected END opcode after initializer expression
+  0000014: error: expected END opcode after initializer expression
 20/20 tests passed.
 ;;; STDOUT ;;)

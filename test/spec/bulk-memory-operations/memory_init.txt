@@ -7,8 +7,7 @@ test() =>
 test() =>
 test() =>
 out/test/spec/bulk-memory-operations/memory_init.wast:189: assert_invalid passed:
-  error: invalid data_segment_index: 0 (max 0)
-  0000027: error: OnDataDropExpr callback failed
+  0000023: error: data.drop requires data count section
 out/test/spec/bulk-memory-operations/memory_init.wast:195: assert_invalid passed:
   error: invalid data_segment_index: 4 (max 1)
   000002c: error: OnDataDropExpr callback failed
@@ -16,8 +15,7 @@ test() =>
 out/test/spec/bulk-memory-operations/memory_init.wast:216: assert_trap passed: out of bounds memory access: memory.init out of bounds
 out/test/spec/bulk-memory-operations/memory_init.wast:223: assert_trap passed: out of bounds memory access: memory.init out of bounds
 out/test/spec/bulk-memory-operations/memory_init.wast:226: assert_invalid passed:
-  error: memory.init requires an imported or defined memory.
-  000002f: error: OnMemoryInitExpr callback failed
+  000002a: error: memory.init requires data count section
 out/test/spec/bulk-memory-operations/memory_init.wast:232: assert_invalid passed:
   error: invalid data_segment_index: 1 (max 1)
   0000034: error: OnMemoryInitExpr callback failed
