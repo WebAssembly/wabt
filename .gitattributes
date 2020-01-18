@@ -9,10 +9,10 @@
 *.sh text
 *.txt text
 *.y text
-demo/primer.css binary
-demo/libwabt.js binary
-demo/third_party/codemirror/codemirror.css binary
-demo/third_party/codemirror/codemirror.js binary
+docs/demo/primer.css binary
+docs/demo/libwabt.js binary
+docs/demo/third_party/codemirror/codemirror.css binary
+docs/demo/third_party/codemirror/codemirror.js binary
 
 # Mark these tests as binary so git doesn't change the line endings:
 test/parse/bad-crlf.txt binary
