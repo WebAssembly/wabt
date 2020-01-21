@@ -4,334 +4,334 @@
 (;; STDOUT ;;;
 out/test/spec/reference-types/unreached-invalid.wast:4: assert_invalid passed:
   error: invalid local_index: 0 (max 0)
-  000001d: error: OnLocalGetExpr callback failed
+  000001a: error: OnLocalGetExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:8: assert_invalid passed:
   error: invalid global_index: 0 (max 0)
-  000001d: error: OnGlobalGetExpr callback failed
+  000001a: error: OnGlobalGetExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:12: assert_invalid passed:
-  000001d: error: invalid call function index: 1
+  000001a: error: invalid call function index: 1
 out/test/spec/reference-types/unreached-invalid.wast:16: assert_invalid passed:
   error: invalid depth: 1 (max 0)
-  000001d: error: OnBrExpr callback failed
+  000001a: error: OnBrExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:21: assert_invalid passed:
   error: type mismatch in i64.eqz, expected [i64] but got [i32]
-  000001e: error: OnConvertExpr callback failed
+  000001b: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:27: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
-  0000022: error: EndFunctionBody callback failed
+  000001f: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:33: assert_invalid passed:
   error: type mismatch in select, expected [i32, i32, i32] but got [i64, i32, i32]
-  0000026: error: OnSelectExpr callback failed
+  0000023: error: OnSelectExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:42: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  000001e: error: EndFunctionBody callback failed
+  000001b: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:46: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  000001d: error: EndFunctionBody callback failed
+  000001a: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:50: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  000001f: error: EndFunctionBody callback failed
+  000001c: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:56: assert_invalid passed:
   error: type mismatch in function, expected [] but got [any]
-  000001d: error: EndFunctionBody callback failed
+  000001a: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:60: assert_invalid passed:
   error: type mismatch in function, expected [] but got [any]
-  000001f: error: EndFunctionBody callback failed
+  000001c: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:64: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  0000021: error: EndFunctionBody callback failed
+  000001e: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:71: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  0000022: error: OnConvertExpr callback failed
+  000001f: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:77: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [f32]
-  0000024: error: OnConvertExpr callback failed
+  0000021: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:83: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32]
-  0000023: error: OnCompareExpr callback failed
+  0000020: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:89: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32, f32]
-  0000026: error: OnCompareExpr callback failed
+  0000023: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:95: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000021: error: OnEndExpr callback failed
+  000001e: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:101: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [f32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:107: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
-  0000023: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:113: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:119: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  000001f: error: EndFunctionBody callback failed
+  000001c: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:125: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [f32]
-  0000025: error: EndFunctionBody callback failed
+  0000022: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:132: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  000001f: error: OnConvertExpr callback failed
+  000001c: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:138: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [f32]
-  0000021: error: OnConvertExpr callback failed
+  000001e: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:144: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32]
-  0000020: error: OnCompareExpr callback failed
+  000001d: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:150: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32, f32]
-  0000023: error: OnCompareExpr callback failed
+  0000020: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:156: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000020: error: OnEndExpr callback failed
+  000001d: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:162: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [f32]
-  0000028: error: OnEndExpr callback failed
+  0000025: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:168: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
-  0000022: error: OnEndExpr callback failed
+  000001f: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:174: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
-  0000026: error: OnEndExpr callback failed
+  0000023: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:180: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  000001e: error: EndFunctionBody callback failed
+  000001b: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:186: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [f32]
-  0000024: error: EndFunctionBody callback failed
+  0000021: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:193: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  000001f: error: OnConvertExpr callback failed
+  000001c: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:199: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  000001f: error: OnConvertExpr callback failed
+  000001c: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:205: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  000001f: error: OnConvertExpr callback failed
+  000001c: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:211: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [f32]
-  0000021: error: OnConvertExpr callback failed
+  000001e: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:217: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32]
-  0000020: error: OnCompareExpr callback failed
+  000001d: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:223: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32, f32]
-  0000023: error: OnCompareExpr callback failed
+  0000020: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:229: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000020: error: OnEndExpr callback failed
+  000001d: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:235: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [f32]
-  0000026: error: OnEndExpr callback failed
+  0000023: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:241: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
-  0000022: error: OnEndExpr callback failed
+  000001f: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:247: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
-  0000024: error: OnEndExpr callback failed
+  0000021: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:253: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  000001e: error: EndFunctionBody callback failed
+  000001b: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:259: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [f32]
-  0000022: error: EndFunctionBody callback failed
+  000001f: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:265: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  0000021: error: OnConvertExpr callback failed
+  000001e: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:271: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  0000023: error: OnConvertExpr callback failed
+  0000020: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:277: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  0000022: error: OnConvertExpr callback failed
+  000001f: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:284: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  0000022: error: OnConvertExpr callback failed
+  000001f: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:290: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [f32]
-  0000024: error: OnConvertExpr callback failed
+  0000021: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:296: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32]
-  0000023: error: OnCompareExpr callback failed
+  0000020: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:302: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32, f32]
-  0000026: error: OnCompareExpr callback failed
+  0000023: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:308: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000023: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:314: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [... f32]
   error: type mismatch in block, expected [] but got [i32]
-  0000029: error: OnEndExpr callback failed
+  0000026: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:321: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
-  0000025: error: OnEndExpr callback failed
+  0000022: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:327: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:334: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  0000021: error: EndFunctionBody callback failed
+  000001e: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:340: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [f32]
-  0000025: error: EndFunctionBody callback failed
+  0000022: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:348: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  0000023: error: OnConvertExpr callback failed
+  0000020: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:354: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [f32]
-  0000025: error: OnConvertExpr callback failed
+  0000022: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:360: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32]
-  0000024: error: OnCompareExpr callback failed
+  0000021: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:366: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32, f32]
-  0000027: error: OnCompareExpr callback failed
+  0000024: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:372: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000024: error: OnEndExpr callback failed
+  0000021: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:378: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [... f32]
   error: type mismatch in block, expected [] but got [i32]
-  000002a: error: OnEndExpr callback failed
+  0000027: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:384: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
-  0000026: error: OnEndExpr callback failed
+  0000023: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:390: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
-  0000028: error: OnEndExpr callback failed
+  0000025: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:396: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  0000022: error: EndFunctionBody callback failed
+  000001f: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:402: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [f32]
-  0000026: error: EndFunctionBody callback failed
+  0000023: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:409: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
-  0000020: error: OnConvertExpr callback failed
+  000001d: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:415: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [f32]
-  0000024: error: OnConvertExpr callback failed
+  0000021: error: OnConvertExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:421: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32]
-  0000021: error: OnCompareExpr callback failed
+  000001e: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:427: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32, f32]
-  0000026: error: OnCompareExpr callback failed
+  0000023: error: OnCompareExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:433: assert_invalid passed:
   error: type mismatch in if true branch, expected [] but got [i32]
-  0000021: error: OnEndExpr callback failed
+  000001e: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:439: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got [f32]
-  0000025: error: OnEndExpr callback failed
+  0000022: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:445: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000023: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:451: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [f32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:457: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
-  0000023: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:463: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:470: assert_invalid passed:
   error: type mismatch in return, expected [i32] but got [f64]
-  0000028: error: OnReturnExpr callback failed
+  0000025: error: OnReturnExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:477: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [f64]
-  000002c: error: OnBrExpr callback failed
+  0000029: error: OnBrExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:484: assert_invalid passed:
   error: type mismatch in br_if, expected [i32] but got [f32]
-  0000024: error: OnBrIfExpr callback failed
+  0000021: error: OnBrIfExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:490: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:498: assert_invalid passed:
   error: type mismatch in block, expected [f32] but got [i32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:507: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:515: assert_invalid passed:
   error: type mismatch in br_table, expected [i32] but got [f32]
-  0000025: error: OnBrTableExpr callback failed
+  0000022: error: OnBrTableExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:521: assert_invalid passed:
   error: type mismatch in br_table, expected [i32] but got [f32]
-  0000028: error: OnBrTableExpr callback failed
+  0000025: error: OnBrTableExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:527: assert_invalid passed:
   error: br_table labels have inconsistent arity: expected 1 got 0
-  0000026: error: OnBrTableExpr callback failed
+  0000023: error: OnBrTableExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:540: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000023: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:546: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
-  0000023: error: EndFunctionBody callback failed
+  0000020: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:552: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
-  0000025: error: EndFunctionBody callback failed
+  0000022: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:558: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000026: error: OnEndExpr callback failed
+  0000023: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:565: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000024: error: OnEndExpr callback failed
+  0000021: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:571: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got []
-  0000025: error: OnEndExpr callback failed
+  0000022: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:577: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [i64]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:584: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000026: error: OnEndExpr callback failed
+  0000023: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:590: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got []
-  0000028: error: OnEndExpr callback failed
+  0000025: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:596: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [i64]
-  000002a: error: OnEndExpr callback failed
+  0000027: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:604: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000027: error: OnEndExpr callback failed
+  0000024: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:611: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000023: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:617: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
-  0000025: error: EndFunctionBody callback failed
+  0000022: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:623: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
-  0000027: error: EndFunctionBody callback failed
+  0000024: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:629: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000028: error: OnEndExpr callback failed
+  0000025: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:637: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
-  0000023: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:643: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
-  0000023: error: EndFunctionBody callback failed
+  0000020: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:649: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
-  0000025: error: EndFunctionBody callback failed
+  0000022: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:656: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
-  0000022: error: EndFunctionBody callback failed
+  000001f: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:662: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
-  0000023: error: EndFunctionBody callback failed
+  0000020: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:669: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
-  0000020: error: EndFunctionBody callback failed
+  000001d: error: EndFunctionBody callback failed
 out/test/spec/reference-types/unreached-invalid.wast:676: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
-  0000025: error: OnEndExpr callback failed
+  0000022: error: OnEndExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:687: assert_invalid passed:
   error: type mismatch in i64.extend_i32_u, expected [i32] but got [i64]
-  000001f: error: OnConvertExpr callback failed
+  000001c: error: OnConvertExpr callback failed
 110/110 tests passed.
 ;;; STDOUT ;;)

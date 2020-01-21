@@ -1,0 +1,28 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-bulk-memory
+;;; ARGS1: -hx
+(module
+  (memory 1)
+  (data "hi")
+  ;; No data count section, since there is no instruction that requires it.
+)
+(;; STDOUT ;;;
+
+data-count-section-removed.wasm:	file format wasm 0x1
+
+Sections:
+
+   Memory start=0x0000000a end=0x0000000d (size=0x00000003) count: 1
+     Data start=0x0000000f end=0x00000014 (size=0x00000005) count: 1
+
+Section Details:
+
+Memory[1]:
+ - memory[0] pages: initial=1
+Data[1]:
+ - segment[0] passive size=2
+  - 0000000: 6869                                     hi
+
+Code Disassembly:
+
+;;; STDOUT ;;)

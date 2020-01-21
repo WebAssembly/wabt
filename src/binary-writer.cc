@@ -165,6 +165,12 @@ class BinaryWriter {
   size_t last_subsection_offset_ = 0;
   size_t last_subsection_leb_size_guess_ = 0;
   size_t last_subsection_payload_offset_ = 0;
+
+  // Information about the data count section, so it can be removed if it is
+  // not needed.
+  size_t data_count_start_ = 0;
+  size_t data_count_end_ = 0;
+  bool has_data_segment_instruction_ = false;
 };
 
 static uint8_t log2_u32(uint32_t x) {
@@ -575,6 +581,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
           module_->GetDataSegmentIndex(cast<DataDropExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::DataDrop);
       WriteU32Leb128(stream_, index, "data.drop segment");
+      has_data_segment_instruction_ = true;
       break;
     }
     case ExprType::MemoryFill:
@@ -591,6 +598,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::MemoryInit);
       WriteU32Leb128(stream_, index, "memory.init segment");
       WriteU32Leb128(stream_, 0, "memory.init reserved");
+      has_data_segment_instruction_ = true;
       break;
     }
     case ExprType::MemorySize:
@@ -1105,10 +1113,15 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  if (options_.features.bulk_memory_enabled()) {
+  if (options_.features.bulk_memory_enabled() &&
+      module_->data_segments.size()) {
+    // Keep track of the data count section offset so it can be removed if
+    // it isn't needed.
+    data_count_start_ = stream_->offset();
     BeginKnownSection(BinarySection::DataCount);
     WriteU32Leb128(stream_, module_->data_segments.size(), "data count");
     EndSection();
+    data_count_end_ = stream_->offset();
   }
 
   if (num_funcs) {
@@ -1128,6 +1141,16 @@ Result BinaryWriter::WriteModule() {
                               "FIXUP func body size");
     }
     EndSection();
+  }
+
+  // Remove the DataCount section if there are no instructions that require it.
+  if (options_.features.bulk_memory_enabled() &&
+      !has_data_segment_instruction_) {
+    Offset size = stream_->offset() - data_count_end_;
+    if (data_count_start_ != data_count_end_) {
+      stream_->MoveData(data_count_start_, data_count_end_, size);
+    }
+    stream_->Truncate(data_count_start_ + size);
   }
 
   if (module_->data_segments.size()) {

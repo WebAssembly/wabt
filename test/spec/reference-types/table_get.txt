@@ -9,18 +9,18 @@ out/test/spec/reference-types/table_get.wast:35: assert_trap passed: out of boun
 out/test/spec/reference-types/table_get.wast:36: assert_trap passed: out of bounds table access: table.get at 4294967295 >= max value 3
 out/test/spec/reference-types/table_get.wast:42: assert_invalid passed:
   error: type mismatch in table.get, expected [i32] but got []
-  0000023: error: OnTableGetExpr callback failed
+  0000020: error: OnTableGetExpr callback failed
 out/test/spec/reference-types/table_get.wast:51: assert_invalid passed:
   error: type mismatch in table.get, expected [i32] but got [f32]
-  0000028: error: OnTableGetExpr callback failed
+  0000025: error: OnTableGetExpr callback failed
 out/test/spec/reference-types/table_get.wast:61: assert_invalid passed:
   error: type mismatch in function, expected [] but got [anyref]
-  0000025: error: EndFunctionBody callback failed
+  0000022: error: EndFunctionBody callback failed
 out/test/spec/reference-types/table_get.wast:70: assert_invalid passed:
   error: type mismatch in implicit return, expected [funcref] but got [anyref]
-  0000026: error: EndFunctionBody callback failed
+  0000023: error: EndFunctionBody callback failed
 out/test/spec/reference-types/table_get.wast:80: assert_invalid passed:
   error: type mismatch in implicit return, expected [funcref] but got [anyref]
-  0000029: error: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 15/15 tests passed.
 ;;; STDOUT ;;)

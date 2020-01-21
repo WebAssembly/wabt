@@ -70,6 +70,20 @@ void Stream::MoveData(size_t dst_offset, size_t src_offset, size_t size) {
   result_ = MoveDataImpl(dst_offset, src_offset, size);
 }
 
+void Stream::Truncate(size_t size) {
+  if (Failed(result_)) {
+    return;
+  }
+  if (log_stream_) {
+    log_stream_->Writef("; truncate to %" PRIzd " (0x%" PRIzx ")\n", size,
+                        size);
+  }
+  result_ = TruncateImpl(size);
+  if (Succeeded(result_) && offset_ > size) {
+    offset_ = size;
+  }
+}
+
 void Stream::Writef(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   WriteData(buffer, length);
@@ -195,6 +209,14 @@ Result MemoryStream::MoveDataImpl(size_t dst_offset,
   return Result::Ok;
 }
 
+Result MemoryStream::TruncateImpl(size_t size) {
+  if (size > buf_->data.size()) {
+    return Result::Error;
+  }
+  buf_->data.resize(size);
+  return Result::Ok;
+}
+
 FileStream::FileStream(string_view filename, Stream* log_stream)
     : Stream(log_stream), file_(nullptr), offset_(0), should_close_(false) {
   std::string filename_str = filename.to_string();
@@ -268,7 +290,16 @@ Result FileStream::MoveDataImpl(size_t dst_offset,
     return Result::Ok;
   }
   // TODO(binji): implement if needed.
-  ERROR0("FileWriter::MoveData not implemented!\n");
+  ERROR0("FileStream::MoveDataImpl not implemented!\n");
+  return Result::Error;
+}
+
+Result FileStream::TruncateImpl(size_t size) {
+  if (!file_) {
+    return Result::Error;
+  }
+  // TODO(binji): implement if needed.
+  ERROR0("FileStream::TruncateImpl not implemented!\n");
   return Result::Error;
 }
 

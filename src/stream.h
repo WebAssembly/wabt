@@ -77,6 +77,8 @@ class Stream {
 
   void MoveData(size_t dst_offset, size_t src_offset, size_t size);
 
+  void Truncate(size_t size);
+
   void WABT_PRINTF_FORMAT(2, 3) Writef(const char* format, ...);
 
   // Specified as uint32_t instead of uint8_t so we can check if the value
@@ -134,6 +136,7 @@ class Stream {
   virtual Result MoveDataImpl(size_t dst_offset,
                               size_t src_offset,
                               size_t size) = 0;
+  virtual Result TruncateImpl(size_t size) = 0;
 
  private:
   template <typename T>
@@ -177,6 +180,7 @@ class MemoryStream : public Stream {
   Result MoveDataImpl(size_t dst_offset,
                       size_t src_offset,
                       size_t size) override;
+  Result TruncateImpl(size_t size) override;
 
  private:
   std::unique_ptr<OutputBuffer> buf_;
@@ -203,6 +207,7 @@ class FileStream : public Stream {
   Result MoveDataImpl(size_t dst_offset,
                       size_t src_offset,
                       size_t size) override;
+  Result TruncateImpl(size_t size) override;
 
  private:
   FILE* file_;
