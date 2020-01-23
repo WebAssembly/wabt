@@ -108,7 +108,7 @@
 (;; STDOUT ;;;
 memory M_a(initial: 1, max: 0);
 
-data d_a(offset: 10) = "Hello, World!\0a\00";
+data d_HelloWorld(offset: 10) = "Hello, World!\0a\00";
 
 export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
   var c:{ a:float, b:float }
@@ -129,7 +129,7 @@ export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
   a[b]:int = a[b]:int;
   a[b + 1]:int = a[b + 1]:int;
   (a + (b << 3))[1]:int = a[b + 1]:int;
-  d_a[7]:ubyte;
+  d_HelloWorld[7]:ubyte;
 }
 
 ;;; STDOUT ;;)
