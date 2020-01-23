@@ -75,7 +75,7 @@ Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
   std::string filename_str = filename.to_string();
   const char* filename_cstr = filename_str.c_str();
 
-  if (filename.size() == 1 && filename[0] == '-') {
+  if (filename == "-") {
     return ReadStdin(out_data);
   }
 

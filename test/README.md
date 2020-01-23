@@ -105,6 +105,7 @@ The currently supported list of keys:
 - `ARGS`: additional args to pass to the executable
 - `ARGS{N}`: additional args to the Nth `RUN` command (zero-based)
 - `ARGS*`: additional args to all `RUN` commands
+- `STDIN`: name of a file to be read and used stdin of the executable
 - `ENV`: environment variables to set, separated by spaces
 - `ERROR`: the expected return value from the executable, defaults to 0
 - `SLOW`: if defined, this test's timeout is increased (currently by 3x).
