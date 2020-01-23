@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#cmakedefine WABT_VERSION_INFO "${WABT_VERSION_INFO}"
+#cmakedefine CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION}"
 
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 

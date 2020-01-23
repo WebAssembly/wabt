@@ -57,7 +57,7 @@ OptionParser::OptionParser(const char* program_name, const char* description)
     exit(0);
   });
   AddOption("version", "Print version information", []() {
-    printf("%s\n", WABT_VERSION_INFO);
+    printf("%s\n", CMAKE_PROJECT_VERSION);
     exit(0);
   });
 }
