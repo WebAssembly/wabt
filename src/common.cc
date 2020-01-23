@@ -53,27 +53,46 @@ const char* g_reloc_type_name[] = {
 };
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 
+static Result ReadStdin(std::vector<uint8_t>* out_data) {
+  out_data->resize(0);
+  uint8_t buffer[4096];
+  while (true) {
+    size_t bytes_read = fread(buffer, 1, sizeof(buffer), stdin);
+    if (bytes_read == 0) {
+      if (ferror(stdin)) {
+        fprintf(stderr, "error reading from stdin: %s\n", strerror(errno));
+        return Result::Error;
+      }
+      return Result::Ok;
+    }
+    size_t old_size = out_data->size();
+    out_data->resize(old_size + bytes_read);
+    memcpy(out_data->data() + old_size, buffer, bytes_read);
+  }
+}
+
 Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
   std::string filename_str = filename.to_string();
   const char* filename_cstr = filename_str.c_str();
 
+  if (filename == "-") {
+    return ReadStdin(out_data);
+  }
+
   struct stat statbuf;
   if (stat(filename_cstr, &statbuf) < 0) {
-    perror("stat failed");
+    fprintf(stderr, "%s: %s\n", filename_cstr, strerror(errno));
     return Result::Error;
   }
 
   if (!(statbuf.st_mode & S_IFREG)) {
-    fprintf(stderr, "%s is not a regular file.\n", filename_cstr);
+    fprintf(stderr, "%s: not a regular file\n", filename_cstr);
     return Result::Error;
   }
 
   FILE* infile = fopen(filename_cstr, "rb");
   if (!infile) {
-    const char format[] = "unable to read file %s";
-    char msg[PATH_MAX + sizeof(format)];
-    wabt_snprintf(msg, sizeof(msg), format, filename_cstr);
-    perror(msg);
+    fprintf(stderr, "%s: %s\n", filename_cstr, strerror(errno));
     return Result::Error;
   }
 
@@ -98,7 +117,7 @@ Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
 
   out_data->resize(size);
   if (size != 0 && fread(out_data->data(), size, 1, infile) != 1) {
-    perror("fread failed");
+    fprintf(stderr, "%s: fread failed: %s\n", filename_cstr, strerror(errno));
     fclose(infile);
     return Result::Error;
   }

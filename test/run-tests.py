@@ -205,6 +205,7 @@ class CommandTemplate(object):
     def __init__(self, exe):
         self.args = SplitArgs(exe)
         self.verbose_args = []
+        self.stdin = None
         self.expected_returncode = 0
 
     def AppendArgs(self, args):
@@ -219,6 +220,9 @@ class CommandTemplate(object):
                 self.verbose_args.append([])
             self.verbose_args[level] += SplitArgs(level_args)
 
+    def SetStdin(self, filename):
+        self.stdin = filename
+
     def _Format(self, cmd, variables):
         return [arg % variables for arg in cmd]
 
@@ -231,14 +235,18 @@ class CommandTemplate(object):
         if extra_args:
             args += extra_args
         args = self._Format(args, variables)
-        return Command(self, FixPythonExecutable(args))
+        stdin = self.stdin
+        if stdin:
+            stdin = stdin % variables
+        return Command(self, FixPythonExecutable(args), stdin)
 
 
 class Command(object):
 
-    def __init__(self, template, args):
+    def __init__(self, template, args, stdin):
         self.template = template
         self.args = args
+        self.stdin = stdin
 
     def GetExpectedReturncode(self):
         return self.template.expected_returncode
@@ -265,17 +273,21 @@ class Command(object):
             kwargs = {}
             if not IS_WINDOWS:
                 kwargs['preexec_fn'] = os.setsid
+            stdin_data = None
+            if self.stdin:
+                stdin_data = open(self.stdin, 'rb').read()
 
             # http://stackoverflow.com/a/10012262: subprocess with a timeout
             # http://stackoverflow.com/a/22582602: kill subprocess and children
             process = subprocess.Popen(self.args, cwd=cwd, env=env,
                                        stdout=None if console_out else subprocess.PIPE,
                                        stderr=None if console_out else subprocess.PIPE,
+                                       stdin=None if not self.stdin else subprocess.PIPE,
                                        **kwargs)
             timer = threading.Timer(timeout, KillProcess)
             try:
                 timer.start()
-                stdout, stderr = process.communicate()
+                stdout, stderr = process.communicate(input=stdin_data)
             finally:
                 returncode = process.returncode
                 process = None
@@ -472,6 +484,8 @@ class TestInfo(object):
             pass
         elif key == 'TOOL':
             self.SetTool(value)
+        elif key == 'STDIN':
+            self.GetLastCommand().SetStdin(value)
         elif key == 'ENV':
             # Pattern: FOO=1 BAR=stuff
             self.env = dict(x.split('=') for x in value.split())
