@@ -3014,32 +3014,32 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-      case Opcode::I8X16LoadSplat: {
-          CHECK_TRAP(Load<uint8_t, uint32_t>(&pc));
-          uint8_t lane_data = Pop<uint32_t>();
-          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(lane_data)));
-          break;
+      case Opcode::V8X16LoadSplat: {
+        CHECK_TRAP(Load<uint8_t, uint32_t>(&pc));
+        uint8_t lane_data = Pop<uint32_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(lane_data)));
+        break;
       }
 
-      case Opcode::I16X8LoadSplat: {
-          CHECK_TRAP(Load<uint16_t, uint32_t>(&pc));
-          uint16_t lane_data = Pop<uint32_t>();
-          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint16_t>(lane_data)));
-          break;
+      case Opcode::V16X8LoadSplat: {
+        CHECK_TRAP(Load<uint16_t, uint32_t>(&pc));
+        uint16_t lane_data = Pop<uint32_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint16_t>(lane_data)));
+        break;
       }
 
-      case Opcode::I32X4LoadSplat: {
-          CHECK_TRAP(Load<uint32_t, uint32_t>(&pc));
-          uint32_t lane_data = Pop<uint32_t>();
-          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint32_t>(lane_data)));
-          break;
+      case Opcode::V32X4LoadSplat: {
+        CHECK_TRAP(Load<uint32_t, uint32_t>(&pc));
+        uint32_t lane_data = Pop<uint32_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint32_t>(lane_data)));
+        break;
       }
 
-      case Opcode::I64X2LoadSplat: {
-          CHECK_TRAP(Load<uint64_t, uint64_t>(&pc));
-          uint64_t lane_data = Pop<uint64_t>();
-          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint64_t>(lane_data)));
-          break;
+      case Opcode::V64X2LoadSplat: {
+        CHECK_TRAP(Load<uint64_t, uint64_t>(&pc));
+        uint64_t lane_data = Pop<uint64_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint64_t>(lane_data)));
+        break;
       }
 
       case Opcode::I8X16Add:
@@ -3074,16 +3074,16 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(SimdBinop<v128, uint64_t>(Sub<uint64_t>));
         break;
 
-      case Opcode::I8X16Mul:
-        CHECK_TRAP(SimdBinop<v128, uint8_t>(Mul<uint32_t>));
-        break;
-
       case Opcode::I16X8Mul:
         CHECK_TRAP(SimdBinop<v128, uint16_t>(Mul<uint32_t>));
         break;
 
       case Opcode::I32X4Mul:
         CHECK_TRAP(SimdBinop<v128, uint32_t>(Mul<uint32_t>));
+        break;
+
+      case Opcode::I64X2Mul:
+        CHECK_TRAP(SimdBinop<v128, uint64_t>(Mul<uint64_t>));
         break;
 
       case Opcode::I8X16Neg:
@@ -3284,12 +3284,6 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-      case Opcode::I64X2AnyTrue: {
-        v128 value = PopRep<v128>();
-        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint64_t>(value, 1)));
-        break;
-      }
-
       case Opcode::I8X16AllTrue: {
         v128 value = PopRep<v128>();
         CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint8_t>(value, 16)));
@@ -3305,12 +3299,6 @@ Result Thread::Run(int num_instructions) {
       case Opcode::I32X4AllTrue: {
         v128 value = PopRep<v128>();
         CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint32_t>(value, 4)));
-        break;
-      }
-
-      case Opcode::I64X2AllTrue: {
-        v128 value = PopRep<v128>();
-        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint64_t>(value, 2)));
         break;
       }
 
@@ -3562,28 +3550,12 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(SimdUnop<v128, uint32_t>(SimdConvert<float, uint32_t>));
         break;
 
-      case Opcode::F64X2ConvertI64X2S:
-        CHECK_TRAP(SimdUnop<v128, int64_t>(SimdConvert<double, int64_t>));
-        break;
-
-      case Opcode::F64X2ConvertI64X2U:
-        CHECK_TRAP(SimdUnop<v128, uint64_t>(SimdConvert<double, uint64_t>));
-        break;
-
       case Opcode::I32X4TruncSatF32X4S:
         CHECK_TRAP(SimdUnop<v128, int32_t>(IntTruncSat<int32_t, float>));
         break;
 
       case Opcode::I32X4TruncSatF32X4U:
         CHECK_TRAP(SimdUnop<v128, uint32_t>(IntTruncSat<uint32_t, float>));
-        break;
-
-      case Opcode::I64X2TruncSatF64X2S:
-        CHECK_TRAP(SimdUnop<v128, int64_t>(IntTruncSat<int64_t, double>));
-        break;
-
-      case Opcode::I64X2TruncSatF64X2U:
-        CHECK_TRAP(SimdUnop<v128, uint64_t>(IntTruncSat<uint64_t, double>));
         break;
 
       case Opcode::RefIsNull:
@@ -3678,6 +3650,18 @@ Result Thread::Run(int num_instructions) {
       case Opcode::V128Andnot:
       case Opcode::I8X16AvgrU:
       case Opcode::I16X8AvgrU:
+      case Opcode::I8X16MinS:
+      case Opcode::I8X16MinU:
+      case Opcode::I8X16MaxS:
+      case Opcode::I8X16MaxU:
+      case Opcode::I16X8MinS:
+      case Opcode::I16X8MinU:
+      case Opcode::I16X8MaxS:
+      case Opcode::I16X8MaxU:
+      case Opcode::I32X4MinS:
+      case Opcode::I32X4MinU:
+      case Opcode::I32X4MaxS:
+      case Opcode::I32X4MaxU:
         return ResultType::NotImplemented;
 
       // The following opcodes are either never generated or should never be
