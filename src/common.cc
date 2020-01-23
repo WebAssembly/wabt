@@ -60,7 +60,7 @@ static Result ReadStdin(std::vector<uint8_t>* out_data) {
     size_t bytes_read = fread(buffer, 1, sizeof(buffer), stdin);
     if (bytes_read == 0) {
       if (ferror(stdin)) {
-        fprintf(stderr, "error reading from stdin\n");
+        fprintf(stderr, "error reading from stdin: %s\n", strerror(errno));
         return Result::Error;
       }
       return Result::Ok;
@@ -117,7 +117,7 @@ Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
 
   out_data->resize(size);
   if (size != 0 && fread(out_data->data(), size, 1, infile) != 1) {
-    fprintf(stderr, "%s: fread failed\n", filename_cstr);
+    fprintf(stderr, "%s: fread failed: %s\n", filename_cstr, strerror(errno));
     fclose(infile);
     return Result::Error;
   }
