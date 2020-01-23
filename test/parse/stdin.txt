@@ -11,7 +11,7 @@
 )
 (;; STDOUT ;;;
 
--:	file format wasm 0x1
+<stdin>:	file format wasm 0x1
 
 Section Details:
 

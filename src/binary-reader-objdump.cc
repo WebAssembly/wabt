@@ -114,6 +114,9 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
       break;
     case ObjdumpMode::Prepass: {
       string_view basename = GetBasename(options_->filename);
+      if (basename == "-") {
+        basename = "<stdin>";
+      }
       printf("%s:\tfile format wasm %#x\n", basename.to_string().c_str(),
              version);
       break;
