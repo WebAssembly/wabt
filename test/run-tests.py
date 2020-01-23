@@ -275,7 +275,7 @@ class Command(object):
                 kwargs['preexec_fn'] = os.setsid
             stdin_data = None
             if self.stdin:
-                stdin_data = open(self.stdin).read()
+                stdin_data = open(self.stdin, 'rb').read()
 
             # http://stackoverflow.com/a/10012262: subprocess with a timeout
             # http://stackoverflow.com/a/22582602: kill subprocess and children
