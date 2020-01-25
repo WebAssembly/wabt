@@ -88,8 +88,7 @@ int ProgramMain(int argc, char** argv) {
         result = ValidateModule(&module, &errors, options);
       }
       result = GenerateNames(&module,
-                             static_cast<NameOpts>(NameOpts::AlphaNames |
-                                                   NameOpts::NoDollar));
+                             static_cast<NameOpts>(NameOpts::AlphaNames));
       // Must be called after ReadBinaryIr & GenerateNames, and before
       // ApplyNames, see comments at definition.
       RenameAll(module);

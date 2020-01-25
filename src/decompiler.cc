@@ -204,12 +204,17 @@ struct Decompiler {
     }
   }
 
+  string_view VarName(string_view name) {
+    assert(!name.empty());
+    return name[0] == '$' ? name.substr(1) : name;
+  }
+
   template<ExprType T> Value Get(const VarExpr<T>& ve) {
-    return Value{{ve.var.name()}, Precedence::Atomic};
+    return Value{{std::string(VarName(ve.var.name()))}, Precedence::Atomic};
   }
 
   template<ExprType T> Value Set(Value& child, const VarExpr<T>& ve) {
-    return WrapChild(child, ve.var.name() + " = ", "", Precedence::Assign);
+    return WrapChild(child, VarName(ve.var.name()) + " = ", "", Precedence::Assign);
   }
 
   std::string TempVarName(Index n) {
@@ -221,7 +226,8 @@ struct Decompiler {
 
   std::string LocalDecl(const std::string& name, Type t) {
     auto struc = lst.GenTypeDecl(name);
-    return cat(name, ":", struc.empty() ? GetDecompTypeName(t) : struc);
+    return cat(VarName(name), ":",
+               struc.empty() ? GetDecompTypeName(t) : struc);
   }
 
   bool ConstIntVal(const Expr* e, uint64_t &dest) {
@@ -360,7 +366,7 @@ struct Decompiler {
       }
       case NodeType::Decl: {
         return Value{
-            {"var " + LocalDecl(n.u.var->name(),
+            {"var " + LocalDecl(std::string(n.u.var->name()),
                                 cur_func->GetLocalType(*n.u.var))},
             Precedence::None};
       }
@@ -368,7 +374,8 @@ struct Decompiler {
         return WrapChild(
             args[0],
             cat("var ",
-                LocalDecl(n.u.var->name(), cur_func->GetLocalType(*n.u.var)),
+                LocalDecl(std::string(n.u.var->name()),
+                          cur_func->GetLocalType(*n.u.var)),
                 " = "),
             "", Precedence::None);
       }
@@ -502,7 +509,7 @@ struct Decompiler {
       case ExprType::Block: {
         auto& val = args[0];
         val.v.push_back(
-              cat("label ", cast<BlockExpr>(n.e)->block.label, ":"));
+              cat("label ", VarName(cast<BlockExpr>(n.e)->block.label), ":"));
         // If this block is part of a larger statement scope, it doesn't
         // need its own indenting, but if its part of an exp we wrap it in {}.
         if (parent && parent->ntype != NodeType::Statements
@@ -521,7 +528,7 @@ struct Decompiler {
         auto& val = args[0];
         auto& block = cast<LoopExpr>(n.e)->block;
         IndentValue(val, indent_amount, {});
-        val.v.insert(val.v.begin(), cat("loop ", block.label, " {"));
+        val.v.insert(val.v.begin(), cat("loop ", VarName(block.label), " {"));
         val.v.push_back("}");
         val.precedence = Precedence::Atomic;
         return std::move(val);
@@ -529,13 +536,14 @@ struct Decompiler {
       case ExprType::Br: {
         auto be = cast<BrExpr>(n.e);
         return Value{{(n.u.lt == LabelType::Loop ? "continue " : "goto ") +
-                      be->var.name()},
+                      VarName(be->var.name())},
                      Precedence::None};
       }
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
         auto jmp = n.u.lt == LabelType::Loop ? "continue" : "goto";
-        return WrapChild(args[0], "if (", cat(") ", jmp, " ", bie->var.name()),
+        return WrapChild(args[0], "if (", cat(") ", jmp, " ",
+                                              VarName(bie->var.name())),
                          Precedence::None);
       }
       case ExprType::Return: {
@@ -562,11 +570,11 @@ struct Decompiler {
         auto bte = cast<BrTableExpr>(n.e);
         std::string ts = "br_table[";
         for (auto &v : bte->targets) {
-          ts += v.name();
+          ts += VarName(v.name());
           ts += ", ";
         }
         ts += "..";
-        ts += bte->default_target.name();
+        ts += VarName(bte->default_target.name());
         ts += "](";
         return WrapChild(args[0], ts, ")", Precedence::Atomic);
       }
@@ -758,7 +766,7 @@ struct Decompiler {
         if (i)
           s += ", ";
         auto t = f->GetParamType(i);
-        auto name = IndexToAlphaName(i);
+        auto name = "$" + IndexToAlphaName(i);
         s += LocalDecl(name, t);
       }
       s += ")";

@@ -247,6 +247,17 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnInitExprRefNull(Index index) override;
   Result OnInitExprRefFunc(Index index, Index func_index) override;
 
+  Result OnDataSymbol(Index index, uint32_t flags, string_view name,
+                       Index segment, uint32_t offset, uint32_t size) override;
+  Result OnFunctionSymbol(Index index, uint32_t flags, string_view name,
+                           Index func_index) override;
+  Result OnGlobalSymbol(Index index, uint32_t flags, string_view name,
+                         Index global_index) override;
+  Result OnSectionSymbol(Index index, uint32_t flags,
+                          Index section_index) override;
+  Result OnEventSymbol(Index index, uint32_t flags, string_view name,
+                        Index event_index) override;
+
  private:
   Location GetLocation() const;
   void PrintError(const char* format, ...);
@@ -1235,6 +1246,73 @@ Result BinaryReaderIR::OnEventType(Index index, Index sig_index) {
   event.decl.type_var = Var(sig_index, GetLocation());
   event.decl.sig = module_->func_types[sig_index]->sig;
   module_->AppendField(std::move(field));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnDataSymbol(Index index, uint32_t flags,
+                                    string_view name, Index segment,
+                                    uint32_t offset, uint32_t size) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (offset) {
+    // If it is pointing into the data segment, then it's not really naming
+    // the whole segment.
+    return Result::Ok;
+  }
+  DataSegment* seg = module_->data_segments[segment];
+  std::string dollar_name =
+      GetUniqueName(&module_->data_segment_bindings, MakeDollarName(name));
+  seg->name = dollar_name;
+  module_->data_segment_bindings.emplace(dollar_name, Binding(segment));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnFunctionSymbol(Index index, uint32_t flags,
+                                        string_view name, Index func_index) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  Func* func = module_->funcs[func_index];
+  if (!func->name.empty()) {
+    // The name section has already named this function.
+    return Result::Ok;
+  }
+  std::string dollar_name =
+      GetUniqueName(&module_->func_bindings, MakeDollarName(name));
+  func->name = dollar_name;
+  module_->func_bindings.emplace(dollar_name, Binding(func_index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnGlobalSymbol(Index index, uint32_t flags,
+                                      string_view name, Index global_index) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  Global* glob = module_->globals[global_index];
+  std::string dollar_name =
+      GetUniqueName(&module_->global_bindings, MakeDollarName(name));
+  glob->name = dollar_name;
+  module_->global_bindings.emplace(dollar_name, Binding(global_index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnSectionSymbol(Index index, uint32_t flags,
+                                       Index section_index) {
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnEventSymbol(Index index, uint32_t flags,
+                                     string_view name, Index event_index) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  Event* event = module_->events[event_index];
+  std::string dollar_name =
+      GetUniqueName(&module_->event_bindings, MakeDollarName(name));
+  event->name = dollar_name;
+  module_->event_bindings.emplace(dollar_name, Binding(event_index));
   return Result::Ok;
 }
 
