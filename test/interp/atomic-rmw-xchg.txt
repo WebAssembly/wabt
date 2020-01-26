@@ -102,9 +102,9 @@ i64.atomic.rmw32.xchg_u-result() => i64:1410065408
 i64.atomic.rmw32.xchg_u-memory() => i64:1
 i64.atomic.rmw.xchg-result() => i64:10000000000
 i64.atomic.rmw.xchg-memory() => i64:1
-bad_align-i32.atomic.rmw16.xchg_u() => error: atomic memory access is unaligned
-bad_align-i32.atomic.rmw.xchg() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw16.xchg_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw32.xchg_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw.xchg() => error: atomic memory access is unaligned
+bad_align-i32.atomic.rmw16.xchg_u() => error: invalid atomic access at 1+0
+bad_align-i32.atomic.rmw.xchg() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw16.xchg_u() => error: invalid atomic access at 1+0
+bad_align-i64.atomic.rmw32.xchg_u() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw.xchg() => error: invalid atomic access at 4+0
 ;;; STDOUT ;;)

@@ -19,37 +19,21 @@
 
 #include "src/common.h"
 #include "src/error.h"
+#include "src/interp/interp.h"
 
 namespace wabt {
 
-namespace interp {
-
-struct Export;
-struct DefinedModule;
-class Environment;
-
-}  // namespace interp
-
 struct ReadBinaryOptions;
 
-// Read and instantiate a module in the given environment.
-Result ReadBinaryInterp(interp::Environment* env,
-                        const void* data,
+namespace interp {
+
+Result ReadBinaryInterp(const void* data,
                         size_t size,
                         const ReadBinaryOptions& options,
                         Errors*,
-                        interp::DefinedModule** out_module);
+                        ModuleDesc* out_module);
 
-// Read and instantiate a module in the given environment. Similar to above but
-// using using a fixed set of exports to resolve the module exports.
-Result ReadBinaryInterp(interp::Environment* env,
-                        const void* data,
-                        size_t size,
-                        const ReadBinaryOptions& options,
-                        const std::vector<interp::Export*>& imports,
-                        Errors*,
-                        interp::DefinedModule** out_module);
-
+}  // namespace interp
 }  // namespace wabt
 
 #endif /* WABT_BINARY_READER_INTERP_H_ */

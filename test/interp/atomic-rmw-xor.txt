@@ -102,9 +102,9 @@ i64.atomic.rmw32.xor_u-result() => i64:1410065408
 i64.atomic.rmw32.xor_u-memory() => i64:1410064385
 i64.atomic.rmw.xor-result() => i64:10000000000
 i64.atomic.rmw.xor-memory() => i64:9999998977
-bad_align-i32.atomic.rmw16.xor_u() => error: atomic memory access is unaligned
-bad_align-i32.atomic.rmw.xor() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw16.xor_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw32.xor_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw.xor() => error: atomic memory access is unaligned
+bad_align-i32.atomic.rmw16.xor_u() => error: invalid atomic access at 1+0
+bad_align-i32.atomic.rmw.xor() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw16.xor_u() => error: invalid atomic access at 1+0
+bad_align-i64.atomic.rmw32.xor_u() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw.xor() => error: invalid atomic access at 4+0
 ;;; STDOUT ;;)

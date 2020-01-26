@@ -4,43 +4,30 @@
 (;; STDOUT ;;;
 out/test/spec/reference-types/linking.wast:28: assert_unlinkable passed:
   error: import signature mismatch
-  0000025: error: OnImportFunc callback failed
 out/test/spec/reference-types/linking.wast:32: assert_unlinkable passed:
   error: import signature mismatch
-  0000026: error: OnImportFunc callback failed
 out/test/spec/reference-types/linking.wast:87: assert_unlinkable passed:
   error: mutability mismatch in imported global, expected mutable but got immutable.
-  000001a: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:91: assert_unlinkable passed:
   error: mutability mismatch in imported global, expected immutable but got mutable.
-  0000016: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:120: assert_unlinkable passed:
   error: type mismatch in imported global, expected nullref but got funcref.
-  0000023: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:124: assert_unlinkable passed:
   error: type mismatch in imported global, expected nullref but got anyref.
-  0000022: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:128: assert_unlinkable passed:
   error: type mismatch in imported global, expected funcref but got anyref.
-  0000022: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:134: assert_unlinkable passed:
   error: type mismatch in imported global, expected funcref but got nullref.
-  0000021: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:138: assert_unlinkable passed:
   error: type mismatch in imported global, expected anyref but got nullref.
-  0000021: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:142: assert_unlinkable passed:
   error: type mismatch in imported global, expected nullref but got funcref.
-  0000021: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:146: assert_unlinkable passed:
   error: type mismatch in imported global, expected anyref but got funcref.
-  0000021: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:150: assert_unlinkable passed:
   error: type mismatch in imported global, expected nullref but got anyref.
-  0000020: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:154: assert_unlinkable passed:
   error: type mismatch in imported global, expected funcref but got anyref.
-  0000020: error: OnImportGlobal callback failed
 out/test/spec/reference-types/linking.wast:200: assert_trap passed: uninitialized table element
 out/test/spec/reference-types/linking.wast:201: assert_trap passed: uninitialized table element
 out/test/spec/reference-types/linking.wast:203: assert_trap passed: uninitialized table element
@@ -58,29 +45,21 @@ out/test/spec/reference-types/linking.wast:251: assert_trap passed: uninitialize
 out/test/spec/reference-types/linking.wast:252: assert_trap passed: uninitialized table element
 out/test/spec/reference-types/linking.wast:254: assert_trap passed: undefined table index
 out/test/spec/reference-types/linking.wast:280: assert_unlinkable passed:
-  error: unknown module field "mem"
-  0000027: error: OnImportMemory callback failed
+  error: invalid import "Mt.mem"
 out/test/spec/reference-types/linking.wast:289: assert_trap passed: uninitialized table element
 out/test/spec/reference-types/linking.wast:331: assert_unlinkable passed:
   error: type mismatch in imported table, expected funcref but got nullref.
-  0000020: error: OnImportTable callback failed
 out/test/spec/reference-types/linking.wast:335: assert_unlinkable passed:
   error: type mismatch in imported table, expected anyref but got nullref.
-  0000020: error: OnImportTable callback failed
 out/test/spec/reference-types/linking.wast:339: assert_unlinkable passed:
   error: type mismatch in imported table, expected nullref but got funcref.
-  0000020: error: OnImportTable callback failed
 out/test/spec/reference-types/linking.wast:343: assert_unlinkable passed:
   error: type mismatch in imported table, expected anyref but got funcref.
-  0000020: error: OnImportTable callback failed
 out/test/spec/reference-types/linking.wast:347: assert_unlinkable passed:
   error: type mismatch in imported table, expected nullref but got anyref.
-  000001f: error: OnImportTable callback failed
 out/test/spec/reference-types/linking.wast:351: assert_unlinkable passed:
   error: type mismatch in imported table, expected funcref but got anyref.
-  000001f: error: OnImportTable callback failed
 out/test/spec/reference-types/linking.wast:429: assert_unlinkable passed:
-  error: unknown module field "tab"
-  0000037: error: OnImportTable callback failed
+  error: invalid import "Mm.tab"
 109/109 tests passed.
 ;;; STDOUT ;;)

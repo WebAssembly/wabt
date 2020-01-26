@@ -172,9 +172,9 @@ i64.atomic.rmw.cmpxchg-true-result() => i64:10000000000
 i64.atomic.rmw.cmpxchg-true-memory() => i64:1
 i64.atomic.rmw.cmpxchg-false-result() => i64:10000000000
 i64.atomic.rmw.cmpxchg-false-memory() => i64:10000000000
-bad_align-i32.atomic.rmw16.cmpxchg_u() => error: atomic memory access is unaligned
-bad_align-i32.atomic.rmw.cmpxchg() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw16.cmpxchg_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw32.cmpxchg_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw.cmpxchg() => error: atomic memory access is unaligned
+bad_align-i32.atomic.rmw16.cmpxchg_u() => error: invalid atomic access at 1+0
+bad_align-i32.atomic.rmw.cmpxchg() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw16.cmpxchg_u() => error: invalid atomic access at 1+0
+bad_align-i64.atomic.rmw32.cmpxchg_u() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw.cmpxchg() => error: invalid atomic access at 4+0
 ;;; STDOUT ;;)

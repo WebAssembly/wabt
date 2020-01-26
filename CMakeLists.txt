@@ -307,12 +307,14 @@ set(WABT_LIBRARY_SRC
   # TODO(binji): Move this into its own library?
   src/interp/binary-reader-interp.h
   src/interp/binary-reader-interp.cc
-  src/interp/binary-reader-metadata.h
-  src/interp/binary-reader-metadata.cc
   src/interp/interp.h
   src/interp/interp.cc
-  src/interp/interp-disassemble.cc
-  src/interp/interp-trace.cc
+  src/interp/interp-inl.h
+  src/interp/interp-math.h
+  src/interp/interp-util.h
+  src/interp/interp-util.cc
+  src/interp/istream.h
+  src/interp/istream.cc
 )
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})

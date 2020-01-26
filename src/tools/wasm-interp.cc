@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -24,18 +23,13 @@
 #include <vector>
 
 #include "src/binary-reader.h"
-#include "src/cast.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/interp/binary-reader-interp.h"
+#include "src/interp/interp-util.h"
 #include "src/interp/interp.h"
-#include "src/literal.h"
 #include "src/option-parser.h"
-#include "src/resolve-names.h"
 #include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-lexer.h"
-#include "src/wast-parser.h"
 
 using namespace wabt;
 using namespace wabt::interp;
@@ -52,10 +46,7 @@ static Features s_features;
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
 
-enum class RunVerbosity {
-  Quiet = 0,
-  Verbose = 1,
-};
+static Store s_store;
 
 static const char s_description[] =
     R"(  read a file in the wasm binary format, and run in it a stack-based
@@ -117,112 +108,104 @@ static void ParseOptions(int argc, char** argv) {
   parser.Parse(argc, argv);
 }
 
-static void RunAllExports(interp::Module* module,
-                          Executor* executor,
-                          RunVerbosity verbose) {
-  TypedValues args;
-  TypedValues results;
-  for (const interp::Export& export_ : module->exports) {
-    if (export_.kind != ExternalKind::Func) {
+Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
+  Result result = Result::Ok;
+
+  auto module = s_store.UnsafeGet<Module>(instance->module());
+  auto&& module_desc = module->desc();
+
+  for (auto&& export_ : module_desc.exports) {
+    if (export_.type.type->kind != ExternalKind::Func) {
       continue;
     }
-    ExecResult exec_result = executor->RunExport(&export_, args);
-    if (verbose == RunVerbosity::Verbose) {
-      WriteCall(s_stdout_stream.get(), string_view(), export_.name, args,
-                exec_result.values, exec_result.result);
-    }
-  }
-}
-
-static wabt::Result ReadModule(const char* module_filename,
-                               Environment* env,
-                               Errors* errors,
-                               DefinedModule** out_module) {
-  wabt::Result result;
-  std::vector<uint8_t> file_data;
-
-  *out_module = nullptr;
-
-  result = ReadFile(module_filename, &file_data);
-  if (Succeeded(result)) {
-    const bool kReadDebugNames = true;
-    const bool kStopOnFirstError = true;
-    const bool kFailOnCustomSectionError = true;
-    ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                              kStopOnFirstError, kFailOnCustomSectionError);
-    result = ReadBinaryInterp(env, file_data.data(), file_data.size(), options,
-                              errors, out_module);
-
-    if (Succeeded(result)) {
-      if (s_verbose) {
-        env->DisassembleModule(s_stdout_stream.get(), *out_module);
+    auto* func_type = cast<FuncType>(export_.type.type.get());
+    if (func_type->params.empty()) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef(">>> running export \"%s\":\n",
+                               export_.type.name.c_str());
       }
+      auto func = s_store.UnsafeGet<Func>(instance->funcs()[export_.index]);
+      Values params;
+      Values results;
+      Trap::Ptr trap;
+      result |= func->Call(s_store, params, results, &trap, s_trace_stream);
+      WriteCall(s_stdout_stream.get(), export_.type.name, *func_type, params,
+                results, trap);
     }
   }
+
   return result;
 }
 
-static interp::Result PrintCallback(const HostFunc* func,
-                                    const interp::FuncSignature* sig,
-                                    const TypedValues& args,
-                                    TypedValues& results) {
-  printf("called host ");
-  WriteCall(s_stdout_stream.get(), func->module_name, func->field_name, args,
-            results, interp::ResultType::Ok);
-  return interp::ResultType::Ok;
-}
+Result ReadAndInstantiateModule(const char* module_filename,
+                                Errors* errors,
+                                Instance::Ptr* out_instance) {
+  auto* stream = s_stdout_stream.get();
+  std::vector<uint8_t> file_data;
+  CHECK_RESULT(ReadFile(module_filename, &file_data));
 
-static void InitEnvironment(Environment* env) {
-  if (s_host_print) {
-    auto* host_module = env->AppendHostModule("host");
-    host_module->on_unknown_func_export =
-        [](Environment* env, HostModule* host_module, string_view name,
-           Index sig_index) -> Index {
-      if (name != "print") {
-        return kInvalidIndex;
-      }
+  ModuleDesc module_desc;
+  const bool kReadDebugNames = true;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+  CHECK_RESULT(ReadBinaryInterp(file_data.data(), file_data.size(), options,
+                                errors, &module_desc));
 
-      return host_module->AppendFuncExport(name, sig_index, PrintCallback)
-          .second;
-    };
+  if (s_verbose) {
+    module_desc.istream.Disassemble(stream);
   }
 
-  if (s_dummy_import_func) {
-    env->on_unknown_module = [](Environment* env, string_view name) {
-      auto* host_module = env->AppendHostModule(name);
-      host_module->on_unknown_func_export =
-          [](Environment* env, HostModule* host_module, string_view name,
-             Index sig_index) -> Index {
-        return host_module->AppendFuncExport(name, sig_index, PrintCallback)
-            .second;
-      };
-      return true;
-    };
-  }
-}
+  auto module = Module::New(s_store, module_desc);
 
-static wabt::Result ReadAndRunModule(const char* module_filename) {
-  wabt::Result result;
-  Environment env(s_features);
-  InitEnvironment(&env);
+  RefVec imports;
+  for (auto&& import : module_desc.imports) {
+    if (import.type.type->kind == ExternKind::Func &&
+        ((s_host_print && import.type.module == "host" &&
+          import.type.name == "print") ||
+         s_dummy_import_func)) {
+      auto func_type = *cast<FuncType>(import.type.type.get());
+      auto import_name = StringPrintf("%s.%s", import.type.module.c_str(),
+                                      import.type.name.c_str());
 
-  Errors errors;
-  DefinedModule* module = nullptr;
-  result = ReadModule(module_filename, &env, &errors, &module);
-  FormatErrorsToFile(errors, Location::Type::Binary);
-  if (Succeeded(result)) {
-    Executor executor(&env, s_trace_stream, s_thread_options);
-    ExecResult exec_result = executor.Initialize(module);
-    if (exec_result.ok()) {
-      if (s_run_all_exports) {
-        RunAllExports(module, &executor, RunVerbosity::Verbose);
-      }
-    } else {
-      WriteResult(s_stdout_stream.get(), "error initialiazing module",
-                  exec_result.result);
-      return wabt::Result::Error;
+      auto host_func =
+          HostFunc::New(s_store, func_type,
+                        [=](const Values& params, Values& results,
+                            Trap::Ptr* trap) -> Result {
+                          printf("called host ");
+                          WriteCall(stream, import_name, func_type, params,
+                                    results, *trap);
+                          return Result::Ok;
+                        });
+      imports.push_back(host_func.ref());
+      continue;
     }
+
+    // By default, just push an null reference. This won't resolve, and
+    // instantiation will fail.
+    imports.push_back(Ref::Null);
   }
+
+  RefPtr<Trap> trap;
+  *out_instance = Instance::Instantiate(s_store, module.ref(), imports, &trap);
+  if (!*out_instance) {
+    // TODO: change to "initializing"
+    WriteTrap(stream, "error initialiazing module", trap);
+    return Result::Error;
+  }
+
+  return Result::Ok;
+}
+
+static Result ReadAndRunModule(const char* module_filename) {
+  Errors errors;
+  Instance::Ptr instance;
+  Result result = ReadAndInstantiateModule(module_filename, &errors, &instance);
+  if (Succeeded(result) && s_run_all_exports) {
+    RunAllExports(instance, &errors);
+  }
+  FormatErrorsToFile(errors, Location::Type::Binary);
   return result;
 }
 

@@ -15,101 +15,69 @@ called host spectest.print_f64(f64:24.000000) =>
 out/test/spec/bulk-memory-operations/imports.wast:91: assert_invalid passed:
   000001e: error: invalid import signature index
 out/test/spec/bulk-memory-operations/imports.wast:107: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  0000020: error: OnImportFunc callback failed
+  error: invalid import "test.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:111: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  0000024: error: OnImportFunc callback failed
+  error: invalid import "spectest.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:116: assert_unlinkable passed:
   error: import signature mismatch
-  000001e: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:120: assert_unlinkable passed:
   error: import signature mismatch
-  000001e: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:124: assert_unlinkable passed:
   error: import signature mismatch
-  000001f: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:128: assert_unlinkable passed:
   error: import signature mismatch
-  0000021: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:132: assert_unlinkable passed:
   error: import signature mismatch
-  0000022: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:136: assert_unlinkable passed:
   error: import signature mismatch
-  0000022: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:140: assert_unlinkable passed:
   error: import signature mismatch
-  0000022: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:144: assert_unlinkable passed:
   error: import signature mismatch
-  0000023: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:148: assert_unlinkable passed:
   error: import signature mismatch
-  0000022: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:152: assert_unlinkable passed:
   error: import signature mismatch
-  0000023: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:156: assert_unlinkable passed:
   error: import signature mismatch
-  0000023: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:160: assert_unlinkable passed:
   error: import signature mismatch
-  0000023: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:164: assert_unlinkable passed:
   error: import signature mismatch
-  0000024: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:168: assert_unlinkable passed:
   error: import signature mismatch
-  0000026: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:172: assert_unlinkable passed:
   error: import signature mismatch
-  0000027: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:176: assert_unlinkable passed:
   error: import signature mismatch
-  0000027: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:181: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind func, not global
-  0000024: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:185: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind func, not table
-  0000025: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:189: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind func, not memory
-  0000025: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:193: assert_unlinkable passed:
   error: expected import "spectest.global_i32" to have kind func, not global
-  0000027: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:197: assert_unlinkable passed:
   error: expected import "spectest.table" to have kind func, not table
-  0000022: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:201: assert_unlinkable passed:
   error: expected import "spectest.memory" to have kind func, not memory
-  0000023: error: OnImportFunc callback failed
 out/test/spec/bulk-memory-operations/imports.wast:235: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  000001b: error: OnImportGlobal callback failed
+  error: invalid import "test.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:239: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  000001f: error: OnImportGlobal callback failed
+  error: invalid import "spectest.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:244: assert_unlinkable passed:
   error: expected import "test.func" to have kind global, not func
-  0000018: error: OnImportGlobal callback failed
 out/test/spec/bulk-memory-operations/imports.wast:248: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind global, not table
-  0000020: error: OnImportGlobal callback failed
 out/test/spec/bulk-memory-operations/imports.wast:252: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind global, not memory
-  0000020: error: OnImportGlobal callback failed
 out/test/spec/bulk-memory-operations/imports.wast:256: assert_unlinkable passed:
   error: expected import "spectest.print_i32" to have kind global, not func
-  0000021: error: OnImportGlobal callback failed
 out/test/spec/bulk-memory-operations/imports.wast:260: assert_unlinkable passed:
   error: expected import "spectest.table" to have kind global, not table
-  000001d: error: OnImportGlobal callback failed
 out/test/spec/bulk-memory-operations/imports.wast:264: assert_unlinkable passed:
   error: expected import "spectest.memory" to have kind global, not memory
-  000001e: error: OnImportGlobal callback failed
 out/test/spec/bulk-memory-operations/imports.wast:283: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/imports.wast:286: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/imports.wast:287: assert_trap passed: undefined table index
@@ -117,95 +85,67 @@ out/test/spec/bulk-memory-operations/imports.wast:302: assert_trap passed: unini
 out/test/spec/bulk-memory-operations/imports.wast:305: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/imports.wast:306: assert_trap passed: undefined table index
 out/test/spec/bulk-memory-operations/imports.wast:310: assert_invalid passed:
-  error: unknown import module ""
-  0000011: error: OnImportTable callback failed
+  0000017: error: table count (2) must be 0 or 1
 out/test/spec/bulk-memory-operations/imports.wast:314: assert_invalid passed:
-  error: unknown import module ""
-  0000011: error: OnImportTable callback failed
+  0000014: error: table count (2) must be 0 or 1
 out/test/spec/bulk-memory-operations/imports.wast:318: assert_invalid passed:
   000000b: error: table count (2) must be 0 or 1
 out/test/spec/bulk-memory-operations/imports.wast:335: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  000001c: error: OnImportTable callback failed
+  error: invalid import "test.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:339: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  0000020: error: OnImportTable callback failed
+  error: invalid import "spectest.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:344: assert_unlinkable passed:
   error: actual size (10) smaller than declared (12)
-  0000021: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:348: assert_unlinkable passed:
   error: max size (unspecified) larger than declared (20)
-  0000022: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:352: assert_unlinkable passed:
   error: actual size (10) smaller than declared (12)
-  000001e: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:356: assert_unlinkable passed:
   error: max size (20) larger than declared (15)
-  000001f: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:361: assert_unlinkable passed:
   error: expected import "test.func" to have kind table, not func
-  0000019: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:365: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind table, not global
-  000001f: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:369: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind table, not memory
-  0000021: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:373: assert_unlinkable passed:
   error: expected import "spectest.print_i32" to have kind table, not func
-  0000022: error: OnImportTable callback failed
 out/test/spec/bulk-memory-operations/imports.wast:391: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
 out/test/spec/bulk-memory-operations/imports.wast:402: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
 out/test/spec/bulk-memory-operations/imports.wast:405: assert_invalid passed:
-  error: unknown import module ""
-  0000010: error: OnImportMemory callback failed
+  0000015: error: memory count (2) must be 0 or 1
 out/test/spec/bulk-memory-operations/imports.wast:409: assert_invalid passed:
-  error: unknown import module ""
-  0000010: error: OnImportMemory callback failed
+  0000013: error: memory count (2) must be 0 or 1
 out/test/spec/bulk-memory-operations/imports.wast:413: assert_invalid passed:
   000000b: error: memory count (2) must be 0 or 1
 out/test/spec/bulk-memory-operations/imports.wast:428: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  000001b: error: OnImportMemory callback failed
+  error: invalid import "test.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:432: assert_unlinkable passed:
-  error: unknown module field "unknown"
-  000001f: error: OnImportMemory callback failed
+  error: invalid import "spectest.unknown"
 out/test/spec/bulk-memory-operations/imports.wast:437: assert_unlinkable passed:
   error: actual size (2) smaller than declared (3)
-  0000020: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:441: assert_unlinkable passed:
   error: max size (unspecified) larger than declared (3)
-  0000021: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:445: assert_unlinkable passed:
   error: actual size (1) smaller than declared (2)
-  000001e: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:449: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
-  000001f: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:454: assert_unlinkable passed:
   error: expected import "test.func-i32" to have kind memory, not func
-  000001c: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:458: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind memory, not global
-  000001e: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:462: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind memory, not table
-  0000020: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:466: assert_unlinkable passed:
   error: expected import "spectest.print_i32" to have kind memory, not func
-  0000021: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:470: assert_unlinkable passed:
   error: expected import "spectest.global_i32" to have kind memory, not global
-  0000022: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:474: assert_unlinkable passed:
   error: expected import "spectest.table" to have kind memory, not table
-  000001d: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:479: assert_unlinkable passed:
   error: actual size (1) smaller than declared (2)
-  000001e: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:483: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
-  000001f: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/imports.wast:501: assert_malformed passed:
   out/test/spec/bulk-memory-operations/imports/imports.100.wat:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (func))
@@ -271,7 +211,6 @@ out/test/spec/bulk-memory-operations/imports.wast:564: assert_malformed passed:
   (memory 0) (import "" "" (memory 1 2))
               ^^^^^^
 out/test/spec/bulk-memory-operations/imports.wast:574: assert_unlinkable passed:
-  error: unknown module field "overloaded"
-  000004d: error: OnImportFunc callback failed
+  error: invalid import "not wasm.overloaded"
 109/109 tests passed.
 ;;; STDOUT ;;)

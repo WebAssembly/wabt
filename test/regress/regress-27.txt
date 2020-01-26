@@ -15,5 +15,5 @@ section(DATA) {
 }
 (;; STDERR ;;;
 error: type mismatch in data segment initializer expression, expected i32 but got void
-0000017: error: OnDataSegmentData callback failed
+0000012: error: EndDataSegmentInitExpr callback failed
 ;;; STDERR ;;)
