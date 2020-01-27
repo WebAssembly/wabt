@@ -35,8 +35,9 @@ already be mostly familiar with that.
 
 ### Naming.
 
-wasm-decompile, much like wasm2wat, derives names from import/export
-declarations and the name section where possible. For things that have no
+wasm-decompile, much like wasm2wat, derives names from the name section
+(preferrably), or linker symbols (if available), or import/export (if not
+available in the other 2). For things that have no
 names, names are generated starting from `a`, `b`, `c` and so forth.
 
 In addition, prefixes are used for things that are not arguments/locals:
@@ -47,6 +48,11 @@ in the case of functions using STL types may end up several hundred characters
 long. Besides removing characters not typically part of an identifier, the
 decompiler also strips common keywords/types from these in an effort to
 reduce their size.
+
+Linker symbols are typically only available in wasm .o files, though if useful
+for naming can be retained in fully linked wasm modules using the
+`--emit-reloc` flag to `wasm.ld`. This gives you names for most functions
+even when `--strip-debug` was used.
 
 ### Top level declarations.
 
@@ -98,7 +104,7 @@ These tend to be the hardest to "read" in Wasm code, as they've lost all
 context of the data structures and types the language that Wasm was compiled
 from was operating upon.
 
-wasm-decompile has a few feature to try and make these more readable.
+wasm-decompile has a few features to try and make these more readable.
 
 The basic form looks like an array indexing operation, so `o[2]:int` says: read
 element 2 from `o` when seen as an array of ints. This thus accesses 4 bytes
@@ -121,6 +127,11 @@ in such crazy ways that this "struct detection" fails, for example it falls
 back to indexing operations when there are holes or overlaps in the memory
 layout, or types are mixed, etc. This happens even more so when locals such
 as `o` are being re-used for unrelated things in memory.
+
+For accesses that are not contiguous, but at least of the same type, the
+decompiler will change the pointer type from `o:int` to e.g. `o:float_ptr` (and
+similarly, it will omit the type from the actual access, `o[2]` instead
+of `o[2]:int`).
 
 Additionally, wasm-decompile tried to clean up typical indexing operations.
 For example, when accessing any array of 32-bit elements, generated Wasm

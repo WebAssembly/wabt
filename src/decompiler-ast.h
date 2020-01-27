@@ -80,7 +80,7 @@ struct AST {
     if (f) {
       mc.BeginFunc(*f);
       for (Index i = 0; i < f->GetNumParams(); i++) {
-        auto name = IndexToAlphaName(i);
+        auto name = "$" + IndexToAlphaName(i);
         vars_defined.insert(name);
       }
     }

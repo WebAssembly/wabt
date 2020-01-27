@@ -120,8 +120,7 @@ void NameGenerator::GenerateName(const char* prefix,
                                  Index index,
                                  unsigned disambiguator,
                                  std::string* str) {
-  str->clear();
-  if (!(opts_ & NameOpts::NoDollar)) *str = "$";
+  *str = "$";
   *str += prefix;
   if (index != kInvalidIndex) {
     if (opts_ & NameOpts::AlphaNames) {

@@ -1,6 +1,5 @@
-;;; TOOL: run-gen-wasm
-;;; ARGS2: --generate-names
-;; NOTE: same test as in test/decompile/names.txt
+;;; TOOL: run-gen-wasm-decompile
+;; NOTE: same test as in test/binary/names.txt
 magic
 version
 section(TYPE) {
@@ -55,7 +54,7 @@ section(DATA) {
   ;; These can only be named thru symbols.
   memory_index[0]
   offset[i32.const 0 end]
-  data[str("foo")]
+  data[str("Hello, World!")]
   memory_index[0]
   offset[i32.const 10 end]
   data[str("bar")]
@@ -92,23 +91,26 @@ section("linking") {
   }
 }
 (;; STDOUT ;;;
-(module $M0
-  (type $t0 (func (result i32)))
-  (type $t1 (func))
-  (func $F0 (type $t0) (result i32)
-    (local $L0 i32)
-    local.get $L0)
-  (func $F1_NS (type $t1))
-  (func $F2_SYM (type $t1))
-  (func $F3_EXPORT (type $t1))
-  (memory $M0 0)
-  (global $G0_SYM i32 (i32.const 0))
-  (global $G1_EXPORT i32 (i32.const 0))
-  (export "F1_EXPORT" (func $F1_NS))
-  (export "F2_EXPORT" (func $F2_SYM))
-  (export "F3_EXPORT" (func $F3_EXPORT))
-  (export "G0_EXPORT" (global 0))
-  (export "G1_EXPORT" (global 1))
-  (data $D0_SYM (i32.const 0) "foo")
-  (data $D1_SYM (i32.const 10) "bar"))
+memory M_a(initial: 0, max: 0);
+
+global G0_SYM:int = 0;
+export global G1_EXPORT:int = 0;
+
+data D0_SYM(offset: 0) = "Hello, World!";
+data D1_SYM(offset: 10) = "bar";
+
+function F0():int {
+  var L0:int;
+  return L0;
+}
+
+function F1_NS() {
+}
+
+function F2_SYM() {
+}
+
+export function F3_EXPORT() {
+}
+
 ;;; STDOUT ;;)

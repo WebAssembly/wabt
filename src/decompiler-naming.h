@@ -119,6 +119,11 @@ enum {
 void RenameToContents(std::vector<DataSegment*>& segs, BindingHash& bh) {
   std::string s;
   for (auto seg : segs) {
+    if (seg->name.substr(0, 2) != "d_") {
+      // This segment was named explicitly by a symbol.
+      // FIXME: this is not a great check, a symbol could start with d_.
+      continue;
+    }
     s = "d_";
     for (auto c : seg->data) {
       if (isalnum(c) || c == '_') {
@@ -183,10 +188,19 @@ void RenameAll(Module& module) {
     { "4096ul" },
   };
   RenameToIdentifiers(module.funcs, module.func_bindings, &filter);
-  // Also do this for some other kinds of names.
+  // Also do this for some other kinds of names, but without the keyword
+  // substitution.
   RenameToIdentifiers(module.globals, module.global_bindings, nullptr);
   RenameToIdentifiers(module.tables, module.table_bindings, nullptr);
-
+  RenameToIdentifiers(module.events, module.event_bindings, nullptr);
+  RenameToIdentifiers(module.exports, module.export_bindings, nullptr);
+  RenameToIdentifiers(module.func_types, module.func_type_bindings, nullptr);
+  RenameToIdentifiers(module.memories, module.memory_bindings, nullptr);
+  RenameToIdentifiers(module.data_segments, module.data_segment_bindings,
+                      nullptr);
+  RenameToIdentifiers(module.elem_segments, module.elem_segment_bindings,
+                      nullptr);
+  // Special purpose naming for data segments.
   RenameToContents(module.data_segments, module.data_segment_bindings);
 }
 
