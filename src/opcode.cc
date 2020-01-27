@@ -191,7 +191,6 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I16X8Sub:
     case Opcode::I32X4Sub:
     case Opcode::I64X2Sub:
-    case Opcode::I8X16Mul:
     case Opcode::I16X8Mul:
     case Opcode::I32X4Mul:
     case Opcode::I8X16Neg:
@@ -226,11 +225,9 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I8X16AnyTrue:
     case Opcode::I16X8AnyTrue:
     case Opcode::I32X4AnyTrue:
-    case Opcode::I64X2AnyTrue:
     case Opcode::I8X16AllTrue:
     case Opcode::I16X8AllTrue:
     case Opcode::I32X4AllTrue:
-    case Opcode::I64X2AllTrue:
     case Opcode::I8X16Eq:
     case Opcode::I16X8Eq:
     case Opcode::I32X4Eq:
@@ -293,18 +290,14 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::F64X2Sqrt:
     case Opcode::F32X4ConvertI32X4S:
     case Opcode::F32X4ConvertI32X4U:
-    case Opcode::F64X2ConvertI64X2S:
-    case Opcode::F64X2ConvertI64X2U:
     case Opcode::I32X4TruncSatF32X4S:
     case Opcode::I32X4TruncSatF32X4U:
-    case Opcode::I64X2TruncSatF64X2S:
-    case Opcode::I64X2TruncSatF64X2U:
     case Opcode::V8X16Swizzle:
     case Opcode::V8X16Shuffle:
-    case Opcode::I8X16LoadSplat:
-    case Opcode::I16X8LoadSplat:
-    case Opcode::I32X4LoadSplat:
-    case Opcode::I64X2LoadSplat:
+    case Opcode::V8X16LoadSplat:
+    case Opcode::V16X8LoadSplat:
+    case Opcode::V32X4LoadSplat:
+    case Opcode::V64X2LoadSplat:
       return features.simd_enabled();
 
     case Opcode::MemoryInit:

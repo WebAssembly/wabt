@@ -12,25 +12,25 @@
     i32.const 4
     v128.load)
 
-  ;; i8x16 load_splat
-  (func (export "i8x16_load_splat_0") (result v128)
+  ;; v8x16 load_splat
+  (func (export "v8x16_load_splat_0") (result v128)
     i32.const 6
-    i8x16.load_splat)
+    v8x16.load_splat)
 
-  ;; i16x8 load_splat
-  (func (export "i16x8_load_splat_0") (result v128)
+  ;; v16x8 load_splat
+  (func (export "v16x8_load_splat_0") (result v128)
     i32.const 6
-    i16x8.load_splat)
+    v16x8.load_splat)
 
-  ;; i32x4 load_splat
-  (func (export "i32x4_load_splat_0") (result v128)
+  ;; v32x4 load_splat
+  (func (export "v32x4_load_splat_0") (result v128)
     i32.const 4
-    i32x4.load_splat)
+    v32x4.load_splat)
 
-  ;; i64x2 load_splat
-  (func (export "i64x2_load_splat_0") (result v128)
+  ;; v64x2 load_splat
+  (func (export "v64x2_load_splat_0") (result v128)
     i32.const 0
-    i64x2.load_splat)
+    v64x2.load_splat)
 
   ;; v128 store
   (func (export "v128_store_0") (result v128)
@@ -42,9 +42,9 @@
 )
 (;; STDOUT ;;;
 v128_load_0() => v128 i32x4:0x41ce0000 0x00000000 0x408fff00 0xffffffff
-i8x16_load_splat_0() => v128 i32x4:0xcececece 0xcececece 0xcececece 0xcececece
-i16x8_load_splat_0() => v128 i32x4:0x41ce41ce 0x41ce41ce 0x41ce41ce 0x41ce41ce
-i32x4_load_splat_0() => v128 i32x4:0x41ce0000 0x41ce0000 0x41ce0000 0x41ce0000
-i64x2_load_splat_0() => v128 i32x4:0xffffffff 0x41ce0000 0xffffffff 0x41ce0000
+v8x16_load_splat_0() => v128 i32x4:0xcececece 0xcececece 0xcececece 0xcececece
+v16x8_load_splat_0() => v128 i32x4:0x41ce41ce 0x41ce41ce 0x41ce41ce 0x41ce41ce
+v32x4_load_splat_0() => v128 i32x4:0x41ce0000 0x41ce0000 0x41ce0000 0x41ce0000
+v64x2_load_splat_0() => v128 i32x4:0xffffffff 0x41ce0000 0xffffffff 0x41ce0000
 v128_store_0() => v128 i32x4:0x11223344 0x55667788 0x99aabbcc 0xddeeff00
 ;;; STDOUT ;;)
