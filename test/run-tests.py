@@ -36,7 +36,7 @@ IS_WINDOWS = sys.platform == 'win32'
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(TEST_DIR)
 OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
-DEFAULT_TIMEOUT = 10    # seconds
+DEFAULT_TIMEOUT = 120    # seconds
 SLOW_TIMEOUT_MULTIPLIER = 3
 
 
@@ -293,7 +293,7 @@ class Command(object):
                 process = None
                 timer.cancel()
             if is_timeout.Get():
-                raise Error('TIMEOUT\nSTDOUT:\n%s\nSTDERR:\n%s\n' % (stdout, stderr))
+                raise Error('TIMEOUT')
             duration = time.time() - start_time
         except OSError as e:
             raise Error(str(e))
@@ -973,8 +973,13 @@ def main(args):
     if status.failed:
         sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
         for info, result in status.failed_tests:
-            last_cmd = result.GetLastCommand() if result is not None else ''
-            sys.stderr.write('- %s\n    %s\n' % (info.GetName(), last_cmd))
+            if isinstance(result, TestResult):
+                msg = result.GetLastCommand()
+            elif isinstance(result, Error):
+                msg = result
+            else:
+                msg = ''
+            sys.stderr.write('- %s\n    %s\n' % (info.GetName(), msg))
         ret = 1
 
     return ret
