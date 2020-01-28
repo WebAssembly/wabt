@@ -1255,6 +1255,10 @@ Result BinaryReaderIR::OnDataSymbol(Index index, uint32_t flags,
   if (name.empty()) {
     return Result::Ok;
   }
+  if (flags & WABT_SYMBOL_FLAG_UNDEFINED) {
+    // Refers to data in another file, `segment` not valid.
+    return Result::Ok;
+  }
   if (offset) {
     // If it is pointing into the data segment, then it's not really naming
     // the whole segment.
