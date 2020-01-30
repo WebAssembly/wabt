@@ -19,6 +19,8 @@
 
 #include "src/decompiler-ast.h"
 
+#include <set>
+
 namespace wabt {
 
 inline void RenameToIdentifier(std::string& name, Index i,

@@ -102,6 +102,17 @@
     call_indirect
     i32.const 0
   )
+  (func $g (param) (result) (local i32)
+    ;; This is rare, but requires special handling: uses of local outside scope
+    ;; of first definition.
+    loop
+      i32.const 1
+      tee_local 0
+      br_if 0
+    end
+    get_local 0
+    drop
+  )
   ;; LLD outputs a name section with de-mangled C++ function signatures as names,
   ;; so have to make sure special chars get removed.
   (func (export "void signature-&<>(int a)") (param) (result))
@@ -169,13 +180,22 @@ export function f(a:int, b:int):int {
   return 0;
 }
 
+function f_c() {
+  var a:int;
+  loop L_a {
+    a = 1;
+    if (a) continue L_a;
+  }
+  a;
+}
+
 function signature() {
 }
 
 function signature_1() {
 }
 
-function f_e() {
+function f_f() {
 }
 
 ;;; STDOUT ;;)
