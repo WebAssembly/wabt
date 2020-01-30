@@ -22,7 +22,7 @@
 #include "src/ir.h"
 #include "src/ir-util.h"
 
-#include <set>
+#include <map>
 
 namespace wabt {
 
@@ -81,7 +81,7 @@ struct AST {
       mc.BeginFunc(*f);
       for (Index i = 0; i < f->GetNumParams(); i++) {
         auto name = "$" + IndexToAlphaName(i);
-        vars_defined.insert(name);
+        vars_defined.insert({ name, { 0, false }});
       }
     }
   }
@@ -107,16 +107,25 @@ struct AST {
   }
 
   template<ExprType T> void Get(const VarExpr<T>& ve, bool local) {
-    if (local && vars_defined.insert(ve.var.name()).second) {
-      // Use before def, may happen since locals are guaranteed 0.
-      PreDecl(ve);
+    if (local) {
+      auto ret = vars_defined.insert({ ve.var.name(), { cur_block_id, false }});
+      if (ret.second) {
+        // Use before def, may happen since locals are guaranteed 0.
+        PreDecl(ve);
+      } else if (blocks_closed[ret.first->second.block_id]) {
+        // This is a use of a variable that was defined in a block that has
+        // already ended. This happens rarely, but we should cater for this
+        // case by lifting it to the top scope.
+        PreDecl(ve);
+      }
     }
     InsertNode(NodeType::Expr, T, &ve, 0);
   }
 
   template<ExprType T> void Set(const VarExpr<T>& ve, bool local) {
     // Seen this var before?
-    if (local && vars_defined.insert(ve.var.name()).second) {
+    if (local &&
+        vars_defined.insert({ ve.var.name(), { cur_block_id, false }}).second) {
       if (value_stack_depth == 1) {
         // Top level, declare it here.
         InsertNode(NodeType::DeclInit, ExprType::Nop, nullptr, 1).u.var =
@@ -206,6 +215,9 @@ struct AST {
   }
 
   void Construct(const ExprList& es, Index nresults, bool is_function_body) {
+    block_stack.push_back(cur_block_id);
+    cur_block_id = blocks_closed.size();
+    blocks_closed.push_back(false);
     auto start = exp_stack.size();
     auto value_stack_depth_start = value_stack_depth;
     auto value_stack_in_variables = value_stack_depth;
@@ -328,6 +340,9 @@ struct AST {
           InsertNode(NodeType::EndReturn, ExprType::Nop, nullptr, nresults);
         }
       }
+      // TODO: these predecls are always at top level, but in the case of
+      // use inside an exp, it be nice to do it in the current block. Can't
+      // do that for predecls that are "out if scope" however.
       std::move(predecls.begin(), predecls.end(),
                 std::back_inserter(exp_stack));
       std::rotate(exp_stack.begin(), exp_stack.end() - predecls.size(),
@@ -340,6 +355,9 @@ struct AST {
     if (size != 1) {
       InsertNode(NodeType::Statements, ExprType::Nop, nullptr, size);
     }
+    blocks_closed[cur_block_id] = true;
+    cur_block_id = block_stack.back();
+    block_stack.pop_back();
   }
 
   ModuleContext& mc;
@@ -347,8 +365,12 @@ struct AST {
   std::vector<Node> predecls;
   const Func *f;
   int value_stack_depth = 0;
-  std::set<std::string> vars_defined;
+  struct Variable { size_t block_id; bool defined; };
+  std::map<std::string, Variable> vars_defined;
   Index flushed_vars = 0;
+  size_t cur_block_id = 0;
+  std::vector<size_t> block_stack;
+  std::vector<bool> blocks_closed;
 };
 
 }  // namespace wabt

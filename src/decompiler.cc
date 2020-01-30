@@ -365,19 +365,26 @@ struct Decompiler {
         return WrapNAry(args, "return ", "", Precedence::None);
       }
       case NodeType::Decl: {
+        cur_ast->vars_defined[n.u.var->name()].defined = true;
         return Value{
             {"var " + LocalDecl(std::string(n.u.var->name()),
                                 cur_func->GetLocalType(*n.u.var))},
             Precedence::None};
       }
       case NodeType::DeclInit: {
-        return WrapChild(
-            args[0],
-            cat("var ",
-                LocalDecl(std::string(n.u.var->name()),
-                          cur_func->GetLocalType(*n.u.var)),
-                " = "),
-            "", Precedence::None);
+        if (cur_ast->vars_defined[n.u.var->name()].defined) {
+          // This has already been pre-declared, output as assign.
+          return WrapChild(args[0], cat(VarName(n.u.var->name()), " = "), "",
+                           Precedence::None);
+        } else {
+          return WrapChild(
+              args[0],
+              cat("var ",
+                  LocalDecl(std::string(n.u.var->name()),
+                            cur_func->GetLocalType(*n.u.var)),
+                  " = "),
+              "", Precedence::None);
+        }
       }
       case NodeType::Expr:
         // We're going to fall thru to the second switch to deal with ExprType.
@@ -756,6 +763,7 @@ struct Decompiler {
       auto is_import =
           CheckImportExport(s, ExternalKind::Func, func_index, f->name);
       AST ast(mc, f);
+      cur_ast = &ast;
       if (!is_import) {
         ast.Construct(f->exprs, f->GetNumResults(), true);
         lst.Track(ast.exp_stack[0]);
@@ -799,6 +807,8 @@ struct Decompiler {
       mc.EndFunc();
       lst.Clear();
       func_index++;
+      cur_ast = nullptr;
+      cur_func = nullptr;
     }
     return s;
   }
@@ -808,6 +818,7 @@ struct Decompiler {
   size_t indent_amount = 2;
   size_t target_exp_width = 70;
   const Func* cur_func = nullptr;
+  AST* cur_ast = nullptr;
   LoadStoreTracking lst;
 };
 
