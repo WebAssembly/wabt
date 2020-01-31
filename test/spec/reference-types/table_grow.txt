@@ -8,25 +8,25 @@ out/test/spec/reference-types/table_grow.wast:22: assert_trap passed: out of bou
 out/test/spec/reference-types/table_grow.wast:23: assert_trap passed: out of bounds table access: table.get at 1 >= max value 1
 out/test/spec/reference-types/table_grow.wast:34: assert_trap passed: out of bounds table access: table.set at 5 >= max value 5
 out/test/spec/reference-types/table_grow.wast:35: assert_trap passed: out of bounds table access: table.get at 5 >= max value 5
-out/test/spec/reference-types/table_grow.wast:109: assert_invalid passed:
+out/test/spec/reference-types/table_grow.wast:111: assert_invalid passed:
   error: type mismatch in table.grow, expected [anyref, i32] but got []
   0000021: error: OnTableGrowExpr callback failed
-out/test/spec/reference-types/table_grow.wast:118: assert_invalid passed:
+out/test/spec/reference-types/table_grow.wast:120: assert_invalid passed:
   error: type mismatch in table.grow, expected [anyref, i32] but got [nullref]
   0000022: error: OnTableGrowExpr callback failed
-out/test/spec/reference-types/table_grow.wast:127: assert_invalid passed:
+out/test/spec/reference-types/table_grow.wast:129: assert_invalid passed:
   error: type mismatch in table.grow, expected [anyref, i32] but got [i32]
   0000023: error: OnTableGrowExpr callback failed
-out/test/spec/reference-types/table_grow.wast:136: assert_invalid passed:
+out/test/spec/reference-types/table_grow.wast:138: assert_invalid passed:
   error: type mismatch in table.grow, expected [anyref, i32] but got [nullref, f32]
   0000027: error: OnTableGrowExpr callback failed
-out/test/spec/reference-types/table_grow.wast:145: assert_invalid passed:
+out/test/spec/reference-types/table_grow.wast:147: assert_invalid passed:
   error: type mismatch in table.grow, expected [funcref, i32] but got [anyref, i32]
   0000026: error: OnTableGrowExpr callback failed
-out/test/spec/reference-types/table_grow.wast:155: assert_invalid passed:
+out/test/spec/reference-types/table_grow.wast:157: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
   0000024: error: EndFunctionBody callback failed
-out/test/spec/reference-types/table_grow.wast:164: assert_invalid passed:
+out/test/spec/reference-types/table_grow.wast:166: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got [i32]
   0000025: error: EndFunctionBody callback failed
 45/45 tests passed.

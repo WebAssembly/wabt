@@ -5,6 +5,8 @@
   (import "foo" "i64_global" (global i64))
   (import "foo" "f32_global" (global f32))
   (import "foo" "f64_global" (global f64))
+  (table 10 funcref)
+  (elem declare func $foo)
 
   (global i32 (i32.const 1))
   (global i64 (i64.const 2))

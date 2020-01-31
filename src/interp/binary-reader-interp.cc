@@ -71,6 +71,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Implement BinaryReader.
   bool OnError(const Error&) override;
 
+  wabt::Result EndModule() override;
+
   wabt::Result OnTypeCount(Index count) override;
   wabt::Result OnType(Index index,
                       Index param_count,
@@ -358,10 +360,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Values cached so they can be shared between callbacks.
   TypedValue init_expr_value_;
   IstreamOffset table_offset_ = 0;
-  uint8_t segment_flags_ = 0;
+  SegmentFlags segment_flags_ = SegFlagsNone;
   Index segment_table_index_ = kInvalidIndex;
   ElemSegment* elem_segment_ = nullptr;
   ElemSegmentInfo* elem_segment_info_ = nullptr;
+  std::vector<bool> declared_funcs_;
+  std::vector<Index> init_expr_funcs_;
   bool has_table = false;
 };
 
@@ -645,6 +649,20 @@ bool BinaryReaderInterp::OnError(const Error& error) {
   return true;
 }
 
+wabt::Result BinaryReaderInterp::EndModule() {
+  // Verify that any ref.func used in init expressions for globals are
+  // mentioned in an elems section.  This can't be done while process the
+  // globals because the global section comes before the elem section.
+  for (Index func_index : init_expr_funcs_) {
+    if (!declared_funcs_[func_index]) {
+      PrintError("function is not declared in any elem sections: %" PRIindex,
+                 func_index);
+      return wabt::Result::Error;
+    }
+  }
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::OnTypeCount(Index count) {
   Index sig_count = env_->GetFuncSignatureCount();
   sig_index_mapping_.resize(count);
@@ -919,6 +937,7 @@ wabt::Result BinaryReaderInterp::OnFunctionCount(Index count) {
   for (Index i = 0; i < count; ++i)
     func_index_mapping_.push_back(env_->GetFuncCount() + i);
   func_fixups_.resize(count);
+  declared_funcs_.resize(count);
   return wabt::Result::Ok;
 }
 
@@ -1037,6 +1056,7 @@ wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
 
 wabt::Result BinaryReaderInterp::OnInitExprRefFunc(Index index, Index func_index) {
   init_expr_value_.type = Type::Funcref;
+  init_expr_funcs_.push_back(func_index);
   init_expr_value_.set_ref({RefType::Func, TranslateFuncIndexToEnv(func_index)});
   return wabt::Result::Ok;
 }
@@ -1103,7 +1123,7 @@ wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
                                                   Index table_index,
                                                   uint8_t flags,
                                                   Type elem_type) {
-  segment_flags_ = flags;
+  segment_flags_ = static_cast<SegmentFlags>(flags);
   segment_table_index_ = table_index;
   return wabt::Result::Ok;
 }
@@ -1130,7 +1150,7 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
                                                             Index count) {
-  elem_segment_ = env_->EmplaceBackElemSegment();
+  elem_segment_ = env_->EmplaceBackElemSegment(segment_flags_);
   if (segment_flags_ & SegPassive) {
     elem_segment_info_ = nullptr;
   } else {
@@ -1163,6 +1183,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
     return wabt::Result::Error;
   }
 
+  declared_funcs_[func_index] = true;
   func_index = TranslateFuncIndexToEnv(func_index);
 
   if (segment_flags_ & SegPassive) {
@@ -1183,7 +1204,7 @@ wabt::Result BinaryReaderInterp::OnDataCount(Index count) {
 wabt::Result BinaryReaderInterp::BeginDataSegment(Index index,
                                                   Index memory_index,
                                                   uint8_t flags) {
-  segment_flags_ = flags;
+  segment_flags_ = static_cast<SegmentFlags>(flags);
   return wabt::Result::Ok;
 }
 
@@ -1784,6 +1805,11 @@ wabt::Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
 }
 
 wabt::Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
+  if (!declared_funcs_[func_index]) {
+    PrintError("function is not declared in any elem sections: %" PRIindex,
+               func_index);
+    return wabt::Result::Error;
+  }
   CHECK_RESULT(typechecker_.OnRefFuncExpr(func_index));
   CHECK_RESULT(EmitOpcode(Opcode::RefFunc));
   CHECK_RESULT(EmitI32(TranslateFuncIndexToEnv(func_index)));

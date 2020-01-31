@@ -2,18 +2,20 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/elem.wast
 ;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
-out/test/spec/reference-types/elem.wast:300: assert_invalid passed:
+out/test/spec/reference-types/elem.wast:320: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/reference-types/elem.wast:330: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/reference-types/elem.wast:335: assert_invalid passed:
   0000015: error: elem section without table section
-out/test/spec/reference-types/elem.wast:310: assert_invalid passed:
+out/test/spec/reference-types/elem.wast:345: assert_invalid passed:
   0000014: error: expected i32 init_expr
-out/test/spec/reference-types/elem.wast:318: assert_invalid passed:
+out/test/spec/reference-types/elem.wast:353: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/reference-types/elem.wast:326: assert_invalid passed:
+out/test/spec/reference-types/elem.wast:361: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/reference-types/elem.wast:334: assert_invalid passed:
+out/test/spec/reference-types/elem.wast:369: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/reference-types/elem.wast:342: assert_invalid passed:
+out/test/spec/reference-types/elem.wast:377: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/reference-types/elem.wast:405: assert_trap passed: uninitialized table element
-31/31 tests passed.
+out/test/spec/reference-types/elem.wast:440: assert_trap passed: uninitialized table element
+33/33 tests passed.
 ;;; STDOUT ;;)
