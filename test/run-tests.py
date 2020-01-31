@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
 import difflib
 import fnmatch
@@ -524,17 +523,7 @@ class TestInfo(object):
                 else:
                     m = re.match(b'\\s*;;;(.*)$', line)
                     if m:
-                        # The matched string has type bytes, but in python2
-                        # that is the same as str. In python3 that needs to be
-                        # decoded first. If we decode the string in python2 the
-                        # result is a unicode string, which doesn't work
-                        # everywhere (as used in a subprocess environment, for
-                        # example).
-                        if sys.version_info.major == 3:
-                            directive = m.group(1).decode('utf-8').strip()
-                        else:
-                            directive = m.group(1).strip()
-
+                        directive = m.group(1).decode('utf-8').strip()
                         if state == 'header':
                             key, value = directive.split(':', 1)
                             key = key.strip()

@@ -15,12 +15,8 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+import io
 import json
 import os
 import re
@@ -97,8 +93,7 @@ def MangleTypes(types):
 def MangleName(s):
     def Mangle(match):
         s = match.group(0)
-        c = ord(s) if isinstance(s, str) else s[0]  # Python2 vs Python3
-        return b'Z%02X' % c
+        return b'Z%02X' % s[0]
 
     # NOTE(binji): Z is not allowed.
     pattern = b'([^_a-zA-Y0-9])'
@@ -381,7 +376,7 @@ def main(args):
             with open(options.prefix) as prefix_file:
                 prefix = prefix_file.read() + '\n'
 
-        output = StringIO()
+        output = io.StringIO()
         cwriter = CWriter(spec_json, prefix, output, out_dir)
         cwriter.Write()
 
@@ -417,12 +412,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    try:
-        sys.exit(main(sys.argv[1:]))
-    except Error as e:
-        # TODO(binji): gcc will output unicode quotes in errors since the terminal
-        # environment allows it, but python2 stderr will always attempt to convert
-        # to ascii first, which fails. This will replace the invalid characters
-        # instead, which is ugly, but works.
-        sys.stderr.write(u'{0}\n'.format(e).encode('ascii', 'replace'))
-        sys.exit(1)
+    sys.exit(main(sys.argv[1:]))

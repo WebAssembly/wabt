@@ -15,12 +15,8 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+import io
 import os
 import sys
 
@@ -52,7 +48,7 @@ def main(args):
     options = arg_parser.parse_args(args)
 
     section_name = None
-    output = StringIO()
+    output = io.StringIO()
 
     output.write('/* Generated from \'%s\' by wasm2c_tmpl.py, do not edit! */\n' %
                  os.path.basename(options.file))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
 import os
 import sys

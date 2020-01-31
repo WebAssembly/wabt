@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -18,10 +18,7 @@
 """Convert a JSON descrption of a spec test into a JavaScript."""
 
 import argparse
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+import io
 import json
 import os
 import re
@@ -524,7 +521,7 @@ def main(args):
                 new_module_filename = extender.Extend(wasm_path, assert_commands)
                 module_command['filename'] = new_module_filename
 
-        output = StringIO()
+        output = io.StringIO()
         if options.prefix:
             with open(options.prefix) as prefix_file:
                 output.write(prefix_file.read())
