@@ -341,6 +341,7 @@ if (NOT EMSCRIPTEN)
     endif ()
   endif ()
 
+  include(CMakeParseArguments)
   function(wabt_executable)
     cmake_parse_arguments(EXE "WITH_LIBM;INSTALL" "NAME" "SOURCES;LIBS" ${ARGN})
 
