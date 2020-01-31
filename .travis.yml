@@ -1,4 +1,5 @@
 language: cpp
+dist: xenial
 before_install:
   - eval "${MATRIX_EVAL}"
   - scripts/travis-before-install.sh
@@ -9,11 +10,9 @@ matrix:
   include:
     - name: gcc
       os: linux
-      dist: trusty
       compiler: gcc
     - name: gcc-i686
       os: linux
-      dist: trusty
       sudo: required
       addons:
         apt:
@@ -23,27 +22,22 @@ matrix:
       compiler: gcc-i686
     - name: clang-release
       os: linux
-      dist: trusty
       compiler: clang
       env: WABT_DEPLOY=clang-release
     - name: asan
       os: linux
-      dist: trusty
       compiler: clang
       env: SANITIZER=asan
 # Disabled because MSAN seems to have stopped working on Travis.
 #    - os: linux
-#      dist: trusty
 #      compiler: clang
 #      env: SANITIZER=msan
     - name: lsan
       os: linux
-      dist: trusty
       compiler: clang
       env: SANITIZER=lsan
     - name: ubsan
       os: linux
-      dist: trusty
       compiler: clang
       env: SANITIZER=ubsan
     - name: osx
