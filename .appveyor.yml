@@ -1,7 +1,8 @@
 ---
 
 init:
-  - set PATH=C:\Python27\Scripts;%PATH%             # while python's bin is already in PATH, but pip.exe in Scripts\ dir isn't
+  # AppVeyor default is python2, but we want python 3
+  - set PATH=C:\Python36;C:\Python36\Scripts;%PATH%
   - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%
   # Python doesn't seem to be able to import files from the current script's
   # directory on Windows.
