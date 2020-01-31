@@ -7,6 +7,8 @@ All end-to-end tests are written using a text format that is parsed by
 `test/run-tests.py`. All files with the extension `.txt` recursively under the
 `test` directory will be run as tests.
 
+The test runner itself is written in python and requires python 3.5 or above.
+
 ## Running the test suite
 
 To run all the tests with default configuration:
