@@ -16,9 +16,7 @@
 #
 
 if [[ ${TRAVIS_OS_NAME} = "linux" ]]; then
-  sudo apt-get update -qq
-  sudo apt-get install -qq gcc-4.8-multilib g++-4.8-multilib -y
-  sudo pip install flake8
+  pip install --user flake8
 elif [[ ${TRAVIS_OS_NAME} = "osx" ]]; then
   brew update
 else
