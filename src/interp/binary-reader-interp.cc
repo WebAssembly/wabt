@@ -361,7 +361,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   uint8_t segment_flags_ = 0;
   Index segment_table_index_ = kInvalidIndex;
   ElemSegment* elem_segment_ = nullptr;
-  ElemSegmentInfo* elem_segment_info_ = nullptr;
   bool has_table = false;
 };
 
@@ -1130,14 +1129,13 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
                                                             Index count) {
-  elem_segment_ = env_->EmplaceBackElemSegment();
   if (segment_flags_ & SegPassive) {
-    elem_segment_info_ = nullptr;
+    elem_segment_ = env_->EmplaceBackElemSegment();
   } else {
     assert(segment_table_index_ != kInvalidIndex);
     Table* table = GetTableByModuleIndex(segment_table_index_);
-    module_->active_elem_segments_.emplace_back(table, table_offset_);
-    elem_segment_info_ = &module_->active_elem_segments_.back();
+    elem_segment_ = env_->EmplaceBackElemSegment(table, table_offset_);
+    module_->active_elem_segments_.push_back(env_->GetElemSegmentCount() - 1);
   }
   return wabt::Result::Ok;
 }
@@ -1145,11 +1143,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
     Index segment_index) {
   assert(segment_flags_ & SegUseElemExprs);
-  if (segment_flags_ & SegPassive) {
-    elem_segment_->elems.push_back({RefType::Null, kInvalidIndex});
-  } else {
-    elem_segment_info_->src.push_back({RefType::Null, kInvalidIndex});
-  }
+  elem_segment_->elems.push_back({RefType::Null, kInvalidIndex});
   return wabt::Result::Ok;
 }
 
@@ -1165,11 +1159,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
 
   func_index = TranslateFuncIndexToEnv(func_index);
 
-  if (segment_flags_ & SegPassive) {
-    elem_segment_->elems.push_back({RefType::Func, func_index});
-  } else {
-    elem_segment_info_->src.push_back({RefType::Func, func_index});
-  }
+  elem_segment_->elems.push_back({RefType::Func, func_index});
   return wabt::Result::Ok;
 }
 
@@ -1195,12 +1185,9 @@ wabt::Result BinaryReaderInterp::BeginDataSegmentInitExpr(Index index) {
 wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
                                                    const void* src_data,
                                                    Address size) {
-  DataSegment* segment = env_->EmplaceBackDataSegment();
+  DataSegment* segment;
   if (segment_flags_ & SegPassive) {
-    segment->data.resize(size);
-    if (size > 0) {
-      memcpy(segment->data.data(), src_data, size);
-    }
+    segment = env_->EmplaceBackDataSegment();
   } else {
     if (init_expr_value_.type != Type::I32) {
       PrintError(
@@ -1213,12 +1200,12 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
     assert(module_->memory_index != kInvalidIndex);
     Memory* memory = env_->GetMemory(module_->memory_index);
     Address address = init_expr_value_.value.i32;
-    module_->active_data_segments_.emplace_back(memory, address);
-    auto& segment = module_->active_data_segments_.back();
-    if (size > 0) {
-      segment.data.resize(size);
-      memcpy(segment.data.data(), src_data, size);
-    }
+    segment = env_->EmplaceBackDataSegment(memory, address);
+    module_->active_data_segments_.push_back(env_->GetDataSegmentCount() - 1);
+  }
+  if (size > 0) {
+    segment->data.resize(size);
+    memcpy(segment->data.data(), src_data, size);
   }
   return wabt::Result::Ok;
 }

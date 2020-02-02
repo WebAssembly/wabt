@@ -3749,9 +3749,10 @@ Result Executor::InitializeSegments(DefinedModule* module) {
   }
 
   for (; pass <= Init; ++pass) {
-    for (const ElemSegmentInfo& info : module->active_elem_segments_) {
+    for (Index i : module->active_elem_segments_) {
+      ElemSegment& info = *env_->GetElemSegment(i);
       uint32_t table_size = info.table->size();
-      uint32_t segment_size = info.src.size();
+      uint32_t segment_size = info.elems.size();
       uint32_t copy_size = segment_size;
       if (!CheckBounds(info.dst, copy_size, table_size)) {
         TRAP_MSG(TableAccessOutOfBounds,
@@ -3762,12 +3763,14 @@ Result Executor::InitializeSegments(DefinedModule* module) {
       }
 
       if (pass == Init && copy_size > 0) {
-        std::copy(info.src.begin(), info.src.begin() + copy_size,
+        std::copy(info.elems.begin(), info.elems.begin() + copy_size,
                   info.table->entries.begin() + info.dst);
+        info.elems.clear();
       }
     }
 
-    for (const DataSegmentInfo& info : module->active_data_segments_) {
+    for (Index i: module->active_data_segments_) {
+      DataSegment& info = *env_->GetDataSegment(i);
       uint32_t memory_size = info.memory->data.size();
       uint32_t segment_size = info.data.size();
       uint32_t copy_size = segment_size;
@@ -3782,6 +3785,7 @@ Result Executor::InitializeSegments(DefinedModule* module) {
       if (pass == Init && copy_size > 0) {
         std::copy(info.data.begin(), info.data.begin() + copy_size,
                   info.memory->data.begin() + info.dst);
+        info.data.clear();
       }
     }
   }

@@ -146,32 +146,20 @@ struct Memory {
 
 struct DataSegment {
   DataSegment() = default;
+  DataSegment(Memory* memory, Address dst) : memory(memory), dst(dst) {}
 
+  Memory* memory = nullptr;
+  Address dst = 0;
   std::vector<char> data;
 };
 
 struct ElemSegment {
   ElemSegment() = default;
+  ElemSegment(Table* table, Index dst) : table(table), dst(dst) {}
 
+  Table* table = nullptr;
+  Index dst = 0;
   std::vector<Ref> elems;
-};
-
-struct ElemSegmentInfo {
-  ElemSegmentInfo(Table* table, Index dst) : table(table), dst(dst) {}
-
-  Table* table;
-  Index dst;
-  std::vector<Ref> src;
-};
-
-struct DataSegmentInfo {
-  DataSegmentInfo(Memory* memory,
-                  Address dst)
-      : memory(memory), dst(dst) {}
-
-  Memory* memory;
-  Address dst;
-  std::vector<char> data;
 };
 
 // Opaque handle to a host object.
@@ -386,15 +374,8 @@ struct DefinedModule : Module {
   IstreamOffset istream_start;
   IstreamOffset istream_end;
 
-  // Changes to linear memory and tables should not apply if a validation error
-  // occurs; these vectors cache the changes that must be applied after we know
-  // that there are no validation errors.
-  //
-  // Note that this behavior changed after the bulk memory proposal; in that
-  // case each segment is initialized as it is encountered. If one fails, then
-  // no further segments are processed.
-  std::vector<ElemSegmentInfo> active_elem_segments_;
-  std::vector<DataSegmentInfo> active_data_segments_;
+  std::vector<Index> active_elem_segments_;
+  std::vector<Index> active_data_segments_;
 };
 
 struct HostModule : Module {
