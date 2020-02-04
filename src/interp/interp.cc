@@ -3769,7 +3769,7 @@ Result Executor::InitializeSegments(DefinedModule* module) {
       }
     }
 
-    for (Index i: module->active_data_segments_) {
+    for (Index i : module->active_data_segments_) {
       DataSegment& info = *env_->GetDataSegment(i);
       uint32_t memory_size = info.memory->data.size();
       uint32_t segment_size = info.data.size();
