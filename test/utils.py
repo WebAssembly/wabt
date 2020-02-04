@@ -140,9 +140,6 @@ def ChangeDir(path, new_dir):
 
 
 def Hexdump(data):
-    if type(data) is str:
-        data = bytearray(data, 'ascii')
-
     DUMP_OCTETS_PER_LINE = 16
     DUMP_OCTETS_PER_GROUP = 2
 
@@ -154,7 +151,7 @@ def Hexdump(data):
         line_end = p + DUMP_OCTETS_PER_LINE
         line = '%07x: ' % p
         while p < line_end:
-            for i in xrange(DUMP_OCTETS_PER_GROUP):
+            for i in range(DUMP_OCTETS_PER_GROUP):
                 if p < end:
                     line += '%02x' % data[p]
                 else:
@@ -163,7 +160,7 @@ def Hexdump(data):
             line += ' '
         line += ' '
         p = line_start
-        for i in xrange(DUMP_OCTETS_PER_LINE):
+        for i in range(DUMP_OCTETS_PER_LINE):
             if p >= end:
                 break
             x = data[p]
