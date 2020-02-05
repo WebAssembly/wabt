@@ -273,7 +273,8 @@ Result Validator::CheckVar(Index max_index,
 
 Result Validator::CheckDeclaredFunc(const Var* var) {
   Index index;
-  CHECK_RESULT(CheckVar(current_module_->funcs.size(), var, "function", &index));
+  CHECK_RESULT(
+      CheckVar(current_module_->funcs.size(), var, "function", &index));
   if (!declared_funcs_[index]) {
     PrintError(&var->loc, "function is not declared in any elem sections");
     return Result::Error;
@@ -1309,7 +1310,6 @@ void Validator::MarkDeclaredFunctions() {
       }
     }
   }
-
 }
 
 Result Validator::CheckModule(const Module* module) {
