@@ -130,6 +130,7 @@ class Validator : public ExprVisitor::Delegate {
                   const char* desc,
                   Index* out_index);
   Result CheckFuncVar(const Var* var, const Func** out_func);
+  Result CheckDeclaredFunc(const Var* var);
   Result CheckGlobalVar(const Var* var,
                         const Global** out_global,
                         Index* out_global_index);
@@ -204,6 +205,7 @@ class Validator : public ExprVisitor::Delegate {
 
   void CheckEvent(const Location* loc, const Event* Event);
   Result CheckEventVar(const Var* var, const Event** out_event);
+  void MarkDeclaredFunctions();
 
   const ValidateOptions& options_;
   Errors* errors_ = nullptr;
@@ -216,6 +218,7 @@ class Validator : public ExprVisitor::Delegate {
   Index num_imported_globals_ = 0;
   Index current_event_index_ = 0;
   TypeChecker typechecker_;
+  std::vector<bool> declared_funcs_;
   // Cached for access by OnTypecheckerError.
   const Location* expr_loc_ = nullptr;
   Result result_ = Result::Ok;
@@ -266,6 +269,17 @@ Result Validator::CheckVar(Index max_index,
              "%s variable out of range: %" PRIindex " (max %" PRIindex ")",
              desc, var->index(), max_index - 1);
   return Result::Error;
+}
+
+Result Validator::CheckDeclaredFunc(const Var* var) {
+  Index index;
+  CHECK_RESULT(
+      CheckVar(current_module_->funcs.size(), var, "function", &index));
+  if (!declared_funcs_[index]) {
+    PrintError(&var->loc, "function is not declared in any elem sections");
+    return Result::Error;
+  }
+  return Result::Ok;
 }
 
 Result Validator::CheckFuncVar(const Var* var, const Func** out_func) {
@@ -824,7 +838,9 @@ Result Validator::OnRefFuncExpr(RefFuncExpr* expr) {
   expr_loc_ = &expr->loc;
   const Func* callee;
   if (Succeeded(CheckFuncVar(&expr->var, &callee))) {
-    typechecker_.OnRefFuncExpr(expr->var.index());
+    if (Succeeded(CheckDeclaredFunc(&expr->var))) {
+      typechecker_.OnRefFuncExpr(expr->var.index());
+    }
   }
   return Result::Ok;
 }
@@ -1072,9 +1088,17 @@ void Validator::CheckConstInitExpr(const Location* loc,
         break;
       }
 
-      case ExprType::RefFunc:
+      case ExprType::RefFunc: {
+        const Func* ref_func = nullptr;
+        if (Failed(CheckFuncVar(&cast<RefFuncExpr>(expr)->var, &ref_func))) {
+          return;
+        }
+        if (Failed(CheckDeclaredFunc(&cast<RefFuncExpr>(expr)->var))) {
+          return;
+        }
         type = Type::Funcref;
         break;
+      }
 
       case ExprType::RefNull:
         type = Type::Nullref;
@@ -1154,7 +1178,7 @@ void Validator::CheckElemSegments(const Module* module) {
         }
       }
 
-      if (elem_segment.kind == SegmentKind::Passive) {
+      if (elem_segment.kind != SegmentKind::Active) {
         continue;
       }
       if (Failed(CheckTableVar(&elem_segment.table_var, nullptr))) {
@@ -1274,6 +1298,20 @@ void Validator::CheckDuplicateExportBindings(const Module* module) {
       });
 }
 
+void Validator::MarkDeclaredFunctions() {
+  declared_funcs_.resize(current_module_->funcs.size());
+  for (const ElemSegment* seg : current_module_->elem_segments) {
+    for (const ElemExpr& expr : seg->elem_exprs) {
+      if (expr.kind == ElemExprKind::RefFunc) {
+        Index func_index = expr.var.index();
+        if (func_index < declared_funcs_.size()) {
+          declared_funcs_[func_index] = true;
+        }
+      }
+    }
+  }
+}
+
 Result Validator::CheckModule(const Module* module) {
   bool seen_start = false;
 
@@ -1283,6 +1321,7 @@ Result Validator::CheckModule(const Module* module) {
   current_global_index_ = 0;
   num_imported_globals_ = 0;
   current_event_index_ = 0;
+  MarkDeclaredFunctions();
 
   for (const ModuleField& field : module->fields) {
     switch (field.type()) {

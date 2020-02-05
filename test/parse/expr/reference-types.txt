@@ -6,6 +6,7 @@
   (table $bar 1 anyref)
   (table $baz 1 anyfunc)
   (table $qux 1 nullref)
+  (elem declare func 0)
 
   (func (result anyref)
     i32.const 0

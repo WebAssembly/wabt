@@ -646,23 +646,28 @@ Result WastParser::ParseVarList(VarVector* out_var_list) {
 
 bool WastParser::ParseElemExprOpt(ElemExpr* out_elem_expr) {
   Location loc = GetLocation();
-  if (MatchLpar(TokenType::RefNull)) {
+  bool item = MatchLpar(TokenType::Item);
+  bool lpar = Match(TokenType::Lpar);
+  if (Match(TokenType::RefNull)) {
     if (!(options_->features.bulk_memory_enabled() ||
           options_->features.reference_types_enabled())) {
       Error(loc, "ref.null not allowed");
     }
     *out_elem_expr = ElemExpr();
-    EXPECT(Rpar);
-    return true;
-  } else if (MatchLpar(TokenType::RefFunc)) {
+  } else if (Match(TokenType::RefFunc)) {
     Var var;
     CHECK_RESULT(ParseVar(&var));
     *out_elem_expr = ElemExpr(var);
-    EXPECT(Rpar);
-    return true;
   } else {
     return false;
   }
+  if (lpar) {
+    EXPECT(Rpar);
+  }
+  if (item) {
+    EXPECT(Rpar);
+  }
+  return true;
 }
 
 bool WastParser::ParseElemExprListOpt(ElemExprVector* out_list) {
@@ -989,6 +994,10 @@ Result WastParser::ParseElemModuleField(Module* module) {
     segment_name = "";
   }
   auto field = MakeUnique<ElemSegmentModuleField>(loc, segment_name);
+  if (options_->features.reference_types_enabled() &&
+      Match(TokenType::Declare)) {
+    field->elem_segment.kind = SegmentKind::Declared;
+  }
 
   // Optional table specifier
   if (options_->features.bulk_memory_enabled()) {
@@ -1008,7 +1017,8 @@ Result WastParser::ParseElemModuleField(Module* module) {
     }
   }
 
-  if (!ParseOffsetExprOpt(&field->elem_segment.offset)) {
+  if ((field->elem_segment.kind != SegmentKind::Declared) &&
+      !ParseOffsetExprOpt(&field->elem_segment.offset)) {
     field->elem_segment.kind = SegmentKind::Passive;
   }
 

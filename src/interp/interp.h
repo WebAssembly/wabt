@@ -151,8 +151,9 @@ struct DataSegment {
 };
 
 struct ElemSegment {
-  ElemSegment() = default;
+  explicit ElemSegment(SegmentFlags flags) : flags(flags) {}
 
+  SegmentFlags flags = SegFlagsNone;
   std::vector<Ref> elems;
 };
 

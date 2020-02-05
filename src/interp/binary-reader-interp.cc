@@ -71,6 +71,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Implement BinaryReader.
   bool OnError(const Error&) override;
 
+  wabt::Result EndModule() override;
+
   wabt::Result OnTypeCount(Index count) override;
   wabt::Result OnType(Index index,
                       Index param_count,
@@ -209,6 +211,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                uint32_t alignment_log2,
                                Address offset) override;
 
+  wabt::Result BeginElemSection(Offset size) override;
   wabt::Result OnElemSegmentCount(Index count) override;
   wabt::Result BeginElemSegment(Index index,
                                 Index table_index,
@@ -299,6 +302,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result FixupTopLabel();
   wabt::Result EmitFuncOffset(DefinedFunc* func, Index func_index);
 
+  wabt::Result CheckDeclaredFunc(Index func_index);
   wabt::Result CheckLocal(Index local_index);
   wabt::Result CheckGlobal(Index global_index);
   wabt::Result CheckGlobalType(GlobalType actual,
@@ -316,7 +320,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result CheckAlign(uint32_t alignment_log2, Address natural_alignment);
   wabt::Result CheckAtomicAlign(uint32_t alignment_log2,
                                 Address natural_alignment);
-  wabt::Result CheckInFunction();
 
   wabt::Result AppendExport(Module* module,
                             ExternalKind kind,
@@ -358,10 +361,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Values cached so they can be shared between callbacks.
   TypedValue init_expr_value_;
   IstreamOffset table_offset_ = 0;
-  uint8_t segment_flags_ = 0;
+  SegmentFlags segment_flags_ = SegFlagsNone;
   Index segment_table_index_ = kInvalidIndex;
   ElemSegment* elem_segment_ = nullptr;
   ElemSegmentInfo* elem_segment_info_ = nullptr;
+  std::vector<bool> declared_funcs_;
+  std::vector<Index> init_expr_funcs_;
   bool has_table = false;
 };
 
@@ -643,6 +648,25 @@ wabt::Result BinaryReaderInterp::EmitFuncOffset(DefinedFunc* func,
 bool BinaryReaderInterp::OnError(const Error& error) {
   errors_->push_back(error);
   return true;
+}
+
+wabt::Result BinaryReaderInterp::CheckDeclaredFunc(Index func_index) {
+  if (func_index >= declared_funcs_.size() || !declared_funcs_[func_index]) {
+    PrintError("function is not declared in any elem sections: %" PRIindex,
+               func_index);
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::EndModule() {
+  // Verify that any ref.func used in init expressions for globals are
+  // mentioned in an elems section.  This can't be done while process the
+  // globals because the global section comes before the elem section.
+  for (Index func_index : init_expr_funcs_) {
+    CHECK_RESULT(CheckDeclaredFunc(func_index));
+  }
+  return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnTypeCount(Index count) {
@@ -1037,6 +1061,7 @@ wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
 
 wabt::Result BinaryReaderInterp::OnInitExprRefFunc(Index index, Index func_index) {
   init_expr_value_.type = Type::Funcref;
+  init_expr_funcs_.push_back(func_index);
   init_expr_value_.set_ref({RefType::Func, TranslateFuncIndexToEnv(func_index)});
   return wabt::Result::Ok;
 }
@@ -1092,6 +1117,15 @@ wabt::Result BinaryReaderInterp::OnStartFunction(Index func_index) {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::BeginElemSection(Offset size) {
+  // Delay resizing `declared_funcs_` until we we know the total range of
+  // function indexes (not until after imports sections is read) and that
+  // an elem section exists (therefore the possiblity of declared functions).
+  Index max_func_index = func_index_mapping_.size();
+  declared_funcs_.resize(max_func_index);
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::OnElemSegmentCount(Index count) {
   for (Index i = 0; i < count; ++i) {
     elem_segment_index_mapping_.push_back(env_->GetElemSegmentCount() + i);
@@ -1103,7 +1137,7 @@ wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
                                                   Index table_index,
                                                   uint8_t flags,
                                                   Type elem_type) {
-  segment_flags_ = flags;
+  segment_flags_ = static_cast<SegmentFlags>(flags);
   segment_table_index_ = table_index;
   return wabt::Result::Ok;
 }
@@ -1130,7 +1164,7 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
                                                             Index count) {
-  elem_segment_ = env_->EmplaceBackElemSegment();
+  elem_segment_ = env_->EmplaceBackElemSegment(segment_flags_);
   if (segment_flags_ & SegPassive) {
     elem_segment_info_ = nullptr;
   } else {
@@ -1163,6 +1197,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
     return wabt::Result::Error;
   }
 
+  declared_funcs_[func_index] = true;
   func_index = TranslateFuncIndexToEnv(func_index);
 
   if (segment_flags_ & SegPassive) {
@@ -1183,7 +1218,7 @@ wabt::Result BinaryReaderInterp::OnDataCount(Index count) {
 wabt::Result BinaryReaderInterp::BeginDataSegment(Index index,
                                                   Index memory_index,
                                                   uint8_t flags) {
-  segment_flags_ = flags;
+  segment_flags_ = static_cast<SegmentFlags>(flags);
   return wabt::Result::Ok;
 }
 
@@ -1784,6 +1819,7 @@ wabt::Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
 }
 
 wabt::Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
+  CHECK_RESULT(CheckDeclaredFunc(func_index));
   CHECK_RESULT(typechecker_.OnRefFuncExpr(func_index));
   CHECK_RESULT(EmitOpcode(Opcode::RefFunc));
   CHECK_RESULT(EmitI32(TranslateFuncIndexToEnv(func_index)));

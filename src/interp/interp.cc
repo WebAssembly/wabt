@@ -1087,6 +1087,9 @@ Result Thread::MemoryFill(const uint8_t** pc) {
 Result Thread::TableInit(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   ElemSegment* segment = ReadElemSegment(pc);
+  if (segment->flags == SegDeclared) {
+    TRAP_MSG(TableAccessOutOfBounds, "table.init out of bounds");
+  }
   uint32_t segment_size = segment->elems.size();
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();

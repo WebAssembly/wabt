@@ -1066,7 +1066,7 @@ Result BinaryWriter::WriteModule() {
       uint8_t flags = segment->GetFlags(module_);
       stream_->WriteU8(flags, "segment flags");
       // 2. optional target table
-      if (flags & SegExplicitIndex) {
+      if (flags & SegExplicitIndex && segment->kind != SegmentKind::Declared) {
         WriteU32Leb128(stream_, module_->GetTableIndex(segment->table_var),
                        "table index");
       }
