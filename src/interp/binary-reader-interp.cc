@@ -211,6 +211,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                uint32_t alignment_log2,
                                Address offset) override;
 
+  wabt::Result BeginElemSection(Offset size) override;
   wabt::Result OnElemSegmentCount(Index count) override;
   wabt::Result BeginElemSegment(Index index,
                                 Index table_index,
@@ -301,6 +302,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result FixupTopLabel();
   wabt::Result EmitFuncOffset(DefinedFunc* func, Index func_index);
 
+  wabt::Result CheckDeclaredFunc(Index func_index);
   wabt::Result CheckLocal(Index local_index);
   wabt::Result CheckGlobal(Index global_index);
   wabt::Result CheckGlobalType(GlobalType actual,
@@ -318,7 +320,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result CheckAlign(uint32_t alignment_log2, Address natural_alignment);
   wabt::Result CheckAtomicAlign(uint32_t alignment_log2,
                                 Address natural_alignment);
-  wabt::Result CheckInFunction();
 
   wabt::Result AppendExport(Module* module,
                             ExternalKind kind,
@@ -649,16 +650,21 @@ bool BinaryReaderInterp::OnError(const Error& error) {
   return true;
 }
 
+wabt::Result BinaryReaderInterp::CheckDeclaredFunc(Index func_index) {
+  if (func_index >= declared_funcs_.size() || !declared_funcs_[func_index]) {
+    PrintError("function is not declared in any elem sections: %" PRIindex,
+               func_index);
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::EndModule() {
   // Verify that any ref.func used in init expressions for globals are
   // mentioned in an elems section.  This can't be done while process the
   // globals because the global section comes before the elem section.
   for (Index func_index : init_expr_funcs_) {
-    if (!declared_funcs_[func_index]) {
-      PrintError("function is not declared in any elem sections: %" PRIindex,
-                 func_index);
-      return wabt::Result::Error;
-    }
+    CHECK_RESULT(CheckDeclaredFunc(func_index));
   }
   return wabt::Result::Ok;
 }
@@ -937,7 +943,6 @@ wabt::Result BinaryReaderInterp::OnFunctionCount(Index count) {
   for (Index i = 0; i < count; ++i)
     func_index_mapping_.push_back(env_->GetFuncCount() + i);
   func_fixups_.resize(count);
-  declared_funcs_.resize(count);
   return wabt::Result::Ok;
 }
 
@@ -1109,6 +1114,15 @@ wabt::Result BinaryReaderInterp::OnStartFunction(Index func_index) {
     return wabt::Result::Error;
   }
   module_->start_func_index = start_func_index;
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::BeginElemSection(Offset size) {
+  // Delay resizing `declared_funcs_` until we we know the total range of
+  // function indexes (not until after imports sections is read) and that
+  // an elem section exists (therefore the possiblity of declared functions).
+  Index max_func_index = func_index_mapping_.size();
+  declared_funcs_.resize(max_func_index);
   return wabt::Result::Ok;
 }
 
@@ -1805,11 +1819,7 @@ wabt::Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
 }
 
 wabt::Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
-  if (!declared_funcs_[func_index]) {
-    PrintError("function is not declared in any elem sections: %" PRIindex,
-               func_index);
-    return wabt::Result::Error;
-  }
+  CHECK_RESULT(CheckDeclaredFunc(func_index));
   CHECK_RESULT(typechecker_.OnRefFuncExpr(func_index));
   CHECK_RESULT(EmitOpcode(Opcode::RefFunc));
   CHECK_RESULT(EmitI32(TranslateFuncIndexToEnv(func_index)));
