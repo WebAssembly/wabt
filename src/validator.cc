@@ -1302,7 +1302,10 @@ void Validator::MarkDeclaredFunctions() {
   for (const ElemSegment* seg : current_module_->elem_segments) {
     for (const ElemExpr& expr : seg->elem_exprs) {
       if (expr.kind == ElemExprKind::RefFunc) {
-        declared_funcs_[expr.var.index()] = true;
+        Index func_index = expr.var.index();
+        if (func_index < declared_funcs_.size()) {
+          declared_funcs_[func_index] = true;
+        }
       }
     }
   }
