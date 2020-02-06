@@ -2,5 +2,6 @@
 ;;; ARGS: foo.txt bar.txt
 ;;; ERROR: 1
 (;; STDERR ;;;
-unexpected argument 'bar.txt'
+wat2wasm: unexpected argument 'bar.txt'
+Try '--help' for more information.
 ;;; STDERR ;;)

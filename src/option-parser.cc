@@ -135,7 +135,11 @@ int OptionParser::Match(const char* s,
 
 void OptionParser::Errorf(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  on_error_(buffer);
+  std::string msg(program_name_);
+  msg += ": ";
+  msg += buffer;
+  msg += "\nTry '--help' for more information.";
+  on_error_(msg.c_str());
 }
 
 void OptionParser::DefaultError(const std::string& message) {
@@ -257,9 +261,8 @@ void OptionParser::Parse(int argc, char* argv[]) {
   // For now, all arguments must be provided. Check that the last Argument was
   // handled at least once.
   if (!arguments_.empty() && arguments_.back().handled_count == 0) {
-    PrintHelp();
     for (size_t i = arg_index; i < arguments_.size(); ++i) {
-      Errorf("expected %s argument.\n", arguments_[i].name.c_str());
+      Errorf("expected %s argument.", arguments_[i].name.c_str());
     }
   }
 }
