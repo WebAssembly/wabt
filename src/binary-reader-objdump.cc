@@ -598,7 +598,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32(uint32_t value) {
 Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
                                                             uint32_t value2) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(immediate_len, "%lu %lu", value, value2);
+  LogOpcode(immediate_len, "%u %u", value, value2);
   return Result::Ok;
 }
 
