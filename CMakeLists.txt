@@ -118,7 +118,15 @@ else ()
     -Wuninitialized
   )
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wold-style-cast")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast")
+
+  if(NOT CYGWIN)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  else()
+      # On Cygwin, POSIX extensions are not visible with std=c++11 
+      # because it defines __STRICT_ANSI__.
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+  endif()
 
   if (WERROR)
     add_definitions(-Werror)
