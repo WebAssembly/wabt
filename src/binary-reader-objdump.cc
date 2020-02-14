@@ -540,7 +540,7 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
   Offset offset = current_opcode_offset;
   size_t data_size = state->offset - offset;
 
-  printf(" %06" PRIzx ":", offset);
+  printf(" %06" PRIzx " (%06" PRIzx "):", offset, offset - GetSectionStart(BinarySection::Code));
   for (size_t i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT;
        i++, offset++) {
     printf(" %02x", data_[offset]);
@@ -577,7 +577,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
   while (offset < offset_end) {
     // Print bytes, but only display a maximum of IMMEDIATE_OCTET_COUNT on each
     // line.
-    printf(" %06" PRIzx ":", offset);
+    printf(" %06" PRIzx " (%06" PRIzx "):", offset, offset - GetSectionStart(BinarySection::Code));
     size_t i;
     for (i = 0; offset < offset_end && i < IMMEDIATE_OCTET_COUNT;
          ++i, ++offset) {
@@ -777,7 +777,8 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
 
 Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
                                                          Offset size) {
-  printf("%06" PRIzx " func[%" PRIindex "]", state->offset, index);
+  printf("%06" PRIzx " (%06" PRIzx ") func[%" PRIindex "]", state->offset,
+         state->offset - GetSectionStart(BinarySection::Code), index);
   auto name = GetFunctionName(index);
   if (!name.empty()) {
     printf(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
