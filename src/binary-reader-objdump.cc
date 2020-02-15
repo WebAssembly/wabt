@@ -22,7 +22,10 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+
+#if HAVE_STRCASECMP
 #include <strings.h>
+#endif
 
 #include "src/binary-reader-nop.h"
 #include "src/filenames.h"
