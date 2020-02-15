@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <strings.h>
 
 #include "src/binary-reader-nop.h"
 #include "src/filenames.h"
