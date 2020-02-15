@@ -118,6 +118,7 @@ else ()
     -Wuninitialized
   )
 
+  set(CMAKE_CXX_EXTENSIONS OFF)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wold-style-cast")
 
   if (WERROR)
