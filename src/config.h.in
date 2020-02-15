@@ -33,9 +33,6 @@
 /* Whether snprintf is defined by stdio.h */
 #cmakedefine01 HAVE_SNPRINTF
 
-/* Whether sysconf is defined by unistd.h */
-#cmakedefine01 HAVE_SYSCONF
-
 /* Whether ssize_t is defined by stddef.h */
 #cmakedefine01 HAVE_SSIZE_T
 
