@@ -75,7 +75,6 @@ include(CheckSymbolExists)
 check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
-check_symbol_exists(sysconf "unistd.h" HAVE_SYSCONF)
 check_symbol_exists(strcasecmp "strings.h" HAVE_STRCASECMP)
 
 if (WIN32)
@@ -118,15 +117,8 @@ else ()
     -Wuninitialized
   )
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast")
-
-  if(NOT CYGWIN)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  else()
-      # On Cygwin, POSIX extensions are not visible with std=c++11 
-      # because it defines __STRICT_ANSI__.
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
-  endif()
+  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wold-style-cast")
 
   if (WERROR)
     add_definitions(-Werror)
@@ -141,11 +133,9 @@ else ()
   # definition, and some libcs (e.g. glibc2.17 and earlier) follow that.
   add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDC_FORMAT_MACROS=1)
 
-  if (MINGW)
-    # _POSIX is needed to ensure we use mingw printf
-    # instead of the VC runtime one.
-    add_definitions(-D_POSIX)
-  endif ()
+  # On MINGW, _POSIX_C_SOURCE is needed to ensure we use mingw printf
+  # instead of the VC runtime one.
+  add_definitions(-D_POSIX_C_SOURCE=200809L)
 
   if (COMPILER_IS_GNU)
     # disable -Wclobbered: it seems to be guessing incorrectly about a local

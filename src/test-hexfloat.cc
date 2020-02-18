@@ -22,10 +22,6 @@
 
 #include "src/literal.h"
 
-#if HAVE_SYSCONF
-#include <unistd.h>
-#endif
-
 #define FOREACH_UINT32_MULTIPLIER 1
 
 #define FOREACH_UINT32(bits) \
@@ -74,13 +70,9 @@ class ThreadedTest : public ::testing::Test {
   static const int kDefaultNumThreads = 2;
 
   virtual void SetUp() {
-#if HAVE_SYSCONF
-    num_threads_ = sysconf(_SC_NPROCESSORS_ONLN);
-    if (num_threads_ == -1)
+    num_threads_ = std::thread::hardware_concurrency();
+    if (num_threads_ == 0)
       num_threads_ = kDefaultNumThreads;
-#else
-    num_threads_ = kDefaultNumThreads;
-#endif
   }
 
   virtual void RunShard(int shard) = 0;
