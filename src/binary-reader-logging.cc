@@ -302,14 +302,14 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
 Result BinaryReaderLogging::OnF32ConstExpr(uint32_t value_bits) {
   float value;
   memcpy(&value, &value_bits, sizeof(value));
-  LOGF("OnF32ConstExpr(%g (0x04%x))\n", value, value_bits);
+  LOGF("OnF32ConstExpr(%g (0x%08x))\n", value, value_bits);
   return reader_->OnF32ConstExpr(value_bits);
 }
 
 Result BinaryReaderLogging::OnF64ConstExpr(uint64_t value_bits) {
   double value;
   memcpy(&value, &value_bits, sizeof(value));
-  LOGF("OnF64ConstExpr(%g (0x08%" PRIx64 "))\n", value, value_bits);
+  LOGF("OnF64ConstExpr(%g (0x%016" PRIx64 "))\n", value, value_bits);
   return reader_->OnF64ConstExpr(value_bits);
 }
 
