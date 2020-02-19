@@ -2006,7 +2006,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
 
     uint8_t kind;
     CHECK_RESULT(ReadU8(&kind, "import kind"));
-    CALLBACK(OnImport, i, static_cast<ExternalKind>(kind), module_name, field_name);
+    CALLBACK(OnImport, i, static_cast<ExternalKind>(kind), module_name,
+             field_name);
     switch (static_cast<ExternalKind>(kind)) {
       case ExternalKind::Func: {
         Index sig_index;
@@ -2060,6 +2061,16 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       }
     }
   }
+
+  ERROR_UNLESS(num_memory_imports_ <= 1,
+               "memory count (%" PRIindex ") must be 0 or 1",
+               num_memory_imports_);
+  if (!options_.features.reference_types_enabled()) {
+    ERROR_UNLESS(num_table_imports_ <= 1,
+                 "table count (%" PRIindex ") must be 0 or 1",
+                 num_table_imports_);
+  }
+
   CALLBACK0(EndImportSection);
   return Result::Ok;
 }
@@ -2085,8 +2096,9 @@ Result BinaryReader::ReadTableSection(Offset section_size) {
   CALLBACK(BeginTableSection, section_size);
   CHECK_RESULT(ReadCount(&num_tables_, "table count"));
   if (!options_.features.reference_types_enabled()) {
-    ERROR_UNLESS(num_tables_ <= 1, "table count (%" PRIindex ") must be 0 or 1",
-                 num_tables_);
+    ERROR_UNLESS(num_table_imports_ + num_tables_ <= 1,
+                 "table count (%" PRIindex ") must be 0 or 1",
+                 num_table_imports_ + num_tables_);
   }
   CALLBACK(OnTableCount, num_tables_);
   for (Index i = 0; i < num_tables_; ++i) {
@@ -2103,7 +2115,9 @@ Result BinaryReader::ReadTableSection(Offset section_size) {
 Result BinaryReader::ReadMemorySection(Offset section_size) {
   CALLBACK(BeginMemorySection, section_size);
   CHECK_RESULT(ReadCount(&num_memories_, "memory count"));
-  ERROR_UNLESS(num_memories_ <= 1, "memory count must be 0 or 1");
+  ERROR_UNLESS(num_memory_imports_ + num_memories_ <= 1,
+               "memory count (%" PRIindex ") must be 0 or 1",
+               num_memory_imports_ + num_memories_);
   CALLBACK(OnMemoryCount, num_memories_);
   for (Index i = 0; i < num_memories_; ++i) {
     Index memory_index = num_memory_imports_ + i;
