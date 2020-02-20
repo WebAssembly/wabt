@@ -1067,15 +1067,9 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
       module_filename, file_data.data(), file_data.size());
   Errors errors;
   if (Succeeded(result)) {
-    std::unique_ptr<::Script> script;
+    std::unique_ptr<wabt::Module> module;
     WastParseOptions options(s_features);
-    result = ParseWastScript(lexer.get(), &script, &errors, &options);
-    if (Succeeded(result)) {
-      wabt::Module* module = script->GetFirstModule();
-      ValidateOptions options(s_features);
-      // Don't do a full validation, just validate the function signatures.
-      result = ValidateFuncSignatures(module, &errors, options);
-    }
+    result = ParseWatModule(lexer.get(), &module, &errors, &options);
   }
 
   auto line_finder = lexer->MakeLineFinder();
