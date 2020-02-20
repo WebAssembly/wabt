@@ -21,6 +21,7 @@
 #include "src/cast.h"
 #include "src/expr-visitor.h"
 #include "src/make-unique.h"
+#include "src/resolve-names.h"
 #include "src/stream.h"
 #include "src/utf8.h"
 
@@ -2805,7 +2806,9 @@ Result ParseWatModule(WastLexer* lexer,
   assert(out_module != nullptr);
   assert(options != nullptr);
   WastParser parser(lexer, errors, options);
-  return parser.ParseModule(out_module);
+  CHECK_RESULT(parser.ParseModule(out_module));
+  CHECK_RESULT(ResolveNamesModule(out_module->get(), errors));
+  return Result::Ok;
 }
 
 Result ParseWastScript(WastLexer* lexer,
@@ -2815,7 +2818,9 @@ Result ParseWastScript(WastLexer* lexer,
   assert(out_script != nullptr);
   assert(options != nullptr);
   WastParser parser(lexer, errors, options);
-  return parser.ParseScript(out_script);
+  CHECK_RESULT(parser.ParseScript(out_script));
+  CHECK_RESULT(ResolveNamesScript(out_script->get(), errors));
+  return Result::Ok;
 }
 
 }  // namespace wabt

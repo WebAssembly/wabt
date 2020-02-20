@@ -32,7 +32,6 @@
 #include "src/interp/interp.h"
 #include "src/literal.h"
 #include "src/option-parser.h"
-#include "src/resolve-names.h"
 #include "src/stream.h"
 #include "src/validator.h"
 #include "src/wast-lexer.h"
@@ -1073,12 +1072,9 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
     result = ParseWastScript(lexer.get(), &script, &errors, &options);
     if (Succeeded(result)) {
       wabt::Module* module = script->GetFirstModule();
-      result = ResolveNamesModule(module, &errors);
-      if (Succeeded(result)) {
-        ValidateOptions options(s_features);
-        // Don't do a full validation, just validate the function signatures.
-        result = ValidateFuncSignatures(module, &errors, options);
-      }
+      ValidateOptions options(s_features);
+      // Don't do a full validation, just validate the function signatures.
+      result = ValidateFuncSignatures(module, &errors, options);
     }
   }
 
