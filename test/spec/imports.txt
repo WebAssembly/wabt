@@ -162,7 +162,7 @@ out/test/spec/imports.wast:409: assert_invalid passed:
   error: unknown import module ""
   0000010: error: OnImportMemory callback failed
 out/test/spec/imports.wast:413: assert_invalid passed:
-  000000b: error: memory count must be 0 or 1
+  000000b: error: memory count (2) must be 0 or 1
 out/test/spec/imports.wast:428: assert_unlinkable passed:
   error: unknown module field "unknown"
   000001b: error: OnImportMemory callback failed

@@ -2,10 +2,9 @@
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
 (;; STDOUT ;;;
 out/test/spec/memory.wast:8: assert_invalid passed:
-  000000b: error: memory count must be 0 or 1
+  000000b: error: memory count (2) must be 0 or 1
 out/test/spec/memory.wast:9: assert_invalid passed:
-  error: only one memory allowed
-  0000023: error: OnMemory callback failed
+  0000021: error: memory count (2) must be 0 or 1
 out/test/spec/memory.wast:18: assert_invalid passed:
   000000b: error: data section without memory section
 out/test/spec/memory.wast:19: assert_invalid passed:
