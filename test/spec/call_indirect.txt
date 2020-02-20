@@ -80,7 +80,7 @@ out/test/spec/call_indirect.wast:701: assert_malformed passed:
   ...0 funcref)(func (result i32)  (call_indirect (type $sig) (param i32) (resu...
                                     ^^^^^^^^^^^^^
 out/test/spec/call_indirect.wast:716: assert_invalid passed:
-  error: found call_indirect operator, but no table
+  0000000: error: table variable out of range: 0 (max 4294967295)
   000001c: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:724: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
@@ -141,7 +141,7 @@ out/test/spec/call_indirect.wast:922: assert_invalid passed:
 out/test/spec/call_indirect.wast:929: assert_invalid passed:
   0000025: error: invalid call_indirect signature index
 out/test/spec/call_indirect.wast:940: assert_invalid passed:
-  error: invalid func_index: 0 (max 0)
+  0000000: error: function variable out of range: 0 (max 4294967295)
   0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
 151/151 tests passed.
 ;;; STDOUT ;;)

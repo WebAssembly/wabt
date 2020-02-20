@@ -111,7 +111,8 @@ out/test/spec/reference-types/imports.wast:385: assert_unlinkable passed:
 out/test/spec/reference-types/imports.wast:403: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
 out/test/spec/reference-types/imports.wast:414: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
 out/test/spec/reference-types/imports.wast:417: assert_invalid passed:
-  0000015: error: memory count (2) must be 0 or 1
+  error: only one memory block allowed
+  0000015: error: OnImportMemory callback failed
 out/test/spec/reference-types/imports.wast:421: assert_invalid passed:
   0000013: error: memory count (2) must be 0 or 1
 out/test/spec/reference-types/imports.wast:425: assert_invalid passed:

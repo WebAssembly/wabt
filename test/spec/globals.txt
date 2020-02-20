@@ -16,19 +16,19 @@ out/test/spec/globals.wast:267: assert_invalid passed:
 out/test/spec/globals.wast:272: assert_invalid passed:
   000000e: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/globals.wast:277: assert_invalid passed:
-  error: type mismatch in global, expected i32 but got f32.
+  error: type mismatch at global initializer expression. got f32, expected i32
   0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/globals.wast:282: assert_invalid passed:
   0000010: error: expected END opcode after initializer expression
 out/test/spec/globals.wast:287: assert_invalid passed:
-  error: type mismatch in global, expected i32 but got void.
+  error: invalid global initializer expression, must be a constant expression; either *.const or global.get.
   000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/globals.wast:292: assert_invalid passed:
-  error: initializer expression can only reference an imported global
-  000000f: error: OnInitExprGlobalGetExpr callback failed
+  0000000: error: initializer expression can only reference an imported global
+  0000010: error: EndGlobalInitExpr callback failed
 out/test/spec/globals.wast:297: assert_invalid passed:
-  error: initializer expression can only reference an imported global
-  000000f: error: OnInitExprGlobalGetExpr callback failed
+  0000000: error: global variable out of range: 1 (max 0)
+  0000010: error: EndGlobalInitExpr callback failed
 out/test/spec/globals.wast:305: assert_malformed passed:
   0000026: error: global mutability must be 0 or 1
 out/test/spec/globals.wast:318: assert_malformed passed:
