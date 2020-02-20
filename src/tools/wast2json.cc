@@ -115,34 +115,30 @@ int ProgramMain(int argc, char** argv) {
   WastParseOptions parse_wast_options(s_features);
   result = ParseWastScript(lexer.get(), &script, &errors, &parse_wast_options);
 
-  if (Succeeded(result)) {
-    result = ResolveNamesScript(script.get(), &errors);
+  if (Succeeded(result) && s_validate) {
+    ValidateOptions options(s_features);
+    result = ValidateScript(script.get(), &errors, options);
+  }
 
-    if (Succeeded(result) && s_validate) {
-      ValidateOptions options(s_features);
-      result = ValidateScript(script.get(), &errors, options);
+  if (Succeeded(result)) {
+    if (s_outfile.empty()) {
+      s_outfile = DefaultOuputName(s_infile);
     }
 
-    if (Succeeded(result)) {
-      if (s_outfile.empty()) {
-        s_outfile = DefaultOuputName(s_infile);
-      }
+    std::vector<FilenameMemoryStreamPair> module_streams;
+    MemoryStream json_stream;
 
-      std::vector<FilenameMemoryStreamPair> module_streams;
-      MemoryStream json_stream;
+    std::string output_basename = StripExtension(s_outfile).to_string();
+    s_write_binary_options.features = s_features;
+    result = WriteBinarySpecScript(&json_stream, script.get(), s_infile,
+                                   output_basename, s_write_binary_options,
+                                   &module_streams, s_log_stream.get());
 
-      std::string output_basename = StripExtension(s_outfile).to_string();
-      s_write_binary_options.features = s_features;
-      result = WriteBinarySpecScript(
-          &json_stream, script.get(), s_infile, output_basename,
-          s_write_binary_options, &module_streams, s_log_stream.get());
+    json_stream.WriteToFile(s_outfile);
 
-      json_stream.WriteToFile(s_outfile);
-
-      for (auto iter = module_streams.begin(); iter != module_streams.end();
-           ++iter) {
-        iter->stream->WriteToFile(iter->filename);
-      }
+    for (auto iter = module_streams.begin(); iter != module_streams.end();
+         ++iter) {
+      iter->stream->WriteToFile(iter->filename);
     }
   }
 
