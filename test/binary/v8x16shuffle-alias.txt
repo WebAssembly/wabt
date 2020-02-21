@@ -1,0 +1,24 @@
+;;; TOOL: run-gen-wasm
+;;; ARGS1: --enable-simd
+;;; ARGS2: --enable-simd
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] v128 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    v128.const 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    v128.const 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    0xfd 0x03 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ;; alias for v8x16.shuffle
+  }
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result v128)))
+  (func (;0;) (type 0) (result v128)
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
+    v8x16.shuffle  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0 ))
+;;; STDOUT ;;)

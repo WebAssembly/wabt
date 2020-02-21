@@ -38,4 +38,8 @@ uint32_t WabtOpcodeCodeTable[WABT_OPCODE_CODE_TABLE_SIZE] = {
   [(prefix << 8) + code] = Name,
 #include "opcode.def"
 #undef WABT_OPCODE
+
+  // TODO(binji): LLVM still generates 0xfd03 for v8x16.shuffle, see
+  // https://github.com/WebAssembly/wabt/issues/1339
+  [(0xfd << 8) + 0x03] = V8X16Shuffle,
 };

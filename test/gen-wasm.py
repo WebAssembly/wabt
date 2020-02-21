@@ -263,6 +263,9 @@ NAMED_VALUES = {
     "table.init": (0xfc, 0x0c),
     "elem.drop": (0xfc, 0x0d),
     "table.copy": (0xfc, 0x0e),
+
+    # simd
+    "v128.const": (0xfd, 0x02),
 }
 
 keywords = {
