@@ -102,9 +102,9 @@ i64.atomic.rmw32.add_u-result() => i64:1410065408
 i64.atomic.rmw32.add_u-memory() => i64:1410065409
 i64.atomic.rmw.add-result() => i64:10000000000
 i64.atomic.rmw.add-memory() => i64:10000000001
-bad_align-i32.atomic.rmw16.add_u() => error: atomic memory access is unaligned
-bad_align-i32.atomic.rmw.add() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw16.add_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw32.add_u() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw.add() => error: atomic memory access is unaligned
+bad_align-i32.atomic.rmw16.add_u() => error: invalid atomic access at 1+0
+bad_align-i32.atomic.rmw.add() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw16.add_u() => error: invalid atomic access at 1+0
+bad_align-i64.atomic.rmw32.add_u() => error: invalid atomic access at 2+0
+bad_align-i64.atomic.rmw.add() => error: invalid atomic access at 4+0
 ;;; STDOUT ;;)

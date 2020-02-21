@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table_get.wast
 ;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
-init(hostref:1) =>
+init(anyref:2) =>
 out/test/spec/reference-types/table_get.wast:33: assert_trap passed: out of bounds table access: table.get at 2 >= max value 2
 out/test/spec/reference-types/table_get.wast:34: assert_trap passed: out of bounds table access: table.get at 3 >= max value 3
 out/test/spec/reference-types/table_get.wast:35: assert_trap passed: out of bounds table access: table.get at 4294967295 >= max value 2

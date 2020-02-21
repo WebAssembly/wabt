@@ -59,7 +59,7 @@ out/test/spec/bulk-memory-operations/table_init.wast:193: assert_invalid passed:
   error: invalid elem_segment_index: 0 (max 0)
   0000024: error: OnElemDropExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:199: assert_invalid passed:
-  error: table.init requires an imported or defined table.
+  error: found table.init operator, but no table
   000002b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:205: assert_invalid passed:
   0000024: error: elem section without table section

@@ -63,9 +63,10 @@ struct Opcode {
     return *GetInfo().decomp ? GetInfo().decomp : GetInfo().name;
   }
   Type GetResultType() const { return GetInfo().result_type; }
-  Type GetParamType1() const { return GetInfo().param1_type; }
-  Type GetParamType2() const { return GetInfo().param2_type; }
-  Type GetParamType3() const { return GetInfo().param3_type; }
+  Type GetParamType1() const { return GetInfo().param_types[0]; }
+  Type GetParamType2() const { return GetInfo().param_types[1]; }
+  Type GetParamType3() const { return GetInfo().param_types[2]; }
+  Type GetParamType(int n) const { return GetInfo().param_types[n - 1]; }
   Address GetMemorySize() const { return GetInfo().memory_size; }
 
   // Get the byte sequence for this opcode, including prefix.
@@ -98,9 +99,7 @@ struct Opcode {
     const char* name;
     const char* decomp;
     Type result_type;
-    Type param1_type;
-    Type param2_type;
-    Type param3_type;
+    Type param_types[3];
     Address memory_size;
     uint8_t prefix;
     uint32_t code;

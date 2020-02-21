@@ -62,9 +62,9 @@ i64.atomic.store8() => i32:4278058235
 i64.atomic.store16() => i32:3435907785
 i64.atomic.store32() => i32:4294843840
 i64.atomic.store() => i64:13465130522234441741
-bad.align-i32.atomic.store16() => error: atomic memory access is unaligned
-bad.align-i32.atomic.store() => error: atomic memory access is unaligned
-bad.align-i64.atomic.store16() => error: atomic memory access is unaligned
-bad.align-i64.atomic.store32() => error: atomic memory access is unaligned
-bad.align-i64.atomic.store() => error: atomic memory access is unaligned
+bad.align-i32.atomic.store16() => error: invalid atomic access at 1+0
+bad.align-i32.atomic.store() => error: invalid atomic access at 2+0
+bad.align-i64.atomic.store16() => error: invalid atomic access at 1+0
+bad.align-i64.atomic.store32() => error: invalid atomic access at 2+0
+bad.align-i64.atomic.store() => error: invalid atomic access at 4+0
 ;;; STDOUT ;;)

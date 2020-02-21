@@ -14,30 +14,37 @@
  * limitations under the License.
  */
 
-#ifndef WABT_BINARY_READER_METADATA_H_
-#define WABT_BINARY_READER_METADATA_H_
+#ifndef WABT_INTERP_UTIL_H_
+#define WABT_INTERP_UTIL_H_
 
-#include "src/common.h"
-#include "src/error.h"
+#include <string>
+#include <vector>
+
+#include "src/interp/interp.h"
+#include "src/string-view.h"
 
 namespace wabt {
 
+class Stream;
+
 namespace interp {
 
-struct ModuleMetadata;
+std::string TypedValueToString(const TypedValue&);
+
+void WriteValue(Stream* stream, const TypedValue&);
+
+void WriteValues(Stream* stream, const ValueTypes&, const Values&);
+
+void WriteTrap(Stream* stream, const char* desc, const Trap::Ptr&);
+
+void WriteCall(Stream* stream,
+               string_view name,
+               const FuncType& func_type,
+               const Values& params,
+               const Values& results,
+               const Trap::Ptr& trap);
 
 }  // namespace interp
-
-struct ReadBinaryOptions;
-
-// Reads just the binary metadata, used by C-API to get module imports names
-// (and potentially other metadata) before instantiation time.
-Result ReadBinaryMetadata(const void* data,
-                          size_t size,
-                          const ReadBinaryOptions& options,
-                          Errors*,
-                          interp::ModuleMetadata** out_metadata);
-
 }  // namespace wabt
 
-#endif /* WABT_BINARY_READER_METADATA_H_ */
+#endif // WABT_INTERP_UTIL_H_

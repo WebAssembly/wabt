@@ -67,6 +67,8 @@
 #define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
 
+#define WABT_VECTORCALL
+
 #if __MINGW32__
 // mingw defaults to printf format specifier being ms_printf (which doesn't
 // understand 'llu', etc.) We always want gnu_printf, and force mingw to always
@@ -103,6 +105,8 @@
 #define WABT_UNLIKELY(x) (x)
 #define WABT_LIKELY(x) (x)
 #define WABT_PRINTF_FORMAT(format_arg, first_arg)
+
+#define WABT_VECTORCALL __vectorcall
 
 #else
 

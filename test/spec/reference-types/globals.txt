@@ -25,8 +25,8 @@ out/test/spec/reference-types/globals.wast:292: assert_invalid passed:
   error: type mismatch in global, expected i32 but got void.
   000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/reference-types/globals.wast:297: assert_invalid passed:
-  error: unknown import module ""
-  0000010: error: OnImportGlobal callback failed
+  error: type mismatch in global, expected funcref but got anyref.
+  0000018: error: EndGlobalInitExpr callback failed
 out/test/spec/reference-types/globals.wast:302: assert_invalid passed:
   error: initializer expression can only reference an imported global
   000000f: error: OnInitExprGlobalGetExpr callback failed

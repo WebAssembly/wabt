@@ -123,7 +123,7 @@ static const Index kInvalidIndex = ~0;
 static const Offset kInvalidOffset = ~0;
 
 template <typename Dst, typename Src>
-Dst Bitcast(Src&& value) {
+Dst WABT_VECTORCALL Bitcast(Src&& value) {
   static_assert(sizeof(Src) == sizeof(Dst), "Bitcast sizes must match.");
   Dst result;
   memcpy(&result, &value, sizeof(result));

@@ -5,8 +5,8 @@
 set-g() =>
 set-f() =>
 out/test/spec/reference-types/ref_func.wast:71: assert_invalid passed:
-  error: unknown import module "M"
-  0000019: error: OnImportFunc callback failed
+  error: function is not declared in any elem sections: 7
+  0000027: error: EndModule callback failed
 out/test/spec/reference-types/ref_func.wast:80: assert_invalid passed:
   error: function is not declared in any elem sections: 0
   0000020: error: EndModule callback failed

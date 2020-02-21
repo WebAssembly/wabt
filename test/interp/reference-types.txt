@@ -43,8 +43,8 @@
 (;; STDOUT ;;;
 ref_null() => nullref
 ref_is_null() => i32:1
-ref_func() => funcref:1
+ref_func() => funcref:4
 table_set() =>
 table_get() => i32:0
-global_set() => funcref:1
+global_set() => anyref:4
 ;;; STDOUT ;;)
