@@ -40,7 +40,6 @@ class Validator : public ExprVisitor::Delegate {
 
   Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
-  Result CheckAllFuncSignatures(const Module* module);
 
   // Implements ExprVisitor::Delegate.
   Result OnBinaryExpr(BinaryExpr*) override;
@@ -158,11 +157,6 @@ class Validator : public ExprVisitor::Delegate {
                       const char* desc,
                       Index index,
                       const char* index_kind);
-  void CheckTypes(const Location* loc,
-                  const TypeVector& actual,
-                  const TypeVector& expected,
-                  const char* desc,
-                  const char* index_kind);
   void CheckResultTypes(const Location* loc,
                         const TypeVector& actual,
                         const TypeVector& expected,
@@ -177,7 +171,6 @@ class Validator : public ExprVisitor::Delegate {
   template <typename T>
   void CheckAtomicExpr(const T* expr, Result (TypeChecker::*func)(Opcode));
   void CheckFuncSignature(const Location* loc, const FuncDeclaration& decl);
-  class CheckFuncSignatureExprVisitorDelegate;
 
   void CheckFunc(const Location* loc, const Func* func);
   void PrintConstExprError(const Location* loc, const char* desc);
@@ -443,21 +436,6 @@ void Validator::CheckTypeIndex(const Location* loc,
   }
 }
 
-void Validator::CheckTypes(const Location* loc,
-                           const TypeVector& actual,
-                           const TypeVector& expected,
-                           const char* desc,
-                           const char* index_kind) {
-  if (actual.size() == expected.size()) {
-    for (size_t i = 0; i < actual.size(); ++i) {
-      CheckTypeIndex(loc, actual[i], expected[i], desc, i, index_kind);
-    }
-  } else {
-    PrintError(loc, "expected %" PRIzd " %ss, got %" PRIzd, expected.size(),
-               index_kind, actual.size());
-  }
-}
-
 void Validator::CheckResultTypes(const Location* loc,
                                  const TypeVector& actual,
                                  const TypeVector& expected,
@@ -520,13 +498,7 @@ void Validator::CheckBlockDeclaration(const Location* loc,
                opcode.GetName());
   }
   if (decl->has_func_type) {
-    const FuncType* func_type;
-    if (Succeeded(CheckFuncTypeVar(&decl->type_var, &func_type))) {
-      CheckTypes(loc, decl->sig.result_types, func_type->sig.result_types,
-                 opcode.GetName(), "result");
-      CheckTypes(loc, decl->sig.param_types, func_type->sig.param_types,
-                 opcode.GetName(), "argument");
-    }
+    CheckFuncTypeVar(&decl->type_var, nullptr);
   }
 }
 
@@ -1014,13 +986,7 @@ Result Validator::OnLoadSplatExpr(LoadSplatExpr* expr) {
 void Validator::CheckFuncSignature(const Location* loc,
                                    const FuncDeclaration& decl) {
   if (decl.has_func_type) {
-    const FuncType* func_type;
-    if (Succeeded(CheckFuncTypeVar(&decl.type_var, &func_type))) {
-      CheckTypes(loc, decl.sig.result_types, func_type->sig.result_types,
-                 "function", "result");
-      CheckTypes(loc, decl.sig.param_types, func_type->sig.param_types,
-                 "function", "argument");
-    }
+    CheckFuncTypeVar(&decl.type_var, nullptr);
   }
 }
 
@@ -1564,72 +1530,6 @@ Result Validator::CheckScript(const Script* script) {
   return result_;
 }
 
-class Validator::CheckFuncSignatureExprVisitorDelegate
-    : public ExprVisitor::DelegateNop {
- public:
-  explicit CheckFuncSignatureExprVisitorDelegate(Validator* validator)
-      : validator_(validator) {}
-
-  Result BeginBlockExpr(BlockExpr* expr) override {
-    validator_->CheckBlockDeclaration(&expr->loc, Opcode::Block,
-                                      &expr->block.decl);
-    return Result::Ok;
-  }
-
-  Result OnCallIndirectExpr(CallIndirectExpr* expr) override {
-    validator_->CheckFuncSignature(&expr->loc, expr->decl);
-    return Result::Ok;
-  }
-
-  Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) override {
-    validator_->CheckFuncSignature(&expr->loc, expr->decl);
-    return Result::Ok;
-  }
-
-  Result BeginIfExpr(IfExpr* expr) override {
-    validator_->CheckBlockDeclaration(&expr->loc, Opcode::If,
-                                      &expr->true_.decl);
-    return Result::Ok;
-  }
-
-  Result BeginLoopExpr(LoopExpr* expr) override {
-    validator_->CheckBlockDeclaration(&expr->loc, Opcode::Loop,
-                                      &expr->block.decl);
-    return Result::Ok;
-  }
-
-  Result BeginTryExpr(TryExpr* expr) override {
-    validator_->CheckBlockDeclaration(&expr->loc, Opcode::Try,
-                                      &expr->block.decl);
-    return Result::Ok;
-  }
-
- private:
-  Validator* validator_;
-};
-
-Result Validator::CheckAllFuncSignatures(const Module* module) {
-  current_module_ = module;
-  for (const ModuleField& field : module->fields) {
-    switch (field.type()) {
-      case ModuleFieldType::Func: {
-        auto func_field = cast<FuncModuleField>(&field);
-        CheckFuncSignature(&field.loc, func_field->func.decl);
-        CheckFuncSignatureExprVisitorDelegate delegate(this);
-        ExprVisitor visitor(&delegate);
-        // TODO(binji): would rather not do a const_cast here, but the visitor
-        // is non-const only.
-        visitor.VisitFunc(const_cast<Func*>(&func_field->func));
-        break;
-      }
-
-      default:
-        break;
-    }
-  }
-  return result_;
-}
-
 }  // end anonymous namespace
 
 Result ValidateScript(const Script* script,
@@ -1646,14 +1546,6 @@ Result ValidateModule(const Module* module,
   Validator validator(errors, nullptr, options);
 
   return validator.CheckModule(module);
-}
-
-Result ValidateFuncSignatures(const Module* module,
-                              Errors* errors,
-                              const ValidateOptions& options) {
-  Validator validator(errors, nullptr, options);
-
-  return validator.CheckAllFuncSignatures(module);
 }
 
 }  // namespace wabt

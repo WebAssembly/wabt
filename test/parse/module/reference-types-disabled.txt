@@ -20,4 +20,10 @@ out/test/parse/module/reference-types-disabled.txt:9:5: error: opcode not allowe
 out/test/parse/module/reference-types-disabled.txt:10:5: error: opcode not allowed: table.set
     table.set $t
     ^^^^^^^^^
+out/test/parse/module/reference-types-disabled.txt:9:15: error: undefined table variable "$t"
+    table.get $t
+              ^^
+out/test/parse/module/reference-types-disabled.txt:10:15: error: undefined table variable "$t"
+    table.set $t
+              ^^
 ;;; STDERR ;;)

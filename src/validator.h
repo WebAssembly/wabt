@@ -37,15 +37,6 @@ struct ValidateOptions {
 Result ValidateScript(const Script*, Errors*, const ValidateOptions&);
 Result ValidateModule(const Module*, Errors*, const ValidateOptions&);
 
-// Validate that all functions that have an explicit function signature and a
-// function type use match.
-//
-// This needs to be separated out because the spec interpreter considers it to
-// be malformed text, not a validation error. We can't handle that error in the
-// parser because the parser doesn't resolve names to indexes, which is
-// required to perform this check.
-Result ValidateFuncSignatures(const Module*, Errors*, const ValidateOptions&);
-
 }  // namespace wabt
 
 #endif /* WABT_VALIDATOR_H_ */
