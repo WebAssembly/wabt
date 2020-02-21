@@ -24,6 +24,7 @@
 #include "src/resolve-names.h"
 #include "src/stream.h"
 #include "src/utf8.h"
+#include "src/validator.h"
 
 #define WABT_TRACING 0
 #include "src/tracing.h"
@@ -2808,6 +2809,8 @@ Result ParseWatModule(WastLexer* lexer,
   WastParser parser(lexer, errors, options);
   CHECK_RESULT(parser.ParseModule(out_module));
   CHECK_RESULT(ResolveNamesModule(out_module->get(), errors));
+  CHECK_RESULT(ValidateFuncSignatures(out_module->get(), errors,
+                                      ValidateOptions(options->features)));
   return Result::Ok;
 }
 
