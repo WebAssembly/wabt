@@ -267,14 +267,77 @@ void ResolveImplicitlyDefinedFunctionType(const Location& loc,
   }
 }
 
+Result CheckTypeIndex(const Location& loc,
+                      Type actual,
+                      Type expected,
+                      const char* desc,
+                      Index index,
+                      const char* index_kind,
+                      Errors* errors) {
+  // Types must match exactly; no subtyping should be allowed.
+  if (actual != expected) {
+    errors->emplace_back(
+        ErrorLevel::Error, loc,
+        StringPrintf("type mismatch for %s %" PRIindex
+                     " of %s. got %s, expected %s",
+                     index_kind, index, desc, GetTypeName(actual),
+                     GetTypeName(expected)));
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result CheckTypes(const Location& loc,
+                  const TypeVector& actual,
+                  const TypeVector& expected,
+                  const char* desc,
+                  const char* index_kind,
+                  Errors* errors) {
+  Result result = Result::Ok;
+  if (actual.size() == expected.size()) {
+    for (size_t i = 0; i < actual.size(); ++i) {
+      result |= CheckTypeIndex(loc, actual[i], expected[i], desc, i, index_kind,
+                               errors);
+    }
+  } else {
+    errors->emplace_back(
+        ErrorLevel::Error, loc,
+        StringPrintf("expected %" PRIzd " %ss, got %" PRIzd, expected.size(),
+                     index_kind, actual.size()));
+    result = Result::Error;
+  }
+  return result;
+}
+
+Result CheckFuncTypeVarMatchesExplicit(const Location& loc,
+                                       const Module& module,
+                                       const FuncDeclaration& decl,
+                                       Errors* errors) {
+  Result result = Result::Ok;
+  if (decl.has_func_type) {
+    // This should only be run after resolving names.
+    assert(decl.type_var.is_index());
+    const FuncType* func_type = module.GetFuncType(decl.type_var);
+    if (func_type) {
+      result |=
+          CheckTypes(loc, decl.sig.result_types, func_type->sig.result_types,
+                     "function", "result", errors);
+      result |=
+          CheckTypes(loc, decl.sig.param_types, func_type->sig.param_types,
+                     "function", "argument", errors);
+    }
+  }
+  return result;
+}
+
 bool IsInlinableFuncSignature(const FuncSignature& sig) {
   return sig.GetNumParams() == 0 && sig.GetNumResults() <= 1;
 }
 
 class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
  public:
-  explicit ResolveFuncTypesExprVisitorDelegate(Module* module)
-      : module_(module) {}
+  explicit ResolveFuncTypesExprVisitorDelegate(Module* module, Errors* errors)
+      : module_(module), errors_(errors) {}
 
   void ResolveBlockDeclaration(const Location& loc, BlockDeclaration* decl) {
     ResolveFuncTypeWithEmptySignature(*module_, decl);
@@ -285,41 +348,49 @@ class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
 
   Result BeginBlockExpr(BlockExpr* expr) override {
     ResolveBlockDeclaration(expr->loc, &expr->block.decl);
-    return Result::Ok;
+    return CheckFuncTypeVarMatchesExplicit(expr->loc, *module_,
+                                           expr->block.decl, errors_);
   }
 
   Result BeginIfExpr(IfExpr* expr) override {
     ResolveBlockDeclaration(expr->loc, &expr->true_.decl);
-    return Result::Ok;
+    return CheckFuncTypeVarMatchesExplicit(expr->loc, *module_,
+                                           expr->true_.decl, errors_);
   }
 
   Result BeginLoopExpr(LoopExpr* expr) override {
     ResolveBlockDeclaration(expr->loc, &expr->block.decl);
-    return Result::Ok;
+    return CheckFuncTypeVarMatchesExplicit(expr->loc, *module_,
+                                           expr->block.decl, errors_);
   }
 
   Result BeginTryExpr(TryExpr* expr) override {
     ResolveBlockDeclaration(expr->loc, &expr->block.decl);
-    return Result::Ok;
+    return CheckFuncTypeVarMatchesExplicit(expr->loc, *module_,
+                                           expr->block.decl, errors_);
   }
 
   Result OnCallIndirectExpr(CallIndirectExpr* expr) override {
     ResolveFuncTypeWithEmptySignature(*module_, &expr->decl);
     ResolveImplicitlyDefinedFunctionType(expr->loc, module_, expr->decl);
-    return Result::Ok;
+    return CheckFuncTypeVarMatchesExplicit(expr->loc, *module_, expr->decl,
+                                           errors_);
   }
 
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) override {
     ResolveFuncTypeWithEmptySignature(*module_, &expr->decl);
     ResolveImplicitlyDefinedFunctionType(expr->loc, module_, expr->decl);
-    return Result::Ok;
+    return CheckFuncTypeVarMatchesExplicit(expr->loc, *module_, expr->decl,
+                                           errors_);
   }
 
  private:
   Module* module_;
+  Errors* errors_;
 };
 
-void ResolveFuncTypes(Module* module) {
+Result ResolveFuncTypes(Module* module, Errors* errors) {
+  Result result = Result::Ok;
   for (ModuleField& field : module->fields) {
     Func* func = nullptr;
     FuncDeclaration* decl = nullptr;
@@ -347,14 +418,17 @@ void ResolveFuncTypes(Module* module) {
     if (decl) {
       ResolveFuncTypeWithEmptySignature(*module, decl);
       ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
+      result |=
+          CheckFuncTypeVarMatchesExplicit(field.loc, *module, *decl, errors);
     }
 
     if (func) {
-      ResolveFuncTypesExprVisitorDelegate delegate(module);
+      ResolveFuncTypesExprVisitorDelegate delegate(module, errors);
       ExprVisitor visitor(&delegate);
-      visitor.VisitFunc(func);
+      result |= visitor.VisitFunc(func);
     }
   }
+  return result;
 }
 
 void AppendInlineExportFields(Module* module,
@@ -920,7 +994,8 @@ Result WastParser::ParseModuleFieldList(Module* module) {
       CHECK_RESULT(Synchronize(IsModuleField));
     }
   }
-  ResolveFuncTypes(module);
+  CHECK_RESULT(ResolveNamesModule(module, errors_));
+  CHECK_RESULT(ResolveFuncTypes(module, errors_));
   return Result::Ok;
 }
 
@@ -2808,9 +2883,6 @@ Result ParseWatModule(WastLexer* lexer,
   assert(options != nullptr);
   WastParser parser(lexer, errors, options);
   CHECK_RESULT(parser.ParseModule(out_module));
-  CHECK_RESULT(ResolveNamesModule(out_module->get(), errors));
-  CHECK_RESULT(ValidateFuncSignatures(out_module->get(), errors,
-                                      ValidateOptions(options->features)));
   return Result::Ok;
 }
 
