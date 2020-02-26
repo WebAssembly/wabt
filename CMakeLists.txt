@@ -291,6 +291,7 @@ set(WABT_LIBRARY_SRC
   src/token.cc
   src/tracing.h
   src/tracing.cc
+  src/type.h
   src/type-checker.h
   src/type-checker.cc
   src/utf8.h
