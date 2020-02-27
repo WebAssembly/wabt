@@ -174,17 +174,26 @@ class SharedValidator {
   };
 
   struct TableType {
-    Type element;
+    TableType() = default;
+    TableType(Type element, Limits limits) : element(element), limits(limits) {}
+
+    Type element = Type::Any;
     Limits limits;
   };
 
   struct MemoryType {
+    MemoryType() = default;
+    MemoryType(Limits limits) : limits(limits) {}
+
     Limits limits;
   };
 
   struct GlobalType {
-    Type type;
-    bool mutable_;
+    GlobalType() = default;
+    GlobalType(Type type, bool mutable_) : type(type), mutable_(mutable_) {}
+
+    Type type = Type::Any;
+    bool mutable_ = true;
   };
 
   struct EventType {
@@ -210,15 +219,19 @@ class SharedValidator {
   Result CheckDeclaredFunc(Var func_var);
 
   Result CheckIndex(Var var, Index max_index, const char* desc);
-  Result CheckTypeIndex(Var sig_var);
-  Result CheckFuncIndex(Var func_var);
-  Result CheckTableIndex(Var table_var);
+  template <typename T>
+  Result CheckIndexWithValue(Var var,
+                             const std::vector<T>& values,
+                             T* out,
+                             const char* desc);
+  Result CheckTypeIndex(Var sig_var, FuncType* out = nullptr);
+  Result CheckFuncIndex(Var func_var, FuncType* out = nullptr);
+  Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckTableIndex(Var table_var, Opcode);
-  Result CheckMemoryIndex(Var memory_var);
+  Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, Opcode);
-  Result CheckSharedMemoryIndex(Var memory_var, Opcode);
-  Result CheckGlobalIndex(Var global_var, GlobalType* out);
-  Result CheckEventIndex(Var event_var);
+  Result CheckGlobalIndex(Var global_var, GlobalType* out = nullptr);
+  Result CheckEventIndex(Var event_var, EventType* out = nullptr);
   Result CheckElemSegmentIndex(Var elem_segment_var);
   Result CheckDataSegmentIndex(Var data_segment_var);
 
