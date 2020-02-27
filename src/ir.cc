@@ -653,6 +653,8 @@ Const::Const(V128Tag, v128 value, const Location& loc_)
 uint8_t ElemSegment::GetFlags(const Module* module) const {
   uint8_t flags = 0;
 
+  bool all_ref_func = elem_type == Type::Funcref;
+
   switch (kind) {
     case SegmentKind::Active: {
       Index table_index = module->GetTableIndex(table_var);
@@ -671,10 +673,11 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
       break;
   }
 
-  bool all_ref_func = std::all_of(
-      elem_exprs.begin(), elem_exprs.end(), [](const ElemExpr& elem_expr) {
-        return elem_expr.kind == ElemExprKind::RefFunc;
-      });
+  all_ref_func = all_ref_func &&
+                 std::all_of(elem_exprs.begin(), elem_exprs.end(),
+                             [](const ElemExpr& elem_expr) {
+                               return elem_expr.kind == ElemExprKind::RefFunc;
+                             });
   if (!all_ref_func) {
     flags |= SegUseElemExprs;
   }

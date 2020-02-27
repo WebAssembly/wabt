@@ -221,9 +221,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnElemSegmentCount(Index count) override;
   wabt::Result BeginElemSegment(Index index,
                                 Index table_index,
-                                uint8_t flags,
-                                Type elem_type) override;
+                                uint8_t flags) override;
   wabt::Result EndElemSegmentInitExpr(Index index) override;
+  wabt::Result OnElemSegmentElemType(Index index, Type elem_type) override;
   wabt::Result OnElemSegmentElemExprCount(Index index, Index count) override;
   wabt::Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
   wabt::Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
@@ -692,13 +692,12 @@ wabt::Result BinaryReaderInterp::OnElemSegmentCount(Index count) {
 
 wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
                                                   Index table_index,
-                                                  uint8_t flags,
-                                                  Type elem_type) {
+                                                  uint8_t flags) {
   auto mode = ToSegmentMode(flags);
-  CHECK_RESULT(validator_.OnElemSegment(loc, Var(table_index), mode, elem_type));
+  CHECK_RESULT(validator_.OnElemSegment(loc, Var(table_index), mode));
 
   ElemDesc desc;
-  desc.type = elem_type;
+  desc.type = ValueType::Void;  // Initialized later in OnElemSegmentElemType.
   desc.mode = mode;
   desc.table_index = table_index;
   module_.elems.push_back(desc);
@@ -724,6 +723,14 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 
   ElemDesc& elem = module_.elems.back();
   elem.offset = init_expr_;
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnElemSegmentElemType(Index index,
+                                                       Type elem_type) {
+  validator_.OnElemSegmentElemType(elem_type);
+  ElemDesc& elem = module_.elems.back();
+  elem.type = elem_type;
   return wabt::Result::Ok;
 }
 

@@ -731,9 +731,10 @@ Result Validator::CheckModule() {
   // Elem segment section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<ElemSegmentModuleField>(&field)) {
-      result_ |= validator_.OnElemSegment(
-          field.loc, f->elem_segment.table_var, f->elem_segment.kind,
-          f->elem_segment.elem_type);
+      result_ |= validator_.OnElemSegment(field.loc, f->elem_segment.table_var,
+                                          f->elem_segment.kind);
+
+      validator_.OnElemSegmentElemType(f->elem_segment.elem_type);
 
       // Init expr.
       if (f->elem_segment.offset.size() == 1) {

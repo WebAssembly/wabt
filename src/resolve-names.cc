@@ -58,6 +58,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnDataDropExpr(DataDropExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
+  Result OnTableCopyExpr(TableCopyExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
   Result OnTableGetExpr(TableGetExpr*) override;
   Result OnTableSetExpr(TableSetExpr*) override;
@@ -351,6 +352,12 @@ Result NameResolver::OnMemoryInitExpr(MemoryInitExpr* expr) {
 
 Result NameResolver::OnElemDropExpr(ElemDropExpr* expr) {
   ResolveElemSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnTableCopyExpr(TableCopyExpr* expr) {
+  ResolveTableVar(&expr->dst_table);
+  ResolveTableVar(&expr->src_table);
   return Result::Ok;
 }
 

@@ -368,12 +368,17 @@ Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
 
 Result BinaryReaderLogging::BeginElemSegment(Index index,
                                              Index table_index,
-                                             uint8_t flags,
-                                             Type elem_type) {
+                                             uint8_t flags) {
   LOGF("BeginElemSegment(index: %" PRIindex ", table_index: %" PRIindex
-       ", flags: %d, elem_type: %s)\n",
-       index, table_index, flags, GetTypeName(elem_type));
-  return reader_->BeginElemSegment(index, table_index, flags, elem_type);
+       ", flags: %d)\n",
+       index, table_index, flags);
+  return reader_->BeginElemSegment(index, table_index, flags);
+}
+
+Result BinaryReaderLogging::OnElemSegmentElemType(Index index, Type elem_type) {
+  LOGF("OnElemSegmentElemType(index: %" PRIindex ", type: %s)\n", index,
+       GetTypeName(elem_type));
+  return reader_->OnElemSegmentElemType(index, elem_type);
 }
 
 Result BinaryReaderLogging::OnDataSegmentData(Index index,

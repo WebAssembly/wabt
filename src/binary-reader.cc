@@ -2220,7 +2220,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     }
     Type elem_type = Type::Funcref;
 
-    CALLBACK(BeginElemSegment, i, table_index, flags, elem_type);
+    CALLBACK(BeginElemSegment, i, table_index, flags);
 
     if (!(flags & SegPassive)) {
       CALLBACK(BeginElemSegmentInitExpr, i);
@@ -2243,7 +2243,10 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
                      GetTypeName(elem_type));
         elem_type = Type::Funcref;
       }
+
     }
+
+    CALLBACK(OnElemSegmentElemType, i, elem_type);
 
     Index num_elem_exprs;
     CHECK_RESULT(ReadCount(&num_elem_exprs, "elem count"));
