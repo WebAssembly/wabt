@@ -319,8 +319,10 @@ FuncType* Module::GetFuncType(const Var& var) {
 
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
   for (size_t i = 0; i < types.size(); ++i) {
-    if (cast<FuncType>(types[i])->sig == sig) {
-      return i;
+    if (auto* func_type = dyn_cast<FuncType>(types[i])) {
+      if (func_type->sig == sig) {
+        return i;
+      }
     }
   }
   return kInvalidIndex;

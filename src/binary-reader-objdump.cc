@@ -726,11 +726,11 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result BeginCustomSection(Offset size, string_view section_name) override;
 
   Result OnTypeCount(Index count) override;
-  Result OnType(Index index,
-                Index param_count,
-                Type* param_types,
-                Index result_count,
-                Type* result_types) override;
+  Result OnFuncType(Index index,
+                    Index param_count,
+                    Type* param_types,
+                    Index result_count,
+                    Type* result_types) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -1029,11 +1029,11 @@ Result BinaryReaderObjdump::OnTypeCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::OnType(Index index,
-                                   Index param_count,
-                                   Type* param_types,
-                                   Index result_count,
-                                   Type* result_types) {
+Result BinaryReaderObjdump::OnFuncType(Index index,
+                                       Index param_count,
+                                       Type* param_types,
+                                       Index result_count,
+                                       Type* result_types) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }

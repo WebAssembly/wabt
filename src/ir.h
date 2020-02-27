@@ -142,6 +142,7 @@ struct FuncSignature {
 
 enum class TypeEntryKind {
   Func,
+  Struct,
 };
 
 class TypeEntry {
@@ -179,6 +180,24 @@ class FuncType : public TypeEntry {
   Type GetResultType(Index index) const { return sig.GetResultType(index); }
 
   FuncSignature sig;
+};
+
+struct Field {
+  std::string name;
+  Type type = Type::Void;
+  bool mutable_ = false;
+};
+
+class StructType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Struct;
+  }
+
+  explicit StructType(string_view name = string_view())
+      : TypeEntry(TypeEntryKind::Struct) {}
+
+  std::vector<Field> fields;
 };
 
 struct FuncDeclaration {
@@ -818,10 +837,8 @@ class ExportModuleField : public ModuleFieldMixin<ModuleFieldType::Export> {
 
 class TypeModuleField : public ModuleFieldMixin<ModuleFieldType::Type> {
  public:
-  explicit TypeModuleField(const Location& loc = Location(),
-                           string_view name = string_view())
-      : ModuleFieldMixin<ModuleFieldType::Type>(loc),
-        type(MakeUnique<FuncType>(name)) {}
+  explicit TypeModuleField(const Location& loc = Location())
+      : ModuleFieldMixin<ModuleFieldType::Type>(loc) {}
 
   std::unique_ptr<TypeEntry> type;
 };

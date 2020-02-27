@@ -152,7 +152,7 @@ class WatWriter : ModuleContext {
   void WriteDataSegment(const DataSegment& segment);
   void WriteImport(const Import& import);
   void WriteExport(const Export& export_);
-  void WriteFuncType(const FuncType& func_type);
+  void WriteTypeEntry(const TypeEntry& type);
   void WriteStartFunction(const Var& start);
 
   class ExprVisitorDelegate;
@@ -184,7 +184,7 @@ class WatWriter : ModuleContext {
   Index global_index_ = 0;
   Index table_index_ = 0;
   Index memory_index_ = 0;
-  Index func_type_index_ = 0;
+  Index type_index_ = 0;
   Index event_index_ = 0;
   Index data_segment_index_ = 0;
   Index elem_segment_index_ = 0;
@@ -1365,13 +1365,23 @@ void WatWriter::WriteExport(const Export& export_) {
   WriteCloseNewline();
 }
 
-void WatWriter::WriteFuncType(const FuncType& func_type) {
+void WatWriter::WriteTypeEntry(const TypeEntry& type) {
   WriteOpenSpace("type");
-  WriteNameOrIndex(func_type.name, func_type_index_++, NextChar::Space);
-  WriteOpenSpace("func");
-  WriteFuncSigSpace(func_type.sig);
-  WriteCloseSpace();
-  WriteCloseNewline();
+  WriteNameOrIndex(type.name, type_index_++, NextChar::Space);
+  switch (type.kind()) {
+    case TypeEntryKind::Func:
+      WriteOpenSpace("func");
+      WriteFuncSigSpace(cast<FuncType>(&type)->sig);
+      WriteCloseSpace();
+      WriteCloseNewline();
+      break;
+
+    case TypeEntryKind::Struct:
+      WriteOpenSpace("struct");
+      WriteCloseSpace();
+      WriteCloseNewline();
+      break;
+  }
 }
 
 void WatWriter::WriteStartFunction(const Var& start) {
@@ -1419,8 +1429,7 @@ Result WatWriter::WriteModule() {
         WriteDataSegment(cast<DataSegmentModuleField>(&field)->data_segment);
         break;
       case ModuleFieldType::Type:
-        WriteFuncType(
-            *cast<FuncType>(cast<TypeModuleField>(&field)->type.get()));
+        WriteTypeEntry(*cast<TypeModuleField>(&field)->type);
         break;
       case ModuleFieldType::Start:
         WriteStartFunction(cast<StartModuleField>(&field)->start);

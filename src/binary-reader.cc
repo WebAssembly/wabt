@@ -1951,44 +1951,60 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
   for (Index i = 0; i < num_signatures_; ++i) {
     Type form;
     CHECK_RESULT(ReadType(&form, "type form"));
-    ERROR_UNLESS(form == Type::Func,
-                 "unexpected type form (got " PRItypecode ")",
-                 WABT_PRINTF_TYPE_CODE(form));
 
-    Index num_params;
-    CHECK_RESULT(ReadCount(&num_params, "function param count"));
+    switch (form) {
+      case Type::Func: {
+        Index num_params;
+        CHECK_RESULT(ReadCount(&num_params, "function param count"));
 
-    param_types_.resize(num_params);
+        param_types_.resize(num_params);
 
-    for (Index j = 0; j < num_params; ++j) {
-      Type param_type;
-      CHECK_RESULT(ReadType(&param_type, "function param type"));
-      ERROR_UNLESS(IsConcreteType(param_type),
-                   "expected valid param type (got " PRItypecode ")",
-                   WABT_PRINTF_TYPE_CODE(param_type));
-      param_types_[j] = param_type;
+        for (Index j = 0; j < num_params; ++j) {
+          Type param_type;
+          CHECK_RESULT(ReadType(&param_type, "function param type"));
+          ERROR_UNLESS(IsConcreteType(param_type),
+                       "expected valid param type (got " PRItypecode ")",
+                       WABT_PRINTF_TYPE_CODE(param_type));
+          param_types_[j] = param_type;
+        }
+
+        Index num_results;
+        CHECK_RESULT(ReadCount(&num_results, "function result count"));
+        ERROR_UNLESS(
+            num_results <= 1 || options_.features.multi_value_enabled(),
+            "result count must be 0 or 1");
+
+        result_types_.resize(num_results);
+
+        for (Index j = 0; j < num_results; ++j) {
+          Type result_type;
+          CHECK_RESULT(ReadType(&result_type, "function result type"));
+          ERROR_UNLESS(IsConcreteType(result_type),
+                       "expected valid result type (got " PRItypecode ")",
+                       WABT_PRINTF_TYPE_CODE(result_type));
+          result_types_[j] = result_type;
+        }
+
+        Type* param_types = num_params ? param_types_.data() : nullptr;
+        Type* result_types = num_results ? result_types_.data() : nullptr;
+
+        CALLBACK(OnFuncType, i, num_params, param_types, num_results,
+                 result_types);
+        break;
+      }
+
+      case Type::Struct:
+        // TODO
+        ERROR_UNLESS(options_.features.gc_enabled(),
+                     "invalid type form: struct not allowed");
+        CALLBACK(OnStructType, i);
+        break;
+
+      default:
+        PrintError("unexpected type form (got " PRItypecode ")",
+                   WABT_PRINTF_TYPE_CODE(form));
+        return Result::Error;
     }
-
-    Index num_results;
-    CHECK_RESULT(ReadCount(&num_results, "function result count"));
-    ERROR_UNLESS(num_results <= 1 || options_.features.multi_value_enabled(),
-                 "result count must be 0 or 1");
-
-    result_types_.resize(num_results);
-
-    for (Index j = 0; j < num_results; ++j) {
-      Type result_type;
-      CHECK_RESULT(ReadType(&result_type, "function result type"));
-      ERROR_UNLESS(IsConcreteType(result_type),
-                   "expected valid result type (got " PRItypecode ")",
-                   WABT_PRINTF_TYPE_CODE(result_type));
-      result_types_[j] = result_type;
-    }
-
-    Type* param_types = num_params ? param_types_.data() : nullptr;
-    Type* result_types = num_results ? result_types_.data() : nullptr;
-
-    CALLBACK(OnType, i, num_params, param_types, num_results, result_types);
   }
   CALLBACK0(EndTypeSection);
   return Result::Ok;

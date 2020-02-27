@@ -261,7 +261,9 @@ void ResolveImplicitlyDefinedFunctionType(const Location& loc,
     Index func_type_index = module->GetFuncTypeIndex(decl.sig);
     if (func_type_index == kInvalidIndex) {
       auto func_type_field = MakeUnique<TypeModuleField>(loc);
-      cast<FuncType>(func_type_field->type.get())->sig = decl.sig;
+      auto func_type = MakeUnique<FuncType>();
+      func_type->sig = decl.sig;
+      func_type_field->type = std::move(func_type);
       module->AppendField(std::move(func_type_field));
     }
   }
@@ -1182,16 +1184,34 @@ Result WastParser::ParseTypeModuleField(Module* module) {
   WABT_TRACE(ParseTypeModuleField);
   EXPECT(Lpar);
   auto field = MakeUnique<TypeModuleField>(GetLocation());
-  FuncType& func_type = *cast<FuncType>(field->type.get());
   EXPECT(Type);
-  ParseBindVarOpt(&func_type.name);
+
+  std::string name;
+  ParseBindVarOpt(&name);
   EXPECT(Lpar);
-  EXPECT(Func);
-  BindingHash bindings;
-  CHECK_RESULT(ParseFuncSignature(&func_type.sig, &bindings));
-  CHECK_RESULT(ErrorIfLpar({"param", "result"}));
-  EXPECT(Rpar);
-  EXPECT(Rpar);
+  Location loc = GetLocation();
+
+  if (Match(TokenType::Func)) {
+    auto func_type = MakeUnique<FuncType>(name);
+    BindingHash bindings;
+    CHECK_RESULT(ParseFuncSignature(&func_type->sig, &bindings));
+    CHECK_RESULT(ErrorIfLpar({"param", "result"}));
+    EXPECT(Rpar);
+    EXPECT(Rpar);
+    field->type = std::move(func_type);
+  } else if (Match(TokenType::Struct)) {
+    if (!options_->features.gc_enabled()) {
+      Error(loc, "struct not allowed");
+      return Result::Error;
+    }
+    auto struct_type = MakeUnique<StructType>(name);
+    EXPECT(Rpar);
+    EXPECT(Rpar);
+    field->type = std::move(struct_type);
+  } else {
+    return ErrorExpected({"func", "struct"});
+  }
+
   module->AppendField(std::move(field));
   return Result::Ok;
 }

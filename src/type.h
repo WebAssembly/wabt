@@ -41,6 +41,7 @@ class Type {
     Nullref = -0x12,  // 0x6e
     Exnref = -0x18,   // 0x68
     Func = -0x20,     // 0x60
+    Struct = -0x21,   // 0x5f
     Void = -0x40,     // 0x40
     ___ = Void,       // Convenient for the opcode table in opcode.h
 

@@ -78,11 +78,11 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndModule() override;
 
   Result OnTypeCount(Index count) override;
-  Result OnType(Index index,
-                Index param_count,
-                Type* param_types,
-                Index result_count,
-                Type* result_types) override;
+  Result OnFuncType(Index index,
+                    Index param_count,
+                    Type* param_types,
+                    Index result_count,
+                    Type* result_types) override;
 
   Result OnImportFunc(Index import_index,
                       string_view module_name,
@@ -432,13 +432,13 @@ Result BinaryReaderInterp::OnTypeCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnType(Index index,
-                                  Index param_count,
-                                  Type* param_types,
-                                  Index result_count,
-                                  Type* result_types) {
-  CHECK_RESULT(validator_.OnType(loc, param_count, param_types, result_count,
-                                 result_types));
+Result BinaryReaderInterp::OnFuncType(Index index,
+                                      Index param_count,
+                                      Type* param_types,
+                                      Index result_count,
+                                      Type* result_types) {
+  CHECK_RESULT(validator_.OnFuncType(loc, param_count, param_types,
+                                     result_count, result_types));
   module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
                                         ToInterp(result_count, result_types)));
   return Result::Ok;

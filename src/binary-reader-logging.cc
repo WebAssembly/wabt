@@ -128,18 +128,24 @@ Result BinaryReaderLogging::BeginCustomSection(Offset size,
   return reader_->BeginCustomSection(size, section_name);
 }
 
-Result BinaryReaderLogging::OnType(Index index,
-                                   Index param_count,
-                                   Type* param_types,
-                                   Index result_count,
-                                   Type* result_types) {
+Result BinaryReaderLogging::OnFuncType(Index index,
+                                       Index param_count,
+                                       Type* param_types,
+                                       Index result_count,
+                                       Type* result_types) {
+  // TODO: switch to "OnFuncType"?
   LOGF("OnType(index: %" PRIindex ", params: ", index);
   LogTypes(param_count, param_types);
   LOGF_NOINDENT(", results: ");
   LogTypes(result_count, result_types);
   LOGF_NOINDENT(")\n");
-  return reader_->OnType(index, param_count, param_types, result_count,
-                         result_types);
+  return reader_->OnFuncType(index, param_count, param_types, result_count,
+                             result_types);
+}
+
+Result BinaryReaderLogging::OnStructType(Index index) {
+  LOGF("OnStructType(index: %" PRIindex ")\n", index);
+  return reader_->OnStructType(index);
 }
 
 Result BinaryReaderLogging::OnImport(Index index,

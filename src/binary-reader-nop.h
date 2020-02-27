@@ -44,13 +44,14 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Type section */
   Result BeginTypeSection(Offset size) override { return Result::Ok; }
   Result OnTypeCount(Index count) override { return Result::Ok; }
-  Result OnType(Index index,
-                Index param_count,
-                Type* param_types,
-                Index result_count,
-                Type* result_types) override {
+  Result OnFuncType(Index index,
+                    Index param_count,
+                    Type* param_types,
+                    Index result_count,
+                    Type* result_types) override {
     return Result::Ok;
   }
+  Result OnStructType(Index index) override { return Result::Ok; }
   Result EndTypeSection() override { return Result::Ok; }
 
   /* Import section */
