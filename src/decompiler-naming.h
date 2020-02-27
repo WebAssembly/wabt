@@ -196,7 +196,7 @@ void RenameAll(Module& module) {
   RenameToIdentifiers(module.tables, module.table_bindings, nullptr);
   RenameToIdentifiers(module.events, module.event_bindings, nullptr);
   RenameToIdentifiers(module.exports, module.export_bindings, nullptr);
-  RenameToIdentifiers(module.func_types, module.func_type_bindings, nullptr);
+  RenameToIdentifiers(module.types, module.type_bindings, nullptr);
   RenameToIdentifiers(module.memories, module.memory_bindings, nullptr);
   RenameToIdentifiers(module.data_segments, module.data_segment_bindings,
                       nullptr);

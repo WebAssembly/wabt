@@ -886,11 +886,12 @@ void CWriter::WriteSourceTop() {
 
 void CWriter::WriteFuncTypes() {
   Write(Newline());
-  Writef("static u32 func_types[%" PRIzd "];", module_->func_types.size());
+  Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
   Write(Newline(), Newline());
   Write("static void init_func_types(void) {", Newline());
   Index func_type_index = 0;
-  for (FuncType* func_type : module_->func_types) {
+  for (TypeEntry* type : module_->types) {
+    FuncType* func_type = cast<FuncType>(type);
     Index num_params = func_type->GetNumParams();
     Index num_results = func_type->GetNumResults();
     Write("  func_types[", func_type_index, "] = wasm_rt_register_func_type(",

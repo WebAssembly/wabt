@@ -140,15 +140,44 @@ struct FuncSignature {
   bool operator==(const FuncSignature&) const;
 };
 
-struct FuncType {
-  explicit FuncType(string_view name) : name(name.to_string()) {}
+enum class TypeEntryKind {
+  Func,
+};
+
+class TypeEntry {
+ public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(TypeEntry);
+
+  virtual ~TypeEntry() = default;
+
+  TypeEntryKind kind() const { return kind_; }
+
+  Location loc;
+  std::string name;
+
+ protected:
+  explicit TypeEntry(TypeEntryKind kind,
+                     string_view name = string_view(),
+                     const Location& loc = Location())
+      : loc(loc), name(name.to_string()), kind_(kind) {}
+
+  TypeEntryKind kind_;
+};
+
+class FuncType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Func;
+  }
+
+  explicit FuncType(string_view name = string_view())
+      : TypeEntry(TypeEntryKind::Func, name) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
   Type GetParamType(Index index) const { return sig.GetParamType(index); }
   Type GetResultType(Index index) const { return sig.GetResultType(index); }
 
-  std::string name;
   FuncSignature sig;
 };
 
@@ -711,7 +740,7 @@ enum class ModuleFieldType {
   Global,
   Import,
   Export,
-  FuncType,
+  Type,
   Table,
   ElemSegment,
   Memory,
@@ -787,13 +816,14 @@ class ExportModuleField : public ModuleFieldMixin<ModuleFieldType::Export> {
   Export export_;
 };
 
-class FuncTypeModuleField : public ModuleFieldMixin<ModuleFieldType::FuncType> {
+class TypeModuleField : public ModuleFieldMixin<ModuleFieldType::Type> {
  public:
-  explicit FuncTypeModuleField(const Location& loc = Location(),
-                               string_view name = string_view())
-      : ModuleFieldMixin<ModuleFieldType::FuncType>(loc), func_type(name) {}
+  explicit TypeModuleField(const Location& loc = Location(),
+                           string_view name = string_view())
+      : ModuleFieldMixin<ModuleFieldType::Type>(loc),
+        type(MakeUnique<FuncType>(name)) {}
 
-  FuncType func_type;
+  std::unique_ptr<TypeEntry> type;
 };
 
 class TableModuleField : public ModuleFieldMixin<ModuleFieldType::Table> {
@@ -892,7 +922,7 @@ struct Module {
   void AppendField(std::unique_ptr<EventModuleField>);
   void AppendField(std::unique_ptr<ExportModuleField>);
   void AppendField(std::unique_ptr<FuncModuleField>);
-  void AppendField(std::unique_ptr<FuncTypeModuleField>);
+  void AppendField(std::unique_ptr<TypeModuleField>);
   void AppendField(std::unique_ptr<GlobalModuleField>);
   void AppendField(std::unique_ptr<ImportModuleField>);
   void AppendField(std::unique_ptr<MemoryModuleField>);
@@ -918,7 +948,7 @@ struct Module {
   std::vector<Global*> globals;
   std::vector<Import*> imports;
   std::vector<Export*> exports;
-  std::vector<FuncType*> func_types;
+  std::vector<TypeEntry*> types;
   std::vector<Table*> tables;
   std::vector<ElemSegment*> elem_segments;
   std::vector<Memory*> memories;
@@ -929,7 +959,7 @@ struct Module {
   BindingHash func_bindings;
   BindingHash global_bindings;
   BindingHash export_bindings;
-  BindingHash func_type_bindings;
+  BindingHash type_bindings;
   BindingHash table_bindings;
   BindingHash memory_bindings;
   BindingHash data_segment_bindings;

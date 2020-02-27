@@ -1418,8 +1418,9 @@ Result WatWriter::WriteModule() {
       case ModuleFieldType::DataSegment:
         WriteDataSegment(cast<DataSegmentModuleField>(&field)->data_segment);
         break;
-      case ModuleFieldType::FuncType:
-        WriteFuncType(cast<FuncTypeModuleField>(&field)->func_type);
+      case ModuleFieldType::Type:
+        WriteFuncType(
+            *cast<FuncType>(cast<TypeModuleField>(&field)->type.get()));
         break;
       case ModuleFieldType::Start:
         WriteStartFunction(cast<StartModuleField>(&field)->start);
