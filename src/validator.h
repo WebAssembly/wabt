@@ -19,18 +19,12 @@
 
 #include "src/error.h"
 #include "src/feature.h"
+#include "src/shared-validator.h"
 
 namespace wabt {
 
 struct Module;
 struct Script;
-
-struct ValidateOptions {
-  ValidateOptions() = default;
-  ValidateOptions(const Features& features) : features(features) {}
-
-  Features features;
-};
 
 // Perform all checks on the script. It is valid if and only if this function
 // succeeds.
@@ -39,4 +33,4 @@ Result ValidateModule(const Module*, Errors*, const ValidateOptions&);
 
 }  // namespace wabt
 
-#endif /* WABT_VALIDATOR_H_ */
+#endif // WABT_VALIDATOR_H_

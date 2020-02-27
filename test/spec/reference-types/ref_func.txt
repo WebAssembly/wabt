@@ -5,13 +5,13 @@
 set-g() =>
 set-f() =>
 out/test/spec/reference-types/ref_func.wast:71: assert_invalid passed:
-  error: function is not declared in any elem sections: 7
-  0000027: error: EndModule callback failed
+  0000000: error: function variable out of range: 7 (max 1)
+  0000027: error: EndGlobalInitExpr callback failed
 out/test/spec/reference-types/ref_func.wast:80: assert_invalid passed:
-  error: function is not declared in any elem sections: 0
+  0000000: error: function is not declared in any elem sections
   0000020: error: EndModule callback failed
 out/test/spec/reference-types/ref_func.wast:84: assert_invalid passed:
-  error: function is not declared in any elem sections: 0
+  0000000: error: function is not declared in any elem sections
   0000019: error: OnRefFuncExpr callback failed
 13/13 tests passed.
 ;;; STDOUT ;;)

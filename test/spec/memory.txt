@@ -12,22 +12,22 @@ out/test/spec/memory.wast:19: assert_invalid passed:
 out/test/spec/memory.wast:20: assert_invalid passed:
   000000b: error: data section without memory section
 out/test/spec/memory.wast:23: assert_invalid passed:
-  error: f32.load requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 4294967295)
   000001c: error: OnLoadExpr callback failed
 out/test/spec/memory.wast:27: assert_invalid passed:
-  error: f32.store requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 4294967295)
   0000021: error: OnStoreExpr callback failed
 out/test/spec/memory.wast:31: assert_invalid passed:
-  error: i32.load8_s requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 4294967295)
   000001c: error: OnLoadExpr callback failed
 out/test/spec/memory.wast:35: assert_invalid passed:
-  error: i32.store8 requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 4294967295)
   000001e: error: OnStoreExpr callback failed
 out/test/spec/memory.wast:39: assert_invalid passed:
-  error: memory.size requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 4294967295)
   0000019: error: OnMemorySizeExpr callback failed
 out/test/spec/memory.wast:43: assert_invalid passed:
-  error: memory.grow requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 4294967295)
   000001b: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory.wast:49: assert_invalid passed:
   000000e: error: memory initial size must be <= max size

@@ -56,10 +56,11 @@ out/test/spec/reference-types/table_init.wast:189: assert_trap passed: uninitial
 out/test/spec/reference-types/table_init.wast:190: assert_trap passed: uninitialized table element
 out/test/spec/reference-types/table_init.wast:191: assert_trap passed: uninitialized table element
 out/test/spec/reference-types/table_init.wast:193: assert_invalid passed:
-  error: invalid elem_segment_index: 0 (max 0)
+  error: elem.drop requires table 0 to be an imported or defined table.
+  0000000: error: elem_segment variable out of range: 0 (max 4294967295)
   0000024: error: OnElemDropExpr callback failed
 out/test/spec/reference-types/table_init.wast:199: assert_invalid passed:
-  error: found table.init operator, but no table
+  0000000: error: table.init requires table 0 to be an imported or defined table.
   000002b: error: OnTableInitExpr callback failed
 out/test/spec/reference-types/table_init.wast:205: assert_invalid passed:
   0000024: error: elem section without table section

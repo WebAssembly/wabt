@@ -283,6 +283,8 @@ set(WABT_LIBRARY_SRC
   src/option-parser.cc
   src/resolve-names.h
   src/resolve-names.cc
+  src/shared-validator.h
+  src/shared-validator.cc
   src/stream.h
   src/stream.cc
   src/string-view.h

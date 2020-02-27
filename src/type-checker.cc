@@ -768,11 +768,12 @@ Result TypeChecker::OnTernary(Opcode opcode) {
 }
 
 Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
-  Result result = Result::Error;
+  Result result = Result::Ok;
   uint32_t lane_count = opcode.GetSimdLaneCount();
   if (lane_idx >= lane_count) {
     PrintError("lane index must be less than %d (got %" PRIu64 ")", lane_count,
                lane_idx);
+    result = Result::Error;
   }
 
   switch (opcode) {
@@ -784,7 +785,7 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
     case Opcode::F32X4ExtractLane:
     case Opcode::I64X2ExtractLane:
     case Opcode::F64X2ExtractLane:
-      result = CheckOpcode1(opcode);
+      result |= CheckOpcode1(opcode);
       break;
     case Opcode::I8X16ReplaceLane:
     case Opcode::I16X8ReplaceLane:
@@ -792,7 +793,7 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
     case Opcode::F32X4ReplaceLane:
     case Opcode::I64X2ReplaceLane:
     case Opcode::F64X2ReplaceLane:
-      result = CheckOpcode2(opcode);
+      result |= CheckOpcode2(opcode);
       break;
     default:
       WABT_UNREACHABLE;
@@ -801,16 +802,17 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
 }
 
 Result TypeChecker::OnSimdShuffleOp(Opcode opcode, v128 lane_idx) {
-  Result result = Result::Error;
+  Result result = Result::Ok;
   uint8_t simd_data[16];
   memcpy(simd_data, &lane_idx, 16);
   for (int i = 0; i < 16; i++) {
     if (simd_data[i] >= 32) {
       PrintError("lane index must be less than 32 (got %d)", simd_data[i]);
+      result = Result::Error;
     }
   }
 
-  result = CheckOpcode2(opcode);
+  result |= CheckOpcode2(opcode);
   return result;
 }
 

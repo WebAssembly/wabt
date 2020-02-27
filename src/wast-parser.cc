@@ -1695,7 +1695,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::CallIndirect: {
       Consume();
       auto expr = MakeUnique<CallIndirectExpr>(loc);
-      ParseVarOpt(&expr->table, Var(0));
+      ParseVarOpt(&expr->table, Var(0, loc));
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
       *out_expr = std::move(expr);
@@ -1712,7 +1712,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       auto expr = MakeUnique<ReturnCallIndirectExpr>(loc);
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
-      ParseVarOpt(&expr->table, Var(0));
+      ParseVarOpt(&expr->table, Var(0, loc));
       *out_expr = std::move(expr);
       break;
     }
@@ -1816,8 +1816,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::TableCopy: {
       ErrorUnlessOpcodeEnabled(Consume());
-      Var dst(0);
-      Var src(0);
+      Var dst(0, loc);
+      Var src(0, loc);
       if (options_->features.reference_types_enabled()) {
       // TODO: disabled for now, since the spec tests don't currently use.
 #if 0
@@ -1836,9 +1836,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::TableInit: {
       ErrorUnlessOpcodeEnabled(Consume());
-      Var segment_index(0);
+      Var segment_index(0, loc);
       CHECK_RESULT(ParseVar(&segment_index));
-      Var table_index(0);
+      Var table_index(0, loc);
       out_expr->reset(new TableInitExpr(segment_index, table_index, loc));
       break;
     }

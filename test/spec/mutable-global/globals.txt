@@ -3,6 +3,7 @@
 (;; STDOUT ;;;
 out/test/spec/mutable-global/globals.wast:50: assert_invalid passed:
   error: can't global.set on immutable global at index 0.
+  error: type mismatch in global.set, expected [f32] but got [i32]
   0000026: error: OnGlobalSetExpr callback failed
 out/test/spec/mutable-global/globals.wast:59: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
@@ -15,19 +16,19 @@ out/test/spec/mutable-global/globals.wast:74: assert_invalid passed:
 out/test/spec/mutable-global/globals.wast:79: assert_invalid passed:
   000000e: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/mutable-global/globals.wast:84: assert_invalid passed:
-  error: type mismatch in global, expected i32 but got f32.
+  error: type mismatch at global initializer expression. got f32, expected i32
   0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/mutable-global/globals.wast:89: assert_invalid passed:
   0000010: error: expected END opcode after initializer expression
 out/test/spec/mutable-global/globals.wast:94: assert_invalid passed:
-  error: type mismatch in global, expected i32 but got void.
+  error: invalid global initializer expression, must be a constant expression; either *.const or global.get.
   000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/mutable-global/globals.wast:99: assert_invalid passed:
-  error: initializer expression can only reference an imported global
-  000000f: error: OnInitExprGlobalGetExpr callback failed
+  0000000: error: initializer expression can only reference an imported global
+  0000010: error: EndGlobalInitExpr callback failed
 out/test/spec/mutable-global/globals.wast:104: assert_invalid passed:
-  error: initializer expression can only reference an imported global
-  000000f: error: OnInitExprGlobalGetExpr callback failed
+  0000000: error: global variable out of range: 1 (max 0)
+  0000010: error: EndGlobalInitExpr callback failed
 out/test/spec/mutable-global/globals.wast:112: assert_malformed passed:
   0000019: error: unable to read string: import field name
 out/test/spec/mutable-global/globals.wast:125: assert_malformed passed:
