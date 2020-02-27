@@ -47,7 +47,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                     Type* param_types,
                     Index result_count,
                     Type* result_types) override;
-  Result OnStructType(Index index) override;
+  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
   Result EndTypeSection() override;
 
   Result BeginImportSection(Offset size) override;

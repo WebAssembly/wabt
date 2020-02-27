@@ -1373,15 +1373,30 @@ void WatWriter::WriteTypeEntry(const TypeEntry& type) {
       WriteOpenSpace("func");
       WriteFuncSigSpace(cast<FuncType>(&type)->sig);
       WriteCloseSpace();
-      WriteCloseNewline();
       break;
 
-    case TypeEntryKind::Struct:
+    case TypeEntryKind::Struct: {
+      auto* struct_type = cast<StructType>(&type);
       WriteOpenSpace("struct");
+      Index field_index = 0;
+      for (auto&& field : struct_type->fields) {
+        // TODO: Write shorthand if there is no name.
+        WriteOpenSpace("field");
+        WriteNameOrIndex(field.name, field_index++, NextChar::Space);
+        if (field.mutable_) {
+          WriteOpenSpace("mut");
+        }
+        WriteType(field.type, NextChar::Space);
+        if (field.mutable_) {
+          WriteCloseSpace();
+        }
+        WriteCloseSpace();
+      }
       WriteCloseSpace();
-      WriteCloseNewline();
       break;
+    }
   }
+  WriteCloseNewline();
 }
 
 void WatWriter::WriteStartFunction(const Var& start) {

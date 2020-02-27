@@ -51,7 +51,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                     Type* result_types) override {
     return Result::Ok;
   }
-  Result OnStructType(Index index) override { return Result::Ok; }
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields) override {
+    return Result::Ok;
+  }
   Result EndTypeSection() override { return Result::Ok; }
 
   /* Import section */

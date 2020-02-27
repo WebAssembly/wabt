@@ -1,3 +1,3 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-gc
-(type (struct))
+(type (struct i32 (field i64)))

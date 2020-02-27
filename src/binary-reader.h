@@ -51,6 +51,12 @@ struct ReadBinaryOptions {
   bool fail_on_custom_section_error = true;
 };
 
+// TODO: Move somewhere else?
+struct TypeMut {
+  Type type;
+  bool mutable_;
+};
+
 class BinaryReaderDelegate {
  public:
   struct State {
@@ -87,7 +93,9 @@ class BinaryReaderDelegate {
                             Type* param_types,
                             Index result_count,
                             Type* result_types) = 0;
-  virtual Result OnStructType(Index index) = 0;  // TODO
+  virtual Result OnStructType(Index index,
+                              Index field_count,
+                              TypeMut* fields) = 0;
   virtual Result EndTypeSection() = 0;
 
   /* Import section */

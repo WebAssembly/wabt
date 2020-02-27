@@ -149,6 +149,7 @@ class BinaryReader {
   BinaryReaderDelegate* delegate_ = nullptr;
   TypeVector param_types_;
   TypeVector result_types_;
+  std::vector<TypeMut> fields_;
   std::vector<Index> target_depths_;
   const ReadBinaryOptions& options_;
   BinarySection last_known_section_ = BinarySection::Invalid;
@@ -1935,12 +1936,31 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
         break;
       }
 
-      case Type::Struct:
-        // TODO
+      case Type::Struct: {
         ERROR_UNLESS(options_.features.gc_enabled(),
                      "invalid type form: struct not allowed");
-        CALLBACK(OnStructType, i);
+        Index num_fields;
+        CHECK_RESULT(ReadCount(&num_fields, "field count"));
+
+        fields_.resize(num_fields);
+        for (Index j = 0; j < num_fields; ++j) {
+          Type field_type;
+          CHECK_RESULT(ReadType(&field_type, "field type"));
+          ERROR_UNLESS(IsConcreteType(field_type),
+                       "expected valid field type (got " PRItypecode ")",
+                       WABT_PRINTF_TYPE_CODE(field_type));
+
+          uint8_t mutable_ = 0;
+          CHECK_RESULT(ReadU8(&mutable_, "field mutability"));
+          ERROR_UNLESS(mutable_ <= 1, "field mutability must be 0 or 1");
+
+          fields_[j].type = field_type;
+          fields_[j].mutable_ = mutable_;
+        }
+
+        CALLBACK(OnStructType, i, fields_.size(), fields_.data());
         break;
+      }
 
       default:
         PrintError("unexpected type form (got " PRItypecode ")",

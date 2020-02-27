@@ -57,7 +57,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                     Type* param_types,
                     Index result_count,
                     Type* result_types) override;
-  Result OnStructType(Index index) override;
+  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -406,9 +406,16 @@ Result BinaryReaderIR::OnFuncType(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnStructType(Index index) {
+Result BinaryReaderIR::OnStructType(Index index,
+                                    Index field_count,
+                                    TypeMut* fields) {
   auto field = MakeUnique<TypeModuleField>(GetLocation());
   auto struct_type = MakeUnique<StructType>();
+  struct_type->fields.resize(field_count);
+  for (Index i = 0; i < field_count; ++i) {
+    struct_type->fields[i].type = fields[i].type;
+    struct_type->fields[i].mutable_ = fields[i].mutable_;
+  }
   field->type = std::move(struct_type);
   module_->AppendField(std::move(field));
   return Result::Ok;
