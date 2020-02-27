@@ -34,6 +34,7 @@ options:
       --enable-bulk-memory                    Enable Bulk-memory operations
       --enable-reference-types                Enable Reference types (anyref)
       --enable-annotations                    Enable Custom annotation syntax
+      --enable-gc                             Enable Garbage collection
       --enable-all                            Enable all features
   -o, --output=FILE                           output wasm binary file
   -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with e.g. lld)
