@@ -606,6 +606,14 @@ Result Validator::CheckModule() {
                                              type_muts.data());
           break;
         }
+
+        case TypeEntryKind::Array: {
+          ArrayType* array_type = cast<ArrayType>(f->type.get());
+          result_ |= validator_.OnArrayType(
+              field.loc,
+              TypeMut{array_type->field.type, array_type->field.mutable_});
+          break;
+        }
       }
     }
   }

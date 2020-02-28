@@ -20,6 +20,7 @@
 
 /* Tokens with no additional data (i.e. bare). */
 WABT_TOKEN(Invalid, "Invalid")
+WABT_TOKEN(Array, "array")
 WABT_TOKEN(AssertExhaustion, "assert_exhaustion")
 WABT_TOKEN(AssertInvalid, "assert_invalid")
 WABT_TOKEN(AssertMalformed, "assert_malformed")

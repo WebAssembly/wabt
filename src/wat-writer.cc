@@ -153,6 +153,7 @@ class WatWriter : ModuleContext {
   void WriteImport(const Import& import);
   void WriteExport(const Export& export_);
   void WriteTypeEntry(const TypeEntry& type);
+  void WriteField(const Field& field);
   void WriteStartFunction(const Var& start);
 
   class ExprVisitorDelegate;
@@ -1379,20 +1380,32 @@ void WatWriter::WriteTypeEntry(const TypeEntry& type) {
         // TODO: Write shorthand if there is no name.
         WriteOpenSpace("field");
         WriteNameOrIndex(field.name, field_index++, NextChar::Space);
-        if (field.mutable_) {
-          WriteOpenSpace("mut");
-        }
-        WriteType(field.type, NextChar::Space);
-        if (field.mutable_) {
-          WriteCloseSpace();
-        }
+        WriteField(field);
         WriteCloseSpace();
       }
       WriteCloseSpace();
       break;
     }
+
+    case TypeEntryKind::Array: {
+      auto* array_type = cast<ArrayType>(&type);
+      WriteOpenSpace("array");
+      WriteField(array_type->field);
+      WriteCloseSpace();
+      break;
+    }
   }
   WriteCloseNewline();
+}
+
+void WatWriter::WriteField(const Field& field) {
+  if (field.mutable_) {
+    WriteOpenSpace("mut");
+  }
+  WriteType(field.type, NextChar::Space);
+  if (field.mutable_) {
+    WriteCloseSpace();
+  }
 }
 
 void WatWriter::WriteStartFunction(const Var& start) {

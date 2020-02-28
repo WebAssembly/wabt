@@ -68,6 +68,11 @@ Result SharedValidator::OnStructType(const Location&,
   return Result::Ok;
 }
 
+Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
+  array_types_.emplace(num_types_++, ArrayType{field});
+  return Result::Ok;
+}
+
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
   Result result = Result::Ok;
   FuncType type;

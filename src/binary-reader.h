@@ -97,6 +97,7 @@ class BinaryReaderDelegate {
   virtual Result OnStructType(Index index,
                               Index field_count,
                               TypeMut* fields) = 0;
+  virtual Result OnArrayType(Index index, TypeMut field) = 0;
   virtual Result EndTypeSection() = 0;
 
   /* Import section */

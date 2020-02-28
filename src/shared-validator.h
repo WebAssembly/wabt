@@ -67,6 +67,7 @@ class SharedValidator {
                     Index result_count,
                     const Type* result_types);
   Result OnStructType(const Location&, Index field_count, TypeMut* fields);
+  Result OnArrayType(const Location&, TypeMut field);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&);
@@ -188,6 +189,13 @@ class SharedValidator {
     TypeMutVector fields;
   };
 
+  struct ArrayType {
+    ArrayType() = default;
+    ArrayType(TypeMut field) : field(field) {}
+
+    TypeMut field;
+  };
+
   struct TableType {
     TableType() = default;
     TableType(Type element, Limits limits) : element(element), limits(limits) {}
@@ -275,6 +283,7 @@ class SharedValidator {
   Index num_types_ = 0;
   std::map<Index, FuncType> func_types_;
   std::map<Index, StructType> struct_types_;
+  std::map<Index, ArrayType> array_types_;
 
   std::vector<FuncType> funcs_;       // Includes imported and defined.
   std::vector<TableType> tables_;     // Includes imported and defined.

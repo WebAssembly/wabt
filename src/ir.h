@@ -162,6 +162,7 @@ struct FuncSignature {
 enum class TypeEntryKind {
   Func,
   Struct,
+  Array,
 };
 
 class TypeEntry {
@@ -217,6 +218,18 @@ class StructType : public TypeEntry {
       : TypeEntry(TypeEntryKind::Struct) {}
 
   std::vector<Field> fields;
+};
+
+class ArrayType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Array;
+  }
+
+  explicit ArrayType(string_view name = string_view())
+      : TypeEntry(TypeEntryKind::Array) {}
+
+  Field field;
 };
 
 struct FuncDeclaration {

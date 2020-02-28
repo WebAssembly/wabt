@@ -1196,8 +1196,6 @@ Result WastParser::ParseTypeModuleField(Module* module) {
     BindingHash bindings;
     CHECK_RESULT(ParseFuncSignature(&func_type->sig, &bindings));
     CHECK_RESULT(ErrorIfLpar({"param", "result"}));
-    EXPECT(Rpar);
-    EXPECT(Rpar);
     field->type = std::move(func_type);
   } else if (Match(TokenType::Struct)) {
     if (!options_->features.gc_enabled()) {
@@ -1206,13 +1204,20 @@ Result WastParser::ParseTypeModuleField(Module* module) {
     }
     auto struct_type = MakeUnique<StructType>(name);
     CHECK_RESULT(ParseFieldList(&struct_type->fields));
-    EXPECT(Rpar);
-    EXPECT(Rpar);
     field->type = std::move(struct_type);
+  } else if (Match(TokenType::Array)) {
+    if (!options_->features.gc_enabled()) {
+      Error(loc, "array type not allowed");
+    }
+    auto array_type = MakeUnique<ArrayType>(name);
+    CHECK_RESULT(ParseField(&array_type->field));
+    field->type = std::move(array_type);
   } else {
-    return ErrorExpected({"func", "struct"});
+    return ErrorExpected({"func", "struct", "array"});
   }
 
+  EXPECT(Rpar);
+  EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
 }

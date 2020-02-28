@@ -915,6 +915,15 @@ Result BinaryWriter::WriteModule() {
           }
           break;
         }
+
+        case TypeEntryKind::Array: {
+          const ArrayType* array_type = cast<ArrayType>(type);
+          WriteHeader("array type", i);
+          WriteType(stream_, Type::Array);
+          WriteType(stream_, array_type->field.type);
+          stream_->WriteU8(array_type->field.mutable_, "field mutability");
+          break;
+        }
       }
     }
     EndSection();

@@ -732,6 +732,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                     Index result_count,
                     Type* result_types) override;
   Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
+  Result OnArrayType(Index index, TypeMut field) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -1083,6 +1084,22 @@ Result BinaryReaderObjdump::OnStructType(Index index,
     if (fields[i].mutable_) {
       printf(")");
     }
+  }
+  printf(")\n");
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnArrayType(Index index, TypeMut field) {
+  if (!ShouldPrintDetails()) {
+    return Result::Ok;
+  }
+  printf(" - type[%" PRIindex "] (array", index);
+  if (field.mutable_) {
+    printf(" (mut");
+  }
+  printf(" %s", field.type.GetName());
+  if (field.mutable_) {
+    printf(")");
   }
   printf(")\n");
   return Result::Ok;
