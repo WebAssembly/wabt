@@ -24,6 +24,7 @@ options:
       --enable-bulk-memory                    Enable Bulk-memory operations
       --enable-reference-types                Enable Reference types (anyref)
       --enable-annotations                    Enable Custom annotation syntax
+      --enable-gc                             Enable Garbage collection
       --enable-all                            Enable all features
       --no-debug-names                        Ignore debug names in the binary file
       --ignore-custom-section-errors          Ignore errors in custom sections

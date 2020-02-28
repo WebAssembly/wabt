@@ -25,6 +25,7 @@ options:
       --enable-bulk-memory                    Enable Bulk-memory operations
       --enable-reference-types                Enable Reference types (anyref)
       --enable-annotations                    Enable Custom annotation syntax
+      --enable-gc                             Enable Garbage collection
       --enable-all                            Enable all features
   -o, --output=FILENAME                       Output file for the opcode counts, by default use stdout
   -c, --cutoff=N                              Cutoff for reporting counts less than N

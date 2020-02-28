@@ -33,3 +33,4 @@ WABT_FEATURE(tail_call,        "tail-call",               false,   "Tail-call su
 WABT_FEATURE(bulk_memory,      "bulk-memory",             false,   "Bulk-memory operations")
 WABT_FEATURE(reference_types,  "reference-types",         false,   "Reference types (anyref)")
 WABT_FEATURE(annotations,      "annotations",             false,   "Custom annotation syntax")
+WABT_FEATURE(gc,               "gc",                      false,   "Garbage collection")
