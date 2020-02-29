@@ -166,7 +166,7 @@ bool Module::IsImport(ExternalKind kind, const Var& var) const {
   }
 }
 
-void LocalTypes::Set(const TypeVector& types) {
+void LocalTypes::Set(const TypeVarVector& types) {
   decls_.clear();
   if (types.empty()) {
     return;
@@ -192,7 +192,7 @@ Index LocalTypes::size() const {
       [](Index sum, const Decl& decl) { return sum + decl.second; });
 }
 
-Type LocalTypes::operator[](Index i) const {
+TypeVar LocalTypes::operator[](Index i) const {
   Index count = 0;
   for (auto decl: decls_) {
     if (i < count + decl.second) {
@@ -204,7 +204,7 @@ Type LocalTypes::operator[](Index i) const {
   return Type::Any;
 }
 
-Type Func::GetLocalType(Index index) const {
+TypeVar Func::GetLocalType(Index index) const {
   Index num_params = decl.GetNumParams();
   if (index < num_params) {
     return GetParamType(index);
@@ -215,7 +215,7 @@ Type Func::GetLocalType(Index index) const {
   }
 }
 
-Type Func::GetLocalType(const Var& var) const {
+TypeVar Func::GetLocalType(const Var& var) const {
   return GetLocalType(GetLocalIndex(var));
 }
 
@@ -636,6 +636,30 @@ void Var::Destroy() {
   if (is_name()) {
     Destruct(name_);
   }
+}
+
+TypeVar::TypeVar(Type type) : type(type) {
+  if (type.IsRefT()) {
+    var.set_index(type.GetRefTIndex());
+  }
+}
+
+TypeVar::TypeVar(Type::Enum enum_) : TypeVar(Type(enum_)) {}
+
+TypeVar::TypeVar(Type type, Var var) : type(type), var(var) {
+  assert(type.IsRefT());
+}
+
+TypeVar::operator Type() const {
+  if (type.IsRefT()) {
+    assert(var.is_index());
+    return Type::MakeRefT(var.index());
+  }
+  return type;
+}
+
+TypeVar::operator Type::Enum() const {
+  return TypeVar::operator Type();
 }
 
 uint8_t ElemSegment::GetFlags(const Module* module) const {

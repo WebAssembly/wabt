@@ -73,6 +73,20 @@ struct Var {
 };
 typedef std::vector<Var> VarVector;
 
+// TODO: Better name for this?
+struct TypeVar {
+  TypeVar() = default;
+  TypeVar(Type);
+  TypeVar(Type::Enum);
+  TypeVar(Type, Var);  // Only used for Type::RefT.
+  operator Type() const;
+  operator Type::Enum() const;
+
+  Type type = Type::Void;
+  Var var;
+};
+typedef std::vector<TypeVar> TypeVarVector;
+
 struct Const {
   Const() : Const(Type::I32, uint32_t(0)) {}
 
@@ -183,13 +197,13 @@ struct Const {
 typedef std::vector<Const> ConstVector;
 
 struct FuncSignature {
-  TypeVector param_types;
-  TypeVector result_types;
+  TypeVarVector param_types;
+  TypeVarVector result_types;
 
   Index GetNumParams() const { return param_types.size(); }
   Index GetNumResults() const { return result_types.size(); }
-  Type GetParamType(Index index) const { return param_types[index]; }
-  Type GetResultType(Index index) const { return result_types[index]; }
+  TypeVar GetParamType(Index index) const { return param_types[index]; }
+  TypeVar GetResultType(Index index) const { return result_types[index]; }
 
   bool operator==(const FuncSignature&) const;
 };
@@ -231,15 +245,15 @@ class FuncType : public TypeEntry {
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
-  Type GetParamType(Index index) const { return sig.GetParamType(index); }
-  Type GetResultType(Index index) const { return sig.GetResultType(index); }
+  TypeVar GetParamType(Index index) const { return sig.GetParamType(index); }
+  TypeVar GetResultType(Index index) const { return sig.GetResultType(index); }
 
   FuncSignature sig;
 };
 
 struct Field {
   std::string name;
-  Type type = Type::Void;
+  TypeVar type = Type::Void;
   bool mutable_ = false;
 };
 
@@ -270,8 +284,8 @@ class ArrayType : public TypeEntry {
 struct FuncDeclaration {
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
-  Type GetParamType(Index index) const { return sig.GetParamType(index); }
-  Type GetResultType(Index index) const { return sig.GetResultType(index); }
+  TypeVar GetParamType(Index index) const { return sig.GetParamType(index); }
+  TypeVar GetResultType(Index index) const { return sig.GetResultType(index); }
 
   bool has_func_type = false;
   Var type_var;
@@ -464,9 +478,9 @@ typedef VarExpr<ExprType::TableFill> TableFillExpr;
 
 class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
-  SelectExpr(TypeVector type, const Location& loc = Location())
+  SelectExpr(TypeVarVector type, const Location& loc = Location())
       : ExprMixin<ExprType::Select>(loc), result_type(type) {}
-  TypeVector result_type;
+  TypeVarVector result_type;
 };
 
 class TableInitExpr : public ExprMixin<ExprType::TableInit> {
@@ -615,13 +629,13 @@ struct Event {
 
 class LocalTypes {
  public:
-  typedef std::pair<Type, Index> Decl;
+  typedef std::pair<TypeVar, Index> Decl;
   typedef std::vector<Decl> Decls;
 
   struct const_iterator {
     const_iterator(Decls::const_iterator decl, Index index)
         : decl(decl), index(index) {}
-    Type operator*() const { return decl->first; }
+    TypeVar operator*() const { return decl->first; }
     const_iterator& operator++();
     const_iterator operator++(int);
 
@@ -629,18 +643,18 @@ class LocalTypes {
     Index index;
   };
 
-  void Set(const TypeVector&);
+  void Set(const TypeVarVector&);
 
   const Decls& decls() const { return decls_; }
 
-  void AppendDecl(Type type, Index count) {
+  void AppendDecl(TypeVar type, Index count) {
     if (count != 0) {
       decls_.emplace_back(type, count);
     }
   }
 
   Index size() const;
-  Type operator[](Index) const;
+  TypeVar operator[](Index) const;
 
   const_iterator begin() const { return {decls_.begin(), 0}; }
   const_iterator end() const { return {decls_.end(), 0}; }
@@ -677,10 +691,10 @@ inline bool operator!=(const LocalTypes::const_iterator& lhs,
 struct Func {
   explicit Func(string_view name) : name(name.to_string()) {}
 
-  Type GetParamType(Index index) const { return decl.GetParamType(index); }
-  Type GetResultType(Index index) const { return decl.GetResultType(index); }
-  Type GetLocalType(Index index) const;
-  Type GetLocalType(const Var& var) const;
+  TypeVar GetParamType(Index index) const { return decl.GetParamType(index); }
+  TypeVar GetResultType(Index index) const { return decl.GetResultType(index); }
+  TypeVar GetLocalType(Index index) const;
+  TypeVar GetLocalType(const Var& var) const;
   Index GetNumParams() const { return decl.GetNumParams(); }
   Index GetNumLocals() const { return local_types.size(); }
   Index GetNumParamsAndLocals() const {
@@ -700,7 +714,7 @@ struct Global {
   explicit Global(string_view name) : name(name.to_string()) {}
 
   std::string name;
-  Type type = Type::Void;
+  TypeVar type = Type::Void;
   bool mutable_ = false;
   ExprList init_expr;
 };
@@ -711,7 +725,7 @@ struct Table {
 
   std::string name;
   Limits elem_limits;
-  Type elem_type;
+  TypeVar elem_type;
 };
 
 enum class ElemExprKind {
@@ -736,7 +750,7 @@ struct ElemSegment {
   SegmentKind kind = SegmentKind::Active;
   std::string name;
   Var table_var;
-  Type elem_type;
+  TypeVar elem_type;
   ExprList offset;
   ElemExprVector elem_exprs;
 };

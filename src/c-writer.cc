@@ -39,7 +39,7 @@ namespace {
 struct Label {
   Label(LabelType label_type,
         const std::string& name,
-        const TypeVector& sig,
+        const TypeVarVector& sig,
         size_t type_stack_size,
         bool used = false)
       : label_type(label_type),
@@ -54,7 +54,7 @@ struct Label {
 
   LabelType label_type;
   const std::string& name;
-  const TypeVector& sig;
+  const TypeVarVector& sig;
   size_t type_stack_size;
   bool used = false;
 };
@@ -103,8 +103,8 @@ struct SignedType {
 };
 
 struct ResultType {
-  explicit ResultType(const TypeVector& types) : types(types) {}
-  const TypeVector& types;
+  explicit ResultType(const TypeVarVector& types) : types(types) {}
+  const TypeVarVector& types;
 };
 
 struct Newline {};
@@ -147,7 +147,7 @@ class CWriter {
   void ResetTypeStack(size_t mark);
   Type StackType(Index) const;
   void PushType(Type);
-  void PushTypes(const TypeVector&);
+  void PushTypes(const TypeVarVector&);
   void DropTypes(size_t count);
 
   void PushLabel(LabelType,
@@ -162,11 +162,11 @@ class CWriter {
   static std::string Deref(const std::string&);
 
   static char MangleType(Type);
-  static std::string MangleTypes(const TypeVector&);
+  static std::string MangleTypes(const TypeVarVector&);
   static std::string MangleName(string_view);
   static std::string MangleFuncName(string_view,
-                                    const TypeVector& param_types,
-                                    const TypeVector& result_types);
+                                    const TypeVarVector& param_types,
+                                    const TypeVarVector& result_types);
   static std::string MangleGlobalName(string_view, Type);
   static std::string LegalizeName(string_view);
   static std::string ExportName(string_view mangled_name);
@@ -210,6 +210,7 @@ class CWriter {
   void Write(const ExternalPtr&);
   void Write(const ExternalRef&);
   void Write(Type);
+  void Write(TypeVar);
   void Write(SignedType);
   void Write(TypeEnum);
   void Write(const Var&);
@@ -286,7 +287,7 @@ class CWriter {
   SymbolSet global_syms_;
   SymbolSet local_syms_;
   SymbolSet import_syms_;
-  TypeVector type_stack_;
+  TypeVarVector type_stack_;
   std::vector<Label> label_stack_;
 };
 
@@ -403,7 +404,7 @@ void CWriter::PushType(Type type) {
   type_stack_.push_back(type);
 }
 
-void CWriter::PushTypes(const TypeVector& types) {
+void CWriter::PushTypes(const TypeVarVector& types) {
   type_stack_.insert(type_stack_.end(), types.begin(), types.end());
 }
 
@@ -480,7 +481,7 @@ char CWriter::MangleType(Type type) {
 }
 
 // static
-std::string CWriter::MangleTypes(const TypeVector& types) {
+std::string CWriter::MangleTypes(const TypeVarVector& types) {
   if (types.empty())
     return std::string("v");
 
@@ -512,8 +513,8 @@ std::string CWriter::MangleName(string_view name) {
 
 // static
 std::string CWriter::MangleFuncName(string_view name,
-                                    const TypeVector& param_types,
-                                    const TypeVector& result_types) {
+                                    const TypeVarVector& param_types,
+                                    const TypeVarVector& result_types) {
   std::string sig = MangleTypes(result_types) + MangleTypes(param_types);
   return MangleName(name) + MangleName(sig);
 }
@@ -750,6 +751,10 @@ void CWriter::Write(Type type) {
     default:
       WABT_UNREACHABLE;
   }
+}
+
+void CWriter::Write(TypeVar type) {
+  Write(type.type);
 }
 
 void CWriter::Write(TypeEnum type) {

@@ -290,8 +290,8 @@ Result CheckTypeIndex(const Location& loc,
 }
 
 Result CheckTypes(const Location& loc,
-                  const TypeVector& actual,
-                  const TypeVector& expected,
+                  const TypeVarVector& actual,
+                  const TypeVarVector& expected,
                   const char* desc,
                   const char* index_kind,
                   Errors* errors) {
@@ -765,7 +765,7 @@ bool WastParser::ParseElemExprVarListOpt(ElemExprVector* out_list) {
   return !out_list->empty();
 }
 
-Result WastParser::ParseValueType(Type* out_type) {
+Result WastParser::ParseValueType(TypeVar* out_type) {
   WABT_TRACE(ParseValueType);
   if (!PeekMatch(TokenType::ValueType)) {
     return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "anyref"});
@@ -800,7 +800,7 @@ Result WastParser::ParseValueType(Type* out_type) {
   return Result::Ok;
 }
 
-Result WastParser::ParseValueTypeList(TypeVector* out_type_list) {
+Result WastParser::ParseValueTypeList(TypeVarVector* out_type_list) {
   WABT_TRACE(ParseValueTypeList);
   while (PeekMatch(TokenType::ValueType))
     out_type_list->push_back(Consume().type());
@@ -808,7 +808,7 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list) {
   return Result::Ok;
 }
 
-Result WastParser::ParseRefType(Type* out_type) {
+Result WastParser::ParseRefType(TypeVar* out_type) {
   WABT_TRACE(ParseRefType);
   if (!PeekMatch(TokenType::ValueType)) {
     return ErrorExpected({"funcref", "anyref", "nullref", "exnref"});
@@ -825,7 +825,7 @@ Result WastParser::ParseRefType(Type* out_type) {
   return Result::Ok;
 }
 
-bool WastParser::ParseRefTypeOpt(Type* out_type) {
+bool WastParser::ParseRefTypeOpt(TypeVar* out_type) {
   WABT_TRACE(ParseRefTypeOpt);
   if (!PeekMatch(TokenType::ValueType)) {
     return false;
@@ -1169,7 +1169,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     Func& func = field->func;
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
-    TypeVector local_types;
+    TypeVarVector local_types;
     CHECK_RESULT(ParseBoundValueTypeList(TokenType::Local, &local_types,
                                          &func.bindings, func.GetNumParams()));
     func.local_types.Set(local_types);
@@ -1467,7 +1467,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else if (PeekMatch(TokenType::ValueType)) {
-    Type elem_type;
+    TypeVar elem_type;
     CHECK_RESULT(ParseRefType(&elem_type));
 
     EXPECT(Lpar);
@@ -1583,14 +1583,14 @@ Result WastParser::ParseUnboundFuncSignature(FuncSignature* sig) {
 }
 
 Result WastParser::ParseBoundValueTypeList(TokenType token,
-                                           TypeVector* types,
+                                           TypeVarVector* types,
                                            BindingHash* bindings,
                                            Index binding_index_offset) {
   WABT_TRACE(ParseBoundValueTypeList);
   while (MatchLpar(token)) {
     if (PeekMatch(TokenType::Var)) {
       std::string name;
-      Type type;
+      TypeVar type;
       Location loc = GetLocation();
       ParseBindVarOpt(&name);
       CHECK_RESULT(ParseValueType(&type));
@@ -1606,7 +1606,7 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
 }
 
 Result WastParser::ParseUnboundValueTypeList(TokenType token,
-                                             TypeVector* types) {
+                                             TypeVarVector* types) {
   WABT_TRACE(ParseUnboundValueTypeList);
   while (MatchLpar(token)) {
     CHECK_RESULT(ParseValueTypeList(types));
@@ -1615,7 +1615,7 @@ Result WastParser::ParseUnboundValueTypeList(TokenType token,
   return Result::Ok;
 }
 
-Result WastParser::ParseResultList(TypeVector* result_types) {
+Result WastParser::ParseResultList(TypeVarVector* result_types) {
   WABT_TRACE(ParseResultList);
   return ParseUnboundValueTypeList(TokenType::Result, result_types);
 }
@@ -1706,7 +1706,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::Select: {
       Consume();
-      TypeVector result;
+      TypeVarVector result;
       if (options_->features.reference_types_enabled() &&
           MatchLpar(TokenType::Result)) {
         CHECK_RESULT(ParseValueTypeList(&result));

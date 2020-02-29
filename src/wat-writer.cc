@@ -123,7 +123,7 @@ class WatWriter : ModuleContext {
   void WriteVar(const Var& var, NextChar next_char);
   void WriteBrVar(const Var& var, NextChar next_char);
   void WriteType(Type type, NextChar next_char);
-  void WriteTypes(const TypeVector& types, const char* name);
+  void WriteTypes(const TypeVarVector& types, const char* name);
   void WriteFuncSigSpace(const FuncSignature& func_sig);
   void WriteBeginBlock(LabelType label_type,
                        const Block& block,
@@ -383,7 +383,7 @@ void WatWriter::WriteType(Type type, NextChar next_char) {
   WritePuts(type_name, next_char);
 }
 
-void WatWriter::WriteTypes(const TypeVector& types, const char* name) {
+void WatWriter::WriteTypes(const TypeVarVector& types, const char* name) {
   if (types.size()) {
     if (name) {
       WriteOpenSpace(name);

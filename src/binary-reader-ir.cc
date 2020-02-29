@@ -368,7 +368,8 @@ void BinaryReaderIR::SetBlockDeclaration(BlockDeclaration* decl,
   } else {
     decl->has_func_type = false;
     decl->sig.param_types.clear();
-    decl->sig.result_types = sig_type.GetInlineVector();
+    auto results = sig_type.GetInlineVector();
+    decl->sig.result_types.assign(results.begin(), results.end());
   }
 }
 
@@ -937,7 +938,7 @@ Result BinaryReaderIR::OnReturnExpr() {
 }
 
 Result BinaryReaderIR::OnSelectExpr(Type result_type) {
-  return AppendExpr(MakeUnique<SelectExpr>(TypeVector{result_type}));
+  return AppendExpr(MakeUnique<SelectExpr>(TypeVarVector{result_type}));
 }
 
 Result BinaryReaderIR::OnGlobalSetExpr(Index global_index) {

@@ -42,16 +42,13 @@ class ScriptValidator {
 
  private:
   struct ActionResult {
-    enum class Kind {
-      Error,
-      Types,
-      Type,
-    } kind;
+    ActionResult(Result result) : result(result) {}
+    ActionResult(Result::Enum result) : result(result) {}
+    ActionResult(Result result, TypeVector types)
+        : result(result), types(types) {}
 
-    union {
-      const TypeVector* types;
-      Type type;
-    };
+    Result result;
+    TypeVector types;
   };
 
   void WABT_PRINTF_FORMAT(3, 4)
@@ -67,8 +64,8 @@ class ScriptValidator {
                         const TypeVector& expected,
                         const char* desc);
 
-  const TypeVector* CheckInvoke(const InvokeAction* action);
-  Result CheckGet(const GetAction* action, Type* out_type);
+  ActionResult CheckInvoke(const InvokeAction* action);
+  ActionResult CheckGet(const GetAction* action);
   ActionResult CheckAction(const Action* action);
   void CheckCommand(const Command* command);
 
@@ -585,6 +582,17 @@ Validator::Validator(Errors* errors,
       validator_(errors_, options_),
       current_module_(module) {}
 
+static TypeVector ToTypeVector(const TypeVarVector& vec) {
+  TypeVector result;
+  for (auto&& type_var : vec) {
+    assert(type_var.var.is_index());
+    assert(!type_var.type.IsRefT() ||
+           type_var.type.GetRefTIndex() == type_var.var.index());
+    result.push_back(type_var.type);
+  }
+  return result;
+}
+
 Result Validator::CheckModule() {
   const Module* module = current_module_;
 
@@ -594,11 +602,11 @@ Result Validator::CheckModule() {
       switch (f->type->kind()) {
         case TypeEntryKind::Func: {
           FuncType* func_type = cast<FuncType>(f->type.get());
-          result_ |= validator_.OnFuncType(field.loc,
-                                           func_type->sig.param_types.size(),
-                                           func_type->sig.param_types.data(),
-                                           func_type->sig.result_types.size(),
-                                           func_type->sig.result_types.data());
+          TypeVector param_types = ToTypeVector(func_type->sig.param_types);
+          TypeVector result_types = ToTypeVector(func_type->sig.result_types);
+          result_ |= validator_.OnFuncType(
+              field.loc, param_types.size(), param_types.data(),
+              result_types.size(), result_types.data());
           break;
         }
 
@@ -862,24 +870,25 @@ Result Validator::CheckModule() {
 // Returns the result type of the invoked function, checked by the caller;
 // returning nullptr means that another error occured first, so the result type
 // should be ignored.
-const TypeVector* ScriptValidator::CheckInvoke(const InvokeAction* action) {
+ScriptValidator::ActionResult ScriptValidator::CheckInvoke(
+    const InvokeAction* action) {
   const Module* module = script_->GetModule(action->module_var);
   if (!module) {
     PrintError(&action->loc, "unknown module");
-    return nullptr;
+    return Result::Error;
   }
 
   const Export* export_ = module->GetExport(action->name);
   if (!export_) {
     PrintError(&action->loc, "unknown function export \"%s\"",
                action->name.c_str());
-    return nullptr;
+    return Result::Error;
   }
 
   const Func* func = module->GetFunc(export_->var);
   if (!func) {
     // This error will have already been reported, just skip it.
-    return nullptr;
+    return Result::Error;
   }
 
   size_t actual_args = action->args.size();
@@ -890,7 +899,7 @@ const TypeVector* ScriptValidator::CheckInvoke(const InvokeAction* action) {
                ", expected %" PRIzd,
                actual_args > expected_args ? "many" : "few", actual_args,
                expected_args);
-    return nullptr;
+    return Result::Error;
   }
   for (size_t i = 0; i < actual_args; ++i) {
     const Const* const_ = &action->args[i];
@@ -898,10 +907,11 @@ const TypeVector* ScriptValidator::CheckInvoke(const InvokeAction* action) {
                    "invoke", i, "argument");
   }
 
-  return &func->decl.sig.result_types;
+  return ActionResult{Result::Ok, ToTypeVector(func->decl.sig.result_types)};
 }
 
-Result ScriptValidator::CheckGet(const GetAction* action, Type* out_type) {
+ScriptValidator::ActionResult ScriptValidator::CheckGet(
+    const GetAction* action) {
   const Module* module = script_->GetModule(action->module_var);
   if (!module) {
     PrintError(&action->loc, "unknown module");
@@ -921,32 +931,21 @@ Result ScriptValidator::CheckGet(const GetAction* action, Type* out_type) {
     return Result::Error;
   }
 
-  *out_type = global->type;
-  return Result::Ok;
+  return ActionResult{Result::Ok, {global->type}};
 }
 
 ScriptValidator::ActionResult ScriptValidator::CheckAction(
     const Action* action) {
-  ActionResult result;
-  ZeroMemory(result);
-
   switch (action->type()) {
     case ActionType::Invoke:
-      result.types = CheckInvoke(cast<InvokeAction>(action));
-      result.kind =
-          result.types ? ActionResult::Kind::Types : ActionResult::Kind::Error;
-      break;
+      return CheckInvoke(cast<InvokeAction>(action));
 
     case ActionType::Get:
-      if (Succeeded(CheckGet(cast<GetAction>(action), &result.type))) {
-        result.kind = ActionResult::Kind::Type;
-      } else {
-        result.kind = ActionResult::Kind::Error;
-      }
-      break;
-  }
+      return CheckGet(cast<GetAction>(action));
 
-  return result;
+    default:
+      return Result::Error;
+  }
 }
 
 void ScriptValidator::CheckCommand(const Command* command) {
@@ -981,18 +980,8 @@ void ScriptValidator::CheckCommand(const Command* command) {
       for (auto ex : assert_return_command->expected) {
         actual_types.push_back(ex.type());
       }
-      switch (result.kind) {
-        case ActionResult::Kind::Types:
-          CheckResultTypes(&action->loc, actual_types, *result.types, "action");
-          break;
-
-        case ActionResult::Kind::Type:
-          CheckResultTypes(&action->loc, actual_types, {result.type}, "action");
-          break;
-
-        case ActionResult::Kind::Error:
-          // Error occurred, don't do any further checks.
-          break;
+      if (Succeeded(result.result)) {
+        CheckResultTypes(&action->loc, actual_types, result.types, "action");
       }
       break;
     }

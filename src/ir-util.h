@@ -25,8 +25,8 @@ namespace wabt {
 struct Label {
   Label(LabelType label_type,
         const std::string& name,
-        const TypeVector& param_types,
-        const TypeVector& result_types)
+        const TypeVarVector& param_types,
+        const TypeVarVector& result_types)
       : name(name),
         label_type(label_type),
         param_types(param_types),
@@ -34,8 +34,8 @@ struct Label {
 
   std::string name;
   LabelType label_type;
-  TypeVector param_types;
-  TypeVector result_types;
+  TypeVarVector param_types;
+  TypeVarVector result_types;
 };
 
 struct ModuleContext {
