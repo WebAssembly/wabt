@@ -25,8 +25,6 @@
 #include "src/shared-validator.h"
 #include "src/stream.h"
 
-// TODO: Remove wabt:: namespace everywhere.
-
 namespace wabt {
 namespace interp {
 
@@ -77,176 +75,175 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Implement BinaryReader.
   bool OnError(const Error&) override;
 
-  wabt::Result EndModule() override;
+  Result EndModule() override;
 
-  wabt::Result OnTypeCount(Index count) override;
-  wabt::Result OnType(Index index,
-                      Index param_count,
-                      Type* param_types,
-                      Index result_count,
-                      Type* result_types) override;
+  Result OnTypeCount(Index count) override;
+  Result OnType(Index index,
+                Index param_count,
+                Type* param_types,
+                Index result_count,
+                Type* result_types) override;
 
-  wabt::Result OnImportFunc(Index import_index,
-                            string_view module_name,
-                            string_view field_name,
-                            Index func_index,
-                            Index sig_index) override;
-  wabt::Result OnImportTable(Index import_index,
-                             string_view module_name,
-                             string_view field_name,
-                             Index table_index,
-                             Type elem_type,
-                             const Limits* elem_limits) override;
-  wabt::Result OnImportMemory(Index import_index,
-                              string_view module_name,
-                              string_view field_name,
-                              Index memory_index,
-                              const Limits* page_limits) override;
-  wabt::Result OnImportGlobal(Index import_index,
-                              string_view module_name,
-                              string_view field_name,
-                              Index global_index,
-                              Type type,
-                              bool mutable_) override;
-
-  wabt::Result OnFunctionCount(Index count) override;
-  wabt::Result OnFunction(Index index, Index sig_index) override;
-
-  wabt::Result OnTableCount(Index count) override;
-  wabt::Result OnTable(Index index,
+  Result OnImportFunc(Index import_index,
+                      string_view module_name,
+                      string_view field_name,
+                      Index func_index,
+                      Index sig_index) override;
+  Result OnImportTable(Index import_index,
+                       string_view module_name,
+                       string_view field_name,
+                       Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override;
+  Result OnImportMemory(Index import_index,
+                        string_view module_name,
+                        string_view field_name,
+                        Index memory_index,
+                        const Limits* page_limits) override;
+  Result OnImportGlobal(Index import_index,
+                        string_view module_name,
+                        string_view field_name,
+                        Index global_index,
+                        Type type,
+                        bool mutable_) override;
 
-  wabt::Result OnMemoryCount(Index count) override;
-  wabt::Result OnMemory(Index index, const Limits* limits) override;
+  Result OnFunctionCount(Index count) override;
+  Result OnFunction(Index index, Index sig_index) override;
 
-  wabt::Result OnGlobalCount(Index count) override;
-  wabt::Result BeginGlobal(Index index, Type type, bool mutable_) override;
-  wabt::Result EndGlobalInitExpr(Index index) override;
+  Result OnTableCount(Index count) override;
+  Result OnTable(Index index,
+                 Type elem_type,
+                 const Limits* elem_limits) override;
 
-  wabt::Result OnExport(Index index,
-                        ExternalKind kind,
-                        Index item_index,
-                        string_view name) override;
+  Result OnMemoryCount(Index count) override;
+  Result OnMemory(Index index, const Limits* limits) override;
 
-  wabt::Result OnStartFunction(Index func_index) override;
+  Result OnGlobalCount(Index count) override;
+  Result BeginGlobal(Index index, Type type, bool mutable_) override;
+  Result EndGlobalInitExpr(Index index) override;
 
-  wabt::Result BeginFunctionBody(Index index, Offset size) override;
-  wabt::Result OnLocalDeclCount(Index count) override;
-  wabt::Result OnLocalDecl(Index decl_index, Index count, Type type) override;
+  Result OnExport(Index index,
+                  ExternalKind kind,
+                  Index item_index,
+                  string_view name) override;
 
-  wabt::Result OnOpcode(Opcode Opcode) override;
-  wabt::Result OnAtomicLoadExpr(Opcode opcode,
-                                uint32_t alignment_log2,
-                                Address offset) override;
-  wabt::Result OnAtomicStoreExpr(Opcode opcode,
-                                 uint32_t alignment_log2,
-                                 Address offset) override;
-  wabt::Result OnAtomicRmwExpr(Opcode opcode,
-                               uint32_t alignment_log2,
-                               Address offset) override;
-  wabt::Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
-                                      uint32_t alignment_log2,
-                                      Address offset) override;
-  wabt::Result OnAtomicWaitExpr(Opcode opcode,
-                                uint32_t alignment_log2,
-                                Address offset) override;
-  wabt::Result OnAtomicNotifyExpr(Opcode opcode,
-                                uint32_t alignment_log2,
-                                Address offset) override;
-  wabt::Result OnBinaryExpr(wabt::Opcode opcode) override;
-  wabt::Result OnBlockExpr(Type sig_type) override;
-  wabt::Result OnBrExpr(Index depth) override;
-  wabt::Result OnBrIfExpr(Index depth) override;
-  wabt::Result OnBrTableExpr(Index num_targets,
-                             Index* target_depths,
-                             Index default_target_depth) override;
-  wabt::Result OnCallExpr(Index func_index) override;
-  wabt::Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
-  wabt::Result OnReturnCallExpr(Index func_index) override;
-  wabt::Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
-  wabt::Result OnCompareExpr(wabt::Opcode opcode) override;
-  wabt::Result OnConvertExpr(wabt::Opcode opcode) override;
-  wabt::Result OnDropExpr() override;
-  wabt::Result OnElseExpr() override;
-  wabt::Result OnEndExpr() override;
-  wabt::Result OnF32ConstExpr(uint32_t value_bits) override;
-  wabt::Result OnF64ConstExpr(uint64_t value_bits) override;
-  wabt::Result OnV128ConstExpr(v128 value_bits) override;
-  wabt::Result OnGlobalGetExpr(Index global_index) override;
-  wabt::Result OnGlobalSetExpr(Index global_index) override;
-  wabt::Result OnI32ConstExpr(uint32_t value) override;
-  wabt::Result OnI64ConstExpr(uint64_t value) override;
-  wabt::Result OnIfExpr(Type sig_type) override;
-  wabt::Result OnLoadExpr(wabt::Opcode opcode,
+  Result OnStartFunction(Index func_index) override;
+
+  Result BeginFunctionBody(Index index, Offset size) override;
+  Result OnLocalDeclCount(Index count) override;
+  Result OnLocalDecl(Index decl_index, Index count, Type type) override;
+
+  Result OnOpcode(Opcode Opcode) override;
+  Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
-  wabt::Result OnLocalGetExpr(Index local_index) override;
-  wabt::Result OnLocalSetExpr(Index local_index) override;
-  wabt::Result OnLocalTeeExpr(Index local_index) override;
-  wabt::Result OnLoopExpr(Type sig_type) override;
-  wabt::Result OnMemoryCopyExpr() override;
-  wabt::Result OnDataDropExpr(Index segment_index) override;
-  wabt::Result OnMemoryGrowExpr() override;
-  wabt::Result OnMemoryFillExpr() override;
-  wabt::Result OnMemoryInitExpr(Index segment_index) override;
-  wabt::Result OnMemorySizeExpr() override;
-  wabt::Result OnRefFuncExpr(Index func_index) override;
-  wabt::Result OnRefNullExpr() override;
-  wabt::Result OnRefIsNullExpr() override;
-  wabt::Result OnNopExpr() override;
-  wabt::Result OnReturnExpr() override;
-  wabt::Result OnSelectExpr(Type result_type) override;
-  wabt::Result OnStoreExpr(wabt::Opcode opcode,
+  Result OnAtomicStoreExpr(Opcode opcode,
                            uint32_t alignment_log2,
                            Address offset) override;
-  wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
-  wabt::Result OnTableCopyExpr(Index dst_index, Index src_index) override;
-  wabt::Result OnTableGetExpr(Index table_index) override;
-  wabt::Result OnTableSetExpr(Index table_index) override;
-  wabt::Result OnTableGrowExpr(Index table_index) override;
-  wabt::Result OnTableSizeExpr(Index table_index) override;
-  wabt::Result OnTableFillExpr(Index table_index) override;
-  wabt::Result OnElemDropExpr(Index segment_index) override;
-  wabt::Result OnTableInitExpr(Index segment_index, Index table_index) override;
-  wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
-  wabt::Result OnUnreachableExpr() override;
-  wabt::Result EndFunctionBody(Index index) override;
-  wabt::Result OnSimdLaneOpExpr(wabt::Opcode opcode, uint64_t value) override;
-  wabt::Result OnSimdShuffleOpExpr(wabt::Opcode opcode, v128 value) override;
-  wabt::Result OnLoadSplatExpr(wabt::Opcode opcode,
-                               uint32_t alignment_log2,
-                               Address offset) override;
+  Result OnAtomicRmwExpr(Opcode opcode,
+                         uint32_t alignment_log2,
+                         Address offset) override;
+  Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                uint32_t alignment_log2,
+                                Address offset) override;
+  Result OnAtomicWaitExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
+  Result OnAtomicNotifyExpr(Opcode opcode,
+                            uint32_t alignment_log2,
+                            Address offset) override;
+  Result OnBinaryExpr(Opcode opcode) override;
+  Result OnBlockExpr(Type sig_type) override;
+  Result OnBrExpr(Index depth) override;
+  Result OnBrIfExpr(Index depth) override;
+  Result OnBrTableExpr(Index num_targets,
+                       Index* target_depths,
+                       Index default_target_depth) override;
+  Result OnCallExpr(Index func_index) override;
+  Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnReturnCallExpr(Index func_index) override;
+  Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnCompareExpr(Opcode opcode) override;
+  Result OnConvertExpr(Opcode opcode) override;
+  Result OnDropExpr() override;
+  Result OnElseExpr() override;
+  Result OnEndExpr() override;
+  Result OnF32ConstExpr(uint32_t value_bits) override;
+  Result OnF64ConstExpr(uint64_t value_bits) override;
+  Result OnV128ConstExpr(v128 value_bits) override;
+  Result OnGlobalGetExpr(Index global_index) override;
+  Result OnGlobalSetExpr(Index global_index) override;
+  Result OnI32ConstExpr(uint32_t value) override;
+  Result OnI64ConstExpr(uint64_t value) override;
+  Result OnIfExpr(Type sig_type) override;
+  Result OnLoadExpr(Opcode opcode,
+                    uint32_t alignment_log2,
+                    Address offset) override;
+  Result OnLocalGetExpr(Index local_index) override;
+  Result OnLocalSetExpr(Index local_index) override;
+  Result OnLocalTeeExpr(Index local_index) override;
+  Result OnLoopExpr(Type sig_type) override;
+  Result OnMemoryCopyExpr() override;
+  Result OnDataDropExpr(Index segment_index) override;
+  Result OnMemoryGrowExpr() override;
+  Result OnMemoryFillExpr() override;
+  Result OnMemoryInitExpr(Index segment_index) override;
+  Result OnMemorySizeExpr() override;
+  Result OnRefFuncExpr(Index func_index) override;
+  Result OnRefNullExpr() override;
+  Result OnRefIsNullExpr() override;
+  Result OnNopExpr() override;
+  Result OnReturnExpr() override;
+  Result OnSelectExpr(Type result_type) override;
+  Result OnStoreExpr(Opcode opcode,
+                     uint32_t alignment_log2,
+                     Address offset) override;
+  Result OnUnaryExpr(Opcode opcode) override;
+  Result OnTableCopyExpr(Index dst_index, Index src_index) override;
+  Result OnTableGetExpr(Index table_index) override;
+  Result OnTableSetExpr(Index table_index) override;
+  Result OnTableGrowExpr(Index table_index) override;
+  Result OnTableSizeExpr(Index table_index) override;
+  Result OnTableFillExpr(Index table_index) override;
+  Result OnElemDropExpr(Index segment_index) override;
+  Result OnTableInitExpr(Index segment_index, Index table_index) override;
+  Result OnTernaryExpr(Opcode opcode) override;
+  Result OnUnreachableExpr() override;
+  Result EndFunctionBody(Index index) override;
+  Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
+  Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
+  Result OnLoadSplatExpr(Opcode opcode,
+                         uint32_t alignment_log2,
+                         Address offset) override;
 
-  wabt::Result OnElemSegmentCount(Index count) override;
-  wabt::Result BeginElemSegment(Index index,
-                                Index table_index,
-                                uint8_t flags) override;
-  wabt::Result EndElemSegmentInitExpr(Index index) override;
-  wabt::Result OnElemSegmentElemType(Index index, Type elem_type) override;
-  wabt::Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  wabt::Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
-  wabt::Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                             Index func_index) override;
+  Result OnElemSegmentCount(Index count) override;
+  Result BeginElemSegment(Index index,
+                          Index table_index,
+                          uint8_t flags) override;
+  Result EndElemSegmentInitExpr(Index index) override;
+  Result OnElemSegmentElemType(Index index, Type elem_type) override;
+  Result OnElemSegmentElemExprCount(Index index, Index count) override;
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
+  Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
+                                       Index func_index) override;
 
-  wabt::Result OnDataCount(Index count) override;
-  wabt::Result EndDataSegmentInitExpr(Index index) override;
-  wabt::Result BeginDataSegment(Index index,
-                                Index memory_index,
-                                uint8_t flags) override;
-  wabt::Result OnDataSegmentData(Index index,
-                                 const void* data,
-                                 Address size) override;
+  Result OnDataCount(Index count) override;
+  Result EndDataSegmentInitExpr(Index index) override;
+  Result BeginDataSegment(Index index,
+                          Index memory_index,
+                          uint8_t flags) override;
+  Result OnDataSegmentData(Index index,
+                           const void* data,
+                           Address size) override;
 
-  wabt::Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
-  wabt::Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
-  wabt::Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  wabt::Result OnInitExprGlobalGetExpr(Index index,
-                                       Index global_index) override;
-  wabt::Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
-  wabt::Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  wabt::Result OnInitExprRefNull(Index index) override;
-  wabt::Result OnInitExprRefFunc(Index index, Index func_index) override;
+  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
+  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprV128ConstExpr(Index index, v128 value) override;
+  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
+  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
+  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprRefNull(Index index) override;
+  Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:
   Label* GetLabel(Index depth);
@@ -257,18 +254,17 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   void PrintError(const char* format, ...);
 
-  wabt::Result GetDropCount(Index keep_count,
-                            size_t type_stack_limit,
-                            Index* out_drop_count);
-  wabt::Result GetBrDropKeepCount(Index depth,
-                                  Index* out_drop_count,
-                                  Index* out_keep_count);
-  wabt::Result GetReturnDropKeepCount(Index* out_drop_count,
-                                      Index* out_keep_count);
-  wabt::Result GetReturnCallDropKeepCount(const FuncType&,
-                                          Index keep_extra,
-                                          Index* out_drop_count,
-                                          Index* out_keep_count);
+  Result GetDropCount(Index keep_count,
+                      size_t type_stack_limit,
+                      Index* out_drop_count);
+  Result GetBrDropKeepCount(Index depth,
+                            Index* out_drop_count,
+                            Index* out_keep_count);
+  Result GetReturnDropKeepCount(Index* out_drop_count, Index* out_keep_count);
+  Result GetReturnCallDropKeepCount(const FuncType&,
+                                    Index keep_extra,
+                                    Index* out_drop_count,
+                                    Index* out_keep_count);
   void EmitBr(Index depth, Index drop_count, Index keep_count);
   void FixupTopLabel();
   u32 GetFuncOffset(Index func_index);
@@ -350,9 +346,9 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReaderInterp::PrintError(const char* format,
   errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset), buffer);
 }
 
-wabt::Result BinaryReaderInterp::GetDropCount(Index keep_count,
-                                              size_t type_stack_limit,
-                                              Index* out_drop_count) {
+Result BinaryReaderInterp::GetDropCount(Index keep_count,
+                                        size_t type_stack_limit,
+                                        Index* out_drop_count) {
   assert(validator_.type_stack_size() >= type_stack_limit);
   Index type_stack_count = validator_.type_stack_size() - type_stack_limit;
   // The keep_count may be larger than the type_stack_count if the typechecker
@@ -360,39 +356,38 @@ wabt::Result BinaryReaderInterp::GetDropCount(Index keep_count,
   // drop, but 0 is a reasonable choice.
   *out_drop_count =
       type_stack_count >= keep_count ? type_stack_count - keep_count : 0;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::GetBrDropKeepCount(Index depth,
-                                                    Index* out_drop_count,
-                                                    Index* out_keep_count) {
+Result BinaryReaderInterp::GetBrDropKeepCount(Index depth,
+                                              Index* out_drop_count,
+                                              Index* out_keep_count) {
   SharedValidator::Label* label;
   CHECK_RESULT(validator_.GetLabel(depth, &label));
   Index keep_count = label->br_types().size();
   CHECK_RESULT(
       GetDropCount(keep_count, label->type_stack_limit, out_drop_count));
   *out_keep_count = keep_count;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::GetReturnDropKeepCount(Index* out_drop_count,
-                                                        Index* out_keep_count) {
+Result BinaryReaderInterp::GetReturnDropKeepCount(Index* out_drop_count,
+                                                  Index* out_keep_count) {
   CHECK_RESULT(GetBrDropKeepCount(label_stack_.size() - 1, out_drop_count,
                                   out_keep_count));
   *out_drop_count += validator_.GetLocalCount();
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::GetReturnCallDropKeepCount(
-    const FuncType& func_type,
-    Index keep_extra,
-    Index* out_drop_count,
-    Index* out_keep_count) {
+Result BinaryReaderInterp::GetReturnCallDropKeepCount(const FuncType& func_type,
+                                                      Index keep_extra,
+                                                      Index* out_drop_count,
+                                                      Index* out_keep_count) {
   Index keep_count = static_cast<Index>(func_type.params.size()) + keep_extra;
   CHECK_RESULT(GetDropCount(keep_count, 0, out_drop_count));
   *out_drop_count += validator_.GetLocalCount();
   *out_keep_count = keep_count;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
 void BinaryReaderInterp::EmitBr(Index depth,
@@ -427,140 +422,138 @@ bool BinaryReaderInterp::OnError(const Error& error) {
   return true;
 }
 
-wabt::Result BinaryReaderInterp::EndModule() {
+Result BinaryReaderInterp::EndModule() {
   CHECK_RESULT(validator_.EndModule());
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTypeCount(Index count) {
+Result BinaryReaderInterp::OnTypeCount(Index count) {
   module_.func_types.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnType(Index index,
-                                        Index param_count,
-                                        Type* param_types,
-                                        Index result_count,
-                                        Type* result_types) {
+Result BinaryReaderInterp::OnType(Index index,
+                                  Index param_count,
+                                  Type* param_types,
+                                  Index result_count,
+                                  Type* result_types) {
   CHECK_RESULT(validator_.OnType(loc, param_count, param_types, result_count,
                                  result_types));
   module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
                                         ToInterp(result_count, result_types)));
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnImportFunc(Index import_index,
-                                              string_view module_name,
-                                              string_view field_name,
-                                              Index func_index,
-                                              Index sig_index) {
+Result BinaryReaderInterp::OnImportFunc(Index import_index,
+                                        string_view module_name,
+                                        string_view field_name,
+                                        Index func_index,
+                                        Index sig_index) {
   CHECK_RESULT(validator_.OnFunction(loc, Var(sig_index)));
   FuncType& func_type = module_.func_types[sig_index];
   module_.imports.push_back(ImportDesc{ImportType(
       module_name.to_string(), field_name.to_string(), func_type.Clone())});
   func_types_.push_back(func_type);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnImportTable(Index import_index,
-                                               string_view module_name,
-                                               string_view field_name,
-                                               Index table_index,
-                                               Type elem_type,
-                                               const Limits* elem_limits) {
+Result BinaryReaderInterp::OnImportTable(Index import_index,
+                                         string_view module_name,
+                                         string_view field_name,
+                                         Index table_index,
+                                         Type elem_type,
+                                         const Limits* elem_limits) {
   CHECK_RESULT(validator_.OnTable(loc, elem_type, *elem_limits));
   TableType table_type{elem_type, *elem_limits};
   module_.imports.push_back(ImportDesc{ImportType(
       module_name.to_string(), field_name.to_string(), table_type.Clone())});
   table_types_.push_back(table_type);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnImportMemory(Index import_index,
-                                                string_view module_name,
-                                                string_view field_name,
-                                                Index memory_index,
-                                                const Limits* page_limits) {
+Result BinaryReaderInterp::OnImportMemory(Index import_index,
+                                          string_view module_name,
+                                          string_view field_name,
+                                          Index memory_index,
+                                          const Limits* page_limits) {
   CHECK_RESULT(validator_.OnMemory(loc, *page_limits));
   MemoryType memory_type{*page_limits};
   module_.imports.push_back(ImportDesc{ImportType(
       module_name.to_string(), field_name.to_string(), memory_type.Clone())});
   memory_types_.push_back(memory_type);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
-                                                string_view module_name,
-                                                string_view field_name,
-                                                Index global_index,
-                                                Type type,
-                                                bool mutable_) {
+Result BinaryReaderInterp::OnImportGlobal(Index import_index,
+                                          string_view module_name,
+                                          string_view field_name,
+                                          Index global_index,
+                                          Type type,
+                                          bool mutable_) {
   CHECK_RESULT(validator_.OnGlobalImport(loc, type, mutable_));
   GlobalType global_type{type, ToMutability(mutable_)};
   module_.imports.push_back(ImportDesc{ImportType(
       module_name.to_string(), field_name.to_string(), global_type.Clone())});
   global_types_.push_back(global_type);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnFunctionCount(Index count) {
+Result BinaryReaderInterp::OnFunctionCount(Index count) {
   module_.funcs.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnFunction(Index index, Index sig_index) {
+Result BinaryReaderInterp::OnFunction(Index index, Index sig_index) {
   CHECK_RESULT(validator_.OnFunction(loc, Var(sig_index)));
   FuncType& func_type = module_.func_types[sig_index];
   module_.funcs.push_back(FuncDesc{func_type, {}, 0});
   func_types_.push_back(func_type);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableCount(Index count) {
+Result BinaryReaderInterp::OnTableCount(Index count) {
   module_.tables.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTable(Index index,
-                                         Type elem_type,
-                                         const Limits* elem_limits) {
+Result BinaryReaderInterp::OnTable(Index index,
+                                   Type elem_type,
+                                   const Limits* elem_limits) {
   CHECK_RESULT(validator_.OnTable(loc, elem_type, *elem_limits));
   TableType table_type{elem_type, *elem_limits};
   module_.tables.push_back(TableDesc{table_type});
   table_types_.push_back(table_type);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnMemoryCount(Index count) {
+Result BinaryReaderInterp::OnMemoryCount(Index count) {
   module_.memories.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnMemory(Index index, const Limits* limits) {
+Result BinaryReaderInterp::OnMemory(Index index, const Limits* limits) {
   CHECK_RESULT(validator_.OnMemory(loc, *limits));
   MemoryType memory_type{*limits};
   module_.memories.push_back(MemoryDesc{memory_type});
   memory_types_.push_back(memory_type);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnGlobalCount(Index count) {
+Result BinaryReaderInterp::OnGlobalCount(Index count) {
   module_.globals.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::BeginGlobal(Index index,
-                                             Type type,
-                                             bool mutable_) {
+Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
   CHECK_RESULT(validator_.OnGlobal(loc, type, mutable_));
   GlobalType global_type{type, ToMutability(mutable_)};
   module_.globals.push_back(GlobalDesc{global_type, InitExpr{}});
   global_types_.push_back(global_type);
   init_expr_.kind = InitExprKind::None;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
+Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
   switch (init_expr_.kind) {
     case InitExprKind::I32:
       CHECK_RESULT(validator_.OnGlobalInitExpr_Const(loc, ValueType::I32));
@@ -603,61 +596,58 @@ wabt::Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
 
   GlobalDesc& global = module_.globals.back();
   global.init = init_expr_;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprF32ConstExpr(Index index,
-                                                        uint32_t value_bits) {
+Result BinaryReaderInterp::OnInitExprF32ConstExpr(Index index,
+                                                  uint32_t value_bits) {
   init_expr_.kind = InitExprKind::F32;
   init_expr_.f32_ = Bitcast<f32>(value_bits);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprF64ConstExpr(Index index,
-                                                        uint64_t value_bits) {
+Result BinaryReaderInterp::OnInitExprF64ConstExpr(Index index,
+                                                  uint64_t value_bits) {
   init_expr_.kind = InitExprKind::F64;
   init_expr_.f64_ = Bitcast<f64>(value_bits);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprV128ConstExpr(Index index,
-                                                         v128 value_bits) {
+Result BinaryReaderInterp::OnInitExprV128ConstExpr(Index index,
+                                                   v128 value_bits) {
   init_expr_.kind = InitExprKind::V128;
   init_expr_.v128_ = Bitcast<v128>(value_bits);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprGlobalGetExpr(Index index,
-                                                         Index global_index) {
+Result BinaryReaderInterp::OnInitExprGlobalGetExpr(Index index,
+                                                   Index global_index) {
   init_expr_.kind = InitExprKind::GlobalGet;
   init_expr_.index_ = global_index;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprI32ConstExpr(Index index,
-                                                        uint32_t value) {
+Result BinaryReaderInterp::OnInitExprI32ConstExpr(Index index, uint32_t value) {
   init_expr_.kind = InitExprKind::I32;
   init_expr_.i32_ = value;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index,
-                                                        uint64_t value) {
+Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index, uint64_t value) {
   init_expr_.kind = InitExprKind::I64;
   init_expr_.i64_ = value;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
+Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
   init_expr_.kind = InitExprKind::RefNull;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprRefFunc(Index index,
-                                                   Index func_index) {
+Result BinaryReaderInterp::OnInitExprRefFunc(Index index, Index func_index) {
   init_expr_.kind = InitExprKind::RefFunc;
   init_expr_.index_ = func_index;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnExport(Index index,
@@ -679,20 +669,20 @@ Result BinaryReaderInterp::OnExport(Index index,
   return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnStartFunction(Index func_index) {
+Result BinaryReaderInterp::OnStartFunction(Index func_index) {
   CHECK_RESULT(validator_.OnStart(loc, Var(func_index)));
   module_.starts.push_back(StartDesc{func_index});
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentCount(Index count) {
+Result BinaryReaderInterp::OnElemSegmentCount(Index count) {
   module_.elems.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
-                                                  Index table_index,
-                                                  uint8_t flags) {
+Result BinaryReaderInterp::BeginElemSegment(Index index,
+                                            Index table_index,
+                                            uint8_t flags) {
   auto mode = ToSegmentMode(flags);
   CHECK_RESULT(validator_.OnElemSegment(loc, Var(table_index), mode));
 
@@ -702,10 +692,10 @@ wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
   desc.table_index = table_index;
   module_.elems.push_back(desc);
   init_expr_.kind = InitExprKind::None;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
+Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
   switch (init_expr_.kind) {
     case InitExprKind::I32:
       CHECK_RESULT(validator_.OnElemSegmentInitExpr_Const(loc, ValueType::I32));
@@ -723,48 +713,45 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 
   ElemDesc& elem = module_.elems.back();
   elem.offset = init_expr_;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentElemType(Index index,
-                                                       Type elem_type) {
+Result BinaryReaderInterp::OnElemSegmentElemType(Index index, Type elem_type) {
   validator_.OnElemSegmentElemType(elem_type);
   ElemDesc& elem = module_.elems.back();
   elem.type = elem_type;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
-                                                            Index count) {
+Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
+                                                      Index count) {
   ElemDesc& elem = module_.elems.back();
   elem.elements.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
-    Index segment_index) {
+Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(Index segment_index) {
   CHECK_RESULT(validator_.OnElemSegmentElemExpr_RefNull(loc));
   ElemDesc& elem = module_.elems.back();
   elem.elements.push_back(ElemExpr{ElemKind::RefNull, 0});
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
-    Index segment_index,
-    Index func_index) {
+Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(Index segment_index,
+                                                         Index func_index) {
   CHECK_RESULT(validator_.OnElemSegmentElemExpr_RefFunc(loc, Var(func_index)));
   ElemDesc& elem = module_.elems.back();
   elem.elements.push_back(ElemExpr{ElemKind::RefFunc, func_index});
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnDataCount(Index count) {
+Result BinaryReaderInterp::OnDataCount(Index count) {
   validator_.OnDataCount(count);
   module_.datas.reserve(count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
+Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
   switch (init_expr_.kind) {
     case InitExprKind::I32:
       CHECK_RESULT(validator_.OnDataSegmentInitExpr_Const(loc, ValueType::I32));
@@ -782,12 +769,12 @@ wabt::Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
 
   DataDesc& data = module_.datas.back();
   data.offset = init_expr_;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::BeginDataSegment(Index index,
-                                                  Index memory_index,
-                                                  uint8_t flags) {
+Result BinaryReaderInterp::BeginDataSegment(Index index,
+                                            Index memory_index,
+                                            uint8_t flags) {
   auto mode = ToSegmentMode(flags);
   CHECK_RESULT(validator_.OnDataSegment(loc, Var(memory_index), mode));
 
@@ -796,18 +783,18 @@ wabt::Result BinaryReaderInterp::BeginDataSegment(Index index,
   desc.memory_index = memory_index;
   module_.datas.push_back(desc);
   init_expr_.kind = InitExprKind::None;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
-                                                   const void* src_data,
-                                                   Address size) {
+Result BinaryReaderInterp::OnDataSegmentData(Index index,
+                                             const void* src_data,
+                                             Address size) {
   DataDesc& dst_data = module_.datas.back();
   if (size > 0) {
     dst_data.data.resize(size);
     memcpy(dst_data.data.data(), src_data, size);
   }
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
 void BinaryReaderInterp::PushLabel(Istream::Offset offset,
@@ -819,7 +806,7 @@ void BinaryReaderInterp::PopLabel() {
   label_stack_.pop_back();
 }
 
-wabt::Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
+Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
   Index defined_index = index - num_func_imports();
   func_ = &module_.funcs[defined_index];
   func_->code_offset = istream_.end();
@@ -833,10 +820,10 @@ wabt::Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
 
   // Push implicit func label (equivalent to return).
   PushLabel();
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::EndFunctionBody(Index index) {
+Result BinaryReaderInterp::EndFunctionBody(Index index) {
   FixupTopLabel();
   Index drop_count, keep_count;
   CHECK_RESULT(GetReturnDropKeepCount(&drop_count, &keep_count));
@@ -845,18 +832,18 @@ wabt::Result BinaryReaderInterp::EndFunctionBody(Index index) {
   istream_.Emit(Opcode::Return);
   PopLabel();
   func_ = nullptr;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnLocalDeclCount(Index count) {
+Result BinaryReaderInterp::OnLocalDeclCount(Index count) {
   local_decl_count_ = count;
   local_count_ = 0;
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnLocalDecl(Index decl_index,
-                                             Index count,
-                                             Type type) {
+Result BinaryReaderInterp::OnLocalDecl(Index decl_index,
+                                       Index count,
+                                       Type type) {
   CHECK_RESULT(validator_.OnLocalDecl(loc, count, type));
 
   local_count_ += count;
@@ -865,129 +852,127 @@ wabt::Result BinaryReaderInterp::OnLocalDecl(Index decl_index,
   if (decl_index == local_decl_count_ - 1) {
     istream_.Emit(Opcode::InterpAlloca, local_count_);
   }
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
 Index BinaryReaderInterp::num_func_imports() const {
   return func_types_.size() - module_.funcs.size();
 }
 
-wabt::Result BinaryReaderInterp::OnOpcode(Opcode opcode) {
+Result BinaryReaderInterp::OnOpcode(Opcode opcode) {
   if (func_ == nullptr || label_stack_.empty()) {
     PrintError("Unexpected instruction after end of function");
-    return wabt::Result::Error;
+    return Result::Error;
   }
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnUnaryExpr(Opcode opcode) {
+Result BinaryReaderInterp::OnUnaryExpr(Opcode opcode) {
   CHECK_RESULT(validator_.OnUnary(loc, opcode));
   istream_.Emit(opcode);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTernaryExpr(Opcode opcode) {
+Result BinaryReaderInterp::OnTernaryExpr(Opcode opcode) {
   CHECK_RESULT(validator_.OnTernary(loc, opcode));
   istream_.Emit(opcode);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnSimdLaneOpExpr(Opcode opcode,
-                                                  uint64_t value) {
+Result BinaryReaderInterp::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   CHECK_RESULT(validator_.OnSimdLaneOp(loc, opcode, value));
   istream_.Emit(opcode, static_cast<u8>(value));
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnSimdShuffleOpExpr(Opcode opcode,
-                                                     v128 value) {
+Result BinaryReaderInterp::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
   CHECK_RESULT(validator_.OnSimdShuffleOp(loc, opcode, value));
   istream_.Emit(opcode, value);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
 uint32_t GetAlignment(uint32_t alignment_log2) {
   return alignment_log2 < 32 ? 1 << alignment_log2 : ~0u;
 }
 
-wabt::Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,
-                                                 uint32_t align_log2,
-                                                 Address offset) {
+Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,
+                                           uint32_t align_log2,
+                                           Address offset) {
   CHECK_RESULT(validator_.OnLoadSplat(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
-                                                  uint32_t align_log2,
-                                                  Address offset) {
+Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
+                                            uint32_t align_log2,
+                                            Address offset) {
   CHECK_RESULT(validator_.OnAtomicLoad(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnAtomicStoreExpr(Opcode opcode,
-                                                   uint32_t align_log2,
-                                                   Address offset) {
+Result BinaryReaderInterp::OnAtomicStoreExpr(Opcode opcode,
+                                             uint32_t align_log2,
+                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicStore(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnAtomicRmwExpr(Opcode opcode,
-                                                 uint32_t align_log2,
-                                                 Address offset) {
+Result BinaryReaderInterp::OnAtomicRmwExpr(Opcode opcode,
+                                           uint32_t align_log2,
+                                           Address offset) {
   CHECK_RESULT(validator_.OnAtomicRmw(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnAtomicRmwCmpxchgExpr(Opcode opcode,
-                                                        uint32_t align_log2,
-                                                        Address offset) {
+Result BinaryReaderInterp::OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                                  uint32_t align_log2,
+                                                  Address offset) {
   CHECK_RESULT(
       validator_.OnAtomicRmwCmpxchg(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnBinaryExpr(Opcode opcode) {
+Result BinaryReaderInterp::OnBinaryExpr(Opcode opcode) {
   CHECK_RESULT(validator_.OnBinary(loc, opcode));
   istream_.Emit(opcode);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnBlockExpr(Type sig_type) {
+Result BinaryReaderInterp::OnBlockExpr(Type sig_type) {
   CHECK_RESULT(validator_.OnBlock(loc, sig_type));
   PushLabel();
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnLoopExpr(Type sig_type) {
+Result BinaryReaderInterp::OnLoopExpr(Type sig_type) {
   CHECK_RESULT(validator_.OnLoop(loc, sig_type));
   PushLabel(istream_.end());
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnIfExpr(Type sig_type) {
+Result BinaryReaderInterp::OnIfExpr(Type sig_type) {
   CHECK_RESULT(validator_.OnIf(loc, sig_type));
   istream_.Emit(Opcode::InterpBrUnless);
   auto fixup = istream_.EmitFixupU32();
   PushLabel(Istream::kInvalidOffset, fixup);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElseExpr() {
+Result BinaryReaderInterp::OnElseExpr() {
   CHECK_RESULT(validator_.OnElse(loc));
   Label* label = TopLabel();
   Istream::Offset fixup_cond_offset = label->fixup_offset;
   istream_.Emit(Opcode::Br);
   label->fixup_offset = istream_.EmitFixupU32();
   istream_.ResolveFixupU32(fixup_cond_offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnEndExpr() {
+Result BinaryReaderInterp::OnEndExpr() {
   SharedValidator::Label* label;
   CHECK_RESULT(validator_.GetLabel(0, &label));
   LabelType label_type = label->label_type;
@@ -997,18 +982,18 @@ wabt::Result BinaryReaderInterp::OnEndExpr() {
   }
   FixupTopLabel();
   PopLabel();
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnBrExpr(Index depth) {
+Result BinaryReaderInterp::OnBrExpr(Index depth) {
   Index drop_count, keep_count;
   CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
   CHECK_RESULT(validator_.OnBr(loc, Var(depth)));
   EmitBr(depth, drop_count, keep_count);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnBrIfExpr(Index depth) {
+Result BinaryReaderInterp::OnBrIfExpr(Index depth) {
   Index drop_count, keep_count;
   CHECK_RESULT(validator_.OnBrIf(loc, Var(depth)));
   CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
@@ -1017,12 +1002,12 @@ wabt::Result BinaryReaderInterp::OnBrIfExpr(Index depth) {
   auto fixup = istream_.EmitFixupU32();
   EmitBr(depth, drop_count, keep_count);
   istream_.ResolveFixupU32(fixup);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
-                                               Index* target_depths,
-                                               Index default_target_depth) {
+Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
+                                         Index* target_depths,
+                                         Index default_target_depth) {
   CHECK_RESULT(validator_.BeginBrTable(loc));
   Index drop_count, keep_count;
   istream_.Emit(Opcode::BrTable, num_targets);
@@ -1044,30 +1029,30 @@ wabt::Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
   EmitBr(default_target_depth, 0, 0);
 
   CHECK_RESULT(validator_.EndBrTable(loc));
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnCallExpr(Index func_index) {
+Result BinaryReaderInterp::OnCallExpr(Index func_index) {
   CHECK_RESULT(validator_.OnCall(loc, Var(func_index)));
 
   if (func_index >= num_func_imports()) {
     istream_.Emit(Opcode::Call, func_index);
   } else {
-    // TODO: rename CallImport
-    istream_.Emit(Opcode::InterpCallHost, func_index);
+    istream_.Emit(Opcode::InterpCallImport, func_index);
   }
 
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
-                                                    Index table_index) {
-  CHECK_RESULT(validator_.OnCallIndirect(loc, Var(sig_index), Var(table_index)));
+Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
+                                              Index table_index) {
+  CHECK_RESULT(
+      validator_.OnCallIndirect(loc, Var(sig_index), Var(table_index)));
   istream_.Emit(Opcode::CallIndirect, table_index, sig_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
+Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
   FuncType& func_type = func_types_[func_index];
 
   Index drop_count, keep_count;
@@ -1081,16 +1066,15 @@ wabt::Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
   if (func_index >= num_func_imports()) {
     istream_.Emit(Opcode::Br, GetFuncOffset(func_index));
   } else {
-    // TODO: rename CallImport
-    istream_.Emit(Opcode::InterpCallHost, func_index);
+    istream_.Emit(Opcode::InterpCallImport, func_index);
     istream_.Emit(Opcode::Return);
   }
 
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
-                                                          Index table_index) {
+Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
+                                                    Index table_index) {
   FuncType& func_type = module_.func_types[sig_index];
 
   Index drop_count, keep_count;
@@ -1103,67 +1087,67 @@ wabt::Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
       validator_.OnReturnCallIndirect(loc, Var(sig_index), Var(table_index)));
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.Emit(Opcode::ReturnCallIndirect, table_index, sig_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnCompareExpr(Opcode opcode) {
+Result BinaryReaderInterp::OnCompareExpr(Opcode opcode) {
   CHECK_RESULT(validator_.OnCompare(loc, opcode));
   istream_.Emit(opcode);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnConvertExpr(Opcode opcode) {
+Result BinaryReaderInterp::OnConvertExpr(Opcode opcode) {
   CHECK_RESULT(validator_.OnConvert(loc, opcode));
   istream_.Emit(opcode);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnDropExpr() {
+Result BinaryReaderInterp::OnDropExpr() {
   CHECK_RESULT(validator_.OnDrop(loc));
   istream_.Emit(Opcode::Drop);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnI32ConstExpr(uint32_t value) {
+Result BinaryReaderInterp::OnI32ConstExpr(uint32_t value) {
   CHECK_RESULT(validator_.OnConst(loc, Type::I32));
   istream_.Emit(Opcode::I32Const, value);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnI64ConstExpr(uint64_t value) {
+Result BinaryReaderInterp::OnI64ConstExpr(uint64_t value) {
   CHECK_RESULT(validator_.OnConst(loc, Type::I64));
   istream_.Emit(Opcode::I64Const, value);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnF32ConstExpr(uint32_t value_bits) {
+Result BinaryReaderInterp::OnF32ConstExpr(uint32_t value_bits) {
   CHECK_RESULT(validator_.OnConst(loc, Type::F32));
   istream_.Emit(Opcode::F32Const, value_bits);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
+Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
   CHECK_RESULT(validator_.OnConst(loc, Type::F64));
   istream_.Emit(Opcode::F64Const, value_bits);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
+Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
   CHECK_RESULT(validator_.OnConst(loc, Type::V128));
   istream_.Emit(Opcode::V128Const, value_bits);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
+Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
   CHECK_RESULT(validator_.OnGlobalGet(loc, Var(global_index)));
   istream_.Emit(Opcode::GlobalGet, global_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnGlobalSetExpr(Index global_index) {
+Result BinaryReaderInterp::OnGlobalSetExpr(Index global_index) {
   CHECK_RESULT(validator_.OnGlobalSet(loc, Var(global_index)));
   istream_.Emit(Opcode::GlobalSet, global_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
 Index BinaryReaderInterp::TranslateLocalIndex(Index local_index) {
@@ -1171,200 +1155,200 @@ Index BinaryReaderInterp::TranslateLocalIndex(Index local_index) {
          local_index;
 }
 
-wabt::Result BinaryReaderInterp::OnLocalGetExpr(Index local_index) {
+Result BinaryReaderInterp::OnLocalGetExpr(Index local_index) {
   // Get the translated index before calling validator_.OnLocalGet because it
   // will update the type stack size. We need the index to be relative to the
   // old stack size.
   Index translated_local_index = TranslateLocalIndex(local_index);
   CHECK_RESULT(validator_.OnLocalGet(loc, Var(local_index)));
   istream_.Emit(Opcode::LocalGet, translated_local_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnLocalSetExpr(Index local_index) {
+Result BinaryReaderInterp::OnLocalSetExpr(Index local_index) {
   // See comment in OnLocalGetExpr above.
   Index translated_local_index = TranslateLocalIndex(local_index);
   CHECK_RESULT(validator_.OnLocalSet(loc, Var(local_index)));
   istream_.Emit(Opcode::LocalSet, translated_local_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
+Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
   CHECK_RESULT(validator_.OnLocalTee(loc, Var(local_index)));
   istream_.Emit(Opcode::LocalTee, TranslateLocalIndex(local_index));
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnLoadExpr(Opcode opcode,
-                                            uint32_t align_log2,
-                                            Address offset) {
+Result BinaryReaderInterp::OnLoadExpr(Opcode opcode,
+                                      uint32_t align_log2,
+                                      Address offset) {
   CHECK_RESULT(validator_.OnLoad(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnStoreExpr(Opcode opcode,
-                                             uint32_t align_log2,
-                                             Address offset) {
+Result BinaryReaderInterp::OnStoreExpr(Opcode opcode,
+                                       uint32_t align_log2,
+                                       Address offset) {
   CHECK_RESULT(validator_.OnStore(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnMemoryGrowExpr() {
+Result BinaryReaderInterp::OnMemoryGrowExpr() {
   CHECK_RESULT(validator_.OnMemoryGrow(loc));
   istream_.Emit(Opcode::MemoryGrow, kMemoryIndex0);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnMemorySizeExpr() {
+Result BinaryReaderInterp::OnMemorySizeExpr() {
   CHECK_RESULT(validator_.OnMemorySize(loc));
   istream_.Emit(Opcode::MemorySize, kMemoryIndex0);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableGrowExpr(Index table_index) {
+Result BinaryReaderInterp::OnTableGrowExpr(Index table_index) {
   CHECK_RESULT(validator_.OnTableGrow(loc, Var(table_index)));
   istream_.Emit(Opcode::TableGrow, table_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableSizeExpr(Index table_index) {
+Result BinaryReaderInterp::OnTableSizeExpr(Index table_index) {
   CHECK_RESULT(validator_.OnTableSize(loc, Var(table_index)));
   istream_.Emit(Opcode::TableSize, table_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
+Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
   CHECK_RESULT(validator_.OnTableFill(loc, Var(table_index)));
   istream_.Emit(Opcode::TableFill, table_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
+Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   CHECK_RESULT(validator_.OnRefFunc(loc, Var(func_index)));
   istream_.Emit(Opcode::RefFunc, func_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnRefNullExpr() {
+Result BinaryReaderInterp::OnRefNullExpr() {
   CHECK_RESULT(validator_.OnRefNull(loc));
   istream_.Emit(Opcode::RefNull);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnRefIsNullExpr() {
+Result BinaryReaderInterp::OnRefIsNullExpr() {
   CHECK_RESULT(validator_.OnRefIsNull(loc));
   istream_.Emit(Opcode::RefIsNull);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnNopExpr() {
+Result BinaryReaderInterp::OnNopExpr() {
   CHECK_RESULT(validator_.OnNop(loc));
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnReturnExpr() {
+Result BinaryReaderInterp::OnReturnExpr() {
   Index drop_count, keep_count;
   CHECK_RESULT(GetReturnDropKeepCount(&drop_count, &keep_count));
   CHECK_RESULT(validator_.OnReturn(loc));
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.Emit(Opcode::Return);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnSelectExpr(Type result_type) {
+Result BinaryReaderInterp::OnSelectExpr(Type result_type) {
   CHECK_RESULT(validator_.OnSelect(loc, result_type));
   istream_.Emit(Opcode::Select);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnUnreachableExpr() {
+Result BinaryReaderInterp::OnUnreachableExpr() {
   CHECK_RESULT(validator_.OnUnreachable(loc));
   istream_.Emit(Opcode::Unreachable);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
-                                                  uint32_t align_log2,
-                                                  Address offset) {
+Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
+                                            uint32_t align_log2,
+                                            Address offset) {
   CHECK_RESULT(validator_.OnAtomicWait(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
-                                                    uint32_t align_log2,
-                                                    Address offset) {
-  CHECK_RESULT(validator_.OnAtomicNotify(loc, opcode, GetAlignment(align_log2)));
+Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
+                                              uint32_t align_log2,
+                                              Address offset) {
+  CHECK_RESULT(
+      validator_.OnAtomicNotify(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnMemoryCopyExpr() {
+Result BinaryReaderInterp::OnMemoryCopyExpr() {
   CHECK_RESULT(validator_.OnMemoryCopy(loc));
   istream_.Emit(Opcode::MemoryCopy, kMemoryIndex0, kMemoryIndex0);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnDataDropExpr(Index segment_index) {
+Result BinaryReaderInterp::OnDataDropExpr(Index segment_index) {
   CHECK_RESULT(validator_.OnDataDrop(loc, Var(segment_index)));
   istream_.Emit(Opcode::DataDrop, segment_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnMemoryFillExpr() {
+Result BinaryReaderInterp::OnMemoryFillExpr() {
   CHECK_RESULT(validator_.OnMemoryFill(loc));
   istream_.Emit(Opcode::MemoryFill, kMemoryIndex0);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index) {
+Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index) {
   CHECK_RESULT(validator_.OnMemoryInit(loc, Var(segment_index)));
   istream_.Emit(Opcode::MemoryInit, kMemoryIndex0, segment_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableGetExpr(Index table_index) {
+Result BinaryReaderInterp::OnTableGetExpr(Index table_index) {
   CHECK_RESULT(validator_.OnTableGet(loc, Var(table_index)));
   istream_.Emit(Opcode::TableGet, table_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableSetExpr(Index table_index) {
+Result BinaryReaderInterp::OnTableSetExpr(Index table_index) {
   CHECK_RESULT(validator_.OnTableSet(loc, Var(table_index)));
   istream_.Emit(Opcode::TableSet, table_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableCopyExpr(Index dst_index,
-                                                 Index src_index) {
+Result BinaryReaderInterp::OnTableCopyExpr(Index dst_index, Index src_index) {
   CHECK_RESULT(validator_.OnTableCopy(loc, Var(dst_index), Var(src_index)));
   istream_.Emit(Opcode::TableCopy, dst_index, src_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemDropExpr(Index segment_index) {
+Result BinaryReaderInterp::OnElemDropExpr(Index segment_index) {
   CHECK_RESULT(validator_.OnElemDrop(loc, Var(segment_index)));
   istream_.Emit(Opcode::ElemDrop, segment_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
-                                                 Index table_index) {
+Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
+                                           Index table_index) {
   CHECK_RESULT(
       validator_.OnTableInit(loc, Var(segment_index), Var(table_index)));
   istream_.Emit(Opcode::TableInit, table_index, segment_index);
-  return wabt::Result::Ok;
+  return Result::Ok;
 }
 
 }  // namespace
 
-wabt::Result ReadBinaryInterp(const void* data,
-                              size_t size,
-                              const ReadBinaryOptions& options,
-                              Errors* errors,
-                              ModuleDesc* out_module) {
+Result ReadBinaryInterp(const void* data,
+                        size_t size,
+                        const ReadBinaryOptions& options,
+                        Errors* errors,
+                        ModuleDesc* out_module) {
   BinaryReaderInterp reader(out_module, errors, options.features);
   return ReadBinary(data, size, &reader, options);
 }

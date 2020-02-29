@@ -462,7 +462,7 @@ Instr Istream::Read(Offset* offset) const {
       break;
 
     case Opcode::Call:
-    case Opcode::InterpCallHost:
+    case Opcode::InterpCallImport:
       instr.kind = InstrKind::Imm_Index_Op_N;
       instr.imm_u32 = ReadAt<u32>(offset);
       break;

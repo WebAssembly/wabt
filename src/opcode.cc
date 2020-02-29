@@ -319,7 +319,7 @@ bool Opcode::IsEnabled(const Features& features) const {
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:
     case Opcode::InterpBrUnless:
-    case Opcode::InterpCallHost:
+    case Opcode::InterpCallImport:
     case Opcode::InterpData:
     case Opcode::InterpDropKeep:
       return false;

@@ -1328,7 +1328,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       }
       break;
 
-    case O::InterpCallHost: {
+    case O::InterpCallImport: {
       Ref new_func_ref = inst_->funcs()[instr.imm_u32];
       Func::Ptr new_func{store_, new_func_ref};
       return DoCall(new_func, out_trap);
