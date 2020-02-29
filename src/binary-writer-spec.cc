@@ -156,7 +156,7 @@ void BinaryWriterSpec::WriteVar(const Var& var) {
 void BinaryWriterSpec::WriteTypeObject(Type type) {
   json_stream_->Writef("{");
   WriteKey("type");
-  WriteString(GetTypeName(type));
+  WriteString(type.GetName());
   json_stream_->Writef("}");
 }
 

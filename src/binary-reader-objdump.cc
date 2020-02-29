@@ -422,12 +422,12 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 };
 
 std::string BinaryReaderObjdumpDisassemble::BlockSigToString(Type type) const {
-  if (IsTypeIndex(type)) {
-    return StringPrintf("type[%d]", GetTypeIndex(type));
+  if (type.IsIndex()) {
+    return StringPrintf("type[%d]", type.GetIndex());
   } else if (type == Type::Void) {
     return "";
   } else {
-    return GetTypeName(type);
+    return type.GetName();
   }
 }
 
@@ -484,7 +484,7 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
   }
   local_index_ += count;
 
-  printf("] type=%s\n", GetTypeName(type));
+  printf("] type=%s\n", type.GetName());
 
   last_opcode_end = current_opcode_offset + data_size;
   current_opcode_offset = last_opcode_end;
@@ -1042,7 +1042,7 @@ Result BinaryReaderObjdump::OnType(Index index,
     if (i != 0) {
       printf(", ");
     }
-    printf("%s", GetTypeName(param_types[i]));
+    printf("%s", param_types[i].GetName());
   }
   printf(") -> ");
   switch (result_count) {
@@ -1050,7 +1050,7 @@ Result BinaryReaderObjdump::OnType(Index index,
       printf("nil");
       break;
     case 1:
-      printf("%s", GetTypeName(result_types[0]));
+      printf("%s", result_types[0].GetName());
       break;
     default:
       printf("(");
@@ -1058,7 +1058,7 @@ Result BinaryReaderObjdump::OnType(Index index,
         if (i != 0) {
           printf(", ");
         }
-        printf("%s", GetTypeName(result_types[i]));
+        printf("%s", result_types[i].GetName());
       }
       printf(")");
       break;
@@ -1140,7 +1140,7 @@ Result BinaryReaderObjdump::OnImportTable(Index import_index,
                                           Type elem_type,
                                           const Limits* elem_limits) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, table_index,
-               GetTypeName(elem_type), elem_limits->initial);
+               elem_type.GetName(), elem_limits->initial);
   if (elem_limits->has_max) {
     PrintDetails(" max=%" PRId64, elem_limits->max);
   }
@@ -1173,7 +1173,7 @@ Result BinaryReaderObjdump::OnImportGlobal(Index import_index,
                                            Type type,
                                            bool mutable_) {
   PrintDetails(" - global[%" PRIindex "] %s mutable=%d", global_index,
-               GetTypeName(type), mutable_);
+               type.GetName(), mutable_);
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
@@ -1219,7 +1219,7 @@ Result BinaryReaderObjdump::OnTable(Index index,
                                     Type elem_type,
                                     const Limits* elem_limits) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, index,
-               GetTypeName(elem_type), elem_limits->initial);
+               elem_type.GetName(), elem_limits->initial);
   if (elem_limits->has_max) {
     PrintDetails(" max=%" PRId64, elem_limits->max);
   }
@@ -1303,8 +1303,8 @@ Result BinaryReaderObjdump::OnGlobalCount(Index count) {
 }
 
 Result BinaryReaderObjdump::BeginGlobal(Index index, Type type, bool mutable_) {
-  PrintDetails(" - global[%" PRIindex "] %s mutable=%d", index,
-               GetTypeName(type), mutable_);
+  PrintDetails(" - global[%" PRIindex "] %s mutable=%d", index, type.GetName(),
+               mutable_);
   string_view name = GetGlobalName(index);
   if (!name.empty()) {
     PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));

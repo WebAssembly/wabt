@@ -413,11 +413,11 @@ bool BinaryReader::IsBlockType(Type type) {
     return true;
   }
 
-  if (!(options_.features.multi_value_enabled() && IsTypeIndex(type))) {
+  if (!(options_.features.multi_value_enabled() && type.IsIndex())) {
     return false;
   }
 
-  return GetTypeIndex(type) < num_signatures_;
+  return type.GetIndex() < num_signatures_;
 }
 
 Index BinaryReader::NumTotalFuncs() {
@@ -525,7 +525,7 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadType(out_elem_type, "table elem type"));
-  ERROR_UNLESS(IsRefType(*out_elem_type),
+  ERROR_UNLESS(out_elem_type->IsRef(),
                "table elem type must be a reference type");
 
   uint32_t flags;
@@ -2232,15 +2232,15 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     if (flags & (SegPassive | SegExplicitIndex)) {
       if (flags & SegUseElemExprs) {
         CHECK_RESULT(ReadType(&elem_type, "table elem type"));
-        ERROR_UNLESS(IsRefType(elem_type),
+        ERROR_UNLESS(elem_type.IsRef(),
                      "segment elem expr type must be a reference type (got %s)",
-                     GetTypeName(elem_type));
+                     elem_type.GetName());
       } else {
         ExternalKind kind;
         CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
-                     GetTypeName(elem_type));
+                     elem_type.GetName());
         elem_type = Type::Funcref;
       }
     }

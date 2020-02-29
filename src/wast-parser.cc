@@ -276,12 +276,11 @@ Result CheckTypeIndex(const Location& loc,
                       Errors* errors) {
   // Types must match exactly; no subtyping should be allowed.
   if (actual != expected) {
-    errors->emplace_back(
-        ErrorLevel::Error, loc,
-        StringPrintf("type mismatch for %s %" PRIindex
-                     " of %s. got %s, expected %s",
-                     index_kind, index, desc, GetTypeName(actual),
-                     GetTypeName(expected)));
+    errors->emplace_back(ErrorLevel::Error, loc,
+                         StringPrintf("type mismatch for %s %" PRIindex
+                                      " of %s. got %s, expected %s",
+                                      index_kind, index, desc, actual.GetName(),
+                                      expected.GetName()));
     return Result::Error;
   }
   return Result::Ok;
@@ -788,7 +787,7 @@ Result WastParser::ParseValueType(Type* out_type) {
   }
 
   if (!is_enabled) {
-    Error(token.loc, "value type not allowed: %s", GetTypeName(type));
+    Error(token.loc, "value type not allowed: %s", type.GetName());
     return Result::Error;
   }
 
@@ -813,7 +812,7 @@ Result WastParser::ParseRefType(Type* out_type) {
   Token token = Consume();
   Type type = token.type();
   if (type == Type::Anyref && !options_->features.reference_types_enabled()) {
-    Error(token.loc, "value type not allowed: %s", GetTypeName(type));
+    Error(token.loc, "value type not allowed: %s", type.GetName());
     return Result::Error;
   }
 

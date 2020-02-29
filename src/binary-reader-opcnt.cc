@@ -120,10 +120,10 @@ void OpcodeInfo::Write(Stream& stream) {
 
     case Kind::BlockSig: {
       auto type = *GetData<Type>();
-      if (IsTypeIndex(type)) {
-        stream.Writef(" type:%d", static_cast<int>(type));
+      if (type.IsIndex()) {
+        stream.Writef(" type:%d", type.GetIndex());
       } else if (type != Type::Void) {
-        stream.Writef(" %s", GetTypeName(type));
+        stream.Writef(" %s", type.GetName());
       }
       break;
     }

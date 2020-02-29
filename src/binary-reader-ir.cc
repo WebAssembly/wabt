@@ -350,15 +350,15 @@ Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
 
 void BinaryReaderIR::SetBlockDeclaration(BlockDeclaration* decl,
                                          Type sig_type) {
-  if (IsTypeIndex(sig_type)) {
-    Index type_index = GetTypeIndex(sig_type);
+  if (sig_type.IsIndex()) {
+    Index type_index = sig_type.GetIndex();
     decl->has_func_type = true;
     decl->type_var = Var(type_index);
     decl->sig = cast<FuncType>(module_->types[type_index])->sig;
   } else {
     decl->has_func_type = false;
     decl->sig.param_types.clear();
-    decl->sig.result_types = GetInlineTypeVector(sig_type);
+    decl->sig.result_types = sig_type.GetInlineVector();
   }
 }
 

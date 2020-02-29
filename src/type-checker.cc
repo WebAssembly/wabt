@@ -30,7 +30,7 @@ std::string TypesToString(const TypeVector& types,
   }
 
   for (size_t i = 0; i < types.size(); ++i) {
-    result += GetTypeName(types[i]);
+    result += types[i].GetName();
     if (i < types.size() - 1) {
       result += ", ";
     }
@@ -169,13 +169,13 @@ static bool IsSubtype(Type sub, Type super) {
   if (super == sub) {
     return true;
   }
-  if (IsRefType(super) != IsRefType(sub)) {
+  if (super.IsRef() != sub.IsRef()) {
     return false;
   }
   if (super == Type::Anyref) {
-    return IsRefType(sub);
+    return sub.IsRef();
   }
-  if (IsNullableRefType(super)) {
+  if (super.IsNullableRef()) {
     return sub == Type::Nullref;
   }
   return false;
@@ -731,7 +731,7 @@ Result TypeChecker::OnSelect(Type expected) {
   result |= PeekType(1, &type1);
   result |= PeekType(2, &type2);
   if (expected == Type::Any) {
-    if (IsRefType(type1) || IsRefType(type2)) {
+    if (type1.IsRef() || type2.IsRef()) {
       result = Result::Error;
     } else {
       result |= CheckType(type1, type2);
