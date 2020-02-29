@@ -81,7 +81,7 @@ out/test/spec/multi-value/call_indirect.wast:730: assert_malformed passed:
   ...0 funcref)(func (result i32)  (call_indirect (type $sig) (param i32) (resu...
                                     ^^^^^^^^^^^^^
 out/test/spec/multi-value/call_indirect.wast:745: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 4294967295)
+  0000000: error: table variable out of range: 0 (max 0)
   000001c: error: OnCallIndirectExpr callback failed
 out/test/spec/multi-value/call_indirect.wast:753: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
@@ -142,7 +142,7 @@ out/test/spec/multi-value/call_indirect.wast:951: assert_invalid passed:
 out/test/spec/multi-value/call_indirect.wast:958: assert_invalid passed:
   0000025: error: invalid call_indirect signature index
 out/test/spec/multi-value/call_indirect.wast:969: assert_invalid passed:
-  0000000: error: function variable out of range: 0 (max 4294967295)
+  0000000: error: function variable out of range: 0 (max 0)
   0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
 155/155 tests passed.
 ;;; STDOUT ;;)

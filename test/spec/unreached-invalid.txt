@@ -5,7 +5,7 @@ out/test/spec/unreached-invalid.wast:4: assert_invalid passed:
   0000000: error: local variable out of range (max 0)
   000001a: error: OnLocalGetExpr callback failed
 out/test/spec/unreached-invalid.wast:8: assert_invalid passed:
-  0000000: error: global variable out of range: 0 (max 4294967295)
+  0000000: error: global variable out of range: 0 (max 0)
   000001a: error: OnGlobalGetExpr callback failed
 out/test/spec/unreached-invalid.wast:12: assert_invalid passed:
   000001a: error: invalid call function index: 1

@@ -9,16 +9,16 @@
   )
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-bulk-memory-no-table.txt:7:41: error: table variable out of range: 0 (max 4294967295)
+out/test/typecheck/bad-bulk-memory-no-table.txt:7:41: error: table variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                         ^^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-table.txt:7:52: error: elem_segment variable out of range: 0 (max 4294967295)
+out/test/typecheck/bad-bulk-memory-no-table.txt:7:52: error: elem_segment variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                                    ^
-out/test/typecheck/bad-bulk-memory-no-table.txt:8:41: error: table variable out of range: 0 (max 4294967295)
+out/test/typecheck/bad-bulk-memory-no-table.txt:8:41: error: table variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.copy
                                         ^^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-table.txt:8:41: error: table variable out of range: 0 (max 4294967295)
+out/test/typecheck/bad-bulk-memory-no-table.txt:8:41: error: table variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.copy
                                         ^^^^^^^^^^
 ;;; STDERR ;;)

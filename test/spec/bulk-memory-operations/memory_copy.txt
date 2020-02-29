@@ -22,7 +22,7 @@ out/test/spec/bulk-memory-operations/memory_copy.wast:3239: assert_trap passed: 
 out/test/spec/bulk-memory-operations/memory_copy.wast:3600: assert_trap passed: out of bounds memory access: memory.copy out of bound
 out/test/spec/bulk-memory-operations/memory_copy.wast:3961: assert_trap passed: out of bounds memory access: memory.copy out of bound
 out/test/spec/bulk-memory-operations/memory_copy.wast:4315: assert_invalid passed:
-  error: memory.copy requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 0)
   000002d: error: OnMemoryCopyExpr callback failed
 out/test/spec/bulk-memory-operations/memory_copy.wast:4321: assert_invalid passed:
   error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i32, f32]

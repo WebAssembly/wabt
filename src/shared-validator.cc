@@ -210,16 +210,9 @@ Result SharedValidator::OnGlobalInitExpr_RefFunc(const Location& loc,
 }
 
 Result SharedValidator::OnGlobalInitExpr_Other(const Location& loc) {
-  return PrintError(loc,
-                    "invalid global initializer expression, must be a constant "
-                    "expression; either *.const or "
-                    "global.get.");
-}
-
-// TODO: Remove; this is here only to match previous error output.
-Result SharedValidator::OnGlobalInitExpr_None(const Location& loc) {
-  return CheckType(loc, Type::Void, globals_.back().type,
-                   "global initializer expression");
+  return PrintError(
+      loc,
+      "invalid global initializer expression, must be a constant expression");
 }
 
 Result SharedValidator::OnEvent(const Location& loc, Var sig_var) {
@@ -407,10 +400,9 @@ Result SharedValidator::EndModule() {
 
 Result SharedValidator::CheckIndex(Var var, Index max_index, const char* desc) {
   if (var.index() >= max_index) {
-    // TODO: Don't use max_index - 1, since that may wrap around to 2**32-1.
     return PrintError(
         var.loc, "%s variable out of range: %" PRIindex " (max %" PRIindex ")",
-        desc, var.index(), max_index - 1);
+        desc, var.index(), max_index);
   }
   return Result::Ok;
 }
@@ -452,29 +444,8 @@ Result SharedValidator::CheckMemoryIndex(Var memory_var, MemoryType* out) {
   return CheckIndexWithValue(memory_var, memories_, out, "memory");
 }
 
-// TODO: Remove; this is only used to match previous error output.
-Result SharedValidator::CheckMemoryIndex(Var memory_var, Opcode opcode) {
-  if (memory_var.index() >= memories_.size()) {
-    return PrintError(memory_var.loc,
-                      "%s requires an imported or defined memory.",
-                      opcode.GetName());
-  }
-  return Result::Ok;
-}
-
 Result SharedValidator::CheckTableIndex(Var table_var, TableType* out) {
   return CheckIndexWithValue(table_var, tables_, out, "table");
-}
-
-// TODO: Remove; this is only used to match previous error output.
-Result SharedValidator::CheckTableIndex(Var table_var, Opcode opcode) {
-  if (table_var.index() >= tables_.size()) {
-    return PrintError(
-        table_var.loc,
-        "%s requires table %u to be an imported or defined table.",
-        opcode.GetName(), table_var.index());
-  }
-  return Result::Ok;
 }
 
 Result SharedValidator::CheckGlobalIndex(Var global_var, GlobalType* out) {
@@ -543,10 +514,6 @@ Result SharedValidator::BeginFunctionBody(const Location& loc,
 }
 
 Result SharedValidator::EndFunctionBody(const Location& loc) {
-  // TODO: Use this location.
-#if 0
-  expr_loc_ = &loc;
-#endif
   return typechecker_.EndFunction();
 }
 
@@ -605,7 +572,7 @@ Result SharedValidator::OnAtomicLoad(const Location& loc,
                                      Address alignment) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), opcode);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicLoad(opcode);
   return result;
@@ -616,7 +583,7 @@ Result SharedValidator::OnAtomicNotify(const Location& loc,
                                        Address alignment) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), opcode);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicNotify(opcode);
   return result;
@@ -627,7 +594,7 @@ Result SharedValidator::OnAtomicRmwCmpxchg(const Location& loc,
                                            Address alignment) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), opcode);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicRmwCmpxchg(opcode);
   return result;
@@ -638,7 +605,7 @@ Result SharedValidator::OnAtomicRmw(const Location& loc,
                                     Address alignment) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), opcode);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicRmw(opcode);
   return result;
@@ -649,7 +616,7 @@ Result SharedValidator::OnAtomicStore(const Location& loc,
                                       Address alignment) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), opcode);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicStore(opcode);
   return result;
@@ -660,7 +627,7 @@ Result SharedValidator::OnAtomicWait(const Location& loc,
                                      Address alignment) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), opcode);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicWait(opcode);
   return result;
@@ -803,10 +770,6 @@ Result SharedValidator::OnElemDrop(const Location& loc, Var segment_var) {
 
 Result SharedValidator::OnElse(const Location& loc) {
   Result result = Result::Ok;
-  // TODO: Re-enable; this is only used to match previous error output.
-#if 0
-  expr_loc_ = &loc;
-#endif
   result |= typechecker_.OnElse();
   return result;
 }
@@ -913,7 +876,7 @@ Result SharedValidator::OnLoop(const Location& loc, Type sig_type) {
 Result SharedValidator::OnMemoryCopy(const Location& loc) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), Opcode::MemoryCopy);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= typechecker_.OnMemoryCopy();
   return result;
 }
@@ -921,7 +884,7 @@ Result SharedValidator::OnMemoryCopy(const Location& loc) {
 Result SharedValidator::OnMemoryFill(const Location& loc) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), Opcode::MemoryFill);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= typechecker_.OnMemoryFill();
   return result;
 }
@@ -937,7 +900,7 @@ Result SharedValidator::OnMemoryGrow(const Location& loc) {
 Result SharedValidator::OnMemoryInit(const Location& loc, Var segment_var) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), Opcode::MemoryInit);
+  result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckDataSegmentIndex(segment_var);
   result |= typechecker_.OnMemoryInit(segment_var.index());
   return result;
@@ -999,7 +962,7 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
                                              Var table_var) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckTableIndex(table_var, Opcode::ReturnCallIndirect);
+  result |= CheckTableIndex(table_var);
   FuncType func_type;
   result |= CheckTypeIndex(sig_var, &func_type);
   result |=

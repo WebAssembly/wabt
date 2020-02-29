@@ -74,7 +74,6 @@ class SharedValidator {
   Result OnGlobalInitExpr_RefNull(const Location&);
   Result OnGlobalInitExpr_RefFunc(const Location&, Var func_var);
   Result OnGlobalInitExpr_Other(const Location&);
-  Result OnGlobalInitExpr_None(const Location&);
   Result OnEvent(const Location&, Var sig_var);
 
   Result OnExport(const Location&,
@@ -235,9 +234,7 @@ class SharedValidator {
   Result CheckTypeIndex(Var sig_var, FuncType* out = nullptr);
   Result CheckFuncIndex(Var func_var, FuncType* out = nullptr);
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
-  Result CheckTableIndex(Var table_var, Opcode);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);
-  Result CheckMemoryIndex(Var memory_var, Opcode);
   Result CheckGlobalIndex(Var global_var, GlobalType* out = nullptr);
   Result CheckEventIndex(Var event_var, EventType* out = nullptr);
   Result CheckElemSegmentIndex(Var elem_segment_var, ElemType* out = nullptr);

@@ -11,7 +11,7 @@ out/test/spec/bulk-memory-operations/memory_fill.wast:117: assert_trap passed: o
 test() =>
 test() =>
 out/test/spec/bulk-memory-operations/memory_fill.wast:174: assert_invalid passed:
-  error: memory.fill requires an imported or defined memory.
+  error: memory variable out of range: 0 (max 0)
   000002c: error: OnMemoryFillExpr callback failed
 out/test/spec/bulk-memory-operations/memory_fill.wast:180: assert_invalid passed:
   error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, f32]

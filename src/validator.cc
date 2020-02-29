@@ -697,8 +697,6 @@ Result Validator::CheckModule() {
             result_ |= validator_.OnGlobalInitExpr_Other(field.loc);
             break;
         }
-      } else if (f->global.init_expr.empty()) {
-        result_ |= validator_.OnGlobalInitExpr_None(field.loc);
       } else {
         result_ |= validator_.OnGlobalInitExpr_Other(field.loc);
       }
