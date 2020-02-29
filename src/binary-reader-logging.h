@@ -231,10 +231,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index,
                           Index table_index,
-                          uint8_t flags,
-                          Type elem_type) override;
+                          uint8_t flags) override;
   Result BeginElemSegmentInitExpr(Index index) override;
   Result EndElemSegmentInitExpr(Index index) override;
+  Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
   Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,

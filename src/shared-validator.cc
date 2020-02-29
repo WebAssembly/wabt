@@ -287,14 +287,17 @@ Result SharedValidator::OnStart(const Location& loc, Var func_var) {
 
 Result SharedValidator::OnElemSegment(const Location& loc,
                                       Var table_var,
-                                      SegmentKind kind,
-                                      Type elem_type) {
+                                      SegmentKind kind) {
   Result result = Result::Ok;
   if (kind == SegmentKind::Active) {
     result |= CheckTableIndex(table_var);
   }
-  ++elem_segments_;
+  elems_.push_back(ElemType{Type::Void});  // Updated in OnElemSegmentElemType.
   return result;
+}
+
+void SharedValidator::OnElemSegmentElemType(Type elem_type) {
+  elems_.back().element = elem_type;
 }
 
 Result SharedValidator::OnElemSegmentInitExpr_Const(const Location& loc,
@@ -450,8 +453,7 @@ Result SharedValidator::CheckMemoryIndex(Var memory_var, MemoryType* out) {
 }
 
 // TODO: Remove; this is only used to match previous error output.
-Result SharedValidator::CheckMemoryIndex(Var memory_var,
-                                         Opcode opcode) {
+Result SharedValidator::CheckMemoryIndex(Var memory_var, Opcode opcode) {
   if (memory_var.index() >= memories_.size()) {
     return PrintError(memory_var.loc,
                       "%s requires an imported or defined memory.",
@@ -483,8 +485,9 @@ Result SharedValidator::CheckEventIndex(Var event_var, EventType* out) {
   return CheckIndexWithValue(event_var, events_, out, "event");
 }
 
-Result SharedValidator::CheckElemSegmentIndex(Var elem_segment_var) {
-  return CheckIndex(elem_segment_var, elem_segments_, "elem_segment");
+Result SharedValidator::CheckElemSegmentIndex(Var elem_segment_var,
+                                              ElemType* out) {
+  return CheckIndexWithValue(elem_segment_var, elems_, out, "elem_segment");
 }
 
 Result SharedValidator::CheckDataSegmentIndex(Var data_segment_var) {
@@ -1052,9 +1055,12 @@ Result SharedValidator::OnTableCopy(const Location& loc,
                                     Var src_var) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckTableIndex(dst_var, Opcode::TableCopy);
-  result |= CheckTableIndex(src_var, Opcode::TableCopy);
+  TableType dst_table;
+  TableType src_table;
+  result |= CheckTableIndex(dst_var, &dst_table);
+  result |= CheckTableIndex(src_var, &src_table);
   result |= typechecker_.OnTableCopy();
+  result |= CheckType(loc, src_table.element, dst_table.element, "table.copy");
   return result;
 }
 
@@ -1090,9 +1096,12 @@ Result SharedValidator::OnTableInit(const Location& loc,
                                     Var table_var) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= CheckTableIndex(table_var, Opcode::TableInit);
-  result |= CheckElemSegmentIndex(segment_var);
+  TableType table_type;
+  ElemType elem_type;
+  result |= CheckTableIndex(table_var, &table_type);
+  result |= CheckElemSegmentIndex(segment_var, &elem_type);
   result |= typechecker_.OnTableInit(table_var.index(), segment_var.index());
+  result |= CheckType(loc, elem_type.element, table_type.element, "table.init");
   return result;
 }
 

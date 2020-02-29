@@ -1820,11 +1820,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Var dst(0, loc);
       Var src(0, loc);
       if (options_->features.reference_types_enabled()) {
-      // TODO: disabled for now, since the spec tests don't currently use.
-#if 0
-        CHECK_RESULT(ParseVar(&dst));
-        CHECK_RESULT(ParseVar(&src));
-#endif
+        ParseVarOpt(&dst, dst);
+        ParseVarOpt(&src, src);
       }
       out_expr->reset(new TableCopyExpr(dst, src, loc));
       break;
@@ -1840,6 +1837,15 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Var segment_index(0, loc);
       CHECK_RESULT(ParseVar(&segment_index));
       Var table_index(0, loc);
+      if (ParseVarOpt(&table_index, table_index)) {
+        // Here are the two forms:
+        //
+        //   table.init $elemidx ...
+        //   table.init $tableidx $elemidx ...
+        //
+        // So if both indexes are provided, we need to swap them.
+        std::swap(segment_index, table_index);
+      }
       out_expr->reset(new TableInitExpr(segment_index, table_index, loc));
       break;
     }
@@ -1851,21 +1857,25 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::TableSet:
       ErrorUnlessOpcodeEnabled(Consume());
+      // TODO: Table index.
       CHECK_RESULT(ParsePlainInstrVar<TableSetExpr>(loc, out_expr));
       break;
 
     case TokenType::TableGrow:
       ErrorUnlessOpcodeEnabled(Consume());
+      // TODO: Table index.
       CHECK_RESULT(ParsePlainInstrVar<TableGrowExpr>(loc, out_expr));
       break;
 
     case TokenType::TableSize:
       ErrorUnlessOpcodeEnabled(Consume());
+      // TODO: Table index.
       CHECK_RESULT(ParsePlainInstrVar<TableSizeExpr>(loc, out_expr));
       break;
 
     case TokenType::TableFill:
       ErrorUnlessOpcodeEnabled(Consume());
+      // TODO: Table index.
       CHECK_RESULT(ParsePlainInstrVar<TableFillExpr>(loc, out_expr));
       break;
 

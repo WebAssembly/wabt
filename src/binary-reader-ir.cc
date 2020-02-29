@@ -205,10 +205,10 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index,
                           Index table_index,
-                          uint8_t flags,
-                          Type elem_type) override;
+                          uint8_t flags) override;
   Result BeginElemSegmentInitExpr(Index index) override;
   Result EndElemSegmentInitExpr(Index index) override;
+  Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
   Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
@@ -1022,8 +1022,7 @@ Result BinaryReaderIR::OnElemSegmentCount(Index count) {
 
 Result BinaryReaderIR::BeginElemSegment(Index index,
                                         Index table_index,
-                                        uint8_t flags,
-                                        Type elem_type) {
+                                        uint8_t flags) {
   auto field = MakeUnique<ElemSegmentModuleField>(GetLocation());
   ElemSegment& elem_segment = field->elem_segment;
   elem_segment.table_var = Var(table_index, GetLocation());
@@ -1034,7 +1033,6 @@ Result BinaryReaderIR::BeginElemSegment(Index index,
   } else {
     elem_segment.kind = SegmentKind::Active;
   }
-  elem_segment.elem_type = elem_type;
   module_->AppendField(std::move(field));
   return Result::Ok;
 }
@@ -1048,6 +1046,13 @@ Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
 
 Result BinaryReaderIR::EndElemSegmentInitExpr(Index index) {
   current_init_expr_ = nullptr;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnElemSegmentElemType(Index index, Type elem_type) {
+  assert(index == module_->elem_segments.size() - 1);
+  ElemSegment* segment = module_->elem_segments[index];
+  segment->elem_type = elem_type;
   return Result::Ok;
 }
 

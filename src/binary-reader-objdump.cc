@@ -799,8 +799,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index,
                           Index table_index,
-                          uint8_t flags,
-                          Type elem_type) override;
+                          uint8_t flags) override;
+  Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
   Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
@@ -1273,11 +1273,15 @@ Result BinaryReaderObjdump::OnElemSegmentCount(Index count) {
 
 Result BinaryReaderObjdump::BeginElemSegment(Index index,
                                              Index table_index,
-                                             uint8_t flags,
-                                             Type elem_type) {
+                                             uint8_t flags) {
   table_index_ = table_index;
   elem_index_ = 0;
   elem_flags_ = flags;
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnElemSegmentElemType(Index index, Type elem_type) {
+  // TODO: Add support for this.
   return Result::Ok;
 }
 

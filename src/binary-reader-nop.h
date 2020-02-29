@@ -302,12 +302,14 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnElemSegmentCount(Index count) override { return Result::Ok; }
   Result BeginElemSegment(Index index,
                           Index table_index,
-                          uint8_t flags,
-                          Type elem_type) override {
+                          uint8_t flags) override {
     return Result::Ok;
   }
   Result BeginElemSegmentInitExpr(Index index) override { return Result::Ok; }
   Result EndElemSegmentInitExpr(Index index) override { return Result::Ok; }
+  Result OnElemSegmentElemType(Index index, Type elem_type) override {
+    return Result::Ok;
+  }
   Result OnElemSegmentElemExprCount(Index index, Index count) override {
     return Result::Ok;
   }

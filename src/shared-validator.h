@@ -84,7 +84,8 @@ class SharedValidator {
 
   Result OnStart(const Location&, Var func_var);
 
-  Result OnElemSegment(const Location&, Var table_var, SegmentKind, Type elem_type);
+  Result OnElemSegment(const Location&, Var table_var, SegmentKind);
+  void OnElemSegmentElemType(Type elem_type);
   Result OnElemSegmentInitExpr_Const(const Location&, Type);
   Result OnElemSegmentInitExpr_GlobalGet(const Location&, Var global_var);
   Result OnElemSegmentInitExpr_Other(const Location&);
@@ -200,6 +201,13 @@ class SharedValidator {
     TypeVector params;
   };
 
+  struct ElemType {
+    ElemType() = default;
+    ElemType(Type element) : element(element) {}
+
+    Type element;
+  };
+
   struct LocalDecl {
     Type type;
     Index end;
@@ -232,7 +240,7 @@ class SharedValidator {
   Result CheckMemoryIndex(Var memory_var, Opcode);
   Result CheckGlobalIndex(Var global_var, GlobalType* out = nullptr);
   Result CheckEventIndex(Var event_var, EventType* out = nullptr);
-  Result CheckElemSegmentIndex(Var elem_segment_var);
+  Result CheckElemSegmentIndex(Var elem_segment_var, ElemType* out = nullptr);
   Result CheckDataSegmentIndex(Var data_segment_var);
 
   Result CheckAlign(const Location&, Address align, Address natural_align);
@@ -258,9 +266,9 @@ class SharedValidator {
   std::vector<MemoryType> memories_;  // Includes imported and defined.
   std::vector<GlobalType> globals_;   // Includes imported and defined.
   std::vector<EventType> events_;     // Includes imported and defined.
+  std::vector<ElemType> elems_;
   Index starts_ = 0;
   Index num_imported_globals_ = 0;
-  Index elem_segments_ = 0;
   Index data_segments_ = 0;
 
   // Includes parameters, since this is only used for validating
