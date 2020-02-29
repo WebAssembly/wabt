@@ -337,7 +337,7 @@ bool operator!=(const RefPtr<U>& lhs, const RefPtr<V>& rhs) {
 }
 
 //// ValueType ////
-inline bool IsReference(ValueType type) { return IsRefType(type); }
+inline bool IsReference(ValueType type) { return type.IsRef(); }
 template <> inline bool HasType<s32>(ValueType type) { return type == ValueType::I32; }
 template <> inline bool HasType<u32>(ValueType type) { return type == ValueType::I32; }
 template <> inline bool HasType<s64>(ValueType type) { return type == ValueType::I64; }

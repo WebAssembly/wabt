@@ -536,7 +536,7 @@ static void print_sig(const FuncType& sig) {
       fprintf(stderr, ", ");
     }
     first = false;
-    fprintf(stderr, "%s", GetTypeName(Type));
+    fprintf(stderr, "%s", Type.GetName());
   }
   fprintf(stderr, ") -> (");
   first = true;
@@ -545,7 +545,7 @@ static void print_sig(const FuncType& sig) {
       fprintf(stderr, ", ");
     }
     first = false;
-    fprintf(stderr, "%s", GetTypeName(Type));
+    fprintf(stderr, "%s", Type.GetName());
   }
   fprintf(stderr, ")\n");
 #endif

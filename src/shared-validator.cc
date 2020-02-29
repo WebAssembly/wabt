@@ -108,7 +108,7 @@ Result SharedValidator::OnTable(const Location& loc,
       !options_.features.reference_types_enabled()) {
     result |= PrintError(loc, "tables must have funcref type");
   }
-  if (!IsRefType(elem_type)) {
+  if (!elem_type.IsRef()) {
     result |= PrintError(loc, "tables must have reference types");
   }
 
@@ -160,7 +160,7 @@ Result SharedValidator::CheckType(const Location& loc,
                                   const char* desc) {
   if (Failed(TypeChecker::CheckType(actual, expected))) {
     PrintError(loc, "type mismatch at %s. got %s, expected %s", desc,
-               GetTypeName(actual), GetTypeName(expected));
+               actual.GetName(), expected.GetName());
     return Result::Error;
   }
   return Result::Ok;
@@ -501,8 +501,8 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
                                             TypeVector* out_result_types) {
   Result result = Result::Ok;
 
-  if (IsTypeIndex(sig_type)) {
-    Index sig_index = GetTypeIndex(sig_type);
+  if (sig_type.IsIndex()) {
+    Index sig_index = sig_type.GetIndex();
     FuncType func_type;
     result |= CheckTypeIndex(Var(sig_index, loc), &func_type);
 
@@ -520,7 +520,7 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
     *out_result_types = func_type.results;
   } else {
     out_param_types->clear();
-    *out_result_types = GetInlineTypeVector(sig_type);
+    *out_result_types = sig_type.GetInlineVector();
   }
 
   return result;

@@ -55,7 +55,7 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type, const char* desc) {
-  WriteS32Leb128(stream, type, desc ? desc : GetTypeName(type));
+  WriteS32Leb128(stream, type, desc ? desc : type.GetName());
 }
 
 void WriteLimits(Stream* stream, const Limits* limits) {

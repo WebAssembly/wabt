@@ -377,7 +377,7 @@ void WatWriter::WriteBrVar(const Var& var, NextChar next_char) {
 }
 
 void WatWriter::WriteType(Type type, NextChar next_char) {
-  const char* type_name = GetTypeName(type);
+  const char* type_name = type.GetName();
   assert(type_name);
   WritePuts(type_name, next_char);
 }

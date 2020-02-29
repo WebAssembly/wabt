@@ -32,7 +32,7 @@ const char* GetName(Mutability mut) {
 }
 
 const char* GetName(ValueType type) {
-  return GetTypeName(type);
+  return type.GetName();
 }
 
 const char* GetName(ExternKind kind) {

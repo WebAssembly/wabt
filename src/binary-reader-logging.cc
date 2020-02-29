@@ -77,10 +77,10 @@ void BinaryReaderLogging::WriteIndent() {
 }
 
 void BinaryReaderLogging::LogType(Type type) {
-  if (IsTypeIndex(type)) {
-    LOGF_NOINDENT("typeidx[%d]", static_cast<int>(type));
+  if (type.IsIndex()) {
+    LOGF_NOINDENT("typeidx[%d]", type.GetIndex());
   } else {
-    LOGF_NOINDENT("%s", GetTypeName(type));
+    LOGF_NOINDENT("%s", type.GetName());
   }
 }
 
@@ -175,7 +175,7 @@ Result BinaryReaderLogging::OnImportTable(Index import_index,
   SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnImportTable(import_index: %" PRIindex ", table_index: %" PRIindex
        ", elem_type: %s, %s)\n",
-       import_index, table_index, GetTypeName(elem_type), buf);
+       import_index, table_index, elem_type.GetName(), buf);
   return reader_->OnImportTable(import_index, module_name, field_name,
                                 table_index, elem_type, elem_limits);
 }
@@ -203,8 +203,7 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
   LOGF("OnImportGlobal(import_index: %" PRIindex ", global_index: %" PRIindex
        ", type: %s, mutable: "
        "%s)\n",
-       import_index, global_index, GetTypeName(type),
-       mutable_ ? "true" : "false");
+       import_index, global_index, type.GetName(), mutable_ ? "true" : "false");
   return reader_->OnImportGlobal(import_index, module_name, field_name,
                                  global_index, type, mutable_);
 }
@@ -227,7 +226,7 @@ Result BinaryReaderLogging::OnTable(Index index,
   char buf[100];
   SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnTable(index: %" PRIindex ", elem_type: %s, %s)\n", index,
-       GetTypeName(elem_type), buf);
+       elem_type.GetName(), buf);
   return reader_->OnTable(index, elem_type, elem_limits);
 }
 
@@ -240,7 +239,7 @@ Result BinaryReaderLogging::OnMemory(Index index, const Limits* page_limits) {
 
 Result BinaryReaderLogging::BeginGlobal(Index index, Type type, bool mutable_) {
   LOGF("BeginGlobal(index: %" PRIindex ", type: %s, mutable: %s)\n", index,
-       GetTypeName(type), mutable_ ? "true" : "false");
+       type.GetName(), mutable_ ? "true" : "false");
   return reader_->BeginGlobal(index, type, mutable_);
 }
 
@@ -263,7 +262,7 @@ Result BinaryReaderLogging::OnLocalDecl(Index decl_index,
                                         Index count,
                                         Type type) {
   LOGF("OnLocalDecl(index: %" PRIindex ", count: %" PRIindex ", type: %s)\n",
-       decl_index, count, GetTypeName(type));
+       decl_index, count, type.GetName());
   return reader_->OnLocalDecl(decl_index, count, type);
 }
 
@@ -344,7 +343,7 @@ Result BinaryReaderLogging::OnLoopExpr(Type sig_type) {
 }
 
 Result BinaryReaderLogging::OnSelectExpr(Type return_type) {
-  LOGF("OnSelectExpr(return_type: %s)\n", GetTypeName(return_type));
+  LOGF("OnSelectExpr(return_type: %s)\n", return_type.GetName());
   return reader_->OnSelectExpr(return_type);
 }
 
@@ -377,7 +376,7 @@ Result BinaryReaderLogging::BeginElemSegment(Index index,
 
 Result BinaryReaderLogging::OnElemSegmentElemType(Index index, Type elem_type) {
   LOGF("OnElemSegmentElemType(index: %" PRIindex ", type: %s)\n", index,
-       GetTypeName(elem_type));
+       elem_type.GetName());
   return reader_->OnElemSegmentElemType(index, elem_type);
 }
 

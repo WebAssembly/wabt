@@ -81,7 +81,7 @@ std::string Token::to_string() const {
     return text_.to_string();
   } else {
     assert(HasType());
-    return GetTypeName(type_);
+    return type_.GetName();
   }
 }
 
