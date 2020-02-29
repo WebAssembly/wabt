@@ -507,6 +507,7 @@ if (NOT EMSCRIPTEN)
       src/test-option-parser.cc
       src/test-string-view.cc
       src/test-filenames.cc
+      src/test-type.cc
       src/test-utf8.cc
       src/test-wast-parser.cc
     )

@@ -64,6 +64,10 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::Anyref:
       return StringPrintf("anyref:%" PRIzd, tv.value.Get<Ref>().index);
 
+    case Type::RefT:
+      // TODO
+      return "ref $T";
+
     case Type::Func:
     case Type::Struct:
     case Type::Array:
