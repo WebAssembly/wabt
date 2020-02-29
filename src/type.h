@@ -87,6 +87,18 @@ class Type {
     }
   }
 
+  // Functions for handling types that are an index into the type section.
+  // These are always positive integers. They occur in the binary format in
+  // block signatures, e.g.
+  //
+  //   (block (result i32 i64) ...)
+  //
+  // is encoded as
+  //
+  //   (type $T (func (result i32 i64)))
+  //   ...
+  //   (block (type $T) ...)
+  // 
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
   Index GetIndex() const {
