@@ -2243,7 +2243,6 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
                      GetTypeName(elem_type));
         elem_type = Type::Funcref;
       }
-
     }
 
     CALLBACK(OnElemSegmentElemType, i, elem_type);
