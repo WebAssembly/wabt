@@ -354,7 +354,7 @@ void BinaryReaderIR::SetBlockDeclaration(BlockDeclaration* decl,
     Index type_index = GetTypeIndex(sig_type);
     decl->has_func_type = true;
     decl->type_var = Var(type_index);
-    decl->sig = module_->func_types[type_index]->sig;
+    decl->sig = cast<FuncType>(module_->types[type_index])->sig;
   } else {
     decl->has_func_type = false;
     decl->sig.param_types.clear();
@@ -379,7 +379,7 @@ bool BinaryReaderIR::OnError(const Error& error) {
 
 Result BinaryReaderIR::OnTypeCount(Index count) {
   WABT_TRY
-  module_->func_types.reserve(count);
+  module_->types.reserve(count);
   WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
@@ -389,8 +389,8 @@ Result BinaryReaderIR::OnType(Index index,
                               Type* param_types,
                               Index result_count,
                               Type* result_types) {
-  auto field = MakeUnique<FuncTypeModuleField>(GetLocation());
-  FuncType& func_type = field->func_type;
+  auto field = MakeUnique<TypeModuleField>(GetLocation());
+  FuncType& func_type = *cast<FuncType>(field->type.get());
   func_type.sig.param_types.assign(param_types, param_types + param_count);
   func_type.sig.result_types.assign(result_types, result_types + result_count);
   module_->AppendField(std::move(field));
@@ -414,7 +414,7 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
   import->field_name = field_name.to_string();
   import->func.decl.has_func_type = true;
   import->func.decl.type_var = Var(sig_index, GetLocation());
-  import->func.decl.sig = module_->func_types[sig_index]->sig;
+  import->func.decl.sig = cast<FuncType>(module_->types[sig_index])->sig;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
@@ -475,7 +475,7 @@ Result BinaryReaderIR::OnImportEvent(Index import_index,
   import->field_name = field_name.to_string();
   import->event.decl.has_func_type = true;
   import->event.decl.type_var = Var(sig_index, GetLocation());
-  import->event.decl.sig = module_->func_types[sig_index]->sig;
+  import->event.decl.sig = cast<FuncType>(module_->types[sig_index])->sig;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
@@ -493,7 +493,7 @@ Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
   Func& func = field->func;
   func.decl.has_func_type = true;
   func.decl.type_var = Var(sig_index, GetLocation());
-  func.decl.sig = module_->func_types[sig_index]->sig;
+  func.decl.sig = cast<FuncType>(module_->types[sig_index])->sig;
   module_->AppendField(std::move(field));
   return Result::Ok;
 }
@@ -707,11 +707,11 @@ Result BinaryReaderIR::OnCallExpr(Index func_index) {
 }
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
-  assert(sig_index < module_->func_types.size());
+  assert(sig_index < module_->types.size());
   auto expr = MakeUnique<CallIndirectExpr>();
   expr->decl.has_func_type = true;
   expr->decl.type_var = Var(sig_index, GetLocation());
-  expr->decl.sig = module_->func_types[sig_index]->sig;
+  expr->decl.sig = cast<FuncType>(module_->types[sig_index])->sig;
   expr->table = Var(table_index);
   return AppendExpr(std::move(expr));
 }
@@ -722,11 +722,11 @@ Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
 }
 
 Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index, Index table_index) {
-  assert(sig_index < module_->func_types.size());
+  assert(sig_index < module_->types.size());
   auto expr = MakeUnique<ReturnCallIndirectExpr>();
   expr->decl.has_func_type = true;
   expr->decl.type_var = Var(sig_index, GetLocation());
-  expr->decl.sig = module_->func_types[sig_index]->sig;
+  expr->decl.sig = cast<FuncType>(module_->types[sig_index])->sig;
   expr->table = Var(table_index);
   return AppendExpr(std::move(expr));
 }
@@ -1244,7 +1244,7 @@ Result BinaryReaderIR::OnEventType(Index index, Index sig_index) {
   Event& event = field->event;
   event.decl.has_func_type = true;
   event.decl.type_var = Var(sig_index, GetLocation());
-  event.decl.sig = module_->func_types[sig_index]->sig;
+  event.decl.sig = cast<FuncType>(module_->types[sig_index])->sig;
   module_->AppendField(std::move(field));
   return Result::Ok;
 }

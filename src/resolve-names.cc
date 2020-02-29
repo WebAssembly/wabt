@@ -186,7 +186,7 @@ void NameResolver::ResolveGlobalVar(Var* var) {
 }
 
 void NameResolver::ResolveFuncTypeVar(Var* var) {
-  ResolveVar(&current_module_->func_type_bindings, var, "function type");
+  ResolveVar(&current_module_->type_bindings, var, "type");
 }
 
 void NameResolver::ResolveTableVar(Var* var) {
@@ -477,7 +477,7 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->elem_segment_bindings, "elem");
   CheckDuplicateBindings(&module->func_bindings, "function");
   CheckDuplicateBindings(&module->global_bindings, "global");
-  CheckDuplicateBindings(&module->func_type_bindings, "function type");
+  CheckDuplicateBindings(&module->type_bindings, "type");
   CheckDuplicateBindings(&module->table_bindings, "table");
   CheckDuplicateBindings(&module->memory_bindings, "memory");
   CheckDuplicateBindings(&module->event_bindings, "event");

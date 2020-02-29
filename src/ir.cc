@@ -128,7 +128,7 @@ Index Module::GetMemoryIndex(const Var& var) const {
 }
 
 Index Module::GetFuncTypeIndex(const Var& var) const {
-  return func_type_bindings.FindIndex(var);
+  return type_bindings.FindIndex(var);
 }
 
 Index Module::GetEventIndex(const Var& var) const {
@@ -310,16 +310,16 @@ const FuncType* Module::GetFuncType(const Var& var) const {
 }
 
 FuncType* Module::GetFuncType(const Var& var) {
-  Index index = func_type_bindings.FindIndex(var);
-  if (index >= func_types.size()) {
+  Index index = type_bindings.FindIndex(var);
+  if (index >= types.size()) {
     return nullptr;
   }
-  return func_types[index];
+  return cast<FuncType>(types[index]);
 }
 
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
-  for (size_t i = 0; i < func_types.size(); ++i) {
-    if (func_types[i]->sig == sig) {
+  for (size_t i = 0; i < types.size(); ++i) {
+    if (cast<FuncType>(types[i])->sig == sig) {
       return i;
     }
   }
@@ -380,13 +380,12 @@ void Module::AppendField(std::unique_ptr<FuncModuleField> field) {
   fields.push_back(std::move(field));
 }
 
-void Module::AppendField(std::unique_ptr<FuncTypeModuleField> field) {
-  FuncType& func_type = field->func_type;
-  if (!func_type.name.empty()) {
-    func_type_bindings.emplace(func_type.name,
-                               Binding(field->loc, func_types.size()));
+void Module::AppendField(std::unique_ptr<TypeModuleField> field) {
+  TypeEntry& type = *field->type;
+  if (!type.name.empty()) {
+    type_bindings.emplace(type.name, Binding(field->loc, types.size()));
   }
-  func_types.push_back(&func_type);
+  types.push_back(&type);
   fields.push_back(std::move(field));
 }
 
@@ -506,8 +505,8 @@ void Module::AppendField(std::unique_ptr<ModuleField> field) {
       AppendField(cast<ExportModuleField>(std::move(field)));
       break;
 
-    case ModuleFieldType::FuncType:
-      AppendField(cast<FuncTypeModuleField>(std::move(field)));
+    case ModuleFieldType::Type:
+      AppendField(cast<TypeModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Table:

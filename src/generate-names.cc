@@ -86,7 +86,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 
   Result VisitFunc(Index func_index, Func* func);
   Result VisitGlobal(Index global_index, Global* global);
-  Result VisitFuncType(Index func_type_index, FuncType* func_type);
+  Result VisitType(Index func_type_index, TypeEntry* type);
   Result VisitTable(Index table_index, Table* table);
   Result VisitMemory(Index memory_index, Memory* memory);
   Result VisitEvent(Index event_index, Event* event);
@@ -241,10 +241,9 @@ Result NameGenerator::VisitGlobal(Index global_index, Global* global) {
   return Result::Ok;
 }
 
-Result NameGenerator::VisitFuncType(Index func_type_index,
-                                    FuncType* func_type) {
-  MaybeGenerateAndBindName(&module_->func_type_bindings, "t", func_type_index,
-                           &func_type->name);
+Result NameGenerator::VisitType(Index type_index, TypeEntry* type) {
+  MaybeGenerateAndBindName(&module_->type_bindings, "t", type_index,
+                           &type->name);
   return Result::Ok;
 }
 
@@ -411,7 +410,7 @@ Result NameGenerator::VisitModule(Module* module) {
   }
 
   VisitAll(module->globals, &NameGenerator::VisitGlobal);
-  VisitAll(module->func_types, &NameGenerator::VisitFuncType);
+  VisitAll(module->types, &NameGenerator::VisitType);
   VisitAll(module->funcs, &NameGenerator::VisitFunc);
   VisitAll(module->tables, &NameGenerator::VisitTable);
   VisitAll(module->memories, &NameGenerator::VisitMemory);

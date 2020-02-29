@@ -876,11 +876,11 @@ Result BinaryWriter::WriteModule() {
   stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   stream_->WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
 
-  if (module_->func_types.size()) {
+  if (module_->types.size()) {
     BeginKnownSection(BinarySection::Type);
-    WriteU32Leb128(stream_, module_->func_types.size(), "num types");
-    for (size_t i = 0; i < module_->func_types.size(); ++i) {
-      const FuncType* func_type = module_->func_types[i];
+    WriteU32Leb128(stream_, module_->types.size(), "num types");
+    for (size_t i = 0; i < module_->types.size(); ++i) {
+      const FuncType* func_type = cast<FuncType>(module_->types[i]);
       const FuncSignature* sig = &func_type->sig;
       WriteHeader("type", i);
       WriteType(stream_, Type::Func);

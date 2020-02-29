@@ -584,12 +584,18 @@ Result Validator::CheckModule() {
 
   // Type section.
   for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<FuncTypeModuleField>(&field)) {
-      result_ |=
-          validator_.OnType(field.loc, f->func_type.sig.param_types.size(),
-                            f->func_type.sig.param_types.data(),
-                            f->func_type.sig.result_types.size(),
-                            f->func_type.sig.result_types.data());
+    if (auto* f = dyn_cast<TypeModuleField>(&field)) {
+      switch (f->type->kind()) {
+        case TypeEntryKind::Func: {
+          FuncType* func_type = cast<FuncType>(f->type.get());
+          result_ |=
+              validator_.OnType(field.loc, func_type->sig.param_types.size(),
+                                func_type->sig.param_types.data(),
+                                func_type->sig.result_types.size(),
+                                func_type->sig.result_types.data());
+          break;
+        }
+      }
     }
   }
 
