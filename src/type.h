@@ -41,6 +41,7 @@ class Type {
     Funcref = -0x10,  // 0x70
     Anyref = -0x11,   // 0x6f
     Nullref = -0x12,  // 0x6e
+    RefT = -0x13,     // 0x6d
     Exnref = -0x18,   // 0x68
     Func = -0x20,     // 0x60
     Struct = -0x21,   // 0x5f
@@ -58,12 +59,12 @@ class Type {
   Type() = default;  // Provided so Type can be member of a union.
   Type(int32_t code) : enum_(static_cast<Enum>(code)) {}
   Type(Enum e) : enum_(e) {}
-  operator Enum() const { return enum_; }
+  operator Enum() const { return IsRefT() ? RefT : enum_; }
 
   bool IsRef() const {
     return enum_ == Type::Anyref || enum_ == Type::Funcref ||
            enum_ == Type::Nullref || enum_ == Type::Exnref ||
-           enum_ == Type::Hostref;
+           enum_ == Type::Hostref || IsRefT();
   }
 
   bool IsNullableRef() const {
@@ -102,7 +103,7 @@ class Type {
   //   (type $T (func (result i32 i64)))
   //   ...
   //   (block (type $T) ...)
-  // 
+  //
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
   Index GetIndex() const {
@@ -130,6 +131,39 @@ class Type {
       default:
         WABT_UNREACHABLE;
     }
+  }
+
+  // Functions for handling types of the form (ref $T), where $T is an index
+  // into the type section. Rather than storing an additional field in the Type
+  // struct, it's more efficient to use the extra bits in the enum to encode
+  // the index. For example, RefT is encoded as -0x13 (0xffffffff6d):
+  //
+  //    1111 1111 1111 1111 1111 1111 0110 1101
+  //       f    f    f    f    f    f    6    d
+  //
+  // We can store the index in the top bits (making sure to keep the MSB set so
+  // the number remains negative), giving us 23 bits to use for the type index.
+  //
+  //    1nnn nnnn nnnn nnnn nnnn nnnn 0110 1101
+  //
+  static const uint32_t kRefTMask = 0x800000ff;
+  static const uint32_t kRefTSignature =
+      static_cast<uint32_t>(RefT) & kRefTMask;
+
+  static const uint32_t kRefT_IndexMask = 0x7fffff00;
+  static const uint32_t kRefT_IndexShift = 8;
+
+  static Type MakeRefT(Index index) {
+    return static_cast<Enum>(kRefTSignature | (index << kRefT_IndexShift));
+  }
+
+  bool IsRefT() const {
+    return (static_cast<uint32_t>(enum_) & kRefTMask) == kRefTSignature;
+  }
+
+  Index GetRefTIndex() const {
+    assert(IsRefT());
+    return (static_cast<uint32_t>(enum_) & kRefT_IndexMask) >> kRefT_IndexShift;
   }
 
  private:
