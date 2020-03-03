@@ -1,0 +1,6 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(module
+  (type (struct))
+  (func (result (ref 0))
+    unreachable))

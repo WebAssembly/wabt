@@ -122,7 +122,7 @@ class WatWriter : ModuleContext {
   void WriteQuotedString(string_view str, NextChar next_char);
   void WriteVar(const Var& var, NextChar next_char);
   void WriteBrVar(const Var& var, NextChar next_char);
-  void WriteType(Type type, NextChar next_char);
+  void WriteType(TypeVar type, NextChar next_char);
   void WriteTypes(const TypeVarVector& types, const char* name);
   void WriteFuncSigSpace(const FuncSignature& func_sig);
   void WriteBeginBlock(LabelType label_type,
@@ -377,10 +377,16 @@ void WatWriter::WriteBrVar(const Var& var, NextChar next_char) {
   }
 }
 
-void WatWriter::WriteType(Type type, NextChar next_char) {
-  const char* type_name = type.GetName();
-  assert(type_name);
-  WritePuts(type_name, next_char);
+void WatWriter::WriteType(TypeVar type, NextChar next_char) {
+  if (type.type == Type::RefT) {
+    WriteOpenSpace("ref");
+    WriteVar(type.var, NextChar::Space);
+    WriteCloseSpace();
+  } else {
+    const char* type_name = type.type.GetName();
+    assert(type_name);
+    WritePuts(type_name, next_char);
+  }
 }
 
 void WatWriter::WriteTypes(const TypeVarVector& types, const char* name) {
@@ -1127,7 +1133,7 @@ void WatWriter::WriteTypeBindings(const char* prefix,
    */
   bool is_open = false;
   size_t index = 0;
-  for (Type type : types) {
+  for (TypeVar type : types) {
     if (!is_open) {
       WriteOpenSpace(prefix);
       is_open = true;

@@ -476,6 +476,7 @@ nullref, Type::Nullref
 offset, TokenType::Offset
 param, TokenType::Param
 quote, TokenType::Quote
+ref, TokenType::Ref
 ref.func, TokenType::RefFunc, Opcode::RefFunc
 ref.host, TokenType::RefHost
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull

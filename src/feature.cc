@@ -45,6 +45,10 @@ void Features::UpdateDependencies() {
   if (reference_types_enabled_) {
     bulk_memory_enabled_ = true;
   }
+  // GC requires reference types.
+  if (gc_enabled_) {
+    reference_types_enabled_ = true;
+  }
 }
 
 }  // namespace wabt

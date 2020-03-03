@@ -1,0 +1,5 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(module
+  (type (struct))
+  (table 0 (ref 0)))

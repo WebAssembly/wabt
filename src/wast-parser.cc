@@ -519,6 +519,10 @@ bool WastParser::PeekMatchExpr() {
   return IsExpr(PeekPair());
 }
 
+bool WastParser::PeekMatchValueType() {
+  return PeekMatch(TokenType::ValueType) || PeekMatchLpar(TokenType::Ref);
+}
+
 bool WastParser::Match(TokenType type) {
   if (PeekMatch(type)) {
     Consume();
@@ -765,79 +769,89 @@ bool WastParser::ParseElemExprVarListOpt(ElemExprVector* out_list) {
   return !out_list->empty();
 }
 
-Result WastParser::ParseValueType(TypeVar* out_type) {
+Result WastParser::ParseValueType(TypeVar* out_type, ValueTypeAllowed allowed) {
   WABT_TRACE(ParseValueType);
-  if (!PeekMatch(TokenType::ValueType)) {
+
+  if (PeekMatch(TokenType::ValueType)) {
+    Token token = Consume();
+    Type type = token.type();
+    bool is_enabled;
+    switch (type) {
+      case Type::V128:
+        is_enabled = options_->features.simd_enabled();
+        break;
+      case Type::Funcref:
+        // Funcref is OK even in MVP, as long as we're looking for References
+        // only (i.e. for table and elem types.)
+        is_enabled = options_->features.reference_types_enabled() ||
+                     allowed == ValueTypeAllowed::Reference;
+        break;
+      case Type::Anyref:
+      case Type::Hostref:
+        is_enabled = options_->features.reference_types_enabled();
+        break;
+      case Type::Exnref:
+        is_enabled = options_->features.exceptions_enabled();
+        break;
+      default:
+        is_enabled = true;
+        break;
+    }
+
+    if (allowed == ValueTypeAllowed::Reference && !type.IsRef()) {
+      return ErrorExpected({"funcref", "anyref", "nullref", "exnref"});
+    }
+
+    if (!is_enabled) {
+      Error(token.loc, "value type not allowed: %s", type.GetName());
+      return Result::Error;
+    }
+
+    *out_type = type;
+    return Result::Ok;
+  } else if (PeekMatchLpar(TokenType::Ref)) {  // (ref <var>)
+    Consume();  // Lpar
+    Token token = Consume();
+    // TODO: inline struct/array?
+    if (!options_->features.gc_enabled()) {
+      Error(token.loc, "value type not allowed: ref $T");
+      return Result::Error;
+    }
+
+    Var var;
+    CHECK_RESULT(ParseVar(&var));
+    EXPECT(Rpar);
+
+    *out_type = TypeVar(Type::MakeRefT(0), var);
+    return Result::Ok;
+  } else {
     return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "anyref"});
   }
-
-  Token token = Consume();
-  Type type = token.type();
-  bool is_enabled;
-  switch (type) {
-    case Type::V128:
-      is_enabled = options_->features.simd_enabled();
-      break;
-    case Type::Anyref:
-    case Type::Funcref:
-    case Type::Hostref:
-      is_enabled = options_->features.reference_types_enabled();
-      break;
-    case Type::Exnref:
-      is_enabled = options_->features.exceptions_enabled();
-      break;
-    default:
-      is_enabled = true;
-      break;
-  }
-
-  if (!is_enabled) {
-    Error(token.loc, "value type not allowed: %s", type.GetName());
-    return Result::Error;
-  }
-
-  *out_type = type;
-  return Result::Ok;
 }
 
 Result WastParser::ParseValueTypeList(TypeVarVector* out_type_list) {
   WABT_TRACE(ParseValueTypeList);
-  while (PeekMatch(TokenType::ValueType))
-    out_type_list->push_back(Consume().type());
+  while (PeekMatchValueType()) {
+    TypeVar type;
+    CHECK_RESULT(ParseValueType(&type, ValueTypeAllowed::Any));
+    out_type_list->push_back(type);
+  }
 
   return Result::Ok;
 }
 
 Result WastParser::ParseRefType(TypeVar* out_type) {
   WABT_TRACE(ParseRefType);
-  if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"funcref", "anyref", "nullref", "exnref"});
-  }
-
-  Token token = Consume();
-  Type type = token.type();
-  if (type == Type::Anyref && !options_->features.reference_types_enabled()) {
-    Error(token.loc, "value type not allowed: %s", type.GetName());
-    return Result::Error;
-  }
-
-  *out_type = type;
+  CHECK_RESULT(ParseValueType(out_type, ValueTypeAllowed::Reference));
   return Result::Ok;
 }
 
 bool WastParser::ParseRefTypeOpt(TypeVar* out_type) {
   WABT_TRACE(ParseRefTypeOpt);
-  if (!PeekMatch(TokenType::ValueType)) {
+  if (!PeekMatchValueType()) {
     return false;
   }
-
-  Token token = Consume();
-  Type type = token.type();
-  if (type == Type::Anyref && !options_->features.reference_types_enabled()) {
-    return false;
-  }
-
-  *out_type = type;
+  CHECK_RESULT(ParseValueType(out_type, ValueTypeAllowed::Reference));
   return true;
 }
 
@@ -1231,11 +1245,11 @@ Result WastParser::ParseField(Field* field) {
     // TODO: Share with ParseGlobalType?
     if (MatchLpar(TokenType::Mut)) {
       field->mutable_ = true;
-      CHECK_RESULT(ParseValueType(&field->type));
+      CHECK_RESULT(ParseValueType(&field->type, ValueTypeAllowed::Any));
       EXPECT(Rpar);
     } else {
       field->mutable_ = false;
-      CHECK_RESULT(ParseValueType(&field->type));
+      CHECK_RESULT(ParseValueType(&field->type, ValueTypeAllowed::Any));
     }
     return Result::Ok;
   };
@@ -1593,7 +1607,7 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
       TypeVar type;
       Location loc = GetLocation();
       ParseBindVarOpt(&name);
-      CHECK_RESULT(ParseValueType(&type));
+      CHECK_RESULT(ParseValueType(&type, ValueTypeAllowed::Any));
       bindings->emplace(name,
                         Binding(loc, binding_index_offset + types->size()));
       types->push_back(type);
@@ -2675,11 +2689,11 @@ Result WastParser::ParseGlobalType(Global* global) {
   WABT_TRACE(ParseGlobalType);
   if (MatchLpar(TokenType::Mut)) {
     global->mutable_ = true;
-    CHECK_RESULT(ParseValueType(&global->type));
+    CHECK_RESULT(ParseValueType(&global->type, ValueTypeAllowed::Any));
     CHECK_RESULT(ErrorIfLpar({"i32", "i64", "f32", "f64"}));
     EXPECT(Rpar);
   } else {
-    CHECK_RESULT(ParseValueType(&global->type));
+    CHECK_RESULT(ParseValueType(&global->type, ValueTypeAllowed::Any));
   }
 
   return Result::Ok;

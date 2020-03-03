@@ -91,6 +91,11 @@ class WastParser {
   // folded expressions, plain instructions and block instructions.
   bool PeekMatchExpr();
 
+  // Returns true if the next two tokens can start a ValueType. Currently this
+  // is either TokenType::ValueType (e.g. i32, funcref, etc.) or a typed
+  // reference (e.g. "(ref $T)").
+  bool PeekMatchValueType();
+
   // Returns true if the next token's type is equal to the parameter. If so,
   // then the token is consumed.
   bool Match(TokenType);
@@ -118,6 +123,11 @@ class WastParser {
   // synchronized.
   Result Synchronize(SynchronizeFunc);
 
+  enum class ValueTypeAllowed {
+    Any,        // Allow any value type (given feature flags)
+    Reference,  // Allow any reference type (includes funcref for MVP)
+  };
+
   bool ParseBindVarOpt(std::string* name);
   Result ParseVar(Var* out_var);
   bool ParseVarOpt(Var* out_var, Var default_var = Var());
@@ -129,7 +139,7 @@ class WastParser {
   bool ParseElemExprOpt(ElemExpr* out_elem_expr);
   bool ParseElemExprListOpt(ElemExprVector* out_list);
   bool ParseElemExprVarListOpt(ElemExprVector* out_list);
-  Result ParseValueType(TypeVar* out_type);
+  Result ParseValueType(TypeVar* out_type, ValueTypeAllowed);
   Result ParseValueTypeList(TypeVarVector* out_type_list);
   Result ParseRefType(TypeVar* out_type);
   bool ParseRefTypeOpt(TypeVar* out_type);
