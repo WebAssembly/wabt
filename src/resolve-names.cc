@@ -67,6 +67,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -407,6 +408,11 @@ Result NameResolver::OnRefFuncExpr(RefFuncExpr* expr) {
 
 Result NameResolver::OnSelectExpr(SelectExpr* expr) {
   VisitTypeVarVector(&expr->result_type);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewExpr(StructNewExpr* expr) {
+  ResolveTypeVar(&expr->var);
   return Result::Ok;
 }
 

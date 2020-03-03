@@ -354,6 +354,9 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnStoreExpr(cast<StoreExpr>(expr)));
       break;
 
+    case ExprType::StructNew:
+      CHECK_RESULT(delegate_->OnStructNewExpr(cast<StructNewExpr>(expr)));
+      break;
 
     case ExprType::Throw:
       CHECK_RESULT(delegate_->OnThrowExpr(cast<ThrowExpr>(expr)));

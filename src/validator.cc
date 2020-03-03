@@ -128,6 +128,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
@@ -469,6 +470,11 @@ Result Validator::OnSelectExpr(SelectExpr* expr) {
 #else
   return result_;
 #endif
+}
+
+Result Validator::OnStructNewExpr(StructNewExpr* expr) {
+  result_ |= validator_.OnStructNew(expr->loc, expr->var);
+  return Result::Ok;
 }
 
 Result Validator::OnStoreExpr(StoreExpr* expr) {

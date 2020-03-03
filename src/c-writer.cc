@@ -1157,7 +1157,7 @@ void CWriter::WriteElemInitializers() {
       // don't have any passive segments (where ref.null can be used).
       assert(elem_expr.kind == ElemExprKind::RefFunc);
       const Func* func = module_->GetFunc(elem_expr.var);
-      Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
+      Index func_type_index = module_->GetTypeIndex(func->decl.type_var);
 
       Write(ExternalRef(table->name), ".data[offset + ", i,
             "] = (wasm_rt_elem_t){func_types[", func_type_index,
@@ -1484,7 +1484,7 @@ void CWriter::Write(const ExprList& exprs) {
         const Table* table = module_->tables[0];
 
         assert(decl.has_func_type);
-        Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
+        Index func_type_index = module_->GetTypeIndex(decl.type_var);
 
         Write("CALL_INDIRECT(", ExternalRef(table->name), ", ");
         WriteFuncDeclaration(decl, "(*)");
@@ -1687,6 +1687,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Rethrow:
       case ExprType::ReturnCall:
       case ExprType::ReturnCallIndirect:
+      case ExprType::StructNew:
       case ExprType::Throw:
       case ExprType::Try:
         UNIMPLEMENTED("...");

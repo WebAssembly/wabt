@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type (struct i32 (ref 0)))
+(func (result (ref 0))
+  i32.const 2
+  i32.const 1
+  i32.const 0
+  ref.null
+  struct.new 0
+  struct.new 0
+  struct.new 0)

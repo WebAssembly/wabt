@@ -71,6 +71,7 @@ const char* ExprTypeName[] = {
   "SimdShuffleOp",
   "LoadSplat",
   "Store",
+  "StructNew",
   "TableCopy",
   "ElemDrop",
   "TableInit",
@@ -128,7 +129,7 @@ Index Module::GetMemoryIndex(const Var& var) const {
   return memory_bindings.FindIndex(var);
 }
 
-Index Module::GetFuncTypeIndex(const Var& var) const {
+Index Module::GetTypeIndex(const Var& var) const {
   return type_bindings.FindIndex(var);
 }
 
@@ -318,6 +319,18 @@ FuncType* Module::GetFuncType(const Var& var) {
   return cast<FuncType>(types[index]);
 }
 
+const StructType* Module::GetStructType(const Var& var) const {
+  return const_cast<Module*>(this)->GetStructType(var);
+}
+
+StructType* Module::GetStructType(const Var& var) {
+  Index index = type_bindings.FindIndex(var);
+  if (index >= types.size()) {
+    return nullptr;
+  }
+  return cast<StructType>(types[index]);
+}
+
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
   for (size_t i = 0; i < types.size(); ++i) {
     if (auto* func_type = dyn_cast<FuncType>(types[i])) {
@@ -331,7 +344,7 @@ Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
 
 Index Module::GetFuncTypeIndex(const FuncDeclaration& decl) const {
   if (decl.has_func_type) {
-    return GetFuncTypeIndex(decl.type_var);
+    return GetTypeIndex(decl.type_var);
   } else {
     return GetFuncTypeIndex(decl.sig);
   }

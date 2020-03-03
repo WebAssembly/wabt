@@ -544,6 +544,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
@@ -839,6 +840,12 @@ Result WatWriter::ExprVisitorDelegate::OnReturnCallIndirectExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
   writer_->WritePutsNewline(Opcode::Select_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnStructNewExpr(StructNewExpr* expr) {
+  writer_->WritePutsSpace(Opcode::StructNew_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 

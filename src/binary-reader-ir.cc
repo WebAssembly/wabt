@@ -175,6 +175,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnMemoryGrowExpr() override;
   Result OnMemoryInitExpr(Index segment_index) override;
   Result OnMemorySizeExpr() override;
+  Result OnStructNew(Index type_index) override;
   Result OnTableCopyExpr(Index dst_index, Index src_index) override;
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
@@ -879,6 +880,10 @@ Result BinaryReaderIR::OnMemoryInitExpr(Index segment) {
 
 Result BinaryReaderIR::OnMemorySizeExpr() {
   return AppendExpr(MakeUnique<MemorySizeExpr>());
+}
+
+Result BinaryReaderIR::OnStructNew(Index type_index) {
+  return AppendExpr(MakeUnique<StructNewExpr>(Var(type_index)));
 }
 
 Result BinaryReaderIR::OnTableCopyExpr(Index dst_index, Index src_index) {

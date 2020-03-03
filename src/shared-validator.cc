@@ -63,8 +63,13 @@ Result SharedValidator::OnFuncType(const Location& loc,
 Result SharedValidator::OnStructType(const Location&,
                                      Index field_count,
                                      TypeMut* fields) {
-  struct_types_.emplace(num_types_++, StructType{TypeMutVector(
-                                          &fields[0], &fields[field_count])});
+  TypeVector types;
+  MutVector muts;
+  for (Index i = 0; i < field_count; ++i) {
+    types.push_back(fields[i].type);
+    muts.push_back(fields[i].mutable_);
+  }
+  struct_types_.emplace(num_types_++, StructType{types, muts});
   return Result::Ok;
 }
 
@@ -458,6 +463,26 @@ Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
   if (iter == func_types_.end()) {
     return PrintError(sig_var.loc, "type %d is not a function",
                       sig_var.index());
+  }
+
+  if (out) {
+    *out = iter->second;
+  }
+  return Result::Ok;
+}
+
+// TODO: Share code w/ CheckFuncTypeIndex.
+Result SharedValidator::CheckStructTypeIndex(Var type_var, StructType* out) {
+  Result result = CheckIndex(type_var, num_types_, "struct type");
+  if (Failed(result)) {
+    *out = StructType{};
+    return Result::Error;
+  }
+
+  auto iter = struct_types_.find(type_var.index());
+  if (iter == struct_types_.end()) {
+    return PrintError(type_var.loc, "type %d is not a struct",
+                      type_var.index());
   }
 
   if (out) {
@@ -1049,6 +1074,16 @@ Result SharedValidator::OnStore(const Location& loc,
   result |= CheckMemoryIndex(Var(0, loc));
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnStore(opcode);
+  return result;
+}
+
+Result SharedValidator::OnStructNew(const Location& loc, Var type_var) {
+  Result result = Result::Ok;
+  expr_loc_ = &loc;
+  StructType struct_type;
+  result |= CheckStructTypeIndex(type_var, &struct_type);
+  result |= typechecker_.OnStructNew(Type::MakeRefT(type_var.index()),
+                                     struct_type.types);
   return result;
 }
 

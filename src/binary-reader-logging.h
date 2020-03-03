@@ -190,6 +190,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnMemoryGrowExpr() override;
   Result OnMemoryInitExpr(Index segment_index) override;
   Result OnMemorySizeExpr() override;
+  Result OnStructNew(Index type_index) override;
   Result OnTableCopyExpr(Index dst_index, Index src_index) override;
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;

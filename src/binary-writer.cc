@@ -244,7 +244,7 @@ void BinaryWriter::WriteBlockDecl(const BlockDeclaration& decl) {
     return;
   }
 
-  Index index = decl.has_func_type ? module_->GetFuncTypeIndex(decl.type_var)
+  Index index = decl.has_func_type ? module_->GetTypeIndex(decl.type_var)
                                    : module_->GetFuncTypeIndex(decl.sig);
   assert(index != kInvalidIndex);
   WriteS32Leb128(stream_, index, "block type function index");
@@ -717,6 +717,12 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Store:
       WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;
+    case ExprType::StructNew: {
+      Index index = module_->GetTypeIndex(cast<StructNewExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::StructNew);
+      WriteU32Leb128(stream_, index, "struct.new type index");
+      break;
+    }
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);
       WriteU32Leb128(stream_, GetEventVarDepth(&cast<ThrowExpr>(expr)->var),

@@ -755,6 +755,12 @@ Result TypeChecker::OnStore(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
 
+Result TypeChecker::OnStructNew(Type struct_type, const TypeVector& fields) {
+  Result result = PopAndCheckSignature(fields, "struct.new");
+  PushType(struct_type);
+  return result;
+}
+
 Result TypeChecker::OnTry(const TypeVector& param_types,
                           const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "try");

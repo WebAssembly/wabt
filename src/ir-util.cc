@@ -258,6 +258,13 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::SimdShuffleOp:
       return { 2, 1 };
 
+    case ExprType::StructNew: {
+      const Var& var = cast<StructNewExpr>(&expr)->var;
+      const StructType* struct_type = module.GetStructType(var);
+      Index field_count = struct_type ? struct_type->fields.size() : 0;
+      return {field_count, 1};
+    }
+
     default:
       fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(expr));
       assert(0);

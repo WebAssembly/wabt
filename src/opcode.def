@@ -230,6 +230,9 @@ WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe2, InterpCallImport, "call_impo
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe3, InterpData, "data", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe4, InterpDropKeep, "drop_keep", "")
 
+/* GC opcodes (--enable-gc) */
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0xfb, 0x00, StructNew, "struct.new", "")
+
 /* Saturating float-to-int opcodes (--enable-saturating-float-to-int) */
 WABT_OPCODE(I32,  F32,  ___,  ___,  0,  0xfc, 0x00, I32TruncSatF32S, "i32.trunc_sat_f32_s", "")
 WABT_OPCODE(I32,  F32,  ___,  ___,  0,  0xfc, 0x01, I32TruncSatF32U, "i32.trunc_sat_f32_u", "")

@@ -339,6 +339,7 @@ enum class ExprType {
   SimdShuffleOp,
   LoadSplat,
   Store,
+  StructNew,
   TableCopy,
   ElemDrop,
   TableInit,
@@ -475,6 +476,8 @@ typedef VarExpr<ExprType::TableSet> TableSetExpr;
 typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
 typedef VarExpr<ExprType::TableSize> TableSizeExpr;
 typedef VarExpr<ExprType::TableFill> TableFillExpr;
+
+typedef VarExpr<ExprType::StructNew> StructNewExpr;
 
 class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
@@ -994,11 +997,13 @@ class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
 };
 
 struct Module {
-  Index GetFuncTypeIndex(const Var&) const;
+  Index GetTypeIndex(const Var&) const;
   Index GetFuncTypeIndex(const FuncDeclaration&) const;
   Index GetFuncTypeIndex(const FuncSignature&) const;
   const FuncType* GetFuncType(const Var&) const;
   FuncType* GetFuncType(const Var&);
+  const StructType* GetStructType(const Var&) const;
+  StructType* GetStructType(const Var&);
   Index GetFuncIndex(const Var&) const;
   const Func* GetFunc(const Var&) const;
   Func* GetFunc(const Var&);

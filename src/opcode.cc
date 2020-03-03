@@ -84,6 +84,9 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64TruncSatF64U:
       return features.sat_float_to_int_enabled();
 
+    case Opcode::StructNew:
+      return features.gc_enabled();
+
     case Opcode::I32Extend8S:
     case Opcode::I32Extend16S:
     case Opcode::I64Extend8S:

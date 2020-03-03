@@ -162,6 +162,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Ternary:
     case TokenType::SimdLaneOp:
     case TokenType::SimdShuffleOp:
+    case TokenType::StructNew:
       return true;
     default:
       return false;
@@ -2122,6 +2123,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
           new SimdShuffleOpExpr(token.opcode(), value, loc));
       break;
     }
+
+    case TokenType::StructNew:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<StructNewExpr>(loc, out_expr));
+      break;
 
     default:
       assert(
