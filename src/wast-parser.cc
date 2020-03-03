@@ -163,6 +163,8 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::SimdLaneOp:
     case TokenType::SimdShuffleOp:
     case TokenType::StructNew:
+    case TokenType::StructGet:
+    case TokenType::StructSet:
       return true;
     default:
       return false;
@@ -1700,6 +1702,17 @@ Result WastParser::ParsePlainLoadStoreInstr(Location loc,
   return Result::Ok;
 }
 
+template <typename T>
+Result WastParser::ParseStructFieldInstr(Location loc,
+                                         std::unique_ptr<Expr>* out_expr) {
+  Var struct_var;
+  Var field_var;
+  CHECK_RESULT(ParseVar(&struct_var));
+  CHECK_RESULT(ParseVar(&field_var));
+  out_expr->reset(new T(struct_var, field_var, loc));
+  return Result::Ok;
+}
+
 Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   WABT_TRACE(ParsePlainInstr);
   Location loc = GetLocation();
@@ -2127,6 +2140,16 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::StructNew:
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<StructNewExpr>(loc, out_expr));
+      break;
+
+    case TokenType::StructGet:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParseStructFieldInstr<StructGetExpr>(loc, out_expr));
+      break;
+
+    case TokenType::StructSet:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParseStructFieldInstr<StructSetExpr>(loc, out_expr));
       break;
 
     default:

@@ -264,6 +264,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnMemoryInitExpr(Index segment_index) override { return Result::Ok; }
   Result OnMemorySizeExpr() override { return Result::Ok; }
   Result OnStructNew(Index type_index) override { return Result::Ok; }
+  Result OnStructGet(Index type_index, Index field_index) override {
+    return Result::Ok;
+  }
+  Result OnStructSet(Index type_index, Index field_index) override {
+    return Result::Ok;
+  }
   Result OnTableCopyExpr(Index dst_index, Index src_index) override {
     return Result::Ok;
   }

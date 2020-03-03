@@ -339,7 +339,9 @@ enum class ExprType {
   SimdShuffleOp,
   LoadSplat,
   Store,
+  StructGet,
   StructNew,
+  StructSet,
   TableCopy,
   ElemDrop,
   TableInit,
@@ -478,6 +480,23 @@ typedef VarExpr<ExprType::TableSize> TableSizeExpr;
 typedef VarExpr<ExprType::TableFill> TableFillExpr;
 
 typedef VarExpr<ExprType::StructNew> StructNewExpr;
+
+template <ExprType TypeEnum>
+class StructFieldExpr : public ExprMixin<TypeEnum> {
+ public:
+  StructFieldExpr(const Var& struct_var,
+                  const Var& field_var,
+                  const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc),
+        struct_var(struct_var),
+        field_var(field_var) {}
+
+  Var struct_var;
+  Var field_var;
+};
+
+typedef StructFieldExpr<ExprType::StructGet> StructGetExpr;
+typedef StructFieldExpr<ExprType::StructSet> StructSetExpr;
 
 class SelectExpr : public ExprMixin<ExprType::Select> {
  public:

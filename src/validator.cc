@@ -128,7 +128,9 @@ class Validator : public ExprVisitor::Delegate {
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
   Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
@@ -472,8 +474,20 @@ Result Validator::OnSelectExpr(SelectExpr* expr) {
 #endif
 }
 
+Result Validator::OnStructGetExpr(StructGetExpr* expr) {
+  result_ |=
+      validator_.OnStructGet(expr->loc, expr->struct_var, expr->field_var);
+  return Result::Ok;
+}
+
 Result Validator::OnStructNewExpr(StructNewExpr* expr) {
   result_ |= validator_.OnStructNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructSetExpr(StructSetExpr* expr) {
+  result_ |=
+      validator_.OnStructSet(expr->loc, expr->struct_var, expr->field_var);
   return Result::Ok;
 }
 

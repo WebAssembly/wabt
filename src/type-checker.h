@@ -117,7 +117,9 @@ class TypeChecker {
   Result OnSimdLaneOp(Opcode, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode);
+  Result OnStructGet(Type struct_type, Type field_type);
   Result OnStructNew(Type struct_type, const TypeVector&);
+  Result OnStructSet(Type struct_type, Type field_type);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);

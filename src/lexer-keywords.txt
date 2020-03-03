@@ -491,7 +491,9 @@ select, TokenType::Select, Opcode::Select
 shared, TokenType::Shared
 start, TokenType::Start
 struct, TokenType::Struct
+struct.get, TokenType::StructGet, Opcode::StructGet
 struct.new, TokenType::StructNew, Opcode::StructNew
+struct.set, TokenType::StructSet, Opcode::StructSet
 table.copy, TokenType::TableCopy, Opcode::TableCopy
 table.fill, TokenType::TableFill, Opcode::TableFill
 table.get, TokenType::TableGet, Opcode::TableGet

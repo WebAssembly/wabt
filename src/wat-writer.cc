@@ -544,7 +544,9 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
   Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
@@ -843,9 +845,23 @@ Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnStructGetExpr(StructGetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::StructGet_Opcode.GetName());
+  writer_->WriteVar(expr->struct_var, NextChar::Newline);
+  writer_->WriteVar(expr->field_var, NextChar::Newline);
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::OnStructNewExpr(StructNewExpr* expr) {
   writer_->WritePutsSpace(Opcode::StructNew_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnStructSetExpr(StructSetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::StructSet_Opcode.GetName());
+  writer_->WriteVar(expr->struct_var, NextChar::Newline);
+  writer_->WriteVar(expr->field_var, NextChar::Newline);
   return Result::Ok;
 }
 

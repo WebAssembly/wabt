@@ -107,6 +107,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::AtomicStore:
     case ExprType::Store:
     case ExprType::TableSet:
+    case ExprType::StructSet:
       return { 2, 0 };
 
     case ExprType::Block:
@@ -181,6 +182,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::Unary:
     case ExprType::TableGet:
     case ExprType::RefIsNull:
+    case ExprType::StructGet:
       return { 1, 1 };
 
     case ExprType::Drop:

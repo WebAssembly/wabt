@@ -257,6 +257,8 @@ class BinaryReaderDelegate {
   virtual Result OnMemoryInitExpr(Index segment_index) = 0;
   virtual Result OnMemorySizeExpr() = 0;
   virtual Result OnStructNew(Index type_index) = 0;
+  virtual Result OnStructGet(Index type_index, Index field_index) = 0;
+  virtual Result OnStructSet(Index type_index, Index field_index) = 0;
   virtual Result OnTableCopyExpr(Index dst_index, Index src_index) = 0;
   virtual Result OnElemDropExpr(Index segment_index) = 0;
   virtual Result OnTableInitExpr(Index segment_index, Index table_index) = 0;

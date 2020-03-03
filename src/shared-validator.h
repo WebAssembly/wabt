@@ -160,7 +160,9 @@ class SharedValidator {
   Result OnSimdLaneOp(const Location&, Opcode, uint64_t lane_idx);
   Result OnSimdShuffleOp(const Location&, Opcode, v128 lane_idx);
   Result OnStore(const Location&, Opcode, Address align);
+  Result OnStructGet(const Location&, Var type_var, Var field_var);
   Result OnStructNew(const Location&, Var type_var);
+  Result OnStructSet(const Location&, Var type_var, Var field_var);
   Result OnTableCopy(const Location&, Var dst_var, Var src_var);
   Result OnTableFill(const Location&, Var table_var);
   Result OnTableGet(const Location&, Var table_var);
@@ -262,6 +264,9 @@ class SharedValidator {
                              const char* desc);
   Result CheckFuncTypeIndex(Var sig_var, FuncType* out = nullptr);
   Result CheckStructTypeIndex(Var struct_var, StructType* out = nullptr);
+  Result CheckStructFieldIndex(const StructType& type,
+                               Var field_var,
+                               TypeMut* out = nullptr);
   Result CheckFuncIndex(Var func_var, FuncType* out = nullptr);
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);

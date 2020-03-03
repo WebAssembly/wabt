@@ -491,6 +491,22 @@ Result SharedValidator::CheckStructTypeIndex(Var type_var, StructType* out) {
   return Result::Ok;
 }
 
+Result SharedValidator::CheckStructFieldIndex(const StructType& struct_type,
+                                              Var field_var,
+                                              TypeMut* out) {
+  Result result =
+      CheckIndex(field_var, struct_type.types.size(), "struct field");
+  if (out) {
+    if (Succeeded(result)) {
+      *out = TypeMut{struct_type.types[field_var.index()],
+                     struct_type.muts[field_var.index()]};
+    } else {
+      *out = TypeMut{};
+    }
+  }
+  return result;
+}
+
 Result SharedValidator::CheckFuncIndex(Var func_var, FuncType* out) {
   return CheckIndexWithValue(func_var, funcs_, out, "function");
 }
@@ -1077,6 +1093,20 @@ Result SharedValidator::OnStore(const Location& loc,
   return result;
 }
 
+Result SharedValidator::OnStructGet(const Location& loc,
+                                    Var type_var,
+                                    Var field_var) {
+  Result result = Result::Ok;
+  expr_loc_ = &loc;
+  StructType struct_type;
+  TypeMut type_mut;
+  result |= CheckStructTypeIndex(type_var, &struct_type);
+  result |= CheckStructFieldIndex(struct_type, field_var, &type_mut);
+  result |=
+      typechecker_.OnStructGet(Type::MakeRefT(type_var.index()), type_mut.type);
+  return result;
+}
+
 Result SharedValidator::OnStructNew(const Location& loc, Var type_var) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
@@ -1084,6 +1114,25 @@ Result SharedValidator::OnStructNew(const Location& loc, Var type_var) {
   result |= CheckStructTypeIndex(type_var, &struct_type);
   result |= typechecker_.OnStructNew(Type::MakeRefT(type_var.index()),
                                      struct_type.types);
+  return result;
+}
+
+Result SharedValidator::OnStructSet(const Location& loc,
+                                    Var type_var,
+                                    Var field_var) {
+  Result result = Result::Ok;
+  expr_loc_ = &loc;
+  StructType struct_type;
+  TypeMut type_mut;
+  result |= CheckStructTypeIndex(type_var, &struct_type);
+  result |= CheckStructFieldIndex(struct_type, field_var, &type_mut);
+  if (!type_mut.mutable_) {
+    result |= PrintError(
+        loc, "can't struct.set on immutable field at index %" PRIindex ".",
+        field_var.index());
+  }
+  result |=
+      typechecker_.OnStructSet(Type::MakeRefT(type_var.index()), type_mut.type);
   return result;
 }
 

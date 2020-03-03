@@ -111,7 +111,9 @@ class ExprVisitor::Delegate {
   virtual Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) = 0;
   virtual Result OnSelectExpr(SelectExpr*) = 0;
   virtual Result OnStoreExpr(StoreExpr*) = 0;
+  virtual Result OnStructGetExpr(StructGetExpr*) = 0;
   virtual Result OnStructNewExpr(StructNewExpr*) = 0;
+  virtual Result OnStructSetExpr(StructSetExpr*) = 0;
   virtual Result OnUnaryExpr(UnaryExpr*) = 0;
   virtual Result OnUnreachableExpr(UnreachableExpr*) = 0;
   virtual Result BeginTryExpr(TryExpr*) = 0;
@@ -183,7 +185,9 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   }
   Result OnSelectExpr(SelectExpr*) override { return Result::Ok; }
   Result OnStoreExpr(StoreExpr*) override { return Result::Ok; }
+  Result OnStructGetExpr(StructGetExpr*) override { return Result::Ok; }
   Result OnStructNewExpr(StructNewExpr*) override { return Result::Ok; }
+  Result OnStructSetExpr(StructSetExpr*) override { return Result::Ok; }
   Result OnUnaryExpr(UnaryExpr*) override { return Result::Ok; }
   Result OnUnreachableExpr(UnreachableExpr*) override { return Result::Ok; }
   Result BeginTryExpr(TryExpr*) override { return Result::Ok; }

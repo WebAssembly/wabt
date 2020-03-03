@@ -1,0 +1,13 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type (struct (mut i32) (mut i64)))
+
+(func (param (ref 0)) (param i32)
+  local.get 0
+  local.get 1
+  struct.set 0 0)
+
+(func (param (ref 0)) (param i64)
+  local.get 0
+  local.get 1
+  struct.set 0 1)

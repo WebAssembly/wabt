@@ -1575,6 +1575,26 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::StructGet: {
+        Index type;
+        Index field;
+        CHECK_RESULT(ReadIndex(&type, "type index"));
+        CHECK_RESULT(ReadIndex(&field, "field index"));
+        CALLBACK(OnStructGet, type, field);
+        CALLBACK(OnOpcodeUint32Uint32, type, field);
+        break;
+      }
+
+      case Opcode::StructSet: {
+        Index type;
+        Index field;
+        CHECK_RESULT(ReadIndex(&type, "type index"));
+        CHECK_RESULT(ReadIndex(&field, "field index"));
+        CALLBACK(OnStructSet, type, field);
+        CALLBACK(OnOpcodeUint32Uint32, type, field);
+        break;
+      }
+
       default:
         return ReportUnexpectedOpcode(opcode);
     }

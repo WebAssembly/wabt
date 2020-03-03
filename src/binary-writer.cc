@@ -717,10 +717,28 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Store:
       WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;
+    case ExprType::StructGet: {
+      auto* get_expr = cast<StructGetExpr>(expr);
+      Index index = module_->GetTypeIndex(get_expr->struct_var);
+      WriteOpcode(stream_, Opcode::StructGet);
+      WriteU32Leb128(stream_, index, "struct.get type index");
+      WriteU32Leb128(stream_, get_expr->field_var.index(),
+                     "struct.get field index");
+      break;
+    }
     case ExprType::StructNew: {
       Index index = module_->GetTypeIndex(cast<StructNewExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::StructNew);
       WriteU32Leb128(stream_, index, "struct.new type index");
+      break;
+    }
+    case ExprType::StructSet: {
+      auto* set_expr = cast<StructSetExpr>(expr);
+      Index index = module_->GetTypeIndex(set_expr->struct_var);
+      WriteOpcode(stream_, Opcode::StructSet);
+      WriteU32Leb128(stream_, index, "struct.set type index");
+      WriteU32Leb128(stream_, set_expr->field_var.index(),
+                     "struct.set field index");
       break;
     }
     case ExprType::Throw:
