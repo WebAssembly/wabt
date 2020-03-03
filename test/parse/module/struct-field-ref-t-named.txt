@@ -1,0 +1,4 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type $point (struct i32 i32))
+(type $box (struct (ref $point) (ref $point)))

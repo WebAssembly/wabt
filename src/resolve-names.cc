@@ -66,6 +66,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
+  Result OnSelectExpr(SelectExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -82,7 +83,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveVar(const BindingHash* bindings, Var* var, const char* desc);
   void ResolveFuncVar(Var* var);
   void ResolveGlobalVar(Var* var);
-  void ResolveFuncTypeVar(Var* var);
+  void ResolveTypeVar(Var* var);
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
   void ResolveEventVar(Var* var);
@@ -90,8 +91,14 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
+  void VisitTypeVar(TypeVar* type_var);
+  void VisitTypeVarVector(TypeVarVector* vec);
+  void VisitFuncSignature(FuncSignature* sig);
+  void VisitField(Field* field);
+  void VisitTypeEntry(TypeEntry* type_entry);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
+  void VisitTable(Table* table);
   void VisitGlobal(Global* global);
   void VisitEvent(Event* event);
   void VisitElemSegment(ElemSegment* segment);
@@ -186,7 +193,7 @@ void NameResolver::ResolveGlobalVar(Var* var) {
   ResolveVar(&current_module_->global_bindings, var, "global");
 }
 
-void NameResolver::ResolveFuncTypeVar(Var* var) {
+void NameResolver::ResolveTypeVar(Var* var) {
   ResolveVar(&current_module_->type_bindings, var, "type");
 }
 
@@ -228,8 +235,9 @@ void NameResolver::ResolveLocalVar(Var* var) {
 }
 
 void NameResolver::ResolveBlockDeclarationVar(BlockDeclaration* decl) {
+  VisitFuncSignature(&decl->sig);
   if (decl->has_func_type) {
-    ResolveFuncTypeVar(&decl->type_var);
+    ResolveTypeVar(&decl->type_var);
   }
 }
 
@@ -285,7 +293,7 @@ Result NameResolver::OnCallExpr(CallExpr* expr) {
 
 Result NameResolver::OnCallIndirectExpr(CallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
-    ResolveFuncTypeVar(&expr->decl.type_var);
+    ResolveTypeVar(&expr->decl.type_var);
   }
   ResolveTableVar(&expr->table);
   return Result::Ok;
@@ -298,7 +306,7 @@ Result NameResolver::OnReturnCallExpr(ReturnCallExpr* expr) {
 
 Result NameResolver::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
-    ResolveFuncTypeVar(&expr->decl.type_var);
+    ResolveTypeVar(&expr->decl.type_var);
   }
   ResolveTableVar(&expr->table);
   return Result::Ok;
@@ -397,6 +405,11 @@ Result NameResolver::OnRefFuncExpr(RefFuncExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnSelectExpr(SelectExpr* expr) {
+  VisitTypeVarVector(&expr->result_type);
+  return Result::Ok;
+}
+
 Result NameResolver::BeginTryExpr(TryExpr* expr) {
   PushLabel(expr->block.label);
   ResolveBlockDeclarationVar(&expr->block.decl);
@@ -413,10 +426,63 @@ Result NameResolver::OnThrowExpr(ThrowExpr* expr) {
   return Result::Ok;
 }
 
+void NameResolver::VisitTypeVar(TypeVar* type) {
+  ResolveTypeVar(&type->var);
+  // A TypeVar contains a Type and a Var, where the Var is an optional Index
+  // parameter for the type. It's currently only used for the (ref $T) value
+  // type.
+  //
+  // Type also can store this information, but only an Index. We always want
+  // the Var's index to be in sync with the Type's index. When converting from
+  // TypeVar to Type, the Var's index will be stored in the Type, so this line
+  // will keep them in sync after the var's name was resolved.
+  type->type = *type;
+}
+
+void NameResolver::VisitTypeVarVector(TypeVarVector* vec) {
+  for (auto&& type_var : *vec) {
+    VisitTypeVar(&type_var);
+  }
+}
+
+void NameResolver::VisitFuncSignature(FuncSignature* sig) {
+  VisitTypeVarVector(&sig->param_types);
+  VisitTypeVarVector(&sig->result_types);
+}
+
+void NameResolver::VisitField(Field* field) {
+  VisitTypeVar(&field->type);
+}
+
+void NameResolver::VisitTypeEntry(TypeEntry* type_entry) {
+  switch (type_entry->kind()) {
+    case TypeEntryKind::Func:
+      VisitFuncSignature(&cast<FuncType>(type_entry)->sig);
+      break;
+
+    case TypeEntryKind::Struct:
+      for (auto&& field : cast<StructType>(type_entry)->fields) {
+        VisitField(&field);
+      }
+      break;
+
+    case TypeEntryKind::Array: {
+      VisitField(&cast<ArrayType>(type_entry)->field);
+      break;
+    }
+  }
+}
+
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
   if (func->decl.has_func_type) {
-    ResolveFuncTypeVar(&func->decl.type_var);
+    ResolveTypeVar(&func->decl.type_var);
+  }
+
+  VisitFuncSignature(&func->decl.sig);
+
+  for (auto&& decl : func->local_types.decls()) {
+    VisitTypeVar(&decl.first);
   }
 
   func->bindings.FindDuplicates(
@@ -454,18 +520,24 @@ void NameResolver::VisitExport(Export* export_) {
   }
 }
 
+void NameResolver::VisitTable(Table* table) {
+  VisitTypeVar(&table->elem_type);
+}
+
 void NameResolver::VisitGlobal(Global* global) {
   visitor_.VisitExprList(global->init_expr);
+  VisitTypeVar(&global->type);
 }
 
 void NameResolver::VisitEvent(Event* event) {
   if (event->decl.has_func_type) {
-    ResolveFuncTypeVar(&event->decl.type_var);
+    ResolveTypeVar(&event->decl.type_var);
   }
 }
 
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
+  VisitTypeVar(&segment->elem_type);
   visitor_.VisitExprList(segment->offset);
   for (ElemExpr& elem_expr : segment->elem_exprs) {
     if (elem_expr.kind == ElemExprKind::RefFunc) {
@@ -489,10 +561,14 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->memory_bindings, "memory");
   CheckDuplicateBindings(&module->event_bindings, "event");
 
+  for (TypeEntry* type_entry : module->types)
+    VisitTypeEntry(type_entry);
   for (Func* func : module->funcs)
     VisitFunc(func);
   for (Export* export_ : module->exports)
     VisitExport(export_);
+  for (Table* table : module->tables)
+    VisitTable(table);
   for (Global* global : module->globals)
     VisitGlobal(global);
   for (Event* event : module->events)

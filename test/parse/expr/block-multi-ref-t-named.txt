@@ -1,0 +1,9 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc --enable-multi
+(module
+  (type $T (struct))
+  (func
+    unreachable
+    block (param (ref $T))
+      drop
+    end))

@@ -1,0 +1,4 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type (struct i32 i32))
+(type (struct (ref 0) (ref 0)))

@@ -172,7 +172,7 @@ void LocalTypes::Set(const TypeVarVector& types) {
     return;
   }
 
-  Type type = types[0];
+  TypeVar type = types[0];
   Index count = 1;
   for (Index i = 1; i < types.size(); ++i) {
     if (types[i] != type) {
