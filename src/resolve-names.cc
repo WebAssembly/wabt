@@ -67,7 +67,9 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
   Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -411,8 +413,24 @@ Result NameResolver::OnSelectExpr(SelectExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnStructGetExpr(StructGetExpr* expr) {
+  ResolveTypeVar(&expr->struct_var);
+  if (auto* struct_type = current_module_->GetStructType(expr->struct_var)) {
+    ResolveVar(&struct_type->bindings, &expr->field_var, "field");
+  }
+  return Result::Ok;
+}
+
 Result NameResolver::OnStructNewExpr(StructNewExpr* expr) {
   ResolveTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructSetExpr(StructSetExpr* expr) {
+  ResolveTypeVar(&expr->struct_var);
+  if (auto* struct_type = current_module_->GetStructType(expr->struct_var)) {
+    ResolveVar(&struct_type->bindings, &expr->field_var, "field");
+  }
   return Result::Ok;
 }
 

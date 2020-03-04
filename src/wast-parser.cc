@@ -1223,7 +1223,7 @@ Result WastParser::ParseTypeModuleField(Module* module) {
       return Result::Error;
     }
     auto struct_type = MakeUnique<StructType>(name);
-    CHECK_RESULT(ParseFieldList(&struct_type->fields));
+    CHECK_RESULT(ParseFieldList(&struct_type->fields, &struct_type->bindings));
     field->type = std::move(struct_type);
   } else if (Match(TokenType::Array)) {
     if (!options_->features.gc_enabled()) {
@@ -1268,12 +1268,18 @@ Result WastParser::ParseField(Field* field) {
   return Result::Ok;
 }
 
-Result WastParser::ParseFieldList(std::vector<Field>* fields) {
+Result WastParser::ParseFieldList(std::vector<Field>* fields,
+                                  BindingHash* bindings) {
   WABT_TRACE(ParseFieldList);
-  while (PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar)) {
+  for (Index index = 0;
+       PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar); ++index) {
     Field field;
+    Location loc = GetLocation();
     CHECK_RESULT(ParseField(&field));
     fields->push_back(field);
+    if (!field.name.empty()) {
+      bindings->emplace(field.name, Binding(loc, index));
+    }
   }
   return Result::Ok;
 }

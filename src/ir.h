@@ -267,6 +267,7 @@ class StructType : public TypeEntry {
       : TypeEntry(TypeEntryKind::Struct, name) {}
 
   std::vector<Field> fields;
+  BindingHash bindings;
 };
 
 class ArrayType : public TypeEntry {

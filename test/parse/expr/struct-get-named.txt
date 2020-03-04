@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type $list (struct (field $car i32) (field $cdr (ref $list))))
+
+(func (param $p (ref $list)) (result i32)
+  local.get $p
+  struct.get $list $car)
+
+(func (param $p (ref $list)) (result (ref $list))
+  local.get $p
+  struct.get $list $cdr)

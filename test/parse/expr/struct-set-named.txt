@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type $point (struct (field $x (mut i32)) (field $y (mut i32))))
+
+(func (param $p (ref $point)) (param $newx i32) (param $newy i32)
+  local.get $p
+  local.get $newx
+  struct.set $point $x
+  local.get $p
+  local.get $newy
+  struct.set $point $y)
