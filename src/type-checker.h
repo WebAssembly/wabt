@@ -120,6 +120,10 @@ class TypeChecker {
   Result OnStructGet(Type struct_type, Type field_type);
   Result OnStructNew(Type struct_type, const TypeVector&);
   Result OnStructSet(Type struct_type, Type field_type);
+  Result OnArrayGet(Type array_type, Type field_type);
+  Result OnArrayLen(Type array_type);
+  Result OnArrayNew(Type array_type, Type field_type);
+  Result OnArraySet(Type array_type, Type field_type);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);

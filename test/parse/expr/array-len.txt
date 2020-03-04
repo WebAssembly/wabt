@@ -1,0 +1,7 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type (array f32))
+
+(func (param (ref 0)) (result i32)
+  local.get 0
+  array.len 0)

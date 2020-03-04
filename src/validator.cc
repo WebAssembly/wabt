@@ -82,6 +82,10 @@ class Validator : public ExprVisitor::Delegate {
 
   Result CheckModule();
 
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayLenExpr(ArrayLenExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
   Result OnBinaryExpr(BinaryExpr*) override;
   Result BeginBlockExpr(BlockExpr*) override;
   Result EndBlockExpr(BlockExpr*) override;
@@ -488,6 +492,26 @@ Result Validator::OnStructNewExpr(StructNewExpr* expr) {
 Result Validator::OnStructSetExpr(StructSetExpr* expr) {
   result_ |=
       validator_.OnStructSet(expr->loc, expr->struct_var, expr->field_var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayGetExpr(ArrayGetExpr* expr) {
+  result_ |= validator_.OnArrayGet(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewExpr(ArrayNewExpr* expr) {
+  result_ |= validator_.OnArrayNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArraySetExpr(ArraySetExpr* expr) {
+  result_ |= validator_.OnArraySet(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayLenExpr(ArrayLenExpr* expr) {
+  result_ |= validator_.OnArrayLen(expr->loc, expr->var);
   return Result::Ok;
 }
 

@@ -1,0 +1,9 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type (array (mut f32)))
+
+(func (param (ref 0))
+  local.get 0
+  i32.const 0
+  f32.const 0
+  array.set 0)

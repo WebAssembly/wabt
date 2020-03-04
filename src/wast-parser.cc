@@ -165,6 +165,10 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::StructNew:
     case TokenType::StructGet:
     case TokenType::StructSet:
+    case TokenType::ArrayNew:
+    case TokenType::ArrayGet:
+    case TokenType::ArraySet:
+    case TokenType::ArrayLen:
       return true;
     default:
       return false;
@@ -2156,6 +2160,26 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::StructSet:
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParseStructFieldInstr<StructSetExpr>(loc, out_expr));
+      break;
+
+    case TokenType::ArrayNew:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<ArrayNewExpr>(loc, out_expr));
+      break;
+
+    case TokenType::ArrayGet:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<ArrayGetExpr>(loc, out_expr));
+      break;
+
+    case TokenType::ArraySet:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<ArraySetExpr>(loc, out_expr));
+      break;
+
+    case TokenType::ArrayLen:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<ArrayLenExpr>(loc, out_expr));
       break;
 
     default:

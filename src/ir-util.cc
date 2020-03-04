@@ -102,6 +102,8 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::Binary:
     case ExprType::Compare:
     case ExprType::TableGrow:
+    case ExprType::ArrayGet:
+    case ExprType::ArrayNew:
       return { 2, 1 };
 
     case ExprType::AtomicStore:
@@ -172,6 +174,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::MemoryFill:
     case ExprType::MemoryCopy:
     case ExprType::TableCopy:
+    case ExprType::ArraySet:
       return { 3, 0 };
 
     case ExprType::AtomicLoad:
@@ -183,6 +186,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::TableGet:
     case ExprType::RefIsNull:
     case ExprType::StructGet:
+    case ExprType::ArrayLen:
       return { 1, 1 };
 
     case ExprType::Drop:

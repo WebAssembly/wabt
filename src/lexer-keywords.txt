@@ -17,6 +17,10 @@ struct TokenInfo {
 %%
 anyref, Type::Anyref
 array, TokenType::Array
+array.get, TokenType::ArrayGet, Opcode::ArrayGet
+array.len, TokenType::ArrayLen, Opcode::ArrayLen
+array.new, TokenType::ArrayNew, Opcode::ArrayNew
+array.set, TokenType::ArraySet, Opcode::ArraySet
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
 assert_malformed, TokenType::AssertMalformed

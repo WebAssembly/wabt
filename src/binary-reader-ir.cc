@@ -117,6 +117,10 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
+  Result OnArrayNew(Index type_index) override;
+  Result OnArrayGet(Index type_index) override;
+  Result OnArraySet(Index type_index) override;
+  Result OnArrayLen(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
@@ -633,6 +637,22 @@ Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   current_func_->local_types.AppendDecl(type, count);
   return Result::Ok;
+}
+
+Result BinaryReaderIR::OnArrayNew(Index type_index) {
+  return AppendExpr(MakeUnique<ArrayNewExpr>(Var(type_index)));
+}
+
+Result BinaryReaderIR::OnArrayGet(Index type_index) {
+  return AppendExpr(MakeUnique<ArrayGetExpr>(Var(type_index)));
+}
+
+Result BinaryReaderIR::OnArraySet(Index type_index) {
+  return AppendExpr(MakeUnique<ArraySetExpr>(Var(type_index)));
+}
+
+Result BinaryReaderIR::OnArrayLen(Index type_index) {
+  return AppendExpr(MakeUnique<ArrayLenExpr>(Var(type_index)));
 }
 
 Result BinaryReaderIR::OnAtomicLoadExpr(Opcode opcode,

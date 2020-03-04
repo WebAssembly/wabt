@@ -1,0 +1,9 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type (array i64))
+
+(func
+  i64.const 0
+  i32.const 0
+  array.new 0
+  drop)

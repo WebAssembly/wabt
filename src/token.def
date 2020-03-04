@@ -78,6 +78,10 @@ WABT_TOKEN_FIRST(Literal, Float)
 WABT_TOKEN_LAST(Literal, Nat)
 
 /* Tokens with Opcode data. */
+WABT_TOKEN(ArrayGet, "array.get")
+WABT_TOKEN(ArrayLen, "array.len")
+WABT_TOKEN(ArrayNew, "array.new")
+WABT_TOKEN(ArraySet, "array.set")
 WABT_TOKEN(AtomicFence, "atomic.fence")
 WABT_TOKEN(AtomicLoad, "ATOMIC_LOAD")
 WABT_TOKEN(AtomicNotify, "ATOMIC_NOTIFY")
@@ -144,7 +148,7 @@ WABT_TOKEN(Throw, "throw")
 WABT_TOKEN(Try, "try")
 WABT_TOKEN(Unary, "UNARY")
 WABT_TOKEN(Unreachable, "unreachable")
-WABT_TOKEN_FIRST(Opcode, AtomicFence)
+WABT_TOKEN_FIRST(Opcode, ArrayGet)
 WABT_TOKEN_LAST(Opcode, Unreachable)
 
 /* Tokens with string data. */

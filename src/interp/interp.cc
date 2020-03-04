@@ -1699,6 +1699,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::StructNew:
     case O::StructGet:
     case O::StructSet:
+    case O::ArrayNew:
+    case O::ArrayGet:
+    case O::ArraySet:
+    case O::ArrayLen:
       WABT_UNREACHABLE;
       break;
   }

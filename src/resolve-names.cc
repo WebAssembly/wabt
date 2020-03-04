@@ -36,6 +36,10 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result VisitScript(Script* script);
 
   // Implementation of ExprVisitor::DelegateNop.
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayLenExpr(ArrayLenExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
   Result BeginBlockExpr(BlockExpr*) override;
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
@@ -242,6 +246,26 @@ void NameResolver::ResolveBlockDeclarationVar(BlockDeclaration* decl) {
   if (decl->has_func_type) {
     ResolveTypeVar(&decl->type_var);
   }
+}
+
+Result NameResolver::OnArrayGetExpr(ArrayGetExpr* expr) {
+  ResolveTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayLenExpr(ArrayLenExpr* expr) {
+  ResolveTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewExpr(ArrayNewExpr* expr) {
+  ResolveTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArraySetExpr(ArraySetExpr* expr) {
+  ResolveTypeVar(&expr->var);
+  return Result::Ok;
 }
 
 Result NameResolver::BeginBlockExpr(BlockExpr* expr) {

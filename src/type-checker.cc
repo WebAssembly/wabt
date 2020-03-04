@@ -771,6 +771,28 @@ Result TypeChecker::OnStructSet(Type struct_type, Type field_type) {
   return PopAndCheck2Types(struct_type, field_type, "struct.set");
 }
 
+Result TypeChecker::OnArrayGet(Type array_type, Type field_type) {
+  Result result = PopAndCheck2Types(array_type, Type::I32, "array.get");
+  PushType(field_type);
+  return result;
+}
+
+Result TypeChecker::OnArrayLen(Type array_type) {
+  Result result = PopAndCheck1Type(array_type, "array.len");
+  PushType(Type::I32);
+  return result;
+}
+
+Result TypeChecker::OnArrayNew(Type array_type, Type field_type) {
+  Result result = PopAndCheck2Types(field_type, Type::I32, "array.new");
+  PushType(array_type);
+  return result;
+}
+
+Result TypeChecker::OnArraySet(Type array_type, Type field_type) {
+  return PopAndCheck3Types(array_type, Type::I32, field_type, "array.set");
+}
+
 Result TypeChecker::OnTry(const TypeVector& param_types,
                           const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "try");

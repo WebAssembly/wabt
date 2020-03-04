@@ -87,6 +87,10 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::StructNew:
     case Opcode::StructGet:
     case Opcode::StructSet:
+    case Opcode::ArrayNew:
+    case Opcode::ArrayGet:
+    case Opcode::ArraySet:
+    case Opcode::ArrayLen:
       return features.gc_enabled();
 
     case Opcode::I32Extend8S:

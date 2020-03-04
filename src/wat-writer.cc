@@ -498,6 +498,10 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
  public:
   explicit ExprVisitorDelegate(WatWriter* writer) : writer_(writer) {}
 
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayLenExpr(ArrayLenExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
   Result OnBinaryExpr(BinaryExpr*) override;
   Result BeginBlockExpr(BlockExpr*) override;
   Result EndBlockExpr(BlockExpr*) override;
@@ -862,6 +866,30 @@ Result WatWriter::ExprVisitorDelegate::OnStructSetExpr(StructSetExpr* expr) {
   writer_->WritePutsSpace(Opcode::StructSet_Opcode.GetName());
   writer_->WriteVar(expr->struct_var, NextChar::Newline);
   writer_->WriteVar(expr->field_var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayGetExpr(ArrayGetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::ArrayGet_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayLenExpr(ArrayLenExpr* expr) {
+  writer_->WritePutsSpace(Opcode::ArrayLen_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayNewExpr(ArrayNewExpr* expr) {
+  writer_->WritePutsSpace(Opcode::ArrayNew_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArraySetExpr(ArraySetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::ArraySet_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 

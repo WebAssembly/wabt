@@ -692,6 +692,10 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::StructNew:
     case Opcode::StructGet:
     case Opcode::StructSet:
+    case Opcode::ArrayNew:
+    case Opcode::ArrayGet:
+    case Opcode::ArraySet:
+    case Opcode::ArrayLen:
       // Not used.
       break;
   }

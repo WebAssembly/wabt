@@ -366,6 +366,22 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnStructSetExpr(cast<StructSetExpr>(expr)));
       break;
 
+    case ExprType::ArrayGet:
+      CHECK_RESULT(delegate_->OnArrayGetExpr(cast<ArrayGetExpr>(expr)));
+      break;
+
+    case ExprType::ArrayLen:
+      CHECK_RESULT(delegate_->OnArrayLenExpr(cast<ArrayLenExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNew:
+      CHECK_RESULT(delegate_->OnArrayNewExpr(cast<ArrayNewExpr>(expr)));
+      break;
+
+    case ExprType::ArraySet:
+      CHECK_RESULT(delegate_->OnArraySetExpr(cast<ArraySetExpr>(expr)));
+      break;
+
     case ExprType::Throw:
       CHECK_RESULT(delegate_->OnThrowExpr(cast<ThrowExpr>(expr)));
       break;

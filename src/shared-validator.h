@@ -108,6 +108,10 @@ class SharedValidator {
   Result EndFunctionBody(const Location&);
   Result OnLocalDecl(const Location&, Index count, Type type);
 
+  Result OnArrayGet(const Location&, Var type_var);
+  Result OnArrayLen(const Location&, Var type_var);
+  Result OnArrayNew(const Location&, Var type_var);
+  Result OnArraySet(const Location&, Var type_var);
   Result OnAtomicFence(const Location&, uint32_t consistency_model);
   Result OnAtomicLoad(const Location&, Opcode, Address align);
   Result OnAtomicNotify(const Location&, Opcode, Address align);
@@ -262,8 +266,15 @@ class SharedValidator {
                              const std::vector<T>& values,
                              T* out,
                              const char* desc);
+  template <typename T>
+  Result CheckTypeIndex(Var var,
+                        const std::map<Index, T>& map,
+                        T* out,
+                        const char* desc1,
+                        const char* desc2);
   Result CheckFuncTypeIndex(Var sig_var, FuncType* out = nullptr);
   Result CheckStructTypeIndex(Var struct_var, StructType* out = nullptr);
+  Result CheckArrayTypeIndex(Var array_var, ArrayType* out = nullptr);
   Result CheckStructFieldIndex(const StructType& type,
                                Var field_var,
                                TypeMut* out = nullptr);

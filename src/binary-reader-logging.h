@@ -140,6 +140,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeF64(uint64_t value) override;
   Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
+  Result OnArrayNew(Index type_index) override;
+  Result OnArrayGet(Index type_index) override;
+  Result OnArraySet(Index type_index) override;
+  Result OnArrayLen(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;

@@ -199,6 +199,10 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeF64(uint64_t value) = 0;
   virtual Result OnOpcodeV128(v128 value) = 0;
   virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
+  virtual Result OnArrayNew(Index type_index) = 0;
+  virtual Result OnArrayGet(Index type_index) = 0;
+  virtual Result OnArraySet(Index type_index) = 0;
+  virtual Result OnArrayLen(Index type_index) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   uint32_t alignment_log2,
                                   Address offset) = 0;

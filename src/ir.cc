@@ -25,6 +25,10 @@
 namespace {
 
 const char* ExprTypeName[] = {
+  "ArrayGet",
+  "ArrayLen",
+  "ArrayNew",
+  "ArraySet",
   "AtomicFence",
   "AtomicLoad",
   "AtomicRmw",
