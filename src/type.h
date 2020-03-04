@@ -30,7 +30,7 @@ using TypeVector = std::vector<Type>;
 class Type {
  public:
   // Matches binary format, do not change.
-  enum Enum {
+  enum Enum : int32_t {
     I32 = -0x01,      // 0x7f
     I64 = -0x02,      // 0x7e
     F32 = -0x03,      // 0x7d
