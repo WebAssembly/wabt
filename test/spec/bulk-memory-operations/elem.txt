@@ -3,7 +3,8 @@
 ;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 out/test/spec/bulk-memory-operations/elem.wast:300: assert_invalid passed:
-  0000015: error: elem section without table section
+  0000000: error: table variable out of range: 0 (max 0)
+  0000016: error: BeginElemSegment callback failed
 out/test/spec/bulk-memory-operations/elem.wast:310: assert_invalid passed:
   0000014: error: expected i32 init_expr
 out/test/spec/bulk-memory-operations/elem.wast:318: assert_invalid passed:

@@ -138,9 +138,11 @@ out/test/spec/multi-value/call_indirect.wast:931: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000003d: error: OnCallIndirectExpr callback failed
 out/test/spec/multi-value/call_indirect.wast:951: assert_invalid passed:
-  0000021: error: invalid call_indirect signature index
+  0000000: error: function type variable out of range: 1 (max 1)
+  0000022: error: OnCallIndirectExpr callback failed
 out/test/spec/multi-value/call_indirect.wast:958: assert_invalid passed:
-  0000025: error: invalid call_indirect signature index
+  0000000: error: function type variable out of range: 1012321300 (max 1)
+  0000026: error: OnCallIndirectExpr callback failed
 out/test/spec/multi-value/call_indirect.wast:969: assert_invalid passed:
   0000000: error: function variable out of range: 0 (max 0)
   0000018: error: OnElemSegmentElemExpr_RefFunc callback failed

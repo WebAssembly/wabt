@@ -2,7 +2,8 @@
 ;;; STDIN_FILE: third_party/testsuite/func.wast
 (;; STDOUT ;;;
 out/test/spec/func.wast:303: assert_invalid passed:
-  000001a: error: invalid function signature index: 2
+  0000000: error: function type variable out of range: 2 (max 2)
+  000001a: error: OnFunction callback failed
 out/test/spec/func.wast:387: assert_malformed passed:
   out/test/spec/func/func.4.wat:1:76: error: unexpected token "param", expected an instr.
   ... i32) (result i32)))(func (type $sig) (result i32) (param i32) (i32.const 0))
@@ -65,9 +66,11 @@ out/test/spec/func.wast:485: assert_invalid passed:
   error: type mismatch in f64.neg, expected [f64] but got [i64]
   000001c: error: OnUnaryExpr callback failed
 out/test/spec/func.wast:493: assert_invalid passed:
-  000000e: error: result count must be 0 or 1
+  error: multiple result values not currently supported.
+  0000010: error: OnFuncType callback failed
 out/test/spec/func.wast:497: assert_invalid passed:
-  000000e: error: result count must be 0 or 1
+  error: multiple result values not currently supported.
+  0000010: error: OnFuncType callback failed
 out/test/spec/func.wast:506: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000019: error: EndFunctionBody callback failed

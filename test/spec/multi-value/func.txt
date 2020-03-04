@@ -3,7 +3,8 @@
 ;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
 out/test/spec/multi-value/func.wast:436: assert_invalid passed:
-  000001a: error: invalid function signature index: 2
+  0000000: error: function type variable out of range: 2 (max 2)
+  000001a: error: OnFunction callback failed
 out/test/spec/multi-value/func.wast:520: assert_malformed passed:
   out/test/spec/multi-value/func/func.4.wat:1:76: error: unexpected token "param", expected an instr.
   ... i32) (result i32)))(func (type $sig) (result i32) (param i32) (i32.const 0))

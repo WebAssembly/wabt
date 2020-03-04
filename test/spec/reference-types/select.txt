@@ -14,7 +14,8 @@ out/test/spec/reference-types/select.wast:373: assert_invalid passed:
 out/test/spec/reference-types/select.wast:377: assert_invalid passed:
   000001d: error: invalid arity in select instrcution: 0
 out/test/spec/reference-types/select.wast:381: assert_invalid passed:
-  000000e: error: result count must be 0 or 1
+  error: multiple result values not currently supported.
+  0000010: error: OnFuncType callback failed
 out/test/spec/reference-types/select.wast:393: assert_invalid passed:
   error: type mismatch in select, expected [any, any, i32] but got [nullref, nullref, i32]
   000001c: error: OnSelectExpr callback failed

@@ -4,7 +4,8 @@ version
 section(TYPE) { count[1] function params[0] results[0] }
 section(FUNCTION) { count[1] sig[0] }
 section(EXPORT) { count[1] str("foo") func_kind func[1] }
+section(CODE) { count[1] func { locals[0] } }
 (;; STDERR ;;;
-000001b: error: invalid export func index: 1
-000001b: error: invalid export func index: 1
+out/test/binary/bad-export-func/bad-export-func.wasm:000001b: error: function variable out of range: 1 (max 1)
+out/test/binary/bad-export-func/bad-export-func.wasm:000001b: error: function variable out of range: 1 (max 1)
 ;;; STDERR ;;)

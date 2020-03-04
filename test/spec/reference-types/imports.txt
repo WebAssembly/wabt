@@ -13,7 +13,8 @@ called host spectest.print_f64(f64:24.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
 out/test/spec/reference-types/imports.wast:92: assert_invalid passed:
-  000001e: error: invalid import signature index
+  0000000: error: function type variable out of range: 1 (max 1)
+  000001e: error: OnImportFunc callback failed
 out/test/spec/reference-types/imports.wast:108: assert_unlinkable passed:
   error: invalid import "test.unknown"
 out/test/spec/reference-types/imports.wast:112: assert_unlinkable passed:
@@ -114,9 +115,11 @@ out/test/spec/reference-types/imports.wast:417: assert_invalid passed:
   error: only one memory block allowed
   0000015: error: OnImportMemory callback failed
 out/test/spec/reference-types/imports.wast:421: assert_invalid passed:
-  0000013: error: memory count (2) must be 0 or 1
+  error: only one memory block allowed
+  0000015: error: OnMemory callback failed
 out/test/spec/reference-types/imports.wast:425: assert_invalid passed:
-  000000b: error: memory count (2) must be 0 or 1
+  error: only one memory block allowed
+  000000f: error: OnMemory callback failed
 out/test/spec/reference-types/imports.wast:440: assert_unlinkable passed:
   error: invalid import "test.unknown"
 out/test/spec/reference-types/imports.wast:444: assert_unlinkable passed:

@@ -7,6 +7,6 @@ section(DATA) {
   data[str("hi")]
 }
 (;; STDERR ;;;
-000000b: error: data section without memory section
-000000b: error: data section without memory section
+000000c: error: invalid data segment flags: 0x41
+000000c: error: invalid data segment flags: 0x41
 ;;; STDERR ;;)
