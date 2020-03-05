@@ -169,10 +169,22 @@ class Type {
     return (static_cast<uint32_t>(enum_) & kRefTMask) == kRefTSignature;
   }
 
+  static bool IsRefT(uint32_t code) {
+    return code == static_cast<uint32_t>(RefT);
+  }
+
   Index GetRefTIndex() const {
     assert(IsRefT());
     return (static_cast<uint32_t>(enum_) & kRefT_IndexMask) >> kRefT_IndexShift;
   }
+
+  friend bool operator==(Type lhs, Type rhs) { return lhs.enum_ == rhs.enum_; }
+  friend bool operator==(Type lhs, Type::Enum rhs) { return lhs.enum_ == rhs; }
+  friend bool operator==(Type::Enum lhs, Type rhs) { return lhs == rhs.enum_; }
+
+  friend bool operator!=(Type lhs, Type rhs) { return lhs.enum_ != rhs.enum_; }
+  friend bool operator!=(Type lhs, Type::Enum rhs) { return lhs.enum_ != rhs; }
+  friend bool operator!=(Type::Enum lhs, Type rhs) { return lhs != rhs.enum_; }
 
  private:
   Enum enum_;

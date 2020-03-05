@@ -378,7 +378,7 @@ void WatWriter::WriteBrVar(const Var& var, NextChar next_char) {
 }
 
 void WatWriter::WriteType(TypeVar type, NextChar next_char) {
-  if (type.type == Type::RefT) {
+  if (type.type.IsRefT()) {
     WriteOpenSpace("ref");
     WriteVar(type.var, NextChar::Space);
     WriteCloseSpace();

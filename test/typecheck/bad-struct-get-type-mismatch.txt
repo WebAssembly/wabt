@@ -1,0 +1,25 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-gc
+(type (struct i32))
+(type (struct i64))
+
+;; not reference
+(func
+  f32.const 0
+  struct.get 0 0
+  drop)
+
+;; wrong reference
+(func (param (ref 0))
+  local.get 0
+  struct.get 1 0
+  drop)
+(;; STDERR ;;;
+out/test/typecheck/bad-struct-get-type-mismatch.txt:10:3: error: type mismatch in struct.get, expected [ref 0] but got [f32]
+  struct.get 0 0
+  ^^^^^^^^^^
+out/test/typecheck/bad-struct-get-type-mismatch.txt:16:3: error: type mismatch in struct.get, expected [ref 1] but got [ref 0]
+  struct.get 1 0
+  ^^^^^^^^^^
+;;; STDERR ;;)

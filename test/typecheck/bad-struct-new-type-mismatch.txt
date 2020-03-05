@@ -1,0 +1,14 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-gc
+(type (struct (mut i32)))
+
+(func
+  f32.const 0
+  struct.new 0
+  drop)
+(;; STDERR ;;;
+out/test/typecheck/bad-struct-new-type-mismatch.txt:8:3: error: type mismatch in struct.new, expected [i32] but got [f32]
+  struct.new 0
+  ^^^^^^^^^^
+;;; STDERR ;;)

@@ -82,6 +82,18 @@ struct TypeVar {
   operator Type() const;
   operator Type::Enum() const;
 
+  friend bool operator==(TypeVar lhs, TypeVar rhs) { return lhs.type == rhs.type; }
+  friend bool operator==(TypeVar lhs, Type rhs) { return lhs.type == rhs; }
+  friend bool operator==(Type lhs, TypeVar rhs) { return lhs == rhs.type; }
+  friend bool operator==(TypeVar lhs, Type::Enum rhs) { return lhs.type == rhs; }
+  friend bool operator==(Type::Enum lhs, TypeVar rhs) { return lhs == rhs.type; }
+
+  friend bool operator!=(TypeVar lhs, TypeVar rhs) { return lhs.type != rhs.type; }
+  friend bool operator!=(TypeVar lhs, Type rhs) { return lhs.type != rhs; }
+  friend bool operator!=(Type lhs, TypeVar rhs) { return lhs != rhs.type; }
+  friend bool operator!=(TypeVar lhs, Type::Enum rhs) { return lhs.type != rhs; }
+  friend bool operator!=(Type::Enum lhs, TypeVar rhs) { return lhs != rhs.type; }
+
   Type type = Type::Void;
   Var var;
 };

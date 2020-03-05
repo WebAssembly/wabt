@@ -1,0 +1,34 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-gc
+(type (struct (mut i32)))
+(type (struct (mut i64)))
+
+;; param1: not reference
+(func
+  f32.const 0
+  i32.const 0
+  struct.set 0 0)
+
+;; param1: wrong reference
+(func (param (ref 1))
+  local.get 0
+  i32.const 0
+  struct.set 0 0)
+
+;; param2: wrong field type
+(func (param (ref 0))
+  local.get 0
+  i64.const 0
+  struct.set 0 0)
+(;; STDERR ;;;
+out/test/typecheck/bad-struct-set-type-mismatch.txt:11:3: error: type mismatch in struct.set, expected [ref 0, i32] but got [f32, i32]
+  struct.set 0 0)
+  ^^^^^^^^^^
+out/test/typecheck/bad-struct-set-type-mismatch.txt:17:3: error: type mismatch in struct.set, expected [ref 0, i32] but got [ref 1, i32]
+  struct.set 0 0)
+  ^^^^^^^^^^
+out/test/typecheck/bad-struct-set-type-mismatch.txt:23:3: error: type mismatch in struct.set, expected [ref 0, i32] but got [ref 0, i64]
+  struct.set 0 0)
+  ^^^^^^^^^^
+;;; STDERR ;;)

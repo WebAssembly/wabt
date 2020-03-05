@@ -30,7 +30,13 @@ std::string TypesToString(const TypeVector& types,
   }
 
   for (size_t i = 0; i < types.size(); ++i) {
-    result += types[i].GetName();
+    auto&& type = types[i];
+    if (type.IsRefT()) {
+      // TODO: Use more than type index (type name, struct/array, fields, etc.)
+      result += "ref " + std::to_string(type.GetRefTIndex());
+    } else {
+      result += types[i].GetName();
+    }
     if (i < types.size() - 1) {
       result += ", ";
     }
@@ -166,6 +172,12 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 }
 
 static bool IsSubtype(Type sub, Type super) {
+  if (sub.IsRefT() && super.IsRefT()) {
+    // For now just check that they have the same type index.
+    // TODO: Handle various subtyping.
+    return sub.GetRefTIndex() == super.GetRefTIndex();
+  }
+
   if (super == sub) {
     return true;
   }

@@ -300,7 +300,7 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   uint32_t type = 0;
   CHECK_RESULT(ReadS32Leb128(&type, desc));
-  if (static_cast<int32_t>(type) == Type::RefT) {
+  if (Type::IsRefT(type)) {
     Index index;
     CHECK_RESULT(ReadS32Leb128(&index, "type index"));
     *out_value = Type::MakeRefT(index);

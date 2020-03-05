@@ -1,0 +1,14 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-gc
+(type (struct i32))
+
+(func (param (ref 0))
+  local.get 0
+  i32.const 0
+  struct.set 0 0)
+(;; STDERR ;;;
+out/test/typecheck/bad-struct-set-const.txt:9:3: error: can't struct.set on immutable field at index 0.
+  struct.set 0 0)
+  ^^^^^^^^^^
+;;; STDERR ;;)

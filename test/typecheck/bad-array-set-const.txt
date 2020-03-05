@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-gc
+(type (array i32))
+
+(func (param (ref 0))
+  local.get 0
+  i32.const 0
+  i32.const 0
+  array.set 0)
+(;; STDERR ;;;
+out/test/typecheck/bad-array-set-const.txt:10:3: error: can't array.set on immutable array
+  array.set 0)
+  ^^^^^^^^^
+;;; STDERR ;;)
