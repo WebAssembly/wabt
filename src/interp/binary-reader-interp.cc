@@ -20,6 +20,7 @@
 #include <set>
 
 #include "src/binary-reader-nop.h"
+#include "src/cast.h"
 #include "src/feature.h"
 #include "src/interp/interp.h"
 #include "src/shared-validator.h"
@@ -83,6 +84,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                     Type* param_types,
                     Index result_count,
                     Type* result_types) override;
+  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
 
   Result OnImportFunc(Index import_index,
                       string_view module_name,
@@ -262,7 +264,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                             Index* out_drop_count,
                             Index* out_keep_count);
   Result GetReturnDropKeepCount(Index* out_drop_count, Index* out_keep_count);
-  Result GetReturnCallDropKeepCount(const FuncType&,
+  Result GetReturnCallDropKeepCount(const FuncTypeEntry&,
                                     Index keep_extra,
                                     Index* out_drop_count,
                                     Index* out_keep_count);
@@ -380,10 +382,11 @@ Result BinaryReaderInterp::GetReturnDropKeepCount(Index* out_drop_count,
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::GetReturnCallDropKeepCount(const FuncType& func_type,
-                                                      Index keep_extra,
-                                                      Index* out_drop_count,
-                                                      Index* out_keep_count) {
+Result BinaryReaderInterp::GetReturnCallDropKeepCount(
+    const FuncTypeEntry& func_type,
+    Index keep_extra,
+    Index* out_drop_count,
+    Index* out_keep_count) {
   Index keep_count = static_cast<Index>(func_type.params.size()) + keep_extra;
   CHECK_RESULT(GetDropCount(keep_count, 0, out_drop_count));
   *out_drop_count += validator_.GetLocalCount();
@@ -429,7 +432,7 @@ Result BinaryReaderInterp::EndModule() {
 }
 
 Result BinaryReaderInterp::OnTypeCount(Index count) {
-  module_.func_types.reserve(count);
+  module_.types.reserve(count);
   return Result::Ok;
 }
 
@@ -440,8 +443,23 @@ Result BinaryReaderInterp::OnFuncType(Index index,
                                       Type* result_types) {
   CHECK_RESULT(validator_.OnFuncType(loc, param_count, param_types,
                                      result_count, result_types));
-  module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
-                                        ToInterp(result_count, result_types)));
+  module_.types.push_back(TypeDesc{
+      MakeUnique<FuncTypeEntry>(ToInterp(param_count, param_types),
+                                ToInterp(result_count, result_types))});
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructType(Index index,
+                                        Index field_count,
+                                        TypeMut* fields) {
+  CHECK_RESULT(validator_.OnStructType(loc, field_count, fields));
+  ValueTypes types;
+  Mutabilities muts;
+  for (Index i = 0; i < field_count; ++i) {
+    types.push_back(fields[i].type);
+    muts.push_back(ToMutability(fields[i].mutable_));
+  }
+  module_.types.push_back(TypeDesc{MakeUnique<StructTypeEntry>(types, muts)});
   return Result::Ok;
 }
 
@@ -451,7 +469,9 @@ Result BinaryReaderInterp::OnImportFunc(Index import_index,
                                         Index func_index,
                                         Index sig_index) {
   CHECK_RESULT(validator_.OnFunction(loc, Var(sig_index)));
-  FuncType& func_type = module_.func_types[sig_index];
+  FuncTypeEntry& func_type_entry =
+      *cast<FuncTypeEntry>(module_.types[sig_index].type.get());
+  FuncType func_type{func_type_entry};
   module_.imports.push_back(ImportDesc{ImportType(
       module_name.to_string(), field_name.to_string(), func_type.Clone())});
   func_types_.push_back(func_type);
@@ -506,7 +526,9 @@ Result BinaryReaderInterp::OnFunctionCount(Index count) {
 
 Result BinaryReaderInterp::OnFunction(Index index, Index sig_index) {
   CHECK_RESULT(validator_.OnFunction(loc, Var(sig_index)));
-  FuncType& func_type = module_.func_types[sig_index];
+  FuncTypeEntry& func_type_entry =
+      *cast<FuncTypeEntry>(module_.types[sig_index].type.get());
+  FuncType func_type{func_type_entry};
   module_.funcs.push_back(FuncDesc{func_type, {}, 0});
   func_types_.push_back(func_type);
   return Result::Ok;
@@ -1054,7 +1076,8 @@ Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
 }
 
 Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
-  FuncType& func_type = func_types_[func_index];
+  // TODO: need to validate the index here.
+  FuncTypeEntry& func_type = func_types_[func_index].entry;
 
   Index drop_count, keep_count;
   CHECK_RESULT(
@@ -1076,7 +1099,9 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
 
 Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
                                                     Index table_index) {
-  FuncType& func_type = module_.func_types[sig_index];
+  // TODO: need to validate the index here.
+  FuncTypeEntry& func_type =
+      *cast<FuncTypeEntry>(module_.types[sig_index].type.get());
 
   Index drop_count, keep_count;
   // +1 to include the index of the function.

@@ -32,6 +32,27 @@ inline bool operator!=(Ref lhs, Ref rhs) {
   return lhs.index != rhs.index;
 }
 
+//// TypeEntry ////
+inline TypeEntry::TypeEntry(TypeEntryKind kind) : kind(kind) {}
+
+//// FuncTypeEntry ////
+// static
+inline bool FuncTypeEntry::classof(const TypeEntry* entry) {
+  return entry->kind == skind;
+}
+
+inline FuncTypeEntry::FuncTypeEntry(ValueTypes params, ValueTypes results)
+    : TypeEntry(skind), params(params), results(results) {}
+
+//// StructTypeEntry ////
+// static
+inline bool StructTypeEntry::classof(const TypeEntry* entry) {
+  return entry->kind == skind;
+}
+
+inline StructTypeEntry::StructTypeEntry(ValueTypes types, Mutabilities muts)
+    : TypeEntry(skind), types(types), muts(muts) {}
+
 //// ExternType ////
 inline ExternType::ExternType(ExternKind kind) : kind(kind) {}
 
@@ -41,8 +62,11 @@ inline bool FuncType::classof(const ExternType* type) {
   return type->kind == skind;
 }
 
+inline FuncType::FuncType(const FuncTypeEntry& entry)
+    : ExternType(ExternKind::Func), entry(entry) {}
+
 inline FuncType::FuncType(ValueTypes params, ValueTypes results)
-    : ExternType(ExternKind::Func), params(params), results(results) {}
+    : ExternType(ExternKind::Func), entry(params, results) {}
 
 //// TableType ////
 // static
@@ -119,6 +143,20 @@ inline ExportType::ExportType(const ExportType& other)
 inline ExportType& ExportType::operator=(const ExportType& other) {
   if (this != &other) {
     name = other.name;
+    type = other.type->Clone();
+  }
+  return *this;
+}
+
+//// TypeDesc ////
+
+inline TypeDesc::TypeDesc(std::unique_ptr<TypeEntry> type)
+    : type(std::move(type)) {}
+
+inline TypeDesc::TypeDesc(const TypeDesc& desc) : type(desc.type->Clone()) {}
+
+inline TypeDesc& TypeDesc::operator=(const TypeDesc& other) {
+  if (this != &other) {
     type = other.type->Clone();
   }
   return *this;

@@ -119,7 +119,7 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
       continue;
     }
     auto* func_type = cast<FuncType>(export_.type.type.get());
-    if (func_type->params.empty()) {
+    if (func_type->entry.params.empty()) {
       if (s_trace_stream) {
         s_trace_stream->Writef(">>> running export \"%s\":\n",
                                export_.type.name.c_str());

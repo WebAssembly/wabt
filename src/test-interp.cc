@@ -93,7 +93,7 @@ TEST_F(InterpTest, MVP) {
       0x65, 0x6c, 0x6c, 0x6f,
   });
 
-  EXPECT_EQ(3u, module_desc_.func_types.size());
+  EXPECT_EQ(3u, module_desc_.types.size());
   EXPECT_EQ(1u, module_desc_.imports.size());
   EXPECT_EQ(2u, module_desc_.funcs.size());
   EXPECT_EQ(1u, module_desc_.tables.size());

@@ -1329,7 +1329,7 @@ ActionResult CommandRunner::RunAction(int line_number,
       auto* func = cast<interp::Func>(extern_.get());
       func->Call(store_, action->args, result.values, &result.trap,
                  s_trace_stream);
-      result.types = func->type().results;
+      result.types = func->type().entry.results;
       if (verbose == RunVerbosity::Verbose) {
         WriteCall(s_stdout_stream.get(), action->field_name, func->type(),
                   action->args, result.values, result.trap);

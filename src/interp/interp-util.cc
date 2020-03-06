@@ -110,12 +110,12 @@ void WriteCall(Stream* stream,
                const Values& results,
                const Trap::Ptr& trap) {
   stream->Writef(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(name));
-  WriteValues(stream, func_type.params, params);
+  WriteValues(stream, func_type.entry.params, params);
   stream->Writef(") =>");
   if (!trap) {
     if (!results.empty()) {
       stream->Writef(" ");
-      WriteValues(stream, func_type.results, results);
+      WriteValues(stream, func_type.entry.results, results);
     }
     stream->Writef("\n");
   } else {

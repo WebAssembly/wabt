@@ -108,8 +108,8 @@ struct wasm_functype_t : wasm_externtype_t {
         results(*results) {}
 
   wasm_functype_t(FuncType ft) : wasm_externtype_t{MakeUnique<FuncType>(ft)} {
-    FromWabtValueTypes(ft.params, &params);
-    FromWabtValueTypes(ft.results, &results);
+    FromWabtValueTypes(ft.entry.params, &params);
+    FromWabtValueTypes(ft.entry.results, &results);
   }
 
   ~wasm_functype_t() {
@@ -531,7 +531,7 @@ static void print_sig(const FuncType& sig) {
 #ifndef NDEBUG
   fprintf(stderr, "(");
   bool first = true;
-  for (auto Type : sig.params) {
+  for (auto Type : sig.entry.params) {
     if (!first) {
       fprintf(stderr, ", ");
     }
@@ -540,7 +540,7 @@ static void print_sig(const FuncType& sig) {
   }
   fprintf(stderr, ") -> (");
   first = true;
-  for (auto Type : sig.results) {
+  for (auto Type : sig.entry.results) {
     if (!first) {
       fprintf(stderr, ", ");
     }
@@ -735,7 +735,7 @@ own wasm_func_t* wasm_func_new(wasm_store_t* store,
     wasm_val_vec_t params, results;
     wasm_val_vec_new_uninitialized(&params, wabt_params.size());
     wasm_val_vec_new_uninitialized(&results, wabt_results.size());
-    FromWabtValues(store->I, params.data, wabt_type.params, wabt_params);
+    FromWabtValues(store->I, params.data, wabt_type.entry.params, wabt_params);
     auto trap = callback(params.data, results.data);
     wasm_val_vec_delete(&params);
     if (trap) {
@@ -764,7 +764,7 @@ own wasm_func_t* wasm_func_new_with_env(wasm_store_t* store,
     wasm_val_vec_t params, results;
     wasm_val_vec_new_uninitialized(&params, wabt_params.size());
     wasm_val_vec_new_uninitialized(&results, wabt_results.size());
-    FromWabtValues(store->I, params.data, wabt_type.params, wabt_params);
+    FromWabtValues(store->I, params.data, wabt_type.entry.params, wabt_params);
     auto trap = callback(env, params.data, results.data);
     wasm_val_vec_delete(&params);
     if (trap) {
@@ -789,11 +789,11 @@ own wasm_functype_t* wasm_func_type(const wasm_func_t* func) {
 }
 
 size_t wasm_func_result_arity(const wasm_func_t* func) {
-  return func->As<Func>()->type().results.size();
+  return func->As<Func>()->type().entry.results.size();
 }
 
 size_t wasm_func_param_arity(const wasm_func_t* func) {
-  return func->As<Func>()->type().params.size();
+  return func->As<Func>()->type().entry.params.size();
 }
 
 own wasm_trap_t* wasm_func_call(const wasm_func_t* f,
@@ -803,14 +803,14 @@ own wasm_trap_t* wasm_func_call(const wasm_func_t* f,
   // TRACE("%d", f->index);
 
   auto&& func_type = f->As<Func>()->type();
-  Values wabt_args = ToWabtValues(args, func_type.params.size());
+  Values wabt_args = ToWabtValues(args, func_type.entry.params.size());
   Values wabt_results;
   Trap::Ptr trap;
   if (Failed(
           f->As<Func>()->Call(*f->I.store(), wabt_args, wabt_results, &trap))) {
     return new wasm_trap_t{trap};
   }
-  FromWabtValues(*f->I.store(), results, func_type.results, wabt_results);
+  FromWabtValues(*f->I.store(), results, func_type.entry.results, wabt_results);
   return nullptr;
 }
 

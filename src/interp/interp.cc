@@ -51,6 +51,40 @@ const char* GetName(ObjectKind kind) {
 // static
 const Ref Ref::Null{0};
 
+//// FuncTypeEntry ////
+std::unique_ptr<TypeEntry> FuncTypeEntry::Clone() const {
+  return MakeUnique<FuncTypeEntry>(*this);
+}
+
+Result Match(const FuncTypeEntry& expected,
+             const FuncTypeEntry& actual,
+             std::string* out_msg) {
+  if (expected.params != actual.params || expected.results != actual.results) {
+    if (out_msg) {
+      *out_msg = "import signature mismatch";
+    }
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+//// StructTypeEntry ////
+std::unique_ptr<TypeEntry> StructTypeEntry::Clone() const {
+  return MakeUnique<StructTypeEntry>(*this);
+}
+
+Result Match(const StructTypeEntry& expected,
+             const StructTypeEntry& actual,
+             std::string* out_msg) {
+  if (expected.types != actual.types || expected.muts != actual.muts) {
+    if (out_msg) {
+      *out_msg = "struct type mismatch";
+    }
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
 //// Limits ////
 Result Match(const Limits& expected,
              const Limits& actual,
@@ -87,13 +121,7 @@ std::unique_ptr<ExternType> FuncType::Clone() const {
 Result Match(const FuncType& expected,
              const FuncType& actual,
              std::string* out_msg) {
-  if (expected.params != actual.params || expected.results != actual.results) {
-    if (out_msg) {
-      *out_msg = "import signature mismatch";
-    }
-    return Result::Error;
-  }
-  return Result::Ok;
+  return Match(expected.entry, actual.entry, out_msg);
 }
 
 //// TableType ////
@@ -180,10 +208,10 @@ bool CanGrow(const Limits& limits, u32 old_size, u32 delta, u32* new_size) {
 //// FuncDesc ////
 
 ValueType FuncDesc::GetLocalType(Index index) const {
-  if (index < type.params.size()) {
-    return type.params[index];
+  if (index < type.entry.params.size()) {
+    return type.entry.params[index];
   }
-  index -= type.params.size();
+  index -= type.entry.params.size();
 
   auto iter = std::lower_bound(
       locals.begin(), locals.end(), index + 1,
@@ -391,8 +419,8 @@ Result DefinedFunc::DoCall(Thread& thread,
                            const Values& params,
                            Values& results,
                            Trap::Ptr* out_trap) {
-  assert(params.size() == type_.params.size());
-  thread.PushValues(type_.params, params);
+  assert(params.size() == type_.entry.params.size());
+  thread.PushValues(type_.entry.params, params);
   RunResult result = thread.PushCall(*this, out_trap);
   if (result == RunResult::Trap) {
     return Result::Error;
@@ -401,7 +429,7 @@ Result DefinedFunc::DoCall(Thread& thread,
   if (result == RunResult::Trap) {
     return Result::Error;
   }
-  thread.PopValues(type_.results, &results);
+  thread.PopValues(type_.entry.results, &results);
   return Result::Ok;
 }
 
@@ -1098,14 +1126,15 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::CallIndirect:
     case O::ReturnCallIndirect: {
       Table::Ptr table{store_, inst_->tables()[instr.imm_u32x2.fst]};
-      auto&& func_type = mod_->desc().func_types[instr.imm_u32x2.snd];
+      auto&& func_type = *cast<FuncTypeEntry>(
+          mod_->desc().types[instr.imm_u32x2.snd].type.get());
       auto entry = Pop<u32>();
       TRAP_IF(entry >= table->elements().size(), "undefined table index");
       auto new_func_ref = table->elements()[entry];
       TRAP_IF(new_func_ref == Ref::Null, "uninitialized table element");
       Func::Ptr new_func{store_, new_func_ref};
       TRAP_IF(
-          Failed(Match(new_func->type(), func_type, nullptr)),
+          Failed(Match(new_func->type().entry, func_type, nullptr)),
           "indirect call signature mismatch");  // TODO: don't use "signature"
       if (instr.op == O::ReturnCallIndirect) {
         return DoReturnCall(new_func, out_trap);
@@ -1715,18 +1744,18 @@ RunResult Thread::DoCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
     auto& func_type = host_func->type();
 
     Values params;
-    PopValues(func_type.params, &params);
+    PopValues(func_type.entry.params, &params);
     if (PushCall(*host_func, out_trap) == RunResult::Trap) {
       return RunResult::Trap;
     }
 
-    Values results(func_type.results.size());
+    Values results(func_type.entry.results.size());
     if (Failed(host_func->Call(*this, params, results, out_trap))) {
       return RunResult::Trap;
     }
 
     PopCall();
-    PushValues(func_type.results, results);
+    PushValues(func_type.entry.results, results);
   } else {
     if (PushCall(*cast<DefinedFunc>(func.get()), out_trap) == RunResult::Trap) {
       return RunResult::Ok;
@@ -2250,9 +2279,9 @@ ValueType Thread::TraceSource::GetLocalType(Index stack_slot) {
   // local1 can be accessed with stack_slot 4, and param1 can be accessed with
   // stack_slot 6. The formula below takes these values into account to convert
   // the stack_slot into a local index.
-  Index local_index =
-      (thread_->values_.size() - frame.values + func->type().params.size()) -
-      stack_slot;
+  Index local_index = (thread_->values_.size() - frame.values +
+                       func->type().entry.params.size()) -
+                      stack_slot;
   return func->desc().GetLocalType(local_index);
 }
 
