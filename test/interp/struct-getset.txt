@@ -1,0 +1,34 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-gc
+(type $pair (struct (mut i32) i32))
+
+(func $inc (param (ref $pair))
+  local.get 0
+  i32.const 1
+  local.get 0
+  struct.get $pair 0
+  i32.add
+  struct.set $pair 0)
+
+(func (export "test") (result i32)
+  (local $x (ref $pair))
+
+  i32.const 1
+  i32.const 2
+  struct.new $pair
+  local.set $x  ;; $x = {1, 2}
+
+  local.get $x
+  call $inc     ;; $x = {2, 2}
+
+  local.get $x
+  call $inc     ;; $x = {3, 2}
+
+  local.get $x
+  struct.get $pair 0
+  local.get $x
+  struct.get $pair 1
+  i32.add)      ;; 3 + 2 => 5
+(;; STDOUT ;;;
+test() => i32:5
+;;; STDOUT ;;)

@@ -1,0 +1,39 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-gc
+(type $list (struct (mut i32) (mut (ref $list))))
+
+(func $circle (result (ref $list))
+  (local $x (ref $list))
+  i32.const 1
+  ref.null
+  struct.new $list
+
+  local.tee $x       ;; $x = {1, null}
+  local.get $x
+  struct.set $list 1
+  local.get $x)      ;; $x = {1, $x}
+
+(func $cdr (param (ref $list)) (result (ref $list))
+  local.get 0
+  struct.get $list 1)
+
+(func (export "test") (result i32)
+  (local $x (ref $list))
+
+  call $circle
+  local.tee $x        ;; $x = {1, $x}
+
+  call $cdr
+  call $cdr
+  call $cdr
+  call $cdr
+
+  ;; Top of stack should still be $x
+  i32.const 2
+  struct.set $list 0  ;; $x = {2, $x}
+
+  local.get $x
+  struct.get $list 0)
+(;; STDOUT ;;;
+test() => i32:2
+;;; STDOUT ;;)

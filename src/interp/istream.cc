@@ -445,6 +445,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::LocalTee:
     case Opcode::MemoryGrow:
     case Opcode::TableGet:
+    case Opcode::StructGet:
       // Index immediate, 1 operand.
       instr.kind = InstrKind::Imm_Index_Op_1;
       instr.imm_u32 = ReadAt<u32>(offset);
@@ -452,6 +453,7 @@ Instr Istream::Read(Offset* offset) const {
 
     case Opcode::TableSet:
     case Opcode::TableGrow:
+    case Opcode::StructSet:
       // Index immediate, 2 operands.
       instr.kind = InstrKind::Imm_Index_Op_2;
       instr.imm_u32 = ReadAt<u32>(offset);
@@ -690,8 +692,6 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::Throw:
     case Opcode::Try:
     case Opcode::ReturnCall:
-    case Opcode::StructGet:
-    case Opcode::StructSet:
     case Opcode::ArrayNew:
     case Opcode::ArrayGet:
     case Opcode::ArraySet:

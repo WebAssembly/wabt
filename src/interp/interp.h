@@ -1134,6 +1134,8 @@ class Thread : public Object {
   RunResult DoStore(Instr, Trap::Ptr* out_trap);
 
   RunResult DoStructNew(const StructTypeEntry&);
+  RunResult DoStructGet(Index field);
+  RunResult DoStructSet(Index field);
 
   RunResult DoMemoryInit(Instr, Trap::Ptr* out_trap);
   RunResult DoDataDrop(Instr);
@@ -1224,10 +1226,25 @@ class Struct : public Object {
 
   static Struct::Ptr New(Store&, const StructTypeEntry&, const Values&);
 
+  template <typename T>
+  Result Get(Index field, T* out) const;
+  template <typename T>
+  Result WABT_VECTORCALL Set(Index field, T);
+  Result Set(Store&, Index field, Ref);
+
+  Value UnsafeGet(Index field) const;
+  template <typename T>
+  T WABT_VECTORCALL UnsafeGet(Index field) const;
+  void UnsafeSet(Index field, Value);
+
+  const StructTypeEntry& type() const;
+
  protected:
   friend Store;
   explicit Struct(Store&, const StructTypeEntry&, const Values&);
   void Mark(Store&) override;
+
+  bool IsValidField(Index) const;
 
 
   // TODO: Store the struct's type here for now. In the future, we may want

@@ -1410,6 +1410,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::StructNew:
       return DoStructNew(
           *cast<StructTypeEntry>(mod_->desc().types[instr.imm_u32].type.get()));
+    case O::StructGet: return DoStructGet(instr.imm_u32);
+    case O::StructSet: return DoStructSet(instr.imm_u32);
 
     case O::I32TruncSatF32S: return DoUnop(IntTruncSat<s32, f32>);
     case O::I32TruncSatF32U: return DoUnop(IntTruncSat<u32, f32>);
@@ -1730,8 +1732,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::BrOnExn:
     case O::InterpData:
     case O::Invalid:
-    case O::StructGet:
-    case O::StructSet:
     case O::ArrayNew:
     case O::ArrayGet:
     case O::ArraySet:
@@ -1860,6 +1860,21 @@ RunResult Thread::DoStructNew(const StructTypeEntry& entry) {
   PopValues(entry.types, &values);
   assert(values.size() == entry.types.size());
   Push(Struct::New(store_, entry, values).ref());
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoStructGet(Index field) {
+  auto ref = Pop<Ref>();
+  Struct::Ptr struct_ = store_.UnsafeGet<Struct>(ref);
+  Push(struct_->UnsafeGet(field));
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoStructSet(Index field) {
+  auto value = Pop();
+  auto ref = Pop<Ref>();
+  Struct::Ptr struct_ = store_.UnsafeGet<Struct>(ref);
+  struct_->UnsafeSet(field, value);
   return RunResult::Ok;
 }
 
@@ -2256,6 +2271,7 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
     case ValueType::Funcref: reftype = "funcref"; break;
     case ValueType::Exnref:  reftype = "exnref"; break;
     case ValueType::Anyref:  reftype = "anyref"; break;
+    case ValueType::RefT:    reftype = "ref $T"; break;  // TODO: type index
 
     default:
       WABT_UNREACHABLE;
@@ -2316,6 +2332,15 @@ void Struct::Mark(Store& store) {
       store.Mark(values_[i].Get<Ref>());
     }
   }
+}
+
+Result Struct::Set(Store& store, Index field, Ref ref) {
+  if (!(IsValidField(field) && store.HasValueType(ref, type_.types[field]))) {
+    return Result::Error;
+  }
+
+  values_[field].Set(ref);
+  return Result::Ok;
 }
 
 }  // namespace interp

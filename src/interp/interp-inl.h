@@ -976,5 +976,51 @@ inline Struct::Ptr Struct::New(Store& store,
   return store.Alloc<Struct>(store, entry, values);
 }
 
+template <typename T>
+inline Result Struct::Get(Index field, T* out) const {
+  if (!(IsValidField(field) && HasType<T>(type_.types[field]))) {
+    return Result::Error;
+  }
+
+  *out = values_[field].Get<T>();
+  return Result::Ok;
+}
+
+template <typename T>
+inline Result WABT_VECTORCALL Struct::Set(Index field, T val) {
+  if (!(IsValidField(field) && HasType<T>(type_.types[field]) &&
+        type_.muts[field] == Mutability::Var)) {
+    return Result::Error;
+  }
+
+  values_[field].Set<T>(val);
+  return Result::Ok;
+}
+
+inline Value Struct::UnsafeGet(Index field) const {
+  assert(IsValidField(field));
+  return values_[field];
+}
+
+template <typename T>
+inline T WABT_VECTORCALL Struct::UnsafeGet(Index field) const {
+  assert(IsValidField(field));
+  RequireType<T>(type_.types[field]);
+  return values_[field].Get<T>();
+}
+
+inline void Struct::UnsafeSet(Index field, Value val) {
+  assert(IsValidField(field));
+  values_[field] = val;
+}
+
+inline const StructTypeEntry& Struct::type() const {
+  return type_;
+}
+
+inline bool Struct::IsValidField(Index field) const {
+  return field < values_.size();
+}
+
 }  // namespace interp
 }  // namespace wabt
