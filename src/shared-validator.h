@@ -58,11 +58,11 @@ class SharedValidator {
 
   Result EndModule();
 
-  Result OnType(const Location&,
-                Index param_count,
-                const Type* param_types,
-                Index result_count,
-                const Type* result_types);
+  Result OnFuncType(const Location&,
+                    Index param_count,
+                    const Type* param_types,
+                    Index result_count,
+                    const Type* result_types);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&);

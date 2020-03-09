@@ -44,11 +44,11 @@ void SharedValidator::OnTypecheckerError(const char* msg) {
   PrintError(*expr_loc_, "%s", msg);
 }
 
-Result SharedValidator::OnType(const Location& loc,
-                               Index param_count,
-                               const Type* param_types,
-                               Index result_count,
-                               const Type* result_types) {
+Result SharedValidator::OnFuncType(const Location& loc,
+                                   Index param_count,
+                                   const Type* param_types,
+                                   Index result_count,
+                                   const Type* result_types) {
   types_.push_back(FuncType{ToTypeVector(param_count, param_types),
                             ToTypeVector(result_count, result_types)});
   return Result::Ok;

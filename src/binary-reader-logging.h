@@ -42,11 +42,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginTypeSection(Offset size) override;
   Result OnTypeCount(Index count) override;
-  Result OnType(Index index,
-                Index param_count,
-                Type* param_types,
-                Index result_count,
-                Type* result_types) override;
+  Result OnFuncType(Index index,
+                    Index param_count,
+                    Type* param_types,
+                    Index result_count,
+                    Type* result_types) override;
+  Result OnStructType(Index index) override;
   Result EndTypeSection() override;
 
   Result BeginImportSection(Offset size) override;

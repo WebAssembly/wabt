@@ -59,6 +59,7 @@ std::string TypedValueToString(const TypedValue& tv) {
       return StringPrintf("anyref:%" PRIzd, tv.value.Get<Ref>().index);
 
     case Type::Func:
+    case Type::Struct:
     case Type::Void:
     case Type::Any:
     case Type::I8:

@@ -82,11 +82,12 @@ class BinaryReaderDelegate {
   /* Type section */
   virtual Result BeginTypeSection(Offset size) = 0;
   virtual Result OnTypeCount(Index count) = 0;
-  virtual Result OnType(Index index,
-                        Index param_count,
-                        Type* param_types,
-                        Index result_count,
-                        Type* result_types) = 0;
+  virtual Result OnFuncType(Index index,
+                            Index param_count,
+                            Type* param_types,
+                            Index result_count,
+                            Type* result_types) = 0;
+  virtual Result OnStructType(Index index) = 0;  // TODO
   virtual Result EndTypeSection() = 0;
 
   /* Import section */

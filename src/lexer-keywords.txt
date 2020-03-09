@@ -482,6 +482,7 @@ return, TokenType::Return, Opcode::Return
 select, TokenType::Select, Opcode::Select
 shared, TokenType::Shared
 start, TokenType::Start
+struct, TokenType::Struct
 table.copy, TokenType::TableCopy, Opcode::TableCopy
 table.fill, TokenType::TableFill, Opcode::TableFill
 table.get, TokenType::TableGet, Opcode::TableGet

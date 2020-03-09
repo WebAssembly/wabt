@@ -52,11 +52,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   bool OnError(const Error&) override;
 
   Result OnTypeCount(Index count) override;
-  Result OnType(Index index,
-                Index param_count,
-                Type* param_types,
-                Index result_count,
-                Type* result_types) override;
+  Result OnFuncType(Index index,
+                    Index param_count,
+                    Type* param_types,
+                    Index result_count,
+                    Type* result_types) override;
+  Result OnStructType(Index index) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -384,15 +385,24 @@ Result BinaryReaderIR::OnTypeCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnType(Index index,
-                              Index param_count,
-                              Type* param_types,
-                              Index result_count,
-                              Type* result_types) {
+Result BinaryReaderIR::OnFuncType(Index index,
+                                  Index param_count,
+                                  Type* param_types,
+                                  Index result_count,
+                                  Type* result_types) {
   auto field = MakeUnique<TypeModuleField>(GetLocation());
-  FuncType& func_type = *cast<FuncType>(field->type.get());
-  func_type.sig.param_types.assign(param_types, param_types + param_count);
-  func_type.sig.result_types.assign(result_types, result_types + result_count);
+  auto func_type = MakeUnique<FuncType>();
+  func_type->sig.param_types.assign(param_types, param_types + param_count);
+  func_type->sig.result_types.assign(result_types, result_types + result_count);
+  field->type = std::move(func_type);
+  module_->AppendField(std::move(field));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnStructType(Index index) {
+  auto field = MakeUnique<TypeModuleField>(GetLocation());
+  auto struct_type = MakeUnique<StructType>();
+  field->type = std::move(struct_type);
   module_->AppendField(std::move(field));
   return Result::Ok;
 }

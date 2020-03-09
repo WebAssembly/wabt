@@ -880,21 +880,33 @@ Result BinaryWriter::WriteModule() {
     BeginKnownSection(BinarySection::Type);
     WriteU32Leb128(stream_, module_->types.size(), "num types");
     for (size_t i = 0; i < module_->types.size(); ++i) {
-      const FuncType* func_type = cast<FuncType>(module_->types[i]);
-      const FuncSignature* sig = &func_type->sig;
-      WriteHeader("type", i);
-      WriteType(stream_, Type::Func);
+      const TypeEntry* type = module_->types[i];
+      switch (type->kind()) {
+        case TypeEntryKind::Func: {
+          const FuncType* func_type = cast<FuncType>(type);
+          const FuncSignature* sig = &func_type->sig;
+          WriteHeader("type", i);  // TODO: switch to "func type"?
+          WriteType(stream_, Type::Func);
 
-      Index num_params = sig->param_types.size();
-      Index num_results = sig->result_types.size();
-      WriteU32Leb128(stream_, num_params, "num params");
-      for (size_t j = 0; j < num_params; ++j) {
-        WriteType(stream_, sig->param_types[j]);
-      }
+          Index num_params = sig->param_types.size();
+          Index num_results = sig->result_types.size();
+          WriteU32Leb128(stream_, num_params, "num params");
+          for (size_t j = 0; j < num_params; ++j) {
+            WriteType(stream_, sig->param_types[j]);
+          }
 
-      WriteU32Leb128(stream_, num_results, "num results");
-      for (size_t j = 0; j < num_results; ++j) {
-        WriteType(stream_, sig->result_types[j]);
+          WriteU32Leb128(stream_, num_results, "num results");
+          for (size_t j = 0; j < num_results; ++j) {
+            WriteType(stream_, sig->result_types[j]);
+          }
+          break;
+        }
+
+        case TypeEntryKind::Struct:
+          WriteHeader("struct type", i);
+          WriteType(stream_, Type::Struct);
+          // TODO
+          break;
       }
     }
     EndSection();
