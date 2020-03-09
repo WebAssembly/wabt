@@ -90,6 +90,7 @@ enum class ObjectKind {
   Module,
   Instance,
   Thread,
+  Struct,
 };
 
 const char* GetName(Mutability);
@@ -1132,6 +1133,8 @@ class Thread : public Object {
   template <typename T, typename V = T>
   RunResult DoStore(Instr, Trap::Ptr* out_trap);
 
+  RunResult DoStructNew(const StructTypeEntry&);
+
   RunResult DoMemoryInit(Instr, Trap::Ptr* out_trap);
   RunResult DoDataDrop(Instr);
   RunResult DoMemoryCopy(Instr, Trap::Ptr* out_trap);
@@ -1210,6 +1213,29 @@ struct Thread::TraceSource : Istream::TraceSource {
   ValueType GetTableElementType(Index);
 
   Thread* thread_;
+};
+
+class Struct : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Struct;
+  static const char* GetTypeName() { return "Struct"; }
+  using Ptr = RefPtr<Struct>;
+
+  static Struct::Ptr New(Store&, const StructTypeEntry&, const Values&);
+
+ protected:
+  friend Store;
+  explicit Struct(Store&, const StructTypeEntry&, const Values&);
+  void Mark(Store&) override;
+
+
+  // TODO: Store the struct's type here for now. In the future, we may want
+  // these to be shared, in which case there should be a StructType Object as
+  // well.
+  StructTypeEntry type_;
+  // TODO: Pack values into a single memory allocation.
+  Values values_;
 };
 
 }  // namespace interp

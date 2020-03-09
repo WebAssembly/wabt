@@ -1,3 +1,11 @@
 ;;; TOOL: run-interp
 ;;; ARGS*: --enable-gc
 (type (struct i32 i32))
+
+(func (export "f") (result (ref 0))
+  i32.const 1
+  i32.const 2
+  struct.new 0)
+(;; STDOUT ;;;
+f() => ref 0
+;;; STDOUT ;;)

@@ -963,5 +963,18 @@ inline Store& Thread::store() {
   return store_;
 }
 
+//// Struct ////
+// static
+inline bool Struct::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+// static
+inline Struct::Ptr Struct::New(Store& store,
+                               const StructTypeEntry& entry,
+                               const Values& values) {
+  return store.Alloc<Struct>(store, entry, values);
+}
+
 }  // namespace interp
 }  // namespace wabt

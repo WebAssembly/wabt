@@ -192,6 +192,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnMemoryFillExpr() override;
   Result OnMemoryInitExpr(Index segment_index) override;
   Result OnMemorySizeExpr() override;
+  Result OnStructNew(Index type_index) override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr() override;
   Result OnRefIsNullExpr() override;
@@ -1371,6 +1372,12 @@ Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
   CHECK_RESULT(
       validator_.OnTableInit(loc, Var(segment_index), Var(table_index)));
   istream_.Emit(Opcode::TableInit, table_index, segment_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructNew(Index type_index) {
+  CHECK_RESULT(validator_.OnStructNew(loc, Var(type_index)));
+  istream_.Emit(Opcode::StructNew, type_index);
   return Result::Ok;
 }
 

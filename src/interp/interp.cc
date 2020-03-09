@@ -41,8 +41,9 @@ const char* GetName(ExternKind kind) {
 
 const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
-      "Null",   "Foreign", "Trap",  "DefinedFunc", "HostFunc", "Table",
-      "Memory", "Global",  "Event", "Module",      "Instance", "Thread",
+      "Null",     "Foreign", "Trap",   "DefinedFunc", "HostFunc",
+      "Table",    "Memory",  "Global", "Event",       "Module",
+      "Instance", "Thread",  "Struct",
   };
   return kNames[int(kind)];
 }
@@ -1406,6 +1407,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       break;
     }
 
+    case O::StructNew:
+      return DoStructNew(
+          *cast<StructTypeEntry>(mod_->desc().types[instr.imm_u32].type.get()));
+
     case O::I32TruncSatF32S: return DoUnop(IntTruncSat<s32, f32>);
     case O::I32TruncSatF32U: return DoUnop(IntTruncSat<u32, f32>);
     case O::I32TruncSatF64S: return DoUnop(IntTruncSat<s32, f64>);
@@ -1725,7 +1730,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::BrOnExn:
     case O::InterpData:
     case O::Invalid:
-    case O::StructNew:
     case O::StructGet:
     case O::StructSet:
     case O::ArrayNew:
@@ -1848,6 +1852,14 @@ RunResult Thread::DoConvert(Trap::Ptr* out_trap) {
 template <typename R, typename T>
 RunResult Thread::DoReinterpret() {
   Push(Bitcast<R>(Pop<T>()));
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoStructNew(const StructTypeEntry& entry) {
+  Values values;
+  PopValues(entry.types, &values);
+  assert(values.size() == entry.types.size());
+  Push(Struct::New(store_, entry, values).ref());
   return RunResult::Ok;
 }
 
@@ -2291,6 +2303,19 @@ ValueType Thread::TraceSource::GetGlobalType(Index index) {
 
 ValueType Thread::TraceSource::GetTableElementType(Index index) {
   return thread_->mod_->desc().tables[index].type.element;
+}
+
+//// Struct ////
+
+Struct::Struct(Store& store, const StructTypeEntry& type, const Values& values)
+    : Object(skind), type_(type), values_(values) {}
+
+void Struct::Mark(Store& store) {
+  for (size_t i = 0; i < type_.types.size(); ++i) {
+    if (type_.types[i].IsRef()) {
+      store.Mark(values_[i].Get<Ref>());
+    }
+  }
 }
 
 }  // namespace interp

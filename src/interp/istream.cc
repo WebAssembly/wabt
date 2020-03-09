@@ -466,6 +466,7 @@ Instr Istream::Read(Offset* offset) const {
 
     case Opcode::Call:
     case Opcode::InterpCallImport:
+    case Opcode::StructNew:
       instr.kind = InstrKind::Imm_Index_Op_N;
       instr.imm_u32 = ReadAt<u32>(offset);
       break;
@@ -689,7 +690,6 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::Throw:
     case Opcode::Try:
     case Opcode::ReturnCall:
-    case Opcode::StructNew:
     case Opcode::StructGet:
     case Opcode::StructSet:
     case Opcode::ArrayNew:
