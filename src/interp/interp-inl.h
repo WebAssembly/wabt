@@ -53,6 +53,15 @@ inline bool StructTypeEntry::classof(const TypeEntry* entry) {
 inline StructTypeEntry::StructTypeEntry(ValueTypes types, Mutabilities muts)
     : TypeEntry(skind), types(types), muts(muts) {}
 
+//// ArrayTypeEntry ////
+// static
+inline bool ArrayTypeEntry::classof(const TypeEntry* entry) {
+  return entry->kind == skind;
+}
+
+inline ArrayTypeEntry::ArrayTypeEntry(ValueType type, Mutability mut)
+    : TypeEntry(skind), type(type), mut(mut) {}
+
 //// ExternType ////
 inline ExternType::ExternType(ExternKind kind) : kind(kind) {}
 
@@ -1020,6 +1029,90 @@ inline const StructTypeEntry& Struct::type() const {
 
 inline bool Struct::IsValidField(Index field) const {
   return field < values_.size();
+}
+
+//// Array ////
+// static
+inline bool Array::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+// static
+inline Array::Ptr Array::New(Store& store,
+                             const ArrayTypeEntry& entry,
+                             Value value,
+                             Index size) {
+  return store.Alloc<Array>(store, entry, value, size);
+}
+
+inline Index Array::Len() const {
+  return values_.size();
+}
+
+inline Result Array::Get(Index index, Value* out) const {
+  if (!IsValidIndex(index)) {
+    return Result::Error;
+  }
+  *out = values_[index];
+  return Result::Ok;
+}
+
+template <typename T>
+inline Result Array::Get(Index index, T* out) const {
+  if (!(IsValidIndex(index) && HasType<T>(type_.type))) {
+    return Result::Error;
+  }
+
+  *out = values_[index].Get<T>();
+  return Result::Ok;
+}
+
+inline Result Array::Set(Index index, Value val) {
+  if (!IsValidIndex(index)) {
+    return Result::Error;
+  }
+  values_[index] = val;
+  return Result::Ok;
+}
+
+template <typename T>
+inline Result WABT_VECTORCALL Array::Set(Index index, T val) {
+  if (!(IsValidIndex(index) && HasType<T>(type_.type) &&
+        type_.mut == Mutability::Var)) {
+    return Result::Error;
+  }
+
+  values_[index].Set<T>(val);
+  return Result::Ok;
+}
+
+inline Value Array::UnsafeGet(Index index) const {
+  assert(IsValidIndex(index));
+  return values_[index];
+}
+
+template <typename T>
+inline T WABT_VECTORCALL Array::UnsafeGet(Index index) const {
+  assert(IsValidIndex(index));
+  RequireType<T>(type_.type);
+  return values_[index].Get<T>();
+}
+
+inline Result Array::UnsafeSet(Index index, Value val) {
+  if (!IsValidIndex(index)) {
+    return Result::Error;
+  }
+
+  values_[index] = val;
+  return Result::Ok;
+}
+
+inline const ArrayTypeEntry& Array::type() const {
+  return type_;
+}
+
+inline bool Array::IsValidIndex(Index index) const {
+  return index < values_.size();
 }
 
 }  // namespace interp

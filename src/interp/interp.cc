@@ -43,7 +43,7 @@ const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
       "Null",     "Foreign", "Trap",   "DefinedFunc", "HostFunc",
       "Table",    "Memory",  "Global", "Event",       "Module",
-      "Instance", "Thread",  "Struct",
+      "Instance", "Thread",  "Struct", "Array",
   };
   return kNames[int(kind)];
 }
@@ -80,6 +80,23 @@ Result Match(const StructTypeEntry& expected,
   if (expected.types != actual.types || expected.muts != actual.muts) {
     if (out_msg) {
       *out_msg = "struct type mismatch";
+    }
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+//// ArrayTypeEntry ////
+std::unique_ptr<TypeEntry> ArrayTypeEntry::Clone() const {
+  return MakeUnique<ArrayTypeEntry>(*this);
+}
+
+Result Match(const ArrayTypeEntry& expected,
+             const ArrayTypeEntry& actual,
+             std::string* out_msg) {
+  if (expected.type != actual.type || expected.mut != actual.mut) {
+    if (out_msg) {
+      *out_msg = "array type mismatch";
     }
     return Result::Error;
   }
@@ -1413,6 +1430,13 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::StructGet: return DoStructGet(instr.imm_u32);
     case O::StructSet: return DoStructSet(instr.imm_u32);
 
+    case O::ArrayNew:
+      return DoArrayNew(
+          *cast<ArrayTypeEntry>(mod_->desc().types[instr.imm_u32].type.get()));
+    case O::ArrayGet: return DoArrayGet(out_trap);
+    case O::ArraySet: return DoArraySet(out_trap);
+    case O::ArrayLen: return DoArrayLen();
+
     case O::I32TruncSatF32S: return DoUnop(IntTruncSat<s32, f32>);
     case O::I32TruncSatF32U: return DoUnop(IntTruncSat<u32, f32>);
     case O::I32TruncSatF64S: return DoUnop(IntTruncSat<s32, f64>);
@@ -1732,10 +1756,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::BrOnExn:
     case O::InterpData:
     case O::Invalid:
-    case O::ArrayNew:
-    case O::ArrayGet:
-    case O::ArraySet:
-    case O::ArrayLen:
       WABT_UNREACHABLE;
       break;
   }
@@ -1875,6 +1895,39 @@ RunResult Thread::DoStructSet(Index field) {
   auto ref = Pop<Ref>();
   Struct::Ptr struct_ = store_.UnsafeGet<Struct>(ref);
   struct_->UnsafeSet(field, value);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayNew(const ArrayTypeEntry& entry) {
+  auto size = Pop<u32>();
+  auto value = Pop();
+  Push(Array::New(store_, entry, value, size).ref());
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayGet(Trap::Ptr* out_trap) {
+  auto index = Pop<u32>();
+  auto ref = Pop<Ref>();
+  Array::Ptr array = store_.UnsafeGet<Array>(ref);
+  Value value;
+  TRAP_IF(Failed(array->Get(index, &value)), "invalid array access");
+  Push(value);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArraySet(Trap::Ptr* out_trap) {
+  auto value = Pop();
+  auto index = Pop<u32>();
+  auto ref = Pop<Ref>();
+  Array::Ptr array = store_.UnsafeGet<Array>(ref);
+  TRAP_IF(Failed(array->Set(index, value)), "invalid array access");
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayLen() {
+  auto ref = Pop<Ref>();
+  Array::Ptr array = store_.UnsafeGet<Array>(ref);
+  Push<u32>(array->Len());
   return RunResult::Ok;
 }
 
@@ -2340,6 +2393,29 @@ Result Struct::Set(Store& store, Index field, Ref ref) {
   }
 
   values_[field].Set(ref);
+  return Result::Ok;
+}
+
+//// Array ////
+
+Array::Array(Store& store, const ArrayTypeEntry& type, Value value, Index size)
+    : Object(skind), type_(type), values_(size, value) {}
+
+void Array::Mark(Store& store) {
+  if (type_.type.IsRef()) {
+    for (auto&& value : values_) {
+      store.Mark(value.Get<Ref>());
+    }
+  }
+}
+
+Result Array::Set(Store& store, Index index, Ref ref) {
+  assert(type_.type.IsRef());
+  if (!(IsValidIndex(index) && store.HasValueType(ref, type_.type))) {
+    return Result::Error;
+  }
+
+  values_[index].Set(ref);
   return Result::Ok;
 }
 

@@ -1,0 +1,11 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-gc
+(type (array f32))
+
+(func (export "f") (result (ref 0))
+  f32.const 0
+  i32.const 10
+  array.new 0)
+(;; STDOUT ;;;
+f() => ref 0
+;;; STDOUT ;;)

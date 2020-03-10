@@ -85,6 +85,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                     Index result_count,
                     Type* result_types) override;
   Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
+  Result OnArrayType(Index index, TypeMut field) override;
 
   Result OnImportFunc(Index import_index,
                       string_view module_name,
@@ -136,6 +137,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
   Result OnOpcode(Opcode Opcode) override;
+  Result OnArrayNew(Index type_index) override;
+  Result OnArrayGet(Index type_index) override;
+  Result OnArraySet(Index type_index) override;
+  Result OnArrayLen(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
@@ -463,6 +468,13 @@ Result BinaryReaderInterp::OnStructType(Index index,
     muts.push_back(ToMutability(fields[i].mutable_));
   }
   module_.types.push_back(TypeDesc{MakeUnique<StructTypeEntry>(types, muts)});
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayType(Index index, TypeMut field) {
+  CHECK_RESULT(validator_.OnArrayType(loc, field));
+  module_.types.push_back(TypeDesc{
+      MakeUnique<ArrayTypeEntry>(field.type, ToMutability(field.mutable_))});
   return Result::Ok;
 }
 
@@ -1392,6 +1404,30 @@ Result BinaryReaderInterp::OnStructGet(Index type_index, Index field_index) {
 Result BinaryReaderInterp::OnStructSet(Index type_index, Index field_index) {
   CHECK_RESULT(validator_.OnStructSet(loc, Var(type_index), Var(field_index)));
   istream_.Emit(Opcode::StructSet, field_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNew(Index type_index) {
+  CHECK_RESULT(validator_.OnArrayNew(loc, Var(type_index)));
+  istream_.Emit(Opcode::ArrayNew, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayGet(Index type_index) {
+  CHECK_RESULT(validator_.OnArrayGet(loc, Var(type_index)));
+  istream_.Emit(Opcode::ArrayGet);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArraySet(Index type_index) {
+  CHECK_RESULT(validator_.OnArraySet(loc, Var(type_index)));
+  istream_.Emit(Opcode::ArraySet);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayLen(Index type_index) {
+  CHECK_RESULT(validator_.OnArrayLen(loc, Var(type_index)));
+  istream_.Emit(Opcode::ArrayLen);
   return Result::Ok;
 }
 

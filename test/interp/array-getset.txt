@@ -1,0 +1,38 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-gc
+(type $arr (array (mut i32)))
+
+(func $init (param $x (ref $arr)) (param $n i32)
+  loop
+    local.get $x
+    local.get $n
+    i32.const 1
+    i32.sub
+    local.tee $n    ;; n--
+    local.get $n
+    array.set $arr  ;; x[n] = n
+
+    local.get $n
+    i32.const 0
+    i32.gt_s
+    br_if 0         ;; loop if n >= 0
+  end)
+
+(func (export "test") (result i32)
+  (local $x (ref $arr))
+
+  i32.const 0
+  i32.const 5
+  array.new $arr  ;; [0, 0, 0, 0, 0]
+  local.tee $x
+
+  i32.const 5
+  call $init      ;; [0, 1, 2, 3, 4]
+
+  local.get $x
+  i32.const 1
+  array.get $arr
+  local.get $x
+  i32.const 3
+  array.get $arr
+  i32.add)        ;; 1 + 3 => 4

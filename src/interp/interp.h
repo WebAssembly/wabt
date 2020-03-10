@@ -73,7 +73,7 @@ enum class Mutability { Const, Var };
 enum class EventAttr { Exception };
 using SegmentMode = SegmentKind;
 enum class ElemKind { RefNull, RefFunc };
-enum class TypeEntryKind { Func, Struct };
+enum class TypeEntryKind { Func, Struct, Array };
 
 using Mutabilities = std::vector<Mutability>;
 
@@ -91,6 +91,7 @@ enum class ObjectKind {
   Instance,
   Thread,
   Struct,
+  Array,
 };
 
 const char* GetName(Mutability);
@@ -208,6 +209,22 @@ struct StructTypeEntry : TypeEntry {
 
   ValueTypes types;
   Mutabilities muts;
+};
+
+struct ArrayTypeEntry : TypeEntry {
+  static const TypeEntryKind skind = TypeEntryKind::Array;
+  static bool classof(const TypeEntry* entry);
+
+  explicit ArrayTypeEntry(ValueType type, Mutability mut);
+
+  std::unique_ptr<TypeEntry> Clone() const override;
+
+  friend Result Match(const ArrayTypeEntry& expected,
+                      const ArrayTypeEntry& actual,
+                      std::string* out_msg);
+
+  ValueType type;
+  Mutability mut;
 };
 
 struct ExternType {
@@ -1137,6 +1154,11 @@ class Thread : public Object {
   RunResult DoStructGet(Index field);
   RunResult DoStructSet(Index field);
 
+  RunResult DoArrayNew(const ArrayTypeEntry&);
+  RunResult DoArrayGet(Trap::Ptr* out_trap);
+  RunResult DoArraySet(Trap::Ptr* out_trap);
+  RunResult DoArrayLen();
+
   RunResult DoMemoryInit(Instr, Trap::Ptr* out_trap);
   RunResult DoDataDrop(Instr);
   RunResult DoMemoryCopy(Instr, Trap::Ptr* out_trap);
@@ -1252,6 +1274,47 @@ class Struct : public Object {
   // well.
   StructTypeEntry type_;
   // TODO: Pack values into a single memory allocation.
+  Values values_;
+};
+
+class Array : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Array;
+  static const char* GetTypeName() { return "Array"; }
+  using Ptr = RefPtr<Array>;
+
+  static Array::Ptr New(Store&, const ArrayTypeEntry&, Value, Index size);
+
+  Index Len() const;
+
+  Result Get(Index, Value* out) const;
+  template <typename T>
+  Result Get(Index, T* out) const;
+  Result Set(Index, Value);
+  template <typename T>
+  Result WABT_VECTORCALL Set(Index, T);
+  Result Set(Store&, Index, Ref);
+
+  Value UnsafeGet(Index) const;
+  template <typename T>
+  T WABT_VECTORCALL UnsafeGet(Index) const;
+  // Unsafe because it doesn't check that the type matches. It does check the
+  // index though.
+  Result UnsafeSet(Index, Value);
+
+  const ArrayTypeEntry& type() const;
+
+ protected:
+  friend Store;
+  explicit Array(Store&, const ArrayTypeEntry&, Value, Index size);
+  void Mark(Store&) override;
+
+  bool IsValidIndex(Index) const;
+
+  // TODO: See comments in StructTypeEntry; we may want to share the type_
+  // between multiple arrays.
+  ArrayTypeEntry type_;
   Values values_;
 };
 
