@@ -166,19 +166,19 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
 
   /* Always write the values as strings, even though they may be representable
    * as JSON numbers. This way the formatting is consistent. */
-  switch (const_.type) {
+  switch (const_.type()) {
     case Type::I32:
       WriteString("i32");
       WriteSeparator();
       WriteKey("value");
-      json_stream_->Writef("\"%u\"", const_.u32);
+      json_stream_->Writef("\"%u\"", const_.u32());
       break;
 
     case Type::I64:
       WriteString("i64");
       WriteSeparator();
       WriteKey("value");
-      json_stream_->Writef("\"%" PRIu64 "\"", const_.u64);
+      json_stream_->Writef("\"%" PRIu64 "\"", const_.u64());
       break;
 
     case Type::F32: {
@@ -186,14 +186,14 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("f32");
       WriteSeparator();
       WriteKey("value");
-      if (const_.is_expected_nan) {
-        if (const_.expected == ExpectedNan::Arithmetic) {
+      if (const_.is_expected_nan()) {
+        if (const_.expected() == ExpectedNan::Arithmetic) {
           WriteString("nan:arithmetic");
         } else {
           WriteString("nan:canonical");
         }
       } else {
-        json_stream_->Writef("\"%u\"", const_.f32_bits);
+        json_stream_->Writef("\"%u\"", const_.f32_bits());
       }
       break;
     }
@@ -203,14 +203,14 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("f64");
       WriteSeparator();
       WriteKey("value");
-      if (const_.is_expected_nan) {
-        if (const_.expected == ExpectedNan::Arithmetic) {
+      if (const_.is_expected_nan()) {
+        if (const_.expected() == ExpectedNan::Arithmetic) {
           WriteString("nan:arithmetic");
         } else {
           WriteString("nan:canonical");
         }
       } else {
-        json_stream_->Writef("\"%" PRIu64 "\"", const_.f64_bits);
+        json_stream_->Writef("\"%" PRIu64 "\"", const_.f64_bits());
       }
       break;
     }
@@ -226,7 +226,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("funcref");
       WriteSeparator();
       WriteKey("value");
-      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits);
+      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits());
       json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
       break;
     }
@@ -235,7 +235,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("hostref");
       WriteSeparator();
       WriteKey("value");
-      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits);
+      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits());
       json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
       break;
     }
@@ -245,7 +245,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteSeparator();
       WriteKey("value");
       char buffer[128];
-      WriteUint128(buffer, 128, const_.vec128);
+      WriteUint128(buffer, 128, const_.vec128());
       json_stream_->Writef("\"%s\"", buffer);
       break;
     }

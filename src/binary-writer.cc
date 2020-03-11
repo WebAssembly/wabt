@@ -487,27 +487,27 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Const: {
       const Const& const_ = cast<ConstExpr>(expr)->const_;
-      switch (const_.type) {
+      switch (const_.type()) {
         case Type::I32: {
           WriteOpcode(stream_, Opcode::I32Const);
-          WriteS32Leb128(stream_, const_.u32, "i32 literal");
+          WriteS32Leb128(stream_, const_.u32(), "i32 literal");
           break;
         }
         case Type::I64:
           WriteOpcode(stream_, Opcode::I64Const);
-          WriteS64Leb128(stream_, const_.u64, "i64 literal");
+          WriteS64Leb128(stream_, const_.u64(), "i64 literal");
           break;
         case Type::F32:
           WriteOpcode(stream_, Opcode::F32Const);
-          stream_->WriteU32(const_.f32_bits, "f32 literal");
+          stream_->WriteU32(const_.f32_bits(), "f32 literal");
           break;
         case Type::F64:
           WriteOpcode(stream_, Opcode::F64Const);
-          stream_->WriteU64(const_.f64_bits, "f64 literal");
+          stream_->WriteU64(const_.f64_bits(), "f64 literal");
           break;
         case Type::V128:
           WriteOpcode(stream_, Opcode::V128Const);
-          stream_->WriteU128(const_.vec128, "v128 literal");
+          stream_->WriteU128(const_.vec128(), "v128 literal");
           break;
         default:
           assert(0);

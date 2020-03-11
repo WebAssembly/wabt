@@ -426,27 +426,25 @@ void WatWriter::WriteEndBlock() {
 }
 
 void WatWriter::WriteConst(const Const& const_) {
-  switch (const_.type) {
+  switch (const_.type()) {
     case Type::I32:
       WritePutsSpace(Opcode::I32Const_Opcode.GetName());
-      Writef("%d", static_cast<int32_t>(const_.u32));
+      Writef("%d", static_cast<int32_t>(const_.u32()));
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case Type::I64:
       WritePutsSpace(Opcode::I64Const_Opcode.GetName());
-      Writef("%" PRId64, static_cast<int64_t>(const_.u64));
+      Writef("%" PRId64, static_cast<int64_t>(const_.u64()));
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case Type::F32: {
       WritePutsSpace(Opcode::F32Const_Opcode.GetName());
       char buffer[128];
-      WriteFloatHex(buffer, 128, const_.f32_bits);
+      WriteFloatHex(buffer, 128, const_.f32_bits());
       WritePutsSpace(buffer);
-      float f32;
-      memcpy(&f32, &const_.f32_bits, sizeof(f32));
-      Writef("(;=%g;)", f32);
+      Writef("(;=%g;)", Bitcast<float>(const_.f32_bits()));
       WriteNewline(NO_FORCE_NEWLINE);
       break;
     }
@@ -454,20 +452,18 @@ void WatWriter::WriteConst(const Const& const_) {
     case Type::F64: {
       WritePutsSpace(Opcode::F64Const_Opcode.GetName());
       char buffer[128];
-      WriteDoubleHex(buffer, 128, const_.f64_bits);
+      WriteDoubleHex(buffer, 128, const_.f64_bits());
       WritePutsSpace(buffer);
-      double f64;
-      memcpy(&f64, &const_.f64_bits, sizeof(f64));
-      Writef("(;=%g;)", f64);
+      Writef("(;=%g;)", Bitcast<double>(const_.f64_bits()));
       WriteNewline(NO_FORCE_NEWLINE);
       break;
     }
 
     case Type::V128: {
       WritePutsSpace(Opcode::V128Const_Opcode.GetName());
-      Writef("i32x4 0x%08x 0x%08x 0x%08x 0x%08x", const_.vec128.v[0],
-             const_.vec128.v[1], const_.vec128.v[2],
-             const_.vec128.v[3]);
+      auto vec = const_.vec128();
+      Writef("i32x4 0x%08x 0x%08x 0x%08x 0x%08x", vec.v[0], vec.v[1], vec.v[2],
+             vec.v[3]);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
     }

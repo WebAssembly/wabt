@@ -74,57 +74,76 @@ struct Var {
 typedef std::vector<Var> VarVector;
 
 struct Const {
-  Const() : Const(I32Tag(), 0, Location()) {}
+  Const() : Const(Type::I32, uint32_t(0)) {}
 
   static Const I32(uint32_t val = 0, const Location& loc = Location()) {
-    return Const(I32Tag(), val, loc);
+    return Const(Type::I32, val, loc);
   }
-
   static Const I64(uint64_t val = 0, const Location& loc = Location()) {
-    return Const(I64Tag(), val, loc);
+    return Const(Type::I64, val, loc);
   }
-
   static Const F32(uint32_t val = 0, const Location& loc = Location()) {
-    return Const(F32Tag(), val, loc);
+    return Const(Type::F32, val, loc);
   }
-
   static Const F64(uint64_t val = 0, const Location& loc = Location()) {
-    return Const(F64Tag(), val, loc);
+    return Const(Type::F64, val, loc);
+  }
+  static Const V128(v128 val, const Location& loc = Location()) {
+    return Const(Type::V128, val, loc);
   }
 
-  static Const V128(v128 val, const Location& loc = Location()) {
-    return Const(V128Tag(), val, loc);
-  }
+  Type type() const { return type_; }
+
+  uint32_t u32() const { return data_[0]; }
+  uint64_t u64() const { return To<uint64_t>(); }
+  uint32_t f32_bits() const { return data_[0]; }
+  uint64_t f64_bits() const { return To<uint64_t>(); }
+  uintptr_t ref_bits() const { return To<uintptr_t>(); }
+  v128 vec128() const { return To<v128>(); }
+
+  bool is_expected_nan() const { return nan_ != ExpectedNan::None; }
+  ExpectedNan expected() const { assert(is_expected_nan()); return nan_; }
+
+  void set_u32(uint32_t x) { From(Type::I32, x); }
+  void set_u64(uint64_t x) { From(Type::I64, x); }
+  void set_f32(uint32_t x) { From(Type::F32, x); }
+  void set_f64(uint64_t x) { From(Type::F64, x); }
+  void set_vec128(v128 x)  { From(Type::V128, x); }
+
+  // Only used for expectations. (e.g. wast assertions)
+  void set_f32(ExpectedNan nan) { From<float>(Type::F32, 0); nan_ = nan; }
+  void set_f64(ExpectedNan nan) { From<double>(Type::F64, 0); nan_ = nan; }
+  void set_hostref(uintptr_t x) { From(Type::Hostref, x); }
+  void set_nullref()            { From<uintptr_t>(Type::Nullref, 0); }
+  void set_funcref()            { From<uintptr_t>(Type::Funcref, 0); }
 
   Location loc;
-  Type type;
-
-  bool is_expected_nan = false;
-  union {
-    uint32_t u32;
-    uint64_t u64;
-    uint32_t f32_bits;
-    uint64_t f64_bits;
-    uintptr_t ref_bits;
-    v128 vec128;
-    ExpectedNan expected;
-  };
 
  private:
-  // Struct tags to differentiate constructors.
-  struct I32Tag {};
-  struct I64Tag {};
-  struct F32Tag {};
-  struct F64Tag {};
-  struct RefTag {};
-  struct V128Tag {};
+  template <typename T>
+  Const(Type type, T data, const Location& loc = Location()) : loc(loc) {
+    From<T>(type, data);
+  }
 
-  Const(I32Tag, uint32_t val = 0, const Location& loc = Location());
-  Const(I64Tag, uint64_t val = 0, const Location& loc = Location());
-  Const(F32Tag, uint32_t val = 0, const Location& loc = Location());
-  Const(F64Tag, uint64_t val = 0, const Location& loc = Location());
-  Const(RefTag, uintptr_t val = 0, const Location& loc = Location());
-  Const(V128Tag, v128 val = {{0, 0, 0, 0}}, const Location& loc = Location());
+  template <typename T>
+  T To() const {
+    static_assert(sizeof(T) <= sizeof(data_), "Invalid cast!");
+    T result;
+    memcpy(&result, &data_[0], sizeof(result));
+    return result;
+  }
+
+  template <typename T>
+  void From(Type type, T data) {
+    static_assert(sizeof(T) <= sizeof(data_), "Invalid cast!");
+    type_ = type;
+    memcpy(&data_[0], &data, sizeof(data));
+    nan_ = ExpectedNan::None;
+  }
+
+  Type type_;
+  uint32_t data_[4];  // 32 * 4 = 128 bits.
+  ExpectedNan nan_ = ExpectedNan::None;
 };
 typedef std::vector<Const> ConstVector;
 

@@ -212,8 +212,10 @@ enum class SegmentKind {
   Declared,
 };
 
-// Used in test asserts for special expected values "nan:canonical" and "nan:arithmetic"
+// Used in test asserts for special expected values "nan:canonical" and
+// "nan:arithmetic"
 enum class ExpectedNan {
+  None,
   Canonical,
   Arithmetic,
 };

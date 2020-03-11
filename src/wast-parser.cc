@@ -2132,7 +2132,7 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     }
   }
 
-  memcpy(&const_->vec128.v, v128_bytes.data(), 16);
+  const_->set_vec128(Bitcast<v128>(v128_bytes));
 
   return Result::Ok;
 }
@@ -2187,41 +2187,48 @@ Result WastParser::ParseConst(Const* const_, ConstType type) {
 
   Result result;
   switch (opcode) {
-    case Opcode::I32Const:
-      const_->type = Type::I32;
-      result =
-          ParseInt32(s, end, &const_->u32, ParseIntType::SignedAndUnsigned);
+    case Opcode::I32Const: {
+      uint32_t u32;
+      result = ParseInt32(s, end, &u32, ParseIntType::SignedAndUnsigned);
+      const_->set_u32(u32);
       break;
+    }
 
-    case Opcode::I64Const:
-      const_->type = Type::I64;
-      result =
-          ParseInt64(s, end, &const_->u64, ParseIntType::SignedAndUnsigned);
+    case Opcode::I64Const: {
+      uint64_t u64;
+      result = ParseInt64(s, end, &u64, ParseIntType::SignedAndUnsigned);
+      const_->set_u64(u64);
       break;
+    }
 
-    case Opcode::F32Const:
-      const_->type = Type::F32;
+    case Opcode::F32Const: {
+      ExpectedNan expected;
       if (type == ConstType::Expectation &&
-          ParseExpectedNan(&const_->expected) == Result::Ok) {
-        const_->is_expected_nan = true;
+          Succeeded(ParseExpectedNan(&expected))) {
+        const_->set_f32(expected);
         break;
       }
-      result = ParseFloat(literal.type, s, end, &const_->f32_bits);
+      uint32_t f32_bits;
+      result = ParseFloat(literal.type, s, end, &f32_bits);
+      const_->set_f32(f32_bits);
       break;
+    }
 
-    case Opcode::F64Const:
-      const_->type = Type::F64;
+    case Opcode::F64Const: {
+      ExpectedNan expected;
       if (type == ConstType::Expectation &&
-          ParseExpectedNan(&const_->expected) == Result::Ok) {
-        const_->is_expected_nan = true;
+        Succeeded(ParseExpectedNan(&expected))) {
+        const_->set_f64(expected);
         break;
       }
-      result = ParseDouble(literal.type, s, end, &const_->f64_bits);
+      uint64_t f64_bits;
+      result = ParseDouble(literal.type, s, end, &f64_bits);
+      const_->set_f64(f64_bits);
       break;
+    }
 
     case Opcode::V128Const:
       ErrorUnlessOpcodeEnabled(token);
-      const_->type = Type::V128;
       // Parse V128 Simd Const (16 bytes).
       result = ParseSimdV128Const(const_, token_type);
       // ParseSimdV128Const report error already, just return here if parser get
@@ -2277,8 +2284,7 @@ Result WastParser::ParseHostRef(Const* const_) {
   uint64_t ref_bits;
   Result result = ParseInt64(s, end, &ref_bits, ParseIntType::UnsignedOnly);
 
-  const_->type = Type::Hostref;
-  const_->ref_bits = static_cast<uintptr_t>(ref_bits);
+  const_->set_hostref(static_cast<uintptr_t>(ref_bits));
 
   if (Failed(result)) {
     Error(const_->loc, "invalid literal \"" PRIstringview "\"",
@@ -2305,16 +2311,14 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         auto token = Consume();
         ErrorUnlessOpcodeEnabled(token);
         const_.loc = GetLocation();
-        const_.type = Type::Nullref;
-        const_.ref_bits = 0;
+        const_.set_nullref();
         break;
       }
       case TokenType::RefFunc: {
         auto token = Consume();
         ErrorUnlessOpcodeEnabled(token);
         const_.loc = GetLocation();
-        const_.type = Type::Funcref;
-        const_.ref_bits = 0;
+        const_.set_funcref();
         break;
       }
       case TokenType::RefHost:

@@ -281,7 +281,7 @@ Result Validator::OnCompareExpr(CompareExpr* expr) {
 }
 
 Result Validator::OnConstExpr(ConstExpr* expr) {
-  result_ |= validator_.OnConst(expr->loc, expr->const_.type);
+  result_ |= validator_.OnConst(expr->loc, expr->const_.type());
   return Result::Ok;
 }
 
@@ -680,7 +680,7 @@ Result Validator::CheckModule() {
         switch (expr->type()) {
           case ExprType::Const:
             result_ |= validator_.OnGlobalInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type);
+                expr->loc, cast<ConstExpr>(expr)->const_.type());
             break;
 
           case ExprType::GlobalGet: {
@@ -746,7 +746,7 @@ Result Validator::CheckModule() {
         switch (expr->type()) {
           case ExprType::Const:
             result_ |= validator_.OnElemSegmentInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type);
+                expr->loc, cast<ConstExpr>(expr)->const_.type());
             break;
 
           case ExprType::GlobalGet: {
@@ -814,7 +814,7 @@ Result Validator::CheckModule() {
         switch (expr->type()) {
           case ExprType::Const:
             result_ |= validator_.OnDataSegmentInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type);
+                expr->loc, cast<ConstExpr>(expr)->const_.type());
             break;
 
           case ExprType::GlobalGet: {
@@ -874,8 +874,8 @@ const TypeVector* ScriptValidator::CheckInvoke(const InvokeAction* action) {
   }
   for (size_t i = 0; i < actual_args; ++i) {
     const Const* const_ = &action->args[i];
-    CheckTypeIndex(&const_->loc, const_->type, func->GetParamType(i), "invoke",
-                   i, "argument");
+    CheckTypeIndex(&const_->loc, const_->type(), func->GetParamType(i),
+                   "invoke", i, "argument");
   }
 
   return &func->decl.sig.result_types;
@@ -959,7 +959,7 @@ void ScriptValidator::CheckCommand(const Command* command) {
       // the types that are the result of the action.
       TypeVector actual_types;
       for (auto ex : assert_return_command->expected) {
-        actual_types.push_back(ex.type);
+        actual_types.push_back(ex.type());
       }
       switch (result.kind) {
         case ActionResult::Kind::Types:

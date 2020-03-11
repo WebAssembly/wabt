@@ -781,42 +781,44 @@ void CWriter::Write(const ResultType& rt) {
 }
 
 void CWriter::Write(const Const& const_) {
-  switch (const_.type) {
+  switch (const_.type()) {
     case Type::I32:
-      Writef("%uu", static_cast<int32_t>(const_.u32));
+      Writef("%uu", static_cast<int32_t>(const_.u32()));
       break;
 
     case Type::I64:
-      Writef("%" PRIu64 "ull", static_cast<int64_t>(const_.u64));
+      Writef("%" PRIu64 "ull", static_cast<int64_t>(const_.u64()));
       break;
 
     case Type::F32: {
+      uint32_t f32_bits = const_.f32_bits();
       // TODO(binji): Share with similar float info in interp.cc and literal.cc
-      if ((const_.f32_bits & 0x7f800000u) == 0x7f800000u) {
-        const char* sign = (const_.f32_bits & 0x80000000) ? "-" : "";
-        uint32_t significand = const_.f32_bits & 0x7fffffu;
+      if ((f32_bits & 0x7f800000u) == 0x7f800000u) {
+        const char* sign = (f32_bits & 0x80000000) ? "-" : "";
+        uint32_t significand = f32_bits & 0x7fffffu;
         if (significand == 0) {
           // Infinity.
           Writef("%sINFINITY", sign);
         } else {
           // Nan.
-          Writef("f32_reinterpret_i32(0x%08x) /* %snan:0x%06x */",
-                 const_.f32_bits, sign, significand);
+          Writef("f32_reinterpret_i32(0x%08x) /* %snan:0x%06x */", f32_bits,
+                 sign, significand);
         }
-      } else if (const_.f32_bits == 0x80000000) {
+      } else if (f32_bits == 0x80000000) {
         // Negative zero. Special-cased so it isn't written as -0 below.
         Writef("-0.f");
       } else {
-        Writef("%.9g", Bitcast<float>(const_.f32_bits));
+        Writef("%.9g", Bitcast<float>(f32_bits));
       }
       break;
     }
 
-    case Type::F64:
+    case Type::F64: {
+      uint64_t f64_bits = const_.f64_bits();
       // TODO(binji): Share with similar float info in interp.cc and literal.cc
-      if ((const_.f64_bits & 0x7ff0000000000000ull) == 0x7ff0000000000000ull) {
-        const char* sign = (const_.f64_bits & 0x8000000000000000ull) ? "-" : "";
-        uint64_t significand = const_.f64_bits & 0xfffffffffffffull;
+      if ((f64_bits & 0x7ff0000000000000ull) == 0x7ff0000000000000ull) {
+        const char* sign = (f64_bits & 0x8000000000000000ull) ? "-" : "";
+        uint64_t significand = f64_bits & 0xfffffffffffffull;
         if (significand == 0) {
           // Infinity.
           Writef("%sINFINITY", sign);
@@ -824,15 +826,16 @@ void CWriter::Write(const Const& const_) {
           // Nan.
           Writef("f64_reinterpret_i64(0x%016" PRIx64 ") /* %snan:0x%013" PRIx64
                  " */",
-                 const_.f64_bits, sign, significand);
+                 f64_bits, sign, significand);
         }
-      } else if (const_.f64_bits == 0x8000000000000000ull) {
+      } else if (f64_bits == 0x8000000000000000ull) {
         // Negative zero. Special-cased so it isn't written as -0 below.
         Writef("-0.0");
       } else {
-        Writef("%.17g", Bitcast<double>(const_.f64_bits));
+        Writef("%.17g", Bitcast<double>(f64_bits));
       }
       break;
+    }
 
     default:
       WABT_UNREACHABLE;
@@ -1496,7 +1499,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::Const: {
         const Const& const_ = cast<ConstExpr>(&expr)->const_;
-        PushType(const_.type);
+        PushType(const_.type());
         Write(StackVar(0), " = ", const_, ";", Newline());
         break;
       }
