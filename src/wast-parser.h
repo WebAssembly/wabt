@@ -169,6 +169,8 @@ class WastParser {
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
   Result ParsePlainInstr(std::unique_ptr<Expr>*);
+  Result ParseF32(Const*, ConstType type);
+  Result ParseF64(Const*, ConstType type);
   Result ParseConst(Const*, ConstType type);
   Result ParseHostRef(Const*);
   Result ParseExpectedNan(ExpectedNan* expected);
@@ -214,7 +216,7 @@ class WastParser {
   template <typename T>
   Result ParseAssertScriptModuleCommand(TokenType, CommandPtr*);
 
-  Result ParseSimdV128Const(Const*, TokenType);
+  Result ParseSimdV128Const(Const*, TokenType, ConstType);
 
   void CheckImportOrdering(Module*);
 

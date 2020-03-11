@@ -1,0 +1,90 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i8x16_sat_arith.wast
+;;; ARGS*: --enable-simd
+(;; STDOUT ;;;
+out/test/spec/simd/simd_i8x16_sat_arith.wast:561: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.1.wat:1:22: error: unexpected token "i8x16.add_saturate", expected an instr.
+  (func (result v128) (i8x16.add_saturate (v128.const i8x16 1 1 1 1 1 1 1 1 1 1...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:564: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.2.wat:1:22: error: unexpected token "i8x16.sub_saturate", expected an instr.
+  (func (result v128) (i8x16.sub_saturate (v128.const i8x16 1 1 1 1 1 1 1 1 1 1...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:567: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.3.wat:1:22: error: unexpected token "i8x16.mul_saturate", expected an instr.
+  (func (result v128) (i8x16.mul_saturate (v128.const i8x16 1 1 1 1 1 1 1 1 1 1...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:570: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.4.wat:1:22: error: unexpected token "i8x16.div_saturate", expected an instr.
+  (func (result v128) (i8x16.div_saturate (v128.const i8x16 1 1 1 1 1 1 1 1 1 1...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:573: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.5.wat:1:22: error: unexpected token "i32x4.add_saturate_s", expected an instr.
+  (func (result v128) (i32x4.add_saturate_s (v128.const i32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:576: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.6.wat:1:22: error: unexpected token "i32x4.add_saturate_u", expected an instr.
+  (func (result v128) (i32x4.add_saturate_u (v128.const i32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:579: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.7.wat:1:22: error: unexpected token "i32x4.sub_saturate_s", expected an instr.
+  (func (result v128) (i32x4.sub_saturate_s (v128.const i32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:582: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.8.wat:1:22: error: unexpected token "i32x4.sub_saturate_u", expected an instr.
+  (func (result v128) (i32x4.sub_saturate_u (v128.const i32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:585: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.9.wat:1:22: error: unexpected token "f32x4.add_saturate_s", expected an instr.
+  (func (result v128) (f32x4.add_saturate_s (v128.const f32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:588: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.10.wat:1:22: error: unexpected token "f32x4.add_saturate_u", expected an instr.
+  (func (result v128) (f32x4.add_saturate_u (v128.const f32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:591: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.11.wat:1:22: error: unexpected token "f32x4.sub_saturate_s", expected an instr.
+  (func (result v128) (f32x4.sub_saturate_s (v128.const f32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:594: assert_malformed passed:
+  out/test/spec/simd/simd_i8x16_sat_arith/simd_i8x16_sat_arith.12.wat:1:22: error: unexpected token "f32x4.sub_saturate_u", expected an instr.
+  (func (result v128) (f32x4.sub_saturate_u (v128.const f32x4 0 0 0 0) (v128.co...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_i8x16_sat_arith.wast:599: assert_invalid passed:
+  error: type mismatch in i8x16.add_saturate_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:600: assert_invalid passed:
+  error: type mismatch in i8x16.add_saturate_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:601: assert_invalid passed:
+  error: type mismatch in i8x16.sub_saturate_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:602: assert_invalid passed:
+  error: type mismatch in i8x16.sub_saturate_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:607: assert_invalid passed:
+  error: type mismatch in i8x16.add_saturate_s, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:615: assert_invalid passed:
+  error: type mismatch in i8x16.add_saturate_s, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:623: assert_invalid passed:
+  error: type mismatch in i8x16.add_saturate_u, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:631: assert_invalid passed:
+  error: type mismatch in i8x16.add_saturate_u, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:639: assert_invalid passed:
+  error: type mismatch in i8x16.sub_saturate_s, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:647: assert_invalid passed:
+  error: type mismatch in i8x16.sub_saturate_s, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:655: assert_invalid passed:
+  error: type mismatch in i8x16.sub_saturate_u, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i8x16_sat_arith.wast:663: assert_invalid passed:
+  error: type mismatch in i8x16.sub_saturate_u, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+212/212 tests passed.
+;;; STDOUT ;;)

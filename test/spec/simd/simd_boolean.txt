@@ -1,0 +1,58 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_boolean.wast
+;;; ARGS*: --enable-simd
+(;; STDOUT ;;;
+out/test/spec/simd/simd_boolean.wast:952: assert_invalid passed:
+  error: type mismatch in i8x16.any_true, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:953: assert_invalid passed:
+  error: type mismatch in i8x16.all_true, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:954: assert_invalid passed:
+  error: type mismatch in i16x8.any_true, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:955: assert_invalid passed:
+  error: type mismatch in i16x8.all_true, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:956: assert_invalid passed:
+  error: type mismatch in i32x4.any_true, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:957: assert_invalid passed:
+  error: type mismatch in i32x4.all_true, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:961: assert_malformed passed:
+  out/test/spec/simd/simd_boolean/simd_boolean.8.wat:1:32: error: unexpected token "f32x4.any_true", expected an instr.
+  (memory 1) (func (result i32) (f32x4.any_true (v128.const i32x4 0 0 0 0)))
+                                 ^^^^^^^^^^^^^^
+out/test/spec/simd/simd_boolean.wast:962: assert_malformed passed:
+  out/test/spec/simd/simd_boolean/simd_boolean.9.wat:1:32: error: unexpected token "f32x4.all_true", expected an instr.
+  (memory 1) (func (result i32) (f32x4.all_true (v128.const i32x4 0 0 0 0)))
+                                 ^^^^^^^^^^^^^^
+out/test/spec/simd/simd_boolean.wast:963: assert_malformed passed:
+  out/test/spec/simd/simd_boolean/simd_boolean.10.wat:1:32: error: unexpected token "f64x2.any_true", expected an instr.
+  (memory 1) (func (result i32) (f64x2.any_true (v128.const i32x4 0 0 0 0)))
+                                 ^^^^^^^^^^^^^^
+out/test/spec/simd/simd_boolean.wast:964: assert_malformed passed:
+  out/test/spec/simd/simd_boolean/simd_boolean.11.wat:1:32: error: unexpected token "f64x2.all_true", expected an instr.
+  (memory 1) (func (result i32) (f64x2.all_true (v128.const i32x4 0 0 0 0)))
+                                 ^^^^^^^^^^^^^^
+out/test/spec/simd/simd_boolean.wast:969: assert_invalid passed:
+  error: type mismatch in i8x16.any_true, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:977: assert_invalid passed:
+  error: type mismatch in i8x16.all_true, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:985: assert_invalid passed:
+  error: type mismatch in i16x8.any_true, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:993: assert_invalid passed:
+  error: type mismatch in i16x8.all_true, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:1001: assert_invalid passed:
+  error: type mismatch in i32x4.any_true, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_boolean.wast:1009: assert_invalid passed:
+  error: type mismatch in i32x4.all_true, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+258/258 tests passed.
+;;; STDOUT ;;)

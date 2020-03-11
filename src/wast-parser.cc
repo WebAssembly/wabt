@@ -2018,8 +2018,32 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::SimdLaneOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
+      if (!PeekMatch(TokenType::Nat) && !PeekMatch(TokenType::Int)) {
+        return ErrorExpected({"a natural number"}, "123");
+      }
+
+      Literal literal = Consume().literal();
       uint64_t lane_idx;
-      CHECK_RESULT(ParseNat(&lane_idx));
+
+      // TODO: The simd tests currently allow a lane number with an optional +,
+      // but probably shouldn't. See
+      // https://github.com/WebAssembly/simd/issues/181#issuecomment-597386919
+      Result result = ParseInt64(literal.text.begin(), literal.text.end(),
+                                 &lane_idx, ParseIntType::SignedAndUnsigned);
+
+      if (Failed(result)) {
+        Error(loc, "invalid literal \"" PRIstringview "\"",
+              WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+        return Result::Error;
+      }
+
+      // TODO: Should share lane validation logic w/ SimdShuffleOp below. (See
+      // comment below for explanation of 255 vs. 32)
+      if (lane_idx > 255) {
+        Error(loc, "lane index \"" PRIstringview "\" out-of-range [0, 32)",
+              WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+        return Result::Error;
+      }
       out_expr->reset(new SimdLaneOpExpr(token.opcode(), lane_idx, loc));
       break;
     }
@@ -2051,8 +2075,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
           return Result::Error;
         }
 
-        if (value > 31) {
-          Error(loc, "shuffle index \"" PRIstringview "\" out-of-range [0, 32)",
+        // The valid range is only [0, 32), but it's only malformed if it can't
+        // fit in a byte.
+        if (value > 255) {
+          Error(loc,
+                "shuffle index \"" PRIstringview "\" out-of-range [0, 32)",
                 WABT_PRINTF_STRING_VIEW_ARG(literal.text));
           return Result::Error;
         }
@@ -2075,7 +2102,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   return Result::Ok;
 }
 
-Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
+Result WastParser::ParseSimdV128Const(Const* const_,
+                                      TokenType token_type,
+                                      ConstType const_type) {
   WABT_TRACE(ParseSimdV128Const);
 
   uint8_t lane_count = 0;
@@ -2100,76 +2129,93 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
   }
   Consume();
 
-  uint8_t lane_size = sizeof(v128) / lane_count;
-
-  // The bytes of the v128 are written here first:
-  std::array<char, 16> v128_bytes{};
   const_->loc = GetLocation();
 
-  for (int i = 0; i < lane_count; ++i) {
+  for (int lane = 0; lane < lane_count; ++lane) {
     Location loc = GetLocation();
 
     // Check that the lane literal type matches the element type of the v128:
-    if (!PeekMatch(TokenType::Int) && !PeekMatch(TokenType::Nat)) {
-      if (integer) {
-        return ErrorExpected({"a Nat or Integer literal"}, "123");
-      } else if (!PeekMatch(TokenType::Float)) {
-        return ErrorExpected({"a Float literal"}, "42.0");
-      }
+    Token token = GetToken();
+    switch (token.token_type()) {
+      case TokenType::Nat:
+      case TokenType::Int:
+        // OK.
+        break;
+
+      case TokenType::Float:
+      case TokenType::NanArithmetic:
+      case TokenType::NanCanonical:
+        if (integer) {
+          goto error;
+        }
+        break;
+
+      error:
+      default:
+        if (integer) {
+          return ErrorExpected({"a Nat or Integer literal"}, "123");
+        } else {
+          return ErrorExpected({"a Float literal"}, "42.0");
+        }
     }
 
-    Literal literal = Consume().literal();
-
-    string_view sv = literal.text;
-    const char* s = sv.begin();
-    const char* end = sv.end();
-
-    // Pointer to the lane in the v128 bytes:
-    char* lane_ptr = &v128_bytes[lane_size * i];
     Result result;
 
     // For each type, parse the next literal, bound check it, and write it to
     // the array of bytes:
     if (integer) {
-      switch(lane_count) {
-        case 16:
-          result = ParseInt8(s, end, reinterpret_cast<uint8_t*>(lane_ptr),
-                             ParseIntType::SignedAndUnsigned);
+      string_view sv = Consume().literal().text;
+      const char* s = sv.begin();
+      const char* end = sv.end();
+
+      switch (lane_count) {
+        case 16: {
+          uint8_t value = 0;
+          result = ParseInt8(s, end, &value, ParseIntType::SignedAndUnsigned);
+          const_->set_v128_u8(lane, value);
           break;
-        case 8:
-          result = ParseInt16(s, end, reinterpret_cast<uint16_t*>(lane_ptr),
-                              ParseIntType::SignedAndUnsigned);
+        }
+        case 8: {
+          uint16_t value = 0;
+          result = ParseInt16(s, end, &value, ParseIntType::SignedAndUnsigned);
+          const_->set_v128_u16(lane, value);
           break;
-        case 4:
-          result = ParseInt32(s, end, reinterpret_cast<uint32_t*>(lane_ptr),
-                              ParseIntType::SignedAndUnsigned);
+        }
+        case 4: {
+          uint32_t value = 0;
+          result = ParseInt32(s, end, &value, ParseIntType::SignedAndUnsigned);
+          const_->set_v128_u32(lane, value);
           break;
-        case 2:
-          result = ParseInt64(s, end, reinterpret_cast<uint64_t*>(lane_ptr),
-                              ParseIntType::SignedAndUnsigned);
+        }
+        case 2: {
+          uint64_t value = 0;
+          result = ParseInt64(s, end, &value, ParseIntType::SignedAndUnsigned);
+          const_->set_v128_u64(lane, value);
           break;
+        }
       }
     } else {
-      switch(lane_count) {
+      Const lane_const_;
+      switch (lane_count) {
         case 4:
-          result = ParseFloat(literal.type, s, end,
-                              reinterpret_cast<uint32_t*>(lane_ptr));
+          result = ParseF32(&lane_const_, const_type);
+          const_->set_v128_f32(lane, lane_const_.f32_bits());
           break;
+
         case 2:
-          result = ParseDouble(literal.type, s, end,
-                               reinterpret_cast<uint64_t*>(lane_ptr));
+          result = ParseF64(&lane_const_, const_type);
+          const_->set_v128_f64(lane, lane_const_.f64_bits());
           break;
       }
+
+      const_->set_expected_nan(lane, lane_const_.expected_nan());
     }
 
     if (Failed(result)) {
-      Error(loc, "invalid literal \"" PRIstringview "\"",
-            WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+      Error(loc, "invalid literal \"%s\"", token.to_string().c_str());
       return Result::Error;
     }
   }
-
-  const_->set_vec128(Bitcast<v128>(v128_bytes));
 
   return Result::Ok;
 }
@@ -2191,83 +2237,91 @@ Result WastParser::ParseExpectedNan(ExpectedNan* expected) {
   return Result::Ok;
 }
 
-Result WastParser::ParseConst(Const* const_, ConstType type) {
+Result WastParser::ParseF32(Const* const_, ConstType const_type) {
+  ExpectedNan expected;
+  if (const_type == ConstType::Expectation &&
+      Succeeded(ParseExpectedNan(&expected))) {
+    const_->set_f32(expected);
+    return Result::Ok;
+  }
+  auto literal = Consume().literal();
+  uint32_t f32_bits;
+  Result result = ParseFloat(literal.type, literal.text.begin(),
+                             literal.text.end(), &f32_bits);
+  const_->set_f32(f32_bits);
+  return result;
+}
+
+Result WastParser::ParseF64(Const* const_, ConstType const_type) {
+  ExpectedNan expected;
+  if (const_type == ConstType::Expectation &&
+      Succeeded(ParseExpectedNan(&expected))) {
+    const_->set_f64(expected);
+    return Result::Ok;
+  }
+  auto literal = Consume().literal();
+  uint64_t f64_bits;
+  Result result = ParseDouble(literal.type, literal.text.begin(),
+                              literal.text.end(), &f64_bits);
+  const_->set_f64(f64_bits);
+  return result;
+}
+
+Result WastParser::ParseConst(Const* const_, ConstType const_type) {
   WABT_TRACE(ParseConst);
-  Token token = Consume();
-  Opcode opcode = token.opcode();
-  Literal literal;
-  string_view sv;
-  const char* s;
-  const char* end;
+  Token opcode_token = Consume();
+  Opcode opcode = opcode_token.opcode();
   const_->loc = GetLocation();
-  TokenType token_type = Peek();
+  Token token = GetToken();
 
   // V128 is fully handled by ParseSimdV128Const:
   if (opcode != Opcode::V128Const) {
-    switch (token_type) {
-    case TokenType::Nat:
-    case TokenType::Int:
-    case TokenType::Float: {
-      literal = Consume().literal();
-      sv = literal.text;
-      s = sv.begin();
-      end = sv.end();
-      break;
-    }
-    case TokenType::NanArithmetic:
-    case TokenType::NanCanonical:
-      break;
-    default:
-      return ErrorExpected({"a numeric literal"}, "123, -45, 6.7e8");
+    switch (token.token_type()) {
+      case TokenType::Nat:
+      case TokenType::Int:
+      case TokenType::Float:
+        // OK.
+        break;
+      case TokenType::NanArithmetic:
+      case TokenType::NanCanonical:
+        break;
+      default:
+        return ErrorExpected({"a numeric literal"}, "123, -45, 6.7e8");
     }
   }
 
   Result result;
   switch (opcode) {
     case Opcode::I32Const: {
+      auto sv = Consume().literal().text;
       uint32_t u32;
-      result = ParseInt32(s, end, &u32, ParseIntType::SignedAndUnsigned);
+      result = ParseInt32(sv.begin(), sv.end(), &u32,
+                          ParseIntType::SignedAndUnsigned);
       const_->set_u32(u32);
       break;
     }
 
     case Opcode::I64Const: {
+      auto sv = Consume().literal().text;
       uint64_t u64;
-      result = ParseInt64(s, end, &u64, ParseIntType::SignedAndUnsigned);
+      result = ParseInt64(sv.begin(), sv.end(), &u64,
+                          ParseIntType::SignedAndUnsigned);
       const_->set_u64(u64);
       break;
     }
 
-    case Opcode::F32Const: {
-      ExpectedNan expected;
-      if (type == ConstType::Expectation &&
-          Succeeded(ParseExpectedNan(&expected))) {
-        const_->set_f32(expected);
-        break;
-      }
-      uint32_t f32_bits;
-      result = ParseFloat(literal.type, s, end, &f32_bits);
-      const_->set_f32(f32_bits);
+    case Opcode::F32Const:
+      result = ParseF32(const_, const_type);
       break;
-    }
 
-    case Opcode::F64Const: {
-      ExpectedNan expected;
-      if (type == ConstType::Expectation &&
-        Succeeded(ParseExpectedNan(&expected))) {
-        const_->set_f64(expected);
-        break;
-      }
-      uint64_t f64_bits;
-      result = ParseDouble(literal.type, s, end, &f64_bits);
-      const_->set_f64(f64_bits);
+    case Opcode::F64Const:
+      result = ParseF64(const_, const_type);
       break;
-    }
 
     case Opcode::V128Const:
-      ErrorUnlessOpcodeEnabled(token);
+      ErrorUnlessOpcodeEnabled(opcode_token);
       // Parse V128 Simd Const (16 bytes).
-      result = ParseSimdV128Const(const_, token_type);
+      result = ParseSimdV128Const(const_, token.token_type(), const_type);
       // ParseSimdV128Const report error already, just return here if parser get
       // errors.
       if (Failed(result)) {
@@ -2281,8 +2335,7 @@ Result WastParser::ParseConst(Const* const_, ConstType type) {
   }
 
   if (Failed(result)) {
-    Error(const_->loc, "invalid literal \"" PRIstringview "\"",
-          WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+    Error(const_->loc, "invalid literal \"%s\"", token.to_string().c_str());
     // Return if parser get errors.
     return Result::Error;
   }

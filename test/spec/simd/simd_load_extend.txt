@@ -1,0 +1,90 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_load_extend.wast
+;;; ARGS*: --enable-simd
+(;; STDOUT ;;;
+out/test/spec/simd/simd_load_extend.wast:208: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/simd/simd_load_extend.wast:209: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/simd/simd_load_extend.wast:210: assert_trap passed: out of bounds memory access: access at 65536+8 >= max value 65536
+out/test/spec/simd/simd_load_extend.wast:211: assert_trap passed: out of bounds memory access: access at 65536+8 >= max value 65536
+out/test/spec/simd/simd_load_extend.wast:212: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/simd/simd_load_extend.wast:213: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/simd/simd_load_extend.wast:216: assert_invalid passed:
+  error: type mismatch in i16x8.load8x8_s, expected [i32] but got [f32]
+  0000027: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:217: assert_invalid passed:
+  error: type mismatch in i16x8.load8x8_u, expected [i32] but got [f32]
+  0000027: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:218: assert_invalid passed:
+  error: type mismatch in i32x4.load16x4_s, expected [i32] but got [f64]
+  000002b: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:219: assert_invalid passed:
+  error: type mismatch in i32x4.load16x4_u, expected [i32] but got [f64]
+  000002b: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:220: assert_invalid passed:
+  error: type mismatch in i64x2.load32x2_s, expected [i32] but got [v128]
+  0000034: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:221: assert_invalid passed:
+  error: type mismatch in i64x2.load32x2_u, expected [i32] but got [v128]
+  0000034: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:226: assert_invalid passed:
+  error: type mismatch in i16x8.load8x8_s, expected [i32] but got []
+  0000022: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:234: assert_invalid passed:
+  error: type mismatch in i16x8.load8x8_u, expected [i32] but got []
+  0000022: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:242: assert_invalid passed:
+  error: type mismatch in i32x4.load16x4_s, expected [i32] but got []
+  0000022: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:250: assert_invalid passed:
+  error: type mismatch in i32x4.load16x4_u, expected [i32] but got []
+  0000022: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:258: assert_invalid passed:
+  error: type mismatch in i64x2.load32x2_s, expected [i32] but got []
+  0000022: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:266: assert_invalid passed:
+  error: type mismatch in i64x2.load32x2_u, expected [i32] but got []
+  0000022: error: OnLoadExpr callback failed
+out/test/spec/simd/simd_load_extend.wast:276: assert_malformed passed:
+  out/test/spec/simd/simd_load_extend/simd_load_extend.13.wat:1:25: error: unexpected token "i16x8.load16x4_s", expected an expr.
+  (memory 1) (func (drop (i16x8.load16x4_s (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_extend/simd_load_extend.13.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i16x8.load16x4_s (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_extend.wast:277: assert_malformed passed:
+  out/test/spec/simd/simd_load_extend/simd_load_extend.14.wat:1:25: error: unexpected token "i16x8.load16x4_u", expected an expr.
+  (memory 1) (func (drop (i16x8.load16x4_u (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_extend/simd_load_extend.14.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i16x8.load16x4_u (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_extend.wast:278: assert_malformed passed:
+  out/test/spec/simd/simd_load_extend/simd_load_extend.15.wat:1:25: error: unexpected token "i32x4.load32x2_s", expected an expr.
+  (memory 1) (func (drop (i32x4.load32x2_s (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_extend/simd_load_extend.15.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i32x4.load32x2_s (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_extend.wast:279: assert_malformed passed:
+  out/test/spec/simd/simd_load_extend/simd_load_extend.16.wat:1:25: error: unexpected token "i32x4.load32x2_u", expected an expr.
+  (memory 1) (func (drop (i32x4.load32x2_u (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_extend/simd_load_extend.16.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i32x4.load32x2_u (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_extend.wast:280: assert_malformed passed:
+  out/test/spec/simd/simd_load_extend/simd_load_extend.17.wat:1:25: error: unexpected token "i64x2.load64x1_s", expected an expr.
+  (memory 1) (func (drop (i64x2.load64x1_s (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_extend/simd_load_extend.17.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i64x2.load64x1_s (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_extend.wast:281: assert_malformed passed:
+  out/test/spec/simd/simd_load_extend/simd_load_extend.18.wat:1:25: error: unexpected token "i64x2.load64x1_u", expected an expr.
+  (memory 1) (func (drop (i64x2.load64x1_u (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_extend/simd_load_extend.18.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i64x2.load64x1_u (i32.const 0))))
+                                                         ^
+96/96 tests passed.
+;;; STDOUT ;;)

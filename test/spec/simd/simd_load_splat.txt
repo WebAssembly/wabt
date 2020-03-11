@@ -1,0 +1,86 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_load_splat.wast
+;;; ARGS*: --enable-simd
+(;; STDOUT ;;;
+out/test/spec/simd/simd_load_splat.wast:119: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:120: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:121: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:122: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:123: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:124: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:125: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:126: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:128: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:129: assert_trap passed: out of bounds memory access: access at 65537+1 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:130: assert_trap passed: out of bounds memory access: access at 65550+1 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:131: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:132: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:133: assert_trap passed: out of bounds memory access: access at 65549+2 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:134: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:135: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:136: assert_trap passed: out of bounds memory access: access at 65547+4 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:137: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:138: assert_trap passed: out of bounds memory access: access at 65530+8 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:139: assert_trap passed: out of bounds memory access: access at 65543+8 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:141: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:142: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:143: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:144: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:145: assert_trap passed: out of bounds memory access: access at 65537+1 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:146: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:147: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:148: assert_trap passed: out of bounds memory access: access at 65530+8 >= max value 65536
+out/test/spec/simd/simd_load_splat.wast:209: assert_invalid passed:
+  error: type mismatch in v8x16.load_splat, expected [i32] but got [v128]
+  0000034: error: OnLoadSplatExpr callback failed
+out/test/spec/simd/simd_load_splat.wast:210: assert_invalid passed:
+  error: type mismatch in v16x8.load_splat, expected [i32] but got [v128]
+  0000034: error: OnLoadSplatExpr callback failed
+out/test/spec/simd/simd_load_splat.wast:211: assert_invalid passed:
+  error: type mismatch in v32x4.load_splat, expected [i32] but got [v128]
+  0000034: error: OnLoadSplatExpr callback failed
+out/test/spec/simd/simd_load_splat.wast:212: assert_invalid passed:
+  error: type mismatch in v64x2.load_splat, expected [i32] but got [v128]
+  0000034: error: OnLoadSplatExpr callback failed
+out/test/spec/simd/simd_load_splat.wast:217: assert_malformed passed:
+  out/test/spec/simd/simd_load_splat/simd_load_splat.6.wat:1:25: error: unexpected token "i8x16.load_splat", expected an expr.
+  (memory 1) (func (drop (i8x16.load_splat (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_splat/simd_load_splat.6.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i8x16.load_splat (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_splat.wast:218: assert_malformed passed:
+  out/test/spec/simd/simd_load_splat/simd_load_splat.7.wat:1:25: error: unexpected token "i16x8.load_splat", expected an expr.
+  (memory 1) (func (drop (i16x8.load_splat (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_splat/simd_load_splat.7.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i16x8.load_splat (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_splat.wast:219: assert_malformed passed:
+  out/test/spec/simd/simd_load_splat/simd_load_splat.8.wat:1:25: error: unexpected token "i32x4.load_splat", expected an expr.
+  (memory 1) (func (drop (i32x4.load_splat (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_splat/simd_load_splat.8.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i32x4.load_splat (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_splat.wast:220: assert_malformed passed:
+  out/test/spec/simd/simd_load_splat/simd_load_splat.9.wat:1:25: error: unexpected token "i64x2.load_splat", expected an expr.
+  (memory 1) (func (drop (i64x2.load_splat (i32.const 0))))
+                          ^^^^^^^^^^^^^^^^
+  out/test/spec/simd/simd_load_splat/simd_load_splat.9.wat:1:56: error: unexpected token ), expected EOF.
+  (memory 1) (func (drop (i64x2.load_splat (i32.const 0))))
+                                                         ^
+out/test/spec/simd/simd_load_splat.wast:226: assert_invalid passed:
+  error: type mismatch in v8x16.load_splat, expected [i32] but got []
+  0000022: error: OnLoadSplatExpr callback failed
+out/test/spec/simd/simd_load_splat.wast:234: assert_invalid passed:
+  error: type mismatch in v16x8.load_splat, expected [i32] but got []
+  0000022: error: OnLoadSplatExpr callback failed
+out/test/spec/simd/simd_load_splat.wast:242: assert_invalid passed:
+  error: type mismatch in v32x4.load_splat, expected [i32] but got []
+  0000022: error: OnLoadSplatExpr callback failed
+out/test/spec/simd/simd_load_splat.wast:250: assert_invalid passed:
+  error: type mismatch in v64x2.load_splat, expected [i32] but got []
+  0000022: error: OnLoadSplatExpr callback failed
+120/120 tests passed.
+;;; STDOUT ;;)

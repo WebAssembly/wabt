@@ -1,0 +1,59 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i16x8_arith2.wast
+;;; ARGS*: --enable-simd
+(;; STDOUT ;;;
+out/test/spec/simd/simd_i16x8_arith2.wast:296: assert_malformed passed:
+  out/test/spec/simd/simd_i16x8_arith2/simd_i16x8_arith2.1.wat:1:33: error: unexpected token "i16x8.avgr", expected an instr.
+  (memory 1) (func (result v128) (i16x8.avgr (v128.const i16x8 0 0 0 0 0 0 0 0)...
+                                  ^^^^^^^^^^
+out/test/spec/simd/simd_i16x8_arith2.wast:297: assert_malformed passed:
+  out/test/spec/simd/simd_i16x8_arith2/simd_i16x8_arith2.2.wat:1:33: error: unexpected token "i16x8.avgr_s", expected an instr.
+  (memory 1) (func (result v128) (i16x8.avgr_s (v128.const i16x8 0 0 0 0 0 0 0 ...
+                                  ^^^^^^^^^^^^
+out/test/spec/simd/simd_i16x8_arith2.wast:300: assert_invalid passed:
+  error: type mismatch in i16x8.min_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:301: assert_invalid passed:
+  error: type mismatch in i16x8.min_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:302: assert_invalid passed:
+  error: type mismatch in i16x8.max_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:303: assert_invalid passed:
+  error: type mismatch in i16x8.max_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:304: assert_invalid passed:
+  error: type mismatch in i16x8.avgr_u, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:309: assert_invalid passed:
+  error: type mismatch in i16x8.min_s, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:317: assert_invalid passed:
+  error: type mismatch in i16x8.min_s, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:325: assert_invalid passed:
+  error: type mismatch in i16x8.min_u, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:333: assert_invalid passed:
+  error: type mismatch in i16x8.min_u, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:341: assert_invalid passed:
+  error: type mismatch in i16x8.max_s, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:349: assert_invalid passed:
+  error: type mismatch in i16x8.max_s, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:357: assert_invalid passed:
+  error: type mismatch in i16x8.max_u, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:365: assert_invalid passed:
+  error: type mismatch in i16x8.max_u, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:373: assert_invalid passed:
+  error: type mismatch in i16x8.avgr_u, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i16x8_arith2.wast:381: assert_invalid passed:
+  error: type mismatch in i16x8.avgr_u, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+137/137 tests passed.
+;;; STDOUT ;;)
