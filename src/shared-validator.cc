@@ -49,19 +49,20 @@ Result SharedValidator::OnFuncType(const Location& loc,
                                    const Type* param_types,
                                    Index result_count,
                                    const Type* result_types) {
+  Result result = Result::Ok;
+  if (!options_.features.multi_value_enabled() && result_count > 1) {
+    result |=
+        PrintError(loc, "multiple result values not currently supported.");
+  }
   types_.push_back(FuncType{ToTypeVector(param_count, param_types),
                             ToTypeVector(result_count, result_types)});
-  return Result::Ok;
+  return result;
 }
 
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
   Result result = Result::Ok;
   FuncType type;
   result |= CheckTypeIndex(sig_var, &type);
-  if (!options_.features.multi_value_enabled() && type.results.size() > 1) {
-    result |=
-        PrintError(loc, "multiple result values not currently supported.");
-  }
   funcs_.push_back(type);
   return result;
 }
@@ -481,11 +482,8 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
       result |= PrintError(loc, "%s params not currently supported.",
                            opcode.GetName());
     }
-    if (func_type.results.size() > 1 &&
-        !options_.features.multi_value_enabled()) {
-      result |= PrintError(loc, "multiple %s results not currently supported.",
-                           opcode.GetName());
-    }
+    // Multiple results without --enable-multi-value is checked above in
+    // OnType.
 
     *out_param_types = func_type.params;
     *out_result_types = func_type.results;

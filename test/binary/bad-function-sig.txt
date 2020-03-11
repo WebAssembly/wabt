@@ -3,7 +3,8 @@ magic
 version
 section(TYPE) { count[1] function params[1] i32 results[1] i32 }
 section(FUNCTION) { count[1] type[1] }
+section(CODE) { count[1] func { locals[0] } }
 (;; STDERR ;;;
-0000014: error: invalid function signature index: 1
-0000014: error: invalid function signature index: 1
+out/test/binary/bad-function-sig/bad-function-sig.wasm:0000014: error: function type variable out of range: 1 (max 1)
+out/test/binary/bad-function-sig/bad-function-sig.wasm:0000014: error: function type variable out of range: 1 (max 1)
 ;;; STDERR ;;)

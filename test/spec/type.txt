@@ -11,8 +11,10 @@ out/test/spec/type.wast:48: assert_malformed passed:
   (type (func (result $x i32)))
                       ^^
 out/test/spec/type.wast:53: assert_invalid passed:
-  000000e: error: result count must be 0 or 1
+  error: multiple result values not currently supported.
+  0000010: error: OnFuncType callback failed
 out/test/spec/type.wast:57: assert_invalid passed:
-  000000e: error: result count must be 0 or 1
+  error: multiple result values not currently supported.
+  0000010: error: OnFuncType callback failed
 4/4 tests passed.
 ;;; STDOUT ;;)

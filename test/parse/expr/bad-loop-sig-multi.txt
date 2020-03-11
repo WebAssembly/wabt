@@ -15,7 +15,7 @@
       drop
     end))
 (;; STDERR ;;;
-out/test/parse/expr/bad-loop-sig-multi.txt:5:5: error: multiple loop results not currently supported.
+out/test/parse/expr/bad-loop-sig-multi.txt:5:5: error: multiple result values not currently supported.
     loop (result i32 i32)
     ^^^^
 out/test/parse/expr/bad-loop-sig-multi.txt:14:5: error: loop params not currently supported.

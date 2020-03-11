@@ -22,7 +22,7 @@
       drop
     end))
 (;; STDERR ;;;
-out/test/parse/expr/bad-if-sig-multi.txt:6:5: error: multiple if results not currently supported.
+out/test/parse/expr/bad-if-sig-multi.txt:6:5: error: multiple result values not currently supported.
     if (result i32 i32)
     ^^
 out/test/parse/expr/bad-if-sig-multi.txt:19:5: error: if params not currently supported.
