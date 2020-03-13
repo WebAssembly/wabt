@@ -254,10 +254,34 @@ void Store::DeleteRoot(RootList::Index index) {
 }
 
 void Store::Collect() {
+  marks_.resize(objects_.size());
   std::fill(marks_.begin(), marks_.end(), false);
-  Mark(roots_.list);
-  for (size_t i = 0; i < marks_.size(); ++i) {
-    if (!marks_[i]) {
+
+  // First mark all roots.
+  for (RootList::Index i = 0; i < roots_.size(); ++i) {
+    if (roots_.IsUsed(i)) {
+      Mark(roots_.Get(i));
+    }
+  }
+
+  // TODO: better GC algo.
+  // Loop through all newly marked objects and mark their referents.
+  std::vector<bool> all_marked(marks_.size(), false);
+  bool new_marked;
+  do {
+    new_marked = false;
+    for (size_t i = 0; i < marks_.size(); ++i) {
+      if (!all_marked[i] && marks_[i]) {
+        all_marked[i] = true;
+        objects_.Get(i)->Mark(*this);
+        new_marked = true;
+      }
+    }
+  } while (new_marked);
+
+  // Delete all unmarked objects.
+  for (size_t i = 0; i < all_marked.size(); ++i) {
+    if (objects_.IsUsed(i) && !all_marked[i]) {
       objects_.Delete(i);
     }
   }
@@ -1094,6 +1118,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       break;
 
     case O::Select: {
+      // TODO: need to mark whether this is a ref.
       auto cond = Pop<u32>();
       Value false_ = Pop();
       Value true_ = Pop();

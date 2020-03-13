@@ -134,40 +134,54 @@ inline Frame::Frame(Ref func,
 
 //// FreeList ////
 template <typename T>
-bool FreeList<T>::IsValid(Index index) const {
-  return index < list.size();
+bool FreeList<T>::IsUsed(Index index) const {
+  return index < list_.size() && !is_free_[index];
 }
 
 template <typename T>
 template <typename... Args>
-typename FreeList<T>::Index FreeList<T>::New(Args&&... args) {
-  if (!free.empty()) {
-    Index index = free.back();
-    free.pop_back();
-    list[index] = T(std::forward<Args>(args)...);
+auto FreeList<T>::New(Args&&... args) -> Index {
+  if (!free_.empty()) {
+    Index index = free_.back();
+    assert(is_free_[index]);
+    free_.pop_back();
+    is_free_[index] = false;
+    list_[index] = T(std::forward<Args>(args)...);
     return index;
   }
-  list.emplace_back(std::forward<Args>(args)...);
-  return list.size() - 1;
+  assert(list_.size() == is_free_.size());
+  is_free_.push_back(false);
+  list_.emplace_back(std::forward<Args>(args)...);
+  return list_.size() - 1;
 }
 
 template <typename T>
 void FreeList<T>::Delete(Index index) {
-  assert(IsValid(index));
-  list[index].~T();
-  free.push_back(index);
+  list_[index] = T();
+  is_free_[index] = true;
+  free_.push_back(index);
 }
 
 template <typename T>
 const T& FreeList<T>::Get(Index index) const {
-  assert(IsValid(index));
-  return list[index];
+  assert(IsUsed(index));
+  return list_[index];
 }
 
 template <typename T>
 T& FreeList<T>::Get(Index index) {
-  assert(IsValid(index));
-  return list[index];
+  assert(IsUsed(index));
+  return list_[index];
+}
+
+template <typename T>
+auto FreeList<T>::size() const -> Index {
+  return list_.size();
+}
+
+template <typename T>
+auto FreeList<T>::count() const -> Index {
+  return list_.size() - free_.size();
 }
 
 //// RefPtr ////
@@ -414,12 +428,12 @@ template <> inline void WABT_VECTORCALL Value::Set<Ref>(Ref val) { ref_ = val; }
 
 //// Store ////
 inline bool Store::IsValid(Ref ref) const {
-  return objects_.IsValid(ref.index) && objects_.Get(ref.index);
+  return objects_.IsUsed(ref.index) && objects_.Get(ref.index);
 }
 
 template <typename T>
 bool Store::Is(Ref ref) const {
-  return objects_.IsValid(ref.index) && isa<T>(objects_.Get(ref.index).get());
+  return objects_.IsUsed(ref.index) && isa<T>(objects_.Get(ref.index).get());
 }
 
 template <typename T>
@@ -442,6 +456,10 @@ RefPtr<T> Store::Alloc(Args&&... args) {
   RefPtr<T> ptr{*this, ref};
   ptr->self_ = ref;
   return ptr;
+}
+
+inline Store::ObjectList::Index Store::object_count() const {
+  return objects_.count();
 }
 
 inline const Features& Store::features() const {

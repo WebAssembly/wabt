@@ -21,6 +21,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "src/cast.h"
@@ -377,20 +378,43 @@ struct Frame {
 };
 
 template <typename T>
-struct FreeList {
+class FreeList {
+ public:
   using Index = size_t;
-
-  bool IsValid(Index) const;
 
   template <typename... Args>
   Index New(Args&&...);
   void Delete(Index);
 
+  bool IsUsed(Index) const;
+
   const T& Get(Index) const;
   T& Get(Index);
 
-  std::vector<T> list;
-  std::vector<size_t> free;
+  Index size() const;  // 1 greater than the maximum index.
+  Index count() const; // The number of used elements.
+
+ private:
+  // TODO: Optimize memory layout? We could probably store all of this
+  // information in one uintptr_t.
+  //
+  // For example, when T is a pointer to an Object (e.g. Store::ObjectList), we
+  // can assume alignment to 4 bytes at least. Given a 32-bit pointer, we can
+  // expect the following layout:
+  //
+  //   nnnnnnnn nnnnnnnn nnnnnnnn nnnnnnn0 f
+  //
+  // where:
+  //   f: "is_free": 0 when the payload is of type T
+  //                 1 when the payload is the index of the next free object
+  //   n: the payload
+  //
+  // When T is a Ref (see Store::RootList below), we'd need to store the
+  // "is_free" bit in most-significant bit instead.
+  //
+  std::vector<T> list_;
+  std::vector<size_t> free_;
+  std::vector<bool> is_free_;
 };
 
 class Store {
@@ -420,6 +444,8 @@ class Store {
   void Collect();
   void Mark(Ref);
   void Mark(const RefVec&);
+
+  ObjectList::Index object_count() const;
 
   const Features& features() const;
 
