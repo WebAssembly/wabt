@@ -784,7 +784,7 @@ def HandleTestResult(status, info, result, rebase=False):
 
 # Source : http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
 def YesNoPrompt(question, default='yes'):
-    """Ask a yes/no question via raw_input() and return their answer.
+    """Ask a yes/no question via input() and return their answer.
 
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
@@ -805,7 +805,7 @@ def YesNoPrompt(question, default='yes'):
 
     while True:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:

@@ -23,7 +23,7 @@ import struct
 import sys
 
 import find_exe
-from utils import ChangeDir, ChangeExt, Error, Executable
+from utils import ChangeDir, Error, Executable
 import utils
 
 F32_INF = 0x7f800000
@@ -282,7 +282,6 @@ def main(args):
         with open(json_filename) as json_file:
             json_dir = os.path.dirname(json_filename)
             spec_json = json.load(json_file)
-            all_commands = spec_json['commands']
 
         output = io.StringIO()
         WastWriter(json_dir, spec_json, output).Write()
