@@ -133,9 +133,11 @@ else ()
   # definition, and some libcs (e.g. glibc2.17 and earlier) follow that.
   add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDC_FORMAT_MACROS=1)
 
-  # On MINGW, _POSIX_C_SOURCE is needed to ensure we use mingw printf
-  # instead of the VC runtime one.
-  add_definitions(-D_POSIX_C_SOURCE=200809L)
+  if (MINGW OR CYGWIN)
+    # On MINGW, _POSIX_C_SOURCE is needed to ensure we use mingw printf
+    # instead of the VC runtime one.
+    add_definitions(-D_POSIX_C_SOURCE=200809L)
+  endif()
 
   if (COMPILER_IS_GNU)
     # disable -Wclobbered: it seems to be guessing incorrectly about a local
