@@ -181,8 +181,6 @@ class SharedValidator {
     TypeVector results;
   };
 
-  using TypeMutVector = std::vector<TypeMut>;
-
   struct StructType {
     StructType() = default;
     StructType(const TypeMutVector& fields) : fields(fields) {}

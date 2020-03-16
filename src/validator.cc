@@ -598,7 +598,7 @@ Result Validator::CheckModule() {
 
         case TypeEntryKind::Struct: {
           StructType* struct_type = cast<StructType>(f->type.get());
-          std::vector<TypeMut> type_muts;
+          TypeMutVector type_muts;
           for (auto&& field : struct_type->fields) {
             type_muts.push_back(TypeMut{field.type, field.mutable_});
           }

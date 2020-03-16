@@ -149,7 +149,7 @@ class BinaryReader {
   BinaryReaderDelegate* delegate_ = nullptr;
   TypeVector param_types_;
   TypeVector result_types_;
-  std::vector<TypeMut> fields_;
+  TypeMutVector fields_;
   std::vector<Index> target_depths_;
   const ReadBinaryOptions& options_;
   BinarySection last_known_section_ = BinarySection::Invalid;

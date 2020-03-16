@@ -56,6 +56,7 @@ struct TypeMut {
   Type type;
   bool mutable_;
 };
+using TypeMutVector = std::vector<TypeMut>;
 
 class BinaryReaderDelegate {
  public:
