@@ -637,21 +637,6 @@ void Var::Destroy() {
   }
 }
 
-Const::Const(I32Tag, uint32_t value, const Location& loc_)
-    : loc(loc_), type(Type::I32), u32(value) {}
-
-Const::Const(I64Tag, uint64_t value, const Location& loc_)
-    : loc(loc_), type(Type::I64), u64(value) {}
-
-Const::Const(F32Tag, uint32_t value, const Location& loc_)
-    : loc(loc_), type(Type::F32), f32_bits(value) {}
-
-Const::Const(F64Tag, uint64_t value, const Location& loc_)
-    : loc(loc_), type(Type::F64), f64_bits(value) {}
-
-Const::Const(V128Tag, v128 value, const Location& loc_)
-    : loc(loc_), type(Type::V128), vec128(value) {}
-
 uint8_t ElemSegment::GetFlags(const Module* module) const {
   uint8_t flags = 0;
 

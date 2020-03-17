@@ -234,8 +234,8 @@ struct Decompiler {
     dest = 0;
     if (!e || e->type() != ExprType::Const) return false;
     auto& c = cast<ConstExpr>(e)->const_;
-    if (c.type != Type::I32 && c.type != Type::I64) return false;
-    dest = c.type == Type::I32 ? c.u32 : c.u64;
+    if (c.type() != Type::I32 && c.type() != Type::I64) return false;
+    dest = c.type() == Type::I32 ? c.u32() : c.u64();
     return true;
   }
 
@@ -302,7 +302,8 @@ struct Decompiler {
         if (se.opcode == Opcode::I32Shl &&
             const_exp.etype == ExprType::Const) {
           auto& ce = *cast<ConstExpr>(const_exp.e);
-          if (ce.const_.type == Type::I32 && (1U << ce.const_.u32) == align) {
+          if (ce.const_.type() == Type::I32 &&
+              (1U << ce.const_.u32()) == align) {
             // Pfew, case detected :( Lets re-write this in Haskell.
             // TODO: we're decompiling these twice.
             // The thing to the left of << is going to be part of the index.
@@ -397,21 +398,19 @@ struct Decompiler {
     switch (n.etype) {
       case ExprType::Const: {
         auto& c = cast<ConstExpr>(n.e)->const_;
-        switch (c.type) {
+        switch (c.type()) {
           case Type::I32:
-            return Value{{std::to_string(static_cast<int32_t>(c.u32))},
+            return Value{{std::to_string(static_cast<int32_t>(c.u32()))},
                          Precedence::Atomic};
           case Type::I64:
-            return Value{{std::to_string(static_cast<int64_t>(c.u64)) + "L"},
+            return Value{{std::to_string(static_cast<int64_t>(c.u64())) + "L"},
                          Precedence::Atomic};
           case Type::F32: {
-            float f;
-            memcpy(&f, &c.f32_bits, sizeof(float));
+            float f = Bitcast<float>(c.f32_bits());
             return Value{{to_string(f) + "f"}, Precedence::Atomic};
           }
           case Type::F64: {
-            double d;
-            memcpy(&d, &c.f64_bits, sizeof(double));
+            double d = Bitcast<double>(c.f64_bits());
             return Value{{to_string(d)}, Precedence::Atomic};
           }
           case Type::V128:
