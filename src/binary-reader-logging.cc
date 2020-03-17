@@ -143,9 +143,25 @@ Result BinaryReaderLogging::OnFuncType(Index index,
                              result_types);
 }
 
-Result BinaryReaderLogging::OnStructType(Index index) {
-  LOGF("OnStructType(index: %" PRIindex ")\n", index);
-  return reader_->OnStructType(index);
+Result BinaryReaderLogging::OnStructType(Index index,
+                                         Index field_count,
+                                         TypeMut* fields) {
+  LOGF("OnStructType(index: %" PRIindex ", fields: ", index);
+  LOGF_NOINDENT("[");
+  for (Index i = 0; i < field_count; ++i) {
+    if (fields[i].mutable_) {
+      LOGF_NOINDENT("(mut ");
+    }
+    LogType(fields[i].type);
+    if (fields[i].mutable_) {
+      LOGF_NOINDENT(")");
+    }
+    if (i != field_count - 1) {
+      LOGF_NOINDENT(", ");
+    }
+  }
+  LOGF_NOINDENT("])\n");
+  return reader_->OnStructType(index, field_count, fields);
 }
 
 Result BinaryReaderLogging::OnImport(Index index,

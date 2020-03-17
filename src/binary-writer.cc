@@ -902,11 +902,19 @@ Result BinaryWriter::WriteModule() {
           break;
         }
 
-        case TypeEntryKind::Struct:
+        case TypeEntryKind::Struct: {
+          const StructType* struct_type = cast<StructType>(type);
           WriteHeader("struct type", i);
           WriteType(stream_, Type::Struct);
-          // TODO
+          Index num_fields = struct_type->fields.size();
+          WriteU32Leb128(stream_, num_fields, "num fields");
+          for (size_t j = 0; j < num_fields; ++j) {
+            const Field& field = struct_type->fields[j];
+            WriteType(stream_, field.type);
+            stream_->WriteU8(field.mutable_, "field mutability");
+          }
           break;
+        }
       }
     }
     EndSection();

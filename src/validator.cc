@@ -597,7 +597,13 @@ Result Validator::CheckModule() {
         }
 
         case TypeEntryKind::Struct: {
-          // TODO
+          StructType* struct_type = cast<StructType>(f->type.get());
+          TypeMutVector type_muts;
+          for (auto&& field : struct_type->fields) {
+            type_muts.push_back(TypeMut{field.type, field.mutable_});
+          }
+          result_ |= validator_.OnStructType(field.loc, type_muts.size(),
+                                             type_muts.data());
           break;
         }
       }

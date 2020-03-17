@@ -54,15 +54,24 @@ Result SharedValidator::OnFuncType(const Location& loc,
     result |=
         PrintError(loc, "multiple result values not currently supported.");
   }
-  types_.push_back(FuncType{ToTypeVector(param_count, param_types),
-                            ToTypeVector(result_count, result_types)});
+  func_types_.emplace(num_types_++,
+                      FuncType{ToTypeVector(param_count, param_types),
+                               ToTypeVector(result_count, result_types)});
   return result;
+}
+
+Result SharedValidator::OnStructType(const Location&,
+                                     Index field_count,
+                                     TypeMut* fields) {
+  struct_types_.emplace(num_types_++, StructType{TypeMutVector(
+                                          &fields[0], &fields[field_count])});
+  return Result::Ok;
 }
 
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
   Result result = Result::Ok;
   FuncType type;
-  result |= CheckTypeIndex(sig_var, &type);
+  result |= CheckFuncTypeIndex(sig_var, &type);
   funcs_.push_back(type);
   return result;
 }
@@ -219,7 +228,7 @@ Result SharedValidator::OnGlobalInitExpr_Other(const Location& loc) {
 Result SharedValidator::OnEvent(const Location& loc, Var sig_var) {
   Result result = Result::Ok;
   FuncType type;
-  result |= CheckTypeIndex(sig_var, &type);
+  result |= CheckFuncTypeIndex(sig_var, &type);
   if (!type.results.empty()) {
     result |= PrintError(loc, "Event signature must have 0 results.");
   }
@@ -433,8 +442,23 @@ Result SharedValidator::CheckLocalIndex(Var local_var, Type* out_type) {
   return Result::Ok;
 }
 
-Result SharedValidator::CheckTypeIndex(Var sig_var, FuncType* out) {
-  return CheckIndexWithValue(sig_var, types_, out, "function type");
+Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
+  Result result = CheckIndex(sig_var, num_types_, "function type");
+  if (Failed(result)) {
+    *out = FuncType{};
+    return Result::Error;
+  }
+
+  auto iter = func_types_.find(sig_var.index());
+  if (iter == func_types_.end()) {
+    return PrintError(sig_var.loc, "type %d is not a function",
+                      sig_var.index());
+  }
+
+  if (out) {
+    *out = iter->second;
+  }
+  return Result::Ok;
 }
 
 Result SharedValidator::CheckFuncIndex(Var func_var, FuncType* out) {
@@ -476,7 +500,7 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
   if (sig_type.IsIndex()) {
     Index sig_index = sig_type.GetIndex();
     FuncType func_type;
-    result |= CheckTypeIndex(Var(sig_index, loc), &func_type);
+    result |= CheckFuncTypeIndex(Var(sig_index, loc), &func_type);
 
     if (!func_type.params.empty() && !options_.features.multi_value_enabled()) {
       result |= PrintError(loc, "%s params not currently supported.",
@@ -709,7 +733,7 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   Result result = Result::Ok;
   expr_loc_ = &loc;
   FuncType func_type;
-  result |= CheckTypeIndex(sig_var, &func_type);
+  result |= CheckFuncTypeIndex(sig_var, &func_type);
   result |= CheckTableIndex(table_var);
   result |= typechecker_.OnCallIndirect(func_type.params, func_type.results);
   return result;
@@ -962,7 +986,7 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
   expr_loc_ = &loc;
   result |= CheckTableIndex(table_var);
   FuncType func_type;
-  result |= CheckTypeIndex(sig_var, &func_type);
+  result |= CheckFuncTypeIndex(sig_var, &func_type);
   result |=
       typechecker_.OnReturnCallIndirect(func_type.params, func_type.results);
   return result;

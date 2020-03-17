@@ -1205,6 +1205,7 @@ Result WastParser::ParseTypeModuleField(Module* module) {
       return Result::Error;
     }
     auto struct_type = MakeUnique<StructType>(name);
+    CHECK_RESULT(ParseFieldList(&struct_type->fields));
     EXPECT(Rpar);
     EXPECT(Rpar);
     field->type = std::move(struct_type);
@@ -1213,6 +1214,42 @@ Result WastParser::ParseTypeModuleField(Module* module) {
   }
 
   module->AppendField(std::move(field));
+  return Result::Ok;
+}
+
+Result WastParser::ParseField(Field* field) {
+  WABT_TRACE(ParseField);
+  auto parse_mut_valuetype = [&]() -> Result {
+    // TODO: Share with ParseGlobalType?
+    if (MatchLpar(TokenType::Mut)) {
+      field->mutable_ = true;
+      CHECK_RESULT(ParseValueType(&field->type));
+      EXPECT(Rpar);
+    } else {
+      field->mutable_ = false;
+      CHECK_RESULT(ParseValueType(&field->type));
+    }
+    return Result::Ok;
+  };
+
+  if (MatchLpar(TokenType::Field)) {
+    ParseBindVarOpt(&field->name);
+    CHECK_RESULT(parse_mut_valuetype());
+    EXPECT(Rpar);
+  } else {
+    CHECK_RESULT(parse_mut_valuetype());
+  }
+
+  return Result::Ok;
+}
+
+Result WastParser::ParseFieldList(std::vector<Field>* fields) {
+  WABT_TRACE(ParseFieldList);
+  while (PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar)) {
+    Field field;
+    CHECK_RESULT(ParseField(&field));
+    fields->push_back(field);
+  }
   return Result::Ok;
 }
 

@@ -17,6 +17,7 @@
 #ifndef WABT_SHARED_VALIDATOR_H_
 #define WABT_SHARED_VALIDATOR_H_
 
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -27,6 +28,8 @@
 #include "src/ir.h"
 #include "src/opcode.h"
 #include "src/type-checker.h"
+
+#include "src/binary-reader.h"  // For TypeMut.
 
 namespace wabt {
 
@@ -63,6 +66,7 @@ class SharedValidator {
                     const Type* param_types,
                     Index result_count,
                     const Type* result_types);
+  Result OnStructType(const Location&, Index field_count, TypeMut* fields);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&);
@@ -169,8 +173,19 @@ class SharedValidator {
 
  private:
   struct FuncType {
+    FuncType() = default;
+    FuncType(const TypeVector& params, const TypeVector& results)
+        : params(params), results(results) {}
+
     TypeVector params;
     TypeVector results;
+  };
+
+  struct StructType {
+    StructType() = default;
+    StructType(const TypeMutVector& fields) : fields(fields) {}
+
+    TypeMutVector fields;
   };
 
   struct TableType {
@@ -231,7 +246,7 @@ class SharedValidator {
                              const std::vector<T>& values,
                              T* out,
                              const char* desc);
-  Result CheckTypeIndex(Var sig_var, FuncType* out = nullptr);
+  Result CheckFuncTypeIndex(Var sig_var, FuncType* out = nullptr);
   Result CheckFuncIndex(Var func_var, FuncType* out = nullptr);
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);
@@ -257,7 +272,10 @@ class SharedValidator {
   // Cached for access by OnTypecheckerError.
   const Location* expr_loc_ = nullptr;
 
-  std::vector<FuncType> types_;
+  Index num_types_ = 0;
+  std::map<Index, FuncType> func_types_;
+  std::map<Index, StructType> struct_types_;
+
   std::vector<FuncType> funcs_;       // Includes imported and defined.
   std::vector<TableType> tables_;     // Includes imported and defined.
   std::vector<MemoryType> memories_;  // Includes imported and defined.

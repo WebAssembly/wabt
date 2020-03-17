@@ -143,6 +143,7 @@ f64x2.splat, TokenType::Unary, Opcode::F64X2Splat
 f64x2.sqrt, TokenType::Unary, Opcode::F64X2Sqrt
 f64x2.sub, TokenType::Binary, Opcode::F64X2Sub
 f64x2, TokenType::F64X2
+field, TokenType::Field
 funcref, Type::Funcref
 func, TokenType::Func
 get, TokenType::Get
