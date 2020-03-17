@@ -542,3 +542,146 @@ TEST_F(InterpTest, Rot13) {
 
   ASSERT_EQ("Hello, WebAssembly!", string_data);
 }
+
+class InterpGCTest : public InterpTest {
+ public:
+  void SetUp() override {
+    before_new = store_.object_count();
+  }
+
+  void TearDown() override {
+    // Reset instance and module, in case they were allocated.
+    inst_.reset();
+    mod_.reset();
+
+    store_.Collect();
+    EXPECT_EQ(before_new, store_.object_count());
+  }
+
+  size_t before_new;
+};
+
+TEST_F(InterpGCTest, Collect_Basic) {
+  auto foreign = Foreign::New(store_, nullptr);
+  auto after_new = store_.object_count();
+  EXPECT_EQ(before_new + 1, after_new);
+
+  // Remove root, but object is not destroyed until collect.
+  foreign.reset();
+  EXPECT_EQ(after_new, store_.object_count());
+}
+
+TEST_F(InterpGCTest, Collect_GlobalCycle) {
+  auto gt = GlobalType{ValueType::Anyref, Mutability::Var};
+  auto g1 = Global::New(store_, gt, Value::Make(Ref::Null));
+  auto g2 = Global::New(store_, gt, Value::Make(g1->self()));
+  g1->Set(store_, g2->self());
+
+  auto after_new = store_.object_count();
+  EXPECT_EQ(before_new + 2, after_new);
+
+  // Remove g1 root, but it's kept alive by g2.
+  g1.reset();
+  store_.Collect();
+  EXPECT_EQ(after_new, store_.object_count());
+
+  // Remove g2 root, now both should be removed.
+  g2.reset();
+}
+
+TEST_F(InterpGCTest, Collect_TableCycle) {
+  auto tt = TableType{ValueType::Anyref, Limits{2}};
+  auto t1 = Table::New(store_, tt);
+  auto t2 = Table::New(store_, tt);
+  auto t3 = Table::New(store_, tt);
+
+  t1->Set(store_, 0, t1->self());  // t1 references itself.
+  t2->Set(store_, 0, t3->self());
+  t3->Set(store_, 0, t2->self());  // t2 and t3 reference each other.
+  t3->Set(store_, 1, t1->self());  // t3 also references t1.
+
+  auto after_new = store_.object_count();
+  EXPECT_EQ(before_new + 3, after_new);
+
+  // Remove t1 and t2 roots, but their kept alive by t3.
+  t1.reset();
+  t2.reset();
+  store_.Collect();
+  EXPECT_EQ(after_new, store_.object_count());
+
+  // Remove t3 root, now all should be removed.
+  t3.reset();
+}
+
+TEST_F(InterpGCTest, Collect_Func) {
+  ReadModule(s_fac_module);
+  Instantiate();
+  auto func = GetFuncExport(0);
+
+  auto after_new = store_.object_count();
+  EXPECT_EQ(before_new + 3, after_new);  // module, instance, func.
+
+  // Reset module and instance roots, but they'll be kept alive by the func.
+  mod_.reset();
+  inst_.reset();
+  store_.Collect();
+  EXPECT_EQ(after_new, store_.object_count());
+}
+
+TEST_F(InterpGCTest, Collect_InstanceImport) {
+  // (import "" "f" (func))
+  // (import "" "t" (table 0 funcref))
+  // (import "" "m" (memory 0))
+  // (import "" "g" (global i32))
+  ReadModule({
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x04, 0x01,
+      0x60, 0x00, 0x00, 0x02, 0x19, 0x04, 0x00, 0x01, 0x66, 0x00, 0x00,
+      0x00, 0x01, 0x74, 0x01, 0x70, 0x00, 0x00, 0x00, 0x01, 0x6d, 0x02,
+      0x00, 0x00, 0x00, 0x01, 0x67, 0x03, 0x7f, 0x00,
+  });
+  auto f = HostFunc::New(
+      store_, FuncType{{}, {}},
+      [](const Values&, Values&, Trap::Ptr*) -> Result { return Result::Ok; });
+  auto t = Table::New(store_, TableType{ValueType::Funcref, Limits{0}});
+  auto m = Memory::New(store_, MemoryType{Limits{0}});
+  auto g = Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
+                       Value::Make(5));
+
+  Instantiate({f->self(), t->self(), m->self(), g->self()});
+  auto after_new = store_.object_count();
+  EXPECT_EQ(before_new + 6, after_new);  // module, instance, f, t, m, g
+
+  // Instance keeps all imports alive.
+  f.reset();
+  t.reset();
+  m.reset();
+  g.reset();
+  store_.Collect();
+  EXPECT_EQ(after_new, store_.object_count());
+}
+
+TEST_F(InterpGCTest, Collect_InstanceExport) {
+  // (func (export "f"))
+  // (global (export "g") i32 (i32.const 0))
+  // (table (export "t") 0 funcref)
+  // (memory (export "m") 0)
+  ReadModule({
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x04, 0x01,
+      0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00, 0x04, 0x04, 0x01, 0x70,
+      0x00, 0x00, 0x05, 0x03, 0x01, 0x00, 0x00, 0x06, 0x06, 0x01, 0x7f,
+      0x00, 0x41, 0x00, 0x0b, 0x07, 0x11, 0x04, 0x01, 0x66, 0x00, 0x00,
+      0x01, 0x67, 0x03, 0x00, 0x01, 0x74, 0x01, 0x00, 0x01, 0x6d, 0x02,
+      0x00, 0x0a, 0x04, 0x01, 0x02, 0x00, 0x0b,
+  });
+  Instantiate();
+  auto after_new = store_.object_count();
+  EXPECT_EQ(before_new + 6, after_new);  // module, instance, f, t, m, g
+
+  // Instance keeps all exports alive.
+  store_.Collect();
+  EXPECT_EQ(after_new, store_.object_count());
+}
+
+// TODO: Test for Thread keeping references alive as locals/params/stack values.
+// This requires better tracking of references than currently exists in the
+// interpreter. (see TODOs in Select/LocalGet/GlobalGet)
