@@ -254,7 +254,8 @@ void Store::DeleteRoot(RootList::Index index) {
 }
 
 void Store::Collect() {
-  marks_.resize(objects_.size());
+  size_t object_count = objects_.size();
+  marks_.resize(object_count);
   std::fill(marks_.begin(), marks_.end(), false);
 
   // First mark all roots.
@@ -266,11 +267,11 @@ void Store::Collect() {
 
   // TODO: better GC algo.
   // Loop through all newly marked objects and mark their referents.
-  std::vector<bool> all_marked(marks_.size(), false);
+  std::vector<bool> all_marked(object_count, false);
   bool new_marked;
   do {
     new_marked = false;
-    for (size_t i = 0; i < marks_.size(); ++i) {
+    for (size_t i = 0; i < object_count; ++i) {
       if (!all_marked[i] && marks_[i]) {
         all_marked[i] = true;
         objects_.Get(i)->Mark(*this);
@@ -280,7 +281,7 @@ void Store::Collect() {
   } while (new_marked);
 
   // Delete all unmarked objects.
-  for (size_t i = 0; i < all_marked.size(); ++i) {
+  for (size_t i = 0; i < object_count; ++i) {
     if (objects_.IsUsed(i) && !all_marked[i]) {
       objects_.Delete(i);
     }
