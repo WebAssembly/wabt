@@ -1,0 +1,20 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-gc
+;;; ARGS1: -x
+(type (struct))
+(type (struct i32 i64 f32 f64))
+(type (struct i32 (mut i64)))
+(;; STDOUT ;;;
+
+struct.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[3]:
+ - type[0] (struct)
+ - type[1] (struct i32 i64 f32 f64)
+ - type[2] (struct i32 (mut i64))
+
+Code Disassembly:
+
+;;; STDOUT ;;)
