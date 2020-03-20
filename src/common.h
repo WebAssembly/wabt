@@ -102,15 +102,57 @@
 #define PRIoffset PRIzx
 
 struct v128 {
-  uint32_t v[4];
+  v128() = default;
+  v128(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3) {
+    set_u32(0, x0);
+    set_u32(1, x1);
+    set_u32(2, x2);
+    set_u32(3, x3);
+  }
 
   bool operator==(const v128& other) const {
-    return v[0] == other.v[0] &&
-           v[1] == other.v[1] &&
-           v[2] == other.v[2] &&
-           v[3] == other.v[3];
+    return std::equal(std::begin(v), std::end(v), std::begin(other.v));
   }
   bool operator!=(const v128& other) const { return !(*this == other); }
+
+  uint8_t u8(int lane) const { return To<uint8_t>(lane); }
+  uint16_t u16(int lane) const { return To<uint16_t>(lane); }
+  uint32_t u32(int lane) const { return To<uint32_t>(lane); }
+  uint64_t u64(int lane) const { return To<uint64_t>(lane); }
+  uint32_t f32_bits(int lane) const { return To<uint32_t>(lane); }
+  uint64_t f64_bits(int lane) const { return To<uint64_t>(lane); }
+
+  void set_u8(int lane, uint8_t x) { return From<uint8_t>(lane, x); }
+  void set_u16(int lane, uint16_t x) { return From<uint16_t>(lane, x); }
+  void set_u32(int lane, uint32_t x) { return From<uint32_t>(lane, x); }
+  void set_u64(int lane, uint64_t x) { return From<uint64_t>(lane, x); }
+  void set_f32_bits(int lane, uint32_t x) { return From<uint32_t>(lane, x); }
+  void set_f64_bits(int lane, uint64_t x) { return From<uint64_t>(lane, x); }
+
+  bool is_zero() const {
+    return std::all_of(std::begin(v), std::end(v),
+                       [](uint8_t x) { return x == 0; });
+  }
+  void set_zero() { std::fill(std::begin(v), std::end(v), 0); }
+
+  template <typename T>
+  T To(int lane) const {
+    static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
+    assert((lane + 1) * sizeof(T) <= sizeof(v));
+    T result;
+    memcpy(&result, &v[lane * sizeof(T)], sizeof(result));
+    return result;
+  }
+
+  template <typename T>
+  void From(int lane, T data) {
+    static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
+    assert((lane + 1) * sizeof(T) <= sizeof(v));
+    memcpy(&v[lane * sizeof(T)], &data, sizeof(data));
+  }
+
+ private:
+  uint8_t v[16];
 };
 
 namespace wabt {

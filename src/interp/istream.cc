@@ -844,8 +844,8 @@ Istream::Offset Istream::Trace(Stream* stream,
 
     case InstrKind::Imm_V128_Op_0:
       stream->Writef(" i32x4 0x%08x 0x%08x 0x%08x 0x%08x\n",
-                     instr.imm_v128.v[0], instr.imm_v128.v[1],
-                     instr.imm_v128.v[2], instr.imm_v128.v[3]);
+                     instr.imm_v128.u32(0), instr.imm_v128.u32(1),
+                     instr.imm_v128.u32(2), instr.imm_v128.u32(3));
       break;
 
     case InstrKind::Imm_V128_Op_2:
@@ -853,8 +853,8 @@ Istream::Offset Istream::Trace(Stream* stream,
       stream->Writef(
           " %s, %s : (Lane imm: i32x4 0x%08x 0x%08x 0x%08x 0x%08x )\n",
           source->Pick(2, instr).c_str(), source->Pick(1, instr).c_str(),
-          instr.imm_v128.v[0], instr.imm_v128.v[1], instr.imm_v128.v[2],
-          instr.imm_v128.v[3]);
+          instr.imm_v128.u32(0), instr.imm_v128.u32(1), instr.imm_v128.u32(2),
+          instr.imm_v128.u32(3));
       break;
   }
   return offset;

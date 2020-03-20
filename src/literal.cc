@@ -661,18 +661,18 @@ void Mul10(v128* v) {
   constexpr uint32_t kTopThreeBits = 0xe0000000;
   constexpr uint32_t kTopBit = 0x80000000;
 
-  uint32_t carry_into_v1 = ((v->v[0] & kTopThreeBits) >> 29) +
-                           ((v->v[0] & kTopBit) >> 31);
-  v->v[0] = AddWithCarry(v->v[0] << 3, v->v[0] << 1, &carry_into_v1);
-  uint32_t carry_into_v2 = ((v->v[1] & kTopThreeBits) >> 29) +
-                           ((v->v[1] & kTopBit) >> 31);
-  v->v[1] = AddWithCarry(v->v[1] << 3, v->v[1] << 1, &carry_into_v2);
-  v->v[1] = AddWithCarry(v->v[1], carry_into_v1, &carry_into_v2);
-  uint32_t carry_into_v3 = ((v->v[2] & kTopThreeBits) >> 29) +
-                           ((v->v[2] & kTopBit) >> 31);
-  v->v[2] = AddWithCarry(v->v[2] << 3, v->v[2] << 1, &carry_into_v3);
-  v->v[2] = AddWithCarry(v->v[2], carry_into_v2, &carry_into_v3);
-  v->v[3] = v->v[3] * 10 + carry_into_v3;
+  uint32_t carry_into_v1 =
+      ((v->u32(0) & kTopThreeBits) >> 29) + ((v->u32(0) & kTopBit) >> 31);
+  v->set_u32(0, AddWithCarry(v->u32(0) << 3, v->u32(0) << 1, &carry_into_v1));
+  uint32_t carry_into_v2 =
+      ((v->u32(1) & kTopThreeBits) >> 29) + ((v->u32(1) & kTopBit) >> 31);
+  v->set_u32(1, AddWithCarry(v->u32(1) << 3, v->u32(1) << 1, &carry_into_v2));
+  v->set_u32(1, AddWithCarry(v->u32(1), carry_into_v1, &carry_into_v2));
+  uint32_t carry_into_v3 =
+      ((v->u32(2) & kTopThreeBits) >> 29) + ((v->u32(2) & kTopBit) >> 31);
+  v->set_u32(2, AddWithCarry(v->u32(2) << 3, v->u32(2) << 1, &carry_into_v3));
+  v->set_u32(2, AddWithCarry(v->u32(2), carry_into_v2, &carry_into_v3));
+  v->set_u32(3, v->u32(3) * 10 + carry_into_v3);
 }
 }
 
@@ -683,10 +683,7 @@ Result ParseUint128(const char* s,
     return Result::Error;
   }
 
-  out->v[0] = 0;
-  out->v[1] = 0;
-  out->v[2] = 0;
-  out->v[3] = 0;
+  out->set_zero();
 
   while (true) {
     uint32_t digit = (*s - '0');
@@ -698,10 +695,10 @@ Result ParseUint128(const char* s,
     uint32_t carry_into_v2 = 0;
     uint32_t carry_into_v3 = 0;
     uint32_t overflow = 0;
-    out->v[0] = AddWithCarry(out->v[0], digit, &carry_into_v1);
-    out->v[1] = AddWithCarry(out->v[1], carry_into_v1, &carry_into_v2);
-    out->v[2] = AddWithCarry(out->v[2], carry_into_v2, &carry_into_v3);
-    out->v[3] = AddWithCarry(out->v[3], carry_into_v3, &overflow);
+    out->set_u32(0, AddWithCarry(out->u32(0), digit, &carry_into_v1));
+    out->set_u32(1, AddWithCarry(out->u32(1), carry_into_v1, &carry_into_v2));
+    out->set_u32(2, AddWithCarry(out->u32(2), carry_into_v2, &carry_into_v3));
+    out->set_u32(3, AddWithCarry(out->u32(3), carry_into_v3, &overflow));
     if (overflow) {
       return Result::Error;
     }
@@ -800,17 +797,17 @@ void WriteUint128(char* buffer, size_t size, v128 bits) {
   char reversed_buffer[40];
   size_t len = 0;
   do {
-    remainder = bits.v[3];
+    remainder = bits.u32(3);
 
     for (int i = 3; i != 0; --i) {
       digits = remainder / 10;
-      remainder = ((remainder - digits * 10) << 32) + bits.v[i-1];
-      bits.v[i] = digits;
+      remainder = ((remainder - digits * 10) << 32) + bits.u32(i-1);
+      bits.set_u32(i, digits);
     }
 
     digits = remainder / 10;
     remainder = remainder - digits * 10;
-    bits.v[0] = digits;
+    bits.set_u32(0, digits);
 
     char remainder_buffer[21];
     snprintf(remainder_buffer, 21, "%" PRIu64, remainder);
@@ -818,7 +815,7 @@ void WriteUint128(char* buffer, size_t size, v128 bits) {
     assert(len + remainder_buffer_len < sizeof(reversed_buffer));
     memcpy(&reversed_buffer[len], remainder_buffer, remainder_buffer_len);
     len += remainder_buffer_len;
-  } while (bits.v[0] || bits.v[1] || bits.v[2] || bits.v[3]);
+  } while (!bits.is_zero());
   size_t truncated_tail = 0;
   if (len >= size) {
     truncated_tail = len - size + 1;
