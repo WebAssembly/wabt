@@ -2195,8 +2195,8 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
     case ValueType::F64: return StringPrintf("%g", val.Get<f64>());
     case ValueType::V128: {
       auto v = val.Get<v128>();
-      return StringPrintf("0x%08x 0x%08x 0x%08x 0x%08x", v.v[0], v.v[1], v.v[2],
-                          v.v[3]);
+      return StringPrintf("0x%08x 0x%08x 0x%08x 0x%08x", v.u32(0), v.u32(1),
+                          v.u32(2), v.u32(3));
     }
 
     case ValueType::Nullref: reftype = "nullref"; break;

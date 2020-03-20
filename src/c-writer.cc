@@ -2261,7 +2261,7 @@ void CWriter::Write(const SimdShuffleOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(1, result_type), " = ", expr.opcode.GetName(), "(",
         StackVar(1), " ", StackVar(0), ", lane Imm: $0x%08x %08x %08x %08x",
-        expr.val.v[0], expr.val.v[1], expr.val.v[2], expr.val.v[3], ")",
+        expr.val.u32(0), expr.val.u32(1), expr.val.u32(2), expr.val.u32(3), ")",
         Newline());
   DropTypes(2);
   PushType(result_type);

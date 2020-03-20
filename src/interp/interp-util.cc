@@ -39,8 +39,8 @@ std::string TypedValueToString(const TypedValue& tv) {
 
     case Type::V128: {
       v128 simd = tv.value.Get<v128>();
-      return StringPrintf("v128 i32x4:0x%08x 0x%08x 0x%08x 0x%08x", simd.v[0],
-                          simd.v[1], simd.v[2], simd.v[3]);
+      return StringPrintf("v128 i32x4:0x%08x 0x%08x 0x%08x 0x%08x", simd.u32(0),
+                          simd.u32(1), simd.u32(2), simd.u32(3));
     }
 
     case Type::Nullref:

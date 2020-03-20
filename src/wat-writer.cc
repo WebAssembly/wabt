@@ -462,8 +462,8 @@ void WatWriter::WriteConst(const Const& const_) {
     case Type::V128: {
       WritePutsSpace(Opcode::V128Const_Opcode.GetName());
       auto vec = const_.vec128();
-      Writef("i32x4 0x%08x 0x%08x 0x%08x 0x%08x", vec.v[0], vec.v[1], vec.v[2],
-             vec.v[3]);
+      Writef("i32x4 0x%08x 0x%08x 0x%08x 0x%08x", vec.u32(0), vec.u32(1),
+             vec.u32(2), vec.u32(3));
       WriteNewline(NO_FORCE_NEWLINE);
       break;
     }

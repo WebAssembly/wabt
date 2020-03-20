@@ -94,12 +94,12 @@ struct Const {
 
   Type type() const { return type_; }
 
-  uint32_t u32() const { return data_[0]; }
-  uint64_t u64() const { return To<uint64_t>(); }
-  uint32_t f32_bits() const { return data_[0]; }
-  uint64_t f64_bits() const { return To<uint64_t>(); }
-  uintptr_t ref_bits() const { return To<uintptr_t>(); }
-  v128 vec128() const { return To<v128>(); }
+  uint32_t u32() const { return data_.u32(0); }
+  uint64_t u64() const { return data_.u64(0); }
+  uint32_t f32_bits() const { return data_.f32_bits(0); }
+  uint64_t f64_bits() const { return data_.f64_bits(0); }
+  uintptr_t ref_bits() const { return data_.To<uintptr_t>(0); }
+  v128 vec128() const { return data_; }
 
   bool is_expected_nan() const { return nan_ != ExpectedNan::None; }
   ExpectedNan expected() const { assert(is_expected_nan()); return nan_; }
@@ -126,23 +126,14 @@ struct Const {
   }
 
   template <typename T>
-  T To() const {
-    static_assert(sizeof(T) <= sizeof(data_), "Invalid cast!");
-    T result;
-    memcpy(&result, &data_[0], sizeof(result));
-    return result;
-  }
-
-  template <typename T>
   void From(Type type, T data) {
-    static_assert(sizeof(T) <= sizeof(data_), "Invalid cast!");
     type_ = type;
-    memcpy(&data_[0], &data, sizeof(data));
+    data_.From<T>(0, data);
     nan_ = ExpectedNan::None;
   }
 
   Type type_;
-  uint32_t data_[4];  // 32 * 4 = 128 bits.
+  v128 data_;
   ExpectedNan nan_ = ExpectedNan::None;
 };
 typedef std::vector<Const> ConstVector;
