@@ -368,10 +368,11 @@ if (NOT EMSCRIPTEN)
       list(APPEND WABT_EXECUTABLES ${EXE_NAME})
       set(WABT_EXECUTABLES ${WABT_EXECUTABLES} PARENT_SCOPE)
 
-      add_custom_target(${EXE_NAME}-copy-to-bin ALL
+      add_custom_command(
+        TARGET ${EXE_NAME}
+        POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXE_NAME}> ${WABT_SOURCE_DIR}/bin
-        DEPENDS ${EXE_NAME}
       )
     endif ()
   endfunction()
@@ -554,12 +555,13 @@ if (NOT EMSCRIPTEN)
         set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-pointer-to-int-cast")
       endif ()
       target_link_libraries(${EXENAME} wasm Threads::Threads)
-      add_custom_target(${EXENAME}-copy-to-bin ALL
+      add_custom_command(
+        TARGET ${EXENAME}
+        POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXENAME}> ${WABT_SOURCE_DIR}/bin/
         COMMAND ${CMAKE_COMMAND} -E copy ${WABT_SOURCE_DIR}/third_party/wasm-c-api/example/${NAME}.wasm $<TARGET_FILE_DIR:${EXENAME}>/
         COMMAND ${CMAKE_COMMAND} -E copy ${WABT_SOURCE_DIR}/third_party/wasm-c-api/example/${NAME}.wasm ${WABT_SOURCE_DIR}/bin/
-        DEPENDS ${EXENAME}
       )
       add_dependencies(run-c-api-tests ${EXENAME})
     endfunction()
