@@ -1133,8 +1133,7 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  if (options_.features.bulk_memory_enabled() &&
-      module_->data_segments.size()) {
+  if (options_.features.bulk_memory_enabled()) {
     // Keep track of the data count section offset so it can be removed if
     // it isn't needed.
     data_count_start_ = stream_->offset();
