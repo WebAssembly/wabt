@@ -56,6 +56,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                       TypeMut* fields) override {
     return Result::Ok;
   }
+  Result OnArrayType(Index index, TypeMut field) override {
+    return Result::Ok;
+  }
   Result EndTypeSection() override { return Result::Ok; }
 
   /* Import section */

@@ -16,6 +16,7 @@ struct TokenInfo {
 };
 %%
 anyref, Type::Anyref
+array, TokenType::Array
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
 assert_malformed, TokenType::AssertMalformed

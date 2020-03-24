@@ -48,6 +48,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                     Index result_count,
                     Type* result_types) override;
   Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
+  Result OnArrayType(Index index, TypeMut field) override;
   Result EndTypeSection() override;
 
   Result BeginImportSection(Offset size) override;
@@ -355,6 +356,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   void LogType(Type type);
   void LogTypes(Index type_count, Type* types);
   void LogTypes(TypeVector& types);
+  void LogField(TypeMut field);
 
   Stream* stream_;
   BinaryReaderDelegate* reader_;

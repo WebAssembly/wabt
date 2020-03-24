@@ -99,6 +99,16 @@ void BinaryReaderLogging::LogTypes(TypeVector& types) {
   LogTypes(types.size(), types.data());
 }
 
+void BinaryReaderLogging::LogField(TypeMut field) {
+  if (field.mutable_) {
+    LOGF_NOINDENT("(mut ");
+  }
+  LogType(field.type);
+  if (field.mutable_) {
+    LOGF_NOINDENT(")");
+  }
+}
+
 bool BinaryReaderLogging::OnError(const Error& error) {
   return reader_->OnError(error);
 }
@@ -149,19 +159,20 @@ Result BinaryReaderLogging::OnStructType(Index index,
   LOGF("OnStructType(index: %" PRIindex ", fields: ", index);
   LOGF_NOINDENT("[");
   for (Index i = 0; i < field_count; ++i) {
-    if (fields[i].mutable_) {
-      LOGF_NOINDENT("(mut ");
-    }
-    LogType(fields[i].type);
-    if (fields[i].mutable_) {
-      LOGF_NOINDENT(")");
-    }
+    LogField(fields[i]);
     if (i != field_count - 1) {
       LOGF_NOINDENT(", ");
     }
   }
   LOGF_NOINDENT("])\n");
   return reader_->OnStructType(index, field_count, fields);
+}
+
+Result BinaryReaderLogging::OnArrayType(Index index, TypeMut field) {
+  LOGF("OnArrayType(index: %" PRIindex ", field: ", index);
+  LogField(field);
+  LOGF_NOINDENT(")\n");
+  return reader_->OnArrayType(index, field);
 }
 
 Result BinaryReaderLogging::OnImport(Index index,

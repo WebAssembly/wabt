@@ -60,6 +60,7 @@ std::string TypedValueToString(const TypedValue& tv) {
 
     case Type::Func:
     case Type::Struct:
+    case Type::Array:
     case Type::Void:
     case Type::Any:
     case Type::I8:

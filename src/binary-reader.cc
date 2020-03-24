@@ -108,6 +108,7 @@ class BinaryReader {
   Result ReadIndex(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
+  Result ReadField(TypeMut* out_value) WABT_WARN_UNUSED;
 
   bool IsConcreteType(Type);
   bool IsBlockType(Type);
@@ -370,6 +371,22 @@ Result BinaryReader::ReadCount(Index* count, const char* desc) {
                desc, *count, section_remaining);
     return Result::Error;
   }
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadField(TypeMut* out_value) {
+  // TODO: Reuse for global header too?
+  Type field_type;
+  CHECK_RESULT(ReadType(&field_type, "field type"));
+  ERROR_UNLESS(IsConcreteType(field_type),
+               "expected valid field type (got " PRItypecode ")",
+               WABT_PRINTF_TYPE_CODE(field_type));
+
+  uint8_t mutable_ = 0;
+  CHECK_RESULT(ReadU8(&mutable_, "field mutability"));
+  ERROR_UNLESS(mutable_ <= 1, "field mutability must be 0 or 1");
+  out_value->type = field_type;
+  out_value->mutable_ = mutable_;
   return Result::Ok;
 }
 
@@ -1944,23 +1961,22 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
 
         fields_.resize(num_fields);
         for (Index j = 0; j < num_fields; ++j) {
-          Type field_type;
-          CHECK_RESULT(ReadType(&field_type, "field type"));
-          ERROR_UNLESS(IsConcreteType(field_type),
-                       "expected valid field type (got " PRItypecode ")",
-                       WABT_PRINTF_TYPE_CODE(field_type));
-
-          uint8_t mutable_ = 0;
-          CHECK_RESULT(ReadU8(&mutable_, "field mutability"));
-          ERROR_UNLESS(mutable_ <= 1, "field mutability must be 0 or 1");
-
-          fields_[j].type = field_type;
-          fields_[j].mutable_ = mutable_;
+          CHECK_RESULT(ReadField(&fields_[j]));
         }
 
         CALLBACK(OnStructType, i, fields_.size(), fields_.data());
         break;
       }
+
+      case Type::Array: {
+        ERROR_UNLESS(options_.features.gc_enabled(),
+                     "invalid type form: array not allowed");
+
+        TypeMut field;
+        CHECK_RESULT(ReadField(&field));
+        CALLBACK(OnArrayType, i, field);
+        break;
+      };
 
       default:
         PrintError("unexpected type form (got " PRItypecode ")",
