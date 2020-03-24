@@ -1,0 +1,22 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-simd
+(module
+  (func (param v128) (result v128)
+    local.get 0
+    local.get 0
+    v8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+  (func (param v128) (result f32)
+    local.get 0
+    f32x4.extract_lane 1))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param v128) (result v128)))
+  (type (;1;) (func (param v128) (result f32)))
+  (func (;0;) (type 0) (param v128) (result v128)
+    local.get 0
+    local.get 0
+    v8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+  (func (;1;) (type 1) (param v128) (result f32)
+    local.get 0
+    f32x4.extract_lane 1))
+;;; STDOUT ;;)
