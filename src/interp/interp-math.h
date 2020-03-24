@@ -80,6 +80,9 @@ template <typename T> T WABT_VECTORCALL IntNot(T val) { return ~val; }
 template <typename T> T WABT_VECTORCALL IntNeg(T val) { return ~val + 1; }
 template <typename T> T WABT_VECTORCALL Add(T lhs, T rhs) { return CanonNaN(lhs + rhs); }
 template <typename T> T WABT_VECTORCALL Sub(T lhs, T rhs) { return CanonNaN(lhs - rhs); }
+// Must cast lhs * rhs to T, since for example, u16 * u16 => int, which cannot
+// represent the value 65535 * 65535 (which UBSan complains about). We always
+// want to wrap, so casting back to T solves this issue.
 template <typename T> T WABT_VECTORCALL Mul(T lhs, T rhs) { return CanonNaN(T(lhs * rhs)); }
 template <typename T> T WABT_VECTORCALL IntAnd(T lhs, T rhs) { return lhs & rhs; }
 template <typename T> T WABT_VECTORCALL IntOr(T lhs, T rhs) { return lhs | rhs; }
