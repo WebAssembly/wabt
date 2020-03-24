@@ -80,7 +80,7 @@ template <typename T> T WABT_VECTORCALL IntNot(T val) { return ~val; }
 template <typename T> T WABT_VECTORCALL IntNeg(T val) { return ~val + 1; }
 template <typename T> T WABT_VECTORCALL Add(T lhs, T rhs) { return CanonNaN(lhs + rhs); }
 template <typename T> T WABT_VECTORCALL Sub(T lhs, T rhs) { return CanonNaN(lhs - rhs); }
-template <typename T> T WABT_VECTORCALL Mul(T lhs, T rhs) { return CanonNaN(lhs * rhs); }
+template <typename T> T WABT_VECTORCALL Mul(T lhs, T rhs) { return CanonNaN(T(lhs * rhs)); }
 template <typename T> T WABT_VECTORCALL IntAnd(T lhs, T rhs) { return lhs & rhs; }
 template <typename T> T WABT_VECTORCALL IntOr(T lhs, T rhs) { return lhs | rhs; }
 template <typename T> T WABT_VECTORCALL IntXor(T lhs, T rhs) { return lhs ^ rhs; }
