@@ -36,8 +36,8 @@ class Type {
     F32 = -0x03,      // 0x7d
     F64 = -0x04,      // 0x7c
     V128 = -0x05,     // 0x7b
-    I8 = -0x06,       // 0x7a  // packed-type only, used in gc and as v128 lane
-    I16 = -0x07,      // 0x79  // packed-type only, used in gc and as v128 lane
+    I8 = -0x06,       // 0x7a  : packed-type only, used in gc and as v128 lane
+    I16 = -0x07,      // 0x79  : packed-type only, used in gc and as v128 lane
     Funcref = -0x10,  // 0x70
     Anyref = -0x11,   // 0x6f
     Nullref = -0x12,  // 0x6e

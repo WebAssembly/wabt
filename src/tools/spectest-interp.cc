@@ -161,8 +161,15 @@ class RegisterCommand : public CommandMixin<CommandType::Register> {
 
 struct ExpectedValue {
   TypedValue value;
-  Type lane_type;      // Only valid if value.type == Type::V128.
-  ExpectedNan nan[4];  // One for each v128 lane (up to 4 for f32x4).
+  Type lane_type;             // Only valid if value.type == Type::V128.
+  // Up to 4 NaN values used, depending on |value.type| and |lane_type|:
+  //   | type  | lane_type | valid                 |
+  //   | f32   |           | nan[0]                |
+  //   | f64   |           | nan[0]                |
+  //   | v128  | f32       | nan[0] through nan[3] |
+  //   | v128  | f64       | nan[0],nan[1]         |
+  //   | *     | *         | none valid            |
+  ExpectedNan nan[4];
 };
 
 int LaneCountFromType(Type type) {
@@ -314,6 +321,10 @@ class JSONParser {
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
 
+  // Whether to allow parsing of expectation-only forms (e.g. `nan:canonical`,
+  // `nan:arithmetic`, etc.)
+  enum class AllowExpected { No, Yes };
+
   void PutbackChar();
   int ReadChar();
   void SkipWhitespace();
@@ -333,20 +344,24 @@ class JSONParser {
   wabt::Result ParseI64Value(uint64_t* out_value, string_view value_str);
   wabt::Result ParseF32Value(uint32_t* out_value,
                              ExpectedNan* out_nan,
-                             string_view value_str);
+                             string_view value_str,
+                             AllowExpected);
   wabt::Result ParseF64Value(uint64_t* out_value,
                              ExpectedNan* out_nan,
-                             string_view value_str);
+                             string_view value_str,
+                             AllowExpected);
   wabt::Result ParseLaneConstValue(Type lane_type,
                                    int lane,
                                    ExpectedValue* out_value,
-                                   string_view value_str);
+                                   string_view value_str,
+                                   AllowExpected);
   wabt::Result ParseConstValue(Type type,
                                Value* out_value,
                                ExpectedNan* out_nan,
-                               string_view value_str);
+                               string_view value_str,
+                               AllowExpected);
   wabt::Result ParseConstVector(ValueTypes* out_types, Values* out_values);
-  wabt::Result ParseExpectedValue(ExpectedValue* out_value);
+  wabt::Result ParseExpectedValue(ExpectedValue* out_value, AllowExpected);
   wabt::Result ParseExpectedValues(std::vector<ExpectedValue>* out_values);
   wabt::Result ParseAction(Action* out_action);
   wabt::Result ParseActionResult();
@@ -614,7 +629,7 @@ wabt::Result JSONParser::ParseTypeVector(TypeVector* out_types) {
 
 wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
   ExpectedValue expected;
-  CHECK_RESULT(ParseExpectedValue(&expected));
+  CHECK_RESULT(ParseExpectedValue(&expected, AllowExpected::No));
   *out_value = expected.value;
   return wabt::Result::Ok;
 }
@@ -641,39 +656,48 @@ wabt::Result JSONParser::ParseI64Value(uint64_t* out_value,
 
 wabt::Result JSONParser::ParseF32Value(uint32_t* out_value,
                                        ExpectedNan* out_nan,
-                                       string_view value_str) {
-  *out_value = 0;
-  if (value_str == "nan:canonical") {
-    *out_nan = ExpectedNan::Canonical;
-  } else if (value_str == "nan:arithmetic") {
-    *out_nan = ExpectedNan::Arithmetic;
-  } else {
-    *out_nan = ExpectedNan::None;
-    if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
-                          ParseIntType::UnsignedOnly))) {
-      PrintError("invalid f32 literal");
-      return wabt::Result::Error;
+                                       string_view value_str,
+                                       AllowExpected allow_expected) {
+  if (allow_expected == AllowExpected::Yes) {
+    *out_value = 0;
+    if (value_str == "nan:canonical") {
+      *out_nan = ExpectedNan::Canonical;
+      return wabt::Result::Ok;
+    } else if (value_str == "nan:arithmetic") {
+      *out_nan = ExpectedNan::Arithmetic;
+      return wabt::Result::Ok;
     }
+  }
+
+  *out_nan = ExpectedNan::None;
+  if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid f32 literal");
+    return wabt::Result::Error;
   }
   return wabt::Result::Ok;
 }
 
 wabt::Result JSONParser::ParseF64Value(uint64_t* out_value,
                                        ExpectedNan* out_nan,
-                                       string_view value_str) {
-  if (value_str == "nan:canonical") {
+                                       string_view value_str,
+                                       AllowExpected allow_expected) {
+  if (allow_expected == AllowExpected::Yes) {
     *out_value = 0;
-    *out_nan = ExpectedNan::Canonical;
-  } else if (value_str == "nan:arithmetic") {
-    *out_value = 0;
-    *out_nan = ExpectedNan::Arithmetic;
-  } else {
-    *out_nan = ExpectedNan::None;
-    if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
-                          ParseIntType::UnsignedOnly))) {
-      PrintError("invalid f64 literal");
-      return wabt::Result::Error;
+    if (value_str == "nan:canonical") {
+      *out_nan = ExpectedNan::Canonical;
+      return wabt::Result::Ok;
+    } else if (value_str == "nan:arithmetic") {
+      *out_nan = ExpectedNan::Arithmetic;
+      return wabt::Result::Ok;
     }
+  }
+
+  *out_nan = ExpectedNan::None;
+  if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid f64 literal");
+    return wabt::Result::Error;
   }
   return wabt::Result::Ok;
 }
@@ -681,7 +705,8 @@ wabt::Result JSONParser::ParseF64Value(uint64_t* out_value,
 wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
                                              int lane,
                                              ExpectedValue* out_value,
-                                             string_view value_str) {
+                                             string_view value_str,
+                                             AllowExpected allow_expected) {
   v128& v = out_value->value.value.v128_;
 
   switch (lane_type) {
@@ -716,7 +741,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
     case Type::F32: {
       ExpectedNan nan;
       uint32_t value_bits;
-      CHECK_RESULT(ParseF32Value(&value_bits, &nan, value_str));
+      CHECK_RESULT(ParseF32Value(&value_bits, &nan, value_str, allow_expected));
       v.set_f32_bits(lane, value_bits);
       assert(lane < 4);
       out_value->nan[lane] = nan;
@@ -726,7 +751,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
     case Type::F64: {
       ExpectedNan nan;
       uint64_t value_bits;
-      CHECK_RESULT(ParseF64Value(&value_bits, &nan, value_str));
+      CHECK_RESULT(ParseF64Value(&value_bits, &nan, value_str, allow_expected));
       v.set_f64_bits(lane, value_bits);
       assert(lane < 2);
       out_value->nan[lane] = nan;
@@ -743,7 +768,8 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
 wabt::Result JSONParser::ParseConstValue(Type type,
                                          Value* out_value,
                                          ExpectedNan* out_nan,
-                                         string_view value_str) {
+                                         string_view value_str,
+                                         AllowExpected allow_expected) {
   *out_nan = ExpectedNan::None;
 
   switch (type) {
@@ -756,7 +782,8 @@ wabt::Result JSONParser::ParseConstValue(Type type,
 
     case Type::F32: {
       uint32_t value_bits;
-      CHECK_RESULT(ParseF32Value(&value_bits, out_nan, value_str));
+      CHECK_RESULT(
+          ParseF32Value(&value_bits, out_nan, value_str, allow_expected));
       out_value->Set(Bitcast<f32>(value_bits));
       break;
     }
@@ -770,7 +797,8 @@ wabt::Result JSONParser::ParseConstValue(Type type,
 
     case Type::F64: {
       uint64_t value_bits;
-      CHECK_RESULT(ParseF64Value(&value_bits, out_nan, value_str));
+      CHECK_RESULT(
+          ParseF64Value(&value_bits, out_nan, value_str, allow_expected));
       out_value->Set(Bitcast<f64>(value_bits));
       break;
     }
@@ -808,7 +836,8 @@ wabt::Result JSONParser::ParseConstValue(Type type,
   return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value) {
+wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value,
+                                            AllowExpected allow_expected) {
   Type type;
   std::string value_str;
   EXPECT("{");
@@ -826,7 +855,8 @@ wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value) {
     int lane_count = LaneCountFromType(lane_type);
     for (int lane = 0; lane < lane_count; ++lane) {
       CHECK_RESULT(ParseString(&value_str));
-      CHECK_RESULT(ParseLaneConstValue(lane_type, lane, out_value, value_str));
+      CHECK_RESULT(ParseLaneConstValue(lane_type, lane, out_value, value_str,
+                                       allow_expected));
       if (lane < lane_count - 1) {
         EXPECT(",");
       }
@@ -837,7 +867,8 @@ wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value) {
   } else {
     PARSE_KEY_STRING_VALUE("value", &value_str);
     CHECK_RESULT(ParseConstValue(type, &out_value->value.value,
-                                 &out_value->nan[0], value_str));
+                                 &out_value->nan[0], value_str,
+                                 allow_expected));
     out_value->value.type = type;
   }
   EXPECT("}");
@@ -855,7 +886,7 @@ wabt::Result JSONParser::ParseExpectedValues(
       EXPECT(",");
     }
     ExpectedValue value;
-    CHECK_RESULT(ParseExpectedValue(&value));
+    CHECK_RESULT(ParseExpectedValue(&value, AllowExpected::Yes));
     out_values->push_back(value);
     first = false;
   }
@@ -1617,8 +1648,9 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
     }
 
     default:
-      return TypedValueToString(ev.value);
+      break;
   }
+  return TypedValueToString(ev.value);
 }
 
 wabt::Result CommandRunner::CheckAssertReturnResult(

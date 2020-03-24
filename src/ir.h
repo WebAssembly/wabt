@@ -172,7 +172,7 @@ struct Const {
     assert((lane + 1) * sizeof(T) <= sizeof(data_));
     type_ = type;
     data_.From<T>(lane, data);
-    nan_[lane] = ExpectedNan::None;
+    set_expected_nan(lane, ExpectedNan::None);
   }
 
   Type type_;

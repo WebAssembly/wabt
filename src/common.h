@@ -151,7 +151,6 @@ struct v128 {
     memcpy(&v[lane * sizeof(T)], &data, sizeof(data));
   }
 
- private:
   uint8_t v[16];
 };
 
