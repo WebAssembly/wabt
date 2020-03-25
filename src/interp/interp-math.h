@@ -80,10 +80,6 @@ template <typename T> T WABT_VECTORCALL IntNot(T val) { return ~val; }
 template <typename T> T WABT_VECTORCALL IntNeg(T val) { return ~val + 1; }
 template <typename T> T WABT_VECTORCALL Add(T lhs, T rhs) { return CanonNaN(lhs + rhs); }
 template <typename T> T WABT_VECTORCALL Sub(T lhs, T rhs) { return CanonNaN(lhs - rhs); }
-// Must cast lhs * rhs to T, since for example, u16 * u16 => int, which cannot
-// represent the value 65535 * 65535 (which UBSan complains about). We always
-// want to wrap, so casting back to T solves this issue.
-template <typename T> T WABT_VECTORCALL Mul(T lhs, T rhs) { return CanonNaN(T(lhs * rhs)); }
 template <typename T> T WABT_VECTORCALL IntAnd(T lhs, T rhs) { return lhs & rhs; }
 template <typename T> T WABT_VECTORCALL IntOr(T lhs, T rhs) { return lhs | rhs; }
 template <typename T> T WABT_VECTORCALL IntXor(T lhs, T rhs) { return lhs ^ rhs; }
@@ -94,6 +90,27 @@ template <typename T> T WABT_VECTORCALL IntMax(T lhs, T rhs) { return std::max(l
 template <typename T> T WABT_VECTORCALL IntAndNot(T lhs, T rhs) { return lhs & ~rhs; }
 template <typename T> T WABT_VECTORCALL IntAvgr(T lhs, T rhs) { return (lhs + rhs + 1) / 2; }
 template <typename T> T WABT_VECTORCALL Xchg(T lhs, T rhs) { return rhs; }
+
+// Because of the integer promotion rules [1], any value of a type T which is
+// smaller than `int` will be converted to an `int`, as long as `int` can hold
+// any value of type T.
+//
+// So type `u16` will be promoted to `int`, since all values can be stored in
+// an int. Unfortunately, the product of two `u16` values cannot always be
+// stored in an `int` (e.g. 65535 * 65535). This triggers an error in UBSan.
+//
+// As a result, we make sure to promote the type ahead of time for `u16`. Note
+// that this isn't a problem for any other unsigned types.
+//
+// [1]; https://en.cppreference.com/w/cpp/language/implicit_conversion#Integral_promotion
+template <typename T> struct PromoteMul { using type = T; };
+template <> struct PromoteMul<u16> { using type = u32; };
+
+template <typename T>
+T WABT_VECTORCALL Mul(T lhs, T rhs) {
+  using U = typename PromoteMul<T>::type;
+  return CanonNaN(U(lhs) * U(rhs));
+}
 
 template <typename T> struct Mask { using Type = T; };
 template <> struct Mask<f32> { using Type = u32; };
