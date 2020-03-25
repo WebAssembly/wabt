@@ -36,8 +36,8 @@
   V(Function, function, 3)             \
   V(Table, table, 4)                   \
   V(Memory, memory, 5)                 \
-  V(Global, global, 6)                 \
   V(Event, event, 13)                  \
+  V(Global, global, 6)                 \
   V(Export, export, 7)                 \
   V(Start, start, 8)                   \
   V(Elem, elem, 9)                     \
