@@ -36,6 +36,8 @@ class Type {
     F32 = -0x03,      // 0x7d
     F64 = -0x04,      // 0x7c
     V128 = -0x05,     // 0x7b
+    I8 = -0x06,       // 0x7a  : packed-type only, used in gc and as v128 lane
+    I16 = -0x07,      // 0x79  : packed-type only, used in gc and as v128 lane
     Funcref = -0x10,  // 0x70
     Anyref = -0x11,   // 0x6f
     Nullref = -0x12,  // 0x6e
@@ -48,9 +50,7 @@ class Type {
 
     Any = 0,          // Not actually specified, but useful for type-checking
     Hostref = 2,      // Not actually specified, but used in testing and type-checking
-    I8 = 3,    // Not actually specified, but used internally with load/store
     I8U = 4,   // Not actually specified, but used internally with load/store
-    I16 = 5,   // Not actually specified, but used internally with load/store
     I16U = 6,  // Not actually specified, but used internally with load/store
     I32U = 7,  // Not actually specified, but used internally with load/store
   };
@@ -78,6 +78,8 @@ class Type {
       case Type::F32:     return "f32";
       case Type::F64:     return "f64";
       case Type::V128:    return "v128";
+      case Type::I8:      return "i8";
+      case Type::I16:     return "i16";
       case Type::Funcref: return "funcref";
       case Type::Func:    return "func";
       case Type::Exnref:  return "exnref";

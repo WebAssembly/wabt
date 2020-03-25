@@ -43,6 +43,12 @@ std::string TypedValueToString(const TypedValue& tv) {
                           simd.u32(1), simd.u32(2), simd.u32(3));
     }
 
+    case Type::I8:  // For SIMD lane.
+      return StringPrintf("i8:%u", tv.value.Get<u32>() & 0xff);
+
+    case Type::I16:  // For SIMD lane.
+      return StringPrintf("i16:%u", tv.value.Get<u32>() & 0xffff);
+
     case Type::Nullref:
       return StringPrintf("nullref");
 
@@ -63,9 +69,7 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::Array:
     case Type::Void:
     case Type::Any:
-    case Type::I8:
     case Type::I8U:
-    case Type::I16:
     case Type::I16U:
     case Type::I32U:
       // These types are not concrete types and should never exist as a value

@@ -54,6 +54,8 @@ class BinaryWriterSpec {
   void WriteLocation(const Location& loc);
   void WriteVar(const Var& var);
   void WriteTypeObject(Type type);
+  void WriteF32(uint32_t, ExpectedNan);
+  void WriteF64(uint64_t, ExpectedNan);
   void WriteConst(const Const& const_);
   void WriteConstVector(const ConstVector& consts);
   void WriteAction(const Action& action);
@@ -160,6 +162,38 @@ void BinaryWriterSpec::WriteTypeObject(Type type) {
   json_stream_->Writef("}");
 }
 
+void BinaryWriterSpec::WriteF32(uint32_t f32_bits, ExpectedNan expected) {
+  switch (expected) {
+    case ExpectedNan::None:
+      json_stream_->Writef("\"%u\"", f32_bits);
+      break;
+
+    case ExpectedNan::Arithmetic:
+      WriteString("nan:arithmetic");
+      break;
+
+    case ExpectedNan::Canonical:
+      WriteString("nan:canonical");
+      break;
+  }
+}
+
+void BinaryWriterSpec::WriteF64(uint64_t f64_bits, ExpectedNan expected) {
+  switch (expected) {
+    case ExpectedNan::None:
+      json_stream_->Writef("\"%" PRIu64 "\"", f64_bits);
+      break;
+
+    case ExpectedNan::Arithmetic:
+      WriteString("nan:arithmetic");
+      break;
+
+    case ExpectedNan::Canonical:
+      WriteString("nan:canonical");
+      break;
+  }
+}
+
 void BinaryWriterSpec::WriteConst(const Const& const_) {
   json_stream_->Writef("{");
   WriteKey("type");
@@ -181,39 +215,19 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       json_stream_->Writef("\"%" PRIu64 "\"", const_.u64());
       break;
 
-    case Type::F32: {
-      /* TODO(binji): write as hex float */
+    case Type::F32:
       WriteString("f32");
       WriteSeparator();
       WriteKey("value");
-      if (const_.is_expected_nan()) {
-        if (const_.expected() == ExpectedNan::Arithmetic) {
-          WriteString("nan:arithmetic");
-        } else {
-          WriteString("nan:canonical");
-        }
-      } else {
-        json_stream_->Writef("\"%u\"", const_.f32_bits());
-      }
+      WriteF32(const_.f32_bits(), const_.expected_nan());
       break;
-    }
 
-    case Type::F64: {
-      /* TODO(binji): write as hex float */
+    case Type::F64:
       WriteString("f64");
       WriteSeparator();
       WriteKey("value");
-      if (const_.is_expected_nan()) {
-        if (const_.expected() == ExpectedNan::Arithmetic) {
-          WriteString("nan:arithmetic");
-        } else {
-          WriteString("nan:canonical");
-        }
-      } else {
-        json_stream_->Writef("\"%" PRIu64 "\"", const_.f64_bits());
-      }
+      WriteF64(const_.f64_bits(), const_.expected_nan());
       break;
-    }
 
     case Type::Nullref:
       WriteString("nullref");
@@ -243,10 +257,52 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
     case Type::V128: {
       WriteString("v128");
       WriteSeparator();
+      WriteKey("lane_type");
+      WriteString(const_.lane_type().GetName());
+      WriteSeparator();
       WriteKey("value");
-      char buffer[128];
-      WriteUint128(buffer, 128, const_.vec128());
-      json_stream_->Writef("\"%s\"", buffer);
+      json_stream_->Writef("[");
+
+      for (int lane = 0; lane < const_.lane_count(); ++lane) {
+        switch (const_.lane_type()) {
+          case Type::I8:
+            json_stream_->Writef("\"%u\"", const_.v128_lane<uint8_t>(lane));
+            break;
+
+          case Type::I16:
+            json_stream_->Writef("\"%u\"", const_.v128_lane<uint16_t>(lane));
+            break;
+
+          case Type::I32:
+            json_stream_->Writef("\"%u\"", const_.v128_lane<uint32_t>(lane));
+            break;
+
+          case Type::I64:
+            json_stream_->Writef("\"%" PRIu64 "\"",
+                                 const_.v128_lane<uint64_t>(lane));
+            break;
+
+          case Type::F32:
+            WriteF32(const_.v128_lane<uint32_t>(lane),
+                     const_.expected_nan(lane));
+            break;
+
+          case Type::F64:
+            WriteF64(const_.v128_lane<uint64_t>(lane),
+                     const_.expected_nan(lane));
+            break;
+
+          default:
+            WABT_UNREACHABLE;
+        }
+
+        if (lane != const_.lane_count() - 1) {
+          WriteSeparator();
+        }
+      }
+
+      json_stream_->Writef("]");
+
       break;
     }
 

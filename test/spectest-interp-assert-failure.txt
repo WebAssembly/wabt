@@ -14,7 +14,7 @@
 (assert_return (invoke "func32nan") (f32.const nan:canonical))
 (assert_return (invoke "func64nan") (f64.const nan:canonical))
 (;; STDOUT ;;;
-out/test/spectest-interp-assert-failure.txt:10: expected result to be nan, got f32:0.100000
-out/test/spectest-interp-assert-failure.txt:11: expected result to be nan, got f64:0.200000
+out/test/spectest-interp-assert-failure.txt:10: mismatch in result 0 of assert_return: expected f32:nan:canonical, got f32:0.100000
+out/test/spectest-interp-assert-failure.txt:11: mismatch in result 0 of assert_return: expected f64:nan:arithmetic, got f64:0.200000
 4/6 tests passed.
 ;;; STDOUT ;;)

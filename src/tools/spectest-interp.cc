@@ -160,10 +160,121 @@ class RegisterCommand : public CommandMixin<CommandType::Register> {
 };
 
 struct ExpectedValue {
-  bool is_expected_nan;
   TypedValue value;
-  ExpectedNan expectedNan;
+  Type lane_type;             // Only valid if value.type == Type::V128.
+  // Up to 4 NaN values used, depending on |value.type| and |lane_type|:
+  //   | type  | lane_type | valid                 |
+  //   | f32   |           | nan[0]                |
+  //   | f64   |           | nan[0]                |
+  //   | v128  | f32       | nan[0] through nan[3] |
+  //   | v128  | f64       | nan[0],nan[1]         |
+  //   | *     | *         | none valid            |
+  ExpectedNan nan[4];
 };
+
+int LaneCountFromType(Type type) {
+  switch (type) {
+    case Type::I8: return 16;
+    case Type::I16: return 8;
+    case Type::I32: return 4;
+    case Type::I64: return 2;
+    case Type::F32: return 4;
+    case Type::F64: return 2;
+    default: assert(false); return 0;
+  }
+}
+
+ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
+  int lane_count = LaneCountFromType(ev.lane_type);
+  assert(ev.value.type == Type::V128);
+  assert(lane < lane_count);
+
+  ExpectedValue result;
+  result.value.type = ev.lane_type;
+
+  v128 vec = ev.value.value.Get<v128>();
+
+  for (int lane = 0; lane < lane_count; ++lane) {
+    switch (ev.lane_type) {
+      case Type::I8:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u32>(vec.u8(lane));
+        break;
+
+      case Type::I16:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u32>(vec.u16(lane));
+        break;
+
+      case Type::I32:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u32>(vec.u32(lane));
+        break;
+
+      case Type::I64:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u64>(vec.u64(lane));
+        break;
+
+      case Type::F32:
+        result.nan[0] = ev.nan[lane];
+        result.value.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
+        break;
+
+      case Type::F64:
+        result.nan[0] = ev.nan[lane];
+        result.value.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
+        break;
+
+      default:
+        WABT_UNREACHABLE;
+    }
+  }
+  return result;
+}
+
+TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
+  int lane_count = LaneCountFromType(lane_type);
+  assert(tv.type == Type::V128);
+  assert(lane < lane_count);
+
+  TypedValue result;
+  result.type = lane_type;
+
+  v128 vec = tv.value.Get<v128>();
+
+  for (int lane = 0; lane < lane_count; ++lane) {
+    switch (lane_type) {
+      case Type::I8:
+        result.value.Set<u32>(vec.u8(lane));
+        break;
+
+      case Type::I16:
+        result.value.Set<u32>(vec.u16(lane));
+        break;
+
+      case Type::I32:
+        result.value.Set<u32>(vec.u32(lane));
+        break;
+
+      case Type::I64:
+        result.value.Set<u64>(vec.u64(lane));
+        break;
+
+      case Type::F32:
+        result.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
+        break;
+
+      case Type::F64:
+        result.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
+        break;
+
+      default:
+        WABT_UNREACHABLE;
+    }
+  }
+  return result;
+}
 
 class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
  public:
@@ -210,6 +321,10 @@ class JSONParser {
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
 
+  // Whether to allow parsing of expectation-only forms (e.g. `nan:canonical`,
+  // `nan:arithmetic`, etc.)
+  enum class AllowExpected { No, Yes };
+
   void PutbackChar();
   int ReadChar();
   void SkipWhitespace();
@@ -221,14 +336,32 @@ class JSONParser {
   wabt::Result ParseKeyStringValue(const char* key, std::string* out_string);
   wabt::Result ParseOptNameStringValue(std::string* out_string);
   wabt::Result ParseLine(uint32_t* out_line_number);
+  wabt::Result ParseType(Type* out_type);
   wabt::Result ParseTypeObject(Type* out_type);
   wabt::Result ParseTypeVector(TypeVector* out_types);
   wabt::Result ParseConst(TypedValue* out_value);
-  wabt::Result ParseConstValue(TypedValue* out_value,
-                         string_view type_str,
-                         string_view value_str);
+  wabt::Result ParseI32Value(uint32_t* out_value, string_view value_str);
+  wabt::Result ParseI64Value(uint64_t* out_value, string_view value_str);
+  wabt::Result ParseF32Value(uint32_t* out_value,
+                             ExpectedNan* out_nan,
+                             string_view value_str,
+                             AllowExpected);
+  wabt::Result ParseF64Value(uint64_t* out_value,
+                             ExpectedNan* out_nan,
+                             string_view value_str,
+                             AllowExpected);
+  wabt::Result ParseLaneConstValue(Type lane_type,
+                                   int lane,
+                                   ExpectedValue* out_value,
+                                   string_view value_str,
+                                   AllowExpected);
+  wabt::Result ParseConstValue(Type type,
+                               Value* out_value,
+                               ExpectedNan* out_nan,
+                               string_view value_str,
+                               AllowExpected);
   wabt::Result ParseConstVector(ValueTypes* out_types, Values* out_values);
-  wabt::Result ParseExpectedValue(ExpectedValue* out_value);
+  wabt::Result ParseExpectedValue(ExpectedValue* out_value, AllowExpected);
   wabt::Result ParseExpectedValues(std::vector<ExpectedValue>* out_values);
   wabt::Result ParseAction(Action* out_action);
   wabt::Result ParseActionResult();
@@ -435,43 +568,47 @@ wabt::Result JSONParser::ParseLine(uint32_t* out_line_number) {
   return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseTypeObject(Type* out_type) {
+wabt::Result JSONParser::ParseType(Type* out_type) {
   std::string type_str;
-  EXPECT("{");
-  PARSE_KEY_STRING_VALUE("type", &type_str);
-  EXPECT("}");
+  CHECK_RESULT(ParseString(&type_str));
 
   if (type_str == "i32") {
     *out_type = Type::I32;
-    return wabt::Result::Ok;
   } else if (type_str == "f32") {
     *out_type = Type::F32;
-    return wabt::Result::Ok;
   } else if (type_str == "i64") {
     *out_type = Type::I64;
-    return wabt::Result::Ok;
   } else if (type_str == "f64") {
     *out_type = Type::F64;
-    return wabt::Result::Ok;
   } else if (type_str == "v128") {
     *out_type = Type::V128;
-    return wabt::Result::Ok;
+  } else if (type_str == "i8") {
+    *out_type = Type::I8;
+  } else if (type_str == "i16") {
+    *out_type = Type::I16;
   } else if (type_str == "funcref") {
     *out_type = Type::Funcref;
-    return wabt::Result::Ok;
   } else if (type_str == "anyref") {
     *out_type = Type::Anyref;
-    return wabt::Result::Ok;
   } else if (type_str == "nullref") {
     *out_type = Type::Nullref;
-    return wabt::Result::Ok;
   } else if (type_str == "exnref") {
     *out_type = Type::Exnref;
-    return wabt::Result::Ok;
+  } else if (type_str == "hostref") {
+    *out_type = Type::Hostref;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
   }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseTypeObject(Type* out_type) {
+  EXPECT("{");
+  EXPECT_KEY("type");
+  CHECK_RESULT(ParseType(out_type));
+  EXPECT("}");
+  return wabt::Result::Ok;
 }
 
 wabt::Result JSONParser::ParseTypeVector(TypeVector* out_types) {
@@ -491,121 +628,252 @@ wabt::Result JSONParser::ParseTypeVector(TypeVector* out_types) {
 }
 
 wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
-  std::string type_str;
-  std::string value_str;
-  EXPECT("{");
-  PARSE_KEY_STRING_VALUE("type", &type_str);
-  EXPECT(",");
-  PARSE_KEY_STRING_VALUE("value", &value_str);
-  EXPECT("}");
-
-  return ParseConstValue(out_value, type_str, value_str);
+  ExpectedValue expected;
+  CHECK_RESULT(ParseExpectedValue(&expected, AllowExpected::No));
+  *out_value = expected.value;
+  return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseConstValue(TypedValue* out_value,
-                                   string_view type_str,
-                                   string_view value_str) {
-  const char* value_start = value_str.data();
-  const char* value_end = value_str.data() + value_str.size();
-  if (type_str == "i32") {
-    uint32_t value;
-    if (Failed((ParseInt32(value_start, value_end, &value,
-                           ParseIntType::UnsignedOnly)))) {
-      PrintError("invalid i32 literal");
-      return wabt::Result::Error;
-    }
-    out_value->type = ValueType::I32;
-    out_value->value.Set(value);
-  } else if (type_str == "f32") {
-    uint32_t value_bits;
-    if (Failed(ParseInt32(value_start, value_end, &value_bits,
-                            ParseIntType::UnsignedOnly))) {
-      PrintError("invalid f32 literal");
-      return wabt::Result::Error;
-    }
-    out_value->type = ValueType::F32;
-    out_value->value.Set(Bitcast<f32>(value_bits));
-  } else if (type_str == "i64") {
-    uint64_t value;
-    if (Failed(ParseInt64(value_start, value_end, &value,
-                          ParseIntType::UnsignedOnly))) {
-      PrintError("invalid i64 literal");
-      return wabt::Result::Error;
-    }
-    out_value->type = ValueType::I64;
-    out_value->value.Set(value);
-  } else if (type_str == "f64") {
-    uint64_t value_bits;
-    if (Failed((ParseInt64(value_start, value_end, &value_bits,
-                           ParseIntType::UnsignedOnly)))) {
-      PrintError("invalid f64 literal");
-      return wabt::Result::Error;
-    }
-    out_value->type = ValueType::F64;
-    out_value->value.Set(Bitcast<f64>(value_bits));
-  } else if (type_str == "v128") {
-    v128 value_bits;
-    if (Failed(ParseUint128(value_start, value_end, &value_bits))) {
-      PrintError("invalid v128 literal");
-      return wabt::Result::Error;
-    }
-    out_value->type = ValueType::V128;
-    out_value->value.Set(value_bits);
-  } else if (type_str == "nullref") {
-    out_value->type = ValueType::Nullref;
-    out_value->value.Set(Ref::Null);
-  } else if (type_str == "hostref") {
-    uint32_t value;
-    if (Failed(ParseInt32(value_start, value_end, &value,
-                          ParseIntType::UnsignedOnly))) {
-      PrintError("invalid hostref literal");
-      return wabt::Result::Error;
-    }
-    out_value->type = ValueType::Hostref;
-    // TODO: hack, just whatever ref is at this index; but skip null (which is
-    // always 0).
-    out_value->value.Set(Ref{value + 1});
-  } else if (type_str == "funcref") {
-    uint32_t value;
-    if (Failed(ParseInt32(value_start, value_end, &value,
-                          ParseIntType::UnsignedOnly))) {
-      PrintError("invalid funcref literal");
-      return wabt::Result::Error;
-    }
-    out_value->type = ValueType::Funcref;
-    out_value->value.Set(Ref{value});
-  } else {
-    PrintError("unknown concrete type: \"%s\"", type_str.to_string().c_str());
+wabt::Result JSONParser::ParseI32Value(uint32_t* out_value,
+                                       string_view value_str) {
+  if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid i32 literal");
     return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseI64Value(uint64_t* out_value,
+                                       string_view value_str) {
+  if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid i64 literal");
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseF32Value(uint32_t* out_value,
+                                       ExpectedNan* out_nan,
+                                       string_view value_str,
+                                       AllowExpected allow_expected) {
+  if (allow_expected == AllowExpected::Yes) {
+    *out_value = 0;
+    if (value_str == "nan:canonical") {
+      *out_nan = ExpectedNan::Canonical;
+      return wabt::Result::Ok;
+    } else if (value_str == "nan:arithmetic") {
+      *out_nan = ExpectedNan::Arithmetic;
+      return wabt::Result::Ok;
+    }
+  }
+
+  *out_nan = ExpectedNan::None;
+  if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid f32 literal");
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseF64Value(uint64_t* out_value,
+                                       ExpectedNan* out_nan,
+                                       string_view value_str,
+                                       AllowExpected allow_expected) {
+  if (allow_expected == AllowExpected::Yes) {
+    *out_value = 0;
+    if (value_str == "nan:canonical") {
+      *out_nan = ExpectedNan::Canonical;
+      return wabt::Result::Ok;
+    } else if (value_str == "nan:arithmetic") {
+      *out_nan = ExpectedNan::Arithmetic;
+      return wabt::Result::Ok;
+    }
+  }
+
+  *out_nan = ExpectedNan::None;
+  if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid f64 literal");
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
+                                             int lane,
+                                             ExpectedValue* out_value,
+                                             string_view value_str,
+                                             AllowExpected allow_expected) {
+  v128& v = out_value->value.value.v128_;
+
+  switch (lane_type) {
+    case Type::I8: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      v.set_u8(lane, value);
+      break;
+    }
+
+    case Type::I16: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      v.set_u16(lane, value);
+      break;
+    }
+
+    case Type::I32: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      v.set_u32(lane, value);
+      break;
+    }
+
+    case Type::I64: {
+      uint64_t value;
+      CHECK_RESULT(ParseI64Value(&value, value_str));
+      v.set_u64(lane, value);
+      break;
+    }
+
+    case Type::F32: {
+      ExpectedNan nan;
+      uint32_t value_bits;
+      CHECK_RESULT(ParseF32Value(&value_bits, &nan, value_str, allow_expected));
+      v.set_f32_bits(lane, value_bits);
+      assert(lane < 4);
+      out_value->nan[lane] = nan;
+      break;
+    }
+
+    case Type::F64: {
+      ExpectedNan nan;
+      uint64_t value_bits;
+      CHECK_RESULT(ParseF64Value(&value_bits, &nan, value_str, allow_expected));
+      v.set_f64_bits(lane, value_bits);
+      assert(lane < 2);
+      out_value->nan[lane] = nan;
+      break;
+    }
+
+    default:
+      PrintError("unknown concrete type: \"%s\"", lane_type.GetName());
+      return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseConstValue(Type type,
+                                         Value* out_value,
+                                         ExpectedNan* out_nan,
+                                         string_view value_str,
+                                         AllowExpected allow_expected) {
+  *out_nan = ExpectedNan::None;
+
+  switch (type) {
+    case Type::I32: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      out_value->Set(value);
+      break;
+    }
+
+    case Type::F32: {
+      uint32_t value_bits;
+      CHECK_RESULT(
+          ParseF32Value(&value_bits, out_nan, value_str, allow_expected));
+      out_value->Set(Bitcast<f32>(value_bits));
+      break;
+    }
+
+    case Type::I64: {
+      uint64_t value;
+      CHECK_RESULT(ParseI64Value(&value, value_str));
+      out_value->Set(value);
+      break;
+    }
+
+    case Type::F64: {
+      uint64_t value_bits;
+      CHECK_RESULT(
+          ParseF64Value(&value_bits, out_nan, value_str, allow_expected));
+      out_value->Set(Bitcast<f64>(value_bits));
+      break;
+    }
+
+    case Type::V128:
+      assert(false);  // Should use ParseLaneConstValue instead.
+      break;
+
+    case Type::Nullref: {
+      out_value->Set(Ref::Null);
+      break;
+    }
+
+    case Type::Hostref: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      // TODO: hack, just whatever ref is at this index; but skip null (which is
+      // always 0).
+      out_value->Set(Ref{value + 1});
+      break;
+    }
+
+    case Type::Funcref: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      out_value->Set(Ref{value});
+      break;
+    }
+
+    default:
+      PrintError("unknown concrete type: \"%s\"", type.GetName());
+      return wabt::Result::Error;
   }
 
   return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value) {
-  std::string type_str;
+wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value,
+                                            AllowExpected allow_expected) {
+  Type type;
   std::string value_str;
   EXPECT("{");
-  PARSE_KEY_STRING_VALUE("type", &type_str);
+  EXPECT_KEY("type");
+  CHECK_RESULT(ParseType(&type));
   EXPECT(",");
-  PARSE_KEY_STRING_VALUE("value", &value_str);
+  if (type == Type::V128) {
+    Type lane_type;
+    EXPECT_KEY("lane_type");
+    CHECK_RESULT(ParseType(&lane_type));
+    EXPECT(",");
+    EXPECT_KEY("value");
+    EXPECT("[");
+
+    int lane_count = LaneCountFromType(lane_type);
+    for (int lane = 0; lane < lane_count; ++lane) {
+      CHECK_RESULT(ParseString(&value_str));
+      CHECK_RESULT(ParseLaneConstValue(lane_type, lane, out_value, value_str,
+                                       allow_expected));
+      if (lane < lane_count - 1) {
+        EXPECT(",");
+      }
+    }
+    EXPECT("]");
+    out_value->value.type = type;
+    out_value->lane_type = lane_type;
+  } else {
+    PARSE_KEY_STRING_VALUE("value", &value_str);
+    CHECK_RESULT(ParseConstValue(type, &out_value->value.value,
+                                 &out_value->nan[0], value_str,
+                                 allow_expected));
+    out_value->value.type = type;
+  }
   EXPECT("}");
 
-  if (type_str == "f32" || type_str == "f64") {
-    out_value->value.type = type_str == "f32" ? ValueType::F32 : ValueType::F64;
-    if (value_str == "nan:canonical") {
-      out_value->is_expected_nan = true;
-      out_value->expectedNan = ExpectedNan::Canonical;
-      return wabt::Result::Ok;
-    } else if (value_str == "nan:arithmetic") {
-      out_value->is_expected_nan = true;
-      out_value->expectedNan = ExpectedNan::Arithmetic;
-      return wabt::Result::Ok;
-    }
-  }
-
-  out_value->is_expected_nan = false;
-  return ParseConstValue(&out_value->value, type_str, value_str);
+  return wabt::Result::Ok;
 }
 
 wabt::Result JSONParser::ParseExpectedValues(
@@ -618,7 +886,7 @@ wabt::Result JSONParser::ParseExpectedValues(
       EXPECT(",");
     }
     ExpectedValue value;
-    CHECK_RESULT(ParseExpectedValue(&value));
+    CHECK_RESULT(ParseExpectedValue(&value, AllowExpected::Yes));
     out_values->push_back(value);
     first = false;
   }
@@ -906,6 +1174,12 @@ class CommandRunner {
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
+
+  wabt::Result CheckAssertReturnResult(const AssertReturnCommand* command,
+                                       int index,
+                                       ExpectedValue expected,
+                                       TypedValue actual,
+                                       bool print_error);
 
   void TallyCommand(wabt::Result);
 
@@ -1323,39 +1597,6 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
   return wabt::Result::Ok;
 }
 
-static bool TypedValuesAreEqual(const TypedValue& expected,
-                                const TypedValue& actual) {
-  assert(expected.type == actual.type || IsReference(expected.type));
-  switch (expected.type) {
-    case Type::I32:
-      return expected.value.Get<u32>() == actual.value.Get<u32>();
-
-    case Type::F32:
-      return Bitcast<u32>(expected.value.Get<f32>()) ==
-             Bitcast<u32>(actual.value.Get<f32>());
-
-    case Type::I64:
-      return expected.value.Get<u64>() == actual.value.Get<u64>();
-
-    case Type::F64:
-      return Bitcast<u64>(expected.value.Get<f64>()) ==
-             Bitcast<u64>(actual.value.Get<f64>());
-
-    case Type::V128:
-      return expected.value.Get<v128>() == actual.value.Get<v128>();
-
-    case Type::Nullref:
-      return actual.value.Get<Ref>() == Ref::Null;
-
-    case Type::Funcref:
-    case Type::Hostref:
-      return expected.value.Get<Ref>() == actual.value.Get<Ref>();
-
-    default:
-      WABT_UNREACHABLE;
-  }
-}
-
 static bool WABT_VECTORCALL IsCanonicalNan(f32 val) {
   const u32 kQuietNan = 0x7fc00000U;
   const u32 kQuietNegNan = 0xffc00000U;
@@ -1378,6 +1619,138 @@ static bool WABT_VECTORCALL IsArithmeticNan(f32 val) {
 static bool WABT_VECTORCALL IsArithmeticNan(f64 val) {
   const u64 kQuietNan = 0x7ff8000000000000ULL;
   return (Bitcast<u64>(val) & kQuietNan) == kQuietNan;
+}
+
+static std::string ExpectedValueToString(const ExpectedValue& ev) {
+  // Extend TypedValueToString to print expected nan values too.
+  switch (ev.value.type) {
+    case Type::F32:
+    case Type::F64:
+      switch (ev.nan[0]) {
+        case ExpectedNan::None:
+          return TypedValueToString(ev.value);
+
+        case ExpectedNan::Arithmetic:
+          return StringPrintf("%s:nan:arithmetic", ev.value.type.GetName());
+
+        case ExpectedNan::Canonical:
+          return StringPrintf("%s:nan:canonical", ev.value.type.GetName());
+      }
+      break;
+
+    case Type::V128: {
+      int lane_count = LaneCountFromType(ev.lane_type);
+      std::string result = "v128 ";
+      for (int lane = 0; lane < lane_count; ++lane) {
+        result += ExpectedValueToString(GetLane(ev, lane));
+      }
+      return result;
+    }
+
+    default:
+      break;
+  }
+  return TypedValueToString(ev.value);
+}
+
+wabt::Result CommandRunner::CheckAssertReturnResult(
+    const AssertReturnCommand* command,
+    int index,
+    ExpectedValue expected,
+    TypedValue actual,
+    bool print_error) {
+  assert(expected.value.type == actual.type ||
+         IsReference(expected.value.type));
+  bool ok = true;
+  switch (expected.value.type) {
+    case Type::I8:
+    case Type::I16:
+    case Type::I32:
+      ok = expected.value.value.Get<u32>() == actual.value.Get<u32>();
+      break;
+
+    case Type::I64:
+      ok = expected.value.value.Get<u64>() == actual.value.Get<u64>();
+      break;
+
+    case Type::F32:
+      switch (expected.nan[0]) {
+        case ExpectedNan::Arithmetic:
+          ok = IsArithmeticNan(actual.value.Get<f32>());
+          break;
+
+        case ExpectedNan::Canonical:
+          ok = IsCanonicalNan(actual.value.Get<f32>());
+          break;
+
+        case ExpectedNan::None:
+          ok = Bitcast<u32>(expected.value.value.Get<f32>()) ==
+               Bitcast<u32>(actual.value.Get<f32>());
+          break;
+      }
+      break;
+
+    case Type::F64:
+      switch (expected.nan[0]) {
+        case ExpectedNan::Arithmetic:
+          ok = IsArithmeticNan(actual.value.Get<f64>());
+          break;
+
+        case ExpectedNan::Canonical:
+          ok = IsCanonicalNan(actual.value.Get<f64>());
+          break;
+
+        case ExpectedNan::None:
+          ok = Bitcast<u64>(expected.value.value.Get<f64>()) ==
+               Bitcast<u64>(actual.value.Get<f64>());
+          break;
+      }
+      break;
+
+    case Type::V128: {
+      // Compare each lane as if it were its own value.
+      for (int lane = 0; lane < LaneCountFromType(expected.lane_type); ++lane) {
+        ExpectedValue lane_expected = GetLane(expected, lane);
+        TypedValue lane_actual = GetLane(actual, expected.lane_type, lane);
+
+        if (Failed(CheckAssertReturnResult(command, index, lane_expected,
+                                           lane_actual, false))) {
+          PrintError(command->line,
+                     "mismatch in lane %u of result %u of assert_return: "
+                     "expected %s, got %s",
+                     lane, index, ExpectedValueToString(lane_expected).c_str(),
+                     TypedValueToString(lane_actual).c_str());
+          ok = false;
+        }
+      }
+      break;
+    }
+
+    case Type::Nullref:
+      ok = actual.value.Get<Ref>() == Ref::Null;
+      break;
+
+    case Type::Funcref:
+      // A funcref expectation only requires that the reference be a function,
+      // but it doesn't check the actual index.
+      ok = store_.HasValueType(actual.value.Get<Ref>(), Type::Funcref);
+      break;
+
+    case Type::Hostref:
+      ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
+      break;
+
+    default:
+      WABT_UNREACHABLE;
+  }
+
+  if (!ok && print_error) {
+    PrintError(command->line,
+               "mismatch in result %u of assert_return: expected %s, got %s",
+               index, ExpectedValueToString(expected).c_str(),
+               TypedValueToString(actual).c_str());
+  }
+  return ok ? wabt::Result::Ok : wabt::Result::Error;
 }
 
 wabt::Result CommandRunner::OnAssertReturnCommand(
@@ -1404,45 +1777,7 @@ wabt::Result CommandRunner::OnAssertReturnCommand(
     const ExpectedValue& expected = command->expected[i];
     TypedValue actual{action_result.types[i], action_result.values[i]};
 
-    if (expected.is_expected_nan) {
-      bool is_nan;
-      if (expected.expectedNan == ExpectedNan::Arithmetic) {
-        if (expected.value.type == Type::F64) {
-          is_nan = IsArithmeticNan(actual.value.Get<f64>());
-        } else {
-          is_nan = IsArithmeticNan(actual.value.Get<f32>());
-        }
-      } else if (expected.expectedNan == ExpectedNan::Canonical) {
-        if (expected.value.type == Type::F64) {
-          is_nan = IsCanonicalNan(actual.value.Get<f64>());
-        } else {
-          is_nan = IsCanonicalNan(actual.value.Get<f32>());
-        }
-      } else {
-        WABT_UNREACHABLE;
-      }
-      if (!is_nan) {
-        PrintError(command->line, "expected result to be nan, got %s",
-                   TypedValueToString(actual).c_str());
-        result = wabt::Result::Error;
-      }
-    } else if (expected.value.type == Type::Funcref) {
-      if (!store_.HasValueType(actual.value.Get<Ref>(), Type::Funcref)) {
-        PrintError(command->line,
-                   "mismatch in result %" PRIzd
-                   " of assert_return: expected funcref, got %s",
-                   i, TypedValueToString(actual).c_str());
-      }
-    } else {
-      if (!TypedValuesAreEqual(expected.value, actual)) {
-        PrintError(command->line,
-                   "mismatch in result %" PRIzd
-                   " of assert_return: expected %s, got %s",
-                   i, TypedValueToString(expected.value).c_str(),
-                   TypedValueToString(actual).c_str());
-        result = wabt::Result::Error;
-      }
-    }
+    result |= CheckAssertReturnResult(command, i, expected, actual, true);
   }
 
   return result;

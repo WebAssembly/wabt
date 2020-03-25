@@ -1,0 +1,90 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i32x4_arith2.wast
+;;; ARGS*: --enable-simd
+(;; STDOUT ;;;
+out/test/spec/simd/simd_i32x4_arith2.wast:240: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.1.wat:1:33: error: unexpected token "f32x4.min_s", expected an instr.
+  (memory 1) (func (result v128) (f32x4.min_s (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:241: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.2.wat:1:33: error: unexpected token "f32x4.min_u", expected an instr.
+  (memory 1) (func (result v128) (f32x4.min_u (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:242: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.3.wat:1:33: error: unexpected token "f32x4.max_s", expected an instr.
+  (memory 1) (func (result v128) (f32x4.max_s (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:243: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.4.wat:1:33: error: unexpected token "f32x4.max_u", expected an instr.
+  (memory 1) (func (result v128) (f32x4.max_u (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:244: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.5.wat:1:33: error: unexpected token "i64x2.min_s", expected an instr.
+  (memory 1) (func (result v128) (i64x2.min_s (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:245: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.6.wat:1:33: error: unexpected token "i64x2.min_u", expected an instr.
+  (memory 1) (func (result v128) (i64x2.min_u (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:246: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.7.wat:1:33: error: unexpected token "i64x2.max_s", expected an instr.
+  (memory 1) (func (result v128) (i64x2.max_s (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:247: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.8.wat:1:33: error: unexpected token "i64x2.max_u", expected an instr.
+  (memory 1) (func (result v128) (i64x2.max_u (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:248: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.9.wat:1:33: error: unexpected token "f64x2.min_s", expected an instr.
+  (memory 1) (func (result v128) (f64x2.min_s (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:249: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.10.wat:1:33: error: unexpected token "f64x2.min_u", expected an instr.
+  (memory 1) (func (result v128) (f64x2.min_u (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:250: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.11.wat:1:33: error: unexpected token "f64x2.max_s", expected an instr.
+  (memory 1) (func (result v128) (f64x2.max_s (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:251: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_arith2/simd_i32x4_arith2.12.wat:1:33: error: unexpected token "f64x2.max_u", expected an instr.
+  (memory 1) (func (result v128) (f64x2.max_u (v128.const i32x4 0 0 0 0) (v128....
+                                  ^^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_arith2.wast:254: assert_invalid passed:
+  error: type mismatch in i32x4.min_s, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:255: assert_invalid passed:
+  error: type mismatch in i32x4.min_u, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:256: assert_invalid passed:
+  error: type mismatch in i32x4.max_s, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:257: assert_invalid passed:
+  error: type mismatch in i32x4.max_u, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:262: assert_invalid passed:
+  error: type mismatch in i32x4.min_s, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:270: assert_invalid passed:
+  error: type mismatch in i32x4.min_s, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:278: assert_invalid passed:
+  error: type mismatch in i32x4.min_u, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:286: assert_invalid passed:
+  error: type mismatch in i32x4.min_u, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:294: assert_invalid passed:
+  error: type mismatch in i32x4.max_s, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:302: assert_invalid passed:
+  error: type mismatch in i32x4.max_s, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:310: assert_invalid passed:
+  error: type mismatch in i32x4.max_u, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i32x4_arith2.wast:318: assert_invalid passed:
+  error: type mismatch in i32x4.max_u, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+116/116 tests passed.
+;;; STDOUT ;;)

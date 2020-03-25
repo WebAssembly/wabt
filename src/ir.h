@@ -93,6 +93,19 @@ struct Const {
   }
 
   Type type() const { return type_; }
+  Type lane_type() const { assert(type_ == Type::V128); return lane_type_; }
+
+  int lane_count() const {
+    switch (lane_type()) {
+      case Type::I8:  return 16;
+      case Type::I16: return 8;
+      case Type::I32: return 4;
+      case Type::I64: return 2;
+      case Type::F32: return 4;
+      case Type::F64: return 2;
+      default: WABT_UNREACHABLE;
+    }
+  }
 
   uint32_t u32() const { return data_.u32(0); }
   uint64_t u64() const { return data_.u64(0); }
@@ -101,40 +114,71 @@ struct Const {
   uintptr_t ref_bits() const { return data_.To<uintptr_t>(0); }
   v128 vec128() const { return data_; }
 
-  bool is_expected_nan() const { return nan_ != ExpectedNan::None; }
-  ExpectedNan expected() const { assert(is_expected_nan()); return nan_; }
+  template <typename T>
+  T v128_lane(int lane) const { return data_.To<T>(lane); }
 
   void set_u32(uint32_t x) { From(Type::I32, x); }
   void set_u64(uint64_t x) { From(Type::I64, x); }
   void set_f32(uint32_t x) { From(Type::F32, x); }
   void set_f64(uint64_t x) { From(Type::F64, x); }
-  void set_vec128(v128 x)  { From(Type::V128, x); }
+
+  void set_v128_u8(int lane, uint8_t x) { set_v128_lane(lane, Type::I8, x); }
+  void set_v128_u16(int lane, uint16_t x) { set_v128_lane(lane, Type::I16, x); }
+  void set_v128_u32(int lane, uint32_t x) { set_v128_lane(lane, Type::I32, x); }
+  void set_v128_u64(int lane, uint64_t x) { set_v128_lane(lane, Type::I64, x); }
+  void set_v128_f32(int lane, uint32_t x) { set_v128_lane(lane, Type::F32, x); }
+  void set_v128_f64(int lane, uint64_t x) { set_v128_lane(lane, Type::F64, x); }
 
   // Only used for expectations. (e.g. wast assertions)
-  void set_f32(ExpectedNan nan) { From<float>(Type::F32, 0); nan_ = nan; }
-  void set_f64(ExpectedNan nan) { From<double>(Type::F64, 0); nan_ = nan; }
+  void set_f32(ExpectedNan nan) { set_f32(0); set_expected_nan(0, nan); }
+  void set_f64(ExpectedNan nan) { set_f64(0); set_expected_nan(0, nan); }
   void set_hostref(uintptr_t x) { From(Type::Hostref, x); }
   void set_nullref()            { From<uintptr_t>(Type::Nullref, 0); }
   void set_funcref()            { From<uintptr_t>(Type::Funcref, 0); }
 
+  bool is_expected_nan(int lane = 0) const {
+    return expected_nan(lane) != ExpectedNan::None;
+  }
+
+  ExpectedNan expected_nan(int lane = 0) const {
+    return lane < 4 ? nan_[lane] : ExpectedNan::None;
+  }
+
+  void set_expected_nan(int lane, ExpectedNan nan) {
+    if (lane < 4) {
+      nan_[lane] = nan;
+    }
+  }
+
+  // v128 support
   Location loc;
 
  private:
+  template <typename T>
+  void set_v128_lane(int lane, Type lane_type, T x) {
+    lane_type_ = lane_type;
+    From(Type::V128, x, lane);
+    set_expected_nan(lane, ExpectedNan::None);
+  }
+
   template <typename T>
   Const(Type type, T data, const Location& loc = Location()) : loc(loc) {
     From<T>(type, data);
   }
 
   template <typename T>
-  void From(Type type, T data) {
+  void From(Type type, T data, int lane = 0) {
+    static_assert(sizeof(T) <= sizeof(data_), "Invalid cast!");
+    assert((lane + 1) * sizeof(T) <= sizeof(data_));
     type_ = type;
-    data_.From<T>(0, data);
-    nan_ = ExpectedNan::None;
+    data_.From<T>(lane, data);
+    set_expected_nan(lane, ExpectedNan::None);
   }
 
   Type type_;
+  Type lane_type_;    // Only valid if type_ == Type::V128.
   v128 data_;
-  ExpectedNan nan_ = ExpectedNan::None;
+  ExpectedNan nan_[4];
 };
 typedef std::vector<Const> ConstVector;
 

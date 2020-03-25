@@ -13,5 +13,5 @@
   ]
 }
 (;; STDERR ;;;
-out/test/spectest-interp-invalid-literal.txt:11:50: invalid i32 literal
+out/test/spectest-interp-invalid-literal.txt:11:49: invalid i32 literal
 ;;; STDERR ;;)
