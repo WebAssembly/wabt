@@ -1011,6 +1011,19 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
+  assert(module_->events.size() >= module_->num_event_imports);
+  Index num_events = module_->events.size() - module_->num_event_imports;
+  if (num_events) {
+    BeginKnownSection(BinarySection::Event);
+    WriteU32Leb128(stream_, num_events, "event count");
+    for (size_t i = 0; i < num_events; ++i) {
+      WriteHeader("event", i);
+      const Event* event = module_->events[i + module_->num_event_imports];
+      WriteEventType(event);
+    }
+    EndSection();
+  }
+
   assert(module_->globals.size() >= module_->num_global_imports);
   Index num_globals = module_->globals.size() - module_->num_global_imports;
   if (num_globals) {
@@ -1021,19 +1034,6 @@ Result BinaryWriter::WriteModule() {
       const Global* global = module_->globals[i + module_->num_global_imports];
       WriteGlobalHeader(global);
       WriteInitExpr(global->init_expr);
-    }
-    EndSection();
-  }
-
-  assert(module_->events.size() >= module_->num_event_imports);
-  Index num_events = module_->events.size() - module_->num_event_imports;
-  if (num_events) {
-    BeginKnownSection(BinarySection::Event);
-    WriteU32Leb128(stream_, num_events, "event count");
-    for (size_t i = 0; i < num_events; ++i) {
-      WriteHeader("event", i);
-      const Event* event = module_->events[i + module_->num_event_imports];
-      WriteEventType(event);
     }
     EndSection();
   }

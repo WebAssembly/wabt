@@ -3,7 +3,7 @@
 ;;; ARGS2: --enable-exceptions
 magic
 version
-section(EXPORT) { count[0] }
+section(GLOBAL) { count[0] }
 section(EVENT) { count[0] }
 (;; STDERR ;;;
 000000d: error: section Event out of order
