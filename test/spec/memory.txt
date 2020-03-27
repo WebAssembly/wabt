@@ -55,5 +55,17 @@ out/test/spec/memory.wast:69: assert_invalid passed:
 out/test/spec/memory.wast:73: assert_invalid passed:
   error: max pages (4294967295) must be <= (65536)
   0000012: error: OnMemory callback failed
-63/63 tests passed.
+out/test/spec/memory.wast:216: assert_malformed passed:
+  out/test/spec/memory/memory.26.wat:1:17: error: redefinition of memory "$foo"
+  (memory $foo 1)(memory $foo 1)
+                  ^^^^^^
+out/test/spec/memory.wast:220: assert_malformed passed:
+  out/test/spec/memory/memory.27.wat:1:32: error: redefinition of memory "$foo"
+  (import "" "" (memory $foo 1))(memory $foo 1)
+                                 ^^^^^^
+out/test/spec/memory.wast:224: assert_malformed passed:
+  out/test/spec/memory/memory.28.wat:1:32: error: redefinition of memory "$foo"
+  (import "" "" (memory $foo 1))(import "" "" (memory $foo 1))
+                                 ^^^^^^
+66/66 tests passed.
 ;;; STDOUT ;;)

@@ -1,0 +1,17 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/table.wast
+(;; STDOUT ;;;
+out/test/spec/table.wast:3: assert_malformed passed:
+  out/test/spec/table/table.0.wat:1:24: error: redefinition of table "$foo"
+  (table $foo 1 funcref)(table $foo 1 funcref)
+                         ^^^^^
+out/test/spec/table.wast:7: assert_malformed passed:
+  out/test/spec/table/table.1.wat:1:39: error: redefinition of table "$foo"
+  (import "" "" (table $foo 1 funcref))(table $foo 1 funcref)
+                                        ^^^^^
+out/test/spec/table.wast:11: assert_malformed passed:
+  out/test/spec/table/table.2.wat:1:39: error: redefinition of table "$foo"
+  (import "" "" (table $foo 1 funcref))(import "" "" (table $foo 1 funcref))
+                                        ^^^^^^
+3/3 tests passed.
+;;; STDOUT ;;)

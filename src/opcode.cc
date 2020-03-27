@@ -297,6 +297,9 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::V16X8LoadSplat:
     case Opcode::V32X4LoadSplat:
     case Opcode::V64X2LoadSplat:
+    case Opcode::I8X16Abs:
+    case Opcode::I16X8Abs:
+    case Opcode::I32X4Abs:
       return features.simd_enabled();
 
     case Opcode::MemoryInit:

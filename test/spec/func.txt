@@ -161,5 +161,29 @@ out/test/spec/func.wast:659: assert_malformed passed:
   out/test/spec/func/func.49.wat:1:21: error: unexpected token "param", expected an instr.
   (func (result i32) (param i32) (local.get 0))
                       ^^^^^
-120/120 tests passed.
+out/test/spec/func.wast:665: assert_malformed passed:
+  out/test/spec/func/func.50.wat:1:13: error: redefinition of function "$foo"
+  (func $foo)(func $foo)
+              ^^^^
+out/test/spec/func.wast:669: assert_malformed passed:
+  out/test/spec/func/func.51.wat:1:28: error: redefinition of function "$foo"
+  (import "" "" (func $foo))(func $foo)
+                             ^^^^
+out/test/spec/func.wast:673: assert_malformed passed:
+  out/test/spec/func/func.52.wat:1:28: error: redefinition of function "$foo"
+  (import "" "" (func $foo))(import "" "" (func $foo))
+                             ^^^^^^
+out/test/spec/func.wast:678: assert_malformed passed:
+  out/test/spec/func/func.53.wat:1:31: error: redefinition of parameter "$foo"
+  (func (param $foo i32) (param $foo i32))
+                                ^^^^
+out/test/spec/func.wast:680: assert_malformed passed:
+  out/test/spec/func/func.54.wat:1:31: error: redefinition of parameter "$foo"
+  (func (param $foo i32) (local $foo i32))
+                                ^^^^
+out/test/spec/func.wast:682: assert_malformed passed:
+  out/test/spec/func/func.55.wat:1:31: error: redefinition of local "$foo"
+  (func (local $foo i32) (local $foo i32))
+                                ^^^^
+126/126 tests passed.
 ;;; STDOUT ;;)
