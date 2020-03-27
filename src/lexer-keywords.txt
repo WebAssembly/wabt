@@ -152,6 +152,7 @@ global.get, TokenType::GlobalGet, Opcode::GlobalGet
 global.set, TokenType::GlobalSet, Opcode::GlobalSet
 global, TokenType::Global
 grow_memory, TokenType::MemoryGrow, Opcode::MemoryGrow
+i16x8.abs, TokenType::Unary, Opcode::I16X8Abs
 i16x8.add_saturate_s, TokenType::Binary, Opcode::I16X8AddSaturateS
 i16x8.add_saturate_u, TokenType::Binary, Opcode::I16X8AddSaturateU
 i16x8.add, TokenType::Binary, Opcode::I16X8Add
@@ -271,6 +272,7 @@ i32.trunc_sat_f64_s, TokenType::Convert, Opcode::I32TruncSatF64S
 i32.trunc_sat_f64_u, TokenType::Convert, Opcode::I32TruncSatF64U
 i32, Type::I32
 i32.wrap_i64, TokenType::Convert, Opcode::I32WrapI64
+i32x4.abs, TokenType::Unary, Opcode::I32X4Abs
 i32x4.add, TokenType::Binary, Opcode::I32X4Add
 i32x4.all_true, TokenType::Unary, Opcode::I32X4AllTrue
 i32x4.any_true, TokenType::Unary, Opcode::I32X4AnyTrue
@@ -413,6 +415,7 @@ i64x2.splat, TokenType::Unary, Opcode::I64X2Splat
 i64x2.sub, TokenType::Binary, Opcode::I64X2Sub
 i64x2, TokenType::I64X2
 i64.xor, TokenType::Binary, Opcode::I64Xor
+i8x16.abs, TokenType::Unary, Opcode::I8X16Abs
 i8x16.add_saturate_s, TokenType::Binary, Opcode::I8X16AddSaturateS
 i8x16.add_saturate_u, TokenType::Binary, Opcode::I8X16AddSaturateU
 i8x16.add, TokenType::Binary, Opcode::I8X16Add

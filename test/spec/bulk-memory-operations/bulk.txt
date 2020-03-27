@@ -32,22 +32,22 @@ init_passive(i32:0) =>
 drop_active() =>
 out/test/spec/bulk-memory-operations/bulk.wast:176: assert_trap passed: out of bounds memory access: memory.init out of bounds
 init_active(i32:0) =>
-out/test/spec/bulk-memory-operations/bulk.wast:217: assert_trap passed: out of bounds table access: table.init out of bounds
-out/test/spec/bulk-memory-operations/bulk.wast:219: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/bulk.wast:219: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/bulk.wast:221: assert_trap passed: uninitialized table element
 init(i32:0, i32:1, i32:2) =>
-out/test/spec/bulk-memory-operations/bulk.wast:225: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/bulk.wast:227: assert_trap passed: uninitialized table element
 init(i32:1, i32:2, i32:2) =>
 init(i32:3, i32:0, i32:0) =>
 init(i32:0, i32:4, i32:0) =>
-out/test/spec/bulk-memory-operations/bulk.wast:235: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/bulk-memory-operations/bulk.wast:237: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/bulk.wast:239: assert_trap passed: out of bounds table access: table.init out of bounds
 init_passive(i32:1) =>
 drop_passive() =>
 drop_passive() =>
-out/test/spec/bulk-memory-operations/bulk.wast:263: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/bulk.wast:265: assert_trap passed: out of bounds table access: table.init out of bounds
 init_passive(i32:0) =>
 drop_active() =>
-out/test/spec/bulk-memory-operations/bulk.wast:267: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/bulk.wast:269: assert_trap passed: out of bounds table access: table.init out of bounds
 init_active(i32:0) =>
 copy(i32:3, i32:0, i32:3) =>
 copy(i32:0, i32:1, i32:3) =>
@@ -56,7 +56,7 @@ copy(i32:6, i32:8, i32:2) =>
 copy(i32:8, i32:6, i32:2) =>
 copy(i32:10, i32:0, i32:0) =>
 copy(i32:0, i32:10, i32:0) =>
-out/test/spec/bulk-memory-operations/bulk.wast:344: assert_trap passed: out of bounds table access: table.copy out of bounds
-out/test/spec/bulk-memory-operations/bulk.wast:346: assert_trap passed: out of bounds table access: table.copy out of bounds
+out/test/spec/bulk-memory-operations/bulk.wast:348: assert_trap passed: out of bounds table access: table.copy out of bounds
+out/test/spec/bulk-memory-operations/bulk.wast:350: assert_trap passed: out of bounds table access: table.copy out of bounds
 104/104 tests passed.
 ;;; STDOUT ;;)

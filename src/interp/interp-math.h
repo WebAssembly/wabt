@@ -91,6 +91,18 @@ template <typename T> T WABT_VECTORCALL IntAndNot(T lhs, T rhs) { return lhs & ~
 template <typename T> T WABT_VECTORCALL IntAvgr(T lhs, T rhs) { return (lhs + rhs + 1) / 2; }
 template <typename T> T WABT_VECTORCALL Xchg(T lhs, T rhs) { return rhs; }
 
+// This is a wrapping absolute value function, so a negative number that is not
+// representable as a positive number will be unchanged (e.g. abs(-128) = 128).
+//
+// Note that std::abs() does not have this behavior (e.g. abs(-128) is UB).
+// Similarly, using unary minus is also UB.
+template <typename T>
+T WABT_VECTORCALL IntAbs(T val) {
+  static_assert(std::is_unsigned<T>::value, "T must be unsigned.");
+  const auto signbit = T(-1) << (sizeof(T) * 8 - 1);
+  return (val & signbit) ? ~val + 1 : val;
+}
+
 // Because of the integer promotion rules [1], any value of a type T which is
 // smaller than `int` will be converted to an `int`, as long as `int` can hold
 // any value of type T.
