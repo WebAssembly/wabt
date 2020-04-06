@@ -5,9 +5,11 @@ associated `.wat` file and `.wasm` files.
 
 ## Example
 
+```sh
 # parse spec-test.wast, and write files to spec-test.json. Modules are written
 # to spec-test.0.wasm, spec-test.1.wasm, etc.
 $ bin/wast2json spec-test.wast -o spec-test.json
+```
 
 ## Wast
 
@@ -66,7 +68,7 @@ commands are not used in any of the spec tests.
 
 The JSON format has the following structure:
 
-```json
+```
 {"source_filename": <string>,
  "commands": [ <commands>* ] }
 ```
@@ -74,7 +76,7 @@ The JSON format has the following structure:
 The `source_filename` is the name of the input `.wast` file. Each command is a
 JSON object. They all have the following structure:
 
-```json
+```
 {"type": <string>, "line": <number>, ...}
 ```
 
@@ -110,7 +112,7 @@ the most recently instantiated module.
 
 The complete format for an "invoke" action command is:
 
-```json
+```
 {
   "type": "invoke",
   ("module": <string>)?,
@@ -123,7 +125,7 @@ The "args" property represents the parameters to pass to the exported function.
 
 The complete format for a "get" action command is:
 
-```json
+```
 {
   "type": "get",
   ("module": <string>)?,
@@ -135,7 +137,7 @@ The complete format for a "get" action command is:
 
 A const vector is an array of consts.
 
-```json
+```
 [<const>]
 ```
 
@@ -162,7 +164,7 @@ The `reference-types` proposal adds three more valid types:
 
 The `simd` proposal adds another type, with a slightly different syntax.
 
-```json
+```
 {
   "type": "v128",
   "lane_type": "i8" | "i16" | "i32" | "f32" | "f64",
@@ -175,7 +177,7 @@ to be precise enough to store all Wasm values. Values are always written as
 decimal numbers. For example, the following const has the type "i32" and the
 value `34`.
 
-```json
+```
 ("type": "i32", "value": "34"}
 ```
 
@@ -185,7 +187,7 @@ representation of the number. For example, the following const has the type
 to hexadecimal `0x3f800000`, which is the binary representation of `1.0` as a
 32-bit float.
 
-```json
+```
 ("type": "f32", "value": "1065353216"}
 ```
 
@@ -204,7 +206,7 @@ lanes depends on the "lane_type" property:
 For example, a "v128" const with lane type "i32" and lanes `0`, `1`, `2`, `3`
 would be written:
 
-```json
+```
 {
   "type": "v128",
   "lane_type": "i32",
@@ -218,7 +220,7 @@ Expected values are similar to a const vector. They are always arrays, and they
 typically contain const values. For example, the following expected value is
 the same as a const vector, and has the type "i32" and the value "1":
 
-```json
+```
 [
   {"type": "i32", "value": "1"}
 ]
@@ -229,7 +231,7 @@ and "f64" types (and simd lanes), the pattern can also be "nan:canonical" or
 "nan:arithmetic". For example, the following expected value has the type "f32"
 and must be a canonical NaN:
 
-```json
+```
 [
   {"type": "f32", "value": "nan:canonical"}
 ]
@@ -240,7 +242,7 @@ can be a const or a pattern. For example, the following expected value has four
 lanes, each of type "f32", two of which have const values (lanes 0 and 2), and
 two of which are patterns (lanes 1 and 3):
 
-```json
+```
 [
   {
     "type": "v128",
@@ -259,7 +261,7 @@ The `multi-value` proposal allows for multiple return values from a function,
 which is why the expected values is always an array. For example, the following
 example has two expected values:
 
-```json
+```
 [
   {"type": "i32", "value": "1"},
   {"type": "i64", "value": "2"}
@@ -274,7 +276,7 @@ assertions.
 
 The complete format for the "module" command is:
 
-```json
+```
 {
  "type": "module",
  "line": <number>,
@@ -292,7 +294,7 @@ The path is always relative to the JSON file.
 
 ### "action" command
 
-```json
+```
 {
  "type": "action",
  "line": <number>,
@@ -305,7 +307,7 @@ that does not have an associated assertion).
 
 ### "assert_return" command
 
-```json
+```
 {
  "type": "assert_return",
  "line": <number>,
@@ -319,7 +321,7 @@ It runs an action and checks that the result is an expected value.
 
 ### "assert_exhaustion" command
 
-```json
+```
 {
  "type": "assert_exhaustion",
  "line": <number>,
@@ -335,7 +337,7 @@ The "text" property specifies the text expected by the rerefence interpreter.
 
 ### "assert_trap" command
 
-```json
+```
 {
  "type": "assert_trap",
  "line": <number>,
@@ -355,7 +357,7 @@ The "text" property specifies the text expected by the rerefence interpreter.
 
 ### "assert_invalid" command
 
-```json
+```
 {
   "type": "assert_invalid",
   "line": <number>,
@@ -379,7 +381,7 @@ format.
 
 ### "assert_malformed" command
 
-```json
+```
 {
   "type": "assert_malformed",
   "line": <number>,
@@ -405,7 +407,7 @@ format.
 
 ### "assert_uninstantiable" command
 
-```json
+```
 {
   "type": "assert_uninstantiable",
   "line": <number>,
@@ -433,7 +435,7 @@ format.
 
 ### "assert_unlinkable" command
 
-```json
+```
 {
   "type": "assert_unlinkable",
   "line": <number>,
@@ -459,7 +461,7 @@ format.
 
 ### "register" command
 
-```json
+```
 {
   "type": "register",
   ("name": <string>,)?
@@ -475,7 +477,7 @@ most recently instantiated module is used.
 
 The "as" property specifies the name to use in the registry. For example, if a module is registered as:
 
-```json
+```
 {
   "type": "register",
   "as": "my_module"
@@ -515,7 +517,7 @@ Assume we have the following `.wast` file:
 
 The following JSON file will be generated (with added whitespace for clarity):
 
-```json
+```
 {
   "source_filename": "example.wast",
   "commands": [
