@@ -188,7 +188,7 @@ struct LoadStoreTracking {
         }
         // Align to next access: all elements are expected to be aligned to
         // a memory address thats a multiple of their own size.
-        auto mask = access.second.byte_size - 1;
+        auto mask = static_cast<uint64_t>(access.second.byte_size - 1);
         cur_offset = (cur_offset + mask) & ~mask;
         if (cur_offset != access.first) {
           var.second.struct_layout = false;
