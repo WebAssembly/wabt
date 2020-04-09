@@ -1,3 +1,19 @@
+/* Entry point for the rot13 example.
+ *
+ * This example shows how you can fulfill wasm module imports in your C
+ * program, and access linear memory.
+ *
+ * The program reads arguments from the command line, and [rot13] encodes them,
+ * e.g.:
+ *
+ * ```
+ * $ rot13 foo bar
+ * foo -> sbb
+ * bar -> one
+ * ```
+ *
+ * [rot13]: https://en.wikipedia.org/wiki/ROT13
+ */
 #include <stdio.h>
 #include <stdlib.h>
 
