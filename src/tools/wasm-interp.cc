@@ -191,7 +191,7 @@ Result ReadAndInstantiateModule(const char* module_filename,
   *out_instance = Instance::Instantiate(s_store, module.ref(), imports, &trap);
   if (!*out_instance) {
     // TODO: change to "initializing"
-    WriteTrap(stream, "error initialiazing module", trap);
+    WriteTrap(stream, "error initializing module", trap);
     return Result::Error;
   }
 
