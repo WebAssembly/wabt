@@ -28,27 +28,34 @@
 0000010: 01                                        ; num functions
 0000011: 00                                        ; function 0 signature index
 000000f: 02                                        ; FIXUP section size
-; section "Code" (10)
-0000012: 0a                                        ; section code
+; section "DataCount" (12)
+0000012: 0c                                        ; section code
 0000013: 00                                        ; section size (guess)
-0000014: 01                                        ; num functions
+0000014: 00                                        ; data count
+0000013: 01                                        ; FIXUP section size
+; section "Code" (10)
+0000015: 0a                                        ; section code
+0000016: 00                                        ; section size (guess)
+0000017: 01                                        ; num functions
 ; function body 0
-0000015: 00                                        ; func body size (guess)
-0000016: 00                                        ; local decl count
-0000017: 06                                        ; try
-0000018: 7f                                        ; i32
-0000019: 01                                        ; nop
-000001a: 41                                        ; i32.const
-000001b: 07                                        ; i32 literal
-000001c: 07                                        ; catch
-000001d: 1a                                        ; drop
-000001e: 41                                        ; i32.const
-000001f: 08                                        ; i32 literal
-0000020: 0b                                        ; end
-0000021: 1a                                        ; drop
-0000022: 0b                                        ; end
-0000015: 0d                                        ; FIXUP func body size
-0000013: 0f                                        ; FIXUP section size
+0000018: 00                                        ; func body size (guess)
+0000019: 00                                        ; local decl count
+000001a: 06                                        ; try
+000001b: 7f                                        ; i32
+000001c: 01                                        ; nop
+000001d: 41                                        ; i32.const
+000001e: 07                                        ; i32 literal
+000001f: 07                                        ; catch
+0000020: 1a                                        ; drop
+0000021: 41                                        ; i32.const
+0000022: 08                                        ; i32 literal
+0000023: 0b                                        ; end
+0000024: 1a                                        ; drop
+0000025: 0b                                        ; end
+0000018: 0d                                        ; FIXUP func body size
+0000016: 0f                                        ; FIXUP section size
+; move data: [15, 26) -> [12, 23)
+; truncate to 35 (0x23)
 
 try.wasm:	file format wasm 0x1
 

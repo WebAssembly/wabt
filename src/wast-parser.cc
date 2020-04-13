@@ -780,8 +780,10 @@ Result WastParser::ParseValueType(Type* out_type) {
     case Type::Anyref:
     case Type::Funcref:
     case Type::Hostref:
-    case Type::Exnref:
       is_enabled = options_->features.reference_types_enabled();
+      break;
+    case Type::Exnref:
+      is_enabled = options_->features.exceptions_enabled();
       break;
     default:
       is_enabled = true;

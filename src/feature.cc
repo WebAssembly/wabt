@@ -37,6 +37,10 @@ void Features::AddOptions(OptionParser* parser) {
 }
 
 void Features::UpdateDependencies() {
+  // Exception handling requires reference types.
+  if (exceptions_enabled_) {
+    reference_types_enabled_ = true;
+  }
   // Reference types requires bulk memory.
   if (reference_types_enabled_) {
     bulk_memory_enabled_ = true;

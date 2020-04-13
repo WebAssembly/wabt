@@ -43,6 +43,7 @@ elem, TokenType::Elem
 else, TokenType::Else, Opcode::Else
 end, TokenType::End, Opcode::End
 event, TokenType::Event
+exnref, Type::Exnref
 export, TokenType::Export
 f32.abs, TokenType::Unary, Opcode::F32Abs
 f32.add, TokenType::Binary, Opcode::F32Add
