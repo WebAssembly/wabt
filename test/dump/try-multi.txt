@@ -49,43 +49,50 @@
 000001a: 00                                        ; function 0 signature index
 000001b: 00                                        ; function 1 signature index
 0000018: 03                                        ; FIXUP section size
-; section "Code" (10)
-000001c: 0a                                        ; section code
+; section "DataCount" (12)
+000001c: 0c                                        ; section code
 000001d: 00                                        ; section size (guess)
-000001e: 02                                        ; num functions
+000001e: 00                                        ; data count
+000001d: 01                                        ; FIXUP section size
+; section "Code" (10)
+000001f: 0a                                        ; section code
+0000020: 00                                        ; section size (guess)
+0000021: 02                                        ; num functions
 ; function body 0
-000001f: 00                                        ; func body size (guess)
-0000020: 00                                        ; local decl count
-0000021: 06                                        ; try
-0000022: 01                                        ; block type function index
-0000023: 41                                        ; i32.const
-0000024: 01                                        ; i32 literal
-0000025: 41                                        ; i32.const
-0000026: 02                                        ; i32 literal
-0000027: 07                                        ; catch
-0000028: 1a                                        ; drop
-0000029: 41                                        ; i32.const
-000002a: 03                                        ; i32 literal
-000002b: 41                                        ; i32.const
-000002c: 04                                        ; i32 literal
-000002d: 0b                                        ; end
-000002e: 0f                                        ; return
-000002f: 0b                                        ; end
-000001f: 10                                        ; FIXUP func body size
+0000022: 00                                        ; func body size (guess)
+0000023: 00                                        ; local decl count
+0000024: 06                                        ; try
+0000025: 01                                        ; block type function index
+0000026: 41                                        ; i32.const
+0000027: 01                                        ; i32 literal
+0000028: 41                                        ; i32.const
+0000029: 02                                        ; i32 literal
+000002a: 07                                        ; catch
+000002b: 1a                                        ; drop
+000002c: 41                                        ; i32.const
+000002d: 03                                        ; i32 literal
+000002e: 41                                        ; i32.const
+000002f: 04                                        ; i32 literal
+0000030: 0b                                        ; end
+0000031: 0f                                        ; return
+0000032: 0b                                        ; end
+0000022: 10                                        ; FIXUP func body size
 ; function body 1
-0000030: 00                                        ; func body size (guess)
-0000031: 00                                        ; local decl count
-0000032: 41                                        ; i32.const
-0000033: 00                                        ; i32 literal
-0000034: 06                                        ; try
-0000035: 02                                        ; block type function index
-0000036: 1a                                        ; drop
-0000037: 07                                        ; catch
-0000038: 1a                                        ; drop
-0000039: 0b                                        ; end
-000003a: 0b                                        ; end
-0000030: 0a                                        ; FIXUP func body size
-000001d: 1d                                        ; FIXUP section size
+0000033: 00                                        ; func body size (guess)
+0000034: 00                                        ; local decl count
+0000035: 41                                        ; i32.const
+0000036: 00                                        ; i32 literal
+0000037: 06                                        ; try
+0000038: 02                                        ; block type function index
+0000039: 1a                                        ; drop
+000003a: 07                                        ; catch
+000003b: 1a                                        ; drop
+000003c: 0b                                        ; end
+000003d: 0b                                        ; end
+0000033: 0a                                        ; FIXUP func body size
+0000020: 1d                                        ; FIXUP section size
+; move data: [1f, 3e) -> [1c, 3b)
+; truncate to 59 (0x3b)
 
 try-multi.wasm:	file format wasm 0x1
 
