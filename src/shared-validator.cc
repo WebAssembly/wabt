@@ -594,6 +594,18 @@ Result SharedValidator::CheckAtomicAlign(const Location& loc,
   return Result::Ok;
 }
 
+Result SharedValidator::OnAtomicFence(const Location& loc,
+                                      uint32_t consistency_model) {
+  Result result = Result::Ok;
+  if (consistency_model != 0) {
+    result |= PrintError(
+        loc, "unexpected atomic.fence consistency model (expected 0): %u",
+        consistency_model);
+  }
+  result |= typechecker_.OnAtomicFence(consistency_model);
+  return result;
+}
+
 Result SharedValidator::OnAtomicLoad(const Location& loc,
                                      Opcode opcode,
                                      Address alignment) {

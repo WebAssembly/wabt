@@ -156,6 +156,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnAtomicWaitExpr(cast<AtomicWaitExpr>(expr)));
       break;
 
+    case ExprType::AtomicFence:
+      CHECK_RESULT(delegate_->OnAtomicFenceExpr(cast<AtomicFenceExpr>(expr)));
+      break;
+
     case ExprType::AtomicNotify:
       CHECK_RESULT(delegate_->OnAtomicNotifyExpr(cast<AtomicNotifyExpr>(expr)));
       break;

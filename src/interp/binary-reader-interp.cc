@@ -149,6 +149,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnAtomicWaitExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
+  Result OnAtomicFenceExpr(uint32_t consistency_model) override;
   Result OnAtomicNotifyExpr(Opcode opcode,
                             uint32_t alignment_log2,
                             Address offset) override;
@@ -1274,6 +1275,12 @@ Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicWait(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnAtomicFenceExpr(uint32_t consistency_model) {
+  CHECK_RESULT(validator_.OnAtomicFence(loc, consistency_model));
+  istream_.Emit(Opcode::AtomicFence, consistency_model);
   return Result::Ok;
 }
 

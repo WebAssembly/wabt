@@ -25,6 +25,7 @@
 namespace {
 
 const char* ExprTypeName[] = {
+  "AtomicFence",
   "AtomicLoad",
   "AtomicRmw",
   "AtomicRmwCmpxchg",

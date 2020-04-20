@@ -369,6 +369,10 @@ Result TypeChecker::OnAtomicWait(Opcode opcode) {
   return CheckOpcode3(opcode);
 }
 
+Result TypeChecker::OnAtomicFence(uint32_t consistency_model) {
+  return Result::Ok;
+}
+
 Result TypeChecker::OnAtomicNotify(Opcode opcode) {
   return CheckOpcode2(opcode);
 }

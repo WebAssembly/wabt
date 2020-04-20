@@ -406,6 +406,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::AtomicWait:
       WriteLoadStoreExpr<AtomicWaitExpr>(func, expr, "memory offset");
       break;
+    case ExprType::AtomicFence: {
+      auto* fence_expr = cast<AtomicFenceExpr>(expr);
+      WriteOpcode(stream_, Opcode::AtomicFence);
+      WriteU32Leb128(stream_, fence_expr->consistency_model,
+                     "consistency model");
+      break;
+    }
     case ExprType::AtomicNotify:
       WriteLoadStoreExpr<AtomicNotifyExpr>(func, expr, "memory offset");
       break;

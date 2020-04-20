@@ -218,6 +218,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnAtomicWaitExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
+  Result OnAtomicFenceExpr(uint32_t consistency_model) override;
   Result OnAtomicNotifyExpr(Opcode opcode,
                             uint32_t alignment_log2,
                             Address offset) override;

@@ -607,6 +607,7 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_u32x2.snd = ReadAt<u32>(offset);
       break;
 
+    case Opcode::AtomicFence:
     case Opcode::I32Const:
     case Opcode::InterpAlloca:
       // i32/f32 immediate, 0 operands.

@@ -213,6 +213,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnAtomicWaitExpr(Opcode, uint32_t, Address) override {
     return Result::Ok;
   }
+  Result OnAtomicFenceExpr(uint32_t) override {
+    return Result::Ok;
+  }
   Result OnAtomicNotifyExpr(Opcode, uint32_t, Address) override {
     return Result::Ok;
   }

@@ -284,6 +284,7 @@ enum class ExprType {
   AtomicRmwCmpxchg,
   AtomicStore,
   AtomicNotify,
+  AtomicFence,
   AtomicWait,
   Binary,
   Block,
@@ -594,6 +595,16 @@ typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
 typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
 typedef LoadStoreExpr<ExprType::AtomicNotify> AtomicNotifyExpr;
 typedef LoadStoreExpr<ExprType::LoadSplat> LoadSplatExpr;
+
+class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
+ public:
+  explicit AtomicFenceExpr(uint32_t consistency_model,
+                           const Location& loc = Location())
+      : ExprMixin<ExprType::AtomicFence>(loc),
+        consistency_model(consistency_model) {}
+
+  uint32_t consistency_model;
+};
 
 struct Event {
   explicit Event(string_view name) : name(name.to_string()) {}
