@@ -520,13 +520,6 @@ if (NOT EMSCRIPTEN)
       set(USES_TERMINAL USES_TERMINAL)
     endif ()
 
-    add_custom_target(check)
-    add_custom_target(run-unittests
-      COMMAND $<TARGET_FILE:wabt-unittests>
-      DEPENDS wabt-unittests
-      WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-      ${USES_TERMINAL}
-    )
     # Python 3.5 is the version shipped in Ubuntu Xenial
     find_package(PythonInterp 3.5)
     if(PYTHONINTERP_FOUND)
@@ -540,13 +533,20 @@ if (NOT EMSCRIPTEN)
         ${USES_TERMINAL}
       )
 
+      add_custom_target(run-unittests
+        COMMAND $<TARGET_FILE:wabt-unittests>
+        DEPENDS wabt-unittests
+        WORKING_DIRECTORY ${WABT_SOURCE_DIR}
+        ${USES_TERMINAL}
+      )
+
       add_custom_target(run-c-api-tests
         COMMAND ${PYTHON_EXECUTABLE} ${WABT_SOURCE_DIR}/test/run-c-api-examples.py --bindir $<TARGET_FILE_DIR:wat2wasm>
         WORKING_DIRECTORY ${WABT_SOURCE_DIR}
         ${USES_TERMINAL}
       )
-
-      add_dependencies(check run-unittests run-tests  run-c-api-tests)
+      
+      add_custom_target(check DEPENDS run-tests run-unittests run-c-api-tests)
 
       function(c_api_example NAME)
         set(EXENAME wasm-c-api-${NAME})
@@ -584,7 +584,7 @@ if (NOT EMSCRIPTEN)
         c_api_example(threads)
       endif ()
     else()
-      add_dependencies(check run-unittests)
+      message(FATAL_ERROR "Python 3 is required for wabt testing. Please install it. \nIf you want to proceed without installing python 3, either add -no-tests to make target (example: make clang-debug-no-tests) or run cmake with -DBUILD_TESTS=OFF.").
     endif(PYTHONINTERP_FOUND)
   endif ()
 
