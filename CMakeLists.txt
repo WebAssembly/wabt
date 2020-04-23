@@ -546,7 +546,7 @@ if (NOT EMSCRIPTEN)
         ${USES_TERMINAL}
       )
 
-      add_custom_target(check DEPENDS run-tests run-unittests run-c-api-tests)
+      add_custom_target(check DEPENDS run-unittests run-tests run-c-api-tests)
 
       function(c_api_example NAME)
         set(EXENAME wasm-c-api-${NAME})
