@@ -545,7 +545,7 @@ if (NOT EMSCRIPTEN)
         WORKING_DIRECTORY ${WABT_SOURCE_DIR}
         ${USES_TERMINAL}
       )
-      
+
       add_custom_target(check DEPENDS run-tests run-unittests run-c-api-tests)
 
       function(c_api_example NAME)
@@ -584,7 +584,7 @@ if (NOT EMSCRIPTEN)
         c_api_example(threads)
       endif ()
     else()
-      message(FATAL_ERROR "Python 3 is required for wabt testing. Please install it. \nIf you want to proceed without installing python 3, either add -no-tests to make target (example: make clang-debug-no-tests) or run cmake with -DBUILD_TESTS=OFF.").
+      message(FATAL_ERROR "Python 3 is required for wabt testing. Please install it. \nIf you want to proceed without installing python 3, either add -no-tests to make target (example: make clang-debug-no-tests) or run cmake with -DBUILD_TESTS=OFF.")
     endif(PYTHONINTERP_FOUND)
   endif ()
 
