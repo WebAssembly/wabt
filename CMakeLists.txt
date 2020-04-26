@@ -464,6 +464,13 @@ if (NOT EMSCRIPTEN)
     )
   endif ()
 
+  # Python 3.5 is the version shipped in Ubuntu Xenial
+  find_package(PythonInterp 3.5)
+  if(NOT PYTHONINTERP_FOUND)
+    set(BUILD_TESTS OFF) 
+    message(WARNING "Skipping tests. Python 3 is required for wabt testing. Please install python3 to run tests.")
+  endif()
+
   find_package(Threads)
   if (BUILD_TESTS)
     if (NOT USE_SYSTEM_GTEST)
@@ -520,11 +527,6 @@ if (NOT EMSCRIPTEN)
       set(USES_TERMINAL USES_TERMINAL)
     endif ()
 
-    # Python 3.5 is the version shipped in Ubuntu Xenial
-    find_package(PythonInterp 3.5)
-    if(NOT PYTHONINTERP_FOUND)
-      message(FATAL_ERROR "Python 3 is required for wabt testing. Please install it. \nIf you want to proceed without installing python 3, either add -no-tests to make target (example: make clang-debug-no-tests) or run cmake with -DBUILD_TESTS=OFF.")
-    endif()
     # test running
     set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
