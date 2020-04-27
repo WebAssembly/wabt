@@ -466,7 +466,7 @@ if (NOT EMSCRIPTEN)
 
   # Python 3.5 is the version shipped in Ubuntu Xenial
   find_package(PythonInterp 3.5)
-  if(NOT PYTHONINTERP_FOUND)
+  if(BUILD_TESTS AND (NOT PYTHONINTERP_FOUND))
     set(BUILD_TESTS OFF) 
     message(WARNING "Skipping tests. Python 3 is required for wabt testing. Please install python3 to run tests.")
   endif()
