@@ -464,6 +464,13 @@ if (NOT EMSCRIPTEN)
     )
   endif ()
 
+  # Python 3.5 is the version shipped in Ubuntu Xenial
+  find_package(PythonInterp 3.5)
+  if(BUILD_TESTS AND (NOT PYTHONINTERP_FOUND))
+    set(BUILD_TESTS OFF) 
+    message(WARNING "Skipping tests. Python 3 is required for wabt testing. Please install python3 to run tests.")
+  endif()
+
   find_package(Threads)
   if (BUILD_TESTS)
     if (NOT USE_SYSTEM_GTEST)
@@ -520,8 +527,6 @@ if (NOT EMSCRIPTEN)
       set(USES_TERMINAL USES_TERMINAL)
     endif ()
 
-    # Python 3.5 is the version shipped in Ubuntu Xenial
-    find_package(PythonInterp 3.5 REQUIRED)
     # test running
     set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
