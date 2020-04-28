@@ -14,6 +14,24 @@
  * limitations under the License.
  */
 
+var features = {};
+
+WabtModule().then(function(wabt) {
+
+// TODO: Share feature selection and other code with wat2wasm/demo.js
+var FEATURES = [
+  'exceptions',
+  'mutable_globals',
+  'sat_float_to_int',
+  'sign_extension',
+  'simd',
+  'threads',
+  'multi_value',
+  'tail_call',
+  'bulk_memory',
+  'reference_types',
+];
+
 var editorEl = document.querySelector('.editor');
 var uploadEl = document.getElementById('upload');
 var selectEl = document.getElementById('select');
@@ -28,6 +46,16 @@ var editor = CodeMirror.fromTextArea(editorEl, options);
 
 var fileBuffer = null;
 
+for (var feature of FEATURES) {
+  var featureEl = document.getElementById(feature);
+  features[feature] = featureEl.checked;
+  featureEl.addEventListener('change', event => {
+    var feature = event.target.id;
+    features[feature] = event.target.checked;
+    compile(fileBuffer);
+  });
+}
+
 function compile(contents) {
   if (!contents) {
     return;
@@ -38,22 +66,21 @@ function compile(contents) {
   var foldExprs = foldExprsEl.checked;
   var inlineExport = inlineExportEl.checked;
 
-  WabtModule().then(function(wabt) {
-    try {
-      var module = wabt.readWasm(contents, {readDebugNames: readDebugNames});
-      if (generateNames) {
-        module.generateNames();
-        module.applyNames();
-      }
-      var result =
-          module.toText({foldExprs: foldExprs, inlineExport: inlineExport});
-      editor.setValue(result);
-    } catch (e) {
-      editor.setValue(e.toString());
-    } finally {
-      if (module) module.destroy();
+  try {
+    var module =
+        wabt.readWasm(contents, {readDebugNames: readDebugNames, ...features});
+    if (generateNames) {
+      module.generateNames();
+      module.applyNames();
     }
-  });
+    var result =
+        module.toText({foldExprs: foldExprs, inlineExport: inlineExport});
+    editor.setValue(result);
+  } catch (e) {
+    editor.setValue(e.toString());
+  } finally {
+    if (module) module.destroy();
+  }
 }
 
 function onUploadClicked(e) {
@@ -107,3 +134,5 @@ for (var i = 0; i < examples.length; ++i) {
 }
 selectEl.selectedIndex = 0;
 setExample(selectEl.selectedIndex);
+
+});

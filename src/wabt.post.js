@@ -279,11 +279,7 @@ WasmModule.prototype.validate = function(options) {
 };
 
 WasmModule.prototype.resolveNames = function() {
-  var result =
-      Module._wabt_resolve_names_module(this.module_addr, this.errors.addr);
-  if (result !== WABT_OK) {
-    throw new Error('resolveNames failed:\n' + this.errors.format());
-  }
+  // No-op, this is now part of text parsing.
 };
 
 WasmModule.prototype.generateNames = function() {
