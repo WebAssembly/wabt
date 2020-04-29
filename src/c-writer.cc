@@ -2080,10 +2080,10 @@ void CWriter::Write(const LoadExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(", ExternalPtr(memory->name),
-        ", (u64)(", StackVar(0));
+        ", (u64)(", StackVar(0), ")");
   if (expr.offset != 0)
-    Write(" + ", expr.offset);
-  Write("));", Newline());
+    Write(" + ", expr.offset, "u");
+  Write(");", Newline());
   DropTypes(1);
   PushType(result_type);
 }
@@ -2108,10 +2108,10 @@ void CWriter::Write(const StoreExpr& expr) {
   assert(module_->memories.size() == 1);
   Memory* memory = module_->memories[0];
 
-  Write(func, "(", ExternalPtr(memory->name), ", (u64)(", StackVar(1));
+  Write(func, "(", ExternalPtr(memory->name), ", (u64)(", StackVar(1), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset);
-  Write("), ", StackVar(0), ");", Newline());
+  Write(", ", StackVar(0), ");", Newline());
   DropTypes(2);
 }
 
