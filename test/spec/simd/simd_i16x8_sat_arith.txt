@@ -20,39 +20,39 @@ out/test/spec/simd/simd_i16x8_sat_arith.wast:618: assert_malformed passed:
                        ^^^^^^^^^^^^^^^^^^
 out/test/spec/simd/simd_i16x8_sat_arith.wast:623: assert_invalid passed:
   error: type mismatch in i16x8.add_saturate_s, expected [v128, v128] but got [i32, f32]
-  0000021: error: OnBinaryExpr callback failed
+  0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:624: assert_invalid passed:
   error: type mismatch in i16x8.add_saturate_u, expected [v128, v128] but got [i32, f32]
-  0000021: error: OnBinaryExpr callback failed
+  0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:625: assert_invalid passed:
   error: type mismatch in i16x8.sub_saturate_s, expected [v128, v128] but got [i32, f32]
-  0000021: error: OnBinaryExpr callback failed
+  0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:626: assert_invalid passed:
   error: type mismatch in i16x8.sub_saturate_u, expected [v128, v128] but got [i32, f32]
-  0000021: error: OnBinaryExpr callback failed
+  0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:631: assert_invalid passed:
   error: type mismatch in i16x8.add_saturate_s, expected [v128, v128] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:639: assert_invalid passed:
   error: type mismatch in i16x8.add_saturate_s, expected [v128, v128] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:647: assert_invalid passed:
   error: type mismatch in i16x8.add_saturate_u, expected [v128, v128] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:655: assert_invalid passed:
   error: type mismatch in i16x8.add_saturate_u, expected [v128, v128] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:663: assert_invalid passed:
   error: type mismatch in i16x8.sub_saturate_s, expected [v128, v128] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:671: assert_invalid passed:
   error: type mismatch in i16x8.sub_saturate_s, expected [v128, v128] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:679: assert_invalid passed:
   error: type mismatch in i16x8.sub_saturate_u, expected [v128, v128] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i16x8_sat_arith.wast:687: assert_invalid passed:
   error: type mismatch in i16x8.sub_saturate_u, expected [v128, v128] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 220/220 tests passed.
 ;;; STDOUT ;;)

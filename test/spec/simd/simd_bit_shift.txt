@@ -13,22 +13,22 @@ out/test/spec/simd/simd_bit_shift.wast:978: assert_invalid passed:
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:979: assert_invalid passed:
   error: type mismatch in i16x8.shl, expected [v128, i32] but got [i32, i32]
-  000001e: error: OnBinaryExpr callback failed
+  000001f: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:980: assert_invalid passed:
   error: type mismatch in i16x8.shr_s, expected [v128, i32] but got [i32, i32]
-  000001e: error: OnBinaryExpr callback failed
+  000001f: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:981: assert_invalid passed:
   error: type mismatch in i16x8.shr_u, expected [v128, i32] but got [i32, i32]
-  000001e: error: OnBinaryExpr callback failed
+  000001f: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:982: assert_invalid passed:
   error: type mismatch in i32x4.shl, expected [v128, i32] but got [i32, i32]
-  000001e: error: OnBinaryExpr callback failed
+  000001f: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:983: assert_invalid passed:
   error: type mismatch in i32x4.shr_s, expected [v128, i32] but got [i32, i32]
-  000001e: error: OnBinaryExpr callback failed
+  000001f: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:984: assert_invalid passed:
   error: type mismatch in i32x4.shr_u, expected [v128, i32] but got [i32, i32]
-  000001e: error: OnBinaryExpr callback failed
+  000001f: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:985: assert_invalid passed:
   error: type mismatch in i64x2.shl, expected [v128, i32] but got [i32, i32]
   000001f: error: OnBinaryExpr callback failed
@@ -109,22 +109,22 @@ out/test/spec/simd/simd_bit_shift.wast:1026: assert_invalid passed:
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:1034: assert_invalid passed:
   error: type mismatch in i16x8.shr_u, expected [v128, i32] but got [i32]
-  000001c: error: OnBinaryExpr callback failed
+  000001d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:1042: assert_invalid passed:
   error: type mismatch in i16x8.shr_u, expected [v128, i32] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:1050: assert_invalid passed:
   error: type mismatch in i16x8.shr_u, expected [v128, i32] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:1058: assert_invalid passed:
   error: type mismatch in i32x4.shr_s, expected [v128, i32] but got [i32]
-  000001c: error: OnBinaryExpr callback failed
+  000001d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:1066: assert_invalid passed:
   error: type mismatch in i32x4.shr_s, expected [v128, i32] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:1074: assert_invalid passed:
   error: type mismatch in i32x4.shr_s, expected [v128, i32] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bit_shift.wast:1082: assert_invalid passed:
   error: type mismatch in i64x2.shl, expected [v128, i32] but got [i32]
   000001d: error: OnBinaryExpr callback failed

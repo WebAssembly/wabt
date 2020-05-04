@@ -148,10 +148,10 @@ out/test/spec/simd/simd_conversions.wast:1092: assert_invalid passed:
   000001d: error: OnConvertExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1094: assert_invalid passed:
   error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [i32, i64]
-  000001f: error: OnBinaryExpr callback failed
+  000001e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1095: assert_invalid passed:
   error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [i32, i64]
-  000001f: error: OnBinaryExpr callback failed
+  000001e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1096: assert_invalid passed:
   error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [f32, f64]
   0000029: error: OnBinaryExpr callback failed
@@ -196,16 +196,16 @@ out/test/spec/simd/simd_conversions.wast:1241: assert_invalid passed:
   000001b: error: OnConvertExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1249: assert_invalid passed:
   error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [v128]
-  000002d: error: OnBinaryExpr callback failed
+  000002c: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1257: assert_invalid passed:
   error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got []
-  000001b: error: OnBinaryExpr callback failed
+  000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1265: assert_invalid passed:
   error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [v128]
-  000002d: error: OnBinaryExpr callback failed
+  000002c: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1273: assert_invalid passed:
   error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got []
-  000001b: error: OnBinaryExpr callback failed
+  000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_conversions.wast:1281: assert_invalid passed:
   error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed

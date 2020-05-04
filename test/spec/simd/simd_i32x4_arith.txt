@@ -4,36 +4,36 @@
 (;; STDOUT ;;;
 out/test/spec/simd/simd_i32x4_arith.wast:528: assert_invalid passed:
   error: type mismatch in i32x4.neg, expected [v128] but got [i32]
-  000001c: error: OnUnaryExpr callback failed
+  000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:529: assert_invalid passed:
   error: type mismatch in i32x4.add, expected [v128, v128] but got [i32, f32]
-  0000021: error: OnBinaryExpr callback failed
+  0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:530: assert_invalid passed:
   error: type mismatch in i32x4.sub, expected [v128, v128] but got [i32, f32]
-  0000021: error: OnBinaryExpr callback failed
+  0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:531: assert_invalid passed:
   error: type mismatch in i32x4.mul, expected [v128, v128] but got [i32, f32]
-  0000021: error: OnBinaryExpr callback failed
+  0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:536: assert_invalid passed:
   error: type mismatch in i32x4.neg, expected [v128] but got []
-  000001a: error: OnUnaryExpr callback failed
+  000001b: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:544: assert_invalid passed:
   error: type mismatch in i32x4.add, expected [v128, v128] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:552: assert_invalid passed:
   error: type mismatch in i32x4.add, expected [v128, v128] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:560: assert_invalid passed:
   error: type mismatch in i32x4.sub, expected [v128, v128] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:568: assert_invalid passed:
   error: type mismatch in i32x4.sub, expected [v128, v128] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:576: assert_invalid passed:
   error: type mismatch in i32x4.mul, expected [v128, v128] but got [v128]
-  000002c: error: OnBinaryExpr callback failed
+  000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i32x4_arith.wast:584: assert_invalid passed:
   error: type mismatch in i32x4.mul, expected [v128, v128] but got []
-  000001a: error: OnBinaryExpr callback failed
+  000001b: error: OnBinaryExpr callback failed
 192/192 tests passed.
 ;;; STDOUT ;;)

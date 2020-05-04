@@ -40,10 +40,10 @@ out/test/spec/simd/simd_i8x16_arith2.wast:348: assert_invalid passed:
   0000021: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i8x16_arith2.wast:349: assert_invalid passed:
   error: type mismatch in i8x16.avgr_u, expected [v128, v128] but got [i32, f32]
-  0000022: error: OnBinaryExpr callback failed
+  0000021: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i8x16_arith2.wast:350: assert_invalid passed:
   error: type mismatch in i8x16.abs, expected [v128] but got [f32]
-  0000020: error: OnUnaryExpr callback failed
+  000001f: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_i8x16_arith2.wast:355: assert_invalid passed:
   error: type mismatch in i8x16.min_s, expected [v128, v128] but got [v128]
   000002c: error: OnBinaryExpr callback failed
@@ -70,12 +70,12 @@ out/test/spec/simd/simd_i8x16_arith2.wast:411: assert_invalid passed:
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i8x16_arith2.wast:419: assert_invalid passed:
   error: type mismatch in i8x16.avgr_u, expected [v128, v128] but got [v128]
-  000002d: error: OnBinaryExpr callback failed
+  000002c: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i8x16_arith2.wast:427: assert_invalid passed:
   error: type mismatch in i8x16.avgr_u, expected [v128, v128] but got []
-  000001b: error: OnBinaryExpr callback failed
+  000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_i8x16_arith2.wast:435: assert_invalid passed:
   error: type mismatch in i8x16.abs, expected [v128] but got []
-  000001b: error: OnUnaryExpr callback failed
+  000001a: error: OnUnaryExpr callback failed
 174/174 tests passed.
 ;;; STDOUT ;;)

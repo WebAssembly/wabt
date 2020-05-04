@@ -43,13 +43,13 @@ out/test/spec/simd/simd_bitwise.wast:421: assert_invalid passed:
   0000020: error: OnTernaryExpr callback failed
 out/test/spec/simd/simd_bitwise.wast:423: assert_invalid passed:
   error: type mismatch in v128.andnot, expected [v128, v128] but got [i32, v128]
-  000002f: error: OnBinaryExpr callback failed
+  000002e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bitwise.wast:424: assert_invalid passed:
   error: type mismatch in v128.andnot, expected [v128, v128] but got [v128, i32]
-  000002f: error: OnBinaryExpr callback failed
+  000002e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bitwise.wast:425: assert_invalid passed:
   error: type mismatch in v128.andnot, expected [v128, v128] but got [i32, i32]
-  000001f: error: OnBinaryExpr callback failed
+  000001e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bitwise.wast:718: assert_invalid passed:
   error: type mismatch in v128.not, expected [v128] but got []
   000001a: error: OnUnaryExpr callback failed
@@ -73,10 +73,10 @@ out/test/spec/simd/simd_bitwise.wast:766: assert_invalid passed:
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bitwise.wast:774: assert_invalid passed:
   error: type mismatch in v128.andnot, expected [v128, v128] but got [v128]
-  000002d: error: OnBinaryExpr callback failed
+  000002c: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bitwise.wast:782: assert_invalid passed:
   error: type mismatch in v128.andnot, expected [v128, v128] but got []
-  000001b: error: OnBinaryExpr callback failed
+  000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_bitwise.wast:790: assert_invalid passed:
   error: type mismatch in v128.bitselect, expected [v128, v128, v128] but got [v128, v128]
   000003e: error: OnTernaryExpr callback failed
