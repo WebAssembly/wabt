@@ -380,10 +380,10 @@ out/test/spec/simd/simd_lane.wast:497: assert_invalid passed:
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:500: assert_invalid passed:
   error: type mismatch in v8x16.swizzle, expected [v128, v128] but got [i32, v128]
-  000002f: error: OnBinaryExpr callback failed
+  000002e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_lane.wast:502: assert_invalid passed:
   error: type mismatch in v8x16.swizzle, expected [v128, v128] but got [v128, i32]
-  000002f: error: OnBinaryExpr callback failed
+  000002e: error: OnBinaryExpr callback failed
 out/test/spec/simd/simd_lane.wast:504: assert_invalid passed:
   error: type mismatch in v8x16.shuffle, expected [v128, v128] but got [f32, v128]
   0000041: error: OnSimdShuffleOpExpr callback failed

@@ -63,34 +63,34 @@ Code Disassembly:
  0000bb: 0b                         | end
 0000bd func[1] <v128_store_0>:
  0000be: 41 04                      | i32.const 4
- 0000c0: fd 02 44 33 22 11 88 77 66 | v128.const 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
+ 0000c0: fd 0c 44 33 22 11 88 77 66 | v128.const 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
  0000c9: 55 cc bb aa 99 00 ff ee dd | 
- 0000d2: fd 01 04 00                | v128.store 4 0
+ 0000d2: fd 0b 04 00                | v128.store 4 0
  0000d6: 41 04                      | i32.const 4
  0000d8: fd 00 04 00                | v128.load 4 0
  0000dc: 0b                         | end
 0000de func[2] <i16x8.load8x8_s>:
  0000df: 41 00                      | i32.const 0
- 0000e1: fd d2 01 03 00             | i16x8.load8x8_s 3 0
- 0000e6: 0b                         | end
-0000e8 func[3] <i16x8.load8x8_u>:
- 0000e9: 41 00                      | i32.const 0
- 0000eb: fd d3 01 03 00             | i16x8.load8x8_u 3 0
- 0000f0: 0b                         | end
-0000f2 func[4] <i32x4.load16x4_s>:
- 0000f3: 41 00                      | i32.const 0
- 0000f5: fd d4 01 03 00             | i32x4.load16x4_s 3 0
- 0000fa: 0b                         | end
-0000fc func[5] <i32x4.load16x4_u>:
- 0000fd: 41 00                      | i32.const 0
- 0000ff: fd d5 01 03 00             | i32x4.load16x4_u 3 0
- 000104: 0b                         | end
-000106 func[6] <i64x2.load32x2_s>:
- 000107: 41 00                      | i32.const 0
- 000109: fd d6 01 03 00             | i64x2.load32x2_s 3 0
- 00010e: 0b                         | end
-000110 func[7] <i64x2.load32x2_u>:
- 000111: 41 00                      | i32.const 0
- 000113: fd d7 01 03 00             | i64x2.load32x2_u 3 0
- 000118: 0b                         | end
+ 0000e1: fd 01 03 00                | i16x8.load8x8_s 3 0
+ 0000e5: 0b                         | end
+0000e7 func[3] <i16x8.load8x8_u>:
+ 0000e8: 41 00                      | i32.const 0
+ 0000ea: fd 02 03 00                | i16x8.load8x8_u 3 0
+ 0000ee: 0b                         | end
+0000f0 func[4] <i32x4.load16x4_s>:
+ 0000f1: 41 00                      | i32.const 0
+ 0000f3: fd 03 03 00                | i32x4.load16x4_s 3 0
+ 0000f7: 0b                         | end
+0000f9 func[5] <i32x4.load16x4_u>:
+ 0000fa: 41 00                      | i32.const 0
+ 0000fc: fd 04 03 00                | i32x4.load16x4_u 3 0
+ 000100: 0b                         | end
+000102 func[6] <i64x2.load32x2_s>:
+ 000103: 41 00                      | i32.const 0
+ 000105: fd 05 03 00                | i64x2.load32x2_s 3 0
+ 000109: 0b                         | end
+00010b func[7] <i64x2.load32x2_u>:
+ 00010c: 41 00                      | i32.const 0
+ 00010e: fd 06 03 00                | i64x2.load32x2_u 3 0
+ 000112: 0b                         | end
 ;;; STDOUT ;;)

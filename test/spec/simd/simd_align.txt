@@ -10,34 +10,34 @@ out/test/spec/simd/simd_align.wast:58: assert_invalid passed:
   0000034: error: OnStoreExpr callback failed
 out/test/spec/simd/simd_align.wast:62: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
-  0000024: error: OnLoadExpr callback failed
+  0000023: error: OnLoadExpr callback failed
 out/test/spec/simd/simd_align.wast:66: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
-  0000024: error: OnLoadExpr callback failed
+  0000023: error: OnLoadExpr callback failed
 out/test/spec/simd/simd_align.wast:70: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
-  0000024: error: OnLoadExpr callback failed
+  0000023: error: OnLoadExpr callback failed
 out/test/spec/simd/simd_align.wast:74: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
-  0000024: error: OnLoadExpr callback failed
+  0000023: error: OnLoadExpr callback failed
 out/test/spec/simd/simd_align.wast:78: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
-  0000024: error: OnLoadExpr callback failed
+  0000023: error: OnLoadExpr callback failed
 out/test/spec/simd/simd_align.wast:82: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
-  0000024: error: OnLoadExpr callback failed
+  0000023: error: OnLoadExpr callback failed
 out/test/spec/simd/simd_align.wast:86: assert_invalid passed:
   error: alignment must not be larger than natural alignment (1)
-  0000024: error: OnLoadSplatExpr callback failed
+  0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd/simd_align.wast:90: assert_invalid passed:
   error: alignment must not be larger than natural alignment (2)
-  0000024: error: OnLoadSplatExpr callback failed
+  0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd/simd_align.wast:94: assert_invalid passed:
   error: alignment must not be larger than natural alignment (4)
-  0000024: error: OnLoadSplatExpr callback failed
+  0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd/simd_align.wast:98: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
-  0000024: error: OnLoadSplatExpr callback failed
+  0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd/simd_align.wast:105: assert_malformed passed:
   out/test/spec/simd/simd_align/simd_align.56.wat:1:35: error: unexpected token align=-1, expected ).
   (memory 1) (func (drop (v128.load align=-1 (i32.const 0))))

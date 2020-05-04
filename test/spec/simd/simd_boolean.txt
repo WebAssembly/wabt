@@ -10,16 +10,16 @@ out/test/spec/simd/simd_boolean.wast:953: assert_invalid passed:
   000001c: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:954: assert_invalid passed:
   error: type mismatch in i16x8.any_true, expected [v128] but got [i32]
-  000001c: error: OnUnaryExpr callback failed
+  000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:955: assert_invalid passed:
   error: type mismatch in i16x8.all_true, expected [v128] but got [i32]
-  000001c: error: OnUnaryExpr callback failed
+  000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:956: assert_invalid passed:
   error: type mismatch in i32x4.any_true, expected [v128] but got [i32]
-  000001c: error: OnUnaryExpr callback failed
+  000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:957: assert_invalid passed:
   error: type mismatch in i32x4.all_true, expected [v128] but got [i32]
-  000001c: error: OnUnaryExpr callback failed
+  000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:961: assert_malformed passed:
   out/test/spec/simd/simd_boolean/simd_boolean.8.wat:1:32: error: unexpected token "f32x4.any_true", expected an instr.
   (memory 1) (func (result i32) (f32x4.any_true (v128.const i32x4 0 0 0 0)))
@@ -44,15 +44,15 @@ out/test/spec/simd/simd_boolean.wast:977: assert_invalid passed:
   000001a: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:985: assert_invalid passed:
   error: type mismatch in i16x8.any_true, expected [v128] but got []
-  000001a: error: OnUnaryExpr callback failed
+  000001b: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:993: assert_invalid passed:
   error: type mismatch in i16x8.all_true, expected [v128] but got []
-  000001a: error: OnUnaryExpr callback failed
+  000001b: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:1001: assert_invalid passed:
   error: type mismatch in i32x4.any_true, expected [v128] but got []
-  000001a: error: OnUnaryExpr callback failed
+  000001b: error: OnUnaryExpr callback failed
 out/test/spec/simd/simd_boolean.wast:1009: assert_invalid passed:
   error: type mismatch in i32x4.all_true, expected [v128] but got []
-  000001a: error: OnUnaryExpr callback failed
+  000001b: error: OnUnaryExpr callback failed
 258/258 tests passed.
 ;;; STDOUT ;;)
