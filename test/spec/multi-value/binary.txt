@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/binary.wast
-;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
 out/test/spec/multi-value/binary.wast:6: assert_malformed passed:
   0000000: error: unable to read uint32_t: magic

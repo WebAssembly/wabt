@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-multi-value
 (module
   (func (export "block-multi-result") (result i32)
     block (result i32 i32)

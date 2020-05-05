@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/loop.wast
-;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
 out/test/spec/multi-value/loop.wast:526: assert_malformed passed:
   out/test/spec/multi-value/loop/loop.1.wat:1:95: error: unexpected token (, expected ).

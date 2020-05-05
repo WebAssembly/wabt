@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/call_indirect.wast
-;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
 out/test/spec/multi-value/call_indirect.wast:498: assert_trap passed: indirect call signature mismatch
 out/test/spec/multi-value/call_indirect.wast:499: assert_trap passed: indirect call signature mismatch

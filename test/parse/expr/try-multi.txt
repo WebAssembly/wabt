@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-exceptions --enable-multi-value
+;;; ARGS: --enable-exceptions
 (module
   ;; try w/ multiple results
   (func

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/br.wast
-;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
 out/test/spec/multi-value/br.wast:471: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []

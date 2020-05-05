@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-multi-value
 (module
   ;; if w/ multiple results
   (func
