@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/sign-extension-ops/i64.wast
-;;; ARGS*: --enable-sign-extension
 (;; STDOUT ;;;
 out/test/spec/sign-extension-ops/i64.wast:65: assert_trap passed: integer divide by zero
 out/test/spec/sign-extension-ops/i64.wast:66: assert_trap passed: integer divide by zero

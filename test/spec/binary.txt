@@ -133,7 +133,8 @@ out/test/spec/binary.wast:741: assert_malformed passed:
   error: invalid depth: 11 (max 2)
   0000024: error: OnBrTableExpr callback failed
 out/test/spec/binary.wast:763: assert_malformed passed:
-  0000025: error: expected valid block signature type
+  error: function type variable out of range: 11 (max 1)
+  0000025: error: OnBlockExpr callback failed
 out/test/spec/binary.wast:798: assert_malformed passed:
   0000017: error: multiple Start sections
 67/67 tests passed.

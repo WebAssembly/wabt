@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-saturating-float-to-int
 (module
   (func (export "i32.trunc_s:sat/f32") (result i32)
     f32.const -100.12345

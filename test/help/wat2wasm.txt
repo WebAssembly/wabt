@@ -18,27 +18,27 @@ examples:
   $ wat2wasm spec-test.wast -v
 
 options:
-      --help                                  Print this help message
-      --version                               Print version information
-  -v, --verbose                               Use multiple times for more info
-      --debug-parser                          Turn on debugging the parser of wat files
-  -d, --dump-module                           Print a hexdump of the module to stdout
-      --enable-exceptions                     Enable Experimental exception handling
-      --disable-mutable-globals               Disable Import/export mutable globals
-      --enable-saturating-float-to-int        Enable Saturating float-to-int operators
-      --enable-sign-extension                 Enable Sign-extension operators
-      --enable-simd                           Enable SIMD support
-      --enable-threads                        Enable Threading support
-      --enable-multi-value                    Enable Multi-value
-      --enable-tail-call                      Enable Tail-call support
-      --enable-bulk-memory                    Enable Bulk-memory operations
-      --enable-reference-types                Enable Reference types (anyref)
-      --enable-annotations                    Enable Custom annotation syntax
-      --enable-gc                             Enable Garbage collection
-      --enable-all                            Enable all features
-  -o, --output=FILE                           output wasm binary file
-  -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with e.g. lld)
-      --no-canonicalize-leb128s               Write all LEB128 sizes as 5-bytes instead of their minimal size
-      --debug-names                           Write debug names to the generated binary file
-      --no-check                              Don't check for invalid modules
+      --help                                   Print this help message
+      --version                                Print version information
+  -v, --verbose                                Use multiple times for more info
+      --debug-parser                           Turn on debugging the parser of wat files
+  -d, --dump-module                            Print a hexdump of the module to stdout
+      --enable-exceptions                      Enable Experimental exception handling
+      --disable-mutable-globals                Disable Import/export mutable globals
+      --disable-saturating-float-to-int        Disable Saturating float-to-int operators
+      --disable-sign-extension                 Disable Sign-extension operators
+      --enable-simd                            Enable SIMD support
+      --enable-threads                         Enable Threading support
+      --disable-multi-value                    Disable Multi-value
+      --enable-tail-call                       Enable Tail-call support
+      --enable-bulk-memory                     Enable Bulk-memory operations
+      --enable-reference-types                 Enable Reference types (anyref)
+      --enable-annotations                     Enable Custom annotation syntax
+      --enable-gc                              Enable Garbage collection
+      --enable-all                             Enable all features
+  -o, --output=FILE                            output wasm binary file
+  -r, --relocatable                            Create a relocatable wasm binary (suitable for linking with e.g. lld)
+      --no-canonicalize-leb128s                Write all LEB128 sizes as 5-bytes instead of their minimal size
+      --debug-names                            Write debug names to the generated binary file
+      --no-check                               Don't check for invalid modules
 ;;; STDOUT ;;)

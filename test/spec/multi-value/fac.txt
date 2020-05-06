@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/fac.wast
-;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
 7/7 tests passed.
 ;;; STDOUT ;;)

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/if.wast
-;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
 out/test/spec/multi-value/if.wast:585: assert_trap passed: undefined table index
 out/test/spec/multi-value/if.wast:726: assert_malformed passed:

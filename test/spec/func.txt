@@ -1,4 +1,5 @@
 ;;; TOOL: run-interp-spec
+;;; ARGS: --disable-multi-value
 ;;; STDIN_FILE: third_party/testsuite/func.wast
 (;; STDOUT ;;;
 out/test/spec/func.wast:303: assert_invalid passed:

@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-multi-value
 ;;; ERROR: 1
 (module
   ;; too few results
@@ -40,19 +39,19 @@
     end)
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-block-multi-mismatch.txt:9:5: error: type mismatch in block, expected [i32, i32] but got [i32]
+out/test/typecheck/bad-block-multi-mismatch.txt:8:5: error: type mismatch in block, expected [i32, i32] but got [i32]
     end
     ^^^
-out/test/typecheck/bad-block-multi-mismatch.txt:18:5: error: type mismatch in block, expected [] but got [i32]
+out/test/typecheck/bad-block-multi-mismatch.txt:17:5: error: type mismatch in block, expected [] but got [i32]
     end
     ^^^
-out/test/typecheck/bad-block-multi-mismatch.txt:26:5: error: type mismatch in block, expected [f32, i32] but got [i32, i32]
+out/test/typecheck/bad-block-multi-mismatch.txt:25:5: error: type mismatch in block, expected [f32, i32] but got [i32, i32]
     end
     ^^^
-out/test/typecheck/bad-block-multi-mismatch.txt:31:5: error: type mismatch in block, expected [i32] but got []
+out/test/typecheck/bad-block-multi-mismatch.txt:30:5: error: type mismatch in block, expected [i32] but got []
     block (param i32)
     ^^^^^
-out/test/typecheck/bad-block-multi-mismatch.txt:38:5: error: type mismatch in block, expected [i32] but got [f32]
+out/test/typecheck/bad-block-multi-mismatch.txt:37:5: error: type mismatch in block, expected [i32] but got [f32]
     block (param i32)
     ^^^^^
 ;;; STDERR ;;)

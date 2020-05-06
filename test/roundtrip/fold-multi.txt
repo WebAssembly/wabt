@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --fold-exprs --enable-multi-value
+;;; ARGS: --stdout --fold-exprs
 (module
   (func $dup (result i32 i32)
     i32.const 0

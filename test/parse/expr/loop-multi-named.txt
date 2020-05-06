@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-multi-value
 (type $v_v (func))
 (type $v_ii (func (param i32 i32)))
 (type $ii_v (func (result i32 i32)))

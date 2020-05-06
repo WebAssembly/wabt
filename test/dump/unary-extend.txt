@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: -v --enable-sign-extension
+;;; ARGS0: -v
 (module
   (func
     i32.const 0
