@@ -588,14 +588,10 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
     *out_type = Type::I16;
   } else if (type_str == "funcref") {
     *out_type = Type::Funcref;
-  } else if (type_str == "anyref") {
-    *out_type = Type::Anyref;
-  } else if (type_str == "nullref") {
-    *out_type = Type::Nullref;
+  } else if (type_str == "externref") {
+    *out_type = Type::Externref;
   } else if (type_str == "exnref") {
     *out_type = Type::Exnref;
-  } else if (type_str == "hostref") {
-    *out_type = Type::Hostref;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -807,26 +803,26 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       assert(false);  // Should use ParseLaneConstValue instead.
       break;
 
-    case Type::Nullref: {
-      out_value->Set(Ref::Null);
+    case Type::Funcref:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        assert(allow_expected == AllowExpected::Yes);
+        out_value->Set(Ref{1});
+      }
       break;
-    }
 
-    case Type::Hostref: {
-      uint32_t value;
-      CHECK_RESULT(ParseI32Value(&value, value_str));
-      // TODO: hack, just whatever ref is at this index; but skip null (which is
-      // always 0).
-      out_value->Set(Ref{value + 1});
+    case Type::Externref:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        uint32_t value;
+        CHECK_RESULT(ParseI32Value(&value, value_str));
+        // TODO: hack, just whatever ref is at this index; but skip null (which
+        // is always 0).
+        out_value->Set(Ref{value + 1});
+      }
       break;
-    }
-
-    case Type::Funcref: {
-      uint32_t value;
-      CHECK_RESULT(ParseI32Value(&value, value_str));
-      out_value->Set(Ref{value});
-      break;
-    }
 
     default:
       PrintError("unknown concrete type: \"%s\"", type.GetName());
@@ -1727,17 +1723,13 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       break;
     }
 
-    case Type::Nullref:
-      ok = actual.value.Get<Ref>() == Ref::Null;
-      break;
-
     case Type::Funcref:
       // A funcref expectation only requires that the reference be a function,
       // but it doesn't check the actual index.
-      ok = store_.HasValueType(actual.value.Get<Ref>(), Type::Funcref);
+      ok = (actual.type == Type::Funcref);
       break;
 
-    case Type::Hostref:
+    case Type::Externref:
       ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
       break;
 

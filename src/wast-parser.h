@@ -131,6 +131,7 @@ class WastParser {
   bool ParseElemExprVarListOpt(ElemExprVector* out_list);
   Result ParseValueType(Type* out_type);
   Result ParseValueTypeList(TypeVector* out_type_list);
+  Result ParseRefKind(Type* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
   Result ParseQuotedText(std::string* text);
@@ -172,7 +173,7 @@ class WastParser {
   Result ParseF32(Const*, ConstType type);
   Result ParseF64(Const*, ConstType type);
   Result ParseConst(Const*, ConstType type);
-  Result ParseHostRef(Const*);
+  Result ParseExternref(Const*);
   Result ParseExpectedNan(ExpectedNan* expected);
   Result ParseConstList(ConstVector*, ConstType type);
   Result ParseBlockInstr(std::unique_ptr<Expr>*);

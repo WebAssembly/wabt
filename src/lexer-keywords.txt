@@ -4,6 +4,8 @@ struct TokenInfo {
       : name(name), token_type(token_type) {}
   TokenInfo(const char* name, Type value_type)
       : name(name), token_type(TokenType::ValueType), value_type(value_type) {}
+  TokenInfo(const char* name, Type value_type, TokenType token_type)
+      : name(name), token_type(token_type), value_type(value_type) {}
   TokenInfo(const char* name, TokenType token_type, Opcode opcode)
       : name(name), token_type(token_type), opcode(opcode) {}
 
@@ -15,8 +17,7 @@ struct TokenInfo {
   };
 };
 %%
-anyref, Type::Anyref
-array, TokenType::Array
+array, Type::Array, TokenType::Array
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
 assert_malformed, TokenType::AssertMalformed
@@ -45,7 +46,10 @@ elem, TokenType::Elem
 else, TokenType::Else, Opcode::Else
 end, TokenType::End, Opcode::End
 event, TokenType::Event
+exn, Type::Exnref, TokenType::Exn
 exnref, Type::Exnref
+extern, Type::Externref, TokenType::Extern
+externref, Type::Externref
 export, TokenType::Export
 f32.abs, TokenType::Unary, Opcode::F32Abs
 f32.add, TokenType::Binary, Opcode::F32Add
@@ -149,7 +153,7 @@ f64x2.sub, TokenType::Binary, Opcode::F64X2Sub
 f64x2, TokenType::F64X2
 field, TokenType::Field
 funcref, Type::Funcref
-func, TokenType::Func
+func, Type::Funcref, TokenType::Func
 get, TokenType::Get
 global.get, TokenType::GlobalGet, Opcode::GlobalGet
 global.set, TokenType::GlobalSet, Opcode::GlobalSet
@@ -473,12 +477,11 @@ mut, TokenType::Mut
 nan:arithmetic, TokenType::NanArithmetic
 nan:canonical, TokenType::NanCanonical
 nop, TokenType::Nop, Opcode::Nop
-nullref, Type::Nullref
 offset, TokenType::Offset
 param, TokenType::Param
 quote, TokenType::Quote
+ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc
-ref.host, TokenType::RefHost
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
 ref.null, TokenType::RefNull, Opcode::RefNull
 register, TokenType::Register
@@ -490,7 +493,7 @@ return, TokenType::Return, Opcode::Return
 select, TokenType::Select, Opcode::Select
 shared, TokenType::Shared
 start, TokenType::Start
-struct, TokenType::Struct
+struct, Type::Struct, TokenType::Struct
 table.copy, TokenType::TableCopy, Opcode::TableCopy
 table.fill, TokenType::TableFill, Opcode::TableFill
 table.get, TokenType::TableGet, Opcode::TableGet

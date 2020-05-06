@@ -165,31 +165,13 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
   return result;
 }
 
-static bool IsSubtype(Type sub, Type super) {
-  if (super == sub) {
-    return true;
-  }
-  if (super.IsRef() != sub.IsRef()) {
-    return false;
-  }
-  if (super == Type::Anyref) {
-    return sub.IsRef();
-  }
-  if (super.IsNullableRef()) {
-    return sub == Type::Nullref;
-  }
-  return false;
-}
-
 Result TypeChecker::CheckType(Type actual, Type expected) {
   if (expected == Type::Any || actual == Type::Any) {
     return Result::Ok;
   }
-
-  if (!IsSubtype(actual, expected)) {
+  if (actual != expected) {
     return Result::Error;
   }
-
   return Result::Ok;
 }
 
@@ -693,13 +675,13 @@ Result TypeChecker::OnRefFuncExpr(Index) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnRefNullExpr() {
-  PushType(Type::Nullref);
+Result TypeChecker::OnRefNullExpr(Type type) {
+  PushType(type);
   return Result::Ok;
 }
 
-Result TypeChecker::OnRefIsNullExpr() {
-  Result result = PopAndCheck1Type(Type::Anyref, "ref.is_null");
+Result TypeChecker::OnRefIsNullExpr(Type type) {
+  Result result = PopAndCheck1Type(type, "ref.is_null");
   PushType(Type::I32);
   return result;
 }

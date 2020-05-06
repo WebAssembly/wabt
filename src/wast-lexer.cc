@@ -540,7 +540,8 @@ Token WastLexer::GetKeywordToken() {
   }
   if (IsTokenTypeBare(info->token_type)) {
     return BareToken(info->token_type);
-  } else if (IsTokenTypeType(info->token_type)) {
+  } else if (IsTokenTypeType(info->token_type) ||
+             IsTokenTypeRefKind(info->token_type)) {
     return Token(GetLocation(), info->token_type, info->value_type);
   } else {
     assert(IsTokenTypeOpcode(info->token_type));

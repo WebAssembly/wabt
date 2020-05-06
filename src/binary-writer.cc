@@ -681,10 +681,12 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     }
     case ExprType::RefNull: {
       WriteOpcode(stream_, Opcode::RefNull);
+      WriteType(stream_, cast<RefNullExpr>(expr)->type, "ref.null type");
       break;
     }
     case ExprType::RefIsNull: {
       WriteOpcode(stream_, Opcode::RefIsNull);
+      WriteType(stream_, cast<RefIsNullExpr>(expr)->type, "ref.is_null type");
       break;
     }
     case ExprType::Nop:
@@ -1126,6 +1128,7 @@ Result BinaryWriter::WriteModule() {
           switch (elem_expr.kind) {
             case ElemExprKind::RefNull:
               WriteOpcode(stream_, Opcode::RefNull);
+              WriteType(stream_, elem_expr.type, "elem expr ref.null type");
               break;
 
             case ElemExprKind::RefFunc:

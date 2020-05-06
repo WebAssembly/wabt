@@ -403,6 +403,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeF64(uint64_t value) override;
   Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
+  Result OnOpcodeType(Type type) override;
 
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
@@ -636,6 +637,12 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeV128(v128 value) {
   return Result::Ok;
 }
 
+Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
+  Offset immediate_len = state->offset - current_opcode_offset;
+  LogOpcode(immediate_len, type.GetRefKindName());
+  return Result::Ok;
+}
+
 Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
     Index num_targets,
     Index* target_depths,
@@ -697,6 +704,8 @@ enum class InitExprType {
   V128,
   Global,
   FuncRef,
+  // TODO: There isn't a nullref anymore, this just represents ref.null of some
+  // type T.
   NullRef,
 };
 
@@ -709,6 +718,7 @@ struct InitExpr {
     uint64_t i64;
     uint64_t f64;
     v128 v128_v;
+    Type type;
   } value;
 };
 
@@ -804,7 +814,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                           uint8_t flags) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                        Index func_index) override;
 
@@ -838,7 +848,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index) override;
+  Result OnInitExprRefNull(Index index, Type type) override;
   Result OnInitExprRefFunc(Index index, Index func_index) override;
 
   Result OnDylinkInfo(uint32_t mem_size,
@@ -1286,8 +1296,10 @@ Result BinaryReaderObjdump::OnExport(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index) {
-  PrintDetails("  - elem[%" PRIindex "] = nullref\n", elem_offset_ + elem_index_);
+Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index,
+                                                          Type type) {
+  PrintDetails("  - elem[%" PRIindex "] = ref.null %s\n",
+               elem_offset_ + elem_index_, type.GetName());
   elem_index_++;
   return Result::Ok;
 }
@@ -1395,7 +1407,7 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       break;
     }
     case InitExprType::NullRef: {
-      PrintDetails(" - init nullref\n");
+      PrintDetails(" - init null\n");
       break;
     }
   }
@@ -1489,9 +1501,10 @@ Result BinaryReaderObjdump::OnInitExprI64ConstExpr(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnInitExprRefNull(Index index) {
+Result BinaryReaderObjdump::OnInitExprRefNull(Index index, Type type) {
   InitExpr expr;
   expr.type = InitExprType::NullRef;
+  expr.value.type = type;
   HandleInitExpr(expr);
   return Result::Ok;
 }

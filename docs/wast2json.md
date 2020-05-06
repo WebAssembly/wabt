@@ -157,8 +157,7 @@ The `reference-types` proposal adds three more valid types:
 
 | type | JSON format |
 | - | - |
-| "nullref" | `{"type": "nullref", "value": ""}` |
-| "hostref" | `{"type": "hostref", "value": <string>}` |
+| "externref" | `{"type": "externref", "value": <string>}` |
 | "funcref" | `{"type": "funcref", "value": <string>}` |
 
 

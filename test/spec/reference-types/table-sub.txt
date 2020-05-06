@@ -2,11 +2,11 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table-sub.wast
 ;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
-out/test/spec/reference-types/table-sub.wast:12: assert_invalid passed:
-  error: type mismatch at table.copy. got anyref, expected funcref
+out/test/spec/reference-types/table-sub.wast:2: assert_invalid passed:
+  error: type mismatch at table.copy. got externref, expected funcref
   000002a: error: OnTableCopyExpr callback failed
-out/test/spec/reference-types/table-sub.wast:23: assert_invalid passed:
-  error: type mismatch at table.init. got anyref, expected funcref
+out/test/spec/reference-types/table-sub.wast:13: assert_invalid passed:
+  error: type mismatch at table.init. got externref, expected funcref
   000002d: error: OnTableInitExpr callback failed
 2/2 tests passed.
 ;;; STDOUT ;;)

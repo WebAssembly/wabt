@@ -31,25 +31,23 @@ class Type {
  public:
   // Matches binary format, do not change.
   enum Enum {
-    I32 = -0x01,      // 0x7f
-    I64 = -0x02,      // 0x7e
-    F32 = -0x03,      // 0x7d
-    F64 = -0x04,      // 0x7c
-    V128 = -0x05,     // 0x7b
-    I8 = -0x06,       // 0x7a  : packed-type only, used in gc and as v128 lane
-    I16 = -0x07,      // 0x79  : packed-type only, used in gc and as v128 lane
-    Funcref = -0x10,  // 0x70
-    Anyref = -0x11,   // 0x6f
-    Nullref = -0x12,  // 0x6e
-    Exnref = -0x18,   // 0x68
-    Func = -0x20,     // 0x60
-    Struct = -0x21,   // 0x5f
-    Array = -0x22,    // 0x5e
-    Void = -0x40,     // 0x40
-    ___ = Void,       // Convenient for the opcode table in opcode.h
+    I32 = -0x01,        // 0x7f
+    I64 = -0x02,        // 0x7e
+    F32 = -0x03,        // 0x7d
+    F64 = -0x04,        // 0x7c
+    V128 = -0x05,       // 0x7b
+    I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
+    I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
+    Funcref = -0x10,    // 0x70
+    Externref = -0x11,  // 0x6f
+    Exnref = -0x18,     // 0x68
+    Func = -0x20,       // 0x60
+    Struct = -0x21,     // 0x5f
+    Array = -0x22,      // 0x5e
+    Void = -0x40,       // 0x40
+    ___ = Void,         // Convenient for the opcode table in opcode.h
 
     Any = 0,          // Not actually specified, but useful for type-checking
-    Hostref = 2,      // Not actually specified, but used in testing and type-checking
     I8U = 4,   // Not actually specified, but used internally with load/store
     I16U = 6,  // Not actually specified, but used internally with load/store
     I32U = 7,  // Not actually specified, but used internally with load/store
@@ -61,9 +59,8 @@ class Type {
   operator Enum() const { return enum_; }
 
   bool IsRef() const {
-    return enum_ == Type::Anyref || enum_ == Type::Funcref ||
-           enum_ == Type::Nullref || enum_ == Type::Exnref ||
-           enum_ == Type::Hostref;
+    return enum_ == Type::Externref || enum_ == Type::Funcref ||
+           enum_ == Type::Exnref;
   }
 
   bool IsNullableRef() const {
@@ -73,21 +70,31 @@ class Type {
 
   const char* GetName() const {
     switch (enum_) {
-      case Type::I32:     return "i32";
-      case Type::I64:     return "i64";
-      case Type::F32:     return "f32";
-      case Type::F64:     return "f64";
-      case Type::V128:    return "v128";
-      case Type::I8:      return "i8";
-      case Type::I16:     return "i16";
-      case Type::Funcref: return "funcref";
-      case Type::Func:    return "func";
-      case Type::Exnref:  return "exnref";
-      case Type::Void:    return "void";
-      case Type::Any:     return "any";
-      case Type::Anyref:  return "anyref";
-      case Type::Nullref: return "nullref";
-      default:            return "<type_index>";
+      case Type::I32:       return "i32";
+      case Type::I64:       return "i64";
+      case Type::F32:       return "f32";
+      case Type::F64:       return "f64";
+      case Type::V128:      return "v128";
+      case Type::I8:        return "i8";
+      case Type::I16:       return "i16";
+      case Type::Funcref:   return "funcref";
+      case Type::Func:      return "func";
+      case Type::Exnref:    return "exnref";
+      case Type::Void:      return "void";
+      case Type::Any:       return "any";
+      case Type::Externref: return "externref";
+      default:              return "<type_index>";
+    }
+  }
+
+  const char* GetRefKindName() const {
+    switch (enum_) {
+      case Type::Funcref:   return "func";
+      case Type::Externref: return "extern";
+      case Type::Exnref:    return "exn";
+      case Type::Struct:    return "struct";
+      case Type::Array:     return "array";
+      default:              return "<invalid>";
     }
   }
 
@@ -122,8 +129,7 @@ class Type {
       case Type::F64:
       case Type::V128:
       case Type::Funcref:
-      case Type::Anyref:
-      case Type::Nullref:
+      case Type::Externref:
       case Type::Exnref:
         return TypeVector(this, this + 1);
 

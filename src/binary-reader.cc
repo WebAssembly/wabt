@@ -99,6 +99,7 @@ class BinaryReader {
   Result ReadS32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS64Leb128(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadType(Type* out_value, const char* desc) WABT_WARN_UNUSED;
+  Result ReadRefType(Type* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadExternalKind(ExternalKind* out_value,
                           const char* desc) WABT_WARN_UNUSED;
   Result ReadStr(string_view* out_str, const char* desc) WABT_WARN_UNUSED;
@@ -302,6 +303,14 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadRefType(Type* out_value, const char* desc) {
+  uint32_t type = 0;
+  CHECK_RESULT(ReadS32Leb128(&type, desc));
+  *out_value = static_cast<Type>(type);
+  ERROR_UNLESS(out_value->IsRef(), "%s must be a reference type", desc);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadExternalKind(ExternalKind* out_value,
                                       const char* desc) {
   uint8_t value = 0;
@@ -402,8 +411,7 @@ bool BinaryReader::IsConcreteType(Type type) {
       return options_.features.simd_enabled();
 
     case Type::Funcref:
-    case Type::Anyref:
-    case Type::Nullref:
+    case Type::Externref:
       return options_.features.reference_types_enabled();
 
     case Type::Exnref:
@@ -483,9 +491,12 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
       break;
     }
 
-    case Opcode::RefNull:
-      CALLBACK(OnInitExprRefNull, index);
+    case Opcode::RefNull: {
+      Type type;
+      CHECK_RESULT(ReadRefType(&type, "ref.null type"));
+      CALLBACK(OnInitExprRefNull, index, type);
       break;
+    }
 
     case Opcode::RefFunc: {
       Index func_index;
@@ -514,9 +525,7 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
 }
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
-  CHECK_RESULT(ReadType(out_elem_type, "table elem type"));
-  ERROR_UNLESS(out_elem_type->IsRef(),
-               "table elem type must be a reference type");
+  CHECK_RESULT(ReadRefType(out_elem_type, "table elem type"));
 
   uint32_t flags;
   uint32_t initial;
@@ -1545,14 +1554,18 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::RefNull: {
-        CALLBACK(OnRefNullExpr);
-        CALLBACK0(OnOpcodeBare);
+        Type type;
+        CHECK_RESULT(ReadRefType(&type, "ref.null type"));
+        CALLBACK(OnRefNullExpr, type);
+        CALLBACK(OnOpcodeType, type);
         break;
       }
 
       case Opcode::RefIsNull: {
-        CALLBACK(OnRefIsNullExpr);
-        CALLBACK0(OnOpcodeBare);
+        Type type;
+        CHECK_RESULT(ReadRefType(&type, "ref.is_null type"));
+        CALLBACK(OnRefIsNullExpr, type);
+        CALLBACK(OnOpcodeType, type);
         break;
       }
 
@@ -2197,10 +2210,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     // For backwards compat we support not declaring the element kind.
     if (flags & (SegPassive | SegExplicitIndex)) {
       if (flags & SegUseElemExprs) {
-        CHECK_RESULT(ReadType(&elem_type, "table elem type"));
-        ERROR_UNLESS(elem_type.IsRef(),
-                     "segment elem expr type must be a reference type (got %s)",
-                     elem_type.GetName());
+        CHECK_RESULT(ReadRefType(&elem_type, "table elem type"));
       } else {
         ExternalKind kind;
         CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
@@ -2222,7 +2232,9 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         Opcode opcode;
         CHECK_RESULT(ReadOpcode(&opcode, "elem expr opcode"));
         if (opcode == Opcode::RefNull) {
-          CALLBACK(OnElemSegmentElemExpr_RefNull, i);
+          Type type;
+          CHECK_RESULT(ReadRefType(&type, "elem expr ref.null type"));
+          CALLBACK(OnElemSegmentElemExpr_RefNull, i, type);
         } else if (opcode == Opcode::RefFunc) {
           Index func_index;
           CHECK_RESULT(ReadIndex(&func_index, "elem expr func index"));

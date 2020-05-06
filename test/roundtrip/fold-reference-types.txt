@@ -2,7 +2,7 @@
 ;;; ARGS: --stdout --fold-exprs --enable-reference-types
 
 (module
-  (table $t 1 anyref)
+  (table $t 1 externref)
   (func
     i32.const 0
     i32.const 0
@@ -18,5 +18,5 @@
       (i32.const 0)
       (table.get 0
         (i32.const 0))))
-  (table (;0;) 1 anyref))
+  (table (;0;) 1 externref))
 ;;; STDOUT ;;)

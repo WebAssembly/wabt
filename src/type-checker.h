@@ -109,8 +109,8 @@ class TypeChecker {
   Result OnTableSize();
   Result OnTableFill(Type elem_type);
   Result OnRefFuncExpr(Index func_index);
-  Result OnRefNullExpr();
-  Result OnRefIsNullExpr();
+  Result OnRefNullExpr(Type type);
+  Result OnRefIsNullExpr(Type type);
   Result OnRethrow();
   Result OnReturn();
   Result OnSelect(Type expected);

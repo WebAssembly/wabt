@@ -199,6 +199,7 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeF64(uint64_t value) = 0;
   virtual Result OnOpcodeV128(v128 value) = 0;
   virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
+  virtual Result OnOpcodeType(Type type) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   uint32_t alignment_log2,
                                   Address offset) = 0;
@@ -265,8 +266,8 @@ class BinaryReaderDelegate {
   virtual Result OnTableSizeExpr(Index table_index) = 0;
   virtual Result OnTableFillExpr(Index table_index) = 0;
   virtual Result OnRefFuncExpr(Index func_index) = 0;
-  virtual Result OnRefNullExpr() = 0;
-  virtual Result OnRefIsNullExpr() = 0;
+  virtual Result OnRefNullExpr(Type type) = 0;
+  virtual Result OnRefIsNullExpr(Type type) = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr() = 0;
   virtual Result OnReturnExpr() = 0;
@@ -304,7 +305,8 @@ class BinaryReaderDelegate {
   virtual Result EndElemSegmentInitExpr(Index index) = 0;
   virtual Result OnElemSegmentElemType(Index index, Type elem_type) = 0;
   virtual Result OnElemSegmentElemExprCount(Index index, Index count) = 0;
-  virtual Result OnElemSegmentElemExpr_RefNull(Index segment_index) = 0;
+  virtual Result OnElemSegmentElemExpr_RefNull(Index segment_index,
+                                               Type type) = 0;
   virtual Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                                Index func_index) = 0;
   virtual Result EndElemSegment(Index index) = 0;
@@ -425,7 +427,7 @@ class BinaryReaderDelegate {
   virtual Result OnInitExprGlobalGetExpr(Index index, Index global_index) = 0;
   virtual Result OnInitExprI32ConstExpr(Index index, uint32_t value) = 0;
   virtual Result OnInitExprI64ConstExpr(Index index, uint64_t value) = 0;
-  virtual Result OnInitExprRefNull(Index index) = 0;
+  virtual Result OnInitExprRefNull(Index index, Type type) = 0;
   virtual Result OnInitExprRefFunc(Index index, Index func_index) = 0;
 
   const State* state = nullptr;

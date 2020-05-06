@@ -56,7 +56,7 @@
     memory.copy
 
     ;; reference types
-    ref.null
+    ref.null func
     drop
 
     ;; exceptions

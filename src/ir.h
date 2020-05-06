@@ -74,6 +74,8 @@ struct Var {
 typedef std::vector<Var> VarVector;
 
 struct Const {
+  static constexpr uintptr_t kRefNullBits = ~uintptr_t(0);
+
   Const() : Const(Type::I32, uint32_t(0)) {}
 
   static Const I32(uint32_t val = 0, const Location& loc = Location()) {
@@ -132,9 +134,9 @@ struct Const {
   // Only used for expectations. (e.g. wast assertions)
   void set_f32(ExpectedNan nan) { set_f32(0); set_expected_nan(0, nan); }
   void set_f64(ExpectedNan nan) { set_f64(0); set_expected_nan(0, nan); }
-  void set_hostref(uintptr_t x) { From(Type::Hostref, x); }
-  void set_nullref()            { From<uintptr_t>(Type::Nullref, 0); }
   void set_funcref()            { From<uintptr_t>(Type::Funcref, 0); }
+  void set_externref(uintptr_t x) { From(Type::Externref, x); }
+  void set_null(Type type)      { From<uintptr_t>(type, kRefNullBits); }
 
   bool is_expected_nan(int lane = 0) const {
     return expected_nan(lane) != ExpectedNan::None;
@@ -396,8 +398,18 @@ typedef ExprMixin<ExprType::Nop> NopExpr;
 typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
-typedef ExprMixin<ExprType::RefNull> RefNullExpr;
-typedef ExprMixin<ExprType::RefIsNull> RefIsNullExpr;
+
+template <ExprType TypeEnum>
+class RefTypeExpr : public ExprMixin<TypeEnum> {
+ public:
+  RefTypeExpr(Type type, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), type(type) {}
+
+  Type type;
+};
+
+typedef RefTypeExpr<ExprType::RefNull> RefNullExpr;
+typedef RefTypeExpr<ExprType::RefIsNull> RefIsNullExpr;
 
 template <ExprType TypeEnum>
 class OpcodeExpr : public ExprMixin<TypeEnum> {
@@ -720,11 +732,13 @@ enum class ElemExprKind {
 };
 
 struct ElemExpr {
-  ElemExpr() : kind(ElemExprKind::RefNull) {}
+  ElemExpr() : kind(ElemExprKind::RefNull), type(Type::Funcref) {}
   explicit ElemExpr(Var var) : kind(ElemExprKind::RefFunc), var(var) {}
+  explicit ElemExpr(Type type) : kind(ElemExprKind::RefNull), type(type) {}
 
   ElemExprKind kind;
-  Var var;  // Only used when kind == RefFunc.
+  Var var;    // Only used when kind == RefFunc.
+  Type type;  // Only used when kind == RefNull
 };
 
 typedef std::vector<ElemExpr> ElemExprVector;

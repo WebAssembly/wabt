@@ -11,25 +11,25 @@ out/test/spec/reference-types/table_set.wast:47: assert_trap passed: out of boun
 out/test/spec/reference-types/table_set.wast:48: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 1
 out/test/spec/reference-types/table_set.wast:49: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 2
 out/test/spec/reference-types/table_set.wast:55: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, anyref] but got []
+  error: type mismatch in table.set, expected [i32, externref] but got []
   000001f: error: OnTableSetExpr callback failed
 out/test/spec/reference-types/table_set.wast:64: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, anyref] but got [nullref]
-  0000020: error: OnTableSetExpr callback failed
+  error: type mismatch in table.set, expected [i32, externref] but got [externref]
+  0000021: error: OnTableSetExpr callback failed
 out/test/spec/reference-types/table_set.wast:73: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, anyref] but got [i32]
+  error: type mismatch in table.set, expected [i32, externref] but got [i32]
   0000021: error: OnTableSetExpr callback failed
 out/test/spec/reference-types/table_set.wast:82: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, anyref] but got [f32, nullref]
-  0000025: error: OnTableSetExpr callback failed
+  error: type mismatch in table.set, expected [i32, externref] but got [f32, externref]
+  0000026: error: OnTableSetExpr callback failed
 out/test/spec/reference-types/table_set.wast:91: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, funcref] but got [i32, anyref]
+  error: type mismatch in table.set, expected [i32, funcref] but got [i32, externref]
   0000024: error: OnTableSetExpr callback failed
 out/test/spec/reference-types/table_set.wast:101: assert_invalid passed:
-  error: type mismatch in table.set, expected [i32, funcref] but got [i32, anyref]
+  error: type mismatch in table.set, expected [i32, funcref] but got [i32, externref]
   0000027: error: OnTableSetExpr callback failed
 out/test/spec/reference-types/table_set.wast:112: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
-  0000024: error: EndFunctionBody callback failed
+  0000025: error: EndFunctionBody callback failed
 25/25 tests passed.
 ;;; STDOUT ;;)

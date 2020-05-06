@@ -122,6 +122,7 @@ class WatWriter : ModuleContext {
   void WriteQuotedString(string_view str, NextChar next_char);
   void WriteVar(const Var& var, NextChar next_char);
   void WriteBrVar(const Var& var, NextChar next_char);
+  void WriteRefKind(Type type, NextChar next_char);
   void WriteType(Type type, NextChar next_char);
   void WriteTypes(const TypeVector& types, const char* name);
   void WriteFuncSigSpace(const FuncSignature& func_sig);
@@ -375,6 +376,10 @@ void WatWriter::WriteBrVar(const Var& var, NextChar next_char) {
   } else {
     WriteString(var.name(), next_char);
   }
+}
+
+void WatWriter::WriteRefKind(Type type, NextChar next_char) {
+  WritePuts(type.GetRefKindName(), next_char);
 }
 
 void WatWriter::WriteType(Type type, NextChar next_char) {
@@ -797,12 +802,14 @@ Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
-  writer_->WritePutsNewline(Opcode::RefNull_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::RefNull_Opcode.GetName());
+  writer_->WriteRefKind(expr->type, NextChar::Newline);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnRefIsNullExpr(RefIsNullExpr* expr) {
-  writer_->WritePutsNewline(Opcode::RefIsNull_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::RefIsNull_Opcode.GetName());
+  writer_->WriteRefKind(expr->type, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -1287,6 +1294,7 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     if (flags & SegUseElemExprs) {
       if (expr.kind == ElemExprKind::RefNull) {
         WriteOpenSpace("ref.null");
+        WriteRefKind(expr.type, NextChar::Space);
         WriteCloseSpace();
       } else {
         WriteOpenSpace("ref.func");

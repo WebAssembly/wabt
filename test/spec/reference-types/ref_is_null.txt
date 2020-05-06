@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/ref_is_null.wast
 ;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
-init(anyref:1) =>
+init(externref:1) =>
 deinit() =>
-18/18 tests passed.
+13/13 tests passed.
 ;;; STDOUT ;;)

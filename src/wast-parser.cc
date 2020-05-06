@@ -731,7 +731,9 @@ bool WastParser::ParseElemExprOpt(ElemExpr* out_elem_expr) {
           options_->features.reference_types_enabled())) {
       Error(loc, "ref.null not allowed");
     }
-    *out_elem_expr = ElemExpr();
+    Type type;
+    CHECK_RESULT(ParseRefKind(&type));
+    *out_elem_expr = ElemExpr(type);
   } else if (Match(TokenType::RefFunc)) {
     Var var;
     CHECK_RESULT(ParseVar(&var));
@@ -768,7 +770,7 @@ bool WastParser::ParseElemExprVarListOpt(ElemExprVector* out_list) {
 Result WastParser::ParseValueType(Type* out_type) {
   WABT_TRACE(ParseValueType);
   if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "anyref"});
+    return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "externref"});
   }
 
   Token token = Consume();
@@ -778,9 +780,8 @@ Result WastParser::ParseValueType(Type* out_type) {
     case Type::V128:
       is_enabled = options_->features.simd_enabled();
       break;
-    case Type::Anyref:
     case Type::Funcref:
-    case Type::Hostref:
+    case Type::Externref:
       is_enabled = options_->features.reference_types_enabled();
       break;
     case Type::Exnref:
@@ -808,15 +809,37 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list) {
   return Result::Ok;
 }
 
-Result WastParser::ParseRefType(Type* out_type) {
-  WABT_TRACE(ParseRefType);
-  if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"funcref", "anyref", "nullref", "exnref"});
+Result WastParser::ParseRefKind(Type* out_type) {
+  WABT_TRACE(ParseRefKind);
+  if (!IsTokenTypeRefKind(Peek())) {
+    return ErrorExpected({"func", "extern", "exn"});
   }
 
   Token token = Consume();
   Type type = token.type();
-  if (type == Type::Anyref && !options_->features.reference_types_enabled()) {
+
+  if ((type == Type::Externref &&
+       !options_->features.reference_types_enabled()) ||
+      ((type == Type::Struct || type == Type::Array) &&
+       !options_->features.gc_enabled())) {
+    Error(token.loc, "value type not allowed: %s", type.GetName());
+    return Result::Error;
+  }
+
+  *out_type = type;
+  return Result::Ok;
+}
+
+Result WastParser::ParseRefType(Type* out_type) {
+  WABT_TRACE(ParseRefType);
+  if (!PeekMatch(TokenType::ValueType)) {
+    return ErrorExpected({"funcref", "externref", "exnref"});
+  }
+
+  Token token = Consume();
+  Type type = token.type();
+  if (type == Type::Externref &&
+      !options_->features.reference_types_enabled()) {
     Error(token.loc, "value type not allowed: %s", type.GetName());
     return Result::Error;
   }
@@ -833,7 +856,8 @@ bool WastParser::ParseRefTypeOpt(Type* out_type) {
 
   Token token = Consume();
   Type type = token.type();
-  if (type == Type::Anyref && !options_->features.reference_types_enabled()) {
+  if (type == Type::Externref &&
+      !options_->features.reference_types_enabled()) {
     return false;
   }
 
@@ -1949,15 +1973,21 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParsePlainInstrVar<RefFuncExpr>(loc, out_expr));
       break;
 
-    case TokenType::RefNull:
+    case TokenType::RefNull: {
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new RefNullExpr(loc));
+      Type type;
+      CHECK_RESULT(ParseRefKind(&type));
+      out_expr->reset(new RefNullExpr(type, loc));
       break;
+    }
 
-    case TokenType::RefIsNull:
+    case TokenType::RefIsNull: {
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new RefIsNullExpr(loc));
+      Type type;
+      CHECK_RESULT(ParseRefKind(&type));
+      out_expr->reset(new RefIsNullExpr(type, loc));
       break;
+    }
 
     case TokenType::Throw:
       ErrorUnlessOpcodeEnabled(Consume());
@@ -2360,11 +2390,11 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
   return Result::Ok;
 }
 
-Result WastParser::ParseHostRef(Const* const_) {
-  WABT_TRACE(ParseHostRef);
+Result WastParser::ParseExternref(Const* const_) {
+  WABT_TRACE(ParseExternref);
   Token token = Consume();
   if (!options_->features.reference_types_enabled()) {
-    Error(token.loc, "hostref not allowed");
+    Error(token.loc, "externref not allowed");
     return Result::Error;
   }
 
@@ -2391,7 +2421,7 @@ Result WastParser::ParseHostRef(Const* const_) {
   uint64_t ref_bits;
   Result result = ParseInt64(s, end, &ref_bits, ParseIntType::UnsignedOnly);
 
-  const_->set_hostref(static_cast<uintptr_t>(ref_bits));
+  const_->set_externref(static_cast<uintptr_t>(ref_bits));
 
   if (Failed(result)) {
     Error(const_->loc, "invalid literal \"" PRIstringview "\"",
@@ -2406,7 +2436,7 @@ Result WastParser::ParseHostRef(Const* const_) {
 Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
   WABT_TRACE(ParseConstList);
   while (PeekMatchLpar(TokenType::Const) || PeekMatchLpar(TokenType::RefNull) ||
-         PeekMatchLpar(TokenType::RefHost) ||
+         PeekMatchLpar(TokenType::RefExtern) ||
          PeekMatchLpar(TokenType::RefFunc)) {
     Consume();
     Const const_;
@@ -2416,9 +2446,11 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         break;
       case TokenType::RefNull: {
         auto token = Consume();
+        Type type;
+        CHECK_RESULT(ParseRefKind(&type));
         ErrorUnlessOpcodeEnabled(token);
         const_.loc = GetLocation();
-        const_.set_nullref();
+        const_.set_null(type);
         break;
       }
       case TokenType::RefFunc: {
@@ -2428,8 +2460,8 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         const_.set_funcref();
         break;
       }
-      case TokenType::RefHost:
-        CHECK_RESULT(ParseHostRef(&const_));
+      case TokenType::RefExtern:
+        CHECK_RESULT(ParseExternref(&const_));
         break;
       default:
         assert(!"unreachable");

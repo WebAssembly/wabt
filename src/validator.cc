@@ -433,12 +433,12 @@ Result Validator::OnRefFuncExpr(RefFuncExpr* expr) {
 }
 
 Result Validator::OnRefNullExpr(RefNullExpr* expr) {
-  result_ |= validator_.OnRefNull(expr->loc);
+  result_ |= validator_.OnRefNull(expr->loc, expr->type);
   return Result::Ok;
 }
 
 Result Validator::OnRefIsNullExpr(RefIsNullExpr* expr) {
-  result_ |= validator_.OnRefIsNull(expr->loc);
+  result_ |= validator_.OnRefIsNull(expr->loc, expr->type);
   return Result::Ok;
 }
 
@@ -715,7 +715,8 @@ Result Validator::CheckModule() {
             break;
 
           case ExprType::RefNull:
-            result_ |= validator_.OnGlobalInitExpr_RefNull(expr->loc);
+            result_ |= validator_.OnGlobalInitExpr_RefNull(
+                expr->loc, cast<RefNullExpr>(expr)->type);
             break;
 
           default:
@@ -789,7 +790,8 @@ Result Validator::CheckModule() {
         switch (elem_expr.kind) {
           case ElemExprKind::RefNull:
             // TODO: better location?
-            result_ |= validator_.OnElemSegmentElemExpr_RefNull(field.loc);
+            result_ |= validator_.OnElemSegmentElemExpr_RefNull(field.loc,
+                                                                elem_expr.type);
             break;
 
           case ElemExprKind::RefFunc:

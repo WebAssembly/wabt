@@ -29,7 +29,8 @@ out/test/spec/bulk-memory-operations/linking.wast:190: assert_trap passed: undef
 out/test/spec/bulk-memory-operations/linking.wast:216: assert_unlinkable passed:
   error: invalid import "Mt.mem"
 out/test/spec/bulk-memory-operations/linking.wast:225: assert_trap passed: uninitialized table element
-out/test/spec/bulk-memory-operations/linking.wast:326: assert_unlinkable passed:
+out/test/spec/bulk-memory-operations/linking.wast:239: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/linking.wast:327: assert_unlinkable passed:
   error: invalid import "Mm.tab"
-94/94 tests passed.
+96/96 tests passed.
 ;;; STDOUT ;;)

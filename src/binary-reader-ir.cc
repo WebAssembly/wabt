@@ -184,8 +184,8 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTableSizeExpr(Index table_index) override;
   Result OnTableFillExpr(Index table_index) override;
   Result OnRefFuncExpr(Index func_index) override;
-  Result OnRefNullExpr() override;
-  Result OnRefIsNullExpr() override;
+  Result OnRefNullExpr(Type type) override;
+  Result OnRefIsNullExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
   Result OnReturnExpr() override;
@@ -213,7 +213,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                        Index func_index) override;
 
@@ -247,7 +247,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index) override;
+  Result OnInitExprRefNull(Index index, Type type) override;
   Result OnInitExprRefFunc(Index index, Index func_index) override;
 
   Result OnDataSymbol(Index index, uint32_t flags, string_view name,
@@ -914,12 +914,12 @@ Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
   return AppendExpr(MakeUnique<RefFuncExpr>(Var(func_index)));
 }
 
-Result BinaryReaderIR::OnRefNullExpr() {
-  return AppendExpr(MakeUnique<RefNullExpr>());
+Result BinaryReaderIR::OnRefNullExpr(Type type) {
+  return AppendExpr(MakeUnique<RefNullExpr>(type));
 }
 
-Result BinaryReaderIR::OnRefIsNullExpr() {
-  return AppendExpr(MakeUnique<RefIsNullExpr>());
+Result BinaryReaderIR::OnRefIsNullExpr(Type type) {
+  return AppendExpr(MakeUnique<RefIsNullExpr>(type));
 }
 
 Result BinaryReaderIR::OnNopExpr() {
@@ -1073,10 +1073,11 @@ Result BinaryReaderIR::OnElemSegmentElemExprCount(Index index, Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnElemSegmentElemExpr_RefNull(Index segment_index) {
+Result BinaryReaderIR::OnElemSegmentElemExpr_RefNull(Index segment_index,
+                                                     Type type) {
   assert(segment_index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[segment_index];
-  segment->elem_exprs.emplace_back();
+  segment->elem_exprs.emplace_back(type);
   return Result::Ok;
 }
 
@@ -1226,9 +1227,9 @@ Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnInitExprRefNull(Index index) {
+Result BinaryReaderIR::OnInitExprRefNull(Index index, Type type) {
   Location loc = GetLocation();
-  current_init_expr_->push_back(MakeUnique<RefNullExpr>(loc));
+  current_init_expr_->push_back(MakeUnique<RefNullExpr>(type, loc));
   return Result::Ok;
 }
 
