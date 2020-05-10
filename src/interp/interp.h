@@ -701,8 +701,10 @@ class HostFunc : public Func {
   static const char* GetTypeName() { return "HostFunc"; }
   using Ptr = RefPtr<HostFunc>;
 
-  using Callback = std::function<
-      Result(const Values& params, Values& results, Trap::Ptr* out_trap)>;
+  using Callback = std::function<Result(Thread& thread,
+                                        const Values& params,
+                                        Values& results,
+                                        Trap::Ptr* out_trap)>;
 
   static HostFunc::Ptr New(Store&, FuncType, Callback);
 

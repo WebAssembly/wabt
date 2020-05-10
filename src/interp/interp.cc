@@ -421,7 +421,7 @@ Result HostFunc::DoCall(Thread& thread,
                         const Values& params,
                         Values& results,
                         Trap::Ptr* out_trap) {
-  return callback_(params, results, out_trap);
+  return callback_(thread, params, results, out_trap);
 }
 
 //// Table ////

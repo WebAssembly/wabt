@@ -171,8 +171,8 @@ Result ReadAndInstantiateModule(const char* module_filename,
 
       auto host_func =
           HostFunc::New(s_store, func_type,
-                        [=](const Values& params, Values& results,
-                            Trap::Ptr* trap) -> Result {
+                        [=](Thread& thread, const Values& params,
+                            Values& results, Trap::Ptr* trap) -> Result {
                           printf("called host ");
                           WriteCall(stream, import_name, func_type, params,
                                     results, *trap);

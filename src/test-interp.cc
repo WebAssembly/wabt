@@ -275,12 +275,13 @@ TEST_F(InterpTest, HostFunc) {
       0x08, 0x01, 0x06, 0x00, 0x41, 0x01, 0x10, 0x00, 0x0b,
   });
 
-  auto host_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-      [](const Values& params, Values& results, Trap::Ptr* out_trap) -> Result {
-        results[0] = Value::Make(params[0].Get<u32>() + 1);
-        return Result::Ok;
-      });
+  auto host_func =
+      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+                    [](Thread& thread, const Values& params, Values& results,
+                       Trap::Ptr* out_trap) -> Result {
+                      results[0] = Value::Make(params[0].Get<u32>() + 1);
+                      return Result::Ok;
+                    });
 
   Instantiate({host_func->self()});
 
@@ -306,7 +307,7 @@ TEST_F(InterpTest, HostFunc_PingPong) {
 
   auto host_func = HostFunc::New(
       store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-      [&](const Values& params, Values& results,
+      [&](Thread& thread, const Values& params, Values& results,
           Trap::Ptr* out_trap) -> Result {
         auto val = params[0].Get<u32>();
         if (val < 10) {
@@ -344,18 +345,18 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
 
   auto thread = Thread::New(store_, {});
 
-  auto host_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-      [&](const Values& params, Values& results,
-          Trap::Ptr* out_trap) -> Result {
-        auto val = params[0].Get<u32>();
-        if (val < 10) {
-          return GetFuncExport(0)->Call(*thread, {Value::Make(val * 2)}, results,
-                                        out_trap);
-        }
-        results[0] = Value::Make(val);
-        return Result::Ok;
-      });
+  auto host_func =
+      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+                    [&](Thread& t, const Values& params, Values& results,
+                        Trap::Ptr* out_trap) -> Result {
+                      auto val = params[0].Get<u32>();
+                      if (val < 10) {
+                        return GetFuncExport(0)->Call(t, {Value::Make(val * 2)},
+                                                      results, out_trap);
+                      }
+                      results[0] = Value::Make(val);
+                      return Result::Ok;
+                    });
 
   Instantiate({host_func->self()});
 
@@ -382,12 +383,13 @@ TEST_F(InterpTest, HostTrap) {
       0x0a, 0x06, 0x01, 0x04, 0x00, 0x10, 0x00, 0x0b,
   });
 
-  auto host_func = HostFunc::New(store_, FuncType{{}, {}},
-                                 [&](const Values& params, Values& results,
-                                     Trap::Ptr* out_trap) -> Result {
-                                   *out_trap = Trap::New(store_, "boom");
-                                   return Result::Error;
-                                 });
+  auto host_func =
+      HostFunc::New(store_, FuncType{{}, {}},
+                    [&](Thread& thread, const Values& params, Values& results,
+                        Trap::Ptr* out_trap) -> Result {
+                      *out_trap = Trap::New(store_, "boom");
+                      return Result::Error;
+                    });
 
   mod_ = Module::New(store_, module_desc_);
   RefPtr<Trap> trap;
@@ -475,18 +477,19 @@ TEST_F(InterpTest, Rot13) {
       0x41, 0x00, 0x20, 0x00, 0x10, 0x01, 0x0b,
   });
 
-  auto host_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-      [](const Values& params, Values& results, Trap::Ptr* out_trap) -> Result {
-        results[0] = Value::Make(params[0].Get<u32>() + 1);
-        return Result::Ok;
-      });
+  auto host_func =
+      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+                    [](Thread& thread, const Values& params, Values& results,
+                       Trap::Ptr* out_trap) -> Result {
+                      results[0] = Value::Make(params[0].Get<u32>() + 1);
+                      return Result::Ok;
+                    });
 
   std::string string_data = "Hello, WebAssembly!";
 
   auto memory = Memory::New(store_, MemoryType{Limits{1}});
 
-  auto fill_buf = [&](const Values& params, Values& results,
+  auto fill_buf = [&](Thread& thread, const Values& params, Values& results,
                       Trap::Ptr* out_trap) -> Result {
     // (param $ptr i32) (param $max_size i32) (result $size i32)
     EXPECT_EQ(2u, params.size());
@@ -508,7 +511,7 @@ TEST_F(InterpTest, Rot13) {
       store_, FuncType{{ValueType::I32, ValueType::I32}, {ValueType::I32}},
       fill_buf);
 
-  auto buf_done = [&](const Values& params, Values& results,
+  auto buf_done = [&](Thread& thread, const Values& params, Values& results,
                       Trap::Ptr* out_trap) -> Result {
     // (param $ptr i32) (param $size i32)
     EXPECT_EQ(2u, params.size());
@@ -639,9 +642,9 @@ TEST_F(InterpGCTest, Collect_InstanceImport) {
       0x00, 0x01, 0x74, 0x01, 0x70, 0x00, 0x00, 0x00, 0x01, 0x6d, 0x02,
       0x00, 0x00, 0x00, 0x01, 0x67, 0x03, 0x7f, 0x00,
   });
-  auto f = HostFunc::New(
-      store_, FuncType{{}, {}},
-      [](const Values&, Values&, Trap::Ptr*) -> Result { return Result::Ok; });
+  auto f = HostFunc::New(store_, FuncType{{}, {}},
+                         [](Thread& thread, const Values&, Values&,
+                            Trap::Ptr*) -> Result { return Result::Ok; });
   auto t = Table::New(store_, TableType{ValueType::Funcref, Limits{0}});
   auto m = Memory::New(store_, MemoryType{Limits{0}});
   auto g = Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
