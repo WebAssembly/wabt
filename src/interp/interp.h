@@ -1021,6 +1021,8 @@ class Thread : public Object {
 
   Store& store();
 
+  Instance* GetCallerInstance();
+
  private:
   friend Store;
   friend DefinedFunc;

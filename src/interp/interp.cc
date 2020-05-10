@@ -932,6 +932,12 @@ void Thread::PushValues(const ValueTypes& types, const Values& values) {
   }
 #define TRAP_UNLESS(cond, msg) TRAP_IF(!(cond), msg)
 
+Instance* Thread::GetCallerInstance() {
+  if (frames_.size() < 2)
+    return nullptr;
+  return frames_[frames_.size() - 2].inst;
+}
+
 RunResult Thread::PushCall(Ref func, u32 offset, Trap::Ptr* out_trap) {
   TRAP_IF(frames_.size() == frames_.capacity(), "call stack exhausted");
   frames_.emplace_back(func, values_.size(), offset, inst_, mod_);

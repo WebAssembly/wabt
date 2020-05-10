@@ -1,0 +1,15 @@
+;;; TOOL: run-interp-wasi
+;;; ARGS: --trace
+;;; ERROR: 42
+(import "wasi_snapshot_preview1" "proc_exit" (func $exit (param i32)))
+
+(memory (export "memory") 1)
+
+(func (export "_start")
+  (call $exit (i32.const 42))
+)
+(;; STDOUT ;;;
+#0.    0: V:0  | i32.const 42
+#0.    8: V:1  | call_import $0
+>>> running wasi function "proc_exit":
+;;; STDOUT ;;)
