@@ -14,5 +14,5 @@ section(DATA) {
   data[str("overflow")]
 }
 (;; STDOUT ;;;
-error initialiazing module: out of bounds memory access: data segment is out of bounds: [0, 8) >= max value 0
+error initializing module: out of bounds memory access: data segment is out of bounds: [0, 8) >= max value 0
 ;;; STDOUT ;;)
