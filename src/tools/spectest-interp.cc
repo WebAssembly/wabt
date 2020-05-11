@@ -1224,7 +1224,8 @@ CommandRunner::CommandRunner() : store_(s_features) {
     auto import_name = StringPrintf("spectest.%s", print.name);
     spectest[print.name] = HostFunc::New(
         store_, print.type,
-        [=](const Values& params, Values& results, Trap::Ptr* trap) -> wabt::Result {
+        [=](Thread& inst, const Values& params, Values& results,
+            Trap::Ptr* trap) -> wabt::Result {
           printf("called host ");
           WriteCall(s_stdout_stream.get(), import_name, print.type, params,
                     results, *trap);

@@ -730,8 +730,8 @@ own wasm_func_t* wasm_func_new(wasm_store_t* store,
                                const wasm_functype_t* type,
                                wasm_func_callback_t callback) {
   FuncType wabt_type = *type->As<FuncType>();
-  auto lambda = [=](const Values& wabt_params, Values& wabt_results,
-                    Trap::Ptr* out_trap) -> Result {
+  auto lambda = [=](Thread& thread, const Values& wabt_params,
+                    Values& wabt_results, Trap::Ptr* out_trap) -> Result {
     wasm_val_vec_t params, results;
     wasm_val_vec_new_uninitialized(&params, wabt_params.size());
     wasm_val_vec_new_uninitialized(&results, wabt_results.size());
@@ -759,8 +759,8 @@ own wasm_func_t* wasm_func_new_with_env(wasm_store_t* store,
                                         void* env,
                                         void (*finalizer)(void*)) {
   FuncType wabt_type = *type->As<FuncType>();
-  auto lambda = [=](const Values& wabt_params, Values& wabt_results,
-                    Trap::Ptr* out_trap) -> Result {
+  auto lambda = [=](Thread& thread, const Values& wabt_params,
+                    Values& wabt_results, Trap::Ptr* out_trap) -> Result {
     wasm_val_vec_t params, results;
     wasm_val_vec_new_uninitialized(&params, wabt_params.size());
     wasm_val_vec_new_uninitialized(&results, wabt_results.size());
