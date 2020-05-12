@@ -21,10 +21,6 @@ set -o errexit
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source "${SCRIPT_DIR}/travis-common.sh"
 
-if [[ ${TRAVIS_OS_NAME} = "linux" ]]; then
-  flake8
-fi
-
 if [[ ${COMPILER} = "clang" && -z ${SANITIZER:-} ]]; then
   # Test building without GTest submodule
   make clang-debug-no-tests
