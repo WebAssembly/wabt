@@ -47,9 +47,7 @@ static bool s_run_all_exports;
 static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
-#ifdef WITH_WASI
 static bool s_wasi;
-#endif
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
@@ -97,12 +95,10 @@ static void ParseOptions(int argc, char** argv) {
                    });
   parser.AddOption('t', "trace", "Trace execution",
                    []() { s_trace_stream = s_stdout_stream.get(); });
-#ifdef WITH_WASI
   parser.AddOption("wasi",
                    "Assume input module is WASI compliant (Export "
                    " WASI API the the module and invoke _start function)",
                    []() { s_wasi = true; });
-#endif
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -231,7 +227,10 @@ static Result ReadAndRunModule(const char* module_filename) {
 
 #if WITH_WASI
   uvwasi_t uvwasi;
+#endif
+
   if (s_wasi) {
+#if WITH_WASI
     uvwasi_errno_t err;
     uvwasi_options_t init_options;
     /* Setup the initialization options. */
@@ -253,12 +252,14 @@ static Result ReadAndRunModule(const char* module_filename) {
     }
     CHECK_RESULT(WasiBindImports(module, imports, s_stdout_stream.get(),
                                  s_trace_stream));
+#else
+    s_stdout_stream.get()->Writef("wasi support not compiled in\n");
+    return Result::Error;
+#endif
   } else {
     BindImports(module, imports);
   }
-#else
   BindImports(module, imports);
-#endif
 
   Instance::Ptr instance;
   CHECK_RESULT(InstantiateModule(imports, module, &instance));

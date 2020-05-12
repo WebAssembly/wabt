@@ -681,9 +681,10 @@ class Status(object):
 def FindTestFiles(ext, filter_pattern_re, exclude_dirs):
     tests = []
     for root, dirs, files in os.walk(TEST_DIR):
-        if exclude_dirs:
-            # Filtering out dirs here causes os.walk not to descend into them
-            dirs = [d for d in dirs if d not in exclude_dirs]
+        for ex in exclude_dirs:
+            if ex in dirs:
+                # Filtering out dirs here causes os.walk not to descend into them
+                dirs.remove(ex)
         for f in files:
             path = os.path.join(root, f)
             if os.path.splitext(f)[1] == ext:
