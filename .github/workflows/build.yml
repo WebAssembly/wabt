@@ -9,6 +9,18 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+    - name: install tools
+      run: |
+        sudo pip3 install flake8==3.7.8
+    - run: flake8
   build:
     name: Build
     runs-on: ${{ matrix.os }}

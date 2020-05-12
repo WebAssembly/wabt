@@ -15,11 +15,6 @@
 # limitations under the License.
 #
 
-if [[ ${TRAVIS_OS_NAME} = "linux" ]]; then
-  pip install --user flake8
-elif [[ ${TRAVIS_OS_NAME} = "osx" ]]; then
+if [[ ${TRAVIS_OS_NAME} = "osx" ]]; then
   brew update
-else
-  echo "unknown TRAVIS_OS_NAME: ${TRAVIS_OS_NAME}"
-  exit 1
 fi
