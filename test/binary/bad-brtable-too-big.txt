@@ -1,0 +1,17 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    br_table leb_i32(0xffffffff)  ;; invalid target count
+    0 0 0 ;; first few targets
+  }
+}
+(;; STDERR ;;;
+000001d: error: invalid br_table target count 4294967295, only 4 bytes left in section
+000001d: error: invalid br_table target count 4294967295, only 4 bytes left in section
+;;; STDERR ;;)

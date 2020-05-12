@@ -656,7 +656,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::BrTable: {
         Index num_targets;
-        CHECK_RESULT(ReadIndex(&num_targets, "br_table target count"));
+        CHECK_RESULT(ReadCount(&num_targets, "br_table target count"));
         target_depths_.resize(num_targets);
 
         for (Index i = 0; i < num_targets; ++i) {
