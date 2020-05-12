@@ -722,7 +722,6 @@ Result BinaryReaderIR::OnCallExpr(Index func_index) {
 }
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
-  assert(sig_index < module_->types.size());
   auto expr = MakeUnique<CallIndirectExpr>();
   SetFuncDeclaration(&expr->decl, Var(sig_index, GetLocation()));
   expr->table = Var(table_index);
@@ -734,7 +733,6 @@ Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
 }
 
 Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index, Index table_index) {
-  assert(sig_index < module_->types.size());
   auto expr = MakeUnique<ReturnCallIndirectExpr>();
   SetFuncDeclaration(&expr->decl, Var(sig_index, GetLocation()));
   expr->table = Var(table_index);
