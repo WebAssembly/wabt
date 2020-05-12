@@ -21,6 +21,7 @@
 
 #include "uvwasi.h"
 
+#include <cinttypes>
 #include <unordered_map>
 
 using namespace wabt;
@@ -50,22 +51,14 @@ _Static_assert(offsetof(__wasi_iovec_t, buf_len) == 4, "witx calculated offset")
 
 class WasiInstance {
  public:
-  WasiInstance(Instance* instance,
+  WasiInstance(Instance::Ptr instance,
                uvwasi_s* uvwasi,
                Memory* memory,
                Stream* trace_stream)
-      : instance(instance),
+      : trace_stream(trace_stream),
+        instance(instance),
         uvwasi(uvwasi),
-        memory(memory),
-        trace_stream(trace_stream) {}
-
-  Instance* instance;
-  uvwasi_s* uvwasi;
-  // The memory accociated with the instance.  Looked up once on startup
-  // and cached here.
-  Memory* memory;
-  // The trace stream accosiated with the instance.
-  Stream* trace_stream;
+        memory(memory) {}
 
   Result proc_exit(const Values& params, Values& results, Trap::Ptr* trap) {
     const Value arg0 = params[0];
@@ -77,27 +70,50 @@ class WasiInstance {
     const Value arg0 = params[0];
     int32_t iovptr = params[1].i32_;
     int32_t iovcnt = params[2].i32_;
-    __wasi_iovec_t* wasm_iovs = getMemPtr<__wasi_iovec_t>(iovptr, iovcnt);
+    __wasi_iovec_t* wasm_iovs = getMemPtr<__wasi_iovec_t>(iovptr, iovcnt, trap);
+    if (!wasm_iovs) {
+      return Result::Error;
+    }
     uvwasi_ciovec_t* iovs = new uvwasi_ciovec_t[iovcnt];
     for (int i = 0; i < iovcnt; i++) {
       iovs[0].buf_len = wasm_iovs[0].buf_len;
-      iovs[0].buf = getMemPtr<uint8_t>(wasm_iovs[0].buf, wasm_iovs[0].buf_len);
+      iovs[0].buf =
+          getMemPtr<uint8_t>(wasm_iovs[0].buf, wasm_iovs[0].buf_len, trap);
+      if (!iovs[0].buf) {
+        return Result::Error;
+      }
     }
-    __wasi_ptr_t* out_addr = getMemPtr<__wasi_ptr_t>(params[3].i32_, 1);
+    __wasi_ptr_t* out_addr = getMemPtr<__wasi_ptr_t>(params[3].i32_, 1, trap);
+    if (!out_addr) {
+      return Result::Error;
+    }
     uvwasi_fd_write(uvwasi, arg0.i32_, iovs, iovcnt, out_addr);
     delete[] iovs;
     return Result::Ok;
   }
 
- protected:
+  // The trace stream accosiated with the instance.
+  Stream* trace_stream;
+
+  Instance::Ptr instance;
+ private:
   template <typename T>
-  T* getMemPtr(uint32_t address, uint32_t size) {
+  T* getMemPtr(uint32_t address, uint32_t size, Trap::Ptr* trap) {
     if (!memory->IsValidAccess(address, 0, size * sizeof(T))) {
-      printf("invalid access\n");
-      // TODO(abort).
+      *trap = Trap::New(*instance.store(),
+                        StringPrintf("out of bounds memory access: "
+                                     "[%u, %" PRIu64 ") >= max value %u",
+                                     address, u64{address} + size * sizeof(T),
+                                     memory->ByteSize()));
+      return nullptr;
     }
     return reinterpret_cast<T*>(memory->UnsafeData() + address);
   }
+
+  uvwasi_s* uvwasi;
+  // The memory accociated with the instance.  Looked up once on startup
+  // and cached here.
+  Memory* memory;
 };
 
 std::unordered_map<Instance*, WasiInstance*> wasiInstances;
@@ -210,8 +226,7 @@ Result WasiRunStart(const Instance::Ptr& instance,
   }
 
   // Register memory
-  auto* wasi =
-      new WasiInstance(instance.get(), uvwasi, memory.get(), trace_stream);
+  auto* wasi = new WasiInstance(instance, uvwasi, memory.get(), trace_stream);
   wasiInstances[instance.get()] = wasi;
 
   // Call start ([] -> [])
