@@ -27,9 +27,14 @@
 #include "src/feature.h"
 #include "src/interp/binary-reader-interp.h"
 #include "src/interp/interp-util.h"
+#include "src/interp/interp-wasi.h"
 #include "src/interp/interp.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
+
+#ifdef WITH_WASI
+#include "uvwasi.h"
+#endif
 
 using namespace wabt;
 using namespace wabt::interp;
@@ -42,6 +47,7 @@ static bool s_run_all_exports;
 static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
+static bool s_wasi;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
@@ -89,6 +95,10 @@ static void ParseOptions(int argc, char** argv) {
                    });
   parser.AddOption('t', "trace", "Trace execution",
                    []() { s_trace_stream = s_stdout_stream.get(); });
+  parser.AddOption("wasi",
+                   "Assume input module is WASI compliant (Export "
+                   " WASI API the the module and invoke _start function)",
+                   []() { s_wasi = true; });
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -137,30 +147,10 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
   return result;
 }
 
-Result ReadAndInstantiateModule(const char* module_filename,
-                                Errors* errors,
-                                Instance::Ptr* out_instance) {
+static void BindImports(const Module::Ptr& module, RefVec& imports) {
   auto* stream = s_stdout_stream.get();
-  std::vector<uint8_t> file_data;
-  CHECK_RESULT(ReadFile(module_filename, &file_data));
 
-  ModuleDesc module_desc;
-  const bool kReadDebugNames = true;
-  const bool kStopOnFirstError = true;
-  const bool kFailOnCustomSectionError = true;
-  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                            kStopOnFirstError, kFailOnCustomSectionError);
-  CHECK_RESULT(ReadBinaryInterp(file_data.data(), file_data.size(), options,
-                                errors, &module_desc));
-
-  if (s_verbose) {
-    module_desc.istream.Disassemble(stream);
-  }
-
-  auto module = Module::New(s_store, module_desc);
-
-  RefVec imports;
-  for (auto&& import : module_desc.imports) {
+  for (auto&& import : module->desc().imports) {
     if (import.type.type->kind == ExternKind::Func &&
         ((s_host_print && import.type.module == "host" &&
           import.type.name == "print") ||
@@ -186,26 +176,105 @@ Result ReadAndInstantiateModule(const char* module_filename,
     // instantiation will fail.
     imports.push_back(Ref::Null);
   }
+}
 
+static Result ReadModule(const char* module_filename,
+                         Errors* errors,
+                         Module::Ptr* out_module) {
+  auto* stream = s_stdout_stream.get();
+  std::vector<uint8_t> file_data;
+  CHECK_RESULT(ReadFile(module_filename, &file_data));
+
+  ModuleDesc module_desc;
+  const bool kReadDebugNames = true;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+  CHECK_RESULT(ReadBinaryInterp(file_data.data(), file_data.size(), options,
+                                errors, &module_desc));
+
+  if (s_verbose) {
+    module_desc.istream.Disassemble(stream);
+  }
+
+  *out_module = Module::New(s_store, module_desc);
+  return Result::Ok;
+}
+
+static Result InstantiateModule(RefVec& imports,
+                                const Module::Ptr& module,
+                                Instance::Ptr* out_instance) {
   RefPtr<Trap> trap;
   *out_instance = Instance::Instantiate(s_store, module.ref(), imports, &trap);
   if (!*out_instance) {
-    WriteTrap(stream, "error initializing module", trap);
+    WriteTrap(s_stdout_stream.get(), "error initializing module", trap);
     return Result::Error;
   }
-
   return Result::Ok;
 }
 
 static Result ReadAndRunModule(const char* module_filename) {
   Errors errors;
+  Module::Ptr module;
+  Result result = ReadModule(module_filename, &errors, &module);
+  if (!Succeeded(result)) {
+    FormatErrorsToFile(errors, Location::Type::Binary);
+    return result;
+  }
+
+  RefVec imports;
+
+#if WITH_WASI
+  uvwasi_t uvwasi;
+#endif
+
+  if (s_wasi) {
+#if WITH_WASI
+    uvwasi_errno_t err;
+    uvwasi_options_t init_options;
+    /* Setup the initialization options. */
+    init_options.in = 0;
+    init_options.out = 1;
+    init_options.err = 2;
+    init_options.fd_table_size = 3;
+    init_options.argc = 0;
+    init_options.argv = NULL;
+    init_options.envp = NULL;
+    init_options.preopenc = 0;
+    init_options.preopens = NULL;
+    init_options.allocator = NULL;
+
+    err = uvwasi_init(&uvwasi, &init_options);
+    if (err != UVWASI_ESUCCESS) {
+      s_stdout_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
+      return Result::Error;
+    }
+    CHECK_RESULT(WasiBindImports(module, imports, s_stdout_stream.get(),
+                                 s_trace_stream));
+#else
+    s_stdout_stream.get()->Writef("wasi support not compiled in\n");
+    return Result::Error;
+#endif
+  } else {
+    BindImports(module, imports);
+  }
+  BindImports(module, imports);
+
   Instance::Ptr instance;
-  Result result = ReadAndInstantiateModule(module_filename, &errors, &instance);
-  if (Succeeded(result) && s_run_all_exports) {
+  CHECK_RESULT(InstantiateModule(imports, module, &instance));
+
+  if (s_run_all_exports) {
     RunAllExports(instance, &errors);
   }
-  FormatErrorsToFile(errors, Location::Type::Binary);
-  return result;
+#ifdef WITH_WASI
+  if (s_wasi) {
+    CHECK_RESULT(
+        WasiRunStart(instance, &uvwasi, s_stdout_stream.get(), s_trace_stream));
+  }
+#endif
+
+  return Result::Ok;
 }
 
 int ProgramMain(int argc, char** argv) {
