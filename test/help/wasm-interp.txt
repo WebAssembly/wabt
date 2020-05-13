@@ -41,6 +41,7 @@ options:
   -C, --call-stack-size=SIZE                   Size in elements of the call stack
   -t, --trace                                  Trace execution
       --wasi                                   Assume input module is WASI compliant (Export  WASI API the the module and invoke _start function)
+  -e, --env=ENV                                Pass the given environment string in the WASI runtime
       --run-all-exports                        Run all the exported functions, in order. Useful for testing
       --host-print                             Include an importable function named "host.print" for printing to stdout
       --dummy-import-func                      Provide a dummy implementation of all imported functions. The function will log the call and return an appropriate zero value.

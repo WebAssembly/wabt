@@ -48,6 +48,7 @@ static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
 static bool s_wasi;
+static std::vector<std::string> s_wasi_env;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
@@ -100,6 +101,10 @@ static void ParseOptions(int argc, char** argv) {
                    "Assume input module is WASI compliant (Export "
                    " WASI API the the module and invoke _start function)",
                    []() { s_wasi = true; });
+  parser.AddOption(
+      'e', "env", "ENV",
+      "Pass the given environment string in the WASI runtime",
+      [](const std::string& argument) { s_wasi_env.push_back(argument); });
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -234,14 +239,25 @@ static Result ReadAndRunModule(const char* module_filename) {
 #if WITH_WASI
     uvwasi_errno_t err;
     uvwasi_options_t init_options;
+
+    std::vector<const char*> argv;
+    argv.push_back(module_filename);
+    argv.push_back(nullptr);
+
+    std::vector<const char*> envp;
+    for (auto s : s_wasi_env) {
+      envp.push_back(s.c_str());
+    }
+    envp.push_back(nullptr);
+
     /* Setup the initialization options. */
     init_options.in = 0;
     init_options.out = 1;
     init_options.err = 2;
     init_options.fd_table_size = 3;
-    init_options.argc = 0;
-    init_options.argv = NULL;
-    init_options.envp = NULL;
+    init_options.argc = argv.size() - 1;
+    init_options.argv = argv.data();
+    init_options.envp = envp.data();
     init_options.preopenc = 0;
     init_options.preopens = NULL;
     init_options.allocator = NULL;
