@@ -1,0 +1,8 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --debug-names
+(module (func (param i32) (param $b i32)))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32 i32)))
+  (func (;0;) (type 0) (param i32) (param $b i32)))
+;;; STDOUT ;;)

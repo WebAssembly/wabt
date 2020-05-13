@@ -1125,26 +1125,27 @@ void WatWriter::WriteTypeBindings(const char* prefix,
    *   (param $foo i32)
    *   (param i32 i64 f32)
    */
-  bool is_open = false;
+  bool first = true;
+  bool prev_has_name = false;
   size_t index = 0;
   for (Type type : types) {
-    if (!is_open) {
-      WriteOpenSpace(prefix);
-      is_open = true;
-    }
-
     const std::string& name = index_to_name[binding_index_offset + index];
-    if (!name.empty()) {
+    bool has_name = !name.empty();
+    if ((has_name || prev_has_name) && !first) {
+      WriteCloseSpace();
+    }
+    if (has_name || prev_has_name || first) {
+      WriteOpenSpace(prefix);
+    }
+    if (has_name) {
       WriteString(name, NextChar::Space);
     }
     WriteType(type, NextChar::Space);
-    if (!name.empty()) {
-      WriteCloseSpace();
-      is_open = false;
-    }
+    prev_has_name = has_name;
+    first = false;
     ++index;
   }
-  if (is_open) {
+  if (types.size() != 0) {
     WriteCloseSpace();
   }
 }
