@@ -18,6 +18,9 @@
   (call $fd_write (i32.const 1) (i32.const 12) (i32.const 1) (i32.const 20))
   drop
 )
+(;; STDERR ;;;
+error: out of bounds memory access: [65535, 65541) >= max value 65536
+;;; STDERR ;;)
 (;; STDOUT ;;;
 #0.    0: V:0  | i32.const 1
 #0.    8: V:1  | i32.const 12
@@ -25,5 +28,4 @@
 #0.   24: V:3  | i32.const 20
 #0.   32: V:4  | call_import $0
 >>> running wasi function "fd_write":
- error: out of bounds memory access: [65535, 65541) >= max value 65536
 ;;; STDOUT ;;)

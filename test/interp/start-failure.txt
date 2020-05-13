@@ -4,6 +4,6 @@
   (func $start unreachable)
   (start $start)
 )
-(;; STDOUT ;;;
+(;; STDERR ;;;
 error initializing module: unreachable executed
-;;; STDOUT ;;)
+;;; STDERR ;;)
