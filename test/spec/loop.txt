@@ -1,49 +1,149 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/loop.wast
 (;; STDOUT ;;;
-out/test/spec/loop.wast:386: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got []
-  000001c: error: EndFunctionBody callback failed
-out/test/spec/loop.wast:390: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
-  000001c: error: EndFunctionBody callback failed
-out/test/spec/loop.wast:394: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f32] but got []
-  000001c: error: EndFunctionBody callback failed
-out/test/spec/loop.wast:398: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f64] but got []
-  000001c: error: EndFunctionBody callback failed
-out/test/spec/loop.wast:403: assert_invalid passed:
+out/test/spec/loop.wast:526: assert_malformed passed:
+  out/test/spec/loop/loop.1.wat:1:95: error: unexpected token (, expected ).
+  ...result i32)))(func (i32.const 0) (loop (type $sig) (result i32) (param i32)))
+                                                                     ^
+out/test/spec/loop.wast:533: assert_malformed passed:
+  out/test/spec/loop/loop.2.wat:1:82: error: unexpected token (, expected ).
+  ...result i32)))(func (i32.const 0) (loop (param i32) (type $sig) (result i32)))
+                                                        ^
+out/test/spec/loop.wast:540: assert_malformed passed:
+  out/test/spec/loop/loop.3.wat:1:95: error: unexpected token (, expected ).
+  ...result i32)))(func (i32.const 0) (loop (param i32) (result i32) (type $sig)))
+                                                                     ^
+out/test/spec/loop.wast:547: assert_malformed passed:
+  out/test/spec/loop/loop.4.wat:1:83: error: unexpected token (, expected ).
+  ...result i32)))(func (i32.const 0) (loop (result i32) (type $sig) (param i32)))
+                                                         ^
+out/test/spec/loop.wast:554: assert_malformed passed:
+  out/test/spec/loop/loop.5.wat:1:83: error: unexpected token (, expected ).
+  ...result i32)))(func (i32.const 0) (loop (result i32) (param i32) (type $sig)))
+                                                         ^
+out/test/spec/loop.wast:561: assert_malformed passed:
+  out/test/spec/loop/loop.6.wat:1:40: error: unexpected token (, expected ).
+  (func (i32.const 0) (loop (result i32) (param i32)))
+                                         ^
+out/test/spec/loop.wast:568: assert_malformed passed:
+  out/test/spec/loop/loop.7.wat:1:34: error: unexpected token $x, expected ).
+  (func (i32.const 0) (loop (param $x i32) (drop)))
+                                   ^^
+  out/test/spec/loop/loop.7.wat:1:49: error: unexpected token ), expected EOF.
+  (func (i32.const 0) (loop (param $x i32) (drop)))
+                                                  ^
+out/test/spec/loop.wast:572: assert_malformed passed:
+  out/test/spec/loop/loop.8.wat:1:25: error: expected 0 results, got 1
+  (type $sig (func))(func (loop (type $sig) (result i32) (i32.const 0)) (unreac...
+                          ^
+out/test/spec/loop.wast:579: assert_malformed passed:
+  out/test/spec/loop/loop.9.wat:1:50: error: expected 1 arguments, got 0
+  ...func (param i32) (result i32)))(func (loop (type $sig) (result i32) (i32.c...
+                                          ^
+out/test/spec/loop.wast:586: assert_malformed passed:
+  out/test/spec/loop/loop.10.wat:1:64: error: expected 1 results, got 0
+  ...2) (result i32)))(func (i32.const 0) (loop (type $sig) (param i32) (drop))...
+                                          ^
+out/test/spec/loop.wast:593: assert_malformed passed:
+  out/test/spec/loop/loop.11.wat:1:68: error: expected 2 arguments, got 1
+  ...2) (result i32)))(func (i32.const 0) (loop (type $sig) (param i32) (result...
+                                          ^
+out/test/spec/loop.wast:601: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
-out/test/spec/loop.wast:409: assert_invalid passed:
+out/test/spec/loop.wast:609: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  000001c: error: EndFunctionBody callback failed
+out/test/spec/loop.wast:613: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  000001c: error: EndFunctionBody callback failed
+out/test/spec/loop.wast:617: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f32] but got []
+  000001c: error: EndFunctionBody callback failed
+out/test/spec/loop.wast:621: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f64] but got []
+  000001c: error: EndFunctionBody callback failed
+out/test/spec/loop.wast:626: assert_invalid passed:
+  error: type mismatch in loop, expected [] but got [i32]
+  000001c: error: OnEndExpr callback failed
+out/test/spec/loop.wast:632: assert_invalid passed:
+  error: type mismatch in loop, expected [] but got [i32, i32]
+  000001e: error: OnEndExpr callback failed
+out/test/spec/loop.wast:638: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got []
   000001b: error: OnEndExpr callback failed
-out/test/spec/loop.wast:415: assert_invalid passed:
+out/test/spec/loop.wast:644: assert_invalid passed:
+  error: type mismatch in loop, expected [i32, i32] but got []
+  000001c: error: OnEndExpr callback failed
+out/test/spec/loop.wast:650: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got []
   000001c: error: OnEndExpr callback failed
-out/test/spec/loop.wast:421: assert_invalid passed:
+out/test/spec/loop.wast:656: assert_invalid passed:
+  error: type mismatch in loop, expected [i32, i32] but got []
+  000001d: error: OnEndExpr callback failed
+out/test/spec/loop.wast:662: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
   0000020: error: OnEndExpr callback failed
-out/test/spec/loop.wast:427: assert_invalid passed:
+out/test/spec/loop.wast:668: assert_invalid passed:
+  error: type mismatch in loop, expected [i32, i32] but got [i32]
+  000001e: error: OnEndExpr callback failed
+out/test/spec/loop.wast:674: assert_invalid passed:
+  error: type mismatch in loop, expected [i32, i32] but got [i32]
+  0000020: error: OnEndExpr callback failed
+out/test/spec/loop.wast:680: assert_invalid passed:
+  error: type mismatch in loop, expected [] but got [i32]
+  000001f: error: OnEndExpr callback failed
+out/test/spec/loop.wast:686: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/loop.wast:434: assert_invalid passed:
+out/test/spec/loop.wast:693: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got []
   000001e: error: OnEndExpr callback failed
-out/test/spec/loop.wast:443: assert_invalid passed:
+out/test/spec/loop.wast:702: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got []
   000001e: error: OnEndExpr callback failed
-out/test/spec/loop.wast:452: assert_invalid passed:
+out/test/spec/loop.wast:711: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got []
   0000020: error: OnEndExpr callback failed
-out/test/spec/loop.wast:463: assert_malformed passed:
-  out/test/spec/loop/loop.13.wat:1:16: error: unexpected label "$l"
+out/test/spec/loop.wast:721: assert_invalid passed:
+  error: type mismatch in loop, expected [i32] but got []
+  000001d: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:727: assert_invalid passed:
+  error: type mismatch in loop, expected [i32, f64] but got []
+  000001e: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:733: assert_invalid passed:
+  error: type mismatch in loop, expected [i32] but got [f32]
+  0000022: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:739: assert_invalid passed:
+  error: type mismatch in loop, expected [f32, i32] but got [f32]
+  0000023: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:745: assert_invalid passed:
+  error: type mismatch in loop, expected [i32] but got []
+  000001f: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:751: assert_invalid passed:
+  error: type mismatch in loop, expected [i32, f64] but got []
+  0000020: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:757: assert_invalid passed:
+  error: type mismatch in loop, expected [i32] but got [f32]
+  0000024: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:763: assert_invalid passed:
+  error: type mismatch in loop, expected [f32, i32] but got [f32]
+  0000025: error: OnLoopExpr callback failed
+out/test/spec/loop.wast:770: assert_malformed passed:
+  out/test/spec/loop/loop.39.wat:1:44: error: unexpected token $x, expected ).
+  (func (param i32) (result i32) loop (param $x i32) end)
+                                             ^^
+out/test/spec/loop.wast:774: assert_malformed passed:
+  out/test/spec/loop/loop.40.wat:1:45: error: unexpected token $x, expected ).
+  (func (param i32) (result i32) (loop (param $x i32)))
+                                              ^^
+out/test/spec/loop.wast:779: assert_malformed passed:
+  out/test/spec/loop/loop.41.wat:1:16: error: unexpected label "$l"
   (func loop end $l)
                  ^^
-out/test/spec/loop.wast:467: assert_malformed passed:
-  out/test/spec/loop/loop.14.wat:1:19: error: mismatching label "$a" != "$l"
+out/test/spec/loop.wast:783: assert_malformed passed:
+  out/test/spec/loop/loop.42.wat:1:19: error: mismatching label "$a" != "$l"
   (func loop $a end $l)
                     ^^
-80/80 tests passed.
+119/119 tests passed.
 ;;; STDOUT ;;)
