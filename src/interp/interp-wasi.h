@@ -30,7 +30,7 @@ namespace interp {
 
 Result WasiBindImports(const Module::Ptr& module,
                        RefVec& imports,
-                       Stream* stream,
+                       Stream* err_stream,
                        Stream* trace_stream);
 
 Result WasiRunStart(const Instance::Ptr& instance,

@@ -51,6 +51,7 @@ static bool s_wasi;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
+static std::unique_ptr<FileStream> s_stderr_stream;
 
 static Store s_store;
 
@@ -208,7 +209,7 @@ static Result InstantiateModule(RefVec& imports,
   RefPtr<Trap> trap;
   *out_instance = Instance::Instantiate(s_store, module.ref(), imports, &trap);
   if (!*out_instance) {
-    WriteTrap(s_stdout_stream.get(), "error initializing module", trap);
+    WriteTrap(s_stderr_stream.get(), "error initializing module", trap);
     return Result::Error;
   }
   return Result::Ok;
@@ -247,13 +248,13 @@ static Result ReadAndRunModule(const char* module_filename) {
 
     err = uvwasi_init(&uvwasi, &init_options);
     if (err != UVWASI_ESUCCESS) {
-      s_stdout_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
+      s_stderr_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
       return Result::Error;
     }
-    CHECK_RESULT(WasiBindImports(module, imports, s_stdout_stream.get(),
+    CHECK_RESULT(WasiBindImports(module, imports, s_stderr_stream.get(),
                                  s_trace_stream));
 #else
-    s_stdout_stream.get()->Writef("wasi support not compiled in\n");
+    s_stderr_stream.get()->Writef("wasi support not compiled in\n");
     return Result::Error;
 #endif
   } else {
@@ -270,7 +271,7 @@ static Result ReadAndRunModule(const char* module_filename) {
 #ifdef WITH_WASI
   if (s_wasi) {
     CHECK_RESULT(
-        WasiRunStart(instance, &uvwasi, s_stdout_stream.get(), s_trace_stream));
+        WasiRunStart(instance, &uvwasi, s_stderr_stream.get(), s_trace_stream));
   }
 #endif
 
@@ -280,6 +281,7 @@ static Result ReadAndRunModule(const char* module_filename) {
 int ProgramMain(int argc, char** argv) {
   InitStdio();
   s_stdout_stream = FileStream::CreateStdout();
+  s_stderr_stream = FileStream::CreateStderr();
 
   ParseOptions(argc, argv);
 

@@ -154,7 +154,7 @@ Result WasiBindImports(const Module::Ptr& module,
     }
 
     if (import.type.module != "wasi_snapshot_preview1") {
-      stream->Writef("wasi error: unknown module import: %s\n",
+      stream->Writef("wasi error: unknown module import: `%s`\n",
                      import.type.module.c_str());
       return Result::Error;
     }
@@ -182,7 +182,7 @@ Result WasiBindImports(const Module::Ptr& module,
 
 Result WasiRunStart(const Instance::Ptr& instance,
                     uvwasi_s* uvwasi,
-                    Stream* stream,
+                    Stream* err_stream,
                     Stream* trace_stream) {
   Store* store = instance.store();
   auto module = store->UnsafeGet<Module>(instance->module());
@@ -193,14 +193,14 @@ Result WasiRunStart(const Instance::Ptr& instance,
   for (auto&& export_ : module_desc.exports) {
     if (export_.type.name == "memory") {
       if (export_.type.type->kind != ExternalKind::Memory) {
-        stream->Writef("wasi error: memory export has incorrect type\n");
+        err_stream->Writef("wasi error: memory export has incorrect type\n");
         return Result::Error;
       }
       memory = store->UnsafeGet<Memory>(instance->memories()[export_.index]);
     }
     if (export_.type.name == "_start") {
       if (export_.type.type->kind != ExternalKind::Func) {
-        stream->Writef("wasi error: _start export is not a function\n");
+        err_stream->Writef("wasi error: _start export is not a function\n");
         return Result::Error;
       }
       start = store->UnsafeGet<Func>(instance->funcs()[export_.index]);
@@ -211,17 +211,17 @@ Result WasiRunStart(const Instance::Ptr& instance,
   }
 
   if (!start) {
-    stream->Writef("wasi error: _start export not found\n");
+    err_stream->Writef("wasi error: _start export not found\n");
     return Result::Error;
   }
 
   if (!memory) {
-    stream->Writef("wasi error: memory export not found\n");
+    err_stream->Writef("wasi error: memory export not found\n");
     return Result::Error;
   }
 
   if (start->type().params.size() || start->type().results.size()) {
-    stream->Writef("wasi error: invalid _start signature\n");
+    err_stream->Writef("wasi error: invalid _start signature\n");
     return Result::Error;
   }
 
@@ -235,7 +235,7 @@ Result WasiRunStart(const Instance::Ptr& instance,
   Trap::Ptr trap;
   Result res = start->Call(*store, params, results, &trap, trace_stream);
   if (trap) {
-    WriteTrap(stream, " error", trap);
+    WriteTrap(err_stream, "error", trap);
   }
 
   // Unregister memory
