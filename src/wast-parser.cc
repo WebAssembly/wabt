@@ -926,7 +926,8 @@ Result WastParser::ParseNat(uint64_t* out_nat) {
 
   Token token = Consume();
   string_view sv = token.literal().text;
-  if (Failed(ParseUint64(sv.begin(), sv.end(), out_nat))) {
+  if (Failed(ParseUint64(sv.begin(), sv.end(), out_nat)) ||
+      *out_nat > 0xffffffffu) {
     Error(token.loc, "invalid int \"" PRIstringview "\"",
           WABT_PRINTF_STRING_VIEW_ARG(sv));
   }

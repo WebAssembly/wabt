@@ -1,5 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/block.wast
+;;; SKIP: multi-value not supported yet
 (;; STDOUT ;;;
 41/41 tests passed.
 ;;; STDOUT ;;)

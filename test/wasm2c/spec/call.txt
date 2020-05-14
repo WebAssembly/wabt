@@ -1,5 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/call.wast
+;;; SKIP: multi-value not supported yet
 (;; STDOUT ;;;
 64/64 tests passed.
 ;;; STDOUT ;;)

@@ -1,147 +1,147 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/conversions.wast
 (;; STDOUT ;;;
-out/test/spec/conversions.wast:70: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:71: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:72: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:73: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:74: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:75: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:76: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:77: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:92: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:93: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:94: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:95: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:96: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:97: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:98: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:99: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:115: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:116: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:117: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:118: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:119: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:120: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:121: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:122: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:138: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:139: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:140: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:141: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:142: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:143: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:144: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:145: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:146: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:147: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:148: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:166: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:167: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:168: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:169: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:170: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:171: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:172: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:173: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:186: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:187: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:188: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:189: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:190: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:191: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:192: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:193: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:211: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:212: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:213: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:214: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:215: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:216: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:217: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:218: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:235: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:236: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:237: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:238: assert_trap passed: integer overflow
-out/test/spec/conversions.wast:239: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:240: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:241: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:242: assert_trap passed: invalid conversion to integer
-out/test/spec/conversions.wast:475: assert_invalid passed:
+out/test/spec/conversions.wast:78: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:79: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:80: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:81: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:82: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:83: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:84: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:85: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:100: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:101: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:102: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:103: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:104: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:105: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:106: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:107: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:123: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:124: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:125: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:126: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:127: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:128: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:129: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:130: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:146: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:147: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:148: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:149: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:150: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:151: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:152: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:153: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:154: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:155: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:156: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:174: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:175: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:176: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:177: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:178: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:179: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:180: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:181: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:194: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:195: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:196: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:197: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:198: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:199: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:200: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:201: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:219: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:220: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:221: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:222: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:223: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:224: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:225: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:226: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:243: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:244: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:245: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:246: assert_trap passed: integer overflow
+out/test/spec/conversions.wast:247: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:248: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:249: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:250: assert_trap passed: invalid conversion to integer
+out/test/spec/conversions.wast:674: assert_invalid passed:
   error: type mismatch in i32.wrap_i64, expected [i64] but got [f32]
   000001e: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:476: assert_invalid passed:
+out/test/spec/conversions.wast:675: assert_invalid passed:
   error: type mismatch in i32.trunc_f32_s, expected [f32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:477: assert_invalid passed:
+out/test/spec/conversions.wast:676: assert_invalid passed:
   error: type mismatch in i32.trunc_f32_u, expected [f32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:478: assert_invalid passed:
+out/test/spec/conversions.wast:677: assert_invalid passed:
   error: type mismatch in i32.trunc_f64_s, expected [f64] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:479: assert_invalid passed:
+out/test/spec/conversions.wast:678: assert_invalid passed:
   error: type mismatch in i32.trunc_f64_u, expected [f64] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:480: assert_invalid passed:
+out/test/spec/conversions.wast:679: assert_invalid passed:
   error: type mismatch in i32.reinterpret_f32, expected [f32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:481: assert_invalid passed:
+out/test/spec/conversions.wast:680: assert_invalid passed:
   error: type mismatch in i64.extend_i32_s, expected [i32] but got [f32]
   000001e: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:482: assert_invalid passed:
+out/test/spec/conversions.wast:681: assert_invalid passed:
   error: type mismatch in i64.extend_i32_u, expected [i32] but got [f32]
   000001e: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:483: assert_invalid passed:
+out/test/spec/conversions.wast:682: assert_invalid passed:
   error: type mismatch in i64.trunc_f32_s, expected [f32] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:484: assert_invalid passed:
+out/test/spec/conversions.wast:683: assert_invalid passed:
   error: type mismatch in i64.trunc_f32_u, expected [f32] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:485: assert_invalid passed:
+out/test/spec/conversions.wast:684: assert_invalid passed:
   error: type mismatch in i64.trunc_f64_s, expected [f64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:486: assert_invalid passed:
+out/test/spec/conversions.wast:685: assert_invalid passed:
   error: type mismatch in i64.trunc_f64_u, expected [f64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:487: assert_invalid passed:
+out/test/spec/conversions.wast:686: assert_invalid passed:
   error: type mismatch in i64.reinterpret_f64, expected [f64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:488: assert_invalid passed:
+out/test/spec/conversions.wast:687: assert_invalid passed:
   error: type mismatch in f32.convert_i32_s, expected [i32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:489: assert_invalid passed:
+out/test/spec/conversions.wast:688: assert_invalid passed:
   error: type mismatch in f32.convert_i32_u, expected [i32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:490: assert_invalid passed:
+out/test/spec/conversions.wast:689: assert_invalid passed:
   error: type mismatch in f32.convert_i64_s, expected [i64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:491: assert_invalid passed:
+out/test/spec/conversions.wast:690: assert_invalid passed:
   error: type mismatch in f32.convert_i64_u, expected [i64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:492: assert_invalid passed:
+out/test/spec/conversions.wast:691: assert_invalid passed:
   error: type mismatch in f32.demote_f64, expected [f64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:493: assert_invalid passed:
+out/test/spec/conversions.wast:692: assert_invalid passed:
   error: type mismatch in f32.reinterpret_i32, expected [i32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:494: assert_invalid passed:
+out/test/spec/conversions.wast:693: assert_invalid passed:
   error: type mismatch in f64.convert_i32_s, expected [i32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:495: assert_invalid passed:
+out/test/spec/conversions.wast:694: assert_invalid passed:
   error: type mismatch in f64.convert_i32_u, expected [i32] but got [i64]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:496: assert_invalid passed:
+out/test/spec/conversions.wast:695: assert_invalid passed:
   error: type mismatch in f64.convert_i64_s, expected [i64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:497: assert_invalid passed:
+out/test/spec/conversions.wast:696: assert_invalid passed:
   error: type mismatch in f64.convert_i64_u, expected [i64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:498: assert_invalid passed:
+out/test/spec/conversions.wast:697: assert_invalid passed:
   error: type mismatch in f64.promote_f32, expected [f32] but got [i32]
   000001b: error: OnConvertExpr callback failed
-out/test/spec/conversions.wast:499: assert_invalid passed:
+out/test/spec/conversions.wast:698: assert_invalid passed:
   error: type mismatch in f64.reinterpret_i64, expected [i64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-434/434 tests passed.
+614/614 tests passed.
 ;;; STDOUT ;;)

@@ -1,5 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/if.wast
+;;; SKIP: multi-value not supported yet
 (;; STDOUT ;;;
 88/88 tests passed.
 ;;; STDOUT ;;)

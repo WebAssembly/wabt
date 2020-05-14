@@ -1,5 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/conversions.wast
+;;; SKIP: non-trapping float-to-int, multi-value not supported yet
 (;; STDOUT ;;;
 409/409 tests passed.
 ;;; STDOUT ;;)

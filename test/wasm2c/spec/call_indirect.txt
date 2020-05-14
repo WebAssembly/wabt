@@ -1,5 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/call_indirect.wast
+;;; SKIP: multi-value not supported yet
 (;; STDOUT ;;;
 118/118 tests passed.
 ;;; STDOUT ;;)
