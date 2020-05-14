@@ -1070,9 +1070,11 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::Try, try_expr->block,
                       Opcode::Try_Opcode.GetName());
+      WriteOpenNewline("do");
       FlushExprTreeVector(expr_tree.children);
       WriteFoldedExprList(try_expr->block.exprs);
       FlushExprTreeStack();
+      WriteCloseNewline();
       WriteOpenNewline("catch");
       WriteFoldedExprList(try_expr->catch_);
       FlushExprTreeStack();

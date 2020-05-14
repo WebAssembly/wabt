@@ -20,6 +20,7 @@
     (drop
       (block (result i32)  ;; label = @1
         (try  ;; label = @2
+          (do)
           (catch
             (drop
               (br_on_exn 1 (;@1;) 0))))

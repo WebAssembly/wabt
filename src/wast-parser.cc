@@ -2652,8 +2652,11 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         auto expr = MakeUnique<TryExpr>(loc);
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseBlockDeclaration(&expr->block.decl));
+        EXPECT(Lpar);
+        EXPECT(Do);
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
         expr->block.end_loc = GetLocation();
+        EXPECT(Rpar);
         EXPECT(Lpar);
         EXPECT(Catch);
         CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
