@@ -457,7 +457,7 @@ std::string CWriter::LegalizeName(string_view name) {
   // colliding with things C cares about, such as reserved words (e.g. "void")
   // or a function name like main() (which a compiler will  complain about if we
   // define it with another type). To avoid such problems, prefix.
-  result = "__w2c_" + result;
+  result = "w2c_" + result;
 
   return result;
 }
