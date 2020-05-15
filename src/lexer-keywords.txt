@@ -38,6 +38,7 @@ current_memory, TokenType::MemorySize, Opcode::MemorySize
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data
 declare, TokenType::Declare
+do, TokenType::Do
 drop, TokenType::Drop, Opcode::Drop
 elem.drop, TokenType::ElemDrop, Opcode::ElemDrop
 elem, TokenType::Elem

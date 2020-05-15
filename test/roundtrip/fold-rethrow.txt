@@ -16,6 +16,7 @@
   (type (;1;) (func))
   (func (;0;) (type 1)
     (try  ;; label = @1
+      (do)
       (catch
         (rethrow))))
   (event (;0;) (type 0) (param i32)))

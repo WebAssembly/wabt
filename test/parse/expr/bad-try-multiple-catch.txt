@@ -15,7 +15,8 @@
   ;; folded
   (func
     (try
-      (nop)
+      (do
+        (nop))
       (catch
         (nop))
       (catch
@@ -27,10 +28,10 @@ out/test/parse/expr/bad-try-multiple-catch.txt:11:5: error: unexpected token cat
 out/test/parse/expr/bad-try-multiple-catch.txt:13:5: error: unexpected token end, expected ).
     end)
     ^^^
-out/test/parse/expr/bad-try-multiple-catch.txt:21:7: error: unexpected token (, expected ).
+out/test/parse/expr/bad-try-multiple-catch.txt:22:7: error: unexpected token (, expected ).
       (catch
       ^
-out/test/parse/expr/bad-try-multiple-catch.txt:22:16: error: unexpected token ), expected EOF.
+out/test/parse/expr/bad-try-multiple-catch.txt:23:16: error: unexpected token ), expected EOF.
         (nop))))
                ^
 ;;; STDERR ;;)
