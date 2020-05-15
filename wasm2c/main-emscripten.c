@@ -84,7 +84,10 @@ u32 (*Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii)(u32, u32, u32, u32) = _Z_wasi_s
 
 u32 _Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(u32 clock_id, u64 max_lag, u32 out) {
   // TODO: handle realtime vs monotonic etc.
-  i64_store(Z_memory, out, (u64)((double)clock()) / CLOCKS_PER_SEC);
+  // wasi expects a result in nanoseconds, and we know how to convert clock()
+  // to seconds, so compute from there
+  const double NSEC_PER_SEC = 1000.0 * 1000.0 * 1000.0;
+  i64_store(Z_memory, out, (u64)(clock() / (CLOCKS_PER_SEC / NSEC_PER_SEC)));
   return 0;
 }
 
