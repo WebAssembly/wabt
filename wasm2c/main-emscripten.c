@@ -1,4 +1,4 @@
-
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdint.h>
@@ -230,8 +230,10 @@ IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
   }
   struct stat nbuf;
   if (fstat(nfd, &nbuf)) {
+    printf("error, %d %s\n", errno, strerror(errno));
     return EM_EACCES;
   }
+  printf("success, size=%ld\n", nbuf.st_size);
   i32_store(buf + 0, nbuf.st_dev);
   i32_store(buf + 4, 0);
   i32_store(buf + 8, nbuf.st_ino);
@@ -254,7 +256,18 @@ IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
   return 0;
 });
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
+IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 fd, u32 buf, u32 count), {
+  int nfd = get_native_fd(fd);
+  printf("read %d (=> %d) %d %d\n", fd, nfd, buf, count);
+  if (nfd < 0) {
+    return EM_EACCES;
+  }
+  ssize_t ret = read(nfd, MEMACCESS(buf), count);
+  if (ret < 0) {
+    return EM_EACCES;
+  }
+  return ret;
+});
 
 IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), {
   printf("stat64: %s\n", MEMACCESS(a));
