@@ -58,15 +58,17 @@ DEFINE_STORE(i64_store32, u32, u64);
 
 // Imports
 
+#define WASI_DEFAULT_ERROR 63 /* __WASI_ERRNO_PERM */
+
 void _Z_wasi_snapshot_preview1Z_proc_exitZ_vi(u32 x) {
   exit(x);
 }
 void (*Z_wasi_snapshot_preview1Z_proc_exitZ_vi)(u32) = _Z_wasi_snapshot_preview1Z_proc_exitZ_vi;
 
 u32 _Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(u32 fd, u32 iov, u32 iovcnt, u32 pnum) {
+  // TODO full file support
   if (fd != 1) {
-    puts("only stdout supported so far");
-    exit(1);
+    return WASI_DEFAULT_ERROR;
   }
   u32 num = 0;
   for (u32 i = 0; i < iovcnt; i++) {
@@ -81,6 +83,21 @@ u32 _Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(u32 fd, u32 iov, u32 iovcnt, u32 
   return 0;
 }
 u32 (*Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii)(u32, u32, u32, u32) = _Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii;
+
+u32 _Z_wasi_snapshot_preview1Z_fd_closeZ_ii(u32 fd) {
+  // TODO full file support
+  if (fd != 1) {
+    return WASI_DEFAULT_ERROR;
+  }
+  return 0;
+}
+u32 (*Z_wasi_snapshot_preview1Z_fd_closeZ_ii)(u32) = _Z_wasi_snapshot_preview1Z_fd_closeZ_ii;
+
+u32 _Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(u32 x, u64 y, u32 z, u32 w) {
+  // TODO full file support
+  return WASI_DEFAULT_ERROR;
+}
+u32 (*Z_wasi_snapshot_preview1Z_fd_seekZ_iijii)(u32, u64, u32, u32) = _Z_wasi_snapshot_preview1Z_fd_seekZ_iijii;
 
 u32 _Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(u32 clock_id, u64 max_lag, u32 out) {
   // TODO: handle realtime vs monotonic etc.
