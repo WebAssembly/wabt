@@ -65,18 +65,26 @@ void _Z_wasi_snapshot_preview1Z_proc_exitZ_vi(u32 x) {
 }
 void (*Z_wasi_snapshot_preview1Z_proc_exitZ_vi)(u32) = _Z_wasi_snapshot_preview1Z_proc_exitZ_vi;
 
+static FILE* FS_get_stream(u32 fd) {
+  if (fd == 1) {
+    return stdout;
+  } else if (fd == 2) {
+    return stderr;
+  }
+  return NULL;
+}
+
 u32 _Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(u32 fd, u32 iov, u32 iovcnt, u32 pnum) {
-  // TODO full file support
-  if (fd != 1) {
+  // TODO full file handling
+  FILE* stream = FS_get_stream(fd);
+  if (!stream) {
     return WASI_DEFAULT_ERROR;
   }
   u32 num = 0;
   for (u32 i = 0; i < iovcnt; i++) {
     u32 ptr = i32_load(Z_memory, iov + i * 8);
     u32 len = i32_load(Z_memory, iov + i * 8 + 4);
-    for (u32 j = 0; j < len; j++) {
-      putchar(i32_load8_u(Z_memory, ptr + j));
-    }
+    fwrite(Z_memory->data + ptr, 1, len, stream);
     num += len;
   }
   i32_store(Z_memory, pnum, num);
@@ -86,7 +94,7 @@ u32 (*Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii)(u32, u32, u32, u32) = _Z_wasi_s
 
 u32 _Z_wasi_snapshot_preview1Z_fd_closeZ_ii(u32 fd) {
   // TODO full file support
-  if (fd != 1) {
+  if (fd != 1 && fd != 2) {
     return WASI_DEFAULT_ERROR;
   }
   return 0;
