@@ -192,9 +192,12 @@ STUB_IMPORT_IMPL(u32, Z_envZ_utimesZ_iii, (u32 a, u32 b), -1);
 // Syscalls return a negative error code
 #define EM_EACCES -2
 
-IMPORT_IMPL(u32, Z_envZ___sys_unlinkZ_ii, (u32 a), {
-  printf("unlink %d\n", a);
-  return EM_EACCES;
+IMPORT_IMPL(u32, Z_envZ___sys_unlinkZ_ii, (u32 path), {
+  printf("unlink %s\n", MEMACCESS(path));
+  if (unlink(MEMACCESS(path))) {
+    return EM_EACCES;
+  }
+  return 0;
 });
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_rmdirZ_ii, (u32 a), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b), EM_EACCES);
