@@ -93,11 +93,57 @@ u32 _Z_wasi_snapshot_preview1Z_fd_closeZ_ii(u32 fd) {
 }
 u32 (*Z_wasi_snapshot_preview1Z_fd_closeZ_ii)(u32) = _Z_wasi_snapshot_preview1Z_fd_closeZ_ii;
 
-u32 _Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(u32 x, u64 y, u32 z, u32 w) {
-  // TODO full file support
-  return WASI_DEFAULT_ERROR;
-}
-u32 (*Z_wasi_snapshot_preview1Z_fd_seekZ_iijii)(u32, u64, u32, u32) = _Z_wasi_snapshot_preview1Z_fd_seekZ_iijii;
+#define ERRORING_STUB(ret, name, params, errorcode) \
+u32 _##name params { \
+  /* TODO */ \
+  return errorcode; \
+} \
+ret (*name) params = _##name;
+
+ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 a, u64 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
+ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
+ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
+ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
+
+// TODO: set errno for these
+ERRORING_STUB(u32, Z_envZ_dlopenZ_iii, (u32 a, u32 b), 1);
+ERRORING_STUB(u32, Z_envZ_dlcloseZ_ii, (u32 a), 1);
+ERRORING_STUB(u32, Z_envZ_dlsymZ_iii, (u32 a, u32 b), 0);
+ERRORING_STUB(u32, Z_envZ_dlerrorZ_iv, (), 0);
+ERRORING_STUB(u32, Z_envZ_signalZ_iii, (u32 a, u32 b), -1);
+ERRORING_STUB(u32, Z_envZ_systemZ_ii, (u32 a), -1);
+ERRORING_STUB(u32, Z_envZ_utimesZ_iii, (u32 a, u32 b), -1);
+
+#define EM_EACCES 2
+
+ERRORING_STUB(u32, Z_envZ___sys_unlinkZ_ii, (u32 a), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_rmdirZ_ii, (u32 a), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
+
+ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a, u32 b, u32 c), 0);
+ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b, u32 c), 0);
+ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a, u32 b, u32 c), 0);
+
+// TODO Z_envZ_emscripten_longjmpZ_vii
+//      Z_envZ_saveSetjmpZ_iiiii
+//      Z_envZ_testSetjmpZ_iiii
+//      Z_envZ_getTempRet0Z_iv
+//      Z_envZ_setTempRet0Z_vi
+//      Z_envZ_invoke_viiZ_viii
+//
+//      Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii
+//      Z_wasi_snapshot_preview1Z_environ_getZ_iii
+//      Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii
+//      Z_wasi_snapshot_preview1Z_args_getZ_iii
 
 u32 _Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(u32 clock_id, u64 max_lag, u32 out) {
   // TODO: handle realtime vs monotonic etc.
@@ -109,7 +155,6 @@ u32 _Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(u32 clock_id, u64 max_lag, u
 }
 
 u32 (*Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji)(u32, u64, u32) = _Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji;
-
 
 // Main
 
