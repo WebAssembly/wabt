@@ -146,6 +146,10 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
       printf("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
     }
+    if (result != len) {
+      printf("    amount error, %d %d\n", result, len);
+      return WASI_DEFAULT_ERROR;
+    }
     num += len;
   }
   printf("    success: %d\n", num);
