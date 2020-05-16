@@ -118,20 +118,20 @@ ERRORING_STUB(u32, Z_envZ_utimesZ_iii, (u32 a, u32 b), -1);
 
 ERRORING_STUB(u32, Z_envZ___sys_unlinkZ_ii, (u32 a), EM_EACCES);
 ERRORING_STUB(u32, Z_envZ___sys_rmdirZ_ii, (u32 a), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b), EM_EACCES);
 ERRORING_STUB(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b), EM_EACCES);
+ERRORING_STUB(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
 ERRORING_STUB(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 
-ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a, u32 b, u32 c), 0);
-ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b, u32 c), 0);
-ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a, u32 b, u32 c), 0);
+ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a), 0);
+ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b), 0);
+ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a), 0);
 
 // TODO Z_envZ_emscripten_longjmpZ_vii
 //      Z_envZ_saveSetjmpZ_iiiii
