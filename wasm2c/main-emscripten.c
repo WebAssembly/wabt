@@ -14,6 +14,8 @@
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
+#define MEMACCESS(addr) &Z_memory->data[addr]
+
 #define MEMCHECK(a, t)  \
   if (UNLIKELY((a) + sizeof(t) > Z_memory->size)) TRAP(OOB)
 
@@ -21,7 +23,7 @@
   static inline t3 name(u64 addr) {   \
     MEMCHECK(addr, t1);                       \
     t1 result;                                     \
-    memcpy(&result, &Z_memory->data[addr], sizeof(t1)); \
+    memcpy(&result, MEMACCESS(addr), sizeof(t1)); \
     return (t3)(t2)result;                         \
   }
 
@@ -29,7 +31,7 @@
   static inline void name(u64 addr, t2 value) { \
     MEMCHECK(addr, t1);                                 \
     t1 wrapped = (t1)value;                                  \
-    memcpy(&Z_memory->data[addr], &wrapped, sizeof(t1));          \
+    memcpy(MEMACCESS(addr), &wrapped, sizeof(t1));          \
   }
 
 DEFINE_LOAD(i32_load, u32, u32, u32);
@@ -142,12 +144,19 @@ STUB_IMPORT_IMPL(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
+
+IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), {
+  printf("stat: %s\n", MEMACCESS(a));
+  return -1;
+});
+IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b), {
+  printf("access: %s\n", MEMACCESS(a));
+  return -1;
+});
 
 STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a), 0);
 STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b), 0);
