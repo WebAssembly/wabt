@@ -144,6 +144,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
   for (u32 i = 0; i < iovcnt; i++) {
     u32 ptr = i32_load(iov + i * 8);
     u32 len = i32_load(iov + i * 8 + 4);
+    printf("    chunk %d %d\n", ptr, len);
     ssize_t result = write(nfd, MEMACCESS(ptr), len);
     if (result < 0) {
       printf("    error, %d %s\n", errno, strerror(errno));
@@ -203,7 +204,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 fd, u64 offset, 
     printf("    error, %d %s\n", errno, strerror(errno));
     return WASI_DEFAULT_ERROR;
   }
-  i32_store(new_offset, off);
+  i64_store(new_offset, off);
   return 0;
 });
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e), {
