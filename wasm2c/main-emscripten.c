@@ -98,7 +98,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
   return 0;
 });
 
-IMPORT_IMPL(u32, _Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
   // TODO full file support
   FILE* stream = FS_get_stream(fd);
   if (!stream) {
@@ -176,8 +176,10 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, 
 int main(int argc, char** argv) {
   init();
 
-  if (setjmp(g_jmp_buf) != 0) {
-    puts("[wasm trap, halting]");
+  int trap_code;
+  if ((trap_code = setjmp(g_jmp_buf))) {
+    printf("[wasm trap %d, halting]\n", trap_code);
+    return 1;
   } else {
     return Z_mainZ_iii(0, 0);
   }
