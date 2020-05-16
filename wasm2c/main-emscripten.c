@@ -1,4 +1,5 @@
 
+#include <fcntl.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -63,7 +64,7 @@ DEFINE_STORE(i64_store32, u32, u64);
 
 #define IMPORT_IMPL(ret, name, params, body) \
 ret _##name params { \
-  puts("[stub: " #name "]"); \
+  puts("[import: " #name "]"); \
   body \
 } \
 ret (*name) params = _##name;
@@ -76,26 +77,57 @@ IMPORT_IMPL(void, Z_wasi_snapshot_preview1Z_proc_exitZ_vi, (u32 x), {
   exit(x);
 });
 
-static FILE* FS_get_stream(u32 fd) {
-  if (fd == 1) {
-    return stdout;
-  } else if (fd == 2) {
-    return stderr;
-  }
-  return NULL;
+#define MAX_FDS 1024
+
+static int wasm_fd_to_native[MAX_FDS];
+
+static u32 next_wasm_fd;
+
+static void init_fds() {
+  wasm_fd_to_native[0] = STDIN_FILENO;
+  wasm_fd_to_native[1] = STDOUT_FILENO;
+  wasm_fd_to_native[2] = STDERR_FILENO;
+  next_wasm_fd = 3;
 }
 
+void abort_with_message(const char* message) {
+  fprintf(stderr, "%s\n", message);
+  abort();
+}
+
+static u32 get_fd(int nfd) {
+  if (next_wasm_fd >= MAX_FDS) {
+    abort_with_message("ran out of fds");
+  }
+  u32 ret = next_wasm_fd;
+  wasm_fd_to_native[ret] = nfd;
+  next_wasm_fd++;
+  return ret;
+}
+
+static int get_native_fd(u32 fd) {
+  if (fd >= MAX_FDS || fd >= next_wasm_fd) {
+    return -1;
+  }
+  return wasm_fd_to_native[fd];
+}
+
+IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (u32 path, u32 flags, u32 varargs), {
+  printf("open: %s %d %d\n", MEMACCESS(path), flags, i32_load(varargs));
+  return open(MEMACCESS(path), flags, i32_load(varargs));
+});
+
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
-  // TODO full file handling
-  FILE* stream = FS_get_stream(fd);
-  if (!stream) {
+  printf("fd_write %d\n", fd);
+  int nfd = get_native_fd(fd);
+  if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
   u32 num = 0;
   for (u32 i = 0; i < iovcnt; i++) {
     u32 ptr = i32_load(iov + i * 8);
     u32 len = i32_load(iov + i * 8 + 4);
-    fwrite(Z_memory->data + ptr, 1, len, stream);
+    write(nfd, MEMACCESS(ptr), len);
     num += len;
   }
   i32_store(pnum, num);
@@ -104,8 +136,8 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
   // TODO full file support
-  FILE* stream = FS_get_stream(fd);
-  if (!stream) {
+  int nfd = get_native_fd(fd);
+  if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
   return 0;
@@ -155,6 +187,7 @@ IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), {
   printf("stat: %s\n", MEMACCESS(a));
   return -1;
 });
+
 IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 pathname, u32 mode), {
   printf("access: %s 0x%x\n", MEMACCESS(pathname), mode);
   // TODO: sandboxing, convert mode
@@ -192,9 +225,93 @@ IMPORT_IMPL(void, Z_envZ_setTempRet0Z_vi, (u32 x), {
   tempRet0 = x;
 });
 
+// autodebug
+
+IMPORT_IMPL(void, Z_envZ_log_executionZ_vi, (u32 loc), {
+  printf("log_execution %d\n", loc);
+});
+IMPORT_IMPL(void, Z_envZ_get_i32Z_iiii, (u32 loc, u32 index, u32 value), {
+  printf("get_i32 %d %d %d\n", loc, index, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_get_i64Z_iiiii, (u32 loc, u32 index, u32 low, u32 high), {
+  printf("get_i64 %d %d %d %d\n", loc, index, low, high);
+  setTempRet0(high);
+  return low;
+});
+IMPORT_IMPL(void, Z_envZ_get_f32Z_iiif, (u32 loc, u32 index, f32 value), {
+  printf("get_f32 %d %f\n", loc, index, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_get_f64Z_iiid, (u32 loc, u32 index, f64 value), {
+  printf("get_f64 %d %d %f\n", loc, index, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_set_i32Z_iiii, (u32 loc, u32 index, u32 value), {
+  printf("set_i32 %d %d %d\n", loc, index, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_set_i64Z_iiiii, (u32 loc, u32 index, u32 low, u32 high), {
+  printf("set_i64 %d %d %d %d\n", loc, index, low, high);
+  setTempRet0(high);
+  return low;
+});
+IMPORT_IMPL(void, Z_envZ_set_f32Z_iiif, (u32 loc, u32 index, f32 value), {
+  printf("set_f32 %d %d %f\n", loc, index, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_set_f64Z_iiid, (u32 loc, u32 index, f32 value), {
+  printf("set_f64 %d %d %f\n", loc, index, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_load_ptrZ_iiiii, (u32 loc, u32 bytes, u32 offset, u32 ptr), {
+  printf("load_ptr %d %d %d %d\n", loc, bytes, offset, ptr);
+  return ptr;
+});
+IMPORT_IMPL(void, Z_envZ_load_val_i32Z_iii, (u32 loc, u32 value), {
+  printf("load_val_i32 %d %d\n", loc, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_load_val_i64Z_iiii, (u32 loc, u32 low, u32 high), {
+  printf("load_val_i64 %d %d %d\n", loc, low, high);
+  setTempRet0(high);
+  return low;
+});
+IMPORT_IMPL(void, Z_envZ_load_val_f32Z_iif, (u32 loc, f32 value), {
+  printf("load_val_f32 %d %f\n", loc, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_load_val_f64Z_iid, (u32 loc, f64 value), {
+  printf("load_val_f64 %d %f\n", loc, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_store_ptrZ_iiiii, (u32 loc, u32 bytes, u32 offset, u32 ptr), {
+  printf("store_ptr %d %d %d %d\n", loc, bytes, offset, ptr);
+  return ptr;
+});
+IMPORT_IMPL(void, Z_envZ_store_val_i32Z_iii, (u32 loc, u32 value), {
+  printf("store_val_i32 %d %d\n", loc, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_store_val_i64Z_iiii, (u32 loc, u32 low, u32 high), {
+  printf("store_val_i64 %d %d %d\n", loc, low, high);
+  setTempRet0(high);
+  return low;
+});
+IMPORT_IMPL(void, Z_envZ_store_val_f32Z_iif, (u32 loc, f32 value), {
+  printf("store_val_f32 %d %f\n", loc, value);
+  return value;
+});
+IMPORT_IMPL(void, Z_envZ_store_val_f64Z_iid, (u32 loc, f64 value), {
+  printf("store_val_f64 %d %f\n", loc, value);
+  return value;
+});
+
 // Main
 
 int main(int argc, char** argv) {
+  init_fds();
+
   init();
 
   int trap_code;
