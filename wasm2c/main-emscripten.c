@@ -14,22 +14,22 @@
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
-#define MEMCHECK(mem, a, t)  \
-  if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
+#define MEMCHECK(a, t)  \
+  if (UNLIKELY((a) + sizeof(t) > Z_memory->size)) TRAP(OOB)
 
 #define DEFINE_LOAD(name, t1, t2, t3)              \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
-    MEMCHECK(mem, addr, t1);                       \
+  static inline t3 name(u64 addr) {   \
+    MEMCHECK(addr, t1);                       \
     t1 result;                                     \
-    memcpy(&result, &mem->data[addr], sizeof(t1)); \
+    memcpy(&result, &Z_memory->data[addr], sizeof(t1)); \
     return (t3)(t2)result;                         \
   }
 
 #define DEFINE_STORE(name, t1, t2)                           \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    MEMCHECK(mem, addr, t1);                                 \
+  static inline void name(u64 addr, t2 value) { \
+    MEMCHECK(addr, t1);                                 \
     t1 wrapped = (t1)value;                                  \
-    memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
+    memcpy(&Z_memory->data[addr], &wrapped, sizeof(t1));          \
   }
 
 DEFINE_LOAD(i32_load, u32, u32, u32);
@@ -60,6 +60,7 @@ DEFINE_STORE(i64_store32, u32, u64);
 
 #define IMPORT_IMPL(ret, name, params, body) \
 ret _##name params { \
+  puts("[stub: " #name "]"); \
   body \
 } \
 ret (*name) params = _##name;
@@ -89,12 +90,12 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
   }
   u32 num = 0;
   for (u32 i = 0; i < iovcnt; i++) {
-    u32 ptr = i32_load(Z_memory, iov + i * 8);
-    u32 len = i32_load(Z_memory, iov + i * 8 + 4);
+    u32 ptr = i32_load(iov + i * 8);
+    u32 len = i32_load(iov + i * 8 + 4);
     fwrite(Z_memory->data + ptr, 1, len, stream);
     num += len;
   }
-  i32_store(Z_memory, pnum, num);
+  i32_store(pnum, num);
   return 0;
 });
 
@@ -109,8 +110,8 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii, (u32 pcount, u32 pbuf_size), {
   // TODO: connect to actual env?
-  i32_store(Z_memory, pcount, 0);
-  i32_store(Z_memory, pbuf_size, 0);
+  i32_store(pcount, 0);
+  i32_store(pbuf_size, 0);
   return 0;
 });
 
@@ -167,7 +168,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, 
   // wasi expects a result in nanoseconds, and we know how to convert clock()
   // to seconds, so compute from there
   const double NSEC_PER_SEC = 1000.0 * 1000.0 * 1000.0;
-  i64_store(Z_memory, out, (u64)(clock() / (CLOCKS_PER_SEC / NSEC_PER_SEC)));
+  i64_store(out, (u64)(clock() / (CLOCKS_PER_SEC / NSEC_PER_SEC)));
   return 0;
 });
 
