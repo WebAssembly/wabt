@@ -66,9 +66,15 @@ DEFINE_STORE(i64_store32, u32, u64);
 
 // Imports
 
+#ifdef VERBOSE_LOGGING
+#define VERBOSE_LOG(format, ...) printf(format, __VA_ARGS__);
+#else
+#define VERBOSE_LOG(format, ...)
+#endif
+
 #define IMPORT_IMPL(ret, name, params, body) \
 ret _##name params { \
-  puts("[import: " #name "]"); \
+  VERBOSE_LOG("[import: " #name "]"); \
   body \
 } \
 ret (*name) params = _##name;
@@ -123,12 +129,12 @@ static int get_native_fd(u32 fd) {
 }
 
 IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (u32 path, u32 flags, u32 varargs), {
-  printf("  open: %s %d %d\n", MEMACCESS(path), flags, i32_load(varargs));
+  VERBOSE_LOG("  open: %s %d %d\n", MEMACCESS(path), flags, i32_load(varargs));
   int nfd = open(MEMACCESS(path), flags, i32_load(varargs));
-  printf("    => native %d\n", nfd);
+  VERBOSE_LOG("    => native %d\n", nfd);
   if (nfd >= 0) {
     u32 fd = get_or_allocate_wasm_fd(nfd);
-    printf("      => wasm %d\n", fd);
+    VERBOSE_LOG("      => wasm %d\n", fd);
     return fd;
   }
   return -1;
@@ -136,7 +142,7 @@ IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (u32 path, u32 flags, u32 varargs), {
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
   int nfd = get_native_fd(fd);
-  printf("  fd_write wasm %d => native %d\n", fd, nfd);
+  VERBOSE_LOG("  fd_write wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
@@ -144,19 +150,19 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
   for (u32 i = 0; i < iovcnt; i++) {
     u32 ptr = i32_load(iov + i * 8);
     u32 len = i32_load(iov + i * 8 + 4);
-    printf("    chunk %d %d\n", ptr, len);
+    VERBOSE_LOG("    chunk %d %d\n", ptr, len);
     ssize_t result = write(nfd, MEMACCESS(ptr), len);
     if (result < 0) {
-      printf("    error, %d %s\n", errno, strerror(errno));
+      VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
     }
     if (result != len) {
-      printf("    amount error, %ld %d\n", result, len);
+      VERBOSE_LOG("    amount error, %ld %d\n", result, len);
       return WASI_DEFAULT_ERROR;
     }
     num += len;
   }
-  printf("    success: %d\n", num);
+  VERBOSE_LOG("    success: %d\n", num);
   i32_store(pnum, num);
   return 0;
 });
@@ -164,7 +170,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
   // TODO full file support
   int nfd = get_native_fd(fd);
-  printf("  close wasm %d => native %d\n", fd, nfd);
+  VERBOSE_LOG("  close wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
@@ -194,14 +200,14 @@ static int whence_to_native(u32 whence) {
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 fd, u64 offset, u32 whence, u32 new_offset), {
   int nfd = get_native_fd(fd);
   int nwhence = whence_to_native(whence);
-  printf("  seek %d (=> native %d) %ld %d (=> %d) %d\n", fd, nfd, offset, whence, nwhence, new_offset);
+  VERBOSE_LOG("  seek %d (=> native %d) %ld %d (=> %d) %d\n", fd, nfd, offset, whence, nwhence, new_offset);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
   off_t off = lseek(nfd, offset, nwhence);
-  printf("    off: %ld\n", off);
+  VERBOSE_LOG("    off: %ld\n", off);
   if (off == (off_t)-1) {
-    printf("    error, %d %s\n", errno, strerror(errno));
+    VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
     return WASI_DEFAULT_ERROR;
   }
   i64_store(new_offset, off);
@@ -228,9 +234,9 @@ STUB_IMPORT_IMPL(u32, Z_envZ_utimesZ_iii, (u32 a, u32 b), -1);
 #define EM_EACCES -2
 
 IMPORT_IMPL(u32, Z_envZ___sys_unlinkZ_ii, (u32 path), {
-  printf("  unlink %s\n", MEMACCESS(path));
+  VERBOSE_LOG("  unlink %s\n", MEMACCESS(path));
   if (unlink(MEMACCESS(path))) {
-    printf("    error, %d %s\n", errno, strerror(errno));
+    VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
     return EM_EACCES;
   }
   return 0;
@@ -245,10 +251,10 @@ STUB_IMPORT_IMPL(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
 static u32 do_stat(int nfd, u32 buf) {
   struct stat nbuf;
   if (fstat(nfd, &nbuf)) {
-    printf("    error, %d %s\n", errno, strerror(errno));
+    VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
     return EM_EACCES;
   }
-  printf("    success, size=%ld\n", nbuf.st_size);
+  VERBOSE_LOG("    success, size=%ld\n", nbuf.st_size);
   i32_store(buf + 0, nbuf.st_dev);
   i32_store(buf + 4, 0);
   i32_store(buf + 8, nbuf.st_ino);
@@ -273,7 +279,7 @@ static u32 do_stat(int nfd, u32 buf) {
 
 IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
   int nfd = get_native_fd(fd);
-  printf("  fstat64 %d (=> %d) %d\n", fd, nfd, buf);
+  VERBOSE_LOG("  fstat64 %d (=> %d) %d\n", fd, nfd, buf);
   if (nfd < 0) {
     return EM_EACCES;
   }
@@ -281,10 +287,10 @@ IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
 });
 
 IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 path, u32 buf), {
-  printf("  stat64: %s\n", MEMACCESS(path));
+  VERBOSE_LOG("  stat64: %s\n", MEMACCESS(path));
   int nfd = open(MEMACCESS(path), O_PATH);
   if (nfd < 0) {
-    printf("    error, %d %s\n", errno, strerror(errno));
+    VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
     return EM_EACCES;
   }
   return do_stat(nfd, buf);
@@ -293,26 +299,26 @@ IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 path, u32 buf), {
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
 IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 fd, u32 buf, u32 count), {
   int nfd = get_native_fd(fd);
-  printf("  read %d (=> %d) %d %d\n", fd, nfd, buf, count);
+  VERBOSE_LOG("  read %d (=> %d) %d %d\n", fd, nfd, buf, count);
   if (nfd < 0) {
-    printf("    bad fd\n");
+    VERBOSE_LOG("    bad fd\n");
     return EM_EACCES;
   }
   ssize_t ret = read(nfd, MEMACCESS(buf), count);
-  printf("    native read: %ld\n", ret);
+  VERBOSE_LOG("    native read: %ld\n", ret);
   if (ret < 0) {
-    printf("    read error %d %s\n", errno, strerror(errno));
+    VERBOSE_LOG("    read error %d %s\n", errno, strerror(errno));
     return EM_EACCES;
   }
   return ret;
 });
 
 IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 pathname, u32 mode), {
-  printf("  access: %s 0x%x\n", MEMACCESS(pathname), mode);
+  VERBOSE_LOG("  access: %s 0x%x\n", MEMACCESS(pathname), mode);
   // TODO: sandboxing, convert mode
   int result = access(MEMACCESS(pathname), mode);
   if (result < 0) {
-    printf("    access error: %d %s\n", errno, strerror(errno));
+    VERBOSE_LOG("    access error: %d %s\n", errno, strerror(errno));
     return EM_EACCES;
   }
   return 0;
