@@ -95,14 +95,20 @@ void abort_with_message(const char* message) {
   abort();
 }
 
-static u32 get_fd(int nfd) {
+static u32 get_or_allocate_wasm_fd(int nfd) {
+  // If the native fd is already mapped, return the same wasm fd for it.
+  for (int i = 0; i < next_wasm_fd; i++) {
+    if (wasm_fd_to_native[i] == nfd) {
+      return i;
+    }
+  }
   if (next_wasm_fd >= MAX_FDS) {
     abort_with_message("ran out of fds");
   }
-  u32 ret = next_wasm_fd;
-  wasm_fd_to_native[ret] = nfd;
+  u32 fd = next_wasm_fd;
+  wasm_fd_to_native[fd] = nfd;
   next_wasm_fd++;
-  return ret;
+  return fd;
 }
 
 static int get_native_fd(u32 fd) {
@@ -114,7 +120,11 @@ static int get_native_fd(u32 fd) {
 
 IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (u32 path, u32 flags, u32 varargs), {
   printf("open: %s %d %d\n", MEMACCESS(path), flags, i32_load(varargs));
-  return open(MEMACCESS(path), flags, i32_load(varargs));
+  int nfd = open(MEMACCESS(path), flags, i32_load(varargs));
+  if (nfd >= 0) {
+    return get_or_allocate_wasm_fd(nfd);
+  }
+  return -1;
 });
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
@@ -140,6 +150,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
+  close(nfd);
   return 0;
 });
 
