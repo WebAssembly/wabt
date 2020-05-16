@@ -165,13 +165,11 @@ STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a), 0);
 STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b), 0);
 STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a), 0);
 
-// TODO Z_envZ_emscripten_longjmpZ_vii
+// TODO for lua
+//      Z_envZ_emscripten_longjmpZ_vii
 //      Z_envZ_saveSetjmpZ_iiiii
 //      Z_envZ_testSetjmpZ_iiii
-//      Z_envZ_getTempRet0Z_iv
-//      Z_envZ_setTempRet0Z_vi
 //      Z_envZ_invoke_viiZ_viii
-//
 //      Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii
 //      Z_wasi_snapshot_preview1Z_args_getZ_iii
 
@@ -182,6 +180,16 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, 
   const double NSEC_PER_SEC = 1000.0 * 1000.0 * 1000.0;
   i64_store(out, (u64)(clock() / (CLOCKS_PER_SEC / NSEC_PER_SEC)));
   return 0;
+});
+
+static u32 tempRet0 = 0;
+
+IMPORT_IMPL(u32, Z_envZ_getTempRet0Z_iv, (), {
+  return tempRet0;
+});
+
+IMPORT_IMPL(void, Z_envZ_setTempRet0Z_vi, (u32 x), {
+  tempRet0 = x;
 });
 
 // Main
