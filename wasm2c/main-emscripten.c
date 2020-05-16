@@ -121,15 +121,18 @@ static int get_native_fd(u32 fd) {
 IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (u32 path, u32 flags, u32 varargs), {
   printf("open: %s %d %d\n", MEMACCESS(path), flags, i32_load(varargs));
   int nfd = open(MEMACCESS(path), flags, i32_load(varargs));
+  printf("  => native %d\n", nfd);
   if (nfd >= 0) {
-    return get_or_allocate_wasm_fd(nfd);
+    u32 fd = get_or_allocate_wasm_fd(nfd);
+    printf("    => wasm %d\n", fd);
+    return fd;
   }
   return -1;
 });
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
-  printf("fd_write %d\n", fd);
   int nfd = get_native_fd(fd);
+  printf("fd_write wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
@@ -147,6 +150,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
   // TODO full file support
   int nfd = get_native_fd(fd);
+  printf("close wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
@@ -166,7 +170,10 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_getZ_iii, (u32 __environ, u32
   return 0;
 });
 
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 a, u64 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 a, u64 b, u32 c, u32 d), {
+  printf("seek %d %ld %d %d\n", a, b, d, d);
+  return WASI_DEFAULT_ERROR;
+});
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii, (u32 a, u32 b, u32 c, u32 d, u32 f), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
@@ -182,16 +189,23 @@ STUB_IMPORT_IMPL(u32, Z_envZ_signalZ_iii, (u32 a, u32 b), -1);
 STUB_IMPORT_IMPL(u32, Z_envZ_systemZ_ii, (u32 a), -1);
 STUB_IMPORT_IMPL(u32, Z_envZ_utimesZ_iii, (u32 a, u32 b), -1);
 
-#define EM_EACCES 2
+// Syscalls return a negative error code
+#define EM_EACCES -2
 
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_unlinkZ_ii, (u32 a), EM_EACCES);
+IMPORT_IMPL(u32, Z_envZ___sys_unlinkZ_ii, (u32 a), {
+  printf("unlink %d\n", a);
+  return EM_EACCES;
+});
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_rmdirZ_ii, (u32 a), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b), EM_EACCES);
+IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b), {
+  printf("fstat64 %d %d\n", a, b);
+  return EM_EACCES;
+});
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 
