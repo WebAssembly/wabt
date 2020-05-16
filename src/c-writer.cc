@@ -220,7 +220,6 @@ class CWriter {
   void Write(const ResultType&);
   void Write(const Const&);
   void WriteInitExpr(const ExprList&);
-  void InitGlobalSymbols();
   std::string GenerateHeaderGuard() const;
   void WriteSourceTop();
   void WriteFuncTypes();
@@ -291,91 +290,6 @@ class CWriter {
 };
 
 static const char kImplicitFuncLabel[] = "$Bfunc";
-
-static const char* s_global_symbols[] = {
-    // keywords
-    "_Alignas", "_Alignof", "asm", "_Atomic", "auto", "_Bool", "break", "case",
-    "char", "_Complex", "const", "continue", "default", "do", "double", "else",
-    "enum", "extern", "float", "for", "_Generic", "goto", "if", "_Imaginary",
-    "inline", "int", "long", "_Noreturn", "_Pragma", "register", "restrict",
-    "return", "short", "signed", "sizeof", "static", "_Static_assert", "struct",
-    "switch", "_Thread_local", "typedef", "union", "unsigned", "void",
-    "volatile", "while",
-
-    // math.h
-    "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cbrt",
-    "ceil", "copysign", "cos", "cosh", "double_t", "erf", "erfc", "exp", "exp2",
-    "expm1", "fabs", "fdim", "float_t", "floor", "fma", "fmax", "fmin", "fmod",
-    "fpclassify", "FP_FAST_FMA", "FP_FAST_FMAF", "FP_FAST_FMAL", "FP_ILOGB0",
-    "FP_ILOGBNAN", "FP_INFINITE", "FP_NAN", "FP_NORMAL", "FP_SUBNORMAL",
-    "FP_ZERO", "frexp", "HUGE_VAL", "HUGE_VALF", "HUGE_VALL", "hypot", "ilogb",
-    "INFINITY", "isfinite", "isgreater", "isgreaterequal", "isinf", "isless",
-    "islessequal", "islessgreater", "isnan", "isnormal", "isunordered", "ldexp",
-    "lgamma", "llrint", "llround", "log", "log10", "log1p", "log2", "logb",
-    "lrint", "lround", "MATH_ERREXCEPT", "math_errhandling", "MATH_ERRNO",
-    "modf", "nan", "NAN", "nanf", "nanl", "nearbyint", "nextafter",
-    "nexttoward", "pow", "remainder", "remquo", "rint", "round", "scalbln",
-    "scalbn", "signbit", "sin", "sinh", "sqrt", "tan", "tanh", "tgamma",
-    "trunc",
-
-    // stdint.h
-    "INT16_C", "INT16_MAX", "INT16_MIN", "int16_t", "INT32_MAX", "INT32_MIN",
-    "int32_t", "INT64_C", "INT64_MAX", "INT64_MIN", "int64_t", "INT8_C",
-    "INT8_MAX", "INT8_MIN", "int8_t", "INT_FAST16_MAX", "INT_FAST16_MIN",
-    "int_fast16_t", "INT_FAST32_MAX", "INT_FAST32_MIN", "int_fast32_t",
-    "INT_FAST64_MAX", "INT_FAST64_MIN", "int_fast64_t", "INT_FAST8_MAX",
-    "INT_FAST8_MIN", "int_fast8_t", "INT_LEAST16_MAX", "INT_LEAST16_MIN",
-    "int_least16_t", "INT_LEAST32_MAX", "INT_LEAST32_MIN", "int_least32_t",
-    "INT_LEAST64_MAX", "INT_LEAST64_MIN", "int_least64_t", "INT_LEAST8_MAX",
-    "INT_LEAST8_MIN", "int_least8_t", "INTMAX_C", "INTMAX_MAX", "INTMAX_MIN",
-    "intmax_t", "INTPTR_MAX", "INTPTR_MIN", "intptr_t", "PTRDIFF_MAX",
-    "PTRDIFF_MIN", "SIG_ATOMIC_MAX", "SIG_ATOMIC_MIN", "SIZE_MAX", "UINT16_C",
-    "UINT16_MAX", "uint16_t", "UINT32_C", "UINT32_MAX", "uint32_t", "UINT64_C",
-    "UINT64_MAX", "uint64_t", "UINT8_MAX", "uint8_t", "UINT_FAST16_MAX",
-    "uint_fast16_t", "UINT_FAST32_MAX", "uint_fast32_t", "UINT_FAST64_MAX",
-    "uint_fast64_t", "UINT_FAST8_MAX", "uint_fast8_t", "UINT_LEAST16_MAX",
-    "uint_least16_t", "UINT_LEAST32_MAX", "uint_least32_t", "UINT_LEAST64_MAX",
-    "uint_least64_t", "UINT_LEAST8_MAX", "uint_least8_t", "UINTMAX_C",
-    "UINTMAX_MAX", "uintmax_t", "UINTPTR_MAX", "uintptr_t", "UINT8_C",
-    "WCHAR_MAX", "WCHAR_MIN", "WINT_MAX", "WINT_MIN",
-
-    // string.h
-    "memchr", "memcmp", "memcpy", "memmove", "memset", "NULL", "size_t",
-    "strcat", "strchr", "strcmp", "strcoll", "strcpy", "strcspn", "strerror",
-    "strlen", "strncat", "strncmp", "strncpy", "strpbrk", "strrchr", "strspn",
-    "strstr", "strtok", "strxfrm",
-
-    // defined
-    "CALL_INDIRECT", "DEFINE_LOAD", "DEFINE_REINTERPRET", "DEFINE_STORE",
-    "DIVREM_U", "DIV_S", "DIV_U", "f32", "f32_load", "f32_reinterpret_i32",
-    "f32_store", "f64", "f64_load", "f64_reinterpret_i64", "f64_store", "FMAX",
-    "FMIN", "FUNC_EPILOGUE", "FUNC_PROLOGUE", "func_types", "I32_CLZ",
-    "I32_CLZ", "I32_DIV_S", "i32_load", "i32_load16_s", "i32_load16_u",
-    "i32_load8_s", "i32_load8_u", "I32_POPCNT", "i32_reinterpret_f32",
-    "I32_REM_S", "I32_ROTL", "I32_ROTR", "i32_store", "i32_store16",
-    "i32_store8", "I32_TRUNC_S_F32", "I32_TRUNC_S_F64", "I32_TRUNC_U_F32",
-    "I32_TRUNC_U_F64", "I64_CTZ", "I64_CTZ", "I64_DIV_S", "i64_load",
-    "i64_load16_s", "i64_load16_u", "i64_load32_s", "i64_load32_u",
-    "i64_load8_s", "i64_load8_u", "I64_POPCNT", "i64_reinterpret_f64",
-    "I64_REM_S", "I64_ROTL", "I64_ROTR", "i64_store", "i64_store16",
-    "i64_store32", "i64_store8", "I64_TRUNC_S_F32", "I64_TRUNC_S_F64",
-    "I64_TRUNC_U_F32", "I64_TRUNC_U_F64", "init", "init_elem_segment",
-    "init_func_types", "init_globals", "init_memory", "init_table", "LIKELY",
-    "MEMCHECK", "REM_S", "REM_U", "ROTL", "ROTR", "s16", "s32", "s64", "s8",
-    "TRAP", "TRUNC_S", "TRUNC_U", "Type", "u16", "u32", "u64", "u8", "UNLIKELY",
-    "UNREACHABLE", "WASM_RT_ADD_PREFIX", "wasm_rt_allocate_memory",
-    "wasm_rt_allocate_table", "wasm_rt_anyfunc_t", "wasm_rt_call_stack_depth",
-    "wasm_rt_elem_t", "WASM_RT_F32", "WASM_RT_F64", "wasm_rt_grow_memory",
-    "WASM_RT_I32", "WASM_RT_I64", "WASM_RT_INCLUDED_",
-    "WASM_RT_MAX_CALL_STACK_DEPTH", "wasm_rt_memory_t", "WASM_RT_MODULE_PREFIX",
-    "WASM_RT_PASTE_", "WASM_RT_PASTE", "wasm_rt_register_func_type",
-    "wasm_rt_table_t", "wasm_rt_trap", "WASM_RT_TRAP_CALL_INDIRECT",
-    "WASM_RT_TRAP_DIV_BY_ZERO", "WASM_RT_TRAP_EXHAUSTION",
-    "WASM_RT_TRAP_INT_OVERFLOW", "WASM_RT_TRAP_INVALID_CONVERSION",
-    "WASM_RT_TRAP_NONE", "WASM_RT_TRAP_OOB", "wasm_rt_trap_t",
-    "WASM_RT_TRAP_UNREACHABLE",
-
-};
 
 #define SECTION_NAME(x) s_header_##x
 #include "src/prebuilt/wasm2c.include.h"
@@ -538,6 +452,12 @@ std::string CWriter::LegalizeName(string_view name) {
   result = isalpha(name[0]) ? name[0] : '_';
   for (size_t i = 1; i < name.size(); ++i)
     result += isalnum(name[i]) ? name[i] : '_';
+
+  // In addition to containing valid characters for C, we must also avoid
+  // colliding with things C cares about, such as reserved words (e.g. "void")
+  // or a function name like main() (which a compiler will  complain about if we
+  // define it with another type). To avoid such problems, prefix.
+  result = "w2c_" + result;
 
   return result;
 }
@@ -859,12 +779,6 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
 
     default:
       WABT_UNREACHABLE;
-  }
-}
-
-void CWriter::InitGlobalSymbols() {
-  for (const char* symbol : s_global_symbols) {
-    global_syms_.insert(symbol);
   }
 }
 
@@ -2313,7 +2227,6 @@ void CWriter::WriteCSource() {
 Result CWriter::WriteModule(const Module& module) {
   WABT_USE(options_);
   module_ = &module;
-  InitGlobalSymbols();
   WriteCHeader();
   WriteCSource();
   return result_;
