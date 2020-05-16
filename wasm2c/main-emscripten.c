@@ -58,12 +58,19 @@ DEFINE_STORE(i64_store32, u32, u64);
 
 // Imports
 
+#define IMPORT_IMPL(ret, name, params, body) \
+ret _##name params { \
+  body \
+} \
+ret (*name) params = _##name;
+
+#define STUB_IMPORT_IMPL(ret, name, params, errorcode) IMPORT_IMPL(ret, name, params, { return errorcode; });
+
 #define WASI_DEFAULT_ERROR 63 /* __WASI_ERRNO_PERM */
 
-void _Z_wasi_snapshot_preview1Z_proc_exitZ_vi(u32 x) {
+IMPORT_IMPL(void, Z_wasi_snapshot_preview1Z_proc_exitZ_vi, (u32 x), {
   exit(x);
-}
-void (*Z_wasi_snapshot_preview1Z_proc_exitZ_vi)(u32) = _Z_wasi_snapshot_preview1Z_proc_exitZ_vi;
+});
 
 static FILE* FS_get_stream(u32 fd) {
   if (fd == 1) {
@@ -74,7 +81,7 @@ static FILE* FS_get_stream(u32 fd) {
   return NULL;
 }
 
-u32 _Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(u32 fd, u32 iov, u32 iovcnt, u32 pnum) {
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
   // TODO full file handling
   FILE* stream = FS_get_stream(fd);
   if (!stream) {
@@ -89,23 +96,16 @@ u32 _Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(u32 fd, u32 iov, u32 iovcnt, u32 
   }
   i32_store(Z_memory, pnum, num);
   return 0;
-}
-u32 (*Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii)(u32, u32, u32, u32) = _Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii;
+});
 
-u32 _Z_wasi_snapshot_preview1Z_fd_closeZ_ii(u32 fd) {
+IMPORT_IMPL(u32, _Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
   // TODO full file support
-  if (fd != 1 && fd != 2) {
+  FILE* stream = FS_get_stream(fd);
+  if (!stream) {
     return WASI_DEFAULT_ERROR;
   }
   return 0;
-}
-u32 (*Z_wasi_snapshot_preview1Z_fd_closeZ_ii)(u32) = _Z_wasi_snapshot_preview1Z_fd_closeZ_ii;
-
-#define IMPORT_IMPL(ret, name, params, body) \
-u32 _##name params { \
-  body \
-} \
-ret (*name) params = _##name;
+});
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii, (u32 pcount, u32 pbuf_size), {
   // TODO: connect to actual env?
@@ -119,45 +119,38 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_getZ_iii, (u32 __environ, u32
   return 0;
 });
 
-#define ERRORING_STUB(ret, name, params, errorcode) \
-u32 _##name params { \
-  /* TODO */ \
-  return errorcode; \
-} \
-ret (*name) params = _##name;
-
-ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 a, u64 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
-ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
-ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
-ERRORING_STUB(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 a, u64 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
 
 // TODO: set errno for these
-ERRORING_STUB(u32, Z_envZ_dlopenZ_iii, (u32 a, u32 b), 1);
-ERRORING_STUB(u32, Z_envZ_dlcloseZ_ii, (u32 a), 1);
-ERRORING_STUB(u32, Z_envZ_dlsymZ_iii, (u32 a, u32 b), 0);
-ERRORING_STUB(u32, Z_envZ_dlerrorZ_iv, (), 0);
-ERRORING_STUB(u32, Z_envZ_signalZ_iii, (u32 a, u32 b), -1);
-ERRORING_STUB(u32, Z_envZ_systemZ_ii, (u32 a), -1);
-ERRORING_STUB(u32, Z_envZ_utimesZ_iii, (u32 a, u32 b), -1);
+STUB_IMPORT_IMPL(u32, Z_envZ_dlopenZ_iii, (u32 a, u32 b), 1);
+STUB_IMPORT_IMPL(u32, Z_envZ_dlcloseZ_ii, (u32 a), 1);
+STUB_IMPORT_IMPL(u32, Z_envZ_dlsymZ_iii, (u32 a, u32 b), 0);
+STUB_IMPORT_IMPL(u32, Z_envZ_dlerrorZ_iv, (), 0);
+STUB_IMPORT_IMPL(u32, Z_envZ_signalZ_iii, (u32 a, u32 b), -1);
+STUB_IMPORT_IMPL(u32, Z_envZ_systemZ_ii, (u32 a), -1);
+STUB_IMPORT_IMPL(u32, Z_envZ_utimesZ_iii, (u32 a, u32 b), -1);
 
 #define EM_EACCES 2
 
-ERRORING_STUB(u32, Z_envZ___sys_unlinkZ_ii, (u32 a), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_rmdirZ_ii, (u32 a), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
-ERRORING_STUB(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_unlinkZ_ii, (u32 a), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_rmdirZ_ii, (u32 a), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_renameZ_iii, (u32 a, u32 b), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
+STUB_IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 
-ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a), 0);
-ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b), 0);
-ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a), 0);
+STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a), 0);
+STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b), 0);
+STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a), 0);
 
 // TODO Z_envZ_emscripten_longjmpZ_vii
 //      Z_envZ_saveSetjmpZ_iiiii
@@ -169,16 +162,14 @@ ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a), 0);
 //      Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii
 //      Z_wasi_snapshot_preview1Z_args_getZ_iii
 
-u32 _Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(u32 clock_id, u64 max_lag, u32 out) {
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, u64 max_lag, u32 out), {
   // TODO: handle realtime vs monotonic etc.
   // wasi expects a result in nanoseconds, and we know how to convert clock()
   // to seconds, so compute from there
   const double NSEC_PER_SEC = 1000.0 * 1000.0 * 1000.0;
   i64_store(Z_memory, out, (u64)(clock() / (CLOCKS_PER_SEC / NSEC_PER_SEC)));
   return 0;
-}
-
-u32 (*Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji)(u32, u64, u32) = _Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji;
+});
 
 // Main
 
