@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "wasm-rt.h"
 #include "wasm-rt-impl.h"
@@ -14,7 +15,7 @@
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
-#define MEMACCESS(addr) &Z_memory->data[addr]
+#define MEMACCESS(addr) ((void*)&Z_memory->data[addr])
 
 #define MEMCHECK(a, t)  \
   if (UNLIKELY((a) + sizeof(t) > Z_memory->size)) TRAP(OOB)
@@ -127,7 +128,8 @@ STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
 
-// TODO: set errno for these
+// TODO: set errno for everything
+
 STUB_IMPORT_IMPL(u32, Z_envZ_dlopenZ_iii, (u32 a, u32 b), 1);
 STUB_IMPORT_IMPL(u32, Z_envZ_dlcloseZ_ii, (u32 a), 1);
 STUB_IMPORT_IMPL(u32, Z_envZ_dlsymZ_iii, (u32 a, u32 b), 0);
@@ -153,9 +155,10 @@ IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), {
   printf("stat: %s\n", MEMACCESS(a));
   return -1;
 });
-IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 a, u32 b), {
-  printf("access: %s\n", MEMACCESS(a));
-  return -1;
+IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 pathname, u32 mode), {
+  printf("access: %s 0x%x\n", MEMACCESS(pathname), mode);
+  // TODO: sandboxing, convert mode
+  return access(MEMACCESS(pathname), mode);
 });
 
 STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a), 0);
