@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -180,7 +181,7 @@ static int whence_to_native(u32 whence) {
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 fd, u64 offset, u32 whence, u32 new_offset), {
   int nfd = get_native_fd(fd);
   int nwhence = whence_to_native(whence);
-  printf("seek %d (=> native %d) %ld %d (=> %d)%d\n", fd, nfd, offset, whence, nwhence, new_offset);
+  printf("seek %d (=> native %d) %ld %d (=> %d) %d\n", fd, nfd, offset, whence, nwhence, new_offset);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
@@ -221,16 +222,43 @@ STUB_IMPORT_IMPL(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
-IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 a, u32 b), {
-  printf("fstat64 %d %d\n", a, b);
-  return EM_EACCES;
+IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
+  int nfd = get_native_fd(fd);
+  printf("fstat64 %d (=> %d) %d\n", fd, nfd, buf);
+  if (nfd < 0) {
+    return EM_EACCES;
+  }
+  struct stat nbuf;
+  if (fstat(nfd, &nbuf)) {
+    return EM_EACCES;
+  }
+  i32_store(buf + 0, nbuf.st_dev);
+  i32_store(buf + 4, 0);
+  i32_store(buf + 8, nbuf.st_ino);
+  i32_store(buf + 12, nbuf.st_mode);
+  i32_store(buf + 16, nbuf.st_nlink);
+  i32_store(buf + 20, nbuf.st_uid);
+  i32_store(buf + 24, nbuf.st_gid);
+  i32_store(buf + 28, nbuf.st_rdev);
+  i32_store(buf + 32, 0);
+  i64_store(buf + 40, nbuf.st_size);
+  i32_store(buf + 48, nbuf.st_blksize);
+  i32_store(buf + 52, nbuf.st_blocks);
+  i32_store(buf + 56, nbuf.st_atim.tv_sec);
+  i32_store(buf + 60, nbuf.st_atim.tv_nsec);
+  i32_store(buf + 64, nbuf.st_mtim.tv_sec);
+  i32_store(buf + 68, nbuf.st_mtim.tv_nsec);
+  i32_store(buf + 72, nbuf.st_ctim.tv_sec);
+  i32_store(buf + 76, nbuf.st_ctim.tv_nsec);
+  i64_store(buf + 80, nbuf.st_ino);
+  return 0;
 });
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 
 IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), {
-  printf("stat: %s\n", MEMACCESS(a));
-  return -1;
+  printf("stat64: %s\n", MEMACCESS(a));
+  return EM_EACCES;
 });
 
 IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 pathname, u32 mode), {
