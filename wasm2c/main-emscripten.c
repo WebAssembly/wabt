@@ -156,6 +156,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_getZ_iii, (u32 __environ, u32
 });
 
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 a, u64 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii, (u32 a, u64 b, u32 c, u32 d, u32 f), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
@@ -230,79 +231,79 @@ IMPORT_IMPL(void, Z_envZ_setTempRet0Z_vi, (u32 x), {
 IMPORT_IMPL(void, Z_envZ_log_executionZ_vi, (u32 loc), {
   printf("log_execution %d\n", loc);
 });
-IMPORT_IMPL(void, Z_envZ_get_i32Z_iiii, (u32 loc, u32 index, u32 value), {
+IMPORT_IMPL(u32, Z_envZ_get_i32Z_iiii, (u32 loc, u32 index, u32 value), {
   printf("get_i32 %d %d %d\n", loc, index, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_get_i64Z_iiiii, (u32 loc, u32 index, u32 low, u32 high), {
+IMPORT_IMPL(u32, Z_envZ_get_i64Z_iiiii, (u32 loc, u32 index, u32 low, u32 high), {
   printf("get_i64 %d %d %d %d\n", loc, index, low, high);
-  setTempRet0(high);
+  tempRet0 = high;
   return low;
 });
-IMPORT_IMPL(void, Z_envZ_get_f32Z_iiif, (u32 loc, u32 index, f32 value), {
-  printf("get_f32 %d %f\n", loc, index, value);
+IMPORT_IMPL(f32, Z_envZ_get_f32Z_fiif, (u32 loc, u32 index, f32 value), {
+  printf("get_f32 %d %d %f\n", loc, index, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_get_f64Z_iiid, (u32 loc, u32 index, f64 value), {
+IMPORT_IMPL(f64, Z_envZ_get_f64Z_diid, (u32 loc, u32 index, f64 value), {
   printf("get_f64 %d %d %f\n", loc, index, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_set_i32Z_iiii, (u32 loc, u32 index, u32 value), {
+IMPORT_IMPL(u32, Z_envZ_set_i32Z_iiii, (u32 loc, u32 index, u32 value), {
   printf("set_i32 %d %d %d\n", loc, index, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_set_i64Z_iiiii, (u32 loc, u32 index, u32 low, u32 high), {
+IMPORT_IMPL(u32, Z_envZ_set_i64Z_iiiii, (u32 loc, u32 index, u32 low, u32 high), {
   printf("set_i64 %d %d %d %d\n", loc, index, low, high);
-  setTempRet0(high);
+  tempRet0 = high;
   return low;
 });
-IMPORT_IMPL(void, Z_envZ_set_f32Z_iiif, (u32 loc, u32 index, f32 value), {
+IMPORT_IMPL(f32, Z_envZ_set_f32Z_fiif, (u32 loc, u32 index, f32 value), {
   printf("set_f32 %d %d %f\n", loc, index, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_set_f64Z_iiid, (u32 loc, u32 index, f32 value), {
+IMPORT_IMPL(f64, Z_envZ_set_f64Z_diid, (u32 loc, u32 index, f64 value), {
   printf("set_f64 %d %d %f\n", loc, index, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_load_ptrZ_iiiii, (u32 loc, u32 bytes, u32 offset, u32 ptr), {
+IMPORT_IMPL(u32, Z_envZ_load_ptrZ_iiiii, (u32 loc, u32 bytes, u32 offset, u32 ptr), {
   printf("load_ptr %d %d %d %d\n", loc, bytes, offset, ptr);
   return ptr;
 });
-IMPORT_IMPL(void, Z_envZ_load_val_i32Z_iii, (u32 loc, u32 value), {
+IMPORT_IMPL(u32, Z_envZ_load_val_i32Z_iii, (u32 loc, u32 value), {
   printf("load_val_i32 %d %d\n", loc, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_load_val_i64Z_iiii, (u32 loc, u32 low, u32 high), {
+IMPORT_IMPL(u32, Z_envZ_load_val_i64Z_iiii, (u32 loc, u32 low, u32 high), {
   printf("load_val_i64 %d %d %d\n", loc, low, high);
-  setTempRet0(high);
+  tempRet0 = high;
   return low;
 });
-IMPORT_IMPL(void, Z_envZ_load_val_f32Z_iif, (u32 loc, f32 value), {
+IMPORT_IMPL(f32, Z_envZ_load_val_f32Z_fif, (u32 loc, f32 value), {
   printf("load_val_f32 %d %f\n", loc, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_load_val_f64Z_iid, (u32 loc, f64 value), {
+IMPORT_IMPL(f64, Z_envZ_load_val_f64Z_did, (u32 loc, f64 value), {
   printf("load_val_f64 %d %f\n", loc, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_store_ptrZ_iiiii, (u32 loc, u32 bytes, u32 offset, u32 ptr), {
+IMPORT_IMPL(u32, Z_envZ_store_ptrZ_iiiii, (u32 loc, u32 bytes, u32 offset, u32 ptr), {
   printf("store_ptr %d %d %d %d\n", loc, bytes, offset, ptr);
   return ptr;
 });
-IMPORT_IMPL(void, Z_envZ_store_val_i32Z_iii, (u32 loc, u32 value), {
+IMPORT_IMPL(u32, Z_envZ_store_val_i32Z_iii, (u32 loc, u32 value), {
   printf("store_val_i32 %d %d\n", loc, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_store_val_i64Z_iiii, (u32 loc, u32 low, u32 high), {
+IMPORT_IMPL(u32, Z_envZ_store_val_i64Z_iiii, (u32 loc, u32 low, u32 high), {
   printf("store_val_i64 %d %d %d\n", loc, low, high);
-  setTempRet0(high);
+  tempRet0 = high;
   return low;
 });
-IMPORT_IMPL(void, Z_envZ_store_val_f32Z_iif, (u32 loc, f32 value), {
+IMPORT_IMPL(f32, Z_envZ_store_val_f32Z_fif, (u32 loc, f32 value), {
   printf("store_val_f32 %d %f\n", loc, value);
   return value;
 });
-IMPORT_IMPL(void, Z_envZ_store_val_f64Z_iid, (u32 loc, f64 value), {
+IMPORT_IMPL(f64, Z_envZ_store_val_f64Z_did, (u32 loc, f64 value), {
   printf("store_val_f64 %d %f\n", loc, value);
   return value;
 });
