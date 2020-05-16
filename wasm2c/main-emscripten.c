@@ -93,6 +93,24 @@ u32 _Z_wasi_snapshot_preview1Z_fd_closeZ_ii(u32 fd) {
 }
 u32 (*Z_wasi_snapshot_preview1Z_fd_closeZ_ii)(u32) = _Z_wasi_snapshot_preview1Z_fd_closeZ_ii;
 
+#define IMPORT_IMPL(ret, name, params, body) \
+u32 _##name params { \
+  body \
+} \
+ret (*name) params = _##name;
+
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii, (u32 pcount, u32 pbuf_size), {
+  // TODO: connect to actual env?
+  i32_store(Z_memory, pcount, 0);
+  i32_store(Z_memory, pbuf_size, 0);
+  return 0;
+});
+
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_getZ_iii, (u32 __environ, u32 environ_buf), {
+  // TODO: connect to actual env?
+  return 0;
+});
+
 #define ERRORING_STUB(ret, name, params, errorcode) \
 u32 _##name params { \
   /* TODO */ \
@@ -140,8 +158,6 @@ ERRORING_STUB(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a), 0);
 //      Z_envZ_setTempRet0Z_vi
 //      Z_envZ_invoke_viiZ_viii
 //
-//      Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii
-//      Z_wasi_snapshot_preview1Z_environ_getZ_iii
 //      Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii
 //      Z_wasi_snapshot_preview1Z_args_getZ_iii
 
