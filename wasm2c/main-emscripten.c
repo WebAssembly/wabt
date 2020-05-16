@@ -1,3 +1,5 @@
+#define __USE_GNU // for O_PATH
+
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -6,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -147,7 +150,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
       return WASI_DEFAULT_ERROR;
     }
     if (result != len) {
-      printf("    amount error, %d %d\n", result, len);
+      printf("    amount error, %ld %d\n", result, len);
       return WASI_DEFAULT_ERROR;
     }
     num += len;
@@ -237,12 +240,8 @@ STUB_IMPORT_IMPL(u32, Z_envZ___sys_lstat64Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup3Z_iiii, (u32 a, u32 b, u32 c), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup2Z_iii, (u32 a, u32 b), EM_EACCES);
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_getcwdZ_iii, (u32 a, u32 b), EM_EACCES);
-IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
-  int nfd = get_native_fd(fd);
-  printf("  fstat64 %d (=> %d) %d\n", fd, nfd, buf);
-  if (nfd < 0) {
-    return EM_EACCES;
-  }
+
+static u32 do_stat(int nfd, u32 buf) {
   struct stat nbuf;
   if (fstat(nfd, &nbuf)) {
     printf("    error, %d %s\n", errno, strerror(errno));
@@ -269,7 +268,27 @@ IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
   i32_store(buf + 76, nbuf.st_ctim.tv_nsec);
   i64_store(buf + 80, nbuf.st_ino);
   return 0;
+}
+
+IMPORT_IMPL(u32, Z_envZ___sys_fstat64Z_iii, (u32 fd, u32 buf), {
+  int nfd = get_native_fd(fd);
+  printf("  fstat64 %d (=> %d) %d\n", fd, nfd, buf);
+  if (nfd < 0) {
+    return EM_EACCES;
+  }
+  return do_stat(nfd, buf);
 });
+
+IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 path, u32 buf), {
+  printf("  stat64: %s\n", MEMACCESS(path));
+  int nfd = open(MEMACCESS(path), O_PATH);
+  if (nfd < 0) {
+    printf("    error, %d %s\n", errno, strerror(errno));
+    return EM_EACCES;
+  }
+  return do_stat(nfd, buf);
+});
+
 STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (u32 a, u32 b, u32 c, u32 d), EM_EACCES);
 IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 fd, u32 buf, u32 count), {
   int nfd = get_native_fd(fd);
@@ -285,11 +304,6 @@ IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (u32 fd, u32 buf, u32 count), {
     return EM_EACCES;
   }
   return ret;
-});
-
-IMPORT_IMPL(u32, Z_envZ___sys_stat64Z_iii, (u32 a, u32 b), {
-  printf("  stat64 (stub): %s\n", MEMACCESS(a));
-  return EM_EACCES;
 });
 
 IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (u32 pathname, u32 mode), {
