@@ -170,11 +170,27 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_getZ_iii, (u32 __environ, u32
   return 0;
 });
 
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 a, u64 b, u32 c, u32 d), {
-  printf("seek %d %ld %d %d\n", a, b, d, d);
-  return WASI_DEFAULT_ERROR;
+static int whence_to_native(u32 whence) {
+  if (whence == 0) return SEEK_SET;
+  if (whence == 1) return SEEK_CUR;
+  if (whence == 2) return SEEK_END;
+  return -1;
+}
+
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (u32 fd, u64 offset, u32 whence, u32 new_offset), {
+  int nfd = get_native_fd(fd);
+  int nwhence = whence_to_native(whence);
+  printf("seek %d (=> native %d) %ld %d (=> %d)%d\n", fd, nfd, offset, whence, nwhence, new_offset);
+  if (nfd < 0) {
+    return WASI_DEFAULT_ERROR;
+  }
+  off_t off = lseek(nfd, offset, nwhence);
+  i32_store(new_offset, off);
+  return 0;
 });
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii, (u32 a, u32 b, u32 c, u32 d, u32 f), WASI_DEFAULT_ERROR);
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e), {
+  return Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(a, b + (((u64)c) << 32), d, e);
+});
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
