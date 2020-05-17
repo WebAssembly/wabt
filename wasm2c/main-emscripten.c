@@ -1,3 +1,5 @@
+#define VERBOSE_LOGGING
+
 #define __USE_GNU // for O_PATH
 
 #include <errno.h>
@@ -71,14 +73,14 @@ DEFINE_STORE(i64_store32, u32, u64);
   ret (*WASM_RT_ADD_PREFIX(name)) args;
 
 #ifdef VERBOSE_LOGGING
-#define VERBOSE_LOG(format, ...) printf(format, __VA_ARGS__);
+#define VERBOSE_LOG(...) { printf(__VA_ARGS__); }
 #else
-#define VERBOSE_LOG(format, ...)
+#define VERBOSE_LOG(...)
 #endif
 
 #define IMPORT_IMPL(ret, name, params, body) \
 ret _##name params { \
-  VERBOSE_LOG("[import: " #name "]"); \
+  VERBOSE_LOG("[import: " #name "]\n"); \
   body \
 } \
 ret (*name) params = _##name;
@@ -357,21 +359,23 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_getZ_iii, (u32 argv, u32 argv_bu
   return 0;
 });
 
-// TODO for lua
-//      Z_envZ_emscripten_longjmpZ_vii
-//      Z_envZ_saveSetjmpZ_iiiii
-//      Z_envZ_testSetjmpZ_iiii
+IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (u32 buf, u32 value), {
+printf("bad\n");
+});
+
 IMPORT_IMPL(void, Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), {
   DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
   DECLARE_EXPORT(void, Z_dynCall_viiZ_viii, (u32, u32, u32));
 
+printf("sad\n");
   jmp_buf buf;
   u32 sp = Z_stackSaveZ_iv();
   int result = setjmp(buf);
   if (result == 0) {
     Z_dynCall_viiZ_viii(fptr, a, b);
   } else {
-    // longjmp took us here
+    // A longjmp took us here; stop the unwinding.
+// XXX not quite right
     Z_stackRestoreZ_vi(sp);
     Z_setThrewZ_vii(1, 0);
   }
