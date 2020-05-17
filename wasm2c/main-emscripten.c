@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <setjmp.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,6 +66,9 @@ DEFINE_STORE(i64_store16, u16, u64);
 DEFINE_STORE(i64_store32, u32, u64);
 
 // Imports
+
+#define DECLARE_EXPORT(ret, name, args) \
+  ret (*WASM_RT_ADD_PREFIX(name)) args;
 
 #ifdef VERBOSE_LOGGING
 #define VERBOSE_LOG(format, ...) printf(format, __VA_ARGS__);
@@ -357,7 +361,21 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_getZ_iii, (u32 argv, u32 argv_bu
 //      Z_envZ_emscripten_longjmpZ_vii
 //      Z_envZ_saveSetjmpZ_iiiii
 //      Z_envZ_testSetjmpZ_iiii
-//      Z_envZ_invoke_viiZ_viii
+IMPORT_IMPL(void, Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), {
+  DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
+  DECLARE_EXPORT(void, Z_dynCall_viiZ_viii, (u32, u32, u32));
+
+  jmp_buf buf;
+  u32 sp = Z_stackSaveZ_iv();
+  int result = setjmp(buf);
+  if (result == 0) {
+    Z_dynCall_viiZ_viii(fptr, a, b);
+  } else {
+    // longjmp took us here
+    Z_stackRestoreZ_vi(sp);
+    Z_setThrewZ_vii(1, 0);
+  }
+});
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, u64 max_lag, u32 out), {
   // TODO: handle realtime vs monotonic etc.
