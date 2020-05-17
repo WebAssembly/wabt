@@ -1,4 +1,4 @@
-#define VERBOSE_LOGGING
+//#define VERBOSE_LOGGING
 
 #define __USE_GNU // for O_PATH
 
@@ -367,25 +367,52 @@ static jmp_buf setjmp_stack[MAX_SETJMP_STACK];
 
 static u32 next_setjmp = 0;
 
-IMPORT_IMPL(void, Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), {
-  DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
-  DECLARE_EXPORT(void, Z_dynCall_viiZ_viii, (u32, u32, u32));
-
-  u32 sp = Z_stackSaveZ_iv();
-  if (next_setjmp >= MAX_SETJMP_STACK) {
-    abort_with_message("too many nested setjmps");
-  }
-  u32 id = next_setjmp++;
-  int result = setjmp(setjmp_stack[id]);
-  if (result == 0) {
-    Z_dynCall_viiZ_viii(fptr, a, b);
-  } else {
-    // A longjmp or an exception took us here.
-    Z_stackRestoreZ_vi(sp);
-    Z_setThrewZ_vii(1, 0);
-  }
-  next_setjmp--;
+#define VOID_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
+IMPORT_IMPL(ret, name, typed_args, { \
+  DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32)); \
+  DECLARE_EXPORT(void, dyncall, types); \
+  u32 sp = Z_stackSaveZ_iv(); \
+  if (next_setjmp >= MAX_SETJMP_STACK) { \
+    abort_with_message("too many nested setjmps"); \
+  } \
+  u32 id = next_setjmp++; \
+  int result = setjmp(setjmp_stack[id]); \
+  if (result == 0) { \
+    dyncall args; \
+    /* if we got here, no longjmp or exception happened, we returned normally */ \
+  } else { \
+    /* A longjmp or an exception took us here. */ \
+    Z_stackRestoreZ_vi(sp); \
+    Z_setThrewZ_vii(1, 0); \
+  } \
+  next_setjmp--; \
 });
+
+#define RETURNING_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
+IMPORT_IMPL(ret, name, typed_args, { \
+  DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32)); \
+  DECLARE_EXPORT(ret, dyncall, types); \
+  u32 sp = Z_stackSaveZ_iv(); \
+  if (next_setjmp >= MAX_SETJMP_STACK) { \
+    abort_with_message("too many nested setjmps"); \
+  } \
+  u32 id = next_setjmp++; \
+  int result = setjmp(setjmp_stack[id]); \
+  if (result == 0) { \
+    return dyncall args; \
+    /* if we got here, no longjmp or exception happened, we returned normally */ \
+  } else { \
+    /* A longjmp or an exception took us here. */ \
+    Z_stackRestoreZ_vi(sp); \
+    Z_setThrewZ_vii(1, 0); \
+  } \
+  next_setjmp--; \
+  return 0; \
+});
+
+VOID_INVOKE_IMPL(void, Z_envZ_invoke_vZ_vi, (u32 fptr), (u32), (fptr), Z_dynCall_vZ_vi);
+VOID_INVOKE_IMPL(void, Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_viiZ_viii);
+RETURNING_INVOKE_IMPL(u32, Z_envZ_invoke_iiiZ_iiii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_iiiZ_viii);
 
 IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (u32 buf, u32 value), {
   if (next_setjmp == 0) {
