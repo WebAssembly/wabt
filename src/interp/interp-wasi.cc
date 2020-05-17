@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
+/*
+ * This is an experiment and currently extremely limited implementation
+ * of the WASI syscall API.  The implementation of the API itself is coming from
+ * uvwasi: https://github.com/cjihrig/uvwasi.
+ *
+ * Most of the code in the file is mostly marshelling data between the wabt
+ * interpreter and uvwasi.
+ *
+ * For details of the WASI api see:
+ * https://github.com/WebAssembly/WASI/blob/master/phases/snapshot/docs.md
+ * and the C headers version:
+ * https://github.com/WebAssembly/wasi-libc/blob/master/libc-bottom-half/headers/public/wasi/api.h
+ */
+
 #include "src/interp/interp-wasi.h"
 #include "src/interp/interp-util.h"
 
@@ -49,6 +63,8 @@ _Static_assert(_Alignof(__wasi_iovec_t) == 4, "witx calculated align");
 _Static_assert(offsetof(__wasi_iovec_t, buf) == 0, "witx calculated offset");
 _Static_assert(offsetof(__wasi_iovec_t, buf_len) == 4, "witx calculated offset");
 
+#define __WASI_ERRNO_NOENT (UINT16_C(44))
+
 class WasiInstance {
  public:
   WasiInstance(Instance::Ptr instance,
@@ -66,29 +82,128 @@ class WasiInstance {
     return Result::Ok;
   }
 
-  Result fd_write(const Values& params, Values& results, Trap::Ptr* trap) {
-    const Value arg0 = params[0];
+  Result fd_fdstat_get(const Values& params, Values& results, Trap::Ptr* trap) {
+    int32_t fd = params[0].i32_;
+    if (trace_stream) {
+      trace_stream->Writef("fd_fdstat_get %d\n", fd);
+    }
+    results[0].i32_ = __WASI_ERRNO_NOENT;
+    return Result::Ok;
+  }
+
+  Result fd_read(const Values& params, Values& results, Trap::Ptr* trap) {
+    int32_t fd = params[0].i32_;
     int32_t iovptr = params[1].i32_;
     int32_t iovcnt = params[2].i32_;
-    __wasi_iovec_t* wasm_iovs = getMemPtr<__wasi_iovec_t>(iovptr, iovcnt, trap);
-    if (!wasm_iovs) {
-      return Result::Error;
+    if (trace_stream) {
+      trace_stream->Writef("fd_read %d [%d]\n", fd, iovcnt);
     }
-    uvwasi_ciovec_t* iovs = new uvwasi_ciovec_t[iovcnt];
+    __wasi_iovec_t* wasm_iovs;
+    CHECK_RESULT(getMemPtr<__wasi_iovec_t>(iovptr, iovcnt, &wasm_iovs, trap));
+    std::vector<uvwasi_iovec_t> iovs(iovcnt);
     for (int i = 0; i < iovcnt; i++) {
-      iovs[0].buf_len = wasm_iovs[0].buf_len;
-      iovs[0].buf =
-          getMemPtr<uint8_t>(wasm_iovs[0].buf, wasm_iovs[0].buf_len, trap);
-      if (!iovs[0].buf) {
-        return Result::Error;
-      }
+      iovs[i].buf_len = wasm_iovs[i].buf_len;
+
+      CHECK_RESULT(getMemPtr<uint8_t>(wasm_iovs[i].buf, wasm_iovs[i].buf_len,
+                                      reinterpret_cast<uint8_t**>(&iovs[i].buf),
+                                      trap));
     }
-    __wasi_ptr_t* out_addr = getMemPtr<__wasi_ptr_t>(params[3].i32_, 1, trap);
-    if (!out_addr) {
-      return Result::Error;
+    __wasi_ptr_t* out_addr;
+    CHECK_RESULT(getMemPtr<__wasi_ptr_t>(params[3].i32_, 1, &out_addr, trap));
+    results[0].i32_ =
+        uvwasi_fd_read(uvwasi, fd, iovs.data(), iovs.size(), out_addr);
+    if (trace_stream) {
+      trace_stream->Writef("fd_read -> %d\n", results[0].i32_);
     }
-    uvwasi_fd_write(uvwasi, arg0.i32_, iovs, iovcnt, out_addr);
-    delete[] iovs;
+    return Result::Ok;
+  }
+
+  Result fd_write(const Values& params, Values& results, Trap::Ptr* trap) {
+    int32_t fd = params[0].i32_;
+    int32_t iovptr = params[1].i32_;
+    int32_t iovcnt = params[2].i32_;
+    __wasi_iovec_t* wasm_iovs;
+    CHECK_RESULT(getMemPtr<__wasi_iovec_t>(iovptr, iovcnt, &wasm_iovs, trap));
+    std::vector<uvwasi_ciovec_t> iovs(iovcnt);
+    for (int i = 0; i < iovcnt; i++) {
+      iovs[i].buf_len = wasm_iovs[i].buf_len;
+      CHECK_RESULT(getMemPtr<const uint8_t>(
+          wasm_iovs[i].buf, wasm_iovs[i].buf_len,
+          reinterpret_cast<const uint8_t**>(&iovs[i].buf), trap));
+    }
+    __wasi_ptr_t* out_addr;
+    CHECK_RESULT(getMemPtr<__wasi_ptr_t>(params[3].i32_, 1, &out_addr, trap));
+    results[0].i32_ =
+        uvwasi_fd_write(uvwasi, fd, iovs.data(), iovs.size(), out_addr);
+    return Result::Ok;
+  }
+
+  Result environ_get(const Values& params, Values& results, Trap::Ptr* trap) {
+    uvwasi_size_t environc;
+    uvwasi_size_t environ_buf_size;
+    uvwasi_environ_sizes_get(uvwasi, &environc, &environ_buf_size);
+    uint32_t wasm_buf = params[1].i32_;
+    char* buf;
+    CHECK_RESULT(getMemPtr<char>(wasm_buf, environ_buf_size, &buf, trap));
+    std::vector<char*> host_env(environc);
+    uvwasi_environ_get(uvwasi, host_env.data(), buf);
+
+    // Copy host_env pointer array wasm_env)
+    for (uvwasi_size_t i = 0; i < environc; i++) {
+      uint32_t rel_address = host_env[i] - buf;
+      uint32_t dest = params[0].i32_ + (i * sizeof(uint32_t));
+      CHECK_RESULT(writeValue<uint32_t>(wasm_buf + rel_address, dest, trap));
+    }
+
+    return Result::Ok;
+  }
+
+  Result environ_sizes_get(const Values& params,
+                           Values& results,
+                           Trap::Ptr* trap) {
+    uvwasi_size_t environc;
+    uvwasi_size_t environ_buf_size;
+    uvwasi_environ_sizes_get(uvwasi, &environc, &environ_buf_size);
+    CHECK_RESULT(writeValue<uint32_t>(environc, params[0].i32_, trap));
+    CHECK_RESULT(writeValue<uint32_t>(environ_buf_size, params[1].i32_, trap));
+    if (trace_stream) {
+      trace_stream->Writef("environ_sizes_get -> %d %d\n", environc,
+                           environ_buf_size);
+    }
+    return Result::Ok;
+  }
+
+  Result args_get(const Values& params, Values& results, Trap::Ptr* trap) {
+    uvwasi_size_t argc;
+    uvwasi_size_t arg_buf_size;
+    uvwasi_args_sizes_get(uvwasi, &argc, &arg_buf_size);
+    uint32_t wasm_buf = params[1].i32_;
+    char* buf;
+    CHECK_RESULT(getMemPtr<char>(wasm_buf, arg_buf_size, &buf, trap));
+    char** host_args = new char*[argc];
+    uvwasi_args_get(uvwasi, host_args, buf);
+
+    // Copy host_args pointer array wasm_args)
+    for (uvwasi_size_t i = 0; i < argc; i++) {
+      uint32_t rel_address = host_args[i] - buf;
+      uint32_t dest = params[0].i32_ + (i * sizeof(uint32_t));
+      CHECK_RESULT(writeValue<uint32_t>(wasm_buf + rel_address, dest, trap));
+    }
+
+    return Result::Ok;
+  }
+
+  Result args_sizes_get(const Values& params,
+                        Values& results,
+                        Trap::Ptr* trap) {
+    uvwasi_size_t argc;
+    uvwasi_size_t arg_buf_size;
+    uvwasi_args_sizes_get(uvwasi, &argc, &arg_buf_size);
+    CHECK_RESULT(writeValue<uint32_t>(argc, params[0].i32_, trap));
+    CHECK_RESULT(writeValue<uint32_t>(arg_buf_size, params[1].i32_, trap));
+    if (trace_stream) {
+      trace_stream->Writef("args_sizes_get -> %d %d\n", argc, arg_buf_size);
+    }
     return Result::Ok;
   }
 
@@ -96,18 +211,33 @@ class WasiInstance {
   Stream* trace_stream;
 
   Instance::Ptr instance;
+
  private:
+  // Write a value into wasm-memory and the given memory offset.
   template <typename T>
-  T* getMemPtr(uint32_t address, uint32_t size, Trap::Ptr* trap) {
+  Result writeValue(T value, uint32_t target_address, Trap::Ptr* trap) {
+    T* abs_address;
+    CHECK_RESULT(getMemPtr<T>(target_address, sizeof(T), &abs_address, trap));
+    *abs_address = value;
+    return Result::Ok;
+  }
+
+  // Result a wasm-memory-local address to an absolute memory location.
+  template <typename T>
+  Result getMemPtr(uint32_t address,
+                   uint32_t size,
+                   T** result,
+                   Trap::Ptr* trap) {
     if (!memory->IsValidAccess(address, 0, size * sizeof(T))) {
       *trap = Trap::New(*instance.store(),
                         StringPrintf("out of bounds memory access: "
                                      "[%u, %" PRIu64 ") >= max value %u",
                                      address, u64{address} + size * sizeof(T),
                                      memory->ByteSize()));
-      return nullptr;
+      return Result::Error;
     }
-    return reinterpret_cast<T*>(memory->UnsafeData() + address);
+    *result = reinterpret_cast<T*>(memory->UnsafeData() + address);
+    return Result::Ok;
   }
 
   uvwasi_s* uvwasi;
@@ -120,21 +250,22 @@ std::unordered_map<Instance*, WasiInstance*> wasiInstances;
 
 // TODO(sbc): Auto-generate this.
 
-#define WASI_CALLBACK(NAME)                                          \
-  Result NAME(Thread& thread, const Values& params, Values& results, \
-              Trap::Ptr* trap) {                                     \
-    Instance* instance = thread.GetCallerInstance();                 \
-    assert(instance);                                                \
-    WasiInstance* wasi_instance = wasiInstances[instance];           \
-    if (wasi_instance->trace_stream) {                               \
-      wasi_instance->trace_stream->Writef(                           \
-          ">>> running wasi function \"%s\":\n", #NAME);             \
-    }                                                                \
-    return wasi_instance->NAME(params, results, trap);               \
+#define WASI_CALLBACK(NAME)                                                 \
+  static Result NAME(Thread& thread, const Values& params, Values& results, \
+                     Trap::Ptr* trap) {                                     \
+    Instance* instance = thread.GetCallerInstance();                        \
+    assert(instance);                                                       \
+    WasiInstance* wasi_instance = wasiInstances[instance];                  \
+    if (wasi_instance->trace_stream) {                                      \
+      wasi_instance->trace_stream->Writef(                                  \
+          ">>> running wasi function \"%s\":\n", #NAME);                    \
+    }                                                                       \
+    return wasi_instance->NAME(params, results, trap);                      \
   }
 
-WASI_CALLBACK(proc_exit);
-WASI_CALLBACK(fd_write);
+#define WASI_FUNC(NAME) WASI_CALLBACK(NAME)
+#include "wasi_api.def"
+#undef WASI_FUNC
 
 }  // namespace
 
@@ -164,16 +295,18 @@ Result WasiBindImports(const Module::Ptr& module,
                                     import.type.name.c_str());
     HostFunc::Ptr host_func;
 
-    // TODO(sbc): Auto-generate this.
-    if (import.type.name == "proc_exit") {
-      host_func = HostFunc::New(*store, func_type, proc_exit);
-    } else if (import.type.name == "fd_write") {
-      host_func = HostFunc::New(*store, func_type, fd_write);
-    } else {
-      stream->Writef("unknown wasi_snapshot_preview1 import: %s\n",
-                     import.type.name.c_str());
-      return Result::Error;
-    }
+#define WASI_FUNC(NAME)                                 \
+  if (import.type.name == #NAME) {                      \
+    host_func = HostFunc::New(*store, func_type, NAME); \
+    goto found;                                         \
+  }
+#include "wasi_api.def"
+#undef WASI_FUNC
+
+    stream->Writef("unknown `wasi_snapshot_preview1` import: `%s`\n",
+                   import.type.name.c_str());
+    return Result::Error;
+  found:
     imports.push_back(host_func.ref());
   }
 

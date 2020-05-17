@@ -424,7 +424,6 @@ if (NOT EMSCRIPTEN)
 
     if(WITH_WASI)
       add_subdirectory("third_party/uvwasi" EXCLUDE_FROM_ALL)
-      include_directories("${libuv_SOURCE_DIR}/include")
       include_directories(third_party/uvwasi/include)
       add_definitions(-DWITH_WASI)
       set(INTERP_LIBS uvwasi_a)

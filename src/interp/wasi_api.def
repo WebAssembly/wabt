@@ -1,0 +1,8 @@
+WASI_FUNC(proc_exit)
+WASI_FUNC(fd_read)
+WASI_FUNC(fd_write)
+WASI_FUNC(fd_fdstat_get)
+WASI_FUNC(environ_sizes_get)
+WASI_FUNC(environ_get)
+WASI_FUNC(args_sizes_get)
+WASI_FUNC(args_get)
