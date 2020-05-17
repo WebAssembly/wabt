@@ -69,9 +69,6 @@ DEFINE_STORE(i64_store32, u32, u64);
 
 // Imports
 
-#define DECLARE_EXPORT(ret, name, args) \
-  ret (*WASM_RT_ADD_PREFIX(name)) args;
-
 #ifdef VERBOSE_LOGGING
 #define VERBOSE_LOG(...) { printf(__VA_ARGS__); }
 #else
@@ -367,11 +364,20 @@ static jmp_buf setjmp_stack[MAX_SETJMP_STACK];
 
 static u32 next_setjmp = 0;
 
+// Declare exports for invokes. We should generate them based on what the
+// wasm needs, but for now have a fixed list here. To get things to link,
+// declare them, so they either link with the existing value in the main
+// wasm2c .c output file, or else they contain NULL but will never be called.
+#define DECLARE_EXPORT(ret, name, args) \
+__attribute__((weak)) \
+ret (*WASM_RT_ADD_PREFIX(name)) args = NULL;
+
 DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
 
 #define VOID_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
 DECLARE_EXPORT(void, dyncall, types); \
 IMPORT_IMPL(ret, name, typed_args, { \
+printf("INVOKE " #name "  " #dyncall "\n"); \
 puts("a1"); \
 puts("a2"); \
 puts("a3"); \
@@ -383,13 +389,13 @@ puts("a5"); \
   } \
 puts("a6"); \
   u32 id = next_setjmp++; \
-puts("a7"); \
+printf("a7 setjmp %d\n", id); \
   int result = setjmp(setjmp_stack[id]); \
 puts("a8"); \
   if (result == 0) { \
-puts("a9"); \
-printf("dynacll %p %p\n", Z_dynCall_vZ_vi, dyncall); \
-    dyncall args; \
+puts("aa9"); \
+printf("adynacll %p %p\n", Z_dynCall_vZ_vi, dyncall); \
+    (* dyncall) args; \
 puts("aa"); \
     /* if we got here, no longjmp or exception happened, we returned normally */ \
   } else { \
@@ -407,11 +413,11 @@ puts("af"); \
 });
 
 #define RETURNING_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
+DECLARE_EXPORT(ret, dyncall, types); \
 IMPORT_IMPL(ret, name, typed_args, { \
+printf("INVOKE " #name "  " #dyncall "\n"); \
 puts("a1"); \
-  DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32)); \
 puts("a2"); \
-  DECLARE_EXPORT(ret, dyncall, types); \
 puts("a3"); \
   u32 sp = Z_stackSaveZ_iv(); \
 puts("a4"); \
@@ -421,13 +427,15 @@ puts("a5"); \
   } \
 puts("a6"); \
   u32 id = next_setjmp++; \
-puts("a7"); \
+printf("a7 setjmp %d\n", id); \
   int result = setjmp(setjmp_stack[id]); \
 puts("a8"); \
+  ret returned_value = 0; \
   if (result == 0) { \
-puts("a9"); \
-printf("dynacll %p %p\n", Z_dynCall_vZ_vi, dyncall); \
-    return dyncall args; \
+puts("ba9a"); \
+printf("bdynacll %p\n", dyncall); \
+puts("ba9b"); \
+    returned_value = (* dyncall) args; \
     /* if we got here, no longjmp or exception happened, we returned normally */ \
   } else { \
 puts("a10"); \
@@ -440,17 +448,18 @@ puts("a12"); \
 puts("a13"); \
   next_setjmp--; \
 puts("a14"); \
-  return 0; \
+  return returned_value; \
 });
 
 VOID_INVOKE_IMPL(void, Z_envZ_invoke_vZ_vi, (u32 fptr), (u32), (fptr), Z_dynCall_vZ_vi);
 VOID_INVOKE_IMPL(void, Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_viiZ_viii);
-RETURNING_INVOKE_IMPL(u32, Z_envZ_invoke_iiiZ_iiii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_iiiZ_viii);
+RETURNING_INVOKE_IMPL(u32, Z_envZ_invoke_iiiZ_iiii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_iiiZ_iiii);
 
 IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (u32 buf, u32 value), {
   if (next_setjmp == 0) {
     abort_with_message("longjmp without setjmp");
   }
+printf("do longjmp %d\n", next_setjmp - 1);
   longjmp(setjmp_stack[next_setjmp - 1], 1);
 });
 
