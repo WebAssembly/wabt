@@ -383,6 +383,28 @@ ret (*WASM_RT_ADD_PREFIX(name)) args = NULL;
 
 DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
 
+#define VOID_INVOKE_IMPL(name, typed_args, types, args, dyncall) \
+DECLARE_EXPORT(void, dyncall, types); \
+\
+IMPORT_IMPL(void, name, typed_args, { \
+  VERBOSE_LOG("invoke " #name "  " #dyncall "\n"); \
+  u32 sp = Z_stackSaveZ_iv(); \
+  if (next_setjmp >= MAX_SETJMP_STACK) { \
+    abort_with_message("too many nested setjmps"); \
+  } \
+  u32 id = next_setjmp++; \
+  int result = setjmp(setjmp_stack[id]); \
+  if (result == 0) { \
+    (* dyncall) args; \
+    /* if we got here, no longjmp or exception happened, we returned normally */ \
+  } else { \
+    /* A longjmp or an exception took us here. */ \
+    Z_stackRestoreZ_vi(sp); \
+    Z_setThrewZ_vii(1, 0); \
+  } \
+  next_setjmp--; \
+});
+
 #define RETURNING_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
 DECLARE_EXPORT(ret, dyncall, types); \
 \
@@ -405,28 +427,6 @@ IMPORT_IMPL(ret, name, typed_args, { \
   } \
   next_setjmp--; \
   return returned_value; \
-});
-
-#define VOID_INVOKE_IMPL(name, typed_args, types, args, dyncall) \
-DECLARE_EXPORT(void, dyncall, types); \
-\
-IMPORT_IMPL(void, name, typed_args, { \
-  VERBOSE_LOG("invoke " #name "  " #dyncall "\n"); \
-  u32 sp = Z_stackSaveZ_iv(); \
-  if (next_setjmp >= MAX_SETJMP_STACK) { \
-    abort_with_message("too many nested setjmps"); \
-  } \
-  u32 id = next_setjmp++; \
-  int result = setjmp(setjmp_stack[id]); \
-  if (result == 0) { \
-    (* dyncall) args; \
-    /* if we got here, no longjmp or exception happened, we returned normally */ \
-  } else { \
-    /* A longjmp or an exception took us here. */ \
-    Z_stackRestoreZ_vi(sp); \
-    Z_setThrewZ_vii(1, 0); \
-  } \
-  next_setjmp--; \
 });
 
 VOID_INVOKE_IMPL(Z_envZ_invoke_vZ_vi, (u32 fptr), (u32), (fptr), Z_dynCall_vZ_vi);
