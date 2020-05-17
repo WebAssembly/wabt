@@ -367,46 +367,79 @@ static jmp_buf setjmp_stack[MAX_SETJMP_STACK];
 
 static u32 next_setjmp = 0;
 
+DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
+
 #define VOID_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
+DECLARE_EXPORT(void, dyncall, types); \
 IMPORT_IMPL(ret, name, typed_args, { \
-  DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32)); \
-  DECLARE_EXPORT(void, dyncall, types); \
+puts("a1"); \
+puts("a2"); \
+puts("a3"); \
   u32 sp = Z_stackSaveZ_iv(); \
+puts("a4"); \
   if (next_setjmp >= MAX_SETJMP_STACK) { \
+puts("a5"); \
     abort_with_message("too many nested setjmps"); \
   } \
+puts("a6"); \
   u32 id = next_setjmp++; \
+puts("a7"); \
   int result = setjmp(setjmp_stack[id]); \
+puts("a8"); \
   if (result == 0) { \
+puts("a9"); \
+printf("dynacll %p %p\n", Z_dynCall_vZ_vi, dyncall); \
     dyncall args; \
+puts("aa"); \
     /* if we got here, no longjmp or exception happened, we returned normally */ \
   } else { \
+puts("ab"); \
     /* A longjmp or an exception took us here. */ \
+puts("a"); \
     Z_stackRestoreZ_vi(sp); \
+puts("ac"); \
     Z_setThrewZ_vii(1, 0); \
+puts("ad"); \
   } \
+puts("ae"); \
   next_setjmp--; \
+puts("af"); \
 });
 
 #define RETURNING_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
 IMPORT_IMPL(ret, name, typed_args, { \
+puts("a1"); \
   DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32)); \
+puts("a2"); \
   DECLARE_EXPORT(ret, dyncall, types); \
+puts("a3"); \
   u32 sp = Z_stackSaveZ_iv(); \
+puts("a4"); \
   if (next_setjmp >= MAX_SETJMP_STACK) { \
+puts("a5"); \
     abort_with_message("too many nested setjmps"); \
   } \
+puts("a6"); \
   u32 id = next_setjmp++; \
+puts("a7"); \
   int result = setjmp(setjmp_stack[id]); \
+puts("a8"); \
   if (result == 0) { \
+puts("a9"); \
+printf("dynacll %p %p\n", Z_dynCall_vZ_vi, dyncall); \
     return dyncall args; \
     /* if we got here, no longjmp or exception happened, we returned normally */ \
   } else { \
+puts("a10"); \
     /* A longjmp or an exception took us here. */ \
     Z_stackRestoreZ_vi(sp); \
+puts("a11"); \
     Z_setThrewZ_vii(1, 0); \
+puts("a12"); \
   } \
+puts("a13"); \
   next_setjmp--; \
+puts("a14"); \
   return 0; \
 });
 
