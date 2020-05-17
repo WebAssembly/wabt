@@ -154,7 +154,16 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
     u32 ptr = i32_load(iov + i * 8);
     u32 len = i32_load(iov + i * 8 + 4);
     VERBOSE_LOG("    chunk %d %d\n", ptr, len);
-    ssize_t result = write(nfd, MEMACCESS(ptr), len);
+    ssize_t result;
+    // Use stdio for stdout/stderr to avoid mixing a low-level write() with
+    // other logging code, which can change the order from the expected.
+    if (nfd == STDOUT_FILENO) {
+      result = fwrite(MEMACCESS(ptr), 1, len, stdout);
+    } else if (nfd == STDERR_FILENO) {
+      result = fwrite(MEMACCESS(ptr), 1, len, stderr);
+    } else {
+      result = write(nfd, MEMACCESS(ptr), len);
+    }
     if (result < 0) {
       VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
@@ -374,9 +383,9 @@ ret (*WASM_RT_ADD_PREFIX(name)) args = NULL;
 
 DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
 
-#define VOID_INVOKE_IMPL(ret, name, typed_args, types, args, dyncall) \
+#define VOID_INVOKE_IMPL(name, typed_args, types, args, dyncall) \
 DECLARE_EXPORT(void, dyncall, types); \
-IMPORT_IMPL(ret, name, typed_args, { \
+IMPORT_IMPL(void, name, typed_args, { \
 printf("INVOKE " #name "  " #dyncall "\n"); \
 puts("a1"); \
 puts("a2"); \
@@ -451,9 +460,10 @@ puts("a14"); \
   return returned_value; \
 });
 
-VOID_INVOKE_IMPL(void, Z_envZ_invoke_vZ_vi, (u32 fptr), (u32), (fptr), Z_dynCall_vZ_vi);
-VOID_INVOKE_IMPL(void, Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_viiZ_viii);
+VOID_INVOKE_IMPL(Z_envZ_invoke_vZ_vi, (u32 fptr), (u32), (fptr), Z_dynCall_vZ_vi);
+VOID_INVOKE_IMPL(Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_viiZ_viii);
 RETURNING_INVOKE_IMPL(u32, Z_envZ_invoke_iiiZ_iiii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_iiiZ_iiii);
+RETURNING_INVOKE_IMPL(u32, Z_envZ_invoke_iiZ_iii, (u32 fptr, u32 a), (u32, u32), (fptr, a), Z_dynCall_iiZ_iii);
 
 IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (u32 buf, u32 value), {
   if (next_setjmp == 0) {
