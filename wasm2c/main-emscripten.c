@@ -179,6 +179,32 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (u32 fd, u32 iov, u3
   return 0;
 });
 
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 fd, u32 iov, u32 iovcnt, u32 pnum), {
+  int nfd = get_native_fd(fd);
+  VERBOSE_LOG("  fd_read wasm %d => native %d\n", fd, nfd);
+  if (nfd < 0) {
+    return WASI_DEFAULT_ERROR;
+  }
+  u32 num = 0;
+  for (u32 i = 0; i < iovcnt; i++) {
+    u32 ptr = i32_load(iov + i * 8);
+    u32 len = i32_load(iov + i * 8 + 4);
+    VERBOSE_LOG("    chunk %d %d\n", ptr, len);
+    ssize_t result = read(nfd, MEMACCESS(ptr), len);
+    if (result < 0) {
+      VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
+      return WASI_DEFAULT_ERROR;
+    }
+    num += result;
+    if (result != len) {
+      break; // nothing more to read
+    }
+  }
+  VERBOSE_LOG("    success: %d\n", num);
+  i32_store(pnum, num);
+  return 0;
+});
+
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (u32 fd), {
   // TODO full file support
   int nfd = get_native_fd(fd);
@@ -230,7 +256,6 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii, (u32 a, u32 b, u32 c
 });
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
 STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
 
 // TODO: set errno in wasm for everything
 
