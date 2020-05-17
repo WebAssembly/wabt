@@ -470,6 +470,7 @@ IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (u32 buf, u32 value), {
     abort_with_message("longjmp without setjmp");
   }
 printf("do longjmp %d\n", next_setjmp - 1);
+  Z_setThrewZ_vii(buf, value ? value : 1);
   longjmp(setjmp_stack[next_setjmp - 1], 1);
 });
 
