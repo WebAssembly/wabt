@@ -328,13 +328,36 @@ STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_initZ_ii, (u32 a), 0);
 STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (u32 a, u32 b), 0);
 STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (u32 a), 0);
 
+static int main_argc;
+static char** main_argv;
+
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii, (u32 pargc, u32 pargv_buf_size), {
+  i32_store(pargc, main_argc);
+  u32 buf_size = 0;
+  for (u32 i = 0; i < main_argc; i++) {
+    buf_size += strlen(main_argv[i]) + 1;
+  }
+  i32_store(pargv_buf_size, buf_size);
+  return 0;
+});
+
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_getZ_iii, (u32 argv, u32 argv_buf), {
+  u32 buf_size = 0;
+  for (u32 i = 0; i < main_argc; i++) {
+    u32 ptr = argv_buf + buf_size;
+    i32_store(argv + i * 4, ptr);
+    char* arg = main_argv[i];
+    strcpy(MEMACCESS(ptr), arg);
+    buf_size += strlen(arg) + 1;
+  }
+  return 0;
+});
+
 // TODO for lua
 //      Z_envZ_emscripten_longjmpZ_vii
 //      Z_envZ_saveSetjmpZ_iiiii
 //      Z_envZ_testSetjmpZ_iiii
 //      Z_envZ_invoke_viiZ_viii
-//      Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii
-//      Z_wasi_snapshot_preview1Z_args_getZ_iii
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, u64 max_lag, u32 out), {
   // TODO: handle realtime vs monotonic etc.
@@ -440,6 +463,9 @@ IMPORT_IMPL(f64, Z_envZ_store_val_f64Z_did, (u32 loc, f64 value), {
 // Main
 
 int main(int argc, char** argv) {
+  main_argc = argc;
+  main_argv = argv;
+
   init_fds();
 
   init();
