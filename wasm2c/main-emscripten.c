@@ -359,26 +359,39 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_getZ_iii, (u32 argv, u32 argv_bu
   return 0;
 });
 
-IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (u32 buf, u32 value), {
-printf("bad\n");
-});
+// Maintain a stack of setjmps, each jump taking us back to the last invoke.
+
+#define MAX_SETJMP_STACK 1024
+
+static jmp_buf setjmp_stack[MAX_SETJMP_STACK];
+
+static u32 next_setjmp = 0;
 
 IMPORT_IMPL(void, Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), {
   DECLARE_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
   DECLARE_EXPORT(void, Z_dynCall_viiZ_viii, (u32, u32, u32));
 
-printf("sad\n");
-  jmp_buf buf;
   u32 sp = Z_stackSaveZ_iv();
-  int result = setjmp(buf);
+  if (next_setjmp >= MAX_SETJMP_STACK) {
+    abort_with_message("too many nested setjmps");
+  }
+  u32 id = next_setjmp++;
+  int result = setjmp(setjmp_stack[id]);
   if (result == 0) {
     Z_dynCall_viiZ_viii(fptr, a, b);
   } else {
-    // A longjmp took us here; stop the unwinding.
-// XXX not quite right
+    // A longjmp or an exception took us here.
     Z_stackRestoreZ_vi(sp);
     Z_setThrewZ_vii(1, 0);
   }
+  next_setjmp--;
+});
+
+IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (u32 buf, u32 value), {
+  if (next_setjmp == 0) {
+    abort_with_message("longjmp without setjmp");
+  }
+  longjmp(setjmp_stack[next_setjmp - 1], 1);
 });
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, u64 max_lag, u32 out), {
