@@ -82,7 +82,7 @@ ret _##name params { \
 } \
 ret (*name) params = _##name;
 
-#define STUB_IMPORT_IMPL(ret, name, params, errorcode) IMPORT_IMPL(ret, name, params, { return errorcode; });
+#define STUB_IMPORT_IMPL(ret, name, params, returncode) IMPORT_IMPL(ret, name, params, { return returncode; });
 
 #define WASI_DEFAULT_ERROR 63 /* __WASI_ERRNO_PERM */
 
@@ -402,6 +402,7 @@ static u32 next_setjmp = 0;
 // wasm needs, but for now have a fixed list here. To get things to link,
 // declare them, so they either link with the existing value in the main
 // wasm2c .c output file, or else they contain NULL but will never be called.
+
 #define DECLARE_EXPORT(ret, name, args) \
 __attribute__((weak)) \
 ret (*WASM_RT_ADD_PREFIX(name)) args = NULL;
@@ -456,6 +457,8 @@ IMPORT_IMPL(ret, name, typed_args, { \
 
 VOID_INVOKE_IMPL(Z_envZ_invoke_vZ_vi, (u32 fptr), (u32), (fptr), Z_dynCall_vZ_vi);
 VOID_INVOKE_IMPL(Z_envZ_invoke_viiZ_viii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_viiZ_viii);
+VOID_INVOKE_IMPL(Z_envZ_invoke_viiiZ_viiii, (u32 fptr, u32 a, u32 b, u32 c), (u32, u32, u32, u32), (fptr, a, b, c), Z_dynCall_viiiZ_viiii);
+
 RETURNING_INVOKE_IMPL(u32, Z_envZ_invoke_iiiZ_iiii, (u32 fptr, u32 a, u32 b), (u32, u32, u32), (fptr, a, b), Z_dynCall_iiiZ_iiii);
 RETURNING_INVOKE_IMPL(u32, Z_envZ_invoke_iiZ_iii, (u32 fptr, u32 a), (u32, u32), (fptr, a), Z_dynCall_iiZ_iii);
 
@@ -475,6 +478,13 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (u32 clock_id, 
   i64_store(out, (u64)(clock() / (CLOCKS_PER_SEC / NSEC_PER_SEC)));
   return 0;
 });
+
+IMPORT_IMPL(void, Z_envZ_emscripten_notify_memory_growthZ_vi, (u32 size), {});
+
+STUB_IMPORT_IMPL(u32, Z_envZ_pthread_createZ_iiiii, (u32 a, u32 b, u32 c, u32 d), -1);
+STUB_IMPORT_IMPL(u32, Z_envZ_pthread_joinZ_iii, (u32 a, u32 b), -1);
+
+STUB_IMPORT_IMPL(u32, Z_envZ___cxa_thread_atexitZ_iiii, (u32 a, u32 b, u32 c), -1);
 
 static u32 tempRet0 = 0;
 
