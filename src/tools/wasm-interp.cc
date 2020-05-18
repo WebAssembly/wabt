@@ -108,8 +108,7 @@ static void ParseOptions(int argc, char** argv) {
       "Pass the given environment string in the WASI runtime",
       [](const std::string& argument) { s_wasi_env.push_back(argument); });
   parser.AddOption(
-      'd', "dir", "DIR",
-      "Pass the given directory the the WASI runtime",
+      'd', "dir", "DIR", "Pass the given directory the the WASI runtime",
       [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
   parser.AddOption(
       "run-all-exports",
@@ -269,7 +268,7 @@ static Result ReadAndRunModule(const char* module_filename) {
     envp.push_back(nullptr);
 
     std::vector<uvwasi_preopen_t> dirs;
-    for (auto& dir: s_wasi_dirs) {
+    for (auto& dir : s_wasi_dirs) {
       if (s_trace_stream) {
         s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
       }

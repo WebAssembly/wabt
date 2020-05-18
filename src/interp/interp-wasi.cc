@@ -43,8 +43,12 @@ using namespace wabt::interp;
 
 namespace {
 
-// Types that align with WASI specis on size and alignment.
+// Types that align with WASI spec on size and alignment.  These are
+// copied directly from wasi-lib's auto-generated api.h
 // TODO(sbc): Auto-generate this from witx.
+
+// BEGIN: wasi.h types from wasi-libc
+
 typedef uint32_t __wasi_size_t;
 typedef uint32_t __wasi_ptr_t;
 
@@ -54,7 +58,7 @@ _Static_assert(sizeof(__wasi_ptr_t) == 4, "witx calculated size");
 _Static_assert(_Alignof(__wasi_ptr_t) == 4, "witx calculated align");
 
 typedef struct __wasi_prestat_dir_t {
-    __wasi_size_t pr_name_len;
+  __wasi_size_t pr_name_len;
 } __wasi_prestat_dir_t;
 
 typedef uint8_t __wasi_preopentype_t;
@@ -64,9 +68,13 @@ typedef uint8_t __wasi_filetype_t;
 typedef uint16_t __wasi_oflags_t;
 typedef uint32_t __wasi_lookupflags_t;
 typedef uint32_t __wasi_fd_t;
+typedef uint64_t __wasi_timestamp_t;
+typedef uint8_t __wasi_whence_t;
+typedef int64_t __wasi_filedelta_t;
+typedef uint64_t __wasi_filesize_t;
 
 typedef union __wasi_prestat_u_t {
-    __wasi_prestat_dir_t dir;
+  __wasi_prestat_dir_t dir;
 } __wasi_prestat_u_t;
 
 struct __wasi_prestat_t {
@@ -75,18 +83,22 @@ struct __wasi_prestat_t {
 };
 
 typedef struct __wasi_fdstat_t {
-    __wasi_filetype_t fs_filetype;
-    __wasi_fdflags_t fs_flags;
-    __wasi_rights_t fs_rights_base;
-    __wasi_rights_t fs_rights_inheriting;
+  __wasi_filetype_t fs_filetype;
+  __wasi_fdflags_t fs_flags;
+  __wasi_rights_t fs_rights_base;
+  __wasi_rights_t fs_rights_inheriting;
 } __wasi_fdstat_t;
 
 _Static_assert(sizeof(__wasi_fdstat_t) == 24, "witx calculated size");
 _Static_assert(_Alignof(__wasi_fdstat_t) == 8, "witx calculated align");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_filetype) == 0, "witx calculated offset");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_flags) == 2, "witx calculated offset");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_rights_base) == 8, "witx calculated offset");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_rights_inheriting) == 16, "witx calculated offset");
+_Static_assert(offsetof(__wasi_fdstat_t, fs_filetype) == 0,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_fdstat_t, fs_flags) == 2,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_fdstat_t, fs_rights_base) == 8,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_fdstat_t, fs_rights_inheriting) == 16,
+               "witx calculated offset");
 
 struct __wasi_iovec_t {
   __wasi_ptr_t buf;
@@ -98,8 +110,47 @@ _Static_assert(_Alignof(__wasi_iovec_t) == 4, "witx calculated align");
 _Static_assert(offsetof(__wasi_iovec_t, buf) == 0, "witx calculated offset");
 _Static_assert(offsetof(__wasi_iovec_t, buf_len) == 4, "witx calculated offset");
 
+typedef uint64_t __wasi_device_t;
+
+_Static_assert(sizeof(__wasi_device_t) == 8, "witx calculated size");
+_Static_assert(_Alignof(__wasi_device_t) == 8, "witx calculated align");
+
+typedef uint64_t __wasi_inode_t;
+
+_Static_assert(sizeof(__wasi_inode_t) == 8, "witx calculated size");
+_Static_assert(_Alignof(__wasi_inode_t) == 8, "witx calculated align");
+
+typedef uint64_t __wasi_linkcount_t;
+
+_Static_assert(sizeof(__wasi_linkcount_t) == 8, "witx calculated size");
+_Static_assert(_Alignof(__wasi_linkcount_t) == 8, "witx calculated align");
+
+typedef struct __wasi_filestat_t {
+  __wasi_device_t dev;
+  __wasi_inode_t ino;
+  __wasi_filetype_t filetype;
+  __wasi_linkcount_t nlink;
+  __wasi_filesize_t size;
+  __wasi_timestamp_t atim;
+  __wasi_timestamp_t mtim;
+  __wasi_timestamp_t ctim;
+} __wasi_filestat_t;
+
+_Static_assert(sizeof(__wasi_filestat_t) == 64, "witx calculated size");
+_Static_assert(_Alignof(__wasi_filestat_t) == 8, "witx calculated align");
+_Static_assert(offsetof(__wasi_filestat_t, dev) == 0, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, ino) == 8, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, filetype) == 16, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, nlink) == 24, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, size) == 32, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, atim) == 40, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, mtim) == 48, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, ctim) == 56, "witx calculated offset");
+
 #define __WASI_ERRNO_SUCCESS (UINT16_C(0))
 #define __WASI_ERRNO_NOENT (UINT16_C(44))
+
+// END wasi.h types from wasi-lib
 
 class WasiInstance {
  public:
@@ -112,9 +163,42 @@ class WasiInstance {
         uvwasi(uvwasi),
         memory(memory) {}
 
+  Result random_get(const Values& params,
+                             Values& results,
+                             Trap::Ptr* trap) {
+    /* __wasi_errno_t __wasi_random_get(uint8_t * buf, __wasi_size_t buf_len) */
+    assert(false);
+    return Result::Ok;
+  }
+
   Result proc_exit(const Values& params, Values& results, Trap::Ptr* trap) {
     const Value arg0 = params[0];
     uvwasi_proc_exit(uvwasi, arg0.i32_);
+    return Result::Ok;
+  }
+
+  Result poll_oneoff(const Values& params, Values& results, Trap::Ptr* trap) {
+    assert(false);
+    return Result::Ok;
+  }
+
+  Result clock_time_get(const Values& params,
+                        Values& results,
+                        Trap::Ptr* trap) {
+    /* __wasi_errno_t __wasi_clock_time_get(__wasi_clockid_t id,
+     *                                      __wasi_timestamp_t precision,
+     *                                      __wasi_timestamp_t *time)
+     */
+    __wasi_timestamp_t t;
+    results[0].i32_ =
+        uvwasi_clock_time_get(uvwasi, params[0].i32_, params[1].i64_, &t);
+    uint32_t time_ptr = params[2].i32_;
+    CHECK_RESULT(writeValue<__wasi_timestamp_t>(t, time_ptr, trap));
+    return Result::Ok;
+  }
+
+  Result path_rename(const Values& params, Values& results, Trap::Ptr* trap) {
+    assert(false);
     return Result::Ok;
   }
 
@@ -153,7 +237,9 @@ class WasiInstance {
     return Result::Ok;
   }
 
-  Result path_filestat_get(const Values& params, Values& results, Trap::Ptr* trap) {
+  Result path_filestat_get(const Values& params,
+                           Values& results,
+                           Trap::Ptr* trap) {
     /* __wasi_errno_t __wasi_path_filestat_get(__wasi_fd_t fd,
      *                                         __wasi_lookupflags_t flags,
      *                                         const char *path,
@@ -173,9 +259,13 @@ class WasiInstance {
     uvwasi_filestat_t buf;
     results[0].i32_ =
         uvwasi_path_filestat_get(uvwasi, fd, flags, path, path_len, &buf);
-    uvwasi_serdes_write_filestat_t(memory->UnsafeData(), filestat_ptr, &buf);
+    __wasi_filestat_t* filestat;
+    CHECK_RESULT(getMemPtr<__wasi_filestat_t>(
+        filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
+    uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
     if (trace_stream) {
-      trace_stream->Writef("path_filestat_get -> size=%lu %d\n", buf.st_size, results[0].i32_);
+      trace_stream->Writef("path_filestat_get -> size=%lu %d\n", buf.st_size,
+                           results[0].i32_);
     }
     return Result::Ok;
   }
@@ -208,7 +298,28 @@ class WasiInstance {
     return Result::Ok;
   }
 
-  Result path_unlink_file(const Values& params, Values& results, Trap::Ptr* trap) {
+  Result path_readlink(const Values& params, Values& results, Trap::Ptr* trap) {
+    assert(false);
+    return Result::Ok;
+  }
+
+  Result path_create_directory(const Values& params,
+                               Values& results,
+                               Trap::Ptr* trap) {
+    assert(false);
+    return Result::Ok;
+  }
+
+  Result path_remove_directory(const Values& params,
+                               Values& results,
+                               Trap::Ptr* trap) {
+    assert(false);
+    return Result::Ok;
+  }
+
+  Result path_unlink_file(const Values& params,
+                          Values& results,
+                          Trap::Ptr* trap) {
     /* __wasi_errno_t __wasi_path_unlink_file(__wasi_fd_t fd,
      *                                        const char *path,
      *                                        size_t path_len)
@@ -225,34 +336,71 @@ class WasiInstance {
     return Result::Ok;
   }
 
-  Result fd_prestat_get(const Values& params, Values& results, Trap::Ptr* trap) {
+  Result fd_prestat_get(const Values& params,
+                        Values& results,
+                        Trap::Ptr* trap) {
+    /* __wasi_errno_t __wasi_fd_prestat_get(__wasi_fd_t fd,
+     *                                      __wasi_prestat_t *buf))
+     */
     uvwasi_fd_t fd = params[0].i32_;
+    uint32_t prestat_ptr = params[1].i32_;
     if (trace_stream) {
       trace_stream->Writef("fd_prestat_get %d\n", fd);
     }
-    CHECK_RESULT(getMemPtr<__wasi_prestat_t>(params[1].i32_, 1, nullptr, trap));
     uvwasi_prestat_t buf;
     results[0].i32_ = uvwasi_fd_prestat_get(uvwasi, fd, &buf);
-    uvwasi_serdes_write_prestat_t(memory->UnsafeData(), params[1].i32_, &buf);
+    __wasi_prestat_t* prestat;
+    CHECK_RESULT(getMemPtr<__wasi_prestat_t>(prestat_ptr, 1, &prestat, trap));
+    uvwasi_serdes_write_prestat_t(prestat, 0, &buf);
     if (trace_stream) {
       trace_stream->Writef("fd_prestat_get -> %d\n", results[0].i32_);
     }
     return Result::Ok;
   }
 
-  Result fd_prestat_dir_name(const Values& params, Values& results, Trap::Ptr* trap) {
+  Result fd_prestat_dir_name(const Values& params,
+                             Values& results,
+                             Trap::Ptr* trap) {
     uvwasi_fd_t fd = params[0].i32_;
     uint32_t path_ptr = params[1].i32_;
     uvwasi_size_t path_len = params[2].i32_;
     if (trace_stream) {
-      trace_stream->Writef("fd_prestat_dir_name %d %d %d\n", fd, path_ptr, path_len);
+      trace_stream->Writef("fd_prestat_dir_name %d %d %d\n", fd, path_ptr,
+                           path_len);
     }
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     results[0].i32_ = uvwasi_fd_prestat_dir_name(uvwasi, fd, path, path_len);
     if (trace_stream) {
-      trace_stream->Writef("fd_prestat_dir_name %d -> %d %s %d\n", fd, results[0].i32_, path, path_len);
+      trace_stream->Writef("fd_prestat_dir_name %d -> %d %s %d\n", fd,
+                           results[0].i32_, path, path_len);
     }
+    return Result::Ok;
+  }
+
+  Result fd_filestat_get(const Values& params,
+                         Values& results,
+                         Trap::Ptr* trap) {
+    /* __wasi_fd_filestat_get(__wasi_fd_t f, __wasi_filestat_t *buf) */
+    uvwasi_fd_t fd = params[0].i32_;
+    uint32_t filestat_ptr = params[1].i32_;
+    uvwasi_filestat_t buf;
+    results[0].i32_ = uvwasi_fd_filestat_get(uvwasi, fd, &buf);
+    __wasi_filestat_t* filestat;
+    CHECK_RESULT(getMemPtr<__wasi_filestat_t>(
+        filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
+    uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
+    if (trace_stream) {
+      trace_stream->Writef("fd_filestat_get -> size=%lu %d\n", buf.st_size,
+                           results[0].i32_);
+    }
+    return Result::Ok;
+  }
+
+  Result fd_fdstat_set_flags(const Values& params,
+                             Values& results,
+                             Trap::Ptr* trap) {
+    assert(false);
     return Result::Ok;
   }
 
@@ -263,9 +411,13 @@ class WasiInstance {
       trace_stream->Writef("fd_fdstat_get %d\n", fd);
     }
     CHECK_RESULT(getMemPtr<__wasi_fdstat_t>(stat_ptr, 1, nullptr, trap));
-    uvwasi_fdstat_t statbuf;
-    results[0].i32_ = uvwasi_fd_fdstat_get(uvwasi, fd, &statbuf);
-    uvwasi_serdes_write_fdstat_t(memory->UnsafeData(), params[1].i32_, &statbuf);
+    uvwasi_fdstat_t host_statbuf;
+    results[0].i32_ = uvwasi_fd_fdstat_get(uvwasi, fd, &host_statbuf);
+
+    // Write the host statbuf into the target wasm memory
+    __wasi_fdstat_t* statbuf;
+    CHECK_RESULT(getMemPtr<__wasi_fdstat_t>(stat_ptr, 1, &statbuf, trap));
+    uvwasi_serdes_write_fdstat_t(statbuf, 0, &host_statbuf);
     return Result::Ok;
   }
 
@@ -273,6 +425,7 @@ class WasiInstance {
     int32_t fd = params[0].i32_;
     int32_t iovptr = params[1].i32_;
     int32_t iovcnt = params[2].i32_;
+    int32_t out_ptr = params[2].i32_;
     if (trace_stream) {
       trace_stream->Writef("fd_read %d [%d]\n", fd, iovcnt);
     }
@@ -287,12 +440,22 @@ class WasiInstance {
                                       trap));
     }
     __wasi_ptr_t* out_addr;
-    CHECK_RESULT(getMemPtr<__wasi_ptr_t>(params[3].i32_, 1, &out_addr, trap));
+    CHECK_RESULT(getMemPtr<__wasi_ptr_t>(out_ptr, 1, &out_addr, trap));
     results[0].i32_ =
         uvwasi_fd_read(uvwasi, fd, iovs.data(), iovs.size(), out_addr);
     if (trace_stream) {
       trace_stream->Writef("fd_read -> %d\n", results[0].i32_);
     }
+    return Result::Ok;
+  }
+
+  Result fd_pread(const Values& params, Values& results, Trap::Ptr* trap) {
+    assert(false);
+    return Result::Ok;
+  }
+
+  Result fd_readdir(const Values& params, Values& results, Trap::Ptr* trap) {
+    assert(false);
     return Result::Ok;
   }
 
@@ -316,13 +479,30 @@ class WasiInstance {
     return Result::Ok;
   }
 
+  Result fd_pwrite(const Values& params, Values& results, Trap::Ptr* trap) {
+    assert(false);
+    return Result::Ok;
+  }
+
   Result fd_close(const Values& params, Values& results, Trap::Ptr* trap) {
     assert(false);
     return Result::Ok;
   }
 
   Result fd_seek(const Values& params, Values& results, Trap::Ptr* trap) {
-    assert(false);
+    /* __wasi_errno_t __wasi_fd_seek(__wasi_fd_t fd,
+     *                               __wasi_filedelta_t offset,
+     *                               __wasi_whence_t whence,
+     *                               __wasi_filesize_t *newoffset)
+     */
+    int32_t fd = params[0].i32_;
+    __wasi_filedelta_t offset = params[1].i32_;
+    __wasi_whence_t whence = params[2].i32_;
+    uint32_t newoffset_ptr = params[3].i32_;
+    uvwasi_filesize_t newoffset;
+    results[0].i32_ =
+        uvwasi_fd_seek(uvwasi, fd, offset, whence, &newoffset);
+    CHECK_RESULT(writeValue<__wasi_filesize_t>(newoffset, newoffset_ptr, trap));
     return Result::Ok;
   }
 
@@ -478,7 +658,8 @@ Result WasiBindImports(const Module::Ptr& module,
       return Result::Error;
     }
 
-    if (import.type.module != "wasi_snapshot_preview1") {
+    if (import.type.module != "wasi_snapshot_preview1" &&
+        import.type.module != "wasi_unstable") {
       stream->Writef("wasi error: unknown module import: `%s`\n",
                      import.type.module.c_str());
       return Result::Error;
@@ -489,6 +670,7 @@ Result WasiBindImports(const Module::Ptr& module,
                                     import.type.name.c_str());
     HostFunc::Ptr host_func;
 
+    // TODO(sbc): Validate signatures of imports.
 #define WASI_FUNC(NAME)                                 \
   if (import.type.name == #NAME) {                      \
     host_func = HostFunc::New(*store, func_type, NAME); \
@@ -497,8 +679,7 @@ Result WasiBindImports(const Module::Ptr& module,
 #include "wasi_api.def"
 #undef WASI_FUNC
 
-    stream->Writef("unknown `wasi_snapshot_preview1` import: `%s`\n",
-                   import.type.name.c_str());
+    stream->Writef("unknown wasi API import: `%s`\n", import.type.name.c_str());
     return Result::Error;
   found:
     imports.push_back(host_func.ref());
