@@ -1,4 +1,7 @@
-//#define VERBOSE_LOGGING
+/*
+ * A main file to run wasm2c code. This implements various wasi and emscripten
+ * syscalls, and allows direct/unsandboxed file access TODO add options
+ */
 
 #define __USE_GNU // for O_PATH
 
