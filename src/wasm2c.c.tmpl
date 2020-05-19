@@ -30,7 +30,7 @@
        ? ((t)table.data[x].func)(__VA_ARGS__)        \
        : TRAP(CALL_INDIRECT))
 
-#ifndef WASM_RT_NO_MEMORY_CHECKS
+#ifndef WASM_RT_NO_MEMORY_BOUNDS_CHECKS
 #define MEMCHECK(mem, a, t)  \
   if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
 #else

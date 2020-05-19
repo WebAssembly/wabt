@@ -443,7 +443,7 @@ By default wasm2c output will check all the things that WebAssembly VMs would,
 like memory accesses being in bounds. You can optionally disable some of those
 things, by defining the following things when compiling the C code:
 
-* `WASM_RT_NO_MEMORY_CHECKS`: Prevents checks from being emitted for memory
-  accesses being in bounds.
+* `WASM_RT_NO_MEMORY_BOUNDS_CHECKS`: Prevents checks from being emitted for
+  memory accesses being in bounds.
 * `WASM_RT_NO_STACK_DEPTH_CHECKS`: Prevents checks from being emitted for
   exhausting the stack.

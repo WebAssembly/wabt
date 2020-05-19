@@ -33,7 +33,7 @@ const char SECTION_NAME(declarations)[] =
 "       ? ((t)table.data[x].func)(__VA_ARGS__)        \\\n"
 "       : TRAP(CALL_INDIRECT))\n"
 "\n"
-"#ifndef WASM_RT_NO_MEMORY_CHECKS\n"
+"#ifndef WASM_RT_NO_MEMORY_BOUNDS_CHECKS\n"
 "#define MEMCHECK(mem, a, t)  \\\n"
 "  if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)\n"
 "#else\n"
