@@ -16,7 +16,11 @@
 #define FUNC_PROLOGUE
 #endif
 
+#ifndef WASM_RT_NO_STACK_DEPTH_CHECKS
 #define FUNC_EPILOGUE --wasm_rt_call_stack_depth
+#else
+#define FUNC_EPILOGUE
+#endif
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
