@@ -150,3 +150,32 @@ TEST(OptionParser, OneOrMoreArguments) {
   parser.Parse(3, const_cast<char**>(args));
   EXPECT_EQ("hellogoodbye", argument);
 }
+
+TEST(OptionParser, ZeroOrMoreArguments) {
+  std::string argument;
+  OptionParser parser("prog", "desc");
+  parser.AddArgument("arg", OptionParser::ArgumentCount::ZeroOrMore,
+                     [&](const char* arg) { argument += arg; });
+
+  const char* args_none[] = {"prog name"};
+  parser.Parse(1, const_cast<char**>(args_none));
+  EXPECT_EQ("", argument);
+
+  const char* args_many[] = {"prog name", "hello", "goodbye"};
+  parser.Parse(3, const_cast<char**>(args_many));
+  EXPECT_EQ("hellogoodbye", argument);
+}
+
+TEST(OptionParser, StopProccessing) {
+  std::string argument;
+  bool has_x = false;
+  OptionParser parser("prog", "desc");
+  parser.AddArgument("arg", OptionParser::ArgumentCount::ZeroOrMore,
+                     [&](const char* arg) { argument += arg; });
+  parser.AddOption('x', "x", "help", [&]() { has_x = true; });
+
+  const char* args_many[] = {"prog name", "-x", "--", "foo", "-x", "-y", "bar"};
+  parser.Parse(7, const_cast<char**>(args_many));
+  EXPECT_TRUE(has_x);
+  EXPECT_EQ("foo-x-ybar", argument);
+}

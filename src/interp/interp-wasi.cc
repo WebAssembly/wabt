@@ -140,12 +140,18 @@ _Static_assert(sizeof(__wasi_filestat_t) == 64, "witx calculated size");
 _Static_assert(_Alignof(__wasi_filestat_t) == 8, "witx calculated align");
 _Static_assert(offsetof(__wasi_filestat_t, dev) == 0, "witx calculated offset");
 _Static_assert(offsetof(__wasi_filestat_t, ino) == 8, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, filetype) == 16, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, nlink) == 24, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, size) == 32, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, atim) == 40, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, mtim) == 48, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, ctim) == 56, "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, filetype) == 16,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, nlink) == 24,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, size) == 32,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, atim) == 40,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, mtim) == 48,
+               "witx calculated offset");
+_Static_assert(offsetof(__wasi_filestat_t, ctim) == 56,
+               "witx calculated offset");
 
 #define __WASI_ERRNO_SUCCESS (UINT16_C(0))
 #define __WASI_ERRNO_NOENT (UINT16_C(44))
@@ -163,9 +169,7 @@ class WasiInstance {
         uvwasi(uvwasi),
         memory(memory) {}
 
-  Result random_get(const Values& params,
-                             Values& results,
-                             Trap::Ptr* trap) {
+  Result random_get(const Values& params, Values& results, Trap::Ptr* trap) {
     /* __wasi_errno_t __wasi_random_get(uint8_t * buf, __wasi_size_t buf_len) */
     assert(false);
     return Result::Ok;
@@ -500,8 +504,7 @@ class WasiInstance {
     __wasi_whence_t whence = params[2].i32_;
     uint32_t newoffset_ptr = params[3].i32_;
     uvwasi_filesize_t newoffset;
-    results[0].i32_ =
-        uvwasi_fd_seek(uvwasi, fd, offset, whence, &newoffset);
+    results[0].i32_ = uvwasi_fd_seek(uvwasi, fd, offset, whence, &newoffset);
     CHECK_RESULT(writeValue<__wasi_filesize_t>(newoffset, newoffset_ptr, trap));
     return Result::Ok;
   }
