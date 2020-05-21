@@ -575,7 +575,7 @@ TEST_F(InterpGCTest, Collect_Basic) {
 }
 
 TEST_F(InterpGCTest, Collect_GlobalCycle) {
-  auto gt = GlobalType{ValueType::Externref, Mutability::Var};
+  auto gt = GlobalType{ValueType::ExternRef, Mutability::Var};
   auto g1 = Global::New(store_, gt, Value::Make(Ref::Null));
   auto g2 = Global::New(store_, gt, Value::Make(g1->self()));
   g1->Set(store_, g2->self());
@@ -593,7 +593,7 @@ TEST_F(InterpGCTest, Collect_GlobalCycle) {
 }
 
 TEST_F(InterpGCTest, Collect_TableCycle) {
-  auto tt = TableType{ValueType::Externref, Limits{2}};
+  auto tt = TableType{ValueType::ExternRef, Limits{2}};
   auto t1 = Table::New(store_, tt);
   auto t2 = Table::New(store_, tt);
   auto t3 = Table::New(store_, tt);
@@ -645,7 +645,7 @@ TEST_F(InterpGCTest, Collect_InstanceImport) {
   auto f = HostFunc::New(store_, FuncType{{}, {}},
                          [](Thread& thread, const Values&, Values&,
                             Trap::Ptr*) -> Result { return Result::Ok; });
-  auto t = Table::New(store_, TableType{ValueType::Funcref, Limits{0}});
+  auto t = Table::New(store_, TableType{ValueType::FuncRef, Limits{0}});
   auto m = Memory::New(store_, MemoryType{Limits{0}});
   auto g = Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
                        Value::Make(5));

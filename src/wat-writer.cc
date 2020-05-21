@@ -1286,7 +1286,7 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   if (flags & SegUseElemExprs) {
     WriteType(segment.elem_type, NextChar::Space);
   } else {
-    assert(segment.elem_type == Type::Funcref);
+    assert(segment.elem_type == Type::FuncRef);
     WritePuts("func", NextChar::Space);
   }
 

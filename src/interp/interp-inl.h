@@ -365,6 +365,8 @@ template <typename T> void RequireType(ValueType type) {
 }
 
 inline bool TypesMatch(ValueType expected, ValueType actual) {
+  // Currently there is no subtyping, so expected and actual must match
+  // exactly. In the future this may be expanded.
   return expected == actual;
 }
 

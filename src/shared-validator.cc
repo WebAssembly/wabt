@@ -119,7 +119,7 @@ Result SharedValidator::OnTable(const Location& loc,
   if (limits.is_shared) {
     result |= PrintError(loc, "tables may not be shared");
   }
-  if (elem_type != Type::Funcref &&
+  if (elem_type != Type::FuncRef &&
       !options_.features.reference_types_enabled()) {
     result |= PrintError(loc, "tables must have funcref type");
   }
@@ -220,7 +220,7 @@ Result SharedValidator::OnGlobalInitExpr_RefFunc(const Location& loc,
   Result result = Result::Ok;
   result |= CheckFuncIndex(func_var);
   init_expr_funcs_.push_back(func_var);
-  result |= CheckType(loc, Type::Funcref, globals_.back().type,
+  result |= CheckType(loc, Type::FuncRef, globals_.back().type,
                       "global initializer expression");
   return result;
 }

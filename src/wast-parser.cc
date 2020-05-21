@@ -780,11 +780,11 @@ Result WastParser::ParseValueType(Type* out_type) {
     case Type::V128:
       is_enabled = options_->features.simd_enabled();
       break;
-    case Type::Funcref:
-    case Type::Externref:
+    case Type::FuncRef:
+    case Type::ExternRef:
       is_enabled = options_->features.reference_types_enabled();
       break;
-    case Type::Exnref:
+    case Type::ExnRef:
       is_enabled = options_->features.exceptions_enabled();
       break;
     default:
@@ -818,7 +818,7 @@ Result WastParser::ParseRefKind(Type* out_type) {
   Token token = Consume();
   Type type = token.type();
 
-  if ((type == Type::Externref &&
+  if ((type == Type::ExternRef &&
        !options_->features.reference_types_enabled()) ||
       ((type == Type::Struct || type == Type::Array) &&
        !options_->features.gc_enabled())) {
@@ -838,7 +838,7 @@ Result WastParser::ParseRefType(Type* out_type) {
 
   Token token = Consume();
   Type type = token.type();
-  if (type == Type::Externref &&
+  if (type == Type::ExternRef &&
       !options_->features.reference_types_enabled()) {
     Error(token.loc, "value type not allowed: %s", type.GetName());
     return Result::Error;
@@ -856,7 +856,7 @@ bool WastParser::ParseRefTypeOpt(Type* out_type) {
 
   Token token = Consume();
   Type type = token.type();
-  if (type == Type::Externref &&
+  if (type == Type::ExternRef &&
       !options_->features.reference_types_enabled()) {
     return false;
   }
@@ -1131,7 +1131,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
-    field->elem_segment.elem_type = Type::Funcref;
+    field->elem_segment.elem_type = Type::FuncRef;
     if (PeekMatch(TokenType::Func)) {
       EXPECT(Func);
     }

@@ -587,11 +587,11 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
   } else if (type_str == "i16") {
     *out_type = Type::I16;
   } else if (type_str == "funcref") {
-    *out_type = Type::Funcref;
+    *out_type = Type::FuncRef;
   } else if (type_str == "externref") {
-    *out_type = Type::Externref;
+    *out_type = Type::ExternRef;
   } else if (type_str == "exnref") {
-    *out_type = Type::Exnref;
+    *out_type = Type::ExnRef;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -803,7 +803,7 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       assert(false);  // Should use ParseLaneConstValue instead.
       break;
 
-    case Type::Funcref:
+    case Type::FuncRef:
       if (value_str == "null") {
         out_value->Set(Ref::Null);
       } else {
@@ -812,7 +812,7 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       }
       break;
 
-    case Type::Externref:
+    case Type::ExternRef:
       if (value_str == "null") {
         out_value->Set(Ref::Null);
       } else {
@@ -1230,7 +1230,7 @@ CommandRunner::CommandRunner() : store_(s_features) {
   }
 
   spectest["table"] =
-      interp::Table::New(store_, TableType{ValueType::Funcref, Limits{10, 20}});
+      interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
 
   spectest["memory"] = interp::Memory::New(store_, MemoryType{Limits{1, 2}});
 
@@ -1723,13 +1723,13 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       break;
     }
 
-    case Type::Funcref:
+    case Type::FuncRef:
       // A funcref expectation only requires that the reference be a function,
       // but it doesn't check the actual index.
-      ok = (actual.type == Type::Funcref);
+      ok = (actual.type == Type::FuncRef);
       break;
 
-    case Type::Externref:
+    case Type::ExternRef:
       ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
       break;
 

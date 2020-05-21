@@ -134,8 +134,8 @@ struct Const {
   // Only used for expectations. (e.g. wast assertions)
   void set_f32(ExpectedNan nan) { set_f32(0); set_expected_nan(0, nan); }
   void set_f64(ExpectedNan nan) { set_f64(0); set_expected_nan(0, nan); }
-  void set_funcref()            { From<uintptr_t>(Type::Funcref, 0); }
-  void set_externref(uintptr_t x) { From(Type::Externref, x); }
+  void set_funcref()            { From<uintptr_t>(Type::FuncRef, 0); }
+  void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
   void set_null(Type type)      { From<uintptr_t>(type, kRefNullBits); }
 
   bool is_expected_nan(int lane = 0) const {
@@ -719,7 +719,7 @@ struct Global {
 
 struct Table {
   explicit Table(string_view name)
-      : name(name.to_string()), elem_type(Type::Funcref) {}
+      : name(name.to_string()), elem_type(Type::FuncRef) {}
 
   std::string name;
   Limits elem_limits;
@@ -732,7 +732,7 @@ enum class ElemExprKind {
 };
 
 struct ElemExpr {
-  ElemExpr() : kind(ElemExprKind::RefNull), type(Type::Funcref) {}
+  ElemExpr() : kind(ElemExprKind::RefNull), type(Type::FuncRef) {}
   explicit ElemExpr(Var var) : kind(ElemExprKind::RefFunc), var(var) {}
   explicit ElemExpr(Type type) : kind(ElemExprKind::RefNull), type(type) {}
 

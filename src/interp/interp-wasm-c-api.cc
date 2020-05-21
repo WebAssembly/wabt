@@ -310,9 +310,9 @@ static ValueType ToWabtValueType(wasm_valkind_t kind) {
     case WASM_F64:
       return ValueType::F64;
     case WASM_ANYREF:
-      return ValueType::Externref;
+      return ValueType::ExternRef;
     case WASM_FUNCREF:
-      return ValueType::Funcref;
+      return ValueType::FuncRef;
     default:
       TRACE("unexpected wasm_valkind_t: %d", kind);
       WABT_UNREACHABLE;
@@ -330,9 +330,9 @@ static wasm_valkind_t FromWabtValueType(ValueType type) {
       return WASM_F32;
     case ValueType::F64:
       return WASM_F64;
-    case ValueType::Externref:
+    case ValueType::ExternRef:
       return WASM_ANYREF;
-    case ValueType::Funcref:
+    case ValueType::FuncRef:
       return WASM_FUNCREF;
     default:
       WABT_UNREACHABLE;
@@ -429,13 +429,13 @@ static wasm_val_t FromWabtValue(Store& store, const TypedValue& tv) {
       out_value.kind = WASM_F64;
       out_value.of.f64 = tv.value.Get<f64>();
       break;
-    case Type::Funcref: {
+    case Type::FuncRef: {
       Ref ref = tv.value.Get<Ref>();
       out_value.kind = WASM_FUNCREF;
       out_value.of.ref = new wasm_func_t(store.UnsafeGet<Func>(ref));
       break;
     }
-    case Type::Externref: {
+    case Type::ExternRef: {
       Ref ref = tv.value.Get<Ref>();
       out_value.kind = WASM_ANYREF;
       out_value.of.ref = new wasm_foreign_t(store.UnsafeGet<Foreign>(ref));

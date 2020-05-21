@@ -49,13 +49,13 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::I16:  // For SIMD lane.
       return StringPrintf("i16:%u", tv.value.Get<u32>() & 0xffff);
 
-    case Type::Funcref:
+    case Type::FuncRef:
       return StringPrintf("funcref:%" PRIzd, tv.value.Get<Ref>().index);
 
-    case Type::Externref:
+    case Type::ExternRef:
       return StringPrintf("externref:%" PRIzd, tv.value.Get<Ref>().index);
 
-    case Type::Exnref:
+    case Type::ExnRef:
       return StringPrintf("exnref:%" PRIzd, tv.value.Get<Ref>().index);
 
     case Type::Func:

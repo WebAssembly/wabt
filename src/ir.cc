@@ -641,7 +641,7 @@ void Var::Destroy() {
 uint8_t ElemSegment::GetFlags(const Module* module) const {
   uint8_t flags = 0;
 
-  bool all_ref_func = elem_type == Type::Funcref;
+  bool all_ref_func = elem_type == Type::FuncRef;
 
   switch (kind) {
     case SegmentKind::Active: {

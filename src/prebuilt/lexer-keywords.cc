@@ -198,7 +198,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"mut", TokenType::Mut},
       {""}, {""},
 #line 49 "src/lexer-keywords.txt"
-      {"exn", Type::Exnref, TokenType::Exn},
+      {"exn", Type::ExnRef, TokenType::Exn},
 #line 127 "src/lexer-keywords.txt"
       {"f64.ne", TokenType::Compare, Opcode::F64Ne},
 #line 77 "src/lexer-keywords.txt"
@@ -216,7 +216,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"event", TokenType::Event},
       {""},
 #line 50 "src/lexer-keywords.txt"
-      {"exnref", Type::Exnref},
+      {"exnref", Type::ExnRef},
       {""},
 #line 119 "src/lexer-keywords.txt"
       {"f64.le", TokenType::Compare, Opcode::F64Le},
@@ -233,10 +233,10 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 488 "src/lexer-keywords.txt"
       {"result", TokenType::Result},
 #line 155 "src/lexer-keywords.txt"
-      {"funcref", Type::Funcref},
+      {"funcref", Type::FuncRef},
       {""}, {""}, {""},
 #line 51 "src/lexer-keywords.txt"
-      {"extern", Type::Externref, TokenType::Extern},
+      {"extern", Type::ExternRef, TokenType::Extern},
 #line 492 "src/lexer-keywords.txt"
       {"return", TokenType::Return, Opcode::Return},
 #line 504 "src/lexer-keywords.txt"
@@ -266,7 +266,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 73 "src/lexer-keywords.txt"
       {"f32.min", TokenType::Binary, Opcode::F32Min},
 #line 52 "src/lexer-keywords.txt"
-      {"externref", Type::Externref},
+      {"externref", Type::ExternRef},
       {""}, {""}, {""}, {""}, {""}, {""},
 #line 398 "src/lexer-keywords.txt"
       {"i64.store32", TokenType::Store, Opcode::I64Store32},
@@ -297,7 +297,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 205 "src/lexer-keywords.txt"
       {"i32.and", TokenType::Binary, Opcode::I32And},
 #line 156 "src/lexer-keywords.txt"
-      {"func", Type::Funcref, TokenType::Func},
+      {"func", Type::FuncRef, TokenType::Func},
       {""}, {""},
 #line 153 "src/lexer-keywords.txt"
       {"f64x2", TokenType::F64X2},
@@ -977,7 +977,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"i32.atomic.rmw8.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmw8CmpxchgU},
       {""}, {""},
 #line 527 "src/lexer-keywords.txt"
-      {"anyfunc", Type::Funcref},
+      {"anyfunc", Type::FuncRef},
       {""}, {""}, {""}, {""}, {""},
 #line 474 "src/lexer-keywords.txt"
       {"memory", TokenType::Memory},

@@ -410,11 +410,11 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::V128:
       return options_.features.simd_enabled();
 
-    case Type::Funcref:
-    case Type::Externref:
+    case Type::FuncRef:
+    case Type::ExternRef:
       return options_.features.reference_types_enabled();
 
-    case Type::Exnref:
+    case Type::ExnRef:
       return options_.features.exceptions_enabled();
 
     default:
@@ -2197,7 +2197,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
-    Type elem_type = Type::Funcref;
+    Type elem_type = Type::FuncRef;
 
     CALLBACK(BeginElemSegment, i, table_index, flags);
 
@@ -2217,7 +2217,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
                      elem_type.GetName());
-        elem_type = Type::Funcref;
+        elem_type = Type::FuncRef;
       }
     }
 

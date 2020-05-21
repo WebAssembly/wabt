@@ -38,9 +38,9 @@ class Type {
     V128 = -0x05,       // 0x7b
     I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
     I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
-    Funcref = -0x10,    // 0x70
-    Externref = -0x11,  // 0x6f
-    Exnref = -0x18,     // 0x68
+    FuncRef = -0x10,    // 0x70
+    ExternRef = -0x11,  // 0x6f
+    ExnRef = -0x18,     // 0x68
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
@@ -59,8 +59,8 @@ class Type {
   operator Enum() const { return enum_; }
 
   bool IsRef() const {
-    return enum_ == Type::Externref || enum_ == Type::Funcref ||
-           enum_ == Type::Exnref;
+    return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
+           enum_ == Type::ExnRef;
   }
 
   bool IsNullableRef() const {
@@ -77,21 +77,21 @@ class Type {
       case Type::V128:      return "v128";
       case Type::I8:        return "i8";
       case Type::I16:       return "i16";
-      case Type::Funcref:   return "funcref";
+      case Type::FuncRef:   return "funcref";
       case Type::Func:      return "func";
-      case Type::Exnref:    return "exnref";
+      case Type::ExnRef:    return "exnref";
       case Type::Void:      return "void";
       case Type::Any:       return "any";
-      case Type::Externref: return "externref";
+      case Type::ExternRef: return "externref";
       default:              return "<type_index>";
     }
   }
 
   const char* GetRefKindName() const {
     switch (enum_) {
-      case Type::Funcref:   return "func";
-      case Type::Externref: return "extern";
-      case Type::Exnref:    return "exn";
+      case Type::FuncRef:   return "func";
+      case Type::ExternRef: return "extern";
+      case Type::ExnRef:    return "exn";
       case Type::Struct:    return "struct";
       case Type::Array:     return "array";
       default:              return "<invalid>";
@@ -128,9 +128,9 @@ class Type {
       case Type::F32:
       case Type::F64:
       case Type::V128:
-      case Type::Funcref:
-      case Type::Externref:
-      case Type::Exnref:
+      case Type::FuncRef:
+      case Type::ExternRef:
+      case Type::ExnRef:
         return TypeVector(this, this + 1);
 
       default:
