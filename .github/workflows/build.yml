@@ -69,9 +69,10 @@ jobs:
         submodules: true
     - name: build
       run: |
-        docker run -di --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
-        docker exec emscripten emconfigure cmake .
-        docker exec emscripten emmake make -j 2
+        docker run -di --name emscripten -v $(pwd):/src trzeci/emscripten:1.39.10-upstream bash
+        docker exec emscripten emcc -v
+        docker exec emscripten emcmake cmake .
+        docker exec emscripten make -j 2 VERBOSE=1
 
   build-asan:
     name: asan
