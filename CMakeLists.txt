@@ -628,7 +628,7 @@ if (EMSCRIPTEN)
   # build to JS for now, as node.js doesn't have code caching for wasm yet, and
   # wasm startup times are slower
   foreach(variable CMAKE_EXE_LINKER_FLAGS)
-    set(${variable} "${${variable}} -s NODERAWFS -s SINGLE_FILE -s WASM=0 -Oz")
+    set(${variable} "${${variable}} -s NODERAWFS -s SINGLE_FILE -s WASM=0 -Oz -s ALLOW_MEMORY_GROWTH=1")
   endforeach(variable)
 
   # wabt.js
@@ -649,7 +649,6 @@ if (EMSCRIPTEN)
     -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
     -s RESERVED_FUNCTION_POINTERS=10
     -s NO_EXIT_RUNTIME=1
-    -s ALLOW_MEMORY_GROWTH=1
     -s MODULARIZE=1
     -s EXPORT_NAME=\"'WabtModule'\"
   )
