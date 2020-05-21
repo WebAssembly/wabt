@@ -1,0 +1,21 @@
+;;; TOOL: run-interp-wasi
+;;; ARGS: --trace
+;; __WASI_CLOCKID_REALTIME = 0
+
+(import "wasi_snapshot_preview1" "clock_time_get" (func $clock_time_get (param i32 i64 i32) (result i32)))
+(memory (export "memory") 1)
+(data (i32.const 20) "\00\00\00\00\00\00\00\00")
+
+(func (export "_start")
+  (call $clock_time_get (i32.const 0) (i64.const 0) (i32.const 20))
+  drop
+)
+(;; STDOUT ;;;
+#0.    0: V:0  | i32.const 0
+#0.    8: V:1  | i64.const 0
+#0.   20: V:2  | i32.const 20
+#0.   28: V:3  | call_import $0
+>>> running wasi function "clock_time_get":
+#0.   36: V:1  | drop
+#0.   40: V:0  | return
+;;; STDOUT ;;)

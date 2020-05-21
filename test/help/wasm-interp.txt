@@ -1,7 +1,7 @@
 ;;; RUN: %(wasm-interp)s
 ;;; ARGS: --help
 (;; STDOUT ;;;
-usage: wasm-interp [options] filename
+usage: wasm-interp [options] filename [arg]...
 
   read a file in the wasm binary format, and run in it a stack-based
   interpreter.
@@ -42,6 +42,7 @@ options:
   -t, --trace                                  Trace execution
       --wasi                                   Assume input module is WASI compliant (Export  WASI API the the module and invoke _start function)
   -e, --env=ENV                                Pass the given environment string in the WASI runtime
+  -d, --dir=DIR                                Pass the given directory the the WASI runtime
       --run-all-exports                        Run all the exported functions, in order. Useful for testing
       --host-print                             Include an importable function named "host.print" for printing to stdout
       --dummy-import-func                      Provide a dummy implementation of all imported functions. The function will log the call and return an appropriate zero value.

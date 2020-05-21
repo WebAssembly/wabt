@@ -28,7 +28,7 @@ namespace wabt {
 class OptionParser {
  public:
   enum class HasArgument { No, Yes };
-  enum class ArgumentCount { One, OneOrMore };
+  enum class ArgumentCount { One, OneOrMore, ZeroOrMore };
 
   struct Option;
   typedef std::function<void(const char*)> Callback;

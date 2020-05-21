@@ -49,6 +49,8 @@ static bool s_dummy_import_func;
 static Features s_features;
 static bool s_wasi;
 static std::vector<std::string> s_wasi_env;
+static std::vector<std::string> s_wasi_argv;
+static std::vector<std::string> s_wasi_dirs;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
@@ -106,6 +108,9 @@ static void ParseOptions(int argc, char** argv) {
       "Pass the given environment string in the WASI runtime",
       [](const std::string& argument) { s_wasi_env.push_back(argument); });
   parser.AddOption(
+      'd', "dir", "DIR", "Pass the given directory the the WASI runtime",
+      [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
+  parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
       []() { s_run_all_exports = true; });
@@ -121,6 +126,9 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
+  parser.AddArgument(
+      "arg", OptionParser::ArgumentCount::ZeroOrMore,
+      [](const char* argument) { s_wasi_argv.push_back(argument); });
   parser.Parse(argc, argv);
 }
 
@@ -242,13 +250,30 @@ static Result ReadAndRunModule(const char* module_filename) {
 
     std::vector<const char*> argv;
     argv.push_back(module_filename);
+    for (auto& s : s_wasi_argv) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef("wasi: arg: \"%s\"\n", s.c_str());
+      }
+      argv.push_back(s.c_str());
+    }
     argv.push_back(nullptr);
 
     std::vector<const char*> envp;
-    for (auto s : s_wasi_env) {
+    for (auto& s : s_wasi_env) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef("wasi: env: \"%s\"\n", s.c_str());
+      }
       envp.push_back(s.c_str());
     }
     envp.push_back(nullptr);
+
+    std::vector<uvwasi_preopen_t> dirs;
+    for (auto& dir : s_wasi_dirs) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
+      }
+      dirs.push_back({dir.c_str(), dir.c_str()});
+    }
 
     /* Setup the initialization options. */
     init_options.in = 0;
@@ -258,8 +283,8 @@ static Result ReadAndRunModule(const char* module_filename) {
     init_options.argc = argv.size() - 1;
     init_options.argv = argv.data();
     init_options.envp = envp.data();
-    init_options.preopenc = 0;
-    init_options.preopens = NULL;
+    init_options.preopenc = dirs.size();
+    init_options.preopens = dirs.data();
     init_options.allocator = NULL;
 
     err = uvwasi_init(&uvwasi, &init_options);
