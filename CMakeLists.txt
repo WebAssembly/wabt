@@ -622,6 +622,11 @@ endif ()
 if (EMSCRIPTEN)
   # flags for all emscripten builds
 
+  # exceptions are never needed
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+
+  # build to JS for now, as node.js doesn't have code caching for wasm yet, and
+  # wasm startup times are slower
   foreach(variable CMAKE_EXE_LINKER_FLAGS)
     set(${variable} "${${variable}} -s NODERAWFS -s SINGLE_FILE -s WASM=0 -Oz")
   endforeach(variable)
