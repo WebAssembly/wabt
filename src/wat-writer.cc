@@ -1275,6 +1275,12 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
 
   uint8_t flags = segment.GetFlags(&module);
 
+  if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
+    WriteOpenSpace("table");
+    WriteVar(segment.table_var, NextChar::Space);
+    WriteCloseSpace();
+  }
+
   if (!(flags & SegPassive)) {
     WriteInitExpr(segment.offset);
   }

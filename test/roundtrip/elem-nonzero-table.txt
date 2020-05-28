@@ -1,0 +1,16 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-reference-types
+(module
+  (table 1 funcref)
+  (table 1 funcref)
+  (elem (table 1) (i32.const 0) 0)
+  (func)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0))
+  (table (;0;) 1 funcref)
+  (table (;1;) 1 funcref)
+  (elem (;0;) (table 1) (i32.const 0) func 0))
+;;; STDOUT ;;)
