@@ -123,7 +123,10 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
     sa.sa_flags = SA_SIGINFO;
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = signal_handler;
-    if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+
+    /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
+    if (sigaction(SIGSEGV, &sa, NULL) == -1 ||
+        sigaction(SIGBUS, &sa, NULL) == -1) {
       perror("sigaction failed");
       abort();
     }
