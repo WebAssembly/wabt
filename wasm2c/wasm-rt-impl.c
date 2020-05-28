@@ -20,8 +20,15 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_LINUX
+#include <signal.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
 
 #define PAGE_SIZE 65536
 
@@ -35,6 +42,11 @@ typedef struct FuncType {
 uint32_t wasm_rt_call_stack_depth;
 uint32_t g_saved_call_stack_depth;
 
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+bool g_signal_handler_installed = false;
+int g_page_size;
+#endif
+
 jmp_buf g_jmp_buf;
 FuncType* g_func_types;
 uint32_t g_func_type_count;
@@ -42,7 +54,11 @@ uint32_t g_func_type_count;
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
   wasm_rt_call_stack_depth = g_saved_call_stack_depth;
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_LINUX
+  siglongjmp(g_jmp_buf, code);
+#else
   longjmp(g_jmp_buf, code);
+#endif
 }
 
 static bool func_types_are_equal(FuncType* a, FuncType* b) {
@@ -91,13 +107,44 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
   return idx + 1;
 }
 
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_LINUX
+static void signal_handler(int sig, siginfo_t* si, void* unused) {
+  wasm_rt_trap(WASM_RT_TRAP_OOB);
+}
+#endif
+
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
+  uint32_t byte_length = initial_pages * PAGE_SIZE;
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_LINUX
+  if (!g_signal_handler_installed) {
+    g_signal_handler_installed = true;
+    struct sigaction sa;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_sigaction = signal_handler;
+    if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+      perror("sigaction failed");
+      abort();
+    }
+  }
+
+  /* Reserve 8GiB. */
+  void* addr =
+      mmap(NULL, 0x200000000ull, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (addr == -1) {
+    perror("mmap failed");
+    abort();
+  }
+  mprotect(addr, byte_length, PROT_READ | PROT_WRITE);
+  memory->data = addr;
+#else
+  memory->data = calloc(byte_length, 1);
+#endif
+  memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
-  memory->size = initial_pages * PAGE_SIZE;
-  memory->data = calloc(memory->size, 1);
 }
 
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
@@ -109,15 +156,22 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint32_t)-1;
   }
+  uint32_t old_size = old_pages * PAGE_SIZE;
   uint32_t new_size = new_pages * PAGE_SIZE;
+  uint32_t delta_size = delta * PAGE_SIZE;
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_LINUX
+  uint8_t* new_data = memory->data;
+  mprotect(new_data + old_size, delta_size, PROT_READ | PROT_WRITE);
+#else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
     return (uint32_t)-1;
   }
+  memset(memory->data + old_size, 0, delta_size);
+#endif
   memory->pages = new_pages;
   memory->size = new_size;
   memory->data = new_data;
-  memset(memory->data + old_pages * PAGE_SIZE, 0, delta * PAGE_SIZE);
   return old_pages;
 }
 

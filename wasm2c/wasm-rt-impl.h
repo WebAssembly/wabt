@@ -46,8 +46,13 @@ extern uint32_t g_saved_call_stack_depth;
  *   my_wasm_func();
  * ```
  */
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#define wasm_rt_impl_try() \
+  (g_saved_call_stack_depth = wasm_rt_call_stack_depth, sigsetjmp(g_jmp_buf, 1))
+#else
 #define wasm_rt_impl_try() \
   (g_saved_call_stack_depth = wasm_rt_call_stack_depth, setjmp(g_jmp_buf))
+#endif
 
 #ifdef __cplusplus
 }

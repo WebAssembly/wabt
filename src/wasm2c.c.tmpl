@@ -22,8 +22,12 @@
        ? ((t)table.data[x].func)(__VA_ARGS__)        \
        : TRAP(CALL_INDIRECT))
 
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#define MEMCHECK(mem, a, t)
+#else
 #define MEMCHECK(mem, a, t)  \
   if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
+#endif
 
 #define DEFINE_LOAD(name, t1, t2, t3)              \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \

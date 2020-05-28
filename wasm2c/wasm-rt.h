@@ -35,6 +35,16 @@ extern "C" {
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER
+
+#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#ifdef __linux__
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_LINUX
+#else
+#error "No signal handler implementation for OS!"
+#endif
+#endif
+
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
 typedef enum {
   WASM_RT_TRAP_NONE,         /** No error. */
