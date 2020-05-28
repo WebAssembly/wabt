@@ -29,7 +29,7 @@
     i32.const 0
     i32.const 0
     i32.const 0
-    table.init $e0
+    table.init $T0 $e0
     elem.drop $e0)
   (table $T0 1 funcref)
   (memory $M0 1)

@@ -121,6 +121,7 @@ class WatWriter : ModuleContext {
   void WriteQuotedData(const void* data, size_t length);
   void WriteQuotedString(string_view str, NextChar next_char);
   void WriteVar(const Var& var, NextChar next_char);
+  void WriteVarUnlessZero(const Var& var, NextChar next_char);
   void WriteBrVar(const Var& var, NextChar next_char);
   void WriteRefKind(Type type, NextChar next_char);
   void WriteType(Type type, NextChar next_char);
@@ -361,6 +362,16 @@ void WatWriter::WriteVar(const Var& var, NextChar next_char) {
     next_char_ = next_char;
   } else {
     WriteName(var.name(), next_char);
+  }
+}
+
+bool VarIsZero(const Var& var) {
+  return var.is_index() && var.index() == 0;
+}
+
+void WatWriter::WriteVarUnlessZero(const Var& var, NextChar next_char) {
+  if (!VarIsZero(var)) {
+    WriteVar(var, next_char);
   }
 }
 
@@ -620,9 +631,7 @@ Result WatWriter::ExprVisitorDelegate::OnCallExpr(CallExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
     CallIndirectExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
-  if (!expr->table.is_index() || expr->table.index() != 0) {
-    writer_->WriteVar(expr->table, NextChar::Space);
-  }
+  writer_->WriteVarUnlessZero(expr->table, NextChar::Space);
   writer_->WriteOpenSpace("type");
   writer_->WriteVar(expr->decl.type_var, NextChar::Newline);
   writer_->WriteCloseNewline();
@@ -749,7 +758,12 @@ Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnTableCopyExpr(TableCopyExpr* expr) {
-  writer_->WritePutsNewline(Opcode::TableCopy_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::TableCopy_Opcode.GetName());
+  if (!(VarIsZero(expr->dst_table) && VarIsZero(expr->src_table))) {
+    writer_->WriteVar(expr->dst_table, NextChar::Space);
+    writer_->WriteVar(expr->src_table, NextChar::Space);
+  }
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
 
@@ -761,6 +775,7 @@ Result WatWriter::ExprVisitorDelegate::OnElemDropExpr(ElemDropExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnTableInitExpr(TableInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::TableInit_Opcode.GetName());
+  writer_->WriteVarUnlessZero(expr->table_index, NextChar::Space);
   writer_->WriteVar(expr->segment_index, NextChar::Newline);
   return Result::Ok;
 }
