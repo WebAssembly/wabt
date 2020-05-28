@@ -204,7 +204,7 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   if (!IsValid(ref)) {
     return false;
   }
-  if (type == ValueType::Anyref) {
+  if (type == ValueType::ExternRef) {
     return true;
   }
   if (ref == Ref::Null) {
@@ -213,26 +213,13 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
 
   Object* obj = objects_.Get(ref.index).get();
   switch (type) {
-    case ValueType::Funcref:
+    case ValueType::FuncRef:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
-    case ValueType::Nullref:
-      return ref.index == 0;
-    case ValueType::Exnref:  // TODO
+    case ValueType::ExnRef:  // TODO
       return false;
     default:
       return false;
-  }
-}
-
-ValueType Store::GetValueType(Ref ref) const {
-  Object* obj = objects_.Get(ref.index).get();
-  switch (obj->kind()) {
-    case ObjectKind::Null:        return ValueType::Nullref;
-    case ObjectKind::Foreign:     return ValueType::Hostref;
-    case ObjectKind::DefinedFunc:
-    case ObjectKind::HostFunc:    return ValueType::Funcref;
-    default:                      return ValueType::Anyref;
   }
 }
 
@@ -2210,10 +2197,9 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
                           v.u32(2), v.u32(3));
     }
 
-    case ValueType::Nullref: reftype = "nullref"; break;
-    case ValueType::Funcref: reftype = "funcref"; break;
-    case ValueType::Exnref:  reftype = "exnref"; break;
-    case ValueType::Anyref:  reftype = "anyref"; break;
+    case ValueType::FuncRef:    reftype = "funcref"; break;
+    case ValueType::ExternRef:  reftype = "externref"; break;
+    case ValueType::ExnRef:     reftype = "exnref"; break;
 
     default:
       WABT_UNREACHABLE;

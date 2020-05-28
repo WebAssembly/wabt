@@ -190,6 +190,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeF64(uint64_t value) override { return Result::Ok; }
   Result OnOpcodeV128(v128 value) override { return Result::Ok; }
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
+  Result OnOpcodeType(Type type) override { return Result::Ok; }
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override {
@@ -276,8 +277,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTableSizeExpr(Index table_index) override { return Result::Ok; }
   Result OnTableFillExpr(Index table_index) override { return Result::Ok; }
   Result OnRefFuncExpr(Index func_index) override { return Result::Ok; }
-  Result OnRefNullExpr() override { return Result::Ok; }
-  Result OnRefIsNullExpr() override { return Result::Ok; }
+  Result OnRefNullExpr(Type type) override { return Result::Ok; }
+  Result OnRefIsNullExpr(Type type) override { return Result::Ok; }
   Result OnNopExpr() override { return Result::Ok; }
   Result OnRethrowExpr() override { return Result::Ok; }
   Result OnReturnCallExpr(Index sig_index) override { return Result::Ok; }
@@ -324,7 +325,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnElemSegmentElemExprCount(Index index, Index count) override {
     return Result::Ok;
   }
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override {
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index,
+                                       Type type) override {
     return Result::Ok;
   }
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
@@ -508,7 +510,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override {
     return Result::Ok;
   }
-  Result OnInitExprRefNull(Index index) override {
+  Result OnInitExprRefNull(Index index, Type type) override {
     return Result::Ok;
   }
   Result OnInitExprRefFunc(Index index, Index func_index) override {

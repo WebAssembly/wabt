@@ -652,10 +652,22 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
     return reader_->name(value);                  \
   }
 
+#define DEFINE_TYPE(name)                       \
+  Result BinaryReaderLogging::name(Type type) { \
+    LOGF(#name "(%s)\n", type.GetName());       \
+    return reader_->name(type);                 \
+  }
+
 #define DEFINE_INDEX_DESC(name, desc)                 \
   Result BinaryReaderLogging::name(Index value) {     \
     LOGF(#name "(" desc ": %" PRIindex ")\n", value); \
     return reader_->name(value);                      \
+  }
+
+#define DEFINE_INDEX_TYPE(name)                                              \
+  Result BinaryReaderLogging::name(Index value, Type type) {                 \
+    LOGF(#name "(index: %" PRIindex ", type: %s)\n", value, type.GetName()); \
+    return reader_->name(value, type);                                       \
   }
 
 #define DEFINE_INDEX_INDEX(name, desc0, desc1)                           \
@@ -777,8 +789,8 @@ DEFINE_INDEX(OnTableGrowExpr)
 DEFINE_INDEX(OnTableSizeExpr)
 DEFINE_INDEX_DESC(OnTableFillExpr, "table index")
 DEFINE_INDEX(OnRefFuncExpr)
-DEFINE0(OnRefNullExpr)
-DEFINE0(OnRefIsNullExpr)
+DEFINE_TYPE(OnRefNullExpr)
+DEFINE_TYPE(OnRefIsNullExpr)
 DEFINE0(OnNopExpr)
 DEFINE0(OnRethrowExpr);
 DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")
@@ -798,7 +810,7 @@ DEFINE_INDEX(OnElemSegmentCount)
 DEFINE_INDEX(BeginElemSegmentInitExpr)
 DEFINE_INDEX(EndElemSegmentInitExpr)
 DEFINE_INDEX_INDEX(OnElemSegmentElemExprCount, "index", "count")
-DEFINE_INDEX(OnElemSegmentElemExpr_RefNull)
+DEFINE_INDEX_TYPE(OnElemSegmentElemExpr_RefNull)
 DEFINE_INDEX_INDEX(OnElemSegmentElemExpr_RefFunc, "index", "func_index")
 DEFINE_INDEX(EndElemSegment)
 DEFINE_END(EndElemSection)
@@ -825,7 +837,7 @@ DEFINE_BEGIN(BeginRelocSection)
 DEFINE_END(EndRelocSection)
 
 DEFINE_INDEX_INDEX(OnInitExprGlobalGetExpr, "index", "global_index")
-DEFINE_INDEX(OnInitExprRefNull)
+DEFINE_INDEX_TYPE(OnInitExprRefNull)
 DEFINE_INDEX_INDEX(OnInitExprRefFunc, "index", "func_index")
 
 DEFINE_BEGIN(BeginDylinkSection)
@@ -889,6 +901,10 @@ Result BinaryReaderLogging::OnOpcodeV128(v128 value) {
 
 Result BinaryReaderLogging::OnOpcodeBlockSig(Type sig_type) {
   return reader_->OnOpcodeBlockSig(sig_type);
+}
+
+Result BinaryReaderLogging::OnOpcodeType(Type type) {
+  return reader_->OnOpcodeType(type);
 }
 
 Result BinaryReaderLogging::OnEndFunc() {

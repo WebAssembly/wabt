@@ -140,6 +140,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeF64(uint64_t value) override;
   Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
+  Result OnOpcodeType(Type type) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
@@ -199,8 +200,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTableSizeExpr(Index table) override;
   Result OnTableFillExpr(Index table) override;
   Result OnRefFuncExpr(Index index) override;
-  Result OnRefNullExpr() override;
-  Result OnRefIsNullExpr() override;
+  Result OnRefNullExpr(Type type) override;
+  Result OnRefIsNullExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
   Result OnReturnCallExpr(Index func_index) override;
@@ -239,7 +240,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                        Index func_index) override;
   Result EndElemSegment(Index index) override;
@@ -347,7 +348,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index) override;
+  Result OnInitExprRefNull(Index index, Type type) override;
   Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:

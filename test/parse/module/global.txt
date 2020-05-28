@@ -19,6 +19,5 @@
   (global f64 (get_global 3))
 
   (func $foo)
-  (global anyref (ref.null))
-  (global funcref (ref.func $foo))
-  (global nullref (ref.null)))
+  (global externref (ref.null extern))
+  (global funcref (ref.func $foo)))

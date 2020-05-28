@@ -31,6 +31,6 @@ WABT_FEATURE(threads,          "threads",                 false,   "Threading su
 WABT_FEATURE(multi_value,      "multi-value",             true,    "Multi-value")
 WABT_FEATURE(tail_call,        "tail-call",               false,   "Tail-call support")
 WABT_FEATURE(bulk_memory,      "bulk-memory",             false,   "Bulk-memory operations")
-WABT_FEATURE(reference_types,  "reference-types",         false,   "Reference types (anyref)")
+WABT_FEATURE(reference_types,  "reference-types",         false,   "Reference types (externref)")
 WABT_FEATURE(annotations,      "annotations",             false,   "Custom annotation syntax")
 WABT_FEATURE(gc,               "gc",                      false,   "Garbage collection")

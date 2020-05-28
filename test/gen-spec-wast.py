@@ -198,10 +198,8 @@ class WastWriter(object):
             return F32ToWasm(int(value))
         elif type_ == 'f64':
             return F64ToWasm(int(value))
-        elif type_ == 'nullref':
-            return type_
-        elif type_ == 'hostref':
-            return 'ref.host %s' % value
+        elif type_ == 'externref':
+            return 'ref.extern %s' % value
         elif type_ == 'funcref':
             return 'ref.func %s' % value
         else:

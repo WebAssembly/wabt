@@ -191,8 +191,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnMemoryInitExpr(Index segment_index) override;
   Result OnMemorySizeExpr() override;
   Result OnRefFuncExpr(Index func_index) override;
-  Result OnRefNullExpr() override;
-  Result OnRefIsNullExpr() override;
+  Result OnRefNullExpr(Type type) override;
+  Result OnRefIsNullExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnReturnExpr() override;
   Result OnSelectExpr(Type result_type) override;
@@ -224,7 +224,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                        Index func_index) override;
 
@@ -243,7 +243,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index) override;
+  Result OnInitExprRefNull(Index index, Type type) override;
   Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:
@@ -582,7 +582,7 @@ Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
       break;
 
     case InitExprKind::RefNull:
-      CHECK_RESULT(validator_.OnGlobalInitExpr_RefNull(loc));
+      CHECK_RESULT(validator_.OnGlobalInitExpr_RefNull(loc, init_expr_.type_));
       break;
 
     case InitExprKind::RefFunc:
@@ -640,8 +640,9 @@ Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index, uint64_t value) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
+Result BinaryReaderInterp::OnInitExprRefNull(Index index, Type type) {
   init_expr_.kind = InitExprKind::RefNull;
+  init_expr_.type_ = type;
   return Result::Ok;
 }
 
@@ -731,8 +732,9 @@ Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(Index segment_index) {
-  CHECK_RESULT(validator_.OnElemSegmentElemExpr_RefNull(loc));
+Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(Index segment_index,
+                                                         Type type) {
+  CHECK_RESULT(validator_.OnElemSegmentElemExpr_RefNull(loc, type));
   ElemDesc& elem = module_.elems.back();
   elem.elements.push_back(ElemExpr{ElemKind::RefNull, 0});
   return Result::Ok;
@@ -1232,14 +1234,14 @@ Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnRefNullExpr() {
-  CHECK_RESULT(validator_.OnRefNull(loc));
+Result BinaryReaderInterp::OnRefNullExpr(Type type) {
+  CHECK_RESULT(validator_.OnRefNull(loc, type));
   istream_.Emit(Opcode::RefNull);
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnRefIsNullExpr() {
-  CHECK_RESULT(validator_.OnRefIsNull(loc));
+Result BinaryReaderInterp::OnRefIsNullExpr(Type type) {
+  CHECK_RESULT(validator_.OnRefIsNull(loc, type));
   istream_.Emit(Opcode::RefIsNull);
   return Result::Ok;
 }

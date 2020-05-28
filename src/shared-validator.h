@@ -76,7 +76,7 @@ class SharedValidator {
   Result OnGlobal(const Location&, Type type, bool mutable_);
   Result OnGlobalInitExpr_Const(const Location&, Type);
   Result OnGlobalInitExpr_GlobalGet(const Location&, Var global_var);
-  Result OnGlobalInitExpr_RefNull(const Location&);
+  Result OnGlobalInitExpr_RefNull(const Location&, Type type);
   Result OnGlobalInitExpr_RefFunc(const Location&, Var func_var);
   Result OnGlobalInitExpr_Other(const Location&);
   Result OnEvent(const Location&, Var sig_var);
@@ -93,7 +93,7 @@ class SharedValidator {
   Result OnElemSegmentInitExpr_Const(const Location&, Type);
   Result OnElemSegmentInitExpr_GlobalGet(const Location&, Var global_var);
   Result OnElemSegmentInitExpr_Other(const Location&);
-  Result OnElemSegmentElemExpr_RefNull(const Location&);
+  Result OnElemSegmentElemExpr_RefNull(const Location&, Type type);
   Result OnElemSegmentElemExpr_RefFunc(const Location&, Var func_var);
   Result OnElemSegmentElemExpr_Other(const Location&);
 
@@ -150,8 +150,8 @@ class SharedValidator {
   Result OnMemorySize(const Location&);
   Result OnNop(const Location&);
   Result OnRefFunc(const Location&, Var func_var);
-  Result OnRefIsNull(const Location&);
-  Result OnRefNull(const Location&);
+  Result OnRefIsNull(const Location&, Type type);
+  Result OnRefNull(const Location&, Type type);
   Result OnRethrow(const Location&);
   Result OnReturnCall(const Location&, Var func_var);
   Result OnReturnCallIndirect(const Location&, Var sig_var, Var table_var);

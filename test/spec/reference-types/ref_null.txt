@@ -2,5 +2,5 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/ref_null.wast
 ;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
-3/3 tests passed.
+2/2 tests passed.
 ;;; STDOUT ;;)

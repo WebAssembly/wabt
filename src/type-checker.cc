@@ -165,31 +165,13 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
   return result;
 }
 
-static bool IsSubtype(Type sub, Type super) {
-  if (super == sub) {
-    return true;
-  }
-  if (super.IsRef() != sub.IsRef()) {
-    return false;
-  }
-  if (super == Type::Anyref) {
-    return sub.IsRef();
-  }
-  if (super.IsNullableRef()) {
-    return sub == Type::Nullref;
-  }
-  return false;
-}
-
 Result TypeChecker::CheckType(Type actual, Type expected) {
   if (expected == Type::Any || actual == Type::Any) {
     return Result::Ok;
   }
-
-  if (!IsSubtype(actual, expected)) {
+  if (actual != expected) {
     return Result::Error;
   }
-
   return Result::Ok;
 }
 
@@ -408,7 +390,7 @@ Result TypeChecker::OnBrIf(Index depth) {
 }
 
 Result TypeChecker::OnBrOnExn(Index depth, const TypeVector& types) {
-  Result result = PopAndCheck1Type(Type::Exnref, "br_on_exn");
+  Result result = PopAndCheck1Type(Type::ExnRef, "br_on_exn");
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));
   if (Failed(CheckTypes(types, label->br_types()))) {
@@ -417,7 +399,7 @@ Result TypeChecker::OnBrOnExn(Index depth, const TypeVector& types) {
                TypesToString(types).c_str());
     result = Result::Error;
   }
-  PushType(Type::Exnref);
+  PushType(Type::ExnRef);
   return result;
 }
 
@@ -515,7 +497,7 @@ Result TypeChecker::OnCatch() {
   ResetTypeStackToLabel(label);
   label->label_type = LabelType::Catch;
   label->unreachable = false;
-  PushType(Type::Exnref);
+  PushType(Type::ExnRef);
   return result;
 }
 
@@ -689,23 +671,23 @@ Result TypeChecker::OnTableFill(Type elem_type) {
 }
 
 Result TypeChecker::OnRefFuncExpr(Index) {
-  PushType(Type::Funcref);
+  PushType(Type::FuncRef);
   return Result::Ok;
 }
 
-Result TypeChecker::OnRefNullExpr() {
-  PushType(Type::Nullref);
+Result TypeChecker::OnRefNullExpr(Type type) {
+  PushType(type);
   return Result::Ok;
 }
 
-Result TypeChecker::OnRefIsNullExpr() {
-  Result result = PopAndCheck1Type(Type::Anyref, "ref.is_null");
+Result TypeChecker::OnRefIsNullExpr(Type type) {
+  Result result = PopAndCheck1Type(type, "ref.is_null");
   PushType(Type::I32);
   return result;
 }
 
 Result TypeChecker::OnRethrow() {
-  Result result = PopAndCheck1Type(Type::Exnref, "rethrow");
+  Result result = PopAndCheck1Type(Type::ExnRef, "rethrow");
   CHECK_RESULT(SetUnreachable());
   return result;
 }

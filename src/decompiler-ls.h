@@ -37,10 +37,9 @@ inline const char *GetDecompTypeName(Type t) {
     case Type::F64: return "double";
     case Type::V128: return "simd";
     case Type::Func: return "func";
-    case Type::Funcref: return "funcref";
-    case Type::Anyref: return "anyref";
-    case Type::Nullref: return "nullref";
-    case Type::Exnref: return "exnref";
+    case Type::FuncRef: return "funcref";
+    case Type::ExternRef: return "externref";
+    case Type::ExnRef: return "exnref";
     case Type::Void: return "void";
     default: return "ILLEGAL";
   }

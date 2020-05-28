@@ -365,16 +365,9 @@ template <typename T> void RequireType(ValueType type) {
 }
 
 inline bool TypesMatch(ValueType expected, ValueType actual) {
-  if (expected == actual) {
-    return true;
-  }
-  if (!IsReference(expected)) {
-    return false;
-  }
-  if (expected == ValueType::Anyref || actual == ValueType::Nullref) {
-    return true;
-  }
-  return false;
+  // Currently there is no subtyping, so expected and actual must match
+  // exactly. In the future this may be expanded.
+  return expected == actual;
 }
 
 //// Value ////

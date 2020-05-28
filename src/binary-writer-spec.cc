@@ -56,6 +56,7 @@ class BinaryWriterSpec {
   void WriteTypeObject(Type type);
   void WriteF32(uint32_t, ExpectedNan);
   void WriteF64(uint64_t, ExpectedNan);
+  void WriteRefBits(uintptr_t ref_bits);
   void WriteConst(const Const& const_);
   void WriteConstVector(const ConstVector& consts);
   void WriteAction(const Action& action);
@@ -194,6 +195,14 @@ void BinaryWriterSpec::WriteF64(uint64_t f64_bits, ExpectedNan expected) {
   }
 }
 
+void BinaryWriterSpec::WriteRefBits(uintptr_t ref_bits) {
+  if (ref_bits == Const::kRefNullBits) {
+    json_stream_->Writef("\"null\"");
+  } else {
+    json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
+  }
+}
+
 void BinaryWriterSpec::WriteConst(const Const& const_) {
   json_stream_->Writef("{");
   WriteKey("type");
@@ -229,28 +238,19 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteF64(const_.f64_bits(), const_.expected_nan());
       break;
 
-    case Type::Nullref:
-      WriteString("nullref");
-      WriteSeparator();
-      WriteKey("value");
-      json_stream_->Writef("\"0\"");
-      break;
-
-    case Type::Funcref: {
+    case Type::FuncRef: {
       WriteString("funcref");
       WriteSeparator();
       WriteKey("value");
-      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits());
-      json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
+      WriteRefBits(const_.ref_bits());
       break;
     }
 
-    case Type::Hostref: {
-      WriteString("hostref");
+    case Type::ExternRef: {
+      WriteString("externref");
       WriteSeparator();
       WriteKey("value");
-      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits());
-      json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
+      WriteRefBits(const_.ref_bits());
       break;
     }
 

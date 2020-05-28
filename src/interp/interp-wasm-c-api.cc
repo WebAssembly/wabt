@@ -310,9 +310,9 @@ static ValueType ToWabtValueType(wasm_valkind_t kind) {
     case WASM_F64:
       return ValueType::F64;
     case WASM_ANYREF:
-      return ValueType::Anyref;
+      return ValueType::ExternRef;
     case WASM_FUNCREF:
-      return ValueType::Funcref;
+      return ValueType::FuncRef;
     default:
       TRACE("unexpected wasm_valkind_t: %d", kind);
       WABT_UNREACHABLE;
@@ -330,11 +330,9 @@ static wasm_valkind_t FromWabtValueType(ValueType type) {
       return WASM_F32;
     case ValueType::F64:
       return WASM_F64;
-    case ValueType::Anyref:
-    case ValueType::Hostref:
-    case ValueType::Nullref:
+    case ValueType::ExternRef:
       return WASM_ANYREF;
-    case ValueType::Funcref:
+    case ValueType::FuncRef:
       return WASM_FUNCREF;
     default:
       WABT_UNREACHABLE;
@@ -431,30 +429,16 @@ static wasm_val_t FromWabtValue(Store& store, const TypedValue& tv) {
       out_value.kind = WASM_F64;
       out_value.of.f64 = tv.value.Get<f64>();
       break;
-    case Type::Anyref:
-    case Type::Funcref:
-    case Type::Hostref:
-    case Type::Nullref: {
+    case Type::FuncRef: {
       Ref ref = tv.value.Get<Ref>();
-      // Get the actual type for this reference; tv.type uses the function
-      // signature, which may be to general (e.g. anyref).
-      Type type = store.GetValueType(ref);
-      out_value.kind = FromWabtValueType(type);
-      switch (type) {
-        case Type::Funcref:
-          out_value.of.ref = new wasm_func_t(store.UnsafeGet<Func>(ref));
-          break;
-
-        case Type::Hostref:
-          out_value.of.ref = new wasm_foreign_t(store.UnsafeGet<Foreign>(ref));
-          break;
-
-        case Type::Nullref:
-          out_value.of.ref = nullptr;
-          break;
-
-        default: WABT_UNREACHABLE;
-      }
+      out_value.kind = WASM_FUNCREF;
+      out_value.of.ref = new wasm_func_t(store.UnsafeGet<Func>(ref));
+      break;
+    }
+    case Type::ExternRef: {
+      Ref ref = tv.value.Get<Ref>();
+      out_value.kind = WASM_ANYREF;
+      out_value.of.ref = new wasm_foreign_t(store.UnsafeGet<Foreign>(ref));
       break;
     }
     default:

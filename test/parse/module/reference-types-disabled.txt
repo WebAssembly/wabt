@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 
 (module
-  (table $t 1 anyref)
+  (table $t 1 externref)
   (func
     i32.const 0
     i32.const 0
@@ -11,9 +11,9 @@
   )
 )
 (;; STDERR ;;;
-out/test/parse/module/reference-types-disabled.txt:5:15: error: value type not allowed: anyref
-  (table $t 1 anyref)
-              ^^^^^^
+out/test/parse/module/reference-types-disabled.txt:5:15: error: value type not allowed: externref
+  (table $t 1 externref)
+              ^^^^^^^^^
 out/test/parse/module/reference-types-disabled.txt:9:5: error: opcode not allowed: table.get
     table.get $t
     ^^^^^^^^^

@@ -13,7 +13,7 @@
 
   (table 1 anyfunc)
   (elem $elem funcref 0)
-  (elem funcref (ref.null))
+  (elem funcref (ref.null func))
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
     elem.drop 0
@@ -40,7 +40,7 @@ out/test/parse/expr/bulk-memory-disabled.txt:15:23: error: unexpected token 0, e
   (elem $elem funcref 0)
                       ^
 out/test/parse/expr/bulk-memory-disabled.txt:16:17: error: ref.null not allowed
-  (elem funcref (ref.null))
+  (elem funcref (ref.null func))
                 ^
 out/test/parse/expr/bulk-memory-disabled.txt:18:41: error: opcode not allowed: table.init
     i32.const 0 i32.const 0 i32.const 0 table.init 0

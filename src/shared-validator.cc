@@ -119,7 +119,7 @@ Result SharedValidator::OnTable(const Location& loc,
   if (limits.is_shared) {
     result |= PrintError(loc, "tables may not be shared");
   }
-  if (elem_type != Type::Funcref &&
+  if (elem_type != Type::FuncRef &&
       !options_.features.reference_types_enabled()) {
     result |= PrintError(loc, "tables must have funcref type");
   }
@@ -209,8 +209,9 @@ Result SharedValidator::OnGlobalInitExpr_GlobalGet(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnGlobalInitExpr_RefNull(const Location& loc) {
-  return CheckType(loc, Type::Nullref, globals_.back().type,
+Result SharedValidator::OnGlobalInitExpr_RefNull(const Location& loc,
+                                                 Type type) {
+  return CheckType(loc, type, globals_.back().type,
                    "global initializer expression");
 }
 
@@ -219,7 +220,7 @@ Result SharedValidator::OnGlobalInitExpr_RefFunc(const Location& loc,
   Result result = Result::Ok;
   result |= CheckFuncIndex(func_var);
   init_expr_funcs_.push_back(func_var);
-  result |= CheckType(loc, Type::Funcref, globals_.back().type,
+  result |= CheckType(loc, Type::FuncRef, globals_.back().type,
                       "global initializer expression");
   return result;
 }
@@ -335,8 +336,9 @@ Result SharedValidator::OnElemSegmentInitExpr_Other(const Location& loc) {
                     "global.get.");
 }
 
-Result SharedValidator::OnElemSegmentElemExpr_RefNull(const Location& loc) {
-  return Result::Ok;
+Result SharedValidator::OnElemSegmentElemExpr_RefNull(const Location& loc,
+                                                      Type type) {
+  return CheckType(loc, type, elems_.back().element, "elem expression");
 }
 
 Result SharedValidator::OnElemSegmentElemExpr_RefFunc(const Location& loc,
@@ -966,17 +968,17 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   return result;
 }
 
-Result SharedValidator::OnRefIsNull(const Location& loc) {
+Result SharedValidator::OnRefIsNull(const Location& loc, Type type) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= typechecker_.OnRefIsNullExpr();
+  result |= typechecker_.OnRefIsNullExpr(type);
   return result;
 }
 
-Result SharedValidator::OnRefNull(const Location& loc) {
+Result SharedValidator::OnRefNull(const Location& loc, Type type) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= typechecker_.OnRefNullExpr();
+  result |= typechecker_.OnRefNullExpr(type);
   return result;
 }
 

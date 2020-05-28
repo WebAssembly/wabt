@@ -587,15 +587,11 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
   } else if (type_str == "i16") {
     *out_type = Type::I16;
   } else if (type_str == "funcref") {
-    *out_type = Type::Funcref;
-  } else if (type_str == "anyref") {
-    *out_type = Type::Anyref;
-  } else if (type_str == "nullref") {
-    *out_type = Type::Nullref;
+    *out_type = Type::FuncRef;
+  } else if (type_str == "externref") {
+    *out_type = Type::ExternRef;
   } else if (type_str == "exnref") {
-    *out_type = Type::Exnref;
-  } else if (type_str == "hostref") {
-    *out_type = Type::Hostref;
+    *out_type = Type::ExnRef;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -807,26 +803,26 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       assert(false);  // Should use ParseLaneConstValue instead.
       break;
 
-    case Type::Nullref: {
-      out_value->Set(Ref::Null);
+    case Type::FuncRef:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        assert(allow_expected == AllowExpected::Yes);
+        out_value->Set(Ref{1});
+      }
       break;
-    }
 
-    case Type::Hostref: {
-      uint32_t value;
-      CHECK_RESULT(ParseI32Value(&value, value_str));
-      // TODO: hack, just whatever ref is at this index; but skip null (which is
-      // always 0).
-      out_value->Set(Ref{value + 1});
+    case Type::ExternRef:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        uint32_t value;
+        CHECK_RESULT(ParseI32Value(&value, value_str));
+        // TODO: hack, just whatever ref is at this index; but skip null (which
+        // is always 0).
+        out_value->Set(Ref{value + 1});
+      }
       break;
-    }
-
-    case Type::Funcref: {
-      uint32_t value;
-      CHECK_RESULT(ParseI32Value(&value, value_str));
-      out_value->Set(Ref{value});
-      break;
-    }
 
     default:
       PrintError("unknown concrete type: \"%s\"", type.GetName());
@@ -1234,7 +1230,7 @@ CommandRunner::CommandRunner() : store_(s_features) {
   }
 
   spectest["table"] =
-      interp::Table::New(store_, TableType{ValueType::Funcref, Limits{10, 20}});
+      interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
 
   spectest["memory"] = interp::Memory::New(store_, MemoryType{Limits{1, 2}});
 
@@ -1727,17 +1723,13 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       break;
     }
 
-    case Type::Nullref:
-      ok = actual.value.Get<Ref>() == Ref::Null;
-      break;
-
-    case Type::Funcref:
+    case Type::FuncRef:
       // A funcref expectation only requires that the reference be a function,
       // but it doesn't check the actual index.
-      ok = store_.HasValueType(actual.value.Get<Ref>(), Type::Funcref);
+      ok = (actual.type == Type::FuncRef);
       break;
 
-    case Type::Hostref:
+    case Type::ExternRef:
       ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
       break;
 

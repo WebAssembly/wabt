@@ -1,0 +1,45 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table.wast
+;;; ARGS*: --enable-reference-types
+(;; STDOUT ;;;
+out/test/spec/reference-types/table.wast:14: assert_invalid passed:
+  0000000: error: table variable out of range: 0 (max 0)
+  000000c: error: BeginElemSegment callback failed
+out/test/spec/reference-types/table.wast:15: assert_invalid passed:
+  0000000: error: table variable out of range: 0 (max 0)
+  0000016: error: BeginElemSegment callback failed
+out/test/spec/reference-types/table.wast:19: assert_invalid passed:
+  error: max elems (0) must be >= initial elems (1)
+  000000f: error: OnTable callback failed
+out/test/spec/reference-types/table.wast:23: assert_invalid passed:
+  error: max elems (0) must be >= initial elems (4294967295)
+  0000013: error: OnTable callback failed
+out/test/spec/reference-types/table.wast:28: assert_malformed passed:
+  out/test/spec/reference-types/table/table.13.wat:1:8: error: invalid int "0x1_0000_0000"
+  (table 0x1_0000_0000 funcref)
+         ^^^^^^^^^^^^^
+out/test/spec/reference-types/table.wast:32: assert_malformed passed:
+  out/test/spec/reference-types/table/table.14.wat:1:8: error: invalid int "0x1_0000_0000"
+  (table 0x1_0000_0000 0x1_0000_0000 funcref)
+         ^^^^^^^^^^^^^
+  out/test/spec/reference-types/table/table.14.wat:1:22: error: invalid int "0x1_0000_0000"
+  (table 0x1_0000_0000 0x1_0000_0000 funcref)
+                       ^^^^^^^^^^^^^
+out/test/spec/reference-types/table.wast:36: assert_malformed passed:
+  out/test/spec/reference-types/table/table.15.wat:1:10: error: invalid int "0x1_0000_0000"
+  (table 0 0x1_0000_0000 funcref)
+           ^^^^^^^^^^^^^
+out/test/spec/reference-types/table.wast:43: assert_malformed passed:
+  out/test/spec/reference-types/table/table.16.wat:1:24: error: redefinition of table "$foo"
+  (table $foo 1 funcref)(table $foo 1 funcref)
+                         ^^^^^
+out/test/spec/reference-types/table.wast:47: assert_malformed passed:
+  out/test/spec/reference-types/table/table.17.wat:1:39: error: redefinition of table "$foo"
+  (import "" "" (table $foo 1 funcref))(table $foo 1 funcref)
+                                        ^^^^^
+out/test/spec/reference-types/table.wast:51: assert_malformed passed:
+  out/test/spec/reference-types/table/table.18.wat:1:39: error: redefinition of table "$foo"
+  (import "" "" (table $foo 1 funcref))(import "" "" (table $foo 1 funcref))
+                                        ^^^^^^
+10/10 tests passed.
+;;; STDOUT ;;)

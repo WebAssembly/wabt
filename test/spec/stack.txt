@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/stack.wast
 (;; STDOUT ;;;
-3/3 tests passed.
+5/5 tests passed.
 ;;; STDOUT ;;)

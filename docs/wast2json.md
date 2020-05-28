@@ -153,14 +153,14 @@ types are supported, with the given JSON format:
 | "f32" | `{"type": "f32", "value": <string>}` |
 | "f64" | `{"type": "f64", "value": <string>}` |
 
-The `reference-types` proposal adds three more valid types:
+The `reference-types` proposal adds three more valid types. In each case the
+value can either be an integer or `"null"`:
 
 | type | JSON format |
 | - | - |
-| "nullref" | `{"type": "nullref", "value": ""}` |
-| "hostref" | `{"type": "hostref", "value": <string>}` |
+| "externref" | `{"type": "externref", "value": <string>}` |
 | "funcref" | `{"type": "funcref", "value": <string>}` |
-
+| "exnref" | `{"type": "exnref", "value": <string>}` |
 
 The `simd` proposal adds another type, with a slightly different syntax.
 

@@ -115,6 +115,7 @@ struct InitExpr {
     f64 f64_;
     v128 v128_;
     Index index_;
+    Type type_;
   };
 };
 
@@ -426,7 +427,6 @@ class Store {
 
   bool IsValid(Ref) const;
   bool HasValueType(Ref, ValueType) const;
-  ValueType GetValueType(Ref) const;
   template <typename T>
   bool Is(Ref) const;
 
