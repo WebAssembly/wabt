@@ -42,6 +42,7 @@ ALL_EXAMPLES = [
 SKIP_EXAMPLES = [
     'threads',  # We don't yet support threads
     'finalize',  # This test is really slow
+    'hostref', # This wasm module is currently invalid (needs subtyping changes)
 ]
 
 IS_WINDOWS = sys.platform == 'win32'
