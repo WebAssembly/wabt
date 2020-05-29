@@ -643,7 +643,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Select:
-        CALLBACK(OnSelectExpr, Type::Any);
+        CALLBACK(OnSelectExpr, Type::Void);
         CALLBACK0(OnOpcodeBare);
         break;
 

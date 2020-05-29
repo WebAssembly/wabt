@@ -854,7 +854,11 @@ Result WatWriter::ExprVisitorDelegate::OnReturnCallIndirectExpr(
 }
 
 Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
-  writer_->WritePutsNewline(Opcode::Select_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::Select_Opcode.GetName());
+  if (!expr->result_type.empty()) {
+    writer_->WriteTypes(expr->result_type, "result");
+  }
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
 

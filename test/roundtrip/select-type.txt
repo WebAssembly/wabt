@@ -1,0 +1,17 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-reference-types
+(module
+  (func
+    unreachable
+    select (result funcref)
+    drop
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    unreachable
+    select (result funcref)
+    drop))
+;;; STDOUT ;;)

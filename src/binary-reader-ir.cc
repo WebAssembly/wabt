@@ -935,7 +935,7 @@ Result BinaryReaderIR::OnReturnExpr() {
 }
 
 Result BinaryReaderIR::OnSelectExpr(Type result_type) {
-  return AppendExpr(MakeUnique<SelectExpr>(TypeVector{result_type}));
+  return AppendExpr(MakeUnique<SelectExpr>(result_type.GetInlineVector()));
 }
 
 Result BinaryReaderIR::OnGlobalSetExpr(Index global_index) {
