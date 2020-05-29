@@ -464,6 +464,7 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
   import->table.elem_limits = *elem_limits;
+  import->table.elem_type = elem_type;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
