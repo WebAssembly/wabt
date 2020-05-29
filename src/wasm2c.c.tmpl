@@ -22,26 +22,26 @@
        ? ((t)table.data[x].func)(__VA_ARGS__)        \
        : TRAP(CALL_INDIRECT))
 
-#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define MEMCHECK(mem, a, t)
 #else
 #define MEMCHECK(mem, a, t)  \
   if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
 #endif
 
-#define DEFINE_LOAD(name, t1, t2, t3)              \
+#define DEFINE_LOAD(name, t1, t2, t3)                        \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
-    MEMCHECK(mem, addr, t1);                       \
-    t1 result;                                     \
-    memcpy(&result, &mem->data[addr], sizeof(t1)); \
-    return (t3)(t2)result;                         \
+    MEMCHECK(mem, addr, t1);                                 \
+    t1 result;                                               \
+    __builtin_memcpy(&result, &mem->data[addr], sizeof(t1)); \
+    return (t3)(t2)result;                                   \
   }
 
-#define DEFINE_STORE(name, t1, t2)                           \
+#define DEFINE_STORE(name, t1, t2)                                     \
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    MEMCHECK(mem, addr, t1);                                 \
-    t1 wrapped = (t1)value;                                  \
-    memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
+    MEMCHECK(mem, addr, t1);                                           \
+    t1 wrapped = (t1)value;                                            \
+    __builtin_memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
   }
 
 DEFINE_LOAD(i32_load, u32, u32, u32);

@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
 #include <signal.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -42,7 +42,7 @@ typedef struct FuncType {
 uint32_t wasm_rt_call_stack_depth;
 uint32_t g_saved_call_stack_depth;
 
-#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 bool g_signal_handler_installed = false;
 #endif
 
@@ -53,11 +53,7 @@ uint32_t g_func_type_count;
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
   wasm_rt_call_stack_depth = g_saved_call_stack_depth;
-#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
-  siglongjmp(g_jmp_buf, code);
-#else
-  longjmp(g_jmp_buf, code);
-#endif
+  WASM_RT_LONGJMP(g_jmp_buf, code);
 }
 
 static bool func_types_are_equal(FuncType* a, FuncType* b) {
@@ -106,7 +102,7 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
   return idx + 1;
 }
 
-#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
 static void signal_handler(int sig, siginfo_t* si, void* unused) {
   wasm_rt_trap(WASM_RT_TRAP_OOB);
 }
@@ -116,7 +112,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   uint32_t byte_length = initial_pages * PAGE_SIZE;
-#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
     struct sigaction sa;
@@ -161,7 +157,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t old_size = old_pages * PAGE_SIZE;
   uint32_t new_size = new_pages * PAGE_SIZE;
   uint32_t delta_size = delta * PAGE_SIZE;
-#ifdef WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   uint8_t* new_data = memory->data;
   mprotect(new_data + old_size, delta_size, PROT_READ | PROT_WRITE);
 #else
@@ -169,7 +165,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_data == NULL) {
     return (uint32_t)-1;
   }
-  memset(memory->data + old_size, 0, delta_size);
+  memset(new_data + old_size, 0, delta_size);
 #endif
   memory->pages = new_pages;
   memory->size = new_size;
