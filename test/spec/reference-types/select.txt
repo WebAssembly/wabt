@@ -12,7 +12,8 @@ out/test/spec/reference-types/select.wast:342: assert_invalid passed:
   error: type mismatch in select, expected [any, any, i32] but got [i32]
   000001c: error: OnSelectExpr callback failed
 out/test/spec/reference-types/select.wast:346: assert_invalid passed:
-  000001d: error: invalid arity in select instrcution: 0
+  error: type mismatch in select, expected [any, any, i32] but got [i32]
+  000001c: error: OnSelectExpr callback failed
 out/test/spec/reference-types/select.wast:350: assert_invalid passed:
   0000025: error: invalid arity in select instrcution: 2
 out/test/spec/reference-types/select.wast:362: assert_invalid passed:

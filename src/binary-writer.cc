@@ -700,8 +700,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Select: {
       auto* select_expr = cast<SelectExpr>(expr);
-      if (select_expr->result_type.size() == 1 &&
-          select_expr->result_type[0] == Type::Any) {
+      if (select_expr->result_type.empty()) {
         WriteOpcode(stream_, Opcode::Select);
       } else {
         WriteOpcode(stream_, Opcode::SelectT);
