@@ -1304,7 +1304,7 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     WriteInitExpr(segment.offset);
   }
 
-  if (flags == SegDeclared) {
+  if ((flags & SegDeclared) == SegDeclared) {
     WritePuts("declare", NextChar::Space);
   }
 
