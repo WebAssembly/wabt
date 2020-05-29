@@ -1737,7 +1737,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         CHECK_RESULT(ParseValueTypeList(&result));
         EXPECT(Rpar);
       } else {
-        result.push_back(Type::Any);
+        result.push_back(Type::Void);
       }
       out_expr->reset(new SelectExpr(result, loc));
       break;
