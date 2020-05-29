@@ -716,7 +716,7 @@ Result TypeChecker::OnSelect(Type expected) {
   result |= PeekAndCheckType(0, Type::I32);
   result |= PeekType(1, &type1);
   result |= PeekType(2, &type2);
-  if (expected == Type::Any) {
+  if (expected == Type::Void) {
     if (type1.IsRef() || type2.IsRef()) {
       result = Result::Error;
     } else {

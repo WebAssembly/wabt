@@ -464,8 +464,13 @@ Result Validator::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
 }
 
 Result Validator::OnSelectExpr(SelectExpr* expr) {
-  assert(expr->result_type.size());
-  result_ |= validator_.OnSelect(expr->loc, expr->result_type[0]);
+  Type result_type;
+  if (expr->result_type.empty()) {
+    result_type = Type::Void;
+  } else {
+    result_type = expr->result_type[0];
+  }
+  result_ |= validator_.OnSelect(expr->loc, result_type);
   // TODO: Existing behavior fails when select fails.
 #if 0
   return Result::Ok;

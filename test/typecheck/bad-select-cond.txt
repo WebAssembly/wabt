@@ -7,7 +7,7 @@
     f32.const 0
     select))
 (;; STDERR ;;;
-out/test/typecheck/bad-select-cond.txt:8:5: error: type mismatch in select, expected [i64, i64, i32] but got [i64, i64, f32]
+out/test/typecheck/bad-select-cond.txt:8:5: error: type mismatch in select, expected [any, any, i32] but got [i64, i64, f32]
     select))
     ^^^^^^
 ;;; STDERR ;;)
