@@ -35,6 +35,26 @@ extern "C" {
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
+/** Whether to enable memory checking via a signal handler.
+ *
+ * This is usually 10%-25% faster, but requires OS-specific support.
+ * */
+#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
+#endif
+
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 1
+#else
+#error "No signal handler implementation for OS!"
+#endif
+#endif
+
+#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
+#endif
+
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
 typedef enum {
   WASM_RT_TRAP_NONE,         /** No error. */
