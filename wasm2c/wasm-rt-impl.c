@@ -121,8 +121,8 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
     sa.sa_sigaction = signal_handler;
 
     /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
-    if (sigaction(SIGSEGV, &sa, NULL) == -1 ||
-        sigaction(SIGBUS, &sa, NULL) == -1) {
+    if (sigaction(SIGSEGV, &sa, NULL) != 0 ||
+        sigaction(SIGBUS, &sa, NULL) != 0) {
       perror("sigaction failed");
       abort();
     }
@@ -130,7 +130,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 
   /* Reserve 8GiB. */
   void* addr =
-      mmap(NULL, 0x200000000ull, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      mmap(NULL, 0x200000000ul, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (addr == -1) {
     perror("mmap failed");
     abort();
