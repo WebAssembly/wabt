@@ -1,0 +1,18 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(MEMORY) { count[1] flags[0] min[1] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.load align[65] offset[0]
+    drop
+  }
+}
+(;; STDERR ;;;
+000001e: error: invalid load alignment: 65
+000001e: error: invalid load alignment: 65
+;;; STDERR ;;)

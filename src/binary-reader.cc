@@ -108,6 +108,7 @@ class BinaryReader {
                    const char* desc) WABT_WARN_UNUSED;
   Result ReadIndex(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
+  Result ReadAlignment(uint32_t* align_log2, const char* desc) WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadField(TypeMut* out_value) WABT_WARN_UNUSED;
 
@@ -363,6 +364,17 @@ Result BinaryReader::ReadOffset(Offset* offset, const char* desc) {
   uint32_t value;
   CHECK_RESULT(ReadU32Leb128(&value, desc));
   *offset = value;
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadAlignment(uint32_t* alignment_log2, const char* desc) {
+  uint32_t value;
+  CHECK_RESULT(ReadU32Leb128(&value, desc));
+  if (value >= 32) {
+    PrintError("invalid %s: %u", desc, value);
+    return Result::Error;
+  }
+  *alignment_log2 = value;
   return Result::Ok;
 }
 
@@ -862,7 +874,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64X2Load32X2S:
       case Opcode::I64X2Load32X2U: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
         CALLBACK(OnLoadExpr, opcode, alignment_log2, offset);
@@ -881,7 +893,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64Store:
       case Opcode::V128Store: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "store alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "store alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "store offset"));
 
@@ -1197,7 +1209,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::V32X4LoadSplat:
       case Opcode::V64X2LoadSplat: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
 
@@ -1303,7 +1315,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::AtomicNotify: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
 
@@ -1315,7 +1327,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32AtomicWait:
       case Opcode::I64AtomicWait: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
 
@@ -1342,7 +1354,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32AtomicLoad:
       case Opcode::I64AtomicLoad: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
 
@@ -1359,7 +1371,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32AtomicStore:
       case Opcode::I64AtomicStore: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "store alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "store alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "store offset"));
 
@@ -1411,7 +1423,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw16XchgU:
       case Opcode::I64AtomicRmw32XchgU: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "memory alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "memory offset"));
 
@@ -1428,7 +1440,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw16CmpxchgU:
       case Opcode::I64AtomicRmw32CmpxchgU: {
         uint32_t alignment_log2;
-        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "memory alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "memory offset"));
 
@@ -1830,7 +1842,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           uint32_t alignment_log2;
           uint32_t flags;
           CHECK_RESULT(ReadStr(&name, "segment name"));
-          CHECK_RESULT(ReadU32Leb128(&alignment_log2, "segment alignment"));
+          CHECK_RESULT(ReadAlignment(&alignment_log2, "segment alignment"));
           CHECK_RESULT(ReadU32Leb128(&flags, "segment flags"));
           CALLBACK(OnSegmentInfo, i, name, alignment_log2, flags);
         }
