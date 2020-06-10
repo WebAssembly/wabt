@@ -580,6 +580,12 @@ void wasm_trap_trace(const wasm_trap_t* trap, own wasm_frame_vec_t* out) {
   // TRACE(stderr, "error: %s\n", msg.c_str());
 }
 
+// wasm_config
+
+own wasm_config_t* wasm_config_new() {
+  return new wasm_config_t();
+}
+
 // wasm_engine
 
 own wasm_engine_t* wasm_engine_new() {
@@ -611,6 +617,28 @@ own wasm_module_t* wasm_module_new(wasm_store_t* store,
   }
 
   return new wasm_module_t{Module::New(store->I, module_desc), binary};
+}
+
+bool wasm_module_validate(wasm_store_t* store, const wasm_byte_vec_t* binary) {
+  // TODO: Optimize this; for now it is generating a new module and discarding
+  // it. But since this call only needs to validate, it could do much less.
+  wasm_module_t* module = wasm_module_new(store, binary);
+  if (module == nullptr) {
+    return false;
+  }
+  wasm_module_delete(module);
+  return true;
+}
+
+void wasm_module_imports(const wasm_module_t* module,
+                         own wasm_importtype_vec_t* out) {
+  auto&& import_types = module->As<Module>()->import_types();
+  TRACE("%" PRIzx, import_types.size());
+  wasm_importtype_vec_new_uninitialized(out, import_types.size());
+
+  for (size_t i = 0; i < import_types.size(); ++i) {
+    out->data[i] = new wasm_importtype_t{import_types[i]};
+  }
 }
 
 void wasm_module_exports(const wasm_module_t* module,
@@ -925,6 +953,10 @@ own wasm_memory_t* wasm_memory_new(wasm_store_t* store,
                                    const wasm_memorytype_t* type) {
   TRACE0();
   return new wasm_memory_t{Memory::New(store->I, *type->As<MemoryType>())};
+}
+
+own wasm_memorytype_t* wasm_memory_type(const wasm_memory_t* memory) {
+  return new wasm_memorytype_t{memory->As<Memory>()->type()};
 }
 
 byte_t* wasm_memory_data(wasm_memory_t* memory) {
