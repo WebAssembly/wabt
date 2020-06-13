@@ -229,7 +229,9 @@ bool IsCommand(TokenTypePair pair) {
     case TokenType::AssertUnlinkable:
     case TokenType::Get:
     case TokenType::Invoke:
+    case TokenType::Input:
     case TokenType::Module:
+    case TokenType::Output:
     case TokenType::Register:
       return true;
     default:
@@ -2764,6 +2766,12 @@ Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
     case TokenType::Register:
       return ParseRegisterCommand(out_command);
 
+    case TokenType::Input:
+      return ParseInputCommand(out_command);
+
+    case TokenType::Output:
+      return ParseOutputCommand(out_command);
+
     default:
       assert(!"ParseCommand should only be called when IsCommand() is true");
       return Result::Error;
@@ -2904,6 +2912,40 @@ Result WastParser::ParseRegisterCommand(CommandPtr* out_command) {
   EXPECT(Rpar);
   out_command->reset(new RegisterCommand(text, var));
   return Result::Ok;
+}
+
+Result WastParser::ParseInputCommand(CommandPtr*) {
+  // Parse the input command, but always fail since this command is not
+  // actually supported.
+  WABT_TRACE(ParseInputCommand);
+  EXPECT(Lpar);
+  Location loc = GetLocation();
+  EXPECT(Input);
+  Error(loc, "input command is not supported");
+  Var var;
+  std::string text;
+  ParseVarOpt(&var);
+  CHECK_RESULT(ParseQuotedText(&text));
+  EXPECT(Rpar);
+  return Result::Error;
+}
+
+Result WastParser::ParseOutputCommand(CommandPtr*) {
+  // Parse the output command, but always fail since this command is not
+  // actually supported.
+  WABT_TRACE(ParseOutputCommand);
+  EXPECT(Lpar);
+  Location loc = GetLocation();
+  EXPECT(Output);
+  Error(loc, "output command is not supported");
+  Var var;
+  std::string text;
+  ParseVarOpt(&var);
+  if (Peek() == TokenType::Text) {
+    CHECK_RESULT(ParseQuotedText(&text));
+  }
+  EXPECT(Rpar);
+  return Result::Error;
 }
 
 Result WastParser::ParseAction(ActionPtr* out_action) {

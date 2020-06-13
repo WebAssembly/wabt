@@ -459,6 +459,7 @@ i8x16.sub, TokenType::Binary, Opcode::I8X16Sub
 i8x16, TokenType::I8X16
 if, TokenType::If, Opcode::If
 import, TokenType::Import
+input, TokenType::Input
 invoke, TokenType::Invoke
 item, TokenType::Item
 local.get, TokenType::LocalGet, Opcode::LocalGet
@@ -478,6 +479,7 @@ nan:arithmetic, TokenType::NanArithmetic
 nan:canonical, TokenType::NanCanonical
 nop, TokenType::Nop, Opcode::Nop
 offset, TokenType::Offset
+output, TokenType::Output
 param, TokenType::Param
 quote, TokenType::Quote
 ref.extern, TokenType::RefExtern
