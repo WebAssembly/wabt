@@ -199,7 +199,7 @@ void BinaryWriterSpec::WriteRefBits(uintptr_t ref_bits) {
   if (ref_bits == Const::kRefNullBits) {
     json_stream_->Writef("\"null\"");
   } else {
-    json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
+    json_stream_->Writef("\"%" PRIuPTR "\"", ref_bits);
   }
 }
 

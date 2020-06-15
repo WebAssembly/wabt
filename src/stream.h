@@ -193,7 +193,7 @@ class FileStream : public Stream {
   explicit FileStream(FILE*, Stream* log_stream = nullptr);
   FileStream(FileStream&&);
   FileStream& operator=(FileStream&&);
-  ~FileStream();
+  ~FileStream() override;
 
   static std::unique_ptr<FileStream> CreateStdout();
   static std::unique_ptr<FileStream> CreateStderr();
