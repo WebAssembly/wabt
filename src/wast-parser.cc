@@ -243,7 +243,7 @@ bool IsEmptySignature(const FuncSignature& sig) {
   return sig.result_types.empty() && sig.param_types.empty();
 }
 
-void ResolveFuncTypeWithEmptySignature(const Module& module,
+bool ResolveFuncTypeWithEmptySignature(const Module& module,
                                        FuncDeclaration* decl) {
   // Resolve func type variables where the signature was not specified
   // explicitly, e.g.: (func (type 1) ...)
@@ -251,9 +251,10 @@ void ResolveFuncTypeWithEmptySignature(const Module& module,
     const FuncType* func_type = module.GetFuncType(decl->type_var);
     if (func_type) {
       decl->sig = func_type->sig;
+      return true;
     }
   }
-
+  return false;
 }
 
 void ResolveImplicitlyDefinedFunctionType(const Location& loc,
@@ -419,14 +420,28 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
       continue;
     }
 
+    bool has_func_type_and_empty_signature = false;
+
     if (decl) {
-      ResolveFuncTypeWithEmptySignature(*module, decl);
+      has_func_type_and_empty_signature =
+          ResolveFuncTypeWithEmptySignature(*module, decl);
       ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
       result |=
           CheckFuncTypeVarMatchesExplicit(field.loc, *module, *decl, errors);
     }
 
     if (func) {
+      if (has_func_type_and_empty_signature) {
+        // The call to ResolveFuncTypeWithEmptySignature may have updated the
+        // function signature so there are parameters. Since parameters and
+        // local variables share the same index space, we need to increment the
+        // local indexes bound to a given name by the number of parameters in
+        // the function.
+        for (auto& pair: func->bindings) {
+          pair.second.index += func->GetNumParams();
+        }
+      }
+
       ResolveFuncTypesExprVisitorDelegate delegate(module, errors);
       ExprVisitor visitor(&delegate);
       result |= visitor.VisitFunc(func);
