@@ -19,6 +19,12 @@ project(WABT VERSION 1.0.13)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Check if wabt is being used directly or via add_subdirectory, FetchContent, etc
+set(WABT_MASTER_PROJECT OFF)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(WABT_MASTER_PROJECT ON)
+endif()
+
 # For git users, attempt to generate a more useful version string
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
   find_package(Git QUIET REQUIRED)
@@ -26,11 +32,17 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
           "${GIT_EXECUTABLE}" --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git describe --tags
           RESULT_VARIABLE
               GIT_VERSION_RESULT
+          ERROR_VARIABLE
+              GIT_VERSION_ERROR
           OUTPUT_VARIABLE
               GIT_VERSION
           OUTPUT_STRIP_TRAILING_WHITESPACE)
   if (${GIT_VERSION_RESULT})
-    message(WARNING "Error running git describe to determine version")
+    # Don't issue warning if we aren't the master project;
+    # just assume that whoever included us knows the version they are getting
+    if (WABT_MASTER_PROJECT)
+      message(WARNING "${GIT_VERSION_ERROR} Error running git describe to determine version")
+    endif()
   else ()
     set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION} (${GIT_VERSION})")
   endif ()
@@ -482,7 +494,7 @@ endif ()
 # Python 3.5 is the version shipped in Ubuntu Xenial
 find_package(PythonInterp 3.5)
 if(BUILD_TESTS AND (NOT PYTHONINTERP_FOUND))
-  set(BUILD_TESTS OFF) 
+  set(BUILD_TESTS OFF)
   message(WARNING "Skipping tests. Python 3 is required for wabt testing. Please install python3 to run tests.")
 endif()
 
