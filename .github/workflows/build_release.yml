@@ -45,7 +45,7 @@ jobs:
 
     - name: cmake (win)
       # -G "Visual Studio 15 2017"
-      run: cmake -S . -B out
+      run: cmake -S . -B out -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
       if: matrix.os == 'windows-latest'
 
     - name: build
