@@ -659,7 +659,7 @@ if (EMSCRIPTEN)
   set(EMSCRIPTEN_EXPORTED_JSON ${WABT_SOURCE_DIR}/src/emscripten-exported.json)
 
   set(LIBWABT_LINK_FLAGS
-    --memory-init-file 0
+    -s SINGLE_FILE
     --post-js ${WABT_POST_JS}
     -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
     -s RESERVED_FUNCTION_POINTERS=10
