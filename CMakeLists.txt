@@ -17,6 +17,10 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(WABT VERSION 1.0.13)
 
+if (POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif (POLICY CMP0077)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Check if wabt is being used directly or via add_subdirectory, FetchContent, etc
