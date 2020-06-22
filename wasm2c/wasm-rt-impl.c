@@ -131,7 +131,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   /* Reserve 8GiB. */
   void* addr =
       mmap(NULL, 0x200000000ul, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (addr == -1) {
+  if (addr == (void*)-1) {
     perror("mmap failed");
     abort();
   }
