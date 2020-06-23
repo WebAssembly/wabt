@@ -192,7 +192,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnMemorySizeExpr() override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
-  Result OnRefIsNullExpr(Type type) override;
+  Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
   Result OnReturnExpr() override;
   Result OnSelectExpr(Type result_type) override;
@@ -1240,8 +1240,8 @@ Result BinaryReaderInterp::OnRefNullExpr(Type type) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnRefIsNullExpr(Type type) {
-  CHECK_RESULT(validator_.OnRefIsNull(loc, type));
+Result BinaryReaderInterp::OnRefIsNullExpr() {
+  CHECK_RESULT(validator_.OnRefIsNull(loc));
   istream_.Emit(Opcode::RefIsNull);
   return Result::Ok;
 }

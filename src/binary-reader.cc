@@ -1573,13 +1573,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::RefIsNull: {
-        Type type;
-        CHECK_RESULT(ReadRefType(&type, "ref.is_null type"));
-        CALLBACK(OnRefIsNullExpr, type);
-        CALLBACK(OnOpcodeType, type);
+      case Opcode::RefIsNull:
+        CALLBACK(OnRefIsNullExpr);
+        CALLBACK(OnOpcodeBare);
         break;
-      }
 
       default:
         return ReportUnexpectedOpcode(opcode);

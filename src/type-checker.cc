@@ -420,21 +420,11 @@ Result TypeChecker::OnBrTableTarget(Index depth) {
   if (br_table_sig_ == nullptr) {
     br_table_sig_ = &label_sig;
   } else {
-    if (features_.reference_types_enabled()) {
-      if (br_table_sig_->size() != label_sig.size()) {
-        result |= Result::Error;
-        PrintError("br_table labels have inconsistent arity: expected %" PRIzd
-                   " got %" PRIzd,
-                   br_table_sig_->size(), label_sig.size());
-      }
-    } else {
-      if (*br_table_sig_ != label_sig) {
-        result |= Result::Error;
-        PrintError(
-            "br_table labels have inconsistent types: expected %s, got %s",
-            TypesToString(*br_table_sig_).c_str(),
-            TypesToString(label_sig).c_str());
-      }
+    if (*br_table_sig_ != label_sig) {
+      result |= Result::Error;
+      PrintError("br_table labels have inconsistent types: expected %s, got %s",
+                 TypesToString(*br_table_sig_).c_str(),
+                 TypesToString(label_sig).c_str());
     }
   }
 
@@ -680,8 +670,21 @@ Result TypeChecker::OnRefNullExpr(Type type) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnRefIsNullExpr(Type type) {
-  Result result = PopAndCheck1Type(type, "ref.is_null");
+Result TypeChecker::OnRefIsNullExpr() {
+  Type type;
+  Result result = PeekType(0, &type);
+  if (!type.IsRef()) {
+    TypeVector actual;
+    if (Succeeded(result)) {
+      actual.push_back(type);
+    }
+    std::string message =
+        "type mismatch in ref.is_null, expected reference but got " +
+        TypesToString(actual);
+    PrintError("%s", message.c_str());
+    result = Result::Error;
+  }
+  result |= DropTypes(1);
   PushType(Type::I32);
   return result;
 }

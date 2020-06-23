@@ -968,10 +968,10 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   return result;
 }
 
-Result SharedValidator::OnRefIsNull(const Location& loc, Type type) {
+Result SharedValidator::OnRefIsNull(const Location& loc) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= typechecker_.OnRefIsNullExpr(type);
+  result |= typechecker_.OnRefIsNullExpr();
   return result;
 }
 

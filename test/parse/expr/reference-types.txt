@@ -40,7 +40,7 @@
 
   (func (param externref) (result i32)
     local.get 0
-    ref.is_null extern
+    ref.is_null
   )
 
   (func (result funcref)

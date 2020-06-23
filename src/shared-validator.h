@@ -150,7 +150,7 @@ class SharedValidator {
   Result OnMemorySize(const Location&);
   Result OnNop(const Location&);
   Result OnRefFunc(const Location&, Var func_var);
-  Result OnRefIsNull(const Location&, Type type);
+  Result OnRefIsNull(const Location&);
   Result OnRefNull(const Location&, Type type);
   Result OnRethrow(const Location&);
   Result OnReturnCall(const Location&, Var func_var);
