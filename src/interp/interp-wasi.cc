@@ -52,10 +52,10 @@ namespace {
 typedef uint32_t __wasi_size_t;
 typedef uint32_t __wasi_ptr_t;
 
-_Static_assert(sizeof(__wasi_size_t) == 4, "witx calculated size");
-_Static_assert(_Alignof(__wasi_size_t) == 4, "witx calculated align");
-_Static_assert(sizeof(__wasi_ptr_t) == 4, "witx calculated size");
-_Static_assert(_Alignof(__wasi_ptr_t) == 4, "witx calculated align");
+static_assert(sizeof(__wasi_size_t) == 4, "witx calculated size");
+static_assert(alignof(__wasi_size_t) == 4, "witx calculated align");
+static_assert(sizeof(__wasi_ptr_t) == 4, "witx calculated size");
+static_assert(alignof(__wasi_ptr_t) == 4, "witx calculated align");
 
 typedef struct __wasi_prestat_dir_t {
   __wasi_size_t pr_name_len;
@@ -89,15 +89,15 @@ typedef struct __wasi_fdstat_t {
   __wasi_rights_t fs_rights_inheriting;
 } __wasi_fdstat_t;
 
-_Static_assert(sizeof(__wasi_fdstat_t) == 24, "witx calculated size");
-_Static_assert(_Alignof(__wasi_fdstat_t) == 8, "witx calculated align");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_filetype) == 0,
+static_assert(sizeof(__wasi_fdstat_t) == 24, "witx calculated size");
+static_assert(alignof(__wasi_fdstat_t) == 8, "witx calculated align");
+static_assert(offsetof(__wasi_fdstat_t, fs_filetype) == 0,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_flags) == 2,
+static_assert(offsetof(__wasi_fdstat_t, fs_flags) == 2,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_rights_base) == 8,
+static_assert(offsetof(__wasi_fdstat_t, fs_rights_base) == 8,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_fdstat_t, fs_rights_inheriting) == 16,
+static_assert(offsetof(__wasi_fdstat_t, fs_rights_inheriting) == 16,
                "witx calculated offset");
 
 struct __wasi_iovec_t {
@@ -105,25 +105,25 @@ struct __wasi_iovec_t {
   __wasi_size_t buf_len;
 };
 
-_Static_assert(sizeof(__wasi_iovec_t) == 8, "witx calculated size");
-_Static_assert(_Alignof(__wasi_iovec_t) == 4, "witx calculated align");
-_Static_assert(offsetof(__wasi_iovec_t, buf) == 0, "witx calculated offset");
-_Static_assert(offsetof(__wasi_iovec_t, buf_len) == 4, "witx calculated offset");
+static_assert(sizeof(__wasi_iovec_t) == 8, "witx calculated size");
+static_assert(alignof(__wasi_iovec_t) == 4, "witx calculated align");
+static_assert(offsetof(__wasi_iovec_t, buf) == 0, "witx calculated offset");
+static_assert(offsetof(__wasi_iovec_t, buf_len) == 4, "witx calculated offset");
 
 typedef uint64_t __wasi_device_t;
 
-_Static_assert(sizeof(__wasi_device_t) == 8, "witx calculated size");
-_Static_assert(_Alignof(__wasi_device_t) == 8, "witx calculated align");
+static_assert(sizeof(__wasi_device_t) == 8, "witx calculated size");
+static_assert(alignof(__wasi_device_t) == 8, "witx calculated align");
 
 typedef uint64_t __wasi_inode_t;
 
-_Static_assert(sizeof(__wasi_inode_t) == 8, "witx calculated size");
-_Static_assert(_Alignof(__wasi_inode_t) == 8, "witx calculated align");
+static_assert(sizeof(__wasi_inode_t) == 8, "witx calculated size");
+static_assert(alignof(__wasi_inode_t) == 8, "witx calculated align");
 
 typedef uint64_t __wasi_linkcount_t;
 
-_Static_assert(sizeof(__wasi_linkcount_t) == 8, "witx calculated size");
-_Static_assert(_Alignof(__wasi_linkcount_t) == 8, "witx calculated align");
+static_assert(sizeof(__wasi_linkcount_t) == 8, "witx calculated size");
+static_assert(alignof(__wasi_linkcount_t) == 8, "witx calculated align");
 
 typedef struct __wasi_filestat_t {
   __wasi_device_t dev;
@@ -136,21 +136,21 @@ typedef struct __wasi_filestat_t {
   __wasi_timestamp_t ctim;
 } __wasi_filestat_t;
 
-_Static_assert(sizeof(__wasi_filestat_t) == 64, "witx calculated size");
-_Static_assert(_Alignof(__wasi_filestat_t) == 8, "witx calculated align");
-_Static_assert(offsetof(__wasi_filestat_t, dev) == 0, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, ino) == 8, "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, filetype) == 16,
+static_assert(sizeof(__wasi_filestat_t) == 64, "witx calculated size");
+static_assert(alignof(__wasi_filestat_t) == 8, "witx calculated align");
+static_assert(offsetof(__wasi_filestat_t, dev) == 0, "witx calculated offset");
+static_assert(offsetof(__wasi_filestat_t, ino) == 8, "witx calculated offset");
+static_assert(offsetof(__wasi_filestat_t, filetype) == 16,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, nlink) == 24,
+static_assert(offsetof(__wasi_filestat_t, nlink) == 24,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, size) == 32,
+static_assert(offsetof(__wasi_filestat_t, size) == 32,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, atim) == 40,
+static_assert(offsetof(__wasi_filestat_t, atim) == 40,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, mtim) == 48,
+static_assert(offsetof(__wasi_filestat_t, mtim) == 48,
                "witx calculated offset");
-_Static_assert(offsetof(__wasi_filestat_t, ctim) == 56,
+static_assert(offsetof(__wasi_filestat_t, ctim) == 56,
                "witx calculated offset");
 
 #define __WASI_ERRNO_SUCCESS (UINT16_C(0))
@@ -268,7 +268,7 @@ class WasiInstance {
         filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
     uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
     if (trace_stream) {
-      trace_stream->Writef("path_filestat_get -> size=%lu %d\n", buf.st_size,
+      trace_stream->Writef("path_filestat_get -> size=%" PRIu64 " %d\n", buf.st_size,
                            results[0].i32_);
     }
     return Result::Ok;
@@ -395,7 +395,7 @@ class WasiInstance {
         filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
     uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
     if (trace_stream) {
-      trace_stream->Writef("fd_filestat_get -> size=%lu %d\n", buf.st_size,
+      trace_stream->Writef("fd_filestat_get -> size=%" PRIu64 " %d\n", buf.st_size,
                            results[0].i32_);
     }
     return Result::Ok;
