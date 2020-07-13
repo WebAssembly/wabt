@@ -281,7 +281,16 @@ int wabt_vsnprintf(char* str, size_t size, const char* format, va_list ap);
 #endif
 
 #if !HAVE_SSIZE_T
+#if COMPILER_IS_MSVC
+/* define ssize_t identically to how LLVM does, to avoid conflicts if including both */
+#if defined(_WIN64)
+typedef signed __int64 ssize_t;
+#else
+typedef signed int ssize_t;
+#endif /* _WIN64 */
+#else
 typedef long ssize_t;
+#endif
 #endif
 
 #if !HAVE_STRCASECMP
