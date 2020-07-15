@@ -266,73 +266,76 @@ out/test/spec/reference-types/unreached-invalid.wast:527: assert_invalid passed:
   error: br_table labels have inconsistent types: expected [f32], got []
   0000023: error: OnBrTableExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:540: assert_invalid passed:
+  error: br_table labels have inconsistent types: expected [f32], got [f64]
+  0000023: error: OnBrTableExpr callback failed
+out/test/spec/reference-types/unreached-invalid.wast:555: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000020: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:546: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:561: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000020: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:552: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:567: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000022: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:558: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:573: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000023: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:565: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:580: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000021: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:571: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:586: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got []
   0000022: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:577: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:592: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [i64]
   0000024: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:584: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:599: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000023: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:590: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:605: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got []
   0000025: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:596: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:611: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [i64]
   0000027: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:604: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:619: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000024: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:611: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:626: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000020: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:617: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:632: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000022: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:623: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:638: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000024: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:629: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:644: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000025: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:637: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:652: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
   0000020: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:643: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:658: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000020: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:649: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:664: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000022: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:656: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:671: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   000001f: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:662: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:677: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000020: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:669: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:684: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
   000001d: error: EndFunctionBody callback failed
-out/test/spec/reference-types/unreached-invalid.wast:676: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:691: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000022: error: OnEndExpr callback failed
-out/test/spec/reference-types/unreached-invalid.wast:687: assert_invalid passed:
+out/test/spec/reference-types/unreached-invalid.wast:702: assert_invalid passed:
   error: type mismatch in i64.extend_i32_u, expected [i32] but got [i64]
   000001c: error: OnConvertExpr callback failed
-110/110 tests passed.
+111/111 tests passed.
 ;;; STDOUT ;;)

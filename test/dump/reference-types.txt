@@ -42,7 +42,7 @@
 
   (func (param externref) (result i32)
     local.get 0
-    ref.is_null extern
+    ref.is_null
   )
 
 
@@ -94,7 +94,7 @@ Code[10]:
  - func[3] size=8
  - func[4] size=9
  - func[5] size=9
- - func[6] size=6
+ - func[6] size=5
  - func[7] size=5
  - func[8] size=5
  - func[9] size=5
@@ -131,15 +131,15 @@ Code Disassembly:
  00007c: 0b                         | end
 00007e func[6]:
  00007f: 20 00                      | local.get 0
- 000081: d1 6f                      | ref.is_null extern
- 000083: 0b                         | end
-000085 func[7]:
- 000086: fc 10 00                   | table.size 0
- 000089: 0b                         | end
-00008b func[8]:
- 00008c: fc 10 01                   | table.size 1
- 00008f: 0b                         | end
-000091 func[9]:
- 000092: fc 10 02                   | table.size 2
- 000095: 0b                         | end
+ 000081: d1                         | ref.is_null
+ 000082: 0b                         | end
+000084 func[7]:
+ 000085: fc 10 00                   | table.size 0
+ 000088: 0b                         | end
+00008a func[8]:
+ 00008b: fc 10 01                   | table.size 1
+ 00008e: 0b                         | end
+000090 func[9]:
+ 000091: fc 10 02                   | table.size 2
+ 000094: 0b                         | end
 ;;; STDOUT ;;)

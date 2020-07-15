@@ -409,7 +409,7 @@ class RefTypeExpr : public ExprMixin<TypeEnum> {
 };
 
 typedef RefTypeExpr<ExprType::RefNull> RefNullExpr;
-typedef RefTypeExpr<ExprType::RefIsNull> RefIsNullExpr;
+typedef ExprMixin<ExprType::RefIsNull> RefIsNullExpr;
 
 template <ExprType TypeEnum>
 class OpcodeExpr : public ExprMixin<TypeEnum> {

@@ -790,7 +790,7 @@ DEFINE_INDEX(OnTableSizeExpr)
 DEFINE_INDEX_DESC(OnTableFillExpr, "table index")
 DEFINE_INDEX(OnRefFuncExpr)
 DEFINE_TYPE(OnRefNullExpr)
-DEFINE_TYPE(OnRefIsNullExpr)
+DEFINE0(OnRefIsNullExpr)
 DEFINE0(OnNopExpr)
 DEFINE0(OnRethrowExpr);
 DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")

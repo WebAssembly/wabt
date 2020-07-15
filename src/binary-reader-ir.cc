@@ -185,7 +185,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTableFillExpr(Index table_index) override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
-  Result OnRefIsNullExpr(Type type) override;
+  Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
   Result OnReturnExpr() override;
@@ -919,8 +919,8 @@ Result BinaryReaderIR::OnRefNullExpr(Type type) {
   return AppendExpr(MakeUnique<RefNullExpr>(type));
 }
 
-Result BinaryReaderIR::OnRefIsNullExpr(Type type) {
-  return AppendExpr(MakeUnique<RefIsNullExpr>(type));
+Result BinaryReaderIR::OnRefIsNullExpr() {
+  return AppendExpr(MakeUnique<RefIsNullExpr>());
 }
 
 Result BinaryReaderIR::OnNopExpr() {

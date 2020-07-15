@@ -18,7 +18,7 @@
 
   (func $ref_is_null_func (export "ref_is_null_func") (result i32)
     global.get $g
-    ref.is_null func
+    ref.is_null
   )
 
   (func $ref_func (export "ref_func") (result funcref)
@@ -35,7 +35,7 @@
     call $table_set
     i32.const 0
     table.get $t_func
-    ref.is_null func
+    ref.is_null
   )
 
   (func $global_set (export "global_set") (result funcref)

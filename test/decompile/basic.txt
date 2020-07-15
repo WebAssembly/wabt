@@ -96,7 +96,7 @@
     set_local 0
     nop
     ref.null func
-    ref.is_null func
+    ref.is_null
     drop
     i32.const 0  ;; fi
     call_indirect

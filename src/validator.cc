@@ -438,7 +438,7 @@ Result Validator::OnRefNullExpr(RefNullExpr* expr) {
 }
 
 Result Validator::OnRefIsNullExpr(RefIsNullExpr* expr) {
-  result_ |= validator_.OnRefIsNull(expr->loc, expr->type);
+  result_ |= validator_.OnRefIsNull(expr->loc);
   return Result::Ok;
 }
 

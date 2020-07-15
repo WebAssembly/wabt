@@ -278,7 +278,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTableFillExpr(Index table_index) override { return Result::Ok; }
   Result OnRefFuncExpr(Index func_index) override { return Result::Ok; }
   Result OnRefNullExpr(Type type) override { return Result::Ok; }
-  Result OnRefIsNullExpr(Type type) override { return Result::Ok; }
+  Result OnRefIsNullExpr() override { return Result::Ok; }
   Result OnNopExpr() override { return Result::Ok; }
   Result OnRethrowExpr() override { return Result::Ok; }
   Result OnReturnCallExpr(Index sig_index) override { return Result::Ok; }

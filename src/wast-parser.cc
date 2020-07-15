@@ -1996,13 +1996,10 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
-    case TokenType::RefIsNull: {
+    case TokenType::RefIsNull:
       ErrorUnlessOpcodeEnabled(Consume());
-      Type type;
-      CHECK_RESULT(ParseRefKind(&type));
-      out_expr->reset(new RefIsNullExpr(type, loc));
+      out_expr->reset(new RefIsNullExpr(loc));
       break;
-    }
 
     case TokenType::Throw:
       ErrorUnlessOpcodeEnabled(Consume());

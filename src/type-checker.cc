@@ -670,8 +670,21 @@ Result TypeChecker::OnRefNullExpr(Type type) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnRefIsNullExpr(Type type) {
-  Result result = PopAndCheck1Type(type, "ref.is_null");
+Result TypeChecker::OnRefIsNullExpr() {
+  Type type;
+  Result result = PeekType(0, &type);
+  if (!type.IsRef()) {
+    TypeVector actual;
+    if (Succeeded(result)) {
+      actual.push_back(type);
+    }
+    std::string message =
+        "type mismatch in ref.is_null, expected reference but got " +
+        TypesToString(actual);
+    PrintError("%s", message.c_str());
+    result = Result::Error;
+  }
+  result |= DropTypes(1);
   PushType(Type::I32);
   return result;
 }

@@ -824,7 +824,6 @@ Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnRefIsNullExpr(RefIsNullExpr* expr) {
   writer_->WritePutsSpace(Opcode::RefIsNull_Opcode.GetName());
-  writer_->WriteRefKind(expr->type, NextChar::Newline);
   return Result::Ok;
 }
 
