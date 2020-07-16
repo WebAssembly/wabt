@@ -223,7 +223,6 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
 
     case ExprType::Try:
       return { 0, cast<TryExpr>(&expr)->block.decl.sig.GetNumResults() };
-      break;
 
     case ExprType::Ternary:
       return { 3, 1 };
@@ -260,4 +259,8 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::SimdShuffleOp:
       return { 2, 1 };
   }
+
+  fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(expr));
+  assert(0);
+  return {0, 0};
 }
