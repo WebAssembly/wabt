@@ -47,6 +47,8 @@ extern "C" {
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 #if defined(__WORDSIZE) && __WORDSIZE != 64
 #warning "Signal handler is only supported on 64-bit architectures"
+#undef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
 #else
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 1
 #endif
