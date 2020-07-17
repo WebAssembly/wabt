@@ -260,7 +260,5 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       return { 2, 1 };
   }
 
-  fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(expr));
-  assert(0);
-  return {0, 0};
+  WABT_UNREACHABLE;
 }
