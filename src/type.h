@@ -17,8 +17,11 @@
 #ifndef WABT_TYPE_H_
 #define WABT_TYPE_H_
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
+
+#include "config.h"
 
 namespace wabt {
 
