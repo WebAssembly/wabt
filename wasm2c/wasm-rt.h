@@ -39,26 +39,32 @@ extern "C" {
  *
  * This is usually 10%-25% faster, but requires OS-specific support.
  * */
+// #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
+
+/** Check whether the signal handler is supported at all. */
+#if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
+    defined(__WORDSIZE) && __WORDSIZE == 64
+
+/* If the signal handler is supported, then use it by default. */
 #ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
 #endif
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-#if defined(__WORDSIZE) && __WORDSIZE != 64
-#warning "Signal handler is only supported on 64-bit architectures"
-#undef WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
-#else
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 1
 #endif
+
 #else
-#error "No signal handler implementation for OS!"
-#endif
+
+/* The signal handler is not supported, error out if the user was trying to
+ * enable it. */
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#error "Signal handler is not supported for this OS/Architecture!"
 #endif
 
-#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
+
 #endif
 
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
