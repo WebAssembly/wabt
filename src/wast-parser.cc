@@ -320,8 +320,6 @@ Result CheckFuncTypeVarMatchesExplicit(const Location& loc,
                                        Errors* errors) {
   Result result = Result::Ok;
   if (decl.has_func_type) {
-    // This should only be run after resolving names.
-    assert(decl.type_var.is_index());
     const FuncType* func_type = module.GetFuncType(decl.type_var);
     if (func_type) {
       result |=
@@ -1040,8 +1038,8 @@ Result WastParser::ParseModuleFieldList(Module* module) {
       CHECK_RESULT(Synchronize(IsModuleField));
     }
   }
-  CHECK_RESULT(ResolveNamesModule(module, errors_));
   CHECK_RESULT(ResolveFuncTypes(module, errors_));
+  CHECK_RESULT(ResolveNamesModule(module, errors_));
   return Result::Ok;
 }
 

@@ -10,5 +10,5 @@
   (func (;0;) (type 0) (param i32) (result i32)
     (local $var i32)
     local.get 0
-    local.tee 0))
+    local.tee $var))
 ;;; STDOUT ;;)
