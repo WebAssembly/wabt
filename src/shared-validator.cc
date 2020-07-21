@@ -612,10 +612,11 @@ Result SharedValidator::OnAtomicLoad(const Location& loc,
                                      Opcode opcode,
                                      Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnAtomicLoad(opcode);
+  result |= typechecker_.OnAtomicLoad(opcode, mt.limits);
   return result;
 }
 
@@ -623,10 +624,11 @@ Result SharedValidator::OnAtomicNotify(const Location& loc,
                                        Opcode opcode,
                                        Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnAtomicNotify(opcode);
+  result |= typechecker_.OnAtomicNotify(opcode, mt.limits);
   return result;
 }
 
@@ -634,10 +636,11 @@ Result SharedValidator::OnAtomicRmwCmpxchg(const Location& loc,
                                            Opcode opcode,
                                            Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnAtomicRmwCmpxchg(opcode);
+  result |= typechecker_.OnAtomicRmwCmpxchg(opcode, mt.limits);
   return result;
 }
 
@@ -645,10 +648,11 @@ Result SharedValidator::OnAtomicRmw(const Location& loc,
                                     Opcode opcode,
                                     Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnAtomicRmw(opcode);
+  result |= typechecker_.OnAtomicRmw(opcode, mt.limits);
   return result;
 }
 
@@ -656,10 +660,11 @@ Result SharedValidator::OnAtomicStore(const Location& loc,
                                       Opcode opcode,
                                       Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnAtomicStore(opcode);
+  result |= typechecker_.OnAtomicStore(opcode, mt.limits);
   return result;
 }
 
@@ -667,10 +672,11 @@ Result SharedValidator::OnAtomicWait(const Location& loc,
                                      Opcode opcode,
                                      Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnAtomicWait(opcode);
+  result |= typechecker_.OnAtomicWait(opcode, mt.limits);
   return result;
 }
 
@@ -859,10 +865,11 @@ Result SharedValidator::OnLoad(const Location& loc,
                                Opcode opcode,
                                Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnLoad(opcode);
+  result |= typechecker_.OnLoad(opcode, mt.limits);
   return result;
 }
 
@@ -870,10 +877,11 @@ Result SharedValidator::OnLoadSplat(const Location& loc,
                                     Opcode opcode,
                                     Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnLoad(opcode);
+  result |= typechecker_.OnLoad(opcode, mt.limits);
   return result;
 }
 
@@ -916,42 +924,47 @@ Result SharedValidator::OnLoop(const Location& loc, Type sig_type) {
 
 Result SharedValidator::OnMemoryCopy(const Location& loc) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
-  result |= typechecker_.OnMemoryCopy();
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= typechecker_.OnMemoryCopy(mt.limits);
   return result;
 }
 
 Result SharedValidator::OnMemoryFill(const Location& loc) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
-  result |= typechecker_.OnMemoryFill();
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= typechecker_.OnMemoryFill(mt.limits);
   return result;
 }
 
 Result SharedValidator::OnMemoryGrow(const Location& loc) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
-  result |= typechecker_.OnMemoryGrow();
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= typechecker_.OnMemoryGrow(mt.limits);
   return result;
 }
 
 Result SharedValidator::OnMemoryInit(const Location& loc, Var segment_var) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckDataSegmentIndex(segment_var);
-  result |= typechecker_.OnMemoryInit(segment_var.index());
+  result |= typechecker_.OnMemoryInit(segment_var.index(), mt.limits);
   return result;
 }
 
 Result SharedValidator::OnMemorySize(const Location& loc) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
-  result |= typechecker_.OnMemorySize();
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= typechecker_.OnMemorySize(mt.limits);
   return result;
 }
 
@@ -1047,10 +1060,11 @@ Result SharedValidator::OnStore(const Location& loc,
                                 Opcode opcode,
                                 Address alignment) {
   Result result = Result::Ok;
+  MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc));
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
-  result |= typechecker_.OnStore(opcode);
+  result |= typechecker_.OnStore(opcode, mt.limits);
   return result;
 }
 

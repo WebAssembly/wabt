@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-memory64
+(module
+  (memory 1 i64)
+  (func
+    i64.const 100
+    grow_memory
+    drop))

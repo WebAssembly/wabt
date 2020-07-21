@@ -61,6 +61,7 @@ void WriteType(Stream* stream, Type type, const char* desc) {
 void WriteLimits(Stream* stream, const Limits* limits) {
   uint32_t flags = limits->has_max ? WABT_BINARY_LIMITS_HAS_MAX_FLAG : 0;
   flags |= limits->is_shared ? WABT_BINARY_LIMITS_IS_SHARED_FLAG : 0;
+  flags |= limits->is_64 ? WABT_BINARY_LIMITS_IS_64_FLAG : 0;
   WriteU32Leb128(stream, flags, "limits: flags");
   WriteU32Leb128(stream, limits->initial, "limits: initial");
   if (limits->has_max) {
@@ -824,15 +825,30 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
     WriteU32Leb128(stream_, reloc.index, "reloc index");
     switch (reloc.type) {
       case RelocType::MemoryAddressLEB:
+      case RelocType::MemoryAddressLEB64:
       case RelocType::MemoryAddressSLEB:
+      case RelocType::MemoryAddressSLEB64:
       case RelocType::MemoryAddressRelSLEB:
+      case RelocType::MemoryAddressRelSLEB64:
       case RelocType::MemoryAddressI32:
+      case RelocType::MemoryAddressI64:
       case RelocType::FunctionOffsetI32:
       case RelocType::SectionOffsetI32:
         WriteU32Leb128(stream_, reloc.addend, "reloc addend");
         break;
-      default:
+      case RelocType::FuncIndexLEB:
+      case RelocType::TableIndexSLEB:
+      case RelocType::TableIndexSLEB64:
+      case RelocType::TableIndexI32:
+      case RelocType::TableIndexI64:
+      case RelocType::TypeIndexLEB:
+      case RelocType::GlobalIndexLEB:
+      case RelocType::EventIndexLEB:
+      case RelocType::TableIndexRelSLEB:
         break;
+      default:
+        fprintf(stderr, "warning: unsupported relocation type: %s\n",
+                GetRelocTypeName(reloc.type));
     }
   }
 

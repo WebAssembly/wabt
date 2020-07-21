@@ -187,6 +187,50 @@ size_t ReadU32Leb128(const uint8_t* p,
   }
 }
 
+size_t ReadU64Leb128(const uint8_t* p,
+                     const uint8_t* end,
+                     uint64_t* out_value) {
+  if (p < end && (p[0] & 0x80) == 0) {
+    *out_value = LEB128_1(uint64_t);
+    return 1;
+  } else if (p + 1 < end && (p[1] & 0x80) == 0) {
+    *out_value = LEB128_2(uint64_t);
+    return 2;
+  } else if (p + 2 < end && (p[2] & 0x80) == 0) {
+    *out_value = LEB128_3(uint64_t);
+    return 3;
+  } else if (p + 3 < end && (p[3] & 0x80) == 0) {
+    *out_value = LEB128_4(uint64_t);
+    return 4;
+  } else if (p + 4 < end && (p[4] & 0x80) == 0) {
+    *out_value = LEB128_5(uint64_t);
+    return 5;
+  } else if (p + 5 < end && (p[5] & 0x80) == 0) {
+    *out_value = LEB128_6(uint64_t);
+    return 6;
+  } else if (p + 6 < end && (p[6] & 0x80) == 0) {
+    *out_value = LEB128_7(uint64_t);
+    return 7;
+  } else if (p + 7 < end && (p[7] & 0x80) == 0) {
+    *out_value = LEB128_8(uint64_t);
+    return 8;
+  } else if (p + 8 < end && (p[8] & 0x80) == 0) {
+    *out_value = LEB128_9(uint64_t);
+    return 9;
+  } else if (p + 9 < end && (p[9] & 0x80) == 0) {
+    // The top bits set represent values > 32 bits.
+    if (p[9] & 0xf0) {
+      return 0;
+    }
+    *out_value = LEB128_10(uint64_t);
+    return 10;
+  } else {
+    // past the end.
+    *out_value = 0;
+    return 0;
+  }
+}
+
 size_t ReadS32Leb128(const uint8_t* p,
                      const uint8_t* end,
                      uint32_t* out_value) {

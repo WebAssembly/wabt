@@ -135,23 +135,23 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   Result OnOpcode(Opcode Opcode) override;
   Result OnAtomicLoadExpr(Opcode opcode,
-                          uint32_t alignment_log2,
+                          Address alignment_log2,
                           Address offset) override;
   Result OnAtomicStoreExpr(Opcode opcode,
-                           uint32_t alignment_log2,
+                           Address alignment_log2,
                            Address offset) override;
   Result OnAtomicRmwExpr(Opcode opcode,
-                         uint32_t alignment_log2,
+                         Address alignment_log2,
                          Address offset) override;
   Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
-                                uint32_t alignment_log2,
+                                Address alignment_log2,
                                 Address offset) override;
   Result OnAtomicWaitExpr(Opcode opcode,
-                          uint32_t alignment_log2,
+                          Address alignment_log2,
                           Address offset) override;
   Result OnAtomicFenceExpr(uint32_t consistency_model) override;
   Result OnAtomicNotifyExpr(Opcode opcode,
-                            uint32_t alignment_log2,
+                            Address alignment_log2,
                             Address offset) override;
   Result OnBinaryExpr(Opcode opcode) override;
   Result OnBlockExpr(Type sig_type) override;
@@ -178,7 +178,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
   Result OnLoadExpr(Opcode opcode,
-                    uint32_t alignment_log2,
+                    Address alignment_log2,
                     Address offset) override;
   Result OnLocalGetExpr(Index local_index) override;
   Result OnLocalSetExpr(Index local_index) override;
@@ -197,7 +197,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnReturnExpr() override;
   Result OnSelectExpr(Type result_type) override;
   Result OnStoreExpr(Opcode opcode,
-                     uint32_t alignment_log2,
+                     Address alignment_log2,
                      Address offset) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTableCopyExpr(Index dst_index, Index src_index) override;
@@ -214,7 +214,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
   Result OnLoadSplatExpr(Opcode opcode,
-                         uint32_t alignment_log2,
+                         Address alignment_log2,
                          Address offset) override;
 
   Result OnElemSegmentCount(Index count) override;
@@ -894,12 +894,12 @@ Result BinaryReaderInterp::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
   return Result::Ok;
 }
 
-uint32_t GetAlignment(uint32_t alignment_log2) {
+uint32_t GetAlignment(Address alignment_log2) {
   return alignment_log2 < 32 ? 1 << alignment_log2 : ~0u;
 }
 
 Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,
-                                           uint32_t align_log2,
+                                           Address align_log2,
                                            Address offset) {
   CHECK_RESULT(validator_.OnLoadSplat(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
@@ -907,7 +907,7 @@ Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,
 }
 
 Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
-                                            uint32_t align_log2,
+                                            Address align_log2,
                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicLoad(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
@@ -915,7 +915,7 @@ Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
 }
 
 Result BinaryReaderInterp::OnAtomicStoreExpr(Opcode opcode,
-                                             uint32_t align_log2,
+                                             Address align_log2,
                                              Address offset) {
   CHECK_RESULT(validator_.OnAtomicStore(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
@@ -923,7 +923,7 @@ Result BinaryReaderInterp::OnAtomicStoreExpr(Opcode opcode,
 }
 
 Result BinaryReaderInterp::OnAtomicRmwExpr(Opcode opcode,
-                                           uint32_t align_log2,
+                                           Address align_log2,
                                            Address offset) {
   CHECK_RESULT(validator_.OnAtomicRmw(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
@@ -931,7 +931,7 @@ Result BinaryReaderInterp::OnAtomicRmwExpr(Opcode opcode,
 }
 
 Result BinaryReaderInterp::OnAtomicRmwCmpxchgExpr(Opcode opcode,
-                                                  uint32_t align_log2,
+                                                  Address align_log2,
                                                   Address offset) {
   CHECK_RESULT(
       validator_.OnAtomicRmwCmpxchg(loc, opcode, GetAlignment(align_log2)));
@@ -1183,7 +1183,7 @@ Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
 }
 
 Result BinaryReaderInterp::OnLoadExpr(Opcode opcode,
-                                      uint32_t align_log2,
+                                      Address align_log2,
                                       Address offset) {
   CHECK_RESULT(validator_.OnLoad(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
@@ -1191,7 +1191,7 @@ Result BinaryReaderInterp::OnLoadExpr(Opcode opcode,
 }
 
 Result BinaryReaderInterp::OnStoreExpr(Opcode opcode,
-                                       uint32_t align_log2,
+                                       Address align_log2,
                                        Address offset) {
   CHECK_RESULT(validator_.OnStore(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
@@ -1273,7 +1273,7 @@ Result BinaryReaderInterp::OnUnreachableExpr() {
 }
 
 Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
-                                            uint32_t align_log2,
+                                            Address align_log2,
                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicWait(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
@@ -1287,7 +1287,7 @@ Result BinaryReaderInterp::OnAtomicFenceExpr(uint32_t consistency_model) {
 }
 
 Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
-                                              uint32_t align_log2,
+                                              Address align_log2,
                                               Address offset) {
   CHECK_RESULT(
       validator_.OnAtomicNotify(loc, opcode, GetAlignment(align_log2)));

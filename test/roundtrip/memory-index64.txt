@@ -1,0 +1,8 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout
+(module
+  (import "a" "b" (memory 1 i64)))
+(;; STDOUT ;;;
+(module
+  (import "a" "b" (memory (;0;) 1 i64)))
+;;; STDOUT ;;)

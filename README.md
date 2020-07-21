@@ -56,6 +56,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 | [bulk memory][] | `--enable-bulk-memory` | ✓ | ✓ | ✓ | ✓ |
 | [reference types][] | `--enable-reference-types` | ✓ | ✓ | ✓ | ✓ |
 | [annotations][] | `--enable-annotations` | | ✓ | | |
+| [memory64][] | `--enable-memory64` | | | | |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
@@ -68,6 +69,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [bulk memory]: https://github.com/WebAssembly/bulk-memory-operations
 [reference types]: https://github.com/WebAssembly/reference-types
 [annotations]: https://github.com/WebAssembly/annotations
+[memory64]: https://github.com/WebAssembly/memory64
 
 ## Cloning
 

@@ -255,23 +255,42 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
   return result;
 }
 
-Result TypeChecker::CheckOpcode1(Opcode opcode) {
-  Result result = PopAndCheck1Type(opcode.GetParamType1(), opcode.GetName());
-  PushType(opcode.GetResultType());
-  return result;
-}
-
-Result TypeChecker::CheckOpcode2(Opcode opcode) {
-  Result result = PopAndCheck2Types(opcode.GetParamType1(),
-                                    opcode.GetParamType2(), opcode.GetName());
-  PushType(opcode.GetResultType());
-  return result;
-}
-
-Result TypeChecker::CheckOpcode3(Opcode opcode) {
+Result TypeChecker::CheckOpcode1(Opcode opcode,
+                                 const Limits* limits,
+                                 bool has_address_operands) {
   Result result =
-      PopAndCheck3Types(opcode.GetParamType1(), opcode.GetParamType2(),
-                        opcode.GetParamType3(), opcode.GetName());
+      PopAndCheck1Type(opcode.GetMemoryParam(
+                           opcode.GetParamType1(), limits,
+                           has_address_operands || opcode.GetMemorySize() != 0),
+                       opcode.GetName());
+  PushType(has_address_operands
+               ? opcode.GetMemoryParam(opcode.GetResultType(), limits, true)
+               : opcode.GetResultType());
+  return result;
+}
+
+Result TypeChecker::CheckOpcode2(Opcode opcode, const Limits* limits) {
+  Result result =
+      PopAndCheck2Types(opcode.GetMemoryParam(opcode.GetParamType1(), limits,
+                                              opcode.GetMemorySize() != 0),
+                        opcode.GetParamType2(), opcode.GetName());
+  PushType(opcode.GetResultType());
+  return result;
+}
+
+Result TypeChecker::CheckOpcode3(Opcode opcode,
+                                 const Limits* limits1,
+                                 const Limits* limits2,
+                                 const Limits* limits3) {
+  bool has_address_operands = limits1 || limits2 || limits3;
+  Result result =
+      PopAndCheck3Types(opcode.GetMemoryParam(opcode.GetParamType1(), limits1,
+                                              has_address_operands),
+                        opcode.GetMemoryParam(opcode.GetParamType2(), limits2,
+                                              has_address_operands),
+                        opcode.GetMemoryParam(opcode.GetParamType3(), limits3,
+                                              has_address_operands),
+                        opcode.GetName());
   PushType(opcode.GetResultType());
   return result;
 }
@@ -331,32 +350,32 @@ Result TypeChecker::BeginFunction(const TypeVector& sig) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnAtomicLoad(Opcode opcode) {
-  return CheckOpcode1(opcode);
+Result TypeChecker::OnAtomicLoad(Opcode opcode, const Limits& limits) {
+  return CheckOpcode1(opcode, &limits);
 }
 
-Result TypeChecker::OnAtomicStore(Opcode opcode) {
-  return CheckOpcode2(opcode);
+Result TypeChecker::OnAtomicStore(Opcode opcode, const Limits& limits) {
+  return CheckOpcode2(opcode, &limits);
 }
 
-Result TypeChecker::OnAtomicRmw(Opcode opcode) {
-  return CheckOpcode2(opcode);
+Result TypeChecker::OnAtomicRmw(Opcode opcode, const Limits& limits) {
+  return CheckOpcode2(opcode, &limits);
 }
 
-Result TypeChecker::OnAtomicRmwCmpxchg(Opcode opcode) {
-  return CheckOpcode3(opcode);
+Result TypeChecker::OnAtomicRmwCmpxchg(Opcode opcode, const Limits& limits) {
+  return CheckOpcode3(opcode, &limits);
 }
 
-Result TypeChecker::OnAtomicWait(Opcode opcode) {
-  return CheckOpcode3(opcode);
+Result TypeChecker::OnAtomicWait(Opcode opcode, const Limits& limits) {
+  return CheckOpcode3(opcode, &limits);
 }
 
 Result TypeChecker::OnAtomicFence(uint32_t consistency_model) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnAtomicNotify(Opcode opcode) {
-  return CheckOpcode2(opcode);
+Result TypeChecker::OnAtomicNotify(Opcode opcode, const Limits& limits) {
+  return CheckOpcode2(opcode, &limits);
 }
 
 Result TypeChecker::OnBinary(Opcode opcode) {
@@ -570,8 +589,8 @@ Result TypeChecker::OnGlobalSet(Type type) {
   return PopAndCheck1Type(type, "global.set");
 }
 
-Result TypeChecker::OnLoad(Opcode opcode) {
-  return CheckOpcode1(opcode);
+Result TypeChecker::OnLoad(Opcode opcode, const Limits& limits) {
+  return CheckOpcode1(opcode, &limits);
 }
 
 Result TypeChecker::OnLocalGet(Type type) {
@@ -598,28 +617,28 @@ Result TypeChecker::OnLoop(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnMemoryCopy() {
-  return CheckOpcode3(Opcode::MemoryCopy);
+Result TypeChecker::OnMemoryCopy(const Limits& limits) {
+  return CheckOpcode3(Opcode::MemoryCopy, &limits, &limits, &limits);
 }
 
 Result TypeChecker::OnDataDrop(uint32_t segment) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnMemoryFill() {
-  return CheckOpcode3(Opcode::MemoryFill);
+Result TypeChecker::OnMemoryFill(const Limits& limits) {
+  return CheckOpcode3(Opcode::MemoryFill, &limits, nullptr, &limits);
 }
 
-Result TypeChecker::OnMemoryGrow() {
-  return CheckOpcode1(Opcode::MemoryGrow);
+Result TypeChecker::OnMemoryGrow(const Limits& limits) {
+  return CheckOpcode1(Opcode::MemoryGrow, &limits, true);
 }
 
-Result TypeChecker::OnMemoryInit(uint32_t segment) {
-  return CheckOpcode3(Opcode::MemoryInit);
+Result TypeChecker::OnMemoryInit(uint32_t segment, const Limits& limits) {
+  return CheckOpcode3(Opcode::MemoryInit, &limits);
 }
 
-Result TypeChecker::OnMemorySize() {
-  PushType(Type::I32);
+Result TypeChecker::OnMemorySize(const Limits& limits) {
+  PushType(limits.is_64 ? Type::I64 : Type::I32);
   return Result::Ok;
 }
 
@@ -736,8 +755,8 @@ Result TypeChecker::OnSelect(Type expected) {
   return result;
 }
 
-Result TypeChecker::OnStore(Opcode opcode) {
-  return CheckOpcode2(opcode);
+Result TypeChecker::OnStore(Opcode opcode, const Limits& limits) {
+  return CheckOpcode2(opcode, &limits);
 }
 
 Result TypeChecker::OnTry(const TypeVector& param_types,

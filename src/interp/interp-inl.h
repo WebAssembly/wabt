@@ -631,19 +631,19 @@ inline Memory::Ptr Memory::New(interp::Store& store, MemoryType type) {
   return store.Alloc<Memory>(store, type);
 }
 
-inline bool Memory::IsValidAccess(u32 offset, u32 addend, size_t size) const {
-  return u64{offset} + addend + size <= data_.size();
+inline bool Memory::IsValidAccess(u64 offset, u64 addend, u64 size) const {
+  return offset + addend + size <= data_.size();
 }
 
-inline bool Memory::IsValidAtomicAccess(u32 offset,
-                                        u32 addend,
-                                        size_t size) const {
+inline bool Memory::IsValidAtomicAccess(u64 offset,
+                                        u64 addend,
+                                        u64 size) const {
   return IsValidAccess(offset, addend, size) &&
          ((offset + addend) & (size - 1)) == 0;
 }
 
 template <typename T>
-Result Memory::Load(u32 offset, u32 addend, T* out) const {
+Result Memory::Load(u64 offset, u64 addend, T* out) const {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
@@ -652,7 +652,7 @@ Result Memory::Load(u32 offset, u32 addend, T* out) const {
 }
 
 template <typename T>
-T WABT_VECTORCALL Memory::UnsafeLoad(u32 offset, u32 addend) const {
+T WABT_VECTORCALL Memory::UnsafeLoad(u64 offset, u64 addend) const {
   assert(IsValidAccess(offset, addend, sizeof(T)));
   T val;
   memcpy(&val, data_.data() + offset + addend, sizeof(T));
@@ -660,7 +660,7 @@ T WABT_VECTORCALL Memory::UnsafeLoad(u32 offset, u32 addend) const {
 }
 
 template <typename T>
-Result WABT_VECTORCALL Memory::Store(u32 offset, u32 addend, T val) {
+Result WABT_VECTORCALL Memory::Store(u64 offset, u64 addend, T val) {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
@@ -669,7 +669,7 @@ Result WABT_VECTORCALL Memory::Store(u32 offset, u32 addend, T val) {
 }
 
 template <typename T>
-Result Memory::AtomicLoad(u32 offset, u32 addend, T* out) const {
+Result Memory::AtomicLoad(u64 offset, u64 addend, T* out) const {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
@@ -678,7 +678,7 @@ Result Memory::AtomicLoad(u32 offset, u32 addend, T* out) const {
 }
 
 template <typename T>
-Result Memory::AtomicStore(u32 offset, u32 addend, T val) {
+Result Memory::AtomicStore(u64 offset, u64 addend, T val) {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
@@ -687,7 +687,7 @@ Result Memory::AtomicStore(u32 offset, u32 addend, T val) {
 }
 
 template <typename T, typename F>
-Result Memory::AtomicRmw(u32 offset, u32 addend, T rhs, F&& func, T* out) {
+Result Memory::AtomicRmw(u64 offset, u64 addend, T rhs, F&& func, T* out) {
   T lhs;
   CHECK_RESULT(AtomicLoad(offset, addend, &lhs));
   CHECK_RESULT(AtomicStore(offset, addend, func(lhs, rhs)));
@@ -696,8 +696,8 @@ Result Memory::AtomicRmw(u32 offset, u32 addend, T rhs, F&& func, T* out) {
 }
 
 template <typename T>
-Result Memory::AtomicRmwCmpxchg(u32 offset,
-                                u32 addend,
+Result Memory::AtomicRmwCmpxchg(u64 offset,
+                                u64 addend,
                                 T expect,
                                 T replace,
                                 T* out) {
@@ -714,11 +714,11 @@ inline u8* Memory::UnsafeData() {
   return data_.data();
 }
 
-inline u32 Memory::ByteSize() const {
+inline u64 Memory::ByteSize() const {
   return data_.size();
 }
 
-inline u32 Memory::PageSize() const {
+inline u64 Memory::PageSize() const {
   return pages_;
 }
 
@@ -822,7 +822,7 @@ inline const DataDesc& DataSegment::desc() const {
   return *desc_;
 }
 
-inline u32 DataSegment::size() const {
+inline u64 DataSegment::size() const {
   return size_;
 }
 

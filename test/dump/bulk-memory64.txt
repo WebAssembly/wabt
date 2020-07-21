@@ -1,0 +1,54 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-bulk-memory
+
+(module
+  (memory 1 i64)
+  (data "a")
+  (func
+    i64.const 0 i32.const 0 i32.const 0 memory.init 0
+    data.drop 0
+    i64.const 0 i64.const 0 i64.const 0 memory.copy
+    i64.const 0 i32.const 0 i64.const 0 memory.fill
+  )
+
+  (table 1 anyfunc)
+  (elem func 0)
+  (func
+    i32.const 0 i32.const 0 i32.const 0 table.init 0
+    elem.drop 0
+    i32.const 0 i32.const 0 i32.const 0 table.copy
+  )
+)
+(;; STDOUT ;;;
+
+bulk-memory64.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+00002c func[0]:
+ 00002d: 42 00                      | i64.const 0
+ 00002f: 41 00                      | i32.const 0
+ 000031: 41 00                      | i32.const 0
+ 000033: fc 08 00 00                | memory.init 0 0
+ 000037: fc 09 00                   | data.drop 0
+ 00003a: 42 00                      | i64.const 0
+ 00003c: 42 00                      | i64.const 0
+ 00003e: 42 00                      | i64.const 0
+ 000040: fc 0a 00 00                | memory.copy 0 0
+ 000044: 42 00                      | i64.const 0
+ 000046: 41 00                      | i32.const 0
+ 000048: 42 00                      | i64.const 0
+ 00004a: fc 0b 00                   | memory.fill 0
+ 00004d: 0b                         | end
+00004f func[1]:
+ 000050: 41 00                      | i32.const 0
+ 000052: 41 00                      | i32.const 0
+ 000054: 41 00                      | i32.const 0
+ 000056: fc 0c 00 00                | table.init 0 0
+ 00005a: fc 0d 00                   | elem.drop 0
+ 00005d: 41 00                      | i32.const 0
+ 00005f: 41 00                      | i32.const 0
+ 000061: 41 00                      | i32.const 0
+ 000063: fc 0e 00 00                | table.copy 0 0
+ 000067: 0b                         | end
+;;; STDOUT ;;)

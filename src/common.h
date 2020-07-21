@@ -98,7 +98,7 @@
 #endif
 
 #define PRIindex "u"
-#define PRIaddress "u"
+#define PRIaddress "lu"
 #define PRIoffset PRIzx
 
 struct v128 {
@@ -157,7 +157,7 @@ struct v128 {
 namespace wabt {
 
 typedef uint32_t Index;    // An index into one of the many index spaces.
-typedef uint32_t Address;  // An address or size in linear memory.
+typedef uint64_t Address;  // An address or size in linear memory.
 typedef size_t Offset;     // An offset into a host's file or memory buffer.
 
 static const Address kInvalidAddress = ~0;
@@ -273,22 +273,30 @@ enum SegmentFlags : uint8_t {
 };
 
 enum class RelocType {
-  FuncIndexLEB = 0,          // e.g. Immediate of call instruction
-  TableIndexSLEB = 1,        // e.g. Loading address of function
-  TableIndexI32 = 2,         // e.g. Function address in DATA
-  MemoryAddressLEB = 3,      // e.g. Memory address in load/store offset immediate
-  MemoryAddressSLEB = 4,     // e.g. Memory address in i32.const
-  MemoryAddressI32 = 5,      // e.g. Memory address in DATA
-  TypeIndexLEB = 6,          // e.g. Immediate type in call_indirect
-  GlobalIndexLEB = 7,        // e.g. Immediate of get_global inst
-  FunctionOffsetI32 = 8,     // e.g. Code offset in DWARF metadata
-  SectionOffsetI32 = 9,      // e.g. Section offset in DWARF metadata
-  EventIndexLEB = 10,        // Used in throw instructions
-  MemoryAddressRelSLEB = 11, // In PIC code, data address relative to __memory_base
-  TableIndexRelSLEB = 12,    // In PIC code, table index relative to __table_base
+  FuncIndexLEB = 0,       // e.g. Immediate of call instruction
+  TableIndexSLEB = 1,     // e.g. Loading address of function
+  TableIndexI32 = 2,      // e.g. Function address in DATA
+  MemoryAddressLEB = 3,   // e.g. Memory address in load/store offset immediate
+  MemoryAddressSLEB = 4,  // e.g. Memory address in i32.const
+  MemoryAddressI32 = 5,   // e.g. Memory address in DATA
+  TypeIndexLEB = 6,       // e.g. Immediate type in call_indirect
+  GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
+  FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
+  SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
+  EventIndexLEB = 10,     // Used in throw instructions
+  MemoryAddressRelSLEB =
+      11,  // In PIC code, data address relative to __memory_base
+  TableIndexRelSLEB = 12,   // In PIC code, table index relative to __table_base
+  GlobalIndexI32 = 13,      // e.g. Global index in data (e.g. DWARF)
+  MemoryAddressLEB64 = 14,  // Memory64: Like MemoryAddressLEB
+  MemoryAddressSLEB64 = 15,     // Memory64: Like MemoryAddressSLEB
+  MemoryAddressI64 = 16,        // Memory64: Like MemoryAddressI32
+  MemoryAddressRelSLEB64 = 17,  // Memory64: Like MemoryAddressRelSLEB
+  TableIndexSLEB64 = 18,        // Memory64: Like TableIndexSLEB
+  TableIndexI64 = 19,           // Memory64: Like TableIndexI32
 
   First = FuncIndexLEB,
-  Last = TableIndexRelSLEB,
+  Last = TableIndexI64,
 };
 static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
@@ -360,14 +368,21 @@ struct Limits {
       : initial(initial), max(max), has_max(true) {}
   Limits(uint64_t initial, uint64_t max, bool is_shared)
       : initial(initial), max(max), has_max(true), is_shared(is_shared) {}
+  Limits(uint64_t initial, uint64_t max, bool is_shared, bool is_64)
+      : initial(initial),
+        max(max),
+        has_max(true),
+        is_shared(is_shared),
+        is_64(is_64) {}
 
   uint64_t initial = 0;
   uint64_t max = 0;
   bool has_max = false;
   bool is_shared = false;
+  bool is_64 = false;
 };
 
-enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
+enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFFFFFFFFFF };
 
 Result ReadFile(string_view filename, std::vector<uint8_t>* out_data);
 

@@ -894,7 +894,7 @@ Result WastParser::ParseQuotedText(std::string* text) {
   return Result::Ok;
 }
 
-bool WastParser::ParseOffsetOpt(uint32_t* out_offset) {
+bool WastParser::ParseOffsetOpt(Address* out_offset) {
   WABT_TRACE(ParseOffsetOpt);
   if (PeekMatch(TokenType::OffsetEqNat)) {
     Token token = Consume();
@@ -905,11 +905,11 @@ bool WastParser::ParseOffsetOpt(uint32_t* out_offset) {
       Error(token.loc, "invalid offset \"" PRIstringview "\"",
             WABT_PRINTF_STRING_VIEW_ARG(sv));
     }
+    // FIXME: make this depend on the current memory.
     if (offset64 > UINT32_MAX) {
       Error(token.loc, "offset must be less than or equal to 0xffffffff");
     }
-
-    *out_offset = static_cast<uint32_t>(offset64);
+    *out_offset = offset64;
     return true;
   } else {
     *out_offset = 0;
@@ -917,12 +917,12 @@ bool WastParser::ParseOffsetOpt(uint32_t* out_offset) {
   }
 }
 
-bool WastParser::ParseAlignOpt(uint32_t* out_align) {
+bool WastParser::ParseAlignOpt(Address* out_align) {
   WABT_TRACE(ParseAlignOpt);
   if (PeekMatch(TokenType::AlignEqNat)) {
     Token token = Consume();
     string_view sv = token.text();
-    if (Failed(ParseInt32(sv.begin(), sv.end(), out_align,
+    if (Failed(ParseInt64(sv.begin(), sv.end(), out_align,
                           ParseIntType::UnsignedOnly))) {
       Error(token.loc, "invalid alignment \"" PRIstringview "\"",
             WABT_PRINTF_STRING_VIEW_ARG(sv));
@@ -952,6 +952,11 @@ Result WastParser::ParseLimits(Limits* out_limits) {
 
   if (Match(TokenType::Shared)) {
     out_limits->is_shared = true;
+  }
+
+  if (PeekMatch(TokenType::ValueType) && GetToken().type() == Type::I64) {
+    Consume();
+    out_limits->is_64 = true;
   }
 
   return Result::Ok;
@@ -1717,8 +1722,8 @@ Result WastParser::ParsePlainLoadStoreInstr(Location loc,
                                             Token token,
                                             std::unique_ptr<Expr>* out_expr) {
   Opcode opcode = token.opcode();
-  uint32_t offset;
-  uint32_t align;
+  Address offset;
+  Address align;
   ParseOffsetOpt(&offset);
   ParseAlignOpt(&align);
   out_expr->reset(new T(opcode, align, offset, loc));

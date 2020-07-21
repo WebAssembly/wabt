@@ -249,6 +249,7 @@ def main(args):
     parser.add_argument('--enable-bulk-memory', action='store_true')
     parser.add_argument('--enable-tail-call', action='store_true')
     parser.add_argument('--enable-reference-types', action='store_true')
+    parser.add_argument('--enable-memory64', action='store_true')
     options = parser.parse_args(args)
 
     wast2json = Executable(
@@ -266,6 +267,7 @@ def main(args):
         '--enable-bulk-memory': options.enable_bulk_memory,
         '--enable-tail-call': options.enable_tail_call,
         '--enable-reference-types': options.enable_reference_types,
+        '--enable-memory64': options.enable_memory64,
     })
 
     json_filename = options.file

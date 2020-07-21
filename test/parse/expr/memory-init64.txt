@@ -1,0 +1,12 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-bulk-memory  --enable-memory64
+(module
+  (memory 0 i64)
+
+  (func
+    i64.const 0
+    i32.const 0
+    i32.const 0
+    memory.init 0)
+
+  (data "hi"))

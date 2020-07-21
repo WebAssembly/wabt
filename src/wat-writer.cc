@@ -1274,6 +1274,9 @@ void WatWriter::WriteLimits(const Limits& limits) {
   if (limits.is_shared) {
     Writef("shared");
   }
+  if (limits.is_64) {
+    Writef("i64");
+  }
 }
 
 void WatWriter::WriteTable(const Table& table) {
