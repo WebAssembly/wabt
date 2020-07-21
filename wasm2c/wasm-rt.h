@@ -35,11 +35,12 @@ extern "C" {
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
-/** Whether to enable memory checking via a signal handler.
+/** Enable memory checking via a signal handler via the following definition:
+ *
+ * #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
  *
  * This is usually 10%-25% faster, but requires OS-specific support.
  * */
-// #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
 
 /** Check whether the signal handler is supported at all. */
 #if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
