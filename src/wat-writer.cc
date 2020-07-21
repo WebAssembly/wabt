@@ -823,7 +823,7 @@ Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnRefIsNullExpr(RefIsNullExpr* expr) {
-  writer_->WritePutsSpace(Opcode::RefIsNull_Opcode.GetName());
+  writer_->WritePutsNewline(Opcode::RefIsNull_Opcode.GetName());
   return Result::Ok;
 }
 
