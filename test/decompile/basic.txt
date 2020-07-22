@@ -86,6 +86,10 @@
     end
     i32.const 104
     drop
+    i32.const 1
+    block (param i32)   ;; block with input
+      br_if 0
+    end
     block (result i32)  ;; block as an exp.
     i32.const 2
     i32.const 0
@@ -168,11 +172,13 @@ export function f(a:int, b:int):int {
   return 103;
   label B_e:
   104;
+  if (1) goto B_j;
+  label B_j:
   a = {
         2;
-        if (0) goto B_j;
+        if (0) goto B_k;
         3;
-        label B_j:
+        label B_k:
       }
   nop;
   is_null(null);

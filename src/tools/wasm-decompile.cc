@@ -83,15 +83,17 @@ int ProgramMain(int argc, char** argv) {
     result = ReadBinaryIr(infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
     if (Succeeded(result)) {
+      ValidateOptions options(features);
+      result = ValidateModule(&module, &errors, options);
       if (Succeeded(result)) {
-        ValidateOptions options(features);
-        result = ValidateModule(&module, &errors, options);
+        result = GenerateNames(&module,
+                               static_cast<NameOpts>(NameOpts::AlphaNames));
       }
-      result = GenerateNames(&module,
-                             static_cast<NameOpts>(NameOpts::AlphaNames));
-      // Must be called after ReadBinaryIr & GenerateNames, and before
-      // ApplyNames, see comments at definition.
-      RenameAll(module);
+      if (Succeeded(result)) {
+        // Must be called after ReadBinaryIr & GenerateNames, and before
+        // ApplyNames, see comments at definition.
+        RenameAll(module);
+      }
       if (Succeeded(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */

@@ -141,7 +141,7 @@ struct AST {
 
   template<ExprType T> void Block(const BlockExprBase<T>& be, LabelType label) {
     mc.BeginBlock(label, be.block);
-    Construct(be.block.exprs, be.block.decl.GetNumResults(), false);
+    Construct(be.block.exprs, be.block.decl.GetNumResults(), be.block.decl.GetNumParams(), false);
     mc.EndBlock();
     InsertNode(NodeType::Expr, T, &be, 1);
   }
@@ -180,9 +180,9 @@ struct AST {
         auto ife = cast<IfExpr>(&e);
         value_stack_depth--;  // Condition.
         mc.BeginBlock(LabelType::Block, ife->true_);
-        Construct(ife->true_.exprs, ife->true_.decl.GetNumResults(), false);
+        Construct(ife->true_.exprs, ife->true_.decl.GetNumResults(), ife->true_.decl.GetNumParams(), false);
         if (!ife->false_.empty()) {
-          Construct(ife->false_, ife->true_.decl.GetNumResults(), false);
+          Construct(ife->false_, ife->true_.decl.GetNumResults(), ife->true_.decl.GetNumParams(), false);
         }
         mc.EndBlock();
         value_stack_depth++;  // Put Condition back.
@@ -214,12 +214,12 @@ struct AST {
     }
   }
 
-  void Construct(const ExprList& es, Index nresults, bool is_function_body) {
+  void Construct(const ExprList& es, Index nresults, Index nparams, bool is_function_body) {
     block_stack.push_back(cur_block_id);
     cur_block_id = blocks_closed.size();
     blocks_closed.push_back(false);
     auto start = exp_stack.size();
-    auto value_stack_depth_start = value_stack_depth;
+    auto value_stack_depth_start = value_stack_depth - nparams;
     auto value_stack_in_variables = value_stack_depth;
     bool unreachable = false;
     for (auto& e : es) {
