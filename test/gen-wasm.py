@@ -44,6 +44,8 @@ NAMED_VALUES = {
     'v128': 0x7b,    # -5
     'anyfunc': 0x70,    # -0x10
     'function': 0x60,    # -0x20
+    'struct': 0x5f,    # -0x21
+    'array': 0x5e,    # -0x22
     'void': 0x40,    # -0x40
     'magic': (0, 0x61, 0x73, 0x6d),
     'version': (1, 0, 0, 0),
