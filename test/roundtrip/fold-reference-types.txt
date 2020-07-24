@@ -41,7 +41,8 @@
     (drop
       (ref.null extern))
     (drop
-      (ref.is_null (local.get 0)))
+      (ref.is_null
+        (local.get 0)))
     (drop
       (ref.func 0)))
   (table (;0;) 1 externref)
