@@ -315,7 +315,7 @@ FuncType* Module::GetFuncType(const Var& var) {
   if (index >= types.size()) {
     return nullptr;
   }
-  return cast<FuncType>(types[index]);
+  return dyn_cast<FuncType>(types[index]);
 }
 
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
