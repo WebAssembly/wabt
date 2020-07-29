@@ -786,3 +786,6 @@
   (module quote "(func loop $a end $l)")
   "mismatching label"
 )
+(;; STDOUT ;;;
+64/64 tests passed.
+;;; STDOUT ;;)

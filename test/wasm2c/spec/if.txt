@@ -1551,3 +1551,6 @@
   (module quote "(func i32.const 0 if $a else $l end $l)")
   "mismatching label"
 )
+(;; STDOUT ;;;
+84/84 tests passed.
+;;; STDOUT ;;)
