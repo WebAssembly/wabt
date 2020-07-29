@@ -2360,9 +2360,9 @@ Result BinaryReader::ReadSections() {
   bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
 
   for (; state_.offset < state_.size; ++section_index) {
-    uint32_t section_code;
+    uint8_t section_code;
     Offset section_size;
-    CHECK_RESULT(ReadU32Leb128(&section_code, "section code"));
+    CHECK_RESULT(ReadU8(&section_code, "section code"));
     CHECK_RESULT(ReadOffset(&section_size, "section size"));
     ReadEndRestoreGuard guard(this);
     read_end_ = state_.offset + section_size;
