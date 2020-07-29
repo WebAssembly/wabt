@@ -1,0 +1,8 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(IMPORT) { count[1] str("module") str("func") dummy[5] }
+(;; STDERR ;;;
+0000018: error: malformed import kind: 5
+0000018: error: malformed import kind: 5
+;;; STDERR ;;)
