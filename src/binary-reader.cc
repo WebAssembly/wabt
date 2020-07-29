@@ -543,10 +543,12 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   uint32_t initial;
   uint32_t max = 0;
   CHECK_RESULT(ReadU8(&flags, "table flags"));
-  CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
+  const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
   ERROR_IF(is_shared, "tables may not be shared");
+  ERROR_UNLESS(unknown_flags == 0, "malformed table limits flag: %d", flags);
+  CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
   if (has_max) {
     CHECK_RESULT(ReadU32Leb128(&max, "table max elem count"));
   }
@@ -562,9 +564,11 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   uint32_t initial;
   uint32_t max = 0;
   CHECK_RESULT(ReadU8(&flags, "memory flags"));
-  CHECK_RESULT(ReadU32Leb128(&initial, "memory initial page count"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
+  const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
+  ERROR_UNLESS(unknown_flags == 0, "malformed memory limits flag: %d", flags);
+  CHECK_RESULT(ReadU32Leb128(&initial, "memory initial page count"));
   if (has_max) {
     CHECK_RESULT(ReadU32Leb128(&max, "memory max page count"));
   }

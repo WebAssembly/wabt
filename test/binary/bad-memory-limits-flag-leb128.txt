@@ -6,6 +6,6 @@ section(MEMORY) {
   flags[0x81 0]
 }
 (;; STDERR ;;;
-000000d: error: unable to read u32 leb128: memory max page count
-000000d: error: unable to read u32 leb128: memory max page count
+000000c: error: malformed memory limits flag: 129
+000000c: error: malformed memory limits flag: 129
 ;;; STDERR ;;)
