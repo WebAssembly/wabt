@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(MEMORY) {
+  count[1]
+  flags[0x81 0]
+}
+(;; STDERR ;;;
+000000d: error: unable to read u32 leb128: memory max page count
+000000d: error: unable to read u32 leb128: memory max page count
+;;; STDERR ;;)

@@ -539,10 +539,10 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadRefType(out_elem_type, "table elem type"));
 
-  uint32_t flags;
+  uint8_t flags;
   uint32_t initial;
   uint32_t max = 0;
-  CHECK_RESULT(ReadU32Leb128(&flags, "table flags"));
+  CHECK_RESULT(ReadU8(&flags, "table flags"));
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
@@ -558,10 +558,10 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
 }
 
 Result BinaryReader::ReadMemory(Limits* out_page_limits) {
-  uint32_t flags;
+  uint8_t flags;
   uint32_t initial;
   uint32_t max = 0;
-  CHECK_RESULT(ReadU32Leb128(&flags, "memory flags"));
+  CHECK_RESULT(ReadU8(&flags, "memory flags"));
   CHECK_RESULT(ReadU32Leb128(&initial, "memory initial page count"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
