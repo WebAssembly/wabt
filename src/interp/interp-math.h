@@ -285,9 +285,9 @@ T WABT_VECTORCALL FloatMax(T lhs, T rhs) {
 
 template <typename R, typename T> bool WABT_VECTORCALL CanConvert(T val) { return true; }
 template <> inline bool WABT_VECTORCALL CanConvert<s32, f32>(f32 val) { return val >= -2147483648.f && val < 2147483648.f; }
-template <> inline bool WABT_VECTORCALL CanConvert<s32, f64>(f64 val) { return val >= -2147483648. && val <= 2147483647.; }
+template <> inline bool WABT_VECTORCALL CanConvert<s32, f64>(f64 val) { return val > -2147483649. && val < 2147483648.; }
 template <> inline bool WABT_VECTORCALL CanConvert<u32, f32>(f32 val) { return val > -1.f && val < 4294967296.f; }
-template <> inline bool WABT_VECTORCALL CanConvert<u32, f64>(f64 val) { return val > -1. && val <= 4294967295.; }
+template <> inline bool WABT_VECTORCALL CanConvert<u32, f64>(f64 val) { return val > -1. && val < 4294967296.; }
 template <> inline bool WABT_VECTORCALL CanConvert<s64, f32>(f32 val) { return val >= -9223372036854775808.f && val < 9223372036854775808.f; }
 template <> inline bool WABT_VECTORCALL CanConvert<s64, f64>(f64 val) { return val >= -9223372036854775808. && val < 9223372036854775808.; }
 template <> inline bool WABT_VECTORCALL CanConvert<u64, f32>(f32 val) { return val > -1.f && val < 18446744073709551616.f; }
