@@ -2086,6 +2086,10 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         num_event_imports_++;
         break;
       }
+
+      default:
+        PrintError("malformed import kind: %d", kind);
+        return Result::Error;
     }
   }
 
