@@ -55,6 +55,7 @@ endif ()
 option(BUILD_TESTS "Build GTest-based tests" ON)
 option(USE_SYSTEM_GTEST "Use system GTest, instead of building" OFF)
 option(BUILD_TOOLS "Build wabt commandline tools" ON)
+option(BUILD_FUZZ_TOOLS "Build tools that can repro fuzz bugs" OFF)
 option(BUILD_LIBWASM "Build libwasm" ON)
 option(USE_ASAN "Use address sanitizer" OFF)
 option(USE_MSAN "Use memory sanitizer" OFF)
@@ -344,6 +345,15 @@ set(WABT_LIBRARY_SRC
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 
+if (BUILD_FUZZ_TOOLS)
+  set(FUZZ_FLAGS "-fsanitize=fuzzer,address")
+  add_library(wabt-fuzz STATIC ${WABT_LIBRARY_SRC})
+  set_target_properties(wabt-fuzz
+    PROPERTIES
+    COMPILE_FLAGS "${FUZZ_FLAGS}"
+  )
+endif ()
+
 # libwasm, which implenents the wasm C API
 if (BUILD_LIBWASM)
   add_library(wasm SHARED ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
@@ -369,10 +379,15 @@ endif ()
 
 include(CMakeParseArguments)
 function(wabt_executable)
-  cmake_parse_arguments(EXE "WITH_LIBM;INSTALL" "NAME" "SOURCES;LIBS" ${ARGN})
+  cmake_parse_arguments(EXE "WITH_LIBM;FUZZ;INSTALL" "NAME" "SOURCES;LIBS" ${ARGN})
 
   # Always link libwabt.
-  set(EXE_LIBS "${EXE_LIBS};wabt")
+  if (EXE_FUZZ)
+    set(EXE_LIBS "${EXE_LIBS};wabt-fuzz")
+    set(EXTRA_LINK_FLAGS "${FUZZ_FLAGS}")
+  else ()
+    set(EXE_LIBS "${EXE_LIBS};wabt")
+  endif ()
 
   # Optionally link libm.
   if (EXE_WITH_LIBM AND (COMPILER_IS_CLANG OR COMPILER_IS_GNU))
@@ -388,11 +403,15 @@ function(wabt_executable)
   if (EMSCRIPTEN)
     # build to JS for now, as node.js doesn't have code caching for wasm yet,
     # and wasm startup times are slower
-    set_target_properties(${EXE_NAME}
-      PROPERTIES
-      LINK_FLAGS "-s NODERAWFS -s SINGLE_FILE -s WASM=0 -Oz -s ALLOW_MEMORY_GROWTH=1"
+    set(EXTRA_LINK_FLAGS
+      "${EXTRA_LINK_FLAGS} -s NODERAWFS -s SINGLE_FILE -s WASM=0 -Oz -s ALLOW_MEMORY_GROWTH=1"
     )
   endif ()
+
+  set_target_properties(${EXE_NAME}
+    PROPERTIES
+    LINK_FLAGS "${EXTRA_LINK_FLAGS}"
+  )
 
   if (EXE_INSTALL)
     list(APPEND WABT_EXECUTABLES ${EXE_NAME})
@@ -502,6 +521,16 @@ if (BUILD_TOOLS)
     SOURCES src/tools/wasm-decompile.cc
     INSTALL
   )
+
+  if(BUILD_FUZZ_TOOLS)
+    # wasm2wat-fuzz
+    wabt_executable(
+      NAME wasm2wat-fuzz
+      SOURCES src/tools/wasm2wat-fuzz.cc
+      FUZZ
+      INSTALL
+    )
+  endif ()
 endif ()
 
 # Python 3.5 is the version shipped in Ubuntu Xenial
