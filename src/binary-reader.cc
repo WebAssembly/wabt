@@ -202,8 +202,7 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
   }
 }
 
-Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
-                                            const char* where) {
+Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode, const char* where) {
   std::string message = "unexpected opcode";
   if (where) {
     message += ' ';
@@ -215,7 +214,7 @@ Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
   std::vector<uint8_t> bytes = opcode.GetBytes();
   assert(bytes.size() > 0);
 
-  for (uint8_t byte: bytes) {
+  for (uint8_t byte : bytes) {
     message += StringPrintf(" 0x%x", byte);
   }
 
@@ -1794,7 +1793,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           switch (sym_type) {
             case SymbolType::Function:
             case SymbolType::Global:
-            case SymbolType::Event:  {
+            case SymbolType::Event: {
               uint32_t index = 0;
               CHECK_RESULT(ReadU32Leb128(&index, "index"));
               if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0 ||
@@ -2490,7 +2489,6 @@ Result BinaryReader::ReadSections() {
       // further sections.
       state_.offset = read_end_;
     }
-
 
     if (section != BinarySection::Custom) {
       last_known_section_ = section;
