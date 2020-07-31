@@ -1,0 +1,25 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) { count[1] func { locals[0] } }
+
+section("linking") {
+  metadata_version[2]
+
+  section(LINKING_SYMBOL_TABLE) {
+    num_symbols[1]
+
+    type[0]
+    flags[1]
+    index[1]
+    str("func OOB")
+  }
+}
+(;; STDERR ;;;
+error: invalid function index: 1
+0000032: error: OnFunctionSymbol callback failed
+error: invalid function index: 1
+0000032: error: OnFunctionSymbol callback failed
+;;; STDERR ;;)

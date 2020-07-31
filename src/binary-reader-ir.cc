@@ -1277,6 +1277,10 @@ Result BinaryReaderIR::OnDataSymbol(Index index, uint32_t flags,
     // the whole segment.
     return Result::Ok;
   }
+  if (segment >= module_->data_segments.size()) {
+    PrintError("invalid data segment index: %" PRIindex, segment);
+    return Result::Error;
+  }
   DataSegment* seg = module_->data_segments[segment];
   std::string dollar_name =
       GetUniqueName(&module_->data_segment_bindings, MakeDollarName(name));
@@ -1289,6 +1293,10 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index, uint32_t flags,
                                         string_view name, Index func_index) {
   if (name.empty()) {
     return Result::Ok;
+  }
+  if (func_index >= module_->funcs.size()) {
+    PrintError("invalid function index: %" PRIindex, func_index);
+    return Result::Error;
   }
   Func* func = module_->funcs[func_index];
   if (!func->name.empty()) {
@@ -1307,6 +1315,10 @@ Result BinaryReaderIR::OnGlobalSymbol(Index index, uint32_t flags,
   if (name.empty()) {
     return Result::Ok;
   }
+  if (global_index >= module_->globals.size()) {
+    PrintError("invalid global index: %" PRIindex, global_index);
+    return Result::Error;
+  }
   Global* glob = module_->globals[global_index];
   std::string dollar_name =
       GetUniqueName(&module_->global_bindings, MakeDollarName(name));
@@ -1324,6 +1336,10 @@ Result BinaryReaderIR::OnEventSymbol(Index index, uint32_t flags,
                                      string_view name, Index event_index) {
   if (name.empty()) {
     return Result::Ok;
+  }
+  if (event_index >= module_->events.size()) {
+    PrintError("invalid event index: %" PRIindex, event_index);
+    return Result::Error;
   }
   Event* event = module_->events[event_index];
   std::string dollar_name =
