@@ -1,0 +1,31 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(MEMORY) { count[1] has_max[0] initial[0] }
+section(DATA) {
+  count[1]
+  memory_index[0]
+  offset[i32.const 0 end]
+  data[str("foo")]
+}
+
+section("linking") {
+  metadata_version[2]
+
+  section(LINKING_SYMBOL_TABLE) {
+    num_symbols[1]
+
+    type[1]
+    flags[1]
+    str("data OOB")
+    segment[1] ;; OOB
+    offset[0]
+    size[0]
+  }
+}
+(;; STDERR ;;;
+error: invalid data segment index: 1
+0000034: error: OnDataSymbol callback failed
+error: invalid data segment index: 1
+0000034: error: OnDataSymbol callback failed
+;;; STDERR ;;)

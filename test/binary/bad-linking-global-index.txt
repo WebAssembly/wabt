@@ -1,0 +1,26 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(GLOBAL) {
+  count[1]
+  type[i32] mut[0] init_expr[i32.const 0 end]
+}
+
+section("linking") {
+  metadata_version[2]
+
+  section(LINKING_SYMBOL_TABLE) {
+    num_symbols[1]
+
+    type[2]
+    flags[1]
+    index[1]
+    str("global OOB")
+  }
+}
+(;; STDERR ;;;
+error: invalid global index: 1
+000002c: error: OnGlobalSymbol callback failed
+error: invalid global index: 1
+000002c: error: OnGlobalSymbol callback failed
+;;; STDERR ;;)
