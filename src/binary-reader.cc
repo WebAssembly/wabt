@@ -568,6 +568,8 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
   const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
   ERROR_UNLESS(unknown_flags == 0, "malformed memory limits flag: %d", flags);
+  ERROR_IF(is_shared && !options_.features.threads_enabled(),
+           "memory may not be shared: threads not allowed");
   CHECK_RESULT(ReadU32Leb128(&initial, "memory initial page count"));
   if (has_max) {
     CHECK_RESULT(ReadU32Leb128(&max, "memory max page count"));
