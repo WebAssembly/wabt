@@ -120,9 +120,9 @@ There are many make targets available for other configurations as well. They
 are generated from every combination of a compiler, build type and
 configuration.
 
- - compilers: `gcc`, `clang`, `gcc-i686`, `gcc-fuzz`
+ - compilers: `gcc`, `clang`, `gcc-i686`, `emcc`
  - build types: `debug`, `release`
- - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `no-tests`
+ - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `fuzz`, `no-tests`
 
 They are combined with dashes, for example:
 
@@ -333,3 +333,23 @@ $ CC=gcc scripts/travis-test.sh
 $ CC=clang scripts/travis-build.sh
 $ CC=clang scripts/travis-test.sh
 ```
+
+## Fuzzing
+
+To build using the [LLVM fuzzer support](https://llvm.org/docs/LibFuzzer.html),
+append `fuzz` to the target:
+
+```console
+$ make clang-debug-fuzz
+```
+
+This will produce a `wasm2wat_fuzz` binary. It can be used to fuzz the binary
+reader, as well as reproduce fuzzer errors found by
+[oss-fuzz](https://github.com/google/oss-fuzz/tree/master/projects/wabt).
+
+```console
+$ out/clang/Debug/fuzz/wasm2wat_fuzz ...
+```
+
+See the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for
+more information about how to use this tool.
