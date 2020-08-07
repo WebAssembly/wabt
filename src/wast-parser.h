@@ -135,8 +135,8 @@ class WastParser {
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
   Result ParseQuotedText(std::string* text);
-  bool ParseOffsetOpt(uint32_t* offset);
-  bool ParseAlignOpt(uint32_t* align);
+  bool ParseOffsetOpt(Address* offset);
+  bool ParseAlignOpt(Address* align);
   Result ParseLimits(Limits*);
   Result ParseNat(uint64_t*);
 

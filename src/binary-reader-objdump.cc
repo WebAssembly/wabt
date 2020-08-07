@@ -153,7 +153,8 @@ string_view BinaryReaderObjdumpBase::GetSegmentName(Index index) const {
 }
 
 string_view BinaryReaderObjdumpBase::GetSymbolName(Index symbol_index) const {
-  assert(symbol_index < objdump_state_->symtab.size());
+  if (symbol_index >= objdump_state_->symtab.size())
+    return "<illegal_symbol_index>";
   ObjdumpSymbol& sym = objdump_state_->symtab[symbol_index];
   switch (sym.kind) {
     case SymbolType::Function:
@@ -338,7 +339,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
 
   Result OnSegmentInfo(Index index,
                        string_view name,
-                       uint32_t alignment_log2,
+                       Address alignment_log2,
                        uint32_t flags) override {
     SetSegmentName(index, name);
     return Result::Ok;
@@ -889,7 +890,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,
-                       uint32_t alignment_log2,
+                       Address alignment_log2,
                        uint32_t flags) override;
   Result OnInitFunctionCount(Index count) override;
   Result OnInitFunction(uint32_t priority, Index function_index) override;
@@ -1208,6 +1209,12 @@ Result BinaryReaderObjdump::OnImportMemory(Index import_index,
   if (page_limits->has_max) {
     PrintDetails(" max=%" PRId64, page_limits->max);
   }
+  if (page_limits->is_shared) {
+    PrintDetails(" shared");
+  }
+  if (page_limits->is_64) {
+    PrintDetails(" i64");
+  }
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
@@ -1254,6 +1261,12 @@ Result BinaryReaderObjdump::OnMemory(Index index, const Limits* page_limits) {
                page_limits->initial);
   if (page_limits->has_max) {
     PrintDetails(" max=%" PRId64, page_limits->max);
+  }
+  if (page_limits->is_shared) {
+    PrintDetails(" shared");
+  }
+  if (page_limits->is_64) {
+    PrintDetails(" i64");
   }
   PrintDetails("\n");
   return Result::Ok;
@@ -1775,10 +1788,10 @@ Result BinaryReaderObjdump::OnSegmentInfoCount(Index count) {
 
 Result BinaryReaderObjdump::OnSegmentInfo(Index index,
                                           string_view name,
-                                          uint32_t alignment_log2,
+                                          Address alignment_log2,
                                           uint32_t flags) {
-  PrintDetails("   - %d: " PRIstringview " p2align=%d flags=%#x\n", index,
-               WABT_PRINTF_STRING_VIEW_ARG(name), alignment_log2, flags);
+  PrintDetails("   - %d: " PRIstringview " p2align=%" PRIaddress " flags=%#x\n",
+               index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment_log2, flags);
   return Result::Ok;
 }
 

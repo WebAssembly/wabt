@@ -4,9 +4,9 @@ version
 section(TABLE) {
   count[1]
   anyfunc
-  flags[4]
+  flags[8]
 }
 (;; STDERR ;;;
-000000d: error: malformed table limits flag: 4
-000000d: error: malformed table limits flag: 4
+000000d: error: malformed table limits flag: 8
+000000d: error: malformed table limits flag: 8
 ;;; STDERR ;;)

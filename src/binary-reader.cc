@@ -96,6 +96,7 @@ class BinaryReader {
   Result ReadF64(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadV128(v128* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadU32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
+  Result ReadU64Leb128(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS64Leb128(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadType(Type* out_value, const char* desc) WABT_WARN_UNUSED;
@@ -108,7 +109,7 @@ class BinaryReader {
                    const char* desc) WABT_WARN_UNUSED;
   Result ReadIndex(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
-  Result ReadAlignment(uint32_t* align_log2, const char* desc) WABT_WARN_UNUSED;
+  Result ReadAlignment(Address* align_log2, const char* desc) WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadField(TypeMut* out_value) WABT_WARN_UNUSED;
 
@@ -124,6 +125,9 @@ class BinaryReader {
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
   Result ReadEventType(Index* out_sig_index) WABT_WARN_UNUSED;
+  Result ReadAddress(Address* out_value,
+                     Index memory,
+                     const char* desc) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
@@ -166,6 +170,7 @@ class BinaryReader {
   Index num_function_signatures_ = 0;
   Index num_function_bodies_ = 0;
   Index data_count_ = kInvalidIndex;
+  std::vector<Limits> memories;
 
   using ReadEndRestoreGuard =
       ValueRestoreGuard<size_t, &BinaryReader::read_end_>;
@@ -278,6 +283,15 @@ Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadU64Leb128(uint64_t* out_value, const char* desc) {
+  const uint8_t* p = state_.data + state_.offset;
+  const uint8_t* end = state_.data + read_end_;
+  size_t bytes_read = wabt::ReadU64Leb128(p, end, out_value);
+  ERROR_UNLESS(bytes_read > 0, "unable to read u64 leb128: %s", desc);
+  state_.offset += bytes_read;
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadS32Leb128(uint32_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
@@ -366,7 +380,7 @@ Result BinaryReader::ReadOffset(Offset* offset, const char* desc) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadAlignment(uint32_t* alignment_log2, const char* desc) {
+Result BinaryReader::ReadAlignment(Address* alignment_log2, const char* desc) {
   uint32_t value;
   CHECK_RESULT(ReadU32Leb128(&value, desc));
   if (value >= 32) {
@@ -544,8 +558,10 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadU8(&flags, "table flags"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
+  bool is_64 = flags & WABT_BINARY_LIMITS_IS_64_FLAG;
   const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
   ERROR_IF(is_shared, "tables may not be shared");
+  ERROR_IF(is_64, "tables may not be 64-bit");
   ERROR_UNLESS(unknown_flags == 0, "malformed table limits flag: %d", flags);
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
   if (has_max) {
@@ -565,6 +581,7 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   CHECK_RESULT(ReadU8(&flags, "memory flags"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
+  bool is_64 = flags & WABT_BINARY_LIMITS_IS_64_FLAG;
   const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
   ERROR_UNLESS(unknown_flags == 0, "malformed memory limits flag: %d", flags);
   ERROR_IF(is_shared && !options_.features.threads_enabled(),
@@ -576,8 +593,12 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
 
   out_page_limits->has_max = has_max;
   out_page_limits->is_shared = is_shared;
+  out_page_limits->is_64 = is_64;
   out_page_limits->initial = initial;
   out_page_limits->max = max;
+
+  // Have to keep a copy of these, to know how to interpret load/stores.
+  memories.push_back(*out_page_limits);
   return Result::Ok;
 }
 
@@ -594,6 +615,22 @@ Result BinaryReader::ReadGlobalHeader(Type* out_type, bool* out_mutable) {
   *out_type = global_type;
   *out_mutable = mutable_;
   return Result::Ok;
+}
+
+Result BinaryReader::ReadAddress(Address* out_value,
+                                 Index memory,
+                                 const char* desc) {
+  ERROR_UNLESS(memory < memories.size(),
+               "load/store memory %u out of range %lu", memory,
+               memories.size());
+  if (memories[memory].is_64) {
+    return ReadU64Leb128(out_value, desc);
+  } else {
+    uint32_t val;
+    Result res = ReadU32Leb128(&val, desc);
+    *out_value = val;
+    return res;
+  }
 }
 
 Result BinaryReader::ReadFunctionBody(Offset end_offset) {
@@ -878,10 +915,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32X4Load16X4U:
       case Opcode::I64X2Load32X2S:
       case Opcode::I64X2Load32X2U: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
         CALLBACK(OnLoadExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
         break;
@@ -897,10 +934,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F32Store:
       case Opcode::F64Store:
       case Opcode::V128Store: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "store alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "store offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "store offset"));
 
         CALLBACK(OnStoreExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1213,10 +1250,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::V16X8LoadSplat:
       case Opcode::V32X4LoadSplat:
       case Opcode::V64X2LoadSplat: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
 
         CALLBACK(OnLoadSplatExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1319,10 +1356,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::AtomicNotify: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
 
         CALLBACK(OnAtomicNotifyExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1331,10 +1368,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::I32AtomicWait:
       case Opcode::I64AtomicWait: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
 
         CALLBACK(OnAtomicWaitExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1358,10 +1395,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicLoad32U:
       case Opcode::I32AtomicLoad:
       case Opcode::I64AtomicLoad: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
 
         CALLBACK(OnAtomicLoadExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1375,10 +1412,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicStore32:
       case Opcode::I32AtomicStore:
       case Opcode::I64AtomicStore: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "store alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "store offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "store offset"));
 
         CALLBACK(OnAtomicStoreExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1427,10 +1464,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw8XchgU:
       case Opcode::I64AtomicRmw16XchgU:
       case Opcode::I64AtomicRmw32XchgU: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "memory alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "memory offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "memory offset"));
 
         CALLBACK(OnAtomicRmwExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1444,10 +1481,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw8CmpxchgU:
       case Opcode::I64AtomicRmw16CmpxchgU:
       case Opcode::I64AtomicRmw32CmpxchgU: {
-        uint32_t alignment_log2;
+        Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "memory alignment"));
         Address offset;
-        CHECK_RESULT(ReadU32Leb128(&offset, "memory offset"));
+        CHECK_RESULT(ReadAddress(&offset, 0, "memory offset"));
 
         CALLBACK(OnAtomicRmwCmpxchgExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
@@ -1719,15 +1756,32 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
     RelocType type = static_cast<RelocType>(reloc_type);
     switch (type) {
       case RelocType::MemoryAddressLEB:
+      case RelocType::MemoryAddressLEB64:
       case RelocType::MemoryAddressSLEB:
+      case RelocType::MemoryAddressSLEB64:
       case RelocType::MemoryAddressRelSLEB:
+      case RelocType::MemoryAddressRelSLEB64:
       case RelocType::MemoryAddressI32:
+      case RelocType::MemoryAddressI64:
       case RelocType::FunctionOffsetI32:
       case RelocType::SectionOffsetI32:
         CHECK_RESULT(ReadS32Leb128(&addend, "addend"));
         break;
-      default:
+
+      case RelocType::FuncIndexLEB:
+      case RelocType::TableIndexSLEB:
+      case RelocType::TableIndexSLEB64:
+      case RelocType::TableIndexI32:
+      case RelocType::TableIndexI64:
+      case RelocType::TypeIndexLEB:
+      case RelocType::GlobalIndexLEB:
+      case RelocType::EventIndexLEB:
+      case RelocType::TableIndexRelSLEB:
         break;
+
+      default:
+        PrintError("unknown reloc type: %s", GetRelocTypeName(type));
+        return Result::Error;
     }
     CALLBACK(OnReloc, type, offset, index, addend);
   }
@@ -1841,7 +1895,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CALLBACK(OnSegmentInfoCount, count);
         for (Index i = 0; i < count; i++) {
           string_view name;
-          uint32_t alignment_log2;
+          Address alignment_log2;
           uint32_t flags;
           CHECK_RESULT(ReadStr(&name, "segment name"));
           CHECK_RESULT(ReadAlignment(&alignment_log2, "segment alignment"));

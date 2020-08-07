@@ -604,7 +604,7 @@ Result BinaryReaderLogging::OnEventSymbol(Index index,
 
 Result BinaryReaderLogging::OnSegmentInfo(Index index,
                                           string_view name,
-                                          uint32_t alignment,
+                                          Address alignment,
                                           uint32_t flags) {
   LOGF("OnSegmentInfo(%d name: " PRIstringview
        ", alignment: %d, flags: 0x%x)\n",
@@ -693,7 +693,7 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
   }
 
 #define DEFINE_LOAD_STORE_OPCODE(name)                                      \
-  Result BinaryReaderLogging::name(Opcode opcode, uint32_t alignment_log2,  \
+  Result BinaryReaderLogging::name(Opcode opcode, Address alignment_log2,   \
                                    Address offset) {                        \
     LOGF(#name "(opcode: \"%s\" (%u), align log2: %u, offset: %" PRIaddress \
                ")\n",                                                       \

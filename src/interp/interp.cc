@@ -169,7 +169,8 @@ Result Match(const EventType& expected,
 }
 
 //// Limits ////
-bool CanGrow(const Limits& limits, u32 old_size, u32 delta, u32* new_size) {
+template <typename T>
+bool CanGrow(const Limits& limits, T old_size, T delta, T* new_size) {
   if (limits.max >= delta && old_size <= limits.max - delta) {
     *new_size = old_size + delta;
     return true;
@@ -456,7 +457,7 @@ Result Table::Grow(Store& store, u32 count, Ref ref) {
   size_t old_size = elements_.size();
   u32 new_size;
   if (store.HasValueType(ref, type_.element) &&
-      CanGrow(type_.limits, old_size, count, &new_size)) {
+      CanGrow<u32>(type_.limits, old_size, count, &new_size)) {
     elements_.resize(new_size);
     Fill(store, old_size, ref, new_size - old_size);
     return Result::Ok;
@@ -527,9 +528,9 @@ Result Memory::Match(class Store& store,
   return MatchImpl(store, import_type, type_, out_trap);
 }
 
-Result Memory::Grow(u32 count) {
-  u32 new_pages;
-  if (CanGrow(type_.limits, pages_, count, &new_pages)) {
+Result Memory::Grow(u64 count) {
+  u64 new_pages;
+  if (CanGrow<u64>(type_.limits, pages_, count, &new_pages)) {
     pages_ = new_pages;
     data_.resize(new_pages * WABT_PAGE_SIZE);
     return Result::Ok;
@@ -537,7 +538,7 @@ Result Memory::Grow(u32 count) {
   return Result::Error;
 }
 
-Result Memory::Fill(u32 offset, u8 value, u32 size) {
+Result Memory::Fill(u64 offset, u8 value, u64 size) {
   if (IsValidAccess(offset, 0, size)) {
     std::fill(data_.begin() + offset, data_.begin() + offset + size, value);
     return Result::Ok;
@@ -545,10 +546,10 @@ Result Memory::Fill(u32 offset, u8 value, u32 size) {
   return Result::Error;
 }
 
-Result Memory::Init(u32 dst_offset,
+Result Memory::Init(u64 dst_offset,
                     const DataSegment& src,
-                    u32 src_offset,
-                    u32 size) {
+                    u64 src_offset,
+                    u64 size) {
   if (IsValidAccess(dst_offset, 0, size) &&
       src.IsValidRange(src_offset, size)) {
     std::copy(src.desc().data.begin() + src_offset,
@@ -561,10 +562,10 @@ Result Memory::Init(u32 dst_offset,
 
 // static
 Result Memory::Copy(Memory& dst,
-                    u32 dst_offset,
+                    u64 dst_offset,
                     const Memory& src,
-                    u32 src_offset,
-                    u32 size) {
+                    u64 src_offset,
+                    u64 size) {
   if (dst.IsValidAccess(dst_offset, 0, size) &&
       src.IsValidAccess(src_offset, 0, size)) {
     auto src_begin = src.data_.begin() + src_offset;
@@ -673,8 +674,8 @@ bool ElemSegment::IsValidRange(u32 offset, u32 size) const {
 DataSegment::DataSegment(const DataDesc* desc)
     : desc_(desc), size_(desc->data.size()) {}
 
-bool DataSegment::IsValidRange(u32 offset, u32 size) const {
-  u32 data_size = size_;
+bool DataSegment::IsValidRange(u64 offset, u64 size) const {
+  u64 data_size = size_;
   return size <= data_size && offset <= data_size - size;
 }
 
@@ -1175,17 +1176,29 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::MemorySize: {
       Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32]};
-      Push(memory->PageSize());
+      if (memory->type().limits.is_64) {
+        Push<u64>(memory->PageSize());
+      } else {
+        Push<u32>(static_cast<u32>(memory->PageSize()));
+      }
       break;
     }
 
     case O::MemoryGrow: {
       Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32]};
-      u32 old_size = memory->PageSize();
+      u64 old_size = memory->PageSize();
       if (Failed(memory->Grow(Pop<u32>()))) {
-        Push<s32>(-1);
+        if (memory->type().limits.is_64) {
+          Push<s64>(-1);
+        } else {
+          Push<s32>(-1);
+        }
       } else {
-        Push<u32>(old_size);
+        if (memory->type().limits.is_64) {
+          Push<u64>(old_size);
+        } else {
+          Push<u32>(old_size);
+        }
       }
       break;
     }
@@ -1724,11 +1737,11 @@ RunResult Thread::DoCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
 template <typename T>
 RunResult Thread::Load(Instr instr, T* out, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
-  u32 offset = Pop<u32>();
+  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->Load(offset, instr.imm_u32x2.snd, out)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %u",
-                       u64{offset} + instr.imm_u32x2.snd, sizeof(T),
+                       offset + instr.imm_u32x2.snd, sizeof(T),
                        memory->ByteSize()));
   return RunResult::Ok;
 }

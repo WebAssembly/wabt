@@ -201,23 +201,23 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
   virtual Result OnOpcodeType(Type type) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
-                                  uint32_t alignment_log2,
+                                  Address alignment_log2,
                                   Address offset) = 0;
   virtual Result OnAtomicStoreExpr(Opcode opcode,
-                                   uint32_t alignment_log2,
+                                   Address alignment_log2,
                                    Address offset) = 0;
   virtual Result OnAtomicRmwExpr(Opcode opcode,
-                                 uint32_t alignment_log2,
+                                 Address alignment_log2,
                                  Address offset) = 0;
   virtual Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
-                                        uint32_t alignment_log2,
+                                        Address alignment_log2,
                                         Address offset) = 0;
   virtual Result OnAtomicWaitExpr(Opcode opcode,
-                                  uint32_t alignment_log2,
+                                  Address alignment_log2,
                                   Address offset) = 0;
   virtual Result OnAtomicFenceExpr(uint32_t consistency_model) = 0;
   virtual Result OnAtomicNotifyExpr(Opcode opcode,
-                                    uint32_t alignment_log2,
+                                    Address alignment_log2,
                                     Address offset) = 0;
   virtual Result OnBinaryExpr(Opcode opcode) = 0;
   virtual Result OnBlockExpr(Type sig_type) = 0;
@@ -245,7 +245,7 @@ class BinaryReaderDelegate {
   virtual Result OnI64ConstExpr(uint64_t value) = 0;
   virtual Result OnIfExpr(Type sig_type) = 0;
   virtual Result OnLoadExpr(Opcode opcode,
-                            uint32_t alignment_log2,
+                            Address alignment_log2,
                             Address offset) = 0;
   virtual Result OnLocalGetExpr(Index local_index) = 0;
   virtual Result OnLocalSetExpr(Index local_index) = 0;
@@ -276,7 +276,7 @@ class BinaryReaderDelegate {
                                           Index table_index) = 0;
   virtual Result OnSelectExpr(Type result_type) = 0;
   virtual Result OnStoreExpr(Opcode opcode,
-                             uint32_t alignment_log2,
+                             Address alignment_log2,
                              Address offset) = 0;
   virtual Result OnThrowExpr(Index event_index) = 0;
   virtual Result OnTryExpr(Type sig_type) = 0;
@@ -292,7 +292,7 @@ class BinaryReaderDelegate {
   virtual Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) = 0;
 
   virtual Result OnLoadSplatExpr(Opcode opcode,
-                                 uint32_t alignment_log2,
+                                 Address alignment_log2,
                                  Address offset) = 0;
 
   /* Elem section */
@@ -402,7 +402,7 @@ class BinaryReaderDelegate {
   virtual Result OnSegmentInfoCount(Index count) = 0;
   virtual Result OnSegmentInfo(Index index,
                                string_view name,
-                               uint32_t alignment_log2,
+                               Address alignment_log2,
                                uint32_t flags) = 0;
   virtual Result OnInitFunctionCount(Index count) = 0;
   virtual Result OnInitFunction(uint32_t priority, Index function_index) = 0;

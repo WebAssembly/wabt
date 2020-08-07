@@ -192,32 +192,32 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
   Result OnOpcodeType(Type type) override { return Result::Ok; }
   Result OnAtomicLoadExpr(Opcode opcode,
-                          uint32_t alignment_log2,
+                          Address alignment_log2,
                           Address offset) override {
     return Result::Ok;
   }
   Result OnAtomicStoreExpr(Opcode opcode,
-                           uint32_t alignment_log2,
+                           Address alignment_log2,
                            Address offset) override {
     return Result::Ok;
   }
   Result OnAtomicRmwExpr(Opcode opcode,
-                         uint32_t alignment_log2,
+                         Address alignment_log2,
                          Address offset) override {
     return Result::Ok;
   }
   Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
-                                uint32_t alignment_log2,
+                                Address alignment_log2,
                                 Address offset) override {
     return Result::Ok;
   }
-  Result OnAtomicWaitExpr(Opcode, uint32_t, Address) override {
+  Result OnAtomicWaitExpr(Opcode, Address, Address) override {
     return Result::Ok;
   }
   Result OnAtomicFenceExpr(uint32_t) override {
     return Result::Ok;
   }
-  Result OnAtomicNotifyExpr(Opcode, uint32_t, Address) override {
+  Result OnAtomicNotifyExpr(Opcode, Address, Address) override {
     return Result::Ok;
   }
   Result OnBinaryExpr(Opcode opcode) override { return Result::Ok; }
@@ -250,7 +250,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnI64ConstExpr(uint64_t value) override { return Result::Ok; }
   Result OnIfExpr(Type sig_type) override { return Result::Ok; }
   Result OnLoadExpr(Opcode opcode,
-                    uint32_t alignment_log2,
+                    Address alignment_log2,
                     Address offset) override {
     return Result::Ok;
   }
@@ -286,7 +286,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnReturnExpr() override { return Result::Ok; }
   Result OnSelectExpr(Type result_type) override { return Result::Ok; }
   Result OnStoreExpr(Opcode opcode,
-                     uint32_t alignment_log2,
+                     Address alignment_log2,
                      Address offset) override {
     return Result::Ok;
   }
@@ -304,7 +304,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnLoadSplatExpr(Opcode opcode,
-                         uint32_t alignment_log2,
+                         Address alignment_log2,
                          Address offset) override {
     return Result::Ok;
   }
@@ -473,7 +473,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnSegmentInfoCount(Index count) override { return Result::Ok; }
   Result OnSegmentInfo(Index index,
                        string_view name,
-                       uint32_t alignment,
+                       Address alignment,
                        uint32_t flags) override {
     return Result::Ok;
   }

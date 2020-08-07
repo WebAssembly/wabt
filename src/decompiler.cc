@@ -303,7 +303,7 @@ struct Decompiler {
             const_exp.etype == ExprType::Const) {
           auto& ce = *cast<ConstExpr>(const_exp.e);
           if (ce.const_.type() == Type::I32 &&
-              (1U << ce.const_.u32()) == align) {
+              (1ULL << ce.const_.u32()) == align) {
             // Pfew, case detected :( Lets re-write this in Haskell.
             // TODO: we're decompiling these twice.
             // The thing to the left of << is going to be part of the index.

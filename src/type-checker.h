@@ -60,12 +60,12 @@ class TypeChecker {
 
   Result BeginFunction(const TypeVector& sig);
   Result OnAtomicFence(uint32_t consistency_model);
-  Result OnAtomicLoad(Opcode);
-  Result OnAtomicNotify(Opcode);
-  Result OnAtomicStore(Opcode);
-  Result OnAtomicRmw(Opcode);
-  Result OnAtomicRmwCmpxchg(Opcode);
-  Result OnAtomicWait(Opcode);
+  Result OnAtomicLoad(Opcode, const Limits& limits);
+  Result OnAtomicNotify(Opcode, const Limits& limits);
+  Result OnAtomicStore(Opcode, const Limits& limits);
+  Result OnAtomicRmw(Opcode, const Limits& limits);
+  Result OnAtomicRmwCmpxchg(Opcode, const Limits& limits);
+  Result OnAtomicWait(Opcode, const Limits& limits);
   Result OnBinary(Opcode);
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
@@ -89,17 +89,17 @@ class TypeChecker {
   Result OnGlobalGet(Type);
   Result OnGlobalSet(Type);
   Result OnIf(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnLoad(Opcode);
+  Result OnLoad(Opcode, const Limits& limits);
   Result OnLocalGet(Type);
   Result OnLocalSet(Type);
   Result OnLocalTee(Type);
   Result OnLoop(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnMemoryCopy();
+  Result OnMemoryCopy(const Limits& limits);
   Result OnDataDrop(Index);
-  Result OnMemoryFill();
-  Result OnMemoryGrow();
-  Result OnMemoryInit(Index);
-  Result OnMemorySize();
+  Result OnMemoryFill(const Limits& limits);
+  Result OnMemoryGrow(const Limits& limits);
+  Result OnMemoryInit(Index, const Limits& limits);
+  Result OnMemorySize(const Limits& limits);
   Result OnTableCopy();
   Result OnElemDrop(Index);
   Result OnTableInit(Index, Index);
@@ -116,7 +116,7 @@ class TypeChecker {
   Result OnSelect(Type expected);
   Result OnSimdLaneOp(Opcode, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
-  Result OnStore(Opcode);
+  Result OnStore(Opcode, const Limits& limits);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);
@@ -150,15 +150,20 @@ class TypeChecker {
   Result PopAndCheckCall(const TypeVector& param_types,
                          const TypeVector& result_types,
                          const char* desc);
-    Result PopAndCheck1Type(Type expected, const char* desc);
+  Result PopAndCheck1Type(Type expected, const char* desc);
   Result PopAndCheck2Types(Type expected1, Type expected2, const char* desc);
   Result PopAndCheck3Types(Type expected1,
                            Type expected2,
                            Type expected3,
                            const char* desc);
-  Result CheckOpcode1(Opcode opcode);
-  Result CheckOpcode2(Opcode opcode);
-  Result CheckOpcode3(Opcode opcode);
+  Result CheckOpcode1(Opcode opcode,
+                      const Limits* limits = nullptr,
+                      bool has_address_operands = false);
+  Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
+  Result CheckOpcode3(Opcode opcode,
+                      const Limits* limits1 = nullptr,
+                      const Limits* limits2 = nullptr,
+                      const Limits* limits3 = nullptr);
   Result OnEnd(Label* label, const char* sig_desc, const char* end_desc);
 
   template <typename... Args>

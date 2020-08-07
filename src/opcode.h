@@ -69,6 +69,14 @@ struct Opcode {
   Type GetParamType(int n) const { return GetInfo().param_types[n - 1]; }
   Address GetMemorySize() const { return GetInfo().memory_size; }
 
+  // If this is a load/store op, the type depends on the memory used.
+  Type GetMemoryParam(Type param,
+                      const Limits* limits,
+                      bool has_address_operands) {
+    return limits && limits->is_64 && has_address_operands ? Type(Type::I64)
+                                                           : param;
+  }
+
   // Get the byte sequence for this opcode, including prefix.
   std::vector<uint8_t> GetBytes() const;
 
