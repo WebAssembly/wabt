@@ -496,10 +496,10 @@ void WatWriter::WriteLoadStoreExpr(const Expr* expr) {
   auto typed_expr = cast<T>(expr);
   WritePutsSpace(typed_expr->opcode.GetName());
   if (typed_expr->offset) {
-    Writef("offset=%u", typed_expr->offset);
+    Writef("offset=%lu", typed_expr->offset);
   }
   if (!typed_expr->opcode.IsNaturallyAligned(typed_expr->align)) {
-    Writef("align=%u", typed_expr->align);
+    Writef("align=%lu", typed_expr->align);
   }
   WriteNewline(NO_FORCE_NEWLINE);
 }
