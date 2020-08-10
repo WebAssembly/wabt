@@ -507,8 +507,7 @@ class RefPtr {
   Store::RootList::Index root_index_;
 };
 
-union Value {
-  Value() = default;
+struct Value {
   static Value WABT_VECTORCALL Make(s32);
   static Value WABT_VECTORCALL Make(u32);
   static Value WABT_VECTORCALL Make(s64);
@@ -525,12 +524,31 @@ union Value {
   template <typename T>
   void WABT_VECTORCALL Set(T);
 
-  u32 i32_;
-  u64 i64_;
-  f32 f32_;
-  f64 f64_;
-  v128 v128_;
-  Ref ref_;
+ private:
+  union {
+    u32 i32_;
+    u64 i64_;
+    f32 f32_;
+    f64 f64_;
+    v128 v128_;
+    Ref ref_;
+  };
+
+ public:
+#ifndef NDEBUG
+  Value() : v128_(0, 0, 0, 0), type(ValueType::Any) {}
+  void SetType(ValueType t) { type = t; }
+  void CheckType(ValueType t) const {
+    // Sadly we must allow Any here, since locals may be uninitialized.
+    // Alternatively we could modify InterpAlloca to set the type.
+    assert(t == type || type == ValueType::Any);
+  }
+  ValueType type;
+#else
+  Value() : v128_(0, 0, 0, 0) {}
+  void SetType(ValueType) {}
+  void CheckType(ValueType) const {}
+#endif
 };
 using Values = std::vector<Value>;
 

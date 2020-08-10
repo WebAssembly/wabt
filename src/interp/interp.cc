@@ -615,7 +615,7 @@ Global::Global(Store& store, GlobalType type, Value value)
 
 void Global::Mark(Store& store) {
   if (IsReference(type_.type)) {
-    store.Mark(value_.ref_);
+    store.Mark(value_.Get<Ref>());
   }
 }
 
@@ -846,8 +846,8 @@ Instance::Ptr Instance::Instantiate(Store& store,
           *out_trap = Trap::New(
               store,
               StringPrintf("out of bounds memory access: data segment is "
-                           "out of bounds: [%u, %" PRIu64 ") >= max value %u",
-                           offset, u64{offset} + segment.size(),
+                           "out of bounds: [%u, %" PRIu64 ") >= max value %"
+                           PRIu64, offset, u64{offset} + segment.size(),
                            memory->ByteSize()));
           return {};
         }
@@ -899,7 +899,7 @@ void Thread::Mark(Store& store) {
     frame.Mark(store);
   }
   for (auto index: refs_) {
-    store.Mark(values_[index].ref_);
+    store.Mark(values_[index].Get<Ref>());
   }
 }
 
@@ -1760,11 +1760,11 @@ template <typename T, typename V>
 RunResult Thread::DoStore(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
   V val = static_cast<V>(Pop<T>());
-  u32 offset = Pop<u32>();
+  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2.snd, val)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %u",
-                       u64{offset} + instr.imm_u32x2.snd, sizeof(V),
+                       offset + instr.imm_u32x2.snd, sizeof(V),
                        memory->ByteSize()));
   return RunResult::Ok;
 }
@@ -2027,7 +2027,7 @@ RunResult Thread::DoSimdShift(BinopFunc<R, T> f) {
   using ST = typename Simd128<T>::Type;
   using SR = typename Simd128<R>::Type;
   static_assert(ST::lanes == SR::lanes, "SIMD lanes don't match");
-  auto amount = Pop<T>();
+  auto amount = Pop<u32>();
   auto lhs = Pop<ST>();
   SR result;
   for (u8 i = 0; i < SR::lanes; ++i) {
@@ -2121,10 +2121,10 @@ RunResult Thread::DoSimdLoadExtend(Instr instr, Trap::Ptr* out_trap) {
 template <typename T, typename V>
 RunResult Thread::DoAtomicLoad(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
-  u32 offset = Pop<u32>();
+  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   V val;
   TRAP_IF(Failed(memory->AtomicLoad(offset, instr.imm_u32x2.snd, &val)),
-          StringPrintf("invalid atomic access at %u+%u", offset,
+          StringPrintf("invalid atomic access at %lu+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<T>(val));
   return RunResult::Ok;
@@ -2134,9 +2134,9 @@ template <typename T, typename V>
 RunResult Thread::DoAtomicStore(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
   V val = static_cast<V>(Pop<T>());
-  u32 offset = Pop<u32>();
+  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->AtomicStore(offset, instr.imm_u32x2.snd, val)),
-          StringPrintf("invalid atomic access at %u+%u", offset,
+          StringPrintf("invalid atomic access at %lu+%u", offset,
                        instr.imm_u32x2.snd));
   return RunResult::Ok;
 }
@@ -2146,11 +2146,11 @@ RunResult Thread::DoAtomicRmw(BinopFunc<T, T> f,
                               Instr instr,
                               Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
-  T val = Pop<T>();
-  u32 offset = Pop<u32>();
+  T val = static_cast<T>(Pop<R>());
+  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   T old;
   TRAP_IF(Failed(memory->AtomicRmw(offset, instr.imm_u32x2.snd, val, f, &old)),
-          StringPrintf("invalid atomic access at %u+%u", offset,
+          StringPrintf("invalid atomic access at %lu+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<R>(old));
   return RunResult::Ok;
@@ -2162,10 +2162,10 @@ RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
   V replace = static_cast<V>(Pop<T>());
   V expect = static_cast<V>(Pop<T>());
   V old;
-  u32 offset = Pop<u32>();
+  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->AtomicRmwCmpxchg(offset, instr.imm_u32x2.snd, expect,
                                           replace, &old)),
-          StringPrintf("invalid atomic access at %u+%u", offset,
+          StringPrintf("invalid atomic access at %lu+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<T>(old));
   return RunResult::Ok;
@@ -2182,8 +2182,19 @@ std::string Thread::TraceSource::Header(Istream::Offset offset) {
 std::string Thread::TraceSource::Pick(Index index, Instr instr) {
   Value val = thread_->Pick(index);
   const char* reftype;
-  // TODO: the opcode index and pick index go in opposite directions.
-  auto type = instr.op.GetParamType(index);
+  // Estimate number of operands.
+  // TODO: Instead, record this accurately in opcode.def.
+  Index num_operands = 3;
+  for (Index i = 3; i >= 1; i--) {
+    if (instr.op.GetParamType(i) == ValueType::Void) {
+      num_operands--;
+    } else {
+      break;
+    }
+  }
+  auto type = index > num_operands
+    ? Type(ValueType::Void)
+    : instr.op.GetParamType(num_operands - index + 1);
   if (type == ValueType::Void) {
     // Void should never be displayed normally; we only expect to see it when
     // the stack may have different a different type. This is likely to occur

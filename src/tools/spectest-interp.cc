@@ -703,7 +703,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
                                              ExpectedValue* out_value,
                                              string_view value_str,
                                              AllowExpected allow_expected) {
-  v128& v = out_value->value.value.v128_;
+  v128 v = out_value->value.value.Get<v128>();
 
   switch (lane_type) {
     case Type::I8: {
@@ -758,6 +758,8 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
       PrintError("unknown concrete type: \"%s\"", lane_type.GetName());
       return wabt::Result::Error;
   }
+
+  out_value->value.value.Set<v128>(v);
   return wabt::Result::Ok;
 }
 

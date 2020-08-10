@@ -570,11 +570,11 @@ Result SharedValidator::CheckAlign(const Location& loc,
                                    Address alignment,
                                    Address natural_alignment) {
   if (!is_power_of_two(alignment)) {
-    PrintError(loc, "alignment (%u) must be a power of 2", alignment);
+    PrintError(loc, "alignment (%lu) must be a power of 2", alignment);
     return Result::Error;
   }
   if (alignment > natural_alignment) {
-    PrintError(loc, "alignment must not be larger than natural alignment (%u)",
+    PrintError(loc, "alignment must not be larger than natural alignment (%lu)",
                natural_alignment);
     return Result::Error;
   }
@@ -585,11 +585,11 @@ Result SharedValidator::CheckAtomicAlign(const Location& loc,
                                          Address alignment,
                                          Address natural_alignment) {
   if (!is_power_of_two(alignment)) {
-    PrintError(loc, "alignment (%u) must be a power of 2", alignment);
+    PrintError(loc, "alignment (%lu) must be a power of 2", alignment);
     return Result::Error;
   }
   if (alignment != natural_alignment) {
-    PrintError(loc, "alignment must be equal to natural alignment (%u)",
+    PrintError(loc, "alignment must be equal to natural alignment (%lu)",
                natural_alignment);
     return Result::Error;
   }
