@@ -279,11 +279,6 @@ void BinaryWriter::EndSection() {
   assert(last_section_leb_size_guess_ != 0);
   Offset delta = WriteFixupU32Leb128Size(
       last_section_offset_, last_section_leb_size_guess_, "FIXUP section size");
-  if (current_reloc_section_ && delta != 0) {
-    for (Reloc& reloc : current_reloc_section_->relocations) {
-      reloc.offset += delta;
-    }
-  }
   last_section_leb_size_guess_ = 0;
   section_count_++;
 }
@@ -1188,8 +1183,17 @@ Result BinaryWriter::WriteModule() {
       Offset body_size_offset =
           WriteU32Leb128Space(leb_size_guess, "func body size (guess)");
       WriteFunc(func);
-      WriteFixupU32Leb128Size(body_size_offset, leb_size_guess,
+      auto func_start_offset = body_size_offset - last_section_payload_offset_;
+      auto func_end_offset = stream_->offset() - last_section_payload_offset_;
+      auto delta = WriteFixupU32Leb128Size(body_size_offset, leb_size_guess,
                               "FIXUP func body size");
+      if (current_reloc_section_ && delta != 0) {
+        for (Reloc& reloc : current_reloc_section_->relocations) {
+          if (reloc.offset >= func_start_offset && reloc.offset <= func_end_offset) {
+            reloc.offset += delta;
+          }
+        }
+      }
     }
     EndSection();
   }
