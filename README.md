@@ -37,13 +37,14 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 ## Supported Proposals
 
 * Proposal: Name and link to the WebAssembly proposal repo
-* flag: Flag to pass to the tool to enable support for the feature
+* flag: Flag to pass to the tool to enable/disable support for the feature
+* default: Whether the feature is enabled by default
 * binary: Whether wabt can read/write the binary format
 * text: Whether wabt can read/write the text format
 * validate: Whether wabt can validate the syntax
 * interpret: Whether wabt can execute these operations in `wasm-interp` or `spectest-interp`
 
-| Proposal | flag | enabled by default? | binary | text | validate | interpret |
+| Proposal | flag | default | binary | text | validate | interpret |
 | - | - | - | - | - | - | - |
 | [exception handling][] | `--enable-exceptions` | | ✓ | ✓ | ✓ | ✓ |
 | [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ |
