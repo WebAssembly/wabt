@@ -129,6 +129,10 @@ if (COMPILER_IS_MSVC)
     # disable exception use in C++ library
     add_definitions(-D_HAS_EXCEPTIONS=0)
   endif ()
+
+  # multi-core build.
+  add_definitions("/MP")
+
 else ()
   # disable -Wunused-parameter: this is really common when implementing
   #   interfaces, etc.
