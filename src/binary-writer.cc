@@ -245,10 +245,7 @@ void BinaryWriter::WriteBlockDecl(const BlockDeclaration& decl) {
   Index index = decl.has_func_type ? module_->GetFuncTypeIndex(decl.type_var)
                                    : module_->GetFuncTypeIndex(decl.sig);
   assert(index != kInvalidIndex);
-  if (options_.relocatable) {
-    AddReloc(RelocType::TypeIndexLEB, index);
-  }
-  WriteS32Leb128(stream_, index, "block type function index");
+  WriteU32Leb128WithReloc(index, "block type function index", RelocType::TypeIndexLEB);
 }
 
 void BinaryWriter::WriteSectionHeader(const char* desc,
@@ -321,8 +318,9 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
       type = SymbolType::Global;
       name = module_->globals[index]->name;
       break;
+    case RelocType::TypeIndexLEB:
+      // type indexes don't create entries in the symbol table, don't use this method for them
     default:
-      // TODO: Add support for TypeIndexLEB.
       fprintf(stderr, "warning: unsupported relocation type: %s\n",
               GetRelocTypeName(reloc_type));
       return kInvalidIndex;
@@ -348,7 +346,12 @@ void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
 
   // Add a new relocation to the curent reloc section
   size_t offset = stream_->offset() - last_section_payload_offset_;
-  Index symbol_index = GetSymbolIndex(reloc_type, index);
+  Index symbol_index;
+  if (reloc_type == RelocType::TypeIndexLEB) {
+    symbol_index = index;
+  } else {
+    symbol_index = GetSymbolIndex(reloc_type, index);
+  }
   current_reloc_section_->relocations.emplace_back(reloc_type, offset,
                                                    symbol_index);
 }
