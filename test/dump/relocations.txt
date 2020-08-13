@@ -1,42 +1,177 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -r
-;;; ARGS1: --headers
+;;; ARGS1: -x
 (module
-  (type $t (func (param i32)))
-  (import "__extern" "foo" (func (param i32) (result i32)))
+
+  (import "__extern" "foo" (func $imported_func (param i32) (result i32)))
+  (func $call_imported_func (param i32) (result i32)
+    local.get 0
+    call $imported_func)
+  ;;(export "call_imported_func" (func $call_imported_func))
+
+  (func $call_local_func (param i32) (param i32) (result i32) (result i32)
+    local.get 0
+    call $call_imported_func
+    local.get 1
+    call $call_imported_func)
+  ;;(export "call_local_func" (func $call_local_func))
+
+
+  (table anyfunc (elem $call_local_func)) ;; relocated table element
+  (func $call_indirect
+    i32.const 4444
+    i32.const 5555
+    i32.const 0
+    call_indirect (param i32)(param i32)(result i32)(result i32)
+    drop
+    drop)
+  ;;(export "call_indirect" (func $call_indirect))
+
   (global $g i32 (i32.const 0))
-  (func $f (param i32) (result i32)
-    get_global 0
-    call 1
-    call 0)
-  (export "f" (func $f))
-  (table anyfunc (elem $f)))
+  (func $get_global (result i32)
+    global.get $g)
+  ;;(export "get_global" (func $get_global))
+
+  (func $multivalue_block (param i32) (result i32 i32)
+    (if (result i32 i32)
+        (local.get 0)
+        (then
+            i32.const 0
+            i32.const 1)
+        (else
+            i32.const 2
+            i32.const 3)))
+  ;;(export "multivalue_block" (func $multivalue_block))
+
+  (func $run_all
+    call $get_global
+    call $multivalue_block
+    call $call_imported_func
+    call $call_local_func
+    call $call_indirect
+    drop
+    drop
+  )
+
+  (start $run_all))
 (;; STDOUT ;;;
 
 relocations.wasm:	file format wasm 0x1
 
-Sections:
+Section Details:
 
-     Type start=0x0000000a end=0x00000014 (size=0x0000000a) count: 2
-   Import start=0x00000016 end=0x00000026 (size=0x00000010) count: 1
- Function start=0x00000028 end=0x0000002a (size=0x00000002) count: 1
-    Table start=0x0000002c end=0x00000031 (size=0x00000005) count: 1
-   Global start=0x00000033 end=0x00000039 (size=0x00000006) count: 1
-   Export start=0x0000003b end=0x00000040 (size=0x00000005) count: 1
-     Elem start=0x00000042 end=0x0000004d (size=0x0000000b) count: 1
-     Code start=0x0000004f end=0x00000065 (size=0x00000016) count: 1
-   Custom start=0x00000067 end=0x00000082 (size=0x0000001b) "linking"
-   Custom start=0x00000084 end=0x00000094 (size=0x00000010) "reloc.Elem"
-   Custom start=0x00000096 end=0x000000ac (size=0x00000016) "reloc.Code"
+Type[6]:
+ - type[0] (i32) -> i32
+ - type[1] (i32, i32) -> (i32, i32)
+ - type[2] () -> nil
+ - type[3] () -> i32
+ - type[4] (i32) -> (i32, i32)
+ - type[5] () -> (i32, i32)
+Import[1]:
+ - func[0] sig=0 <__extern.foo> <- __extern.foo
+Function[6]:
+ - func[1] sig=0 <$call_imported_func>
+ - func[2] sig=1 <$call_local_func>
+ - func[3] sig=2 <$call_indirect>
+ - func[4] sig=3 <$get_global>
+ - func[5] sig=4 <$multivalue_block>
+ - func[6] sig=2
+Table[1]:
+ - table[0] type=funcref initial=1 max=1
+Global[1]:
+ - global[0] i32 mutable=0 <$g> - init i32=0
+Start:
+ - start function: 6
+Elem[1]:
+ - segment[0] flags=0 table=0 count=1 - init i32=0
+  - elem[0] = func[2] <$call_local_func>
+Code[6]:
+ - func[1] size=10 <$call_imported_func>
+ - func[2] size=18 <$call_local_func>
+ - func[3] size=19 <$call_indirect>
+ - func[4] size=8 <$get_global>
+ - func[5] size=20 <$multivalue_block>
+ - func[6] size=34
+Custom:
+ - name: "linking"
+  - symbol table [count=7]
+   - 0: F <$call_local_func> func=2 binding=global vis=default
+   - 1: F <__extern.foo> func=0 undefined binding=global vis=default
+   - 2: F <$call_imported_func> func=1 binding=global vis=default
+   - 3: G <$g> global=0 binding=global vis=default
+   - 4: F <$get_global> func=4 binding=global vis=default
+   - 5: F <$multivalue_block> func=5 binding=global vis=default
+   - 6: F <$call_indirect> func=3 binding=global vis=default
+Custom:
+ - name: "reloc.Elem"
+  - relocations for section: 6 (Elem) [1]
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000006(file=0x00005e) symbol=0 <$call_local_func>
+Custom:
+ - name: "reloc.Code"
+  - relocations for section: 7 (Code) [11]
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000006(file=0x00006b) symbol=1 <__extern.foo>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000011(file=0x000076) symbol=2 <$call_imported_func>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000019(file=0x00007e) symbol=2 <$call_imported_func>
+   - R_WASM_TYPE_INDEX_LEB offset=0x00002a(file=0x00008f) type=1
+   - R_WASM_GLOBAL_INDEX_LEB offset=0x000036(file=0x00009b) symbol=3 <$g>
+   - R_WASM_TYPE_INDEX_LEB offset=0x000041(file=0x0000a6) type=5
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000054(file=0x0000b9) symbol=4 <$get_global>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x00005a(file=0x0000bf) symbol=5 <$multivalue_block>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000060(file=0x0000c5) symbol=2 <$call_imported_func>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000066(file=0x0000cb) symbol=0 <$call_local_func>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x00006c(file=0x0000d1) symbol=6 <$call_indirect>
 
 Code Disassembly:
 
-000051 func[1] <$f>:
- 000052: 23 80 80 80 80 00          | global.get 0 <$g>
-           000053: R_WASM_GLOBAL_INDEX_LEB 1 <$g>
- 000058: 10 81 80 80 80 00          | call 1 <$f>
-           000059: R_WASM_FUNCTION_INDEX_LEB 0 <$f>
- 00005e: 10 80 80 80 80 00          | call 0 <__extern.foo>
-           00005f: R_WASM_FUNCTION_INDEX_LEB 2 <__extern.foo>
- 000064: 0b                         | end
+000067 func[1] <$call_imported_func>:
+ 000068: 20 00                      | local.get 0
+ 00006a: 10 80 80 80 80 00          | call 0 <__extern.foo>
+           00006b: R_WASM_FUNCTION_INDEX_LEB 1 <__extern.foo>
+ 000070: 0b                         | end
+000072 func[2] <$call_local_func>:
+ 000073: 20 00                      | local.get 0
+ 000075: 10 81 80 80 80 00          | call 1 <$call_imported_func>
+           000076: R_WASM_FUNCTION_INDEX_LEB 2 <$call_imported_func>
+ 00007b: 20 01                      | local.get 1
+ 00007d: 10 81 80 80 80 00          | call 1 <$call_imported_func>
+           00007e: R_WASM_FUNCTION_INDEX_LEB 2 <$call_imported_func>
+ 000083: 0b                         | end
+000085 func[3] <$call_indirect>:
+ 000086: 41 dc 22                   | i32.const 4444
+ 000089: 41 b3 2b                   | i32.const 5555
+ 00008c: 41 00                      | i32.const 0
+ 00008e: 11 81 80 80 80 00 00       | call_indirect 1 0
+           00008f: R_WASM_TYPE_INDEX_LEB 1
+ 000095: 1a                         | drop
+ 000096: 1a                         | drop
+ 000097: 0b                         | end
+000099 func[4] <$get_global>:
+ 00009a: 23 80 80 80 80 00          | global.get 0 <$g>
+           00009b: R_WASM_GLOBAL_INDEX_LEB 3 <$g>
+ 0000a0: 0b                         | end
+0000a2 func[5] <$multivalue_block>:
+ 0000a3: 20 00                      | local.get 0
+ 0000a5: 04 85 80 80 80 00          | if type[5]
+           0000a6: R_WASM_TYPE_INDEX_LEB 5
+ 0000ab: 41 00                      |   i32.const 0
+ 0000ad: 41 01                      |   i32.const 1
+ 0000af: 05                         | else
+ 0000b0: 41 02                      |   i32.const 2
+ 0000b2: 41 03                      |   i32.const 3
+ 0000b4: 0b                         | end
+ 0000b5: 0b                         | end
+0000b7 func[6]:
+ 0000b8: 10 84 80 80 80 00          | call 4 <$get_global>
+           0000b9: R_WASM_FUNCTION_INDEX_LEB 4 <$get_global>
+ 0000be: 10 85 80 80 80 00          | call 5 <$multivalue_block>
+           0000bf: R_WASM_FUNCTION_INDEX_LEB 5 <$multivalue_block>
+ 0000c4: 10 81 80 80 80 00          | call 1 <$call_imported_func>
+           0000c5: R_WASM_FUNCTION_INDEX_LEB 2 <$call_imported_func>
+ 0000ca: 10 82 80 80 80 00          | call 2 <$call_local_func>
+           0000cb: R_WASM_FUNCTION_INDEX_LEB 0 <$call_local_func>
+ 0000d0: 10 83 80 80 80 00          | call 3 <$call_indirect>
+           0000d1: R_WASM_FUNCTION_INDEX_LEB 6 <$call_indirect>
+ 0000d6: 1a                         | drop
+ 0000d7: 1a                         | drop
+ 0000d8: 0b                         | end
 ;;; STDOUT ;;)
