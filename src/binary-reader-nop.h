@@ -36,7 +36,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
 
   /* Custom section */
-  Result BeginCustomSection(Offset size, string_view section_name) override {
+  Result BeginCustomSection(Index section_index,
+                            Offset size,
+                            string_view section_name) override {
     return Result::Ok;
   }
   Result EndCustomSection() override { return Result::Ok; }

@@ -133,7 +133,8 @@ class BinaryReader {
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
-  Result ReadCustomSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadCustomSection(Index section_index,
+                           Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadImportSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadFunctionSection(Offset section_size) WABT_WARN_UNUSED;
@@ -1973,10 +1974,11 @@ Result BinaryReader::ReadEventSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadCustomSection(Offset section_size) {
+Result BinaryReader::ReadCustomSection(Index section_index,
+                                       Offset section_size) {
   string_view section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
-  CALLBACK(BeginCustomSection, section_size, section_name);
+  CALLBACK(BeginCustomSection, section_index, section_size, section_name);
   ValueRestoreGuard<bool, &BinaryReader::reading_custom_section_> guard(this);
   reading_custom_section_ = true;
 
@@ -2458,7 +2460,7 @@ Result BinaryReader::ReadSections() {
     Result section_result = Result::Error;
     switch (section) {
       case BinarySection::Custom:
-        section_result = ReadCustomSection(section_size);
+        section_result = ReadCustomSection(section_index, section_size);
         if (options_.fail_on_custom_section_error) {
           result |= section_result;
         } else {
