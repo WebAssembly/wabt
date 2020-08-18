@@ -45,11 +45,11 @@ jobs:
     - name: mkdir
       run: mkdir -p out
     - name: cmake
-      run: cmake .. -G Ninja
+      run: cmake .. -G Ninja -DWERROR=ON
       working-directory: out
       if: matrix.os != 'windows-latest'
     - name: cmake (windows)
-      run: cmake ..
+      run: cmake .. -DWERROR=ON
       working-directory: out
       if: matrix.os == 'windows-latest'
     - name: build
