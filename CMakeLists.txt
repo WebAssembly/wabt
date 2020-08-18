@@ -63,7 +63,7 @@ option(USE_LSAN "Use leak sanitizer" OFF)
 option(USE_UBSAN "Use undefined behavior sanitizer" OFF)
 option(CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(WITH_EXCEPTIONS "Build with exceptions enabled" OFF)
-option(WERROR "Build with warnings as errors" OFF)
+option(WERROR "Build with warnings as errors" ON)
 # WASI support is still a work in progress.
 # Only a handful of syscalls are supported at this point.
 option(WITH_WASI "Build WASI support via uvwasi" OFF)
