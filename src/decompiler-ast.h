@@ -219,7 +219,7 @@ struct AST {
     cur_block_id = blocks_closed.size();
     blocks_closed.push_back(false);
     auto start = exp_stack.size();
-    auto value_stack_depth_start = value_stack_depth - nparams;
+    auto value_stack_depth_start = value_stack_depth - static_cast<int>(nparams);
     auto value_stack_in_variables = value_stack_depth;
     bool unreachable = false;
     for (auto& e : es) {
