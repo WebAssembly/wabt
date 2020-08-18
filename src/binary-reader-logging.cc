@@ -606,8 +606,8 @@ Result BinaryReaderLogging::OnSegmentInfo(Index index,
                                           string_view name,
                                           Address alignment,
                                           uint32_t flags) {
-  LOGF("OnSegmentInfo(%d name: " PRIstringview
-       ", alignment: %lu, flags: 0x%x)\n",
+  LOGF("OnSegmentInfo(%d name: " PRIstringview ", alignment: %" PRIaddress
+       ", flags: 0x%x)\n",
        index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment, flags);
   return reader_->OnSegmentInfo(index, name, alignment, flags);
 }
@@ -692,13 +692,13 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
     return reader_->name(opcode);                                      \
   }
 
-#define DEFINE_LOAD_STORE_OPCODE(name)                                      \
-  Result BinaryReaderLogging::name(Opcode opcode, Address alignment_log2,   \
-                                   Address offset) {                        \
-    LOGF(#name "(opcode: \"%s\" (%u), align log2: %lu, offset: %" PRIaddress\
-               ")\n",                                                       \
-         opcode.GetName(), opcode.GetCode(), alignment_log2, offset);       \
-    return reader_->name(opcode, alignment_log2, offset);                   \
+#define DEFINE_LOAD_STORE_OPCODE(name)                                    \
+  Result BinaryReaderLogging::name(Opcode opcode, Address alignment_log2, \
+                                   Address offset) {                      \
+    LOGF(#name "(opcode: \"%s\" (%u), align log2: %" PRIaddress           \
+               ", offset: %" PRIaddress ")\n",                            \
+         opcode.GetName(), opcode.GetCode(), alignment_log2, offset);     \
+    return reader_->name(opcode, alignment_log2, offset);                 \
   }
 
 #define DEFINE0(name)                  \
