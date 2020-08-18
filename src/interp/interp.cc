@@ -1740,7 +1740,7 @@ RunResult Thread::Load(Instr instr, T* out, Trap::Ptr* out_trap) {
   u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->Load(offset, instr.imm_u32x2.snd, out)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
-                       "+%" PRIzd " >= max value %u",
+                       "+%" PRIzd " >= max value %" PRIu64,
                        offset + instr.imm_u32x2.snd, sizeof(T),
                        memory->ByteSize()));
   return RunResult::Ok;
@@ -1763,7 +1763,7 @@ RunResult Thread::DoStore(Instr instr, Trap::Ptr* out_trap) {
   u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2.snd, val)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
-                       "+%" PRIzd " >= max value %u",
+                       "+%" PRIzd " >= max value %" PRIu64,
                        offset + instr.imm_u32x2.snd, sizeof(V),
                        memory->ByteSize()));
   return RunResult::Ok;
