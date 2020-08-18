@@ -98,7 +98,7 @@
 #endif
 
 #define PRIindex "u"
-#define PRIaddress "lu"
+#define PRIaddress PRIu64
 #define PRIoffset PRIzx
 
 struct v128 {
