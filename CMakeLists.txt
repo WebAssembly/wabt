@@ -121,10 +121,6 @@ if (COMPILER_IS_MSVC)
   # disable warning C4800: implicit conversion from larger int to bool
   add_definitions(-W3 -wd4018 -wd4056 -wd4756 -wd4267 -wd4244 -wd4800 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 
-  if (WERROR)
-    add_definitions(-WX)
-  endif ()
-
   if (NOT WITH_EXCEPTIONS)
     # disable exception use in C++ library
     add_definitions(-D_HAS_EXCEPTIONS=0)
@@ -144,10 +140,6 @@ else ()
 
   set(CMAKE_CXX_EXTENSIONS OFF)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wold-style-cast")
-
-  if (WERROR)
-    add_definitions(-Werror)
-  endif ()
 
   if (NOT WITH_EXCEPTIONS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
@@ -364,9 +356,15 @@ if (BUILD_LIBWASM)
   target_link_libraries(wasm wabt)
   target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
   if (COMPILER_IS_MSVC)
+    if (WERROR)
+      target_compile_options(wasm PRIVATE -WX)
+    endif ()
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__declspec(dllexport)")
   else ()
-    target_compile_options(wasm PRIVATE -Wno-old-style-cast)
+    if (WERROR)
+      target_compile_options(wasm PRIVATE -Werror)
+    endif ()
+    target_compile_options(wasm PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-old-style-cast>)
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__attribute__((visibility(\"default\")))")
   endif ()
   set_target_properties(wasm PROPERTIES CXX_VISIBILITY_PRESET hidden)

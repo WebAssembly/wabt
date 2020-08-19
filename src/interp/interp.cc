@@ -2124,7 +2124,7 @@ RunResult Thread::DoAtomicLoad(Instr instr, Trap::Ptr* out_trap) {
   u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   V val;
   TRAP_IF(Failed(memory->AtomicLoad(offset, instr.imm_u32x2.snd, &val)),
-          StringPrintf("invalid atomic access at %lu+%u", offset,
+          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<T>(val));
   return RunResult::Ok;
@@ -2136,7 +2136,7 @@ RunResult Thread::DoAtomicStore(Instr instr, Trap::Ptr* out_trap) {
   V val = static_cast<V>(Pop<T>());
   u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->AtomicStore(offset, instr.imm_u32x2.snd, val)),
-          StringPrintf("invalid atomic access at %lu+%u", offset,
+          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
                        instr.imm_u32x2.snd));
   return RunResult::Ok;
 }
@@ -2150,7 +2150,7 @@ RunResult Thread::DoAtomicRmw(BinopFunc<T, T> f,
   u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   T old;
   TRAP_IF(Failed(memory->AtomicRmw(offset, instr.imm_u32x2.snd, val, f, &old)),
-          StringPrintf("invalid atomic access at %lu+%u", offset,
+          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<R>(old));
   return RunResult::Ok;
@@ -2165,7 +2165,7 @@ RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
   u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
   TRAP_IF(Failed(memory->AtomicRmwCmpxchg(offset, instr.imm_u32x2.snd, expect,
                                           replace, &old)),
-          StringPrintf("invalid atomic access at %lu+%u", offset,
+          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<T>(old));
   return RunResult::Ok;
