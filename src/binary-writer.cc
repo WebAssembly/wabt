@@ -277,8 +277,8 @@ void BinaryWriter::BeginCustomSection(const char* name) {
 
 void BinaryWriter::EndSection() {
   assert(last_section_leb_size_guess_ != 0);
-  Offset delta = WriteFixupU32Leb128Size(
-      last_section_offset_, last_section_leb_size_guess_, "FIXUP section size");
+  WriteFixupU32Leb128Size(last_section_offset_, last_section_leb_size_guess_,
+                          "FIXUP section size");
   last_section_leb_size_guess_ = 0;
   section_count_++;
 }
