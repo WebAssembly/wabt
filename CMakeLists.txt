@@ -121,10 +121,6 @@ if (COMPILER_IS_MSVC)
   # disable warning C4800: implicit conversion from larger int to bool
   add_definitions(-W3 -wd4018 -wd4056 -wd4756 -wd4267 -wd4244 -wd4800 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 
-  if (WERROR)
-    add_definitions(-WX)
-  endif ()
-
   if (NOT WITH_EXCEPTIONS)
     # disable exception use in C++ library
     add_definitions(-D_HAS_EXCEPTIONS=0)
@@ -360,6 +356,9 @@ if (BUILD_LIBWASM)
   target_link_libraries(wasm wabt)
   target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
   if (COMPILER_IS_MSVC)
+    if (WERROR)
+      target_compile_options(wasm PRIVATE -WX)
+    endif ()
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__declspec(dllexport)")
   else ()
     if (WERROR)
