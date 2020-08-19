@@ -1,0 +1,70 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -r
+;;; ARGS1: -x
+(module
+  (func $add (param i32)(param i32)(result i32)
+    get_local 0
+    get_local 1
+    i32.add
+    return)
+  (table 1 anyfunc)
+  (elem (i32.const 0) $add)
+  (func $run
+    i32.const 4444
+    i32.const 5555
+    i32.const 0
+    call_indirect (param i32)(param i32)(result i32)
+    drop)
+  (export "run" (func $run)))
+(;; STDOUT ;;;
+
+relocations-indirect-calls-and-table-elements.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[2]:
+ - type[0] (i32, i32) -> i32
+ - type[1] () -> nil
+Function[2]:
+ - func[0] sig=0 <$add>
+ - func[1] sig=1 <run>
+Table[1]:
+ - table[0] type=funcref initial=1
+Export[1]:
+ - func[1] <run> -> "run"
+Elem[1]:
+ - segment[0] flags=0 table=0 count=1 - init i32=0
+  - elem[0] = func[0] <$add>
+Code[2]:
+ - func[0] size=8 <$add>
+ - func[1] size=18 <run>
+Custom:
+ - name: "linking"
+  - symbol table [count=1]
+   - 0: F <$add> func=0 binding=global vis=default
+Custom:
+ - name: "reloc.Elem"
+  - relocations for section: 4 (Elem) [1]
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000006(file=0x000030) symbol=0 <$add>
+Custom:
+ - name: "reloc.Code"
+  - relocations for section: 5 (Code) [1]
+   - R_WASM_TYPE_INDEX_LEB offset=0x000015(file=0x00004c) type=0
+
+Code Disassembly:
+
+000039 func[0] <$add>:
+ 00003a: 20 00                      | local.get 0
+ 00003c: 20 01                      | local.get 1
+ 00003e: 6a                         | i32.add
+ 00003f: 0f                         | return
+ 000040: 0b                         | end
+000042 func[1] <run>:
+ 000043: 41 dc 22                   | i32.const 4444
+ 000046: 41 b3 2b                   | i32.const 5555
+ 000049: 41 00                      | i32.const 0
+ 00004b: 11 80 80 80 80 00 00       | call_indirect 0 0
+           00004c: R_WASM_TYPE_INDEX_LEB 0
+ 000052: 1a                         | drop
+ 000053: 0b                         | end
+;;; STDOUT ;;)
