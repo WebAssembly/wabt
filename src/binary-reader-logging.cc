@@ -130,12 +130,13 @@ Result BinaryReaderLogging::BeginSection(Index section_index,
   return reader_->BeginSection(section_index, section_type, size);
 }
 
-Result BinaryReaderLogging::BeginCustomSection(Offset size,
+Result BinaryReaderLogging::BeginCustomSection(Index section_index,
+                                               Offset size,
                                                string_view section_name) {
   LOGF("BeginCustomSection('" PRIstringview "', size: %" PRIzd ")\n",
        WABT_PRINTF_STRING_VIEW_ARG(section_name), size);
   Indent();
-  return reader_->BeginCustomSection(size, section_name);
+  return reader_->BeginCustomSection(section_index, size, section_name);
 }
 
 Result BinaryReaderLogging::OnFuncType(Index index,

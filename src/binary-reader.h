@@ -83,7 +83,9 @@ class BinaryReaderDelegate {
                               Offset size) = 0;
 
   /* Custom section */
-  virtual Result BeginCustomSection(Offset size, string_view section_name) = 0;
+  virtual Result BeginCustomSection(Index section_index,
+                                    Offset size,
+                                    string_view section_name) = 0;
   virtual Result EndCustomSection() = 0;
 
   /* Type section */
