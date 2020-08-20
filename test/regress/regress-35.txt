@@ -1,7 +1,7 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: -r
 (module 
-  ;; (type (func (param i32)(param i32)(result i32))) ;; fails, even if present
+  (type (func (param i32)(param i32)(result i32)))
   (func $add (param i32)(param i32)(result i32)
     get_local 0
     get_local 1
@@ -15,11 +15,12 @@
     i32.const 5555
     i32.const 0
     ;;call_indirect (type 0) ;; fails
-    call_indirect (param i32)(param i32)(result i32) ;; fails
+    call_indirect (param i32)(param i32)(result i32)
     drop
   )
   (export "run" (func $run))
 )
 (;; STDERR ;;;
-warning: unsupported relocation type: R_WASM_TYPE_INDEX_LEB
 ;;; STDERR ;;)
+(;; STDOUT ;;;
+;;; STDOUT ;;)
