@@ -1148,9 +1148,7 @@ Result BinaryWriter::WriteModule() {
 
             case ElemExprKind::RefFunc:
               WriteOpcode(stream_, Opcode::RefFunc);
-              WriteU32Leb128WithReloc(module_->GetFuncIndex(elem_expr.var),
-                                      "elem expr function index",
-                                      RelocType::FuncIndexLEB);
+              WriteU32Leb128(stream_, module_->GetFuncIndex(elem_expr.var), "elem expr function index");
               break;
           }
           WriteOpcode(stream_, Opcode::End);
@@ -1158,9 +1156,7 @@ Result BinaryWriter::WriteModule() {
       } else {
         for (const ElemExpr& elem_expr : segment->elem_exprs) {
           assert(elem_expr.kind == ElemExprKind::RefFunc);
-          WriteU32Leb128WithReloc(module_->GetFuncIndex(elem_expr.var),
-                                  "elem function index",
-                                  RelocType::FuncIndexLEB);
+          WriteU32Leb128(stream_, module_->GetFuncIndex(elem_expr.var), "elem function index");
         }
       }
     }
