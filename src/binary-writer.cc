@@ -324,7 +324,8 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
       name = module_->globals[index]->name;
       break;
     case RelocType::TypeIndexLEB:
-      // type indexes don't create entries in the symbol table, don't use this method for them
+      // type indexes don't create entries in the symbol table, instead their index is directly used
+      return index;
     default:
       fprintf(stderr, "warning: unsupported relocation type: %s\n",
               GetRelocTypeName(reloc_type));
@@ -351,12 +352,7 @@ void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
 
   // Add a new relocation to the curent reloc section
   size_t offset = stream_->offset() - last_section_payload_offset_;
-  Index symbol_index;
-  if (reloc_type == RelocType::TypeIndexLEB) {
-    symbol_index = index;
-  } else {
-    symbol_index = GetSymbolIndex(reloc_type, index);
-  }
+  Index symbol_index = GetSymbolIndex(reloc_type, index);
   current_reloc_section_->relocations.emplace_back(reloc_type, offset,
                                                    symbol_index);
 }
