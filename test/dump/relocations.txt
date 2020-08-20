@@ -4,39 +4,46 @@
 (module
   (type $t (func (param i32)))
   (import "__extern" "foo" (func (param i32) (result i32)))
+  (import "__extern" "bar" (func (param i32) (param i32) (result i32)))
   (global $g i32 (i32.const 0))
   (func $f (param i32) (result i32)
     get_global 0
-    call 1
-    call 0)
+    call 2
+    call 0
+    i32.const 1234
+    i32.const 0
+    call_indirect (param i32) (param i32) (result i32))
   (export "f" (func $f))
-  (table anyfunc (elem $f)))
+  (table anyfunc (elem 1)))
 (;; STDOUT ;;;
 
 relocations.wasm:	file format wasm 0x1
 
 Sections:
 
-     Type start=0x0000000a end=0x00000014 (size=0x0000000a) count: 2
-   Import start=0x00000016 end=0x00000026 (size=0x00000010) count: 1
- Function start=0x00000028 end=0x0000002a (size=0x00000002) count: 1
-    Table start=0x0000002c end=0x00000031 (size=0x00000005) count: 1
-   Global start=0x00000033 end=0x00000039 (size=0x00000006) count: 1
-   Export start=0x0000003b end=0x00000040 (size=0x00000005) count: 1
-     Elem start=0x00000042 end=0x0000004d (size=0x0000000b) count: 1
-     Code start=0x0000004f end=0x00000065 (size=0x00000016) count: 1
-   Custom start=0x00000067 end=0x00000082 (size=0x0000001b) "linking"
-   Custom start=0x00000084 end=0x00000094 (size=0x00000010) "reloc.Elem"
-   Custom start=0x00000096 end=0x000000ac (size=0x00000016) "reloc.Code"
+     Type start=0x0000000a end=0x0000001a (size=0x00000010) count: 3
+   Import start=0x0000001c end=0x0000003b (size=0x0000001f) count: 2
+ Function start=0x0000003d end=0x0000003f (size=0x00000002) count: 1
+    Table start=0x00000041 end=0x00000046 (size=0x00000005) count: 1
+   Global start=0x00000048 end=0x0000004e (size=0x00000006) count: 1
+   Export start=0x00000050 end=0x00000055 (size=0x00000005) count: 1
+     Elem start=0x00000057 end=0x0000005e (size=0x00000007) count: 1
+     Code start=0x00000060 end=0x00000082 (size=0x00000022) count: 1
+   Custom start=0x00000084 end=0x0000009f (size=0x0000001b) "linking"
+   Custom start=0x000000a1 end=0x000000ba (size=0x00000019) "reloc.Code"
 
 Code Disassembly:
 
-000051 func[1] <$f>:
- 000052: 23 80 80 80 80 00          | global.get 0 <$g>
-           000053: R_WASM_GLOBAL_INDEX_LEB 1 <$g>
- 000058: 10 81 80 80 80 00          | call 1 <$f>
-           000059: R_WASM_FUNCTION_INDEX_LEB 0 <$f>
- 00005e: 10 80 80 80 80 00          | call 0 <__extern.foo>
-           00005f: R_WASM_FUNCTION_INDEX_LEB 2 <__extern.foo>
- 000064: 0b                         | end
+000062 func[2] <$f>:
+ 000063: 23 80 80 80 80 00          | global.get 0 <$g>
+           000064: R_WASM_GLOBAL_INDEX_LEB 0 <$g>
+ 000069: 10 82 80 80 80 00          | call 2 <$f>
+           00006a: R_WASM_FUNCTION_INDEX_LEB 1 <$f>
+ 00006f: 10 80 80 80 80 00          | call 0 <__extern.foo>
+           000070: R_WASM_FUNCTION_INDEX_LEB 2 <__extern.foo>
+ 000075: 41 d2 09                   | i32.const 1234
+ 000078: 41 00                      | i32.const 0
+ 00007a: 11 82 80 80 80 00 00       | call_indirect 2 0
+           00007b: R_WASM_TYPE_INDEX_LEB 2
+ 000081: 0b                         | end
 ;;; STDOUT ;;)
