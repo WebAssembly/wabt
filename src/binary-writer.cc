@@ -245,7 +245,7 @@ void BinaryWriter::WriteBlockDecl(const BlockDeclaration& decl) {
   Index index = decl.has_func_type ? module_->GetFuncTypeIndex(decl.type_var)
                                    : module_->GetFuncTypeIndex(decl.sig);
   assert(index != kInvalidIndex);
-  WriteS32Leb128(stream_, index, "block type function index");
+  WriteU32Leb128WithReloc(index, "block type function index", RelocType::TypeIndexLEB);
 }
 
 void BinaryWriter::WriteSectionHeader(const char* desc,
