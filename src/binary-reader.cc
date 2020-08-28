@@ -1189,6 +1189,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I8X16AnyTrue:
       case Opcode::I16X8AnyTrue:
       case Opcode::I32X4AnyTrue:
+      case Opcode::I8X16Bitmask:
+      case Opcode::I16X8Bitmask:
+      case Opcode::I32X4Bitmask:
       case Opcode::I8X16AllTrue:
       case Opcode::I16X8AllTrue:
       case Opcode::I32X4AllTrue:
