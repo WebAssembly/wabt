@@ -74,6 +74,30 @@
     v128.const i32x4 0x01010101 0x000000ff 0x000ff000 0x00000000
     i32x4.all_true)
 
+  ;; i8x16 bitmask
+  (func (export "i8x16_bitmask_0") (result i32)
+    v128.const i32x4 0x80808080 0x80808080 0x80808080 0x80808080
+    i8x16.bitmask)
+  (func (export "i8x16_bitmask_1") (result i32)
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
+    i8x16.bitmask)
+
+  ;; i16x8 bitmask
+  (func (export "i16x8_bitmask_0") (result i32)
+    v128.const i32x4 0x80008000 0x80008000 0x80008000 0x80008000
+    i16x8.bitmask)
+  (func (export "i16x8_bitmask_1") (result i32)
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
+    i16x8.bitmask)
+
+  ;; i32x4 bitmask
+  (func (export "i32x4_bitmask_0") (result i32)
+    v128.const i32x4 0x80000000 0x80000000 0x80000000 0x80000000
+    i32x4.bitmask)
+  (func (export "i32x4_bitmask_1") (result i32)
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
+    i32x4.bitmask)
+
   ;; f32x4 neg
   ;; For Floating num:
   ;; +0.0 = 0x00000000, -0.0 = 0x80000000
@@ -213,6 +237,12 @@ i16x8_all_true_0() => i32:1
 i16x8_all_true_1() => i32:0
 i32x4_all_true_0() => i32:1
 i32x4_all_true_1() => i32:0
+i8x16_bitmask_0() => i32:65535
+i8x16_bitmask_1() => i32:0
+i16x8_bitmask_0() => i32:255
+i16x8_bitmask_1() => i32:0
+i32x4_bitmask_0() => i32:15
+i32x4_bitmask_1() => i32:0
 f32x4_neg_0() => v128 i32x4:0x00000000 0x7fc00000 0xc49a5000 0x3f800000
 f64x2_neg_0() => v128 i32x4:0x00000000 0x80000000 0x00000000 0x7ff80000
 f64x2_neg_1() => v128 i32x4:0x00000000 0x40934a00 0x00000000 0xbff00000

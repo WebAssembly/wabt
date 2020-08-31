@@ -1497,6 +1497,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::I8X16Neg:          return DoSimdUnop(IntNeg<u8>);
     case O::I8X16AnyTrue:      return DoSimdIsTrue<u8x16, 1>();
+    case O::I8X16Bitmask:      return DoSimdBitmask<s8x16>();
     case O::I8X16AllTrue:      return DoSimdIsTrue<u8x16, 16>();
     case O::I8X16Shl:          return DoSimdShift(IntShl<u8>);
     case O::I8X16ShrS:         return DoSimdShift(IntShr<s8>);
@@ -1514,6 +1515,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::I16X8Neg:          return DoSimdUnop(IntNeg<u16>);
     case O::I16X8AnyTrue:      return DoSimdIsTrue<u16x8, 1>();
+    case O::I16X8Bitmask:      return DoSimdBitmask<s16x8>();
     case O::I16X8AllTrue:      return DoSimdIsTrue<u16x8, 8>();
     case O::I16X8Shl:          return DoSimdShift(IntShl<u16>);
     case O::I16X8ShrS:         return DoSimdShift(IntShr<s16>);
@@ -1532,6 +1534,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::I32X4Neg:          return DoSimdUnop(IntNeg<u32>);
     case O::I32X4AnyTrue:      return DoSimdIsTrue<u32x4, 1>();
+    case O::I32X4Bitmask:      return DoSimdBitmask<s32x4>();
     case O::I32X4AllTrue:      return DoSimdIsTrue<u32x4, 4>();
     case O::I32X4Shl:          return DoSimdShift(IntShl<u32>);
     case O::I32X4ShrS:         return DoSimdShift(IntShr<s32>);
@@ -2019,6 +2022,19 @@ RunResult Thread::DoSimdIsTrue() {
   auto val = Pop<S>();
   Push(std::count_if(std::begin(val.v), std::end(val.v),
                      [](L x) { return x != 0; }) >= count);
+  return RunResult::Ok;
+}
+
+template <typename S>
+RunResult Thread::DoSimdBitmask() {
+  auto val = Pop<S>();
+  u32 result = 0;
+  for (u8 i = 0; i < S::lanes; ++i) {
+    if (val.v[i] < 0) {
+      result |= 1 << i;
+    }
+  }
+  Push(result);
   return RunResult::Ok;
 }
 

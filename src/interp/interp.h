@@ -1129,6 +1129,8 @@ class Thread : public Object {
   RunResult DoSimdBitSelect();
   template <typename S, u8 count>
   RunResult DoSimdIsTrue();
+  template <typename S>
+  RunResult DoSimdBitmask();
   template <typename R, typename T>
   RunResult DoSimdShift(BinopFunc<R, T>);
   template <typename S, typename T>
