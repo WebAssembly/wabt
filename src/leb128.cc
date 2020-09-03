@@ -138,6 +138,20 @@ void WriteS64Leb128(Stream* stream, uint64_t value, const char* desc) {
   WriteS64Leb128(stream, Bitcast<int64_t>(value), desc);
 }
 
+void WriteFixedS32Leb128(Stream* stream, uint32_t value, const char* desc) {
+  uint8_t data[MAX_U32_LEB128_BYTES];
+  data[0] = (value & 0x7f) | 0x80;
+  data[1] = ((value >> 7) & 0x7f) | 0x80;
+  data[2] = ((value >> 14) & 0x7f) | 0x80;
+  data[3] = ((value >> 21) & 0x7f) | 0x80;
+  // The last byte needs to be sign-extended.
+  data[4] = ((value >> 28) & 0x0f);
+  if (static_cast<int32_t>(value) < 0) {
+    data[4] |= 0x70;
+  }
+  stream->WriteData(data, MAX_U32_LEB128_BYTES, desc);
+}
+
 #undef LEB128_LOOP_UNTIL
 
 #define BYTE_AT(type, i, shift) ((static_cast<type>(p[i]) & 0x7f) << (shift))

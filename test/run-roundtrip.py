@@ -126,6 +126,7 @@ def main(args):
     parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--inline-exports', action='store_true')
     parser.add_argument('--inline-imports', action='store_true')
+    parser.add_argument('--reloc', action='store_true')
     parser.add_argument('file', help='test file.')
     options = parser.parse_args(args)
 
@@ -145,6 +146,7 @@ def main(args):
         '--enable-tail-call': options.enable_tail_call,
         '--enable-reference-types': options.enable_reference_types,
         '--enable-memory64': options.enable_memory64,
+        '--reloc': options.reloc,
         '--no-check': options.no_check,
     })
 
