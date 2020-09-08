@@ -134,6 +134,9 @@ class BinaryWriter {
   void WriteU32Leb128WithReloc(Index index,
                                const char* desc,
                                RelocType reloc_type);
+  void WriteS32Leb128WithReloc(int32_t value,
+                               const char* desc,
+                               RelocType reloc_type);
   template <typename T>
   void WriteLoadStoreExpr(const Func* func, const Expr* expr, const char* desc);
   void WriteExpr(const Func* func, const Expr* expr);
@@ -245,7 +248,7 @@ void BinaryWriter::WriteBlockDecl(const BlockDeclaration& decl) {
   Index index = decl.has_func_type ? module_->GetFuncTypeIndex(decl.type_var)
                                    : module_->GetFuncTypeIndex(decl.sig);
   assert(index != kInvalidIndex);
-  WriteU32Leb128WithReloc(index, "block type function index", RelocType::TypeIndexLEB);
+  WriteS32Leb128WithReloc(index, "block type function index", RelocType::TypeIndexLEB);
 }
 
 void BinaryWriter::WriteSectionHeader(const char* desc,
@@ -365,6 +368,17 @@ void BinaryWriter::WriteU32Leb128WithReloc(Index index,
     WriteFixedU32Leb128(stream_, index, desc);
   } else {
     WriteU32Leb128(stream_, index, desc);
+  }
+}
+
+void BinaryWriter::WriteS32Leb128WithReloc(int32_t value,
+                                           const char* desc,
+                                           RelocType reloc_type) {
+  if (options_.relocatable) {
+    AddReloc(reloc_type, value);
+    WriteFixedS32Leb128(stream_, value, desc);
+  } else {
+    WriteS32Leb128(stream_, value, desc);
   }
 }
 
