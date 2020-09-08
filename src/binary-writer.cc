@@ -97,10 +97,97 @@ struct RelocSection {
   std::vector<Reloc> relocations;
 };
 
-struct Symbol {
-  Index symbol_index;
-  SymbolType type;
-  Index element_index;
+class Symbol {
+ public:
+  struct Function {
+    static const SymbolType type = SymbolType::Function;
+    Index index;
+  };
+  struct Data {
+    static const SymbolType type = SymbolType::Data;
+    Index index;
+    Offset offset;
+    Address size;
+  };
+  struct Global {
+    static const SymbolType type = SymbolType::Global;
+    Index index;
+  };
+  struct Section {
+    static const SymbolType type = SymbolType::Section;
+    Index section;
+  };
+  struct Event {
+    static const SymbolType type = SymbolType::Event;
+    Index index;
+  };
+
+ private:
+  SymbolType type_;
+  std::string name_;
+  uint8_t flags_;
+  union {
+    Function function_;
+    Data data_;
+    Global global_;
+    Section section_;
+    Event event_;
+  };
+
+ public:
+  Symbol(const std::string& name, uint8_t flags, const Function& f)
+      : type_(Function::type), name_(name), flags_(flags), function_(f) {}
+  Symbol(const std::string& name, uint8_t flags, const Data& d)
+      : type_(Data::type), name_(name), flags_(flags), data_(d) {}
+  Symbol(const std::string& name, uint8_t flags, const Global& g)
+      : type_(Global::type), name_(name), flags_(flags), global_(g) {}
+  Symbol(const std::string& name, uint8_t flags, const Section& s)
+      : type_(Section::type), name_(name), flags_(flags), section_(s) {}
+  Symbol(const std::string& name, uint8_t flags, const Event& e)
+      : type_(Event::type), name_(name), flags_(flags), event_(e) {}
+
+  SymbolType type() const { return type_; }
+  const std::string& name() const { return name_; }
+  uint8_t flags() const { return flags_; }
+
+  SymbolVisibility visibility() const {
+    return static_cast<SymbolVisibility>(flags() & WABT_SYMBOL_MASK_VISIBILITY);
+  }
+  SymbolBinding binding() const {
+    return static_cast<SymbolBinding>(flags() & WABT_SYMBOL_MASK_BINDING);
+  }
+  bool undefined() const { return flags() & WABT_SYMBOL_FLAG_UNDEFINED; }
+  bool defined() const { return !undefined(); }
+  bool exported() const { return flags() & WABT_SYMBOL_FLAG_EXPORTED; }
+  bool explicit_name() const { return flags() & WABT_SYMBOL_FLAG_EXPLICIT_NAME; }
+  bool no_strip() const { return flags() & WABT_SYMBOL_FLAG_NO_STRIP; }
+
+  bool IsFunction() const { return type() == Function::type; }
+  bool IsData() const { return type() == Data::type; }
+  bool IsGlobal() const { return type() == Global::type; }
+  bool IsSection() const { return type() == Section::type; }
+  bool IsEvent() const { return type() == Event::type; }
+
+  const Function& AsFunction() const {
+    assert(IsFunction());
+    return function_;
+  }
+  const Data& AsData() const {
+    assert(IsData());
+    return data_;
+  }
+  const Global& AsGlobal() const {
+    assert(IsGlobal());
+    return global_;
+  }
+  const Section& AsSection() const {
+    assert(IsSection());
+    return section_;
+  }
+  const Event& AsEvent() const {
+    assert(IsEvent());
+    return event_;
+  }
 };
 
 class BinaryWriter {
@@ -125,6 +212,8 @@ class BinaryWriter {
   void EndSection();
   void BeginSubsection(const char* name);
   void EndSubsection();
+  template <typename T>
+  Index InternSymbol(const std::string& name, uint8_t flags, const T& arg);
   Index GetLabelVarDepth(const Var* var);
   Index GetEventVarDepth(const Var* var);
   Index GetLocalIndex(const Func* func, const Var& var);
@@ -312,34 +401,49 @@ Index BinaryWriter::GetEventVarDepth(const Var* var) {
   return var->index();
 }
 
+template <typename T>
+Index BinaryWriter::InternSymbol(const std::string& name, uint8_t flags,
+                                 const T& arg) {
+  auto iter = symtab_.find(name);
+  if (iter != symtab_.end()) {
+    Index sym_index = iter->second;
+    const Symbol& sym = symbols_[sym_index];
+    if (sym.type() != T::type || sym.flags() != flags) {
+      fprintf(stderr, "error: duplicate symbol when writing relocatable "
+              "binary: %s\n", &name[0]);
+      return kInvalidIndex;
+    }
+    return sym_index;
+  }
+
+  Index sym_index = Index(symbols_.size());
+  symtab_[name] = sym_index;
+  symbols_.emplace_back(name, flags, arg);
+  return sym_index;
+}
+
 Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
-  std::string name;
-  SymbolType type = SymbolType::Function;
+  uint8_t flags = 0;
   switch (reloc_type) {
     case RelocType::FuncIndexLEB:
-      name = module_->funcs[index]->name;
-      break;
+      if (index < module_->num_func_imports) {
+        flags |= WABT_SYMBOL_FLAG_UNDEFINED;
+      }
+      return InternSymbol(module_->funcs[index]->name, flags, Symbol::Function{index});
     case RelocType::GlobalIndexLEB:
-      type = SymbolType::Global;
-      name = module_->globals[index]->name;
-      break;
+      if (index < module_->num_global_imports) {
+        flags |= WABT_SYMBOL_FLAG_UNDEFINED;
+      }
+      return InternSymbol(module_->globals[index]->name, flags, Symbol::Global{index});
     case RelocType::TypeIndexLEB:
-      // type indexes don't create entries in the symbol table, instead their index is directly used
+      // Type indexes don't create entries in the symbol table; instead their
+      // index is used directly.
       return index;
     default:
       fprintf(stderr, "warning: unsupported relocation type: %s\n",
               GetRelocTypeName(reloc_type));
       return kInvalidIndex;
   }
-  auto iter = symtab_.find(name);
-  if (iter != symtab_.end()) {
-    return iter->second;
-  }
-
-  Index sym_index = Index(symbols_.size());
-  symtab_[name] = sym_index;
-  symbols_.push_back(Symbol{sym_index, type, index});
-  return sym_index;
 }
 
 void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
@@ -866,29 +970,38 @@ void BinaryWriter::WriteLinkingSection() {
     WriteU32Leb128(stream_, symbols_.size(), "num symbols");
 
     for (const Symbol& sym : symbols_) {
-      bool is_defined = true;
-      if (sym.type == SymbolType::Function) {
-        if (sym.element_index < module_->num_func_imports) {
-          is_defined = false;
-        }
-      }
-      if (sym.type == SymbolType::Global) {
-        if (sym.element_index < module_->num_global_imports) {
-          is_defined = false;
-        }
-      }
-      stream_->WriteU8Enum(sym.type, "symbol type");
-      WriteU32Leb128(stream_, is_defined ? 0 : WABT_SYMBOL_FLAG_UNDEFINED,
-                     "symbol flags");
-      WriteU32Leb128(stream_, sym.element_index, "element index");
-      if (is_defined) {
-        if (sym.type == SymbolType::Function) {
-          WriteStr(stream_, module_->funcs[sym.element_index]->name,
-                   "function name", PrintChars::Yes);
-        } else if (sym.type == SymbolType::Global) {
-          WriteStr(stream_, module_->globals[sym.element_index]->name,
-                   "global name", PrintChars::Yes);
-        }
+      stream_->WriteU8Enum(sym.type(), "symbol type");
+      WriteU32Leb128(stream_, sym.flags(), "symbol flags");
+      switch (sym.type()) {
+        case SymbolType::Function:
+          WriteU32Leb128(stream_, sym.AsFunction().index, "function index");
+          if (sym.defined() || sym.explicit_name()) {
+            WriteStr(stream_, sym.name(), "function name", PrintChars::Yes);
+          }
+          break;
+        case SymbolType::Data:
+          WriteStr(stream_, sym.name(), "data name", PrintChars::Yes);
+          if (sym.defined()) {
+            WriteU32Leb128(stream_, sym.AsData().index, "data index");
+            WriteU32Leb128(stream_, sym.AsData().offset, "data offset");
+            WriteU32Leb128(stream_, sym.AsData().size, "data size");
+          }
+          break;
+        case SymbolType::Global:
+          WriteU32Leb128(stream_, sym.AsGlobal().index, "global index");
+          if (sym.defined() || sym.explicit_name()) {
+            WriteStr(stream_, sym.name(), "global name", PrintChars::Yes);
+          }
+          break;
+        case SymbolType::Section:
+          WriteU32Leb128(stream_, sym.AsSection().section, "event index");
+          break;
+        case SymbolType::Event:
+          WriteU32Leb128(stream_, sym.AsEvent().index, "event index");
+          if (sym.defined() || sym.explicit_name()) {
+            WriteStr(stream_, sym.name(), "event name", PrintChars::Yes);
+          }
+          break;
       }
     }
     EndSubsection();
