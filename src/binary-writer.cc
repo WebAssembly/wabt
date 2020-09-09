@@ -1214,6 +1214,16 @@ Result BinaryWriter::WriteModule() {
       stream_->MoveData(data_count_start_, data_count_end_, size);
     }
     stream_->Truncate(data_count_start_ + size);
+
+    --section_count_;
+
+    // We just effectively decremented the code section's index; adjust anything
+    // that might have captured it.
+    for (RelocSection& section : reloc_sections_) {
+      if (section.section_index == section_count_) {
+        --section.section_index;
+      }
+    }
   }
 
   if (module_->data_segments.size()) {
