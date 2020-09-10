@@ -2516,14 +2516,14 @@ Result BinaryReader::ReadSections() {
         break;
       case BinarySection::Event:
         ERROR_UNLESS(options_.features.exceptions_enabled(),
-                     "invalid section code: %u",
+                     "invalid section code: %u (requires --enable-exceptions)",
                      static_cast<unsigned int>(section));
         section_result = ReadEventSection(section_size);
         result |= section_result;
         break;
       case BinarySection::DataCount:
         ERROR_UNLESS(options_.features.bulk_memory_enabled(),
-                     "invalid section code: %u",
+                     "invalid section code: %u (requires --enable-bulk-memory)",
                      static_cast<unsigned int>(section));
         section_result = ReadDataCountSection(section_size);
         result |= section_result;
