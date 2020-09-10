@@ -1779,6 +1779,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::TableIndexI64:
       case RelocType::TypeIndexLEB:
       case RelocType::GlobalIndexLEB:
+      case RelocType::GlobalIndexI32:
       case RelocType::EventIndexLEB:
       case RelocType::TableIndexRelSLEB:
         break;
