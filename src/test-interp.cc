@@ -61,7 +61,10 @@ class InterpTest : public ::testing::Test {
 
 
 TEST_F(InterpTest, Empty) {
+  ASSERT_TRUE(mod_.empty());
   ReadModule({0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00});
+  Instantiate();
+  ASSERT_FALSE(mod_.empty());
 }
 
 TEST_F(InterpTest, MVP) {
