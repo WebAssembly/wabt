@@ -297,7 +297,7 @@ RefPtr<U> RefPtr<T>::As() {
 
 template <typename T>
 bool RefPtr<T>::empty() const {
-  return obj_ != nullptr;
+  return obj_ == nullptr;
 }
 
 template <typename T>
