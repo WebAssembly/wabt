@@ -22,15 +22,15 @@ Type[2]:
  - type[0] (i32) -> (i32, i32)
  - type[1] () -> (i32, i32)
 Function[1]:
- - func[0] sig=0 <$multivalue_block>
+ - func[0] sig=0 <multivalue_block>
 Export[1]:
- - func[0] <$multivalue_block> -> "multivalue_block"
+ - func[0] <multivalue_block> -> "multivalue_block"
 Code[1]:
- - func[0] size=20 <$multivalue_block>
+ - func[0] size=20 <multivalue_block>
 Custom:
  - name: "linking"
   - symbol table [count=1]
-   - 0: F <$multivalue_block> func=0 exported no_strip binding=global vis=hidden
+   - 0: F <multivalue_block> func=0 exported no_strip binding=global vis=hidden
 Custom:
  - name: "reloc.Code"
   - relocations for section: 3 (Code) [1]
@@ -38,7 +38,7 @@ Custom:
 
 Code Disassembly:
 
-000034 func[0] <$multivalue_block>:
+000034 func[0] <multivalue_block>:
  000035: 20 00                      | local.get 0
  000037: 04 81 80 80 80 00          | if type[1]
            000038: R_WASM_TYPE_INDEX_LEB 1

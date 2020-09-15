@@ -125,7 +125,7 @@ class Symbol {
 
  private:
   SymbolType type_;
-  std::string name_;
+  string_view name_;
   uint8_t flags_;
   union {
     Function function_;
@@ -136,19 +136,19 @@ class Symbol {
   };
 
  public:
-  Symbol(const std::string& name, uint8_t flags, const Function& f)
+  Symbol(const string_view& name, uint8_t flags, const Function& f)
       : type_(Function::type), name_(name), flags_(flags), function_(f) {}
-  Symbol(const std::string& name, uint8_t flags, const Data& d)
+  Symbol(const string_view& name, uint8_t flags, const Data& d)
       : type_(Data::type), name_(name), flags_(flags), data_(d) {}
-  Symbol(const std::string& name, uint8_t flags, const Global& g)
+  Symbol(const string_view& name, uint8_t flags, const Global& g)
       : type_(Global::type), name_(name), flags_(flags), global_(g) {}
-  Symbol(const std::string& name, uint8_t flags, const Section& s)
+  Symbol(const string_view& name, uint8_t flags, const Section& s)
       : type_(Section::type), name_(name), flags_(flags), section_(s) {}
-  Symbol(const std::string& name, uint8_t flags, const Event& e)
+  Symbol(const string_view& name, uint8_t flags, const Event& e)
       : type_(Event::type), name_(name), flags_(flags), event_(e) {}
 
   SymbolType type() const { return type_; }
-  const std::string& name() const { return name_; }
+  const string_view& name() const { return name_; }
   uint8_t flags() const { return flags_; }
 
   SymbolVisibility visibility() const {
@@ -199,9 +199,9 @@ class SymbolTable {
   std::vector<Index> functions_;
   std::vector<Index> globals_;
 
-  std::set<std::string> seen_names_;
+  std::set<string_view> seen_names_;
 
-  Result Intern(const std::string& name) {
+  Result Intern(const string_view& name) {
     if (seen_names_.count(name)) {
       fprintf(stderr, "error: duplicate symbol when writing relocatable "
               "binary: %s\n", &name[0]);
@@ -212,21 +212,31 @@ class SymbolTable {
   };
 
   template <typename T>
-  Result AddSymbol(std::vector<Index>* map, const std::string& name,
+  Result AddSymbol(std::vector<Index>* map, string_view name,
                    bool imported, bool exported, T&& sym) {
     uint8_t flags = 0;
     if (imported) {
       flags |= WABT_SYMBOL_FLAG_UNDEFINED;
       // Wabt currently has no way for a user to explicitly specify the name of
-      // an import, so never set the EXPLICIT_NAME flag, and don't bother
-      // checking the import name for uniqueness.
+      // an import, so never set the EXPLICIT_NAME flag, and ignore any display
+      // name fabricated by wabt.
+      name = string_view();
     } else {
+      // Functions defined in this module without a name don't go in the symbol
+      // table.
+      if (name.empty()) {
+        return Result::Ok;
+      }
+
+      // Otherwise, strip the dollar off the name; a function $foo is available
+      // for linking as "foo".
+      assert(name[0] == '$');
+      name.remove_prefix(1);
+
       if (exported) {
         CHECK_RESULT(Intern(name));
         flags |= uint8_t(SymbolVisibility::Hidden);
         flags |= WABT_SYMBOL_FLAG_NO_STRIP;
-      } else {
-        flags |= uint8_t(SymbolBinding::Local);
       }
     }
     if (exported) {
