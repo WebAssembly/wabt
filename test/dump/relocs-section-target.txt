@@ -1,0 +1,41 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -r --enable-bulk-memory
+;;; ARGS1: -x
+(module
+  (type (;0;) (func))
+  (import "env" "b" (func (;0;) (type 0)))
+  (func $a (type 0)
+    call 0)
+  (export "a" (func $a)))
+(;; STDOUT ;;;
+
+relocs-section-target.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Import[1]:
+ - func[0] sig=0 <env.b> <- env.b
+Function[1]:
+ - func[1] sig=0 <a>
+Export[1]:
+ - func[1] <a> -> "a"
+Code[1]:
+ - func[1] size=8 <a>
+Custom:
+ - name: "linking"
+  - symbol table [count=1]
+   - 0: F <env.b> func=0 undefined binding=global vis=default
+Custom:
+ - name: "reloc.Code"
+  - relocations for section: 4 (Code) [1]
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000004(file=0x00002a) symbol=0 <env.b>
+
+Code Disassembly:
+
+000028 func[1] <a>:
+ 000029: 10 80 80 80 80 00          | call 0 <env.b>
+           00002a: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
+ 00002f: 0b                         | end
+;;; STDOUT ;;)

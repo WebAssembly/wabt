@@ -369,7 +369,8 @@ class BinaryWriter {
   size_t last_subsection_payload_offset_ = 0;
 
   // Information about the data count section, so it can be removed if it is
-  // not needed.
+  // not needed, and relocs relative to the code section patched up.
+  size_t code_start_ = 0;
   size_t data_count_start_ = 0;
   size_t data_count_end_ = 0;
   bool has_data_segment_instruction_ = false;
@@ -1387,6 +1388,7 @@ Result BinaryWriter::WriteModule() {
   }
 
   if (num_funcs) {
+    code_start_ = stream_->offset();
     BeginKnownSection(BinarySection::Code);
     WriteU32Leb128(stream_, num_funcs, "num functions");
 
@@ -1409,10 +1411,26 @@ Result BinaryWriter::WriteModule() {
   if (options_.features.bulk_memory_enabled() &&
       !has_data_segment_instruction_) {
     Offset size = stream_->offset() - data_count_end_;
-    if (data_count_start_ != data_count_end_) {
+    if (size) {
+      // If the DataCount section was followed by anything, assert that it's
+      // only the Code section.  This limits the amount of fixing-up that we
+      // need to do.
+      assert(data_count_end_ == code_start_);
+      assert(last_section_type_ == BinarySection::Code);
       stream_->MoveData(data_count_start_, data_count_end_, size);
     }
     stream_->Truncate(data_count_start_ + size);
+
+    --section_count_;
+
+    // We just effectively decremented the code section's index; adjust anything
+    // that might have captured it.
+    for (RelocSection& section : reloc_sections_) {
+      if (section.section_index == section_count_) {
+        assert(last_section_type_ == BinarySection::Code);
+        --section.section_index;
+      }
+    }
   }
 
   if (module_->data_segments.size()) {

@@ -32,7 +32,6 @@
 0000017: 00                                        ; section size (guess)
 0000018: 00                                        ; data count
 0000017: 01                                        ; FIXUP section size
-; move data: [19, 19) -> [16, 16)
 ; truncate to 22 (0x16)
 
 elem-mvp-compat.wasm:	file format wasm 0x1
