@@ -21,6 +21,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <set>
 #include <vector>
 
 #include "config.h"
@@ -124,7 +125,7 @@ class Symbol {
 
  private:
   SymbolType type_;
-  std::string name_;
+  string_view name_;
   uint8_t flags_;
   union {
     Function function_;
@@ -135,19 +136,19 @@ class Symbol {
   };
 
  public:
-  Symbol(const std::string& name, uint8_t flags, const Function& f)
+  Symbol(const string_view& name, uint8_t flags, const Function& f)
       : type_(Function::type), name_(name), flags_(flags), function_(f) {}
-  Symbol(const std::string& name, uint8_t flags, const Data& d)
+  Symbol(const string_view& name, uint8_t flags, const Data& d)
       : type_(Data::type), name_(name), flags_(flags), data_(d) {}
-  Symbol(const std::string& name, uint8_t flags, const Global& g)
+  Symbol(const string_view& name, uint8_t flags, const Global& g)
       : type_(Global::type), name_(name), flags_(flags), global_(g) {}
-  Symbol(const std::string& name, uint8_t flags, const Section& s)
+  Symbol(const string_view& name, uint8_t flags, const Section& s)
       : type_(Section::type), name_(name), flags_(flags), section_(s) {}
-  Symbol(const std::string& name, uint8_t flags, const Event& e)
+  Symbol(const string_view& name, uint8_t flags, const Event& e)
       : type_(Event::type), name_(name), flags_(flags), event_(e) {}
 
   SymbolType type() const { return type_; }
-  const std::string& name() const { return name_; }
+  const string_view& name() const { return name_; }
   uint8_t flags() const { return flags_; }
 
   SymbolVisibility visibility() const {
@@ -190,6 +191,117 @@ class Symbol {
   }
 };
 
+class SymbolTable {
+  WABT_DISALLOW_COPY_AND_ASSIGN(SymbolTable);
+
+  std::vector<Symbol> symbols_;
+
+  std::vector<Index> functions_;
+  std::vector<Index> globals_;
+
+  std::set<string_view> seen_names_;
+
+  Result EnsureUnique(const string_view& name) {
+    if (seen_names_.count(name)) {
+      fprintf(stderr, "error: duplicate symbol when writing relocatable "
+              "binary: %s\n", &name[0]);
+      return Result::Error;
+    }
+    seen_names_.insert(name);
+    return Result::Ok;
+  };
+
+  template <typename T>
+  Result AddSymbol(std::vector<Index>* map, string_view name,
+                   bool imported, bool exported, T&& sym) {
+    uint8_t flags = 0;
+    if (imported) {
+      flags |= WABT_SYMBOL_FLAG_UNDEFINED;
+      // Wabt currently has no way for a user to explicitly specify the name of
+      // an import, so never set the EXPLICIT_NAME flag, and ignore any display
+      // name fabricated by wabt.
+      name = string_view();
+    } else {
+      // Functions defined in this module without a name don't go in the symbol
+      // table.
+      if (name.empty()) {
+        return Result::Ok;
+      }
+
+      // Otherwise, strip the dollar off the name; a function $foo is available
+      // for linking as "foo".
+      assert(name[0] == '$');
+      name.remove_prefix(1);
+
+      if (exported) {
+        CHECK_RESULT(EnsureUnique(name));
+        flags |= uint8_t(SymbolVisibility::Hidden);
+        flags |= WABT_SYMBOL_FLAG_NO_STRIP;
+      }
+    }
+    if (exported) {
+      flags |= WABT_SYMBOL_FLAG_EXPORTED;
+    }
+
+    map->push_back(symbols_.size());
+    symbols_.emplace_back(name, flags, sym);
+    return Result::Ok;
+  };
+
+ public:
+  SymbolTable() {}
+
+  Result Populate(const Module* module) {
+    std::set<Index> exported_funcs;
+    std::set<Index> exported_globals;
+    std::set<Index> exported_events;
+    std::set<Index> exported_tables;
+
+    for (const Export* export_ : module->exports) {
+      switch (export_->kind) {
+      case ExternalKind::Func:
+        exported_funcs.insert(module->GetFuncIndex(export_->var));
+        break;
+      case ExternalKind::Table:
+        exported_tables.insert(module->GetTableIndex(export_->var));
+        break;
+      case ExternalKind::Memory:
+        break;
+      case ExternalKind::Global:
+        exported_globals.insert(module->GetGlobalIndex(export_->var));
+        break;
+      case ExternalKind::Event:
+        exported_events.insert(module->GetEventIndex(export_->var));
+        break;
+      }
+    }
+
+    // We currently only create symbol table entries for function and global
+    // symbols.
+    for (size_t i = 0; i < module->funcs.size(); ++i) {
+      const Func* func = module->funcs[i];
+      bool imported = i < module->num_func_imports;
+      bool exported = exported_funcs.count(i);
+      CHECK_RESULT(AddSymbol(&functions_, func->name, imported, exported,
+                             Symbol::Function{Index(i)}));
+    }
+
+    for (size_t i = 0; i < module->globals.size(); ++i) {
+      const Global* global = module->globals[i];
+      bool imported = i < module->num_global_imports;
+      bool exported = exported_globals.count(i);
+      CHECK_RESULT(AddSymbol(&globals_, global->name, imported, exported,
+                             Symbol::Global{Index(i)}));
+    }
+
+    return Result::Ok;
+  }
+
+  const std::vector<Symbol>& symbols() const { return symbols_; }
+  Index FunctionSymbolIndex(Index index) const { return functions_[index]; }
+  Index GlobalSymbolIndex(Index index) const { return globals_[index]; }
+};
+
 class BinaryWriter {
   WABT_DISALLOW_COPY_AND_ASSIGN(BinaryWriter);
 
@@ -212,8 +324,6 @@ class BinaryWriter {
   void EndSection();
   void BeginSubsection(const char* name);
   void EndSubsection();
-  template <typename T>
-  Index InternSymbol(const std::string& name, uint8_t flags, const T& arg);
   Index GetLabelVarDepth(const Var* var);
   Index GetEventVarDepth(const Var* var);
   Index GetLocalIndex(const Func* func, const Var& var);
@@ -244,8 +354,7 @@ class BinaryWriter {
   const WriteBinaryOptions& options_;
   const Module* module_;
 
-  std::unordered_map<std::string, Index> symtab_;
-  std::vector<Symbol> symbols_;
+  SymbolTable symtab_;
   std::vector<RelocSection> reloc_sections_;
   RelocSection* current_reloc_section_ = nullptr;
 
@@ -404,40 +513,12 @@ Index BinaryWriter::GetEventVarDepth(const Var* var) {
   return var->index();
 }
 
-template <typename T>
-Index BinaryWriter::InternSymbol(const std::string& name, uint8_t flags,
-                                 const T& arg) {
-  auto iter = symtab_.find(name);
-  if (iter != symtab_.end()) {
-    Index sym_index = iter->second;
-    const Symbol& sym = symbols_[sym_index];
-    if (sym.type() != T::type || sym.flags() != flags) {
-      fprintf(stderr, "error: duplicate symbol when writing relocatable "
-              "binary: %s\n", &name[0]);
-      return kInvalidIndex;
-    }
-    return sym_index;
-  }
-
-  Index sym_index = Index(symbols_.size());
-  symtab_[name] = sym_index;
-  symbols_.emplace_back(name, flags, arg);
-  return sym_index;
-}
-
 Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
-  uint8_t flags = 0;
   switch (reloc_type) {
     case RelocType::FuncIndexLEB:
-      if (index < module_->num_func_imports) {
-        flags |= WABT_SYMBOL_FLAG_UNDEFINED;
-      }
-      return InternSymbol(module_->funcs[index]->name, flags, Symbol::Function{index});
+      return symtab_.FunctionSymbolIndex(index);
     case RelocType::GlobalIndexLEB:
-      if (index < module_->num_global_imports) {
-        flags |= WABT_SYMBOL_FLAG_UNDEFINED;
-      }
-      return InternSymbol(module_->globals[index]->name, flags, Symbol::Global{index});
+      return symtab_.GlobalSymbolIndex(index);
     case RelocType::TypeIndexLEB:
       // Type indexes don't create entries in the symbol table; instead their
       // index is used directly.
@@ -978,12 +1059,13 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
 void BinaryWriter::WriteLinkingSection() {
   BeginCustomSection(WABT_BINARY_SECTION_LINKING);
   WriteU32Leb128(stream_, 2, "metadata version");
-  if (symbols_.size()) {
+  const std::vector<Symbol>& symbols = symtab_.symbols();
+  if (symbols.size()) {
     stream_->WriteU8Enum(LinkingEntryType::SymbolTable, "symbol table");
     BeginSubsection("symbol table");
-    WriteU32Leb128(stream_, symbols_.size(), "num symbols");
+    WriteU32Leb128(stream_, symbols.size(), "num symbols");
 
-    for (const Symbol& sym : symbols_) {
+    for (const Symbol& sym : symbols) {
       stream_->WriteU8Enum(sym.type(), "symbol type");
       WriteU32Leb128(stream_, sym.flags(), "symbol flags");
       switch (sym.type()) {
@@ -1008,7 +1090,7 @@ void BinaryWriter::WriteLinkingSection() {
           }
           break;
         case SymbolType::Section:
-          WriteU32Leb128(stream_, sym.AsSection().section, "event index");
+          WriteU32Leb128(stream_, sym.AsSection().section, "section index");
           break;
         case SymbolType::Event:
           WriteU32Leb128(stream_, sym.AsEvent().index, "event index");
@@ -1026,6 +1108,10 @@ void BinaryWriter::WriteLinkingSection() {
 Result BinaryWriter::WriteModule() {
   stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   stream_->WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
+
+  if (options_.relocatable) {
+    CHECK_RESULT(symtab_.Populate(module_));
+  }
 
   if (module_->types.size()) {
     BeginKnownSection(BinarySection::Type);
