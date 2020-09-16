@@ -201,7 +201,7 @@ class SymbolTable {
 
   std::set<string_view> seen_names_;
 
-  Result Intern(const string_view& name) {
+  Result EnsureUnique(const string_view& name) {
     if (seen_names_.count(name)) {
       fprintf(stderr, "error: duplicate symbol when writing relocatable "
               "binary: %s\n", &name[0]);
@@ -234,7 +234,7 @@ class SymbolTable {
       name.remove_prefix(1);
 
       if (exported) {
-        CHECK_RESULT(Intern(name));
+        CHECK_RESULT(EnsureUnique(name));
         flags |= uint8_t(SymbolVisibility::Hidden);
         flags |= WABT_SYMBOL_FLAG_NO_STRIP;
       }
