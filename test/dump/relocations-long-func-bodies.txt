@@ -22,14 +22,14 @@ relocations-long-func-bodies.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00002e func[0]:
- 00002f: 23 80 80 80 80 00          | global.get 0 <$g>
-           000030: R_WASM_GLOBAL_INDEX_LEB 0 <$g>
+00002e func[0] <previous_func>:
+ 00002f: 23 80 80 80 80 00          | global.get 0 <g>
+           000030: R_WASM_GLOBAL_INDEX_LEB 2 <g>
  000035: 1a                         | drop
  000036: 0b                         | end
 000038 func[1] <long_func>:
- 000039: 23 80 80 80 80 00          | global.get 0 <$g>
-           00003a: R_WASM_GLOBAL_INDEX_LEB 0 <$g>
+ 000039: 23 80 80 80 80 00          | global.get 0 <g>
+           00003a: R_WASM_GLOBAL_INDEX_LEB 2 <g>
  00003f: 1a                         | drop
  000040: 41 00                      | i32.const 0
  000042: 1a                         | drop

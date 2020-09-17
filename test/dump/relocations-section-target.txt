@@ -25,8 +25,9 @@ Code[1]:
  - func[1] size=8 <a>
 Custom:
  - name: "linking"
-  - symbol table [count=1]
+  - symbol table [count=2]
    - 0: F <env.b> func=0 undefined binding=global vis=default
+   - 1: F <a> func=1 exported no_strip binding=global vis=hidden
 Custom:
  - name: "reloc.Code"
   - relocations for section: 4 (Code) [1]
@@ -38,4 +39,5 @@ Code Disassembly:
  000029: 10 80 80 80 80 00          | call 0 <env.b>
            00002a: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
  00002f: 0b                         | end
+
 ;;; STDOUT ;;)
