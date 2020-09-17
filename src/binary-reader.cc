@@ -2387,6 +2387,8 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   for (Index i = 0; i < num_data_segments; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
+    ERROR_IF(flags != 0 && !options_.features.bulk_memory_enabled(),
+             "invalid memory index %d: bulk memory not allowed", flags);
     ERROR_IF(flags > SegFlagMax, "invalid data segment flags: %#x", flags);
     Index memory_index(0);
     if (flags & SegExplicitIndex) {
