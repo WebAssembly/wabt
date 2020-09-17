@@ -9,7 +9,7 @@
   (export "a" (func $a)))
 (;; STDOUT ;;;
 
-relocs-section-target.wasm:	file format wasm 0x1
+relocations-section-target.wasm:	file format wasm 0x1
 
 Section Details:
 
