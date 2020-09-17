@@ -55,9 +55,9 @@ relocations-long-func-section.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000020 func[0]:
- 000021: 23 80 80 80 80 00          | global.get 0 <$a>
-           000022: R_WASM_GLOBAL_INDEX_LEB 0 <$a>
+000020 func[0] <0>:
+ 000021: 23 80 80 80 80 00          | global.get 0 <a>
+           000022: R_WASM_GLOBAL_INDEX_LEB 2 <a>
  000027: 1a                         | drop
  000028: 41 00                      | i32.const 0
  00002a: 1a                         | drop
@@ -102,9 +102,9 @@ Code Disassembly:
  000064: 41 00                      | i32.const 0
  000066: 1a                         | drop
  000067: 0b                         | end
-000069 func[1]:
- 00006a: 23 80 80 80 80 00          | global.get 0 <$a>
-           00006b: R_WASM_GLOBAL_INDEX_LEB 0 <$a>
+000069 func[1] <1>:
+ 00006a: 23 80 80 80 80 00          | global.get 0 <a>
+           00006b: R_WASM_GLOBAL_INDEX_LEB 2 <a>
  000070: 1a                         | drop
  000071: 41 00                      | i32.const 0
  000073: 1a                         | drop
