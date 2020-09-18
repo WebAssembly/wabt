@@ -1,6 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/elem.wast
-;;; ARGS*: --enable-bulk-memory
+;;; ARGS*: --enable-bulk-memory --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/bulk-memory-operations/elem.wast:300: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)

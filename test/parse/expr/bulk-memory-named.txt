@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-bulk-memory
+;;; ARGS: --enable-bulk-memory --enable-reference-types
 
 (module
   (memory 1)

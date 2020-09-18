@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --enable-bulk-memory --enable-memory64
+;;; ARGS: --stdout --enable-bulk-memory --enable-memory64 --enable-reference-types
 (module
   (memory 0 i64)
   (table 0 anyfunc)

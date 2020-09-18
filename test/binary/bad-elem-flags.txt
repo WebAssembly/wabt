@@ -1,4 +1,6 @@
 ;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-reference-types
+;;; ARGS2: --enable-reference-types
 magic
 version
 section(TABLE) {

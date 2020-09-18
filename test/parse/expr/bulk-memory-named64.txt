@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-bulk-memory --enable-memory64
+;;; ARGS: --enable-bulk-memory --enable-memory64 --enable-reference-types
 
 (module
   (memory 1 i64)

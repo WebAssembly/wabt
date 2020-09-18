@@ -2277,6 +2277,9 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
   for (Index i = 0; i < num_elem_segments; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "elem segment flags"));
+    ERROR_IF(flags != 0 && !options_.features.reference_types_enabled(),
+             "invalid elem segment flags: %#x: reference types not allowed",
+             flags);
     ERROR_IF(flags > SegFlagMax, "invalid elem segment flags: %#x", flags);
     Index table_index(0);
     if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
