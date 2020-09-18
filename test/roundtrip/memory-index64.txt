@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout
+;;; ARGS: --stdout --enable-memory64
 (module
   (import "a" "b" (memory 1 i64)))
 (;; STDOUT ;;;
