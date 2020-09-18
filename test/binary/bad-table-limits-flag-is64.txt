@@ -1,0 +1,12 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TABLE) {
+  count[1]
+  anyfunc
+  flags[4]
+}
+(;; STDERR ;;;
+000000d: error: tables may not be 64-bit
+000000d: error: tables may not be 64-bit
+;;; STDERR ;;)

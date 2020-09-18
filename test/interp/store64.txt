@@ -1,4 +1,5 @@
 ;;; TOOL: run-interp
+;;; ARGS: --enable-memory64
 (module
   (memory 1 i64)
 
