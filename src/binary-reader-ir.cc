@@ -260,6 +260,8 @@ class BinaryReaderIR : public BinaryReaderNop {
                           Index section_index) override;
   Result OnEventSymbol(Index index, uint32_t flags, string_view name,
                         Index event_index) override;
+  Result OnTableSymbol(Index index, uint32_t flags, string_view name,
+                       Index table_index) override;
 
  private:
   Location GetLocation() const;
@@ -1346,6 +1348,23 @@ Result BinaryReaderIR::OnEventSymbol(Index index, uint32_t flags,
       GetUniqueName(&module_->event_bindings, MakeDollarName(name));
   event->name = dollar_name;
   module_->event_bindings.emplace(dollar_name, Binding(event_index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnTableSymbol(Index index, uint32_t flags,
+                                     string_view name, Index table_index) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (table_index >= module_->tables.size()) {
+    PrintError("invalid table index: %" PRIindex, table_index);
+    return Result::Error;
+  }
+  Table* table = module_->tables[table_index];
+  std::string dollar_name =
+      GetUniqueName(&module_->table_bindings, MakeDollarName(name));
+  table->name = dollar_name;
+  module_->table_bindings.emplace(dollar_name, Binding(table_index));
   return Result::Ok;
 }
 

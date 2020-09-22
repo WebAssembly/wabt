@@ -294,9 +294,10 @@ enum class RelocType {
   MemoryAddressRelSLEB64 = 17,  // Memory64: Like MemoryAddressRelSLEB
   TableIndexSLEB64 = 18,        // Memory64: Like TableIndexSLEB
   TableIndexI64 = 19,           // Memory64: Like TableIndexI32
+  TableNumberLEB = 20,    // e.g. Immediate of table.get
 
   First = FuncIndexLEB,
-  Last = TableIndexI64,
+  Last = TableNumberLEB,
 };
 static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
@@ -322,6 +323,7 @@ enum class SymbolType {
   Global = 2,
   Section = 3,
   Event = 4,
+  Table = 5,
 };
 
 enum class ComdatType {
@@ -422,6 +424,8 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
       return "section";
     case SymbolType::Event:
       return "event";
+    case SymbolType::Table:
+      return "table";
     default:
       return "<error_symbol_type>";
   }
