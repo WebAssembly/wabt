@@ -2,7 +2,7 @@
 ;;; ARGS: --enable-bulk-memory --enable-memory64
 
 (module
-  (memory 1 i64)
+  (memory i64 1)
   (data $data "a")
   (func
     i64.const 0 i32.const 0 i32.const 0 memory.init $data

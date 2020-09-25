@@ -633,7 +633,11 @@ inline Memory::Ptr Memory::New(interp::Store& store, MemoryType type) {
 }
 
 inline bool Memory::IsValidAccess(u64 offset, u64 addend, u64 size) const {
-  return offset + addend + size <= data_.size();
+  // FIXME: make this faster.
+  return offset <= data_.size() &&
+         addend <= data_.size() &&
+         size <= data_.size() &&
+         offset + addend + size <= data_.size();
 }
 
 inline bool Memory::IsValidAtomicAccess(u64 offset,

@@ -1,0 +1,9 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/memory_redundancy64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+zero_everything() =>
+zero_everything() =>
+zero_everything() =>
+7/7 tests passed.
+;;; STDOUT ;;)

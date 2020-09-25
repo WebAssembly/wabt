@@ -1023,6 +1023,10 @@ Value Thread::Pop() {
   return value;
 }
 
+u64 Thread::PopPtr(const Memory::Ptr& memory) {
+  return memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+}
+
 template <typename T>
 void WABT_VECTORCALL Thread::Push(T value) {
   Push(Value::Make(value));
@@ -1187,15 +1191,15 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::MemoryGrow: {
       Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32]};
       u64 old_size = memory->PageSize();
-      if (Failed(memory->Grow(Pop<u32>()))) {
-        if (memory->type().limits.is_64) {
+      if (memory->type().limits.is_64) {
+        if (Failed(memory->Grow(Pop<u64>()))) {
           Push<s64>(-1);
         } else {
-          Push<s32>(-1);
+          Push<u64>(old_size);
         }
       } else {
-        if (memory->type().limits.is_64) {
-          Push<u64>(old_size);
+        if (Failed(memory->Grow(Pop<u32>()))) {
+          Push<s32>(-1);
         } else {
           Push<u32>(old_size);
         }
@@ -1754,7 +1758,7 @@ RunResult Thread::DoCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
 template <typename T>
 RunResult Thread::Load(Instr instr, T* out, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
-  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+  u64 offset = PopPtr(memory);
   TRAP_IF(Failed(memory->Load(offset, instr.imm_u32x2.snd, out)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %" PRIu64,
@@ -1777,7 +1781,7 @@ template <typename T, typename V>
 RunResult Thread::DoStore(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
   V val = static_cast<V>(Pop<T>());
-  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+  u64 offset = PopPtr(memory);
   TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2.snd, val)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %" PRIu64,
@@ -1843,7 +1847,7 @@ RunResult Thread::DoMemoryInit(Instr instr, Trap::Ptr* out_trap) {
   auto&& data = inst_->datas()[instr.imm_u32x2.snd];
   auto size = Pop<u32>();
   auto src = Pop<u32>();
-  auto dst = Pop<u32>();
+  auto dst = PopPtr(memory);
   TRAP_IF(Failed(memory->Init(dst, data, src, size)),
           "out of bounds memory access: memory.init out of bounds");
   return RunResult::Ok;
@@ -1857,9 +1861,9 @@ RunResult Thread::DoDataDrop(Instr instr) {
 RunResult Thread::DoMemoryCopy(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr mem_dst{store_, inst_->memories()[instr.imm_u32x2.fst]};
   Memory::Ptr mem_src{store_, inst_->memories()[instr.imm_u32x2.snd]};
-  auto size = Pop<u32>();
-  auto src = Pop<u32>();
-  auto dst = Pop<u32>();
+  auto size = PopPtr(mem_src);
+  auto src = PopPtr(mem_src);
+  auto dst = PopPtr(mem_dst);
   // TODO: change to "out of bounds"
   TRAP_IF(Failed(Memory::Copy(*mem_dst, dst, *mem_src, src, size)),
           "out of bounds memory access: memory.copy out of bound");
@@ -1868,9 +1872,9 @@ RunResult Thread::DoMemoryCopy(Instr instr, Trap::Ptr* out_trap) {
 
 RunResult Thread::DoMemoryFill(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32]};
-  auto size = Pop<u32>();
+  auto size = PopPtr(memory);
   auto value = Pop<u32>();
-  auto dst = Pop<u32>();
+  auto dst = PopPtr(memory);
   TRAP_IF(Failed(memory->Fill(dst, value, size)),
           "out of bounds memory access: memory.fill out of bounds");
   return RunResult::Ok;
@@ -2151,7 +2155,7 @@ RunResult Thread::DoSimdLoadExtend(Instr instr, Trap::Ptr* out_trap) {
 template <typename T, typename V>
 RunResult Thread::DoAtomicLoad(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
-  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+  u64 offset = PopPtr(memory);
   V val;
   TRAP_IF(Failed(memory->AtomicLoad(offset, instr.imm_u32x2.snd, &val)),
           StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
@@ -2164,7 +2168,7 @@ template <typename T, typename V>
 RunResult Thread::DoAtomicStore(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
   V val = static_cast<V>(Pop<T>());
-  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+  u64 offset = PopPtr(memory);
   TRAP_IF(Failed(memory->AtomicStore(offset, instr.imm_u32x2.snd, val)),
           StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
                        instr.imm_u32x2.snd));
@@ -2177,7 +2181,7 @@ RunResult Thread::DoAtomicRmw(BinopFunc<T, T> f,
                               Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
   T val = static_cast<T>(Pop<R>());
-  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+  u64 offset = PopPtr(memory);
   T old;
   TRAP_IF(Failed(memory->AtomicRmw(offset, instr.imm_u32x2.snd, val, f, &old)),
           StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
@@ -2192,7 +2196,7 @@ RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
   V replace = static_cast<V>(Pop<T>());
   V expect = static_cast<V>(Pop<T>());
   V old;
-  u64 offset = memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+  u64 offset = PopPtr(memory);
   TRAP_IF(Failed(memory->AtomicRmwCmpxchg(offset, instr.imm_u32x2.snd, expect,
                                           replace, &old)),
           StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,

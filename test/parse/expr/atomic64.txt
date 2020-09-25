@@ -1,7 +1,7 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-threads --enable-memory64
 (module
-  (memory 1 1 shared i64)
+  (memory i64 1 1 shared)
   (func
     i64.const 0 i32.const 0 atomic.notify drop
     i64.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop

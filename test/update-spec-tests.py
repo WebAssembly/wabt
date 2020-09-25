@@ -93,6 +93,7 @@ def main(args):
     ProcessProposalDir('bulk-memory-operations', '--enable-bulk-memory')
     ProcessProposalDir('reference-types', '--enable-reference-types')
     ProcessProposalDir('simd', '--enable-simd')
+    ProcessProposalDir('memory64', '--enable-memory64')
 
     return 0
 

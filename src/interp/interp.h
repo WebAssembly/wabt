@@ -1065,6 +1065,7 @@ class Thread : public Object {
   template <typename T>
   T WABT_VECTORCALL Pop();
   Value Pop();
+  u64 PopPtr(const Memory::Ptr& memory);
 
   template <typename T>
   void WABT_VECTORCALL Push(T);
