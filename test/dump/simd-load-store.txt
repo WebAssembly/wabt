@@ -24,32 +24,32 @@
   ;; i16x8.load8x8_s
   (func (export "i16x8.load8x8_s") (result v128)
     i32.const 0
-    i16x8.load8x8_s)
+    v128.load8x8_s)
 
   ;; i16x8.load8x8_u
   (func (export "i16x8.load8x8_u") (result v128)
     i32.const 0
-    i16x8.load8x8_u)
+    v128.load8x8_u)
 
   ;; i32x4.load16x4_s
   (func (export "i32x4.load16x4_s") (result v128)
     i32.const 0
-    i32x4.load16x4_s)
+    v128.load16x4_s)
 
   ;; i32x4.load16x4_u
   (func (export "i32x4.load16x4_u") (result v128)
     i32.const 0
-    i32x4.load16x4_u)
+    v128.load16x4_u)
 
   ;; i64x2.load32x2_s
   (func (export "i64x2.load32x2_s") (result v128)
     i32.const 0
-    i64x2.load32x2_s)
+    v128.load32x2_s)
 
   ;; i64x2.load32x2_u
   (func (export "i64x2.load32x2_u") (result v128)
     i32.const 0
-    i64x2.load32x2_u)
+    v128.load32x2_u)
 )
 (;; STDOUT ;;;
 
@@ -71,26 +71,26 @@ Code Disassembly:
  0000dc: 0b                         | end
 0000de func[2] <i16x8.load8x8_s>:
  0000df: 41 00                      | i32.const 0
- 0000e1: fd 01 03 00                | i16x8.load8x8_s 3 0
+ 0000e1: fd 01 03 00                | v128.load8x8_s 3 0
  0000e5: 0b                         | end
 0000e7 func[3] <i16x8.load8x8_u>:
  0000e8: 41 00                      | i32.const 0
- 0000ea: fd 02 03 00                | i16x8.load8x8_u 3 0
+ 0000ea: fd 02 03 00                | v128.load8x8_u 3 0
  0000ee: 0b                         | end
 0000f0 func[4] <i32x4.load16x4_s>:
  0000f1: 41 00                      | i32.const 0
- 0000f3: fd 03 03 00                | i32x4.load16x4_s 3 0
+ 0000f3: fd 03 03 00                | v128.load16x4_s 3 0
  0000f7: 0b                         | end
 0000f9 func[5] <i32x4.load16x4_u>:
  0000fa: 41 00                      | i32.const 0
- 0000fc: fd 04 03 00                | i32x4.load16x4_u 3 0
+ 0000fc: fd 04 03 00                | v128.load16x4_u 3 0
  000100: 0b                         | end
 000102 func[6] <i64x2.load32x2_s>:
  000103: 41 00                      | i32.const 0
- 000105: fd 05 03 00                | i64x2.load32x2_s 3 0
+ 000105: fd 05 03 00                | v128.load32x2_s 3 0
  000109: 0b                         | end
 00010b func[7] <i64x2.load32x2_u>:
  00010c: 41 00                      | i32.const 0
- 00010e: fd 06 03 00                | i64x2.load32x2_u 3 0
+ 00010e: fd 06 03 00                | v128.load32x2_u 3 0
  000112: 0b                         | end
 ;;; STDOUT ;;)

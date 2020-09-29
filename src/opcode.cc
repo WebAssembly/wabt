@@ -197,14 +197,14 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I16X8Neg:
     case Opcode::I32X4Neg:
     case Opcode::I64X2Neg:
-    case Opcode::I8X16AddSaturateS:
-    case Opcode::I8X16AddSaturateU:
-    case Opcode::I16X8AddSaturateS:
-    case Opcode::I16X8AddSaturateU:
-    case Opcode::I8X16SubSaturateS:
-    case Opcode::I8X16SubSaturateU:
-    case Opcode::I16X8SubSaturateS:
-    case Opcode::I16X8SubSaturateU:
+    case Opcode::I8X16AddSatS:
+    case Opcode::I8X16AddSatU:
+    case Opcode::I16X8AddSatS:
+    case Opcode::I16X8AddSatU:
+    case Opcode::I8X16SubSatS:
+    case Opcode::I8X16SubSatU:
+    case Opcode::I16X8SubSatS:
+    case Opcode::I16X8SubSatU:
     case Opcode::I8X16Shl:
     case Opcode::I16X8Shl:
     case Opcode::I32X4Shl:
@@ -278,9 +278,13 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::F32X4Abs:
     case Opcode::F64X2Abs:
     case Opcode::F32X4Min:
+    case Opcode::F32X4PMin:
     case Opcode::F64X2Min:
+    case Opcode::F64X2PMin:
     case Opcode::F32X4Max:
+    case Opcode::F32X4PMax:
     case Opcode::F64X2Max:
+    case Opcode::F64X2PMax:
     case Opcode::F32X4Add:
     case Opcode::F64X2Add:
     case Opcode::F32X4Sub:
@@ -295,12 +299,12 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::F32X4ConvertI32X4U:
     case Opcode::I32X4TruncSatF32X4S:
     case Opcode::I32X4TruncSatF32X4U:
-    case Opcode::V8X16Swizzle:
-    case Opcode::V8X16Shuffle:
-    case Opcode::V8X16LoadSplat:
-    case Opcode::V16X8LoadSplat:
-    case Opcode::V32X4LoadSplat:
-    case Opcode::V64X2LoadSplat:
+    case Opcode::I8X16Swizzle:
+    case Opcode::I8X16Shuffle:
+    case Opcode::V128Load8Splat:
+    case Opcode::V128Load16Splat:
+    case Opcode::V128Load32Splat:
+    case Opcode::V128Load64Splat:
     case Opcode::I8X16Abs:
     case Opcode::I16X8Abs:
     case Opcode::I32X4Abs:

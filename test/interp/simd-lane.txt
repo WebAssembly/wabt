@@ -85,7 +85,7 @@
   (func (export  "func_v8x16_shuffle_0") (result v128)
     v128.const i32x4 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
     v128.const i32x4 0x00550055 0x00550055 0x00550055 0x00550155
-    v8x16.shuffle  16 1 18 3 20 5 22 7 24 9 26 11 28 13 30 15)
+    i8x16.shuffle  16 1 18 3 20 5 22 7 24 9 26 11 28 13 30 15)
 )
 (;; STDOUT ;;;
 func_i8x16_extract_lane_s_0() => i32:4294967295

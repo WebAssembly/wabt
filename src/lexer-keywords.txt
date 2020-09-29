@@ -83,11 +83,13 @@ f32.trunc, TokenType::Unary, Opcode::F32Trunc
 f32, Type::F32
 f32x4.abs, TokenType::Unary, Opcode::F32X4Abs
 f32x4.add, TokenType::Binary, Opcode::F32X4Add
+f32x4.ceil, TokenType::Unary, Opcode::F32X4Ceil
 f32x4.convert_i32x4_s, TokenType::Unary, Opcode::F32X4ConvertI32X4S
 f32x4.convert_i32x4_u, TokenType::Unary, Opcode::F32X4ConvertI32X4U
 f32x4.div, TokenType::Binary, Opcode::F32X4Div
 f32x4.eq, TokenType::Compare, Opcode::F32X4Eq
 f32x4.extract_lane, TokenType::SimdLaneOp, Opcode::F32X4ExtractLane
+f32x4.floor, TokenType::Unary, Opcode::F32X4Floor
 f32x4.ge, TokenType::Compare, Opcode::F32X4Ge
 f32x4.gt, TokenType::Compare, Opcode::F32X4Gt
 f32x4.le, TokenType::Compare, Opcode::F32X4Le
@@ -95,12 +97,16 @@ f32x4.lt, TokenType::Compare, Opcode::F32X4Lt
 f32x4.max, TokenType::Binary, Opcode::F32X4Max
 f32x4.min, TokenType::Binary, Opcode::F32X4Min
 f32x4.mul, TokenType::Binary, Opcode::F32X4Mul
+f32x4.nearest, TokenType::Unary, Opcode::F32X4Nearest
 f32x4.neg, TokenType::Unary, Opcode::F32X4Neg
 f32x4.ne, TokenType::Compare, Opcode::F32X4Ne
+f32x4.pmax, TokenType::Binary, Opcode::F32X4PMax
+f32x4.pmin, TokenType::Binary, Opcode::F32X4PMin
 f32x4.replace_lane, TokenType::SimdLaneOp, Opcode::F32X4ReplaceLane
 f32x4.splat, TokenType::Unary, Opcode::F32X4Splat
 f32x4.sqrt, TokenType::Unary, Opcode::F32X4Sqrt
 f32x4.sub, TokenType::Binary, Opcode::F32X4Sub
+f32x4.trunc, TokenType::Unary, Opcode::F32X4Trunc
 f32x4, TokenType::F32X4
 f64.abs, TokenType::Unary, Opcode::F64Abs
 f64.add, TokenType::Binary, Opcode::F64Add
@@ -134,9 +140,11 @@ f64.trunc, TokenType::Unary, Opcode::F64Trunc
 f64, Type::F64
 f64x2.abs, TokenType::Unary, Opcode::F64X2Abs
 f64x2.add, TokenType::Binary, Opcode::F64X2Add
+f64x2.ceil, TokenType::Unary, Opcode::F64X2Ceil
 f64x2.div, TokenType::Binary, Opcode::F64X2Div
 f64x2.eq, TokenType::Compare, Opcode::F64X2Eq
 f64x2.extract_lane, TokenType::SimdLaneOp, Opcode::F64X2ExtractLane
+f64x2.floor, TokenType::Unary, Opcode::F64X2Floor
 f64x2.ge, TokenType::Compare, Opcode::F64X2Ge
 f64x2.gt, TokenType::Compare, Opcode::F64X2Gt
 f64x2.le, TokenType::Compare, Opcode::F64X2Le
@@ -144,12 +152,16 @@ f64x2.lt, TokenType::Compare, Opcode::F64X2Lt
 f64x2.max, TokenType::Binary, Opcode::F64X2Max
 f64x2.min, TokenType::Binary, Opcode::F64X2Min
 f64x2.mul, TokenType::Binary, Opcode::F64X2Mul
+f64x2.nearest, TokenType::Unary, Opcode::F64X2Nearest
 f64x2.neg, TokenType::Unary, Opcode::F64X2Neg
 f64x2.ne, TokenType::Compare, Opcode::F64X2Ne
+f64x2.pmax, TokenType::Binary, Opcode::F64X2PMax
+f64x2.pmin, TokenType::Binary, Opcode::F64X2PMin
 f64x2.replace_lane, TokenType::SimdLaneOp, Opcode::F64X2ReplaceLane
 f64x2.splat, TokenType::Unary, Opcode::F64X2Splat
 f64x2.sqrt, TokenType::Unary, Opcode::F64X2Sqrt
 f64x2.sub, TokenType::Binary, Opcode::F64X2Sub
+f64x2.trunc, TokenType::Unary, Opcode::F64X2Trunc
 f64x2, TokenType::F64X2
 field, TokenType::Field
 funcref, Type::FuncRef
@@ -160,8 +172,8 @@ global.set, TokenType::GlobalSet, Opcode::GlobalSet
 global, TokenType::Global
 grow_memory, TokenType::MemoryGrow, Opcode::MemoryGrow
 i16x8.abs, TokenType::Unary, Opcode::I16X8Abs
-i16x8.add_saturate_s, TokenType::Binary, Opcode::I16X8AddSaturateS
-i16x8.add_saturate_u, TokenType::Binary, Opcode::I16X8AddSaturateU
+i16x8.add_sat_s, TokenType::Binary, Opcode::I16X8AddSatS
+i16x8.add_sat_u, TokenType::Binary, Opcode::I16X8AddSatU
 i16x8.add, TokenType::Binary, Opcode::I16X8Add
 i16x8.all_true, TokenType::Unary, Opcode::I16X8AllTrue
 i16x8.any_true, TokenType::Unary, Opcode::I16X8AnyTrue
@@ -176,8 +188,8 @@ i16x8.gt_s, TokenType::Compare, Opcode::I16X8GtS
 i16x8.gt_u, TokenType::Compare, Opcode::I16X8GtU
 i16x8.le_s, TokenType::Compare, Opcode::I16X8LeS
 i16x8.le_u, TokenType::Compare, Opcode::I16X8LeU
-i16x8.load8x8_s, TokenType::Load, Opcode::I16X8Load8X8S
-i16x8.load8x8_u, TokenType::Load, Opcode::I16X8Load8X8U
+v128.load8x8_s, TokenType::Load, Opcode::V128Load8X8S
+v128.load8x8_u, TokenType::Load, Opcode::V128Load8X8U
 i16x8.lt_s, TokenType::Compare, Opcode::I16X8LtS
 i16x8.lt_u, TokenType::Compare, Opcode::I16X8LtU
 i16x8.max_s, TokenType::Binary, Opcode::I16X8MaxS
@@ -194,8 +206,8 @@ i16x8.shl, TokenType::Binary, Opcode::I16X8Shl
 i16x8.shr_s, TokenType::Binary, Opcode::I16X8ShrS
 i16x8.shr_u, TokenType::Binary, Opcode::I16X8ShrU
 i16x8.splat, TokenType::Unary, Opcode::I16X8Splat
-i16x8.sub_saturate_s, TokenType::Binary, Opcode::I16X8SubSaturateS
-i16x8.sub_saturate_u, TokenType::Binary, Opcode::I16X8SubSaturateU
+i16x8.sub_sat_s, TokenType::Binary, Opcode::I16X8SubSatS
+i16x8.sub_sat_u, TokenType::Binary, Opcode::I16X8SubSatU
 i16x8.sub, TokenType::Binary, Opcode::I16X8Sub
 i16x8, TokenType::I16X8
 i16x8.widen_high_i8x16_s, TokenType::Unary, Opcode::I16X8WidenHighI8X16S
@@ -293,8 +305,8 @@ i32x4.gt_s, TokenType::Compare, Opcode::I32X4GtS
 i32x4.gt_u, TokenType::Compare, Opcode::I32X4GtU
 i32x4.le_s, TokenType::Compare, Opcode::I32X4LeS
 i32x4.le_u, TokenType::Compare, Opcode::I32X4LeU
-i32x4.load16x4_s, TokenType::Load, Opcode::I32X4Load16X4S
-i32x4.load16x4_u, TokenType::Load, Opcode::I32X4Load16X4U
+v128.load16x4_s, TokenType::Load, Opcode::V128Load16X4S
+v128.load16x4_u, TokenType::Load, Opcode::V128Load16X4U
 i32x4.lt_s, TokenType::Compare, Opcode::I32X4LtS
 i32x4.lt_u, TokenType::Compare, Opcode::I32X4LtU
 i32x4.max_s, TokenType::Binary, Opcode::I32X4MaxS
@@ -412,8 +424,8 @@ i64.trunc_sat_f64_u, TokenType::Convert, Opcode::I64TruncSatF64U
 i64, Type::I64
 i64x2.add, TokenType::Binary, Opcode::I64X2Add
 i64x2.extract_lane, TokenType::SimdLaneOp, Opcode::I64X2ExtractLane
-i64x2.load32x2_s, TokenType::Load, Opcode::I64X2Load32X2S
-i64x2.load32x2_u, TokenType::Load, Opcode::I64X2Load32X2U
+v128.load32x2_s, TokenType::Load, Opcode::V128Load32X2S
+v128.load32x2_u, TokenType::Load, Opcode::V128Load32X2U
 i64x2.mul, TokenType::Binary, Opcode::I64X2Mul
 i64x2.neg, TokenType::Unary, Opcode::I64X2Neg
 i64x2.replace_lane, TokenType::SimdLaneOp, Opcode::I64X2ReplaceLane
@@ -425,8 +437,8 @@ i64x2.sub, TokenType::Binary, Opcode::I64X2Sub
 i64x2, TokenType::I64X2
 i64.xor, TokenType::Binary, Opcode::I64Xor
 i8x16.abs, TokenType::Unary, Opcode::I8X16Abs
-i8x16.add_saturate_s, TokenType::Binary, Opcode::I8X16AddSaturateS
-i8x16.add_saturate_u, TokenType::Binary, Opcode::I8X16AddSaturateU
+i8x16.add_sat_s, TokenType::Binary, Opcode::I8X16AddSatS
+i8x16.add_sat_u, TokenType::Binary, Opcode::I8X16AddSatU
 i8x16.add, TokenType::Binary, Opcode::I8X16Add
 i8x16.all_true, TokenType::Unary, Opcode::I8X16AllTrue
 i8x16.any_true, TokenType::Unary, Opcode::I8X16AnyTrue
@@ -456,8 +468,8 @@ i8x16.shl, TokenType::Binary, Opcode::I8X16Shl
 i8x16.shr_s, TokenType::Binary, Opcode::I8X16ShrS
 i8x16.shr_u, TokenType::Binary, Opcode::I8X16ShrU
 i8x16.splat, TokenType::Unary, Opcode::I8X16Splat
-i8x16.sub_saturate_s, TokenType::Binary, Opcode::I8X16SubSaturateS
-i8x16.sub_saturate_u, TokenType::Binary, Opcode::I8X16SubSaturateU
+i8x16.sub_sat_s, TokenType::Binary, Opcode::I8X16SubSatS
+i8x16.sub_sat_u, TokenType::Binary, Opcode::I8X16SubSatU
 i8x16.sub, TokenType::Binary, Opcode::I8X16Sub
 i8x16, TokenType::I8X16
 if, TokenType::If, Opcode::If
@@ -522,12 +534,12 @@ v128.or, TokenType::Binary, Opcode::V128Or
 v128.store, TokenType::Store, Opcode::V128Store
 v128, Type::V128
 v128.xor, TokenType::Binary, Opcode::V128Xor
-v16x8.load_splat, TokenType::Load, Opcode::V16X8LoadSplat
-v32x4.load_splat, TokenType::Load, Opcode::V32X4LoadSplat
-v64x2.load_splat, TokenType::Load, Opcode::V64X2LoadSplat
-v8x16.load_splat, TokenType::Load, Opcode::V8X16LoadSplat
-v8x16.shuffle, TokenType::SimdShuffleOp, Opcode::V8X16Shuffle
-v8x16.swizzle, TokenType::Binary, Opcode::V8X16Swizzle
+v128.load16_splat, TokenType::Load, Opcode::V128Load16Splat
+v128.load32_splat, TokenType::Load, Opcode::V128Load32Splat
+v128.load64_splat, TokenType::Load, Opcode::V128Load64Splat
+v128.load8_splat, TokenType::Load, Opcode::V128Load8Splat
+i8x16.shuffle, TokenType::SimdShuffleOp, Opcode::I8X16Shuffle
+i8x16.swizzle, TokenType::Binary, Opcode::I8X16Swizzle
 # Deprecated names.
 anyfunc, Type::FuncRef
 f32.convert_s/i32, TokenType::Convert, Opcode::F32ConvertI32S
