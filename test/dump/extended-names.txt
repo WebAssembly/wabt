@@ -1,0 +1,213 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --debug-names --enable-all
+;;; ARGS1: -x
+(type $type1 (func (param i32)))
+(table $t1 1 funcref)
+(table $t2 1 funcref)
+(memory $mem2 1 1)
+(data $data1 "hello")
+(func)
+(elem $elem1 func 0)
+(global $g1 (mut i32) (i32.const 1))
+(global $g2 i32 (i32.const 2))
+(;; STDERR ;;;
+0000089: warning: out-of-order sub-section
+;;; STDERR ;;)
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 02                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 01                                        ; num params
+000000d: 7f                                        ; i32
+000000e: 00                                        ; num results
+; type 1
+000000f: 60                                        ; func
+0000010: 00                                        ; num params
+0000011: 00                                        ; num results
+0000009: 08                                        ; FIXUP section size
+; section "Function" (3)
+0000012: 03                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num functions
+0000015: 01                                        ; function 0 signature index
+0000013: 02                                        ; FIXUP section size
+; section "Table" (4)
+0000016: 04                                        ; section code
+0000017: 00                                        ; section size (guess)
+0000018: 02                                        ; num tables
+; table 0
+0000019: 70                                        ; funcref
+000001a: 00                                        ; limits: flags
+000001b: 01                                        ; limits: initial
+; table 1
+000001c: 70                                        ; funcref
+000001d: 00                                        ; limits: flags
+000001e: 01                                        ; limits: initial
+0000017: 07                                        ; FIXUP section size
+; section "Memory" (5)
+000001f: 05                                        ; section code
+0000020: 00                                        ; section size (guess)
+0000021: 01                                        ; num memories
+; memory 0
+0000022: 01                                        ; limits: flags
+0000023: 01                                        ; limits: initial
+0000024: 01                                        ; limits: max
+0000020: 04                                        ; FIXUP section size
+; section "Global" (6)
+0000025: 06                                        ; section code
+0000026: 00                                        ; section size (guess)
+0000027: 02                                        ; num globals
+0000028: 7f                                        ; i32
+0000029: 01                                        ; global mutability
+000002a: 41                                        ; i32.const
+000002b: 01                                        ; i32 literal
+000002c: 0b                                        ; end
+000002d: 7f                                        ; i32
+000002e: 00                                        ; global mutability
+000002f: 41                                        ; i32.const
+0000030: 02                                        ; i32 literal
+0000031: 0b                                        ; end
+0000026: 0b                                        ; FIXUP section size
+; section "Elem" (9)
+0000032: 09                                        ; section code
+0000033: 00                                        ; section size (guess)
+0000034: 01                                        ; num elem segments
+; elem segment header 0
+0000035: 01                                        ; segment flags
+0000036: 00                                        ; elem list type
+0000037: 01                                        ; num elems
+0000038: 00                                        ; elem function index
+0000033: 05                                        ; FIXUP section size
+; section "DataCount" (12)
+0000039: 0c                                        ; section code
+000003a: 00                                        ; section size (guess)
+000003b: 01                                        ; data count
+000003a: 01                                        ; FIXUP section size
+; section "Code" (10)
+000003c: 0a                                        ; section code
+000003d: 00                                        ; section size (guess)
+000003e: 01                                        ; num functions
+; function body 0
+000003f: 00                                        ; func body size (guess)
+0000040: 00                                        ; local decl count
+0000041: 0b                                        ; end
+000003f: 02                                        ; FIXUP func body size
+000003d: 04                                        ; FIXUP section size
+; move data: [3c, 42) -> [39, 3f)
+; truncate to 63 (0x3f)
+; section "Data" (11)
+000003f: 0b                                        ; section code
+0000040: 00                                        ; section size (guess)
+0000041: 01                                        ; num data segments
+; data segment header 0
+0000042: 01                                        ; segment flags
+0000043: 05                                        ; data segment size
+; data segment data 0
+0000044: 6865 6c6c 6f                              ; data segment data
+0000040: 08                                        ; FIXUP section size
+; section "name"
+0000049: 00                                        ; section code
+000004a: 00                                        ; section size (guess)
+000004b: 04                                        ; string length
+000004c: 6e61 6d65                                name  ; custom section name
+0000050: 02                                        ; local name type
+0000051: 00                                        ; subsection size (guess)
+0000052: 01                                        ; num functions
+0000053: 00                                        ; function index
+0000054: 00                                        ; num locals
+0000051: 03                                        ; FIXUP subsection size
+0000055: 04                                        ; type name type
+0000056: 00                                        ; subsection size (guess)
+0000057: 01                                        ; num types
+0000058: 00                                        ; type index
+0000059: 05                                        ; string length
+000005a: 7479 7065 31                             type1  ; type name 0
+0000056: 08                                        ; FIXUP subsection size
+000005f: 05                                        ; table name type
+0000060: 00                                        ; subsection size (guess)
+0000061: 02                                        ; num tables
+0000062: 00                                        ; table index
+0000063: 02                                        ; string length
+0000064: 7431                                     t1  ; table name 0
+0000066: 01                                        ; table index
+0000067: 02                                        ; string length
+0000068: 7432                                     t2  ; table name 1
+0000060: 09                                        ; FIXUP subsection size
+000006a: 06                                        ; memory name type
+000006b: 00                                        ; subsection size (guess)
+000006c: 01                                        ; num memories
+000006d: 00                                        ; memory index
+000006e: 04                                        ; string length
+000006f: 6d65 6d32                                mem2  ; memory name 0
+000006b: 07                                        ; FIXUP subsection size
+0000073: 07                                        ; global name type
+0000074: 00                                        ; subsection size (guess)
+0000075: 02                                        ; num globals
+0000076: 00                                        ; global index
+0000077: 02                                        ; string length
+0000078: 6731                                     g1  ; global name 0
+000007a: 01                                        ; global index
+000007b: 02                                        ; string length
+000007c: 6732                                     g2  ; global name 1
+0000074: 09                                        ; FIXUP subsection size
+000007e: 09                                        ; segment name type
+000007f: 00                                        ; subsection size (guess)
+0000080: 01                                        ; num data_segments
+0000081: 00                                        ; segment index
+0000082: 05                                        ; string length
+0000083: 6461 7461 31                             data1  ; segment name 0
+000007f: 08                                        ; FIXUP subsection size
+0000088: 08                                        ; segment name type
+0000089: 00                                        ; subsection size (guess)
+000008a: 01                                        ; num elem_segments
+000008b: 00                                        ; segment index
+000008c: 05                                        ; string length
+000008d: 656c 656d 31                             elem1  ; segment name 0
+0000089: 08                                        ; FIXUP subsection size
+000004a: 47                                        ; FIXUP section size
+
+extended-names.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[2]:
+ - type[0] (i32) -> nil
+ - type[1] () -> nil
+Function[1]:
+ - func[0] sig=1
+Table[2]:
+ - table[0] type=funcref initial=1
+ - table[1] type=funcref initial=1
+Memory[1]:
+ - memory[0] pages: initial=1 max=1
+Global[2]:
+ - global[0] i32 mutable=1 - init i32=1
+ - global[1] i32 mutable=0 - init i32=2
+Elem[1]:
+ - segment[0] flags=1 table=0 count=1
+  - elem[0] = func[0]
+Code[1]:
+ - func[0] size=2
+Data[1]:
+ - segment[0] passive size=5
+  - 0000000: 6865 6c6c 6f                             hello
+Custom:
+ - name: "name"
+ - type[0] <type1>
+ - table[0] <t1>
+ - table[1] <t2>
+ - memory[0] <mem2>
+ - global[0] <g1>
+ - global[1] <g2>
+ - dataseg[0] <data1>
+
+Code Disassembly:
+
+00003d func[0]:
+ 00003e: 0b                         | end
+;;; STDOUT ;;)

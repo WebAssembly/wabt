@@ -42,4 +42,21 @@ const char* GetSectionName(BinarySection sec) {
   }
 }
 
+const char* NameSubsectionName[] = {
+  "module",
+  "function",
+  "local",
+  "label",
+  "type",
+  "table",
+  "memory",
+  "global",
+  "elemseg",
+  "dataseg",
+};
+
+const char* GetNameSectionSubsectionName(NameSectionSubsection subsec) {
+  return NameSubsectionName[size_t(subsec)];
+}
+
 }  // namespace wabt

@@ -1533,14 +1533,16 @@ Result BinaryWriter::WriteModule() {
     }
 
     if (!module_->name.empty()) {
-      WriteU32Leb128(stream_, 0, "module name type");
+      WriteU32Leb128(stream_, NameSectionSubsection::Module,
+                     "module name type");
       BeginSubsection("module name subsection");
       WriteDebugName(stream_, module_->name, "module name");
       EndSubsection();
     }
 
     if (named_functions > 0) {
-      WriteU32Leb128(stream_, 1, "function name type");
+      WriteU32Leb128(stream_, NameSectionSubsection::Function,
+                     "function name type");
       BeginSubsection("function name subsection");
 
       WriteU32Leb128(stream_, named_functions, "num functions");
@@ -1577,6 +1579,155 @@ Result BinaryWriter::WriteModule() {
       }
     }
     EndSubsection();
+
+    size_t named_types = 0;
+    for (const TypeEntry* type : module_->types) {
+      if (!type->name.empty()) {
+        named_types++;
+      }
+    }
+
+    if (named_types > 0) {
+      WriteU32Leb128(stream_, NameSectionSubsection::Type, "type name type");
+      BeginSubsection("type name subsection");
+
+      WriteU32Leb128(stream_, named_types, "num types");
+      for (size_t i = 0; i < module_->types.size(); ++i) {
+        const TypeEntry* type = module_->types[i];
+        if (type->name.empty()) {
+          continue;
+        }
+        WriteU32Leb128(stream_, i, "type index");
+        wabt_snprintf(desc, sizeof(desc), "type name %" PRIzd, i);
+        WriteDebugName(stream_, type->name, desc);
+      }
+      EndSubsection();
+    }
+
+    size_t named_tables = 0;
+    for (const Table* table : module_->tables) {
+      if (!table->name.empty()) {
+        named_tables++;
+      }
+    }
+
+    if (named_tables > 0) {
+      WriteU32Leb128(stream_, NameSectionSubsection::Table, "table name type");
+      BeginSubsection("table name subsection");
+
+      WriteU32Leb128(stream_, named_tables, "num tables");
+      for (size_t i = 0; i < module_->tables.size(); ++i) {
+        const Table* table = module_->tables[i];
+        if (table->name.empty()) {
+          continue;
+        }
+        WriteU32Leb128(stream_, i, "table index");
+        wabt_snprintf(desc, sizeof(desc), "table name %" PRIzd, i);
+        WriteDebugName(stream_, table->name, desc);
+      }
+      EndSubsection();
+    }
+
+    size_t named_memories = 0;
+    for (const Memory* memory : module_->memories) {
+      if (!memory->name.empty()) {
+        named_memories++;
+      }
+    }
+
+    if (named_memories > 0) {
+      WriteU32Leb128(stream_, NameSectionSubsection::Memory,
+                     "memory name type");
+      BeginSubsection("memory name subsection");
+
+      WriteU32Leb128(stream_, named_memories, "num memories");
+      for (size_t i = 0; i < module_->memories.size(); ++i) {
+        const Memory* memory = module_->memories[i];
+        if (memory->name.empty()) {
+          continue;
+        }
+        WriteU32Leb128(stream_, i, "memory index");
+        wabt_snprintf(desc, sizeof(desc), "memory name %" PRIzd, i);
+        WriteDebugName(stream_, memory->name, desc);
+      }
+      EndSubsection();
+    }
+
+    size_t named_globals = 0;
+    for (const Global* global : module_->globals) {
+      if (!global->name.empty()) {
+        named_globals++;
+      }
+    }
+
+    if (named_globals > 0) {
+      WriteU32Leb128(stream_, NameSectionSubsection::Global,
+                     "global name type");
+      BeginSubsection("global name subsection");
+
+      WriteU32Leb128(stream_, named_globals, "num globals");
+      for (size_t i = 0; i < module_->globals.size(); ++i) {
+        const Global* global = module_->globals[i];
+        if (global->name.empty()) {
+          continue;
+        }
+        WriteU32Leb128(stream_, i, "global index");
+        wabt_snprintf(desc, sizeof(desc), "global name %" PRIzd, i);
+        WriteDebugName(stream_, global->name, desc);
+      }
+      EndSubsection();
+    }
+
+    size_t named_data_segments = 0;
+    for (const DataSegment* segment : module_->data_segments) {
+      if (!segment->name.empty()) {
+        named_data_segments++;
+      }
+    }
+
+    if (named_data_segments > 0) {
+      WriteU32Leb128(stream_, NameSectionSubsection::DataSegment,
+                     "segment name type");
+      BeginSubsection("segment name subsection");
+
+      WriteU32Leb128(stream_, named_data_segments, "num data_segments");
+      for (size_t i = 0; i < module_->data_segments.size(); ++i) {
+        const DataSegment* segment = module_->data_segments[i];
+        if (segment->name.empty()) {
+          continue;
+        }
+        WriteU32Leb128(stream_, i, "segment index");
+        wabt_snprintf(desc, sizeof(desc), "segment name %" PRIzd, i);
+        WriteDebugName(stream_, segment->name, desc);
+      }
+      EndSubsection();
+    }
+
+    size_t named_elem_segments = 0;
+    for (const ElemSegment* segment : module_->elem_segments) {
+      if (!segment->name.empty()) {
+        named_elem_segments++;
+      }
+    }
+
+    if (named_elem_segments > 0) {
+      WriteU32Leb128(stream_, NameSectionSubsection::ElemSegment,
+                     "segment name type");
+      BeginSubsection("segment name subsection");
+
+      WriteU32Leb128(stream_, named_elem_segments, "num elem_segments");
+      for (size_t i = 0; i < module_->elem_segments.size(); ++i) {
+        const ElemSegment* segment = module_->elem_segments[i];
+        if (segment->name.empty()) {
+          continue;
+        }
+        WriteU32Leb128(stream_, i, "segment index");
+        wabt_snprintf(desc, sizeof(desc), "segment name %" PRIzd, i);
+        WriteDebugName(stream_, segment->name, desc);
+      }
+      EndSubsection();
+    }
+
     EndSection();
   }
 
