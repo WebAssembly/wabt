@@ -1,5 +1,0 @@
-;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/fac.wast
-(;; STDOUT ;;;
-7/7 tests passed.
-;;; STDOUT ;;)

@@ -39,5 +39,4 @@ Code Disassembly:
  000029: 10 80 80 80 80 00          | call 0 <env.b>
            00002a: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
  00002f: 0b                         | end
-
 ;;; STDOUT ;;)
