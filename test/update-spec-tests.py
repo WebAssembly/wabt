@@ -63,7 +63,7 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
 
         with open(test_filename, 'w') as f:
             f.write(';;; TOOL: %s\n' % tool)
-            f.write(';;; STDIN_FILE: %s\n' % wast_filename)
+            f.write(';;; STDIN_FILE: %s\n' % wast_filename.replace(os.sep, '/'))
             if flags:
                 f.write(';;; ARGS*: %s\n' % flags)
 

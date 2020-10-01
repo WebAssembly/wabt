@@ -20,7 +20,3 @@
   )
   (export "run" (func $run))
 )
-(;; STDERR ;;;
-;;; STDERR ;;)
-(;; STDOUT ;;;
-;;; STDOUT ;;)
