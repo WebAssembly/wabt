@@ -1784,6 +1784,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::GlobalIndexI32:
       case RelocType::EventIndexLEB:
       case RelocType::TableIndexRelSLEB:
+      case RelocType::TableNumberLEB:
         break;
 
       default:
@@ -1854,7 +1855,8 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           switch (sym_type) {
             case SymbolType::Function:
             case SymbolType::Global:
-            case SymbolType::Event: {
+            case SymbolType::Event:
+            case SymbolType::Table: {
               uint32_t index = 0;
               CHECK_RESULT(ReadU32Leb128(&index, "index"));
               if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0 ||
@@ -1869,6 +1871,9 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                   break;
                 case SymbolType::Event:
                   CALLBACK(OnEventSymbol, i, flags, name, index);
+                  break;
+                case SymbolType::Table:
+                  CALLBACK(OnTableSymbol, i, flags, name, index);
                   break;
                 default:
                   WABT_UNREACHABLE;

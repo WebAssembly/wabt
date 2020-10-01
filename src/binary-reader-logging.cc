@@ -603,6 +603,16 @@ Result BinaryReaderLogging::OnEventSymbol(Index index,
   return reader_->OnEventSymbol(index, flags, name, event_index);
 }
 
+Result BinaryReaderLogging::OnTableSymbol(Index index,
+                                          uint32_t flags,
+                                          string_view name,
+                                          Index table_index) {
+  LOGF("OnTableSymbol(name: " PRIstringview " flags: 0x%x index: %" PRIindex
+           ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags, table_index);
+  return reader_->OnTableSymbol(index, flags, name, table_index);
+}
+
 Result BinaryReaderLogging::OnSegmentInfo(Index index,
                                           string_view name,
                                           Address alignment,

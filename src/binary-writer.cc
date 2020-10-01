@@ -122,6 +122,10 @@ class Symbol {
     static const SymbolType type = SymbolType::Event;
     Index index;
   };
+  struct Table {
+    static const SymbolType type = SymbolType::Table;
+    Index index;
+  };
 
  private:
   SymbolType type_;
@@ -133,6 +137,7 @@ class Symbol {
     Global global_;
     Section section_;
     Event event_;
+    Table table_;
   };
 
  public:
@@ -146,6 +151,8 @@ class Symbol {
       : type_(Section::type), name_(name), flags_(flags), section_(s) {}
   Symbol(const string_view& name, uint8_t flags, const Event& e)
       : type_(Event::type), name_(name), flags_(flags), event_(e) {}
+  Symbol(const string_view& name, uint8_t flags, const Table& t)
+      : type_(Table::type), name_(name), flags_(flags), table_(t) {}
 
   SymbolType type() const { return type_; }
   const string_view& name() const { return name_; }
@@ -168,6 +175,7 @@ class Symbol {
   bool IsGlobal() const { return type() == Global::type; }
   bool IsSection() const { return type() == Section::type; }
   bool IsEvent() const { return type() == Event::type; }
+  bool IsTable() const { return type() == Table::type; }
 
   const Function& AsFunction() const {
     assert(IsFunction());
@@ -189,6 +197,10 @@ class Symbol {
     assert(IsEvent());
     return event_;
   }
+  const Table& AsTable() const {
+    assert(IsTable());
+    return table_;
+  }
 };
 
 class SymbolTable {
@@ -197,6 +209,7 @@ class SymbolTable {
   std::vector<Symbol> symbols_;
 
   std::vector<Index> functions_;
+  std::vector<Index> tables_;
   std::vector<Index> globals_;
 
   std::set<string_view> seen_names_;
@@ -222,16 +235,16 @@ class SymbolTable {
       // name fabricated by wabt.
       name = string_view();
     } else {
-      // Functions defined in this module without a name don't go in the symbol
-      // table.
       if (name.empty()) {
-        return Result::Ok;
+        // Definitions without a name are local.
+        flags |= uint8_t(SymbolBinding::Local);
+        flags |= uint8_t(SymbolVisibility::Hidden);
+      } else {
+        // Otherwise, strip the dollar off the name; a definition $foo is
+        // available for linking as "foo".
+        assert(name[0] == '$');
+        name.remove_prefix(1);
       }
-
-      // Otherwise, strip the dollar off the name; a function $foo is available
-      // for linking as "foo".
-      assert(name[0] == '$');
-      name.remove_prefix(1);
 
       if (exported) {
         CHECK_RESULT(EnsureUnique(name));
@@ -247,6 +260,13 @@ class SymbolTable {
     symbols_.emplace_back(name, flags, sym);
     return Result::Ok;
   };
+
+  Index SymbolIndex(const std::vector<Index>& table, Index index) const {
+    // For well-formed modules, an index into (e.g.) functions_ will always be
+    // within bounds; the out-of-bounds case here is just to allow --relocatable
+    // to write known-invalid modules.
+    return index < table.size() ? table[index] : kInvalidIndex;
+  }
 
  public:
   SymbolTable() {}
@@ -276,14 +296,22 @@ class SymbolTable {
       }
     }
 
-    // We currently only create symbol table entries for function and global
-    // symbols.
+    // We currently only create symbol table entries for function, table, and
+    // global symbols.
     for (size_t i = 0; i < module->funcs.size(); ++i) {
       const Func* func = module->funcs[i];
       bool imported = i < module->num_func_imports;
       bool exported = exported_funcs.count(i);
       CHECK_RESULT(AddSymbol(&functions_, func->name, imported, exported,
                              Symbol::Function{Index(i)}));
+    }
+
+    for (size_t i = 0; i < module->tables.size(); ++i) {
+      const Table* table = module->tables[i];
+      bool imported = i < module->num_table_imports;
+      bool exported = exported_tables.count(i);
+      CHECK_RESULT(AddSymbol(&tables_, table->name, imported, exported,
+                             Symbol::Table{Index(i)}));
     }
 
     for (size_t i = 0; i < module->globals.size(); ++i) {
@@ -298,8 +326,15 @@ class SymbolTable {
   }
 
   const std::vector<Symbol>& symbols() const { return symbols_; }
-  Index FunctionSymbolIndex(Index index) const { return functions_[index]; }
-  Index GlobalSymbolIndex(Index index) const { return globals_[index]; }
+  Index FunctionSymbolIndex(Index index) const {
+    return SymbolIndex(functions_, index);
+  }
+  Index TableSymbolIndex(Index index) const {
+    return SymbolIndex(tables_, index);
+  }
+  Index GlobalSymbolIndex(Index index) const {
+    return SymbolIndex(globals_, index);
+  }
 };
 
 class BinaryWriter {
@@ -336,6 +371,7 @@ class BinaryWriter {
   void WriteS32Leb128WithReloc(int32_t value,
                                const char* desc,
                                RelocType reloc_type);
+  void WriteTableNumberWithReloc(Index table_number, const char* desc);
   template <typename T>
   void WriteLoadStoreExpr(const Func* func, const Expr* expr, const char* desc);
   void WriteExpr(const Func* func, const Expr* expr);
@@ -513,6 +549,8 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
   switch (reloc_type) {
     case RelocType::FuncIndexLEB:
       return symtab_.FunctionSymbolIndex(index);
+    case RelocType::TableNumberLEB:
+      return symtab_.TableSymbolIndex(index);
     case RelocType::GlobalIndexLEB:
       return symtab_.GlobalSymbolIndex(index);
     case RelocType::TypeIndexLEB:
@@ -537,6 +575,12 @@ void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
   // Add a new relocation to the curent reloc section
   size_t offset = stream_->offset() - last_section_payload_offset_;
   Index symbol_index = GetSymbolIndex(reloc_type, index);
+  if (symbol_index == kInvalidIndex) {
+    // The file is invalid, for example a reference to function 42 where only 10
+    // functions are defined.  The user must have already passed --no-check, so
+    // no extra warning here is needed.
+    return;
+  }
   current_reloc_section_->relocations.emplace_back(reloc_type, offset,
                                                    symbol_index);
 }
@@ -557,6 +601,18 @@ void BinaryWriter::WriteS32Leb128WithReloc(int32_t value,
                                            RelocType reloc_type) {
   if (options_.relocatable) {
     AddReloc(reloc_type, value);
+    WriteFixedS32Leb128(stream_, value, desc);
+  } else {
+    WriteS32Leb128(stream_, value, desc);
+  }
+}
+
+void BinaryWriter::WriteTableNumberWithReloc(Index value,
+                                             const char* desc) {
+  // Unless reference types are enabled, all references to tables refer to table
+  // 0, so no relocs need be emitted when making relocatable binaries.
+  if (options_.relocatable && options_.features.reference_types_enabled()) {
+    AddReloc(RelocType::TableNumberLEB, value);
     WriteFixedS32Leb128(stream_, value, desc);
   } else {
     WriteS32Leb128(stream_, value, desc);
@@ -674,7 +730,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
         module_->GetTableIndex(cast<CallIndirectExpr>(expr)->table);
       WriteOpcode(stream_, Opcode::CallIndirect);
       WriteU32Leb128WithReloc(sig_index, "signature index", RelocType::TypeIndexLEB);
-      WriteU32Leb128(stream_, table_index, "table index");
+      WriteTableNumberWithReloc(table_index, "table index");
       break;
     }
     case ExprType::ReturnCallIndirect: {
@@ -684,7 +740,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
           module_->GetTableIndex(cast<ReturnCallIndirectExpr>(expr)->table);
       WriteOpcode(stream_, Opcode::ReturnCallIndirect);
       WriteU32Leb128WithReloc(sig_index, "signature index", RelocType::TypeIndexLEB);
-      WriteU32Leb128(stream_, table_index, "table index");
+      WriteTableNumberWithReloc(table_index, "table index");
       break;
     }
     case ExprType::Compare:
@@ -815,8 +871,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       Index dst = module_->GetTableIndex(copy_expr->dst_table);
       Index src = module_->GetTableIndex(copy_expr->src_table);
       WriteOpcode(stream_, Opcode::TableCopy);
-      WriteU32Leb128(stream_, dst, "table.copy dst_table");
-      WriteU32Leb128(stream_, src, "table.copy src_table");
+      WriteTableNumberWithReloc(dst, "table.copy dst_table");
+      WriteTableNumberWithReloc(src, "table.copy src_table");
       break;
     }
     case ExprType::ElemDrop: {
@@ -833,42 +889,42 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
           module_->GetElemSegmentIndex(init_expr->segment_index);
       WriteOpcode(stream_, Opcode::TableInit);
       WriteU32Leb128(stream_, segment_index, "table.init segment");
-      WriteU32Leb128(stream_, table_index, "table.init table");
+      WriteTableNumberWithReloc(table_index, "table.init table");
       break;
     }
     case ExprType::TableGet: {
       Index index =
           module_->GetTableIndex(cast<TableGetExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableGet);
-      WriteU32Leb128(stream_, index, "table.get table index");
+      WriteTableNumberWithReloc(index, "table.get table index");
       break;
     }
     case ExprType::TableSet: {
       Index index =
           module_->GetTableIndex(cast<TableSetExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableSet);
-      WriteU32Leb128(stream_, index, "table.set table index");
+      WriteTableNumberWithReloc(index, "table.set table index");
       break;
     }
     case ExprType::TableGrow: {
       Index index =
           module_->GetTableIndex(cast<TableGrowExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableGrow);
-      WriteU32Leb128(stream_, index, "table.grow table index");
+      WriteTableNumberWithReloc(index, "table.grow table index");
       break;
     }
     case ExprType::TableSize: {
       Index index =
           module_->GetTableIndex(cast<TableSizeExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableSize);
-      WriteU32Leb128(stream_, index, "table.size table index");
+      WriteTableNumberWithReloc(index, "table.size table index");
       break;
     }
     case ExprType::TableFill: {
       Index index =
           module_->GetTableIndex(cast<TableFillExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableFill);
-      WriteU32Leb128(stream_, index, "table.fill table index");
+      WriteTableNumberWithReloc(index, "table.fill table index");
       break;
     }
     case ExprType::RefFunc: {
@@ -1042,6 +1098,7 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
       case RelocType::GlobalIndexLEB:
       case RelocType::EventIndexLEB:
       case RelocType::TableIndexRelSLEB:
+      case RelocType::TableNumberLEB:
         break;
       default:
         fprintf(stderr, "warning: unsupported relocation type: %s\n",
@@ -1092,6 +1149,12 @@ void BinaryWriter::WriteLinkingSection() {
           WriteU32Leb128(stream_, sym.AsEvent().index, "event index");
           if (sym.defined() || sym.explicit_name()) {
             WriteStr(stream_, sym.name(), "event name", PrintChars::Yes);
+          }
+          break;
+        case SymbolType::Table:
+          WriteU32Leb128(stream_, sym.AsTable().index, "table index");
+          if (sym.defined() || sym.explicit_name()) {
+            WriteStr(stream_, sym.name(), "table name", PrintChars::Yes);
           }
           break;
       }
