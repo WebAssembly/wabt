@@ -385,6 +385,8 @@ class BinaryWriter {
   void WriteEventType(const Event* event);
   void WriteRelocSection(const RelocSection* reloc_section);
   void WriteLinkingSection();
+  template <typename T>
+  void WriteNames(const std::vector<T*>& elems, NameSectionSubsection type);
 
   Stream* stream_;
   const WriteBinaryOptions& options_;
@@ -1164,6 +1166,37 @@ void BinaryWriter::WriteLinkingSection() {
   EndSection();
 }
 
+template <typename T>
+void BinaryWriter::WriteNames(const std::vector<T*>& elems,
+                              NameSectionSubsection type) {
+  size_t num_named_elems = 0;
+  for (const T* elem : elems) {
+    if (!elem->name.empty()) {
+      num_named_elems++;
+    }
+  }
+
+  if (!num_named_elems) {
+    return;
+  }
+
+  WriteU32Leb128(stream_, type, "name subsection type");
+  BeginSubsection("name subsection");
+
+  char desc[100];
+  WriteU32Leb128(stream_, num_named_elems, "num names");
+  for (size_t i = 0; i < elems.size(); ++i) {
+    const T* elem = elems[i];
+    if (elem->name.empty()) {
+      continue;
+    }
+    WriteU32Leb128(stream_, i, "elem index");
+    wabt_snprintf(desc, sizeof(desc), "elem name %" PRIzd, i);
+    WriteDebugName(stream_, elem->name, desc);
+  }
+  EndSubsection();
+}
+
 Result BinaryWriter::WriteModule() {
   stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   stream_->WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
@@ -1525,13 +1558,6 @@ Result BinaryWriter::WriteModule() {
     char desc[100];
     BeginCustomSection(WABT_BINARY_SECTION_NAME);
 
-    size_t named_functions = 0;
-    for (const Func* func : module_->funcs) {
-      if (!func->name.empty()) {
-        named_functions++;
-      }
-    }
-
     if (!module_->name.empty()) {
       WriteU32Leb128(stream_, NameSectionSubsection::Module,
                      "module name type");
@@ -1540,23 +1566,7 @@ Result BinaryWriter::WriteModule() {
       EndSubsection();
     }
 
-    if (named_functions > 0) {
-      WriteU32Leb128(stream_, NameSectionSubsection::Function,
-                     "function name type");
-      BeginSubsection("function name subsection");
-
-      WriteU32Leb128(stream_, named_functions, "num functions");
-      for (size_t i = 0; i < module_->funcs.size(); ++i) {
-        const Func* func = module_->funcs[i];
-        if (func->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "function index");
-        wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
-        WriteDebugName(stream_, func->name, desc);
-      }
-      EndSubsection();
-    }
+    WriteNames<Func>(module_->funcs, NameSectionSubsection::Function);
 
     WriteU32Leb128(stream_, 2, "local name type");
 
@@ -1580,153 +1590,14 @@ Result BinaryWriter::WriteModule() {
     }
     EndSubsection();
 
-    size_t named_types = 0;
-    for (const TypeEntry* type : module_->types) {
-      if (!type->name.empty()) {
-        named_types++;
-      }
-    }
-
-    if (named_types > 0) {
-      WriteU32Leb128(stream_, NameSectionSubsection::Type, "type name type");
-      BeginSubsection("type name subsection");
-
-      WriteU32Leb128(stream_, named_types, "num types");
-      for (size_t i = 0; i < module_->types.size(); ++i) {
-        const TypeEntry* type = module_->types[i];
-        if (type->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "type index");
-        wabt_snprintf(desc, sizeof(desc), "type name %" PRIzd, i);
-        WriteDebugName(stream_, type->name, desc);
-      }
-      EndSubsection();
-    }
-
-    size_t named_tables = 0;
-    for (const Table* table : module_->tables) {
-      if (!table->name.empty()) {
-        named_tables++;
-      }
-    }
-
-    if (named_tables > 0) {
-      WriteU32Leb128(stream_, NameSectionSubsection::Table, "table name type");
-      BeginSubsection("table name subsection");
-
-      WriteU32Leb128(stream_, named_tables, "num tables");
-      for (size_t i = 0; i < module_->tables.size(); ++i) {
-        const Table* table = module_->tables[i];
-        if (table->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "table index");
-        wabt_snprintf(desc, sizeof(desc), "table name %" PRIzd, i);
-        WriteDebugName(stream_, table->name, desc);
-      }
-      EndSubsection();
-    }
-
-    size_t named_memories = 0;
-    for (const Memory* memory : module_->memories) {
-      if (!memory->name.empty()) {
-        named_memories++;
-      }
-    }
-
-    if (named_memories > 0) {
-      WriteU32Leb128(stream_, NameSectionSubsection::Memory,
-                     "memory name type");
-      BeginSubsection("memory name subsection");
-
-      WriteU32Leb128(stream_, named_memories, "num memories");
-      for (size_t i = 0; i < module_->memories.size(); ++i) {
-        const Memory* memory = module_->memories[i];
-        if (memory->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "memory index");
-        wabt_snprintf(desc, sizeof(desc), "memory name %" PRIzd, i);
-        WriteDebugName(stream_, memory->name, desc);
-      }
-      EndSubsection();
-    }
-
-    size_t named_globals = 0;
-    for (const Global* global : module_->globals) {
-      if (!global->name.empty()) {
-        named_globals++;
-      }
-    }
-
-    if (named_globals > 0) {
-      WriteU32Leb128(stream_, NameSectionSubsection::Global,
-                     "global name type");
-      BeginSubsection("global name subsection");
-
-      WriteU32Leb128(stream_, named_globals, "num globals");
-      for (size_t i = 0; i < module_->globals.size(); ++i) {
-        const Global* global = module_->globals[i];
-        if (global->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "global index");
-        wabt_snprintf(desc, sizeof(desc), "global name %" PRIzd, i);
-        WriteDebugName(stream_, global->name, desc);
-      }
-      EndSubsection();
-    }
-
-    size_t named_data_segments = 0;
-    for (const DataSegment* segment : module_->data_segments) {
-      if (!segment->name.empty()) {
-        named_data_segments++;
-      }
-    }
-
-    if (named_data_segments > 0) {
-      WriteU32Leb128(stream_, NameSectionSubsection::DataSegment,
-                     "segment name type");
-      BeginSubsection("segment name subsection");
-
-      WriteU32Leb128(stream_, named_data_segments, "num data_segments");
-      for (size_t i = 0; i < module_->data_segments.size(); ++i) {
-        const DataSegment* segment = module_->data_segments[i];
-        if (segment->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "segment index");
-        wabt_snprintf(desc, sizeof(desc), "segment name %" PRIzd, i);
-        WriteDebugName(stream_, segment->name, desc);
-      }
-      EndSubsection();
-    }
-
-    size_t named_elem_segments = 0;
-    for (const ElemSegment* segment : module_->elem_segments) {
-      if (!segment->name.empty()) {
-        named_elem_segments++;
-      }
-    }
-
-    if (named_elem_segments > 0) {
-      WriteU32Leb128(stream_, NameSectionSubsection::ElemSegment,
-                     "segment name type");
-      BeginSubsection("segment name subsection");
-
-      WriteU32Leb128(stream_, named_elem_segments, "num elem_segments");
-      for (size_t i = 0; i < module_->elem_segments.size(); ++i) {
-        const ElemSegment* segment = module_->elem_segments[i];
-        if (segment->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "segment index");
-        wabt_snprintf(desc, sizeof(desc), "segment name %" PRIzd, i);
-        WriteDebugName(stream_, segment->name, desc);
-      }
-      EndSubsection();
-    }
+    WriteNames<TypeEntry>(module_->types, NameSectionSubsection::Type);
+    WriteNames<Table>(module_->tables, NameSectionSubsection::Table);
+    WriteNames<Memory>(module_->memories, NameSectionSubsection::Memory);
+    WriteNames<Global>(module_->globals, NameSectionSubsection::Global);
+    WriteNames<DataSegment>(module_->data_segments,
+                            NameSectionSubsection::DataSegment);
+    WriteNames<ElemSegment>(module_->elem_segments,
+                            NameSectionSubsection::ElemSegment);
 
     EndSection();
   }

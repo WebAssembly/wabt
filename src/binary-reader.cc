@@ -1737,8 +1737,8 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
         }
         break;
       case NameSectionSubsection::Label:
-        // TODO(sbc): Implemnt label names. These are slightly more complicated
-        // since they refere to offers in the code section / instruction stream.
+        // TODO(sbc): Implement label names. These are slightly more complicated
+        // since they refer to offsets in the code section / instruction stream.
         state_.offset = subsection_end;
         break;
       case NameSectionSubsection::Type:

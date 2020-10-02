@@ -121,53 +121,53 @@
 0000053: 00                                        ; function index
 0000054: 00                                        ; num locals
 0000051: 03                                        ; FIXUP subsection size
-0000055: 04                                        ; type name type
+0000055: 04                                        ; name subsection type
 0000056: 00                                        ; subsection size (guess)
-0000057: 01                                        ; num types
-0000058: 00                                        ; type index
+0000057: 01                                        ; num names
+0000058: 00                                        ; elem index
 0000059: 05                                        ; string length
-000005a: 7479 7065 31                             type1  ; type name 0
+000005a: 7479 7065 31                             type1  ; elem name 0
 0000056: 08                                        ; FIXUP subsection size
-000005f: 05                                        ; table name type
+000005f: 05                                        ; name subsection type
 0000060: 00                                        ; subsection size (guess)
-0000061: 02                                        ; num tables
-0000062: 00                                        ; table index
+0000061: 02                                        ; num names
+0000062: 00                                        ; elem index
 0000063: 02                                        ; string length
-0000064: 7431                                     t1  ; table name 0
-0000066: 01                                        ; table index
+0000064: 7431                                     t1  ; elem name 0
+0000066: 01                                        ; elem index
 0000067: 02                                        ; string length
-0000068: 7432                                     t2  ; table name 1
+0000068: 7432                                     t2  ; elem name 1
 0000060: 09                                        ; FIXUP subsection size
-000006a: 06                                        ; memory name type
+000006a: 06                                        ; name subsection type
 000006b: 00                                        ; subsection size (guess)
-000006c: 01                                        ; num memories
-000006d: 00                                        ; memory index
+000006c: 01                                        ; num names
+000006d: 00                                        ; elem index
 000006e: 04                                        ; string length
-000006f: 6d65 6d32                                mem2  ; memory name 0
+000006f: 6d65 6d32                                mem2  ; elem name 0
 000006b: 07                                        ; FIXUP subsection size
-0000073: 07                                        ; global name type
+0000073: 07                                        ; name subsection type
 0000074: 00                                        ; subsection size (guess)
-0000075: 02                                        ; num globals
-0000076: 00                                        ; global index
+0000075: 02                                        ; num names
+0000076: 00                                        ; elem index
 0000077: 02                                        ; string length
-0000078: 6731                                     g1  ; global name 0
-000007a: 01                                        ; global index
+0000078: 6731                                     g1  ; elem name 0
+000007a: 01                                        ; elem index
 000007b: 02                                        ; string length
-000007c: 6732                                     g2  ; global name 1
+000007c: 6732                                     g2  ; elem name 1
 0000074: 09                                        ; FIXUP subsection size
-000007e: 09                                        ; segment name type
+000007e: 09                                        ; name subsection type
 000007f: 00                                        ; subsection size (guess)
-0000080: 01                                        ; num data_segments
-0000081: 00                                        ; segment index
+0000080: 01                                        ; num names
+0000081: 00                                        ; elem index
 0000082: 05                                        ; string length
-0000083: 6461 7461 31                             data1  ; segment name 0
+0000083: 6461 7461 31                             data1  ; elem name 0
 000007f: 08                                        ; FIXUP subsection size
-0000088: 08                                        ; segment name type
+0000088: 08                                        ; name subsection type
 0000089: 00                                        ; subsection size (guess)
-000008a: 01                                        ; num elem_segments
-000008b: 00                                        ; segment index
+000008a: 01                                        ; num names
+000008b: 00                                        ; elem index
 000008c: 05                                        ; string length
-000008d: 656c 656d 31                             elem1  ; segment name 0
+000008d: 656c 656d 31                             elem1  ; elem name 0
 0000089: 08                                        ; FIXUP subsection size
 000004a: 47                                        ; FIXUP section size
 
