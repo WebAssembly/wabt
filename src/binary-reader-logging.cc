@@ -470,6 +470,25 @@ Result BinaryReaderLogging::OnLocalName(Index func_index,
   return reader_->OnLocalName(func_index, local_index, name);
 }
 
+Result BinaryReaderLogging::OnNameSubsection(
+    Index index,
+    NameSectionSubsection subsection_type,
+    Offset subsection_size) {
+  LOGF("OnNameSubsection(index: %" PRIindex ", type: %s, size:%" PRIzd ")\n",
+       index, GetNameSectionSubsectionName(subsection_type), subsection_size);
+  return reader_->OnNameSubsection(index, subsection_type, subsection_size);
+}
+
+Result BinaryReaderLogging::OnNameEntry(NameSectionSubsection type,
+                                        Index index,
+                                        string_view name) {
+  LOGF("OnNameEntry(type: %s, index: %" PRIindex ", name: \"" PRIstringview
+       "\")\n",
+       GetNameSectionSubsectionName(type), index,
+       WABT_PRINTF_STRING_VIEW_ARG(name));
+  return reader_->OnNameEntry(type, index, name);
+}
+
 Result BinaryReaderLogging::OnInitExprF32ConstExpr(Index index,
                                                    uint32_t value_bits) {
   float value;
@@ -842,6 +861,7 @@ DEFINE_BEGIN(BeginNamesSection)
 DEFINE_INDEX(OnFunctionNamesCount)
 DEFINE_INDEX(OnLocalNameFunctionCount)
 DEFINE_INDEX_INDEX(OnLocalNameLocalCount, "index", "count")
+DEFINE_INDEX(OnNameCount);
 DEFINE_END(EndNamesSection)
 
 DEFINE_BEGIN(BeginRelocSection)

@@ -1658,7 +1658,12 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
     ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
-    switch (static_cast<NameSectionSubsection>(name_type)) {
+    NameSectionSubsection type = static_cast<NameSectionSubsection>(name_type);
+    if (type <= NameSectionSubsection::Last) {
+      CALLBACK(OnNameSubsection, i, type, subsection_size);
+    }
+
+    switch (type) {
       case NameSectionSubsection::Module:
         CALLBACK(OnModuleNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
@@ -1730,6 +1735,32 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
             }
           }
         }
+        break;
+      case NameSectionSubsection::Label:
+        // TODO(sbc): Implement label names. These are slightly more complicated
+        // since they refer to offsets in the code section / instruction stream.
+        state_.offset = subsection_end;
+        break;
+      case NameSectionSubsection::Type:
+      case NameSectionSubsection::Table:
+      case NameSectionSubsection::Memory:
+      case NameSectionSubsection::Global:
+      case NameSectionSubsection::ElemSegment:
+      case NameSectionSubsection::DataSegment:
+        if (subsection_size) {
+          Index num_names;
+          CHECK_RESULT(ReadCount(&num_names, "name count"));
+          CALLBACK(OnNameCount, num_names);
+          for (Index j = 0; j < num_names; ++j) {
+            Index index;
+            string_view name;
+
+            CHECK_RESULT(ReadIndex(&index, "index"));
+            CHECK_RESULT(ReadStr(&name, "name"));
+            CALLBACK(OnNameEntry, type, index, name);
+          }
+        }
+        state_.offset = subsection_end;
         break;
       default:
         // Unknown subsection, skip it.

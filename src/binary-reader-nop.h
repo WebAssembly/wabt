@@ -400,6 +400,18 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndNamesSection() override { return Result::Ok; }
 
+  Result OnNameSubsection(Index index,
+                          NameSectionSubsection subsection_type,
+                          Offset subsection_size) override {
+    return Result::Ok;
+  }
+  Result OnNameCount(Index num_names) override { return Result::Ok; }
+  Result OnNameEntry(NameSectionSubsection type,
+                     Index index,
+                     string_view name) override {
+    return Result::Ok;
+  }
+
   /* Reloc section */
   Result BeginRelocSection(Offset size) override { return Result::Ok; }
   Result OnRelocCount(Index count, Index section_code) override {

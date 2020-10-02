@@ -870,6 +870,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnLocalName(Index function_index,
                      Index local_index,
                      string_view local_name) override;
+  Result OnNameEntry(NameSectionSubsection type,
+                     Index index,
+                     string_view name) override;
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
@@ -1569,6 +1572,15 @@ Result BinaryReaderObjdump::OnModuleName(string_view name) {
 
 Result BinaryReaderObjdump::OnFunctionName(Index index, string_view name) {
   PrintDetails(" - func[%" PRIindex "] <" PRIstringview ">\n", index,
+               WABT_PRINTF_STRING_VIEW_ARG(name));
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnNameEntry(NameSectionSubsection type,
+                                        Index index,
+                                        string_view name) {
+  PrintDetails(" - %s[%" PRIindex "] <" PRIstringview ">\n",
+               GetNameSectionSubsectionName(type), index,
                WABT_PRINTF_STRING_VIEW_ARG(name));
   return Result::Ok;
 }

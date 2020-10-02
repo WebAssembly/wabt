@@ -77,7 +77,16 @@ enum class NameSectionSubsection {
   Module = 0,
   Function = 1,
   Local = 2,
+  Label = 3,
+  Type = 4,
+  Table = 5,
+  Memory = 6,
+  Global = 7,
+  ElemSegment = 8,
+  DataSegment = 9,
+  Last = DataSegment,
 };
+const char* GetNameSectionSubsectionName(NameSectionSubsection subsec);
 
 }  // namespace wabt
 

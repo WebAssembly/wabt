@@ -354,6 +354,13 @@ class BinaryReaderDelegate {
   virtual Result OnLocalName(Index function_index,
                              Index local_index,
                              string_view local_name) = 0;
+  virtual Result OnNameSubsection(Index index,
+                                  NameSectionSubsection subsection_type,
+                                  Offset subsection_size) = 0;
+  virtual Result OnNameCount(Index num_names) = 0;
+  virtual Result OnNameEntry(NameSectionSubsection type,
+                             Index index,
+                             string_view name) = 0;
   virtual Result EndNamesSection() = 0;
 
   /* Reloc section */

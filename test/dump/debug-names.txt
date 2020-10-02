@@ -73,15 +73,15 @@
 000002e: 00                                        ; section size (guess)
 000002f: 04                                        ; string length
 0000030: 6e61 6d65                                name  ; custom section name
-0000034: 01                                        ; function name type
+0000034: 01                                        ; name subsection type
 0000035: 00                                        ; subsection size (guess)
-0000036: 02                                        ; num functions
-0000037: 00                                        ; function index
+0000036: 02                                        ; num names
+0000037: 00                                        ; elem index
 0000038: 02                                        ; string length
-0000039: 4631                                     F1  ; func name 0
-000003b: 02                                        ; function index
+0000039: 4631                                     F1  ; elem name 0
+000003b: 02                                        ; elem index
 000003c: 02                                        ; string length
-000003d: 4632                                     F2  ; func name 2
+000003d: 4632                                     F2  ; elem name 2
 0000035: 09                                        ; FIXUP subsection size
 000003f: 02                                        ; local name type
 0000040: 00                                        ; subsection size (guess)

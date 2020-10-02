@@ -385,6 +385,8 @@ class BinaryWriter {
   void WriteEventType(const Event* event);
   void WriteRelocSection(const RelocSection* reloc_section);
   void WriteLinkingSection();
+  template <typename T>
+  void WriteNames(const std::vector<T*>& elems, NameSectionSubsection type);
 
   Stream* stream_;
   const WriteBinaryOptions& options_;
@@ -1164,6 +1166,37 @@ void BinaryWriter::WriteLinkingSection() {
   EndSection();
 }
 
+template <typename T>
+void BinaryWriter::WriteNames(const std::vector<T*>& elems,
+                              NameSectionSubsection type) {
+  size_t num_named_elems = 0;
+  for (const T* elem : elems) {
+    if (!elem->name.empty()) {
+      num_named_elems++;
+    }
+  }
+
+  if (!num_named_elems) {
+    return;
+  }
+
+  WriteU32Leb128(stream_, type, "name subsection type");
+  BeginSubsection("name subsection");
+
+  char desc[100];
+  WriteU32Leb128(stream_, num_named_elems, "num names");
+  for (size_t i = 0; i < elems.size(); ++i) {
+    const T* elem = elems[i];
+    if (elem->name.empty()) {
+      continue;
+    }
+    WriteU32Leb128(stream_, i, "elem index");
+    wabt_snprintf(desc, sizeof(desc), "elem name %" PRIzd, i);
+    WriteDebugName(stream_, elem->name, desc);
+  }
+  EndSubsection();
+}
+
 Result BinaryWriter::WriteModule() {
   stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   stream_->WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
@@ -1525,36 +1558,15 @@ Result BinaryWriter::WriteModule() {
     char desc[100];
     BeginCustomSection(WABT_BINARY_SECTION_NAME);
 
-    size_t named_functions = 0;
-    for (const Func* func : module_->funcs) {
-      if (!func->name.empty()) {
-        named_functions++;
-      }
-    }
-
     if (!module_->name.empty()) {
-      WriteU32Leb128(stream_, 0, "module name type");
+      WriteU32Leb128(stream_, NameSectionSubsection::Module,
+                     "module name type");
       BeginSubsection("module name subsection");
       WriteDebugName(stream_, module_->name, "module name");
       EndSubsection();
     }
 
-    if (named_functions > 0) {
-      WriteU32Leb128(stream_, 1, "function name type");
-      BeginSubsection("function name subsection");
-
-      WriteU32Leb128(stream_, named_functions, "num functions");
-      for (size_t i = 0; i < module_->funcs.size(); ++i) {
-        const Func* func = module_->funcs[i];
-        if (func->name.empty()) {
-          continue;
-        }
-        WriteU32Leb128(stream_, i, "function index");
-        wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
-        WriteDebugName(stream_, func->name, desc);
-      }
-      EndSubsection();
-    }
+    WriteNames<Func>(module_->funcs, NameSectionSubsection::Function);
 
     WriteU32Leb128(stream_, 2, "local name type");
 
@@ -1577,6 +1589,16 @@ Result BinaryWriter::WriteModule() {
       }
     }
     EndSubsection();
+
+    WriteNames<TypeEntry>(module_->types, NameSectionSubsection::Type);
+    WriteNames<Table>(module_->tables, NameSectionSubsection::Table);
+    WriteNames<Memory>(module_->memories, NameSectionSubsection::Memory);
+    WriteNames<Global>(module_->globals, NameSectionSubsection::Global);
+    WriteNames<DataSegment>(module_->data_segments,
+                            NameSectionSubsection::DataSegment);
+    WriteNames<ElemSegment>(module_->elem_segments,
+                            NameSectionSubsection::ElemSegment);
+
     EndSection();
   }
 
