@@ -533,6 +533,9 @@ Result Memory::Grow(u64 count) {
   if (CanGrow<u64>(type_.limits, pages_, count, &new_pages)) {
     pages_ = new_pages;
     data_.resize(new_pages * WABT_PAGE_SIZE);
+#if WABT_BIG_ENDIAN
+    /* FIXME move data around */
+#endif
     return Result::Ok;
   }
   return Result::Error;
@@ -540,7 +543,11 @@ Result Memory::Grow(u64 count) {
 
 Result Memory::Fill(u64 offset, u8 value, u64 size) {
   if (IsValidAccess(offset, 0, size)) {
+#if WABT_BIG_ENDIAN
+    std::fill(data_.end() - offset - 1, data_.end() - offset - 1 + size, value);
+#else
     std::fill(data_.begin() + offset, data_.begin() + offset + size, value);
+#endif
     return Result::Ok;
   }
   return Result::Error;
@@ -552,9 +559,21 @@ Result Memory::Init(u64 dst_offset,
                     u64 size) {
   if (IsValidAccess(dst_offset, 0, size) &&
       src.IsValidRange(src_offset, size)) {
+#if WABT_BIG_ENDIAN
+    std::copy(src.desc().data.begin() + src_offset,
+              src.desc().data.begin() + src_offset + size,
+              data_.end() - dst_offset - 1);
+    auto base = data_.end() - dst_offset - 1;
+    for (size_t i = 0; i < (size>>1); i++) {
+	    uint8_t tmp = base[i];
+	    base[i] = base[size-1-i];
+	    base[size-1-i] = tmp;
+    }
+#else
     std::copy(src.desc().data.begin() + src_offset,
               src.desc().data.begin() + src_offset + size,
               data_.begin() + dst_offset);
+#endif
     return Result::Ok;
   }
   return Result::Error;
@@ -568,9 +587,14 @@ Result Memory::Copy(Memory& dst,
                     u64 size) {
   if (dst.IsValidAccess(dst_offset, 0, size) &&
       src.IsValidAccess(src_offset, 0, size)) {
+#if WABT_BIG_ENDIAN
+    auto src_begin = src.data_.end() - src_offset - 1;
+    auto dst_begin = dst.data_.end() - dst_offset - 1;
+#else
     auto src_begin = src.data_.begin() + src_offset;
-    auto src_end = src_begin + size;
     auto dst_begin = dst.data_.begin() + dst_offset;
+#endif
+    auto src_end = src_begin + size;
     auto dst_end = dst_begin + size;
     if (src.self() == dst.self() && src_begin < dst_begin) {
       std::move_backward(src_begin, src_end, dst_end);

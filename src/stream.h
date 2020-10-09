@@ -141,7 +141,18 @@ class Stream {
  private:
   template <typename T>
   void Write(const T& data, const char* desc, PrintChars print_chars) {
+#if WABT_BIG_ENDIAN
+    char tmp[sizeof(T)];
+    memcpy(tmp, &data, sizeof(tmp));
+    for (size_t i = 0; i < (sizeof(tmp)>>1); i++) {
+      uint8_t cursor = tmp[i];
+      tmp[i] = tmp[sizeof(tmp) - i - 1];
+      tmp[sizeof(tmp) - i - 1] = cursor;
+    }
+    WriteData(tmp, sizeof(tmp), desc, print_chars);
+#else
     WriteData(&data, sizeof(data), desc, print_chars);
+#endif
   }
 
   size_t offset_;

@@ -29,6 +29,22 @@
   if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
 #endif
 
+#if WABT_BIG_ENDIAN
+#define DEFINE_LOAD(name, t1, t2, t3)                                                 \
+  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                            \
+    MEMCHECK(mem, addr, t1);                                                          \
+    t1 result;                                                                        \
+    __builtin_memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], sizeof(t1)); \
+    return (t3)(t2)result;                                                            \
+  }
+
+#define DEFINE_STORE(name, t1, t2)                                                     \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {                 \
+    MEMCHECK(mem, addr, t1);                                                           \
+    t1 wrapped = (t1)value;                                                            \
+    __builtin_memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1)); \
+  }
+#else
 #define DEFINE_LOAD(name, t1, t2, t3)                        \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
     MEMCHECK(mem, addr, t1);                                 \
@@ -43,6 +59,7 @@
     t1 wrapped = (t1)value;                                            \
     __builtin_memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
   }
+#endif
 
 DEFINE_LOAD(i32_load, u32, u32, u32);
 DEFINE_LOAD(i64_load, u64, u64, u64);

@@ -141,14 +141,7 @@ struct v128 {
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
 #if WABT_BIG_ENDIAN
-    uint8_t tmp[sizeof(result)];
-    memcpy(tmp, &v[lane * sizeof(T)], sizeof(tmp));
-    for (size_t i = 0; i < (sizeof(tmp)>>1); i++) {
-      uint8_t cursor = tmp[i];
-      tmp[i] = tmp[sizeof(tmp) - i - 1];
-      tmp[sizeof(tmp) - i - 1] = cursor;
-    }
-    memcpy(&result, tmp, sizeof(result));
+    memcpy(&result, &v[sizeof(v) - sizeof(T) - lane * sizeof(T)], sizeof(result));
 #else
     memcpy(&result, &v[lane * sizeof(T)], sizeof(result));
 #endif
@@ -160,14 +153,7 @@ struct v128 {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
 #if WABT_BIG_ENDIAN
-    uint8_t tmp[sizeof(data)];
-    memcpy(tmp, &data, sizeof(tmp));
-    for (size_t i = 0; i < (sizeof(tmp)>>1); i++) {
-      uint8_t cursor = tmp[i];
-      tmp[i] = tmp[sizeof(tmp) - i - 1];
-      tmp[sizeof(tmp) - i - 1] = cursor;
-    }
-    memcpy(&v[lane * sizeof(T)], tmp, sizeof(tmp));
+    memcpy(&v[sizeof(v) - sizeof(T) - lane * sizeof(T)], &data, sizeof(data));
 #else
     memcpy(&v[lane * sizeof(T)], &data, sizeof(data));
 #endif
