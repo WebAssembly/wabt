@@ -1976,7 +1976,7 @@ RunResult Thread::DoSimdSplat() {
 
 template <typename R, typename T>
 RunResult Thread::DoSimdExtract(Instr instr) {
-  Push<T>(Pop<R>().v[instr.imm_u8]);
+  Push<T>(Pop<R>()[instr.imm_u8]);
   return RunResult::Ok;
 }
 
@@ -1984,7 +1984,7 @@ template <typename R, typename T>
 RunResult Thread::DoSimdReplace(Instr instr) {
   auto val = Pop<T>();
   auto simd = Pop<R>();
-  simd.v[instr.imm_u8] = val;
+  simd[instr.imm_u8] = val;
   Push(simd);
   return RunResult::Ok;
 }
@@ -2021,7 +2021,7 @@ RunResult Thread::DoSimdBinop(BinopFunc<R, T> f) {
   auto lhs = Pop<ST>();
   SR result;
   for (u8 i = 0; i < SR::lanes; ++i) {
-    result.v[i] = f(lhs.v[i], rhs.v[i]);
+    result[i] = f(lhs[i], rhs[i]);
   }
   Push(result);
   return RunResult::Ok;
@@ -2034,7 +2034,7 @@ RunResult Thread::DoSimdBitSelect() {
   auto lhs = Pop<S>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    result.v[i] = (lhs.v[i] & c.v[i]) | (rhs.v[i] & ~c.v[i]);
+    result[i] = (lhs[i] & c[i]) | (rhs[i] & ~c[i]);
   }
   Push(result);
   return RunResult::Ok;
@@ -2054,7 +2054,7 @@ RunResult Thread::DoSimdBitmask() {
   auto val = Pop<S>();
   u32 result = 0;
   for (u8 i = 0; i < S::lanes; ++i) {
-    if (val.v[i] < 0) {
+    if (val[i] < 0) {
       result |= 1 << i;
     }
   }
@@ -2071,7 +2071,7 @@ RunResult Thread::DoSimdShift(BinopFunc<R, T> f) {
   auto lhs = Pop<ST>();
   SR result;
   for (u8 i = 0; i < SR::lanes; ++i) {
-    result.v[i] = f(lhs.v[i], amount);
+    result[i] = f(lhs[i], amount);
   }
   Push(result);
   return RunResult::Ok;
@@ -2096,7 +2096,7 @@ RunResult Thread::DoSimdSwizzle() {
   auto lhs = Pop<S>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    result.v[i] = rhs.v[i] < S::lanes ? lhs.v[rhs.v[i]] : 0;
+    result[i] = rhs[i] < S::lanes ? lhs[rhs[i]] : 0;
   }
   Push(result);
   return RunResult::Ok;
@@ -2109,8 +2109,8 @@ RunResult Thread::DoSimdShuffle(Instr instr) {
   auto lhs = Pop<S>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    result.v[i] =
-        sel.v[i] < S::lanes ? lhs.v[sel.v[i]] : rhs.v[sel.v[i] - S::lanes];
+    result[i] =
+        sel[i] < S::lanes ? lhs[sel[i]] : rhs[sel[i] - S::lanes];
   }
   Push(result);
   return RunResult::Ok;
@@ -2124,10 +2124,10 @@ RunResult Thread::DoSimdNarrow() {
   auto lhs = Pop<T>();
   S result;
   for (u8 i = 0; i < T::lanes; ++i) {
-    result.v[i] = Saturate<SL, TL>(lhs.v[i]);
+    result[i] = Saturate<SL, TL>(lhs[i]);
   }
   for (u8 i = 0; i < T::lanes; ++i) {
-    result.v[T::lanes + i] = Saturate<SL, TL>(rhs.v[i]);
+    result[T::lanes + i] = Saturate<SL, TL>(rhs[i]);
   }
   Push(result);
   return RunResult::Ok;
@@ -2138,7 +2138,7 @@ RunResult Thread::DoSimdWiden() {
   auto val = Pop<T>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    result.v[i] = val.v[(low ? 0 : S::lanes) + i];
+    result[i] = val[(low ? 0 : S::lanes) + i];
   }
   Push(result);
   return RunResult::Ok;
@@ -2152,7 +2152,7 @@ RunResult Thread::DoSimdLoadExtend(Instr instr, Trap::Ptr* out_trap) {
   }
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    result.v[i] = val.v[i];
+    result[i] = val[i];
   }
   Push(result);
   return RunResult::Ok;
