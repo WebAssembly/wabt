@@ -562,8 +562,8 @@ Result Memory::Init(u64 dst_offset,
 #if WABT_BIG_ENDIAN
     std::copy(src.desc().data.begin() + src_offset,
               src.desc().data.begin() + src_offset + size,
-              data_.end() - dst_offset - 1);
-    auto base = data_.end() - dst_offset - 1;
+              data_.end() - dst_offset - size);
+    auto base = data_.end() - dst_offset - size;
     for (size_t i = 0; i < (size>>1); i++) {
 	    uint8_t tmp = base[i];
 	    base[i] = base[size-1-i];
@@ -588,8 +588,8 @@ Result Memory::Copy(Memory& dst,
   if (dst.IsValidAccess(dst_offset, 0, size) &&
       src.IsValidAccess(src_offset, 0, size)) {
 #if WABT_BIG_ENDIAN
-    auto src_begin = src.data_.end() - src_offset - 1;
-    auto dst_begin = dst.data_.end() - dst_offset - 1;
+    auto src_begin = src.data_.end() - src_offset - size;
+    auto dst_begin = dst.data_.end() - dst_offset - size;
 #else
     auto src_begin = src.data_.begin() + src_offset;
     auto dst_begin = dst.data_.begin() + dst_offset;
