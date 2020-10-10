@@ -544,7 +544,7 @@ Result Memory::Grow(u64 count) {
 Result Memory::Fill(u64 offset, u8 value, u64 size) {
   if (IsValidAccess(offset, 0, size)) {
 #if WABT_BIG_ENDIAN
-    std::fill(data_.end() - offset - 1, data_.end() - offset - 1 + size, value);
+    std::fill(data_.end() - offset - size, data_.end() - offset, value);
 #else
     std::fill(data_.begin() + offset, data_.begin() + offset + size, value);
 #endif
