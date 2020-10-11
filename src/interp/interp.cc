@@ -531,10 +531,13 @@ Result Memory::Match(class Store& store,
 Result Memory::Grow(u64 count) {
   u64 new_pages;
   if (CanGrow<u64>(type_.limits, pages_, count, &new_pages)) {
+#if WABT_BIG_ENDIAN
+    auto old_size = data_.size();
+#endif
     pages_ = new_pages;
     data_.resize(new_pages * WABT_PAGE_SIZE);
 #if WABT_BIG_ENDIAN
-    /* FIXME move data around */
+    std::move_backward(data_.begin(), data_.begin() + old_size, data_.end());
 #endif
     return Result::Ok;
   }
