@@ -30,6 +30,7 @@
 #endif
 
 #if WABT_BIG_ENDIAN
+#define LOAD_DATA(m, o, i, s) memcpy(&(m.data[m.size - o - s]), i, s)
 #define DEFINE_LOAD(name, t1, t2, t3)                                                 \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                            \
     MEMCHECK(mem, addr, t1);                                                          \
@@ -45,6 +46,7 @@
     __builtin_memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1)); \
   }
 #else
+#define LOAD_DATA(m, o, i, s) memcpy(&(m.data[o]), i, s)
 #define DEFINE_LOAD(name, t1, t2, t3)                        \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
     MEMCHECK(mem, addr, t1);                                 \

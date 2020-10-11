@@ -1033,9 +1033,9 @@ void CWriter::WriteDataInitializers() {
   }
   data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {
-    Write("memcpy(&(", ExternalRef(memory->name), ".data[");
+    Write("LOAD_DATA(", ExternalRef(memory->name), ", ");
     WriteInitExpr(data_segment->offset);
-    Write("]), data_segment_data_", data_segment_index, ", ",
+    Write(", data_segment_data_", data_segment_index, ", ",
           data_segment->data.size(), ");", Newline());
     ++data_segment_index;
   }
