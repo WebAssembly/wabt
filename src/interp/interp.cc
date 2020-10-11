@@ -538,6 +538,7 @@ Result Memory::Grow(u64 count) {
     data_.resize(new_pages * WABT_PAGE_SIZE);
 #if WABT_BIG_ENDIAN
     std::move_backward(data_.begin(), data_.begin() + old_size, data_.end());
+    std::fill(data_.begin(), data_.end() - old_size, 0);
 #endif
     return Result::Ok;
   }
