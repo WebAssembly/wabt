@@ -2146,7 +2146,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
           return Result::Error;
         }
 
+#if WABT_BIG_ENDIAN
+        values[15 - lane] = static_cast<uint8_t>(value);
+#else
         values[lane] = static_cast<uint8_t>(value);
+#endif
       }
       v128 value = Bitcast<v128>(values);
 

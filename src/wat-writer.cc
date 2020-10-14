@@ -965,7 +965,11 @@ Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
   writer_->WritePutsSpace(expr->opcode.GetName());
   std::array<uint8_t, 16> values = Bitcast<std::array<uint8_t, 16>>(expr->val);
   for (int32_t lane = 0; lane < 16; ++lane) {
+#if WABT_BIG_ENDIAN
+    writer_->Writef("%u", values[15 - lane]);
+#else
     writer_->Writef("%u", values[lane]);
+#endif
   }
   writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
