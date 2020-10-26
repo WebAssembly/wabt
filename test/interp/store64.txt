@@ -1,7 +1,7 @@
 ;;; TOOL: run-interp
 ;;; ARGS: --enable-memory64
 (module
-  (memory 1 i64)
+  (memory i64 1)
 
   (func (export "i32_store8") (result i32)
       i64.const 0

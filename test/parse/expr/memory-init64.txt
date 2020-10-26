@@ -1,7 +1,7 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-bulk-memory  --enable-memory64
 (module
-  (memory 0 i64)
+  (memory i64 0)
 
   (func
     i64.const 0

@@ -1267,15 +1267,15 @@ void WatWriter::WriteEvent(const Event& event) {
 }
 
 void WatWriter::WriteLimits(const Limits& limits) {
+  if (limits.is_64) {
+    Writef("i64");
+  }
   Writef("%" PRIu64, limits.initial);
   if (limits.has_max) {
     Writef("%" PRIu64, limits.max);
   }
   if (limits.is_shared) {
     Writef("shared");
-  }
-  if (limits.is_64) {
-    Writef("i64");
   }
 }
 

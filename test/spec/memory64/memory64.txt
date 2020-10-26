@@ -1,0 +1,39 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/memory64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64/memory64.wast:8: assert_invalid passed:
+  error: only one memory block allowed
+  000000f: error: OnMemory callback failed
+out/test/spec/memory64/memory64.wast:9: assert_invalid passed:
+  error: only one memory block allowed
+  0000023: error: OnMemory callback failed
+out/test/spec/memory64/memory64.wast:18: assert_invalid passed:
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/memory64/memory64.wast:19: assert_invalid passed:
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/memory64/memory64.wast:20: assert_invalid passed:
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/memory64/memory64.wast:23: assert_invalid passed:
+  000001b: error: load/store memory 0 out of range 0
+out/test/spec/memory64/memory64.wast:27: assert_invalid passed:
+  0000020: error: load/store memory 0 out of range 0
+out/test/spec/memory64/memory64.wast:31: assert_invalid passed:
+  000001b: error: load/store memory 0 out of range 0
+out/test/spec/memory64/memory64.wast:35: assert_invalid passed:
+  000001d: error: load/store memory 0 out of range 0
+out/test/spec/memory64/memory64.wast:39: assert_invalid passed:
+  error: memory variable out of range: 0 (max 0)
+  0000019: error: OnMemorySizeExpr callback failed
+out/test/spec/memory64/memory64.wast:43: assert_invalid passed:
+  error: memory variable out of range: 0 (max 0)
+  error: type mismatch in memory.grow, expected [i32] but got [i64]
+  000001b: error: OnMemoryGrowExpr callback failed
+out/test/spec/memory64/memory64.wast:49: assert_invalid passed:
+  error: max pages (0) must be >= initial pages (1)
+  000000e: error: OnMemory callback failed
+57/57 tests passed.
+;;; STDOUT ;;)

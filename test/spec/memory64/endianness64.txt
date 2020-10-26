@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/endianness64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+68/68 tests passed.
+;;; STDOUT ;;)

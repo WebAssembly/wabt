@@ -1,7 +1,7 @@
 ;;; TOOL: run-roundtrip
 ;;; ARGS: --stdout --enable-bulk-memory --enable-memory64
 (module
-  (memory 0 i64)
+  (memory i64 0)
   (table 0 anyfunc)
 
   (func
@@ -71,7 +71,7 @@
     table.copy)
   (func (;1;) (type 0))
   (table (;0;) 0 funcref)
-  (memory (;0;) 0 i64)
+  (memory (;0;) i64 0)
   (elem (;0;) funcref (ref.func 0) (ref.null func))
   (elem (;1;) func 1)
   (data (;0;) "hi"))
