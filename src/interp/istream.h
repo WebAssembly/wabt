@@ -67,7 +67,7 @@ enum class InstrKind {
   Imm_I8_Op_1,            // i32x4.extract_lane
   Imm_I8_Op_2,            // i32x4.replace_lane
   Imm_V128_Op_0,          // v128.const
-  Imm_V128_Op_2,          // v8x16.shuffle
+  Imm_V128_Op_2,          // i8x16.shuffle
 };
 
 struct Instr {

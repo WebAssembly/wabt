@@ -115,41 +115,41 @@
   (func (export "i8x16_add_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x0000007f 0x00000003 0x00000080
     v128.const i32x4 0x00000001 0x00000002 0x00000003 0x000000ff
-    i8x16.add_saturate_s)
+    i8x16.add_sat_s)
   (func (export "i8x16_add_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ff0001 0x04000002 0x00000003 0x00000004
     v128.const i32x4 0x00020001 0xfe000002 0x00000003 0x00000004
-    i8x16.add_saturate_u)
+    i8x16.add_sat_u)
 
   ;; i16x8 saturating add (signed and unsigned)
   (func (export "i16x8_add_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x00007fff 0x00000003 0x00008000
     v128.const i32x4 0x00000001 0x00000002 0x00000003 0x0000fffe
-    i16x8.add_saturate_s)
+    i16x8.add_sat_s)
   (func (export "i16x8_add_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ffffff 0x0400ffff 0x00000003 0x00000004
     v128.const i32x4 0x00020001 0xfe000002 0x00000003 0x00000004
-    i16x8.add_saturate_u)
+    i16x8.add_sat_u)
 
   ;; i8x16 saturating sub (signed and unsigned)
   (func (export "i8x16_sub_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x0000007f 0x000000fe 0x00000080
     v128.const i32x4 0x00000001 0x000000fe 0x0000007f 0x000000ff
-    i8x16.sub_saturate_s)
+    i8x16.sub_sat_s)
   (func (export "i8x16_sub_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ff0001 0x0400007f 0x0000fffe 0x00000004
     v128.const i32x4 0x00020001 0xfe00fffe 0x0000007f 0x00000004
-    i8x16.sub_saturate_u)
+    i8x16.sub_sat_u)
 
   ;; i16x8 saturating sub (signed and unsigned)
   (func (export "i16x8_sub_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x00007fff 0x0000fffe 0x00008000
     v128.const i32x4 0x00000001 0x0000fffe 0x00007fff 0x0000fffe
-    i16x8.sub_saturate_s)
+    i16x8.sub_sat_s)
   (func (export "i16x8_sub_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ffffff 0x0400ffff 0x00000003 0x00000004
     v128.const i32x4 0x00020001 0xfe000002 0x00000003 0x00000004
-    i16x8.sub_saturate_u)
+    i16x8.sub_sat_u)
 
   ;; v128 and
   (func (export "v128_and_0") (result v128)
@@ -339,21 +339,21 @@
     v128.const i32x4 0x00000000 0x3ff00000 0x00000000 0x3ff80000
     f64x2.mul)
 
-  ;; v8x16.swizzle
+  ;; i8x16.swizzle
   (func (export "v8x16_swizzle_0") (result v128)
     v128.const i32x4 0x04030201 0x08070605 0x0c0b0a09 0x100f0e0d
     v128.const i8x16 0 4 8 12 5 9 13 1 10 14 6 2 15 3 7 11
-    v8x16.swizzle)
+    i8x16.swizzle)
 
   (func (export "v8x16_swizzle_1") (result v128)
     v128.const i32x4 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
     v128.const i8x16 0 0 0 0 0 0 0 0 4 4 4 4 4 4 4 4
-    v8x16.swizzle)
+    i8x16.swizzle)
 
   (func (export "v8x16_swizzle_2") (result v128)
     v128.const i32x4 0xffffffff 0xffffffff 0xffffffff 0xffffffff
     v128.const i8x16 -1 16 31 255 -128 127 32 63 64 127 128 -2 -3 -4 -5 -6
-    v8x16.swizzle)
+    i8x16.swizzle)
 )
 
 (;; STDOUT ;;;

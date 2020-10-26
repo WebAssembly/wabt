@@ -82,13 +82,13 @@
   (func (export  "func_v8x16_swizzle_0") (result v128)
     v128.const i32x4 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
     v128.const i32x4 0x0f0e0d0c 0x0b0a0908 0x07060504 0x03020100
-    v8x16.swizzle)
+    i8x16.swizzle)
 
   ;; v8x16 shuffle
   (func (export  "func_v8x16_shuffle_0") (result v128)
     v128.const i32x4 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
     v128.const i32x4 0x00550055 0x00550055 0x00550055 0x00550155
-    v8x16.shuffle 16 1 18 3 20 5 22 7 24 9 26 11 28 13 30 15)
+    i8x16.shuffle 16 1 18 3 20 5 22 7 24 9 26 11 28 13 30 15)
 )
 (;; STDOUT ;;;
 
@@ -177,14 +177,14 @@ Code Disassembly:
  000376: 55 cc bb aa 99 00 ff ee dd | 
  00037f: fd 0c 0c 0d 0e 0f 08 09 0a | v128.const 0x0f0e0d0c 0x0b0a0908 0x07060504 0x03020100
  000388: 0b 04 05 06 07 00 01 02 03 | 
- 000391: fd 0e                      | v8x16.swizzle
+ 000391: fd 0e                      | i8x16.swizzle
  000393: 0b                         | end
 000395 func[15] <func_v8x16_shuffle_0>:
  000396: fd 0c 01 ff 00 ff 0f ff 00 | v128.const 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
  00039f: ff ff ff 00 ff 7f ff 00 ff | 
  0003a8: fd 0c 55 00 55 00 55 00 55 | v128.const 0x00550055 0x00550055 0x00550055 0x00550155
  0003b1: 00 55 00 55 00 55 01 55 00 | 
- 0003ba: fd 0d 10 01 12 03 14 05 16 | v8x16.shuffle 0x03120110 0x07160514 0x0b1a0918 0x0f1e0d1c
+ 0003ba: fd 0d 10 01 12 03 14 05 16 | i8x16.shuffle 0x03120110 0x07160514 0x0b1a0918 0x0f1e0d1c
  0003c3: 07 18 09 1a 0b 1c 0d 1e 0f | 
  0003cc: 0b                         | end
 ;;; STDOUT ;;)

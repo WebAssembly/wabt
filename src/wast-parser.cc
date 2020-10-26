@@ -2087,11 +2087,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Literal literal = Consume().literal();
       uint64_t lane_idx;
 
-      // TODO: The simd tests currently allow a lane number with an optional +,
-      // but probably shouldn't. See
-      // https://github.com/WebAssembly/simd/issues/181#issuecomment-597386919
       Result result = ParseInt64(literal.text.begin(), literal.text.end(),
-                                 &lane_idx, ParseIntType::SignedAndUnsigned);
+                                 &lane_idx, ParseIntType::UnsignedOnly);
 
       if (Failed(result)) {
         Error(loc, "invalid literal \"" PRIstringview "\"",

@@ -6,21 +6,21 @@
   (func
     (local v128)
     i32.const 0 v128.load drop
-    i32.const 0 i16x8.load8x8_s drop
-    i32.const 0 i16x8.load8x8_u drop
-    i32.const 0 i32x4.load16x4_s drop
-    i32.const 0 i32x4.load16x4_u drop
-    i32.const 0 i64x2.load32x2_s drop
-    i32.const 0 i64x2.load32x2_u drop
-    i32.const 0 v8x16.load_splat drop
-    i32.const 0 v16x8.load_splat drop
-    i32.const 0 v32x4.load_splat drop
-    i32.const 0 v64x2.load_splat drop
+    i32.const 0 v128.load8x8_s drop
+    i32.const 0 v128.load8x8_u drop
+    i32.const 0 v128.load16x4_s drop
+    i32.const 0 v128.load16x4_u drop
+    i32.const 0 v128.load32x2_s drop
+    i32.const 0 v128.load32x2_u drop
+    i32.const 0 v128.load8_splat drop
+    i32.const 0 v128.load16_splat drop
+    i32.const 0 v128.load32_splat drop
+    i32.const 0 v128.load64_splat drop
     i32.const 0 local.get 0 v128.store
     v128.const i32x4 0 0 0 0 drop
 
-    local.get 0 local.get 0 v8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 drop
-    local.get 0 local.get 0 v8x16.swizzle drop
+    local.get 0 local.get 0 i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 drop
+    local.get 0 local.get 0 i8x16.swizzle drop
 
     i32.const 0 i8x16.splat drop
     i32.const 0 i16x8.splat drop
@@ -103,11 +103,11 @@
     local.get 0 i32.const 0 i8x16.shr_s drop
     local.get 0 i32.const 0 i8x16.shr_u drop
     local.get 0 local.get 0 i8x16.add drop
-    local.get 0 local.get 0 i8x16.add_saturate_s drop
-    local.get 0 local.get 0 i8x16.add_saturate_u drop
+    local.get 0 local.get 0 i8x16.add_sat_s drop
+    local.get 0 local.get 0 i8x16.add_sat_u drop
     local.get 0 local.get 0 i8x16.sub drop
-    local.get 0 local.get 0 i8x16.sub_saturate_s drop
-    local.get 0 local.get 0 i8x16.sub_saturate_u drop
+    local.get 0 local.get 0 i8x16.sub_sat_s drop
+    local.get 0 local.get 0 i8x16.sub_sat_u drop
     local.get 0 local.get 0 i8x16.min_s drop
     local.get 0 local.get 0 i8x16.min_u drop
     local.get 0 local.get 0 i8x16.max_s drop
@@ -128,11 +128,11 @@
     local.get 0 i32.const 0 i16x8.shr_s drop
     local.get 0 i32.const 0 i16x8.shr_u drop
     local.get 0 local.get 0 i16x8.add drop
-    local.get 0 local.get 0 i16x8.add_saturate_s drop
-    local.get 0 local.get 0 i16x8.add_saturate_u drop
+    local.get 0 local.get 0 i16x8.add_sat_s drop
+    local.get 0 local.get 0 i16x8.add_sat_u drop
     local.get 0 local.get 0 i16x8.sub drop
-    local.get 0 local.get 0 i16x8.sub_saturate_s drop
-    local.get 0 local.get 0 i16x8.sub_saturate_u drop
+    local.get 0 local.get 0 i16x8.sub_sat_s drop
+    local.get 0 local.get 0 i16x8.sub_sat_u drop
     local.get 0 local.get 0 i16x8.mul drop
     local.get 0 local.get 0 i16x8.min_s drop
     local.get 0 local.get 0 i16x8.min_u drop
@@ -202,34 +202,34 @@
       (v128.load
         (i32.const 0)))
     (drop
-      (i16x8.load8x8_s
+      (v128.load8x8_s
         (i32.const 0)))
     (drop
-      (i16x8.load8x8_u
+      (v128.load8x8_u
         (i32.const 0)))
     (drop
-      (i32x4.load16x4_s
+      (v128.load16x4_s
         (i32.const 0)))
     (drop
-      (i32x4.load16x4_u
+      (v128.load16x4_u
         (i32.const 0)))
     (drop
-      (i64x2.load32x2_s
+      (v128.load32x2_s
         (i32.const 0)))
     (drop
-      (i64x2.load32x2_u
+      (v128.load32x2_u
         (i32.const 0)))
     (drop
-      (v8x16.load_splat
+      (v128.load8_splat
         (i32.const 0)))
     (drop
-      (v16x8.load_splat
+      (v128.load16_splat
         (i32.const 0)))
     (drop
-      (v32x4.load_splat
+      (v128.load32_splat
         (i32.const 0)))
     (drop
-      (v64x2.load_splat
+      (v128.load64_splat
         (i32.const 0)))
     (v128.store
       (i32.const 0)
@@ -237,11 +237,11 @@
     (drop
       (v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000))
     (drop
-      (v8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+      (i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         (local.get 0)
         (local.get 0)))
     (drop
-      (v8x16.swizzle
+      (i8x16.swizzle
         (local.get 0)
         (local.get 0)))
     (drop
@@ -539,11 +539,11 @@
         (local.get 0)
         (local.get 0)))
     (drop
-      (i8x16.add_saturate_s
+      (i8x16.add_sat_s
         (local.get 0)
         (local.get 0)))
     (drop
-      (i8x16.add_saturate_u
+      (i8x16.add_sat_u
         (local.get 0)
         (local.get 0)))
     (drop
@@ -551,11 +551,11 @@
         (local.get 0)
         (local.get 0)))
     (drop
-      (i8x16.sub_saturate_s
+      (i8x16.sub_sat_s
         (local.get 0)
         (local.get 0)))
     (drop
-      (i8x16.sub_saturate_u
+      (i8x16.sub_sat_u
         (local.get 0)
         (local.get 0)))
     (drop
@@ -627,11 +627,11 @@
         (local.get 0)
         (local.get 0)))
     (drop
-      (i16x8.add_saturate_s
+      (i16x8.add_sat_s
         (local.get 0)
         (local.get 0)))
     (drop
-      (i16x8.add_saturate_u
+      (i16x8.add_sat_u
         (local.get 0)
         (local.get 0)))
     (drop
@@ -639,11 +639,11 @@
         (local.get 0)
         (local.get 0)))
     (drop
-      (i16x8.sub_saturate_s
+      (i16x8.sub_sat_s
         (local.get 0)
         (local.get 0)))
     (drop
-      (i16x8.sub_saturate_u
+      (i16x8.sub_sat_u
         (local.get 0)
         (local.get 0)))
     (drop

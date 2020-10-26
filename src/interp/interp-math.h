@@ -273,6 +273,11 @@ T WABT_VECTORCALL FloatMin(T lhs, T rhs) {
 }
 
 template <typename T>
+T WABT_VECTORCALL FloatPMin(T lhs, T rhs) {
+  return std::min(lhs, rhs);
+}
+
+template <typename T>
 T WABT_VECTORCALL FloatMax(T lhs, T rhs) {
   if (WABT_UNLIKELY(std::isnan(lhs) || std::isnan(rhs))) {
     return std::numeric_limits<T>::quiet_NaN();
@@ -281,6 +286,11 @@ T WABT_VECTORCALL FloatMax(T lhs, T rhs) {
   } else {
     return std::max(lhs, rhs);
   }
+}
+
+template <typename T>
+T WABT_VECTORCALL FloatPMax(T lhs, T rhs) {
+  return std::max(lhs, rhs);
 }
 
 template <typename R, typename T> bool WABT_VECTORCALL CanConvert(T val) { return true; }

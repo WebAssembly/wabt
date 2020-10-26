@@ -72,41 +72,41 @@
   (func (export "i8x16_add_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x0000007f 0x00000003 0x00000080
     v128.const i32x4 0x00000001 0x00000002 0x00000003 0x000000ff
-    i8x16.add_saturate_s)
+    i8x16.add_sat_s)
   (func (export "i8x16_add_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ff0001 0x04000002 0x00000003 0x00000004
     v128.const i32x4 0x00020001 0xfe000002 0x00000003 0x00000004
-    i8x16.add_saturate_u)
+    i8x16.add_sat_u)
 
   ;; i16x8 saturating add (signed and unsigned)
   (func (export "i16x8_add_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x00007fff 0x00000003 0x00008000
     v128.const i32x4 0x00000001 0x00000002 0x00000003 0x0000fffe
-    i16x8.add_saturate_s)
+    i16x8.add_sat_s)
   (func (export "i16x8_add_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ffffff 0x0400ffff 0x00000003 0x00000004
     v128.const i32x4 0x00020001 0xfe000002 0x00000003 0x00000004
-    i16x8.add_saturate_u)
+    i16x8.add_sat_u)
 
   ;; i8x16 saturating sub (signed and unsigned)
   (func (export "i8x16_sub_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x0000007f 0x000000fe 0x00000080
     v128.const i32x4 0x00000001 0x000000fe 0x0000007f 0x000000ff
-    i8x16.sub_saturate_s)
+    i8x16.sub_sat_s)
   (func (export "i8x16_sub_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ff0001 0x0400007f 0x0000fffe 0x00000004
     v128.const i32x4 0x00020001 0xfe00fffe 0x0000007f 0x00000004
-    i8x16.sub_saturate_u)
+    i8x16.sub_sat_u)
 
   ;; i16x8 saturating sub (signed and unsigned)
   (func (export "i16x8_sub_saturate_signed_0") (result v128)
     v128.const i32x4 0x00000001 0x00007fff 0x0000fffe 0x00008000
     v128.const i32x4 0x00000001 0x0000fffe 0x00007fff 0x0000fffe
-    i16x8.sub_saturate_s)
+    i16x8.sub_sat_s)
   (func (export "i16x8_sub_saturate_unsigned_0") (result v128)
     v128.const i32x4 0x00ffffff 0x0400ffff 0x00000003 0x00000004
     v128.const i32x4 0x00020001 0xfe000002 0x00000003 0x00000004
-    i16x8.sub_saturate_u)
+    i16x8.sub_sat_u)
 
   ;; v128 and
   (func (export "v128_and_0") (result v128)
@@ -369,56 +369,56 @@ Code Disassembly:
  0005de: 00 03 00 00 00 80 00 00 00 | 
  0005e7: fd 0c 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x000000ff
  0005f0: 00 03 00 00 00 ff 00 00 00 | 
- 0005f9: fd 6f                      | i8x16.add_saturate_s
+ 0005f9: fd 6f                      | i8x16.add_sat_s
  0005fb: 0b                         | end
 0005fd func[12] <i8x16_add_saturate_unsigned_0>:
  0005fe: fd 0c 01 00 ff 00 02 00 00 | v128.const 0x00ff0001 0x04000002 0x00000003 0x00000004
  000607: 04 03 00 00 00 04 00 00 00 | 
  000610: fd 0c 01 00 02 00 02 00 00 | v128.const 0x00020001 0xfe000002 0x00000003 0x00000004
  000619: fe 03 00 00 00 04 00 00 00 | 
- 000622: fd 70                      | i8x16.add_saturate_u
+ 000622: fd 70                      | i8x16.add_sat_u
  000624: 0b                         | end
 000626 func[13] <i16x8_add_saturate_signed_0>:
  000627: fd 0c 01 00 00 00 ff 7f 00 | v128.const 0x00000001 0x00007fff 0x00000003 0x00008000
  000630: 00 03 00 00 00 00 80 00 00 | 
  000639: fd 0c 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x0000fffe
  000642: 00 03 00 00 00 fe ff 00 00 | 
- 00064b: fd 8f 01                   | i16x8.add_saturate_s
+ 00064b: fd 8f 01                   | i16x8.add_sat_s
  00064e: 0b                         | end
 000650 func[14] <i16x8_add_saturate_unsigned_0>:
  000651: fd 0c ff ff ff 00 ff ff 00 | v128.const 0x00ffffff 0x0400ffff 0x00000003 0x00000004
  00065a: 04 03 00 00 00 04 00 00 00 | 
  000663: fd 0c 01 00 02 00 02 00 00 | v128.const 0x00020001 0xfe000002 0x00000003 0x00000004
  00066c: fe 03 00 00 00 04 00 00 00 | 
- 000675: fd 90 01                   | i16x8.add_saturate_u
+ 000675: fd 90 01                   | i16x8.add_sat_u
  000678: 0b                         | end
 00067a func[15] <i8x16_sub_saturate_signed_0>:
  00067b: fd 0c 01 00 00 00 7f 00 00 | v128.const 0x00000001 0x0000007f 0x000000fe 0x00000080
  000684: 00 fe 00 00 00 80 00 00 00 | 
  00068d: fd 0c 01 00 00 00 fe 00 00 | v128.const 0x00000001 0x000000fe 0x0000007f 0x000000ff
  000696: 00 7f 00 00 00 ff 00 00 00 | 
- 00069f: fd 72                      | i8x16.sub_saturate_s
+ 00069f: fd 72                      | i8x16.sub_sat_s
  0006a1: 0b                         | end
 0006a3 func[16] <i8x16_sub_saturate_unsigned_0>:
  0006a4: fd 0c 01 00 ff 00 7f 00 00 | v128.const 0x00ff0001 0x0400007f 0x0000fffe 0x00000004
  0006ad: 04 fe ff 00 00 04 00 00 00 | 
  0006b6: fd 0c 01 00 02 00 fe ff 00 | v128.const 0x00020001 0xfe00fffe 0x0000007f 0x00000004
  0006bf: fe 7f 00 00 00 04 00 00 00 | 
- 0006c8: fd 73                      | i8x16.sub_saturate_u
+ 0006c8: fd 73                      | i8x16.sub_sat_u
  0006ca: 0b                         | end
 0006cc func[17] <i16x8_sub_saturate_signed_0>:
  0006cd: fd 0c 01 00 00 00 ff 7f 00 | v128.const 0x00000001 0x00007fff 0x0000fffe 0x00008000
  0006d6: 00 fe ff 00 00 00 80 00 00 | 
  0006df: fd 0c 01 00 00 00 fe ff 00 | v128.const 0x00000001 0x0000fffe 0x00007fff 0x0000fffe
  0006e8: 00 ff 7f 00 00 fe ff 00 00 | 
- 0006f1: fd 92 01                   | i16x8.sub_saturate_s
+ 0006f1: fd 92 01                   | i16x8.sub_sat_s
  0006f4: 0b                         | end
 0006f6 func[18] <i16x8_sub_saturate_unsigned_0>:
  0006f7: fd 0c ff ff ff 00 ff ff 00 | v128.const 0x00ffffff 0x0400ffff 0x00000003 0x00000004
  000700: 04 03 00 00 00 04 00 00 00 | 
  000709: fd 0c 01 00 02 00 02 00 00 | v128.const 0x00020001 0xfe000002 0x00000003 0x00000004
  000712: fe 03 00 00 00 04 00 00 00 | 
- 00071b: fd 93 01                   | i16x8.sub_saturate_u
+ 00071b: fd 93 01                   | i16x8.sub_sat_u
  00071e: 0b                         | end
 000720 func[19] <v128_and_0>:
  000721: fd 0c 01 00 ff 00 02 00 04 | v128.const 0x00ff0001 0x00040002 0x44000003 0x00000004

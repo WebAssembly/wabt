@@ -15,22 +15,22 @@
   ;; v8x16 load_splat
   (func (export "v8x16_load_splat_0") (result v128)
     i32.const 6
-    v8x16.load_splat)
+    v128.load8_splat)
 
   ;; v16x8 load_splat
   (func (export "v16x8_load_splat_0") (result v128)
     i32.const 6
-    v16x8.load_splat)
+    v128.load16_splat)
 
   ;; v32x4 load_splat
   (func (export "v32x4_load_splat_0") (result v128)
     i32.const 4
-    v32x4.load_splat)
+    v128.load32_splat)
 
   ;; v64x2 load_splat
   (func (export "v64x2_load_splat_0") (result v128)
     i32.const 0
-    v64x2.load_splat)
+    v128.load64_splat)
 
   ;; v128 store
   (func (export "v128_store_0") (result v128)
