@@ -648,11 +648,7 @@ Result Memory::Load(u64 offset, u64 addend, T* out) const {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-#if WABT_BIG_ENDIAN
-  memcpy(out, data_.data() + data_.size() - offset - addend - sizeof(T), sizeof(T));
-#else
-  memcpy(out, data_.data() + offset + addend, sizeof(T));
-#endif
+  WABT_MEMCPY_ENDIAN_AWARE(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -660,11 +656,7 @@ template <typename T>
 T WABT_VECTORCALL Memory::UnsafeLoad(u64 offset, u64 addend) const {
   assert(IsValidAccess(offset, addend, sizeof(T)));
   T val;
-#if WABT_BIG_ENDIAN
-  memcpy(&val, data_.data() + data_.size() - offset - addend - sizeof(T), sizeof(T));
-#else
-  memcpy(&val, data_.data() + offset + addend, sizeof(T));
-#endif
+  WABT_MEMCPY_ENDIAN_AWARE(&val, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
   return val;
 }
 
@@ -673,11 +665,7 @@ Result WABT_VECTORCALL Memory::Store(u64 offset, u64 addend, T val) {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-#if WABT_BIG_ENDIAN
-  memcpy(data_.data() + data_.size() - offset - addend - sizeof(T), &val, sizeof(T));
-#else
-  memcpy(data_.data() + offset + addend, &val, sizeof(T));
-#endif
+  WABT_MEMCPY_ENDIAN_AWARE(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 
@@ -686,11 +674,7 @@ Result Memory::AtomicLoad(u64 offset, u64 addend, T* out) const {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-#if WABT_BIG_ENDIAN
-  memcpy(out, data_.data() + data_.size() - offset - addend - sizeof(T), sizeof(T));
-#else
-  memcpy(out, data_.data() + offset + addend, sizeof(T));
-#endif
+  WABT_MEMCPY_ENDIAN_AWARE(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -699,11 +683,7 @@ Result Memory::AtomicStore(u64 offset, u64 addend, T val) {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-#if WABT_BIG_ENDIAN
-  memcpy(data_.data() + data_.size() - offset - addend - sizeof(T), &val, sizeof(T));
-#else
-  memcpy(data_.data() + offset + addend, &val, sizeof(T));
-#endif
+  WABT_MEMCPY_ENDIAN_AWARE(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 

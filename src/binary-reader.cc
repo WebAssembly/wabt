@@ -253,11 +253,7 @@ Result BinaryReader::ReadT(T* out_value,
 #if WABT_BIG_ENDIAN
   uint8_t tmp[sizeof(T)];
   memcpy(tmp, state_.data + state_.offset, sizeof(tmp));
-  for (size_t i = 0; i < (sizeof(tmp)>>1); i++) {
-    uint8_t cursor = tmp[i];
-    tmp[i] = tmp[sizeof(tmp) - i - 1];
-    tmp[sizeof(tmp) - i - 1] = cursor;
-  }
+  SwapBytesSized(tmp, sizeof(tmp));
   memcpy(out_value, tmp, sizeof(T));
 #else
   memcpy(out_value, state_.data + state_.offset, sizeof(T));

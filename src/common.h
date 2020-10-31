@@ -101,6 +101,19 @@
 #define PRIaddress PRIu64
 #define PRIoffset PRIzx
 
+// Footgun: len may evaluate many times, and sizes may not be evaluated at all.
+#if WABT_BIG_ENDIAN
+#define WABT_MEMCPY_ENDIAN_AWARE(dst, src, dsize, ssize, doff, soff, len)               \
+  memcpy(static_cast<char*>(static_cast<void*>(dst)) + (dsize) - (len) - (doff),        \
+    static_cast<const char*>(static_cast<const void*>(src)) + (ssize) - (len) - (soff), \
+    (len))
+#else
+#define WABT_MEMCPY_ENDIAN_AWARE(dst, src, dsize, ssize, doff, soff, len) \
+  memcpy(static_cast<char*>(static_cast<void*>(dst)) + (doff),            \
+    static_cast<const char*>(static_cast<const void*>(src)) + (soff),     \
+    (len))
+#endif
+
 struct v128 {
   v128() = default;
   v128(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3) {
@@ -140,11 +153,7 @@ struct v128 {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
-#if WABT_BIG_ENDIAN
-    memcpy(&result, &v[sizeof(v) - sizeof(T) - lane * sizeof(T)], sizeof(result));
-#else
-    memcpy(&result, &v[lane * sizeof(T)], sizeof(result));
-#endif
+    WABT_MEMCPY_ENDIAN_AWARE(&result, v, sizeof(result), sizeof(v), 0, lane * sizeof(T), sizeof(result));
     return result;
   }
 
@@ -152,11 +161,7 @@ struct v128 {
   void From(int lane, T data) {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
-#if WABT_BIG_ENDIAN
-    memcpy(&v[sizeof(v) - sizeof(T) - lane * sizeof(T)], &data, sizeof(data));
-#else
-    memcpy(&v[lane * sizeof(T)], &data, sizeof(data));
-#endif
+    WABT_MEMCPY_ENDIAN_AWARE(v, &data, sizeof(v), sizeof(data), lane * sizeof(T), 0, sizeof(data));
   }
 
   uint8_t v[16];
@@ -454,6 +459,15 @@ inline void ConvertBackslashToSlash(char* s) {
 
 inline void ConvertBackslashToSlash(std::string* s) {
   ConvertBackslashToSlash(s->begin(), s->end());
+}
+
+inline void SwapBytesSized(void *addr, size_t size) {
+  auto bytes = static_cast<uint8_t*>(addr);
+  for (size_t i = 0; i < (size >> 1); i++) {
+    uint8_t tmp = bytes[i];
+    bytes[i] = bytes[size-1-i];
+    bytes[size-1-i] = tmp;
+  }
 }
 
 }  // namespace wabt

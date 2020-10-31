@@ -144,11 +144,7 @@ class Stream {
 #if WABT_BIG_ENDIAN
     char tmp[sizeof(T)];
     memcpy(tmp, &data, sizeof(tmp));
-    for (size_t i = 0; i < (sizeof(tmp)>>1); i++) {
-      uint8_t cursor = tmp[i];
-      tmp[i] = tmp[sizeof(tmp) - i - 1];
-      tmp[sizeof(tmp) - i - 1] = cursor;
-    }
+    SwapBytesSized(tmp, sizeof(tmp));
     WriteData(tmp, sizeof(tmp), desc, print_chars);
 #else
     WriteData(&data, sizeof(data), desc, print_chars);
