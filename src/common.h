@@ -463,10 +463,8 @@ inline void ConvertBackslashToSlash(std::string* s) {
 
 inline void SwapBytesSized(void *addr, size_t size) {
   auto bytes = static_cast<uint8_t*>(addr);
-  for (size_t i = 0; i < (size >> 1); i++) {
-    uint8_t tmp = bytes[i];
-    bytes[i] = bytes[size-1-i];
-    bytes[size-1-i] = tmp;
+  for (size_t i = 0; i < size / 2; i++) {
+    std::swap(bytes[i], bytes[size-1-i]);
   }
 }
 
