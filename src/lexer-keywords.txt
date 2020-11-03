@@ -25,7 +25,6 @@ assert_return, TokenType::AssertReturn
 assert_trap, TokenType::AssertTrap
 assert_unlinkable, TokenType::AssertUnlinkable
 atomic.fence, TokenType::AtomicFence, Opcode::AtomicFence
-atomic.notify, TokenType::AtomicNotify, Opcode::AtomicNotify
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
 br_if, TokenType::BrIf, Opcode::BrIf
@@ -243,7 +242,6 @@ i32.atomic.rmw.xor, TokenType::AtomicRmw, Opcode::I32AtomicRmwXor
 i32.atomic.store16, TokenType::AtomicStore, Opcode::I32AtomicStore16
 i32.atomic.store8, TokenType::AtomicStore, Opcode::I32AtomicStore8
 i32.atomic.store, TokenType::AtomicStore, Opcode::I32AtomicStore
-i32.atomic.wait, TokenType::AtomicWait, Opcode::I32AtomicWait
 i32.clz, TokenType::Unary, Opcode::I32Clz
 i32.const, TokenType::Const, Opcode::I32Const
 i32.ctz, TokenType::Unary, Opcode::I32Ctz
@@ -368,7 +366,6 @@ i64.atomic.store16, TokenType::AtomicStore, Opcode::I64AtomicStore16
 i64.atomic.store32, TokenType::AtomicStore, Opcode::I64AtomicStore32
 i64.atomic.store8, TokenType::AtomicStore, Opcode::I64AtomicStore8
 i64.atomic.store, TokenType::AtomicStore, Opcode::I64AtomicStore
-i64.atomic.wait, TokenType::AtomicWait, Opcode::I64AtomicWait
 i64.clz, TokenType::Unary, Opcode::I64Clz
 i64.const, TokenType::Const, Opcode::I64Const
 i64.ctz, TokenType::Unary, Opcode::I64Ctz
@@ -482,6 +479,9 @@ local.set, TokenType::LocalSet, Opcode::LocalSet
 local.tee, TokenType::LocalTee, Opcode::LocalTee
 local, TokenType::Local
 loop, TokenType::Loop, Opcode::Loop
+memory.atomic.notify, TokenType::AtomicNotify, Opcode::MemoryAtomicNotify
+memory.atomic.wait32, TokenType::AtomicWait, Opcode::MemoryAtomicWait32
+memory.atomic.wait64, TokenType::AtomicWait, Opcode::MemoryAtomicWait64
 memory.copy, TokenType::MemoryCopy, Opcode::MemoryCopy
 memory.fill, TokenType::MemoryFill, Opcode::MemoryFill
 memory.grow, TokenType::MemoryGrow, Opcode::MemoryGrow
@@ -541,6 +541,9 @@ v128.load8_splat, TokenType::Load, Opcode::V128Load8Splat
 i8x16.shuffle, TokenType::SimdShuffleOp, Opcode::I8X16Shuffle
 i8x16.swizzle, TokenType::Binary, Opcode::I8X16Swizzle
 # Deprecated names.
+atomic.notify, TokenType::AtomicNotify, Opcode::MemoryAtomicNotify
+i32.atomic.wait, TokenType::AtomicWait, Opcode::MemoryAtomicWait32
+i64.atomic.wait, TokenType::AtomicWait, Opcode::MemoryAtomicWait64
 anyfunc, Type::FuncRef
 f32.convert_s/i32, TokenType::Convert, Opcode::F32ConvertI32S
 f32.convert_s/i64, TokenType::Convert, Opcode::F32ConvertI64S

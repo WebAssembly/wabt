@@ -208,13 +208,13 @@
 
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-atomic-type-mismatch.txt:9:33: error: type mismatch in atomic.notify, expected [i32, i32] but got [f32, i32]
+out/test/typecheck/bad-atomic-type-mismatch.txt:9:33: error: type mismatch in memory.atomic.notify, expected [i32, i32] but got [f32, i32]
   (func f32.const 0 i32.const 0 atomic.notify drop)
                                 ^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:10:45: error: type mismatch in i32.atomic.wait, expected [i32, i32, i64] but got [f32, i32, i64]
+out/test/typecheck/bad-atomic-type-mismatch.txt:10:45: error: type mismatch in memory.atomic.wait32, expected [i32, i32, i64] but got [f32, i32, i64]
   (func f32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:11:45: error: type mismatch in i64.atomic.wait, expected [i32, i64, i64] but got [f32, i64, i64]
+out/test/typecheck/bad-atomic-type-mismatch.txt:11:45: error: type mismatch in memory.atomic.wait64, expected [i32, i64, i64] but got [f32, i64, i64]
   (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:12:21: error: type mismatch in i32.atomic.load, expected [i32] but got [f32]
@@ -406,13 +406,13 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:73:45: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:74:45: error: type mismatch in i64.atomic.rmw32.cmpxchg_u, expected [i32, i64, i64] but got [f32, i64, i64]
   (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:77:33: error: type mismatch in atomic.notify, expected [i32, i32] but got [i32, f32]
+out/test/typecheck/bad-atomic-type-mismatch.txt:77:33: error: type mismatch in memory.atomic.notify, expected [i32, i32] but got [i32, f32]
   (func i32.const 0 f32.const 0 atomic.notify drop)
                                 ^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:78:45: error: type mismatch in i32.atomic.wait, expected [i32, i32, i64] but got [i32, f32, i64]
+out/test/typecheck/bad-atomic-type-mismatch.txt:78:45: error: type mismatch in memory.atomic.wait32, expected [i32, i32, i64] but got [i32, f32, i64]
   (func i32.const 0 f32.const 0 i64.const 0 i32.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:79:45: error: type mismatch in i64.atomic.wait, expected [i32, i64, i64] but got [i32, f64, i64]
+out/test/typecheck/bad-atomic-type-mismatch.txt:79:45: error: type mismatch in memory.atomic.wait64, expected [i32, i64, i64] but got [i32, f64, i64]
   (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:80:33: error: type mismatch in i32.atomic.store, expected [i32, i32] but got [i32, f32]
@@ -583,10 +583,10 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:134:45: error: type mismatch in 
 out/test/typecheck/bad-atomic-type-mismatch.txt:135:45: error: type mismatch in i64.atomic.rmw32.cmpxchg_u, expected [i32, i64, i64] but got [i32, f64, i64]
   (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:138:45: error: type mismatch in i32.atomic.wait, expected [i32, i32, i64] but got [i32, i32, f64]
+out/test/typecheck/bad-atomic-type-mismatch.txt:138:45: error: type mismatch in memory.atomic.wait32, expected [i32, i32, i64] but got [i32, i32, f64]
   (func i32.const 0 i32.const 0 f64.const 0 i32.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:139:45: error: type mismatch in i64.atomic.wait, expected [i32, i64, i64] but got [i32, i64, f64]
+out/test/typecheck/bad-atomic-type-mismatch.txt:139:45: error: type mismatch in memory.atomic.wait64, expected [i32, i64, i64] but got [i32, i64, f64]
   (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:140:45: error: type mismatch in i32.atomic.rmw.cmpxchg, expected [i32, i32, i32] but got [i32, i32, f32]

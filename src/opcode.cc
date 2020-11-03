@@ -91,9 +91,9 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64Extend32S:
       return features.sign_extension_enabled();
 
-    case Opcode::AtomicNotify:
-    case Opcode::I32AtomicWait:
-    case Opcode::I64AtomicWait:
+    case Opcode::MemoryAtomicNotify:
+    case Opcode::MemoryAtomicWait32:
+    case Opcode::MemoryAtomicWait64:
     case Opcode::AtomicFence:
     case Opcode::I32AtomicLoad:
     case Opcode::I64AtomicLoad:

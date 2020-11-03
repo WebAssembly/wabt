@@ -1635,9 +1635,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4Abs: return DoSimdUnop(IntAbs<u32>);
 
     case O::AtomicFence:
-    case O::AtomicNotify:
-    case O::I32AtomicWait:
-    case O::I64AtomicWait:
+    case O::MemoryAtomicNotify:
+    case O::MemoryAtomicWait32:
+    case O::MemoryAtomicWait64:
       return TRAP("not implemented");
 
     case O::I32AtomicLoad:       return DoAtomicLoad<u32>(instr, out_trap);
