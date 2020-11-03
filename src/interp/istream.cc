@@ -541,7 +541,7 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_u32x2.snd = ReadAt<u32>(offset);
       break;
 
-    case Opcode::AtomicNotify:
+    case Opcode::MemoryAtomicNotify:
     case Opcode::F32Store:
     case Opcode::F64Store:
     case Opcode::I32AtomicRmw16AddU:
@@ -610,12 +610,12 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I32AtomicRmw16CmpxchgU:
     case Opcode::I32AtomicRmw8CmpxchgU:
     case Opcode::I32AtomicRmwCmpxchg:
-    case Opcode::I32AtomicWait:
     case Opcode::I64AtomicRmw16CmpxchgU:
     case Opcode::I64AtomicRmw32CmpxchgU:
     case Opcode::I64AtomicRmw8CmpxchgU:
     case Opcode::I64AtomicRmwCmpxchg:
-    case Opcode::I64AtomicWait:
+    case Opcode::MemoryAtomicWait32:
+    case Opcode::MemoryAtomicWait64:
       // Index and memory offset immediates, 3 operands.
       instr.kind = InstrKind::Imm_Index_Offset_Op_3;
       instr.imm_u32x2.fst = ReadAt<u32>(offset);

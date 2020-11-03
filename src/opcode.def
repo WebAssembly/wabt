@@ -452,9 +452,9 @@ WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xfa, F32X4ConvertI32X4S, "f32x4.c
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xfb, F32X4ConvertI32X4U, "f32x4.convert_i32x4_u", "")
 
 /* Thread opcodes (--enable-threads) */
-WABT_OPCODE(I32,  I32,  I32,  ___,  4,  0xfe, 0x00, AtomicNotify, "atomic.notify", "")
-WABT_OPCODE(I32,  I32,  I32,  I64,  4,  0xfe, 0x01, I32AtomicWait, "i32.atomic.wait", "")
-WABT_OPCODE(I32,  I32,  I64,  I64,  8,  0xfe, 0x02, I64AtomicWait, "i64.atomic.wait", "")
+WABT_OPCODE(I32,  I32,  I32,  ___,  4,  0xfe, 0x00, MemoryAtomicNotify, "memory.atomic.notify", "")
+WABT_OPCODE(I32,  I32,  I32,  I64,  4,  0xfe, 0x01, MemoryAtomicWait32, "memory.atomic.wait32", "")
+WABT_OPCODE(I32,  I32,  I64,  I64,  8,  0xfe, 0x02, MemoryAtomicWait64, "memory.atomic.wait64", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0xfe, 0x03, AtomicFence, "atomic.fence", "")
 WABT_OPCODE(I32,  I32,  ___,  ___,  4,  0xfe, 0x10, I32AtomicLoad, "i32.atomic.load", "")
 WABT_OPCODE(I64,  I32,  ___,  ___,  8,  0xfe, 0x11, I64AtomicLoad, "i64.atomic.load", "")

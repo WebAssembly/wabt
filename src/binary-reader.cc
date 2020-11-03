@@ -1373,7 +1373,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
-      case Opcode::AtomicNotify: {
+      case Opcode::MemoryAtomicNotify: {
         Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
@@ -1384,8 +1384,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::I32AtomicWait:
-      case Opcode::I64AtomicWait: {
+      case Opcode::MemoryAtomicWait32:
+      case Opcode::MemoryAtomicWait64: {
         Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
