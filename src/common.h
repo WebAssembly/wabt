@@ -101,18 +101,21 @@
 #define PRIaddress PRIu64
 #define PRIoffset PRIzx
 
-// Footgun: len may evaluate many times, and sizes may not be evaluated at all.
+namespace wabt {
 #if WABT_BIG_ENDIAN
-#define WABT_MEMCPY_ENDIAN_AWARE(dst, src, dsize, ssize, doff, soff, len)               \
-  memcpy(static_cast<char*>(static_cast<void*>(dst)) + (dsize) - (len) - (doff),        \
-    static_cast<const char*>(static_cast<const void*>(src)) + (ssize) - (len) - (soff), \
-    (len))
+  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
+    memcpy(static_cast<char*>(dst) + (dsize) - (len) - (doff),
+      static_cast<const char*>(src) + (ssize) - (len) - (soff),
+      (len));
+  }
 #else
-#define WABT_MEMCPY_ENDIAN_AWARE(dst, src, dsize, ssize, doff, soff, len) \
-  memcpy(static_cast<char*>(static_cast<void*>(dst)) + (doff),            \
-    static_cast<const char*>(static_cast<const void*>(src)) + (soff),     \
-    (len))
+  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
+    memcpy(static_cast<char*>(dst) + (doff),
+      static_cast<const char*>(src) + (soff),
+      (len));
+  }
 #endif
+}
 
 struct v128 {
   v128() = default;
@@ -153,7 +156,7 @@ struct v128 {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
-    WABT_MEMCPY_ENDIAN_AWARE(&result, v, sizeof(result), sizeof(v), 0, lane * sizeof(T), sizeof(result));
+    wabt::MemcpyEndianAware(&result, v, sizeof(result), sizeof(v), 0, lane * sizeof(T), sizeof(result));
     return result;
   }
 
@@ -161,7 +164,7 @@ struct v128 {
   void From(int lane, T data) {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
-    WABT_MEMCPY_ENDIAN_AWARE(v, &data, sizeof(v), sizeof(data), lane * sizeof(T), 0, sizeof(data));
+    wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T), 0, sizeof(data));
   }
 
   uint8_t v[16];
