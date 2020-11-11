@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (table 1 anyfunc)
+  (func)
+  (elem 0))
+(;; STDERR ;;;
+out/test/parse/module/bad-table-no-offset.txt:6:10: error: unexpected token ")", expected an offset expr (e.g. (i32.const 123)).
+  (elem 0))
+         ^
+;;; STDERR ;;)
