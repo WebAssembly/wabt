@@ -36,12 +36,12 @@ out/test/parse/expr/bulk-memory-disabled.txt:10:41: error: opcode not allowed: m
 out/test/parse/expr/bulk-memory-disabled.txt:11:41: error: opcode not allowed: memory.fill
     i32.const 0 i32.const 0 i32.const 0 memory.fill
                                         ^^^^^^^^^^^
-out/test/parse/expr/bulk-memory-disabled.txt:15:23: error: unexpected token 0, expected ).
+out/test/parse/expr/bulk-memory-disabled.txt:15:15: error: unexpected token "funcref", expected an offset expr (e.g. (i32.const 123)).
   (elem $elem funcref 0)
-                      ^
-out/test/parse/expr/bulk-memory-disabled.txt:16:17: error: ref.null not allowed
+              ^^^^^^^
+out/test/parse/expr/bulk-memory-disabled.txt:16:9: error: unexpected token "funcref", expected an offset expr (e.g. (i32.const 123)).
   (elem funcref (ref.null func))
-                ^
+        ^^^^^^^
 out/test/parse/expr/bulk-memory-disabled.txt:18:41: error: opcode not allowed: table.init
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                         ^^^^^^^^^^

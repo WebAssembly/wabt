@@ -1154,9 +1154,14 @@ Result WastParser::ParseElemModuleField(Module* module) {
     }
   }
 
-  if ((field->elem_segment.kind != SegmentKind::Declared) &&
-      !ParseOffsetExprOpt(&field->elem_segment.offset)) {
-    field->elem_segment.kind = SegmentKind::Passive;
+  // Parse offset expression, if not declared/passive segment.
+  if (options_->features.bulk_memory_enabled()) {
+    if (field->elem_segment.kind != SegmentKind::Declared &&
+        !ParseOffsetExprOpt(&field->elem_segment.offset)) {
+      field->elem_segment.kind = SegmentKind::Passive;
+    }
+  } else {
+    CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
   }
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
