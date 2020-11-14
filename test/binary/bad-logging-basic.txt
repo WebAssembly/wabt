@@ -18,7 +18,7 @@ section(CODE) {
 BeginModule(version: 1)
   BeginTypeSection(4)
     OnTypeCount(1)
-    OnType(index: 0, params: [], results: [])
+    OnFuncType(index: 0, params: [], results: [])
   EndTypeSection
   BeginFunctionSection(2)
     OnFunctionCount(1)

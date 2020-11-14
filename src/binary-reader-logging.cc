@@ -144,8 +144,7 @@ Result BinaryReaderLogging::OnFuncType(Index index,
                                        Type* param_types,
                                        Index result_count,
                                        Type* result_types) {
-  // TODO: switch to "OnFuncType"?
-  LOGF("OnType(index: %" PRIindex ", params: ", index);
+  LOGF("OnFuncType(index: %" PRIindex ", params: ", index);
   LogTypes(param_count, param_types);
   LOGF_NOINDENT(", results: ");
   LogTypes(result_count, result_types);

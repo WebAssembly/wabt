@@ -28,18 +28,18 @@
 0000008: 01                                        ; section code
 0000009: 0000 0000 00                              ; section size (guess)
 000000e: 03                                        ; num types
-; type 0
+; func type 0
 000000f: 60                                        ; func
 0000010: 01                                        ; num params
 0000011: 7f                                        ; i32
 0000012: 01                                        ; num results
 0000013: 7f                                        ; i32
-; type 1
+; func type 1
 0000014: 60                                        ; func
 0000015: 01                                        ; num params
 0000016: 7f                                        ; i32
 0000017: 00                                        ; num results
-; type 2
+; func type 2
 0000018: 60                                        ; func
 0000019: 02                                        ; num params
 000001a: 7f                                        ; i32
