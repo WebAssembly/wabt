@@ -12,7 +12,7 @@ BeginModule(version: 1)
   EndCustomSection
   BeginTypeSection(5)
     OnTypeCount(1)
-    OnType(index: 0, params: [], results: [i32])
+    OnFuncType(index: 0, params: [], results: [i32])
   EndTypeSection
   BeginCustomSection('bar', size: 5)
   EndCustomSection

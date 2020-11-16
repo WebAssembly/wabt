@@ -1214,7 +1214,7 @@ Result BinaryWriter::WriteModule() {
         case TypeEntryKind::Func: {
           const FuncType* func_type = cast<FuncType>(type);
           const FuncSignature* sig = &func_type->sig;
-          WriteHeader("type", i);  // TODO: switch to "func type"?
+          WriteHeader("func type", i);
           WriteType(stream_, Type::Func);
 
           Index num_params = sig->param_types.size();
