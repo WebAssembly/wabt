@@ -181,13 +181,13 @@ Type[2]:
 Function[1]:
  - func[0] sig=1
 Table[2]:
- - table[0] type=funcref initial=1
- - table[1] type=funcref initial=1
+ - table[0] type=funcref initial=1 <t1>
+ - table[1] type=funcref initial=1 <t2>
 Memory[1]:
  - memory[0] pages: initial=1 max=1
 Global[2]:
- - global[0] i32 mutable=1 - init i32=1
- - global[1] i32 mutable=0 - init i32=2
+ - global[0] i32 mutable=1 <g1> - init i32=1
+ - global[1] i32 mutable=0 <g2> - init i32=2
 Elem[1]:
  - segment[0] flags=1 table=0 count=1
   - elem[0] = func[0]

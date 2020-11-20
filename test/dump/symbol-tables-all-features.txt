@@ -28,7 +28,7 @@ Function[3]:
  - func[2] sig=0
  - func[3] sig=0 <b>
 Table[1]:
- - table[0] type=funcref initial=0
+ - table[0] type=funcref initial=0 <t>
 Export[1]:
  - func[1] <a> -> "a"
 Code[3]:

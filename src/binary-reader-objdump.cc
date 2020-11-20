@@ -230,6 +230,29 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
+  Result OnNameEntry(NameSectionSubsection type,
+                     Index index,
+                     string_view name) override {
+    switch (type) {
+      // TODO(sbc): remove OnFunctionName in favor of just using
+      // OnNameEntry so that this works
+      /*
+      case NameSectionSubsection::Function:
+        SetFunctionName(index, name);
+        break;
+      */
+      case NameSectionSubsection::Global:
+        SetGlobalName(index, name);
+        break;
+      case NameSectionSubsection::Table:
+        SetTableName(index, name);
+        break;
+      default:
+        break;
+    }
+    return Result::Ok;
+  }
+
   Result OnSymbolCount(Index count) override {
     objdump_state_->symtab.resize(count);
     return Result::Ok;
@@ -1319,6 +1342,10 @@ Result BinaryReaderObjdump::OnTable(Index index,
                elem_type.GetName(), elem_limits->initial);
   if (elem_limits->has_max) {
     PrintDetails(" max=%" PRId64, elem_limits->max);
+  }
+  auto name = GetTableName(index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   PrintDetails("\n");
   return Result::Ok;
