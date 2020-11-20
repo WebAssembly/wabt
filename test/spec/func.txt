@@ -1,11 +1,13 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/func.wast
-;;; ERROR: 1
 (;; STDOUT ;;;
 out/test/spec/func.wast:436: assert_invalid passed:
   0000000: error: function type variable out of range: 2 (max 2)
   000001a: error: OnFunction callback failed
-out/test/spec/func.wast:448: expected module to be malformed: "out/test/spec/func/func.3.wat"
+out/test/spec/func.wast:448: assert_malformed passed:
+  out/test/spec/func/func.3.wat:1:123: error: invalid func type index 2
+  ...lt f64) (f64.const 1))(type $t (func (param i32)))(func (type 2) (param i32))
+                                                        ^^^^
 out/test/spec/func.wast:560: assert_malformed passed:
   out/test/spec/func/func.6.wat:1:76: error: unexpected token "param", expected an instr.
   ... i32) (result i32)))(func (type $sig) (result i32) (param i32) (i32.const 0))
@@ -241,5 +243,5 @@ out/test/spec/func.wast:960: assert_malformed passed:
   out/test/spec/func/func.75.wat:1:31: error: redefinition of local "$foo"
   (func (local $foo i32) (local $foo i32))
                                 ^^^^
-167/168 tests passed.
+168/168 tests passed.
 ;;; STDOUT ;;)
