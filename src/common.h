@@ -284,8 +284,7 @@ enum class RelocType {
   FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
   SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
   EventIndexLEB = 10,     // Used in throw instructions
-  MemoryAddressRelSLEB =
-      11,  // In PIC code, data address relative to __memory_base
+  MemoryAddressRelSLEB = 11,  // In PIC code, addr relative to __memory_base
   TableIndexRelSLEB = 12,   // In PIC code, table index relative to __table_base
   GlobalIndexI32 = 13,      // e.g. Global index in data (e.g. DWARF)
   MemoryAddressLEB64 = 14,  // Memory64: Like MemoryAddressLEB
@@ -294,10 +293,12 @@ enum class RelocType {
   MemoryAddressRelSLEB64 = 17,  // Memory64: Like MemoryAddressRelSLEB
   TableIndexSLEB64 = 18,        // Memory64: Like TableIndexSLEB
   TableIndexI64 = 19,           // Memory64: Like TableIndexI32
-  TableNumberLEB = 20,    // e.g. Immediate of table.get
+  TableNumberLEB = 20,          // e.g. Immediate of table.get
+  MemoryAddressTLSSLEB = 21,    // Address relative to __tls_base
+  MemoryAddressTLSI32 = 22,     // Address relative to __tls_base
 
   First = FuncIndexLEB,
-  Last = TableNumberLEB,
+  Last = MemoryAddressTLSI32,
 };
 static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
