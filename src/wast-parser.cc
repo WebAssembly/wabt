@@ -328,6 +328,18 @@ Result CheckFuncTypeVarMatchesExplicit(const Location& loc,
       result |=
           CheckTypes(loc, decl.sig.param_types, func_type->sig.param_types,
                      "function", "argument", errors);
+    } else if (!(decl.sig.param_types.empty() &&
+                 decl.sig.result_types.empty())) {
+      // We want to check whether the function type at the explicit index
+      // matches the given param and result types. If they were omitted then
+      // they'll be resolved automatically (see
+      // ResolveFuncTypeWithEmptySignature), but if they are provided then we
+      // have to check. If we get here then the type var is invalid, so we
+      // can't check whether they match.
+      errors->emplace_back(ErrorLevel::Error, loc,
+                           StringPrintf("invalid func type index %" PRIindex,
+                                        decl.type_var.index()));
+      result = Result::Error;
     }
   }
   return result;
