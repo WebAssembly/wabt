@@ -165,8 +165,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_data == NULL) {
     return (uint32_t)-1;
   }
-#if WABT_BIG_ENDIAN
-#else
+#if !WABT_BIG_ENDIAN
   memset(new_data + old_size, 0, delta_size);
 #endif
 #endif
