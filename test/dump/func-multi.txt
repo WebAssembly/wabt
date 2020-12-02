@@ -4,7 +4,7 @@
   (func)
   (func)
   (func))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -44,6 +44,8 @@
 000001f: 0b                                        ; end
 000001d: 02                                        ; FIXUP func body size
 0000015: 0a                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 func-multi.wasm:	file format wasm 0x1
 

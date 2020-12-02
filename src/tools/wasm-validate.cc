@@ -50,7 +50,7 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
   });
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",

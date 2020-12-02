@@ -6,7 +6,7 @@
   (func $b)
   (func $start)
   (start $start))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -51,6 +51,8 @@
 0000022: 0b                                        ; end
 0000020: 02                                        ; FIXUP func body size
 0000018: 0a                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 start.wasm:	file format wasm 0x1
 

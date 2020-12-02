@@ -12,7 +12,7 @@
   (type (func (result f64)))
 
   (type (func (param i32) (result f64))))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -66,6 +66,8 @@
 000002e: 01                                        ; num results
 000002f: 7c                                        ; f64
 0000009: 26                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 signatures.wasm:	file format wasm 0x1
 

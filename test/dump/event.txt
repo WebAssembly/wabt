@@ -5,7 +5,7 @@
   (event)
   (event (param i32))
   (event (param f32 f64)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -42,6 +42,8 @@
 000001e: 00                                        ; event attribute
 000001f: 02                                        ; event signature index
 0000018: 07                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 event.wasm:	file format wasm 0x1
 

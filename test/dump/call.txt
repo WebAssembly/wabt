@@ -4,7 +4,7 @@
   (func (param i32)
      i32.const 1
      call 0))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -37,6 +37,8 @@
 000001c: 0b                                        ; end
 0000016: 06                                        ; FIXUP func body size
 0000014: 08                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 call.wasm:	file format wasm 0x1
 

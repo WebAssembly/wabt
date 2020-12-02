@@ -14,7 +14,7 @@
     (local $F3L1 f64)
     (local i64)
     (local $F3L3 i64)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -119,6 +119,8 @@
 0000072: 4633 4c33                                F3L3  ; local name 3
 0000040: 35                                        ; FIXUP subsection size
 000002e: 47                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 debug-names.wasm:	file format wasm 0x1
 

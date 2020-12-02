@@ -5,7 +5,7 @@
 (module (memory 2))
 (module (memory 4))
 (module (memory 5))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Memory" (5)
@@ -46,6 +46,8 @@
 000000b: 00                                        ; limits: flags
 000000c: 05                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 memory-data-size.0.wasm:	file format wasm 0x1
 

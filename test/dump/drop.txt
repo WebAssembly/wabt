@@ -4,7 +4,7 @@
   (func
     i32.const 0
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -35,6 +35,8 @@
 000001a: 0b                                        ; end
 0000015: 05                                        ; FIXUP func body size
 0000013: 07                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 drop.wasm:	file format wasm 0x1
 

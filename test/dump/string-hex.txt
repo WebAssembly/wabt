@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v
 (module (func) (export "foo\de\ad\ca\bb" (func 0)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -38,6 +38,8 @@
 0000024: 0b                                        ; end
 0000022: 02                                        ; FIXUP func body size
 0000020: 04                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 string-hex.wasm:	file format wasm 0x1
 

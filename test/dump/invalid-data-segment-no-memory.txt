@@ -2,7 +2,7 @@
 ;;; ARGS: -v --no-check
 (module
   (data (i32.const 0) "hello"))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Data" (11)
@@ -18,4 +18,4 @@
 ; data segment data 0
 0000010: 6865 6c6c 6f                              ; data segment data
 0000009: 0b                                        ; FIXUP section size
-;;; STDOUT ;;)
+;;; STDERR ;;)

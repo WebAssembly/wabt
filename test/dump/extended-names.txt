@@ -11,9 +11,6 @@
 (global $g1 (mut i32) (i32.const 1))
 (global $g2 i32 (i32.const 2))
 (;; STDERR ;;;
-0000089: warning: out-of-order sub-section
-;;; STDERR ;;)
-(;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -170,6 +167,9 @@
 000008d: 656c 656d 31                             elem1  ; elem name 0
 0000089: 08                                        ; FIXUP subsection size
 000004a: 47                                        ; FIXUP section size
+0000089: warning: out-of-order sub-section
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 extended-names.wasm:	file format wasm 0x1
 

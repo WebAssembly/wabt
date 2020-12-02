@@ -4,7 +4,7 @@
 (module
   (table 1 funcref)
   (elem (table 0) (i32.const 0)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Table" (4)
@@ -33,6 +33,8 @@
 0000018: 00                                        ; data count
 0000017: 01                                        ; FIXUP section size
 ; truncate to 22 (0x16)
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 elem-mvp-compat.wasm:	file format wasm 0x1
 

@@ -19,7 +19,7 @@
     catch
       drop
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -93,6 +93,8 @@
 0000020: 1d                                        ; FIXUP section size
 ; move data: [1f, 3e) -> [1c, 3b)
 ; truncate to 59 (0x3b)
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 try-multi.wasm:	file format wasm 0x1
 

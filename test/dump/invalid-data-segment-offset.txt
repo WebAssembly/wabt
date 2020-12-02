@@ -3,7 +3,7 @@
 (module
   (memory 1)
   (data (i32.add (i32.const 1) (i32.const 2)) "foo"))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Memory" (5)
@@ -30,4 +30,4 @@
 ; data segment data 0
 0000018: 666f 6f                                   ; data segment data
 000000e: 0c                                        ; FIXUP section size
-;;; STDOUT ;;)
+;;; STDERR ;;)

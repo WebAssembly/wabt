@@ -21,7 +21,7 @@
     i32.const 2
     i32.mul
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -146,6 +146,8 @@
 0000099: 0b                                        ; end
 000008d: 8880 8080 00                              ; FIXUP func body size
 000006b: aa80 8080 00                              ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 no-canonicalize.wasm:	file format wasm 0x1
 

@@ -8,7 +8,7 @@
   (import "ignored" "testtable" (table 0 anyfunc))
   (import "ignored" "testevent" (event (param i32)))
 )
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -79,6 +79,8 @@
 0000079: 00                                        ; event attribute
 000007a: 02                                        ; event signature index
 000001c: 5e                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 import.wasm:	file format wasm 0x1
 

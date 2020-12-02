@@ -7,7 +7,7 @@
     catch
       rethrow
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -55,6 +55,8 @@
 000001b: 09                                        ; FIXUP section size
 ; move data: [1a, 25) -> [17, 22)
 ; truncate to 34 (0x22)
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 rethrow.wasm:	file format wasm 0x1
 

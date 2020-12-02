@@ -6,7 +6,7 @@ section("foo") { count[4] }
 section(TYPE) { count[1] function params[0] results[1] i32 }
 section("bar") { count[5] }
 section("foo") { count[6] }
-(;; STDOUT ;;;
+(;; STDERR ;;;
 BeginModule(version: 1)
   BeginCustomSection('foo', size: 5)
   EndCustomSection
@@ -19,6 +19,8 @@ BeginModule(version: 1)
   BeginCustomSection('foo', size: 5)
   EndCustomSection
 EndModule
+;;; STDERR ;;)
+(;; STDOUT ;;;
 (module
   (type (;0;) (func (result i32))))
 ;;; STDOUT ;;)

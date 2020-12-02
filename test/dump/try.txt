@@ -10,7 +10,7 @@
       i32.const 8
     end
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -56,6 +56,8 @@
 0000016: 0f                                        ; FIXUP section size
 ; move data: [15, 26) -> [12, 23)
 ; truncate to 35 (0x23)
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 try.wasm:	file format wasm 0x1
 

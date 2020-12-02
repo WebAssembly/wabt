@@ -12,9 +12,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000015: error: function signature count != function body count
-;;; STDERR ;;)
-(;; STDOUT ;;;
 BeginModule(version: 1)
   BeginTypeSection(4)
     OnTypeCount(1)
@@ -25,4 +22,5 @@ BeginModule(version: 1)
     OnFunction(index: 0, sig_index: 0)
   EndFunctionSection
   BeginCodeSection(4)
-;;; STDOUT ;;)
+0000015: error: function signature count != function body count
+;;; STDERR ;;)

@@ -12,7 +12,7 @@
     block (result i32)
       i32.const 1
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -62,6 +62,8 @@
 000002a: 0b                                        ; end
 0000023: 07                                        ; FIXUP func body size
 0000018: 12                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 block.wasm:	file format wasm 0x1
 

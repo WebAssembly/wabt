@@ -6,7 +6,7 @@
     get_local 0
     grow_memory
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -49,6 +49,8 @@
 0000023: 0b                                        ; end
 000001c: 07                                        ; FIXUP func body size
 000001a: 09                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 grow-memory.wasm:	file format wasm 0x1
 

@@ -5,7 +5,7 @@
   (memory 1)
   (data (i32.const 10) "hello")
   (data (i32.const 20) "goodbye, Lorem ipsum dolor sit amet, consectetur"))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Memory" (5)
@@ -39,6 +39,8 @@
 000002f: 7073 756d 2064 6f6c 6f72 2073 6974 2061 
 000003f: 6d65 742c 2063 6f6e 7365 6374 6574 7572   ; data segment data
 000000e: 40                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 memory.wasm:	file format wasm 0x1
 

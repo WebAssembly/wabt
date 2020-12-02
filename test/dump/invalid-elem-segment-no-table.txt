@@ -4,7 +4,7 @@
   (func)
   (func)
   (elem (i32.const 0) 0 1))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -51,4 +51,4 @@
 0000025: 0b                                        ; end
 0000023: 02                                        ; FIXUP func body size
 000001e: 07                                        ; FIXUP section size
-;;; STDOUT ;;)
+;;; STDERR ;;)

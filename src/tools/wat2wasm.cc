@@ -69,7 +69,7 @@ static void ParseOptions(int argc, char* argv[]) {
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
   });
   parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
                    []() { s_debug_parsing = true; });

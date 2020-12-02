@@ -5,7 +5,7 @@
   (func
     f32.const 2
     set_global 0))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -47,6 +47,8 @@
 0000029: 0b                                        ; end
 0000020: 09                                        ; FIXUP func body size
 000001e: 0b                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 setglobal.wasm:	file format wasm 0x1
 
