@@ -30,7 +30,7 @@
     i64.const 0
     f64.const 0
     f64.store))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -129,6 +129,8 @@
 0000065: 0b                                        ; end
 000001a: 4b                                        ; FIXUP func body size
 0000018: 4d                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 store64.wasm:	file format wasm 0x1
 

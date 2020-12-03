@@ -13,7 +13,7 @@
     block (param i32)
       drop
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -72,6 +72,8 @@
 0000032: 0b                                        ; end
 000002a: 08                                        ; FIXUP func body size
 000001d: 15                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 block-multi.wasm:	file format wasm 0x1
 

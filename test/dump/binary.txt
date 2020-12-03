@@ -101,7 +101,7 @@
 
 ))
 
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -275,6 +275,8 @@
 0000015: e201                                      ; FIXUP func body size
 ; move data: [14, f9) -> [15, fa)
 0000013: e501                                      ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 binary.wasm:	file format wasm 0x1
 

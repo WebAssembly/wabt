@@ -5,7 +5,7 @@
   (import "foo" "bar" (func (param i32) (result i64)))
   (func (param i32) (result i64) 
     i64.const 0))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -49,6 +49,8 @@
 0000028: 0b                                        ; end
 0000024: 04                                        ; FIXUP func body size
 0000022: 06                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 dedupe-sig.wasm:	file format wasm 0x1
 

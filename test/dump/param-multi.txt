@@ -2,7 +2,7 @@
 ;;; ARGS0: -v
 (module
   (func (param i32 i64 f32 f64)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -34,6 +34,8 @@
 000001b: 0b                                        ; end
 0000019: 02                                        ; FIXUP func body size
 0000017: 04                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 param-multi.wasm:	file format wasm 0x1
 

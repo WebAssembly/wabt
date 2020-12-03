@@ -4,7 +4,7 @@
   (global i32 (i32.const 0))
   (func (result i32)
     get_global 0))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -45,6 +45,8 @@
 0000022: 0b                                        ; end
 000001e: 04                                        ; FIXUP func body size
 000001c: 06                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 getglobal.wasm:	file format wasm 0x1
 

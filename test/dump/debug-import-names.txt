@@ -3,7 +3,7 @@
 ;;; ARGS1: --headers -x
 (module
   (import "bar" "foo" (func $foo)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -46,6 +46,8 @@
 000002e: 00                                        ; num locals
 000002b: 03                                        ; FIXUP subsection size
 000001c: 12                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 debug-import-names.wasm:	file format wasm 0x1
 

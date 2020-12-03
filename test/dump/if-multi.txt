@@ -20,7 +20,7 @@
     else
       drop
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -90,6 +90,8 @@
 0000046: 0b                                        ; end
 0000037: 0f                                        ; FIXUP func body size
 000001d: 29                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 if-multi.wasm:	file format wasm 0x1
 

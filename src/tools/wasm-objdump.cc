@@ -53,7 +53,7 @@ static void ParseOptions(int argc, char** argv) {
                    []() { s_objdump_options.disassemble = true; });
   parser.AddOption("debug", "Print extra debug information", []() {
     s_objdump_options.debug = true;
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
     s_objdump_options.log_stream = s_log_stream.get();
   });
   parser.AddOption('x', "details", "Show section details",

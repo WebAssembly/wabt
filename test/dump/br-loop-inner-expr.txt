@@ -16,7 +16,7 @@
         i32.const 5
       end
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -69,6 +69,8 @@
 0000030: 0b                                        ; end
 0000016: 1a                                        ; FIXUP func body size
 0000014: 1c                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 br-loop-inner-expr.wasm:	file format wasm 0x1
 

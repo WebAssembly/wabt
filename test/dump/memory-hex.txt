@@ -3,7 +3,7 @@
 (module
   (memory
     (data "\00\01\02\03\04\05\06\07\08\09\0a")))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Memory" (5)
@@ -28,6 +28,8 @@
 ; data segment data 0
 0000016: 0001 0203 0405 0607 0809 0a               ; data segment data
 000000f: 11                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 memory-hex.wasm:	file format wasm 0x1
 

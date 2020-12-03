@@ -9,7 +9,7 @@
       drop
       i32.const 29
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -50,6 +50,8 @@
 0000024: 0b                                        ; end
 0000016: 0e                                        ; FIXUP func body size
 0000014: 10                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 expr-brif.wasm:	file format wasm 0x1
 

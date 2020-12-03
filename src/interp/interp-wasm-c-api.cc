@@ -490,7 +490,7 @@ static ReadBinaryOptions GetOptions() {
   const bool kFailOnCustomSectionError = true;
   s_features.EnableAll();
   if (getenv("WASM_API_DEBUG") != nullptr) {
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
   }
   return ReadBinaryOptions(s_features, s_log_stream.get(), kReadDebugNames,
                            kStopOnFirstError, kFailOnCustomSectionError);

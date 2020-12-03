@@ -16,7 +16,7 @@
         end
       end
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -67,6 +67,8 @@
 000002e: 0b                                        ; end
 0000015: 19                                        ; FIXUP func body size
 0000013: 1b                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 br-block.wasm:	file format wasm 0x1
 

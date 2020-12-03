@@ -15,7 +15,7 @@
     drop
     get_local 5
     drop ))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -71,6 +71,8 @@
 0000033: 0b                                        ; end
 0000017: 1c                                        ; FIXUP func body size
 0000015: 1e                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 getlocal-param.wasm:	file format wasm 0x1
 

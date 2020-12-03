@@ -10,7 +10,7 @@
   (table 6 6 anyfunc)
   (elem (i32.const 0) 1 1)
   (elem (i32.const 2) 0 0 1 2))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -97,6 +97,8 @@
 000004c: 0b                                        ; end
 0000041: 0b                                        ; FIXUP func body size
 0000039: 13                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 table.wasm:	file format wasm 0x1
 

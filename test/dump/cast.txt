@@ -14,7 +14,7 @@
     f64.const 0
     i64.reinterpret/f64
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -58,6 +58,8 @@
 0000031: 0b                                        ; end
 0000015: 1c                                        ; FIXUP func body size
 0000013: 1e                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 cast.wasm:	file format wasm 0x1
 

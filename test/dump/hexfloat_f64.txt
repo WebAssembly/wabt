@@ -38,7 +38,7 @@
     drop
   )
 )
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -119,6 +119,8 @@
 0000015: ac01                                      ; FIXUP func body size
 ; move data: [14, c3) -> [15, c4)
 0000013: af01                                      ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 hexfloat_f64.wasm:	file format wasm 0x1
 

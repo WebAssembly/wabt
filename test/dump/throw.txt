@@ -5,7 +5,7 @@
   (func
     i32.const 1
     throw $e))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -57,6 +57,8 @@
 000001f: 08                                        ; FIXUP section size
 ; move data: [1e, 28) -> [1b, 25)
 ; truncate to 37 (0x25)
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 throw.wasm:	file format wasm 0x1
 

@@ -16,7 +16,7 @@
   (global i64 (get_global 1))
   (global f32 (get_global 2))
   (global f64 (get_global 3)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Import" (2)
@@ -101,6 +101,8 @@
 0000086: 03                                        ; global index
 0000087: 0b                                        ; end
 0000054: 33                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 global.wasm:	file format wasm 0x1
 

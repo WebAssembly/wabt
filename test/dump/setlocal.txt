@@ -23,7 +23,7 @@
     set_local 6
     i64.const 0
     set_local 7))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
@@ -97,6 +97,8 @@
 0000059: 0b                                        ; end
 0000015: 44                                        ; FIXUP func body size
 0000013: 46                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 setlocal.wasm:	file format wasm 0x1
 
