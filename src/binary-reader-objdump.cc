@@ -1212,7 +1212,12 @@ Result BinaryReaderObjdump::OnStartFunction(Index func_index) {
   if (options_->mode == ObjdumpMode::Headers) {
     printf("start: %" PRIindex "\n", func_index);
   } else {
-    PrintDetails(" - start function: %" PRIindex "\n", func_index);
+    PrintDetails(" - start function: %" PRIindex, func_index);
+    auto name = GetFunctionName(func_index);
+    if (!name.empty()) {
+      PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+    }
+    PrintDetails("\n");
   }
   return Result::Ok;
 }
