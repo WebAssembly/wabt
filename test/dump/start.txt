@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: -v
+;;; ARGS0: -v --debug-names
 ;;; ARGS1: -x --headers
 (module
   (func $a)
@@ -51,6 +51,35 @@
 0000022: 0b                                        ; end
 0000020: 02                                        ; FIXUP func body size
 0000018: 0a                                        ; FIXUP section size
+; section "name"
+0000023: 00                                        ; section code
+0000024: 00                                        ; section size (guess)
+0000025: 04                                        ; string length
+0000026: 6e61 6d65                                name  ; custom section name
+000002a: 01                                        ; name subsection type
+000002b: 00                                        ; subsection size (guess)
+000002c: 03                                        ; num names
+000002d: 00                                        ; elem index
+000002e: 01                                        ; string length
+000002f: 61                                       a  ; elem name 0
+0000030: 01                                        ; elem index
+0000031: 01                                        ; string length
+0000032: 62                                       b  ; elem name 1
+0000033: 02                                        ; elem index
+0000034: 05                                        ; string length
+0000035: 7374 6172 74                             start  ; elem name 2
+000002b: 0e                                        ; FIXUP subsection size
+000003a: 02                                        ; local name type
+000003b: 00                                        ; subsection size (guess)
+000003c: 03                                        ; num functions
+000003d: 00                                        ; function index
+000003e: 00                                        ; num locals
+000003f: 01                                        ; function index
+0000040: 00                                        ; num locals
+0000041: 02                                        ; function index
+0000042: 00                                        ; num locals
+000003b: 07                                        ; FIXUP subsection size
+0000024: 1e                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -62,28 +91,34 @@ Sections:
  Function start=0x00000010 end=0x00000014 (size=0x00000004) count: 3
     Start start=0x00000016 end=0x00000017 (size=0x00000001) start: 2
      Code start=0x00000019 end=0x00000023 (size=0x0000000a) count: 3
+   Custom start=0x00000025 end=0x00000043 (size=0x0000001e) "name"
 
 Section Details:
 
 Type[1]:
  - type[0] () -> nil
 Function[3]:
- - func[0] sig=0
- - func[1] sig=0
- - func[2] sig=0
+ - func[0] sig=0 <a>
+ - func[1] sig=0 <b>
+ - func[2] sig=0 <start>
 Start:
- - start function: 2
+ - start function: 2 <start>
 Code[3]:
- - func[0] size=2
- - func[1] size=2
- - func[2] size=2
+ - func[0] size=2 <a>
+ - func[1] size=2 <b>
+ - func[2] size=2 <start>
+Custom:
+ - name: "name"
+ - func[0] <a>
+ - func[1] <b>
+ - func[2] <start>
 
 Code Disassembly:
 
-00001b func[0]:
+00001b func[0] <a>:
  00001c: 0b                         | end
-00001e func[1]:
+00001e func[1] <b>:
  00001f: 0b                         | end
-000021 func[2]:
+000021 func[2] <start>:
  000022: 0b                         | end
 ;;; STDOUT ;;)
