@@ -1036,10 +1036,18 @@ Result SharedValidator::OnReturn(const Location& loc) {
   return result;
 }
 
-Result SharedValidator::OnSelect(const Location& loc, Type result_type) {
+Result SharedValidator::OnSelect(const Location& loc,
+                                 Index result_count,
+                                 Type* result_types) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= typechecker_.OnSelect(result_type);
+  if (result_count > 1) {
+    result |=
+        PrintError(loc, "invalid arity in select instruction: %" PRIindex ".",
+                   result_count);
+  } else {
+    result |= typechecker_.OnSelect(ToTypeVector(result_count, result_types));
+  }
   return result;
 }
 
