@@ -113,7 +113,7 @@ class TypeChecker {
   Result OnRefIsNullExpr();
   Result OnRethrow();
   Result OnReturn();
-  Result OnSelect(Type expected);
+  Result OnSelect(const TypeVector& result_types);
   Result OnSimdLaneOp(Opcode, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode, const Limits& limits);

@@ -730,7 +730,7 @@ Result TypeChecker::OnReturn() {
   return result;
 }
 
-Result TypeChecker::OnSelect(Type expected) {
+Result TypeChecker::OnSelect(const TypeVector& expected) {
   Result result = Result::Ok;
   Type type1 = Type::Any;
   Type type2 = Type::Any;
@@ -738,7 +738,7 @@ Result TypeChecker::OnSelect(Type expected) {
   result |= PeekAndCheckType(0, Type::I32);
   result |= PeekType(1, &type1);
   result |= PeekType(2, &type2);
-  if (expected == Type::Void) {
+  if (expected.empty()) {
     if (type1.IsRef() || type2.IsRef()) {
       result = Result::Error;
     } else {
@@ -746,8 +746,9 @@ Result TypeChecker::OnSelect(Type expected) {
       result_type = type1;
     }
   } else {
-    result |= CheckType(type1, expected);
-    result |= CheckType(type2, expected);
+    assert(expected.size() == 1);
+    result |= CheckType(type1, expected[0]);
+    result |= CheckType(type2, expected[0]);
   }
   PrintStackIfFailed(result, "select", result_type, result_type, Type::I32);
   result |= DropTypes(3);

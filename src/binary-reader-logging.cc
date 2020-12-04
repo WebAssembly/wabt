@@ -375,9 +375,12 @@ Result BinaryReaderLogging::OnLoopExpr(Type sig_type) {
   return reader_->OnLoopExpr(sig_type);
 }
 
-Result BinaryReaderLogging::OnSelectExpr(Type return_type) {
-  LOGF("OnSelectExpr(return_type: %s)\n", return_type.GetName());
-  return reader_->OnSelectExpr(return_type);
+Result BinaryReaderLogging::OnSelectExpr(Index result_count,
+                                         Type* result_types) {
+  LOGF("OnSelectExpr(return_type: ");
+  LogTypes(result_count, result_types);
+  LOGF_NOINDENT(")\n");
+  return reader_->OnSelectExpr(result_count, result_types);
 }
 
 Result BinaryReaderLogging::OnTryExpr(Type sig_type) {

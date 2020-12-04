@@ -195,7 +195,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
   Result OnReturnExpr() override;
-  Result OnSelectExpr(Type result_type) override;
+  Result OnSelectExpr(Index result_count, Type* result_types) override;
   Result OnStoreExpr(Opcode opcode,
                      Address alignment_log2,
                      Address offset) override;
@@ -1260,8 +1260,9 @@ Result BinaryReaderInterp::OnReturnExpr() {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnSelectExpr(Type result_type) {
-  CHECK_RESULT(validator_.OnSelect(loc, result_type));
+Result BinaryReaderInterp::OnSelectExpr(Index result_count,
+                                        Type* result_types) {
+  CHECK_RESULT(validator_.OnSelect(loc, result_count, result_types));
   istream_.Emit(Opcode::Select);
   return Result::Ok;
 }

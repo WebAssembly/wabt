@@ -686,21 +686,28 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::SelectT: {
-        Index count;
-        CHECK_RESULT(ReadCount(&count, "num result types"));
-        if (count != 1) {
-          PrintError("invalid arity in select instrcution: %u", count);
-          return Result::Error;
+        Index num_results;
+        CHECK_RESULT(ReadCount(&num_results, "num result types"));
+
+        result_types_.resize(num_results);
+        for (Index i = 0; i < num_results; ++i) {
+          Type result_type;
+          CHECK_RESULT(ReadType(&result_type, "select result type"));
+          ERROR_UNLESS(IsConcreteType(result_type),
+                       "expected valid select result type (got " PRItypecode
+                       ")",
+                       WABT_PRINTF_TYPE_CODE(result_type));
+          result_types_[i] = result_type;
         }
-        Type result_type;
-        CHECK_RESULT(ReadType(&result_type, "select result type"));
-        CALLBACK(OnSelectExpr, result_type);
+
+        Type* result_types = num_results ? result_types_.data() : nullptr;
+        CALLBACK(OnSelectExpr, num_results, result_types);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
       case Opcode::Select:
-        CALLBACK(OnSelectExpr, Type::Void);
+        CALLBACK(OnSelectExpr, 0, nullptr);
         CALLBACK0(OnOpcodeBare);
         break;
 
