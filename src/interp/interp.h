@@ -138,6 +138,19 @@ struct Simd {
   static const u8 lanes = L;
 
   T v[L];
+
+  inline T& operator[](u8 idx) {
+#if WABT_BIG_ENDIAN
+    idx = (~idx) & (L-1);
+#endif
+    return v[idx];
+  }
+  inline T operator[](u8 idx) const {
+#if WABT_BIG_ENDIAN
+    idx = (~idx) & (L-1);
+#endif
+    return v[idx];
+  }
 };
 using s8x16 = Simd<s8, 16>;
 using u8x16 = Simd<u8, 16>;

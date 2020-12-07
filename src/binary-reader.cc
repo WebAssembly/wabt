@@ -250,7 +250,14 @@ Result BinaryReader::ReadT(T* out_value,
     PrintError("unable to read %s: %s", type_name, desc);
     return Result::Error;
   }
+#if WABT_BIG_ENDIAN
+  uint8_t tmp[sizeof(T)];
+  memcpy(tmp, state_.data + state_.offset, sizeof(tmp));
+  SwapBytesSized(tmp, sizeof(tmp));
+  memcpy(out_value, tmp, sizeof(T));
+#else
   memcpy(out_value, state_.data + state_.offset, sizeof(T));
+#endif
   state_.offset += sizeof(T);
   return Result::Ok;
 }

@@ -29,6 +29,37 @@
   if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
 #endif
 
+#if WABT_BIG_ENDIAN
+static inline void load_data(void *dest, const void *src, size_t n) {
+  size_t i = 0;
+  u8 *dest_chars = dest;
+  memcpy(dest, src, n);
+  for (i = 0; i < (n>>1); i++) {
+    u8 cursor = dest_chars[i];
+    dest_chars[i] = dest_chars[n - i - 1];
+    dest_chars[n - i - 1] = cursor;
+  }
+}
+#define LOAD_DATA(m, o, i, s) load_data(&(m.data[m.size - o - s]), i, s)
+#define DEFINE_LOAD(name, t1, t2, t3)                                                 \
+  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                            \
+    MEMCHECK(mem, addr, t1);                                                          \
+    t1 result;                                                                        \
+    __builtin_memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], sizeof(t1)); \
+    return (t3)(t2)result;                                                            \
+  }
+
+#define DEFINE_STORE(name, t1, t2)                                                     \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {                 \
+    MEMCHECK(mem, addr, t1);                                                           \
+    t1 wrapped = (t1)value;                                                            \
+    __builtin_memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1)); \
+  }
+#else
+static inline void load_data(void *dest, const void *src, size_t n) {
+  memcpy(dest, src, n);
+}
+#define LOAD_DATA(m, o, i, s) load_data(&(m.data[o]), i, s)
 #define DEFINE_LOAD(name, t1, t2, t3)                        \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
     MEMCHECK(mem, addr, t1);                                 \
@@ -43,6 +74,7 @@
     t1 wrapped = (t1)value;                                            \
     __builtin_memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
   }
+#endif
 
 DEFINE_LOAD(i32_load, u32, u32, u32);
 DEFINE_LOAD(i64_load, u64, u64, u64);

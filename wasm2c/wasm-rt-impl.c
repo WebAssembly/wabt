@@ -165,7 +165,13 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_data == NULL) {
     return (uint32_t)-1;
   }
+#if !WABT_BIG_ENDIAN
   memset(new_data + old_size, 0, delta_size);
+#endif
+#endif
+#if WABT_BIG_ENDIAN
+  memmove(new_data + new_size - old_size, new_data, old_size);
+  memset(new_data, 0, delta_size);
 #endif
   memory->pages = new_pages;
   memory->size = new_size;

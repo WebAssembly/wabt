@@ -101,6 +101,22 @@
 #define PRIaddress PRIu64
 #define PRIoffset PRIzx
 
+namespace wabt {
+#if WABT_BIG_ENDIAN
+  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
+    memcpy(static_cast<char*>(dst) + (dsize) - (len) - (doff),
+      static_cast<const char*>(src) + (ssize) - (len) - (soff),
+      (len));
+  }
+#else
+  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
+    memcpy(static_cast<char*>(dst) + (doff),
+      static_cast<const char*>(src) + (soff),
+      (len));
+  }
+#endif
+}
+
 struct v128 {
   v128() = default;
   v128(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3) {
@@ -140,7 +156,7 @@ struct v128 {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
-    memcpy(&result, &v[lane * sizeof(T)], sizeof(result));
+    wabt::MemcpyEndianAware(&result, v, sizeof(result), sizeof(v), 0, lane * sizeof(T), sizeof(result));
     return result;
   }
 
@@ -148,7 +164,7 @@ struct v128 {
   void From(int lane, T data) {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
-    memcpy(&v[lane * sizeof(T)], &data, sizeof(data));
+    wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T), 0, sizeof(data));
   }
 
   uint8_t v[16];
@@ -447,6 +463,13 @@ inline void ConvertBackslashToSlash(char* s) {
 
 inline void ConvertBackslashToSlash(std::string* s) {
   ConvertBackslashToSlash(s->begin(), s->end());
+}
+
+inline void SwapBytesSized(void *addr, size_t size) {
+  auto bytes = static_cast<uint8_t*>(addr);
+  for (size_t i = 0; i < size / 2; i++) {
+    std::swap(bytes[i], bytes[size-1-i]);
+  }
 }
 
 }  // namespace wabt
