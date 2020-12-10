@@ -1596,10 +1596,10 @@ Result BinaryWriter::WriteModule() {
     WriteNames<Table>(module_->tables, NameSectionSubsection::Table);
     WriteNames<Memory>(module_->memories, NameSectionSubsection::Memory);
     WriteNames<Global>(module_->globals, NameSectionSubsection::Global);
-    WriteNames<DataSegment>(module_->data_segments,
-                            NameSectionSubsection::DataSegment);
     WriteNames<ElemSegment>(module_->elem_segments,
                             NameSectionSubsection::ElemSegment);
+    WriteNames<DataSegment>(module_->data_segments,
+                            NameSectionSubsection::DataSegment);
 
     EndSection();
   }

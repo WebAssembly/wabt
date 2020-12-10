@@ -1,9 +1,9 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-bulk-memory
+;;; ARGS0: --debug-names --enable-bulk-memory
 
 (module
   (memory 1)
-  (data "a")
+  (data $mydata "a")
   (func
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
     data.drop 0
@@ -29,8 +29,8 @@ Code Disassembly:
  00002d: 41 00                      | i32.const 0
  00002f: 41 00                      | i32.const 0
  000031: 41 00                      | i32.const 0
- 000033: fc 08 00 00                | memory.init 0 0
- 000037: fc 09 00                   | data.drop 0
+ 000033: fc 08 00 00                | memory.init 0 0 <mydata>
+ 000037: fc 09 00                   | data.drop 0 <mydata>
  00003a: 41 00                      | i32.const 0
  00003c: 41 00                      | i32.const 0
  00003e: 41 00                      | i32.const 0

@@ -250,6 +250,9 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
       case NameSectionSubsection::Table:
         SetTableName(index, name);
         break;
+      case NameSectionSubsection::DataSegment:
+        SetSegmentName(index, name);
+        break;
       default:
         break;
     }
@@ -650,14 +653,28 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndexIndex(Index value,
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32(uint32_t value) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(immediate_len, "%u", value);
+  string_view name;
+  if (current_opcode == Opcode::DataDrop &&
+      !(name = GetSegmentName(value)).empty()) {
+    LogOpcode(immediate_len, "%d <" PRIstringview ">", value,
+              WABT_PRINTF_STRING_VIEW_ARG(name));
+  } else {
+    LogOpcode(immediate_len, "%u", value);
+  }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
                                                             uint32_t value2) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(immediate_len, "%u %u", value, value2);
+  string_view name;
+  if (current_opcode == Opcode::MemoryInit &&
+      !(name = GetSegmentName(value)).empty()) {
+    LogOpcode(immediate_len, "%u %u <" PRIstringview ">", value, value2,
+              WABT_PRINTF_STRING_VIEW_ARG(name));
+  } else {
+    LogOpcode(immediate_len, "%u %u", value, value2);
+  }
   return Result::Ok;
 }
 
