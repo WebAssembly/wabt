@@ -1981,7 +1981,7 @@ void CWriter::Write(const LoadExpr& expr) {
     case Opcode::I32Load16S: func = "i32_load16_s"; break;
     case Opcode::I64Load16S: func = "i64_load16_s"; break;
     case Opcode::I32Load16U: func = "i32_load16_u"; break;
-    case Opcode::I64Load16U: func = "i32_load16_u"; break;
+    case Opcode::I64Load16U: func = "i64_load16_u"; break;
     case Opcode::I64Load32S: func = "i64_load32_s"; break;
     case Opcode::I64Load32U: func = "i64_load32_u"; break;
 
