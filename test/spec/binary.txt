@@ -59,6 +59,8 @@ out/test/spec/binary.wast:45: assert_malformed passed:
   0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
 out/test/spec/binary.wast:48: assert_malformed passed:
   000000a: error: invalid section code: 12
+  000000a: error: encountered sections that are not feature-enabled; try enabling with:
+  000000a: error:     --enable-bulk-memory
 out/test/spec/binary.wast:49: assert_malformed passed:
   000000a: error: invalid section code: 127
 out/test/spec/binary.wast:50: assert_malformed passed:

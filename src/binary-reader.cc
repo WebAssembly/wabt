@@ -85,6 +85,7 @@ class BinaryReader {
   };
 
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
+  void ReportMissingSectionFeatures(std::vector<std::string> missing_features);
   Result ReadOpcode(Opcode* out_value, const char* desc) WABT_WARN_UNUSED;
   template <typename T>
   Result ReadT(T* out_value,
@@ -206,6 +207,15 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
     fprintf(stderr, "%07" PRIzx ": %s: %s\n", state_.offset,
             GetErrorLevelName(error_level), buffer);
   }
+}
+
+void BinaryReader::ReportMissingSectionFeatures(std::vector<std::string> missing_features) {
+    if (!missing_features.empty()) {
+        PrintError("encountered sections that are not feature-enabled; try enabling with:");
+        for (std::string feature : missing_features) {
+            PrintError("    --enable-%s", feature.c_str());
+        }
+    }
 }
 
 Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode, const char* where) {
@@ -2491,6 +2501,7 @@ Result BinaryReader::ReadSections() {
   Result result = Result::Ok;
   Index section_index = 0;
   bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
+  std::vector<std::string> missing_section_features;
 
   for (; state_.offset < state_.size; ++section_index) {
     uint8_t section_code;
@@ -2584,17 +2595,23 @@ Result BinaryReader::ReadSections() {
         result |= section_result;
         break;
       case BinarySection::Event:
-        ERROR_UNLESS(options_.features.exceptions_enabled(),
-                     "invalid section code: %u",
-                     static_cast<unsigned int>(section));
-        section_result = ReadEventSection(section_size);
+        if (options_.features.exceptions_enabled()) {
+            section_result = ReadEventSection(section_size);
+        } else {
+            section_result = Result::Error;
+            PrintError("invalid section code: %u", static_cast<unsigned int>(section));
+            missing_section_features.push_back("exceptions");
+        }
         result |= section_result;
         break;
       case BinarySection::DataCount:
-        ERROR_UNLESS(options_.features.bulk_memory_enabled(),
-                     "invalid section code: %u",
-                     static_cast<unsigned int>(section));
-        section_result = ReadDataCountSection(section_size);
+        if (options_.features.bulk_memory_enabled()) {
+            section_result = ReadDataCountSection(section_size);
+        } else {
+            section_result = Result::Error;
+            PrintError("invalid section code: %u", static_cast<unsigned int>(section));
+            missing_section_features.push_back("bulk-memory");
+        }
         result |= section_result;
         break;
       case BinarySection::Invalid:
@@ -2609,6 +2626,7 @@ Result BinaryReader::ReadSections() {
 
     if (Failed(section_result)) {
       if (stop_on_first_error) {
+        ReportMissingSectionFeatures(missing_section_features);
         return Result::Error;
       }
 
@@ -2623,6 +2641,7 @@ Result BinaryReader::ReadSections() {
     }
   }
 
+  ReportMissingSectionFeatures(missing_section_features);
   return result;
 }
 
