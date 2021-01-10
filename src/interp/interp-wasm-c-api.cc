@@ -194,7 +194,29 @@ std::unique_ptr<wasm_externtype_t> wasm_externtype_t::New(
 }
 
 struct wasm_importtype_t {
+  wasm_importtype_t(ImportType it)
+      : I(it),
+        extern_{wasm_externtype_t::New(it.type->Clone())},
+        module{I.module.size(), const_cast<wasm_byte_t*>(I.module.data())},
+        name{I.name.size(), const_cast<wasm_byte_t*>(I.name.data())} {}
+
+  wasm_importtype_t(const wasm_importtype_t& other)
+      : wasm_importtype_t(other.I) {}
+
+  wasm_importtype_t& operator=(const wasm_importtype_t& other) {
+    wasm_importtype_t copy(other);
+    std::swap(I, copy.I);
+    std::swap(extern_, copy.extern_);
+    std::swap(module, copy.module);
+    std::swap(name, copy.name);
+    return *this;
+  }
+
   ImportType I;
+  // Stored here because API requires returning pointers.
+  std::unique_ptr<wasm_externtype_t> extern_;
+  wasm_name_t module;
+  wasm_name_t name;
 };
 
 struct wasm_exporttype_t {
@@ -660,6 +682,27 @@ void wasm_module_serialize(const wasm_module_t* module,
 own wasm_module_t* wasm_module_deserialize(wasm_store_t* store,
                                            const wasm_byte_vec_t* bytes) {
   return wasm_module_new(store, bytes);
+}
+
+// wasm_importtype
+
+own wasm_importtype_t* wasm_importtype_new(own wasm_name_t* module,
+                                           own wasm_name_t* name,
+                                           own wasm_externtype_t* type) {
+  return new wasm_importtype_t{
+      ImportType{ToString(module), ToString(name), type->I->Clone()}};
+}
+
+const wasm_name_t* wasm_importtype_module(const wasm_importtype_t* im) {
+  return &im->module;
+}
+
+const wasm_name_t* wasm_importtype_name(const wasm_importtype_t* im) {
+  return &im->name;
+}
+
+const wasm_externtype_t* wasm_importtype_type(const wasm_importtype_t* im) {
+  return im->extern_.get();
 }
 
 // wasm_exporttype
