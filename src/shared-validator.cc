@@ -769,10 +769,19 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnCatch(const Location& loc) {
+Result SharedValidator::OnCatch(const Location& loc,
+                                Var event_var,
+                                bool is_catch_all) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= typechecker_.OnCatch();
+  if (is_catch_all) {
+    TypeVector empty;
+    result |= typechecker_.OnCatch(empty);
+  } else {
+    EventType event_type;
+    result |= CheckEventIndex(event_var, &event_type);
+    result |= typechecker_.OnCatch(event_type.params);
+  }
   return result;
 }
 
@@ -1000,10 +1009,10 @@ Result SharedValidator::OnRefNull(const Location& loc, Type type) {
   return result;
 }
 
-Result SharedValidator::OnRethrow(const Location& loc) {
+Result SharedValidator::OnRethrow(const Location& loc, Var depth) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  result |= typechecker_.OnRethrow();
+  result |= typechecker_.OnRethrow(depth.index());
   return result;
 }
 

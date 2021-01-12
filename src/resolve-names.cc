@@ -44,6 +44,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnReturnCallExpr(ReturnCallExpr *) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnGlobalGetExpr(GlobalGetExpr*) override;
@@ -69,6 +70,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
+  Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -408,8 +410,22 @@ Result NameResolver::EndTryExpr(TryExpr*) {
   return Result::Ok;
 }
 
+Result NameResolver::OnCatchExpr(TryExpr*, Catch* catch_) {
+  if (!catch_->IsCatchAll()) {
+    ResolveEventVar(&catch_->var);
+  }
+  return Result::Ok;
+}
+
 Result NameResolver::OnThrowExpr(ThrowExpr* expr) {
   ResolveEventVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnRethrowExpr(RethrowExpr* expr) {
+  // Note: the variable refers to corresponding (enclosing) catch, using the try
+  // block label for context.
+  ResolveLabelVar(&expr->var);
   return Result::Ok;
 }
 

@@ -948,6 +948,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Rethrow:
       WriteOpcode(stream_, Opcode::Rethrow);
+      WriteU32Leb128(stream_, GetLabelVarDepth(&cast<RethrowExpr>(expr)->var),
+                     "rethrow depth");
       break;
     case ExprType::Return:
       WriteOpcode(stream_, Opcode::Return);
@@ -979,8 +981,16 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::Try);
       WriteBlockDecl(try_expr->block.decl);
       WriteExprList(func, try_expr->block.exprs);
-      WriteOpcode(stream_, Opcode::Catch);
-      WriteExprList(func, try_expr->catch_);
+      for (const Catch& catch_ : try_expr->catches) {
+        if (catch_.IsCatchAll()) {
+          WriteOpcode(stream_, Opcode::Else);
+        } else {
+          WriteOpcode(stream_, Opcode::Catch);
+          WriteU32Leb128(stream_, GetEventVarDepth(&catch_.var),
+                         "catch event");
+        }
+        WriteExprList(func, catch_.exprs);
+      }
       WriteOpcode(stream_, Opcode::End);
       break;
     }

@@ -794,7 +794,7 @@ DEFINE_INDEX_INDEX(OnBrOnExnExpr, "depth", "event_index");
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
-DEFINE0(OnCatchExpr);
+DEFINE_INDEX_DESC(OnCatchExpr, "event_index");
 DEFINE_OPCODE(OnCompareExpr)
 DEFINE_OPCODE(OnConvertExpr)
 DEFINE0(OnDropExpr)
@@ -824,7 +824,7 @@ DEFINE_INDEX(OnRefFuncExpr)
 DEFINE_TYPE(OnRefNullExpr)
 DEFINE0(OnRefIsNullExpr)
 DEFINE0(OnNopExpr)
-DEFINE0(OnRethrowExpr);
+DEFINE_INDEX_DESC(OnRethrowExpr, "depth");
 DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")
 
 DEFINE_INDEX_INDEX(OnReturnCallIndirectExpr, "sig_index", "table_index")

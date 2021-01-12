@@ -265,6 +265,10 @@ NAMED_VALUES = {
     "table.init": (0xfc, 0x0c),
     "elem.drop": (0xfc, 0x0d),
     "table.copy": (0xfc, 0x0e),
+
+    # exceptions
+    "try": 0x06,
+    "catch_all": 0x05,
 }
 
 keywords = {

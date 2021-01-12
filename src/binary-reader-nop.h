@@ -236,7 +236,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnCallExpr(Index func_index) override { return Result::Ok; }
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override { return Result::Ok; }
-  Result OnCatchExpr() override { return Result::Ok; }
+  Result OnCatchExpr(Index event_index) override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
   Result OnConvertExpr(Opcode opcode) override { return Result::Ok; }
   Result OnDropExpr() override { return Result::Ok; }
@@ -282,7 +282,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnRefNullExpr(Type type) override { return Result::Ok; }
   Result OnRefIsNullExpr() override { return Result::Ok; }
   Result OnNopExpr() override { return Result::Ok; }
-  Result OnRethrowExpr() override { return Result::Ok; }
+  Result OnRethrowExpr(Index depth) override { return Result::Ok; }
   Result OnReturnCallExpr(Index sig_index) override { return Result::Ok; }
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override { return Result::Ok; }
   Result OnReturnExpr() override { return Result::Ok; }

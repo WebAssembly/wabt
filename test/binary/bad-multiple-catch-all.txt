@@ -1,0 +1,23 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-exceptions
+;;; ARGS2: --enable-exceptions
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    try 0
+    catch_all
+    catch_all
+    end
+  }
+}
+(;; STDERR ;;;
+error: only one catch_all allowed in try block
+000001b: error: OnElseExpr callback failed
+error: only one catch_all allowed in try block
+000001b: error: OnElseExpr callback failed
+;;; STDERR ;;)

@@ -4,8 +4,8 @@
   (event $e1)
   (func
     try
-    catch
-      rethrow
+    catch $e1
+      rethrow 0
     end))
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
@@ -48,13 +48,15 @@
 000001f: 06                                        ; try
 0000020: 40                                        ; void
 0000021: 07                                        ; catch
-0000022: 09                                        ; rethrow
-0000023: 0b                                        ; end
-0000024: 0b                                        ; end
-000001d: 07                                        ; FIXUP func body size
-000001b: 09                                        ; FIXUP section size
-; move data: [1a, 25) -> [17, 22)
-; truncate to 34 (0x22)
+0000022: 00                                        ; catch event
+0000023: 09                                        ; rethrow
+0000024: 00                                        ; rethrow depth
+0000025: 0b                                        ; end
+0000026: 0b                                        ; end
+000001d: 09                                        ; FIXUP func body size
+000001b: 0b                                        ; FIXUP section size
+; move data: [1a, 27) -> [17, 24)
+; truncate to 36 (0x24)
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -64,8 +66,8 @@ Code Disassembly:
 
 00001b func[0]:
  00001c: 06 40                      | try
- 00001e: 07                         | catch
- 00001f: 09                         |   rethrow
- 000020: 0b                         | end
- 000021: 0b                         | end
+ 00001e: 07 00                      | catch 0
+ 000020: 09 00                      |   rethrow 0
+ 000022: 0b                         | end
+ 000023: 0b                         | end
 ;;; STDOUT ;;)

@@ -70,6 +70,38 @@ Result TypeChecker::GetLabel(Index depth, Label** out_label) {
   return Result::Ok;
 }
 
+Result TypeChecker::GetRethrowLabel(Index depth, Label** out_label) {
+  Index cur = 0, catches = 0;
+  std::string candidates;
+
+  while (cur < label_stack_.size()) {
+    *out_label = &label_stack_[label_stack_.size() - cur - 1];
+
+    if ((*out_label)->label_type == LabelType::Catch) {
+      if (catches == depth) {
+        return Result::Ok;
+      } else {
+        if (!candidates.empty()) {
+          candidates.append(", ");
+        }
+        candidates.append(std::to_string(catches));
+        catches++;
+      }
+    }
+
+    cur++;
+  }
+
+  if (catches == 0) {
+    PrintError("rethrow not in try catch block");
+  } else {
+    PrintError("invalid rethrow depth: %" PRIindex " (catches: %s)", depth,
+               candidates.c_str());
+  }
+  *out_label = nullptr;
+  return Result::Error;
+}
+
 Result TypeChecker::TopLabel(Label** out_label) {
   return GetLabel(0, out_label);
 }
@@ -108,6 +140,13 @@ Result TypeChecker::PopLabel() {
 
 Result TypeChecker::CheckLabelType(Label* label, LabelType label_type) {
   return label->label_type == label_type ? Result::Ok : Result::Error;
+}
+
+Result TypeChecker::Check2LabelTypes(Label* label,
+                                     LabelType label_type1,
+                                     LabelType label_type2) {
+  return label->label_type == label_type1 ||
+         label->label_type == label_type2 ? Result::Ok : Result::Error;
 }
 
 Result TypeChecker::GetThisFunctionLabel(Label** label) {
@@ -496,17 +535,17 @@ Result TypeChecker::OnCompare(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
 
-Result TypeChecker::OnCatch() {
+Result TypeChecker::OnCatch(const TypeVector& sig) {
   Result result = Result::Ok;
   Label* label;
   CHECK_RESULT(TopLabel(&label));
-  result |= CheckLabelType(label, LabelType::Try);
+  result |= Check2LabelTypes(label, LabelType::Try, LabelType::Catch);
   result |= PopAndCheckSignature(label->result_types, "try block");
   result |= CheckTypeStackEnd("try block");
   ResetTypeStackToLabel(label);
   label->label_type = LabelType::Catch;
   label->unreachable = false;
-  PushType(Type::ExnRef);
+  PushTypes(sig);
   return result;
 }
 
@@ -708,8 +747,10 @@ Result TypeChecker::OnRefIsNullExpr() {
   return result;
 }
 
-Result TypeChecker::OnRethrow() {
-  Result result = PopAndCheck1Type(Type::ExnRef, "rethrow");
+Result TypeChecker::OnRethrow(Index depth) {
+  Result result = Result::Ok;
+  Label* label;
+  CHECK_RESULT(GetRethrowLabel(depth, &label));
   CHECK_RESULT(SetUnreachable());
   return result;
 }

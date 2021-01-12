@@ -67,7 +67,9 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnTableFillExpr(TableFillExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnThrowExpr(ThrowExpr*) override;
+  Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
   void PushLabel(const std::string& label);
@@ -338,8 +340,21 @@ Result NameApplier::EndTryExpr(TryExpr*) {
   return Result::Ok;
 }
 
+Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
+  if (!expr->IsCatchAll()) {
+    CHECK_RESULT(UseNameForEventVar(&expr->var));
+  }
+  return Result::Ok;
+}
+
 Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
   CHECK_RESULT(UseNameForEventVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
+  string_view label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 

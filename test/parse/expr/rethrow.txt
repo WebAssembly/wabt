@@ -4,6 +4,6 @@
   (event $e1)
   (func
     try
-    catch
-      rethrow
+    catch $e1
+      rethrow 0
     end))

@@ -34,6 +34,7 @@ br, TokenType::Br, Opcode::Br
 call_indirect, TokenType::CallIndirect, Opcode::CallIndirect
 call, TokenType::Call, Opcode::Call
 catch, TokenType::Catch, Opcode::Catch
+catch_all, TokenType::CatchAll, Opcode::CatchAll
 current_memory, TokenType::MemorySize, Opcode::MemorySize
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data

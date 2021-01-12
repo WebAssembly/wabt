@@ -5,8 +5,7 @@
     try (result i32)
       nop
       i32.const 7
-    catch
-      drop
+    catch_all
       i32.const 8
     end
   )
@@ -19,7 +18,6 @@
       (do
         (nop)
         (i32.const 7))
-      (catch
-        (drop)
+      (catch_all
         (i32.const 8)))))
 ;;; STDOUT ;;)

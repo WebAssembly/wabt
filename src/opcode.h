@@ -39,6 +39,7 @@ struct Opcode {
 #include "src/opcode.def"
 #undef WABT_OPCODE
     Invalid,
+    CatchAll = Else,
   };
 
 // Static opcode objects.

@@ -558,7 +558,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
-  Result OnCatchExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
@@ -883,12 +883,19 @@ Result WatWriter::ExprVisitorDelegate::BeginTryExpr(TryExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnCatchExpr(TryExpr* expr) {
+Result WatWriter::ExprVisitorDelegate::OnCatchExpr(
+    TryExpr* expr, Catch* catch_) {
   writer_->Dedent();
-  writer_->WritePutsSpace(Opcode::Catch_Opcode.GetName());
+  if (catch_->IsCatchAll()) {
+    // We use a literal instead of doing GetName() on the opcode because
+    // `else` and `catch_all` share an opcode.
+    writer_->WritePutsNewline("catch_all");
+  } else {
+    writer_->WritePutsSpace(Opcode::Catch_Opcode.GetName());
+    writer_->WriteVar(catch_->var, NextChar::Newline);
+  }
   writer_->Indent();
   writer_->SetTopLabelType(LabelType::Catch);
-  writer_->WriteNewline(FORCE_NEWLINE);
   return Result::Ok;
 }
 
@@ -904,7 +911,8 @@ Result WatWriter::ExprVisitorDelegate::OnThrowExpr(ThrowExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnRethrowExpr(RethrowExpr* expr) {
-  writer_->WritePutsNewline(Opcode::Rethrow_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::Rethrow_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -1104,10 +1112,19 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WriteFoldedExprList(try_expr->block.exprs);
       FlushExprTreeStack();
       WriteCloseNewline();
-      WriteOpenNewline("catch");
-      WriteFoldedExprList(try_expr->catch_);
-      FlushExprTreeStack();
-      WriteCloseNewline();
+      for (const Catch& catch_ : try_expr->catches) {
+        WritePuts("(", NextChar::None);
+        if (catch_.IsCatchAll()) {
+          WritePutsNewline("catch_all");
+        } else {
+          WritePutsSpace(Opcode::Catch_Opcode.GetName());
+          WriteVar(catch_.var, NextChar::Newline);
+        }
+        Indent();
+        WriteFoldedExprList(catch_.exprs);
+        FlushExprTreeStack();
+        WriteCloseNewline();
+      }
       WriteCloseNewline();
       break;
     }

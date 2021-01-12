@@ -6,7 +6,7 @@
     try $try1 (result i32)
       nop
       i32.const 7
-    catch
+    catch $ex
       nop
     end
   )
@@ -18,7 +18,7 @@
     try $try1 (result i32)
       nop
       i32.const 7
-    catch
+    catch $ex
       nop
     end)
   (type (;0;) (func (param i32)))
