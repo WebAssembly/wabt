@@ -590,8 +590,6 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
     *out_type = Type::FuncRef;
   } else if (type_str == "externref") {
     *out_type = Type::ExternRef;
-  } else if (type_str == "exnref") {
-    *out_type = Type::ExnRef;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;

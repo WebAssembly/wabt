@@ -447,9 +447,6 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::ExternRef:
       return options_.features.reference_types_enabled();
 
-    case Type::ExnRef:
-      return options_.features.exceptions_enabled();
-
     default:
       return false;
   }
@@ -1357,16 +1354,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadIndex(&index, "event index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
-        break;
-      }
-
-      case Opcode::BrOnExn: {
-        Index depth;
-        Index index;
-        CHECK_RESULT(ReadIndex(&depth, "br_on_exn depth"));
-        CHECK_RESULT(ReadIndex(&index, "event index"));
-        CALLBACK(OnBrOnExnExpr, depth, index);
-        CALLBACK(OnOpcodeIndexIndex, depth, index);
         break;
       }
 

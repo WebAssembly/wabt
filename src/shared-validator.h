@@ -119,7 +119,6 @@ class SharedValidator {
   Result OnBlock(const Location&, Type sig_type);
   Result OnBr(const Location&, Var depth);
   Result OnBrIf(const Location&, Var depth);
-  Result OnBrOnExn(const Location&, Var depth, Var event_index);
   Result BeginBrTable(const Location&);
   Result OnBrTableTarget(const Location&, Var depth);
   Result EndBrTable(const Location&);

@@ -217,8 +217,6 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
     case ValueType::FuncRef:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
-    case ValueType::ExnRef:  // TODO
-      return false;
     default:
       return false;
   }
@@ -1740,7 +1738,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::Catch:
     case O::Throw:
     case O::Rethrow:
-    case O::BrOnExn:
     case O::InterpData:
     case O::Invalid:
       WABT_UNREACHABLE;
@@ -2277,7 +2274,6 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
 
     case ValueType::FuncRef:    reftype = "funcref"; break;
     case ValueType::ExternRef:  reftype = "externref"; break;
-    case ValueType::ExnRef:     reftype = "exnref"; break;
 
     default:
       WABT_UNREACHABLE;

@@ -292,7 +292,6 @@ enum class ExprType {
   Block,
   Br,
   BrIf,
-  BrOnExn,
   BrTable,
   Call,
   CallIndirect,
@@ -565,15 +564,6 @@ class TryExpr : public ExprMixin<ExprType::Try> {
 
   Block block;
   CatchVector catches;
-};
-
-class BrOnExnExpr : public ExprMixin<ExprType::BrOnExn> {
- public:
-  BrOnExnExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::BrOnExn>(loc) {}
-
-  Var label_var;
-  Var event_var;
 };
 
 class BrTableExpr : public ExprMixin<ExprType::BrTable> {

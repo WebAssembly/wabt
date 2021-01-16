@@ -716,17 +716,6 @@ Result SharedValidator::OnBrIf(const Location& loc, Var depth) {
   return result;
 }
 
-Result SharedValidator::OnBrOnExn(const Location& loc,
-                                  Var depth,
-                                  Var event_var) {
-  Result result = Result::Ok;
-  expr_loc_ = &loc;
-  EventType event_type;
-  result |= CheckEventIndex(event_var, &event_type);
-  result |= typechecker_.OnBrOnExn(depth.index(), event_type.params);
-  return result;
-}
-
 Result SharedValidator::BeginBrTable(const Location& loc) {
   Result result = Result::Ok;
   expr_loc_ = &loc;

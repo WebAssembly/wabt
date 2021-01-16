@@ -90,7 +90,6 @@ class Validator : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
-  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -246,12 +245,6 @@ Result Validator::OnBrExpr(BrExpr* expr) {
 
 Result Validator::OnBrIfExpr(BrIfExpr* expr) {
   result_ |= validator_.OnBrIf(expr->loc, expr->var);
-  return Result::Ok;
-}
-
-Result Validator::OnBrOnExnExpr(BrOnExnExpr* expr) {
-  result_ |= validator_.OnBrOnExn(expr->loc, expr->label_var,
-                                  expr->event_var);
   return Result::Ok;
 }
 

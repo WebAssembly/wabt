@@ -114,7 +114,6 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Select:
     case TokenType::Br:
     case TokenType::BrIf:
-    case TokenType::BrOnExn:
     case TokenType::BrTable:
     case TokenType::Return:
     case TokenType::ReturnCall:
@@ -815,9 +814,6 @@ Result WastParser::ParseValueType(Type* out_type) {
     case Type::ExternRef:
       is_enabled = options_->features.reference_types_enabled();
       break;
-    case Type::ExnRef:
-      is_enabled = options_->features.exceptions_enabled();
-      break;
     default:
       is_enabled = true;
       break;
@@ -864,7 +860,7 @@ Result WastParser::ParseRefKind(Type* out_type) {
 Result WastParser::ParseRefType(Type* out_type) {
   WABT_TRACE(ParseRefType);
   if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"funcref", "externref", "exnref"});
+    return ErrorExpected({"funcref", "externref"});
   }
 
   Token token = Consume();
@@ -1806,15 +1802,6 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Consume();
       CHECK_RESULT(ParsePlainInstrVar<BrIfExpr>(loc, out_expr));
       break;
-
-    case TokenType::BrOnExn: {
-      Consume();
-      auto expr = MakeUnique<BrOnExnExpr>(loc);
-      CHECK_RESULT(ParseVar(&expr->label_var));
-      CHECK_RESULT(ParseVar(&expr->event_var));
-      *out_expr = std::move(expr);
-      break;
-    }
 
     case TokenType::BrTable: {
       Consume();

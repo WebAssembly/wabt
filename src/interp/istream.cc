@@ -692,7 +692,6 @@ Instr Istream::Read(Offset* offset) const {
       break;
 
     case Opcode::Block:
-    case Opcode::BrOnExn:
     case Opcode::Catch:
     case Opcode::Else:
     case Opcode::End:

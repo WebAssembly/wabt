@@ -28,7 +28,6 @@ atomic.fence, TokenType::AtomicFence, Opcode::AtomicFence
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
 br_if, TokenType::BrIf, Opcode::BrIf
-br_on_exn, TokenType::BrOnExn, Opcode::BrOnExn
 br_table, TokenType::BrTable, Opcode::BrTable
 br, TokenType::Br, Opcode::Br
 call_indirect, TokenType::CallIndirect, Opcode::CallIndirect
@@ -46,8 +45,6 @@ elem, TokenType::Elem
 else, TokenType::Else, Opcode::Else
 end, TokenType::End, Opcode::End
 event, TokenType::Event
-exn, Type::ExnRef, TokenType::Exn
-exnref, Type::ExnRef
 extern, Type::ExternRef, TokenType::Extern
 externref, Type::ExternRef
 export, TokenType::Export
