@@ -150,6 +150,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
+  Result OnDelegateExpr(Index depth) override;
   Result OnDropExpr() override;
   Result OnElseExpr() override;
   Result OnEndExpr() override;
@@ -197,6 +198,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
+  Result OnUnwindExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
@@ -790,6 +792,7 @@ Result BinaryReaderIR::OnEndExpr() {
 
     case LabelType::Func:
     case LabelType::Catch:
+    case LabelType::Unwind:
       break;
   }
 
@@ -988,6 +991,13 @@ Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
     return Result::Error;
   }
 
+  if (try_->kind == TryKind::Invalid) {
+    try_->kind = TryKind::Catch;
+  } else if (try_->kind != TryKind::Catch) {
+    PrintError("catch not allowed in try-unwind or try-delegate");
+    return Result::Error;
+  }
+
   try_->catches.push_back(std::move(catch_));
   label->exprs = &try_->catches.back().exprs;
   return Result::Ok;
@@ -995,6 +1005,52 @@ Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
 
 Result BinaryReaderIR::OnCatchExpr(Index except_index) {
   return AppendCatch(Catch(Var(except_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnUnwindExpr() {
+  LabelNode* label = nullptr;
+  CHECK_RESULT(TopLabel(&label));
+
+  if (label->label_type != LabelType::Try) {
+    PrintError("unwind not inside try block");
+    return Result::Error;
+  }
+
+  auto* try_ = cast<TryExpr>(label->context);
+
+  if (try_->kind == TryKind::Invalid) {
+    try_->kind = TryKind::Unwind;
+  } else if (try_->kind != TryKind::Unwind) {
+    PrintError("unwind not allowed in try-catch or try-delegate");
+    return Result::Error;
+  }
+
+  label->exprs = &try_->unwind;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnDelegateExpr(Index depth) {
+  LabelNode* label = nullptr;
+  CHECK_RESULT(TopLabel(&label));
+
+  if (label->label_type != LabelType::Try) {
+    PrintError("delegate not inside try block");
+    return Result::Error;
+  }
+
+  auto* try_ = cast<TryExpr>(label->context);
+
+  if (try_->kind == TryKind::Invalid) {
+    try_->kind = TryKind::Delegate;
+  } else if (try_->kind != TryKind::Delegate) {
+    PrintError("delegate not allowed in try-catch or try-unwind");
+    return Result::Error;
+  }
+
+  try_->delegate_target = Var(depth, GetLocation());
+
+  PopLabel();
+  return Result::Ok;
 }
 
 Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {

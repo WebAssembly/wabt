@@ -67,6 +67,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnDelegateExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
 
@@ -336,6 +337,12 @@ Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
   if (!expr->IsCatchAll()) {
     CHECK_RESULT(UseNameForEventVar(&expr->var));
   }
+  return Result::Ok;
+}
+
+Result NameApplier::OnDelegateExpr(TryExpr* expr) {
+  string_view label = FindLabelByVar(&expr->delegate_target);
+  UseNameForVar(label, &expr->delegate_target);
   return Result::Ok;
 }
 

@@ -129,6 +129,7 @@ class SharedValidator {
   Result OnConst(const Location&, Type);
   Result OnConvert(const Location&, Opcode);
   Result OnDataDrop(const Location&, Var segment_var);
+  Result OnDelegate(const Location&, Var depth);
   Result OnDrop(const Location&);
   Result OnElemDrop(const Location&, Var segment_var);
   Result OnElse(const Location&);
@@ -171,6 +172,7 @@ class SharedValidator {
   Result OnTry(const Location&, Type sig_type);
   Result OnUnary(const Location&, Opcode);
   Result OnUnreachable(const Location&);
+  Result OnUnwind(const Location&);
 
  private:
   struct FuncType {

@@ -972,17 +972,35 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::Try);
       WriteBlockDecl(try_expr->block.decl);
       WriteExprList(func, try_expr->block.exprs);
-      for (const Catch& catch_ : try_expr->catches) {
-        if (catch_.IsCatchAll()) {
-          WriteOpcode(stream_, Opcode::Else);
-        } else {
-          WriteOpcode(stream_, Opcode::Catch);
-          WriteU32Leb128(stream_, GetEventVarDepth(&catch_.var),
-                         "catch event");
-        }
-        WriteExprList(func, catch_.exprs);
+      switch (try_expr->kind) {
+        case TryKind::Catch:
+          for (const Catch& catch_ : try_expr->catches) {
+            if (catch_.IsCatchAll()) {
+              WriteOpcode(stream_, Opcode::Else);
+            } else {
+              WriteOpcode(stream_, Opcode::Catch);
+              WriteU32Leb128(stream_, GetEventVarDepth(&catch_.var),
+                             "catch event");
+            }
+            WriteExprList(func, catch_.exprs);
+          }
+          WriteOpcode(stream_, Opcode::End);
+          break;
+        case TryKind::Unwind:
+          WriteOpcode(stream_, Opcode::Unwind);
+          WriteExprList(func, try_expr->unwind);
+          WriteOpcode(stream_, Opcode::End);
+          break;
+        case TryKind::Delegate:
+          WriteOpcode(stream_, Opcode::Delegate);
+          WriteU32Leb128(stream_,
+                         GetLabelVarDepth(&try_expr->delegate_target),
+                         "delegate depth");
+          break;
+        case TryKind::Invalid:
+          // Should not occur.
+          break;
       }
-      WriteOpcode(stream_, Opcode::End);
       break;
     }
     case ExprType::Unary:

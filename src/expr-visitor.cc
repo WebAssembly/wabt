@@ -97,12 +97,26 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
           PushDefault(&*iter++);
         } else {
           PopExprlist();
-          if (!try_expr->catches.empty()) {
-            Catch& catch_ = try_expr->catches[0];
-            CHECK_RESULT(delegate_->OnCatchExpr(try_expr, &catch_));
-            PushCatch(expr, 0, catch_.exprs);
-          } else {
-            CHECK_RESULT(delegate_->EndTryExpr(try_expr));
+          switch (try_expr->kind) {
+            case TryKind::Catch:
+              if (!try_expr->catches.empty()) {
+                Catch& catch_ = try_expr->catches[0];
+                CHECK_RESULT(delegate_->OnCatchExpr(try_expr, &catch_));
+                PushCatch(expr, 0, catch_.exprs);
+              } else {
+                CHECK_RESULT(delegate_->EndTryExpr(try_expr));
+              }
+              break;
+            case TryKind::Unwind:
+              CHECK_RESULT(delegate_->OnUnwindExpr(try_expr));
+              PushExprlist(State::Unwind, expr, try_expr->unwind);
+              break;
+            case TryKind::Delegate:
+              CHECK_RESULT(delegate_->OnDelegateExpr(try_expr));
+              break;
+            case TryKind::Invalid:
+              // Should not happen.
+              break;
           }
         }
         break;
@@ -124,6 +138,18 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
           } else {
             CHECK_RESULT(delegate_->EndTryExpr(try_expr));
           }
+        }
+        break;
+      }
+
+      case State::Unwind: {
+        auto try_expr = cast<TryExpr>(expr);
+        auto& iter = expr_iter_stack_.back();
+        if (iter != try_expr->unwind.end()) {
+          PushDefault(&*iter++);
+        } else {
+          CHECK_RESULT(delegate_->EndTryExpr(try_expr));
+          PopExprlist();
         }
         break;
       }

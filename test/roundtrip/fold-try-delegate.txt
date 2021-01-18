@@ -1,0 +1,28 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-exceptions --debug-names
+(module
+  (func (result i32)
+    try (result i32)
+      try
+        nop
+      delegate 1
+      i32.const 7
+    catch_all
+      i32.const 8
+    end
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (func (;0;) (type 0) (result i32)
+    (try (result i32)  ;; label = @1
+      (do
+        (try  ;; label = @2
+          (do
+            (nop))
+          (delegate 1))
+        (i32.const 7))
+      (catch_all
+        (i32.const 8)))))
+;;; STDOUT ;;)

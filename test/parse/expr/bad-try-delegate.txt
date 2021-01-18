@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func try nop delegate)
+  (func try nop delegate 0 end)
+)
+(;; STDERR ;;;
+out/test/parse/expr/bad-try-delegate.txt:5:25: error: unexpected token ")", expected a numeric index or a name (e.g. 12 or $foo).
+  (func try nop delegate)
+                        ^
+out/test/parse/expr/bad-try-delegate.txt:6:28: error: unexpected token end, expected ).
+  (func try nop delegate 0 end)
+                           ^^^
+;;; STDERR ;;)

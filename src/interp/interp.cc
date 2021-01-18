@@ -1736,6 +1736,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::Try:
     case O::Catch:
+    case O::Unwind:
+    case O::Delegate:
     case O::Throw:
     case O::Rethrow:
     case O::InterpData:

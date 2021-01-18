@@ -803,6 +803,13 @@ Result SharedValidator::OnDataDrop(const Location& loc, Var segment_var) {
   return result;
 }
 
+Result SharedValidator::OnDelegate(const Location& loc, Var depth) {
+  Result result = Result::Ok;
+  expr_loc_ = &loc;
+  result |= typechecker_.OnDelegate(depth.index());
+  return result;
+}
+
 Result SharedValidator::OnDrop(const Location& loc) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
@@ -1188,6 +1195,13 @@ Result SharedValidator::OnUnreachable(const Location& loc) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
   result |= typechecker_.OnUnreachable();
+  return result;
+}
+
+Result SharedValidator::OnUnwind(const Location& loc) {
+  Result result = Result::Ok;
+  expr_loc_ = &loc;
+  result |= typechecker_.OnUnwind();
   return result;
 }
 

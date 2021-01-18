@@ -233,6 +233,7 @@ class BinaryReaderDelegate {
   virtual Result OnCatchExpr(Index event_index) = 0;
   virtual Result OnCompareExpr(Opcode opcode) = 0;
   virtual Result OnConvertExpr(Opcode opcode) = 0;
+  virtual Result OnDelegateExpr(Index depth) = 0;
   virtual Result OnDropExpr() = 0;
   virtual Result OnElseExpr() = 0;
   virtual Result OnEndExpr() = 0;
@@ -285,6 +286,7 @@ class BinaryReaderDelegate {
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnTernaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
+  virtual Result OnUnwindExpr() = 0;
   virtual Result EndFunctionBody(Index index) = 0;
   virtual Result EndCodeSection() = 0;
 

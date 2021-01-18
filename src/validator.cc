@@ -135,6 +135,8 @@ class Validator : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnUnwindExpr(TryExpr*) override;
+  Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
@@ -491,6 +493,16 @@ Result Validator::BeginTryExpr(TryExpr* expr) {
 Result Validator::OnCatchExpr(TryExpr*, Catch* catch_) {
   result_ |= validator_.OnCatch(catch_->loc, catch_->var,
                                 catch_->IsCatchAll());
+  return Result::Ok;
+}
+
+Result Validator::OnUnwindExpr(TryExpr* expr) {
+  result_ |= validator_.OnUnwind(expr->loc);
+  return Result::Ok;
+}
+
+Result Validator::OnDelegateExpr(TryExpr* expr) {
+  result_ |= validator_.OnDelegate(expr->loc, expr->delegate_target);
   return Result::Ok;
 }
 

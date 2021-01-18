@@ -1,0 +1,38 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func try nop unwind)
+
+  (func
+    try
+      nop
+    unwind
+      nop
+    catch 0
+      nop
+    end)
+
+  ;; folded
+  (func
+    (try
+      (do
+        (nop))
+      (unwind
+        (nop))
+      (catch 0
+        (nop)))
+(;; STDERR ;;;
+out/test/parse/expr/bad-try-unwind.txt:5:23: error: unexpected token ), expected end.
+  (func try nop unwind)
+                      ^
+out/test/parse/expr/bad-try-unwind.txt:12:5: error: unexpected token catch, expected end.
+    catch 0
+    ^^^^^
+out/test/parse/expr/bad-try-unwind.txt:14:5: error: unexpected token end, expected ).
+    end)
+    ^^^
+out/test/parse/expr/bad-try-unwind.txt:23:8: error: unexpected token "catch", expected a valid try clause.
+      (catch 0
+       ^^^^^
+;;; STDERR ;;)

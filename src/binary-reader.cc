@@ -1341,6 +1341,20 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::Unwind: {
+        CALLBACK0(OnUnwindExpr);
+        CALLBACK0(OnOpcodeBare);
+        break;
+      }
+
+      case Opcode::Delegate: {
+        Index index;
+        CHECK_RESULT(ReadIndex(&index, "depth"));
+        CALLBACK(OnDelegateExpr, index);
+        CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
       case Opcode::Rethrow: {
         Index depth;
         CHECK_RESULT(ReadIndex(&depth, "catch depth"));

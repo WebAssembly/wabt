@@ -796,6 +796,7 @@ DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
 DEFINE_INDEX_DESC(OnCatchExpr, "event_index");
 DEFINE_OPCODE(OnCompareExpr)
 DEFINE_OPCODE(OnConvertExpr)
+DEFINE_INDEX_DESC(OnDelegateExpr, "depth");
 DEFINE0(OnDropExpr)
 DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
@@ -832,6 +833,7 @@ DEFINE_LOAD_STORE_OPCODE(OnLoadSplatExpr);
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
 DEFINE_INDEX_DESC(OnThrowExpr, "event_index")
 DEFINE0(OnUnreachableExpr)
+DEFINE0(OnUnwindExpr)
 DEFINE_OPCODE(OnUnaryExpr)
 DEFINE_OPCODE(OnTernaryExpr)
 DEFINE_END(EndCodeSection)

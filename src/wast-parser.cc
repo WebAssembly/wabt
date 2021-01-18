@@ -2557,10 +2557,27 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       CatchVector catches;
       CHECK_RESULT(ParseLabelOpt(&expr->block.label));
       CHECK_RESULT(ParseBlock(&expr->block));
-      CHECK_RESULT(ParseCatchInstrList(&expr->catches));
-      CHECK_RESULT(ErrorIfLpar({"a catch expr"}));
+      if (IsCatch(Peek())) {
+        CHECK_RESULT(ParseCatchInstrList(&expr->catches));
+        expr->kind = TryKind::Catch;
+      } else if (PeekMatch(TokenType::Unwind)) {
+        Consume();
+        CHECK_RESULT(ParseInstrList(&expr->unwind));
+        expr->kind = TryKind::Unwind;
+      } else if (PeekMatch(TokenType::Delegate)) {
+        Consume();
+        Var var;
+        CHECK_RESULT(ParseVar(&var));
+        expr->delegate_target = var;
+        expr->kind = TryKind::Delegate;
+      } else {
+        return ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
+      }
+      CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
       expr->block.end_loc = GetLocation();
-      EXPECT(End);
+      if (expr->kind != TryKind::Delegate) {
+        EXPECT(End);
+      }
       CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
       *out_expr = std::move(expr);
       break;
@@ -2723,8 +2740,34 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         EXPECT(Do);
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
         EXPECT(Rpar);
-        CHECK_RESULT(ParseCatchExprList(&expr->catches));
-        CHECK_RESULT(ErrorIfLpar({"a catch expr"}));
+        EXPECT(Lpar);
+        TokenType type = Peek();
+        switch (type) {
+          case TokenType::Catch:
+          case TokenType::CatchAll:
+            CHECK_RESULT(ParseCatchExprList(&expr->catches));
+            expr->kind = TryKind::Catch;
+            break;
+          case TokenType::Unwind:
+            Consume();
+            CHECK_RESULT(ParseTerminatingInstrList(&expr->unwind));
+            expr->kind = TryKind::Unwind;
+            EXPECT(Rpar);
+            break;
+          case TokenType::Delegate: {
+            Consume();
+            Var var;
+            CHECK_RESULT(ParseVar(&var));
+            expr->delegate_target = var;
+            expr->kind = TryKind::Delegate;
+            EXPECT(Rpar);
+            break;
+          }
+          default:
+            ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
+            break;
+        }
+        CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
         expr->block.end_loc = GetLocation();
         exprs->push_back(std::move(expr));
         break;
@@ -2774,11 +2817,6 @@ Result WastParser::ParseCatchInstrList(CatchVector* catches) {
 Result WastParser::ParseCatchExprList(CatchVector* catches) {
   WABT_TRACE(ParseCatchExprList);
   bool parsedCatchAll = false;
-
-  EXPECT(Lpar);
-  if (!IsCatch(Peek())) {
-    ErrorExpected({"catch"});
-  }
 
   do {
     Catch catch_(GetLocation());

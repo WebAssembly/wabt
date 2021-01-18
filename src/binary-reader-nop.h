@@ -236,6 +236,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnCatchExpr(Index event_index) override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
   Result OnConvertExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnDelegateExpr(Index depth) override { return Result::Ok; }
   Result OnDropExpr() override { return Result::Ok; }
   Result OnElseExpr() override { return Result::Ok; }
   Result OnEndExpr() override { return Result::Ok; }
@@ -296,6 +297,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnTernaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }
+  Result OnUnwindExpr() override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
   Result EndCodeSection() override { return Result::Ok; }
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override {

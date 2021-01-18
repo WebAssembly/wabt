@@ -44,6 +44,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnDelegateExpr(TryExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr *) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnGlobalGetExpr(GlobalGetExpr*) override;
@@ -407,6 +408,11 @@ Result NameResolver::OnCatchExpr(TryExpr*, Catch* catch_) {
   if (!catch_->IsCatchAll()) {
     ResolveEventVar(&catch_->var);
   }
+  return Result::Ok;
+}
+
+Result NameResolver::OnDelegateExpr(TryExpr* expr) {
+  ResolveLabelVar(&expr->delegate_target);
   return Result::Ok;
 }
 

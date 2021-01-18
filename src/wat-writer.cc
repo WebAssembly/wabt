@@ -558,6 +558,8 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnUnwindExpr(TryExpr*) override;
+  Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
@@ -891,6 +893,21 @@ Result WatWriter::ExprVisitorDelegate::OnCatchExpr(
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnUnwindExpr(TryExpr* expr) {
+  writer_->Dedent();
+  writer_->WritePutsNewline(Opcode::Unwind_Opcode.GetName());
+  writer_->Indent();
+  writer_->SetTopLabelType(LabelType::Unwind);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnDelegateExpr(TryExpr* expr) {
+  writer_->Dedent();
+  writer_->WritePutsSpace(Opcode::Delegate_Opcode.GetName());
+  writer_->WriteVar(expr->delegate_target, NextChar::Newline);
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::EndTryExpr(TryExpr* expr) {
   writer_->WriteEndBlock();
   return Result::Ok;
@@ -1104,18 +1121,39 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WriteFoldedExprList(try_expr->block.exprs);
       FlushExprTreeStack();
       WriteCloseNewline();
-      for (const Catch& catch_ : try_expr->catches) {
-        WritePuts("(", NextChar::None);
-        if (catch_.IsCatchAll()) {
-          WritePutsNewline("catch_all");
-        } else {
-          WritePutsSpace(Opcode::Catch_Opcode.GetName());
-          WriteVar(catch_.var, NextChar::Newline);
-        }
-        Indent();
-        WriteFoldedExprList(catch_.exprs);
-        FlushExprTreeStack();
-        WriteCloseNewline();
+      switch (try_expr->kind) {
+        case TryKind::Catch:
+          for (const Catch& catch_ : try_expr->catches) {
+            WritePuts("(", NextChar::None);
+            if (catch_.IsCatchAll()) {
+              WritePutsNewline("catch_all");
+            } else {
+              WritePutsSpace(Opcode::Catch_Opcode.GetName());
+              WriteVar(catch_.var, NextChar::Newline);
+            }
+            Indent();
+            WriteFoldedExprList(catch_.exprs);
+            FlushExprTreeStack();
+            WriteCloseNewline();
+          }
+          break;
+        case TryKind::Unwind:
+          WritePuts("(", NextChar::None);
+          WritePutsNewline(Opcode::Unwind_Opcode.GetName());
+          Indent();
+          WriteFoldedExprList(try_expr->unwind);
+          FlushExprTreeStack();
+          WriteCloseNewline();
+          break;
+        case TryKind::Delegate:
+          WritePuts("(", NextChar::None);
+          WritePutsSpace(Opcode::Delegate_Opcode.GetName());
+          WriteVar(try_expr->delegate_target, NextChar::None);
+          WritePuts(")", NextChar::Newline);
+          break;
+        case TryKind::Invalid:
+          // Should not occur.
+          break;
       }
       WriteCloseNewline();
       break;
