@@ -12,4 +12,4 @@
 	url = https://github.com/WebAssembly/wasm-c-api
 [submodule "third_party/uvwasi"]
 	path = third_party/uvwasi
-	url = https://github.com/cjihrig/uvwasi
+	url = https://github.com/nodejs/uvwasi
