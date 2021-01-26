@@ -362,6 +362,17 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
+  Result OnImportTable(Index import_index,
+                       string_view module_name,
+                       string_view field_name,
+                       Index table_index,
+                       Type elem_type,
+                       const Limits* elem_limits) override {
+    SetTableName(table_index,
+                 module_name.to_string() + "." + field_name.to_string());
+    return Result::Ok;
+  }
+
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
