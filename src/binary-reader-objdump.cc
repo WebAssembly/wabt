@@ -475,6 +475,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
+  Result OnDelegateExpr(Index) override;
   Result OnEndExpr() override;
   Result OnEndFunc() override;
 
@@ -595,6 +596,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
       switch (current_opcode) {
         case Opcode::Else:
         case Opcode::Catch:
+        case Opcode::Unwind:
           indent_level--;
         default:
           break;
@@ -738,6 +740,15 @@ Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
   buffer.append(std::to_string(default_target_depth));
 
   LogOpcode(immediate_len, "%s", buffer.c_str());
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnDelegateExpr(Index depth) {
+  // Because `delegate` ends the block we need to dedent here, and
+  // we don't need to dedent it in LogOpcode.
+  if (indent_level > 0) {
+    indent_level--;
+  }
   return Result::Ok;
 }
 

@@ -81,7 +81,7 @@ Code Disassembly:
  000020: 06 7f                      | try i32
  000022: 01                         |   nop
  000023: 41 07                      |   i32.const 7
- 000025: 0a                         |   unwind
+ 000025: 0a                         | unwind
  000026: 41 08                      |   i32.const 8
  000028: 1a                         |   drop
  000029: 0b                         | end

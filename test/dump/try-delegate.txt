@@ -88,12 +88,12 @@ Code Disassembly:
  000020: 06 7f                      | try i32
  000022: 06 40                      |   try
  000024: 01                         |     nop
- 000025: 18 01                      |     delegate 1
- 000027: 41 07                      |     i32.const 7
- 000029: 07 00                      |   catch 0
- 00002b: 1a                         |     drop
- 00002c: 41 08                      |     i32.const 8
- 00002e: 0b                         |   end
- 00002f: 1a                         |   drop
- 000030: 0b                         |   end
+ 000025: 18 01                      |   delegate 1
+ 000027: 41 07                      |   i32.const 7
+ 000029: 07 00                      | catch 0
+ 00002b: 1a                         |   drop
+ 00002c: 41 08                      |   i32.const 8
+ 00002e: 0b                         | end
+ 00002f: 1a                         | drop
+ 000030: 0b                         | end
 ;;; STDOUT ;;)
