@@ -691,15 +691,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrIfExpr>(expr)->var),
                      "break depth");
       break;
-    case ExprType::BrOnExn: {
-      auto* br_on_exn_expr = cast<BrOnExnExpr>(expr);
-      WriteOpcode(stream_, Opcode::BrOnExn);
-      WriteU32Leb128(stream_, GetLabelVarDepth(&br_on_exn_expr->label_var),
-                     "break depth");
-      WriteU32Leb128(stream_, module_->GetEventIndex(br_on_exn_expr->event_var),
-                     "event index");
-      break;
-    }
     case ExprType::BrTable: {
       auto* br_table_expr = cast<BrTableExpr>(expr);
       WriteOpcode(stream_, Opcode::BrTable);
@@ -948,6 +939,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Rethrow:
       WriteOpcode(stream_, Opcode::Rethrow);
+      WriteU32Leb128(stream_, GetLabelVarDepth(&cast<RethrowExpr>(expr)->var),
+                     "rethrow depth");
       break;
     case ExprType::Return:
       WriteOpcode(stream_, Opcode::Return);
@@ -979,9 +972,35 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::Try);
       WriteBlockDecl(try_expr->block.decl);
       WriteExprList(func, try_expr->block.exprs);
-      WriteOpcode(stream_, Opcode::Catch);
-      WriteExprList(func, try_expr->catch_);
-      WriteOpcode(stream_, Opcode::End);
+      switch (try_expr->kind) {
+        case TryKind::Catch:
+          for (const Catch& catch_ : try_expr->catches) {
+            if (catch_.IsCatchAll()) {
+              WriteOpcode(stream_, Opcode::Else);
+            } else {
+              WriteOpcode(stream_, Opcode::Catch);
+              WriteU32Leb128(stream_, GetEventVarDepth(&catch_.var),
+                             "catch event");
+            }
+            WriteExprList(func, catch_.exprs);
+          }
+          WriteOpcode(stream_, Opcode::End);
+          break;
+        case TryKind::Unwind:
+          WriteOpcode(stream_, Opcode::Unwind);
+          WriteExprList(func, try_expr->unwind);
+          WriteOpcode(stream_, Opcode::End);
+          break;
+        case TryKind::Delegate:
+          WriteOpcode(stream_, Opcode::Delegate);
+          WriteU32Leb128(stream_,
+                         GetLabelVarDepth(&try_expr->delegate_target),
+                         "delegate depth");
+          break;
+        case TryKind::Invalid:
+          // Should not occur.
+          break;
+      }
       break;
     }
     case ExprType::Unary:

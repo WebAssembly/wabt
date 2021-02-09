@@ -39,7 +39,6 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
-  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
@@ -67,7 +66,10 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnTableFillExpr(TableFillExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnDelegateExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
+  Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
   void PushLabel(const std::string& label);
@@ -310,13 +312,6 @@ Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
   return Result::Ok;
 }
 
-Result NameApplier::OnBrOnExnExpr(BrOnExnExpr* expr) {
-  string_view label = FindLabelByVar(&expr->label_var);
-  UseNameForVar(label, &expr->label_var);
-  CHECK_RESULT(UseNameForEventVar(&expr->event_var));
-  return Result::Ok;
-}
-
 Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
   for (Var& target : expr->targets) {
     string_view label = FindLabelByVar(&target);
@@ -338,8 +333,27 @@ Result NameApplier::EndTryExpr(TryExpr*) {
   return Result::Ok;
 }
 
+Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
+  if (!expr->IsCatchAll()) {
+    CHECK_RESULT(UseNameForEventVar(&expr->var));
+  }
+  return Result::Ok;
+}
+
+Result NameApplier::OnDelegateExpr(TryExpr* expr) {
+  string_view label = FindLabelByVar(&expr->delegate_target);
+  UseNameForVar(label, &expr->delegate_target);
+  return Result::Ok;
+}
+
 Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
   CHECK_RESULT(UseNameForEventVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
+  string_view label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 

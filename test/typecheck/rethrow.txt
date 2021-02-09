@@ -1,0 +1,29 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (event $e)
+  (func
+    try
+      nop
+    catch $e
+      block
+        try
+          nop
+        catch $e
+          rethrow 0
+        end
+      end
+    end)
+
+  (func
+    try
+      nop
+    catch $e
+      block
+        try
+          nop
+        catch $e
+          rethrow 1
+        end
+      end
+    end))

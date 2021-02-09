@@ -1,3 +1,0 @@
-;;; TOOL: wat2wasm
-;;; ARGS: --enable-exceptions
-(module (global exnref (ref.null exn)))

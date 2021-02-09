@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (func
+    try
+      nop
+    unwind
+    end)
+
+  (func
+    try (result i32)
+      (i32.const 1)
+    unwind
+    end
+    drop))

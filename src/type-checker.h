@@ -57,6 +57,7 @@ class TypeChecker {
 
   bool IsUnreachable();
   Result GetLabel(Index depth, Label** out_label);
+  Result GetRethrowLabel(Index depth, Label** out_label);
 
   Result BeginFunction(const TypeVector& sig);
   Result OnAtomicFence(uint32_t consistency_model);
@@ -70,7 +71,6 @@ class TypeChecker {
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
-  Result OnBrOnExn(Index depth, const TypeVector& types);
   Result BeginBrTable();
   Result OnBrTableTarget(Index depth);
   Result EndBrTable();
@@ -79,10 +79,11 @@ class TypeChecker {
                         const TypeVector& result_types);
   Result OnReturnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnCatch();
+  Result OnCatch(const TypeVector& sig);
   Result OnCompare(Opcode);
   Result OnConst(Type);
   Result OnConvert(Opcode);
+  Result OnDelegate(Index depth);
   Result OnDrop();
   Result OnElse();
   Result OnEnd();
@@ -111,7 +112,7 @@ class TypeChecker {
   Result OnRefFuncExpr(Index func_index);
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
-  Result OnRethrow();
+  Result OnRethrow(Index depth);
   Result OnReturn();
   Result OnSelect(const TypeVector& result_types);
   Result OnSimdLaneOp(Opcode, uint64_t);
@@ -122,6 +123,7 @@ class TypeChecker {
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);
   Result OnUnary(Opcode);
   Result OnUnreachable();
+  Result OnUnwind();
   Result EndFunction();
 
   static Result CheckType(Type actual, Type expected);
@@ -136,6 +138,7 @@ class TypeChecker {
                  const TypeVector& result_types);
   Result PopLabel();
   Result CheckLabelType(Label* label, LabelType label_type);
+  Result Check2LabelTypes(Label* label, LabelType label_type1, LabelType label_type2);
   Result GetThisFunctionLabel(Label **label);
   Result PeekType(Index depth, Type* out_type);
   Result PeekAndCheckType(Index depth, Type expected);
@@ -164,7 +167,7 @@ class TypeChecker {
                       const Limits* limits1 = nullptr,
                       const Limits* limits2 = nullptr,
                       const Limits* limits3 = nullptr);
-  Result OnEnd(Label* label, const char* sig_desc, const char* end_desc);
+  Result OnEnd(Label* label, TypeVector& check_type, const char* sig_desc, const char* end_desc);
 
   template <typename... Args>
   void PrintStackIfFailed(Result result, const char* desc, Args... args) {

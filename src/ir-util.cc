@@ -120,9 +120,6 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       return { arity + 1, arity };
     }
 
-    case ExprType::BrOnExn:
-      return { 1, 1 };
-
     case ExprType::BrTable:
       return { GetLabelArity(cast<BrTableExpr>(&expr)->default_target) + 1, 1,
                true };

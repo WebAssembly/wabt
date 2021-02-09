@@ -90,7 +90,6 @@ class Validator : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
-  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -135,7 +134,9 @@ class Validator : public ExprVisitor::Delegate {
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
-  Result OnCatchExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnUnwindExpr(TryExpr*) override;
+  Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
@@ -246,12 +247,6 @@ Result Validator::OnBrExpr(BrExpr* expr) {
 
 Result Validator::OnBrIfExpr(BrIfExpr* expr) {
   result_ |= validator_.OnBrIf(expr->loc, expr->var);
-  return Result::Ok;
-}
-
-Result Validator::OnBrOnExnExpr(BrOnExnExpr* expr) {
-  result_ |= validator_.OnBrOnExn(expr->loc, expr->label_var,
-                                  expr->event_var);
   return Result::Ok;
 }
 
@@ -495,8 +490,19 @@ Result Validator::BeginTryExpr(TryExpr* expr) {
   return Result::Ok;
 }
 
-Result Validator::OnCatchExpr(TryExpr* expr) {
-  result_ |= validator_.OnCatch(expr->loc);
+Result Validator::OnCatchExpr(TryExpr*, Catch* catch_) {
+  result_ |= validator_.OnCatch(catch_->loc, catch_->var,
+                                catch_->IsCatchAll());
+  return Result::Ok;
+}
+
+Result Validator::OnUnwindExpr(TryExpr* expr) {
+  result_ |= validator_.OnUnwind(expr->loc);
+  return Result::Ok;
+}
+
+Result Validator::OnDelegateExpr(TryExpr* expr) {
+  result_ |= validator_.OnDelegate(expr->loc, expr->delegate_target);
   return Result::Ok;
 }
 
@@ -511,7 +517,7 @@ Result Validator::OnThrowExpr(ThrowExpr* expr) {
 }
 
 Result Validator::OnRethrowExpr(RethrowExpr* expr) {
-  result_ |= validator_.OnRethrow(expr->loc);
+  result_ |= validator_.OnRethrow(expr->loc, expr->var);
   return Result::Ok;
 }
 

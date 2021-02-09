@@ -28,16 +28,17 @@ atomic.fence, TokenType::AtomicFence, Opcode::AtomicFence
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
 br_if, TokenType::BrIf, Opcode::BrIf
-br_on_exn, TokenType::BrOnExn, Opcode::BrOnExn
 br_table, TokenType::BrTable, Opcode::BrTable
 br, TokenType::Br, Opcode::Br
 call_indirect, TokenType::CallIndirect, Opcode::CallIndirect
 call, TokenType::Call, Opcode::Call
 catch, TokenType::Catch, Opcode::Catch
+catch_all, TokenType::CatchAll, Opcode::CatchAll
 current_memory, TokenType::MemorySize, Opcode::MemorySize
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data
 declare, TokenType::Declare
+delegate, TokenType::Delegate
 do, TokenType::Do
 drop, TokenType::Drop, Opcode::Drop
 elem.drop, TokenType::ElemDrop, Opcode::ElemDrop
@@ -45,8 +46,6 @@ elem, TokenType::Elem
 else, TokenType::Else, Opcode::Else
 end, TokenType::End, Opcode::End
 event, TokenType::Event
-exn, Type::ExnRef, TokenType::Exn
-exnref, Type::ExnRef
 extern, Type::ExternRef, TokenType::Extern
 externref, Type::ExternRef
 export, TokenType::Export
@@ -583,3 +582,4 @@ i64.trunc_u:sat/f64, TokenType::Convert, Opcode::I64TruncSatF64U
 set_global, TokenType::GlobalSet, Opcode::GlobalSet
 set_local, TokenType::LocalSet, Opcode::LocalSet
 tee_local, TokenType::LocalTee, Opcode::LocalTee
+unwind, TokenType::Unwind, Opcode::Unwind

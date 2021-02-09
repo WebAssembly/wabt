@@ -1,0 +1,22 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-exceptions
+(module
+  (event $e)
+  (func
+    try
+      nop
+    catch $e
+      block
+        try
+          nop
+        catch $e
+          rethrow 2
+        end
+      end
+    end))
+(;; STDERR ;;;
+out/test/typecheck/bad-rethrow-depth.txt:14:11: error: invalid rethrow depth: 2 (catches: 0, 1)
+          rethrow 2
+          ^^^^^^^
+;;; STDERR ;;)

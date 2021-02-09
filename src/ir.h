@@ -292,7 +292,6 @@ enum class ExprType {
   Block,
   Br,
   BrIf,
-  BrOnExn,
   BrTable,
   Call,
   CallIndirect,
@@ -362,6 +361,26 @@ struct Block {
   Location end_loc;
 };
 
+struct Catch {
+  explicit Catch(const Location& loc = Location()) : loc(loc) {}
+  explicit Catch(const Var& var, const Location& loc = Location())
+      : loc(loc), var(var) {}
+  Location loc;
+  Var var;
+  ExprList exprs;
+  bool IsCatchAll() const {
+    return var.is_index() && var.index() == kInvalidIndex;
+  }
+};
+typedef std::vector<Catch> CatchVector;
+
+enum class TryKind {
+  Invalid,
+  Catch,
+  Unwind,
+  Delegate
+};
+
 class Expr : public intrusive_list_base<Expr> {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Expr);
@@ -395,7 +414,6 @@ typedef ExprMixin<ExprType::MemorySize> MemorySizeExpr;
 typedef ExprMixin<ExprType::MemoryCopy> MemoryCopyExpr;
 typedef ExprMixin<ExprType::MemoryFill> MemoryFillExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
-typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
 
@@ -464,6 +482,7 @@ typedef VarExpr<ExprType::LocalSet> LocalSetExpr;
 typedef VarExpr<ExprType::LocalTee> LocalTeeExpr;
 typedef VarExpr<ExprType::ReturnCall> ReturnCallExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
+typedef VarExpr<ExprType::Rethrow> RethrowExpr;
 
 typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
 typedef VarExpr<ExprType::DataDrop> DataDropExpr;
@@ -548,19 +567,13 @@ class IfExpr : public ExprMixin<ExprType::If> {
 class TryExpr : public ExprMixin<ExprType::Try> {
  public:
   explicit TryExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::Try>(loc) {}
+      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Invalid) {}
 
+  TryKind kind;
   Block block;
-  ExprList catch_;
-};
-
-class BrOnExnExpr : public ExprMixin<ExprType::BrOnExn> {
- public:
-  BrOnExnExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::BrOnExn>(loc) {}
-
-  Var label_var;
-  Var event_var;
+  CatchVector catches;
+  ExprList unwind;
+  Var delegate_target;
 };
 
 class BrTableExpr : public ExprMixin<ExprType::BrTable> {

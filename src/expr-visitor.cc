@@ -27,6 +27,7 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
   state_stack_.clear();
   expr_stack_.clear();
   expr_iter_stack_.clear();
+  catch_index_stack_.clear();
 
   PushDefault(root_expr);
 
@@ -95,12 +96,27 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         if (iter != try_expr->block.exprs.end()) {
           PushDefault(&*iter++);
         } else {
-          CHECK_RESULT(delegate_->OnCatchExpr(try_expr));
           PopExprlist();
-          if (try_expr->catch_.empty()) {
-            CHECK_RESULT(delegate_->EndTryExpr(try_expr));
-          } else {
-            PushExprlist(State::Catch, expr, try_expr->catch_);
+          switch (try_expr->kind) {
+            case TryKind::Catch:
+              if (!try_expr->catches.empty()) {
+                Catch& catch_ = try_expr->catches[0];
+                CHECK_RESULT(delegate_->OnCatchExpr(try_expr, &catch_));
+                PushCatch(expr, 0, catch_.exprs);
+              } else {
+                CHECK_RESULT(delegate_->EndTryExpr(try_expr));
+              }
+              break;
+            case TryKind::Unwind:
+              CHECK_RESULT(delegate_->OnUnwindExpr(try_expr));
+              PushExprlist(State::Unwind, expr, try_expr->unwind);
+              break;
+            case TryKind::Delegate:
+              CHECK_RESULT(delegate_->OnDelegateExpr(try_expr));
+              break;
+            case TryKind::Invalid:
+              // Should not happen.
+              break;
           }
         }
         break;
@@ -108,8 +124,28 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
 
       case State::Catch: {
         auto try_expr = cast<TryExpr>(expr);
+        Index catch_index = catch_index_stack_.back();
         auto& iter = expr_iter_stack_.back();
-        if (iter != try_expr->catch_.end()) {
+        if (iter != try_expr->catches[catch_index].exprs.end()) {
+          PushDefault(&*iter++);
+        } else {
+          PopCatch();
+          catch_index++;
+          if (catch_index < try_expr->catches.size()) {
+            Catch& catch_ = try_expr->catches[catch_index];
+            CHECK_RESULT(delegate_->OnCatchExpr(try_expr, &catch_));
+            PushCatch(expr, catch_index, catch_.exprs);
+          } else {
+            CHECK_RESULT(delegate_->EndTryExpr(try_expr));
+          }
+        }
+        break;
+      }
+
+      case State::Unwind: {
+        auto try_expr = cast<TryExpr>(expr);
+        auto& iter = expr_iter_stack_.back();
+        if (iter != try_expr->unwind.end()) {
           PushDefault(&*iter++);
         } else {
           CHECK_RESULT(delegate_->EndTryExpr(try_expr));
@@ -181,10 +217,6 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
 
     case ExprType::BrIf:
       CHECK_RESULT(delegate_->OnBrIfExpr(cast<BrIfExpr>(expr)));
-      break;
-
-    case ExprType::BrOnExn:
-      CHECK_RESULT(delegate_->OnBrOnExnExpr(cast<BrOnExnExpr>(expr)));
       break;
 
     case ExprType::BrTable:
@@ -413,6 +445,22 @@ void ExprVisitor::PopExprlist() {
   state_stack_.pop_back();
   expr_stack_.pop_back();
   expr_iter_stack_.pop_back();
+}
+
+void ExprVisitor::PushCatch(Expr* expr,
+                            Index catch_index,
+                            ExprList& expr_list) {
+  state_stack_.emplace_back(State::Catch);
+  expr_stack_.emplace_back(expr);
+  expr_iter_stack_.emplace_back(expr_list.begin());
+  catch_index_stack_.emplace_back(catch_index);
+}
+
+void ExprVisitor::PopCatch() {
+  state_stack_.pop_back();
+  expr_stack_.pop_back();
+  expr_iter_stack_.pop_back();
+  catch_index_stack_.pop_back();
 }
 
 }  // namespace wabt

@@ -114,7 +114,6 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Select:
     case TokenType::Br:
     case TokenType::BrIf:
-    case TokenType::BrOnExn:
     case TokenType::BrTable:
     case TokenType::Return:
     case TokenType::ReturnCall:
@@ -190,6 +189,10 @@ bool IsExpr(TokenTypePair pair) {
 
 bool IsInstr(TokenTypePair pair) {
   return IsPlainOrBlockInstr(pair[0]) || IsExpr(pair);
+}
+
+bool IsCatch(TokenType token_type) {
+  return token_type == TokenType::Catch || token_type == TokenType::CatchAll;
 }
 
 bool IsModuleField(TokenTypePair pair) {
@@ -811,9 +814,6 @@ Result WastParser::ParseValueType(Type* out_type) {
     case Type::ExternRef:
       is_enabled = options_->features.reference_types_enabled();
       break;
-    case Type::ExnRef:
-      is_enabled = options_->features.exceptions_enabled();
-      break;
     default:
       is_enabled = true;
       break;
@@ -860,7 +860,7 @@ Result WastParser::ParseRefKind(Type* out_type) {
 Result WastParser::ParseRefType(Type* out_type) {
   WABT_TRACE(ParseRefType);
   if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"funcref", "externref", "exnref"});
+    return ErrorExpected({"funcref", "externref"});
   }
 
   Token token = Consume();
@@ -1803,15 +1803,6 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParsePlainInstrVar<BrIfExpr>(loc, out_expr));
       break;
 
-    case TokenType::BrOnExn: {
-      Consume();
-      auto expr = MakeUnique<BrOnExnExpr>(loc);
-      CHECK_RESULT(ParseVar(&expr->label_var));
-      CHECK_RESULT(ParseVar(&expr->event_var));
-      *out_expr = std::move(expr);
-      break;
-    }
-
     case TokenType::BrTable: {
       Consume();
       auto expr = MakeUnique<BrTableExpr>(loc);
@@ -2043,7 +2034,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::Rethrow:
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new RethrowExpr(loc));
+      CHECK_RESULT(ParsePlainInstrVar<RethrowExpr>(loc, out_expr));
       break;
 
     case TokenType::AtomicNotify: {
@@ -2563,12 +2554,30 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::Try: {
       ErrorUnlessOpcodeEnabled(Consume());
       auto expr = MakeUnique<TryExpr>(loc);
+      CatchVector catches;
       CHECK_RESULT(ParseLabelOpt(&expr->block.label));
       CHECK_RESULT(ParseBlock(&expr->block));
-      EXPECT(Catch);
-      CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
-      CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
-      EXPECT(End);
+      if (IsCatch(Peek())) {
+        CHECK_RESULT(ParseCatchInstrList(&expr->catches));
+        expr->kind = TryKind::Catch;
+      } else if (PeekMatch(TokenType::Unwind)) {
+        Consume();
+        CHECK_RESULT(ParseInstrList(&expr->unwind));
+        expr->kind = TryKind::Unwind;
+      } else if (PeekMatch(TokenType::Delegate)) {
+        Consume();
+        Var var;
+        CHECK_RESULT(ParseVar(&var));
+        expr->delegate_target = var;
+        expr->kind = TryKind::Delegate;
+      } else {
+        return ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
+      }
+      CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
+      expr->block.end_loc = GetLocation();
+      if (expr->kind != TryKind::Delegate) {
+        EXPECT(End);
+      }
       CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
       *out_expr = std::move(expr);
       break;
@@ -2730,12 +2739,36 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         EXPECT(Lpar);
         EXPECT(Do);
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
-        expr->block.end_loc = GetLocation();
         EXPECT(Rpar);
         EXPECT(Lpar);
-        EXPECT(Catch);
-        CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
-        EXPECT(Rpar);
+        TokenType type = Peek();
+        switch (type) {
+          case TokenType::Catch:
+          case TokenType::CatchAll:
+            CHECK_RESULT(ParseCatchExprList(&expr->catches));
+            expr->kind = TryKind::Catch;
+            break;
+          case TokenType::Unwind:
+            Consume();
+            CHECK_RESULT(ParseTerminatingInstrList(&expr->unwind));
+            expr->kind = TryKind::Unwind;
+            EXPECT(Rpar);
+            break;
+          case TokenType::Delegate: {
+            Consume();
+            Var var;
+            CHECK_RESULT(ParseVar(&var));
+            expr->delegate_target = var;
+            expr->kind = TryKind::Delegate;
+            EXPECT(Rpar);
+            break;
+          }
+          default:
+            ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
+            break;
+        }
+        CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
+        expr->block.end_loc = GetLocation();
         exprs->push_back(std::move(expr));
         break;
       }
@@ -2747,6 +2780,63 @@ Result WastParser::ParseExpr(ExprList* exprs) {
   }
 
   EXPECT(Rpar);
+  return Result::Ok;
+}
+
+Result WastParser::ParseCatchInstrList(CatchVector* catches) {
+  WABT_TRACE(ParseCatchInstrList);
+  bool parsedCatch = false;
+  bool parsedCatchAll = false;
+
+  while (IsCatch(Peek())) {
+    Catch catch_(GetLocation());
+
+    auto token = Consume();
+    if (token.token_type() == TokenType::Catch) {
+      CHECK_RESULT(ParseVar(&catch_.var));
+    } else {
+      if (parsedCatchAll) {
+        Error(token.loc, "multiple catch_all clauses not allowed");
+        return Result::Error;
+      }
+      parsedCatchAll = true;
+    }
+
+    CHECK_RESULT(ParseInstrList(&catch_.exprs));
+    catches->push_back(std::move(catch_));
+    parsedCatch = true;
+  }
+
+  if (!parsedCatch) {
+    return ErrorExpected({"catch"});
+  }
+
+  return Result::Ok;
+}
+
+Result WastParser::ParseCatchExprList(CatchVector* catches) {
+  WABT_TRACE(ParseCatchExprList);
+  bool parsedCatchAll = false;
+
+  do {
+    Catch catch_(GetLocation());
+
+    auto token = Consume();
+    if (token.token_type() == TokenType::Catch) {
+      CHECK_RESULT(ParseVar(&catch_.var));
+    } else {
+      if (parsedCatchAll) {
+        Error(token.loc, "multiple catch_all clauses not allowed");
+        return Result::Error;
+      }
+      parsedCatchAll = true;
+    }
+
+    CHECK_RESULT(ParseTerminatingInstrList(&catch_.exprs));
+    EXPECT(Rpar);
+    catches->push_back(std::move(catch_));
+  } while (Match(TokenType::Lpar) && IsCatch(Peek()));
+
   return Result::Ok;
 }
 

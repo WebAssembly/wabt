@@ -43,7 +43,6 @@ class Type {
     I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
-    ExnRef = -0x18,     // 0x68
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
@@ -62,8 +61,7 @@ class Type {
   operator Enum() const { return enum_; }
 
   bool IsRef() const {
-    return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
-           enum_ == Type::ExnRef;
+    return enum_ == Type::ExternRef || enum_ == Type::FuncRef;
   }
 
   bool IsNullableRef() const {
@@ -82,7 +80,6 @@ class Type {
       case Type::I16:       return "i16";
       case Type::FuncRef:   return "funcref";
       case Type::Func:      return "func";
-      case Type::ExnRef:    return "exnref";
       case Type::Void:      return "void";
       case Type::Any:       return "any";
       case Type::ExternRef: return "externref";
@@ -94,7 +91,6 @@ class Type {
     switch (enum_) {
       case Type::FuncRef:   return "func";
       case Type::ExternRef: return "extern";
-      case Type::ExnRef:    return "exn";
       case Type::Struct:    return "struct";
       case Type::Array:     return "array";
       default:              return "<invalid>";
@@ -133,7 +129,6 @@ class Type {
       case Type::V128:
       case Type::FuncRef:
       case Type::ExternRef:
-      case Type::ExnRef:
         return TypeVector(this, this + 1);
 
       default:

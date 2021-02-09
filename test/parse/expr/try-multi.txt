@@ -1,12 +1,14 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
+  (event (param i32))
+
   ;; try w/ multiple results
   (func
     try (result f32 f32)
       f32.const 0
       f32.const 1
-    catch
+    catch 0
       drop
       f32.const 2
       f32.const 3
@@ -18,8 +20,8 @@
     i32.const 0
     try (param i32) (result i32)
       i32.eqz
-    catch
-      drop  ;; no i32 param, just exnref
+    catch 0
+      drop
       i32.const 0
     end
     return)

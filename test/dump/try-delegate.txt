@@ -3,13 +3,14 @@
 (module
   (event $e (param i32))
   (func
-    block $b (result i32)
+    try $try1 (result i32)
       try
-      catch
-        br_on_exn $b $e
-        drop
-      end
-      i32.const 0
+        nop
+      delegate 1
+      i32.const 7
+    catch $e
+      drop
+      i32.const 8
     end
     drop))
 (;; STDERR ;;;
@@ -55,41 +56,44 @@
 ; function body 0
 0000021: 00                                        ; func body size (guess)
 0000022: 00                                        ; local decl count
-0000023: 02                                        ; block
+0000023: 06                                        ; try
 0000024: 7f                                        ; i32
 0000025: 06                                        ; try
 0000026: 40                                        ; void
-0000027: 07                                        ; catch
-0000028: 0a                                        ; br_on_exn
-0000029: 01                                        ; break depth
-000002a: 00                                        ; event index
-000002b: 1a                                        ; drop
-000002c: 0b                                        ; end
-000002d: 41                                        ; i32.const
-000002e: 00                                        ; i32 literal
-000002f: 0b                                        ; end
-0000030: 1a                                        ; drop
+0000027: 01                                        ; nop
+0000028: 18                                        ; delegate
+0000029: 01                                        ; delegate depth
+000002a: 41                                        ; i32.const
+000002b: 07                                        ; i32 literal
+000002c: 07                                        ; catch
+000002d: 00                                        ; catch event
+000002e: 1a                                        ; drop
+000002f: 41                                        ; i32.const
+0000030: 08                                        ; i32 literal
 0000031: 0b                                        ; end
-0000021: 10                                        ; FIXUP func body size
-000001f: 12                                        ; FIXUP section size
-; move data: [1e, 32) -> [1b, 2f)
-; truncate to 47 (0x2f)
+0000032: 1a                                        ; drop
+0000033: 0b                                        ; end
+0000021: 12                                        ; FIXUP func body size
+000001f: 14                                        ; FIXUP section size
+; move data: [1e, 34) -> [1b, 31)
+; truncate to 49 (0x31)
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-br_on_exn.wasm:	file format wasm 0x1
+try-delegate.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
 00001f func[0]:
- 000020: 02 7f                      | block i32
+ 000020: 06 7f                      | try i32
  000022: 06 40                      |   try
- 000024: 07                         |   catch
- 000025: 0a 01 00                   |     br_on_exn 1 0
- 000028: 1a                         |     drop
- 000029: 0b                         |   end
- 00002a: 41 00                      |   i32.const 0
- 00002c: 0b                         | end
- 00002d: 1a                         | drop
+ 000024: 01                         |     nop
+ 000025: 18 01                      |   delegate 1
+ 000027: 41 07                      |   i32.const 7
+ 000029: 07 00                      | catch 0
+ 00002b: 1a                         |   drop
+ 00002c: 41 08                      |   i32.const 8
  00002e: 0b                         | end
+ 00002f: 1a                         | drop
+ 000030: 0b                         | end
 ;;; STDOUT ;;)

@@ -5,8 +5,8 @@
 
   (func
     try
-    catch
-      rethrow
+    catch $e0
+      rethrow 0
     end
   )
 )
@@ -16,8 +16,8 @@
   (type (;1;) (func))
   (func (;0;) (type 1)
     try  ;; label = @1
-    catch
-      rethrow
+    catch 0
+      rethrow 0 (;@1;)
     end)
   (event (;0;) (type 0) (param i32)))
 ;;; STDOUT ;;)

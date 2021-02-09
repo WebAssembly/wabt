@@ -140,17 +140,17 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
-  Result OnBrOnExnExpr(Index depth, Index event_index) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
-  Result OnCatchExpr() override;
+  Result OnCatchExpr(Index event_index) override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
+  Result OnDelegateExpr(Index depth) override;
   Result OnDropExpr() override;
   Result OnElseExpr() override;
   Result OnEndExpr() override;
@@ -187,7 +187,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
-  Result OnRethrowExpr() override;
+  Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
   Result OnSelectExpr(Index result_count, Type* result_types) override;
   Result OnStoreExpr(Opcode opcode,
@@ -198,6 +198,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
+  Result OnUnwindExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
@@ -274,6 +275,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result TopLabel(LabelNode** label);
   Result TopLabelExpr(LabelNode** label, Expr** expr);
   Result AppendExpr(std::unique_ptr<Expr> expr);
+  Result AppendCatch(Catch&& catch_);
   void SetFuncDeclaration(FuncDeclaration* decl, Var var);
   void SetBlockDeclaration(BlockDeclaration* decl, Type sig_type);
 
@@ -701,13 +703,6 @@ Result BinaryReaderIR::OnBrIfExpr(Index depth) {
   return AppendExpr(MakeUnique<BrIfExpr>(Var(depth)));
 }
 
-Result BinaryReaderIR::OnBrOnExnExpr(Index depth, Index event_index) {
-  auto expr = MakeUnique<BrOnExnExpr>();
-  expr->label_var = Var(depth);
-  expr->event_var = Var(event_index);
-  return AppendExpr(std::move(expr));
-}
-
 Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
                                      Index* target_depths,
                                      Index default_target_depth) {
@@ -764,6 +759,8 @@ Result BinaryReaderIR::OnElseExpr() {
     if_expr->true_.end_loc = GetLocation();
     label->exprs = &if_expr->false_;
     label->label_type = LabelType::Else;
+  } else if (label->label_type == LabelType::Try) {
+    return AppendCatch(Catch(GetLocation()));
   } else {
     PrintError("else expression without matching if");
     return Result::Error;
@@ -795,6 +792,7 @@ Result BinaryReaderIR::OnEndExpr() {
 
     case LabelType::Func:
     case LabelType::Catch:
+    case LabelType::Unwind:
       break;
   }
 
@@ -929,8 +927,8 @@ Result BinaryReaderIR::OnNopExpr() {
   return AppendExpr(MakeUnique<NopExpr>());
 }
 
-Result BinaryReaderIR::OnRethrowExpr() {
-  return AppendExpr(MakeUnique<RethrowExpr>());
+Result BinaryReaderIR::OnRethrowExpr(Index depth) {
+  return AppendExpr(MakeUnique<RethrowExpr>(Var(depth, GetLocation())));
 }
 
 Result BinaryReaderIR::OnReturnExpr() {
@@ -977,19 +975,81 @@ Result BinaryReaderIR::OnTryExpr(Type sig_type) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnCatchExpr() {
-  LabelNode* label;
+Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
+  LabelNode* label = nullptr;
   CHECK_RESULT(TopLabel(&label));
+
   if (label->label_type != LabelType::Try) {
-    PrintError("catch expression without matching try");
+    PrintError("catch not inside try block");
     return Result::Error;
   }
 
-  LabelNode* parent_label;
-  CHECK_RESULT(GetLabelAt(&parent_label, 1));
+  auto* try_ = cast<TryExpr>(label->context);
 
-  label->label_type = LabelType::Catch;
-  label->exprs = &cast<TryExpr>(&parent_label->exprs->back())->catch_;
+  if (catch_.IsCatchAll() && !try_->catches.empty() && try_->catches.back().IsCatchAll()) {
+    PrintError("only one catch_all allowed in try block");
+    return Result::Error;
+  }
+
+  if (try_->kind == TryKind::Invalid) {
+    try_->kind = TryKind::Catch;
+  } else if (try_->kind != TryKind::Catch) {
+    PrintError("catch not allowed in try-unwind or try-delegate");
+    return Result::Error;
+  }
+
+  try_->catches.push_back(std::move(catch_));
+  label->exprs = &try_->catches.back().exprs;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCatchExpr(Index except_index) {
+  return AppendCatch(Catch(Var(except_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnUnwindExpr() {
+  LabelNode* label = nullptr;
+  CHECK_RESULT(TopLabel(&label));
+
+  if (label->label_type != LabelType::Try) {
+    PrintError("unwind not inside try block");
+    return Result::Error;
+  }
+
+  auto* try_ = cast<TryExpr>(label->context);
+
+  if (try_->kind == TryKind::Invalid) {
+    try_->kind = TryKind::Unwind;
+  } else if (try_->kind != TryKind::Unwind) {
+    PrintError("unwind not allowed in try-catch or try-delegate");
+    return Result::Error;
+  }
+
+  label->exprs = &try_->unwind;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnDelegateExpr(Index depth) {
+  LabelNode* label = nullptr;
+  CHECK_RESULT(TopLabel(&label));
+
+  if (label->label_type != LabelType::Try) {
+    PrintError("delegate not inside try block");
+    return Result::Error;
+  }
+
+  auto* try_ = cast<TryExpr>(label->context);
+
+  if (try_->kind == TryKind::Invalid) {
+    try_->kind = TryKind::Delegate;
+  } else if (try_->kind != TryKind::Delegate) {
+    PrintError("delegate not allowed in try-catch or try-unwind");
+    return Result::Error;
+  }
+
+  try_->delegate_target = Var(depth, GetLocation());
+
+  PopLabel();
   return Result::Ok;
 }
 

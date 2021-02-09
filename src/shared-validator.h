@@ -119,17 +119,17 @@ class SharedValidator {
   Result OnBlock(const Location&, Type sig_type);
   Result OnBr(const Location&, Var depth);
   Result OnBrIf(const Location&, Var depth);
-  Result OnBrOnExn(const Location&, Var depth, Var event_index);
   Result BeginBrTable(const Location&);
   Result OnBrTableTarget(const Location&, Var depth);
   Result EndBrTable(const Location&);
   Result OnCall(const Location&, Var func_var);
   Result OnCallIndirect(const Location&, Var sig_var, Var table_var);
-  Result OnCatch(const Location&);
+  Result OnCatch(const Location&, Var event_var, bool is_catch_all);
   Result OnCompare(const Location&, Opcode);
   Result OnConst(const Location&, Type);
   Result OnConvert(const Location&, Opcode);
   Result OnDataDrop(const Location&, Var segment_var);
+  Result OnDelegate(const Location&, Var depth);
   Result OnDrop(const Location&);
   Result OnElemDrop(const Location&, Var segment_var);
   Result OnElse(const Location&);
@@ -152,7 +152,7 @@ class SharedValidator {
   Result OnRefFunc(const Location&, Var func_var);
   Result OnRefIsNull(const Location&);
   Result OnRefNull(const Location&, Type type);
-  Result OnRethrow(const Location&);
+  Result OnRethrow(const Location&, Var depth);
   Result OnReturnCall(const Location&, Var func_var);
   Result OnReturnCallIndirect(const Location&, Var sig_var, Var table_var);
   Result OnReturn(const Location&);
@@ -172,6 +172,7 @@ class SharedValidator {
   Result OnTry(const Location&, Type sig_type);
   Result OnUnary(const Location&, Opcode);
   Result OnUnreachable(const Location&);
+  Result OnUnwind(const Location&);
 
  private:
   struct FuncType {

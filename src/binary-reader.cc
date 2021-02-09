@@ -447,9 +447,6 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::ExternRef:
       return options_.features.reference_types_enabled();
 
-    case Type::ExnRef:
-      return options_.features.exceptions_enabled();
-
     default:
       return false;
   }
@@ -1337,14 +1334,32 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Catch: {
-        CALLBACK0(OnCatchExpr);
+        Index index;
+        CHECK_RESULT(ReadIndex(&index, "event index"));
+        CALLBACK(OnCatchExpr, index);
+        CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
+      case Opcode::Unwind: {
+        CALLBACK0(OnUnwindExpr);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
+      case Opcode::Delegate: {
+        Index index;
+        CHECK_RESULT(ReadIndex(&index, "depth"));
+        CALLBACK(OnDelegateExpr, index);
+        CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
       case Opcode::Rethrow: {
-        CALLBACK0(OnRethrowExpr);
-        CALLBACK0(OnOpcodeBare);
+        Index depth;
+        CHECK_RESULT(ReadIndex(&depth, "catch depth"));
+        CALLBACK(OnRethrowExpr, depth);
+        CALLBACK(OnOpcodeIndex, depth);
         break;
       }
 
@@ -1353,16 +1368,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadIndex(&index, "event index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
-        break;
-      }
-
-      case Opcode::BrOnExn: {
-        Index depth;
-        Index index;
-        CHECK_RESULT(ReadIndex(&depth, "br_on_exn depth"));
-        CHECK_RESULT(ReadIndex(&index, "event index"));
-        CALLBACK(OnBrOnExnExpr, depth, index);
-        CALLBACK(OnOpcodeIndexIndex, depth, index);
         break;
       }
 
