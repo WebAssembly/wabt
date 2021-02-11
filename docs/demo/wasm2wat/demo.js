@@ -67,7 +67,7 @@ editorContainer.ondrop = function(e) {
 var fileBuffer = null;
 for (var feature of FEATURES) {
   var featureEl = document.getElementById(feature);
-  featureEl.checked = !!features[feature]
+  featureEl.checked = !!features[feature];
   featureEl.addEventListener('change', event => {
     var feature = event.target.id;
     features[feature] = event.target.checked;
