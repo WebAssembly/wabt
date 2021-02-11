@@ -4,10 +4,11 @@
   (event $e)
   (func
     try
-      block
+      try
         try
           throw $e
         delegate 0
+      catch $e
       end
     catch $e
     end)

@@ -1,0 +1,36 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-exceptions
+(module
+  (event $e)
+  (func
+    try
+      block
+        try
+          throw $e
+        delegate 0
+      end
+    catch $e
+    loop
+      try
+        throw $e
+      delegate 0
+    end
+    try
+    catch $e
+      try
+      delegate 0
+    catch_all
+    end
+    end))
+(;; STDERR ;;;
+out/test/typecheck/bad-delegate-target.txt:9:9: error: try-delegate must target a try block or function label
+        try
+        ^^^
+out/test/typecheck/bad-delegate-target.txt:15:7: error: try-delegate must target a try block or function label
+      try
+      ^^^
+out/test/typecheck/bad-delegate-target.txt:21:7: error: try-delegate must target a try block or function label
+      try
+      ^^^
+;;; STDERR ;;)
