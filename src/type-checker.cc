@@ -71,28 +71,26 @@ Result TypeChecker::GetLabel(Index depth, Label** out_label) {
 }
 
 Result TypeChecker::GetRethrowLabel(Index depth, Label** out_label) {
-  Index cur = 0, catches = 0;
-  std::string candidates;
-
-  while (cur < label_stack_.size()) {
-    *out_label = &label_stack_[label_stack_.size() - cur - 1];
-
-    if ((*out_label)->label_type == LabelType::Catch) {
-      if (catches == depth) {
-        return Result::Ok;
-      } else {
-        if (!candidates.empty()) {
-          candidates.append(", ");
-        }
-        candidates.append(std::to_string(catches));
-        catches++;
-      }
-    }
-
-    cur++;
+  if (Failed(GetLabel(depth, out_label))) {
+    return Result::Error;
   }
 
-  if (catches == 0) {
+  if ((*out_label)->label_type == LabelType::Catch) {
+    return Result::Ok;
+  }
+
+  std::string candidates;
+  for (Index idx = 0; idx < label_stack_.size(); idx++) {
+    LabelType type = label_stack_[label_stack_.size() - idx - 1].label_type;
+    if (type == LabelType::Catch) {
+      if (!candidates.empty()) {
+        candidates.append(", ");
+      }
+      candidates.append(std::to_string(idx));
+    }
+  }
+
+  if (candidates.empty()) {
     PrintError("rethrow not in try catch block");
   } else {
     PrintError("invalid rethrow depth: %" PRIindex " (catches: %s)", depth,
