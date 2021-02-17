@@ -596,6 +596,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
       switch (current_opcode) {
         case Opcode::Else:
         case Opcode::Catch:
+        case Opcode::CatchAll:
         case Opcode::Unwind:
           indent_level--;
         default:

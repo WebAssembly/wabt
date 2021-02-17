@@ -17,7 +17,7 @@ section(CODE) {
 }
 (;; STDERR ;;;
 error: only one catch_all allowed in try block
-000001b: error: OnElseExpr callback failed
+000001b: error: OnCatchAllExpr callback failed
 error: only one catch_all allowed in try block
-000001b: error: OnElseExpr callback failed
+000001b: error: OnCatchAllExpr callback failed
 ;;; STDERR ;;)

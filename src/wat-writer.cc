@@ -881,9 +881,7 @@ Result WatWriter::ExprVisitorDelegate::OnCatchExpr(
     TryExpr* expr, Catch* catch_) {
   writer_->Dedent();
   if (catch_->IsCatchAll()) {
-    // We use a literal instead of doing GetName() on the opcode because
-    // `else` and `catch_all` share an opcode.
-    writer_->WritePutsNewline("catch_all");
+    writer_->WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
   } else {
     writer_->WritePutsSpace(Opcode::Catch_Opcode.GetName());
     writer_->WriteVar(catch_->var, NextChar::Newline);

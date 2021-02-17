@@ -27,7 +27,6 @@ typedef enum WabtOpcodeEnum {
 #include "opcode.def"
 #undef WABT_OPCODE
   Invalid,
-  CatchAll = Else,
 } WabtOpcodeEnum;
 
 WABT_STATIC_ASSERT(Invalid <= WABT_OPCODE_CODE_TABLE_SIZE);

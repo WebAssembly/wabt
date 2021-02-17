@@ -164,6 +164,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
   Result OnCatchExpr(Index event_index) override;
+  Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;

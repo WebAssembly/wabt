@@ -145,6 +145,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
   Result OnCatchExpr(Index event_index) override;
+  Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
@@ -759,8 +760,6 @@ Result BinaryReaderIR::OnElseExpr() {
     if_expr->true_.end_loc = GetLocation();
     label->exprs = &if_expr->false_;
     label->label_type = LabelType::Else;
-  } else if (label->label_type == LabelType::Try) {
-    return AppendCatch(Catch(GetLocation()));
   } else {
     PrintError("else expression without matching if");
     return Result::Error;
@@ -1005,6 +1004,10 @@ Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
 
 Result BinaryReaderIR::OnCatchExpr(Index except_index) {
   return AppendCatch(Catch(Var(except_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnCatchAllExpr() {
+  return AppendCatch(Catch(GetLocation()));
 }
 
 Result BinaryReaderIR::OnUnwindExpr() {
