@@ -268,7 +268,7 @@ NAMED_VALUES = {
 
     # exceptions
     "try": 0x06,
-    "catch_all": 0x05,
+    "catch_all": 0x19,
 }
 
 keywords = {

@@ -1341,6 +1341,12 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::CatchAll: {
+        CALLBACK(OnCatchAllExpr);
+        CALLBACK(OnOpcodeBare);
+        break;
+      }
+
       case Opcode::Unwind: {
         CALLBACK0(OnUnwindExpr);
         CALLBACK0(OnOpcodeBare);

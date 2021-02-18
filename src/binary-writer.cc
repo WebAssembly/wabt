@@ -976,7 +976,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
         case TryKind::Catch:
           for (const Catch& catch_ : try_expr->catches) {
             if (catch_.IsCatchAll()) {
-              WriteOpcode(stream_, Opcode::Else);
+              WriteOpcode(stream_, Opcode::CatchAll);
             } else {
               WriteOpcode(stream_, Opcode::Catch);
               WriteU32Leb128(stream_, GetEventVarDepth(&catch_.var),
