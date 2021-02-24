@@ -1,0 +1,89 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-exceptions --debug-names
+(module
+  (func
+    block
+      br 0
+    end
+    block
+      br 0
+    end)
+
+  (func
+    block
+      br 0
+      block
+        br 0
+      end
+    end
+    block
+      br 0
+    end)
+
+  (func
+    (i32.const 0)
+    if
+      br 0
+    end
+    (i32.const 0)
+    if
+      br 0
+    end)
+
+  (func
+    loop
+      br 0
+    end
+    loop
+      br 0
+    end)
+
+  (func
+    try
+      br 0
+    catch_all
+    end
+    try
+      br 0
+    catch_all
+    end)
+  )
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (block  ;; label = @1
+      (br 0 (;@1;)))
+    (block  ;; label = @1
+      (br 0 (;@1;))))
+  (func (;1;) (type 0)
+    (block  ;; label = @1
+      (br 0 (;@1;))
+      (block  ;; label = @2
+        (br 0 (;@2;))))
+    (block  ;; label = @1
+      (br 0 (;@1;))))
+  (func (;2;) (type 0)
+    (if  ;; label = @1
+      (i32.const 0)
+      (then
+        (br 0 (;@1;))))
+    (if  ;; label = @1
+      (i32.const 0)
+      (then
+        (br 0 (;@1;)))))
+  (func (;3;) (type 0)
+    (loop  ;; label = @1
+      (br 0 (;@1;)))
+    (loop  ;; label = @1
+      (br 0 (;@1;))))
+  (func (;4;) (type 0)
+    (try  ;; label = @1
+      (do
+        (br 0 (;@1;)))
+      (catch_all))
+    (try  ;; label = @1
+      (do
+        (br 0 (;@1;)))
+      (catch_all))))
+;;; STDOUT ;;)

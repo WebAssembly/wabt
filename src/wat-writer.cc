@@ -1078,6 +1078,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WriteFoldedExprList(cast<BlockExpr>(expr_tree.expr)->block.exprs);
       FlushExprTreeStack();
       WriteCloseNewline();
+      EndBlock();
       break;
 
     case ExprType::Loop:
@@ -1087,6 +1088,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WriteFoldedExprList(cast<LoopExpr>(expr_tree.expr)->block.exprs);
       FlushExprTreeStack();
       WriteCloseNewline();
+      EndBlock();
       break;
 
     case ExprType::If: {
@@ -1106,6 +1108,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
         WriteCloseNewline();
       }
       WriteCloseNewline();
+      EndBlock();
       break;
     }
 
@@ -1154,6 +1157,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
           break;
       }
       WriteCloseNewline();
+      EndBlock();
       break;
     }
 
