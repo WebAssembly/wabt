@@ -14,7 +14,17 @@
  * limitations under the License.
  */
 
-var features = {};
+
+var features = getLocalStorageFeatures();
+
+function getLocalStorageFeatures() {
+  try {
+    return JSON.parse(localStorage && localStorage.getItem("features")) || defaultFeatures;
+  } catch (e) {
+    console.log(e);
+    return { mutable_globals: true };
+  }
+}
 
 WabtModule().then(function(wabt) {
 
@@ -32,6 +42,7 @@ var FEATURES = [
   'reference_types',
 ];
 
+var defaultFeatures = { mutable_globals: true };
 var editorEl = document.querySelector('.editor');
 var uploadEl = document.getElementById('upload');
 var selectEl = document.getElementById('select');
@@ -40,19 +51,30 @@ var generateNamesEl = document.getElementById('generateNames');
 var foldExprsEl = document.getElementById('foldExprs');
 var inlineExportEl = document.getElementById('inlineExport');
 var readDebugNamesEl = document.getElementById('readDebugNames');
-
 var options = {mode: 'wast', lineNumbers: true};
 var editor = CodeMirror.fromTextArea(editorEl, options);
 
-var fileBuffer = null;
+var editorContainer = document.querySelector('.CodeMirror.cm-s-default');
 
+editorContainer.ondrop = function(e) {
+  e.preventDefault();
+  let file = e.dataTransfer.files[0];
+  if (!file) {
+    return;
+  }
+  readAndCompileFile(file);
+}
+var fileBuffer = null;
 for (var feature of FEATURES) {
   var featureEl = document.getElementById(feature);
-  features[feature] = featureEl.checked;
+  featureEl.checked = !!features[feature];
   featureEl.addEventListener('change', event => {
     var feature = event.target.id;
     features[feature] = event.target.checked;
     compile(fileBuffer);
+    if (localStorage) {
+      localStorage.setItem('features', JSON.stringify(features))
+    }
   });
 }
 
@@ -96,6 +118,10 @@ function onUploadClicked(e) {
 
 function onUploadedFile(e) {
   var file = e.target.files[0];
+  readAndCompileFile(file);
+}
+// extract common util function
+function readAndCompileFile(file) {
   var reader = new FileReader();
   reader.onload = function(e) {
     fileBuffer = new Uint8Array(e.target.result);
