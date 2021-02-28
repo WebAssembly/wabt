@@ -9,13 +9,7 @@ on:
 jobs:
   build:
     name: build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-    defaults:
-      run:
-        shell: bash
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/setup-python@v1
       with:
