@@ -1940,7 +1940,7 @@ Result BinaryReaderObjdump::OnInitFunction(uint32_t priority,
   return Result::Ok;
 }
 Result BinaryReaderObjdump::OnComdatCount(Index count) {
-  PrintDetails("  - comdat groups functions [count=%d]\n", count);
+  PrintDetails("  - comdat groups [count=%d]\n", count);
   return Result::Ok;
 }
 
