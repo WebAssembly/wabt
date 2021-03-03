@@ -1613,6 +1613,12 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4TruncSatF32X4U: return DoSimdUnop(IntTruncSat<u32, f32>);
     case O::F32X4ConvertI32X4S:  return DoSimdUnop(Convert<f32, s32>);
     case O::F32X4ConvertI32X4U:  return DoSimdUnop(Convert<f32, u32>);
+    case O::F32X4DemoteF64X2Zero: return DoSimdUnopZero(Convert<f32, f64>);
+    case O::F64X2PromoteLowF32X4: return DoSimdUnop(Convert<f64, f32>);
+    case O::I32X4TruncSatF64X2SZero: return DoSimdUnopZero(IntTruncSat<s32, f64>);
+    case O::I32X4TruncSatF64X2UZero: return DoSimdUnopZero(IntTruncSat<u32, f64>);
+    case O::F64X2ConvertLowI32X4S: return DoSimdUnop(Convert<f64, s32>);
+    case O::F64X2ConvertLowI32X4U: return DoSimdUnop(Convert<f64, u32>);
 
     case O::I8X16Swizzle:     return DoSimdSwizzle();
     case O::I8X16Shuffle:     return DoSimdShuffle(instr);
@@ -2026,6 +2032,23 @@ RunResult Thread::DoSimdUnop(UnopFunc<R, T> f) {
   auto val = Pop<ST>();
   SR result;
   std::transform(std::begin(val.v), std::end(val.v), std::begin(result.v), f);
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename R, typename T>
+RunResult Thread::DoSimdUnopZero(UnopFunc<R, T> f) {
+  using ST = typename Simd128<T>::Type;
+  using SR = typename Simd128<R>::Type;
+  auto val = Pop<ST>();
+  SR result;
+  std::transform(std::begin(val.v), std::end(val.v), std::begin(result.v), f);
+  for (u8 i = 0; i < ST::lanes; ++i) {
+    result[i] = f(val[i]);
+  }
+  for (u8 i = ST::lanes; i < SR::lanes; ++i) {
+    result[i] = 0;
+  }
   Push(result);
   return RunResult::Ok;
 }
