@@ -1634,6 +1634,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4ExtendHighI16X8S: return DoSimdWiden<s32x4, s16x8, false>();
     case O::I32X4ExtendLowI16X8U:  return DoSimdWiden<u32x4, u16x8, true>();
     case O::I32X4ExtendHighI16X8U: return DoSimdWiden<u32x4, u16x8, false>();
+    case O::I64X2ExtendLowI32X4S:  return DoSimdWiden<s64x2, s32x4, true>();
+    case O::I64X2ExtendHighI32X4S: return DoSimdWiden<s64x2, s32x4, false>();
+    case O::I64X2ExtendLowI32X4U:  return DoSimdWiden<u64x2, u32x4, true>();
+    case O::I64X2ExtendHighI32X4U: return DoSimdWiden<u64x2, u32x4, false>();
 
     case O::V128Load8X8S:  return DoSimdLoadExtend<s16x8, s8x8>(instr, out_trap);
     case O::V128Load8X8U:  return DoSimdLoadExtend<u16x8, u8x8>(instr, out_trap);
@@ -1649,6 +1653,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16Abs: return DoSimdUnop(IntAbs<u8>);
     case O::I16X8Abs: return DoSimdUnop(IntAbs<u16>);
     case O::I32X4Abs: return DoSimdUnop(IntAbs<u32>);
+
+    case O::I8X16Popcnt: return DoSimdUnop(IntPopcnt<u8>);
 
     case O::AtomicFence:
     case O::MemoryAtomicNotify:

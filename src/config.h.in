@@ -130,6 +130,7 @@ inline int Ctz(unsigned x) { return x ? __builtin_ctz(x) : sizeof(x) * 8; }
 inline int Ctz(unsigned long x) { return x ? __builtin_ctzl(x) : sizeof(x) * 8; }
 inline int Ctz(unsigned long long x) { return x ? __builtin_ctzll(x) : sizeof(x) * 8; }
 
+inline int Popcount(uint8_t x) { return __builtin_popcount(x); }
 inline int Popcount(unsigned x) { return __builtin_popcount(x); }
 inline int Popcount(unsigned long x) { return __builtin_popcountl(x); }
 inline int Popcount(unsigned long long x) { return __builtin_popcountll(x); }
