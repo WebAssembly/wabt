@@ -1568,6 +1568,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4MaxU:         return DoSimdBinop(IntMax<u32>);
 
     case O::I64X2Neg:          return DoSimdUnop(IntNeg<u64>);
+    case O::I64X2Bitmask:      return DoSimdBitmask<s64x2>();
+    case O::I64X2AllTrue:      return DoSimdIsTrue<u64x2, 2>();
     case O::I64X2Shl:          return DoSimdShift(IntShl<u64>);
     case O::I64X2ShrS:         return DoSimdShift(IntShr<s64>);
     case O::I64X2ShrU:         return DoSimdShift(IntShr<u64>);
