@@ -1516,9 +1516,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::V128Or:        return DoSimdBinop(IntOr<u64>);
     case O::V128Xor:       return DoSimdBinop(IntXor<u64>);
     case O::V128BitSelect: return DoSimdBitSelect();
+    case O::V128AnyTrue:       return DoSimdIsTrue<u8x16, 1>();
 
     case O::I8X16Neg:          return DoSimdUnop(IntNeg<u8>);
-    case O::I8X16AnyTrue:      return DoSimdIsTrue<u8x16, 1>();
     case O::I8X16Bitmask:      return DoSimdBitmask<s8x16>();
     case O::I8X16AllTrue:      return DoSimdIsTrue<u8x16, 16>();
     case O::I8X16Shl:          return DoSimdShift(IntShl<u8>);
@@ -1536,7 +1536,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16MaxU:         return DoSimdBinop(IntMax<u8>);
 
     case O::I16X8Neg:          return DoSimdUnop(IntNeg<u16>);
-    case O::I16X8AnyTrue:      return DoSimdIsTrue<u16x8, 1>();
     case O::I16X8Bitmask:      return DoSimdBitmask<s16x8>();
     case O::I16X8AllTrue:      return DoSimdIsTrue<u16x8, 8>();
     case O::I16X8Shl:          return DoSimdShift(IntShl<u16>);
@@ -1555,7 +1554,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I16X8MaxU:         return DoSimdBinop(IntMax<u16>);
 
     case O::I32X4Neg:          return DoSimdUnop(IntNeg<u32>);
-    case O::I32X4AnyTrue:      return DoSimdIsTrue<u32x4, 1>();
     case O::I32X4Bitmask:      return DoSimdBitmask<s32x4>();
     case O::I32X4AllTrue:      return DoSimdIsTrue<u32x4, 4>();
     case O::I32X4Shl:          return DoSimdShift(IntShl<u32>);
@@ -1628,14 +1626,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16NarrowI16X8U:    return DoSimdNarrow<u8x16, s16x8>();
     case O::I16X8NarrowI32X4S:    return DoSimdNarrow<s16x8, s32x4>();
     case O::I16X8NarrowI32X4U:    return DoSimdNarrow<u16x8, s32x4>();
-    case O::I16X8WidenLowI8X16S:  return DoSimdWiden<s16x8, s8x16, true>();
-    case O::I16X8WidenHighI8X16S: return DoSimdWiden<s16x8, s8x16, false>();
-    case O::I16X8WidenLowI8X16U:  return DoSimdWiden<u16x8, u8x16, true>();
-    case O::I16X8WidenHighI8X16U: return DoSimdWiden<u16x8, u8x16, false>();
-    case O::I32X4WidenLowI16X8S:  return DoSimdWiden<s32x4, s16x8, true>();
-    case O::I32X4WidenHighI16X8S: return DoSimdWiden<s32x4, s16x8, false>();
-    case O::I32X4WidenLowI16X8U:  return DoSimdWiden<u32x4, u16x8, true>();
-    case O::I32X4WidenHighI16X8U: return DoSimdWiden<u32x4, u16x8, false>();
+    case O::I16X8ExtendLowI8X16S:  return DoSimdWiden<s16x8, s8x16, true>();
+    case O::I16X8ExtendHighI8X16S: return DoSimdWiden<s16x8, s8x16, false>();
+    case O::I16X8ExtendLowI8X16U:  return DoSimdWiden<u16x8, u8x16, true>();
+    case O::I16X8ExtendHighI8X16U: return DoSimdWiden<u16x8, u8x16, false>();
+    case O::I32X4ExtendLowI16X8S:  return DoSimdWiden<s32x4, s16x8, true>();
+    case O::I32X4ExtendHighI16X8S: return DoSimdWiden<s32x4, s16x8, false>();
+    case O::I32X4ExtendLowI16X8U:  return DoSimdWiden<u32x4, u16x8, true>();
+    case O::I32X4ExtendHighI16X8U: return DoSimdWiden<u32x4, u16x8, false>();
 
     case O::V128Load8X8S:  return DoSimdLoadExtend<s16x8, s8x8>(instr, out_trap);
     case O::V128Load8X8U:  return DoSimdLoadExtend<u16x8, u8x8>(instr, out_trap);

@@ -1203,9 +1203,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32X4Neg:
       case Opcode::I64X2Neg:
       case Opcode::V128Not:
-      case Opcode::I8X16AnyTrue:
-      case Opcode::I16X8AnyTrue:
-      case Opcode::I32X4AnyTrue:
+      case Opcode::V128AnyTrue:
       case Opcode::I8X16Bitmask:
       case Opcode::I16X8Bitmask:
       case Opcode::I32X4Bitmask:
@@ -1226,14 +1224,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Abs:
       case Opcode::F32X4Sqrt:
       case Opcode::F64X2Sqrt:
-      case Opcode::I16X8WidenLowI8X16S:
-      case Opcode::I16X8WidenHighI8X16S:
-      case Opcode::I16X8WidenLowI8X16U:
-      case Opcode::I16X8WidenHighI8X16U:
-      case Opcode::I32X4WidenLowI16X8S:
-      case Opcode::I32X4WidenHighI16X8S:
-      case Opcode::I32X4WidenLowI16X8U:
-      case Opcode::I32X4WidenHighI16X8U:
+      case Opcode::I16X8ExtendLowI8X16S:
+      case Opcode::I16X8ExtendHighI8X16S:
+      case Opcode::I16X8ExtendLowI8X16U:
+      case Opcode::I16X8ExtendHighI8X16U:
+      case Opcode::I32X4ExtendLowI16X8S:
+      case Opcode::I32X4ExtendHighI16X8S:
+      case Opcode::I32X4ExtendLowI16X8U:
+      case Opcode::I32X4ExtendHighI16X8U:
       case Opcode::I8X16Abs:
       case Opcode::I16X8Abs:
       case Opcode::I32X4Abs:

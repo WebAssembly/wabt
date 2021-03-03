@@ -116,6 +116,7 @@ Instr Istream::Read(Offset* offset) const {
       instr.kind = InstrKind::Imm_0_Op_0;
       break;
 
+    case Opcode::V128AnyTrue:
     case Opcode::F32Abs:
     case Opcode::F32Ceil:
     case Opcode::F32ConvertI32S:
@@ -161,14 +162,13 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::F64X2Sqrt:
     case Opcode::F64X2Trunc:
     case Opcode::I16X8AllTrue:
-    case Opcode::I16X8AnyTrue:
     case Opcode::I16X8Bitmask:
     case Opcode::I16X8Neg:
     case Opcode::I16X8Splat:
-    case Opcode::I16X8WidenHighI8X16S:
-    case Opcode::I16X8WidenHighI8X16U:
-    case Opcode::I16X8WidenLowI8X16S:
-    case Opcode::I16X8WidenLowI8X16U:
+    case Opcode::I16X8ExtendHighI8X16S:
+    case Opcode::I16X8ExtendHighI8X16U:
+    case Opcode::I16X8ExtendLowI8X16S:
+    case Opcode::I16X8ExtendLowI8X16U:
     case Opcode::I32Clz:
     case Opcode::I32Ctz:
     case Opcode::I32Eqz:
@@ -186,16 +186,15 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I32TruncSatF64U:
     case Opcode::I32WrapI64:
     case Opcode::I32X4AllTrue:
-    case Opcode::I32X4AnyTrue:
     case Opcode::I32X4Bitmask:
     case Opcode::I32X4Neg:
     case Opcode::I32X4Splat:
     case Opcode::I32X4TruncSatF32X4S:
     case Opcode::I32X4TruncSatF32X4U:
-    case Opcode::I32X4WidenHighI16X8S:
-    case Opcode::I32X4WidenHighI16X8U:
-    case Opcode::I32X4WidenLowI16X8S:
-    case Opcode::I32X4WidenLowI16X8U:
+    case Opcode::I32X4ExtendHighI16X8S:
+    case Opcode::I32X4ExtendHighI16X8U:
+    case Opcode::I32X4ExtendLowI16X8S:
+    case Opcode::I32X4ExtendLowI16X8U:
     case Opcode::I64Clz:
     case Opcode::I64Ctz:
     case Opcode::I64Eqz:
@@ -217,7 +216,6 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I64X2Neg:
     case Opcode::I64X2Splat:
     case Opcode::I8X16AllTrue:
-    case Opcode::I8X16AnyTrue:
     case Opcode::I8X16Bitmask:
     case Opcode::I8X16Neg:
     case Opcode::I8X16Splat:

@@ -174,7 +174,6 @@ i16x8.add_sat_s, TokenType::Binary, Opcode::I16X8AddSatS
 i16x8.add_sat_u, TokenType::Binary, Opcode::I16X8AddSatU
 i16x8.add, TokenType::Binary, Opcode::I16X8Add
 i16x8.all_true, TokenType::Unary, Opcode::I16X8AllTrue
-i16x8.any_true, TokenType::Unary, Opcode::I16X8AnyTrue
 i16x8.avgr_u, TokenType::Binary, Opcode::I16X8AvgrU
 i16x8.bitmask, TokenType::Unary, Opcode::I16X8Bitmask
 i16x8.eq, TokenType::Compare, Opcode::I16X8Eq
@@ -208,10 +207,10 @@ i16x8.sub_sat_s, TokenType::Binary, Opcode::I16X8SubSatS
 i16x8.sub_sat_u, TokenType::Binary, Opcode::I16X8SubSatU
 i16x8.sub, TokenType::Binary, Opcode::I16X8Sub
 i16x8, TokenType::I16X8
-i16x8.widen_high_i8x16_s, TokenType::Unary, Opcode::I16X8WidenHighI8X16S
-i16x8.widen_high_i8x16_u, TokenType::Unary, Opcode::I16X8WidenHighI8X16U
-i16x8.widen_low_i8x16_s, TokenType::Unary, Opcode::I16X8WidenLowI8X16S
-i16x8.widen_low_i8x16_u, TokenType::Unary, Opcode::I16X8WidenLowI8X16U
+i16x8.extend_high_i8x16_s, TokenType::Unary, Opcode::I16X8ExtendHighI8X16S
+i16x8.extend_high_i8x16_u, TokenType::Unary, Opcode::I16X8ExtendHighI8X16U
+i16x8.extend_low_i8x16_s, TokenType::Unary, Opcode::I16X8ExtendLowI8X16S
+i16x8.extend_low_i8x16_u, TokenType::Unary, Opcode::I16X8ExtendLowI8X16U
 i32.add, TokenType::Binary, Opcode::I32Add
 i32.and, TokenType::Binary, Opcode::I32And
 i32.atomic.load16_u, TokenType::AtomicLoad, Opcode::I32AtomicLoad16U
@@ -292,7 +291,6 @@ i32.wrap_i64, TokenType::Convert, Opcode::I32WrapI64
 i32x4.abs, TokenType::Unary, Opcode::I32X4Abs
 i32x4.add, TokenType::Binary, Opcode::I32X4Add
 i32x4.all_true, TokenType::Unary, Opcode::I32X4AllTrue
-i32x4.any_true, TokenType::Unary, Opcode::I32X4AnyTrue
 i32x4.bitmask, TokenType::Unary, Opcode::I32X4Bitmask
 i32x4.eq, TokenType::Compare, Opcode::I32X4Eq
 i32x4.extract_lane, TokenType::SimdLaneOp, Opcode::I32X4ExtractLane
@@ -322,10 +320,10 @@ i32x4.sub, TokenType::Binary, Opcode::I32X4Sub
 i32x4, TokenType::I32X4
 i32x4.trunc_sat_f32x4_s, TokenType::Unary, Opcode::I32X4TruncSatF32X4S
 i32x4.trunc_sat_f32x4_u, TokenType::Unary, Opcode::I32X4TruncSatF32X4U
-i32x4.widen_high_i16x8_s, TokenType::Unary, Opcode::I32X4WidenHighI16X8S
-i32x4.widen_high_i16x8_u, TokenType::Unary, Opcode::I32X4WidenHighI16X8U
-i32x4.widen_low_i16x8_s, TokenType::Unary, Opcode::I32X4WidenLowI16X8S
-i32x4.widen_low_i16x8_u, TokenType::Unary, Opcode::I32X4WidenLowI16X8U
+i32x4.extend_high_i16x8_s, TokenType::Unary, Opcode::I32X4ExtendHighI16X8S
+i32x4.extend_high_i16x8_u, TokenType::Unary, Opcode::I32X4ExtendHighI16X8U
+i32x4.extend_low_i16x8_s, TokenType::Unary, Opcode::I32X4ExtendLowI16X8S
+i32x4.extend_low_i16x8_u, TokenType::Unary, Opcode::I32X4ExtendLowI16X8U
 i32.xor, TokenType::Binary, Opcode::I32Xor
 i64.add, TokenType::Binary, Opcode::I64Add
 i64.and, TokenType::Binary, Opcode::I64And
@@ -437,7 +435,6 @@ i8x16.add_sat_s, TokenType::Binary, Opcode::I8X16AddSatS
 i8x16.add_sat_u, TokenType::Binary, Opcode::I8X16AddSatU
 i8x16.add, TokenType::Binary, Opcode::I8X16Add
 i8x16.all_true, TokenType::Unary, Opcode::I8X16AllTrue
-i8x16.any_true, TokenType::Unary, Opcode::I8X16AnyTrue
 i8x16.avgr_u, TokenType::Binary, Opcode::I8X16AvgrU
 i8x16.bitmask, TokenType::Unary, Opcode::I8X16Bitmask
 i8x16.eq, TokenType::Compare, Opcode::I8X16Eq
@@ -526,6 +523,7 @@ unreachable, TokenType::Unreachable, Opcode::Unreachable
 v128.andnot, TokenType::Binary, Opcode::V128Andnot
 v128.and, TokenType::Binary, Opcode::V128And
 v128.bitselect, TokenType::Ternary, Opcode::V128BitSelect
+v128.any_true, TokenType::Unary, Opcode::V128AnyTrue
 v128.const, TokenType::Const, Opcode::V128Const
 v128.load, TokenType::Load, Opcode::V128Load
 v128.not, TokenType::Unary, Opcode::V128Not
