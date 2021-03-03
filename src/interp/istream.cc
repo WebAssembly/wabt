@@ -213,6 +213,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I64TruncSatF64S:
     case Opcode::I64TruncSatF64U:
     case Opcode::I64X2Neg:
+    case Opcode::I64X2AllTrue:
+    case Opcode::I64X2Bitmask:
     case Opcode::I64X2Splat:
     case Opcode::I8X16AllTrue:
     case Opcode::I8X16Bitmask:

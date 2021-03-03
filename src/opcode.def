@@ -410,6 +410,8 @@ WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0xb7, I32X4MinU, "i32x4.min_u", ""
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0xb8, I32X4MaxS, "i32x4.max_s", "")
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0xb9, I32X4MaxU, "i32x4.max_u", "")
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xc1, I64X2Neg, "i64x2.neg", "")
+WABT_OPCODE( I32, V128,  ___, ___,  0,  0xfd, 0xc3, I64X2AllTrue, "i64x2.all_true", "")
+WABT_OPCODE( I32, V128,  ___, ___,  0,  0xfd, 0xc4, I64X2Bitmask, "i64x2.bitmask", "")
 WABT_OPCODE(V128, V128, I32,  ___,  0,  0xfd, 0xcb, I64X2Shl, "i64x2.shl", "")
 WABT_OPCODE(V128, V128, I32,  ___,  0,  0xfd, 0xcc, I64X2ShrS, "i64x2.shr_s", "")
 WABT_OPCODE(V128, V128, I32,  ___,  0,  0xfd, 0xcd, I64X2ShrU, "i64x2.shr_u", "")
