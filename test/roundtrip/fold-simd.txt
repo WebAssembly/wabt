@@ -95,7 +95,7 @@
 
     local.get 0 i8x16.abs drop
     local.get 0 i8x16.neg drop
-    local.get 0 i8x16.any_true drop
+    local.get 0 v128.any_true drop
     local.get 0 i8x16.all_true drop
     local.get 0 local.get 0 i8x16.narrow_i16x8_s drop
     local.get 0 local.get 0 i8x16.narrow_i16x8_u drop
@@ -116,14 +116,13 @@
 
     local.get 0 i16x8.abs drop
     local.get 0 i16x8.neg drop
-    local.get 0 i16x8.any_true drop
     local.get 0 i16x8.all_true drop
     local.get 0 local.get 0 i16x8.narrow_i32x4_s drop
     local.get 0 local.get 0 i16x8.narrow_i32x4_u drop
-    local.get 0 i16x8.widen_low_i8x16_s drop
-    local.get 0 i16x8.widen_high_i8x16_s drop
-    local.get 0 i16x8.widen_low_i8x16_u drop
-    local.get 0 i16x8.widen_high_i8x16_u drop
+    local.get 0 i16x8.extend_low_i8x16_s drop
+    local.get 0 i16x8.extend_high_i8x16_s drop
+    local.get 0 i16x8.extend_low_i8x16_u drop
+    local.get 0 i16x8.extend_high_i8x16_u drop
     local.get 0 i32.const 0 i16x8.shl drop
     local.get 0 i32.const 0 i16x8.shr_s drop
     local.get 0 i32.const 0 i16x8.shr_u drop
@@ -142,12 +141,11 @@
 
     local.get 0 i32x4.abs drop
     local.get 0 i32x4.neg drop
-    local.get 0 i32x4.any_true drop
     local.get 0 i32x4.all_true drop
-    local.get 0 i32x4.widen_low_i16x8_s drop
-    local.get 0 i32x4.widen_high_i16x8_s drop
-    local.get 0 i32x4.widen_low_i16x8_u drop
-    local.get 0 i32x4.widen_high_i16x8_u drop
+    local.get 0 i32x4.extend_low_i16x8_s drop
+    local.get 0 i32x4.extend_high_i16x8_s drop
+    local.get 0 i32x4.extend_low_i16x8_u drop
+    local.get 0 i32x4.extend_high_i16x8_u drop
     local.get 0 i32.const 0 i32x4.shl drop
     local.get 0 i32.const 0 i32x4.shr_s drop
     local.get 0 i32.const 0 i32x4.shr_u drop
@@ -509,7 +507,7 @@
       (i8x16.neg
         (local.get 0)))
     (drop
-      (i8x16.any_true
+      (v128.any_true
         (local.get 0)))
     (drop
       (i8x16.all_true
@@ -585,9 +583,6 @@
       (i16x8.neg
         (local.get 0)))
     (drop
-      (i16x8.any_true
-        (local.get 0)))
-    (drop
       (i16x8.all_true
         (local.get 0)))
     (drop
@@ -599,16 +594,16 @@
         (local.get 0)
         (local.get 0)))
     (drop
-      (i16x8.widen_low_i8x16_s
+      (i16x8.extend_low_i8x16_s
         (local.get 0)))
     (drop
-      (i16x8.widen_high_i8x16_s
+      (i16x8.extend_high_i8x16_s
         (local.get 0)))
     (drop
-      (i16x8.widen_low_i8x16_u
+      (i16x8.extend_low_i8x16_u
         (local.get 0)))
     (drop
-      (i16x8.widen_high_i8x16_u
+      (i16x8.extend_high_i8x16_u
         (local.get 0)))
     (drop
       (i16x8.shl
@@ -677,22 +672,19 @@
       (i32x4.neg
         (local.get 0)))
     (drop
-      (i32x4.any_true
-        (local.get 0)))
-    (drop
       (i32x4.all_true
         (local.get 0)))
     (drop
-      (i32x4.widen_low_i16x8_s
+      (i32x4.extend_low_i16x8_s
         (local.get 0)))
     (drop
-      (i32x4.widen_high_i16x8_s
+      (i32x4.extend_high_i16x8_s
         (local.get 0)))
     (drop
-      (i32x4.widen_low_i16x8_u
+      (i32x4.extend_low_i16x8_u
         (local.get 0)))
     (drop
-      (i32x4.widen_high_i16x8_u
+      (i32x4.extend_high_i16x8_u
         (local.get 0)))
     (drop
       (i32x4.shl
