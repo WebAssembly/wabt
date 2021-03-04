@@ -213,6 +213,10 @@ inline int Ctz(unsigned __int64 mask) {
 #endif
 }
 
+inline int Popcount(uint8_t value) {
+  return __popcnt(value);
+}
+
 inline int Popcount(unsigned long value) {
   return __popcnt(value);
 }
