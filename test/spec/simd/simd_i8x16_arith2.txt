@@ -1,3 +1,4 @@
+;;; SKIP:
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i8x16_arith2.wast
 ;;; ARGS*: --enable-simd
