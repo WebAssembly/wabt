@@ -31,13 +31,33 @@ out/test/spec/elem.wast:248: assert_invalid passed:
 out/test/spec/elem.wast:258: assert_invalid passed:
   0000014: error: expected i32 init_expr
 out/test/spec/elem.wast:266: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  0000013: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:274: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/elem.wast:282: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/elem.wast:290: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/elem.wast:353: assert_trap passed: uninitialized table element
-31/31 tests passed.
+out/test/spec/elem.wast:282: assert_invalid passed:
+  000002b: error: expected END opcode after initializer expression
+out/test/spec/elem.wast:291: assert_invalid passed:
+  000002b: error: expected END opcode after initializer expression
+out/test/spec/elem.wast:301: assert_invalid passed:
+  0000015: error: expected END opcode after initializer expression
+out/test/spec/elem.wast:309: assert_invalid passed:
+  0000013: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/elem.wast:317: assert_invalid passed:
+  0000013: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/elem.wast:325: assert_invalid passed:
+  0000015: error: expected END opcode after initializer expression
+out/test/spec/elem.wast:339: assert_invalid passed:
+  0000000: error: global variable out of range: 0 (max 0)
+  error: initializer expression cannot reference a mutable global
+  0000015: error: EndElemSegmentInitExpr callback failed
+out/test/spec/elem.wast:347: assert_invalid passed:
+  0000000: error: global variable out of range: 1 (max 1)
+  error: initializer expression cannot reference a mutable global
+  000002b: error: EndElemSegmentInitExpr callback failed
+out/test/spec/elem.wast:356: assert_invalid passed:
+  error: initializer expression cannot reference a mutable global
+  000002f: error: EndElemSegmentInitExpr callback failed
+out/test/spec/elem.wast:414: assert_trap passed: uninitialized table element
+38/38 tests passed.
 ;;; STDOUT ;;)
