@@ -1681,6 +1681,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::I16X8Q15mulrSatS: return DoSimdBinop(SaturatingRoundingQMul<s16>);
 
+    case O::I32X4DotI16X8S: return DoSimdDot<s32x4, s16x8>();
+
     case O::AtomicFence:
     case O::MemoryAtomicNotify:
     case O::MemoryAtomicWait32:
@@ -2241,6 +2243,22 @@ RunResult Thread::DoSimdExtaddPairwise() {
   for (u8 i = 0; i < S::lanes; ++i) {
     u8 laneidx = i * 2;
     result[i] = U(val[laneidx]) + U(val[laneidx+1]);
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename S, typename T>
+RunResult Thread::DoSimdDot() {
+  using SL = typename S::LaneType;
+  auto rhs = Pop<T>();
+  auto lhs = Pop<T>();
+  S result;
+  for (u8 i = 0; i < S::lanes; ++i) {
+    u8 laneidx = i * 2;
+    SL lo = SL(lhs[laneidx]) * SL(rhs[laneidx]);
+    SL hi = SL(lhs[laneidx+1]) * SL(rhs[laneidx+1]);
+    result[i] = lo + hi;
   }
   Push(result);
   return RunResult::Ok;

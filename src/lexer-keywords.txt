@@ -319,6 +319,7 @@ i32x4.max_s, TokenType::Binary, Opcode::I32X4MaxS
 i32x4.max_u, TokenType::Binary, Opcode::I32X4MaxU
 i32x4.min_s, TokenType::Binary, Opcode::I32X4MinS
 i32x4.min_u, TokenType::Binary, Opcode::I32X4MinU
+i32x4.dot_i16x8_s, TokenType::Binary, Opcode::I32X4DotI16X8S
 i32x4.mul, TokenType::Binary, Opcode::I32X4Mul
 i32x4.neg, TokenType::Unary, Opcode::I32X4Neg
 i32x4.ne, TokenType::Compare, Opcode::I32X4Ne
