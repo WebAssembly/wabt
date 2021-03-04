@@ -2089,7 +2089,15 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
 
   for (Index i = 0; i < num_signatures; ++i) {
     Type form;
-    CHECK_RESULT(ReadType(&form, "type form"));
+    if (options_.features.gc_enabled()) {
+      CHECK_RESULT(ReadType(&form, "type form"));
+    } else {
+      uint8_t type;
+      CHECK_RESULT(ReadU8(&type, "type form"));
+      ERROR_UNLESS(type == 0x60, "unexpected type form (got " PRItypecode ")",
+                   WABT_PRINTF_TYPE_CODE(type));
+      form = Type::Func;
+    }
 
     switch (form) {
       case Type::Func: {
