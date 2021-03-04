@@ -1498,6 +1498,12 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4LeU: return DoSimdBinop(LeMask<u32>);
     case O::I32X4GeS: return DoSimdBinop(GeMask<s32>);
     case O::I32X4GeU: return DoSimdBinop(GeMask<u32>);
+    case O::I64X2Eq:  return DoSimdBinop(EqMask<u64>);
+    case O::I64X2Ne:  return DoSimdBinop(NeMask<u64>);
+    case O::I64X2LtS: return DoSimdBinop(LtMask<s64>);
+    case O::I64X2GtS: return DoSimdBinop(GtMask<s64>);
+    case O::I64X2LeS: return DoSimdBinop(LeMask<s64>);
+    case O::I64X2GeS: return DoSimdBinop(GeMask<s64>);
     case O::F32X4Eq:  return DoSimdBinop(EqMask<f32>);
     case O::F32X4Ne:  return DoSimdBinop(NeMask<f32>);
     case O::F32X4Lt:  return DoSimdBinop(LtMask<f32>);
