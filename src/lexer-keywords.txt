@@ -212,6 +212,10 @@ i16x8.sub_sat_u, TokenType::Binary, Opcode::I16X8SubSatU
 i16x8.sub, TokenType::Binary, Opcode::I16X8Sub
 i16x8.extadd_pairwise_i8x16_s, TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16S
 i16x8.extadd_pairwise_i8x16_u, TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16U
+i16x8.extmul_low_i8x16_s, TokenType::Binary, Opcode::I16X8ExtmulLowI8X16S
+i16x8.extmul_high_i8x16_s, TokenType::Binary, Opcode::I16X8ExtmulHighI8X16S
+i16x8.extmul_low_i8x16_u, TokenType::Binary, Opcode::I16X8ExtmulLowI8X16U
+i16x8.extmul_high_i8x16_u, TokenType::Binary, Opcode::I16X8ExtmulHighI8X16U
 i16x8, TokenType::I16X8
 i16x8.extend_high_i8x16_s, TokenType::Unary, Opcode::I16X8ExtendHighI8X16S
 i16x8.extend_high_i8x16_u, TokenType::Unary, Opcode::I16X8ExtendHighI8X16U
@@ -325,6 +329,10 @@ i32x4.splat, TokenType::Unary, Opcode::I32X4Splat
 i32x4.sub, TokenType::Binary, Opcode::I32X4Sub
 i32x4.extadd_pairwise_i16x8_s, TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8S
 i32x4.extadd_pairwise_i16x8_u, TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8U
+i32x4.extmul_low_i16x8_s, TokenType::Binary, Opcode::I32X4ExtmulLowI16X8S
+i32x4.extmul_high_i16x8_s, TokenType::Binary, Opcode::I32X4ExtmulHighI16X8S
+i32x4.extmul_low_i16x8_u, TokenType::Binary, Opcode::I32X4ExtmulLowI16X8U
+i32x4.extmul_high_i16x8_u, TokenType::Binary, Opcode::I32X4ExtmulHighI16X8U
 i32x4, TokenType::I32X4
 i32x4.trunc_sat_f32x4_s, TokenType::Unary, Opcode::I32X4TruncSatF32X4S
 i32x4.trunc_sat_f32x4_u, TokenType::Unary, Opcode::I32X4TruncSatF32X4U
@@ -441,6 +449,10 @@ i64x2.shr_s, TokenType::Binary, Opcode::I64X2ShrS
 i64x2.shr_u, TokenType::Binary, Opcode::I64X2ShrU
 i64x2.splat, TokenType::Unary, Opcode::I64X2Splat
 i64x2.sub, TokenType::Binary, Opcode::I64X2Sub
+i64x2.extmul_low_i32x4_s, TokenType::Binary, Opcode::I64X2ExtmulLowI32X4S
+i64x2.extmul_high_i32x4_s, TokenType::Binary, Opcode::I64X2ExtmulHighI32X4S
+i64x2.extmul_low_i32x4_u, TokenType::Binary, Opcode::I64X2ExtmulLowI32X4U
+i64x2.extmul_high_i32x4_u, TokenType::Binary, Opcode::I64X2ExtmulHighI32X4U
 i64x2, TokenType::I64X2
 i64.xor, TokenType::Binary, Opcode::I64Xor
 i8x16.abs, TokenType::Unary, Opcode::I8X16Abs

@@ -1666,6 +1666,19 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4ExtaddPairwiseI16X8S: return DoSimdExtaddPairwise<s32x4, s16x8>();
     case O::I32X4ExtaddPairwiseI16X8U: return DoSimdExtaddPairwise<u32x4, u16x8>();
 
+    case O::I16X8ExtmulLowI8X16S: return DoSimdExtmul<s16x8, s8x16, true>();
+    case O::I16X8ExtmulHighI8X16S: return DoSimdExtmul<s16x8, s8x16, false>();
+    case O::I16X8ExtmulLowI8X16U: return DoSimdExtmul<u16x8, u8x16, true>();
+    case O::I16X8ExtmulHighI8X16U: return DoSimdExtmul<u16x8, u8x16, false>();
+    case O::I32X4ExtmulLowI16X8S: return DoSimdExtmul<s32x4, s16x8, true>();
+    case O::I32X4ExtmulHighI16X8S: return DoSimdExtmul<s32x4, s16x8, false>();
+    case O::I32X4ExtmulLowI16X8U: return DoSimdExtmul<u32x4, u16x8, true>();
+    case O::I32X4ExtmulHighI16X8U: return DoSimdExtmul<u32x4, u16x8, false>();
+    case O::I64X2ExtmulLowI32X4S: return DoSimdExtmul<s64x2, s32x4, true>();
+    case O::I64X2ExtmulHighI32X4S: return DoSimdExtmul<s64x2, s32x4, false>();
+    case O::I64X2ExtmulLowI32X4U: return DoSimdExtmul<u64x2, u32x4, true>();
+    case O::I64X2ExtmulHighI32X4U: return DoSimdExtmul<u64x2, u32x4, false>();
+
     case O::AtomicFence:
     case O::MemoryAtomicNotify:
     case O::MemoryAtomicWait32:
@@ -2185,6 +2198,20 @@ RunResult Thread::DoSimdConvert() {
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
     result[i] = Convert<SL>(val[(low ? 0 : S::lanes) + i]);
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename S, typename T, bool low>
+RunResult Thread::DoSimdExtmul() {
+  auto rhs = Pop<T>();
+  auto lhs = Pop<T>();
+  S result;
+  using U = typename S::LaneType;
+  for (u8 i = 0; i < S::lanes; ++i) {
+    u8 laneidx = (low ? 0 : S::lanes) + i;
+    result[i] = U(lhs[laneidx]) * U(rhs[laneidx]);
   }
   Push(result);
   return RunResult::Ok;
