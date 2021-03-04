@@ -201,6 +201,7 @@ i16x8.mul, TokenType::Binary, Opcode::I16X8Mul
 i16x8.narrow_i32x4_s, TokenType::Binary, Opcode::I16X8NarrowI32X4S
 i16x8.narrow_i32x4_u, TokenType::Binary, Opcode::I16X8NarrowI32X4U
 i16x8.neg, TokenType::Unary, Opcode::I16X8Neg
+i16x8.q15mulr_sat_s, TokenType::Binary, Opcode::I16X8Q15mulrSatS
 i16x8.ne, TokenType::Compare, Opcode::I16X8Ne
 i16x8.replace_lane, TokenType::SimdLaneOp, Opcode::I16X8ReplaceLane
 i16x8.shl, TokenType::Binary, Opcode::I16X8Shl
