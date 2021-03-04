@@ -1,3 +1,4 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_store16_lane.wast
 ;;; ARGS*: --enable-simd
+;;; SKIP:

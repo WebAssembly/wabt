@@ -1,3 +1,4 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i32x4_trunc_sat_f64x2.wast
 ;;; ARGS*: --enable-simd
+;;; SKIP:
