@@ -43,12 +43,32 @@ out/test/spec/data.wast:337: assert_invalid passed:
 out/test/spec/data.wast:355: assert_invalid passed:
   0000013: error: expected i32 init_expr
 out/test/spec/data.wast:363: assert_invalid passed:
-  0000014: error: expected END opcode after initializer expression
+  error: invalid data segment offset, must be a constant expression; either i32.const or global.get.
+  0000012: error: EndDataSegmentInitExpr callback failed
 out/test/spec/data.wast:371: assert_invalid passed:
-  0000012: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/data.wast:379: assert_invalid passed:
-  0000012: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/data.wast:387: assert_invalid passed:
   0000014: error: expected END opcode after initializer expression
-24/24 tests passed.
+out/test/spec/data.wast:379: assert_invalid passed:
+  000002a: error: expected END opcode after initializer expression
+out/test/spec/data.wast:388: assert_invalid passed:
+  000002a: error: expected END opcode after initializer expression
+out/test/spec/data.wast:397: assert_invalid passed:
+  0000014: error: expected END opcode after initializer expression
+out/test/spec/data.wast:405: assert_invalid passed:
+  0000012: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/data.wast:413: assert_invalid passed:
+  0000012: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/data.wast:421: assert_invalid passed:
+  0000014: error: expected END opcode after initializer expression
+out/test/spec/data.wast:435: assert_invalid passed:
+  0000000: error: global variable out of range: 0 (max 0)
+  error: initializer expression cannot reference a mutable global
+  0000014: error: EndDataSegmentInitExpr callback failed
+out/test/spec/data.wast:443: assert_invalid passed:
+  0000000: error: global variable out of range: 1 (max 1)
+  error: initializer expression cannot reference a mutable global
+  000002a: error: EndDataSegmentInitExpr callback failed
+out/test/spec/data.wast:452: assert_invalid passed:
+  error: initializer expression cannot reference a mutable global
+  000002e: error: EndDataSegmentInitExpr callback failed
+31/31 tests passed.
 ;;; STDOUT ;;)
