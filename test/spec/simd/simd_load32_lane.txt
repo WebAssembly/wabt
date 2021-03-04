@@ -1,0 +1,3 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_load32_lane.wast
+;;; ARGS*: --enable-simd
