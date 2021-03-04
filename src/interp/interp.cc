@@ -1755,6 +1755,41 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::Rethrow:
     case O::InterpData:
     case O::Invalid:
+    case O::V128Load8Lane:
+    case O::V128Load16Lane:
+    case O::V128Load32Lane:
+    case O::V128Load64Lane:
+    case O::V128Store8Lane:
+    case O::V128Store16Lane:
+    case O::V128Store32Lane:
+    case O::V128Store64Lane:
+    case O::V128Load32Zero:
+    case O::V128Load64Zero:
+    case O::I16X8ExtaddPairwiseI8X16S:
+    case O::I16X8ExtaddPairwiseI8X16U:
+    case O::I32X4ExtaddPairwiseI16X8S:
+    case O::I32X4ExtaddPairwiseI16X8U:
+    case O::I16X8Q15mulrSatS:
+    case O::I16X8ExtmulLowI8X16S:
+    case O::I16X8ExtmulHighI8X16S:
+    case O::I16X8ExtmulLowI8X16U:
+    case O::I16X8ExtmulHighI8X16U:
+    case O::I32X4DotI16X8S:
+    case O::I32X4ExtmulLowI16X8S:
+    case O::I32X4ExtmulHighI16X8S:
+    case O::I32X4ExtmulLowI16X8U:
+    case O::I32X4ExtmulHighI16X8U:
+    case O::I64X2Abs:
+    case O::I64X2Eq:
+    case O::I64X2Ne:
+    case O::I64X2LtS:
+    case O::I64X2GtS:
+    case O::I64X2LeS:
+    case O::I64X2GeS:
+    case O::I64X2ExtmulLowI32X4S:
+    case O::I64X2ExtmulHighI32X4S:
+    case O::I64X2ExtmulLowI32X4U:
+    case O::I64X2ExtmulHighI32X4U:
       WABT_UNREACHABLE;
       break;
   }
