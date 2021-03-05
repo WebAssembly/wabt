@@ -1237,6 +1237,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I8X16Abs:
       case Opcode::I16X8Abs:
       case Opcode::I32X4Abs:
+      case Opcode::I64X2Abs:
       case Opcode::I8X16Popcnt:
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);

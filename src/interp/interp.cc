@@ -1657,6 +1657,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16Abs: return DoSimdUnop(IntAbs<u8>);
     case O::I16X8Abs: return DoSimdUnop(IntAbs<u16>);
     case O::I32X4Abs: return DoSimdUnop(IntAbs<u32>);
+    case O::I64X2Abs: return DoSimdUnop(IntAbs<u64>);
 
     case O::I8X16Popcnt: return DoSimdUnop(IntPopcnt<u8>);
 
