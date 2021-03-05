@@ -325,6 +325,7 @@ enum class ExprType {
   SimdLaneOp,
   SimdShuffleOp,
   LoadSplat,
+  LoadZero,
   Store,
   TableCopy,
   ElemDrop,
@@ -620,6 +621,7 @@ typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
 typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
 typedef LoadStoreExpr<ExprType::AtomicNotify> AtomicNotifyExpr;
 typedef LoadStoreExpr<ExprType::LoadSplat> LoadSplatExpr;
+typedef LoadStoreExpr<ExprType::LoadZero> LoadZeroExpr;
 
 class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
  public:

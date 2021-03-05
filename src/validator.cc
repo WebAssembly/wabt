@@ -151,6 +151,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
+  Result OnLoadZeroExpr(LoadZeroExpr*) override;
 
  private:
   Type GetDeclarationType(const FuncDeclaration&);
@@ -580,6 +581,12 @@ Result Validator::OnSimdShuffleOpExpr(SimdShuffleOpExpr* expr) {
 Result Validator::OnLoadSplatExpr(LoadSplatExpr* expr) {
   result_ |= validator_.OnLoadSplat(expr->loc, expr->opcode,
                                     expr->opcode.GetAlignment(expr->align));
+  return Result::Ok;
+}
+
+Result Validator::OnLoadZeroExpr(LoadZeroExpr* expr) {
+  result_ |= validator_.OnLoadZero(expr->loc, expr->opcode,
+                                   expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 

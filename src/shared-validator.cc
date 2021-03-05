@@ -895,6 +895,18 @@ Result SharedValidator::OnLoadSplat(const Location& loc,
   return result;
 }
 
+Result SharedValidator::OnLoadZero(const Location& loc,
+                                   Opcode opcode,
+                                   Address alignment) {
+  Result result = Result::Ok;
+  MemoryType mt;
+  expr_loc_ = &loc;
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
+  result |= typechecker_.OnLoad(opcode, mt.limits);
+  return result;
+}
+
 Result SharedValidator::OnLocalGet(const Location& loc, Var local_var) {
   Result result = Result::Ok;
   Type type = Type::Any;

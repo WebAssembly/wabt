@@ -206,6 +206,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLoadSplatExpr(Opcode opcode,
                          Address alignment_log2,
                          Address offset) override;
+  Result OnLoadZeroExpr(Opcode opcode,
+                        Address alignment_log2,
+                        Address offset) override;
 
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index,
@@ -1087,6 +1090,13 @@ Result BinaryReaderIR::OnLoadSplatExpr(Opcode opcode,
                                        Address offset) {
   return AppendExpr(
       MakeUnique<LoadSplatExpr>(opcode, 1 << alignment_log2, offset));
+}
+
+Result BinaryReaderIR::OnLoadZeroExpr(Opcode opcode,
+                                      Address alignment_log2,
+                                      Address offset) {
+  return AppendExpr(
+      MakeUnique<LoadZeroExpr>(opcode, 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnElemSegmentCount(Index count) {

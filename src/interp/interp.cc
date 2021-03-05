@@ -1636,6 +1636,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::V128Load32Splat:   return DoSimdLoadSplat<u32x4, u32>(instr, out_trap);
     case O::V128Load64Splat:   return DoSimdLoadSplat<u64x2, u64>(instr, out_trap);
 
+    case O::V128Load32Zero: return DoSimdLoadZero<u32x4, u32>(instr, out_trap);
+    case O::V128Load64Zero: return DoSimdLoadZero<u64x2, u64>(instr, out_trap);
+
     case O::I8X16NarrowI16X8S:    return DoSimdNarrow<s8x16, s16x8>();
     case O::I8X16NarrowI16X8U:    return DoSimdNarrow<u8x16, s16x8>();
     case O::I16X8NarrowI32X4S:    return DoSimdNarrow<s16x8, s32x4>();
@@ -2158,6 +2161,20 @@ RunResult Thread::DoSimdLoadSplat(Instr instr, Trap::Ptr* out_trap) {
   }
   S result;
   std::fill(std::begin(result.v), std::end(result.v), val);
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename S, typename T>
+RunResult Thread::DoSimdLoadZero(Instr instr, Trap::Ptr* out_trap) {
+  using L = typename S::LaneType;
+  L val;
+  if (Load<L>(instr, &val, out_trap) != RunResult::Ok) {
+    return RunResult::Trap;
+  }
+  S result;
+  std::fill(std::begin(result.v), std::end(result.v), 0);
+  result[0] = val;
   Push(result);
   return RunResult::Ok;
 }

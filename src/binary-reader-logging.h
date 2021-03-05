@@ -234,6 +234,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnLoadSplatExpr(Opcode opcode,
                          Address alignment_log2,
                          Address offset) override;
+  Result OnLoadZeroExpr(Opcode opcode,
+                        Address alignment_log2,
+                        Address offset) override;
 
   Result BeginElemSection(Offset size) override;
   Result OnElemSegmentCount(Index count) override;

@@ -180,6 +180,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::TableGet:
     case ExprType::RefIsNull:
     case ExprType::LoadSplat:
+    case ExprType::LoadZero:
       return { 1, 1 };
 
     case ExprType::Drop:

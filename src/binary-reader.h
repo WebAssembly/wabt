@@ -298,6 +298,9 @@ class BinaryReaderDelegate {
   virtual Result OnLoadSplatExpr(Opcode opcode,
                                  Address alignment_log2,
                                  Address offset) = 0;
+  virtual Result OnLoadZeroExpr(Opcode opcode,
+                                Address alignment_log2,
+                                Address offset) = 0;
 
   /* Elem section */
   virtual Result BeginElemSection(Offset size) = 0;

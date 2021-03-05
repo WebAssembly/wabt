@@ -571,6 +571,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::V128Load64Splat:
     case Opcode::V128Load8Splat:
     case Opcode::V128Load:
+    case Opcode::V128Load32Zero:
+    case Opcode::V128Load64Zero:
       // Index + memory offset immediates, 1 operand.
       instr.kind = InstrKind::Imm_Index_Offset_Op_1;
       instr.imm_u32x2.fst = ReadAt<u32>(offset);
