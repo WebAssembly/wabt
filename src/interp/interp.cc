@@ -1516,9 +1516,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::V128Or:        return DoSimdBinop(IntOr<u64>);
     case O::V128Xor:       return DoSimdBinop(IntXor<u64>);
     case O::V128BitSelect: return DoSimdBitSelect();
+    case O::V128AnyTrue:      return DoSimdIsTrue<u8x16, 1>();
 
     case O::I8X16Neg:          return DoSimdUnop(IntNeg<u8>);
-    case O::I8X16AnyTrue:      return DoSimdIsTrue<u8x16, 1>();
     case O::I8X16Bitmask:      return DoSimdBitmask<s8x16>();
     case O::I8X16AllTrue:      return DoSimdIsTrue<u8x16, 16>();
     case O::I8X16Shl:          return DoSimdShift(IntShl<u8>);
@@ -1536,7 +1536,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16MaxU:         return DoSimdBinop(IntMax<u8>);
 
     case O::I16X8Neg:          return DoSimdUnop(IntNeg<u16>);
-    case O::I16X8AnyTrue:      return DoSimdIsTrue<u16x8, 1>();
     case O::I16X8Bitmask:      return DoSimdBitmask<s16x8>();
     case O::I16X8AllTrue:      return DoSimdIsTrue<u16x8, 8>();
     case O::I16X8Shl:          return DoSimdShift(IntShl<u16>);
@@ -1555,7 +1554,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I16X8MaxU:         return DoSimdBinop(IntMax<u16>);
 
     case O::I32X4Neg:          return DoSimdUnop(IntNeg<u32>);
-    case O::I32X4AnyTrue:      return DoSimdIsTrue<u32x4, 1>();
     case O::I32X4Bitmask:      return DoSimdBitmask<s32x4>();
     case O::I32X4AllTrue:      return DoSimdIsTrue<u32x4, 4>();
     case O::I32X4Shl:          return DoSimdShift(IntShl<u32>);

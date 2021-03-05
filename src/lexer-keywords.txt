@@ -174,7 +174,6 @@ i16x8.add_sat_s, TokenType::Binary, Opcode::I16X8AddSatS
 i16x8.add_sat_u, TokenType::Binary, Opcode::I16X8AddSatU
 i16x8.add, TokenType::Binary, Opcode::I16X8Add
 i16x8.all_true, TokenType::Unary, Opcode::I16X8AllTrue
-i16x8.any_true, TokenType::Unary, Opcode::I16X8AnyTrue
 i16x8.avgr_u, TokenType::Binary, Opcode::I16X8AvgrU
 i16x8.bitmask, TokenType::Unary, Opcode::I16X8Bitmask
 i16x8.eq, TokenType::Compare, Opcode::I16X8Eq
@@ -292,7 +291,6 @@ i32.wrap_i64, TokenType::Convert, Opcode::I32WrapI64
 i32x4.abs, TokenType::Unary, Opcode::I32X4Abs
 i32x4.add, TokenType::Binary, Opcode::I32X4Add
 i32x4.all_true, TokenType::Unary, Opcode::I32X4AllTrue
-i32x4.any_true, TokenType::Unary, Opcode::I32X4AnyTrue
 i32x4.bitmask, TokenType::Unary, Opcode::I32X4Bitmask
 i32x4.eq, TokenType::Compare, Opcode::I32X4Eq
 i32x4.extract_lane, TokenType::SimdLaneOp, Opcode::I32X4ExtractLane
@@ -437,7 +435,6 @@ i8x16.add_sat_s, TokenType::Binary, Opcode::I8X16AddSatS
 i8x16.add_sat_u, TokenType::Binary, Opcode::I8X16AddSatU
 i8x16.add, TokenType::Binary, Opcode::I8X16Add
 i8x16.all_true, TokenType::Unary, Opcode::I8X16AllTrue
-i8x16.any_true, TokenType::Unary, Opcode::I8X16AnyTrue
 i8x16.avgr_u, TokenType::Binary, Opcode::I8X16AvgrU
 i8x16.bitmask, TokenType::Unary, Opcode::I8X16Bitmask
 i8x16.eq, TokenType::Compare, Opcode::I8X16Eq
@@ -530,6 +527,7 @@ v128.const, TokenType::Const, Opcode::V128Const
 v128.load, TokenType::Load, Opcode::V128Load
 v128.not, TokenType::Unary, Opcode::V128Not
 v128.or, TokenType::Binary, Opcode::V128Or
+v128.any_true, TokenType::Unary, Opcode::V128AnyTrue
 v128.store, TokenType::Store, Opcode::V128Store
 v128, Type::V128
 v128.xor, TokenType::Binary, Opcode::V128Xor
