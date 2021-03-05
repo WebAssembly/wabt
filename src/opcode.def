@@ -455,6 +455,8 @@ WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xf8, I32X4TruncSatF32X4S,"i32x4.t
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xf9, I32X4TruncSatF32X4U,"i32x4.trunc_sat_f32x4_u", "")
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xfa, F32X4ConvertI32X4S, "f32x4.convert_i32x4_s", "")
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xfb, F32X4ConvertI32X4U, "f32x4.convert_i32x4_u", "")
+WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xfc, I32X4TruncSatF64X2SZero, "i32x4.trunc_sat_f64x2_s_zero", "")
+WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xfd, I32X4TruncSatF64X2UZero, "i32x4.trunc_sat_f64x2_u_zero", "")
 WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xfe, F64X2ConvertLowI32X4S, "f64x2.convert_low_i32x4_s", "")
 WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xff, F64X2ConvertLowI32X4U, "f64x2.convert_low_i32x4_u", "")
 
