@@ -161,7 +161,6 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::F64X2Sqrt:
     case Opcode::F64X2Trunc:
     case Opcode::I16X8AllTrue:
-    case Opcode::I16X8AnyTrue:
     case Opcode::I16X8Bitmask:
     case Opcode::I16X8Neg:
     case Opcode::I16X8Splat:
@@ -186,7 +185,6 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I32TruncSatF64U:
     case Opcode::I32WrapI64:
     case Opcode::I32X4AllTrue:
-    case Opcode::I32X4AnyTrue:
     case Opcode::I32X4Bitmask:
     case Opcode::I32X4Neg:
     case Opcode::I32X4Splat:
@@ -215,14 +213,16 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I64TruncSatF64S:
     case Opcode::I64TruncSatF64U:
     case Opcode::I64X2Neg:
+    case Opcode::I64X2AllTrue:
+    case Opcode::I64X2Bitmask:
     case Opcode::I64X2Splat:
     case Opcode::I8X16AllTrue:
-    case Opcode::I8X16AnyTrue:
     case Opcode::I8X16Bitmask:
     case Opcode::I8X16Neg:
     case Opcode::I8X16Splat:
     case Opcode::RefIsNull:
     case Opcode::V128Not:
+    case Opcode::V128AnyTrue:
     case Opcode::I8X16Abs:
     case Opcode::I16X8Abs:
     case Opcode::I32X4Abs:

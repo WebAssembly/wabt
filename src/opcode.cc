@@ -223,15 +223,15 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::V128Xor:
     case Opcode::V128Not:
     case Opcode::V128BitSelect:
-    case Opcode::I8X16AnyTrue:
-    case Opcode::I16X8AnyTrue:
-    case Opcode::I32X4AnyTrue:
+    case Opcode::V128AnyTrue:
     case Opcode::I8X16Bitmask:
     case Opcode::I16X8Bitmask:
     case Opcode::I32X4Bitmask:
+    case Opcode::I64X2Bitmask:
     case Opcode::I8X16AllTrue:
     case Opcode::I16X8AllTrue:
     case Opcode::I32X4AllTrue:
+    case Opcode::I64X2AllTrue:
     case Opcode::I8X16Eq:
     case Opcode::I16X8Eq:
     case Opcode::I32X4Eq:
