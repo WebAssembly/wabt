@@ -219,6 +219,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I8X16AllTrue:
     case Opcode::I8X16Bitmask:
     case Opcode::I8X16Neg:
+    case Opcode::I8X16Popcnt:
     case Opcode::I8X16Splat:
     case Opcode::RefIsNull:
     case Opcode::V128Not:
