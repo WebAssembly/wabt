@@ -1615,6 +1615,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4TruncSatF32X4U: return DoSimdUnop(IntTruncSat<u32, f32>);
     case O::F32X4ConvertI32X4S:  return DoSimdUnop(Convert<f32, s32>);
     case O::F32X4ConvertI32X4U:  return DoSimdUnop(Convert<f32, u32>);
+    case O::F32X4DemoteF64X2Zero: return DoSimdUnopZero(Convert<f32, f64>);
+    case O::F64X2PromoteLowF32X4: return DoSimdUnop(Convert<f64, f32>);
+    case O::F64X2ConvertLowI32X4S: return DoSimdUnop(Convert<f64, s32>);
+    case O::F64X2ConvertLowI32X4U: return DoSimdUnop(Convert<f64, u32>);
 
     case O::I8X16Swizzle:     return DoSimdSwizzle();
     case O::I8X16Shuffle:     return DoSimdShuffle(instr);
@@ -1628,14 +1632,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16NarrowI16X8U:    return DoSimdNarrow<u8x16, s16x8>();
     case O::I16X8NarrowI32X4S:    return DoSimdNarrow<s16x8, s32x4>();
     case O::I16X8NarrowI32X4U:    return DoSimdNarrow<u16x8, s32x4>();
-    case O::I16X8WidenLowI8X16S:  return DoSimdWiden<s16x8, s8x16, true>();
-    case O::I16X8WidenHighI8X16S: return DoSimdWiden<s16x8, s8x16, false>();
-    case O::I16X8WidenLowI8X16U:  return DoSimdWiden<u16x8, u8x16, true>();
-    case O::I16X8WidenHighI8X16U: return DoSimdWiden<u16x8, u8x16, false>();
-    case O::I32X4WidenLowI16X8S:  return DoSimdWiden<s32x4, s16x8, true>();
-    case O::I32X4WidenHighI16X8S: return DoSimdWiden<s32x4, s16x8, false>();
-    case O::I32X4WidenLowI16X8U:  return DoSimdWiden<u32x4, u16x8, true>();
-    case O::I32X4WidenHighI16X8U: return DoSimdWiden<u32x4, u16x8, false>();
+    case O::I16X8ExtendLowI8X16S:  return DoSimdExtend<s16x8, s8x16, true>();
+    case O::I16X8ExtendHighI8X16S: return DoSimdExtend<s16x8, s8x16, false>();
+    case O::I16X8ExtendLowI8X16U:  return DoSimdExtend<u16x8, u8x16, true>();
+    case O::I16X8ExtendHighI8X16U: return DoSimdExtend<u16x8, u8x16, false>();
+    case O::I32X4ExtendLowI16X8S:  return DoSimdExtend<s32x4, s16x8, true>();
+    case O::I32X4ExtendHighI16X8S: return DoSimdExtend<s32x4, s16x8, false>();
+    case O::I32X4ExtendLowI16X8U:  return DoSimdExtend<u32x4, u16x8, true>();
+    case O::I32X4ExtendHighI16X8U: return DoSimdExtend<u32x4, u16x8, false>();
 
     case O::V128Load8X8S:  return DoSimdLoadExtend<s16x8, s8x8>(instr, out_trap);
     case O::V128Load8X8U:  return DoSimdLoadExtend<u16x8, u8x8>(instr, out_trap);
@@ -2029,6 +2033,23 @@ RunResult Thread::DoSimdUnop(UnopFunc<R, T> f) {
 }
 
 template <typename R, typename T>
+RunResult Thread::DoSimdUnopZero(UnopFunc<R, T> f) {
+  using ST = typename Simd128<T>::Type;
+  using SR = typename Simd128<R>::Type;
+  auto val = Pop<ST>();
+  SR result;
+  std::transform(std::begin(val.v), std::end(val.v), std::begin(result.v), f);
+  for (u8 i = 0; i < ST::lanes; ++i) {
+    result[i] = f(val[i]);
+  }
+  for (u8 i = ST::lanes; i < SR::lanes; ++i) {
+    result[i] = 0;
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename R, typename T>
 RunResult Thread::DoSimdBinop(BinopFunc<R, T> f) {
   using ST = typename Simd128<T>::Type;
   using SR = typename Simd128<R>::Type;
@@ -2150,7 +2171,7 @@ RunResult Thread::DoSimdNarrow() {
 }
 
 template <typename S, typename T, bool low>
-RunResult Thread::DoSimdWiden() {
+RunResult Thread::DoSimdExtend() {
   auto val = Pop<T>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
