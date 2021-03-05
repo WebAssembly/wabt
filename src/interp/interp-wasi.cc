@@ -177,7 +177,7 @@ class WasiInstance {
 
   Result proc_exit(const Values& params, Values& results, Trap::Ptr* trap) {
     const Value arg0 = params[0];
-    uvwasi_proc_exit(uvwasi, arg0.i32_);
+    uvwasi_proc_exit(uvwasi, arg0.Get<u32>());
     return Result::Ok;
   }
 
@@ -194,9 +194,9 @@ class WasiInstance {
      *                                      __wasi_timestamp_t *time)
      */
     __wasi_timestamp_t t;
-    results[0].i32_ =
-        uvwasi_clock_time_get(uvwasi, params[0].i32_, params[1].i64_, &t);
-    uint32_t time_ptr = params[2].i32_;
+    results[0].Set<u32>(
+        uvwasi_clock_time_get(uvwasi, params[0].Get<u32>(), params[1].Get<u64>(), &t));
+    uint32_t time_ptr = params[2].Get<u32>();
     CHECK_RESULT(writeValue<__wasi_timestamp_t>(t, time_ptr, trap));
     return Result::Ok;
   }
@@ -216,26 +216,26 @@ class WasiInstance {
                                        __wasi_rights_t fs_rights_inherting,
                                        __wasi_fdflags_t fdflags,
                                        __wasi_fd_t *opened_fd) */
-    uvwasi_fd_t dirfd = params[0].i32_;
-    __wasi_lookupflags_t dirflags = params[1].i32_;
-    uint32_t path_ptr = params[2].i32_;
-    __wasi_size_t path_len = params[3].i32_;
-    __wasi_oflags_t oflags = params[4].i32_;
-    __wasi_rights_t fs_rights_base = params[5].i32_;
-    __wasi_rights_t fs_rights_inherting = params[6].i32_;
-    __wasi_fdflags_t fs_flags = params[7].i32_;
-    uint32_t out_ptr = params[8].i32_;
+    uvwasi_fd_t dirfd = params[0].Get<u32>();
+    __wasi_lookupflags_t dirflags = params[1].Get<u32>();
+    uint32_t path_ptr = params[2].Get<u32>();
+    __wasi_size_t path_len = params[3].Get<u32>();
+    __wasi_oflags_t oflags = params[4].Get<u32>();
+    __wasi_rights_t fs_rights_base = params[5].Get<u32>();
+    __wasi_rights_t fs_rights_inherting = params[6].Get<u32>();
+    __wasi_fdflags_t fs_flags = params[7].Get<u32>();
+    uint32_t out_ptr = params[8].Get<u32>();
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     if (trace_stream) {
       trace_stream->Writef("path_open : %s\n", path);
     }
     uvwasi_fd_t outfd;
-    results[0].i32_ =
+    results[0].Set<u32>(
         uvwasi_path_open(uvwasi, dirfd, dirflags, path, path_len, oflags,
-                         fs_rights_base, fs_rights_inherting, fs_flags, &outfd);
+                         fs_rights_base, fs_rights_inherting, fs_flags, &outfd));
     if (trace_stream) {
-      trace_stream->Writef("path_open -> %d\n", results[0].i32_);
+      trace_stream->Writef("path_open -> %d\n", results[0].Get<u32>());
     }
     CHECK_RESULT(writeValue<__wasi_fd_t>(outfd, out_ptr, trap));
     return Result::Ok;
@@ -250,26 +250,26 @@ class WasiInstance {
      *                                         size_t path_len,
      *                                         __wasi_filestat_t *buf
      */
-    uvwasi_fd_t fd = params[0].i32_;
-    __wasi_lookupflags_t flags = params[1].i32_;
-    uint32_t path_ptr = params[2].i32_;
-    uvwasi_size_t path_len = params[3].i32_;
-    uint32_t filestat_ptr = params[4].i32_;
+    uvwasi_fd_t fd = params[0].Get<u32>();
+    __wasi_lookupflags_t flags = params[1].Get<u32>();
+    uint32_t path_ptr = params[2].Get<u32>();
+    uvwasi_size_t path_len = params[3].Get<u32>();
+    uint32_t filestat_ptr = params[4].Get<u32>();
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     if (trace_stream) {
       trace_stream->Writef("path_filestat_get : %d %s\n", fd, path);
     }
     uvwasi_filestat_t buf;
-    results[0].i32_ =
-        uvwasi_path_filestat_get(uvwasi, fd, flags, path, path_len, &buf);
+    results[0].Set<u32>(
+        uvwasi_path_filestat_get(uvwasi, fd, flags, path, path_len, &buf));
     __wasi_filestat_t* filestat;
     CHECK_RESULT(getMemPtr<__wasi_filestat_t>(
         filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
     uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
     if (trace_stream) {
       trace_stream->Writef("path_filestat_get -> size=%" PRIu64 " %d\n", buf.st_size,
-                           results[0].i32_);
+                           results[0].Get<u32>());
     }
     return Result::Ok;
   }
@@ -282,11 +282,11 @@ class WasiInstance {
      *                                    size_t new_path_len);
      */
 
-    uint32_t old_path_ptr = params[0].i32_;
-    __wasi_size_t old_path_len = params[1].i32_;
-    uvwasi_fd_t fd = params[2].i32_;
-    uint32_t new_path_ptr = params[3].i32_;
-    __wasi_size_t new_path_len = params[4].i32_;
+    uint32_t old_path_ptr = params[0].Get<u32>();
+    __wasi_size_t old_path_len = params[1].Get<u32>();
+    uvwasi_fd_t fd = params[2].Get<u32>();
+    uint32_t new_path_ptr = params[3].Get<u32>();
+    __wasi_size_t new_path_len = params[4].Get<u32>();
     char* old_path;
     char* new_path;
     CHECK_RESULT(getMemPtr<char>(old_path_ptr, old_path_len, &old_path, trap));
@@ -294,10 +294,10 @@ class WasiInstance {
     if (trace_stream) {
       trace_stream->Writef("path_symlink %d %s : %s\n", fd, old_path, new_path);
     }
-    results[0].i32_ = uvwasi_path_symlink(uvwasi, old_path, old_path_len, fd,
-                                          new_path, new_path_len);
+    results[0].Set<u32>(uvwasi_path_symlink(uvwasi, old_path, old_path_len, fd,
+                                            new_path, new_path_len));
     if (trace_stream) {
-      trace_stream->Writef("path_symlink -> %d\n", results[0].i32_);
+      trace_stream->Writef("path_symlink -> %d\n", results[0].Get<u32>());
     }
     return Result::Ok;
   }
@@ -328,15 +328,15 @@ class WasiInstance {
      *                                        const char *path,
      *                                        size_t path_len)
      */
-    uvwasi_fd_t fd = params[0].i32_;
-    uint32_t path_ptr = params[1].i32_;
-    __wasi_size_t path_len = params[2].i32_;
+    uvwasi_fd_t fd = params[0].Get<u32>();
+    uint32_t path_ptr = params[1].Get<u32>();
+    __wasi_size_t path_len = params[2].Get<u32>();
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     if (trace_stream) {
       trace_stream->Writef("path_unlink_file %d %s\n", fd, path);
     }
-    results[0].i32_ = uvwasi_path_unlink_file(uvwasi, fd, path, path_len);
+    results[0].Set<u32>(uvwasi_path_unlink_file(uvwasi, fd, path, path_len));
     return Result::Ok;
   }
 
@@ -346,18 +346,18 @@ class WasiInstance {
     /* __wasi_errno_t __wasi_fd_prestat_get(__wasi_fd_t fd,
      *                                      __wasi_prestat_t *buf))
      */
-    uvwasi_fd_t fd = params[0].i32_;
-    uint32_t prestat_ptr = params[1].i32_;
+    uvwasi_fd_t fd = params[0].Get<u32>();
+    uint32_t prestat_ptr = params[1].Get<u32>();
     if (trace_stream) {
       trace_stream->Writef("fd_prestat_get %d\n", fd);
     }
     uvwasi_prestat_t buf;
-    results[0].i32_ = uvwasi_fd_prestat_get(uvwasi, fd, &buf);
+    results[0].Set<u32>(uvwasi_fd_prestat_get(uvwasi, fd, &buf));
     __wasi_prestat_t* prestat;
     CHECK_RESULT(getMemPtr<__wasi_prestat_t>(prestat_ptr, 1, &prestat, trap));
     uvwasi_serdes_write_prestat_t(prestat, 0, &buf);
     if (trace_stream) {
-      trace_stream->Writef("fd_prestat_get -> %d\n", results[0].i32_);
+      trace_stream->Writef("fd_prestat_get -> %d\n", results[0].Get<u32>());
     }
     return Result::Ok;
   }
@@ -365,19 +365,19 @@ class WasiInstance {
   Result fd_prestat_dir_name(const Values& params,
                              Values& results,
                              Trap::Ptr* trap) {
-    uvwasi_fd_t fd = params[0].i32_;
-    uint32_t path_ptr = params[1].i32_;
-    uvwasi_size_t path_len = params[2].i32_;
+    uvwasi_fd_t fd = params[0].Get<u32>();
+    uint32_t path_ptr = params[1].Get<u32>();
+    uvwasi_size_t path_len = params[2].Get<u32>();
     if (trace_stream) {
       trace_stream->Writef("fd_prestat_dir_name %d %d %d\n", fd, path_ptr,
                            path_len);
     }
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
-    results[0].i32_ = uvwasi_fd_prestat_dir_name(uvwasi, fd, path, path_len);
+    results[0].Set<u32>(uvwasi_fd_prestat_dir_name(uvwasi, fd, path, path_len));
     if (trace_stream) {
       trace_stream->Writef("fd_prestat_dir_name %d -> %d %s %d\n", fd,
-                           results[0].i32_, path, path_len);
+                           results[0].Get<u32>(), path, path_len);
     }
     return Result::Ok;
   }
@@ -386,17 +386,17 @@ class WasiInstance {
                          Values& results,
                          Trap::Ptr* trap) {
     /* __wasi_fd_filestat_get(__wasi_fd_t f, __wasi_filestat_t *buf) */
-    uvwasi_fd_t fd = params[0].i32_;
-    uint32_t filestat_ptr = params[1].i32_;
+    uvwasi_fd_t fd = params[0].Get<u32>();
+    uint32_t filestat_ptr = params[1].Get<u32>();
     uvwasi_filestat_t buf;
-    results[0].i32_ = uvwasi_fd_filestat_get(uvwasi, fd, &buf);
+    results[0].Set<u32>(uvwasi_fd_filestat_get(uvwasi, fd, &buf));
     __wasi_filestat_t* filestat;
     CHECK_RESULT(getMemPtr<__wasi_filestat_t>(
         filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
     uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
     if (trace_stream) {
       trace_stream->Writef("fd_filestat_get -> size=%" PRIu64 " %d\n", buf.st_size,
-                           results[0].i32_);
+                           results[0].Get<u32>());
     }
     return Result::Ok;
   }
@@ -409,14 +409,14 @@ class WasiInstance {
   }
 
   Result fd_fdstat_get(const Values& params, Values& results, Trap::Ptr* trap) {
-    int32_t fd = params[0].i32_;
-    uint32_t stat_ptr = params[1].i32_;
+    int32_t fd = params[0].Get<u32>();
+    uint32_t stat_ptr = params[1].Get<u32>();
     if (trace_stream) {
       trace_stream->Writef("fd_fdstat_get %d\n", fd);
     }
     CHECK_RESULT(getMemPtr<__wasi_fdstat_t>(stat_ptr, 1, nullptr, trap));
     uvwasi_fdstat_t host_statbuf;
-    results[0].i32_ = uvwasi_fd_fdstat_get(uvwasi, fd, &host_statbuf);
+    results[0].Set<u32>(uvwasi_fd_fdstat_get(uvwasi, fd, &host_statbuf));
 
     // Write the host statbuf into the target wasm memory
     __wasi_fdstat_t* statbuf;
@@ -426,10 +426,10 @@ class WasiInstance {
   }
 
   Result fd_read(const Values& params, Values& results, Trap::Ptr* trap) {
-    int32_t fd = params[0].i32_;
-    int32_t iovptr = params[1].i32_;
-    int32_t iovcnt = params[2].i32_;
-    int32_t out_ptr = params[2].i32_;
+    int32_t fd = params[0].Get<u32>();
+    int32_t iovptr = params[1].Get<u32>();
+    int32_t iovcnt = params[2].Get<u32>();
+    int32_t out_ptr = params[2].Get<u32>();
     if (trace_stream) {
       trace_stream->Writef("fd_read %d [%d]\n", fd, iovcnt);
     }
@@ -445,10 +445,10 @@ class WasiInstance {
     }
     __wasi_ptr_t* out_addr;
     CHECK_RESULT(getMemPtr<__wasi_ptr_t>(out_ptr, 1, &out_addr, trap));
-    results[0].i32_ =
-        uvwasi_fd_read(uvwasi, fd, iovs.data(), iovs.size(), out_addr);
+    results[0].Set<u32>(
+        uvwasi_fd_read(uvwasi, fd, iovs.data(), iovs.size(), out_addr));
     if (trace_stream) {
-      trace_stream->Writef("fd_read -> %d\n", results[0].i32_);
+      trace_stream->Writef("fd_read -> %d\n", results[0].Get<u32>());
     }
     return Result::Ok;
   }
@@ -464,9 +464,9 @@ class WasiInstance {
   }
 
   Result fd_write(const Values& params, Values& results, Trap::Ptr* trap) {
-    int32_t fd = params[0].i32_;
-    int32_t iovptr = params[1].i32_;
-    int32_t iovcnt = params[2].i32_;
+    int32_t fd = params[0].Get<u32>();
+    int32_t iovptr = params[1].Get<u32>();
+    int32_t iovcnt = params[2].Get<u32>();
     __wasi_iovec_t* wasm_iovs;
     CHECK_RESULT(getMemPtr<__wasi_iovec_t>(iovptr, iovcnt, &wasm_iovs, trap));
     std::vector<uvwasi_ciovec_t> iovs(iovcnt);
@@ -477,9 +477,9 @@ class WasiInstance {
           reinterpret_cast<const uint8_t**>(&iovs[i].buf), trap));
     }
     __wasi_ptr_t* out_addr;
-    CHECK_RESULT(getMemPtr<__wasi_ptr_t>(params[3].i32_, 1, &out_addr, trap));
-    results[0].i32_ =
-        uvwasi_fd_write(uvwasi, fd, iovs.data(), iovs.size(), out_addr);
+    CHECK_RESULT(getMemPtr<__wasi_ptr_t>(params[3].Get<u32>(), 1, &out_addr, trap));
+    results[0].Set<u32>(
+        uvwasi_fd_write(uvwasi, fd, iovs.data(), iovs.size(), out_addr));
     return Result::Ok;
   }
 
@@ -499,12 +499,12 @@ class WasiInstance {
      *                               __wasi_whence_t whence,
      *                               __wasi_filesize_t *newoffset)
      */
-    int32_t fd = params[0].i32_;
-    __wasi_filedelta_t offset = params[1].i32_;
-    __wasi_whence_t whence = params[2].i32_;
-    uint32_t newoffset_ptr = params[3].i32_;
+    int32_t fd = params[0].Get<u32>();
+    __wasi_filedelta_t offset = params[1].Get<u32>();
+    __wasi_whence_t whence = params[2].Get<u32>();
+    uint32_t newoffset_ptr = params[3].Get<u32>();
     uvwasi_filesize_t newoffset;
-    results[0].i32_ = uvwasi_fd_seek(uvwasi, fd, offset, whence, &newoffset);
+    results[0].Set<u32>(uvwasi_fd_seek(uvwasi, fd, offset, whence, &newoffset));
     CHECK_RESULT(writeValue<__wasi_filesize_t>(newoffset, newoffset_ptr, trap));
     return Result::Ok;
   }
@@ -513,7 +513,7 @@ class WasiInstance {
     uvwasi_size_t environc;
     uvwasi_size_t environ_buf_size;
     uvwasi_environ_sizes_get(uvwasi, &environc, &environ_buf_size);
-    uint32_t wasm_buf = params[1].i32_;
+    uint32_t wasm_buf = params[1].Get<u32>();
     char* buf;
     CHECK_RESULT(getMemPtr<char>(wasm_buf, environ_buf_size, &buf, trap));
     std::vector<char*> host_env(environc);
@@ -522,11 +522,11 @@ class WasiInstance {
     // Copy host_env pointer array wasm_env)
     for (uvwasi_size_t i = 0; i < environc; i++) {
       uint32_t rel_address = host_env[i] - buf;
-      uint32_t dest = params[0].i32_ + (i * sizeof(uint32_t));
+      uint32_t dest = params[0].Get<u32>() + (i * sizeof(uint32_t));
       CHECK_RESULT(writeValue<uint32_t>(wasm_buf + rel_address, dest, trap));
     }
 
-    results[0].i32_ = __WASI_ERRNO_SUCCESS;
+    results[0].Set<u32>(__WASI_ERRNO_SUCCESS);
     return Result::Ok;
   }
 
@@ -536,13 +536,13 @@ class WasiInstance {
     uvwasi_size_t environc;
     uvwasi_size_t environ_buf_size;
     uvwasi_environ_sizes_get(uvwasi, &environc, &environ_buf_size);
-    CHECK_RESULT(writeValue<uint32_t>(environc, params[0].i32_, trap));
-    CHECK_RESULT(writeValue<uint32_t>(environ_buf_size, params[1].i32_, trap));
+    CHECK_RESULT(writeValue<uint32_t>(environc, params[0].Get<u32>(), trap));
+    CHECK_RESULT(writeValue<uint32_t>(environ_buf_size, params[1].Get<u32>(), trap));
     if (trace_stream) {
       trace_stream->Writef("environ_sizes_get -> %d %d\n", environc,
                            environ_buf_size);
     }
-    results[0].i32_ = __WASI_ERRNO_SUCCESS;
+    results[0].Set<u32>(__WASI_ERRNO_SUCCESS);
     return Result::Ok;
   }
 
@@ -550,7 +550,7 @@ class WasiInstance {
     uvwasi_size_t argc;
     uvwasi_size_t arg_buf_size;
     uvwasi_args_sizes_get(uvwasi, &argc, &arg_buf_size);
-    uint32_t wasm_buf = params[1].i32_;
+    uint32_t wasm_buf = params[1].Get<u32>();
     char* buf;
     CHECK_RESULT(getMemPtr<char>(wasm_buf, arg_buf_size, &buf, trap));
     std::vector<char*> host_args(argc);
@@ -559,10 +559,10 @@ class WasiInstance {
     // Copy host_args pointer array wasm_args)
     for (uvwasi_size_t i = 0; i < argc; i++) {
       uint32_t rel_address = host_args[i] - buf;
-      uint32_t dest = params[0].i32_ + (i * sizeof(uint32_t));
+      uint32_t dest = params[0].Get<u32>() + (i * sizeof(uint32_t));
       CHECK_RESULT(writeValue<uint32_t>(wasm_buf + rel_address, dest, trap));
     }
-    results[0].i32_ = __WASI_ERRNO_SUCCESS;
+    results[0].Set<u32>(__WASI_ERRNO_SUCCESS);
     return Result::Ok;
   }
 
@@ -572,12 +572,12 @@ class WasiInstance {
     uvwasi_size_t argc;
     uvwasi_size_t arg_buf_size;
     uvwasi_args_sizes_get(uvwasi, &argc, &arg_buf_size);
-    CHECK_RESULT(writeValue<uint32_t>(argc, params[0].i32_, trap));
-    CHECK_RESULT(writeValue<uint32_t>(arg_buf_size, params[1].i32_, trap));
+    CHECK_RESULT(writeValue<uint32_t>(argc, params[0].Get<u32>(), trap));
+    CHECK_RESULT(writeValue<uint32_t>(arg_buf_size, params[1].Get<u32>(), trap));
     if (trace_stream) {
       trace_stream->Writef("args_sizes_get -> %d %d\n", argc, arg_buf_size);
     }
-    results[0].i32_ = __WASI_ERRNO_SUCCESS;
+    results[0].Set<u32>(__WASI_ERRNO_SUCCESS);
     return Result::Ok;
   }
 
@@ -606,7 +606,7 @@ class WasiInstance {
       *trap =
           Trap::New(*instance.store(),
                     StringPrintf("out of bounds memory access: "
-                                 "[%u, %" PRIu64 ") >= max value %u",
+                                 "[%u, %" PRIu64 ") >= max value %" PRIu64,
                                  address, u64{address} + num_elems * sizeof(T),
                                  memory->ByteSize()));
       return Result::Error;
