@@ -1,0 +1,4 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_int_to_int_extend.wast
+;;; ARGS*: --enable-simd
+;;; SKIP:

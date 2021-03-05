@@ -13,30 +13,26 @@ out/test/spec/memory64/address64.wast:201: assert_trap passed: out of bounds mem
 out/test/spec/memory64/address64.wast:202: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
 out/test/spec/memory64/address64.wast:203: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
 out/test/spec/memory64/address64.wast:204: assert_trap passed: out of bounds memory access: access at 4294967296+4 >= max value 65536
-out/test/spec/memory64/address64.wast:207: assert_malformed passed:
-  out/test/spec/memory64/address64/address64.1.wat:1:37: error: offset must be less than or equal to 0xffffffff
-  (memory i64 1)(func (drop (i32.load offset=4294967296 (i64.const 0))))
-                                      ^^^^^^^^^^^^^^^^^
-out/test/spec/memory64/address64.wast:479: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
-out/test/spec/memory64/address64.wast:481: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
-out/test/spec/memory64/address64.wast:482: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
-out/test/spec/memory64/address64.wast:483: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
-out/test/spec/memory64/address64.wast:484: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
-out/test/spec/memory64/address64.wast:485: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory64/address64.wast:472: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/memory64/address64.wast:474: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory64/address64.wast:475: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory64/address64.wast:476: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory64/address64.wast:477: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory64/address64.wast:478: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory64/address64.wast:479: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory64/address64.wast:480: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/memory64/address64.wast:482: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
+out/test/spec/memory64/address64.wast:483: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
+out/test/spec/memory64/address64.wast:484: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
+out/test/spec/memory64/address64.wast:485: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
 out/test/spec/memory64/address64.wast:486: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
-out/test/spec/memory64/address64.wast:487: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
-out/test/spec/memory64/address64.wast:489: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
-out/test/spec/memory64/address64.wast:490: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
-out/test/spec/memory64/address64.wast:491: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
-out/test/spec/memory64/address64.wast:492: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
-out/test/spec/memory64/address64.wast:493: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
-out/test/spec/memory64/address64.wast:494: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
-out/test/spec/memory64/address64.wast:495: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
-out/test/spec/memory64/address64.wast:539: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
-out/test/spec/memory64/address64.wast:541: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
-out/test/spec/memory64/address64.wast:542: assert_trap passed: out of bounds memory access: access at 4294967296+4 >= max value 65536
-out/test/spec/memory64/address64.wast:586: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
-out/test/spec/memory64/address64.wast:588: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
-out/test/spec/memory64/address64.wast:589: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
-239/239 tests passed.
+out/test/spec/memory64/address64.wast:487: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory64/address64.wast:488: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
+out/test/spec/memory64/address64.wast:532: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory64/address64.wast:534: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory64/address64.wast:535: assert_trap passed: out of bounds memory access: access at 4294967296+4 >= max value 65536
+out/test/spec/memory64/address64.wast:579: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/memory64/address64.wast:581: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/memory64/address64.wast:582: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
+238/238 tests passed.
 ;;; STDOUT ;;)
