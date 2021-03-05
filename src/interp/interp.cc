@@ -1648,6 +1648,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I32X4ExtendHighI16X8S: return DoSimdConvert<s32x4, s16x8, false>();
     case O::I32X4ExtendLowI16X8U:  return DoSimdConvert<u32x4, u16x8, true>();
     case O::I32X4ExtendHighI16X8U: return DoSimdConvert<u32x4, u16x8, false>();
+    case O::I64X2ExtendLowI32X4S:  return DoSimdConvert<s64x2, s32x4, true>();
+    case O::I64X2ExtendHighI32X4S: return DoSimdConvert<s64x2, s32x4, false>();
+    case O::I64X2ExtendLowI32X4U:  return DoSimdConvert<u64x2, u32x4, true>();
+    case O::I64X2ExtendHighI32X4U: return DoSimdConvert<u64x2, u32x4, false>();
 
     case O::V128Load8X8S:  return DoSimdLoadExtend<s16x8, s8x8>(instr, out_trap);
     case O::V128Load8X8U:  return DoSimdLoadExtend<u16x8, u8x8>(instr, out_trap);

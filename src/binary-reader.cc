@@ -1254,6 +1254,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32X4ExtendHighI16X8S:
       case Opcode::I32X4ExtendLowI16X8U:
       case Opcode::I32X4ExtendHighI16X8U:
+      case Opcode::I64X2ExtendLowI32X4S:
+      case Opcode::I64X2ExtendHighI32X4S:
+      case Opcode::I64X2ExtendLowI32X4U:
+      case Opcode::I64X2ExtendHighI32X4U:
       case Opcode::I8X16Abs:
       case Opcode::I16X8Abs:
       case Opcode::I32X4Abs:
