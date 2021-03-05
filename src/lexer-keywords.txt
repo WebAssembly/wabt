@@ -210,6 +210,8 @@ i16x8.splat, TokenType::Unary, Opcode::I16X8Splat
 i16x8.sub_sat_s, TokenType::Binary, Opcode::I16X8SubSatS
 i16x8.sub_sat_u, TokenType::Binary, Opcode::I16X8SubSatU
 i16x8.sub, TokenType::Binary, Opcode::I16X8Sub
+i16x8.extadd_pairwise_i8x16_s, TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16S
+i16x8.extadd_pairwise_i8x16_u, TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16U
 i16x8, TokenType::I16X8
 i16x8.extend_high_i8x16_s, TokenType::Unary, Opcode::I16X8ExtendHighI8X16S
 i16x8.extend_high_i8x16_u, TokenType::Unary, Opcode::I16X8ExtendHighI8X16U
@@ -321,6 +323,8 @@ i32x4.shr_s, TokenType::Binary, Opcode::I32X4ShrS
 i32x4.shr_u, TokenType::Binary, Opcode::I32X4ShrU
 i32x4.splat, TokenType::Unary, Opcode::I32X4Splat
 i32x4.sub, TokenType::Binary, Opcode::I32X4Sub
+i32x4.extadd_pairwise_i16x8_s, TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8S
+i32x4.extadd_pairwise_i16x8_u, TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8U
 i32x4, TokenType::I32X4
 i32x4.trunc_sat_f32x4_s, TokenType::Unary, Opcode::I32X4TruncSatF32X4S
 i32x4.trunc_sat_f32x4_u, TokenType::Unary, Opcode::I32X4TruncSatF32X4U
