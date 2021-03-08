@@ -628,8 +628,8 @@ Result BinaryReader::ReadAddress(Address* out_value,
                                  Index memory,
                                  const char* desc) {
   ERROR_UNLESS(memory < memories.size(),
-               "load/store memory %u out of range %lu", memory,
-               static_cast<unsigned long>(memories.size()));
+               "load/store memory %u out of range %zu", memory,
+               memories.size());
   if (memories[memory].is_64) {
     return ReadU64Leb128(out_value, desc);
   } else {
