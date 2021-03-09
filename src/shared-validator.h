@@ -159,6 +159,7 @@ class SharedValidator {
   Result OnReturn(const Location&);
   Result OnSelect(const Location&, Index result_count, Type* result_types);
   Result OnSimdLaneOp(const Location&, Opcode, uint64_t lane_idx);
+  Result OnSimdLoadLane(const Location&, Opcode, Address align, uint64_t lane_idx);
   Result OnSimdShuffleOp(const Location&, Opcode, v128 lane_idx);
   Result OnStore(const Location&, Opcode, Address align);
   Result OnTableCopy(const Location&, Var dst_var, Var src_var);

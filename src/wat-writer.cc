@@ -572,6 +572,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
   Result OnTernaryExpr(TernaryExpr*) override;
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
+  Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
   Result OnLoadZeroExpr(LoadZeroExpr*) override;
@@ -971,6 +972,19 @@ Result WatWriter::ExprVisitorDelegate::OnTernaryExpr(TernaryExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
+  writer_->Writef("%" PRIu64, (expr->val));
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
+  writer_->WritePutsSpace(expr->opcode.GetName());
+  if (expr->offset) {
+    writer_->Writef("offset=%" PRIaddress, expr->offset);
+  }
+  if (!expr->opcode.IsNaturallyAligned(expr->align)) {
+    writer_->Writef("align=%" PRIaddress, expr->align);
+  }
   writer_->Writef("%" PRIu64, (expr->val));
   writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;

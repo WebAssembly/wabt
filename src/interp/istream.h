@@ -59,6 +59,7 @@ enum class InstrKind {
   Imm_Index_Offset_Op_1,  // i32.load
   Imm_Index_Offset_Op_2,  // i32.store
   Imm_Index_Offset_Op_3,  // i32.atomic.rmw.cmpxchg
+  Imm_Index_Offset_Lane_Op_2, // v128.load8_lane
   Imm_I32_Op_0,           // i32.const
   Imm_I64_Op_0,           // i64.const
   Imm_F32_Op_0,           // f32.const
@@ -81,6 +82,7 @@ struct Instr {
     f64 imm_f64;
     v128 imm_v128;
     struct { u32 fst, snd; } imm_u32x2;
+    struct { u32 fst, snd; u8 idx; } imm_u32x2_u8;
   };
 };
 
@@ -106,6 +108,7 @@ class Istream {
   void Emit(Opcode::Enum, u64);
   void Emit(Opcode::Enum, v128);
   void Emit(Opcode::Enum, u32, u32);
+  void Emit(Opcode::Enum, u32, u32, u8);
   void EmitDropKeep(u32 drop, u32 keep);
 
   Offset EmitFixupU32();

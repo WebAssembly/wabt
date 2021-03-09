@@ -254,6 +254,10 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       }
     }
 
+    case ExprType::SimdLoadLane: {
+      return { 2, 1 };
+    }
+
     case ExprType::SimdShuffleOp:
       return { 2, 1 };
   }

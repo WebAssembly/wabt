@@ -212,6 +212,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
+  Result OnSimdLoadLaneExpr(Opcode opcode,
+                            Address alignment_log2,
+                            Address offset,
+                            uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
   Result OnLoadSplatExpr(Opcode opcode,
                          Address alignment_log2,
@@ -891,14 +895,23 @@ Result BinaryReaderInterp::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   return Result::Ok;
 }
 
+uint32_t GetAlignment(Address alignment_log2) {
+  return alignment_log2 < 32 ? 1 << alignment_log2 : ~0u;
+}
+
+Result BinaryReaderInterp::OnSimdLoadLaneExpr(Opcode opcode,
+                                              Address alignment_log2,
+                                              Address offset,
+                                              uint64_t value) {
+  CHECK_RESULT(validator_.OnSimdLoadLane(loc, opcode, GetAlignment(alignment_log2), value));
+  istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
   CHECK_RESULT(validator_.OnSimdShuffleOp(loc, opcode, value));
   istream_.Emit(opcode, value);
   return Result::Ok;
-}
-
-uint32_t GetAlignment(Address alignment_log2) {
-  return alignment_log2 < 32 ? 1 << alignment_log2 : ~0u;
 }
 
 Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,

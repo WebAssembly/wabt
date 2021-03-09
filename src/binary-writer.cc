@@ -1016,6 +1016,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
                        "Simd Lane literal");
       break;
     }
+    case ExprType::SimdLoadLane: {
+      const Opcode opcode = cast<SimdLoadLaneExpr>(expr)->opcode;
+      auto* load_lane_expr = cast<SimdLoadLaneExpr>(expr);
+      WriteOpcode(stream_, opcode);
+      Address align = load_lane_expr->opcode.GetAlignment(load_lane_expr->align);
+      stream_->WriteU8(log2_u32(align), "alignment");
+      WriteU32Leb128(stream_, load_lane_expr->offset, "load offset");
+      stream_->WriteU8(static_cast<uint8_t>(cast<SimdLoadLaneExpr>(expr)->val),
+                       "Simd Lane literal");
+      break;
+    }
     case ExprType::SimdShuffleOp: {
       const Opcode opcode = cast<SimdShuffleOpExpr>(expr)->opcode;
       WriteOpcode(stream_, opcode);

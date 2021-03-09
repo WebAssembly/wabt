@@ -323,6 +323,7 @@ enum class ExprType {
   ReturnCallIndirect,
   Select,
   SimdLaneOp,
+  SimdLoadLane,
   SimdShuffleOp,
   LoadSplat,
   LoadZero,
@@ -451,6 +452,25 @@ class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
       : ExprMixin<ExprType::SimdLaneOp>(loc), opcode(opcode), val(val) {}
 
   Opcode opcode;
+  uint64_t val;
+};
+
+class SimdLoadLaneExpr : public ExprMixin<ExprType::SimdLoadLane> {
+ public:
+  SimdLoadLaneExpr(Opcode opcode,
+                   Address align,
+                   Address offset,
+                   uint64_t val,
+                   const Location& loc = Location())
+      : ExprMixin<ExprType::SimdLoadLane>(loc),
+        opcode(opcode),
+        align(align),
+        offset(offset),
+        val(val) {}
+
+  Opcode opcode;
+  Address align;
+  Address offset;
   uint64_t val;
 };
 
