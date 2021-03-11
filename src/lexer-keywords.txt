@@ -457,6 +457,7 @@ i8x16.min_u, TokenType::Binary, Opcode::I8X16MinU
 i8x16.narrow_i16x8_s, TokenType::Binary, Opcode::I8X16NarrowI16X8S
 i8x16.narrow_i16x8_u, TokenType::Binary, Opcode::I8X16NarrowI16X8U
 i8x16.neg, TokenType::Unary, Opcode::I8X16Neg
+i8x16.popcnt, TokenType::Unary, Opcode::I8X16Popcnt
 i8x16.ne, TokenType::Compare, Opcode::I8X16Ne
 i8x16.replace_lane, TokenType::SimdLaneOp, Opcode::I8X16ReplaceLane
 i8x16.shl, TokenType::Binary, Opcode::I8X16Shl

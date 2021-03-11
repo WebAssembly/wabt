@@ -1652,6 +1652,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I16X8Abs: return DoSimdUnop(IntAbs<u16>);
     case O::I32X4Abs: return DoSimdUnop(IntAbs<u32>);
 
+    case O::I8X16Popcnt: return DoSimdUnop(IntPopcnt<u8>);
+
     case O::AtomicFence:
     case O::MemoryAtomicNotify:
     case O::MemoryAtomicWait32:
