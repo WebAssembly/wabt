@@ -321,20 +321,11 @@ $ make test-clang-release-asan
 ...
 ```
 
-The Travis bots run all of these tests (and more). Before you land a change,
+The GitHub actions bots run all of these tests (and more). Before you land a change,
 you should run them too. One easy way is to use the `test-everything` target:
 
 ```console
 $ make test-everything
-```
-
-To run everything the Travis bots do, you can use the following scripts:
-
-```console
-$ CC=gcc scripts/travis-build.sh
-$ CC=gcc scripts/travis-test.sh
-$ CC=clang scripts/travis-build.sh
-$ CC=clang scripts/travis-test.sh
 ```
 
 ## Fuzzing
