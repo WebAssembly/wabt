@@ -1157,7 +1157,7 @@ class Thread : public Object {
   template <typename S, typename T>
   RunResult DoSimdNarrow();
   template <typename S, typename T, bool low>
-  RunResult DoSimdExtend();
+  RunResult DoSimdConvert();
   template <typename S, typename T>
   RunResult DoSimdLoadExtend(Instr, Trap::Ptr* out_trap);
 

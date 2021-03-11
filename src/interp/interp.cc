@@ -1616,9 +1616,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::F32X4ConvertI32X4S:  return DoSimdUnop(Convert<f32, s32>);
     case O::F32X4ConvertI32X4U:  return DoSimdUnop(Convert<f32, u32>);
     case O::F32X4DemoteF64X2Zero: return DoSimdUnopZero(Convert<f32, f64>);
-    case O::F64X2PromoteLowF32X4: return DoSimdUnop(Convert<f64, f32>);
-    case O::F64X2ConvertLowI32X4S: return DoSimdUnop(Convert<f64, s32>);
-    case O::F64X2ConvertLowI32X4U: return DoSimdUnop(Convert<f64, u32>);
+    case O::F64X2PromoteLowF32X4: return DoSimdConvert<f64x2, f32x4, true>();
+    case O::F64X2ConvertLowI32X4S: return DoSimdConvert<f64x2, s32x4, true>();
+    case O::F64X2ConvertLowI32X4U: return DoSimdConvert<f64x2, u32x4, true>();
 
     case O::I8X16Swizzle:     return DoSimdSwizzle();
     case O::I8X16Shuffle:     return DoSimdShuffle(instr);
@@ -1632,14 +1632,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16NarrowI16X8U:    return DoSimdNarrow<u8x16, s16x8>();
     case O::I16X8NarrowI32X4S:    return DoSimdNarrow<s16x8, s32x4>();
     case O::I16X8NarrowI32X4U:    return DoSimdNarrow<u16x8, s32x4>();
-    case O::I16X8ExtendLowI8X16S:  return DoSimdExtend<s16x8, s8x16, true>();
-    case O::I16X8ExtendHighI8X16S: return DoSimdExtend<s16x8, s8x16, false>();
-    case O::I16X8ExtendLowI8X16U:  return DoSimdExtend<u16x8, u8x16, true>();
-    case O::I16X8ExtendHighI8X16U: return DoSimdExtend<u16x8, u8x16, false>();
-    case O::I32X4ExtendLowI16X8S:  return DoSimdExtend<s32x4, s16x8, true>();
-    case O::I32X4ExtendHighI16X8S: return DoSimdExtend<s32x4, s16x8, false>();
-    case O::I32X4ExtendLowI16X8U:  return DoSimdExtend<u32x4, u16x8, true>();
-    case O::I32X4ExtendHighI16X8U: return DoSimdExtend<u32x4, u16x8, false>();
+    case O::I16X8ExtendLowI8X16S:  return DoSimdConvert<s16x8, s8x16, true>();
+    case O::I16X8ExtendHighI8X16S: return DoSimdConvert<s16x8, s8x16, false>();
+    case O::I16X8ExtendLowI8X16U:  return DoSimdConvert<u16x8, u8x16, true>();
+    case O::I16X8ExtendHighI8X16U: return DoSimdConvert<u16x8, u8x16, false>();
+    case O::I32X4ExtendLowI16X8S:  return DoSimdConvert<s32x4, s16x8, true>();
+    case O::I32X4ExtendHighI16X8S: return DoSimdConvert<s32x4, s16x8, false>();
+    case O::I32X4ExtendLowI16X8U:  return DoSimdConvert<u32x4, u16x8, true>();
+    case O::I32X4ExtendHighI16X8U: return DoSimdConvert<u32x4, u16x8, false>();
 
     case O::V128Load8X8S:  return DoSimdLoadExtend<s16x8, s8x8>(instr, out_trap);
     case O::V128Load8X8U:  return DoSimdLoadExtend<u16x8, u8x8>(instr, out_trap);
@@ -2171,11 +2171,12 @@ RunResult Thread::DoSimdNarrow() {
 }
 
 template <typename S, typename T, bool low>
-RunResult Thread::DoSimdExtend() {
+RunResult Thread::DoSimdConvert() {
+  using SL = typename S::LaneType;
   auto val = Pop<T>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    result[i] = val[(low ? 0 : S::lanes) + i];
+    result[i] = Convert<SL>(val[(low ? 0 : S::lanes) + i]);
   }
   Push(result);
   return RunResult::Ok;
