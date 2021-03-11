@@ -1138,6 +1138,9 @@ class Thread : public Object {
 
   template <typename R, typename T>
   RunResult DoSimdUnop(UnopFunc<R, T>);
+  // Like DoSimdUnop but zeroes top half.
+  template <typename R, typename T>
+  RunResult DoSimdUnopZero(UnopFunc<R, T>);
   template <typename R, typename T>
   RunResult DoSimdBinop(BinopFunc<R, T>);
   RunResult DoSimdBitSelect();
@@ -1154,7 +1157,7 @@ class Thread : public Object {
   template <typename S, typename T>
   RunResult DoSimdNarrow();
   template <typename S, typename T, bool low>
-  RunResult DoSimdWiden();
+  RunResult DoSimdConvert();
   template <typename S, typename T>
   RunResult DoSimdLoadExtend(Instr, Trap::Ptr* out_trap);
 
