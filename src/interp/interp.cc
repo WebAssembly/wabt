@@ -1661,6 +1661,11 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::I8X16Popcnt: return DoSimdUnop(IntPopcnt<u8>);
 
+    case O::I16X8ExtaddPairwiseI8X16S: return DoSimdExtaddPairwise<s16x8, s8x16>();
+    case O::I16X8ExtaddPairwiseI8X16U: return DoSimdExtaddPairwise<u16x8, u8x16>();
+    case O::I32X4ExtaddPairwiseI16X8S: return DoSimdExtaddPairwise<s32x4, s16x8>();
+    case O::I32X4ExtaddPairwiseI16X8U: return DoSimdExtaddPairwise<u32x4, u16x8>();
+
     case O::AtomicFence:
     case O::MemoryAtomicNotify:
     case O::MemoryAtomicWait32:
@@ -2194,6 +2199,19 @@ RunResult Thread::DoSimdLoadExtend(Instr instr, Trap::Ptr* out_trap) {
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
     result[i] = val[i];
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename S, typename T>
+RunResult Thread::DoSimdExtaddPairwise() {
+  auto val = Pop<T>();
+  S result;
+  using U = typename S::LaneType;
+  for (u8 i = 0; i < S::lanes; ++i) {
+    u8 laneidx = i * 2;
+    result[i] = U(val[laneidx]) + U(val[laneidx+1]);
   }
   Push(result);
   return RunResult::Ok;

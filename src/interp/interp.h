@@ -1160,6 +1160,8 @@ class Thread : public Object {
   RunResult DoSimdConvert();
   template <typename S, typename T>
   RunResult DoSimdLoadExtend(Instr, Trap::Ptr* out_trap);
+  template <typename S, typename T>
+  RunResult DoSimdExtaddPairwise();
 
   template <typename T, typename V = T>
   RunResult DoAtomicLoad(Instr, Trap::Ptr* out_trap);
