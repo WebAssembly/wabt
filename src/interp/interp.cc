@@ -1617,6 +1617,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::F32X4ConvertI32X4U:  return DoSimdUnop(Convert<f32, u32>);
     case O::F32X4DemoteF64X2Zero: return DoSimdUnopZero(Convert<f32, f64>);
     case O::F64X2PromoteLowF32X4: return DoSimdConvert<f64x2, f32x4, true>();
+    case O::I32X4TruncSatF64X2SZero: return DoSimdUnopZero(IntTruncSat<s32, f64>);
+    case O::I32X4TruncSatF64X2UZero: return DoSimdUnopZero(IntTruncSat<u32, f64>);
     case O::F64X2ConvertLowI32X4S: return DoSimdConvert<f64x2, s32x4, true>();
     case O::F64X2ConvertLowI32X4U: return DoSimdConvert<f64x2, u32x4, true>();
 

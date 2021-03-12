@@ -328,6 +328,8 @@ i32x4.extend_high_i16x8_s, TokenType::Unary, Opcode::I32X4ExtendHighI16X8S
 i32x4.extend_high_i16x8_u, TokenType::Unary, Opcode::I32X4ExtendHighI16X8U
 i32x4.extend_low_i16x8_s, TokenType::Unary, Opcode::I32X4ExtendLowI16X8S
 i32x4.extend_low_i16x8_u, TokenType::Unary, Opcode::I32X4ExtendLowI16X8U
+i32x4.trunc_sat_f64x2_s_zero, TokenType::Unary, Opcode::I32X4TruncSatF64X2SZero
+i32x4.trunc_sat_f64x2_u_zero, TokenType::Unary, Opcode::I32X4TruncSatF64X2UZero
 i32.xor, TokenType::Binary, Opcode::I32Xor
 i64.add, TokenType::Binary, Opcode::I64Add
 i64.and, TokenType::Binary, Opcode::I64And
