@@ -427,6 +427,7 @@ i64x2.extract_lane, TokenType::SimdLaneOp, Opcode::I64X2ExtractLane
 v128.load32x2_s, TokenType::Load, Opcode::V128Load32X2S
 v128.load32x2_u, TokenType::Load, Opcode::V128Load32X2U
 i64x2.mul, TokenType::Binary, Opcode::I64X2Mul
+i64x2.abs, TokenType::Unary, Opcode::I64X2Abs
 i64x2.neg, TokenType::Unary, Opcode::I64X2Neg
 i64x2.all_true, TokenType::Unary, Opcode::I64X2AllTrue
 i64x2.bitmask, TokenType::Unary, Opcode::I64X2Bitmask

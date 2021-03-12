@@ -233,6 +233,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I8X16Abs:
     case Opcode::I16X8Abs:
     case Opcode::I32X4Abs:
+    case Opcode::I64X2Abs:
       // 0 immediates, 1 operand.
       instr.kind = InstrKind::Imm_0_Op_1;
       break;
