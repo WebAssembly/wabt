@@ -1162,6 +1162,8 @@ class Thread : public Object {
   RunResult DoSimdLoadExtend(Instr, Trap::Ptr* out_trap);
   template <typename S, typename T>
   RunResult DoSimdExtaddPairwise();
+  template <typename S, typename T, bool low>
+  RunResult DoSimdExtmul();
 
   template <typename T, typename V = T>
   RunResult DoAtomicLoad(Instr, Trap::Ptr* out_trap);

@@ -323,6 +323,10 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I16X8Sub:
     case Opcode::I16X8SubSatS:
     case Opcode::I16X8SubSatU:
+    case Opcode::I16X8ExtmulLowI8X16S:
+    case Opcode::I16X8ExtmulHighI8X16S:
+    case Opcode::I16X8ExtmulLowI8X16U:
+    case Opcode::I16X8ExtmulHighI8X16U:
     case Opcode::I32Add:
     case Opcode::I32And:
     case Opcode::I32DivS:
@@ -367,6 +371,10 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I32X4ShrS:
     case Opcode::I32X4ShrU:
     case Opcode::I32X4Sub:
+    case Opcode::I32X4ExtmulLowI16X8S:
+    case Opcode::I32X4ExtmulHighI16X8S:
+    case Opcode::I32X4ExtmulLowI16X8U:
+    case Opcode::I32X4ExtmulHighI16X8U:
     case Opcode::I32Xor:
     case Opcode::I64Add:
     case Opcode::I64And:
@@ -398,6 +406,10 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I64X2ShrU:
     case Opcode::I64X2Sub:
     case Opcode::I64X2Mul:
+    case Opcode::I64X2ExtmulLowI32X4S:
+    case Opcode::I64X2ExtmulHighI32X4S:
+    case Opcode::I64X2ExtmulLowI32X4U:
+    case Opcode::I64X2ExtmulHighI32X4U:
     case Opcode::I64Xor:
     case Opcode::I8X16Add:
     case Opcode::I8X16AddSatS:
