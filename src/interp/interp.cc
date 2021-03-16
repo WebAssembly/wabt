@@ -2258,7 +2258,7 @@ RunResult Thread::DoSimdDot() {
     u8 laneidx = i * 2;
     SL lo = SL(lhs[laneidx]) * SL(rhs[laneidx]);
     SL hi = SL(lhs[laneidx+1]) * SL(rhs[laneidx+1]);
-    result[i] = lo + hi;
+    result[i] = Add(lo, hi);
   }
   Push(result);
   return RunResult::Ok;
