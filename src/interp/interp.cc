@@ -1681,7 +1681,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::I16X8Q15mulrSatS: return DoSimdBinop(SaturatingRoundingQMul<s16>);
 
-    case O::I32X4DotI16X8S: return DoSimdDot<s32x4, s16x8>();
+    case O::I32X4DotI16X8S: return DoSimdDot<u32x4, s16x8>();
 
     case O::AtomicFence:
     case O::MemoryAtomicNotify:
