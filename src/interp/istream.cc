@@ -296,6 +296,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::F64X2PMax:
     case Opcode::F64X2PMin:
     case Opcode::F64X2Sub:
+    case Opcode::I16X8Q15mulrSatS:
     case Opcode::I16X8Add:
     case Opcode::I16X8AddSatS:
     case Opcode::I16X8AddSatU:

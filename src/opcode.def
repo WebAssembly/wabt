@@ -375,6 +375,7 @@ WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0x7e, I32X4ExtaddPairwiseI16X8S, "
 WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0x7f, I32X4ExtaddPairwiseI16X8U, "i32x4.extadd_pairwise_i16x8_u", "")
 WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0x80, I16X8Abs, "i16x8.abs", "")
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0x81, I16X8Neg, "i16x8.neg", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x82, I16X8Q15mulrSatS, "i16x8.q15mulr_sat_s", "")
 WABT_OPCODE(I32,  V128, ___,  ___,  0,  0xfd, 0x83, I16X8AllTrue, "i16x8.all_true", "")
 WABT_OPCODE(I32,  V128, ___,  ___,  0,  0xfd, 0x84, I16X8Bitmask, "i16x8.bitmask", "")
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x85, I16X8NarrowI32X4S, "i16x8.narrow_i32x4_s", "")

@@ -1679,6 +1679,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I64X2ExtmulLowI32X4U: return DoSimdExtmul<u64x2, u32x4, true>();
     case O::I64X2ExtmulHighI32X4U: return DoSimdExtmul<u64x2, u32x4, false>();
 
+    case O::I16X8Q15mulrSatS: return DoSimdBinop(SaturatingRoundingQMul<s16>);
+
     case O::AtomicFence:
     case O::MemoryAtomicNotify:
     case O::MemoryAtomicWait32:
