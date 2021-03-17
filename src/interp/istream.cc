@@ -372,6 +372,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I32X4ShrS:
     case Opcode::I32X4ShrU:
     case Opcode::I32X4Sub:
+    case Opcode::I32X4DotI16X8S:
     case Opcode::I32X4ExtmulLowI16X8S:
     case Opcode::I32X4ExtmulHighI16X8S:
     case Opcode::I32X4ExtmulLowI16X8U:
