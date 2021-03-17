@@ -929,6 +929,12 @@ Result BinaryReaderLogging::OnOpcodeUint32Uint32(uint32_t value,
   return reader_->OnOpcodeUint32Uint32(value, value2);
 }
 
+Result BinaryReaderLogging::OnOpcodeUint32Uint32Uint32(uint32_t value,
+                                                       uint32_t value2,
+                                                       uint32_t value3) {
+  return reader_->OnOpcodeUint32Uint32Uint32(value, value2, value3);
+}
+
 Result BinaryReaderLogging::OnOpcodeUint64(uint64_t value) {
   return reader_->OnOpcodeUint64(value);
 }

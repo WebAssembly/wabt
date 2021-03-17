@@ -187,6 +187,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override {
     return Result::Ok;
   }
+  Result OnOpcodeUint32Uint32Uint32(uint32_t value,
+                                    uint32_t value2,
+                                    uint32_t value3) override {
+    return Result::Ok;
+  }
   Result OnOpcodeUint64(uint64_t value) override { return Result::Ok; }
   Result OnOpcodeF32(uint32_t value) override { return Result::Ok; }
   Result OnOpcodeF64(uint64_t value) override { return Result::Ok; }

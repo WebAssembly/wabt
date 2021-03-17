@@ -196,6 +196,9 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeIndex(Index value) = 0;
   virtual Result OnOpcodeIndexIndex(Index value, Index value2) = 0;
   virtual Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) = 0;
+  virtual Result OnOpcodeUint32Uint32Uint32(uint32_t value,
+                                            uint32_t value2,
+                                            uint32_t value3) = 0;
   virtual Result OnOpcodeUint64(uint64_t value) = 0;
   virtual Result OnOpcodeF32(uint32_t value) = 0;
   virtual Result OnOpcodeF64(uint64_t value) = 0;

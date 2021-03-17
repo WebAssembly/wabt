@@ -1330,7 +1330,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
 
         CALLBACK(OnSimdLoadLaneExpr, opcode, alignment_log2, offset, lane_val);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, lane_val);
         break;
       }
       case Opcode::V128Load32Zero:
