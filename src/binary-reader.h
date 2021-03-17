@@ -301,6 +301,10 @@ class BinaryReaderDelegate {
                                     Address alignment_log2,
                                     Address offset,
                                     uint64_t value) = 0;
+  virtual Result OnSimdStoreLaneExpr(Opcode opcode,
+                                     Address alignment_log2,
+                                     Address offset,
+                                     uint64_t value) = 0;
 
   virtual Result OnLoadSplatExpr(Opcode opcode,
                                  Address alignment_log2,

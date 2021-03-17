@@ -420,6 +420,12 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       break;
     }
 
+    case ExprType::SimdStoreLane: {
+      CHECK_RESULT(
+          delegate_->OnSimdStoreLaneExpr(cast<SimdStoreLaneExpr>(expr)));
+      break;
+    }
+
     case ExprType::SimdShuffleOp: {
       CHECK_RESULT(
           delegate_->OnSimdShuffleOpExpr(cast<SimdShuffleOpExpr>(expr)));

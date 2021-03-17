@@ -656,6 +656,10 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::V128Load16Lane:
     case Opcode::V128Load32Lane:
     case Opcode::V128Load64Lane:
+    case Opcode::V128Store8Lane:
+    case Opcode::V128Store16Lane:
+    case Opcode::V128Store32Lane:
+    case Opcode::V128Store64Lane:
       // Index, memory offset, lane index immediates, 2 operands.
       instr.kind = InstrKind::Imm_Index_Offset_Lane_Op_2;
       instr.imm_u32x2_u8.fst = ReadAt<u32>(offset);

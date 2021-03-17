@@ -1,4 +1,15 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_store16_lane.wast
 ;;; ARGS*: --enable-simd
-;;; SKIP:
+(;; STDOUT ;;;
+out/test/spec/simd/simd_store16_lane.wast:283: assert_invalid passed:
+  error: type mismatch in v128.store16_lane, expected [i32, v128] but got [v128, i32]
+  0000027: error: OnSimdStoreLaneExpr callback failed
+out/test/spec/simd/simd_store16_lane.wast:289: assert_invalid passed:
+  error: lane index must be less than 8 (got 8)
+  0000027: error: OnSimdStoreLaneExpr callback failed
+out/test/spec/simd/simd_store16_lane.wast:296: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000027: error: OnSimdStoreLaneExpr callback failed
+35/35 tests passed.
+;;; STDOUT ;;)

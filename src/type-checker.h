@@ -117,6 +117,7 @@ class TypeChecker {
   Result OnSelect(const TypeVector& result_types);
   Result OnSimdLaneOp(Opcode, uint64_t);
   Result OnSimdLoadLane(Opcode, const Limits& limits, uint64_t);
+  Result OnSimdStoreLane(Opcode, const Limits& limits, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode, const Limits& limits);
   Result OnTernary(Opcode);

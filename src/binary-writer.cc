@@ -374,6 +374,8 @@ class BinaryWriter {
   void WriteTableNumberWithReloc(Index table_number, const char* desc);
   template <typename T>
   void WriteLoadStoreExpr(const Func* func, const Expr* expr, const char* desc);
+  template <typename T>
+  void WriteSimdLoadStoreLaneExpr(const Func* func, const Expr* expr, const char* desc);
   void WriteExpr(const Func* func, const Expr* expr);
   void WriteExprList(const Func* func, const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
@@ -643,6 +645,18 @@ void BinaryWriter::WriteLoadStoreExpr(const Func* func,
   Address align = typed_expr->opcode.GetAlignment(typed_expr->align);
   stream_->WriteU8(log2_u32(align), "alignment");
   WriteU32Leb128(stream_, typed_expr->offset, desc);
+}
+
+template <typename T>
+void BinaryWriter::WriteSimdLoadStoreLaneExpr(const Func* func,
+                                              const Expr* expr,
+                                              const char* desc) {
+  auto* typed_expr = cast<T>(expr);
+  WriteOpcode(stream_, typed_expr->opcode);
+  Address align = typed_expr->opcode.GetAlignment(typed_expr->align);
+  stream_->WriteU8(log2_u32(align), "alignment");
+  WriteU32Leb128(stream_, typed_expr->offset, desc);
+  stream_->WriteU8(static_cast<uint8_t>(typed_expr->val), "Simd Lane literal");
 }
 
 void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
@@ -1017,14 +1031,11 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     }
     case ExprType::SimdLoadLane: {
-      const Opcode opcode = cast<SimdLoadLaneExpr>(expr)->opcode;
-      auto* load_lane_expr = cast<SimdLoadLaneExpr>(expr);
-      WriteOpcode(stream_, opcode);
-      Address align = load_lane_expr->opcode.GetAlignment(load_lane_expr->align);
-      stream_->WriteU8(log2_u32(align), "alignment");
-      WriteU32Leb128(stream_, load_lane_expr->offset, "load offset");
-      stream_->WriteU8(static_cast<uint8_t>(cast<SimdLoadLaneExpr>(expr)->val),
-                       "Simd Lane literal");
+      WriteSimdLoadStoreLaneExpr<SimdLoadLaneExpr>(func, expr, "load offset");
+      break;
+    }
+    case ExprType::SimdStoreLane: {
+      WriteSimdLoadStoreLaneExpr<SimdStoreLaneExpr>(func, expr, "store offset");
       break;
     }
     case ExprType::SimdShuffleOp: {

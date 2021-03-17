@@ -216,6 +216,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
                             Address alignment_log2,
                             Address offset,
                             uint64_t value) override;
+  Result OnSimdStoreLaneExpr(Opcode opcode,
+                             Address alignment_log2,
+                             Address offset,
+                             uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
   Result OnLoadSplatExpr(Opcode opcode,
                          Address alignment_log2,
@@ -904,6 +908,16 @@ Result BinaryReaderInterp::OnSimdLoadLaneExpr(Opcode opcode,
                                               Address offset,
                                               uint64_t value) {
   CHECK_RESULT(validator_.OnSimdLoadLane(loc, opcode, GetAlignment(alignment_log2), value));
+  istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnSimdStoreLaneExpr(Opcode opcode,
+                                              Address alignment_log2,
+                                              Address offset,
+                                              uint64_t value) {
+  CHECK_RESULT(validator_.OnSimdStoreLane(loc, opcode,
+                                          GetAlignment(alignment_log2), value));
   istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));
   return Result::Ok;
 }

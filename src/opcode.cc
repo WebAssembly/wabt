@@ -310,6 +310,10 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::V128Load16Lane:
     case Opcode::V128Load32Lane:
     case Opcode::V128Load64Lane:
+    case Opcode::V128Store8Lane:
+    case Opcode::V128Store16Lane:
+    case Opcode::V128Store32Lane:
+    case Opcode::V128Store64Lane:
     case Opcode::I8X16Abs:
     case Opcode::I16X8Abs:
     case Opcode::I32X4Abs:
@@ -351,12 +355,14 @@ uint32_t Opcode::GetSimdLaneCount() const {
     case Opcode::I8X16ExtractLaneU:
     case Opcode::I8X16ReplaceLane:
     case Opcode::V128Load8Lane:
+    case Opcode::V128Store8Lane:
       return 16;
       break;
     case Opcode::I16X8ExtractLaneS:
     case Opcode::I16X8ExtractLaneU:
     case Opcode::I16X8ReplaceLane:
     case Opcode::V128Load16Lane:
+    case Opcode::V128Store16Lane:
       return 8;
       break;
     case Opcode::F32X4ExtractLane:
@@ -364,6 +370,7 @@ uint32_t Opcode::GetSimdLaneCount() const {
     case Opcode::I32X4ExtractLane:
     case Opcode::I32X4ReplaceLane:
     case Opcode::V128Load32Lane:
+    case Opcode::V128Store32Lane:
       return 4;
       break;
     case Opcode::F64X2ExtractLane:
@@ -371,6 +378,7 @@ uint32_t Opcode::GetSimdLaneCount() const {
     case Opcode::I64X2ExtractLane:
     case Opcode::I64X2ReplaceLane:
     case Opcode::V128Load64Lane:
+    case Opcode::V128Store64Lane:
       return 2;
       break;
     default:
