@@ -1152,6 +1152,8 @@ class Thread : public Object {
   RunResult DoSimdShift(BinopFunc<R, T>);
   template <typename S, typename T>
   RunResult DoSimdLoadSplat(Instr, Trap::Ptr* out_trap);
+  template <typename S, typename T>
+  RunResult DoSimdLoadZero(Instr, Trap::Ptr* out_trap);
   RunResult DoSimdSwizzle();
   RunResult DoSimdShuffle(Instr);
   template <typename S, typename T>

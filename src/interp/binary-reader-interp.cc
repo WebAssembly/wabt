@@ -216,6 +216,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnLoadSplatExpr(Opcode opcode,
                          Address alignment_log2,
                          Address offset) override;
+  Result OnLoadZeroExpr(Opcode opcode,
+                        Address alignment_log2,
+                        Address offset) override;
 
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index,
@@ -902,6 +905,14 @@ Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,
                                            Address align_log2,
                                            Address offset) {
   CHECK_RESULT(validator_.OnLoadSplat(loc, opcode, GetAlignment(align_log2)));
+  istream_.Emit(opcode, kMemoryIndex0, offset);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnLoadZeroExpr(Opcode opcode,
+                                          Address align_log2,
+                                          Address offset) {
+  CHECK_RESULT(validator_.OnLoadZero(loc, opcode, GetAlignment(align_log2)));
   istream_.Emit(opcode, kMemoryIndex0, offset);
   return Result::Ok;
 }

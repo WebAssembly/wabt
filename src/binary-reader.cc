@@ -1318,6 +1318,17 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
         break;
       }
+      case Opcode::V128Load32Zero:
+      case Opcode::V128Load64Zero: {
+        Address alignment_log2;
+        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Address offset;
+        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
+
+        CALLBACK(OnLoadZeroExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        break;
+      }
       case Opcode::I32TruncF32S:
       case Opcode::I32TruncF64S:
       case Opcode::I32TruncF32U:

@@ -1026,6 +1026,9 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::LoadSplat:
       WriteLoadStoreExpr<LoadSplatExpr>(func, expr, "load offset");
       break;
+    case ExprType::LoadZero:
+      WriteLoadStoreExpr<LoadZeroExpr>(func, expr, "load offset");
+      break;
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
       break;

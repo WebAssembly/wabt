@@ -312,6 +312,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                          Address offset) override {
     return Result::Ok;
   }
+  Result OnLoadZeroExpr(Opcode opcode,
+                        Address alignment_log2,
+                        Address offset) override {
+    return Result::Ok;
+  }
 
   /* Elem section */
   Result BeginElemSection(Offset size) override { return Result::Ok; }

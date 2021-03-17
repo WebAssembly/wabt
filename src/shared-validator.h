@@ -139,6 +139,7 @@ class SharedValidator {
   Result OnIf(const Location&, Type sig_type);
   Result OnLoad(const Location&, Opcode, Address align);
   Result OnLoadSplat(const Location&, Opcode, Address align);
+  Result OnLoadZero(const Location&, Opcode, Address align);
   Result OnLocalGet(const Location&, Var);
   Result OnLocalSet(const Location&, Var);
   Result OnLocalTee(const Location&, Var);
