@@ -1143,11 +1143,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I8X16Eq:
       case Opcode::I16X8Eq:
       case Opcode::I32X4Eq:
+      case Opcode::I64X2Eq:
       case Opcode::F32X4Eq:
       case Opcode::F64X2Eq:
       case Opcode::I8X16Ne:
       case Opcode::I16X8Ne:
       case Opcode::I32X4Ne:
+      case Opcode::I64X2Ne:
       case Opcode::F32X4Ne:
       case Opcode::F64X2Ne:
       case Opcode::I8X16LtS:
@@ -1156,6 +1158,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I16X8LtU:
       case Opcode::I32X4LtS:
       case Opcode::I32X4LtU:
+      case Opcode::I64X2LtS:
       case Opcode::F32X4Lt:
       case Opcode::F64X2Lt:
       case Opcode::I8X16LeS:
@@ -1164,6 +1167,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I16X8LeU:
       case Opcode::I32X4LeS:
       case Opcode::I32X4LeU:
+      case Opcode::I64X2LeS:
       case Opcode::F32X4Le:
       case Opcode::F64X2Le:
       case Opcode::I8X16GtS:
@@ -1172,6 +1176,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I16X8GtU:
       case Opcode::I32X4GtS:
       case Opcode::I32X4GtU:
+      case Opcode::I64X2GtS:
       case Opcode::F32X4Gt:
       case Opcode::F64X2Gt:
       case Opcode::I8X16GeS:
@@ -1180,6 +1185,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I16X8GeU:
       case Opcode::I32X4GeS:
       case Opcode::I32X4GeU:
+      case Opcode::I64X2GeS:
       case Opcode::F32X4Ge:
       case Opcode::F64X2Ge:
         CALLBACK(OnCompareExpr, opcode);
