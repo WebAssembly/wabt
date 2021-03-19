@@ -35,9 +35,9 @@
     (param $address i32) (param $x v128) (result v128)
     (v128.load16_lane align=1 2 (local.get $address) (local.get $x)))
   ;; v128.load16_lane with both offset and alignment
-  (func (export "v128.load16_lane_4_offset_1_align_1")
+  (func (export "v128.load16_lane_4_offset_1_align_2")
     (param $address i32) (param $x v128) (result v128)
-    (v128.load16_lane offset=1 align=1 4 (local.get $address) (local.get $x)))
+    (v128.load16_lane offset=1 align=2 4 (local.get $address) (local.get $x)))
 
   ;; v128.load32_lane
   (func (export "v128.load32_lane_0")
@@ -52,9 +52,9 @@
     (param $address i32) (param $x v128) (result v128)
     (v128.load32_lane align=1 2 (local.get $address) (local.get $x)))
   ;; v128.load32_lane with both offset and alignment
-  (func (export "v128.load32_lane_2_offset_1_align_1")
+  (func (export "v128.load32_lane_2_offset_1_align_4")
     (param $address i32) (param $x v128) (result v128)
-    (v128.load32_lane offset=1 align=1 2 (local.get $address) (local.get $x)))
+    (v128.load32_lane offset=1 align=4 2 (local.get $address) (local.get $x)))
 
   ;; v128.load64_lane
   (func (export "v128.load64_lane_0")
@@ -69,9 +69,9 @@
     (param $address i32) (param $x v128) (result v128)
     (v128.load64_lane align=1 0 (local.get $address) (local.get $x)))
   ;; v128.load64_lane with both offset and alignment
-  (func (export "v128.load64_lane_1_offset_1_align_1")
+  (func (export "v128.load64_lane_1_offset_1_align_8")
     (param $address i32) (param $x v128) (result v128)
-    (v128.load64_lane offset=1 align=1 1 (local.get $address) (local.get $x)))
+    (v128.load64_lane offset=1 align=8 1 (local.get $address) (local.get $x)))
 )
 (;; STDOUT ;;;
 
@@ -114,10 +114,10 @@ Code Disassembly:
  00025b: 20 01                      | local.get 1
  00025d: fd 55 00 00 02             | v128.load16_lane 0 0 2
  000262: 0b                         | end
-000264 func[7] <v128.load16_lane_4_offset_1_align_1>:
+000264 func[7] <v128.load16_lane_4_offset_1_align_2>:
  000265: 20 00                      | local.get 0
  000267: 20 01                      | local.get 1
- 000269: fd 55 00 01 04             | v128.load16_lane 0 1 4
+ 000269: fd 55 01 01 04             | v128.load16_lane 1 1 4
  00026e: 0b                         | end
 000270 func[8] <v128.load32_lane_0>:
  000271: 20 00                      | local.get 0
@@ -134,10 +134,10 @@ Code Disassembly:
  00028b: 20 01                      | local.get 1
  00028d: fd 56 00 00 02             | v128.load32_lane 0 0 2
  000292: 0b                         | end
-000294 func[11] <v128.load32_lane_2_offset_1_align_1>:
+000294 func[11] <v128.load32_lane_2_offset_1_align_4>:
  000295: 20 00                      | local.get 0
  000297: 20 01                      | local.get 1
- 000299: fd 56 00 01 02             | v128.load32_lane 0 1 2
+ 000299: fd 56 02 01 02             | v128.load32_lane 2 1 2
  00029e: 0b                         | end
 0002a0 func[12] <v128.load64_lane_0>:
  0002a1: 20 00                      | local.get 0
@@ -154,9 +154,9 @@ Code Disassembly:
  0002bb: 20 01                      | local.get 1
  0002bd: fd 57 00 00 00             | v128.load64_lane 0 0 0
  0002c2: 0b                         | end
-0002c4 func[15] <v128.load64_lane_1_offset_1_align_1>:
+0002c4 func[15] <v128.load64_lane_1_offset_1_align_8>:
  0002c5: 20 00                      | local.get 0
  0002c7: 20 01                      | local.get 1
- 0002c9: fd 57 00 01 01             | v128.load64_lane 0 1 1
+ 0002c9: fd 57 03 01 01             | v128.load64_lane 3 1 1
  0002ce: 0b                         | end
 ;;; STDOUT ;;)
