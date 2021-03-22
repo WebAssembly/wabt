@@ -1,0 +1,162 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-simd
+
+(module
+  (memory 1)
+  (data (i32.const 0) "\00\01\02\03\04\05\06\07\08\09\0A\0B\0C\0D\0E\0F")
+
+  ;; v128.load8_lane
+  (func (export "v128.load8_lane_0")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load8_lane 0 (local.get $address) (local.get $x)))
+  ;; v128.load8_lane with offset
+  (func (export "v128.load8_lane_15_offset_15")
+    (param $x v128) (result v128)
+    (v128.load8_lane offset=15 15 (i32.const 0) (local.get $x)))
+  ;; v128.load8_lane with alignment
+  (func (export "v128.load8_lane_2_align_1")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load8_lane align=1 2 (local.get $address) (local.get $x)))
+  ;; v128.load8_lane with both offset and alignment
+  (func (export "v128.load8_lane_8_offset_1_align_1")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load8_lane offset=1 align=1 8 (local.get $address) (local.get $x)))
+
+  ;; v128.load16_lane
+  (func (export "v128.load16_lane_0")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load16_lane 0 (local.get $address) (local.get $x)))
+  ;; v128.load16_lane with offset
+  (func (export "v128.load16_lane_7_offset_15")
+    (param $x v128) (result v128)
+    (v128.load16_lane offset=15 7 (i32.const 0) (local.get $x)))
+  ;; v128.load16_lane with alignment
+  (func (export "v128.load16_lane_2_align_1")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load16_lane align=1 2 (local.get $address) (local.get $x)))
+  ;; v128.load16_lane with both offset and alignment
+  (func (export "v128.load16_lane_4_offset_1_align_2")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load16_lane offset=1 align=2 4 (local.get $address) (local.get $x)))
+
+  ;; v128.load32_lane
+  (func (export "v128.load32_lane_0")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load32_lane 0 (local.get $address) (local.get $x)))
+  ;; v128.load32_lane with offset
+  (func (export "v128.load32_lane_3_offset_15")
+    (param $x v128) (result v128)
+    (v128.load32_lane offset=15 3 (i32.const 0) (local.get $x)))
+  ;; v128.load32_lane with alignment
+  (func (export "v128.load32_lane_2_align_1")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load32_lane align=1 2 (local.get $address) (local.get $x)))
+  ;; v128.load32_lane with both offset and alignment
+  (func (export "v128.load32_lane_2_offset_1_align_4")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load32_lane offset=1 align=4 2 (local.get $address) (local.get $x)))
+
+  ;; v128.load64_lane
+  (func (export "v128.load64_lane_0")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load64_lane 0 (local.get $address) (local.get $x)))
+  ;; v128.load64_lane with offset
+  (func (export "v128.load64_lane_1_offset_15")
+    (param $x v128) (result v128)
+    (v128.load64_lane offset=15 1 (i32.const 0) (local.get $x)))
+  ;; v128.load64_lane with alignment
+  (func (export "v128.load64_lane_0_align_1")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load64_lane align=1 0 (local.get $address) (local.get $x)))
+  ;; v128.load64_lane with both offset and alignment
+  (func (export "v128.load64_lane_1_offset_1_align_8")
+    (param $address i32) (param $x v128) (result v128)
+    (v128.load64_lane offset=1 align=8 1 (local.get $address) (local.get $x)))
+)
+(;; STDOUT ;;;
+
+simd-load-lane.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000210 func[0] <v128.load8_lane_0>:
+ 000211: 20 00                      | local.get 0
+ 000213: 20 01                      | local.get 1
+ 000215: fd 54 00 00 00             | v128.load8_lane 0 0 0
+ 00021a: 0b                         | end
+00021c func[1] <v128.load8_lane_15_offset_15>:
+ 00021d: 41 00                      | i32.const 0
+ 00021f: 20 00                      | local.get 0
+ 000221: fd 54 00 0f 0f             | v128.load8_lane 0 15 15
+ 000226: 0b                         | end
+000228 func[2] <v128.load8_lane_2_align_1>:
+ 000229: 20 00                      | local.get 0
+ 00022b: 20 01                      | local.get 1
+ 00022d: fd 54 00 00 02             | v128.load8_lane 0 0 2
+ 000232: 0b                         | end
+000234 func[3] <v128.load8_lane_8_offset_1_align_1>:
+ 000235: 20 00                      | local.get 0
+ 000237: 20 01                      | local.get 1
+ 000239: fd 54 00 01 08             | v128.load8_lane 0 1 8
+ 00023e: 0b                         | end
+000240 func[4] <v128.load16_lane_0>:
+ 000241: 20 00                      | local.get 0
+ 000243: 20 01                      | local.get 1
+ 000245: fd 55 01 00 00             | v128.load16_lane 1 0 0
+ 00024a: 0b                         | end
+00024c func[5] <v128.load16_lane_7_offset_15>:
+ 00024d: 41 00                      | i32.const 0
+ 00024f: 20 00                      | local.get 0
+ 000251: fd 55 01 0f 07             | v128.load16_lane 1 15 7
+ 000256: 0b                         | end
+000258 func[6] <v128.load16_lane_2_align_1>:
+ 000259: 20 00                      | local.get 0
+ 00025b: 20 01                      | local.get 1
+ 00025d: fd 55 00 00 02             | v128.load16_lane 0 0 2
+ 000262: 0b                         | end
+000264 func[7] <v128.load16_lane_4_offset_1_align_2>:
+ 000265: 20 00                      | local.get 0
+ 000267: 20 01                      | local.get 1
+ 000269: fd 55 01 01 04             | v128.load16_lane 1 1 4
+ 00026e: 0b                         | end
+000270 func[8] <v128.load32_lane_0>:
+ 000271: 20 00                      | local.get 0
+ 000273: 20 01                      | local.get 1
+ 000275: fd 56 02 00 00             | v128.load32_lane 2 0 0
+ 00027a: 0b                         | end
+00027c func[9] <v128.load32_lane_3_offset_15>:
+ 00027d: 41 00                      | i32.const 0
+ 00027f: 20 00                      | local.get 0
+ 000281: fd 56 02 0f 03             | v128.load32_lane 2 15 3
+ 000286: 0b                         | end
+000288 func[10] <v128.load32_lane_2_align_1>:
+ 000289: 20 00                      | local.get 0
+ 00028b: 20 01                      | local.get 1
+ 00028d: fd 56 00 00 02             | v128.load32_lane 0 0 2
+ 000292: 0b                         | end
+000294 func[11] <v128.load32_lane_2_offset_1_align_4>:
+ 000295: 20 00                      | local.get 0
+ 000297: 20 01                      | local.get 1
+ 000299: fd 56 02 01 02             | v128.load32_lane 2 1 2
+ 00029e: 0b                         | end
+0002a0 func[12] <v128.load64_lane_0>:
+ 0002a1: 20 00                      | local.get 0
+ 0002a3: 20 01                      | local.get 1
+ 0002a5: fd 57 03 00 00             | v128.load64_lane 3 0 0
+ 0002aa: 0b                         | end
+0002ac func[13] <v128.load64_lane_1_offset_15>:
+ 0002ad: 41 00                      | i32.const 0
+ 0002af: 20 00                      | local.get 0
+ 0002b1: fd 57 03 0f 01             | v128.load64_lane 3 15 1
+ 0002b6: 0b                         | end
+0002b8 func[14] <v128.load64_lane_0_align_1>:
+ 0002b9: 20 00                      | local.get 0
+ 0002bb: 20 01                      | local.get 1
+ 0002bd: fd 57 00 00 00             | v128.load64_lane 0 0 0
+ 0002c2: 0b                         | end
+0002c4 func[15] <v128.load64_lane_1_offset_1_align_8>:
+ 0002c5: 20 00                      | local.get 0
+ 0002c7: 20 01                      | local.get 1
+ 0002c9: fd 57 03 01 01             | v128.load64_lane 3 1 1
+ 0002ce: 0b                         | end
+;;; STDOUT ;;)

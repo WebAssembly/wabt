@@ -149,6 +149,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
   Result OnTernaryExpr(TernaryExpr*) override;
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
+  Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
   Result OnLoadZeroExpr(LoadZeroExpr*) override;
@@ -570,6 +571,13 @@ Result Validator::OnTernaryExpr(TernaryExpr* expr) {
 
 Result Validator::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   result_ |= validator_.OnSimdLaneOp(expr->loc, expr->opcode, expr->val);
+  return Result::Ok;
+}
+
+Result Validator::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
+  result_ |= validator_.OnSimdLoadLane(
+      expr->loc, expr->opcode, expr->opcode.GetAlignment(expr->align),
+      expr->val);
   return Result::Ok;
 }
 

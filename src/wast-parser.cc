@@ -160,6 +160,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::AtomicWait:
     case TokenType::Ternary:
     case TokenType::SimdLaneOp:
+    case TokenType::SimdLoadLane:
     case TokenType::SimdShuffleOp:
       return true;
     default:
@@ -1762,6 +1763,33 @@ Result WastParser::ParsePlainLoadStoreInstr(Location loc,
   return Result::Ok;
 }
 
+Result WastParser::ParseSimdLane(Location loc, uint64_t* lane_idx) {
+  if (!PeekMatch(TokenType::Nat) && !PeekMatch(TokenType::Int)) {
+    return ErrorExpected({"a natural number in range [0, 32)"});
+  }
+
+  Literal literal = Consume().literal();
+
+  Result result = ParseInt64(literal.text.begin(), literal.text.end(),
+                             lane_idx, ParseIntType::UnsignedOnly);
+
+  if (Failed(result)) {
+    Error(loc, "invalid literal \"" PRIstringview "\"",
+          WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+    return Result::Error;
+  }
+
+  // The valid range is only [0, 32), but it's only malformed if it can't
+  // fit in a byte.
+  if (*lane_idx > 255) {
+    Error(loc, "lane index \"" PRIstringview "\" out-of-range [0, 32)",
+          WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+    return Result::Error;
+  }
+
+  return Result::Ok;
+}
+
 Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   WABT_TRACE(ParsePlainInstr);
   Location loc = GetLocation();
@@ -2103,30 +2131,35 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::SimdLaneOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      if (!PeekMatch(TokenType::Nat) && !PeekMatch(TokenType::Int)) {
-        return ErrorExpected({"a natural number"}, "123");
-      }
 
-      Literal literal = Consume().literal();
-      uint64_t lane_idx;
-
-      Result result = ParseInt64(literal.text.begin(), literal.text.end(),
-                                 &lane_idx, ParseIntType::UnsignedOnly);
+      uint64_t lane_idx = 0;
+      Result result = ParseSimdLane(loc, &lane_idx);
 
       if (Failed(result)) {
-        Error(loc, "invalid literal \"" PRIstringview "\"",
-              WABT_PRINTF_STRING_VIEW_ARG(literal.text));
         return Result::Error;
       }
 
-      // TODO: Should share lane validation logic w/ SimdShuffleOp below. (See
-      // comment below for explanation of 255 vs. 32)
-      if (lane_idx > 255) {
-        Error(loc, "lane index \"" PRIstringview "\" out-of-range [0, 32)",
-              WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+      out_expr->reset(new SimdLaneOpExpr(token.opcode(), lane_idx, loc));
+      break;
+    }
+
+    case TokenType::SimdLoadLane: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+
+      Address offset;
+      Address align;
+      ParseOffsetOpt(&offset);
+      ParseAlignOpt(&align);
+
+      uint64_t lane_idx = 0;
+      Result result = ParseSimdLane(loc, &lane_idx);
+
+      if (Failed(result)) {
         return Result::Error;
       }
-      out_expr->reset(new SimdLaneOpExpr(token.opcode(), lane_idx, loc));
+
+      out_expr->reset(new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
       break;
     }
 
@@ -2136,37 +2169,13 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       v128 values;
       for (int lane = 0; lane < 16; ++lane) {
         Location loc = GetLocation();
-
-        if (!PeekMatch(TokenType::Nat)) {
-          return ErrorExpected({"a natural number in range [0, 32)"});
-        }
-
-        Literal literal = Consume().literal();
-
-        string_view sv = literal.text;
-        const char* s = sv.begin();
-        const char* end = sv.end();
-        Result result;
-
-        uint32_t value = 0;
-        result = ParseInt32(s, end, &value, ParseIntType::UnsignedOnly);
-
+        uint64_t lane_idx;
+        Result result = ParseSimdLane(loc, &lane_idx);
         if (Failed(result)) {
-          Error(loc, "invalid literal \"" PRIstringview "\"",
-                WABT_PRINTF_STRING_VIEW_ARG(literal.text));
           return Result::Error;
         }
 
-        // The valid range is only [0, 32), but it's only malformed if it can't
-        // fit in a byte.
-        if (value > 255) {
-          Error(loc,
-                "shuffle index \"" PRIstringview "\" out-of-range [0, 32)",
-                WABT_PRINTF_STRING_VIEW_ARG(literal.text));
-          return Result::Error;
-        }
-
-        values.set_u8(lane, static_cast<uint8_t>(value));
+        values.set_u8(lane, static_cast<uint8_t>(lane_idx));
       }
 
       out_expr->reset(

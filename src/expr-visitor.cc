@@ -415,6 +415,11 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       break;
     }
 
+    case ExprType::SimdLoadLane: {
+      CHECK_RESULT(delegate_->OnSimdLoadLaneExpr(cast<SimdLoadLaneExpr>(expr)));
+      break;
+    }
+
     case ExprType::SimdShuffleOp: {
       CHECK_RESULT(
           delegate_->OnSimdShuffleOpExpr(cast<SimdShuffleOpExpr>(expr)));

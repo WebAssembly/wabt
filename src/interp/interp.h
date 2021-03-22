@@ -1153,6 +1153,8 @@ class Thread : public Object {
   template <typename S, typename T>
   RunResult DoSimdLoadSplat(Instr, Trap::Ptr* out_trap);
   template <typename S, typename T>
+  RunResult DoSimdLoadLane(Instr, Trap::Ptr* out_trap);
+  template <typename S, typename T>
   RunResult DoSimdLoadZero(Instr, Trap::Ptr* out_trap);
   RunResult DoSimdSwizzle();
   RunResult DoSimdShuffle(Instr);

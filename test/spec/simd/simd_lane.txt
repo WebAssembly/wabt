@@ -405,14 +405,14 @@ out/test/spec/simd/simd_lane.wast:518: assert_malformed passed:
   ...huffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 (local.get 0) (local.get 0)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:521: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.94.wat:1:70: error: unexpected token "-1", expected a natural number in range [0, 32).
+  out/test/spec/simd/simd_lane/simd_lane.94.wat:1:70: error: invalid literal "-1"
   ... 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 -1(v128.const i8x16 15 14 13 12 11 10 ...
                                          ^^
   out/test/spec/simd/simd_lane/simd_lane.94.wat:1:185: error: unexpected token ), expected EOF.
   ... 8 7 6 5 4 3 2 1 0)(v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:525: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.95.wat:1:70: error: shuffle index "256" out-of-range [0, 32)
+  out/test/spec/simd/simd_lane/simd_lane.95.wat:1:70: error: lane index "256" out-of-range [0, 32)
   ... 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 256(v128.const i8x16 15 14 13 12 11 10...
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.95.wat:1:186: error: unexpected token ), expected EOF.
@@ -462,168 +462,168 @@ out/test/spec/simd/simd_lane.wast:559: assert_malformed passed:
   (func (result v128) (v8x16.shuffle  0  1  2  3  4  5  6  7  8  9 10 11 12 13 ...
                        ^^^^^^^^^^^^^
 out/test/spec/simd/simd_lane.wast:570: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.107.wat:1:54: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.107.wat:1:54: error: unexpected token "(", expected a natural number in range [0, 32).
   ...) (result i32) (i8x16.extract_lane_s (local.get 0) (v128.const i8x16 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.107.wat:1:68: error: unexpected token (, expected EOF.
   ... (i8x16.extract_lane_s (local.get 0) (v128.const i8x16 0 0 0 0 0 0 0 0 0 0...
                                           ^
 out/test/spec/simd/simd_lane.wast:571: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.108.wat:1:54: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.108.wat:1:54: error: unexpected token "(", expected a natural number in range [0, 32).
   ...) (result i32) (i8x16.extract_lane_u (local.get 0) (v128.const i8x16 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.108.wat:1:68: error: unexpected token (, expected EOF.
   ... (i8x16.extract_lane_u (local.get 0) (v128.const i8x16 0 0 0 0 0 0 0 0 0 0...
                                           ^
 out/test/spec/simd/simd_lane.wast:572: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.109.wat:1:54: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.109.wat:1:54: error: unexpected token "(", expected a natural number in range [0, 32).
   ...) (result i32) (i16x8.extract_lane_s (local.get 0) (v128.const i16x8 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.109.wat:1:68: error: unexpected token (, expected EOF.
   ...i32) (i16x8.extract_lane_s (local.get 0) (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                               ^
 out/test/spec/simd/simd_lane.wast:573: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.110.wat:1:54: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.110.wat:1:54: error: unexpected token "(", expected a natural number in range [0, 32).
   ...) (result i32) (i16x8.extract_lane_u (local.get 0) (v128.const i16x8 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.110.wat:1:68: error: unexpected token (, expected EOF.
   ...i32) (i16x8.extract_lane_u (local.get 0) (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                               ^
 out/test/spec/simd/simd_lane.wast:574: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.111.wat:1:52: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.111.wat:1:52: error: unexpected token "(", expected a natural number in range [0, 32).
   ...32) (result i32) (i32x4.extract_lane (local.get 0) (v128.const i32x4 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.111.wat:1:66: error: unexpected token (, expected EOF.
   ...) (result i32) (i32x4.extract_lane (local.get 0) (v128.const i32x4 0 0 0 0)))
                                                       ^
 out/test/spec/simd/simd_lane.wast:575: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.112.wat:1:52: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.112.wat:1:52: error: unexpected token "(", expected a natural number in range [0, 32).
   ...32) (result f32) (f32x4.extract_lane (local.get 0) (v128.const f32x4 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.112.wat:1:66: error: unexpected token (, expected EOF.
   ...) (result f32) (f32x4.extract_lane (local.get 0) (v128.const f32x4 0 0 0 0)))
                                                       ^
 out/test/spec/simd/simd_lane.wast:576: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.113.wat:1:53: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.113.wat:1:53: error: unexpected token "(", expected a natural number in range [0, 32).
   ...2) (result v128) (i8x16.replace_lane (local.get 0) (v128.const i8x16 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.113.wat:1:67: error: unexpected token (, expected EOF.
   ...8) (i8x16.replace_lane (local.get 0) (v128.const i8x16 0 0 0 0 0 0 0 0 0 0...
                                           ^
 out/test/spec/simd/simd_lane.wast:577: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.114.wat:1:53: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.114.wat:1:53: error: unexpected token "(", expected a natural number in range [0, 32).
   ...2) (result v128) (i16x8.replace_lane (local.get 0) (v128.const i16x8 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.114.wat:1:67: error: unexpected token (, expected EOF.
   ...8) (i16x8.replace_lane (local.get 0) (v128.const i16x8 0 0 0 0 0 0 0 0) (i...
                                           ^
 out/test/spec/simd/simd_lane.wast:578: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.115.wat:1:53: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.115.wat:1:53: error: unexpected token "(", expected a natural number in range [0, 32).
   ...2) (result v128) (i32x4.replace_lane (local.get 0) (v128.const i32x4 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.115.wat:1:67: error: unexpected token (, expected EOF.
   ...8) (i32x4.replace_lane (local.get 0) (v128.const i32x4 0 0 0 0) (i32.const...
                                           ^
 out/test/spec/simd/simd_lane.wast:579: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.116.wat:1:53: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.116.wat:1:53: error: unexpected token "(", expected a natural number in range [0, 32).
   ...2) (result v128) (f32x4.replace_lane (local.get 0) (v128.const f32x4 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.116.wat:1:67: error: unexpected token (, expected EOF.
   ...8) (f32x4.replace_lane (local.get 0) (v128.const f32x4 0 0 0 0) (f32.const...
                                           ^
 out/test/spec/simd/simd_lane.wast:581: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.117.wat:1:52: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.117.wat:1:52: error: unexpected token "(", expected a natural number in range [0, 32).
   ... i32) (result i64) (i64x2.extract_lane (local.get 0) (v128.const i64x2 0 0)))
                                             ^
   out/test/spec/simd/simd_lane/simd_lane.117.wat:1:66: error: unexpected token (, expected EOF.
   ... i32) (result i64) (i64x2.extract_lane (local.get 0) (v128.const i64x2 0 0)))
                                                           ^
 out/test/spec/simd/simd_lane.wast:582: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.118.wat:1:52: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.118.wat:1:52: error: unexpected token "(", expected a natural number in range [0, 32).
   ... i32) (result f64) (f64x2.extract_lane (local.get 0) (v128.const f64x2 0 0)))
                                             ^
   out/test/spec/simd/simd_lane/simd_lane.118.wat:1:66: error: unexpected token (, expected EOF.
   ... i32) (result f64) (f64x2.extract_lane (local.get 0) (v128.const f64x2 0 0)))
                                                           ^
 out/test/spec/simd/simd_lane.wast:583: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.119.wat:1:53: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.119.wat:1:53: error: unexpected token "(", expected a natural number in range [0, 32).
   ...2) (result v128) (i64x2.replace_lane (local.get 0) (v128.const i64x2 0 0) ...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.119.wat:1:67: error: unexpected token (, expected EOF.
   ...128) (i64x2.replace_lane (local.get 0) (v128.const i64x2 0 0) (i64.const 1)))
                                             ^
 out/test/spec/simd/simd_lane.wast:584: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.120.wat:1:53: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.120.wat:1:53: error: unexpected token "(", expected a natural number in range [0, 32).
   ...2) (result v128) (f64x2.replace_lane (local.get 0) (v128.const f64x2 0 0) ...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.120.wat:1:67: error: unexpected token (, expected EOF.
   ...8) (f64x2.replace_lane (local.get 0) (v128.const f64x2 0 0) (f64.const 1.0)))
                                           ^
 out/test/spec/simd/simd_lane.wast:588: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.121.wat:1:42: error: unexpected token "1.5", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.121.wat:1:42: error: unexpected token "1.5", expected a natural number in range [0, 32).
   ... (result i32) (i8x16.extract_lane_s 1.5 (v128.const i8x16 0 0 0 0 0 0 0 0 ...
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.121.wat:1:97: error: unexpected token ), expected EOF.
   ...i8x16.extract_lane_s 1.5 (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:589: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.122.wat:1:42: error: unexpected token "nan", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.122.wat:1:42: error: unexpected token "nan", expected a natural number in range [0, 32).
   ... (result i32) (i8x16.extract_lane_u nan (v128.const i8x16 0 0 0 0 0 0 0 0 ...
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.122.wat:1:97: error: unexpected token ), expected EOF.
   ...i8x16.extract_lane_u nan (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:590: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.123.wat:1:42: error: unexpected token "inf", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.123.wat:1:42: error: unexpected token "inf", expected a natural number in range [0, 32).
   ...c (result i32) (i16x8.extract_lane_s inf (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                           ^^^
   out/test/spec/simd/simd_lane/simd_lane.123.wat:1:81: error: unexpected token ), expected EOF.
   ...c (result i32) (i16x8.extract_lane_s inf (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:591: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.124.wat:1:42: error: unexpected token "-inf", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.124.wat:1:42: error: unexpected token "-inf", expected a natural number in range [0, 32).
   ... (result i32) (i16x8.extract_lane_u -inf (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                          ^^^^
   out/test/spec/simd/simd_lane/simd_lane.124.wat:1:82: error: unexpected token ), expected EOF.
   ... (result i32) (i16x8.extract_lane_u -inf (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:592: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.125.wat:1:40: error: unexpected token "nan", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.125.wat:1:40: error: unexpected token "nan", expected a natural number in range [0, 32).
   (func (result i32) (i32x4.extract_lane nan (v128.const i32x4 0 0 0 0)))
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.125.wat:1:71: error: unexpected token ), expected EOF.
   (func (result i32) (i32x4.extract_lane nan (v128.const i32x4 0 0 0 0)))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:593: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.126.wat:1:40: error: unexpected token "nan", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.126.wat:1:40: error: unexpected token "nan", expected a natural number in range [0, 32).
   (func (result f32) (f32x4.extract_lane nan (v128.const f32x4 0 0 0 0)))
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.126.wat:1:71: error: unexpected token ), expected EOF.
   (func (result f32) (f32x4.extract_lane nan (v128.const f32x4 0 0 0 0)))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:594: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.127.wat:1:41: error: unexpected token "-2.5", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.127.wat:1:41: error: unexpected token "-2.5", expected a natural number in range [0, 32).
   ... (result v128) (i8x16.replace_lane -2.5 (v128.const i8x16 0 0 0 0 0 0 0 0 ...
                                         ^^^^
   out/test/spec/simd/simd_lane/simd_lane.127.wat:1:111: error: unexpected token ), expected EOF.
   ..._lane -2.5 (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (i32.const 1)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:595: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.128.wat:1:41: error: unexpected token "nan", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.128.wat:1:41: error: unexpected token "nan", expected a natural number in range [0, 32).
   ...c (result v128) (i16x8.replace_lane nan (v128.const i16x8 0 0 0 0 0 0 0 0)...
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.128.wat:1:94: error: unexpected token ), expected EOF.
   ...8) (i16x8.replace_lane nan (v128.const i16x8 0 0 0 0 0 0 0 0) (i32.const 1)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:596: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.129.wat:1:41: error: unexpected token "inf", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.129.wat:1:41: error: unexpected token "inf", expected a natural number in range [0, 32).
   ...c (result v128) (i32x4.replace_lane inf (v128.const i32x4 0 0 0 0) (i32.co...
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.129.wat:1:86: error: unexpected token ), expected EOF.
   ...sult v128) (i32x4.replace_lane inf (v128.const i32x4 0 0 0 0) (i32.const 1)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:597: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.130.wat:1:41: error: unexpected token "-inf", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.130.wat:1:41: error: unexpected token "-inf", expected a natural number in range [0, 32).
   ... (result v128) (f32x4.replace_lane -inf (v128.const f32x4 0 0 0 0) (f32.co...
                                         ^^^^
   out/test/spec/simd/simd_lane/simd_lane.130.wat:1:89: error: unexpected token ), expected EOF.
@@ -712,14 +712,14 @@ out/test/spec/simd/simd_lane.wast:883: assert_malformed passed:
   ...sult v128) (f64x2.replace_lane +0x01 (v128.const f64x2 0 0) (f64.const 1.0)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:897: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.155.wat:1:42: error: unexpected token "1.0", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.155.wat:1:42: error: unexpected token "1.0", expected a natural number in range [0, 32).
   ... (result i32) (i8x16.extract_lane_s 1.0 (v128.const i8x16 0 0 0 0 0 0 0 0 ...
                                          ^^^
   out/test/spec/simd/simd_lane/simd_lane.155.wat:1:97: error: unexpected token ), expected EOF.
   ...i8x16.extract_lane_s 1.0 (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))
                                                                                  ^
 out/test/spec/simd/simd_lane.wast:902: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.156.wat:1:79: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.156.wat:1:79: error: unexpected token "(", expected a natural number in range [0, 32).
   ... (result i32)  (i8x16.extract_lane_s (v128.const i8x16 0 0 0 0 0 0 0 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.156.wat:1:129: error: unexpected token ), expected EOF.
@@ -729,11 +729,11 @@ out/test/spec/simd/simd_lane.wast:910: assert_invalid passed:
   error: type mismatch in i8x16.extract_lane_s, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:918: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.158.wat:1:74: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.158.wat:1:74: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i8x16.extract_lane_s-arg-empty (result i32)  (i8x16.extract_lane_s))
                                                                            ^
 out/test/spec/simd/simd_lane.wast:926: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.159.wat:1:79: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.159.wat:1:79: error: unexpected token "(", expected a natural number in range [0, 32).
   ...mpty (result i32)  (i16x8.extract_lane_u (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                               ^
   out/test/spec/simd/simd_lane/simd_lane.159.wat:1:113: error: unexpected token ), expected EOF.
@@ -743,11 +743,11 @@ out/test/spec/simd/simd_lane.wast:934: assert_invalid passed:
   error: type mismatch in i16x8.extract_lane_u, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:942: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.161.wat:1:74: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.161.wat:1:74: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i16x8.extract_lane_u-arg-empty (result i32)  (i16x8.extract_lane_u))
                                                                            ^
 out/test/spec/simd/simd_lane.wast:950: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.162.wat:1:75: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.162.wat:1:75: error: unexpected token "(", expected a natural number in range [0, 32).
   ...-1st-arg-empty (result i32)  (i32x4.extract_lane (v128.const i32x4 0 0 0 0)))
                                                       ^
   out/test/spec/simd/simd_lane/simd_lane.162.wat:1:101: error: unexpected token ), expected EOF.
@@ -757,11 +757,11 @@ out/test/spec/simd/simd_lane.wast:958: assert_invalid passed:
   error: type mismatch in i32x4.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:966: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.164.wat:1:70: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.164.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i32x4.extract_lane-arg-empty (result i32)  (i32x4.extract_lane))
                                                                        ^
 out/test/spec/simd/simd_lane.wast:974: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.165.wat:1:75: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.165.wat:1:75: error: unexpected token "(", expected a natural number in range [0, 32).
   ...lane-1st-arg-empty (result i64)  (i64x2.extract_lane (v128.const i64x2 0 0)))
                                                           ^
   out/test/spec/simd/simd_lane/simd_lane.165.wat:1:97: error: unexpected token ), expected EOF.
@@ -771,11 +771,11 @@ out/test/spec/simd/simd_lane.wast:982: assert_invalid passed:
   error: type mismatch in i64x2.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:990: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.167.wat:1:70: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.167.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i64x2.extract_lane-arg-empty (result i64)  (i64x2.extract_lane))
                                                                        ^
 out/test/spec/simd/simd_lane.wast:998: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.168.wat:1:75: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.168.wat:1:75: error: unexpected token "(", expected a natural number in range [0, 32).
   ...-1st-arg-empty (result f32)  (f32x4.extract_lane (v128.const f32x4 0 0 0 0)))
                                                       ^
   out/test/spec/simd/simd_lane/simd_lane.168.wat:1:101: error: unexpected token ), expected EOF.
@@ -785,11 +785,11 @@ out/test/spec/simd/simd_lane.wast:1006: assert_invalid passed:
   error: type mismatch in f32x4.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1014: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.170.wat:1:70: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.170.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $f32x4.extract_lane-arg-empty (result f32)  (f32x4.extract_lane))
                                                                        ^
 out/test/spec/simd/simd_lane.wast:1022: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.171.wat:1:75: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.171.wat:1:75: error: unexpected token "(", expected a natural number in range [0, 32).
   ...lane-1st-arg-empty (result f64)  (f64x2.extract_lane (v128.const f64x2 0 0)))
                                                           ^
   out/test/spec/simd/simd_lane/simd_lane.171.wat:1:97: error: unexpected token ), expected EOF.
@@ -799,11 +799,11 @@ out/test/spec/simd/simd_lane.wast:1030: assert_invalid passed:
   error: type mismatch in f64x2.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1038: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.173.wat:1:70: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.173.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $f64x2.extract_lane-arg-empty (result f64)  (f64x2.extract_lane))
                                                                        ^
 out/test/spec/simd/simd_lane.wast:1046: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.174.wat:1:76: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.174.wat:1:76: error: unexpected token "(", expected a natural number in range [0, 32).
   ...y (result v128)  (i8x16.replace_lane (v128.const i8x16 0 0 0 0 0 0 0 0 0 0...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.174.wat:1:127: error: unexpected token (, expected EOF.
@@ -816,11 +816,11 @@ out/test/spec/simd/simd_lane.wast:1062: assert_invalid passed:
   error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1070: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.177.wat:1:71: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.177.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i8x16.replace_lane-arg-empty (result v128)  (i8x16.replace_lane))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:1078: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.178.wat:1:76: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.178.wat:1:76: error: unexpected token "(", expected a natural number in range [0, 32).
   ...y (result v128)  (i16x8.replace_lane (v128.const i16x8 0 0 0 0 0 0 0 0) (i...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.178.wat:1:111: error: unexpected token (, expected EOF.
@@ -833,11 +833,11 @@ out/test/spec/simd/simd_lane.wast:1094: assert_invalid passed:
   error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1102: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.181.wat:1:71: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.181.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i16x8.replace_lane-arg-empty (result v128)  (i16x8.replace_lane))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:1110: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.182.wat:1:76: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.182.wat:1:76: error: unexpected token "(", expected a natural number in range [0, 32).
   ...y (result v128)  (i32x4.replace_lane (v128.const i32x4 0 0 0 0) (i32.const...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.182.wat:1:103: error: unexpected token (, expected EOF.
@@ -850,11 +850,11 @@ out/test/spec/simd/simd_lane.wast:1126: assert_invalid passed:
   error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1134: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.185.wat:1:71: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.185.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i32x4.replace_lane-arg-empty (result v128)  (i32x4.replace_lane))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:1142: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.186.wat:1:76: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.186.wat:1:76: error: unexpected token "(", expected a natural number in range [0, 32).
   ...y (result v128)  (f32x4.replace_lane (v128.const f32x4 0 0 0 0) (f32.const...
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.186.wat:1:103: error: unexpected token (, expected EOF.
@@ -867,11 +867,11 @@ out/test/spec/simd/simd_lane.wast:1158: assert_invalid passed:
   error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1166: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.189.wat:1:71: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.189.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $f32x4.replace_lane-arg-empty (result v128)  (f32x4.replace_lane))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:1174: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.190.wat:1:76: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.190.wat:1:76: error: unexpected token "(", expected a natural number in range [0, 32).
   ...pty (result v128)  (i64x2.replace_lane (v128.const i64x2 0 0) (i64.const 1)))
                                             ^
   out/test/spec/simd/simd_lane/simd_lane.190.wat:1:99: error: unexpected token (, expected EOF.
@@ -884,11 +884,11 @@ out/test/spec/simd/simd_lane.wast:1190: assert_invalid passed:
   error: type mismatch in i64x2.replace_lane, expected [v128, i64] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1198: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.193.wat:1:71: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.193.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i64x2.replace_lane-arg-empty (result v128)  (i64x2.replace_lane))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:1206: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.194.wat:1:76: error: unexpected token "(", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.194.wat:1:76: error: unexpected token "(", expected a natural number in range [0, 32).
   ...y (result v128)  (f64x2.replace_lane (v128.const f64x2 0 0) (f64.const 1.0)))
                                           ^
   out/test/spec/simd/simd_lane/simd_lane.194.wat:1:99: error: unexpected token (, expected EOF.
@@ -901,7 +901,7 @@ out/test/spec/simd/simd_lane.wast:1222: assert_invalid passed:
   error: type mismatch in f64x2.replace_lane, expected [v128, f64] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd/simd_lane.wast:1230: assert_malformed passed:
-  out/test/spec/simd/simd_lane/simd_lane.197.wat:1:71: error: unexpected token ")", expected a natural number (e.g. 123).
+  out/test/spec/simd/simd_lane/simd_lane.197.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $f64x2.replace_lane-arg-empty (result v128)  (f64x2.replace_lane))
                                                                         ^
 out/test/spec/simd/simd_lane.wast:1238: assert_malformed passed:

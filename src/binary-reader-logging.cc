@@ -395,6 +395,16 @@ Result BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   return reader_->OnSimdLaneOpExpr(opcode, value);
 }
 
+Result BinaryReaderLogging::OnSimdLoadLaneExpr(Opcode opcode,
+                                               Address alignment_log2,
+                                               Address offset,
+                                               uint64_t value) {
+  LOGF("OnSimdLoadLaneExpr (align log2: %" PRIaddress ", offset: %" PRIaddress
+       ", lane: %" PRIu64 ")\n",
+       alignment_log2, offset, value);
+  return reader_->OnSimdLoadLaneExpr(opcode, alignment_log2, offset, value);
+}
+
 Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
   LOGF("OnSimdShuffleOpExpr (lane: 0x%08x %08x %08x %08x)\n", value.u32(0),
        value.u32(1), value.u32(2), value.u32(3));
@@ -917,6 +927,12 @@ Result BinaryReaderLogging::OnOpcodeUint32(uint32_t value) {
 Result BinaryReaderLogging::OnOpcodeUint32Uint32(uint32_t value,
                                                  uint32_t value2) {
   return reader_->OnOpcodeUint32Uint32(value, value2);
+}
+
+Result BinaryReaderLogging::OnOpcodeUint32Uint32Uint32(uint32_t value,
+                                                       uint32_t value2,
+                                                       uint32_t value3) {
+  return reader_->OnOpcodeUint32Uint32Uint32(value, value2, value3);
 }
 
 Result BinaryReaderLogging::OnOpcodeUint64(uint64_t value) {

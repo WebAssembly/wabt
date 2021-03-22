@@ -1077,6 +1077,19 @@ Result SharedValidator::OnSimdLaneOp(const Location& loc,
   return result;
 }
 
+Result SharedValidator::OnSimdLoadLane(const Location& loc,
+                                     Opcode opcode,
+                                     Address alignment,
+                                     uint64_t value) {
+  Result result = Result::Ok;
+  MemoryType mt;
+  expr_loc_ = &loc;
+  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
+  result |= typechecker_.OnSimdLoadLane(opcode, mt.limits, value);
+  return result;
+}
+
 Result SharedValidator::OnSimdShuffleOp(const Location& loc,
                                         Opcode opcode,
                                         v128 value) {
