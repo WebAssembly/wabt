@@ -237,6 +237,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                             Address alignment_log2,
                             Address offset,
                             uint64_t value) override;
+  Result OnSimdStoreLaneExpr(Opcode opcode,
+                             Address alignment_log2,
+                             Address offset,
+                             uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
   Result OnLoadSplatExpr(Opcode opcode,
                          Address alignment_log2,

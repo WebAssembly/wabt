@@ -579,6 +579,10 @@ v128.load8_lane, TokenType::SimdLoadLane, Opcode::V128Load8Lane
 v128.load16_lane, TokenType::SimdLoadLane, Opcode::V128Load16Lane
 v128.load32_lane, TokenType::SimdLoadLane, Opcode::V128Load32Lane
 v128.load64_lane, TokenType::SimdLoadLane, Opcode::V128Load64Lane
+v128.store8_lane, TokenType::SimdStoreLane, Opcode::V128Store8Lane
+v128.store16_lane, TokenType::SimdStoreLane, Opcode::V128Store16Lane
+v128.store32_lane, TokenType::SimdStoreLane, Opcode::V128Store32Lane
+v128.store64_lane, TokenType::SimdStoreLane, Opcode::V128Store64Lane
 i8x16.shuffle, TokenType::SimdShuffleOp, Opcode::I8X16Shuffle
 i8x16.swizzle, TokenType::Binary, Opcode::I8X16Swizzle
 # Deprecated names.

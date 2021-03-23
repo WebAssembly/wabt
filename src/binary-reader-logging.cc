@@ -395,16 +395,6 @@ Result BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   return reader_->OnSimdLaneOpExpr(opcode, value);
 }
 
-Result BinaryReaderLogging::OnSimdLoadLaneExpr(Opcode opcode,
-                                               Address alignment_log2,
-                                               Address offset,
-                                               uint64_t value) {
-  LOGF("OnSimdLoadLaneExpr (align log2: %" PRIaddress ", offset: %" PRIaddress
-       ", lane: %" PRIu64 ")\n",
-       alignment_log2, offset, value);
-  return reader_->OnSimdLoadLaneExpr(opcode, alignment_log2, offset, value);
-}
-
 Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
   LOGF("OnSimdShuffleOpExpr (lane: 0x%08x %08x %08x %08x)\n", value.u32(0),
        value.u32(1), value.u32(2), value.u32(3));
@@ -743,6 +733,15 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
     return reader_->name(opcode, alignment_log2, offset);                 \
   }
 
+#define DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(name)                             \
+  Result BinaryReaderLogging::name(Opcode opcode, Address alignment_log2,    \
+                                   Address offset, uint64_t value) {         \
+    LOGF(#name "(opcode: \"%s\" (%u), align log2: %" PRIaddress              \
+               ", offset: %" PRIaddress ", lane: %" PRIu64 ")\n",            \
+         opcode.GetName(), opcode.GetCode(), alignment_log2, offset, value); \
+    return reader_->name(opcode, alignment_log2, offset, value);             \
+  }
+
 #define DEFINE0(name)                  \
   Result BinaryReaderLogging::name() { \
     LOGF(#name "\n");                  \
@@ -848,6 +847,8 @@ DEFINE0(OnUnreachableExpr)
 DEFINE0(OnUnwindExpr)
 DEFINE_OPCODE(OnUnaryExpr)
 DEFINE_OPCODE(OnTernaryExpr)
+DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(OnSimdLoadLaneExpr);
+DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(OnSimdStoreLaneExpr);
 DEFINE_END(EndCodeSection)
 
 DEFINE_BEGIN(BeginElemSection)

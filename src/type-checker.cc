@@ -883,6 +883,17 @@ Result TypeChecker::OnSimdLoadLane(Opcode opcode, const Limits& limits, uint64_t
   return result;
 }
 
+Result TypeChecker::OnSimdStoreLane(Opcode opcode, const Limits& limits, uint64_t lane_idx) {
+  Result result = Result::Ok;
+  uint32_t lane_count = opcode.GetSimdLaneCount();
+  if (lane_idx >= lane_count) {
+    PrintError("lane index must be less than %d (got %" PRIu64 ")", lane_count,
+               lane_idx);
+    result = Result::Error;
+  }
+  result |= CheckOpcode2(opcode, &limits);
+  return result;
+}
 
 Result TypeChecker::OnSimdShuffleOp(Opcode opcode, v128 lane_idx) {
   Result result = Result::Ok;

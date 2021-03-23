@@ -161,6 +161,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Ternary:
     case TokenType::SimdLaneOp:
     case TokenType::SimdLoadLane:
+    case TokenType::SimdStoreLane:
     case TokenType::SimdShuffleOp:
       return true;
     default:
@@ -2160,6 +2161,26 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       }
 
       out_expr->reset(new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
+      break;
+    }
+
+    case TokenType::SimdStoreLane: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+
+      Address offset;
+      Address align;
+      ParseOffsetOpt(&offset);
+      ParseAlignOpt(&align);
+
+      uint64_t lane_idx = 0;
+      Result result = ParseSimdLane(loc, &lane_idx);
+
+      if (Failed(result)) {
+        return Result::Error;
+      }
+
+      out_expr->reset(new SimdStoreLaneExpr(token.opcode(), align, offset, lane_idx, loc));
       break;
     }
 
