@@ -2,7 +2,6 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_const.wast
 ;;; ARGS*: --enable-simd --enable-reference-types
 ;;; NOTE: reference types is only required because the test uses two tables
-;;; SKIP: unskip when spec test is updated
 (;; STDOUT ;;;
 out/test/spec/simd/simd_const.wast:130: assert_malformed passed:
   out/test/spec/simd/simd_const/simd_const.113.wat:1:25: error: invalid literal "0x100"
@@ -1762,5 +1761,5 @@ out/test/spec/simd/simd_const.wast:1560: assert_malformed passed:
   out/test/spec/simd/simd_const/simd_const.485.wat:1:42: error: unexpected token 0x1.0p_+1.
   (global v128 (v128.const f64x2 0x1.0p_+1 0x1.0p_+1))
                                            ^^^^^^^^^
-444/444 tests passed.
+445/445 tests passed.
 ;;; STDOUT ;;)
