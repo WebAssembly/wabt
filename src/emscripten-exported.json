@@ -1,4 +1,5 @@
 [
+"_free",
 "_malloc",
 "_wabt_apply_names_module",
 "_wabt_bulk_memory_enabled",
