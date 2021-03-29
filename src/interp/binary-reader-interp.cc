@@ -771,6 +771,10 @@ Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
       CHECK_RESULT(validator_.OnDataSegmentInitExpr_Const(loc, ValueType::I32));
       break;
 
+    case InitExprKind::I64:
+      CHECK_RESULT(validator_.OnDataSegmentInitExpr_Const(loc, ValueType::I64));
+      break;
+
     case InitExprKind::GlobalGet:
       CHECK_RESULT(validator_.OnDataSegmentInitExpr_GlobalGet(
           loc, Var(init_expr_.index_)));

@@ -697,7 +697,7 @@ Result TypeChecker::OnMemoryInit(uint32_t segment, const Limits& limits) {
 }
 
 Result TypeChecker::OnMemorySize(const Limits& limits) {
-  PushType(limits.is_64 ? Type::I64 : Type::I32);
+  PushType(limits.IndexType());
   return Result::Ok;
 }
 

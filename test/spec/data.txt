@@ -43,7 +43,7 @@ out/test/spec/data.wast:337: assert_invalid passed:
 out/test/spec/data.wast:355: assert_invalid passed:
   0000013: error: expected i32 init_expr
 out/test/spec/data.wast:363: assert_invalid passed:
-  error: invalid data segment offset, must be a constant expression; either i32.const or global.get.
+  error: invalid data segment offset, must be a constant expression; either iXX.const or global.get.
   0000012: error: EndDataSegmentInitExpr callback failed
 out/test/spec/data.wast:371: assert_invalid passed:
   0000014: error: expected END opcode after initializer expression

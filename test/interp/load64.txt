@@ -2,10 +2,10 @@
 ;;; ARGS: --enable-memory64
 (module
   (memory i64 1)
-  (data (i32.const 0) "\ff\ff\ff\ff")
-  (data (i32.const 4) "\00\00\ce\41")
-  (data (i32.const 8) "\00\00\00\00\00\ff\8f\40")
-  (data (i32.const 16) "\ff\ff\ff\ff\ff\ff\ff\ff")
+  (data (i64.const 0) "\ff\ff\ff\ff")
+  (data (i64.const 4) "\00\00\ce\41")
+  (data (i64.const 8) "\00\00\00\00\00\ff\8f\40")
+  (data (i64.const 16) "\ff\ff\ff\ff\ff\ff\ff\ff")
 
   (func (export "i32_load8_s") (result i32)
     i64.const 0
