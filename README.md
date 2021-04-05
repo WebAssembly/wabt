@@ -94,21 +94,24 @@ $ cmake ..
 $ cmake --build .
 ```
 
-This will produce build files using CMake's default build generator. Read the CMake
-documentation for more information.
+This will produce build files using CMake's default build generator. Read the
+CMake documentation for more information.
 
-**NOTE**: You must create a separate directory for the build artifacts (e.g. `build` above).
-Running `cmake` from the repo root directory will not work since the build produces an
-executable called `wasm2c` which conflicts with the `wasm2c` directory.
+**NOTE**: You must create a separate directory for the build artifacts (e.g.
+`build` above).  Running `cmake` from the repo root directory will not work
+since the build produces an executable called `wasm2c` which conflicts with the
+`wasm2c` directory.
 
 ## Building using the top-level `Makefile` (Linux and macOS)
 
-**NOTE**: Under the hood, this uses `make` to run CMake, which then calls `make` again.
-On some systems (typically macOS), this doesn't build properly. If you see these errors,
-you can build using CMake directly as described above.
+**NOTE**: Under the hood, this uses `make` to run CMake, which then calls
+`ninja` to perform that actual build.  On some systems (typically macOS), this
+doesn't build properly. If you see these errors, you can build using CMake
+directly as described above.
 
-You'll need [CMake](https://cmake.org). If you just run `make`, it will run CMake for you,
-and put the result in `bin/clang/Debug/` by default:
+You'll need [CMake](https://cmake.org) and [Ninja](https://ninja-build.org). If
+you just run `make`, it will run CMake for you, and put the result in
+`out/clang/Debug/` by default:
 
 > Note: If you are on macOS, you will need to use CMake version 3.2 or higher
 

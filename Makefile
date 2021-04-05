@@ -19,7 +19,7 @@
 MAKEFILE_NAME := $(lastword $(MAKEFILE_LIST))
 ROOT_DIR := $(dir $(abspath $(MAKEFILE_NAME)))
 
-USE_NINJA ?= 0
+USE_NINJA ?= 1
 EMSCRIPTEN_DIR ?= $(dir $(shell which emcc))
 CMAKE_CMD ?= cmake
 
