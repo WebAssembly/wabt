@@ -394,6 +394,7 @@ struct Limits {
         has_max(true),
         is_shared(is_shared),
         is_64(is_64) {}
+  Type IndexType() const { return is_64 ? Type::I64 : Type::I32; }
 
   uint64_t initial = 0;
   uint64_t max = 0;

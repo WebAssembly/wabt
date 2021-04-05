@@ -371,7 +371,9 @@ Result SharedValidator::OnDataSegment(const Location& loc,
 
 Result SharedValidator::OnDataSegmentInitExpr_Const(const Location& loc,
                                                     Type type) {
-  return CheckType(loc, type, Type::I32, "data segment offset");
+  auto required =
+      memories_.empty() ? Type(Type::I32) : memories_[0].limits.IndexType();
+  return CheckType(loc, type, required, "data segment offset");
 }
 
 Result SharedValidator::OnDataSegmentInitExpr_GlobalGet(const Location& loc,
@@ -385,14 +387,16 @@ Result SharedValidator::OnDataSegmentInitExpr_GlobalGet(const Location& loc,
         loc, "initializer expression cannot reference a mutable global");
   }
 
-  result |= CheckType(loc, ref_global.type, Type::I32, "data segment offset");
+  auto required =
+      memories_.empty() ? Type(Type::I32) : memories_[0].limits.IndexType();
+  result |= CheckType(loc, ref_global.type, required, "data segment offset");
   return result;
 }
 
 Result SharedValidator::OnDataSegmentInitExpr_Other(const Location& loc) {
   return PrintError(loc,
                     "invalid data segment offset, must be a constant "
-                    "expression; either i32.const or "
+                    "expression; either iXX.const or "
                     "global.get.");
 }
 

@@ -850,7 +850,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
       if (desc.mode == SegmentMode::Active) {
         Result result;
         Memory::Ptr memory{store, inst->memories_[desc.memory_index]};
-        u32 offset = inst->ResolveInitExpr(store, desc.offset).Get<u32>();
+        Value offset_op = inst->ResolveInitExpr(store, desc.offset);
+        u64 offset = memory->type().limits.is_64 ? offset_op.Get<u64>()
+                                                 : offset_op.Get<u32>();
         if (pass == Check) {
           result = memory->IsValidAccess(offset, 0, segment.size())
                        ? Result::Ok
@@ -864,8 +866,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
           *out_trap = Trap::New(
               store,
               StringPrintf("out of bounds memory access: data segment is "
-                           "out of bounds: [%u, %" PRIu64 ") >= max value %"
-                           PRIu64, offset, u64{offset} + segment.size(),
+                           "out of bounds: [%" PRIu64 ", %" PRIu64
+                           ") >= max value %"
+                           PRIu64, offset, offset + segment.size(),
                            memory->ByteSize()));
           return {};
         }

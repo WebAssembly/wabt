@@ -118,8 +118,7 @@ class BinaryReader {
 
   Index NumTotalFuncs();
 
-  Result ReadI32InitExpr(Index index) WABT_WARN_UNUSED;
-  Result ReadInitExpr(Index index, bool require_i32 = false) WABT_WARN_UNUSED;
+  Result ReadInitExpr(Index index, Type required = Type::Any) WABT_WARN_UNUSED;
   Result ReadTable(Type* out_elem_type,
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
@@ -468,11 +467,7 @@ Index BinaryReader::NumTotalFuncs() {
   return num_func_imports_ + num_function_signatures_;
 }
 
-Result BinaryReader::ReadI32InitExpr(Index index) {
-  return ReadInitExpr(index, true);
-}
-
-Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
+Result BinaryReader::ReadInitExpr(Index index, Type required) {
   Opcode opcode;
   CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
   ERROR_UNLESS_OPCODE_ENABLED(opcode);
@@ -542,9 +537,14 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
       return ReportUnexpectedOpcode(opcode, "in initializer expression");
   }
 
-  if (require_i32 && opcode != Opcode::I32Const &&
-      opcode != Opcode::GlobalGet) {
+  if (required == Type::I32 && opcode != Opcode::I32Const &&
+    opcode != Opcode::GlobalGet) {
     PrintError("expected i32 init_expr");
+    return Result::Error;
+  }
+  if (required == Type::I64 && opcode != Opcode::I64Const &&
+      opcode != Opcode::GlobalGet) {
+    PrintError("expected i64 init_expr");
     return Result::Error;
   }
 
@@ -2443,7 +2443,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
 
     if (!(flags & SegPassive)) {
       CALLBACK(BeginElemSegmentInitExpr, i);
-      CHECK_RESULT(ReadI32InitExpr(i));
+      CHECK_RESULT(ReadInitExpr(i, Type::I32));
       CALLBACK(EndElemSegmentInitExpr, i);
     }
 
@@ -2559,7 +2559,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     CALLBACK(BeginDataSegment, i, memory_index, flags);
     if (!(flags & SegPassive)) {
       CALLBACK(BeginDataSegmentInitExpr, i);
-      CHECK_RESULT(ReadI32InitExpr(i));
+      CHECK_RESULT(ReadInitExpr(i, memories[0].IndexType()));
       CALLBACK(EndDataSegmentInitExpr, i);
     }
 
