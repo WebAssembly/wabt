@@ -264,8 +264,11 @@ class CWriter {
   void Write(const UnaryExpr&);
   void Write(const TernaryExpr&);
   void Write(const SimdLaneOpExpr&);
+  void Write(const SimdLoadLaneExpr&);
+  void Write(const SimdStoreLaneExpr&);
   void Write(const SimdShuffleOpExpr&);
   void Write(const LoadSplatExpr&);
+  void Write(const LoadZeroExpr&);
 
   const WriteCOptions& options_;
   const Module* module_ = nullptr;
@@ -1572,6 +1575,16 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
+      case ExprType::SimdLoadLane: {
+        Write(*cast<SimdLoadLaneExpr>(&expr));
+        break;
+      }
+
+      case ExprType::SimdStoreLane: {
+        Write(*cast<SimdStoreLaneExpr>(&expr));
+        break;
+      }
+
       case ExprType::SimdShuffleOp: {
         Write(*cast<SimdShuffleOpExpr>(&expr));
         break;
@@ -1579,6 +1592,10 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::LoadSplat:
         Write(*cast<LoadSplatExpr>(&expr));
+        break;
+
+      case ExprType::LoadZero:
+        Write(*cast<LoadZeroExpr>(&expr));
         break;
 
       case ExprType::Unreachable:
@@ -2171,6 +2188,30 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
   PushType(result_type);
 }
 
+void CWriter::Write(const SimdLoadLaneExpr& expr) {
+  assert(module_->memories.size() == 1);
+  Memory* memory = module_->memories[0];
+  Type result_type = expr.opcode.GetResultType();
+  Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
+        ExternalPtr(memory->name), ", (u64)(", StackVar(1), "), ");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset, "u");
+  Write("< ", StackVar(0), ", lane Imm: %d", expr.val, ");", Newline());
+  DropTypes(2);
+  PushType(result_type);
+}
+
+void CWriter::Write(const SimdStoreLaneExpr& expr) {
+  assert(module_->memories.size() == 1);
+  Memory* memory = module_->memories[0];
+  Write(expr.opcode.GetName(), "(", ExternalPtr(memory->name), ", (u64)(",
+        StackVar(1), "), ");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset, "u");
+  Write(", ", StackVar(0), ", lane Imm: %d", expr.val, ");", Newline());
+  DropTypes(2);
+}
+
 void CWriter::Write(const SimdShuffleOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(1, result_type), " = ", expr.opcode.GetName(), "(",
@@ -2191,6 +2232,19 @@ void CWriter::Write(const LoadSplatExpr& expr) {
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write("));", Newline());
+  DropTypes(1);
+  PushType(result_type);
+}
+
+void CWriter::Write(const LoadZeroExpr& expr) {
+  assert(module_->memories.size() == 1);
+  Memory* memory = module_->memories[0];
+  Type result_type = expr.opcode.GetResultType();
+  Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
+        ExternalPtr(memory->name), ", (u64)(", StackVar(0), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset, "u");
+  Write(");", Newline());
   DropTypes(1);
   PushType(result_type);
 }
