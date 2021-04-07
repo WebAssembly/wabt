@@ -2189,27 +2189,11 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
 }
 
 void CWriter::Write(const SimdLoadLaneExpr& expr) {
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
-  Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
-        ExternalPtr(memory->name), ", (u64)(", StackVar(1), "), ");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
-  Write("< ", StackVar(0), ", lane Imm: %d", expr.val, ");", Newline());
-  DropTypes(2);
-  PushType(result_type);
+  UNIMPLEMENTED("SIMD support");
 }
 
 void CWriter::Write(const SimdStoreLaneExpr& expr) {
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
-  Write(expr.opcode.GetName(), "(", ExternalPtr(memory->name), ", (u64)(",
-        StackVar(1), "), ");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
-  Write(", ", StackVar(0), ", lane Imm: %d", expr.val, ");", Newline());
-  DropTypes(2);
+  UNIMPLEMENTED("SIMD support");
 }
 
 void CWriter::Write(const SimdShuffleOpExpr& expr) {
@@ -2237,16 +2221,7 @@ void CWriter::Write(const LoadSplatExpr& expr) {
 }
 
 void CWriter::Write(const LoadZeroExpr& expr) {
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
-  Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
-        ExternalPtr(memory->name), ", (u64)(", StackVar(0), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
-  Write(");", Newline());
-  DropTypes(1);
-  PushType(result_type);
+  UNIMPLEMENTED("SIMD support");
 }
 
 void CWriter::WriteCHeader() {
