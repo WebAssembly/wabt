@@ -18,6 +18,7 @@
 #define WABT_WAT_WRITER_H_
 
 #include "wabt/common.h"
+#include "wabt/feature.h"
 
 namespace wabt {
 
@@ -25,6 +26,9 @@ struct Module;
 class Stream;
 
 struct WriteWatOptions {
+  WriteWatOptions() = default;
+  WriteWatOptions(const Features& features) : features(features) {}
+  Features features;
   bool fold_exprs = false;  // Write folded expressions.
   bool inline_export = false;
   bool inline_import = false;

@@ -1435,7 +1435,15 @@ void WatWriter::WriteTable(const Table& table) {
 
 void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
-  WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
+  // The first name we encounter here, pre-bulk-memory, was intended to refer to
+  // the table while segment names were not supported at all.  For this reason
+  // we cannot emit a segment name here without bulk-memory enabled, otherwise
+  // the name will be assumed to be the name of a table and parsing will fail.
+  if (options_.features.bulk_memory_enabled()) {
+    WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
+  } else {
+    Writef("(;%u;)", elem_segment_index_);
+  }
 
   uint8_t flags = segment.GetFlags(&module);
 
