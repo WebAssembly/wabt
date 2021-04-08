@@ -248,6 +248,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLocalName(Index function_index,
                      Index local_index,
                      string_view local_name) override;
+  Result OnNameEntry(NameSectionSubsection type,
+                     Index index,
+                     string_view name) override;
 
   Result BeginEventSection(Offset size) override { return Result::Ok; }
   Result OnEventCount(Index count) override { return Result::Ok; }
@@ -290,6 +293,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result AppendCatch(Catch&& catch_);
   void SetFuncDeclaration(FuncDeclaration* decl, Var var);
   void SetBlockDeclaration(BlockDeclaration* decl, Type sig_type);
+  Result SetMemoryName(Index index, string_view name);
+  Result SetTableName(Index index, string_view name);
+  Result SetFunctionName(Index index, string_view name);
+  Result SetGlobalName(Index index, string_view name);
+  Result SetDataSegmentName(Index index, string_view name);
+  Result SetElemSegmentName(Index index, string_view name);
 
   std::string GetUniqueName(BindingHash* bindings,
                             const std::string& original_name);
@@ -1260,16 +1269,134 @@ Result BinaryReaderIR::OnModuleName(string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
+Result BinaryReaderIR::SetGlobalName(Index index, string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
+  if (index >= module_->globals.size()) {
+    PrintError("invalid global index: %" PRIindex, index);
+    return Result::Error;
+  }
+  Global* glob = module_->globals[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->global_bindings, MakeDollarName(name));
+  glob->name = dollar_name;
+  module_->global_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
 
+Result BinaryReaderIR::SetFunctionName(Index index, string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->funcs.size()) {
+    PrintError("invalid function index: %" PRIindex, index);
+    return Result::Error;
+  }
   Func* func = module_->funcs[index];
   std::string dollar_name =
       GetUniqueName(&module_->func_bindings, MakeDollarName(name));
   func->name = dollar_name;
   module_->func_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::SetTableName(Index index, string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->tables.size()) {
+    PrintError("invalid table index: %" PRIindex, index);
+    return Result::Error;
+  }
+  Table* table = module_->tables[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->table_bindings, MakeDollarName(name));
+  table->name = dollar_name;
+  module_->table_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::SetDataSegmentName(Index index, string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->data_segments.size()) {
+    PrintError("invalid data segment index: %" PRIindex, index);
+    return Result::Error;
+  }
+  DataSegment* segment = module_->data_segments[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->data_segment_bindings, MakeDollarName(name));
+  segment->name = dollar_name;
+  module_->data_segment_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::SetElemSegmentName(Index index, string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->elem_segments.size()) {
+    PrintError("invalid elem segment index: %" PRIindex, index);
+    return Result::Error;
+  }
+  ElemSegment* segment = module_->elem_segments[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->elem_segment_bindings, MakeDollarName(name));
+  segment->name = dollar_name;
+  module_->elem_segment_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::SetMemoryName(Index index, string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->memories.size()) {
+    PrintError("invalid memory index: %" PRIindex, index);
+    return Result::Error;
+  }
+  Memory* memory = module_->memories[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->memory_bindings, MakeDollarName(name));
+  memory->name = dollar_name;
+  module_->memory_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
+  return SetFunctionName(index, name);
+}
+
+Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
+                                   Index index,
+                                   string_view name) {
+  switch (type) {
+    // TODO(sbc): remove OnFunctionName in favor of just using
+    // OnNameEntry so that this works
+    case NameSectionSubsection::Function:
+    case NameSectionSubsection::Local:
+    case NameSectionSubsection::Module:
+    case NameSectionSubsection::Label:
+    case NameSectionSubsection::Type:
+      break;
+    case NameSectionSubsection::Global:
+      SetGlobalName(index, name);
+      break;
+    case NameSectionSubsection::Table:
+      SetTableName(index, name);
+      break;
+    case NameSectionSubsection::DataSegment:
+      SetDataSegmentName(index, name);
+      break;
+    case NameSectionSubsection::Memory:
+      SetMemoryName(index, name);
+      break;
+    case NameSectionSubsection::ElemSegment:
+      SetElemSegmentName(index, name);
+      break;
+  }
   return Result::Ok;
 }
 
@@ -1413,19 +1540,7 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index, uint32_t flags,
 
 Result BinaryReaderIR::OnGlobalSymbol(Index index, uint32_t flags,
                                       string_view name, Index global_index) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
-  if (global_index >= module_->globals.size()) {
-    PrintError("invalid global index: %" PRIindex, global_index);
-    return Result::Error;
-  }
-  Global* glob = module_->globals[global_index];
-  std::string dollar_name =
-      GetUniqueName(&module_->global_bindings, MakeDollarName(name));
-  glob->name = dollar_name;
-  module_->global_bindings.emplace(dollar_name, Binding(global_index));
-  return Result::Ok;
+  return SetGlobalName(global_index, name);
 }
 
 Result BinaryReaderIR::OnSectionSymbol(Index index, uint32_t flags,
@@ -1452,19 +1567,7 @@ Result BinaryReaderIR::OnEventSymbol(Index index, uint32_t flags,
 
 Result BinaryReaderIR::OnTableSymbol(Index index, uint32_t flags,
                                      string_view name, Index table_index) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
-  if (table_index >= module_->tables.size()) {
-    PrintError("invalid table index: %" PRIindex, table_index);
-    return Result::Error;
-  }
-  Table* table = module_->tables[table_index];
-  std::string dollar_name =
-      GetUniqueName(&module_->table_bindings, MakeDollarName(name));
-  table->name = dollar_name;
-  module_->table_bindings.emplace(dollar_name, Binding(table_index));
-  return Result::Ok;
+  return SetTableName(index, name);
 }
 
 }  // end anonymous namespace
