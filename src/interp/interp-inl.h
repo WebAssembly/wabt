@@ -68,7 +68,7 @@ inline MemoryType::MemoryType(Limits limits)
     : ExternType(ExternKind::Memory), limits(limits) {
   // Always set max.
   if (!limits.has_max) {
-    this->limits.max = WABT_MAX_PAGES;
+    this->limits.max = limits.is_64 ? WABT_MAX_PAGES64 : WABT_MAX_PAGES32;
   }
 }
 

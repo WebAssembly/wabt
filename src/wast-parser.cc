@@ -972,9 +972,9 @@ Result WastParser::ParseLimitsIndex(Limits* out_limits) {
 Result WastParser::ParseLimits(Limits* out_limits) {
   WABT_TRACE(ParseLimits);
 
-  CHECK_RESULT(ParseNat(&out_limits->initial));
+  CHECK_RESULT(ParseNat(&out_limits->initial, out_limits->is_64));
   if (PeekMatch(TokenType::Nat)) {
-    CHECK_RESULT(ParseNat(&out_limits->max));
+    CHECK_RESULT(ParseNat(&out_limits->max, out_limits->is_64));
     out_limits->has_max = true;
   } else {
     out_limits->has_max = false;
@@ -987,7 +987,7 @@ Result WastParser::ParseLimits(Limits* out_limits) {
   return Result::Ok;
 }
 
-Result WastParser::ParseNat(uint64_t* out_nat) {
+Result WastParser::ParseNat(uint64_t* out_nat, bool is_64) {
   WABT_TRACE(ParseNat);
   if (!PeekMatch(TokenType::Nat)) {
     return ErrorExpected({"a natural number"}, "123");
@@ -996,7 +996,7 @@ Result WastParser::ParseNat(uint64_t* out_nat) {
   Token token = Consume();
   string_view sv = token.literal().text;
   if (Failed(ParseUint64(sv.begin(), sv.end(), out_nat)) ||
-      *out_nat > 0xffffffffu) {
+      (!is_64 && *out_nat > 0xffffffffu)) {
     Error(token.loc, "invalid int \"" PRIstringview "\"",
           WABT_PRINTF_STRING_VIEW_ARG(sv));
   }

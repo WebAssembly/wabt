@@ -139,7 +139,7 @@ class WastParser {
   bool ParseAlignOpt(Address* align);
   Result ParseLimitsIndex(Limits*);
   Result ParseLimits(Limits*);
-  Result ParseNat(uint64_t*);
+  Result ParseNat(uint64_t*, bool is_64);
 
   Result ParseModuleFieldList(Module*);
   Result ParseModuleField(Module*);
