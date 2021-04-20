@@ -367,11 +367,7 @@ endif ()
 
 # libwasm, which implenents the wasm C API
 if (BUILD_LIBWASM)
-  if (WIN32)
-    add_library(wasm SHARED ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
-  else ()
-    add_library(wasm STATIC ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
-  endif ()
+  add_library(wasm ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
   target_link_libraries(wasm wabt)
   target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
   if (COMPILER_IS_MSVC)
