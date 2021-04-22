@@ -124,6 +124,13 @@ typedef struct {
   uint32_t size;
 } wasm_rt_table_t;
 
+typedef struct wasm_func_type_t {
+  wasm_rt_type_t* params;
+  wasm_rt_type_t* results;
+  uint32_t param_count;
+  uint32_t result_count;
+} wasm_func_type_t;
+
 /** Stop execution immediately and jump back to the call to `wasm_rt_try`.
  *  The result of `wasm_rt_try` will be the provided trap reason.
  *
@@ -148,7 +155,9 @@ extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
  *    wasm_rt_register_func_type(2, 1, WASM_RT_I32, WASM_RT_F32, WASM_RT_I64);
  *    => returns 1
  *  ``` */
-extern uint32_t wasm_rt_register_func_type(uint32_t params,
+extern uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
+                                           uint32_t* p_func_type_count,
+                                           uint32_t params,
                                            uint32_t results,
                                            ...);
 
@@ -190,9 +199,6 @@ extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
-
-/** Current call stack depth. */
-extern uint32_t wasm_rt_call_stack_depth;
 
 #ifdef __cplusplus
 }

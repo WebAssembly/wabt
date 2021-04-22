@@ -847,6 +847,10 @@ void CWriter::WriteMultivalueTypes() {
 
 void CWriter::WriteFuncTypes() {
   Write(Newline());
+  Write("static wasm_func_type_t* func_type_structs = 0;");
+  Write(Newline());
+  Write("static u32 func_type_count = 0;");
+  Write(Newline());
   Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
   Write(Newline(), Newline());
   Write("static void init_func_types(void) {", Newline());
@@ -855,7 +859,7 @@ void CWriter::WriteFuncTypes() {
     FuncType* func_type = cast<FuncType>(type);
     Index num_params = func_type->GetNumParams();
     Index num_results = func_type->GetNumResults();
-    Write("  func_types[", func_type_index, "] = wasm_rt_register_func_type(",
+    Write("  func_types[", func_type_index, "] = wasm_rt_register_func_type(&func_type_structs, &func_type_count, ",
           num_params, ", ", num_results);
     for (Index i = 0; i < num_params; ++i) {
       Write(", ", TypeEnum(func_type->GetParamType(i)));

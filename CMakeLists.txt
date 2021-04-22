@@ -352,7 +352,7 @@ set(WABT_LIBRARY_SRC
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 
 IF (NOT WIN32)
-  add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
+  add_library(wasm-rt-impl STATIC SHARED wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
   install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
   install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif ()
