@@ -28,7 +28,8 @@ typedef int64_t s64;
 typedef float f32;
 typedef double f64;
 
-extern void WASM_RT_ADD_PREFIX(init)(void);
+extern void* WASM_RT_ADD_PREFIX(create_wasm2c_sandbox)(void);
+extern void WASM_RT_ADD_PREFIX(destroy_wasm2c_sandbox)(void*);
 %%bottom
 #ifdef __cplusplus
 }

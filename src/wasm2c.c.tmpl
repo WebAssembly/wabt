@@ -14,10 +14,10 @@
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
-#define CALL_INDIRECT(table, t, ft, x, ...)          \
-  (LIKELY((x) < table.size && table.data[x].func &&  \
-          table.data[x].func_type == func_types[ft]) \
-       || TRAP(CALL_INDIRECT)                        \
+#define CALL_INDIRECT(table, t, ft, x, func_types, ...) \
+  (LIKELY((x) < table.size && table.data[x].func &&     \
+          table.data[x].func_type == func_types[ft])    \
+       || TRAP(CALL_INDIRECT)                           \
        , ((t)table.data[x].func)(__VA_ARGS__))
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
