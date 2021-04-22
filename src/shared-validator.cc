@@ -136,7 +136,8 @@ Result SharedValidator::OnMemory(const Location& loc, const Limits& limits) {
   if (memories_.size() > 0) {
     result |= PrintError(loc, "only one memory block allowed");
   }
-  result |= CheckLimits(loc, limits, WABT_MAX_PAGES, "pages");
+  result |= CheckLimits(
+      loc, limits, limits.is_64 ? WABT_MAX_PAGES64 : WABT_MAX_PAGES32, "pages");
 
   if (limits.is_shared) {
     if (!options_.features.threads_enabled()) {
