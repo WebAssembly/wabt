@@ -32,7 +32,7 @@ const char SECTION_NAME(top)[] =
 "extern void* WASM_RT_ADD_PREFIX(create_wasm2c_sandbox)(void);\n"
 "extern void WASM_RT_ADD_PREFIX(destroy_wasm2c_sandbox)(void* sbx_ptr);\n"
 "extern void* WASM_RT_ADD_PREFIX(lookup_wasm2c_nonfunc_export)(void* sbx_ptr, const char* name);\n"
-"extern void* WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types);\n"
+"extern u32 WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types);\n"
 "extern u32 WASM_RT_ADD_PREFIX(add_wasm2c_callback)(void* sbx_ptr, u32 func_type_idx, void* func_ptr);\n"
 "extern void WASM_RT_ADD_PREFIX(remove_wasm2c_callback)(void* sbx_ptr, u32 callback_idx);\n"
 ;

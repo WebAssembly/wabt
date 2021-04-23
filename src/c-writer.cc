@@ -222,6 +222,7 @@ class CWriter {
   void WriteImports();
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&);
+  void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
   void WriteGlobalInitializers();
   void WriteGlobals();
   void WriteGlobal(const Global&, const std::string&);
@@ -908,7 +909,7 @@ void CWriter::WriteImports() {
     switch (import->kind()) {
       case ExternalKind::Func: {
         const Func& func = cast<FuncImport>(import)->func;
-        WriteFuncDeclaration(
+        WriteImportFuncDeclaration(
             func.decl,
             DefineImportName(
                 func.name, import->module_name,
@@ -970,6 +971,15 @@ void CWriter::WriteFuncDeclarations() {
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name) {
   Write(ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
+  for (Index i = 0; i < decl.GetNumParams(); ++i) {
+    Write(", ", decl.GetParamType(i));
+  }
+  Write(")");
+}
+
+void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
+                                   const std::string& name) {
+  Write(ResultType(decl.sig.result_types), " ", name, "(void*");
   for (Index i = 0; i < decl.GetNumParams(); ++i) {
     Write(", ", decl.GetParamType(i));
   }
@@ -1170,7 +1180,7 @@ void CWriter::WriteExportLookup() {
 }
 
 void CWriter::WriteFuncIndexLookup() {
-  Write(Newline(), "void* WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
+  Write(Newline(), "u32 WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
   Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
   Write("return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);", Newline());
   Write(CloseBrace(), Newline());
@@ -1210,7 +1220,7 @@ void CWriter::WriteCallbackAddRemove() {
 
 void CWriter::WriteInit() {
   Write(Newline(), "void* WASM_RT_ADD_PREFIX(create_wasm2c_sandbox)(void) ", OpenBrace());
-  Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) calloc(sizeof(wasm2c_sandbox_t));", Newline());
+  Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) calloc(sizeof(wasm2c_sandbox_t), 1);", Newline());
   Write("init_func_types(sbx);", Newline());
   Write("init_globals(sbx);", Newline());
   Write("init_memory(sbx);", Newline());

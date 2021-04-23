@@ -31,7 +31,7 @@ typedef double f64;
 extern void* WASM_RT_ADD_PREFIX(create_wasm2c_sandbox)(void);
 extern void WASM_RT_ADD_PREFIX(destroy_wasm2c_sandbox)(void* sbx_ptr);
 extern void* WASM_RT_ADD_PREFIX(lookup_wasm2c_nonfunc_export)(void* sbx_ptr, const char* name);
-extern void* WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types);
+extern u32 WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types);
 extern u32 WASM_RT_ADD_PREFIX(add_wasm2c_callback)(void* sbx_ptr, u32 func_type_idx, void* func_ptr);
 extern void WASM_RT_ADD_PREFIX(remove_wasm2c_callback)(void* sbx_ptr, u32 callback_idx);
 %%bottom
