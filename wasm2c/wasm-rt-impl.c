@@ -15,6 +15,7 @@
  */
 
 #include "wasm-rt.h"
+#include "wasm-rt-os.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -27,11 +28,6 @@
 #if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
     defined(__WORDSIZE) && __WORDSIZE == 64
     #define WASM_GUARDPAGE_MODEL
-#endif
-
-#if defined(WASM_GUARDPAGE_MODEL)
-#include <sys/mman.h>
-#include <unistd.h>
 #endif
 
 #define PAGE_SIZE 65536
@@ -87,19 +83,66 @@ uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
   return idx + 1;
 }
 
+static void* mmap_aligned(void *addr, size_t requested_length, int prot, int flags, size_t alignment, size_t alignment_offset)
+{
+    size_t padded_length = requested_length + alignment + alignment_offset;
+    uintptr_t unaligned = (uintptr_t) os_mmap(addr, padded_length, prot, flags);
+
+    if (!unaligned) {
+        return (void*) unaligned;
+    }
+
+    // Round up the next address that has addr % alignment = 0
+    uintptr_t aligned_nonoffset = (unaligned + (alignment - 1)) & ~(alignment - 1);
+
+    // Currently offset 0 is aligned according to alignment
+    // Alignment needs to be enforced at the given offset
+    uintptr_t aligned = 0;
+    if ((aligned_nonoffset - alignment_offset) >= unaligned) {
+        aligned = aligned_nonoffset - alignment_offset;
+    } else {
+        aligned = aligned_nonoffset - alignment_offset + alignment;
+    }
+
+    //Sanity check
+    if (aligned < unaligned
+        || (aligned + (requested_length - 1)) > (unaligned + (padded_length - 1))
+        || (aligned + alignment_offset) % alignment != 0)
+    {
+        os_munmap((void*) unaligned, padded_length);
+        return NULL;
+    }
+
+    {
+        size_t unused_front = aligned - unaligned;
+        if (unused_front != 0) {
+            os_munmap((void*) unaligned, unused_front);
+        }
+    }
+
+    {
+        size_t unused_back = (unaligned + (padded_length - 1)) - (aligned + (requested_length - 1));
+        if (unused_back != 0) {
+            os_munmap((void*) (aligned + requested_length), unused_back);
+        }
+    }
+
+    return (void*) aligned;
+}
+
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   uint32_t byte_length = initial_pages * PAGE_SIZE;
 #if defined(WASM_GUARDPAGE_MODEL)
   /* Reserve 8GiB. */
-  void* addr =
-      mmap(NULL, 0x200000000ul, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  const uint64_t heap_alignment = 0x100000000ul;
+  void* addr = mmap_aligned(NULL, 0x200000000ul, MMAP_PROT_NONE, MMAP_MAP_NONE, heap_alignment, 0 /* alignment_offset */);
   if (addr == (void*)-1) {
     perror("mmap failed");
     abort();
   }
-  mprotect(addr, byte_length, PROT_READ | PROT_WRITE);
+  os_mprotect(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
   memory->data = addr;
 #else
   memory->data = calloc(byte_length, 1);
@@ -124,7 +167,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
 
 #if defined(WASM_GUARDPAGE_MODEL)
   uint8_t* new_data = memory->data;
-  mprotect(new_data + old_size, delta_size, PROT_READ | PROT_WRITE);
+  os_mprotect(new_data + old_size, delta_size, MMAP_PROT_READ | MMAP_PROT_WRITE);
 #else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
