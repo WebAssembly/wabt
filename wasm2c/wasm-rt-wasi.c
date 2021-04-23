@@ -1,5 +1,6 @@
 // This file contains modified versions of the emscripten runtime (as well as the wasi support it includes ) adapted for
 //    - library sandboxing --- these apis have to support multiple wasm2c sandboxed components and cannot use global variables.
+//                             Instead they operate on the sbx context specified as the first parameter to the API
 //    - compatibility --- APIs like setjmp/longjmp are implemented in a very limited way upstream. Expanding this.
 //    - security --- APIs like args_get, sys_open, fd_write, sys_read seemed to have security bugs upstream.
 //                   Additionally, we don't want to allow any file system access. Restrict opens to the null file (/dev/null on unix, nul on windows)
