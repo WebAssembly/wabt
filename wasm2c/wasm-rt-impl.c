@@ -58,22 +58,18 @@ uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
                                     uint32_t* p_func_type_count,
                                     uint32_t param_count,
                                     uint32_t result_count,
-                                    ...) {
+                                    wasm_rt_type_t* types) {
   wasm_func_type_t func_type;
   func_type.param_count = param_count;
   func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
   func_type.result_count = result_count;
   func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
 
-  va_list args;
-  va_start(args, result_count);
-
   uint32_t i;
   for (i = 0; i < param_count; ++i)
-    func_type.params[i] = va_arg(args, wasm_rt_type_t);
+    func_type.params[i] = types[i];
   for (i = 0; i < result_count; ++i)
-    func_type.results[i] = va_arg(args, wasm_rt_type_t);
-  va_end(args);
+    func_type.results[i] = types[(uint64_t)(param_count) + i];
 
   for (i = 0; i < *p_func_type_count; ++i) {
     wasm_func_type_t* func_types = *p_func_type_structs;

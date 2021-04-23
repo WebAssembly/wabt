@@ -232,6 +232,7 @@ class CWriter {
   void WriteDataInitializers();
   void WriteElemInitializers();
   void WriteExportLookup();
+  void WriteFuncIndexLookup();
   void WriteInit();
   void WriteFuncs();
   void Write(const Func&);
@@ -857,26 +858,37 @@ void CWriter::WriteSandboxStruct() {
 
 void CWriter::WriteFuncTypes() {
   Write(Newline());
-  Write("static void init_func_types(wasm2c_sandbox_t* sbx) {", Newline());
+  Write("static void init_func_types(wasm2c_sandbox_t* sbx) ", OpenBrace());
   Index func_type_index = 0;
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
     Index num_params = func_type->GetNumParams();
     Index num_results = func_type->GetNumResults();
-    Write("  sbx->func_types[", func_type_index, "] = wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, ",
-          num_params, ", ", num_results);
+    Write(OpenBrace());
+    Write("wasm_rt_type_t param_ret_types[] = { ");
+    bool first = true;
     for (Index i = 0; i < num_params; ++i) {
-      Write(", ", TypeEnum(func_type->GetParamType(i)));
+      if (!first) {
+        Write(", ");
+      }
+      Write(TypeEnum(func_type->GetParamType(i)));
+      first = false;
     }
-
     for (Index i = 0; i < num_results; ++i) {
-      Write(", ", TypeEnum(func_type->GetResultType(i)));
+      if (!first) {
+        Write(", ");
+      }
+      Write(TypeEnum(func_type->GetResultType(i)));
+      first = false;
     }
-
+    Write(" };", Newline());
+    Write("sbx->func_types[", func_type_index, "] = wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, ",
+          num_params, ", ", num_results, ", param_ret_types");
     Write(");", Newline());
+    Write(CloseBrace(), Newline());
     ++func_type_index;
   }
-  Write("}", Newline());
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteImports() {
@@ -1143,6 +1155,13 @@ void CWriter::WriteExportLookup() {
   }
 
   Write("return 0;", Newline());
+  Write(CloseBrace(), Newline());
+}
+
+void CWriter::WriteFuncIndexLookup() {
+  Write(Newline(), "void* WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
+  Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
+  Write("return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);", Newline());
   Write(CloseBrace(), Newline());
 }
 
@@ -2311,6 +2330,7 @@ void CWriter::WriteCSource() {
   WriteElemInitializers();
   WriteInit();
   WriteExportLookup();
+  WriteFuncIndexLookup();
 }
 
 Result CWriter::WriteModule(const Module& module) {
