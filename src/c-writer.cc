@@ -170,7 +170,6 @@ class CWriter {
                                     const TypeVector& result_types);
   static std::string MangleGlobalName(string_view, Type);
   static std::string LegalizeName(string_view);
-  static std::string ExportName(string_view mangled_name);
   std::string DefineName(SymbolSet*, string_view);
   std::string DefineImportName(const std::string& name,
                                string_view module_name,
@@ -193,12 +192,6 @@ class CWriter {
   }
 
   std::string GetGlobalName(const std::string&) const;
-
-  enum class WriteExportsKind {
-    Declarations,
-    Definitions,
-    Initializers,
-  };
 
   void Write() {}
   void Write(Newline);
@@ -238,8 +231,7 @@ class CWriter {
   void WriteTable(const std::string&);
   void WriteDataInitializers();
   void WriteElemInitializers();
-  void WriteInitExports();
-  void WriteExports(WriteExportsKind);
+  void WriteExportLookup();
   void WriteInit();
   void WriteFuncs();
   void Write(const Func&);
@@ -451,11 +443,6 @@ std::string CWriter::MangleFuncName(string_view name,
 std::string CWriter::MangleGlobalName(string_view name, Type type) {
   std::string sig(1, MangleType(type));
   return MangleName(name) + MangleName(sig);
-}
-
-// static
-std::string CWriter::ExportName(string_view mangled_name) {
-  return "WASM_RT_ADD_PREFIX(" + mangled_name.to_string() + ")";
 }
 
 // static
@@ -958,7 +945,6 @@ void CWriter::WriteFuncDeclarations() {
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
-      Write("static ");
       WriteFuncDeclaration(func->decl, DefineGlobalScopeName(func->name));
       Write(";", Newline());
     }
@@ -1134,93 +1120,30 @@ void CWriter::WriteElemInitializers() {
   Write(CloseBrace(), Newline());
 }
 
-void CWriter::WriteInitExports() {
-  Write(Newline(), "static void init_exports(wasm2c_sandbox_t* sbx) ", OpenBrace());
-  WriteExports(WriteExportsKind::Initializers);
-  Write(CloseBrace(), Newline());
-}
-
-void CWriter::WriteExports(WriteExportsKind kind) {
-  if (module_->exports.empty())
-    return;
-
-  if (kind != WriteExportsKind::Initializers) {
-    Write(Newline());
-  }
-
+void CWriter::WriteExportLookup() {
+  Write(Newline(), "void* WASM_RT_ADD_PREFIX(lookup_wasm2c_nonfunc_export)(void* sbx_ptr, const char* name) ", OpenBrace());
+  Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
   for (const Export* export_ : module_->exports) {
-    Write("/* export: '", export_->name, "' */", Newline());
-    if (kind == WriteExportsKind::Declarations) {
-      Write("extern ");
-    }
-
-    std::string mangled_name;
-    std::string internal_name;
-    std::string object_name;
-
     switch (export_->kind) {
       case ExternalKind::Func: {
-        const Func* func = module_->GetFunc(export_->var);
-        mangled_name =
-            ExportName(MangleFuncName(export_->name, func->decl.sig.param_types,
-                                      func->decl.sig.result_types));
-        internal_name = func->name;
-        if (kind != WriteExportsKind::Initializers) {
-          WriteFuncDeclaration(func->decl, Deref(mangled_name));
-          Write(";");
-        }
         break;
       }
-
-      case ExternalKind::Global: {
-        const Global* global = module_->GetGlobal(export_->var);
-        mangled_name =
-            ExportName(MangleGlobalName(export_->name, global->type));
-        internal_name = global->name;
-        object_name = "sbx->";
-        if (kind != WriteExportsKind::Initializers) {
-          WriteGlobal(*global, Deref(mangled_name));
-          Write(";");
-        }
-        break;
-      }
-
-      case ExternalKind::Memory: {
-        const Memory* memory = module_->GetMemory(export_->var);
-        mangled_name = ExportName(MangleName(export_->name));
-        internal_name = memory->name;
-        object_name = "sbx->";
-        if (kind != WriteExportsKind::Initializers) {
-          WriteMemory(Deref(mangled_name));
-        }
-        break;
-      }
-
+      case ExternalKind::Global :
+      case ExternalKind::Memory :
       case ExternalKind::Table: {
-        const Table* table = module_->GetTable(export_->var);
-        mangled_name = ExportName(MangleName(export_->name));
-        internal_name = table->name;
-        object_name = "sbx->";
-        if (kind != WriteExportsKind::Initializers) {
-          WriteTable(Deref(mangled_name));
-        }
+        Writef("if (strcmp(\"%s\", name))", export_->name.c_str());
+        Write(OpenBrace());
+        Write("return &(sbx->w2c_", export_->name, ");", Newline());
+        Write(CloseBrace(), Newline());
         break;
       }
-
       default:
         WABT_UNREACHABLE;
     }
-
-    if (kind == WriteExportsKind::Initializers) {
-      if (object_name != "") {
-        Write(mangled_name, " = &(", object_name, ExternalRef(internal_name), ");");
-      } else {
-        Write(mangled_name, " = ", ExternalPtr(internal_name), ";");
-      }
-    }
-
-    Write(Newline());
   }
+
+  Write("return 0;", Newline());
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteInit() {
@@ -1230,7 +1153,6 @@ void CWriter::WriteInit() {
   Write("init_globals(sbx);", Newline());
   Write("init_memory(sbx);", Newline());
   Write("init_table(sbx);", Newline());
-  Write("init_exports(sbx);", Newline());
   for (Var* var : module_->starts) {
     Write(ExternalRef(module_->GetFunc(*var)->name), "();", Newline());
   }
@@ -1259,7 +1181,7 @@ void CWriter::Write(const Func& func) {
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
 
-  Write("static ", ResultType(func.decl.sig.result_types), " ",
+  Write(ResultType(func.decl.sig.result_types), " ",
         GlobalName(func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
@@ -2373,7 +2295,6 @@ void CWriter::WriteCHeader() {
   Write(s_header_top);
   WriteMultivalueTypes();
   WriteImports();
-  WriteExports(WriteExportsKind::Declarations);
   Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
 }
@@ -2388,9 +2309,8 @@ void CWriter::WriteCSource() {
   WriteFuncs();
   WriteDataInitializers();
   WriteElemInitializers();
-  WriteExports(WriteExportsKind::Definitions);
-  WriteInitExports();
   WriteInit();
+  WriteExportLookup();
 }
 
 Result CWriter::WriteModule(const Module& module) {

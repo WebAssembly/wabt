@@ -30,6 +30,7 @@ typedef double f64;
 
 extern void* WASM_RT_ADD_PREFIX(create_wasm2c_sandbox)(void);
 extern void WASM_RT_ADD_PREFIX(destroy_wasm2c_sandbox)(void*);
+extern void* WASM_RT_ADD_PREFIX(lookup_wasm2c_nonfunc_export)(void*, const char*);
 %%bottom
 #ifdef __cplusplus
 }

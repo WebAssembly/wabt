@@ -31,6 +31,7 @@ const char SECTION_NAME(top)[] =
 "\n"
 "extern void* WASM_RT_ADD_PREFIX(create_wasm2c_sandbox)(void);\n"
 "extern void WASM_RT_ADD_PREFIX(destroy_wasm2c_sandbox)(void*);\n"
+"extern void* WASM_RT_ADD_PREFIX(lookup_wasm2c_nonfunc_export)(void*, const char*);\n"
 ;
 
 const char SECTION_NAME(bottom)[] =
