@@ -147,9 +147,10 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
 void wasm_rt_allocate_table(wasm_rt_table_t* table,
                             uint32_t elements,
                             uint32_t max_elements) {
+  assert(max_elements >= elements);
   table->size = elements;
   table->max_size = max_elements;
-  table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
+  table->data = calloc(table->max_size, sizeof(wasm_rt_elem_t));
 }
 
 #undef WASM_GUARDPAGE_MODEL

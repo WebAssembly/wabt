@@ -233,6 +233,7 @@ class CWriter {
   void WriteElemInitializers();
   void WriteExportLookup();
   void WriteFuncIndexLookup();
+  void WriteCallbackAddRemove();
   void WriteInit();
   void WriteFuncs();
   void Write(const Func&);
@@ -1039,7 +1040,10 @@ void CWriter::WriteTables() {
   for (const Table* table : module_->tables) {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
-      WriteTable(DefineGlobalScopeName(table->name));
+      std::string curr_table_name = DefineGlobalScopeName(table->name);
+      Writef("u32 %s_current_index;", curr_table_name.c_str());
+      Write(Newline());
+      WriteTable(curr_table_name);
       Write(Newline());
     }
     ++table_index;
@@ -1108,6 +1112,7 @@ void CWriter::WriteElemInitializers() {
           table->elem_limits.initial, ", ", max, ");", Newline());
   }
   Index elem_segment_index = 0;
+  size_t first_unused_elem = 0;
   for (const ElemSegment* elem_segment : module_->elem_segments) {
     Write("offset = ");
     WriteInitExpr(elem_segment->offset);
@@ -1124,11 +1129,14 @@ void CWriter::WriteElemInitializers() {
       Write("sbx->",ExternalRef(table->name), ".data[offset + ", i,
             "] = (wasm_rt_elem_t){sbx->func_types[", func_type_index,
             "], (wasm_rt_anyfunc_t)", ExternalPtr(func->name), "};", Newline());
+      if (i >= first_unused_elem) {
+        first_unused_elem = i+1;
+      }
       ++i;
     }
     ++elem_segment_index;
   }
-
+  Write("sbx->", ExternalRef(table->name), "_current_index = offset + ", std::to_string(first_unused_elem), ";", Newline());
   Write(CloseBrace(), Newline());
 }
 
@@ -1162,6 +1170,38 @@ void CWriter::WriteFuncIndexLookup() {
   Write(Newline(), "void* WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
   Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
   Write("return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);", Newline());
+  Write(CloseBrace(), Newline());
+}
+
+void CWriter::WriteCallbackAddRemove() {
+  const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
+
+  Write(Newline(), "u32 WASM_RT_ADD_PREFIX(add_wasm2c_callback)(void* sbx_ptr, u32 func_type_idx, void* func_ptr) ", OpenBrace());
+  {
+    Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
+
+    Writef("for (u32 i = 0; i < %" PRIu64 "; i++)", table->elem_limits.max);
+    Write(OpenBrace());
+    {
+      Write("if (sbx->", ExternalRef(table->name), ".data[i].func == 0) ", OpenBrace());
+      {
+        Write("sbx->",ExternalRef(table->name), ".data[i]",
+          " = (wasm_rt_elem_t){sbx->func_types[func_type_idx], ",
+          "(wasm_rt_anyfunc_t) func_ptr };", Newline());
+        Write("return i;", Newline());
+      }
+      Write(CloseBrace(), Newline());
+    }
+    Write(CloseBrace(), Newline());
+    Write("TRAP(CALL_INDIRECT);", Newline());
+  }
+  Write(CloseBrace(), Newline());
+
+  Write(Newline(), "void WASM_RT_ADD_PREFIX(remove_wasm2c_callback)(void* sbx_ptr, u32 callback_idx) ", OpenBrace());
+  {
+    Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
+    Write("sbx->", ExternalRef(table->name), ".data[callback_idx].func = 0;", Newline());
+  }
   Write(CloseBrace(), Newline());
 }
 
@@ -2331,6 +2371,7 @@ void CWriter::WriteCSource() {
   WriteInit();
   WriteExportLookup();
   WriteFuncIndexLookup();
+  WriteCallbackAddRemove();
 }
 
 Result CWriter::WriteModule(const Module& module) {
