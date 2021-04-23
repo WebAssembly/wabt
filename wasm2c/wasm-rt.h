@@ -18,6 +18,7 @@
 #define WASM_RT_H_
 
 #include <stdint.h>
+#include <setjmp.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -133,6 +134,24 @@ typedef struct wasm_func_type_t {
   uint32_t result_count;
 } wasm_func_type_t;
 
+#define WASM2C_WASI_MAX_SETJMP_STACK 32
+#define WASM2C_WASI_MAX_FDS 32
+typedef struct wasm_sandbox_wasi_data {
+  wasm_rt_memory_t* heap_memory;
+
+  uint32_t tempRet0;
+
+  uint32_t next_setjmp_index;
+  jmp_buf setjmp_stack[WASM2C_WASI_MAX_SETJMP_STACK];
+
+  uint32_t main_argc;
+  char** main_argv;
+
+  int wasm_fd_to_native[WASM2C_WASI_MAX_FDS];
+  uint32_t next_wasm_fd;
+
+} wasm_sandbox_wasi_data;
+
 /** Stop execution immediately and jump back to the call to `wasm_rt_try`.
  *  The result of `wasm_rt_try` will be the provided trap reason.
  *
@@ -201,6 +220,8 @@ extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
+
+extern void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data);
 
 #ifdef __cplusplus
 }
