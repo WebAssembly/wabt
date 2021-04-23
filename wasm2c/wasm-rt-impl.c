@@ -25,11 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
-    defined(__WORDSIZE) && __WORDSIZE == 64
-    #define WASM_GUARDPAGE_MODEL
-#endif
-
 #define PAGE_SIZE 65536
 
 void wasm_rt_trap(wasm_rt_trap_t code) {

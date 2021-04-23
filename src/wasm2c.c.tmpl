@@ -20,7 +20,7 @@
        || TRAP(CALL_INDIRECT)                           \
        , ((t)table.data[x].func)(__VA_ARGS__))
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if defined(WASM_GUARDPAGE_MODEL)
 #define MEMCHECK(mem, a, t)
 #else
 #define MEMCHECK(mem, a, t)  \

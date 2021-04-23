@@ -46,6 +46,8 @@ extern "C" {
 #if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
     defined(__WORDSIZE) && __WORDSIZE == 64
 
+#define WASM_GUARDPAGE_MODEL
+
 /* If the signal handler is supported, then use it by default. */
 #ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
