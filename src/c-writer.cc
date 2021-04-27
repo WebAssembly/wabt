@@ -1154,7 +1154,7 @@ void CWriter::WriteElemInitializers() {
 }
 
 void CWriter::WriteExportLookup() {
-  Write(Newline(), "void* WASM_RT_ADD_PREFIX(lookup_wasm2c_nonfunc_export)(void* sbx_ptr, const char* name) ", OpenBrace());
+  Write(Newline(), "static void* lookup_wasm2c_nonfunc_export(void* sbx_ptr, const char* name) ", OpenBrace());
   Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
   for (const Export* export_ : module_->exports) {
     switch (export_->kind) {
@@ -1164,7 +1164,7 @@ void CWriter::WriteExportLookup() {
       case ExternalKind::Global :
       case ExternalKind::Memory :
       case ExternalKind::Table: {
-        Writef("if (strcmp(\"%s\", name))", export_->name.c_str());
+        Writef("if (strcmp(\"%s\", name) == 0)", export_->name.c_str());
         Write(OpenBrace());
         Write("return &(sbx->w2c_", export_->name, ");", Newline());
         Write(CloseBrace(), Newline());
@@ -1180,7 +1180,7 @@ void CWriter::WriteExportLookup() {
 }
 
 void CWriter::WriteFuncIndexLookup() {
-  Write(Newline(), "u32 WASM_RT_ADD_PREFIX(lookup_wasm2c_func_index)(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
+  Write(Newline(), "static u32 lookup_wasm2c_func_index(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
   Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
   Write("return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);", Newline());
   Write(CloseBrace(), Newline());
@@ -1189,17 +1189,27 @@ void CWriter::WriteFuncIndexLookup() {
 void CWriter::WriteCallbackAddRemove() {
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
-  Write(Newline(), "u32 WASM_RT_ADD_PREFIX(add_wasm2c_callback)(void* sbx_ptr, u32 func_type_idx, void* func_ptr) ", OpenBrace());
+  Write(Newline(), "static u32 add_wasm2c_callback(void* sbx_ptr, u32 func_type_idx, void* func_ptr) ", OpenBrace());
   {
     Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
 
-    Writef("for (u32 i = 0; i < %" PRIu64 "; i++)", table->elem_limits.max);
+    if (table->elem_limits.max == 0) {
+      Writef("for (u32 i = 1; i != 0; i++) ");
+    } else {
+      Writef("for (u32 i = 1; i < %" PRIu64 "; i++) ", table->elem_limits.max);
+    }
     Write(OpenBrace());
     {
+      Write("if (i >= sbx->w2c___indirect_function_table.size) ", OpenBrace());
+      {
+        Write("wasm_rt_expand_table(&(sbx->w2c___indirect_function_table));", Newline());
+      }
+      Write(CloseBrace(), Newline());
+
       Write("if (sbx->", ExternalRef(table->name), ".data[i].func == 0) ", OpenBrace());
       {
         Write("sbx->",ExternalRef(table->name), ".data[i]",
-          " = (wasm_rt_elem_t){sbx->func_types[func_type_idx], ",
+          " = (wasm_rt_elem_t){func_type_idx, ",
           "(wasm_rt_anyfunc_t) func_ptr };", Newline());
         Write("return i;", Newline());
       }
@@ -1210,7 +1220,7 @@ void CWriter::WriteCallbackAddRemove() {
   }
   Write(CloseBrace(), Newline());
 
-  Write(Newline(), "void WASM_RT_ADD_PREFIX(remove_wasm2c_callback)(void* sbx_ptr, u32 callback_idx) ", OpenBrace());
+  Write(Newline(), "static void remove_wasm2c_callback(void* sbx_ptr, u32 callback_idx) ", OpenBrace());
   {
     Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
     Write("sbx->", ExternalRef(table->name), ".data[callback_idx].func = 0;", Newline());
@@ -1219,7 +1229,7 @@ void CWriter::WriteCallbackAddRemove() {
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "void* WASM_RT_ADD_PREFIX(create_wasm2c_sandbox)(void) ", OpenBrace());
+  Write(Newline(), "static void* create_wasm2c_sandbox(void) ", OpenBrace());
   Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) calloc(sizeof(wasm2c_sandbox_t), 1);", Newline());
   Write("init_func_types(sbx);", Newline());
   Write("init_globals(sbx);", Newline());
@@ -1232,8 +1242,22 @@ void CWriter::WriteInit() {
   Write("return sbx;", Newline());
   Write(CloseBrace(), Newline(), Newline());
 
-  Write("void WASM_RT_ADD_PREFIX(destroy_wasm2c_sandbox)(void* sbx) ", OpenBrace());
+  Write("static void destroy_wasm2c_sandbox(void* sbx) ", OpenBrace());
   Write("free(sbx);", Newline());
+  Write(CloseBrace(), Newline(), Newline());
+
+  Writef("wasm2c_sandbox_funcs_t get_%s_wasm2c_sandbox_info() ", this->options_.mod_name.c_str());
+  Write(OpenBrace());
+  {
+    Write("wasm2c_sandbox_funcs_t ret;", Newline());
+    Write("ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;", Newline());
+    Write("ret.destroy_wasm2c_sandbox = &destroy_wasm2c_sandbox;", Newline());
+    Write("ret.lookup_wasm2c_nonfunc_export = &lookup_wasm2c_nonfunc_export;", Newline());
+    Write("ret.lookup_wasm2c_func_index = &lookup_wasm2c_func_index;", Newline());
+    Write("ret.add_wasm2c_callback = &add_wasm2c_callback;", Newline());
+    Write("ret.remove_wasm2c_callback = &remove_wasm2c_callback;", Newline());
+    Write("return ret;", Newline());
+  }
   Write(CloseBrace(), Newline());
 }
 
@@ -2368,7 +2392,9 @@ void CWriter::WriteCHeader() {
   Write(s_header_top);
   WriteMultivalueTypes();
   WriteImports();
-  Write(s_header_bottom);
+  Write(s_header_bottom, Newline());
+  Writef("wasm2c_sandbox_funcs_t get_%s_wasm2c_sandbox_info();", this->options_.mod_name.c_str());
+  Write(Newline());
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
 }
 
@@ -2382,10 +2408,10 @@ void CWriter::WriteCSource() {
   WriteFuncs();
   WriteDataInitializers();
   WriteElemInitializers();
-  WriteInit();
   WriteExportLookup();
   WriteFuncIndexLookup();
   WriteCallbackAddRemove();
+  WriteInit();
 }
 
 Result CWriter::WriteModule(const Module& module) {

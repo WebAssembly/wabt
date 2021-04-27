@@ -18,6 +18,7 @@
 #include "wasm-rt-os.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -188,7 +189,54 @@ void wasm_rt_allocate_table(wasm_rt_table_t* table,
   assert(max_elements >= elements);
   table->size = elements;
   table->max_size = max_elements;
-  table->data = calloc(table->max_size, sizeof(wasm_rt_elem_t));
+  table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
+  assert(table->data != 0);
+}
+
+#define SATURATING_U32_ADD(ret_ptr, a, b) { \
+  if ((a) > (UINT32_MAX - (b))) {             \
+    /* add will overflowed */               \
+    *ret_ptr = UINT32_MAX;                  \
+  } else {                                  \
+    *ret_ptr = (a) + (b);                   \
+  }                                         \
+}
+
+#define CHECKED_U32_RET_SIZE_T_MULTIPLY(ret_ptr, a, b) { \
+  if ((a) > (SIZE_MAX / (b))) {                            \
+    /* multiple will overflowed */                       \
+    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT);            \
+  } else {                                               \
+    /* convert to size by assigning */                   \
+    *ret_ptr = a;                                        \
+    *ret_ptr = *ret_ptr * b;                             \
+  }                                                      \
+}
+
+void wasm_rt_expand_table(wasm_rt_table_t* table) {
+  uint32_t new_size = 0;
+  SATURATING_U32_ADD(&new_size, table->size, 32);
+
+  if (new_size > table->max_size) {
+    new_size = table->max_size;
+  }
+
+  if (table->size == new_size) {
+    // table is already as large as we allowed, can't expand further
+    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT);
+  }
+
+  size_t allocation_size = 0;
+  CHECKED_U32_RET_SIZE_T_MULTIPLY(&allocation_size, sizeof(wasm_rt_elem_t), new_size);
+  table->data = realloc(table->data, allocation_size);
+  assert(table->data != 0);
+
+  memset(&(table->data[table->size]), 0, allocation_size - (table->size * sizeof(wasm_rt_elem_t)));
+  table->size = new_size;
+}
+
+void wasm2c_ensure_linked() {
+  // We use this to ensure the dynamic library with the wasi symbols is loaded for the host application
 }
 
 #undef WASM_GUARDPAGE_MODEL

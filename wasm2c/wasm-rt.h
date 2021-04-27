@@ -152,6 +152,22 @@ typedef struct wasm_sandbox_wasi_data {
 
 } wasm_sandbox_wasi_data;
 
+typedef void* (*create_wasm2c_sandbox_t)(void);
+typedef void (*destroy_wasm2c_sandbox_t)(void* sbx_ptr);
+typedef void* (*lookup_wasm2c_nonfunc_export_t)(void* sbx_ptr, const char* name);
+typedef uint32_t (*lookup_wasm2c_func_index_t)(void* sbx_ptr, uint32_t param_count, uint32_t result_count, wasm_rt_type_t* types);
+typedef uint32_t (*add_wasm2c_callback_t)(void* sbx_ptr, uint32_t func_type_idx, void* func_ptr);
+typedef void (*remove_wasm2c_callback_t)(void* sbx_ptr, uint32_t callback_idx);
+
+typedef struct wasm2c_sandbox_funcs_t {
+  create_wasm2c_sandbox_t create_wasm2c_sandbox;
+  destroy_wasm2c_sandbox_t destroy_wasm2c_sandbox;
+  lookup_wasm2c_nonfunc_export_t lookup_wasm2c_nonfunc_export;
+  lookup_wasm2c_func_index_t lookup_wasm2c_func_index;
+  add_wasm2c_callback_t add_wasm2c_callback;
+  remove_wasm2c_callback_t remove_wasm2c_callback;
+} wasm2c_sandbox_funcs_t;
+
 /** Stop execution immediately and jump back to the call to `wasm_rt_try`.
  *  The result of `wasm_rt_try` will be the provided trap reason.
  *
@@ -221,7 +237,11 @@ extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
 
+extern void wasm_rt_expand_table(wasm_rt_table_t* table);
+
 extern void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data);
+
+extern void wasm2c_ensure_linked();
 
 #ifdef __cplusplus
 }

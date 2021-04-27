@@ -19,12 +19,16 @@
 
 #include "src/common.h"
 
+#include <string>
+
 namespace wabt {
 
 struct Module;
 class Stream;
 
-struct WriteCOptions {};
+struct WriteCOptions {
+    std::string mod_name;
+};
 
 Result WriteC(Stream* c_stream,
               Stream* h_stream,
