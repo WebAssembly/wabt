@@ -220,6 +220,7 @@ class CWriter {
   void WriteSandboxStruct();
   void WriteFuncTypes();
   void WriteImports();
+  std::string GetFuncMaybeStatic(std::string);
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&);
   void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
@@ -968,9 +969,20 @@ void CWriter::WriteFuncDeclarations() {
   }
 }
 
+std::string CWriter::GetFuncMaybeStatic(std::string name) {
+  std::string maybe_static = "";
+  if (name.rfind("w2c___", 0) == 0 || name == "w2c_main") {
+    // s starts with prefix __
+    maybe_static = "static ";
+  }
+  return maybe_static;
+}
+
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name) {
-  Write(ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
+  // LLVM adds some extra function calls to all wasm objects prefixed with "__".
+  // Keep this static (private), else we cause symbol collisions when linking multiple wasm modules
+  Write(GetFuncMaybeStatic(name), ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
   for (Index i = 0; i < decl.GetNumParams(); ++i) {
     Write(", ", decl.GetParamType(i));
   }
@@ -1117,7 +1129,7 @@ void CWriter::WriteElemInitializers() {
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
   Write(Newline(), "static void init_table(wasm2c_sandbox_t* sbx) ", OpenBrace());
-  Write("uint32_t offset;", Newline());
+  Write("uint32_t offset = 0;", Newline());
   if (table && module_->num_table_imports == 0) {
     uint32_t max =
         table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
@@ -1248,8 +1260,7 @@ void CWriter::WriteInit() {
   Write("free(sbx);", Newline());
   Write(CloseBrace(), Newline(), Newline());
 
-  Writef("wasm2c_sandbox_funcs_t get_%s_wasm2c_sandbox_info() ", this->options_.mod_name.c_str());
-  Write(OpenBrace());
+  Write("wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() ", OpenBrace());
   {
     Write("wasm2c_sandbox_funcs_t ret;", Newline());
     Write("ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;", Newline());
@@ -1280,7 +1291,7 @@ void CWriter::Write(const Func& func) {
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
 
-  Write(ResultType(func.decl.sig.result_types), " ",
+  Write(GetFuncMaybeStatic(GetGlobalName(func.name)), ResultType(func.decl.sig.result_types), " ",
         GlobalName(func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
@@ -2390,14 +2401,13 @@ void CWriter::WriteCHeader() {
   stream_ = h_stream_;
   std::string guard = GenerateHeaderGuard();
   Write("#ifndef ", guard, Newline());
-  Write("#define ", guard, Newline());
+  Write("#define ", guard, Newline(), Newline());
+  Write("#define WASM_CURR_MODULE_PREFIX ", options_.mod_name, Newline());
   Write(s_header_top);
   WriteMultivalueTypes();
   WriteImports();
   Write(s_header_bottom, Newline());
-  Writef("wasm2c_sandbox_funcs_t get_%s_wasm2c_sandbox_info();", this->options_.mod_name.c_str());
-  Write(Newline());
-  Write(Newline(), "#endif  /* ", guard, " */", Newline());
+  Write("#endif  /* ", guard, " */", Newline());
 }
 
 void CWriter::WriteCSource() {

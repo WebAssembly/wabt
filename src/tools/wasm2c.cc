@@ -142,9 +142,6 @@ int ProgramMain(int argc, char** argv) {
       }
 
       if (Succeeded(result)) {
-        if (s_write_c_options.mod_name.empty()) {
-          s_write_c_options.mod_name = "currlib";
-        }
         if (!s_outfile.empty()) {
           std::string header_name =
               strip_extension(s_outfile).to_string() + ".h";

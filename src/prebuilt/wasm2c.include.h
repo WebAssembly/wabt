@@ -17,6 +17,8 @@ const char SECTION_NAME(top)[] =
 "#define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)\n"
 "#define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)\n"
 "\n"
+"#define WASM_CURR_ADD_PREFIX(x) WASM_RT_PASTE(WASM_CURR_MODULE_PREFIX, x)\n"
+"\n"
 "/* TODO(binji): only use stdint.h types in header */\n"
 "typedef uint8_t u8;\n"
 "typedef int8_t s8;\n"
@@ -28,9 +30,12 @@ const char SECTION_NAME(top)[] =
 "typedef int64_t s64;\n"
 "typedef float f32;\n"
 "typedef double f64;\n"
+"\n"
+"wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)();\n"
 ;
 
 const char SECTION_NAME(bottom)[] =
+"\n"
 "#ifdef __cplusplus\n"
 "}\n"
 "#endif\n"
