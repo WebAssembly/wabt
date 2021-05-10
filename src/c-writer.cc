@@ -991,7 +991,7 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
   // LLVM adds some extra function calls to all wasm objects prefixed with "__".
   // Keep this static (private), else we cause symbol collisions when linking multiple wasm modules
   // Additionally windows dlls have to export functions explicitly
-  if (!add_storage_class) {
+  if (add_storage_class) {
     Write(GetFuncStaticOrExport(name));
   }
   Write(ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
