@@ -4,8 +4,13 @@
 #include <string.h>
 #include <stdlib.h>
 %%declarations
-#define UNLIKELY(x) __builtin_expect(!!(x), 0)
-#define LIKELY(x) __builtin_expect(!!(x), 1)
+#if defined(_MSC_VER)
+  #define UNLIKELY(x) (x)
+  #define LIKELY(x) (x)
+#else
+  #define UNLIKELY(x) __builtin_expect(!!(x), 0)
+  #define LIKELY(x) __builtin_expect(!!(x), 1)
+#endif
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 

@@ -7,8 +7,13 @@ const char SECTION_NAME(includes)[] =
 ;
 
 const char SECTION_NAME(declarations)[] =
-"#define UNLIKELY(x) __builtin_expect(!!(x), 0)\n"
-"#define LIKELY(x) __builtin_expect(!!(x), 1)\n"
+"#if defined(_MSC_VER)\n"
+"  #define UNLIKELY(x) (x)\n"
+"  #define LIKELY(x) (x)\n"
+"#else\n"
+"  #define UNLIKELY(x) __builtin_expect(!!(x), 0)\n"
+"  #define LIKELY(x) __builtin_expect(!!(x), 1)\n"
+"#endif\n"
 "\n"
 "#define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)\n"
 "\n"
