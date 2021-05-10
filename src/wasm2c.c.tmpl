@@ -44,7 +44,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                            \
     MEMCHECK(mem, addr, t1);                                                          \
     t1 result;                                                                        \
-    __builtin_memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], sizeof(t1)); \
+    memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], sizeof(t1)); \
     return (t3)(t2)result;                                                            \
   }
 
@@ -52,7 +52,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {                 \
     MEMCHECK(mem, addr, t1);                                                           \
     t1 wrapped = (t1)value;                                                            \
-    __builtin_memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1)); \
+    memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1)); \
   }
 #else
 static inline void load_data(void *dest, const void *src, size_t n) {
@@ -63,7 +63,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
     MEMCHECK(mem, addr, t1);                                 \
     t1 result;                                               \
-    __builtin_memcpy(&result, &mem->data[addr], sizeof(t1)); \
+    memcpy(&result, &mem->data[addr], sizeof(t1)); \
     return (t3)(t2)result;                                   \
   }
 
@@ -71,7 +71,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
     MEMCHECK(mem, addr, t1);                                           \
     t1 wrapped = (t1)value;                                            \
-    __builtin_memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
+    memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
   }
 #endif
 
@@ -99,12 +99,68 @@ DEFINE_STORE(i64_store8, u8, u64);
 DEFINE_STORE(i64_store16, u16, u64);
 DEFINE_STORE(i64_store32, u32, u64);
 
-#define I32_CLZ(x) ((x) ? __builtin_clz(x) : 32)
-#define I64_CLZ(x) ((x) ? __builtin_clzll(x) : 64)
-#define I32_CTZ(x) ((x) ? __builtin_ctz(x) : 32)
-#define I64_CTZ(x) ((x) ? __builtin_ctzll(x) : 64)
-#define I32_POPCNT(x) (__builtin_popcount(x))
-#define I64_POPCNT(x) (__builtin_popcountll(x))
+#if defined(_MSC_VER)
+  #include <intrin.h>
+
+  // https://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
+  u32 __inline I32_CLZ(u32 value) {
+    DWORD leading_zero = 0;
+    if (_BitScanReverse(&leading_zero, value)) {
+      return 31 - leading_zero;
+    } else {
+      return 32;
+    }
+  }
+
+  u64 __inline I64_CLZ(u64 value) {
+    DWORD leading_zero = 0;
+    if (_BitScanReverse64(&leading_zero, value)) {
+      return 63 - leading_zero;
+    } else {
+      return 64;
+    }
+  }
+
+  u32 __inline I32_CTZ(u32 value) {
+    DWORD trailing_zero = 0;
+    if (_BitScanForward(&trailing_zero, value)) {
+      return trailing_zero;
+    } else {
+      return 32;
+    }
+  }
+
+  u64 __inline I64_CTZ(u64 value) {
+    DWORD trailing_zero = 0;
+    if (_BitScanForward64(&trailing_zero, value)) {
+      return trailing_zero;
+    } else {
+      return 64;
+    }
+  }
+
+// https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
+#define POPCOUNT_DEFINE_PORTABLE(f_n, T)                    \
+  u32 __inline f_n(T x) {                                   \
+    x = x - ((x >> 1) & (T)~(T)0/3);                        \
+    x = (x & (T)~(T)0/15*3) + ((x >> 2) & (T)~(T)0/15*3);   \
+    x = (x + (x >> 4)) & (T)~(T)0/255*15;                   \
+    return (T)(x * ((T)~(T)0/255)) >> (sizeof(T) - 1) * 8;  \
+  }
+
+POPCOUNT_DEFINE_PORTABLE(I32_POPCNT, u32)
+POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
+
+#undef POPCOUNT_DEFINE_PORTABLE
+
+#else
+  #define I32_CLZ(x) ((x) ? __builtin_clz(x) : 32)
+  #define I64_CLZ(x) ((x) ? __builtin_clzll(x) : 64)
+  #define I32_CTZ(x) ((x) ? __builtin_ctz(x) : 32)
+  #define I64_CTZ(x) ((x) ? __builtin_ctzll(x) : 64)
+  #define I32_POPCNT(x) (__builtin_popcount(x))
+  #define I64_POPCNT(x) (__builtin_popcountll(x))
+#endif
 
 #define DIV_S(ut, min, x, y)                                 \
    ((UNLIKELY((y) == 0)) ?                TRAP(DIV_BY_ZERO)  \
