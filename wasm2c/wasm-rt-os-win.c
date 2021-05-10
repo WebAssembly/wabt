@@ -31,7 +31,7 @@ void * os_mmap(void *hint, size_t size, int prot, int flags)
     size_t request_size, page_size;
     void *addr;
 
-    page_size = getpagesize();
+    page_size = os_getpagesize();
     request_size = (size + page_size - 1) & ~(page_size - 1);
 
     if (request_size < size)
@@ -61,15 +61,14 @@ void * os_mmap(void *hint, size_t size, int prot, int flags)
 void
 os_munmap(void *addr, size_t size)
 {
-    size_t page_size = getpagesize();
+    size_t page_size = os_getpagesize();
     size_t request_size = (size + page_size - 1) & ~(page_size - 1);
 
     if (addr) {
         if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
-            if (VirtualFree(addr, size, MEM_DECOMMIT) == 0) {
-                os_printf("os_munmap error addr:%p, size:0x%lx, errno:%d\n",
-                          addr, request_size, errno);
-            }
+            int64_t curr_err = errno;
+            printf("os_munmap error addr:%p, size:0x%zx, errno:%" PRId64 "\n",
+                    addr, request_size, curr_err);
         }
     }
 }
@@ -94,7 +93,8 @@ os_mprotect(void *addr, size_t size, int prot)
     else if (prot & MMAP_PROT_READ)
         flProtect = PAGE_READONLY;
 
-    return VirtualProtect((LPVOID)addr, size, flProtect, NULL);
+    DWORD old;
+    return VirtualProtect((LPVOID)addr, size, flProtect, &old);
 }
 
 #endif

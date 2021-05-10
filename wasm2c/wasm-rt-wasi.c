@@ -59,8 +59,19 @@ typedef signed long ssize_t;
 #include "wasm-rt.h"
 #include "wasm-rt-impl.h"
 
+#if defined(__GNUC__)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define LIKELY(x) __builtin_expect(!!(x), 1)
+#else
+#define UNLIKELY(x) (x)
+#define LIKELY(x) (x)
+#endif
+
+#if defined(_WIN32)
+#define POSIX_PREFIX(func) _##func
+#else
+#define POSIX_PREFIX(func) func
+#endif
 
 #define TRAP(x) wasm_rt_trap(WASM_RT_TRAP_##x)
 
@@ -142,12 +153,6 @@ static void abort_with_message(const char* message) {
 // Emscripten upstream stores the value of the last longjmp in a setThrew --- this doesn't seem to be used anywhere
 //    but preserving the behavior just in case
 
-#define DECLARE_WEAK_EXPORT(ret, name, args) \
-__attribute__((weak)) \
-ret (*WASM_RT_ADD_PREFIX(name)) args = NULL;
-
-DECLARE_WEAK_EXPORT(void, Z_setThrewZ_vii, (u32, u32));
-
 IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (wasm_sandbox_wasi_data* wasi_data, u32 buf, u32 value), {
   // Check that at least one setjmp was called
   if (wasi_data->next_setjmp_index == 0) {
@@ -164,9 +169,6 @@ IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (wasm_sandbox_wasi_data* wasi_
   // invalidate all setjmp buffers after index
   wasi_data->next_setjmp_index = buf_val;
 
-  if (Z_setThrewZ_vii) {
-    Z_setThrewZ_vii(buf, value ? value : 1);
-  }
   longjmp(wasi_data->setjmp_stack[buf_val], value);
 });
 
@@ -174,15 +176,14 @@ IMPORT_IMPL(void, Z_envZ_emscripten_longjmpZ_vii, (wasm_sandbox_wasi_data* wasi_
 // Worst case, code will fail to compile; it will not be a runtime security issue.
 IMPORT_IMPL(u32, Z_envZ_emscripten_setjmpZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 buf), {
   // Check that there is space in the setjmp stack
-  if (wasi_data->next_setjmp_index >= WASM2C_WASI_MAX_SETJMP_STACK) {
+  u32 buf_val = wasi_data->next_setjmp_index;
+  if (buf_val >= WASM2C_WASI_MAX_SETJMP_STACK) {
     abort_with_message("too many setjmps called");
   }
 
   // we use the setjmp buff itself to store the index to setjmp_stack we have chosen
-  u32 buf_val = wasi_data->next_setjmp_index;
   wasi_data->next_setjmp_index++;
   wasm_i32_store(wasi_data->heap_memory, buf, buf_val);
-
   return setjmp(wasi_data->setjmp_stack[buf_val]);
 });
 
@@ -305,10 +306,10 @@ static u32 get_or_allocate_wasm_fd(wasm_sandbox_wasi_data* wasi_data, int nfd) {
       return i;
     }
   }
-  if (wasi_data->next_wasm_fd >= WASM2C_WASI_MAX_FDS) {
+  u32 fd = wasi_data->next_wasm_fd;
+  if (fd >= WASM2C_WASI_MAX_FDS) {
     abort_with_message("ran out of fds");
   }
-  u32 fd = wasi_data->next_wasm_fd;
   wasi_data->wasm_fd_to_native[fd] = nfd;
   wasi_data->next_wasm_fd++;
   return fd;
@@ -381,7 +382,7 @@ IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (wasm_sandbox_wasi_data* wasi_data, u
   const char* null_file = get_null_file_path();
   const int null_file_mode = get_null_file_mode();
 
-  int result = access(null_file, null_file_mode);
+  int result = POSIX_PREFIX(access)(null_file, null_file_mode);
   if (result < 0) {
     VERBOSE_LOG("    access error: %d %s\n", errno, strerror(errno));
     return EM_EACCES;
@@ -403,7 +404,7 @@ IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u3
   const int null_file_mode = get_null_file_mode();
 
   // Specify the mode manually to make sure the sandboxed code is not using unusual values
-  int nfd = open(null_file, null_file_flags, null_file_mode);
+  int nfd = POSIX_PREFIX(open)(null_file, null_file_flags, null_file_mode);
   VERBOSE_LOG("    => native %d\n", nfd);
   if (nfd >= 0) {
     u32 fd = get_or_allocate_wasm_fd(wasi_data, nfd);
@@ -436,7 +437,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (wasm_sandbox_wasi_d
     } else if (fd == WASM_STDERR) {
       result = fwrite(MEMACCESS(wasi_data->heap_memory, ptr), 1, len, stderr);
     } else {
-      result = write(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
+      result = POSIX_PREFIX(write)(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
     }
     if (result < 0) {
       VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
@@ -468,7 +469,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (wasm_sandbox_wasi_da
 
     UNCOND_MEMCHECK_SIZE(wasi_data->heap_memory, ptr, len);
 
-    ssize_t result = read(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
+    ssize_t result = POSIX_PREFIX(read)(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
     if (result < 0) {
       VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
@@ -489,7 +490,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_closeZ_ii, (wasm_sandbox_wasi_data
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
-  close(nfd);
+  POSIX_PREFIX(close)(nfd);
   return 0;
 });
 
@@ -525,7 +526,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_seekZ_iijii, (wasm_sandbox_wasi_da
       return WASI_DEFAULT_ERROR;
   }
 
-  off_t off = lseek(nfd, offset, nwhence);
+  off_t off = POSIX_PREFIX(lseek)(nfd, offset, nwhence);
   VERBOSE_LOG("    off: %ld\n", off);
   if (off == (off_t)-1) {
     VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
@@ -626,7 +627,7 @@ IMPORT_IMPL(u32, Z_envZ___sys_readZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u3
   void* target_buf = MEMACCESS(wasi_data->heap_memory, buf);
   UNCOND_MEMCHECK_SIZE(wasi_data->heap_memory, buf, count);
 
-  ssize_t ret = read(nfd, target_buf, count);
+  ssize_t ret = POSIX_PREFIX(read)(nfd, target_buf, count);
   VERBOSE_LOG("    native read: %ld\n", ret);
   if (ret < 0) {
     VERBOSE_LOG("    read error %d %s\n", errno, strerror(errno));
