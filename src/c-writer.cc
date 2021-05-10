@@ -1272,7 +1272,7 @@ void CWriter::WriteInit() {
   Write("free(sbx);", Newline());
   Write(CloseBrace(), Newline(), Newline());
 
-  Write("wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() ", OpenBrace());
+  Write("FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() ", OpenBrace());
   {
     Write("wasm2c_sandbox_funcs_t ret;", Newline());
     Write("ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;", Newline());

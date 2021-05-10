@@ -30,7 +30,13 @@ typedef int64_t s64;
 typedef float f32;
 typedef double f64;
 
-wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)();
+#if defined(_WIN32)
+  #define FUNC_EXPORT __declspec(dllexport)
+#else
+  #define FUNC_EXPORT
+#endif
+
+FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)();
 %%bottom
 
 #ifdef __cplusplus

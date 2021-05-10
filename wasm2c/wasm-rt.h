@@ -43,9 +43,8 @@ extern "C" {
  * This is usually 10%-25% faster, but requires OS-specific support.
  * */
 
-/** Check whether the signal handler is supported at all. */
-#if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
-    defined(__WORDSIZE) && __WORDSIZE == 64
+/** Check if we should use guard page model --- check if system is 64-bit. */
+#if UINTPTR_MAX == 0xffffffffffffffff
 
 #define WASM_GUARDPAGE_MODEL
 

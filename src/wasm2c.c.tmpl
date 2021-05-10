@@ -12,12 +12,6 @@
   #define LIKELY(x) __builtin_expect(!!(x), 1)
 #endif
 
-#if defined(_WIN32)
-  #define FUNC_EXPORT __declspec(dllexport)
-#else
-  #define FUNC_EXPORT
-#endif
-
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
 #define FUNC_PROLOGUE
