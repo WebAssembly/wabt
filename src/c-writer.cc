@@ -222,7 +222,7 @@ class CWriter {
   void WriteImports();
   std::string GetFuncStaticOrExport(std::string);
   void WriteFuncDeclarations();
-  void WriteFuncDeclaration(const FuncDeclaration&, const std::string&);
+  void WriteFuncDeclaration(const FuncDeclaration&, const std::string&, bool add_storage_class = true);
   void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
   void WriteGlobalInitializers();
   void WriteGlobals();
@@ -986,10 +986,15 @@ std::string CWriter::GetFuncStaticOrExport(std::string name) {
 }
 
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
-                                   const std::string& name) {
+                                   const std::string& name,
+                                   bool add_storage_class = true) {
   // LLVM adds some extra function calls to all wasm objects prefixed with "__".
   // Keep this static (private), else we cause symbol collisions when linking multiple wasm modules
-  Write(GetFuncStaticOrExport(name), ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
+  // Additionally windows dlls have to export functions explicitly
+  if (!add_storage_class) {
+    Write(GetFuncStaticOrExport(name));
+  }
+  Write(ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
   for (Index i = 0; i < decl.GetNumParams(); ++i) {
     Write(", ", decl.GetParamType(i));
   }
@@ -1528,7 +1533,7 @@ void CWriter::Write(const ExprList& exprs) {
         Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
 
         Write("CALL_INDIRECT(sbx->", ExternalRef(table->name), ", ");
-        WriteFuncDeclaration(decl, "(*)");
+        WriteFuncDeclaration(decl, "(*)", false /* add_storage_class*/);
         Write(", ", func_type_index, ", ", StackVar(0));
         Write(", sbx->func_types, sbx");
         for (Index i = 0; i < num_params; ++i) {
