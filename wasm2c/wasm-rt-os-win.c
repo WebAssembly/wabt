@@ -58,14 +58,12 @@ void * os_mmap(void *hint, size_t size, int prot, int flags)
     return addr;
 }
 
-void
-os_munmap(void *addr, size_t size)
+static void win_unmap(void *addr, size_t size, DWORD flag)
 {
-    size_t page_size = os_getpagesize();
-    size_t request_size = (size + page_size - 1) & ~(page_size - 1);
-
     if (addr) {
-        if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
+        if (VirtualFree(addr, 0, flag) == 0) {
+            size_t page_size = os_getpagesize();
+            size_t request_size = (size + page_size - 1) & ~(page_size - 1);
             int64_t curr_err = errno;
             printf("os_munmap error addr:%p, size:0x%zx, errno:%" PRId64 "\n",
                     addr, request_size, curr_err);
@@ -73,8 +71,12 @@ os_munmap(void *addr, size_t size)
     }
 }
 
-int
-os_mprotect(void *addr, size_t size, int prot)
+void os_munmap(void *addr, size_t size)
+{
+    win_unmap(addr, size, MEM_RELEASE);
+}
+
+int os_mprotect(void *addr, size_t size, int prot)
 {
     DWORD AllocType = MEM_RESERVE | MEM_COMMIT;
     DWORD flProtect = PAGE_NOACCESS;
@@ -95,6 +97,43 @@ os_mprotect(void *addr, size_t size, int prot)
 
     DWORD old;
     return VirtualProtect((LPVOID)addr, size, flProtect, &old);
+}
+
+
+void* os_mmap_aligned(void *addr, size_t requested_length, int prot, int flags, size_t alignment, size_t alignment_offset)
+{
+    size_t padded_length = requested_length + alignment + alignment_offset;
+    uintptr_t unaligned = (uintptr_t) os_mmap(addr, padded_length, prot, flags);
+
+    if (!unaligned) {
+        return (void*) unaligned;
+    }
+
+    // Round up the next address that has addr % alignment = 0
+    uintptr_t aligned_nonoffset = (unaligned + (alignment - 1)) & ~(alignment - 1);
+
+    // Currently offset 0 is aligned according to alignment
+    // Alignment needs to be enforced at the given offset
+    uintptr_t aligned = 0;
+    if ((aligned_nonoffset - alignment_offset) >= unaligned) {
+        aligned = aligned_nonoffset - alignment_offset;
+    } else {
+        aligned = aligned_nonoffset - alignment_offset + alignment;
+    }
+
+    //Sanity check
+    if (aligned < unaligned
+        || (aligned + (requested_length - 1)) > (unaligned + (padded_length - 1))
+        || (aligned + alignment_offset) % alignment != 0)
+    {
+        os_munmap((void*) unaligned, padded_length);
+        return NULL;
+    }
+
+    // windows does not support partial unmapping, so instead decommit and then remap with the given hint
+    win_unmap(unaligned, 0, MEM_DECOMMIT);
+    aligned = os_mmap(aligned, requested_length, prot, flags);
+    return (void*) aligned;
 }
 
 #endif
