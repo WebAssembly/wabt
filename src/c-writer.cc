@@ -222,7 +222,7 @@ class CWriter {
   void WriteImports();
   std::string GetFuncStaticOrExport(std::string);
   void WriteFuncDeclarations();
-  void WriteFuncDeclaration(const FuncDeclaration&, const std::string&, bool add_storage_class = true);
+  void WriteFuncDeclaration(const FuncDeclaration&, const std::string&, bool add_storage_class);
   void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
   void WriteGlobalInitializers();
   void WriteGlobals();
@@ -967,7 +967,7 @@ void CWriter::WriteFuncDeclarations() {
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
-      WriteFuncDeclaration(func->decl, DefineGlobalScopeName(func->name));
+      WriteFuncDeclaration(func->decl, DefineGlobalScopeName(func->name), true /* add_storage_class */);
       Write(";", Newline());
     }
     ++func_index;
@@ -987,7 +987,7 @@ std::string CWriter::GetFuncStaticOrExport(std::string name) {
 
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name,
-                                   bool add_storage_class = true) {
+                                   bool add_storage_class) {
   // LLVM adds some extra function calls to all wasm objects prefixed with "__".
   // Keep this static (private), else we cause symbol collisions when linking multiple wasm modules
   // Additionally windows dlls have to export functions explicitly
