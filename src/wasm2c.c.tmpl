@@ -103,7 +103,7 @@ DEFINE_STORE(i64_store32, u32, u64);
   #include <intrin.h>
 
   // https://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
-  u32 __inline I32_CLZ(u32 value) {
+  static inline u32 I32_CLZ(u32 value) {
     DWORD leading_zero = 0;
     if (_BitScanReverse(&leading_zero, value)) {
       return 31 - leading_zero;
@@ -112,7 +112,7 @@ DEFINE_STORE(i64_store32, u32, u64);
     }
   }
 
-  u64 __inline I64_CLZ(u64 value) {
+  static inline u64 I64_CLZ(u64 value) {
     DWORD leading_zero = 0;
     if (_BitScanReverse64(&leading_zero, value)) {
       return 63 - leading_zero;
@@ -121,7 +121,7 @@ DEFINE_STORE(i64_store32, u32, u64);
     }
   }
 
-  u32 __inline I32_CTZ(u32 value) {
+  static inline u32 I32_CTZ(u32 value) {
     DWORD trailing_zero = 0;
     if (_BitScanForward(&trailing_zero, value)) {
       return trailing_zero;
@@ -130,7 +130,7 @@ DEFINE_STORE(i64_store32, u32, u64);
     }
   }
 
-  u64 __inline I64_CTZ(u64 value) {
+  static inline u64 I64_CTZ(u64 value) {
     DWORD trailing_zero = 0;
     if (_BitScanForward64(&trailing_zero, value)) {
       return trailing_zero;
@@ -141,7 +141,7 @@ DEFINE_STORE(i64_store32, u32, u64);
 
 // https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
 #define POPCOUNT_DEFINE_PORTABLE(f_n, T)                    \
-  u32 __inline f_n(T x) {                                   \
+  static inline u32 f_n(T x) {                              \
     x = x - ((x >> 1) & (T)~(T)0/3);                        \
     x = (x & (T)~(T)0/15*3) + ((x >> 2) & (T)~(T)0/15*3);   \
     x = (x + (x >> 4)) & (T)~(T)0/255*15;                   \
