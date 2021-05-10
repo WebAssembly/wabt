@@ -87,7 +87,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   /* Reserve 8GiB. */
   const uint64_t heap_alignment = 0x100000000ul;
   void* addr = os_mmap_aligned(NULL, 0x200000000ul, MMAP_PROT_NONE, MMAP_MAP_NONE, heap_alignment, 0 /* alignment_offset */);
-  if (addr == (void*)-1) {
+  if (!addr || addr == (void*)-1) {
     perror("mmap failed");
     abort();
   }

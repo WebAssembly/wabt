@@ -131,8 +131,8 @@ void* os_mmap_aligned(void *addr, size_t requested_length, int prot, int flags, 
     }
 
     // windows does not support partial unmapping, so instead decommit and then remap with the given hint
-    win_unmap(unaligned, 0, MEM_DECOMMIT);
-    aligned = os_mmap(aligned, requested_length, prot, flags);
+    win_unmap((void*) unaligned, 0, MEM_DECOMMIT);
+    aligned = (uintptr_t) os_mmap((void*) aligned, requested_length, prot, flags);
     return (void*) aligned;
 }
 
