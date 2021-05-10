@@ -220,7 +220,7 @@ class CWriter {
   void WriteSandboxStruct();
   void WriteFuncTypes();
   void WriteImports();
-  std::string GetFuncMaybeStatic(std::string);
+  std::string GetFuncStaticOrExport(std::string);
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&);
   void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
@@ -872,19 +872,24 @@ void CWriter::WriteFuncTypes() {
     Write(OpenBrace());
     Write("wasm_rt_type_t param_ret_types[] = { ");
     bool first = true;
-    for (Index i = 0; i < num_params; ++i) {
-      if (!first) {
-        Write(", ");
+    if (num_results == 0 && num_results == 0) {
+      // Make sure array has at least one element
+      Write("/* void(*)(void) */ WASM_RT_I32 ");
+    } else {
+      for (Index i = 0; i < num_params; ++i) {
+        if (!first) {
+          Write(", ");
+        }
+        Write(TypeEnum(func_type->GetParamType(i)));
+        first = false;
       }
-      Write(TypeEnum(func_type->GetParamType(i)));
-      first = false;
-    }
-    for (Index i = 0; i < num_results; ++i) {
-      if (!first) {
-        Write(", ");
+      for (Index i = 0; i < num_results; ++i) {
+        if (!first) {
+          Write(", ");
+        }
+        Write(TypeEnum(func_type->GetResultType(i)));
+        first = false;
       }
-      Write(TypeEnum(func_type->GetResultType(i)));
-      first = false;
     }
     Write(" };", Newline());
     Write("sbx->func_types[", func_type_index, "] = wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, ",
@@ -969,20 +974,22 @@ void CWriter::WriteFuncDeclarations() {
   }
 }
 
-std::string CWriter::GetFuncMaybeStatic(std::string name) {
-  std::string maybe_static = "";
+std::string CWriter::GetFuncStaticOrExport(std::string name) {
+  std::string static_export_string = "";
   if (name.rfind("w2c___", 0) == 0 || name == "w2c_main") {
     // s starts with prefix __
-    maybe_static = "static ";
+    static_export_string = "static ";
+  } else {
+    static_export_string = "FUNC_EXPORT ";
   }
-  return maybe_static;
+  return static_export_string;
 }
 
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name) {
   // LLVM adds some extra function calls to all wasm objects prefixed with "__".
   // Keep this static (private), else we cause symbol collisions when linking multiple wasm modules
-  Write(GetFuncMaybeStatic(name), ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
+  Write(GetFuncStaticOrExport(name), ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
   for (Index i = 0; i < decl.GetNumParams(); ++i) {
     Write(", ", decl.GetParamType(i));
   }
@@ -1291,7 +1298,7 @@ void CWriter::Write(const Func& func) {
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
 
-  Write(GetFuncMaybeStatic(GetGlobalName(func.name)), ResultType(func.decl.sig.result_types), " ",
+  Write(GetFuncStaticOrExport(GetGlobalName(func.name)), ResultType(func.decl.sig.result_types), " ",
         GlobalName(func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());

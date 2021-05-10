@@ -12,6 +12,12 @@
   #define LIKELY(x) __builtin_expect(!!(x), 1)
 #endif
 
+#if defined(_WIN32)
+  #define FUNC_EXPORT __declspec(dllexport)
+#else
+  #define FUNC_EXPORT
+#endif
+
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
 #define FUNC_PROLOGUE
@@ -107,44 +113,59 @@ DEFINE_STORE(i64_store32, u32, u64);
 #if defined(_MSC_VER)
   #include <intrin.h>
 
-  // https://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
-  static inline u32 I32_CLZ(u32 value) {
-    DWORD leading_zero = 0;
-    if (_BitScanReverse(&leading_zero, value)) {
-      return 31 - leading_zero;
-    } else {
-      return 32;
-    }
-  }
+// Adapted from https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
 
-  static inline u64 I64_CLZ(u64 value) {
-    DWORD leading_zero = 0;
-    if (_BitScanReverse64(&leading_zero, value)) {
-      return 63 - leading_zero;
-    } else {
-      return 64;
+static inline int I64_CLZ(unsigned long long v) {
+  unsigned long r = 0;
+  #if defined(_M_AMD64) || defined(_M_ARM)
+    if (_BitScanReverse64(&r, v)) {
+      return 63 - r;
     }
-  }
-
-  static inline u32 I32_CTZ(u32 value) {
-    DWORD trailing_zero = 0;
-    if (_BitScanForward(&trailing_zero, value)) {
-      return trailing_zero;
-    } else {
-      return 32;
+  #else
+    if (_BitScanReverse(&r, (unsigned long) (v >> 32))) {
+      return 31 - r;
+    } else if (_BitScanReverse(&r, (unsigned long) v)) {
+      return 63 - r;
     }
-  }
+  #endif
+  return 64;
+}
 
-  static inline u64 I64_CTZ(u64 value) {
-    DWORD trailing_zero = 0;
-    if (_BitScanForward64(&trailing_zero, value)) {
-      return trailing_zero;
-    } else {
-      return 64;
+static inline int I32_CLZ(unsigned long v) {
+  unsigned long r = 0;
+  if (_BitScanReverse(&r, v)) {
+    return 31 - r;
+  }
+  return 32;
+}
+
+static inline int I64_CTZ(unsigned long long v) {
+  if (!v) {
+    return 64;
+  }
+  unsigned long r = 0;
+  #if defined(_M_AMD64) || defined(_M_ARM)
+    _BitScanForward64(&r, v);
+    return (int) r;
+  #else
+    if (_BitScanForward(&r, (unsigned int) (v))) {
+      return (int) (r);
     }
-  }
 
-// https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
+    _BitScanForward(&r, (unsigned int) (v >> 32));
+    return (int) (r + 32);
+  #endif
+}
+
+static inline int I32_CTZ(unsigned long v) {
+  if (!v) {
+    return 32;
+  }
+  unsigned long r = 0;
+  _BitScanForward(&r, v);
+  return (int) r;
+}
+
 #define POPCOUNT_DEFINE_PORTABLE(f_n, T)                    \
   static inline u32 f_n(T x) {                              \
     x = x - ((x >> 1) & (T)~(T)0/3);                        \
