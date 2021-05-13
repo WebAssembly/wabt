@@ -86,8 +86,17 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 #if defined(WASM_GUARDPAGE_MODEL)
   /* Reserve 8GiB. */
   const uint64_t heap_alignment = 0x100000000ul;
-  void* addr = os_mmap_aligned(NULL, 0x200000000ul, MMAP_PROT_NONE, MMAP_MAP_NONE, heap_alignment, 0 /* alignment_offset */);
-  if (!addr || addr == (void*)-1) {
+  void* addr = NULL;
+  const uint64_t retries = 10;
+
+  for (uint64_t i = 0; i < retries; i++) {
+    void* addr = os_mmap_aligned(NULL, 0x200000000ul, MMAP_PROT_NONE, MMAP_MAP_NONE, heap_alignment, 0 /* alignment_offset */);
+    if (addr) {
+      break;
+    }
+  }
+
+  if (!addr) {
     perror("mmap failed");
     abort();
   }

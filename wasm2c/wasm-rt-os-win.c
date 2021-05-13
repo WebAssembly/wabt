@@ -26,8 +26,9 @@ size_t os_getpagesize() {
     return S.dwPageSize;
 }
 
-static void * win_mmap(void *hint, size_t size, int prot, int flags, DWORD alloc_flag)
+void* os_mmap(void *hint, size_t size, int prot, int flags)
 {
+    DWORD alloc_flag = MEM_RESERVE | MEM_COMMIT;
     DWORD flProtect = PAGE_NOACCESS;
     size_t request_size, page_size;
     void *addr;
@@ -105,13 +106,9 @@ static void* win_mmap_aligned(void *hint, size_t size, int prot, int flags, size
 }
 #endif
 
-void* os_mmap(void *hint, size_t size, int prot, int flags)
+void os_munmap(void *addr, size_t size)
 {
-    return win_mmap(hint, size, prot, flags, MEM_RESERVE | MEM_COMMIT);
-}
-
-static void win_unmap(void *addr, size_t size, DWORD alloc_flag)
-{
+    DWORD alloc_flag = MEM_RELEASE;
     if (addr) {
         if (VirtualFree(addr, 0, alloc_flag) == 0) {
             size_t page_size = os_getpagesize();
@@ -121,11 +118,6 @@ static void win_unmap(void *addr, size_t size, DWORD alloc_flag)
                     addr, request_size, curr_err);
         }
     }
-}
-
-void os_munmap(void *addr, size_t size)
-{
-    win_unmap(addr, size, MEM_RELEASE);
 }
 
 int os_mprotect(void *addr, size_t size, int prot)
@@ -185,6 +177,10 @@ void* os_mmap_aligned(void *addr, size_t requested_length, int prot, int flags, 
             aligned = aligned_nonoffset - alignment_offset + alignment;
         }
 
+        if (aligned == unaligned && padded_length == requested_length) {
+            return (void*) aligned;
+        }
+
         //Sanity check
         if (aligned < unaligned
             || (aligned + (requested_length - 1)) > (unaligned + (padded_length - 1))
@@ -194,9 +190,9 @@ void* os_mmap_aligned(void *addr, size_t requested_length, int prot, int flags, 
             return NULL;
         }
 
-        // windows does not support partial unmapping, so instead decommit and then remap with the given hint
-        win_unmap((void*) unaligned, 0, MEM_DECOMMIT);
-        aligned = (uintptr_t) win_mmap((void*) aligned, requested_length, prot, flags, MEM_COMMIT);
+        // windows does not support partial unmapping, so unmap and remap
+        os_munmap((void*) unaligned, padded_length);
+        uintptr_t aligned = (uintptr_t) os_mmap((void*) aligned, requested_length, prot, flags);
         return (void*) aligned;
     }
 }

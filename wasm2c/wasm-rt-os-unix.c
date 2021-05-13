@@ -54,12 +54,7 @@ void * os_mmap(void *hint, size_t size, int prot, int flags)
     if (flags & MMAP_MAP_FIXED)
         map_flags |= MAP_FIXED;
 
-    /* try 5 times */
-    for (i = 0; i < 5; i ++) {
-        addr = mmap(hint, request_size, map_prot, map_flags, -1, 0);
-        if (addr != MAP_FAILED)
-            break;
-    }
+    addr = mmap(hint, request_size, map_prot, map_flags, -1, 0);
 
     if (addr == MAP_FAILED)
         return NULL;
