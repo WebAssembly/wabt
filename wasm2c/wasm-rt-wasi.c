@@ -667,4 +667,28 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_was
 
 void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
   init_fds(wasi_data);
+  // Remove unused function warnings
+  (void) wasm_i32_load;
+  (void) wasm_i64_load;
+  (void) wasm_f32_load;
+  (void) wasm_f64_load;
+  (void) wasm_i32_load8_s;
+  (void) wasm_i64_load8_s;
+  (void) wasm_i32_load8_u;
+  (void) wasm_i64_load8_u;
+  (void) wasm_i32_load16_s;
+  (void) wasm_i64_load16_s;
+  (void) wasm_i32_load16_u;
+  (void) wasm_i64_load16_u;
+  (void) wasm_i64_load32_s;
+  (void) wasm_i64_load32_u;
+  (void) wasm_i32_store;
+  (void) wasm_i64_store;
+  (void) wasm_f32_store;
+  (void) wasm_f64_store;
+  (void) wasm_i32_store8;
+  (void) wasm_i32_store16;
+  (void) wasm_i64_store8;
+  (void) wasm_i64_store16;
+  (void) wasm_i64_store32;
 }

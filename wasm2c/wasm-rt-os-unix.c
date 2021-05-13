@@ -23,7 +23,6 @@ void* os_mmap(void* hint, size_t size, int prot, int flags) {
   int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
   uint64_t request_size, page_size;
   uint8_t* addr;
-  uint32_t i;
 
   page_size = (uint64_t)os_getpagesize();
   request_size = (size + page_size - 1) & ~(page_size - 1);
