@@ -36,40 +36,17 @@ extern "C" {
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
-/** Enable memory checking via a signal handler via the following definition:
- *
- * #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
- *
- * This is usually 10%-25% faster, but requires OS-specific support.
- * */
-
-/** Check if we should use guard page model --- check if system is 64-bit. */
-#if UINTPTR_MAX == 0xffffffffffffffff
-
-#define WASM_GUARDPAGE_MODEL
-
-/* If the signal handler is supported, then use it by default. */
-#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
+/** Check if we should use guard page model. This is enabled if
+ * --- the os is 64-bit
+ * --- the user has not asked for the use of explicit bounds checks
+ */
+#if !defined(WASM_USING_GUARD_PAGES)
+  #if !defined(WASM_USE_EXPLICIT_BOUNDS_CHECKS) && UINTPTR_MAX == 0xffffffffffffffff
+    #define WASM_USING_GUARD_PAGES 1
+  #else
+    #define WASM_USING_GUARD_PAGES 0
+  #endif
 #endif
-
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 1
-#endif
-
-#else
-
-/* The signal handler is not supported, error out if the user was trying to
- * enable it. */
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#error "Signal handler is not supported for this OS/Architecture!"
-#endif
-
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
-
-#endif
-
 #if defined(_MSC_VER)
 #define WASM_RT_NO_RETURN __declspec(noreturn)
 #else

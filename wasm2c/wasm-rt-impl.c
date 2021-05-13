@@ -201,5 +201,4 @@ void wasm2c_ensure_linked() {
   // We use this to ensure the dynamic library with the wasi symbols is loaded for the host application
 }
 
-#undef WASM_GUARDPAGE_MODEL
 #undef PAGE_SIZE

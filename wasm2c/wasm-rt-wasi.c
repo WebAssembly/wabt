@@ -82,8 +82,7 @@ typedef signed long ssize_t;
 
 #define UNCOND_MEMCHECK(mem, a, t)  UNCOND_MEMCHECK_SIZE(mem, a, sizeof(t))
 
-#undef DEFINE_LOAD
-#define DEFINE_LOAD(name, t1, t2, t3)              \
+#define DEFINE_WASI_LOAD(name, t1, t2, t3)              \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
     UNCOND_MEMCHECK(mem, addr, t1);                       \
     t1 result;                                     \
@@ -91,37 +90,36 @@ typedef signed long ssize_t;
     return (t3)(t2)result;                         \
   }
 
-#undef DEFINE_STORE
-#define DEFINE_STORE(name, t1, t2)                           \
+#define DEFINE_WASI_STORE(name, t1, t2)                           \
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
     UNCOND_MEMCHECK(mem, addr, t1);                                 \
     t1 wrapped = (t1)value;                                  \
     memcpy(MEMACCESS(mem, addr), &wrapped, sizeof(t1));          \
   }
 
-DEFINE_LOAD(wasm_i32_load, u32, u32, u32);
-DEFINE_LOAD(wasm_i64_load, u64, u64, u64);
-DEFINE_LOAD(wasm_f32_load, f32, f32, f32);
-DEFINE_LOAD(wasm_f64_load, f64, f64, f64);
-DEFINE_LOAD(wasm_i32_load8_s, s8, s32, u32);
-DEFINE_LOAD(wasm_i64_load8_s, s8, s64, u64);
-DEFINE_LOAD(wasm_i32_load8_u, u8, u32, u32);
-DEFINE_LOAD(wasm_i64_load8_u, u8, u64, u64);
-DEFINE_LOAD(wasm_i32_load16_s, s16, s32, u32);
-DEFINE_LOAD(wasm_i64_load16_s, s16, s64, u64);
-DEFINE_LOAD(wasm_i32_load16_u, u16, u32, u32);
-DEFINE_LOAD(wasm_i64_load16_u, u16, u64, u64);
-DEFINE_LOAD(wasm_i64_load32_s, s32, s64, u64);
-DEFINE_LOAD(wasm_i64_load32_u, u32, u64, u64);
-DEFINE_STORE(wasm_i32_store, u32, u32);
-DEFINE_STORE(wasm_i64_store, u64, u64);
-DEFINE_STORE(wasm_f32_store, f32, f32);
-DEFINE_STORE(wasm_f64_store, f64, f64);
-DEFINE_STORE(wasm_i32_store8, u8, u32);
-DEFINE_STORE(wasm_i32_store16, u16, u32);
-DEFINE_STORE(wasm_i64_store8, u8, u64);
-DEFINE_STORE(wasm_i64_store16, u16, u64);
-DEFINE_STORE(wasm_i64_store32, u32, u64);
+DEFINE_WASI_LOAD(wasm_i32_load, u32, u32, u32);
+DEFINE_WASI_LOAD(wasm_i64_load, u64, u64, u64);
+DEFINE_WASI_LOAD(wasm_f32_load, f32, f32, f32);
+DEFINE_WASI_LOAD(wasm_f64_load, f64, f64, f64);
+DEFINE_WASI_LOAD(wasm_i32_load8_s, s8, s32, u32);
+DEFINE_WASI_LOAD(wasm_i64_load8_s, s8, s64, u64);
+DEFINE_WASI_LOAD(wasm_i32_load8_u, u8, u32, u32);
+DEFINE_WASI_LOAD(wasm_i64_load8_u, u8, u64, u64);
+DEFINE_WASI_LOAD(wasm_i32_load16_s, s16, s32, u32);
+DEFINE_WASI_LOAD(wasm_i64_load16_s, s16, s64, u64);
+DEFINE_WASI_LOAD(wasm_i32_load16_u, u16, u32, u32);
+DEFINE_WASI_LOAD(wasm_i64_load16_u, u16, u64, u64);
+DEFINE_WASI_LOAD(wasm_i64_load32_s, s32, s64, u64);
+DEFINE_WASI_LOAD(wasm_i64_load32_u, u32, u64, u64);
+DEFINE_WASI_STORE(wasm_i32_store, u32, u32);
+DEFINE_WASI_STORE(wasm_i64_store, u64, u64);
+DEFINE_WASI_STORE(wasm_f32_store, f32, f32);
+DEFINE_WASI_STORE(wasm_f64_store, f64, f64);
+DEFINE_WASI_STORE(wasm_i32_store8, u8, u32);
+DEFINE_WASI_STORE(wasm_i32_store16, u16, u32);
+DEFINE_WASI_STORE(wasm_i64_store8, u8, u64);
+DEFINE_WASI_STORE(wasm_i64_store16, u16, u64);
+DEFINE_WASI_STORE(wasm_i64_store32, u32, u64);
 
 // Imports
 
