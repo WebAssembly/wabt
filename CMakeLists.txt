@@ -470,6 +470,19 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
+if (NOT WIN32)
+  set(LDL_LIB "-ldl")
+else()
+  set(LDL_LIB "")
+endif()
+
+  wabt_executable(
+    NAME wasm2c-runner
+    SOURCES wasm2c/wasm-rt-runner.c
+    LIBS ${LDL_LIB}
+    INSTALL
+  )
+
   # wasm-opcodecnt
   wabt_executable(
     NAME wasm-opcodecnt
