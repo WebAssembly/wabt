@@ -57,11 +57,11 @@ Code[1]:
 Custom:
  - name: "linking"
   - symbol table [count=5]
-   - 0: F <__extern.foo> func=0 undefined binding=global vis=default
-   - 1: F <__extern.bar> func=1 undefined binding=global vis=default
-   - 2: F <f> func=2 exported no_strip binding=global vis=hidden
-   - 3: T <> table=0 binding=local vis=hidden
-   - 4: G <g> global=0 binding=global vis=default
+   - 0: F <__extern.foo> func=0 [ undefined binding=global vis=default ]
+   - 1: F <__extern.bar> func=1 [ undefined binding=global vis=default ]
+   - 2: F <f> func=2 [ exported no_strip binding=global vis=hidden ]
+   - 3: T <> table=0 [ binding=local vis=hidden ]
+   - 4: G <g> global=0 [ binding=global vis=default ]
 Custom:
  - name: "reloc.Code"
   - relocations for section: 7 (Code) [4]
