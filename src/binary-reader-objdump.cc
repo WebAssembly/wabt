@@ -1020,6 +1020,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
   Result PrintSymbolFlags(uint32_t flags);
+  Result PrintSegmentFlags(uint32_t flags);
   void PrintInitExpr(const InitExpr& expr);
   Result OnCount(Index count);
 
@@ -1828,6 +1829,7 @@ Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
       binding_name = "weak";
       break;
   }
+  flags &= ~WABT_SYMBOL_MASK_BINDING;
 
   const char* vis_name = nullptr;
   SymbolVisibility vis =
@@ -1840,16 +1842,50 @@ Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
       vis_name = "default";
       break;
   }
-  if (flags & WABT_SYMBOL_FLAG_UNDEFINED)
-    PrintDetails(" undefined");
-  if (flags & WABT_SYMBOL_FLAG_EXPORTED)
-    PrintDetails(" exported");
-  if (flags & WABT_SYMBOL_FLAG_EXPLICIT_NAME)
-    PrintDetails(" explicit_name");
-  if (flags & WABT_SYMBOL_FLAG_NO_STRIP)
-    PrintDetails(" no_strip");
+  flags &= ~WABT_SYMBOL_MASK_VISIBILITY;
 
-  PrintDetails(" binding=%s vis=%s\n", binding_name, vis_name);
+  PrintDetails(" [");
+  if (flags & WABT_SYMBOL_FLAG_UNDEFINED) {
+    PrintDetails(" undefined");
+    flags &= ~WABT_SYMBOL_FLAG_UNDEFINED;
+  }
+  if (flags & WABT_SYMBOL_FLAG_EXPORTED) {
+    PrintDetails(" exported");
+    flags &= ~WABT_SYMBOL_FLAG_EXPORTED;
+  }
+  if (flags & WABT_SYMBOL_FLAG_EXPLICIT_NAME) {
+    PrintDetails(" explicit_name");
+    flags &= ~WABT_SYMBOL_FLAG_EXPLICIT_NAME;
+  }
+  if (flags & WABT_SYMBOL_FLAG_NO_STRIP) {
+    PrintDetails(" no_strip");
+    flags &= ~WABT_SYMBOL_FLAG_NO_STRIP;
+  }
+  if (flags != 0) {
+    PrintDetails(" unknown_flags=%#x", flags);
+  }
+  PrintDetails(" binding=%s vis=%s ]\n", binding_name, vis_name);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::PrintSegmentFlags(uint32_t flags) {
+  if (flags > WABT_SYMBOL_FLAG_MAX) {
+    err_stream_->Writef("Unknown symbols flags: %x\n", flags);
+    return Result::Error;
+  }
+  PrintDetails(" [");
+  if (flags & WABT_SEGMENT_FLAG_STRINGS) {
+    PrintDetails(" STRINGS");
+    flags &= ~WABT_SEGMENT_FLAG_STRINGS;
+  }
+  if (flags & WABT_SEGMENT_FLAG_TLS) {
+    PrintDetails(" TLS");
+    flags &= ~WABT_SEGMENT_FLAG_TLS;
+  }
+  if (flags != 0) {
+    PrintDetails(" unknown_flags=%#x", flags);
+  }
+  PrintDetails(" ]\n");
   return Result::Ok;
 }
 
@@ -1934,9 +1970,9 @@ Result BinaryReaderObjdump::OnSegmentInfo(Index index,
                                           string_view name,
                                           Address alignment_log2,
                                           uint32_t flags) {
-  PrintDetails("   - %d: " PRIstringview " p2align=%" PRIaddress " flags=%#x\n",
-               index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment_log2, flags);
-  return Result::Ok;
+  PrintDetails("   - %d: " PRIstringview " p2align=%" PRIaddress,
+               index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment_log2);
+  return PrintSegmentFlags(flags);
 }
 
 Result BinaryReaderObjdump::OnInitFunctionCount(Index count) {

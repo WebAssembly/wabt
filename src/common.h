@@ -359,6 +359,10 @@ enum class ComdatType {
 #define WABT_SYMBOL_FLAG_NO_STRIP 0x80
 #define WABT_SYMBOL_FLAG_MAX 0xff
 
+#define WABT_SEGMENT_FLAG_STRINGS 0x1
+#define WABT_SEGMENT_FLAG_TLS 0x2
+#define WABT_SEGMENT_FLAG_MAX 0xff
+
 enum class SymbolVisibility {
   Default = 0,
   Hidden = 4,

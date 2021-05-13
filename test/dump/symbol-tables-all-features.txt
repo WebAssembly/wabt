@@ -38,11 +38,11 @@ Code[3]:
 Custom:
  - name: "linking"
   - symbol table [count=5]
-   - 0: F <env.b> func=0 undefined binding=global vis=default
-   - 1: F <a> func=1 exported no_strip binding=global vis=hidden
-   - 2: F <> func=2 binding=local vis=hidden
-   - 3: F <b> func=3 binding=global vis=default
-   - 4: T <t> table=0 binding=global vis=default
+   - 0: F <env.b> func=0 [ undefined binding=global vis=default ]
+   - 1: F <a> func=1 [ exported no_strip binding=global vis=hidden ]
+   - 2: F <> func=2 [ binding=local vis=hidden ]
+   - 3: F <b> func=3 [ binding=global vis=default ]
+   - 4: T <t> table=0 [ binding=global vis=default ]
 Custom:
  - name: "reloc.Code"
   - relocations for section: 5 (Code) [5]

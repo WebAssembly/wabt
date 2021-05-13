@@ -23,10 +23,10 @@ section("linking") {
     count[2]
     str("data1")
     p2align[2]
-    flags[0]
+    flags[1]
     str("data2")
     p2align[3]
-    flags[0]
+    flags[10]
   }
 
   section(LINKING_INIT_FUNCTIONS) {
@@ -99,16 +99,16 @@ Data[2]:
 Custom:
  - name: "linking"
   - segment info [count=2]
-   - 0: data1 p2align=2 flags=0
-   - 1: data2 p2align=3 flags=0
+   - 0: data1 p2align=2 [ STRINGS ]
+   - 1: data2 p2align=3 [ TLS unknown_flags=0x8 ]
   - init functions [count=2]
    - 1: priority=5
    - 0: priority=6
   - symbol table [count=4]
-   - 0: F <func_sym> func=0 binding=weak vis=default
-   - 1: G <global_sym> global=0 binding=local vis=default
-   - 2: D <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
-   - 3: F <func_sym> func=0 undefined binding=global vis=default
+   - 0: F <func_sym> func=0 [ binding=weak vis=default ]
+   - 1: G <global_sym> global=0 [ binding=local vis=default ]
+   - 2: D <data_sym> segment=1 offset=2 size=1 [ binding=global vis=hidden ]
+   - 3: F <func_sym> func=0 [ undefined binding=global vis=default ]
   - comdat groups [count=2]
    - comdat1: [count=1]
     - segment[1] <data2>
