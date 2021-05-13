@@ -863,7 +863,7 @@ void CWriter::WriteSandboxStruct() {
 
 void CWriter::WriteFuncTypes() {
   Write(Newline());
-  Write("static void init_func_types(wasm2c_sandbox_t* sbx) ", OpenBrace());
+  Write("static void init_func_types(wasm2c_sandbox_t* const sbx) ", OpenBrace());
   Index func_type_index = 0;
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
@@ -994,7 +994,7 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
   if (add_storage_class) {
     Write(GetFuncStaticOrExport(name));
   }
-  Write(ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t*");
+  Write(ResultType(decl.sig.result_types), " ", name, "(wasm2c_sandbox_t* const");
   for (Index i = 0; i < decl.GetNumParams(); ++i) {
     Write(", ", decl.GetParamType(i));
   }
@@ -1028,7 +1028,7 @@ void CWriter::WriteGlobals() {
 void CWriter::WriteGlobalInitializers() {
   Index global_index = 0;
 
-  Write(Newline(), "static void init_globals(wasm2c_sandbox_t* sbx) ", OpenBrace());
+  Write(Newline(), "static void init_globals(wasm2c_sandbox_t* const sbx) ", OpenBrace());
 
   for (const Global* global : module_->globals) {
     bool is_import = global_index < module_->num_global_imports;
@@ -1117,7 +1117,7 @@ void CWriter::WriteDataInitializers() {
     memory = module_->memories[0];
   }
 
-  Write(Newline(), "static void init_memory(wasm2c_sandbox_t* sbx) ", OpenBrace());
+  Write(Newline(), "static void init_memory(wasm2c_sandbox_t* const sbx) ", OpenBrace());
   if (memory && module_->num_memory_imports == 0) {
     uint32_t max =
         memory->page_limits.has_max ? memory->page_limits.max : 65536;
@@ -1140,7 +1140,7 @@ void CWriter::WriteDataInitializers() {
 void CWriter::WriteElemInitializers() {
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
-  Write(Newline(), "static void init_table(wasm2c_sandbox_t* sbx) ", OpenBrace());
+  Write(Newline(), "static void init_table(wasm2c_sandbox_t* const sbx) ", OpenBrace());
   Write("uint32_t offset = 0;", Newline());
   if (table && module_->num_table_imports == 0) {
     uint32_t max =
@@ -1179,7 +1179,7 @@ void CWriter::WriteElemInitializers() {
 
 void CWriter::WriteExportLookup() {
   Write(Newline(), "static void* lookup_wasm2c_nonfunc_export(void* sbx_ptr, const char* name) ", OpenBrace());
-  Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
+  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
   for (const Export* export_ : module_->exports) {
     switch (export_->kind) {
       case ExternalKind::Func: {
@@ -1205,7 +1205,7 @@ void CWriter::WriteExportLookup() {
 
 void CWriter::WriteFuncIndexLookup() {
   Write(Newline(), "static u32 lookup_wasm2c_func_index(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
-  Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
+  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
   Write("return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);", Newline());
   Write(CloseBrace(), Newline());
 }
@@ -1215,7 +1215,7 @@ void CWriter::WriteCallbackAddRemove() {
 
   Write(Newline(), "static u32 add_wasm2c_callback(void* sbx_ptr, u32 func_type_idx, void* func_ptr) ", OpenBrace());
   {
-    Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
+    Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
 
     if (table->elem_limits.max == 0) {
       Writef("for (u32 i = 1; i != 0; i++) ");
@@ -1248,7 +1248,7 @@ void CWriter::WriteCallbackAddRemove() {
 
   Write(Newline(), "static void remove_wasm2c_callback(void* sbx_ptr, u32 callback_idx) ", OpenBrace());
   {
-    Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) sbx_ptr;", Newline());
+    Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
     Write("sbx->", ExternalRef(table->name), ".data[callback_idx].func = 0;", Newline());
   }
   Write(CloseBrace(), Newline());
@@ -1256,10 +1256,10 @@ void CWriter::WriteCallbackAddRemove() {
 
 void CWriter::WriteInit() {
   Write(Newline(), "static void* create_wasm2c_sandbox(void) ", OpenBrace());
-  Write("wasm2c_sandbox_t* sbx = (wasm2c_sandbox_t*) calloc(sizeof(wasm2c_sandbox_t), 1);", Newline());
+  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) calloc(sizeof(wasm2c_sandbox_t), 1);", Newline());
+  Write("init_memory(sbx);", Newline());
   Write("init_func_types(sbx);", Newline());
   Write("init_globals(sbx);", Newline());
-  Write("init_memory(sbx);", Newline());
   Write("init_table(sbx);", Newline());
   Write("wasm_rt_init_wasi(&(sbx->wasi_data));", Newline());
   for (Var* var : module_->starts) {
@@ -1360,7 +1360,7 @@ void CWriter::WriteParamsAndLocals() {
 
 void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
   Indent(4);
-  Write("wasm2c_sandbox_t* sbx");
+  Write("wasm2c_sandbox_t* const sbx");
   for (Index i = 0; i < func_->GetNumParams(); ++i) {
     Write(", ");
     if (i != 0) {

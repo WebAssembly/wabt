@@ -83,7 +83,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   uint32_t byte_length = initial_pages * PAGE_SIZE;
-#if defined(WASM_GUARDPAGE_MODEL)
+#if WASM_USING_GUARD_PAGES == 1
   /* Reserve 8GiB. */
   const uint64_t heap_alignment = 0x100000000ul;
   void* addr = NULL;
@@ -101,7 +101,11 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
     abort();
   }
   os_mprotect(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
-  memory->data = addr;
+  // This is a valid way to initialize a constant field that is not undefined behavior
+  // https://stackoverflow.com/questions/9691404/how-to-initialize-const-in-a-struct-in-c-with-malloc
+  // Summary: malloc of a struct, followed by a write to the constant fields is still defined behavior iff
+  //   there is no prior read of the field
+  *(uint8_t**) &memory->data = addr;
 #else
   memory->data = calloc(byte_length, 1);
 #endif
@@ -123,25 +127,25 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t new_size = new_pages * PAGE_SIZE;
   uint32_t delta_size = delta * PAGE_SIZE;
 
-#if defined(WASM_GUARDPAGE_MODEL)
-  uint8_t* new_data = memory->data;
-  os_mprotect(new_data + old_size, delta_size, MMAP_PROT_READ | MMAP_PROT_WRITE);
+#if WASM_USING_GUARD_PAGES == 1
+  os_mprotect(memory->data + old_size, delta_size, MMAP_PROT_READ | MMAP_PROT_WRITE);
 #else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
     return (uint32_t)-1;
   }
-#if !WABT_BIG_ENDIAN
-  memset(new_data + old_size, 0, delta_size);
+  #if !WABT_BIG_ENDIAN
+    memset(new_data + old_size, 0, delta_size);
+  #endif
+  memory->data = new_data;
 #endif
-#endif
+
 #if WABT_BIG_ENDIAN
-  memmove(new_data + new_size - old_size, new_data, old_size);
-  memset(new_data, 0, delta_size);
+  memmove(memory->data + new_size - old_size, memory->data, old_size);
+  memset(memory->data, 0, delta_size);
 #endif
   memory->pages = new_pages;
   memory->size = new_size;
-  memory->data = new_data;
   return old_pages;
 }
 
