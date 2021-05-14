@@ -191,7 +191,7 @@ void* os_mmap_aligned(void* addr,
 
     // windows does not support partial unmapping, so unmap and remap
     os_munmap((void*)unaligned, padded_length);
-    uintptr_t aligned =
+    aligned =
         (uintptr_t)os_mmap((void*)aligned, requested_length, prot, flags);
     return (void*)aligned;
   }

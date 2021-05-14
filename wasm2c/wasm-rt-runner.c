@@ -1,3 +1,7 @@
+#if defined(_WIN32)
+    // Remove warnings for strcat, strcpy as they are safely used here
+    #define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +29,7 @@ void* open_lib(char const * wasm2c_module_path) {
       #if defined(_WIN32)
         DWORD errorMessageID  = GetLastError();
         if (errorMessageID != 0) {
-          LPSTR messageBuffer = nullptr;
+          LPSTR messageBuffer = 0;
           //The api creates the buffer that holds the message
           size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                       NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
