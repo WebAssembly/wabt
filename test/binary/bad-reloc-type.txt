@@ -1,0 +1,30 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section("reloc.BAD") {
+  reloc_section[0]
+  reloc_count[1]
+  reloc_type[leb_i32(0xffffffff)]
+  reloc_offset[0]
+  reloc_index[0]
+}
+(;; STDERR ;;;
+0000023: warning: unknown reloc type: <error_reloc_type>
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+bad-reloc-type.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Custom:
+ - name: "reloc.BAD"
+  - relocations for section: 0 (Type) [1]
+
+Code Disassembly:
+
+;;; STDOUT ;;)
