@@ -9,6 +9,7 @@
 ////////// File: Missing stuff from emscripten
 /////////////////////////////////////////////////////////////
 #include <stdint.h>
+#include <time.h>
 
 typedef uint8_t u8;
 typedef int8_t s8;
@@ -644,28 +645,97 @@ static int check_clock(u32 clock_id) {
          clock_id == WASM_CLOCK_PROCESS_CPUTIME || clock_id == WASM_CLOCK_THREAD_CPUTIME_ID;
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+  static mach_timebase_info_data_t timebase = { 0, 0 }; /* numer = 0, denom = 0 */
+  static struct timespec           inittime = { 0, 0 }; /* nanoseconds since 1-Jan-1970 to init() */
+  static uint64_t                  initclock;           /* ticks since boot to init() */
+#endif
+
+static void init_clock() {
+  #if defined(__APPLE__) && defined(__MACH__)
+    // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
+    if (mach_timebase_info(&timebase) != 0) {
+      abort();
+    }
+
+    // microseconds since 1 Jan 1970
+    struct timeval micro;
+    if (gettimeofday(&micro, NULL) != 0) {
+      abort();
+    }
+
+    initclock = mach_absolute_time();
+
+    inittime.tv_sec = micro.tv_sec;
+    inittime.tv_nsec = micro.tv_usec * 1000;
+  #endif
+}
+
+// out is a pointer index to a struct of the form
+// // https://github.com/WebAssembly/wasi-libc/blob/659ff414560721b1660a19685110e484a081c3d4/libc-bottom-half/headers/public/__struct_timespec.h
+// struct timespec {
+//   // https://github.com/WebAssembly/wasi-libc/blob/659ff414560721b1660a19685110e484a081c3d4/libc-bottom-half/headers/public/__typedef_time_t.h
+//   // time is long long in wasm32 which is an i64
+//   time_t tv_sec
+//   // long in wasm is an i32
+//   long tv_nsec;
+// }
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u64 max_lag, u32 out), {
   if (!check_clock(clock_id)) {
     return WASI_EINVAL;
   }
-  // TODO: handle realtime vs monotonic etc.
-  // wasi expects a result in nanoseconds, and we know how to convert clock()
-  // to seconds, so compute from there
-  const double NSEC_PER_SEC = 1000.0 * 1000.0 * 1000.0;
-  wasm_i64_store(wasi_data->heap_memory, out, (u64)(clock() / (CLOCKS_PER_SEC / NSEC_PER_SEC)));
-  return 0;
+
+  struct timespec out_struct;
+  int ret = 0;
+
+  #if defined(__APPLE__) && defined(__MACH__)
+    // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
+
+    // ticks since init
+    u64 clock = mach_absolute_time() - initclock;
+    // nanoseconds since init
+    u64 nano = clock * (u64)timebase.numer / (u64)timebase.denom;
+    out_struct = inittime;
+
+    #define BILLION 1000000000L
+    out_struct.tv_sec += nano / BILLION;
+    out_struct.tv_nsec += nano % BILLION;
+    // normalize
+    ts.tv_sec += ts.tv_nsec / BILLION;
+    ts.tv_nsec = ts.tv_nsec % BILLION;
+    #undef BILLION
+
+  #else
+    ret = clock_gettime(clock_id, &out_struct);
+  #endif
+
+  wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
+  wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
+  return ret;
 });
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 out), {
   if (!check_clock(clock_id)) {
     return WASI_EINVAL;
   }
-  // TODO: handle realtime vs monotonic etc. For now just report "milliseconds".
-  wasm_i64_store(wasi_data->heap_memory, out, 1000 * 1000);
-  return 0;
+
+  struct timespec out_struct;
+  int ret = 0;
+  #if defined(__APPLE__) && defined(__MACH__)
+    out_struct.tv_sec = 0;
+    out_struct.tv_nsec = 1;
+  #else
+    ret = clock_getres(clock_id, &out_struct);
+  #endif
+
+  wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
+  wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
+
+  return ret;
 });
 
 void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
+  init_clock();
   init_fds(wasi_data);
   // Remove unused function warnings
   (void) wasm_i32_load;
