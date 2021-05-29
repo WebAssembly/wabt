@@ -11,6 +11,13 @@
 #include <stdint.h>
 #include <time.h>
 
+#if defined(__APPLE__) && defined(__MACH__)
+  #include <sys/time.h>
+  #include <mach/mach_time.h> /* mach_absolute_time */
+  // #include <mach/mach.h>      /* host_get_clock_service, mach_... */
+  // #include <mach/clock.h>     /* clock_get_time */
+#endif
+
 typedef uint8_t u8;
 typedef int8_t s8;
 typedef uint16_t u16;
@@ -138,6 +145,8 @@ static ret _##name params { \
 ret (*name) params = _##name;
 
 #define STUB_IMPORT_IMPL(ret, name, params, returncode) IMPORT_IMPL(ret, name, params, { return returncode; });
+
+#define BILLION 1000000000L
 
 // Generic abort method for a runtime error in the runtime.
 
@@ -697,14 +706,11 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_w
     u64 nano = clock * (u64)timebase.numer / (u64)timebase.denom;
     out_struct = inittime;
 
-    #define BILLION 1000000000L
     out_struct.tv_sec += nano / BILLION;
     out_struct.tv_nsec += nano % BILLION;
     // normalize
-    ts.tv_sec += ts.tv_nsec / BILLION;
-    ts.tv_nsec = ts.tv_nsec % BILLION;
-    #undef BILLION
-
+    out_struct.tv_sec += out_struct.tv_nsec / BILLION;
+    out_struct.tv_nsec = out_struct.tv_nsec % BILLION;
   #else
     ret = clock_gettime(clock_id, &out_struct);
   #endif
