@@ -110,7 +110,6 @@ void os_munmap(void* addr, size_t size) {
 }
 
 int os_mprotect(void* addr, size_t size, int prot) {
-  DWORD AllocType = MEM_RESERVE | MEM_COMMIT;
   DWORD flProtect = PAGE_NOACCESS;
 
   if (!addr)
