@@ -107,71 +107,110 @@ DEFINE_STORE(i64_store32, u32, u64);
 #if defined(_MSC_VER)
   #include <intrin.h>
 
-// Adapted from https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
+  #if _M_IX86
+  static inline unsigned long LowDword(unsigned __int64 value) {
+    return (unsigned long)value;
+  }
 
-static inline int I64_CLZ(unsigned long long v) {
-  unsigned long r = 0;
-  #if defined(_M_AMD64) || defined(_M_ARM)
-    if (_BitScanReverse64(&r, v)) {
-      return 63 - r;
-    }
-  #else
-    if (_BitScanReverse(&r, (unsigned long) (v >> 32))) {
-      return 31 - r;
-    } else if (_BitScanReverse(&r, (unsigned long) v)) {
-      return 63 - r;
-    }
+  static inline unsigned long HighDword(unsigned __int64 value) {
+    unsigned long high;
+    memcpy(&high, (unsigned char*)&value + sizeof(high), sizeof(high));
+    return high;
+  }
   #endif
-  return 64;
-}
 
-static inline int I32_CLZ(unsigned long v) {
-  unsigned long r = 0;
-  if (_BitScanReverse(&r, v)) {
-    return 31 - r;
-  }
-  return 32;
-}
+  static inline int Clz(unsigned long mask) {
+    if (mask == 0)
+      return 32;
 
-static inline int I64_CTZ(unsigned long long v) {
-  if (!v) {
-    return 64;
+    unsigned long index;
+    _BitScanReverse(&index, mask);
+    return sizeof(unsigned long) * 8 - (index + 1);
   }
-  unsigned long r = 0;
-  #if defined(_M_AMD64) || defined(_M_ARM)
-    _BitScanForward64(&r, v);
-    return (int) r;
+
+  static inline int Clz(unsigned int mask) {
+    return Clz((unsigned long)mask);
+  }
+
+  static inline int Clz(unsigned __int64 mask) {
+  #if _M_X64
+    if (mask == 0)
+      return 64;
+
+    unsigned long index;
+    _BitScanReverse64(&index, mask);
+    return sizeof(unsigned __int64) * 8 - (index + 1);
+  #elif _M_IX86
+    int result = Clz(HighDword(mask));
+    if (result == 32)
+      result += Clz(LowDword(mask));
+
+    return result;
   #else
-    if (_BitScanForward(&r, (unsigned int) (v))) {
-      return (int) (r);
-    }
-
-    _BitScanForward(&r, (unsigned int) (v >> 32));
-    return (int) (r + 32);
+  #error unexpected architecture
   #endif
-}
-
-static inline int I32_CTZ(unsigned long v) {
-  if (!v) {
-    return 32;
-  }
-  unsigned long r = 0;
-  _BitScanForward(&r, v);
-  return (int) r;
-}
-
-#define POPCOUNT_DEFINE_PORTABLE(f_n, T)                    \
-  static inline u32 f_n(T x) {                              \
-    x = x - ((x >> 1) & (T)~(T)0/3);                        \
-    x = (x & (T)~(T)0/15*3) + ((x >> 2) & (T)~(T)0/15*3);   \
-    x = (x + (x >> 4)) & (T)~(T)0/255*15;                   \
-    return (T)(x * ((T)~(T)0/255)) >> (sizeof(T) - 1) * 8;  \
   }
 
-POPCOUNT_DEFINE_PORTABLE(I32_POPCNT, u32)
-POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
+  static inline int Ctz(unsigned long mask) {
+    if (mask == 0)
+      return 32;
 
-#undef POPCOUNT_DEFINE_PORTABLE
+    unsigned long index;
+    _BitScanForward(&index, mask);
+    return index;
+  }
+
+  static inline int Ctz(unsigned int mask) {
+    return Ctz((unsigned long)mask);
+  }
+
+  static inline int Ctz(unsigned __int64 mask) {
+  #if _M_X64
+    if (mask == 0)
+      return 64;
+
+    unsigned long index;
+    _BitScanForward64(&index, mask);
+    return index;
+  #elif _M_IX86
+    int result = Ctz(LowDword(mask));
+    if (result == 32)
+      result += Ctz(HighDword(mask));
+
+    return result;
+  #else
+  #error unexpected architecture
+  #endif
+  }
+
+  static inline int Popcount(uint8_t value) {
+    return __popcnt(value);
+  }
+
+  static inline int Popcount(unsigned long value) {
+    return __popcnt(value);
+  }
+
+  static inline int Popcount(unsigned int value) {
+    return Popcount((unsigned long)value);
+  }
+
+  static inline int Popcount(unsigned __int64 value) {
+  #if _M_X64
+    return __popcnt64(value);
+  #elif _M_IX86
+    return Popcount(HighDword(value)) + Popcount(LowDword(value));
+  #else
+  #error unexpected architecture
+  #endif
+  }
+
+  #define I32_CLZ(x) ((x) ? Clz(x) : 32)
+  #define I64_CLZ(x) ((x) ? Clz(x) : 64)
+  #define I32_CTZ(x) ((x) ? Ctz(x) : 32)
+  #define I64_CTZ(x) ((x) ? Ctz(x) : 64)
+  #define I32_POPCNT(x) (Popcount(x))
+  #define I64_POPCNT(x) (Popcount(x))
 
 #else
   #define I32_CLZ(x) ((x) ? __builtin_clz(x) : 32)
