@@ -181,6 +181,7 @@ int os_clock_gettime(int clock_id, struct timespec* out_struct) {
   #if defined(__APPLE__) && defined(__MACH__)
     // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
 
+    (void)clock_id;
     // ticks since init
     u64 clock = mach_absolute_time() - initclock;
     // nanoseconds since init
@@ -203,6 +204,7 @@ int os_clock_gettime(int clock_id, struct timespec* out_struct) {
 int os_clock_getres(int clock_id, struct timespec* out_struct) {
   int ret = 0;
   #if defined(__APPLE__) && defined(__MACH__)
+    (void)clock_id;
     out_struct->tv_sec = 0;
     out_struct->tv_nsec = 1;
   #else

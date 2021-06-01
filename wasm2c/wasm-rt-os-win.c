@@ -188,14 +188,34 @@ void* os_mmap_aligned(void* addr,
   }
 }
 
-void os_clock_init() {}
+#define BILLION 1000000000LL
+static LARGE_INTEGER g_counts_per_sec;
+
+void os_clock_init() {
+  // From here: https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows/38212960#38212960
+  if (QueryPerformanceFrequency(&g_counts_per_sec) == 0) {
+    abort();
+  }
+}
 
 int os_clock_gettime(int clock_id, struct timespec* out_struct) {
-  return clock_gettime(clock_id, out_struct);
+  LARGE_INTEGER count;
+  (void)clock_id;
+
+  if (g_counts_per_sec.QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
+    return -1;
+  }
+
+  out_struct->tv_sec = count.QuadPart / g_counts_per_sec.QuadPart;
+  out_struct->tv_nsec = ((count.QuadPart % g_counts_per_sec.QuadPart) * BILLION) / g_counts_per_sec.QuadPart;
+  return 0;
 }
 
 int os_clock_getres(int clock_id, struct timespec* out_struct) {
-  return clock_getres(clock_id, out_struct);
+  (void)clock_id;
+  out_struct->tv_sec = 0;
+  out_struct->tv_nsec = 1000;
+  return 0;
 }
 
 #endif
