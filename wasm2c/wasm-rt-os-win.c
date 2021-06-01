@@ -7,14 +7,6 @@
 
 #include <errno.h>
 #include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
-
-#include "wasm-rt-os.h"
-
-#include <errno.h>
-#include <inttypes.h>
-#include <stdint.h>
 #include <stdio.h>
 
 #include <Windows.h>
@@ -195,6 +187,16 @@ void* os_mmap_aligned(void* addr,
         (uintptr_t)os_mmap((void*)aligned, requested_length, prot, flags);
     return (void*)aligned;
   }
+}
+
+void os_clock_init() {}
+
+int os_clock_gettime(int clock_id, struct timespec* out_struct) {
+  return clock_gettime(clock_id, out_struct);
+}
+
+int os_clock_getres(int clock_id, struct timespec* out_struct) {
+  return clock_getres(clock_id, out_struct);
 }
 
 #endif

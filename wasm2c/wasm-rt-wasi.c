@@ -9,14 +9,7 @@
 ////////// File: Missing stuff from emscripten
 /////////////////////////////////////////////////////////////
 #include <stdint.h>
-#include <time.h>
-
-#if defined(__APPLE__) && defined(__MACH__)
-  #include <sys/time.h>
-  #include <mach/mach_time.h> /* mach_absolute_time */
-  // #include <mach/mach.h>      /* host_get_clock_service, mach_... */
-  // #include <mach/clock.h>     /* clock_get_time */
-#endif
+#include "wasm-rt-os.h"
 
 typedef uint8_t u8;
 typedef int8_t s8;
@@ -145,8 +138,6 @@ static ret _##name params { \
 ret (*name) params = _##name;
 
 #define STUB_IMPORT_IMPL(ret, name, params, returncode) IMPORT_IMPL(ret, name, params, { return returncode; });
-
-#define BILLION 1000000000L
 
 // Generic abort method for a runtime error in the runtime.
 
@@ -654,32 +645,6 @@ static int check_clock(u32 clock_id) {
          clock_id == WASM_CLOCK_PROCESS_CPUTIME || clock_id == WASM_CLOCK_THREAD_CPUTIME_ID;
 }
 
-#if defined(__APPLE__) && defined(__MACH__)
-  static mach_timebase_info_data_t timebase = { 0, 0 }; /* numer = 0, denom = 0 */
-  static struct timespec           inittime = { 0, 0 }; /* nanoseconds since 1-Jan-1970 to init() */
-  static uint64_t                  initclock;           /* ticks since boot to init() */
-#endif
-
-static void init_clock() {
-  #if defined(__APPLE__) && defined(__MACH__)
-    // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
-    if (mach_timebase_info(&timebase) != 0) {
-      abort();
-    }
-
-    // microseconds since 1 Jan 1970
-    struct timeval micro;
-    if (gettimeofday(&micro, NULL) != 0) {
-      abort();
-    }
-
-    initclock = mach_absolute_time();
-
-    inittime.tv_sec = micro.tv_sec;
-    inittime.tv_nsec = micro.tv_usec * 1000;
-  #endif
-}
-
 // out is a pointer index to a struct of the form
 // // https://github.com/WebAssembly/wasi-libc/blob/659ff414560721b1660a19685110e484a081c3d4/libc-bottom-half/headers/public/__struct_timespec.h
 // struct timespec {
@@ -695,26 +660,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_w
   }
 
   struct timespec out_struct;
-  int ret = 0;
-
-  #if defined(__APPLE__) && defined(__MACH__)
-    // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
-
-    // ticks since init
-    u64 clock = mach_absolute_time() - initclock;
-    // nanoseconds since init
-    u64 nano = clock * (u64)timebase.numer / (u64)timebase.denom;
-    out_struct = inittime;
-
-    out_struct.tv_sec += nano / BILLION;
-    out_struct.tv_nsec += nano % BILLION;
-    // normalize
-    out_struct.tv_sec += out_struct.tv_nsec / BILLION;
-    out_struct.tv_nsec = out_struct.tv_nsec % BILLION;
-  #else
-    ret = clock_gettime(clock_id, &out_struct);
-  #endif
-
+  int ret = os_clock_gettime(clock_id, &out_struct);
   wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
   wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
   return ret;
@@ -726,22 +672,14 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_was
   }
 
   struct timespec out_struct;
-  int ret = 0;
-  #if defined(__APPLE__) && defined(__MACH__)
-    out_struct.tv_sec = 0;
-    out_struct.tv_nsec = 1;
-  #else
-    ret = clock_getres(clock_id, &out_struct);
-  #endif
-
+  int ret = os_clock_getres(clock_id, &out_struct);
   wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
   wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
-
   return ret;
 });
 
 void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
-  init_clock();
+  os_clock_init();
   init_fds(wasi_data);
   // Remove unused function warnings
   (void) wasm_i32_load;

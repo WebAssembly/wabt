@@ -8,9 +8,13 @@
 
 #include <errno.h>
 #include <inttypes.h>
-#include <stdint.h>
 #include <stdio.h>
 
+#if defined(__APPLE__) && defined(__MACH__)
+  // Macs priors to OSX 10.12 don't have the clock functions. So we will use mac specific options
+  #include <sys/time.h>
+  #include <mach/mach_time.h>
+#endif
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -144,6 +148,67 @@ void* os_mmap_aligned(void* addr,
   }
 
   return (void*)aligned;
+}
+
+#if defined(__APPLE__) && defined(__MACH__)
+  static mach_timebase_info_data_t timebase = { 0, 0 }; /* numer = 0, denom = 0 */
+  static struct timespec           inittime = { 0, 0 }; /* nanoseconds since 1-Jan-1970 to init() */
+  static uint64_t                  initclock;           /* ticks since boot to init() */
+#endif
+
+void os_clock_init() {
+  #if defined(__APPLE__) && defined(__MACH__)
+    // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
+    if (mach_timebase_info(&timebase) != 0) {
+      abort();
+    }
+
+    // microseconds since 1 Jan 1970
+    struct timeval micro;
+    if (gettimeofday(&micro, NULL) != 0) {
+      abort();
+    }
+
+    initclock = mach_absolute_time();
+
+    inittime.tv_sec = micro.tv_sec;
+    inittime.tv_nsec = micro.tv_usec * 1000;
+  #endif
+}
+
+int os_clock_gettime(int clock_id, struct timespec* out_struct) {
+  int ret = 0;
+  #if defined(__APPLE__) && defined(__MACH__)
+    // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
+
+    // ticks since init
+    u64 clock = mach_absolute_time() - initclock;
+    // nanoseconds since init
+    u64 nano = clock * (u64)timebase.numer / (u64)timebase.denom;
+    *out_struct = inittime;
+
+    #define BILLION 1000000000L
+    out_struct->tv_sec += nano / BILLION;
+    out_struct->tv_nsec += nano % BILLION;
+    // normalize
+    out_struct->tv_sec += out_struct->tv_nsec / BILLION;
+    out_struct->tv_nsec = out_struct->tv_nsec % BILLION;
+    #undef BILLION
+  #else
+    ret = clock_gettime(clock_id, out_struct);
+  #endif
+  return ret;
+}
+
+int os_clock_getres(int clock_id, struct timespec* out_struct) {
+  int ret = 0;
+  #if defined(__APPLE__) && defined(__MACH__)
+    out_struct->tv_sec = 0;
+    out_struct->tv_nsec = 1;
+  #else
+    ret = clock_getres(clock_id, out_struct);
+  #endif
+  return ret;
 }
 
 #endif
