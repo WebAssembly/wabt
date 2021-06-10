@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
   // Macs priors to OSX 10.12 don't have the clock functions. So we will use mac specific options
@@ -183,9 +184,9 @@ int os_clock_gettime(int clock_id, struct timespec* out_struct) {
 
     (void)clock_id;
     // ticks since init
-    u64 clock = mach_absolute_time() - initclock;
+    uint64_t clock = mach_absolute_time() - initclock;
     // nanoseconds since init
-    u64 nano = clock * (u64)timebase.numer / (u64)timebase.denom;
+    uint64_t nano = clock * (uint64_t)timebase.numer / (uint64_t)timebase.denom;
     *out_struct = inittime;
 
     #define BILLION 1000000000L
