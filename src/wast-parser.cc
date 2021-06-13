@@ -2597,8 +2597,6 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
         CHECK_RESULT(ParseVar(&var));
         expr->delegate_target = var;
         expr->kind = TryKind::Delegate;
-      } else {
-        return ErrorExpected({"catch", "catch_all", "delegate"});
       }
       CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
       expr->block.end_loc = GetLocation();
@@ -2767,26 +2765,27 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         EXPECT(Do);
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
         EXPECT(Rpar);
-        EXPECT(Lpar);
-        TokenType type = Peek();
-        switch (type) {
-          case TokenType::Catch:
-          case TokenType::CatchAll:
-            CHECK_RESULT(ParseCatchExprList(&expr->catches));
-            expr->kind = TryKind::Catch;
-            break;
-          case TokenType::Delegate: {
-            Consume();
-            Var var;
-            CHECK_RESULT(ParseVar(&var));
-            expr->delegate_target = var;
-            expr->kind = TryKind::Delegate;
-            EXPECT(Rpar);
-            break;
+        if (PeekMatch(TokenType::Lpar)) {
+          Consume();
+          TokenType type = Peek();
+          switch (type) {
+            case TokenType::Catch:
+            case TokenType::CatchAll:
+              CHECK_RESULT(ParseCatchExprList(&expr->catches));
+              expr->kind = TryKind::Catch;
+              break;
+            case TokenType::Delegate: {
+              Consume();
+              Var var;
+              CHECK_RESULT(ParseVar(&var));
+              expr->delegate_target = var;
+              expr->kind = TryKind::Delegate;
+              EXPECT(Rpar);
+              break;
+            }
+            default:
+              break;
           }
-          default:
-            ErrorExpected({"catch", "catch_all", "delegate"});
-            break;
         }
         CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
         expr->block.end_loc = GetLocation();

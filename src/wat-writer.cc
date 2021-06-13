@@ -1171,8 +1171,8 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
           WriteVar(try_expr->delegate_target, NextChar::None);
           WritePuts(")", NextChar::Newline);
           break;
-        case TryKind::Invalid:
-          // Should not occur.
+        case TryKind::Plain:
+          // Nothing to do.
           break;
       }
       WriteCloseNewline();

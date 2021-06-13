@@ -1010,7 +1010,7 @@ Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
     return Result::Error;
   }
 
-  if (try_->kind == TryKind::Invalid) {
+  if (try_->kind == TryKind::Plain) {
     try_->kind = TryKind::Catch;
   } else if (try_->kind != TryKind::Catch) {
     PrintError("catch not allowed in try-delegate");
@@ -1041,7 +1041,7 @@ Result BinaryReaderIR::OnDelegateExpr(Index depth) {
 
   auto* try_ = cast<TryExpr>(label->context);
 
-  if (try_->kind == TryKind::Invalid) {
+  if (try_->kind == TryKind::Plain) {
     try_->kind = TryKind::Delegate;
   } else if (try_->kind != TryKind::Delegate) {
     PrintError("delegate not allowed in try-catch");
