@@ -33,6 +33,12 @@
   if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
 #endif
 
+#if defined(WASM_USING_GLOBAL_HEAP)
+#define MEM_ACCESS_REF(mem, addr) (char*) addr
+#else
+#define MEM_ACCESS_REF(mem, addr) &mem->data[addr]
+#endif
+
 #if WABT_BIG_ENDIAN
 static inline void load_data(void *dest, const void *src, size_t n) {
   size_t i = 0;
@@ -49,7 +55,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                            \
     MEMCHECK(mem, addr, t1);                                                          \
     t1 result;                                                                        \
-    memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], sizeof(t1)); \
+    memcpy(&result, MEM_ACCESS_REF(mem, mem->size - addr - sizeof(t1)), sizeof(t1)); \
     return (t3)(t2)result;                                                            \
   }
 
@@ -57,7 +63,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {                 \
     MEMCHECK(mem, addr, t1);                                                           \
     t1 wrapped = (t1)value;                                                            \
-    memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, sizeof(t1)); \
+    memcpy(MEM_ACCESS_REF(mem, mem->size - addr - sizeof(t1)), &wrapped, sizeof(t1)); \
   }
 #else
 static inline void load_data(void *dest, const void *src, size_t n) {
@@ -68,7 +74,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
     MEMCHECK(mem, addr, t1);                                 \
     t1 result;                                               \
-    memcpy(&result, &mem->data[addr], sizeof(t1)); \
+    memcpy(&result, MEM_ACCESS_REF(mem, addr), sizeof(t1)); \
     return (t3)(t2)result;                                   \
   }
 
@@ -76,7 +82,7 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
     MEMCHECK(mem, addr, t1);                                           \
     t1 wrapped = (t1)value;                                            \
-    memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
+    memcpy(MEM_ACCESS_REF(mem, addr), &wrapped, sizeof(t1));          \
   }
 #endif
 
