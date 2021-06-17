@@ -79,6 +79,7 @@ Clone as normal, but don't forget to get the submodules as well:
 ```console
 $ git clone --recursive https://github.com/WebAssembly/wabt
 $ cd wabt
+$ git submodule update --init
 ```
 
 This will fetch the testsuite and gtest repos, which are needed for some tests.
