@@ -71,7 +71,7 @@ struct ObjdumpState {
   ObjdumpNames function_names;
   ObjdumpNames global_names;
   ObjdumpNames section_names;
-  ObjdumpNames event_names;
+  ObjdumpNames tag_names;
   ObjdumpNames segment_names;
   ObjdumpNames table_names;
   std::vector<ObjdumpSymbol> symtab;

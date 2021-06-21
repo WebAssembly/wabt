@@ -146,7 +146,7 @@ class WatWriter : ModuleContext {
   void WriteFunc(const Func& func);
   void WriteBeginGlobal(const Global& global);
   void WriteGlobal(const Global& global);
-  void WriteEvent(const Event& event);
+  void WriteTag(const Tag& tag);
   void WriteLimits(const Limits& limits);
   void WriteTable(const Table& table);
   void WriteElemSegment(const ElemSegment& segment);
@@ -188,7 +188,7 @@ class WatWriter : ModuleContext {
   Index table_index_ = 0;
   Index memory_index_ = 0;
   Index type_index_ = 0;
-  Index event_index_ = 0;
+  Index tag_index_ = 0;
   Index data_segment_index_ = 0;
   Index elem_segment_index_ = 0;
 };
@@ -1339,18 +1339,18 @@ void WatWriter::WriteGlobal(const Global& global) {
   WriteCloseNewline();
 }
 
-void WatWriter::WriteEvent(const Event& event) {
-  WriteOpenSpace("event");
-  WriteNameOrIndex(event.name, event_index_, NextChar::Space);
-  WriteInlineExports(ExternalKind::Event, event_index_);
-  WriteInlineImport(ExternalKind::Event, event_index_);
-  if (event.decl.has_func_type) {
+void WatWriter::WriteTag(const Tag& tag) {
+  WriteOpenSpace("tag");
+  WriteNameOrIndex(tag.name, tag_index_, NextChar::Space);
+  WriteInlineExports(ExternalKind::Tag, tag_index_);
+  WriteInlineImport(ExternalKind::Tag, tag_index_);
+  if (tag.decl.has_func_type) {
     WriteOpenSpace("type");
-    WriteVar(event.decl.type_var, NextChar::None);
+    WriteVar(tag.decl.type_var, NextChar::None);
     WriteCloseSpace();
   }
-  WriteTypes(event.decl.sig.param_types, "param");
-  ++event_index_;
+  WriteTypes(tag.decl.sig.param_types, "param");
+  ++tag_index_;
   WriteCloseNewline();
 }
 
@@ -1472,8 +1472,8 @@ void WatWriter::WriteImport(const Import& import) {
       WriteCloseSpace();
       break;
 
-    case ExternalKind::Event:
-      WriteEvent(cast<EventImport>(&import)->event);
+    case ExternalKind::Tag:
+      WriteTag(cast<TagImport>(&import)->tag);
       break;
   }
 
@@ -1568,8 +1568,8 @@ Result WatWriter::WriteModule() {
       case ModuleFieldType::Import:
         WriteImport(*cast<ImportModuleField>(&field)->import);
         break;
-      case ModuleFieldType::Event:
-        WriteEvent(cast<EventModuleField>(&field)->event);
+      case ModuleFieldType::Tag:
+        WriteTag(cast<TagModuleField>(&field)->tag);
         break;
       case ModuleFieldType::Export:
         WriteExport(cast<ExportModuleField>(&field)->export_);
@@ -1638,8 +1638,8 @@ void WatWriter::BuildInlineExportMap() {
         index = module.GetGlobalIndex(export_->var);
         break;
 
-      case ExternalKind::Event:
-        index = module.GetEventIndex(export_->var);
+      case ExternalKind::Tag:
+        index = module.GetTagIndex(export_->var);
         break;
     }
 
@@ -1683,8 +1683,8 @@ bool WatWriter::IsInlineExport(const Export& export_) {
       index = module.GetGlobalIndex(export_.var);
       break;
 
-    case ExternalKind::Event:
-      index = module.GetEventIndex(export_.var);
+    case ExternalKind::Tag:
+      index = module.GetTagIndex(export_.var);
       break;
   }
 

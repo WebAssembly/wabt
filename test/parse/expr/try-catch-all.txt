@@ -1,8 +1,8 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
-  (event $e1 (param i32))
-  (event $e2 (param i32 i32))
+  (tag $e1 (param i32))
+  (tag $e2 (param i32 i32))
 
   ;; multiple catch clauses ending with catch_all
   (func

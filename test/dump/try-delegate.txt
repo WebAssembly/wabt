@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (event $e (param i32))
+  (tag $e (param i32))
   (func
     try $try1 (result i32)
       try
@@ -36,13 +36,13 @@
 0000014: 01                                        ; num functions
 0000015: 01                                        ; function 0 signature index
 0000013: 02                                        ; FIXUP section size
-; section "Event" (13)
+; section "Tag" (13)
 0000016: 0d                                        ; section code
 0000017: 00                                        ; section size (guess)
-0000018: 01                                        ; event count
-; event 0
-0000019: 00                                        ; event attribute
-000001a: 00                                        ; event signature index
+0000018: 01                                        ; tag count
+; tag 0
+0000019: 00                                        ; tag attribute
+000001a: 00                                        ; tag signature index
 0000017: 03                                        ; FIXUP section size
 ; section "DataCount" (12)
 000001b: 0c                                        ; section code
@@ -66,7 +66,7 @@
 000002a: 41                                        ; i32.const
 000002b: 07                                        ; i32 literal
 000002c: 07                                        ; catch
-000002d: 00                                        ; catch event
+000002d: 00                                        ; catch tag
 000002e: 1a                                        ; drop
 000002f: 41                                        ; i32.const
 0000030: 08                                        ; i32 literal

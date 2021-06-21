@@ -126,9 +126,9 @@ out/test/spec/bulk-memory-operations/binary.wast:593: assert_malformed passed:
 out/test/spec/bulk-memory-operations/binary.wast:604: assert_malformed passed:
   000000e: error: unfinished section (expected end: 0x11)
 out/test/spec/bulk-memory-operations/binary.wast:623: assert_malformed passed:
-  000000e: error: invalid import event kind: exceptions not allowed
+  000000e: error: invalid import tag kind: exceptions not allowed
 out/test/spec/bulk-memory-operations/binary.wast:633: assert_malformed passed:
-  000000e: error: invalid import event kind: exceptions not allowed
+  000000e: error: invalid import tag kind: exceptions not allowed
 out/test/spec/bulk-memory-operations/binary.wast:644: assert_malformed passed:
   000000e: error: malformed import kind: 5
 out/test/spec/bulk-memory-operations/binary.wast:654: assert_malformed passed:

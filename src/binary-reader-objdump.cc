@@ -55,7 +55,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   string_view GetFunctionName(Index index) const;
   string_view GetGlobalName(Index index) const;
   string_view GetSectionName(Index index) const;
-  string_view GetEventName(Index index) const;
+  string_view GetTagName(Index index) const;
   string_view GetSymbolName(Index index) const;
   string_view GetSegmentName(Index index) const;
   string_view GetTableName(Index index) const;
@@ -148,8 +148,8 @@ string_view BinaryReaderObjdumpBase::GetSectionName(Index index) const {
   return objdump_state_->section_names.Get(index);
 }
 
-string_view BinaryReaderObjdumpBase::GetEventName(Index index) const {
-  return objdump_state_->event_names.Get(index);
+string_view BinaryReaderObjdumpBase::GetTagName(Index index) const {
+  return objdump_state_->tag_names.Get(index);
 }
 
 string_view BinaryReaderObjdumpBase::GetSegmentName(Index index) const {
@@ -173,8 +173,8 @@ string_view BinaryReaderObjdumpBase::GetSymbolName(Index symbol_index) const {
       return GetGlobalName(sym.index);
     case SymbolType::Section:
       return GetSectionName(sym.index);
-    case SymbolType::Event:
-      return GetEventName(sym.index);
+    case SymbolType::Tag:
+      return GetTagName(sym.index);
     case SymbolType::Table:
       return GetTableName(sym.index);
   }
@@ -307,15 +307,15 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
-  Result OnEventSymbol(Index index,
-                        uint32_t flags,
-                        string_view name,
-                        Index event_index) override {
+  Result OnTagSymbol(Index index,
+                     uint32_t flags,
+                     string_view name,
+                     Index tag_index) override {
     if (!name.empty()) {
-      SetEventName(event_index, name);
+      SetTagName(tag_index, name);
     }
-    objdump_state_->symtab[index] = {SymbolType::Event, name.to_string(),
-                                     event_index};
+    objdump_state_->symtab[index] = {SymbolType::Tag, name.to_string(),
+                                     tag_index};
     return Result::Ok;
   }
 
@@ -341,13 +341,13 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
-  Result OnImportEvent(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
-                       Index event_index,
-                       Index sig_index) override {
-    SetEventName(event_index,
-                 module_name.to_string() + "." + field_name.to_string());
+  Result OnImportTag(Index import_index,
+                     string_view module_name,
+                     string_view field_name,
+                     Index tag_index,
+                     Index sig_index) override {
+    SetTagName(tag_index,
+               module_name.to_string() + "." + field_name.to_string());
     return Result::Ok;
   }
 
@@ -409,7 +409,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  protected:
   void SetFunctionName(Index index, string_view name);
   void SetGlobalName(Index index, string_view name);
-  void SetEventName(Index index, string_view name);
+  void SetTagName(Index index, string_view name);
   void SetTableName(Index index, string_view name);
   void SetSegmentName(Index index, string_view name);
 };
@@ -423,8 +423,8 @@ void BinaryReaderObjdumpPrepass::SetGlobalName(Index index, string_view name) {
   objdump_state_->global_names.Set(index, name);
 }
 
-void BinaryReaderObjdumpPrepass::SetEventName(Index index, string_view name) {
-  objdump_state_->event_names.Set(index, name);
+void BinaryReaderObjdumpPrepass::SetTagName(Index index, string_view name) {
+  objdump_state_->tag_names.Set(index, name);
 }
 
 void BinaryReaderObjdumpPrepass::SetTableName(Index index, string_view name) {
@@ -873,11 +873,11 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
-  Result OnImportEvent(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
-                       Index event_index,
-                       Index sig_index) override;
+  Result OnImportTag(Index import_index,
+                     string_view module_name,
+                     string_view field_name,
+                     Index tag_index,
+                     Index sig_index) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -991,10 +991,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnSectionSymbol(Index index,
                          uint32_t flags,
                          Index section_index) override;
-  Result OnEventSymbol(Index index,
-                       uint32_t flags,
-                       string_view name,
-                       Index event_index) override;
+  Result OnTagSymbol(Index index,
+                     uint32_t flags,
+                     string_view name,
+                     Index tag_index) override;
   Result OnTableSymbol(Index index,
                        uint32_t flags,
                        string_view name,
@@ -1011,8 +1011,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnComdatEntry(ComdatType kind, Index index) override;
   Result EndLinkingSection() override { return Result::Ok; }
 
-  Result OnEventCount(Index count) override;
-  Result OnEventType(Index index, Index sig_index) override;
+  Result OnTagCount(Index count) override;
+  Result OnTagType(Index index, Index sig_index) override;
 
  private:
   Result InitExprToConstOffset(const InitExpr& expr, uint32_t* out_offset);
@@ -1355,14 +1355,13 @@ Result BinaryReaderObjdump::OnImportGlobal(Index import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnImportEvent(Index import_index,
-                                          string_view module_name,
-                                          string_view field_name,
-                                          Index event_index,
-                                          Index sig_index) {
-  PrintDetails(" - event[%" PRIindex "] sig=%" PRIindex, event_index,
-               sig_index);
-  auto name = GetEventName(event_index);
+Result BinaryReaderObjdump::OnImportTag(Index import_index,
+                                        string_view module_name,
+                                        string_view field_name,
+                                        Index tag_index,
+                                        Index sig_index) {
+  PrintDetails(" - tag[%" PRIindex "] sig=%" PRIindex, tag_index, sig_index);
+  auto name = GetTagName(tag_index);
   if (!name.empty()) {
     PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
@@ -1937,15 +1936,15 @@ Result BinaryReaderObjdump::OnSectionSymbol(Index index,
   return PrintSymbolFlags(flags);
 }
 
-Result BinaryReaderObjdump::OnEventSymbol(Index index,
-                                          uint32_t flags,
-                                          string_view name,
-                                          Index event_index) {
+Result BinaryReaderObjdump::OnTagSymbol(Index index,
+                                        uint32_t flags,
+                                        string_view name,
+                                        Index tag_index) {
   if (name.empty()) {
-    name = GetEventName(event_index);
+    name = GetTagName(tag_index);
   }
-  PrintDetails("   - %d: E <" PRIstringview "> event=%" PRIindex, index,
-               WABT_PRINTF_STRING_VIEW_ARG(name), event_index);
+  PrintDetails("   - %d: E <" PRIstringview "> tag=%" PRIindex, index,
+               WABT_PRINTF_STRING_VIEW_ARG(name), tag_index);
   return PrintSymbolFlags(flags);
 }
 
@@ -2019,15 +2018,15 @@ Result BinaryReaderObjdump::OnComdatEntry(ComdatType kind, Index index) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnEventCount(Index count) {
+Result BinaryReaderObjdump::OnTagCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::OnEventType(Index index, Index sig_index) {
+Result BinaryReaderObjdump::OnTagType(Index index, Index sig_index) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - event[%" PRIindex "] sig=%" PRIindex "\n", index, sig_index);
+  printf(" - tag[%" PRIindex "] sig=%" PRIindex "\n", index, sig_index);
   return Result::Ok;
 }
 

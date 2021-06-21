@@ -119,9 +119,9 @@ out/test/spec/memory64/binary.wast:481: assert_malformed passed:
 out/test/spec/memory64/binary.wast:492: assert_malformed passed:
   000000e: error: unfinished section (expected end: 0x11)
 out/test/spec/memory64/binary.wast:511: assert_malformed passed:
-  000000e: error: invalid import event kind: exceptions not allowed
+  000000e: error: invalid import tag kind: exceptions not allowed
 out/test/spec/memory64/binary.wast:521: assert_malformed passed:
-  000000e: error: invalid import event kind: exceptions not allowed
+  000000e: error: invalid import tag kind: exceptions not allowed
 out/test/spec/memory64/binary.wast:532: assert_malformed passed:
   000000e: error: malformed import kind: 5
 out/test/spec/memory64/binary.wast:542: assert_malformed passed:

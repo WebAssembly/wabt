@@ -205,7 +205,7 @@ bool IsModuleField(TokenTypePair pair) {
   switch (pair[1]) {
     case TokenType::Data:
     case TokenType::Elem:
-    case TokenType::Event:
+    case TokenType::Tag:
     case TokenType::Export:
     case TokenType::Func:
     case TokenType::Type:
@@ -417,17 +417,17 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
     if (auto* func_field = dyn_cast<FuncModuleField>(&field)) {
       func = &func_field->func;
       decl = &func->decl;
-    } else if (auto* event_field = dyn_cast<EventModuleField>(&field)) {
-      decl = &event_field->event.decl;
+    } else if (auto* tag_field = dyn_cast<TagModuleField>(&field)) {
+      decl = &tag_field->tag.decl;
     } else if (auto* import_field = dyn_cast<ImportModuleField>(&field)) {
       if (auto* func_import =
               dyn_cast<FuncImport>(import_field->import.get())) {
         // Only check the declaration, not the function itself, since it is an
         // import.
         decl = &func_import->func.decl;
-      } else if (auto* event_import =
-                     dyn_cast<EventImport>(import_field->import.get())) {
-        decl = &event_import->event.decl;
+      } else if (auto* tag_import =
+                     dyn_cast<TagImport>(import_field->import.get())) {
+        decl = &tag_import->tag.decl;
       } else {
         continue;
       }
@@ -1078,7 +1078,7 @@ Result WastParser::ParseModuleField(Module* module) {
   switch (Peek(1)) {
     case TokenType::Data:   return ParseDataModuleField(module);
     case TokenType::Elem:   return ParseElemModuleField(module);
-    case TokenType::Event:  return ParseEventModuleField(module);
+    case TokenType::Tag:    return ParseTagModuleField(module);
     case TokenType::Export: return ParseExportModuleField(module);
     case TokenType::Func:   return ParseFuncModuleField(module);
     case TokenType::Type:   return ParseTypeModuleField(module);
@@ -1192,14 +1192,14 @@ Result WastParser::ParseElemModuleField(Module* module) {
   return Result::Ok;
 }
 
-Result WastParser::ParseEventModuleField(Module* module) {
-  WABT_TRACE(ParseEventModuleField);
+Result WastParser::ParseTagModuleField(Module* module) {
+  WABT_TRACE(ParseTagModuleField);
   EXPECT(Lpar);
-  auto field = MakeUnique<EventModuleField>(GetLocation());
-  EXPECT(Event);
-  ParseBindVarOpt(&field->event.name);
-  CHECK_RESULT(ParseTypeUseOpt(&field->event.decl));
-  CHECK_RESULT(ParseUnboundFuncSignature(&field->event.decl.sig));
+  auto field = MakeUnique<TagModuleField>(GetLocation());
+  EXPECT(Tag);
+  ParseBindVarOpt(&field->tag.name);
+  CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
+  CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
@@ -1434,12 +1434,12 @@ Result WastParser::ParseImportModuleField(Module* module) {
       break;
     }
 
-    case TokenType::Event: {
+    case TokenType::Tag: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<EventImport>(name);
-      CHECK_RESULT(ParseTypeUseOpt(&import->event.decl));
-      CHECK_RESULT(ParseUnboundFuncSignature(&import->event.decl.sig));
+      auto import = MakeUnique<TagImport>(name);
+      CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
+      CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;
@@ -1599,7 +1599,7 @@ Result WastParser::ParseExportDesc(Export* export_) {
     case TokenType::Table:  export_->kind = ExternalKind::Table; break;
     case TokenType::Memory: export_->kind = ExternalKind::Memory; break;
     case TokenType::Global: export_->kind = ExternalKind::Global; break;
-    case TokenType::Event:  export_->kind = ExternalKind::Event; break;
+    case TokenType::Tag:    export_->kind = ExternalKind::Tag; break;
     default:
       return ErrorExpected({"an external kind"});
   }
@@ -3249,7 +3249,7 @@ void WastParser::CheckImportOrdering(Module* module) {
       module->tables.size() != module->num_table_imports ||
       module->memories.size() != module->num_memory_imports ||
       module->globals.size() != module->num_global_imports ||
-      module->events.size() != module->num_event_imports) {
+      module->tags.size() != module->num_tag_imports) {
     Error(GetLocation(),
           "imports must occur before all non-import definitions");
   }

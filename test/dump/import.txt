@@ -6,7 +6,7 @@
   (import "ignored" "test2" (func (param i32) (result i32)))
   (import "ignored" "testmem" (memory 0))
   (import "ignored" "testtable" (table 0 anyfunc))
-  (import "ignored" "testevent" (event (param i32)))
+  (import "ignored" "testtag" (tag (param i32)))
 )
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
@@ -73,12 +73,12 @@
 ; import header 4
 0000066: 07                                        ; string length
 0000067: 6967 6e6f 7265 64                        ignored  ; import module name
-000006e: 09                                        ; string length
-000006f: 7465 7374 6576 656e 74                   testevent  ; import field name
-0000078: 04                                        ; import kind
-0000079: 00                                        ; event attribute
-000007a: 02                                        ; event signature index
-000001c: 5e                                        ; FIXUP section size
+000006e: 07                                        ; string length
+000006f: 7465 7374 7461 67                        testtag  ; import field name
+0000076: 04                                        ; import kind
+0000077: 00                                        ; tag attribute
+0000078: 02                                        ; tag signature index
+000001c: 5c                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -95,7 +95,7 @@ Import[5]:
  - func[1] sig=1 <ignored.test2> <- ignored.test2
  - memory[0] pages: initial=0 <- ignored.testmem
  - table[0] type=funcref initial=0 <- ignored.testtable
- - event[0] sig=2 <ignored.testevent> <- ignored.testevent
+ - tag[0] sig=2 <ignored.testtag> <- ignored.testtag
 
 Code Disassembly:
 

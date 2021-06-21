@@ -185,7 +185,7 @@ std::unique_ptr<wasm_externtype_t> wasm_externtype_t::New(
     case ExternKind::Global:
       return MakeUnique<wasm_globaltype_t>(*cast<GlobalType>(ptr.get()));
 
-    case ExternKind::Event:
+    case ExternKind::Tag:
       break;
   }
 
@@ -371,7 +371,7 @@ static wasm_externkind_t FromWabtExternKind(ExternKind kind) {
       return WASM_EXTERN_TABLE;
     case ExternalKind::Memory:
       return WASM_EXTERN_MEMORY;
-    case ExternalKind::Event:
+    case ExternalKind::Tag:
       WABT_UNREACHABLE;
   }
   WABT_UNREACHABLE;
