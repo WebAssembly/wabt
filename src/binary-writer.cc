@@ -125,8 +125,8 @@ class Symbol {
     static const SymbolType type = SymbolType::Section;
     Index section;
   };
-  struct Event {
-    static const SymbolType type = SymbolType::Event;
+  struct Tag {
+    static const SymbolType type = SymbolType::Tag;
     Index index;
   };
   struct Table {
@@ -143,7 +143,7 @@ class Symbol {
     Data data_;
     Global global_;
     Section section_;
-    Event event_;
+    Tag tag_;
     Table table_;
   };
 
@@ -156,8 +156,8 @@ class Symbol {
       : type_(Global::type), name_(name), flags_(flags), global_(g) {}
   Symbol(const string_view& name, uint8_t flags, const Section& s)
       : type_(Section::type), name_(name), flags_(flags), section_(s) {}
-  Symbol(const string_view& name, uint8_t flags, const Event& e)
-      : type_(Event::type), name_(name), flags_(flags), event_(e) {}
+  Symbol(const string_view& name, uint8_t flags, const Tag& e)
+      : type_(Tag::type), name_(name), flags_(flags), tag_(e) {}
   Symbol(const string_view& name, uint8_t flags, const Table& t)
       : type_(Table::type), name_(name), flags_(flags), table_(t) {}
 
@@ -181,7 +181,7 @@ class Symbol {
   bool IsData() const { return type() == Data::type; }
   bool IsGlobal() const { return type() == Global::type; }
   bool IsSection() const { return type() == Section::type; }
-  bool IsEvent() const { return type() == Event::type; }
+  bool IsTag() const { return type() == Tag::type; }
   bool IsTable() const { return type() == Table::type; }
 
   const Function& AsFunction() const {
@@ -200,9 +200,9 @@ class Symbol {
     assert(IsSection());
     return section_;
   }
-  const Event& AsEvent() const {
-    assert(IsEvent());
-    return event_;
+  const Tag& AsTag() const {
+    assert(IsTag());
+    return tag_;
   }
   const Table& AsTable() const {
     assert(IsTable());
@@ -281,7 +281,7 @@ class SymbolTable {
   Result Populate(const Module* module) {
     std::set<Index> exported_funcs;
     std::set<Index> exported_globals;
-    std::set<Index> exported_events;
+    std::set<Index> exported_tags;
     std::set<Index> exported_tables;
 
     for (const Export* export_ : module->exports) {
@@ -297,8 +297,8 @@ class SymbolTable {
       case ExternalKind::Global:
         exported_globals.insert(module->GetGlobalIndex(export_->var));
         break;
-      case ExternalKind::Event:
-        exported_events.insert(module->GetEventIndex(export_->var));
+      case ExternalKind::Tag:
+        exported_tags.insert(module->GetTagIndex(export_->var));
         break;
       }
     }
@@ -367,7 +367,7 @@ class BinaryWriter {
   void BeginSubsection(const char* name);
   void EndSubsection();
   Index GetLabelVarDepth(const Var* var);
-  Index GetEventVarDepth(const Var* var);
+  Index GetTagVarDepth(const Var* var);
   Index GetLocalIndex(const Func* func, const Var& var);
   Index GetSymbolIndex(RelocType reloc_type, Index index);
   void AddReloc(RelocType reloc_type, Index index);
@@ -391,7 +391,7 @@ class BinaryWriter {
   void WriteTable(const Table* table);
   void WriteMemory(const Memory* memory);
   void WriteGlobalHeader(const Global* global);
-  void WriteEventType(const Event* event);
+  void WriteTagType(const Tag* tag);
   void WriteRelocSection(const RelocSection* reloc_section);
   void WriteLinkingSection();
   template <typename T>
@@ -552,7 +552,7 @@ Index BinaryWriter::GetLabelVarDepth(const Var* var) {
   return var->index();
 }
 
-Index BinaryWriter::GetEventVarDepth(const Var* var) {
+Index BinaryWriter::GetTagVarDepth(const Var* var) {
   return var->index();
 }
 
@@ -985,8 +985,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);
-      WriteU32Leb128(stream_, GetEventVarDepth(&cast<ThrowExpr>(expr)->var),
-                     "throw event");
+      WriteU32Leb128(stream_, GetTagVarDepth(&cast<ThrowExpr>(expr)->var),
+                     "throw tag");
       break;
     case ExprType::Try: {
       auto* try_expr = cast<TryExpr>(expr);
@@ -1000,8 +1000,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
               WriteOpcode(stream_, Opcode::CatchAll);
             } else {
               WriteOpcode(stream_, Opcode::Catch);
-              WriteU32Leb128(stream_, GetEventVarDepth(&catch_.var),
-                             "catch event");
+              WriteU32Leb128(stream_, GetTagVarDepth(&catch_.var), "catch tag");
             }
             WriteExprList(func, catch_.exprs);
           }
@@ -1110,10 +1109,10 @@ void BinaryWriter::WriteGlobalHeader(const Global* global) {
   stream_->WriteU8(global->mutable_, "global mutability");
 }
 
-void BinaryWriter::WriteEventType(const Event* event) {
-  WriteU32Leb128(stream_, 0, "event attribute");
-  WriteU32Leb128(stream_, module_->GetFuncTypeIndex(event->decl),
-                 "event signature index");
+void BinaryWriter::WriteTagType(const Tag* tag) {
+  WriteU32Leb128(stream_, 0, "tag attribute");
+  WriteU32Leb128(stream_, module_->GetFuncTypeIndex(tag->decl),
+                 "tag signature index");
 }
 
 void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
@@ -1151,7 +1150,7 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
       case RelocType::TableIndexI64:
       case RelocType::TypeIndexLEB:
       case RelocType::GlobalIndexLEB:
-      case RelocType::EventIndexLEB:
+      case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
       case RelocType::TableNumberLEB:
         break;
@@ -1200,10 +1199,10 @@ void BinaryWriter::WriteLinkingSection() {
         case SymbolType::Section:
           WriteU32Leb128(stream_, sym.AsSection().section, "section index");
           break;
-        case SymbolType::Event:
-          WriteU32Leb128(stream_, sym.AsEvent().index, "event index");
+        case SymbolType::Tag:
+          WriteU32Leb128(stream_, sym.AsTag().index, "tag index");
           if (sym.defined() || sym.explicit_name()) {
-            WriteStr(stream_, sym.name(), "event name", PrintChars::Yes);
+            WriteStr(stream_, sym.name(), "tag name", PrintChars::Yes);
           }
           break;
         case SymbolType::Table:
@@ -1343,8 +1342,8 @@ Result BinaryWriter::WriteModule() {
           WriteGlobalHeader(&cast<GlobalImport>(import)->global);
           break;
 
-        case ExternalKind::Event:
-          WriteEventType(&cast<EventImport>(import)->event);
+        case ExternalKind::Tag:
+          WriteTagType(&cast<TagImport>(import)->tag);
           break;
       }
     }
@@ -1393,15 +1392,15 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  assert(module_->events.size() >= module_->num_event_imports);
-  Index num_events = module_->events.size() - module_->num_event_imports;
-  if (num_events) {
-    BeginKnownSection(BinarySection::Event);
-    WriteU32Leb128(stream_, num_events, "event count");
-    for (size_t i = 0; i < num_events; ++i) {
-      WriteHeader("event", i);
-      const Event* event = module_->events[i + module_->num_event_imports];
-      WriteEventType(event);
+  assert(module_->tags.size() >= module_->num_tag_imports);
+  Index num_tags = module_->tags.size() - module_->num_tag_imports;
+  if (num_tags) {
+    BeginKnownSection(BinarySection::Tag);
+    WriteU32Leb128(stream_, num_tags, "tag count");
+    for (size_t i = 0; i < num_tags; ++i) {
+      WriteHeader("tag", i);
+      const Tag* tag = module_->tags[i + module_->num_tag_imports];
+      WriteTagType(tag);
     }
     EndSection();
   }
@@ -1448,9 +1447,9 @@ Result BinaryWriter::WriteModule() {
           WriteU32Leb128(stream_, index, "export global index");
           break;
         }
-        case ExternalKind::Event: {
-          Index index = module_->GetEventIndex(export_->var);
-          WriteU32Leb128(stream_, index, "export event index");
+        case ExternalKind::Tag: {
+          Index index = module_->GetTagIndex(export_->var);
+          WriteU32Leb128(stream_, index, "export tag index");
           break;
         }
       }

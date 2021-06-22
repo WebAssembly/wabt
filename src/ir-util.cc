@@ -213,8 +213,8 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::Throw: {
       auto throw_ = cast<ThrowExpr>(&expr);
       Index operand_count = 0;
-      if (Event* event = module.GetEvent(throw_->var)) {
-        operand_count = event->decl.sig.param_types.size();
+      if (Tag* tag = module.GetTag(throw_->var)) {
+        operand_count = tag->decl.sig.param_types.size();
       }
       return { operand_count, 0, true };
     }

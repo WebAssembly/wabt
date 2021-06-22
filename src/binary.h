@@ -40,7 +40,7 @@
   V(Function, function, 3)             \
   V(Table, table, 4)                   \
   V(Memory, memory, 5)                 \
-  V(Event, event, 13)                  \
+  V(Tag, tag, 13)                      \
   V(Global, global, 6)                 \
   V(Export, export, 7)                 \
   V(Start, start, 8)                   \
@@ -59,7 +59,7 @@ enum class BinarySection {
   Invalid = ~0,
 
   First = Custom,
-  Last = Event,
+  Last = Tag,
 };
 /* clang-format on */
 static const int kBinarySectionCount = WABT_ENUM_COUNT(BinarySection);

@@ -70,7 +70,7 @@ bool TypesMatch(ValueType expected, ValueType actual);
 
 using ExternKind = ExternalKind;
 enum class Mutability { Const, Var };
-enum class EventAttr { Exception };
+enum class TagAttr { Exception };
 using SegmentMode = SegmentKind;
 enum class ElemKind { RefNull, RefFunc };
 
@@ -83,7 +83,7 @@ enum class ObjectKind {
   Table,
   Memory,
   Global,
-  Event,
+  Tag,
   Module,
   Instance,
   Thread,
@@ -249,19 +249,19 @@ struct GlobalType : ExternType {
   Mutability mut;
 };
 
-struct EventType : ExternType {
-  static const ExternKind skind = ExternKind::Event;
+struct TagType : ExternType {
+  static const ExternKind skind = ExternKind::Tag;
   static bool classof(const ExternType* type);
 
-  explicit EventType(EventAttr, const ValueTypes&);
+  explicit TagType(TagAttr, const ValueTypes&);
 
   std::unique_ptr<ExternType> Clone() const override;
 
-  friend Result Match(const EventType& expected,
-                      const EventType& actual,
+  friend Result Match(const TagType& expected,
+                      const TagType& actual,
                       std::string* out_msg);
 
-  EventAttr attr;
+  TagAttr attr;
   ValueTypes signature;
 };
 
@@ -327,8 +327,8 @@ struct GlobalDesc {
   InitExpr init;
 };
 
-struct EventDesc {
-  EventType type;
+struct TagDesc {
+  TagType type;
 };
 
 struct ExportDesc {
@@ -367,7 +367,7 @@ struct ModuleDesc {
   std::vector<TableDesc> tables;
   std::vector<MemoryDesc> memories;
   std::vector<GlobalDesc> globals;
-  std::vector<EventDesc> events;
+  std::vector<TagDesc> tags;
   std::vector<ExportDesc> exports;
   std::vector<StartDesc> starts;
   std::vector<ElemDesc> elems;
@@ -894,26 +894,26 @@ class Global : public Extern {
   Value value_;
 };
 
-class Event : public Extern {
+class Tag : public Extern {
  public:
   static bool classof(const Object* obj);
-  static const ObjectKind skind = ObjectKind::Event;
-  static const char* GetTypeName() { return "Event"; }
-  using Ptr = RefPtr<Event>;
+  static const ObjectKind skind = ObjectKind::Tag;
+  static const char* GetTypeName() { return "Tag"; }
+  using Ptr = RefPtr<Tag>;
 
-  static Event::Ptr New(Store&, EventType);
+  static Tag::Ptr New(Store&, TagType);
 
   Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
 
   const ExternType& extern_type() override;
-  const EventType& type() const;
+  const TagType& type() const;
 
  private:
   friend Store;
-  explicit Event(Store&, EventType);
+  explicit Tag(Store&, TagType);
   void Mark(Store&) override;
 
-  EventType type_;
+  TagType type_;
 };
 
 class ElemSegment {
@@ -992,7 +992,7 @@ class Instance : public Object {
   const RefVec& tables() const;
   const RefVec& memories() const;
   const RefVec& globals() const;
-  const RefVec& events() const;
+  const RefVec& tags() const;
   const RefVec& exports() const;
   const std::vector<ElemSegment>& elems() const;
   std::vector<ElemSegment>& elems();
@@ -1014,7 +1014,7 @@ class Instance : public Object {
   RefVec tables_;
   RefVec memories_;
   RefVec globals_;
-  RefVec events_;
+  RefVec tags_;
   RefVec exports_;
   std::vector<ElemSegment> elems_;
   std::vector<DataSegment> datas_;

@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 ;;; ARGS: --enable-exceptions
 (module
-  (event $e)
+  (tag $e)
   (func
     block
       try

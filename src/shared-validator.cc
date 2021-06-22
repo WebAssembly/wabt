@@ -232,14 +232,14 @@ Result SharedValidator::OnGlobalInitExpr_Other(const Location& loc) {
       "invalid global initializer expression, must be a constant expression");
 }
 
-Result SharedValidator::OnEvent(const Location& loc, Var sig_var) {
+Result SharedValidator::OnTag(const Location& loc, Var sig_var) {
   Result result = Result::Ok;
   FuncType type;
   result |= CheckFuncTypeIndex(sig_var, &type);
   if (!type.results.empty()) {
-    result |= PrintError(loc, "Event signature must have 0 results.");
+    result |= PrintError(loc, "Tag signature must have 0 results.");
   }
-  events_.push_back(EventType{type.params});
+  tags_.push_back(TagType{type.params});
   return result;
 }
 
@@ -272,8 +272,8 @@ Result SharedValidator::OnExport(const Location& loc,
       result |= CheckGlobalIndex(item_var);
       break;
 
-    case ExternalKind::Event:
-      result |= CheckEventIndex(item_var);
+    case ExternalKind::Tag:
+      result |= CheckTagIndex(item_var);
       break;
   }
   return result;
@@ -489,8 +489,8 @@ Result SharedValidator::CheckGlobalIndex(Var global_var, GlobalType* out) {
   return CheckIndexWithValue(global_var, globals_, out, "global");
 }
 
-Result SharedValidator::CheckEventIndex(Var event_var, EventType* out) {
-  return CheckIndexWithValue(event_var, events_, out, "event");
+Result SharedValidator::CheckTagIndex(Var tag_var, TagType* out) {
+  return CheckIndexWithValue(tag_var, tags_, out, "tag");
 }
 
 Result SharedValidator::CheckElemSegmentIndex(Var elem_segment_var,
@@ -764,7 +764,7 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
 }
 
 Result SharedValidator::OnCatch(const Location& loc,
-                                Var event_var,
+                                Var tag_var,
                                 bool is_catch_all) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
@@ -772,9 +772,9 @@ Result SharedValidator::OnCatch(const Location& loc,
     TypeVector empty;
     result |= typechecker_.OnCatch(empty);
   } else {
-    EventType event_type;
-    result |= CheckEventIndex(event_var, &event_type);
-    result |= typechecker_.OnCatch(event_type.params);
+    TagType tag_type;
+    result |= CheckTagIndex(tag_var, &tag_type);
+    result |= typechecker_.OnCatch(tag_type.params);
   }
   return result;
 }
@@ -1208,12 +1208,12 @@ Result SharedValidator::OnTernary(const Location& loc, Opcode opcode) {
   return result;
 }
 
-Result SharedValidator::OnThrow(const Location& loc, Var event_var) {
+Result SharedValidator::OnThrow(const Location& loc, Var tag_var) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
-  EventType event_type;
-  result |= CheckEventIndex(event_var, &event_type);
-  result |= typechecker_.OnThrow(event_type.params);
+  TagType tag_type;
+  result |= CheckTagIndex(tag_var, &tag_type);
+  result |= typechecker_.OnThrow(tag_type.params);
   return result;
 }
 

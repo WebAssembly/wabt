@@ -41,8 +41,8 @@ const char* GetName(ExternKind kind) {
 
 const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
-      "Null",   "Foreign", "Trap",  "DefinedFunc", "HostFunc", "Table",
-      "Memory", "Global",  "Event", "Module",      "Instance", "Thread",
+      "Null",   "Foreign", "Trap", "DefinedFunc", "HostFunc", "Table",
+      "Memory", "Global",  "Tag",  "Module",      "Instance", "Thread",
   };
   return kNames[int(kind)];
 }
@@ -156,13 +156,13 @@ Result Match(const GlobalType& expected,
   return Result::Ok;
 }
 
-//// EventType ////
-std::unique_ptr<ExternType> EventType::Clone() const {
-  return MakeUnique<EventType>(*this);
+//// TagType ////
+std::unique_ptr<ExternType> TagType::Clone() const {
+  return MakeUnique<TagType>(*this);
 }
 
-Result Match(const EventType& expected,
-             const EventType& actual,
+Result Match(const TagType& expected,
+             const TagType& actual,
              std::string* out_msg) {
   // TODO signature
   return Result::Ok;
@@ -655,14 +655,14 @@ void Global::UnsafeSet(Value value) {
   value_ = value;
 }
 
-//// Event ////
-Event::Event(Store&, EventType type) : Extern(skind), type_(type) {}
+//// Tag ////
+Tag::Tag(Store&, TagType type) : Extern(skind), type_(type) {}
 
-void Event::Mark(Store&) {}
+void Tag::Mark(Store&) {}
 
-Result Event::Match(Store& store,
-                    const ImportType& import_type,
-                    Trap::Ptr* out_trap) {
+Result Tag::Match(Store& store,
+                  const ImportType& import_type,
+                  Trap::Ptr* out_trap) {
   return MatchImpl(store, import_type, type_, out_trap);
 }
 
@@ -758,7 +758,7 @@ Instance::Ptr Instance::Instantiate(Store& store,
       case ExternKind::Table:  inst->tables_.push_back(extern_ref); break;
       case ExternKind::Memory: inst->memories_.push_back(extern_ref); break;
       case ExternKind::Global: inst->globals_.push_back(extern_ref); break;
-      case ExternKind::Event:  inst->events_.push_back(extern_ref); break;
+      case ExternKind::Tag:    inst->tags_.push_back(extern_ref); break;
     }
   }
 
@@ -784,9 +784,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
             .ref());
   }
 
-  // Events.
-  for (auto&& desc : mod->desc().events) {
-    inst->events_.push_back(Event::New(store, desc.type).ref());
+  // Tags.
+  for (auto&& desc : mod->desc().tags) {
+    inst->tags_.push_back(Tag::New(store, desc.type).ref());
   }
 
   // Exports.
@@ -797,7 +797,7 @@ Instance::Ptr Instance::Instantiate(Store& store,
       case ExternKind::Table:  ref = inst->tables_[desc.index]; break;
       case ExternKind::Memory: ref = inst->memories_[desc.index]; break;
       case ExternKind::Global: ref = inst->globals_[desc.index]; break;
-      case ExternKind::Event:  ref = inst->events_[desc.index]; break;
+      case ExternKind::Tag:    ref = inst->tags_[desc.index]; break;
     }
     inst->exports_.push_back(ref);
   }
@@ -897,7 +897,7 @@ void Instance::Mark(Store& store) {
   store.Mark(memories_);
   store.Mark(tables_);
   store.Mark(globals_);
-  store.Mark(events_);
+  store.Mark(tags_);
   store.Mark(exports_);
   for (auto&& elem : elems_) {
     elem.Mark(store);

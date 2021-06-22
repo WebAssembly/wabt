@@ -81,14 +81,14 @@ inline bool GlobalType::classof(const ExternType* type) {
 inline GlobalType::GlobalType(ValueType type, Mutability mut)
     : ExternType(ExternKind::Global), type(type), mut(mut) {}
 
-//// EventType ////
+//// TagType ////
 // static
-inline bool EventType::classof(const ExternType* type) {
+inline bool TagType::classof(const ExternType* type) {
   return type->kind == skind;
 }
 
-inline EventType::EventType(EventAttr attr, const ValueTypes& signature)
-    : ExternType(ExternKind::Event), attr(attr), signature(signature) {}
+inline TagType::TagType(TagAttr attr, const ValueTypes& signature)
+    : ExternType(ExternKind::Tag), attr(attr), signature(signature) {}
 
 //// ImportType ////
 inline ImportType::ImportType(std::string module,
@@ -533,7 +533,7 @@ inline bool Extern::classof(const Object* obj) {
     case ObjectKind::Table:
     case ObjectKind::Memory:
     case ObjectKind::Global:
-    case ObjectKind::Event:
+    case ObjectKind::Tag:
       return true;
     default:
       return false;
@@ -782,22 +782,22 @@ inline const GlobalType& Global::type() const {
   return type_;
 }
 
-//// Event ////
+//// Tag ////
 // static
-inline bool Event::classof(const Object* obj) {
+inline bool Tag::classof(const Object* obj) {
   return obj->kind() == skind;
 }
 
 // static
-inline Event::Ptr Event::New(Store& store, EventType type) {
-  return store.Alloc<Event>(store, type);
+inline Tag::Ptr Tag::New(Store& store, TagType type) {
+  return store.Alloc<Tag>(store, type);
 }
 
-inline const ExternType& Event::extern_type() {
+inline const ExternType& Tag::extern_type() {
   return type_;
 }
 
-inline const EventType& Event::type() const {
+inline const TagType& Tag::type() const {
   return type_;
 }
 
@@ -884,8 +884,8 @@ inline const RefVec& Instance::globals() const {
   return globals_;
 }
 
-inline const RefVec& Instance::events() const {
-  return events_;
+inline const RefVec& Instance::tags() const {
+  return tags_;
 }
 
 inline const RefVec& Instance::exports() const {

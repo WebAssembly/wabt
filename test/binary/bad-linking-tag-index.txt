@@ -4,7 +4,7 @@
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }
-section(EVENT) {
+section(TAG) {
   count[1]
   attr[0]
   sig[0]
@@ -19,12 +19,12 @@ section("linking") {
     type[4]
     flags[1]
     index[1]
-    str("event OOB")
+    str("tag OOB")
   }
 }
 (;; STDERR ;;;
-error: invalid event index: 1
-000002e: error: OnEventSymbol callback failed
-error: invalid event index: 1
-000002e: error: OnEventSymbol callback failed
+error: invalid tag index: 1
+000002c: error: OnTagSymbol callback failed
+error: invalid tag index: 1
+000002c: error: OnTagSymbol callback failed
 ;;; STDERR ;;)

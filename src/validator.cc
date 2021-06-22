@@ -684,10 +684,10 @@ Result Validator::CheckModule() {
           break;
         }
 
-        case ExternalKind::Event: {
-          auto&& event = cast<EventImport>(f->import.get())->event;
-          result_ |= validator_.OnEvent(
-              field.loc, GetFuncTypeIndex(field.loc, event.decl));
+        case ExternalKind::Tag: {
+          auto&& tag = cast<TagImport>(f->import.get())->tag;
+          result_ |= validator_.OnTag(field.loc,
+                                      GetFuncTypeIndex(field.loc, tag.decl));
           break;
         }
       }
@@ -758,11 +758,11 @@ Result Validator::CheckModule() {
     }
   }
 
-  // Event section.
+  // Tag section.
   for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<EventModuleField>(&field)) {
-      result_ |= validator_.OnEvent(field.loc,
-                                    GetFuncTypeIndex(field.loc, f->event.decl));
+    if (auto* f = dyn_cast<TagModuleField>(&field)) {
+      result_ |=
+          validator_.OnTag(field.loc, GetFuncTypeIndex(field.loc, f->tag.decl));
     }
   }
 

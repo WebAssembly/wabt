@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (event $e1 (param i32))
+  (tag $e1 (param i32))
   (func
     try (result i32 i32)
       i32.const 1
@@ -50,13 +50,13 @@
 000001a: 01                                        ; function 0 signature index
 000001b: 01                                        ; function 1 signature index
 0000018: 03                                        ; FIXUP section size
-; section "Event" (13)
+; section "Tag" (13)
 000001c: 0d                                        ; section code
 000001d: 00                                        ; section size (guess)
-000001e: 01                                        ; event count
-; event 0
-000001f: 00                                        ; event attribute
-0000020: 00                                        ; event signature index
+000001e: 01                                        ; tag count
+; tag 0
+000001f: 00                                        ; tag attribute
+0000020: 00                                        ; tag signature index
 000001d: 03                                        ; FIXUP section size
 ; section "DataCount" (12)
 0000021: 0c                                        ; section code
@@ -77,7 +77,7 @@
 000002d: 41                                        ; i32.const
 000002e: 02                                        ; i32 literal
 000002f: 07                                        ; catch
-0000030: 00                                        ; catch event
+0000030: 00                                        ; catch tag
 0000031: 1a                                        ; drop
 0000032: 41                                        ; i32.const
 0000033: 03                                        ; i32 literal
@@ -96,7 +96,7 @@
 000003e: 00                                        ; block type function index
 000003f: 1a                                        ; drop
 0000040: 07                                        ; catch
-0000041: 00                                        ; catch event
+0000041: 00                                        ; catch tag
 0000042: 1a                                        ; drop
 0000043: 0b                                        ; end
 0000044: 0b                                        ; end

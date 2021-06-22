@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (event $e1)
+  (tag $e1)
   (func
     try
     catch $e1
@@ -25,13 +25,13 @@
 0000010: 01                                        ; num functions
 0000011: 00                                        ; function 0 signature index
 000000f: 02                                        ; FIXUP section size
-; section "Event" (13)
+; section "Tag" (13)
 0000012: 0d                                        ; section code
 0000013: 00                                        ; section size (guess)
-0000014: 01                                        ; event count
-; event 0
-0000015: 00                                        ; event attribute
-0000016: 00                                        ; event signature index
+0000014: 01                                        ; tag count
+; tag 0
+0000015: 00                                        ; tag attribute
+0000016: 00                                        ; tag signature index
 0000013: 03                                        ; FIXUP section size
 ; section "DataCount" (12)
 0000017: 0c                                        ; section code
@@ -48,7 +48,7 @@
 000001f: 06                                        ; try
 0000020: 40                                        ; void
 0000021: 07                                        ; catch
-0000022: 00                                        ; catch event
+0000022: 00                                        ; catch tag
 0000023: 09                                        ; rethrow
 0000024: 00                                        ; rethrow depth
 0000025: 0b                                        ; end

@@ -1,0 +1,9 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module (tag (result i32)))
+(;; STDERR ;;;
+out/test/typecheck/bad-tag-results.txt:4:10: error: Tag signature must have 0 results.
+(module (tag (result i32)))
+         ^^^
+;;; STDERR ;;)

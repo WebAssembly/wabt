@@ -1,7 +1,7 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
-  (event $e)
+  (tag $e)
   (func
     try $l1
       nop

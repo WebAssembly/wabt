@@ -1,9 +1,0 @@
-;;; TOOL: wat2wasm
-;;; ARGS: --enable-exceptions
-;;; ERROR: 1
-(module (event (result i32)))
-(;; STDERR ;;;
-out/test/typecheck/bad-event-results.txt:4:10: error: Event signature must have 0 results.
-(module (event (result i32)))
-         ^^^^^
-;;; STDERR ;;)

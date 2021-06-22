@@ -2,7 +2,7 @@
 ;;; ARGS: --enable-exceptions
 ;;; ERROR: 1
 (module
-  (event (param i32))
+  (tag (param i32))
   (func
     try
     catch 0

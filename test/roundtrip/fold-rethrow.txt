@@ -1,7 +1,7 @@
 ;;; TOOL: run-roundtrip
 ;;; ARGS: --stdout --fold-exprs --enable-exceptions
 (module
-  (event $e0 (param i32))
+  (tag $e0 (param i32))
 
   (func
     try
@@ -19,5 +19,5 @@
       (do)
       (catch 0
         (rethrow 0 (;@1;)))))
-  (event (;0;) (type 0) (param i32)))
+  (tag (;0;) (type 0) (param i32)))
 ;;; STDOUT ;;)

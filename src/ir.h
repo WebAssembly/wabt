@@ -669,8 +669,8 @@ class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
   uint32_t consistency_model;
 };
 
-struct Event {
-  explicit Event(string_view name) : name(name.to_string()) {}
+struct Tag {
+  explicit Tag(string_view name) : name(name.to_string()) {}
 
   std::string name;
   FuncDeclaration decl;
@@ -883,12 +883,12 @@ class GlobalImport : public ImportMixin<ExternalKind::Global> {
   Global global;
 };
 
-class EventImport : public ImportMixin<ExternalKind::Event> {
+class TagImport : public ImportMixin<ExternalKind::Tag> {
  public:
-  explicit EventImport(string_view name = string_view())
-      : ImportMixin<ExternalKind::Event>(), event(name) {}
+  explicit TagImport(string_view name = string_view())
+      : ImportMixin<ExternalKind::Tag>(), tag(name) {}
 
-  Event event;
+  Tag tag;
 };
 
 struct Export {
@@ -908,7 +908,7 @@ enum class ModuleFieldType {
   Memory,
   DataSegment,
   Start,
-  Event
+  Tag
 };
 
 class ModuleField : public intrusive_list_base<ModuleField> {
@@ -1026,13 +1026,13 @@ class DataSegmentModuleField
   DataSegment data_segment;
 };
 
-class EventModuleField : public ModuleFieldMixin<ModuleFieldType::Event> {
+class TagModuleField : public ModuleFieldMixin<ModuleFieldType::Tag> {
  public:
-  explicit EventModuleField(const Location& loc = Location(),
-                            string_view name = string_view())
-      : ModuleFieldMixin<ModuleFieldType::Event>(loc), event(name) {}
+  explicit TagModuleField(const Location& loc = Location(),
+                          string_view name = string_view())
+      : ModuleFieldMixin<ModuleFieldType::Tag>(loc), tag(name) {}
 
-  Event event;
+  Tag tag;
 };
 
 class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
@@ -1062,8 +1062,8 @@ struct Module {
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
   const Export* GetExport(string_view) const;
-  Event* GetEvent(const Var&) const;
-  Index GetEventIndex(const Var&) const;
+  Tag* GetTag(const Var&) const;
+  Index GetTagIndex(const Var&) const;
   const DataSegment* GetDataSegment(const Var&) const;
   DataSegment* GetDataSegment(const Var&);
   Index GetDataSegmentIndex(const Var&) const;
@@ -1079,7 +1079,7 @@ struct Module {
   // TODO(binji): move this into a builder class?
   void AppendField(std::unique_ptr<DataSegmentModuleField>);
   void AppendField(std::unique_ptr<ElemSegmentModuleField>);
-  void AppendField(std::unique_ptr<EventModuleField>);
+  void AppendField(std::unique_ptr<TagModuleField>);
   void AppendField(std::unique_ptr<ExportModuleField>);
   void AppendField(std::unique_ptr<FuncModuleField>);
   void AppendField(std::unique_ptr<TypeModuleField>);
@@ -1095,7 +1095,7 @@ struct Module {
   std::string name;
   ModuleFieldList fields;
 
-  Index num_event_imports = 0;
+  Index num_tag_imports = 0;
   Index num_func_imports = 0;
   Index num_table_imports = 0;
   Index num_memory_imports = 0;
@@ -1103,7 +1103,7 @@ struct Module {
 
   // Cached for convenience; the pointers are shared with values that are
   // stored in either ModuleField or Import.
-  std::vector<Event*> events;
+  std::vector<Tag*> tags;
   std::vector<Func*> funcs;
   std::vector<Global*> globals;
   std::vector<Import*> imports;
@@ -1115,7 +1115,7 @@ struct Module {
   std::vector<DataSegment*> data_segments;
   std::vector<Var*> starts;
 
-  BindingHash event_bindings;
+  BindingHash tag_bindings;
   BindingHash func_bindings;
   BindingHash global_bindings;
   BindingHash export_bindings;

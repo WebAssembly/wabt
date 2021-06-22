@@ -302,7 +302,7 @@ enum class RelocType {
   GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
   FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
   SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
-  EventIndexLEB = 10,     // Used in throw instructions
+  TagIndexLEB = 10,       // Used in throw instructions
   MemoryAddressRelSLEB = 11,  // In PIC code, addr relative to __memory_base
   TableIndexRelSLEB = 12,   // In PIC code, table index relative to __table_base
   GlobalIndexI32 = 13,      // e.g. Global index in data (e.g. DWARF)
@@ -342,7 +342,7 @@ enum class SymbolType {
   Data = 1,
   Global = 2,
   Section = 3,
-  Event = 4,
+  Tag = 4,
   Table = 5,
 };
 
@@ -380,10 +380,10 @@ enum class ExternalKind {
   Table = 1,
   Memory = 2,
   Global = 3,
-  Event = 4,
+  Tag = 4,
 
   First = Func,
-  Last = Event,
+  Last = Tag,
 };
 static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 
@@ -447,8 +447,8 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
       return "data";
     case SymbolType::Section:
       return "section";
-    case SymbolType::Event:
-      return "event";
+    case SymbolType::Tag:
+      return "tag";
     case SymbolType::Table:
       return "table";
     default:

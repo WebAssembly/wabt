@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
-  (tag $e1)
-  (func throw $e1))
+  (import "foo" "1" (tag (param f64 f32))))
