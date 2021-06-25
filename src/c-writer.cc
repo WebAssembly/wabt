@@ -2125,11 +2125,23 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I32Extend8S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u32)(s32)(s8)(u8)");
+      break;
+
     case Opcode::I32Extend16S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u32)(s32)(s16)(u16)");
+      break;
+
     case Opcode::I64Extend8S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s8)(u8)");
+      break;
+
     case Opcode::I64Extend16S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s16)(u16)");
+      break;
+
     case Opcode::I64Extend32S:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s32)(u32)");
       break;
 
     default:
