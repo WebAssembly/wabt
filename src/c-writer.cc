@@ -1914,14 +1914,35 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::I32TruncSatF32S:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_S_F32");
+      break;
+
     case Opcode::I64TruncSatF32S:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_S_F32");
+      break;
+
     case Opcode::I32TruncSatF64S:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_S_F64");
+      break;
+
     case Opcode::I64TruncSatF64S:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_S_F64");
+      break;
+
     case Opcode::I32TruncSatF32U:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_U_F32");
+      break;
+
     case Opcode::I64TruncSatF32U:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_U_F32");
+      break;
+
     case Opcode::I32TruncSatF64U:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_U_F64");
+      break;
+
     case Opcode::I64TruncSatF64U:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_U_F64");
       break;
 
     case Opcode::F32ConvertI32S:
