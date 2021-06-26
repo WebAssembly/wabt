@@ -303,7 +303,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnTernaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }
-  Result OnUnwindExpr() override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
   Result EndCodeSection() override { return Result::Ok; }
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override {

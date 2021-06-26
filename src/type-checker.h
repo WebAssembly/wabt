@@ -125,7 +125,6 @@ class TypeChecker {
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);
   Result OnUnary(Opcode);
   Result OnUnreachable();
-  Result OnUnwind();
   Result EndFunction();
 
   static Result CheckType(Type actual, Type expected);

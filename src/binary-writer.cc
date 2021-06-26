@@ -1006,11 +1006,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
           }
           WriteOpcode(stream_, Opcode::End);
           break;
-        case TryKind::Unwind:
-          WriteOpcode(stream_, Opcode::Unwind);
-          WriteExprList(func, try_expr->unwind);
-          WriteOpcode(stream_, Opcode::End);
-          break;
         case TryKind::Delegate:
           WriteOpcode(stream_, Opcode::Delegate);
           WriteU32Leb128(stream_,

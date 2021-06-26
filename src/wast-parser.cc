@@ -2591,10 +2591,6 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       if (IsCatch(Peek())) {
         CHECK_RESULT(ParseCatchInstrList(&expr->catches));
         expr->kind = TryKind::Catch;
-      } else if (PeekMatch(TokenType::Unwind)) {
-        Consume();
-        CHECK_RESULT(ParseInstrList(&expr->unwind));
-        expr->kind = TryKind::Unwind;
       } else if (PeekMatch(TokenType::Delegate)) {
         Consume();
         Var var;
@@ -2602,7 +2598,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
         expr->delegate_target = var;
         expr->kind = TryKind::Delegate;
       } else {
-        return ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
+        return ErrorExpected({"catch", "catch_all", "delegate"});
       }
       CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
       expr->block.end_loc = GetLocation();
@@ -2779,12 +2775,6 @@ Result WastParser::ParseExpr(ExprList* exprs) {
             CHECK_RESULT(ParseCatchExprList(&expr->catches));
             expr->kind = TryKind::Catch;
             break;
-          case TokenType::Unwind:
-            Consume();
-            CHECK_RESULT(ParseTerminatingInstrList(&expr->unwind));
-            expr->kind = TryKind::Unwind;
-            EXPECT(Rpar);
-            break;
           case TokenType::Delegate: {
             Consume();
             Var var;
@@ -2795,7 +2785,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
             break;
           }
           default:
-            ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
+            ErrorExpected({"catch", "catch_all", "delegate"});
             break;
         }
         CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));

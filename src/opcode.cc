@@ -65,7 +65,6 @@ bool Opcode::IsEnabled(const Features& features) const {
   switch (enum_) {
     case Opcode::Try:
     case Opcode::Catch:
-    case Opcode::Unwind:
     case Opcode::Delegate:
     case Opcode::Throw:
     case Opcode::Rethrow:

@@ -604,8 +604,7 @@ Result TypeChecker::OnEnd(Label* label,
 Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {
-      "function", "block", "loop", "if", "if false branch", "try",
-      "try catch", "try unwind"};
+      "function", "block", "loop", "if", "if false branch", "try", "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -618,15 +617,7 @@ Result TypeChecker::OnEnd() {
   }
 
   const char* desc = s_label_type_name[static_cast<int>(label->label_type)];
-  if (label->label_type == LabelType::Unwind) {
-    // Unwind is unusual in that it always unwinds the control stack at the end,
-    // and therefore the return type of the unwind expressions are not the same
-    // as the block return type.
-    TypeVector empty;
-    result |= OnEnd(label, empty, desc, desc);
-  } else {
-    result |= OnEnd(label, label->result_types, desc, desc);
-  }
+  result |= OnEnd(label, label->result_types, desc, desc);
   return result;
 }
 
@@ -912,19 +903,6 @@ Result TypeChecker::OnSimdShuffleOp(Opcode opcode, v128 lane_idx) {
 
 Result TypeChecker::OnUnreachable() {
   return SetUnreachable();
-}
-
-Result TypeChecker::OnUnwind() {
-  Result result = Result::Ok;
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  result |= CheckLabelType(label, LabelType::Try);
-  result |= PopAndCheckSignature(label->result_types, "try block");
-  result |= CheckTypeStackEnd("try block");
-  ResetTypeStackToLabel(label);
-  label->label_type = LabelType::Unwind;
-  label->unreachable = false;
-  return result;
 }
 
 Result TypeChecker::EndFunction() {

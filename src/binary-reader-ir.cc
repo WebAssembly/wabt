@@ -199,7 +199,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
-  Result OnUnwindExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdLoadLaneExpr(Opcode opcode,
@@ -813,7 +812,6 @@ Result BinaryReaderIR::OnEndExpr() {
 
     case LabelType::Func:
     case LabelType::Catch:
-    case LabelType::Unwind:
       break;
   }
 
@@ -1015,7 +1013,7 @@ Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
   if (try_->kind == TryKind::Invalid) {
     try_->kind = TryKind::Catch;
   } else if (try_->kind != TryKind::Catch) {
-    PrintError("catch not allowed in try-unwind or try-delegate");
+    PrintError("catch not allowed in try-delegate");
     return Result::Error;
   }
 
@@ -1032,28 +1030,6 @@ Result BinaryReaderIR::OnCatchAllExpr() {
   return AppendCatch(Catch(GetLocation()));
 }
 
-Result BinaryReaderIR::OnUnwindExpr() {
-  LabelNode* label = nullptr;
-  CHECK_RESULT(TopLabel(&label));
-
-  if (label->label_type != LabelType::Try) {
-    PrintError("unwind not inside try block");
-    return Result::Error;
-  }
-
-  auto* try_ = cast<TryExpr>(label->context);
-
-  if (try_->kind == TryKind::Invalid) {
-    try_->kind = TryKind::Unwind;
-  } else if (try_->kind != TryKind::Unwind) {
-    PrintError("unwind not allowed in try-catch or try-delegate");
-    return Result::Error;
-  }
-
-  label->exprs = &try_->unwind;
-  return Result::Ok;
-}
-
 Result BinaryReaderIR::OnDelegateExpr(Index depth) {
   LabelNode* label = nullptr;
   CHECK_RESULT(TopLabel(&label));
@@ -1068,7 +1044,7 @@ Result BinaryReaderIR::OnDelegateExpr(Index depth) {
   if (try_->kind == TryKind::Invalid) {
     try_->kind = TryKind::Delegate;
   } else if (try_->kind != TryKind::Delegate) {
-    PrintError("delegate not allowed in try-catch or try-unwind");
+    PrintError("delegate not allowed in try-catch");
     return Result::Error;
   }
 

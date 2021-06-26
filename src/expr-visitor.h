@@ -42,7 +42,6 @@ class ExprVisitor {
     Loop,
     Try,
     Catch,
-    Unwind,
   };
 
   Result HandleDefaultState(Expr*);
@@ -118,7 +117,6 @@ class ExprVisitor::Delegate {
   virtual Result OnUnreachableExpr(UnreachableExpr*) = 0;
   virtual Result BeginTryExpr(TryExpr*) = 0;
   virtual Result OnCatchExpr(TryExpr*, Catch*) = 0;
-  virtual Result OnUnwindExpr(TryExpr*) = 0;
   virtual Result OnDelegateExpr(TryExpr*) = 0;
   virtual Result EndTryExpr(TryExpr*) = 0;
   virtual Result OnThrowExpr(ThrowExpr*) = 0;
@@ -193,7 +191,6 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override { return Result::Ok; }
   Result BeginTryExpr(TryExpr*) override { return Result::Ok; }
   Result OnCatchExpr(TryExpr*, Catch*) override { return Result::Ok; }
-  Result OnUnwindExpr(TryExpr*) override { return Result::Ok; }
   Result OnDelegateExpr(TryExpr*) override { return Result::Ok; }
   Result EndTryExpr(TryExpr*) override { return Result::Ok; }
   Result OnThrowExpr(ThrowExpr*) override { return Result::Ok; }

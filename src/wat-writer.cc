@@ -558,7 +558,6 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
-  Result OnUnwindExpr(TryExpr*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -894,14 +893,6 @@ Result WatWriter::ExprVisitorDelegate::OnCatchExpr(
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnUnwindExpr(TryExpr* expr) {
-  writer_->Dedent();
-  writer_->WritePutsNewline(Opcode::Unwind_Opcode.GetName());
-  writer_->Indent();
-  writer_->SetTopLabelType(LabelType::Unwind);
-  return Result::Ok;
-}
-
 Result WatWriter::ExprVisitorDelegate::OnDelegateExpr(TryExpr* expr) {
   writer_->Dedent();
   writer_->WritePutsSpace(Opcode::Delegate_Opcode.GetName());
@@ -1172,14 +1163,6 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
             FlushExprTreeStack();
             WriteCloseNewline();
           }
-          break;
-        case TryKind::Unwind:
-          WritePuts("(", NextChar::None);
-          WritePutsNewline(Opcode::Unwind_Opcode.GetName());
-          Indent();
-          WriteFoldedExprList(try_expr->unwind);
-          FlushExprTreeStack();
-          WriteCloseNewline();
           break;
         case TryKind::Delegate:
           WritePuts("(", NextChar::None);
