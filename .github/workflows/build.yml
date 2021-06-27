@@ -20,6 +20,7 @@ jobs:
     - name: install tools
       run: pip3 install flake8==3.7.8
     - run: flake8
+    - run: ./scripts/clang-format-diff.sh
   build:
     name: build
     runs-on: ${{ matrix.os }}
