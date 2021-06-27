@@ -173,15 +173,14 @@ static void BindImports(const Module::Ptr& module, RefVec& imports) {
       auto import_name = StringPrintf("%s.%s", import.type.module.c_str(),
                                       import.type.name.c_str());
 
-      auto host_func =
-          HostFunc::New(s_store, func_type,
-                        [=](Thread& thread, const Values& params,
-                            Values& results, Trap::Ptr* trap) -> Result {
-                          printf("called host ");
-                          WriteCall(stream, import_name, func_type, params,
-                                    results, *trap);
-                          return Result::Ok;
-                        });
+      auto host_func = HostFunc::New(
+          s_store, func_type,
+          [=](Thread& thread, const Values& params, Values& results,
+              Trap::Ptr* trap) -> Result {
+            printf("called host ");
+            WriteCall(stream, import_name, func_type, params, results, *trap);
+            return Result::Ok;
+          });
       imports.push_back(host_func.ref());
       continue;
     }

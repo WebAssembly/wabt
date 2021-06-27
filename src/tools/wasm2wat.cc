@@ -20,8 +20,8 @@
 #include <cstdlib>
 
 #include "src/apply-names.h"
-#include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
+#include "src/binary-reader.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/generate-names.h"
@@ -46,7 +46,7 @@ static std::unique_ptr<FileStream> s_log_stream;
 static bool s_validate = true;
 
 static const char s_description[] =
-R"(  Read a file in the WebAssembly binary format, and convert it to
+    R"(  Read a file in the WebAssembly binary format, and convert it to
   the WebAssembly text format.
 
 examples:

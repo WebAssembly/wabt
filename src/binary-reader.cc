@@ -538,7 +538,7 @@ Result BinaryReader::ReadInitExpr(Index index, Type required) {
   }
 
   if (required == Type::I32 && opcode != Opcode::I32Const &&
-    opcode != Opcode::GlobalGet) {
+      opcode != Opcode::GlobalGet) {
     PrintError("expected i32 init_expr");
     return Result::Error;
   }

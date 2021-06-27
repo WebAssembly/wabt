@@ -22,8 +22,8 @@
 #include <cstdio>
 #include <cstring>
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #if COMPILER_IS_MSVC
 #include <fcntl.h>

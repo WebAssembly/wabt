@@ -25,8 +25,8 @@ BinarySectionOrder GetSectionOrder(BinarySection sec) {
     return BinarySectionOrder::Name;
     WABT_FOREACH_BINARY_SECTION(V)
 #undef V
-  default:
-    WABT_UNREACHABLE;
+    default:
+      WABT_UNREACHABLE;
   }
 }
 
@@ -43,16 +43,8 @@ const char* GetSectionName(BinarySection sec) {
 }
 
 const char* NameSubsectionName[] = {
-  "module",
-  "function",
-  "local",
-  "label",
-  "type",
-  "table",
-  "memory",
-  "global",
-  "elemseg",
-  "dataseg",
+    "module", "function", "local",  "label",   "type",
+    "table",  "memory",   "global", "elemseg", "dataseg",
 };
 
 const char* GetNameSectionSubsectionName(NameSectionSubsection subsec) {

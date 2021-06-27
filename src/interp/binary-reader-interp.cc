@@ -671,11 +671,21 @@ Result BinaryReaderInterp::OnExport(Index index,
 
   std::unique_ptr<ExternType> type;
   switch (kind) {
-    case ExternalKind::Func:   type = func_types_[item_index].Clone(); break;
-    case ExternalKind::Table:  type = table_types_[item_index].Clone(); break;
-    case ExternalKind::Memory: type = memory_types_[item_index].Clone(); break;
-    case ExternalKind::Global: type = global_types_[item_index].Clone(); break;
-    case ExternalKind::Tag:    type = tag_types_[item_index].Clone(); break;
+    case ExternalKind::Func:
+      type = func_types_[item_index].Clone();
+      break;
+    case ExternalKind::Table:
+      type = table_types_[item_index].Clone();
+      break;
+    case ExternalKind::Memory:
+      type = memory_types_[item_index].Clone();
+      break;
+    case ExternalKind::Global:
+      type = global_types_[item_index].Clone();
+      break;
+    case ExternalKind::Tag:
+      type = tag_types_[item_index].Clone();
+      break;
   }
   module_.exports.push_back(
       ExportDesc{ExportType(name.to_string(), std::move(type)), item_index});
@@ -911,15 +921,16 @@ Result BinaryReaderInterp::OnSimdLoadLaneExpr(Opcode opcode,
                                               Address alignment_log2,
                                               Address offset,
                                               uint64_t value) {
-  CHECK_RESULT(validator_.OnSimdLoadLane(loc, opcode, GetAlignment(alignment_log2), value));
+  CHECK_RESULT(validator_.OnSimdLoadLane(loc, opcode,
+                                         GetAlignment(alignment_log2), value));
   istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnSimdStoreLaneExpr(Opcode opcode,
-                                              Address alignment_log2,
-                                              Address offset,
-                                              uint64_t value) {
+                                               Address alignment_log2,
+                                               Address offset,
+                                               uint64_t value) {
   CHECK_RESULT(validator_.OnSimdStoreLane(loc, opcode,
                                           GetAlignment(alignment_log2), value));
   istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));

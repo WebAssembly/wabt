@@ -49,7 +49,7 @@ class Type {
     Void = -0x40,       // 0x40
     ___ = Void,         // Convenient for the opcode table in opcode.h
 
-    Any = 0,          // Not actually specified, but useful for type-checking
+    Any = 0,   // Not actually specified, but useful for type-checking
     I8U = 4,   // Not actually specified, but used internally with load/store
     I16U = 6,  // Not actually specified, but used internally with load/store
     I32U = 7,  // Not actually specified, but used internally with load/store
@@ -71,29 +71,47 @@ class Type {
 
   const char* GetName() const {
     switch (enum_) {
-      case Type::I32:       return "i32";
-      case Type::I64:       return "i64";
-      case Type::F32:       return "f32";
-      case Type::F64:       return "f64";
-      case Type::V128:      return "v128";
-      case Type::I8:        return "i8";
-      case Type::I16:       return "i16";
-      case Type::FuncRef:   return "funcref";
-      case Type::Func:      return "func";
-      case Type::Void:      return "void";
-      case Type::Any:       return "any";
-      case Type::ExternRef: return "externref";
-      default:              return "<type_index>";
+      case Type::I32:
+        return "i32";
+      case Type::I64:
+        return "i64";
+      case Type::F32:
+        return "f32";
+      case Type::F64:
+        return "f64";
+      case Type::V128:
+        return "v128";
+      case Type::I8:
+        return "i8";
+      case Type::I16:
+        return "i16";
+      case Type::FuncRef:
+        return "funcref";
+      case Type::Func:
+        return "func";
+      case Type::Void:
+        return "void";
+      case Type::Any:
+        return "any";
+      case Type::ExternRef:
+        return "externref";
+      default:
+        return "<type_index>";
     }
   }
 
   const char* GetRefKindName() const {
     switch (enum_) {
-      case Type::FuncRef:   return "func";
-      case Type::ExternRef: return "extern";
-      case Type::Struct:    return "struct";
-      case Type::Array:     return "array";
-      default:              return "<invalid>";
+      case Type::FuncRef:
+        return "func";
+      case Type::ExternRef:
+        return "extern";
+      case Type::Struct:
+        return "struct";
+      case Type::Array:
+        return "array";
+      default:
+        return "<invalid>";
     }
   }
 
@@ -108,7 +126,7 @@ class Type {
   //   (type $T (func (result i32 i64)))
   //   ...
   //   (block (type $T) ...)
-  // 
+  //
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
   Index GetIndex() const {

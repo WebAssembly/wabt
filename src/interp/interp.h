@@ -44,7 +44,8 @@ class ElemSegment;
 class Module;
 class Instance;
 class Thread;
-template <typename T> class RefPtr;
+template <typename T>
+class RefPtr;
 
 using s8 = int8_t;
 using u8 = uint8_t;
@@ -63,8 +64,10 @@ using Buffer = std::vector<u8>;
 using ValueType = wabt::Type;
 using ValueTypes = std::vector<ValueType>;
 
-template <typename T> bool HasType(ValueType);
-template <typename T> void RequireType(ValueType);
+template <typename T>
+bool HasType(ValueType);
+template <typename T>
+void RequireType(ValueType);
 bool IsReference(ValueType);
 bool TypesMatch(ValueType expected, ValueType actual);
 
@@ -141,13 +144,13 @@ struct Simd {
 
   inline T& operator[](u8 idx) {
 #if WABT_BIG_ENDIAN
-    idx = (~idx) & (L-1);
+    idx = (~idx) & (L - 1);
 #endif
     return v[idx];
   }
   inline T operator[](u8 idx) const {
 #if WABT_BIG_ENDIAN
-    idx = (~idx) & (L-1);
+    idx = (~idx) & (L - 1);
 #endif
     return v[idx];
   }
@@ -405,8 +408,8 @@ class FreeList {
   const T& Get(Index) const;
   T& Get(Index);
 
-  Index size() const;  // 1 greater than the maximum index.
-  Index count() const; // The number of used elements.
+  Index size() const;   // 1 greater than the maximum index.
+  Index count() const;  // The number of used elements.
 
  private:
   // TODO: Optimize memory layout? We could probably store all of this

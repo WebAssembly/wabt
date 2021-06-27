@@ -24,23 +24,38 @@
 namespace wabt {
 
 // Names starting with "u" are unsigned, the rest are "signed or doesn't matter"
-inline const char *GetDecompTypeName(Type t) {
+inline const char* GetDecompTypeName(Type t) {
   switch (t) {
-    case Type::I8: return "byte";
-    case Type::I8U: return "ubyte";
-    case Type::I16: return "short";
-    case Type::I16U: return "ushort";
-    case Type::I32: return "int";
-    case Type::I32U: return "uint";
-    case Type::I64: return "long";
-    case Type::F32: return "float";
-    case Type::F64: return "double";
-    case Type::V128: return "simd";
-    case Type::Func: return "func";
-    case Type::FuncRef: return "funcref";
-    case Type::ExternRef: return "externref";
-    case Type::Void: return "void";
-    default: return "ILLEGAL";
+    case Type::I8:
+      return "byte";
+    case Type::I8U:
+      return "ubyte";
+    case Type::I16:
+      return "short";
+    case Type::I16U:
+      return "ushort";
+    case Type::I32:
+      return "int";
+    case Type::I32U:
+      return "uint";
+    case Type::I64:
+      return "long";
+    case Type::F32:
+      return "float";
+    case Type::F64:
+      return "double";
+    case Type::V128:
+      return "simd";
+    case Type::Func:
+      return "func";
+    case Type::FuncRef:
+      return "funcref";
+    case Type::ExternRef:
+      return "externref";
+    case Type::Void:
+      return "void";
+    default:
+      return "ILLEGAL";
   }
 }
 
@@ -55,9 +70,12 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
     // FIXME: change into a new column in opcode.def instead?
     auto is_unsigned = name.substr(name.size() - 2) == "_u";
     switch (opc.GetMemorySize()) {
-      case 1: return is_unsigned ? Type::I8U : Type::I8;
-      case 2: return is_unsigned ? Type::I16U : Type::I16;
-      case 4: return is_unsigned ? Type::I32U : Type::I32;
+      case 1:
+        return is_unsigned ? Type::I8U : Type::I8;
+      case 2:
+        return is_unsigned ? Type::I16U : Type::I16;
+      case 4:
+        return is_unsigned ? Type::I32U : Type::I32;
     }
   }
   return operand_type;
@@ -84,18 +102,19 @@ struct LoadStoreTracking {
   };
 
   void Track(const Node& n) {
-    for (auto& c : n.children) Track(c);
+    for (auto& c : n.children)
+      Track(c);
     switch (n.etype) {
       case ExprType::Load: {
         auto& le = *cast<LoadExpr>(n.e);
-        LoadStore(le.offset, le.opcode, le.opcode.GetResultType(),
-                  le.align, n.children[0]);
+        LoadStore(le.offset, le.opcode, le.opcode.GetResultType(), le.align,
+                  n.children[0]);
         break;
       }
       case ExprType::Store: {
         auto& se = *cast<StoreExpr>(n.e);
-        LoadStore(se.offset, se.opcode, se.opcode.GetParamType2(),
-                  se.align, n.children[0]);
+        LoadStore(se.offset, se.opcode, se.opcode.GetParamType2(), se.align,
+                  n.children[0]);
         break;
       }
       default:
@@ -117,7 +136,10 @@ struct LoadStoreTracking {
     }
   }
 
-  void LoadStore(uint64_t offset, Opcode opc, Type type, Address align,
+  void LoadStore(uint64_t offset,
+                 Opcode opc,
+                 Type type,
+                 Address align,
                  const Node& addr_exp) {
     auto byte_size = opc.GetMemorySize();
     type = GetMemoryType(type, opc);
@@ -131,10 +153,8 @@ struct LoadStoreTracking {
     auto& access = var.accesses[offset];
     // Check if previous access at this offset (if any) is of same size
     // and type (see Checklayouts below).
-    if (access.byte_size &&
-        ((access.byte_size != byte_size) ||
-         (access.type != type) ||
-         (access.align != align)))
+    if (access.byte_size && ((access.byte_size != byte_size) ||
+                             (access.type != type) || (access.align != align)))
       access.is_uniform = false;
     // Also exclude weird alignment accesses from structs.
     if (!opc.IsNaturallyAligned(align))
@@ -202,9 +222,7 @@ struct LoadStoreTracking {
   }
 
   std::string GenAlign(Address align, Opcode opc) const {
-    return opc.IsNaturallyAligned(align)
-      ? ""
-      : cat("@", std::to_string(align));
+    return opc.IsNaturallyAligned(align) ? "" : cat("@", std::to_string(align));
   }
 
   std::string GenTypeDecl(const std::string& name) const {
@@ -215,7 +233,8 @@ struct LoadStoreTracking {
     if (it->second.struct_layout) {
       std::string s = "{ ";
       for (auto& access : it->second.accesses) {
-        if (access.second.idx) s += ", ";
+        if (access.second.idx)
+          s += ", ";
         s += IdxToName(access.second.idx);
         s += ':';
         s += GetDecompTypeName(access.second.type);
@@ -243,7 +262,7 @@ struct LoadStoreTracking {
     }
     if (it->second.struct_layout) {
       auto ait = it->second.accesses.find(offset);
-      assert (ait != it->second.accesses.end());
+      assert(ait != it->second.accesses.end());
       return IdxToName(ait->second.idx);
     }
     // Not a struct, see if it is a typed pointer.
@@ -253,9 +272,7 @@ struct LoadStoreTracking {
     return "";
   }
 
-  void Clear() {
-    vars.clear();
-  }
+  void Clear() { vars.clear(); }
 
   std::map<std::string, LSVar> vars;
 };

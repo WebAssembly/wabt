@@ -1083,9 +1083,9 @@ Result SharedValidator::OnSimdLaneOp(const Location& loc,
 }
 
 Result SharedValidator::OnSimdLoadLane(const Location& loc,
-                                     Opcode opcode,
-                                     Address alignment,
-                                     uint64_t value) {
+                                       Opcode opcode,
+                                       Address alignment,
+                                       uint64_t value) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;

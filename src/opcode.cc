@@ -29,11 +29,18 @@ Opcode::Info Opcode::infos_[] = {
 #include "src/opcode.def"
 #undef WABT_OPCODE
 
-  {"<invalid>", "", Type::Void, {Type::Void, Type::Void, Type::Void}, 0, 0, 0, 0},
+    {"<invalid>",
+     "",
+     Type::Void,
+     {Type::Void, Type::Void, Type::Void},
+     0,
+     0,
+     0,
+     0},
 };
 
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                                     \
+                    text, decomp)                                             \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
 #include "src/opcode.def"
 #undef WABT_OPCODE

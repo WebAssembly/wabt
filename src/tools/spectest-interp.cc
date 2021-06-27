@@ -161,7 +161,7 @@ class RegisterCommand : public CommandMixin<CommandType::Register> {
 
 struct ExpectedValue {
   TypedValue value;
-  Type lane_type;             // Only valid if value.type == Type::V128.
+  Type lane_type;  // Only valid if value.type == Type::V128.
   // Up to 4 NaN values used, depending on |value.type| and |lane_type|:
   //   | type  | lane_type | valid                 |
   //   | f32   |           | nan[0]                |
@@ -174,13 +174,21 @@ struct ExpectedValue {
 
 int LaneCountFromType(Type type) {
   switch (type) {
-    case Type::I8: return 16;
-    case Type::I16: return 8;
-    case Type::I32: return 4;
-    case Type::I64: return 2;
-    case Type::F32: return 4;
-    case Type::F64: return 2;
-    default: assert(false); return 0;
+    case Type::I8:
+      return 16;
+    case Type::I16:
+      return 8;
+    case Type::I32:
+      return 4;
+    case Type::I64:
+      return 2;
+    case Type::F32:
+      return 4;
+    case Type::F64:
+      return 2;
+    default:
+      assert(false);
+      return 0;
   }
 }
 
@@ -889,7 +897,8 @@ wabt::Result JSONParser::ParseExpectedValues(
   return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseConstVector(ValueTypes* out_types, Values* out_values) {
+wabt::Result JSONParser::ParseConstVector(ValueTypes* out_types,
+                                          Values* out_values) {
   out_values->clear();
   EXPECT("[");
   bool first = true;
@@ -1182,16 +1191,16 @@ class CommandRunner {
   wabt::Result ReadInvalidTextModule(string_view module_filename,
                                      const std::string& header);
   wabt::Result ReadInvalidModule(int line_number,
-                           string_view module_filename,
-                           ModuleType module_type,
-                           const char* desc);
+                                 string_view module_filename,
+                                 ModuleType module_type,
+                                 const char* desc);
   wabt::Result ReadUnlinkableModule(int line_number,
-                              string_view module_filename,
-                              ModuleType module_type,
-                              const char* desc);
+                                    string_view module_filename,
+                                    ModuleType module_type,
+                                    const char* desc);
 
   Store store_;
-  Registry registry_;  // Used when importing.
+  Registry registry_;   // Used when importing.
   Registry instances_;  // Used when referencing module by name in invoke.
   ExportMap last_instance_;
   int passed_ = 0;
@@ -1218,15 +1227,15 @@ CommandRunner::CommandRunner() : store_(s_features) {
 
   for (auto&& print : print_funcs) {
     auto import_name = StringPrintf("spectest.%s", print.name);
-    spectest[print.name] = HostFunc::New(
-        store_, print.type,
-        [=](Thread& inst, const Values& params, Values& results,
-            Trap::Ptr* trap) -> wabt::Result {
-          printf("called host ");
-          WriteCall(s_stdout_stream.get(), import_name, print.type, params,
-                    results, *trap);
-          return wabt::Result::Ok;
-        });
+    spectest[print.name] =
+        HostFunc::New(store_, print.type,
+                      [=](Thread& inst, const Values& params, Values& results,
+                          Trap::Ptr* trap) -> wabt::Result {
+                        printf("called host ");
+                        WriteCall(s_stdout_stream.get(), import_name,
+                                  print.type, params, results, *trap);
+                        return wabt::Result::Ok;
+                      });
   }
 
   spectest["table"] =
@@ -1234,14 +1243,18 @@ CommandRunner::CommandRunner() : store_(s_features) {
 
   spectest["memory"] = interp::Memory::New(store_, MemoryType{Limits{1, 2}});
 
-  spectest["global_i32"] = interp::Global::New(
-      store_, GlobalType{ValueType::I32, Mutability::Const}, Value::Make(u32{666}));
-  spectest["global_i64"] = interp::Global::New(
-      store_, GlobalType{ValueType::I64, Mutability::Const}, Value::Make(u64{666}));
-  spectest["global_f32"] = interp::Global::New(
-      store_, GlobalType{ValueType::F32, Mutability::Const}, Value::Make(f32{666}));
-  spectest["global_f64"] = interp::Global::New(
-      store_, GlobalType{ValueType::F64, Mutability::Const}, Value::Make(f64{666}));
+  spectest["global_i32"] =
+      interp::Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
+                          Value::Make(u32{666}));
+  spectest["global_i64"] =
+      interp::Global::New(store_, GlobalType{ValueType::I64, Mutability::Const},
+                          Value::Make(u64{666}));
+  spectest["global_f32"] =
+      interp::Global::New(store_, GlobalType{ValueType::F32, Mutability::Const},
+                          Value::Make(f32{666}));
+  spectest["global_f64"] =
+      interp::Global::New(store_, GlobalType{ValueType::F64, Mutability::Const},
+                          Value::Make(f64{666}));
 }
 
 wabt::Result CommandRunner::Run(const Script& script) {
@@ -1349,7 +1362,7 @@ ActionResult CommandRunner::RunAction(int line_number,
 }
 
 wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
-                                            const std::string& header) {
+                                                  const std::string& header) {
   std::vector<uint8_t> file_data;
   wabt::Result result = ReadFile(module_filename, &file_data);
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
@@ -1368,7 +1381,7 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
 }
 
 interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
-                                               Errors* errors) {
+                                              Errors* errors) {
   std::vector<uint8_t> file_data;
 
   if (Failed(ReadFile(module_filename, &file_data))) {
@@ -1394,9 +1407,9 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
 }
 
 wabt::Result CommandRunner::ReadInvalidModule(int line_number,
-                                        string_view module_filename,
-                                        ModuleType module_type,
-                                        const char* desc) {
+                                              string_view module_filename,
+                                              ModuleType module_type,
+                                              const char* desc) {
   std::string header = StringPrintf(
       "%s:%d: %s passed", source_filename_.c_str(), line_number, desc);
 
@@ -1498,7 +1511,7 @@ wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
 wabt::Result CommandRunner::OnAssertMalformedCommand(
     const AssertMalformedCommand* command) {
   wabt::Result result = ReadInvalidModule(command->line, command->filename,
-                                    command->type, "assert_malformed");
+                                          command->type, "assert_malformed");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be malformed: \"%s\"",
                command->filename.c_str());
@@ -1554,7 +1567,7 @@ wabt::Result CommandRunner::OnAssertUnlinkableCommand(
 wabt::Result CommandRunner::OnAssertInvalidCommand(
     const AssertInvalidCommand* command) {
   wabt::Result result = ReadInvalidModule(command->line, command->filename,
-                                    command->type, "assert_invalid");
+                                          command->type, "assert_invalid");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be invalid: \"%s\"",
                command->filename.c_str());

@@ -18,8 +18,8 @@
 #define WABT_ERROR_FORMATTER_H_
 
 #include <cstdio>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "src/color.h"
 #include "src/error.h"

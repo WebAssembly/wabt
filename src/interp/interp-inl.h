@@ -255,7 +255,7 @@ RefPtr<T>::RefPtr(const RefPtr<U>& other)
 
 template <typename T>
 template <typename U>
-RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other){
+RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other) {
   obj_ = other.obj_;
   store_ = other.store_;
   root_index_ = store_ ? store_->CopyRoot(other.root_index_) : 0;
@@ -351,16 +351,40 @@ bool operator!=(const RefPtr<U>& lhs, const RefPtr<V>& rhs) {
 }
 
 //// ValueType ////
-inline bool IsReference(ValueType type) { return type.IsRef(); }
-template <> inline bool HasType<s32>(ValueType type) { return type == ValueType::I32; }
-template <> inline bool HasType<u32>(ValueType type) { return type == ValueType::I32; }
-template <> inline bool HasType<s64>(ValueType type) { return type == ValueType::I64; }
-template <> inline bool HasType<u64>(ValueType type) { return type == ValueType::I64; }
-template <> inline bool HasType<f32>(ValueType type) { return type == ValueType::F32; }
-template <> inline bool HasType<f64>(ValueType type) { return type == ValueType::F64; }
-template <> inline bool HasType<Ref>(ValueType type) { return IsReference(type); }
+inline bool IsReference(ValueType type) {
+  return type.IsRef();
+}
+template <>
+inline bool HasType<s32>(ValueType type) {
+  return type == ValueType::I32;
+}
+template <>
+inline bool HasType<u32>(ValueType type) {
+  return type == ValueType::I32;
+}
+template <>
+inline bool HasType<s64>(ValueType type) {
+  return type == ValueType::I64;
+}
+template <>
+inline bool HasType<u64>(ValueType type) {
+  return type == ValueType::I64;
+}
+template <>
+inline bool HasType<f32>(ValueType type) {
+  return type == ValueType::F32;
+}
+template <>
+inline bool HasType<f64>(ValueType type) {
+  return type == ValueType::F64;
+}
+template <>
+inline bool HasType<Ref>(ValueType type) {
+  return IsReference(type);
+}
 
-template <typename T> void RequireType(ValueType type) {
+template <typename T>
+void RequireType(ValueType type) {
   assert(HasType<T>(type));
 }
 
@@ -371,14 +395,54 @@ inline bool TypesMatch(ValueType expected, ValueType actual) {
 }
 
 //// Value ////
-inline Value WABT_VECTORCALL Value::Make(s32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
-inline Value WABT_VECTORCALL Value::Make(u32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
-inline Value WABT_VECTORCALL Value::Make(s64 val) { Value res; res.i64_ = val; res.SetType(ValueType::I64); return res; }
-inline Value WABT_VECTORCALL Value::Make(u64 val) { Value res; res.i64_ = val; res.SetType(ValueType::I64); return res; }
-inline Value WABT_VECTORCALL Value::Make(f32 val) { Value res; res.f32_ = val; res.SetType(ValueType::F32); return res; }
-inline Value WABT_VECTORCALL Value::Make(f64 val) { Value res; res.f64_ = val; res.SetType(ValueType::F64); return res; }
-inline Value WABT_VECTORCALL Value::Make(v128 val) { Value res; res.v128_ = val; res.SetType(ValueType::V128); return res; }
-inline Value WABT_VECTORCALL Value::Make(Ref val) { Value res; res.ref_ = val; res.SetType(ValueType::ExternRef); return res; }
+inline Value WABT_VECTORCALL Value::Make(s32 val) {
+  Value res;
+  res.i32_ = val;
+  res.SetType(ValueType::I32);
+  return res;
+}
+inline Value WABT_VECTORCALL Value::Make(u32 val) {
+  Value res;
+  res.i32_ = val;
+  res.SetType(ValueType::I32);
+  return res;
+}
+inline Value WABT_VECTORCALL Value::Make(s64 val) {
+  Value res;
+  res.i64_ = val;
+  res.SetType(ValueType::I64);
+  return res;
+}
+inline Value WABT_VECTORCALL Value::Make(u64 val) {
+  Value res;
+  res.i64_ = val;
+  res.SetType(ValueType::I64);
+  return res;
+}
+inline Value WABT_VECTORCALL Value::Make(f32 val) {
+  Value res;
+  res.f32_ = val;
+  res.SetType(ValueType::F32);
+  return res;
+}
+inline Value WABT_VECTORCALL Value::Make(f64 val) {
+  Value res;
+  res.f64_ = val;
+  res.SetType(ValueType::F64);
+  return res;
+}
+inline Value WABT_VECTORCALL Value::Make(v128 val) {
+  Value res;
+  res.v128_ = val;
+  res.SetType(ValueType::V128);
+  return res;
+}
+inline Value WABT_VECTORCALL Value::Make(Ref val) {
+  Value res;
+  res.ref_ = val;
+  res.SetType(ValueType::ExternRef);
+  return res;
+}
 template <typename T, u8 L>
 Value WABT_VECTORCALL Value::Make(Simd<T, L> val) {
   Value res;
@@ -387,38 +451,158 @@ Value WABT_VECTORCALL Value::Make(Simd<T, L> val) {
   return res;
 }
 
-template <> inline s8 WABT_VECTORCALL Value::Get<s8>() const { CheckType(ValueType::I32); return i32_; }
-template <> inline u8 WABT_VECTORCALL Value::Get<u8>() const { CheckType(ValueType::I32); return i32_; }
-template <> inline s16 WABT_VECTORCALL Value::Get<s16>() const { CheckType(ValueType::I32); return i32_; }
-template <> inline u16 WABT_VECTORCALL Value::Get<u16>() const { CheckType(ValueType::I32); return i32_; }
-template <> inline s32 WABT_VECTORCALL Value::Get<s32>() const { CheckType(ValueType::I32); return i32_; }
-template <> inline u32 WABT_VECTORCALL Value::Get<u32>() const { CheckType(ValueType::I32); return i32_; }
-template <> inline s64 WABT_VECTORCALL Value::Get<s64>() const { CheckType(ValueType::I64); return i64_; }
-template <> inline u64 WABT_VECTORCALL Value::Get<u64>() const { CheckType(ValueType::I64); return i64_; }
-template <> inline f32 WABT_VECTORCALL Value::Get<f32>() const { CheckType(ValueType::F32); return f32_; }
-template <> inline f64 WABT_VECTORCALL Value::Get<f64>() const { CheckType(ValueType::F64); return f64_; }
-template <> inline v128 WABT_VECTORCALL Value::Get<v128>() const { CheckType(ValueType::V128); return v128_; }
-template <> inline Ref WABT_VECTORCALL Value::Get<Ref>() const { CheckType(ValueType::ExternRef); return ref_; }
+template <>
+inline s8 WABT_VECTORCALL Value::Get<s8>() const {
+  CheckType(ValueType::I32);
+  return i32_;
+}
+template <>
+inline u8 WABT_VECTORCALL Value::Get<u8>() const {
+  CheckType(ValueType::I32);
+  return i32_;
+}
+template <>
+inline s16 WABT_VECTORCALL Value::Get<s16>() const {
+  CheckType(ValueType::I32);
+  return i32_;
+}
+template <>
+inline u16 WABT_VECTORCALL Value::Get<u16>() const {
+  CheckType(ValueType::I32);
+  return i32_;
+}
+template <>
+inline s32 WABT_VECTORCALL Value::Get<s32>() const {
+  CheckType(ValueType::I32);
+  return i32_;
+}
+template <>
+inline u32 WABT_VECTORCALL Value::Get<u32>() const {
+  CheckType(ValueType::I32);
+  return i32_;
+}
+template <>
+inline s64 WABT_VECTORCALL Value::Get<s64>() const {
+  CheckType(ValueType::I64);
+  return i64_;
+}
+template <>
+inline u64 WABT_VECTORCALL Value::Get<u64>() const {
+  CheckType(ValueType::I64);
+  return i64_;
+}
+template <>
+inline f32 WABT_VECTORCALL Value::Get<f32>() const {
+  CheckType(ValueType::F32);
+  return f32_;
+}
+template <>
+inline f64 WABT_VECTORCALL Value::Get<f64>() const {
+  CheckType(ValueType::F64);
+  return f64_;
+}
+template <>
+inline v128 WABT_VECTORCALL Value::Get<v128>() const {
+  CheckType(ValueType::V128);
+  return v128_;
+}
+template <>
+inline Ref WABT_VECTORCALL Value::Get<Ref>() const {
+  CheckType(ValueType::ExternRef);
+  return ref_;
+}
 
-template <> inline s8x16 WABT_VECTORCALL Value::Get<s8x16>() const { CheckType(ValueType::V128); return Bitcast<s8x16>(v128_); }
-template <> inline u8x16 WABT_VECTORCALL Value::Get<u8x16>() const { CheckType(ValueType::V128); return Bitcast<u8x16>(v128_); }
-template <> inline s16x8 WABT_VECTORCALL Value::Get<s16x8>() const { CheckType(ValueType::V128); return Bitcast<s16x8>(v128_); }
-template <> inline u16x8 WABT_VECTORCALL Value::Get<u16x8>() const { CheckType(ValueType::V128); return Bitcast<u16x8>(v128_); }
-template <> inline s32x4 WABT_VECTORCALL Value::Get<s32x4>() const { CheckType(ValueType::V128); return Bitcast<s32x4>(v128_); }
-template <> inline u32x4 WABT_VECTORCALL Value::Get<u32x4>() const { CheckType(ValueType::V128); return Bitcast<u32x4>(v128_); }
-template <> inline s64x2 WABT_VECTORCALL Value::Get<s64x2>() const { CheckType(ValueType::V128); return Bitcast<s64x2>(v128_); }
-template <> inline u64x2 WABT_VECTORCALL Value::Get<u64x2>() const { CheckType(ValueType::V128); return Bitcast<u64x2>(v128_); }
-template <> inline f32x4 WABT_VECTORCALL Value::Get<f32x4>() const { CheckType(ValueType::V128); return Bitcast<f32x4>(v128_); }
-template <> inline f64x2 WABT_VECTORCALL Value::Get<f64x2>() const { CheckType(ValueType::V128); return Bitcast<f64x2>(v128_); }
+template <>
+inline s8x16 WABT_VECTORCALL Value::Get<s8x16>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<s8x16>(v128_);
+}
+template <>
+inline u8x16 WABT_VECTORCALL Value::Get<u8x16>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<u8x16>(v128_);
+}
+template <>
+inline s16x8 WABT_VECTORCALL Value::Get<s16x8>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<s16x8>(v128_);
+}
+template <>
+inline u16x8 WABT_VECTORCALL Value::Get<u16x8>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<u16x8>(v128_);
+}
+template <>
+inline s32x4 WABT_VECTORCALL Value::Get<s32x4>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<s32x4>(v128_);
+}
+template <>
+inline u32x4 WABT_VECTORCALL Value::Get<u32x4>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<u32x4>(v128_);
+}
+template <>
+inline s64x2 WABT_VECTORCALL Value::Get<s64x2>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<s64x2>(v128_);
+}
+template <>
+inline u64x2 WABT_VECTORCALL Value::Get<u64x2>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<u64x2>(v128_);
+}
+template <>
+inline f32x4 WABT_VECTORCALL Value::Get<f32x4>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<f32x4>(v128_);
+}
+template <>
+inline f64x2 WABT_VECTORCALL Value::Get<f64x2>() const {
+  CheckType(ValueType::V128);
+  return Bitcast<f64x2>(v128_);
+}
 
-template <> inline void WABT_VECTORCALL Value::Set<s32>(s32 val) { i32_ = val; SetType(ValueType::I32); }
-template <> inline void WABT_VECTORCALL Value::Set<u32>(u32 val) { i32_ = val; SetType(ValueType::I32); }
-template <> inline void WABT_VECTORCALL Value::Set<s64>(s64 val) { i64_ = val; SetType(ValueType::I64); }
-template <> inline void WABT_VECTORCALL Value::Set<u64>(u64 val) { i64_ = val; SetType(ValueType::I64); }
-template <> inline void WABT_VECTORCALL Value::Set<f32>(f32 val) { f32_ = val; SetType(ValueType::F32); }
-template <> inline void WABT_VECTORCALL Value::Set<f64>(f64 val) { f64_ = val; SetType(ValueType::F64); }
-template <> inline void WABT_VECTORCALL Value::Set<v128>(v128 val) { v128_ = val; SetType(ValueType::V128); }
-template <> inline void WABT_VECTORCALL Value::Set<Ref>(Ref val) { ref_ = val; SetType(ValueType::ExternRef); }
+template <>
+inline void WABT_VECTORCALL Value::Set<s32>(s32 val) {
+  i32_ = val;
+  SetType(ValueType::I32);
+}
+template <>
+inline void WABT_VECTORCALL Value::Set<u32>(u32 val) {
+  i32_ = val;
+  SetType(ValueType::I32);
+}
+template <>
+inline void WABT_VECTORCALL Value::Set<s64>(s64 val) {
+  i64_ = val;
+  SetType(ValueType::I64);
+}
+template <>
+inline void WABT_VECTORCALL Value::Set<u64>(u64 val) {
+  i64_ = val;
+  SetType(ValueType::I64);
+}
+template <>
+inline void WABT_VECTORCALL Value::Set<f32>(f32 val) {
+  f32_ = val;
+  SetType(ValueType::F32);
+}
+template <>
+inline void WABT_VECTORCALL Value::Set<f64>(f64 val) {
+  f64_ = val;
+  SetType(ValueType::F64);
+}
+template <>
+inline void WABT_VECTORCALL Value::Set<v128>(v128 val) {
+  v128_ = val;
+  SetType(ValueType::V128);
+}
+template <>
+inline void WABT_VECTORCALL Value::Set<Ref>(Ref val) {
+  ref_ = val;
+  SetType(ValueType::ExternRef);
+}
 
 //// Store ////
 inline bool Store::IsValid(Ref ref) const {
@@ -634,10 +818,8 @@ inline Memory::Ptr Memory::New(interp::Store& store, MemoryType type) {
 
 inline bool Memory::IsValidAccess(u64 offset, u64 addend, u64 size) const {
   // FIXME: make this faster.
-  return offset <= data_.size() &&
-         addend <= data_.size() &&
-         size <= data_.size() &&
-         offset + addend + size <= data_.size();
+  return offset <= data_.size() && addend <= data_.size() &&
+         size <= data_.size() && offset + addend + size <= data_.size();
 }
 
 inline bool Memory::IsValidAtomicAccess(u64 offset,
@@ -652,7 +834,8 @@ Result Memory::Load(u64 offset, u64 addend, T* out) const {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0,
+                          offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -660,7 +843,8 @@ template <typename T>
 T WABT_VECTORCALL Memory::UnsafeLoad(u64 offset, u64 addend) const {
   assert(IsValidAccess(offset, addend, sizeof(T)));
   T val;
-  wabt::MemcpyEndianAware(&val, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(&val, data_.data(), sizeof(T), data_.size(), 0,
+                          offset + addend, sizeof(T));
   return val;
 }
 
@@ -669,7 +853,8 @@ Result WABT_VECTORCALL Memory::Store(u64 offset, u64 addend, T val) {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
+  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T),
+                          offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 
@@ -678,7 +863,8 @@ Result Memory::AtomicLoad(u64 offset, u64 addend, T* out) const {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0,
+                          offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -687,7 +873,8 @@ Result Memory::AtomicStore(u64 offset, u64 addend, T val) {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
+  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T),
+                          offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 

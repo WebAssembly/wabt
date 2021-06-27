@@ -19,8 +19,8 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
+#include "src/binary-reader.h"
 #include "src/error-formatter.h"
 #include "src/ir.h"
 #include "src/option-parser.h"
@@ -38,7 +38,7 @@ static bool s_fail_on_custom_section_error = true;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  Read a file in the WebAssembly binary format, and validate it.
+    R"(  Read a file in the WebAssembly binary format, and validate it.
 
 examples:
   # validate binary file test.wasm

@@ -494,8 +494,7 @@ Result Validator::BeginTryExpr(TryExpr* expr) {
 }
 
 Result Validator::OnCatchExpr(TryExpr*, Catch* catch_) {
-  result_ |= validator_.OnCatch(catch_->loc, catch_->var,
-                                catch_->IsCatchAll());
+  result_ |= validator_.OnCatch(catch_->loc, catch_->var, catch_->IsCatchAll());
   return Result::Ok;
 }
 
@@ -576,9 +575,9 @@ Result Validator::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 }
 
 Result Validator::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
-  result_ |= validator_.OnSimdLoadLane(
-      expr->loc, expr->opcode, expr->opcode.GetAlignment(expr->align),
-      expr->val);
+  result_ |= validator_.OnSimdLoadLane(expr->loc, expr->opcode,
+                                       expr->opcode.GetAlignment(expr->align),
+                                       expr->val);
   return Result::Ok;
 }
 
@@ -855,8 +854,8 @@ Result Validator::CheckModule() {
   // Data segment section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<DataSegmentModuleField>(&field)) {
-      result_ |= validator_.OnDataSegment(
-          field.loc, f->data_segment.memory_var, f->data_segment.kind);
+      result_ |= validator_.OnDataSegment(field.loc, f->data_segment.memory_var,
+                                          f->data_segment.kind);
 
       // Init expr.
       if (f->data_segment.offset.size() == 1) {

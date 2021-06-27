@@ -59,7 +59,6 @@ class InterpTest : public ::testing::Test {
   Instance::Ptr inst_;
 };
 
-
 TEST_F(InterpTest, Empty) {
   ASSERT_TRUE(mod_.empty());
   ReadModule({0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00});
@@ -140,7 +139,7 @@ TEST_F(InterpTest, Disassemble) {
   auto buf = stream.ReleaseOutputBuffer();
 
   ExpectBufferStrEq(*buf,
-R"(   0| alloca 1
+                    R"(   0| alloca 1
    8| i32.const 1
   16| local.set $2, %[-1]
   24| local.get $1
@@ -188,7 +187,7 @@ TEST_F(InterpTest, Fac_Trace) {
 
   auto buf = stream.ReleaseOutputBuffer();
   ExpectBufferStrEq(*buf,
-R"(#0.    0: V:1  | alloca 1
+                    R"(#0.    0: V:1  | alloca 1
 #0.    8: V:2  | i32.const 1
 #0.   16: V:3  | local.set $2, 1
 #0.   24: V:2  | local.get $1
@@ -252,7 +251,7 @@ TEST_F(InterpTest, Local_Trace) {
 
   auto buf = stream.ReleaseOutputBuffer();
   ExpectBufferStrEq(*buf,
-R"(#0.    0: V:0  | alloca 4
+                    R"(#0.    0: V:0  | alloca 4
 #0.    8: V:4  | i32.const 0
 #0.   16: V:5  | local.set $5, 0
 #0.   24: V:4  | i64.const 1
@@ -308,18 +307,18 @@ TEST_F(InterpTest, HostFunc_PingPong) {
       0x0b, 0x01, 0x09, 0x00, 0x20, 0x00, 0x41, 0x01, 0x6a, 0x10, 0x00, 0x0b,
   });
 
-  auto host_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-      [&](Thread& thread, const Values& params, Values& results,
-          Trap::Ptr* out_trap) -> Result {
-        auto val = params[0].Get<u32>();
-        if (val < 10) {
-          return GetFuncExport(0)->Call(store_, {Value::Make(val * 2)}, results,
-                                        out_trap);
-        }
-        results[0] = Value::Make(val);
-        return Result::Ok;
-      });
+  auto host_func =
+      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+                    [&](Thread& thread, const Values& params, Values& results,
+                        Trap::Ptr* out_trap) -> Result {
+                      auto val = params[0].Get<u32>();
+                      if (val < 10) {
+                        return GetFuncExport(0)->Call(
+                            store_, {Value::Make(val * 2)}, results, out_trap);
+                      }
+                      results[0] = Value::Make(val);
+                      return Result::Ok;
+                    });
 
   Instantiate({host_func->self()});
 
@@ -328,7 +327,8 @@ TEST_F(InterpTest, HostFunc_PingPong) {
 
   Values results;
   Trap::Ptr trap;
-  Result result = GetFuncExport(0)->Call(store_, {Value::Make(1)}, results, &trap);
+  Result result =
+      GetFuncExport(0)->Call(store_, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());
@@ -368,7 +368,8 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
 
   Values results;
   Trap::Ptr trap;
-  Result result = GetFuncExport(0)->Call(*thread, {Value::Make(1)}, results, &trap);
+  Result result =
+      GetFuncExport(0)->Call(*thread, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());
@@ -551,9 +552,7 @@ TEST_F(InterpTest, Rot13) {
 
 class InterpGCTest : public InterpTest {
  public:
-  void SetUp() override {
-    before_new = store_.object_count();
-  }
+  void SetUp() override { before_new = store_.object_count(); }
 
   void TearDown() override {
     // Reset instance and module, in case they were allocated.

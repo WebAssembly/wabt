@@ -857,7 +857,7 @@ Istream::Offset Istream::Trace(Stream* stream,
       break;
 
     case InstrKind::Imm_Index_Op_N:
-      stream->Writef(" $%u\n", instr.imm_u32); // TODO param/result count?
+      stream->Writef(" $%u\n", instr.imm_u32);  // TODO param/result count?
       break;
 
     case InstrKind::Imm_Index_Index_Op_3:
@@ -891,9 +891,10 @@ Istream::Offset Istream::Trace(Stream* stream,
       break;
 
     case InstrKind::Imm_Index_Offset_Lane_Op_2:
-      stream->Writef(" $%u:%s+$%u, %s (Lane imm: $%u)\n", instr.imm_u32x2_u8.fst,
-                     source->Pick(2, instr).c_str(), instr.imm_u32x2_u8.snd,
-                     source->Pick(1, instr).c_str(), instr.imm_u32x2_u8.idx);
+      stream->Writef(" $%u:%s+$%u, %s (Lane imm: $%u)\n",
+                     instr.imm_u32x2_u8.fst, source->Pick(2, instr).c_str(),
+                     instr.imm_u32x2_u8.snd, source->Pick(1, instr).c_str(),
+                     instr.imm_u32x2_u8.idx);
       break;
 
     case InstrKind::Imm_I32_Op_0:

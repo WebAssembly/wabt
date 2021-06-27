@@ -30,8 +30,8 @@
 #include "src/cast.h"
 #include "src/common.h"
 #include "src/expr-visitor.h"
-#include "src/ir.h"
 #include "src/ir-util.h"
+#include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
 
@@ -91,8 +91,9 @@ struct ExprTree {
 
 class WatWriter : ModuleContext {
  public:
-  WatWriter(Stream* stream, const WriteWatOptions& options,
-            const Module &module)
+  WatWriter(Stream* stream,
+            const WriteWatOptions& options,
+            const Module& module)
       : ModuleContext(module), options_(options), stream_(stream) {}
 
   Result WriteModule();
@@ -880,8 +881,8 @@ Result WatWriter::ExprVisitorDelegate::BeginTryExpr(TryExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnCatchExpr(
-    TryExpr* expr, Catch* catch_) {
+Result WatWriter::ExprVisitorDelegate::OnCatchExpr(TryExpr* expr,
+                                                   Catch* catch_) {
   writer_->Dedent();
   if (catch_->IsCatchAll()) {
     writer_->WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
@@ -978,7 +979,8 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
+Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(
+    SimdLoadLaneExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
   if (expr->offset) {
     writer_->Writef("offset=%" PRIaddress, expr->offset);

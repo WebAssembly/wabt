@@ -20,8 +20,9 @@
 #include <cstdlib>
 
 #include "src/apply-names.h"
-#include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
+#include "src/binary-reader.h"
+#include "src/decompiler.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/generate-names.h"
@@ -30,7 +31,6 @@
 #include "src/stream.h"
 #include "src/validator.h"
 #include "src/wast-lexer.h"
-#include "src/decompiler.h"
 
 using namespace wabt;
 
@@ -45,12 +45,12 @@ int ProgramMain(int argc, char** argv) {
 
   {
     const char s_description[] =
-      "  Read a file in the WebAssembly binary format, and convert it to\n"
-      "  a decompiled text file.\n"
-      "\n"
-      "examples:\n"
-      "  # parse binary file test.wasm and write text file test.dcmp\n"
-      "  $ wasm-decompile test.wasm -o test.dcmp\n";
+        "  Read a file in the WebAssembly binary format, and convert it to\n"
+        "  a decompiled text file.\n"
+        "\n"
+        "examples:\n"
+        "  # parse binary file test.wasm and write text file test.dcmp\n"
+        "  $ wasm-decompile test.wasm -o test.dcmp\n";
     OptionParser parser("wasm-decompile", s_description);
     parser.AddOption(
         'o', "output", "FILENAME",
@@ -77,8 +77,7 @@ int ProgramMain(int argc, char** argv) {
     Errors errors;
     Module module;
     const bool kStopOnFirstError = true;
-    ReadBinaryOptions options(features, nullptr,
-                              true, kStopOnFirstError,
+    ReadBinaryOptions options(features, nullptr, true, kStopOnFirstError,
                               fail_on_custom_section_error);
     result = ReadBinaryIr(infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
@@ -86,8 +85,8 @@ int ProgramMain(int argc, char** argv) {
       ValidateOptions options(features);
       result = ValidateModule(&module, &errors, options);
       if (Succeeded(result)) {
-        result = GenerateNames(&module,
-                               static_cast<NameOpts>(NameOpts::AlphaNames));
+        result =
+            GenerateNames(&module, static_cast<NameOpts>(NameOpts::AlphaNames));
       }
       if (Succeeded(result)) {
         // Must be called after ReadBinaryIr & GenerateNames, and before
@@ -103,7 +102,7 @@ int ProgramMain(int argc, char** argv) {
       if (Succeeded(result)) {
         auto s = Decompile(module, decompile_options);
         FileStream stream(!outfile.empty() ? FileStream(outfile)
-                                             : FileStream(stdout));
+                                           : FileStream(stdout));
         stream.WriteData(s.data(), s.size());
       }
     }

@@ -452,7 +452,7 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
         // local variables share the same index space, we need to increment the
         // local indexes bound to a given name by the number of parameters in
         // the function.
-        for (auto& pair: func->bindings) {
+        for (auto& pair : func->bindings) {
           pair.second.index += func->GetNumParams();
         }
       }
@@ -1076,17 +1076,28 @@ Result WastParser::ParseModuleFieldList(Module* module) {
 Result WastParser::ParseModuleField(Module* module) {
   WABT_TRACE(ParseModuleField);
   switch (Peek(1)) {
-    case TokenType::Data:   return ParseDataModuleField(module);
-    case TokenType::Elem:   return ParseElemModuleField(module);
-    case TokenType::Tag:    return ParseTagModuleField(module);
-    case TokenType::Export: return ParseExportModuleField(module);
-    case TokenType::Func:   return ParseFuncModuleField(module);
-    case TokenType::Type:   return ParseTypeModuleField(module);
-    case TokenType::Global: return ParseGlobalModuleField(module);
-    case TokenType::Import: return ParseImportModuleField(module);
-    case TokenType::Memory: return ParseMemoryModuleField(module);
-    case TokenType::Start:  return ParseStartModuleField(module);
-    case TokenType::Table:  return ParseTableModuleField(module);
+    case TokenType::Data:
+      return ParseDataModuleField(module);
+    case TokenType::Elem:
+      return ParseElemModuleField(module);
+    case TokenType::Tag:
+      return ParseTagModuleField(module);
+    case TokenType::Export:
+      return ParseExportModuleField(module);
+    case TokenType::Func:
+      return ParseFuncModuleField(module);
+    case TokenType::Type:
+      return ParseTypeModuleField(module);
+    case TokenType::Global:
+      return ParseGlobalModuleField(module);
+    case TokenType::Import:
+      return ParseImportModuleField(module);
+    case TokenType::Memory:
+      return ParseMemoryModuleField(module);
+    case TokenType::Start:
+      return ParseStartModuleField(module);
+    case TokenType::Table:
+      return ParseTableModuleField(module);
     default:
       assert(
           !"ParseModuleField should only be called if IsModuleField() is true");
@@ -1595,11 +1606,21 @@ Result WastParser::ParseExportDesc(Export* export_) {
   WABT_TRACE(ParseExportDesc);
   EXPECT(Lpar);
   switch (Peek()) {
-    case TokenType::Func:   export_->kind = ExternalKind::Func; break;
-    case TokenType::Table:  export_->kind = ExternalKind::Table; break;
-    case TokenType::Memory: export_->kind = ExternalKind::Memory; break;
-    case TokenType::Global: export_->kind = ExternalKind::Global; break;
-    case TokenType::Tag:    export_->kind = ExternalKind::Tag; break;
+    case TokenType::Func:
+      export_->kind = ExternalKind::Func;
+      break;
+    case TokenType::Table:
+      export_->kind = ExternalKind::Table;
+      break;
+    case TokenType::Memory:
+      export_->kind = ExternalKind::Memory;
+      break;
+    case TokenType::Global:
+      export_->kind = ExternalKind::Global;
+      break;
+    case TokenType::Tag:
+      export_->kind = ExternalKind::Tag;
+      break;
     default:
       return ErrorExpected({"an external kind"});
   }
@@ -1772,8 +1793,8 @@ Result WastParser::ParseSimdLane(Location loc, uint64_t* lane_idx) {
 
   Literal literal = Consume().literal();
 
-  Result result = ParseInt64(literal.text.begin(), literal.text.end(),
-                             lane_idx, ParseIntType::UnsignedOnly);
+  Result result = ParseInt64(literal.text.begin(), literal.text.end(), lane_idx,
+                             ParseIntType::UnsignedOnly);
 
   if (Failed(result)) {
     Error(loc, "invalid literal \"" PRIstringview "\"",
@@ -2161,7 +2182,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         return Result::Error;
       }
 
-      out_expr->reset(new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
+      out_expr->reset(
+          new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
       break;
     }
 
@@ -2181,7 +2203,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         return Result::Error;
       }
 
-      out_expr->reset(new SimdStoreLaneExpr(token.opcode(), align, offset, lane_idx, loc));
+      out_expr->reset(
+          new SimdStoreLaneExpr(token.opcode(), align, offset, lane_idx, loc));
       break;
     }
 
@@ -2200,8 +2223,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         values.set_u8(lane, static_cast<uint8_t>(lane_idx));
       }
 
-      out_expr->reset(
-          new SimdShuffleOpExpr(token.opcode(), values, loc));
+      out_expr->reset(new SimdShuffleOpExpr(token.opcode(), values, loc));
       break;
     }
 
@@ -2222,20 +2244,38 @@ Result WastParser::ParseSimdV128Const(Const* const_,
   uint8_t lane_count = 0;
   bool integer = true;
   switch (token_type) {
-    case TokenType::I8X16: { lane_count = 16; break; }
-    case TokenType::I16X8: { lane_count = 8; break; }
-    case TokenType::I32X4: { lane_count = 4; break; }
-    case TokenType::I64X2: { lane_count = 2; break; }
-    case TokenType::F32X4: { lane_count = 4; integer = false; break; }
-    case TokenType::F64X2: { lane_count = 2; integer = false; break; }
+    case TokenType::I8X16: {
+      lane_count = 16;
+      break;
+    }
+    case TokenType::I16X8: {
+      lane_count = 8;
+      break;
+    }
+    case TokenType::I32X4: {
+      lane_count = 4;
+      break;
+    }
+    case TokenType::I64X2: {
+      lane_count = 2;
+      break;
+    }
+    case TokenType::F32X4: {
+      lane_count = 4;
+      integer = false;
+      break;
+    }
+    case TokenType::F64X2: {
+      lane_count = 2;
+      integer = false;
+      break;
+    }
     default: {
-      Error(
-        const_->loc,
-        "Unexpected type at start of simd constant. "
-        "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. "
-        "Found \"%s\".",
-        GetTokenTypeName(token_type)
-      );
+      Error(const_->loc,
+            "Unexpected type at start of simd constant. "
+            "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. "
+            "Found \"%s\".",
+            GetTokenTypeName(token_type));
       return Result::Error;
     }
   }
@@ -3032,7 +3072,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
                    &errors, &module);
       module.name = bsm->name;
       module.loc = bsm->loc;
-      for (const auto& error: errors) {
+      for (const auto& error : errors) {
         assert(error.error_level == ErrorLevel::Error);
         if (error.loc.offset == kInvalidOffset) {
           Error(bsm->loc, "error in binary module: %s", error.message.c_str());

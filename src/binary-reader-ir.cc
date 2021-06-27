@@ -45,9 +45,7 @@ LabelNode::LabelNode(LabelType label_type, ExprList* exprs, Expr* context)
 
 class BinaryReaderIR : public BinaryReaderNop {
  public:
-  BinaryReaderIR(Module* out_module,
-                 const char* filename,
-                 Errors* errors);
+  BinaryReaderIR(Module* out_module, const char* filename, Errors* errors);
 
   bool OnError(const Error&) override;
 
@@ -266,19 +264,30 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnInitExprRefNull(Index index, Type type) override;
   Result OnInitExprRefFunc(Index index, Index func_index) override;
 
-  Result OnDataSymbol(Index index, uint32_t flags, string_view name,
-                       Index segment, uint32_t offset, uint32_t size) override;
-  Result OnFunctionSymbol(Index index, uint32_t flags, string_view name,
-                           Index func_index) override;
-  Result OnGlobalSymbol(Index index, uint32_t flags, string_view name,
-                         Index global_index) override;
-  Result OnSectionSymbol(Index index, uint32_t flags,
-                          Index section_index) override;
+  Result OnDataSymbol(Index index,
+                      uint32_t flags,
+                      string_view name,
+                      Index segment,
+                      uint32_t offset,
+                      uint32_t size) override;
+  Result OnFunctionSymbol(Index index,
+                          uint32_t flags,
+                          string_view name,
+                          Index func_index) override;
+  Result OnGlobalSymbol(Index index,
+                        uint32_t flags,
+                        string_view name,
+                        Index global_index) override;
+  Result OnSectionSymbol(Index index,
+                         uint32_t flags,
+                         Index section_index) override;
   Result OnTagSymbol(Index index,
                      uint32_t flags,
                      string_view name,
                      Index tag_index) override;
-  Result OnTableSymbol(Index index, uint32_t flags, string_view name,
+  Result OnTableSymbol(Index index,
+                       uint32_t flags,
+                       string_view name,
                        Index table_index) override;
 
  private:
@@ -753,7 +762,8 @@ Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
   return AppendExpr(MakeUnique<ReturnCallExpr>(Var(func_index)));
 }
 
-Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index, Index table_index) {
+Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index,
+                                                Index table_index) {
   auto expr = MakeUnique<ReturnCallIndirectExpr>();
   SetFuncDeclaration(&expr->decl, Var(sig_index, GetLocation()));
   expr->table = Var(table_index);
@@ -1007,7 +1017,8 @@ Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
 
   auto* try_ = cast<TryExpr>(label->context);
 
-  if (catch_.IsCatchAll() && !try_->catches.empty() && try_->catches.back().IsCatchAll()) {
+  if (catch_.IsCatchAll() && !try_->catches.empty() &&
+      try_->catches.back().IsCatchAll()) {
     PrintError("only one catch_all allowed in try block");
     return Result::Error;
   }
@@ -1109,9 +1120,9 @@ Result BinaryReaderIR::OnSimdLoadLaneExpr(Opcode opcode,
 }
 
 Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
-                                          Address alignment_log2,
-                                          Address offset,
-                                          uint64_t value) {
+                                           Address alignment_log2,
+                                           Address offset,
+                                           uint64_t value) {
   return AppendExpr(
       MakeUnique<SimdStoreLaneExpr>(opcode, alignment_log2, offset, value));
 }
@@ -1492,9 +1503,12 @@ Result BinaryReaderIR::OnTagType(Index index, Index sig_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnDataSymbol(Index index, uint32_t flags,
-                                    string_view name, Index segment,
-                                    uint32_t offset, uint32_t size) {
+Result BinaryReaderIR::OnDataSymbol(Index index,
+                                    uint32_t flags,
+                                    string_view name,
+                                    Index segment,
+                                    uint32_t offset,
+                                    uint32_t size) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1519,8 +1533,10 @@ Result BinaryReaderIR::OnDataSymbol(Index index, uint32_t flags,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionSymbol(Index index, uint32_t flags,
-                                        string_view name, Index func_index) {
+Result BinaryReaderIR::OnFunctionSymbol(Index index,
+                                        uint32_t flags,
+                                        string_view name,
+                                        Index func_index) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1540,12 +1556,15 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index, uint32_t flags,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnGlobalSymbol(Index index, uint32_t flags,
-                                      string_view name, Index global_index) {
+Result BinaryReaderIR::OnGlobalSymbol(Index index,
+                                      uint32_t flags,
+                                      string_view name,
+                                      Index global_index) {
   return SetGlobalName(global_index, name);
 }
 
-Result BinaryReaderIR::OnSectionSymbol(Index index, uint32_t flags,
+Result BinaryReaderIR::OnSectionSymbol(Index index,
+                                       uint32_t flags,
                                        Index section_index) {
   return Result::Ok;
 }
@@ -1569,8 +1588,10 @@ Result BinaryReaderIR::OnTagSymbol(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnTableSymbol(Index index, uint32_t flags,
-                                     string_view name, Index table_index) {
+Result BinaryReaderIR::OnTableSymbol(Index index,
+                                     uint32_t flags,
+                                     string_view name,
+                                     Index table_index) {
   return SetTableName(index, name);
 }
 

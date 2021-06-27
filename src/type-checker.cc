@@ -143,8 +143,9 @@ Result TypeChecker::CheckLabelType(Label* label, LabelType label_type) {
 Result TypeChecker::Check2LabelTypes(Label* label,
                                      LabelType label_type1,
                                      LabelType label_type2) {
-  return label->label_type == label_type1 ||
-         label->label_type == label_type2 ? Result::Ok : Result::Error;
+  return label->label_type == label_type1 || label->label_type == label_type2
+             ? Result::Ok
+             : Result::Error;
 }
 
 Result TypeChecker::GetThisFunctionLabel(Label** label) {
@@ -604,8 +605,8 @@ Result TypeChecker::OnEnd(Label* label,
 Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {
-      "function", "block", "loop", "if", "if false branch", "try",
-      "try catch", "try unwind"};
+      "function",        "block", "loop",      "if",
+      "if false branch", "try",   "try catch", "try unwind"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -871,7 +872,9 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
   return result;
 }
 
-Result TypeChecker::OnSimdLoadLane(Opcode opcode, const Limits& limits, uint64_t lane_idx) {
+Result TypeChecker::OnSimdLoadLane(Opcode opcode,
+                                   const Limits& limits,
+                                   uint64_t lane_idx) {
   Result result = Result::Ok;
   uint32_t lane_count = opcode.GetSimdLaneCount();
   if (lane_idx >= lane_count) {
@@ -883,7 +886,9 @@ Result TypeChecker::OnSimdLoadLane(Opcode opcode, const Limits& limits, uint64_t
   return result;
 }
 
-Result TypeChecker::OnSimdStoreLane(Opcode opcode, const Limits& limits, uint64_t lane_idx) {
+Result TypeChecker::OnSimdStoreLane(Opcode opcode,
+                                    const Limits& limits,
+                                    uint64_t lane_idx) {
   Result result = Result::Ok;
   uint32_t lane_count = opcode.GetSimdLaneCount();
   if (lane_idx >= lane_count) {

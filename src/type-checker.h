@@ -77,8 +77,10 @@ class TypeChecker {
   Result OnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types);
-  Result OnReturnCall(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnReturnCallIndirect(const TypeVector& param_types, const TypeVector& result_types);
+  Result OnReturnCall(const TypeVector& param_types,
+                      const TypeVector& result_types);
+  Result OnReturnCallIndirect(const TypeVector& param_types,
+                              const TypeVector& result_types);
   Result OnCatch(const TypeVector& sig);
   Result OnCompare(Opcode);
   Result OnConst(Type);
@@ -140,17 +142,21 @@ class TypeChecker {
                  const TypeVector& result_types);
   Result PopLabel();
   Result CheckLabelType(Label* label, LabelType label_type);
-  Result Check2LabelTypes(Label* label, LabelType label_type1, LabelType label_type2);
-  Result GetThisFunctionLabel(Label **label);
+  Result Check2LabelTypes(Label* label,
+                          LabelType label_type1,
+                          LabelType label_type2);
+  Result GetThisFunctionLabel(Label** label);
   Result PeekType(Index depth, Type* out_type);
   Result PeekAndCheckType(Index depth, Type expected);
   Result DropTypes(size_t drop_count);
   void PushType(Type type);
   void PushTypes(const TypeVector& types);
   Result CheckTypeStackEnd(const char* desc);
-  Result CheckTypes(const TypeVector &actual, const TypeVector &expected);
+  Result CheckTypes(const TypeVector& actual, const TypeVector& expected);
   Result CheckSignature(const TypeVector& sig, const char* desc);
-  Result CheckReturnSignature(const TypeVector& sig, const TypeVector &expected,const char *desc);
+  Result CheckReturnSignature(const TypeVector& sig,
+                              const TypeVector& expected,
+                              const char* desc);
   Result PopAndCheckSignature(const TypeVector& sig, const char* desc);
   Result PopAndCheckCall(const TypeVector& param_types,
                          const TypeVector& result_types,
@@ -169,7 +175,10 @@ class TypeChecker {
                       const Limits* limits1 = nullptr,
                       const Limits* limits2 = nullptr,
                       const Limits* limits3 = nullptr);
-  Result OnEnd(Label* label, TypeVector& check_type, const char* sig_desc, const char* end_desc);
+  Result OnEnd(Label* label,
+               TypeVector& check_type,
+               const char* sig_desc,
+               const char* end_desc);
 
   template <typename... Args>
   void PrintStackIfFailed(Result result, const char* desc, Args... args) {
