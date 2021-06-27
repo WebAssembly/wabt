@@ -687,7 +687,8 @@ uint8_t DataSegment::GetFlags(const Module* module) const {
     flags |= SegExplicitIndex;
   }
 
-  return flags;
+  return
+      flags;
 }
 
 
