@@ -823,8 +823,7 @@ Result BinaryReaderIR::OnEndExpr() {
 
     case LabelType::Func:
     case LabelType::Catch:
-    case LabelType::Unwind:
-      break;
+    case LabelType::Unwind: break;
   }
 
   return PopLabel();
@@ -954,9 +953,7 @@ Result BinaryReaderIR::OnRefIsNullExpr() {
   return AppendExpr(MakeUnique<RefIsNullExpr>());
 }
 
-Result BinaryReaderIR::OnNopExpr() {
-  return AppendExpr(MakeUnique<NopExpr>());
-}
+Result BinaryReaderIR::OnNopExpr() { return AppendExpr(MakeUnique<NopExpr>()); }
 
 Result BinaryReaderIR::OnRethrowExpr(Index depth) {
   return AppendExpr(MakeUnique<RethrowExpr>(Var(depth, GetLocation())));
@@ -1253,9 +1250,7 @@ Result BinaryReaderIR::OnDataSegmentData(Index index,
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
   segment->data.resize(size);
-  if (size > 0) {
-    memcpy(segment->data.data(), data, size);
-  }
+  if (size > 0) { memcpy(segment->data.data(), data, size); }
   return Result::Ok;
 }
 
@@ -1274,18 +1269,14 @@ static std::string MakeDollarName(string_view name) {
 }
 
 Result BinaryReaderIR::OnModuleName(string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
 
   module_->name = MakeDollarName(name);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::SetGlobalName(Index index, string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (index >= module_->globals.size()) {
     PrintError("invalid global index: %" PRIindex, index);
     return Result::Error;
@@ -1299,9 +1290,7 @@ Result BinaryReaderIR::SetGlobalName(Index index, string_view name) {
 }
 
 Result BinaryReaderIR::SetFunctionName(Index index, string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (index >= module_->funcs.size()) {
     PrintError("invalid function index: %" PRIindex, index);
     return Result::Error;
@@ -1315,9 +1304,7 @@ Result BinaryReaderIR::SetFunctionName(Index index, string_view name) {
 }
 
 Result BinaryReaderIR::SetTableName(Index index, string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (index >= module_->tables.size()) {
     PrintError("invalid table index: %" PRIindex, index);
     return Result::Error;
@@ -1331,9 +1318,7 @@ Result BinaryReaderIR::SetTableName(Index index, string_view name) {
 }
 
 Result BinaryReaderIR::SetDataSegmentName(Index index, string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (index >= module_->data_segments.size()) {
     PrintError("invalid data segment index: %" PRIindex, index);
     return Result::Error;
@@ -1347,9 +1332,7 @@ Result BinaryReaderIR::SetDataSegmentName(Index index, string_view name) {
 }
 
 Result BinaryReaderIR::SetElemSegmentName(Index index, string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (index >= module_->elem_segments.size()) {
     PrintError("invalid elem segment index: %" PRIindex, index);
     return Result::Error;
@@ -1363,9 +1346,7 @@ Result BinaryReaderIR::SetElemSegmentName(Index index, string_view name) {
 }
 
 Result BinaryReaderIR::SetMemoryName(Index index, string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (index >= module_->memories.size()) {
     PrintError("invalid memory index: %" PRIindex, index);
     return Result::Error;
@@ -1392,20 +1373,13 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Local:
     case NameSectionSubsection::Module:
     case NameSectionSubsection::Label:
-    case NameSectionSubsection::Type:
-      break;
-    case NameSectionSubsection::Global:
-      SetGlobalName(index, name);
-      break;
-    case NameSectionSubsection::Table:
-      SetTableName(index, name);
-      break;
+    case NameSectionSubsection::Type: break;
+    case NameSectionSubsection::Global: SetGlobalName(index, name); break;
+    case NameSectionSubsection::Table: SetTableName(index, name); break;
     case NameSectionSubsection::DataSegment:
       SetDataSegmentName(index, name);
       break;
-    case NameSectionSubsection::Memory:
-      SetMemoryName(index, name);
-      break;
+    case NameSectionSubsection::Memory: SetMemoryName(index, name); break;
     case NameSectionSubsection::ElemSegment:
       SetElemSegmentName(index, name);
       break;
@@ -1485,9 +1459,7 @@ Result BinaryReaderIR::OnInitExprRefFunc(Index index, Index func_index) {
 Result BinaryReaderIR::OnLocalName(Index func_index,
                                    Index local_index,
                                    string_view name) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
 
   Func* func = module_->funcs[func_index];
   func->bindings.emplace(GetUniqueName(&func->bindings, MakeDollarName(name)),
@@ -1509,9 +1481,7 @@ Result BinaryReaderIR::OnDataSymbol(Index index,
                                     Index segment,
                                     uint32_t offset,
                                     uint32_t size) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (flags & WABT_SYMBOL_FLAG_UNDEFINED) {
     // Refers to data in another file, `segment` not valid.
     return Result::Ok;
@@ -1537,9 +1507,7 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index,
                                         uint32_t flags,
                                         string_view name,
                                         Index func_index) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (func_index >= module_->funcs.size()) {
     PrintError("invalid function index: %" PRIindex, func_index);
     return Result::Error;
@@ -1573,9 +1541,7 @@ Result BinaryReaderIR::OnTagSymbol(Index index,
                                    uint32_t flags,
                                    string_view name,
                                    Index tag_index) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  if (name.empty()) { return Result::Ok; }
   if (tag_index >= module_->tags.size()) {
     PrintError("invalid tag index: %" PRIindex, tag_index);
     return Result::Error;

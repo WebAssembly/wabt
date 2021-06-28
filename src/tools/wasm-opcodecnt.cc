@@ -76,23 +76,19 @@ static void ParseOptions(int argc, char** argv) {
   parser.Parse(argc, argv);
 }
 
-template <typename T>
-struct SortByCountDescending {
+template <typename T> struct SortByCountDescending {
   bool operator()(const T& lhs, const T& rhs) const {
     return lhs.second > rhs.second;
   }
 };
 
-template <typename T>
-struct WithinCutoff {
+template <typename T> struct WithinCutoff {
   bool operator()(const T& pair) const { return pair.second >= s_cutoff; }
 };
 
 static size_t SumCounts(const OpcodeInfoCounts& info_counts) {
   size_t sum = 0;
-  for (auto& pair : info_counts) {
-    sum += pair.second;
-  }
+  for (auto& pair : info_counts) { sum += pair.second; }
   return sum;
 }
 

@@ -117,8 +117,7 @@ class Command {
   explicit Command(CommandType type) : type(type) {}
 };
 
-template <CommandType TypeEnum>
-class CommandMixin : public Command {
+template <CommandType TypeEnum> class CommandMixin : public Command {
  public:
   static bool classof(const Command* cmd) { return cmd->type == TypeEnum; }
   CommandMixin() : Command(TypeEnum) {}
@@ -174,21 +173,13 @@ struct ExpectedValue {
 
 int LaneCountFromType(Type type) {
   switch (type) {
-    case Type::I8:
-      return 16;
-    case Type::I16:
-      return 8;
-    case Type::I32:
-      return 4;
-    case Type::I64:
-      return 2;
-    case Type::F32:
-      return 4;
-    case Type::F64:
-      return 2;
-    default:
-      assert(false);
-      return 0;
+    case Type::I8: return 16;
+    case Type::I16: return 8;
+    case Type::I32: return 4;
+    case Type::I64: return 2;
+    case Type::F32: return 4;
+    case Type::F64: return 2;
+    default: assert(false); return 0;
   }
 }
 
@@ -234,8 +225,7 @@ ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
         result.value.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
         break;
 
-      default:
-        WABT_UNREACHABLE;
+      default: WABT_UNREACHABLE;
     }
   }
   return result;
@@ -253,21 +243,13 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
 
   for (int lane = 0; lane < lane_count; ++lane) {
     switch (lane_type) {
-      case Type::I8:
-        result.value.Set<u32>(vec.u8(lane));
-        break;
+      case Type::I8: result.value.Set<u32>(vec.u8(lane)); break;
 
-      case Type::I16:
-        result.value.Set<u32>(vec.u16(lane));
-        break;
+      case Type::I16: result.value.Set<u32>(vec.u16(lane)); break;
 
-      case Type::I32:
-        result.value.Set<u32>(vec.u32(lane));
-        break;
+      case Type::I32: result.value.Set<u32>(vec.u32(lane)); break;
 
-      case Type::I64:
-        result.value.Set<u64>(vec.u64(lane));
-        break;
+      case Type::I64: result.value.Set<u64>(vec.u64(lane)); break;
 
       case Type::F32:
         result.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
@@ -277,8 +259,7 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
         result.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
         break;
 
-      default:
-        WABT_UNREACHABLE;
+      default: WABT_UNREACHABLE;
     }
   }
   return result;
@@ -414,9 +395,7 @@ void JSONParser::PutbackChar() {
 }
 
 int JSONParser::ReadChar() {
-  if (json_offset_ >= json_data_.size()) {
-    return -1;
-  }
+  if (json_offset_ >= json_data_.size()) { return -1; }
   prev_loc_ = loc_;
   char c = json_data_[json_offset_++];
   if (c == '\n') {
@@ -432,18 +411,14 @@ int JSONParser::ReadChar() {
 void JSONParser::SkipWhitespace() {
   while (1) {
     switch (ReadChar()) {
-      case -1:
-        return;
+      case -1: return;
 
       case ' ':
       case '\t':
       case '\n':
-      case '\r':
-        break;
+      case '\r': break;
 
-      default:
-        PutbackChar();
-        return;
+      default: PutbackChar(); return;
     }
   }
 }
@@ -452,8 +427,7 @@ bool JSONParser::Match(const char* s) {
   SkipWhitespace();
   Location start_loc = loc_;
   size_t start_offset = json_offset_;
-  while (*s && *s == ReadChar())
-    s++;
+  while (*s && *s == ReadChar()) s++;
 
   if (*s == 0) {
     return true;
@@ -618,9 +592,7 @@ wabt::Result JSONParser::ParseTypeVector(TypeVector* out_types) {
   EXPECT("[");
   bool first = true;
   while (!Match("]")) {
-    if (!first) {
-      EXPECT(",");
-    }
+    if (!first) { EXPECT(","); }
     Type type;
     CHECK_RESULT(ParseTypeObject(&type));
     first = false;
@@ -861,9 +833,7 @@ wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value,
       CHECK_RESULT(ParseString(&value_str));
       CHECK_RESULT(ParseLaneConstValue(lane_type, lane, out_value, value_str,
                                        allow_expected));
-      if (lane < lane_count - 1) {
-        EXPECT(",");
-      }
+      if (lane < lane_count - 1) { EXPECT(","); }
     }
     EXPECT("]");
     out_value->value.type = type;
@@ -886,9 +856,7 @@ wabt::Result JSONParser::ParseExpectedValues(
   EXPECT("[");
   bool first = true;
   while (!Match("]")) {
-    if (!first) {
-      EXPECT(",");
-    }
+    if (!first) { EXPECT(","); }
     ExpectedValue value;
     CHECK_RESULT(ParseExpectedValue(&value, AllowExpected::Yes));
     out_values->push_back(value);
@@ -903,9 +871,7 @@ wabt::Result JSONParser::ParseConstVector(ValueTypes* out_types,
   EXPECT("[");
   bool first = true;
   while (!Match("]")) {
-    if (!first) {
-      EXPECT(",");
-    }
+    if (!first) { EXPECT(","); }
     TypedValue tv;
     CHECK_RESULT(ParseConst(&tv));
     out_types->push_back(tv.type);
@@ -974,12 +940,8 @@ static string_view GetDirname(string_view path) {
   // s = "some\windows\directory", => "some\windows"
   size_t last_slash = path.find_last_of('/');
   size_t last_backslash = path.find_last_of('\\');
-  if (last_slash == string_view::npos) {
-    last_slash = 0;
-  }
-  if (last_backslash == string_view::npos) {
-    last_backslash = 0;
-  }
+  if (last_slash == string_view::npos) { last_slash = 0; }
+  if (last_backslash == string_view::npos) { last_backslash = 0; }
 
   return path.substr(0, std::max(last_slash, last_backslash));
 }
@@ -1128,9 +1090,7 @@ wabt::Result JSONParser::ParseScript(Script* out_script) {
   bool first = true;
   while (!Match("]")) {
     CommandPtr command;
-    if (!first) {
-      EXPECT(",");
-    }
+    if (!first) { EXPECT(","); }
     CHECK_RESULT(ParseCommand(&command));
     out_script->commands.push_back(std::move(command));
     first = false;
@@ -1354,8 +1314,7 @@ ActionResult CommandRunner::RunAction(int line_number,
       break;
     }
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 
   return result;
@@ -1384,9 +1343,7 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
                                               Errors* errors) {
   std::vector<uint8_t> file_data;
 
-  if (Failed(ReadFile(module_filename, &file_data))) {
-    return {};
-  }
+  if (Failed(ReadFile(module_filename, &file_data))) { return {}; }
 
   const bool kReadDebugNames = true;
   const bool kStopOnFirstError = true;
@@ -1399,9 +1356,7 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
     return {};
   }
 
-  if (s_verbose) {
-    module_desc.istream.Disassemble(s_stdout_stream.get());
-  }
+  if (s_verbose) { module_desc.istream.Disassemble(s_stdout_stream.get()); }
 
   return interp::Module::New(store_, module_desc);
 }
@@ -1439,9 +1394,7 @@ Extern::Ptr CommandRunner::GetImport(const std::string& module,
   auto mod_iter = registry_.find(module);
   if (mod_iter != registry_.end()) {
     auto extern_iter = mod_iter->second.find(name);
-    if (extern_iter != mod_iter->second.end()) {
-      return extern_iter->second;
-    }
+    if (extern_iter != mod_iter->second.end()) { return extern_iter->second; }
   }
   return {};
 }
@@ -1488,9 +1441,7 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
   }
 
   PopulateExports(instance, &last_instance_);
-  if (!command->name.empty()) {
-    instances_[command->name] = last_instance_;
-  }
+  if (!command->name.empty()) { instances_[command->name] = last_instance_; }
 
   return wabt::Result::Ok;
 }
@@ -1637,8 +1588,7 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
     case Type::F32:
     case Type::F64:
       switch (ev.nan[0]) {
-        case ExpectedNan::None:
-          return TypedValueToString(ev.value);
+        case ExpectedNan::None: return TypedValueToString(ev.value);
 
         case ExpectedNan::Arithmetic:
           return StringPrintf("%s:nan:arithmetic", ev.value.type.GetName());
@@ -1657,8 +1607,7 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
       return result;
     }
 
-    default:
-      break;
+    default: break;
   }
   return TypedValueToString(ev.value);
 }
@@ -1746,8 +1695,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
       break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 
   if (!ok && print_error) {
@@ -1821,27 +1769,19 @@ wabt::Result CommandRunner::OnAssertExhaustionCommand(
 }
 
 void CommandRunner::TallyCommand(wabt::Result result) {
-  if (Succeeded(result)) {
-    passed_++;
-  }
+  if (Succeeded(result)) { passed_++; }
   total_++;
 }
 
 static int ReadAndRunSpecJSON(string_view spec_json_filename) {
   JSONParser parser;
-  if (parser.ReadFile(spec_json_filename) == wabt::Result::Error) {
-    return 1;
-  }
+  if (parser.ReadFile(spec_json_filename) == wabt::Result::Error) { return 1; }
 
   Script script;
-  if (parser.ParseScript(&script) == wabt::Result::Error) {
-    return 1;
-  }
+  if (parser.ParseScript(&script) == wabt::Result::Error) { return 1; }
 
   CommandRunner runner;
-  if (runner.Run(script) == wabt::Result::Error) {
-    return 1;
-  }
+  if (runner.Run(script) == wabt::Result::Error) { return 1; }
 
   printf("%d/%d tests passed.\n", runner.passed(), runner.total());
   const int failed = runner.total() - runner.passed();

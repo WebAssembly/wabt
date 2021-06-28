@@ -55,14 +55,11 @@ Token WastLexer::GetToken(WastParser* parser) {
   while (true) {
     token_start_ = cursor_;
     switch (PeekChar()) {
-      case kEof:
-        return BareToken(TokenType::Eof);
+      case kEof: return BareToken(TokenType::Eof);
 
       case '(':
         if (MatchString("(;")) {
-          if (ReadBlockComment(parser)) {
-            continue;
-          }
+          if (ReadBlockComment(parser)) { continue; }
           return BareToken(TokenType::Eof);
         } else if (MatchString("(@")) {
           ReadReservedChars();
@@ -74,15 +71,11 @@ Token WastLexer::GetToken(WastParser* parser) {
         }
         break;
 
-      case ')':
-        ReadChar();
-        return BareToken(TokenType::Rpar);
+      case ')': ReadChar(); return BareToken(TokenType::Rpar);
 
       case ';':
         if (MatchString(";;")) {
-          if (ReadLineComment()) {
-            continue;
-          }
+          if (ReadLineComment()) { continue; }
           return BareToken(TokenType::Eof);
         } else {
           ReadChar();
@@ -94,22 +87,17 @@ Token WastLexer::GetToken(WastParser* parser) {
       case ' ':
       case '\t':
       case '\r':
-      case '\n':
-        ReadWhitespace();
-        continue;
+      case '\n': ReadWhitespace(); continue;
 
-      case '"':
-        return GetStringToken(parser);
+      case '"': return GetStringToken(parser);
 
       case '+':
       case '-':
         ReadChar();
         switch (PeekChar()) {
-          case 'i':
-            return GetInfToken();
+          case 'i': return GetInfToken();
 
-          case 'n':
-            return GetNanToken();
+          case 'n': return GetNanToken();
 
           case '0':
             return MatchString("0x") ? GetHexNumberToken(TokenType::Int)
@@ -122,11 +110,9 @@ Token WastLexer::GetToken(WastParser* parser) {
           case '6':
           case '7':
           case '8':
-          case '9':
-            return GetNumberToken(TokenType::Int);
+          case '9': return GetNumberToken(TokenType::Int);
 
-          default:
-            return GetReservedToken();
+          default: return GetReservedToken();
         }
         break;
 
@@ -142,23 +128,17 @@ Token WastLexer::GetToken(WastParser* parser) {
       case '6':
       case '7':
       case '8':
-      case '9':
-        return GetNumberToken(TokenType::Nat);
+      case '9': return GetNumberToken(TokenType::Nat);
 
-      case '$':
-        return GetIdToken();
+      case '$': return GetIdToken();
 
-      case 'a':
-        return GetNameEqNumToken("align=", TokenType::AlignEqNat);
+      case 'a': return GetNameEqNumToken("align=", TokenType::AlignEqNat);
 
-      case 'i':
-        return GetInfToken();
+      case 'i': return GetInfToken();
 
-      case 'n':
-        return GetNanToken();
+      case 'n': return GetNanToken();
 
-      case 'o':
-        return GetNameEqNumToken("offset=", TokenType::OffsetEqNat);
+      case 'o': return GetNameEqNumToken("offset=", TokenType::OffsetEqNat);
 
       default:
         if (IsKeyword(PeekChar())) {
@@ -233,25 +213,17 @@ bool WastLexer::ReadBlockComment(WastParser* parser) {
   int nesting = 1;
   while (true) {
     switch (ReadChar()) {
-      case kEof:
-        ERROR("EOF in block comment");
-        return false;
+      case kEof: ERROR("EOF in block comment"); return false;
 
       case ';':
-        if (MatchChar(')') && --nesting == 0) {
-          return true;
-        }
+        if (MatchChar(')') && --nesting == 0) { return true; }
         break;
 
       case '(':
-        if (MatchChar(';')) {
-          nesting++;
-        }
+        if (MatchChar(';')) { nesting++; }
         break;
 
-      case '\n':
-        Newline();
-        break;
+      case '\n': Newline(); break;
     }
   }
 }
@@ -259,12 +231,9 @@ bool WastLexer::ReadBlockComment(WastParser* parser) {
 bool WastLexer::ReadLineComment() {
   while (true) {
     switch (ReadChar()) {
-      case kEof:
-        return false;
+      case kEof: return false;
 
-      case '\n':
-        Newline();
-        return true;
+      case '\n': Newline(); return true;
     }
   }
 }
@@ -274,17 +243,14 @@ void WastLexer::ReadWhitespace() {
     switch (PeekChar()) {
       case ' ':
       case '\t':
-      case '\r':
-        ReadChar();
-        break;
+      case '\r': ReadChar(); break;
 
       case '\n':
         ReadChar();
         Newline();
         break;
 
-      default:
-        return;
+      default: return;
     }
   }
 }
@@ -296,8 +262,7 @@ Token WastLexer::GetStringToken(WastParser* parser) {
   ReadChar();
   while (in_string) {
     switch (ReadChar()) {
-      case kEof:
-        return BareToken(TokenType::Eof);
+      case kEof: return BareToken(TokenType::Eof);
 
       case '\n':
         token_start_ = cursor_ - 1;
@@ -306,9 +271,7 @@ Token WastLexer::GetStringToken(WastParser* parser) {
         Newline();
         continue;
 
-      case '"':
-        in_string = false;
-        break;
+      case '"': in_string = false; break;
 
       case '\\': {
         switch (ReadChar()) {
@@ -366,9 +329,7 @@ Token WastLexer::GetStringToken(WastParser* parser) {
     }
   }
   token_start_ = saved_token_start;
-  if (has_error) {
-    return Token(GetLocation(), TokenType::Invalid);
-  }
+  if (has_error) { return Token(GetLocation(), TokenType::Invalid); }
 
   return TextToken(TokenType::Text);
 }
@@ -430,25 +391,19 @@ int WastLexer::ReadReservedChars() {
 }
 
 void WastLexer::ReadSign() {
-  if (PeekChar() == '+' || PeekChar() == '-') {
-    ReadChar();
-  }
+  if (PeekChar() == '+' || PeekChar() == '-') { ReadChar(); }
 }
 
 Token WastLexer::GetNumberToken(TokenType token_type) {
   if (ReadNum()) {
     if (MatchChar('.')) {
       token_type = TokenType::Float;
-      if (IsDigit(PeekChar()) && !ReadNum()) {
-        return GetReservedToken();
-      }
+      if (IsDigit(PeekChar()) && !ReadNum()) { return GetReservedToken(); }
     }
     if (MatchChar('e') || MatchChar('E')) {
       token_type = TokenType::Float;
       ReadSign();
-      if (!ReadNum()) {
-        return GetReservedToken();
-      }
+      if (!ReadNum()) { return GetReservedToken(); }
     }
     if (NoTrailingReservedChars()) {
       if (token_type == TokenType::Float) {
@@ -472,9 +427,7 @@ Token WastLexer::GetHexNumberToken(TokenType token_type) {
     if (MatchChar('p') || MatchChar('P')) {
       token_type = TokenType::Float;
       ReadSign();
-      if (!ReadNum()) {
-        return GetReservedToken();
-      }
+      if (!ReadNum()) { return GetReservedToken(); }
     }
     if (NoTrailingReservedChars()) {
       if (token_type == TokenType::Float) {
@@ -525,9 +478,7 @@ Token WastLexer::GetNameEqNumToken(string_view name, TokenType token_type) {
 
 Token WastLexer::GetIdToken() {
   ReadChar();
-  if (NoTrailingReservedChars()) {
-    return TextToken(TokenType::Reserved);
-  }
+  if (NoTrailingReservedChars()) { return TextToken(TokenType::Reserved); }
   return TextToken(TokenType::Var);
 }
 
@@ -535,9 +486,7 @@ Token WastLexer::GetKeywordToken() {
   ReadReservedChars();
   TokenInfo* info =
       Perfect_Hash::InWordSet(token_start_, cursor_ - token_start_);
-  if (!info) {
-    return TextToken(TokenType::Reserved);
-  }
+  if (!info) { return TextToken(TokenType::Reserved); }
   if (IsTokenTypeBare(info->token_type)) {
     return BareToken(info->token_type);
   } else if (IsTokenTypeType(info->token_type) ||

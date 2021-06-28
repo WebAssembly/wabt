@@ -34,9 +34,7 @@ const char* GetTokenTypeName(TokenType token_type) {
       "Expected TokenType names list length to match number of TokenTypes.");
 
   int x = static_cast<int>(token_type);
-  if (x < WABT_ENUM_COUNT(TokenType)) {
-    return s_names[x];
-  }
+  if (x < WABT_ENUM_COUNT(TokenType)) { return s_names[x]; }
 
   return "Invalid";
 }

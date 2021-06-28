@@ -42,8 +42,8 @@
 
 #define WABT_USE(x) static_cast<void>(x)
 
-#define WABT_PAGE_SIZE 0x10000 // 64k
-#define WABT_MAX_PAGES32 0x10000 // # of pages that fit in 32-bit address space
+#define WABT_PAGE_SIZE 0x10000    // 64k
+#define WABT_MAX_PAGES32 0x10000  // # of pages that fit in 32-bit address space
 // # of pages that fit in 64-bit address space
 #define WABT_MAX_PAGEGE64 0x1000000000000
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
@@ -162,8 +162,7 @@ struct v128 {
   }
   void set_zero() { std::fill(std::begin(v), std::end(v), 0); }
 
-  template <typename T>
-  T To(int lane) const {
+  template <typename T> T To(int lane) const {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
@@ -172,8 +171,7 @@ struct v128 {
     return result;
   }
 
-  template <typename T>
-  void From(int lane, T data) {
+  template <typename T> void From(int lane, T data) {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T),
@@ -193,16 +191,14 @@ static const Address kInvalidAddress = ~0;
 static const Index kInvalidIndex = ~0;
 static const Offset kInvalidOffset = ~0;
 
-template <typename Dst, typename Src>
-Dst WABT_VECTORCALL Bitcast(Src&& value) {
+template <typename Dst, typename Src> Dst WABT_VECTORCALL Bitcast(Src&& value) {
   static_assert(sizeof(Src) == sizeof(Dst), "Bitcast sizes must match.");
   Dst result;
   memcpy(&result, &value, sizeof(result));
   return result;
 }
 
-template <typename T>
-void ZeroMemory(T& v) {
+template <typename T> void ZeroMemory(T& v) {
   WABT_STATIC_ASSERT(std::is_pod<T>::value);
   memset(&v, 0, sizeof(v));
 }
@@ -214,10 +210,7 @@ void Construct(T& placement, Args&&... args) {
 }
 
 // Placement destruct
-template <typename T>
-void Destruct(T& placement) {
-  placement.~T();
-}
+template <typename T> void Destruct(T& placement) { placement.~T(); }
 
 inline std::string WABT_PRINTF_FORMAT(1, 2)
     StringPrintf(const char* format, ...) {
@@ -450,25 +443,17 @@ static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
 
 static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
   switch (type) {
-    case SymbolType::Function:
-      return "func";
-    case SymbolType::Global:
-      return "global";
-    case SymbolType::Data:
-      return "data";
-    case SymbolType::Section:
-      return "section";
-    case SymbolType::Tag:
-      return "tag";
-    case SymbolType::Table:
-      return "table";
-    default:
-      return "<error_symbol_type>";
+    case SymbolType::Function: return "func";
+    case SymbolType::Global: return "global";
+    case SymbolType::Data: return "data";
+    case SymbolType::Section: return "section";
+    case SymbolType::Tag: return "tag";
+    case SymbolType::Table: return "table";
+    default: return "<error_symbol_type>";
   }
 }
 
-template <typename T>
-void ConvertBackslashToSlash(T begin, T end) {
+template <typename T> void ConvertBackslashToSlash(T begin, T end) {
   std::replace(begin, end, '\\', '/');
 }
 

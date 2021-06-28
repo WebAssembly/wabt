@@ -108,20 +108,13 @@ struct Const {
 
   int lane_count() const {
     switch (lane_type()) {
-      case Type::I8:
-        return 16;
-      case Type::I16:
-        return 8;
-      case Type::I32:
-        return 4;
-      case Type::I64:
-        return 2;
-      case Type::F32:
-        return 4;
-      case Type::F64:
-        return 2;
-      default:
-        WABT_UNREACHABLE;
+      case Type::I8: return 16;
+      case Type::I16: return 8;
+      case Type::I32: return 4;
+      case Type::I64: return 2;
+      case Type::F32: return 4;
+      case Type::F64: return 2;
+      default: WABT_UNREACHABLE;
     }
   }
 
@@ -132,8 +125,7 @@ struct Const {
   uintptr_t ref_bits() const { return data_.To<uintptr_t>(0); }
   v128 vec128() const { return data_; }
 
-  template <typename T>
-  T v128_lane(int lane) const {
+  template <typename T> T v128_lane(int lane) const {
     return data_.To<T>(lane);
   }
 
@@ -171,17 +163,14 @@ struct Const {
   }
 
   void set_expected_nan(int lane, ExpectedNan nan) {
-    if (lane < 4) {
-      nan_[lane] = nan;
-    }
+    if (lane < 4) { nan_[lane] = nan; }
   }
 
   // v128 support
   Location loc;
 
  private:
-  template <typename T>
-  void set_v128_lane(int lane, Type lane_type, T x) {
+  template <typename T> void set_v128_lane(int lane, Type lane_type, T x) {
     lane_type_ = lane_type;
     From(Type::V128, x, lane);
     set_expected_nan(lane, ExpectedNan::None);
@@ -192,8 +181,7 @@ struct Const {
     From<T>(type, data);
   }
 
-  template <typename T>
-  void From(Type type, T data, int lane = 0) {
+  template <typename T> void From(Type type, T data, int lane = 0) {
     static_assert(sizeof(T) <= sizeof(data_), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(data_));
     type_ = type;
@@ -422,8 +410,7 @@ class Expr : public intrusive_list_base<Expr> {
 
 const char* GetExprTypeName(const Expr& expr);
 
-template <ExprType TypeEnum>
-class ExprMixin : public Expr {
+template <ExprType TypeEnum> class ExprMixin : public Expr {
  public:
   static bool classof(const Expr* expr) { return expr->type() == TypeEnum; }
 
@@ -439,8 +426,7 @@ typedef ExprMixin<ExprType::Nop> NopExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
 
-template <ExprType TypeEnum>
-class RefTypeExpr : public ExprMixin<TypeEnum> {
+template <ExprType TypeEnum> class RefTypeExpr : public ExprMixin<TypeEnum> {
  public:
   RefTypeExpr(Type type, const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc), type(type) {}
@@ -451,8 +437,7 @@ class RefTypeExpr : public ExprMixin<TypeEnum> {
 typedef RefTypeExpr<ExprType::RefNull> RefNullExpr;
 typedef ExprMixin<ExprType::RefIsNull> RefIsNullExpr;
 
-template <ExprType TypeEnum>
-class OpcodeExpr : public ExprMixin<TypeEnum> {
+template <ExprType TypeEnum> class OpcodeExpr : public ExprMixin<TypeEnum> {
  public:
   OpcodeExpr(Opcode opcode, const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc), opcode(opcode) {}
@@ -518,8 +503,7 @@ class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
   v128 val;
 };
 
-template <ExprType TypeEnum>
-class VarExpr : public ExprMixin<TypeEnum> {
+template <ExprType TypeEnum> class VarExpr : public ExprMixin<TypeEnum> {
  public:
   VarExpr(const Var& var, const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc), var(var) {}
@@ -598,8 +582,7 @@ class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
   Var table;
 };
 
-template <ExprType TypeEnum>
-class BlockExprBase : public ExprMixin<TypeEnum> {
+template <ExprType TypeEnum> class BlockExprBase : public ExprMixin<TypeEnum> {
  public:
   explicit BlockExprBase(const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc) {}
@@ -650,8 +633,7 @@ class ConstExpr : public ExprMixin<ExprType::Const> {
 };
 
 // TODO(binji): Rename this, it is used for more than loads/stores now.
-template <ExprType TypeEnum>
-class LoadStoreExpr : public ExprMixin<TypeEnum> {
+template <ExprType TypeEnum> class LoadStoreExpr : public ExprMixin<TypeEnum> {
  public:
   LoadStoreExpr(Opcode opcode,
                 Address align,
@@ -716,9 +698,7 @@ class LocalTypes {
   const Decls& decls() const { return decls_; }
 
   void AppendDecl(Type type, Index count) {
-    if (count != 0) {
-      decls_.emplace_back(type, count);
-    }
+    if (count != 0) { decls_.emplace_back(type, count); }
   }
 
   Index size() const;
@@ -860,8 +840,7 @@ class Import {
   ExternalKind kind_;
 };
 
-template <ExternalKind TypeEnum>
-class ImportMixin : public Import {
+template <ExternalKind TypeEnum> class ImportMixin : public Import {
  public:
   static bool classof(const Import* import) {
     return import->kind() == TypeEnum;
@@ -1224,8 +1203,7 @@ class Action {
 
 typedef std::unique_ptr<Action> ActionPtr;
 
-template <ActionType TypeEnum>
-class ActionMixin : public Action {
+template <ActionType TypeEnum> class ActionMixin : public Action {
  public:
   static bool classof(const Action* action) {
     return action->type() == TypeEnum;
@@ -1278,8 +1256,7 @@ class Command {
   explicit Command(CommandType type) : type(type) {}
 };
 
-template <CommandType TypeEnum>
-class CommandMixin : public Command {
+template <CommandType TypeEnum> class CommandMixin : public Command {
  public:
   static bool classof(const Command* cmd) { return cmd->type == TypeEnum; }
   CommandMixin() : Command(TypeEnum) {}

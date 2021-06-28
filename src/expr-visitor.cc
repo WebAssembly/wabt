@@ -160,14 +160,11 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
 }
 
 Result ExprVisitor::VisitExprList(ExprList& exprs) {
-  for (Expr& expr : exprs)
-    CHECK_RESULT(VisitExpr(&expr));
+  for (Expr& expr : exprs) CHECK_RESULT(VisitExpr(&expr));
   return Result::Ok;
 }
 
-Result ExprVisitor::VisitFunc(Func* func) {
-  return VisitExprList(func->exprs);
-}
+Result ExprVisitor::VisitFunc(Func* func) { return VisitExprList(func->exprs); }
 
 Result ExprVisitor::HandleDefaultState(Expr* expr) {
   switch (expr->type()) {

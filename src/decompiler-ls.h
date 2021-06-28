@@ -26,36 +26,21 @@ namespace wabt {
 // Names starting with "u" are unsigned, the rest are "signed or doesn't matter"
 inline const char* GetDecompTypeName(Type t) {
   switch (t) {
-    case Type::I8:
-      return "byte";
-    case Type::I8U:
-      return "ubyte";
-    case Type::I16:
-      return "short";
-    case Type::I16U:
-      return "ushort";
-    case Type::I32:
-      return "int";
-    case Type::I32U:
-      return "uint";
-    case Type::I64:
-      return "long";
-    case Type::F32:
-      return "float";
-    case Type::F64:
-      return "double";
-    case Type::V128:
-      return "simd";
-    case Type::Func:
-      return "func";
-    case Type::FuncRef:
-      return "funcref";
-    case Type::ExternRef:
-      return "externref";
-    case Type::Void:
-      return "void";
-    default:
-      return "ILLEGAL";
+    case Type::I8: return "byte";
+    case Type::I8U: return "ubyte";
+    case Type::I16: return "short";
+    case Type::I16U: return "ushort";
+    case Type::I32: return "int";
+    case Type::I32U: return "uint";
+    case Type::I64: return "long";
+    case Type::F32: return "float";
+    case Type::F64: return "double";
+    case Type::V128: return "simd";
+    case Type::Func: return "func";
+    case Type::FuncRef: return "funcref";
+    case Type::ExternRef: return "externref";
+    case Type::Void: return "void";
+    default: return "ILLEGAL";
   }
 }
 
@@ -70,12 +55,9 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
     // FIXME: change into a new column in opcode.def instead?
     auto is_unsigned = name.substr(name.size() - 2) == "_u";
     switch (opc.GetMemorySize()) {
-      case 1:
-        return is_unsigned ? Type::I8U : Type::I8;
-      case 2:
-        return is_unsigned ? Type::I16U : Type::I16;
-      case 4:
-        return is_unsigned ? Type::I32U : Type::I32;
+      case 1: return is_unsigned ? Type::I8U : Type::I8;
+      case 2: return is_unsigned ? Type::I16U : Type::I16;
+      case 4: return is_unsigned ? Type::I32U : Type::I32;
     }
   }
   return operand_type;
@@ -102,8 +84,7 @@ struct LoadStoreTracking {
   };
 
   void Track(const Node& n) {
-    for (auto& c : n.children)
-      Track(c);
+    for (auto& c : n.children) Track(c);
     switch (n.etype) {
       case ExprType::Load: {
         auto& le = *cast<LoadExpr>(n.e);
@@ -117,8 +98,7 @@ struct LoadStoreTracking {
                   n.children[0]);
         break;
       }
-      default:
-        break;
+      default: break;
     }
   }
 
@@ -131,8 +111,7 @@ struct LoadStoreTracking {
       case ExprType::LocalTee:
         return cast<LocalTeeExpr>(addr_exp.e)->var.name();
         break;
-      default:
-        return "";
+      default: return "";
     }
   }
 
@@ -146,9 +125,7 @@ struct LoadStoreTracking {
     // We want to associate memory ops of a certain offset & size as being
     // relative to a uniquely identifiable pointer, such as a local.
     auto name = AddrExpName(addr_exp);
-    if (name.empty()) {
-      return;
-    }
+    if (name.empty()) { return; }
     auto& var = vars[name];
     auto& access = var.accesses[offset];
     // Check if previous access at this offset (if any) is of same size
@@ -157,8 +134,7 @@ struct LoadStoreTracking {
                              (access.type != type) || (access.align != align)))
       access.is_uniform = false;
     // Also exclude weird alignment accesses from structs.
-    if (!opc.IsNaturallyAligned(align))
-      access.is_uniform = false;
+    if (!opc.IsNaturallyAligned(align)) access.is_uniform = false;
     access.byte_size = byte_size;
     access.type = type;
     access.align = align;
@@ -227,14 +203,11 @@ struct LoadStoreTracking {
 
   std::string GenTypeDecl(const std::string& name) const {
     auto it = vars.find(name);
-    if (it == vars.end()) {
-      return "";
-    }
+    if (it == vars.end()) { return ""; }
     if (it->second.struct_layout) {
       std::string s = "{ ";
       for (auto& access : it->second.accesses) {
-        if (access.second.idx)
-          s += ", ";
+        if (access.second.idx) s += ", ";
         s += IdxToName(access.second.idx);
         s += ':';
         s += GetDecompTypeName(access.second.type);
@@ -253,22 +226,16 @@ struct LoadStoreTracking {
 
   std::string GenAccess(uint64_t offset, const Node& addr_exp) const {
     auto name = AddrExpName(addr_exp);
-    if (name.empty()) {
-      return "";
-    }
+    if (name.empty()) { return ""; }
     auto it = vars.find(name);
-    if (it == vars.end()) {
-      return "";
-    }
+    if (it == vars.end()) { return ""; }
     if (it->second.struct_layout) {
       auto ait = it->second.accesses.find(offset);
       assert(ait != it->second.accesses.end());
       return IdxToName(ait->second.idx);
     }
     // Not a struct, see if it is a typed pointer.
-    if (it->second.same_type != Type::Void) {
-      return "*";
-    }
+    if (it->second.same_type != Type::Void) { return "*"; }
     return "";
   }
 

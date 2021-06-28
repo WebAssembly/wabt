@@ -21,24 +21,20 @@ namespace wabt {
 BinarySectionOrder GetSectionOrder(BinarySection sec) {
   switch (sec) {
 #define V(Name, name, code) \
-  case BinarySection::Name: \
-    return BinarySectionOrder::Name;
+  case BinarySection::Name: return BinarySectionOrder::Name;
     WABT_FOREACH_BINARY_SECTION(V)
 #undef V
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
 const char* GetSectionName(BinarySection sec) {
   switch (sec) {
 #define V(Name, name, code) \
-  case BinarySection::Name: \
-    return #Name;
+  case BinarySection::Name: return #Name;
     WABT_FOREACH_BINARY_SECTION(V)
 #undef V
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 

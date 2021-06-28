@@ -184,9 +184,7 @@ class TypeChecker {
   void PrintStackIfFailed(Result result, const char* desc, Args... args) {
     // Minor optimization, check result before constructing the vector to pass
     // to the other overload of PrintStackIfFailed.
-    if (Failed(result)) {
-      PrintStackIfFailed(result, desc, {args...});
-    }
+    if (Failed(result)) { PrintStackIfFailed(result, desc, {args...}); }
   }
 
   void PrintStackIfFailed(Result, const char* desc, const TypeVector&);

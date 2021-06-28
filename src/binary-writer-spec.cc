@@ -106,9 +106,7 @@ void BinaryWriterSpec::WriteKey(const char* key) {
   json_stream_->Writef("\"%s\": ", key);
 }
 
-void BinaryWriterSpec::WriteSeparator() {
-  json_stream_->Writef(", ");
-}
+void BinaryWriterSpec::WriteSeparator() { json_stream_->Writef(", "); }
 
 void BinaryWriterSpec::WriteEscapedString(string_view s) {
   json_stream_->WriteChar('"');
@@ -165,17 +163,11 @@ void BinaryWriterSpec::WriteTypeObject(Type type) {
 
 void BinaryWriterSpec::WriteF32(uint32_t f32_bits, ExpectedNan expected) {
   switch (expected) {
-    case ExpectedNan::None:
-      json_stream_->Writef("\"%u\"", f32_bits);
-      break;
+    case ExpectedNan::None: json_stream_->Writef("\"%u\"", f32_bits); break;
 
-    case ExpectedNan::Arithmetic:
-      WriteString("nan:arithmetic");
-      break;
+    case ExpectedNan::Arithmetic: WriteString("nan:arithmetic"); break;
 
-    case ExpectedNan::Canonical:
-      WriteString("nan:canonical");
-      break;
+    case ExpectedNan::Canonical: WriteString("nan:canonical"); break;
   }
 }
 
@@ -185,13 +177,9 @@ void BinaryWriterSpec::WriteF64(uint64_t f64_bits, ExpectedNan expected) {
       json_stream_->Writef("\"%" PRIu64 "\"", f64_bits);
       break;
 
-    case ExpectedNan::Arithmetic:
-      WriteString("nan:arithmetic");
-      break;
+    case ExpectedNan::Arithmetic: WriteString("nan:arithmetic"); break;
 
-    case ExpectedNan::Canonical:
-      WriteString("nan:canonical");
-      break;
+    case ExpectedNan::Canonical: WriteString("nan:canonical"); break;
   }
 }
 
@@ -292,13 +280,10 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
                      const_.expected_nan(lane));
             break;
 
-          default:
-            WABT_UNREACHABLE;
+          default: WABT_UNREACHABLE;
         }
 
-        if (lane != const_.lane_count() - 1) {
-          WriteSeparator();
-        }
+        if (lane != const_.lane_count() - 1) { WriteSeparator(); }
       }
 
       json_stream_->Writef("]");
@@ -306,8 +291,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       break;
     }
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 
   json_stream_->Writef("}");
@@ -318,9 +302,7 @@ void BinaryWriterSpec::WriteConstVector(const ConstVector& consts) {
   for (size_t i = 0; i < consts.size(); ++i) {
     const Const& const_ = consts[i];
     WriteConst(const_);
-    if (i != consts.size() - 1) {
-      WriteSeparator();
-    }
+    if (i != consts.size() - 1) { WriteSeparator(); }
   }
   json_stream_->Writef("]");
 }

@@ -36,9 +36,7 @@ Color::Color(FILE* file, bool enabled) : file_(file) {
 // static
 bool Color::SupportsColor(FILE* file) {
   char* force = getenv("FORCE_COLOR");
-  if (force) {
-    return atoi(force) != 0;
-  }
+  if (force) { return atoi(force) != 0; }
 
 #if _WIN32
 
@@ -76,9 +74,7 @@ bool Color::SupportsColor(FILE* file) {
 }
 
 void Color::WriteCode(const char* code) const {
-  if (enabled_) {
-    fputs(code, file_);
-  }
+  if (enabled_) { fputs(code, file_); }
 }
 
 }  // namespace wabt

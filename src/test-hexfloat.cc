@@ -50,8 +50,7 @@
 
 using namespace wabt;
 
-template <typename T, typename F>
-T bit_cast(F value) {
+template <typename T, typename F> T bit_cast(F value) {
   T result;
   memcpy(&result, &value, sizeof(result));
   return result;
@@ -71,8 +70,7 @@ class ThreadedTest : public ::testing::Test {
 
   virtual void SetUp() {
     num_threads_ = std::thread::hardware_concurrency();
-    if (num_threads_ == 0)
-      num_threads_ = kDefaultNumThreads;
+    if (num_threads_ == 0) num_threads_ = kDefaultNumThreads;
   }
 
   virtual void RunShard(int shard) = 0;
@@ -84,9 +82,7 @@ class ThreadedTest : public ::testing::Test {
       threads.emplace_back(&ThreadedTest::RunShard, this, i);
     }
 
-    for (std::thread& thread : threads) {
-      thread.join();
-    }
+    for (std::thread& thread : threads) { thread.join(); }
   }
 
   int num_threads_;
@@ -99,8 +95,7 @@ class AllFloatsParseTest : public ThreadedTest {
     char buffer[100];
     FOREACH_UINT32(bits) {
       LOG_COMPLETION(bits);
-      if (is_infinity_or_nan(bits))
-        continue;
+      if (is_infinity_or_nan(bits)) continue;
 
       float value = bit_cast<float>(bits);
       int len = snprintf(buffer, sizeof(buffer), "%a", value);
@@ -114,9 +109,7 @@ class AllFloatsParseTest : public ThreadedTest {
   }
 };
 
-TEST_F(AllFloatsParseTest, Run) {
-  RunThreads();
-}
+TEST_F(AllFloatsParseTest, Run) { RunThreads(); }
 
 class AllFloatsWriteTest : public ThreadedTest {
  protected:
@@ -124,8 +117,7 @@ class AllFloatsWriteTest : public ThreadedTest {
     char buffer[100];
     FOREACH_UINT32(bits) {
       LOG_COMPLETION(bits);
-      if (is_infinity_or_nan(bits))
-        continue;
+      if (is_infinity_or_nan(bits)) continue;
 
       WriteFloatHex(buffer, sizeof(buffer), bits);
 
@@ -138,9 +130,7 @@ class AllFloatsWriteTest : public ThreadedTest {
   }
 };
 
-TEST_F(AllFloatsWriteTest, Run) {
-  RunThreads();
-}
+TEST_F(AllFloatsWriteTest, Run) { RunThreads(); }
 
 class AllFloatsRoundtripTest : public ThreadedTest {
  protected:
@@ -172,9 +162,7 @@ class AllFloatsRoundtripTest : public ThreadedTest {
   }
 };
 
-TEST_F(AllFloatsRoundtripTest, Run) {
-  RunThreads();
-}
+TEST_F(AllFloatsRoundtripTest, Run) { RunThreads(); }
 
 /* doubles */
 class ManyDoublesParseTest : public ThreadedTest {
@@ -184,8 +172,7 @@ class ManyDoublesParseTest : public ThreadedTest {
     FOREACH_UINT32(halfbits) {
       LOG_COMPLETION(halfbits);
       uint64_t bits = (static_cast<uint64_t>(halfbits) << 32) | halfbits;
-      if (is_infinity_or_nan(bits))
-        continue;
+      if (is_infinity_or_nan(bits)) continue;
 
       double value = bit_cast<double>(bits);
       int len = snprintf(buffer, sizeof(buffer), "%a", value);
@@ -199,9 +186,7 @@ class ManyDoublesParseTest : public ThreadedTest {
   }
 };
 
-TEST_F(ManyDoublesParseTest, Run) {
-  RunThreads();
-}
+TEST_F(ManyDoublesParseTest, Run) { RunThreads(); }
 
 class ManyDoublesWriteTest : public ThreadedTest {
  protected:
@@ -210,8 +195,7 @@ class ManyDoublesWriteTest : public ThreadedTest {
     FOREACH_UINT32(halfbits) {
       LOG_COMPLETION(halfbits);
       uint64_t bits = (static_cast<uint64_t>(halfbits) << 32) | halfbits;
-      if (is_infinity_or_nan(bits))
-        continue;
+      if (is_infinity_or_nan(bits)) continue;
 
       WriteDoubleHex(buffer, sizeof(buffer), bits);
 
@@ -224,9 +208,7 @@ class ManyDoublesWriteTest : public ThreadedTest {
   }
 };
 
-TEST_F(ManyDoublesWriteTest, Run) {
-  RunThreads();
-}
+TEST_F(ManyDoublesWriteTest, Run) { RunThreads(); }
 
 class ManyDoublesRoundtripTest : public ThreadedTest {
  protected:
@@ -259,6 +241,4 @@ class ManyDoublesRoundtripTest : public ThreadedTest {
   }
 };
 
-TEST_F(ManyDoublesRoundtripTest, Run) {
-  RunThreads();
-}
+TEST_F(ManyDoublesRoundtripTest, Run) { RunThreads(); }

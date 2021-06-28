@@ -28,9 +28,7 @@ namespace {
 void assert_string_view_eq(const char* s, string_view sv) {
   size_t len = std::strlen(s);
   ASSERT_EQ(len, sv.size());
-  for (size_t i = 0; i < len; ++i) {
-    ASSERT_EQ(s[i], sv[i]);
-  }
+  for (size_t i = 0; i < len; ++i) { ASSERT_EQ(s[i], sv[i]); }
 }
 
 constexpr string_view::size_type npos = string_view::npos;
@@ -219,9 +217,7 @@ TEST(string_view, copy) {
   ASSERT_EQ('r', buffer[0]);
   ASSERT_EQ('d', buffer[1]);
   ASSERT_EQ('s', buffer[2]);
-  for (int i = 3; i < 10; ++i) {
-    ASSERT_EQ(0, buffer[i]);
-  }
+  for (int i = 3; i < 10; ++i) { ASSERT_EQ(0, buffer[i]); }
 }
 
 TEST(string_view, substr) {

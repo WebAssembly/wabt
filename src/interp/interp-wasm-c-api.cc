@@ -88,10 +88,7 @@ struct wasm_externtype_t {
   wasm_externtype_t(const wasm_externtype_t& other) = delete;
   wasm_externtype_t& operator=(const wasm_externtype_t& other) = delete;
 
-  template <typename T>
-  T* As() const {
-    return cast<T>(I.get());
-  }
+  template <typename T> T* As() const { return cast<T>(I.get()); }
 
   std::unique_ptr<ExternType> I;
 
@@ -185,8 +182,7 @@ std::unique_ptr<wasm_externtype_t> wasm_externtype_t::New(
     case ExternKind::Global:
       return MakeUnique<wasm_globaltype_t>(*cast<GlobalType>(ptr.get()));
 
-    case ExternKind::Tag:
-      break;
+    case ExternKind::Tag: break;
   }
 
   assert(false);
@@ -250,10 +246,7 @@ struct wasm_store_t {
 struct wasm_ref_t {
   wasm_ref_t(RefPtr<Object> ptr) : I(ptr) {}
 
-  template <typename T>
-  T* As() const {
-    return cast<T>(I.get());
-  }
+  template <typename T> T* As() const { return cast<T>(I.get()); }
 
   RefPtr<Object> I;
 };
@@ -323,56 +316,36 @@ struct wasm_instance_t : wasm_ref_t {
 // Type conversion utilities
 static ValueType ToWabtValueType(wasm_valkind_t kind) {
   switch (kind) {
-    case WASM_I32:
-      return ValueType::I32;
-    case WASM_I64:
-      return ValueType::I64;
-    case WASM_F32:
-      return ValueType::F32;
-    case WASM_F64:
-      return ValueType::F64;
-    case WASM_ANYREF:
-      return ValueType::ExternRef;
-    case WASM_FUNCREF:
-      return ValueType::FuncRef;
-    default:
-      TRACE("unexpected wasm_valkind_t: %d", kind);
-      WABT_UNREACHABLE;
+    case WASM_I32: return ValueType::I32;
+    case WASM_I64: return ValueType::I64;
+    case WASM_F32: return ValueType::F32;
+    case WASM_F64: return ValueType::F64;
+    case WASM_ANYREF: return ValueType::ExternRef;
+    case WASM_FUNCREF: return ValueType::FuncRef;
+    default: TRACE("unexpected wasm_valkind_t: %d", kind); WABT_UNREACHABLE;
   }
   WABT_UNREACHABLE;
 }
 
 static wasm_valkind_t FromWabtValueType(ValueType type) {
   switch (type) {
-    case ValueType::I32:
-      return WASM_I32;
-    case ValueType::I64:
-      return WASM_I64;
-    case ValueType::F32:
-      return WASM_F32;
-    case ValueType::F64:
-      return WASM_F64;
-    case ValueType::ExternRef:
-      return WASM_ANYREF;
-    case ValueType::FuncRef:
-      return WASM_FUNCREF;
-    default:
-      WABT_UNREACHABLE;
+    case ValueType::I32: return WASM_I32;
+    case ValueType::I64: return WASM_I64;
+    case ValueType::F32: return WASM_F32;
+    case ValueType::F64: return WASM_F64;
+    case ValueType::ExternRef: return WASM_ANYREF;
+    case ValueType::FuncRef: return WASM_FUNCREF;
+    default: WABT_UNREACHABLE;
   }
 }
 
 static wasm_externkind_t FromWabtExternKind(ExternKind kind) {
   switch (kind) {
-    case ExternalKind::Func:
-      return WASM_EXTERN_FUNC;
-    case ExternalKind::Global:
-      return WASM_EXTERN_GLOBAL;
-    case ExternalKind::Table:
-      return WASM_EXTERN_TABLE;
-    case ExternalKind::Memory:
-      return WASM_EXTERN_MEMORY;
-    case ExternalKind::Tag:
-      WABT_UNREACHABLE;
+    case ExternalKind::Func: return WASM_EXTERN_FUNC;
+    case ExternalKind::Global: return WASM_EXTERN_GLOBAL;
+    case ExternalKind::Table: return WASM_EXTERN_TABLE;
+    case ExternalKind::Memory: return WASM_EXTERN_MEMORY;
+    case ExternalKind::Tag: WABT_UNREACHABLE;
   }
   WABT_UNREACHABLE;
 }
@@ -407,25 +380,15 @@ static TypedValue ToWabtValue(const wasm_val_t& value) {
   TypedValue out;
   out.type = ToWabtValueType(value.kind);
   switch (value.kind) {
-    case WASM_I32:
-      out.value.Set(value.of.i32);
-      break;
-    case WASM_I64:
-      out.value.Set(value.of.i64);
-      break;
-    case WASM_F32:
-      out.value.Set(value.of.f32);
-      break;
-    case WASM_F64:
-      out.value.Set(value.of.f64);
-      break;
+    case WASM_I32: out.value.Set(value.of.i32); break;
+    case WASM_I64: out.value.Set(value.of.i64); break;
+    case WASM_F32: out.value.Set(value.of.f32); break;
+    case WASM_F64: out.value.Set(value.of.f64); break;
     case WASM_ANYREF:
     case WASM_FUNCREF:
       out.value.Set(value.of.ref ? value.of.ref->I->self() : Ref::Null);
       break;
-    default:
-      TRACE("unexpected wasm type: %d", value.kind);
-      assert(false);
+    default: TRACE("unexpected wasm type: %d", value.kind); assert(false);
   }
   TRACE("-> %s", TypedValueToString(out).c_str());
   return out;
@@ -538,18 +501,14 @@ static void print_sig(const FuncType& sig) {
   fprintf(stderr, "(");
   bool first = true;
   for (auto Type : sig.params) {
-    if (!first) {
-      fprintf(stderr, ", ");
-    }
+    if (!first) { fprintf(stderr, ", "); }
     first = false;
     fprintf(stderr, "%s", Type.GetName());
   }
   fprintf(stderr, ") -> (");
   first = true;
   for (auto Type : sig.results) {
-    if (!first) {
-      fprintf(stderr, ", ");
-    }
+    if (!first) { fprintf(stderr, ", "); }
     first = false;
     fprintf(stderr, "%s", Type.GetName());
   }
@@ -604,15 +563,11 @@ void wasm_trap_trace(const wasm_trap_t* trap, own wasm_frame_vec_t* out) {
 
 // wasm_config
 
-own wasm_config_t* wasm_config_new() {
-  return new wasm_config_t();
-}
+own wasm_config_t* wasm_config_new() { return new wasm_config_t(); }
 
 // wasm_engine
 
-own wasm_engine_t* wasm_engine_new() {
-  return new wasm_engine_t();
-}
+own wasm_engine_t* wasm_engine_new() { return new wasm_engine_t(); }
 
 own wasm_engine_t* wasm_engine_new_with_config(own wasm_config_t*) {
   assert(false);
@@ -645,9 +600,7 @@ bool wasm_module_validate(wasm_store_t* store, const wasm_byte_vec_t* binary) {
   // TODO: Optimize this; for now it is generating a new module and discarding
   // it. But since this call only needs to validate, it could do much less.
   wasm_module_t* module = wasm_module_new(store, binary);
-  if (module == nullptr) {
-    return false;
-  }
+  if (module == nullptr) { return false; }
   wasm_module_delete(module);
   return true;
 }
@@ -967,12 +920,8 @@ wasm_table_size_t wasm_table_size(const wasm_table_t* table) {
 own wasm_ref_t* wasm_table_get(const wasm_table_t* table,
                                wasm_table_size_t index) {
   Ref ref;
-  if (Failed(table->As<Table>()->Get(index, &ref))) {
-    return nullptr;
-  }
-  if (ref == Ref::Null) {
-    return nullptr;
-  }
+  if (Failed(table->As<Table>()->Get(index, &ref))) { return nullptr; }
+  if (ref == Ref::Null) { return nullptr; }
   return new wasm_ref_t{table->I.store()->UnsafeGet<Object>(ref)};
 }
 
@@ -1123,9 +1072,7 @@ void wasm_val_vec_new(own wasm_val_vec_t* vec,
                       own wasm_val_t const src[]) {
   TRACE0();
   wasm_val_vec_new_uninitialized(vec, size);
-  for (size_t i = 0; i < size; ++i) {
-    vec->data[i] = src[i];
-  }
+  for (size_t i = 0; i < size; ++i) { vec->data[i] = src[i]; }
 }
 
 void wasm_val_vec_copy(own wasm_val_vec_t* out, const wasm_val_vec_t* vec) {
@@ -1138,9 +1085,7 @@ void wasm_val_vec_copy(own wasm_val_vec_t* out, const wasm_val_vec_t* vec) {
 
 void wasm_val_vec_delete(own wasm_val_vec_t* vec) {
   TRACE0();
-  for (size_t i = 0; i < vec->size; ++i) {
-    wasm_val_delete(&vec->data[i]);
-  }
+  for (size_t i = 0; i < vec->size; ++i) { wasm_val_delete(&vec->data[i]); }
   delete[] vec->data;
   vec->size = 0;
 }
@@ -1151,9 +1096,7 @@ void wasm_val_vec_delete(own wasm_val_vec_t* vec) {
                              own wasm_##name##_t* const src[]) {        \
     TRACE0();                                                           \
     wasm_##name##_vec_new_uninitialized(vec, size);                     \
-    for (size_t i = 0; i < size; ++i) {                                 \
-      vec->data[i] = src[i];                                            \
-    }                                                                   \
+    for (size_t i = 0; i < size; ++i) { vec->data[i] = src[i]; }        \
   }                                                                     \
   void wasm_##name##_vec_copy(own wasm_##name##_vec_t* out,             \
                               const wasm_##name##_vec_t* vec) {         \
@@ -1165,9 +1108,7 @@ void wasm_val_vec_delete(own wasm_val_vec_t* vec) {
   }                                                                     \
   void wasm_##name##_vec_delete(wasm_##name##_vec_t* vec) {             \
     TRACE0();                                                           \
-    for (size_t i = 0; i < vec->size; ++i) {                            \
-      delete vec->data[i];                                              \
-    }                                                                   \
+    for (size_t i = 0; i < vec->size; ++i) { delete vec->data[i]; }     \
     delete[] vec->data;                                                 \
     vec->size = 0;                                                      \
   }

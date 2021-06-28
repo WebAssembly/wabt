@@ -130,9 +130,7 @@ int ProgramMain(int argc, char** argv) {
   }
 
   for (const char* filename : s_infiles) {
-    if (Failed(dump_file(filename))) {
-      return 1;
-    }
+    if (Failed(dump_file(filename))) { return 1; }
   }
 
   return 0;

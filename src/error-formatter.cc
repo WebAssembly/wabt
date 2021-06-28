@@ -90,8 +90,7 @@ std::string FormatErrorsToString(const Errors& errors,
   for (const auto& error : errors) {
     if (!header.empty()) {
       switch (print_header) {
-        case PrintHeader::Never:
-          break;
+        case PrintHeader::Never: break;
         case PrintHeader::Once:
           print_header = PrintHeader::Never;
           // Fallthrough.

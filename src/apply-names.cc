@@ -106,23 +106,17 @@ void NameApplier::PushLabel(const std::string& label) {
   labels_.push_back(label);
 }
 
-void NameApplier::PopLabel() {
-  labels_.pop_back();
-}
+void NameApplier::PopLabel() { labels_.pop_back(); }
 
 string_view NameApplier::FindLabelByVar(Var* var) {
   if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
       const std::string& label = labels_[i];
-      if (label == var->name()) {
-        return label;
-      }
+      if (label == var->name()) { return label; }
     }
     return string_view();
   } else {
-    if (var->index() >= labels_.size()) {
-      return string_view();
-    }
+    if (var->index() >= labels_.size()) { return string_view(); }
     return labels_[labels_.size() - 1 - var->index()];
   }
 }
@@ -133,88 +127,68 @@ void NameApplier::UseNameForVar(string_view name, Var* var) {
     return;
   }
 
-  if (!name.empty()) {
-    var->set_name(name);
-  }
+  if (!name.empty()) { var->set_name(name); }
 }
 
 Result NameApplier::UseNameForFuncTypeVar(Var* var) {
   FuncType* func_type = module_->GetFuncType(*var);
-  if (!func_type) {
-    return Result::Error;
-  }
+  if (!func_type) { return Result::Error; }
   UseNameForVar(func_type->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForFuncVar(Var* var) {
   Func* func = module_->GetFunc(*var);
-  if (!func) {
-    return Result::Error;
-  }
+  if (!func) { return Result::Error; }
   UseNameForVar(func->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForGlobalVar(Var* var) {
   Global* global = module_->GetGlobal(*var);
-  if (!global) {
-    return Result::Error;
-  }
+  if (!global) { return Result::Error; }
   UseNameForVar(global->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForTableVar(Var* var) {
   Table* table = module_->GetTable(*var);
-  if (!table) {
-    return Result::Error;
-  }
+  if (!table) { return Result::Error; }
   UseNameForVar(table->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForMemoryVar(Var* var) {
   Memory* memory = module_->GetMemory(*var);
-  if (!memory) {
-    return Result::Error;
-  }
+  if (!memory) { return Result::Error; }
   UseNameForVar(memory->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForTagVar(Var* var) {
   Tag* tag = module_->GetTag(*var);
-  if (!tag) {
-    return Result::Error;
-  }
+  if (!tag) { return Result::Error; }
   UseNameForVar(tag->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForDataSegmentVar(Var* var) {
   DataSegment* data_segment = module_->GetDataSegment(*var);
-  if (!data_segment) {
-    return Result::Error;
-  }
+  if (!data_segment) { return Result::Error; }
   UseNameForVar(data_segment->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForElemSegmentVar(Var* var) {
   ElemSegment* elem_segment = module_->GetElemSegment(*var);
-  if (!elem_segment) {
-    return Result::Error;
-  }
+  if (!elem_segment) { return Result::Error; }
   UseNameForVar(elem_segment->name, var);
   return Result::Ok;
 }
 
 Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
   Index local_index = func->GetLocalIndex(*var);
-  if (local_index >= func->GetNumParamsAndLocals()) {
-    return Result::Error;
-  }
+  if (local_index >= func->GetNumParamsAndLocals()) { return Result::Error; }
 
   std::string name = param_and_local_index_to_name_[local_index];
   if (var->is_name()) {
@@ -222,9 +196,7 @@ Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
     return Result::Ok;
   }
 
-  if (!name.empty()) {
-    var->set_name(name);
-  }
+  if (!name.empty()) { var->set_name(name); }
   return Result::Ok;
 }
 
@@ -334,9 +306,7 @@ Result NameApplier::EndTryExpr(TryExpr*) {
 }
 
 Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
-  if (!expr->IsCatchAll()) {
-    CHECK_RESULT(UseNameForTagVar(&expr->var));
-  }
+  if (!expr->IsCatchAll()) { CHECK_RESULT(UseNameForTagVar(&expr->var)); }
   return Result::Ok;
 }
 
@@ -450,9 +420,7 @@ Result NameApplier::VisitTag(Tag* tag) {
 }
 
 Result NameApplier::VisitExport(Index export_index, Export* export_) {
-  if (export_->kind == ExternalKind::Func) {
-    UseNameForFuncVar(&export_->var);
-  }
+  if (export_->kind == ExternalKind::Func) { UseNameForFuncVar(&export_->var); }
   return Result::Ok;
 }
 

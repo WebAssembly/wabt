@@ -86,9 +86,7 @@ int ProgramMain(int argc, char** argv) {
 
   std::vector<uint8_t> file_data;
   Result result = ReadFile(s_infile, &file_data);
-  if (Failed(result)) {
-    WABT_FATAL("unable to read %s\n", s_infile);
-  }
+  if (Failed(result)) { WABT_FATAL("unable to read %s\n", s_infile); }
 
   std::unique_ptr<WastLexer> lexer(WastLexer::CreateBufferLexer(
       s_infile, file_data.data(), file_data.size()));
@@ -102,17 +100,11 @@ int ProgramMain(int argc, char** argv) {
 
   if (Succeeded(result)) {
     Module* module = script->GetFirstModule();
-    if (!module) {
-      WABT_FATAL("no module in file.\n");
-    }
+    if (!module) { WABT_FATAL("no module in file.\n"); }
 
-    if (s_generate_names) {
-      result = GenerateNames(module);
-    }
+    if (s_generate_names) { result = GenerateNames(module); }
 
-    if (Succeeded(result)) {
-      result = ApplyNames(module);
-    }
+    if (Succeeded(result)) { result = ApplyNames(module); }
 
     if (Succeeded(result)) {
       FileStream stream(s_outfile ? FileStream(s_outfile) : FileStream(stdout));

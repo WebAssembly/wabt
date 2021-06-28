@@ -98,8 +98,7 @@ static string_view strip_extension(string_view s) {
   string_view ext = s.substr(s.find_last_of('.'));
   string_view result = s;
 
-  if (ext == ".c")
-    result.remove_suffix(ext.length());
+  if (ext == ".c") result.remove_suffix(ext.length());
   return result;
 }
 

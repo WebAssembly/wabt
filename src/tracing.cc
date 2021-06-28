@@ -23,8 +23,7 @@ size_t indent = 0;
 const char* indent_text = "  ";
 
 void Fill() {
-  for (size_t i = 0; i < indent; ++i)
-    fputs(indent_text, stderr);
+  for (size_t i = 0; i < indent; ++i) fputs(indent_text, stderr);
 }
 
 void Indent() {
@@ -33,9 +32,7 @@ void Indent() {
 }
 
 void Dedent() {
-  if (indent) {
-    --indent;
-  }
+  if (indent) { --indent; }
   Fill();
 }
 
@@ -64,8 +61,6 @@ void TraceScope::PrintEnter(const char* method) {
   fputs("(", stderr);
 }
 
-void TraceScope::PrintNewline() {
-  fputs(")\n", stderr);
-}
+void TraceScope::PrintNewline() { fputs(")\n", stderr); }
 
 }  // end of namespace wabt

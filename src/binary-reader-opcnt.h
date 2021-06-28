@@ -44,8 +44,7 @@ class OpcodeInfo {
   };
 
   explicit OpcodeInfo(Opcode, Kind);
-  template <typename T>
-  OpcodeInfo(Opcode, Kind, T* data, size_t count = 1);
+  template <typename T> OpcodeInfo(Opcode, Kind, T* data, size_t count = 1);
   template <typename T>
   OpcodeInfo(Opcode, Kind, T* data, size_t count, T extra);
 
@@ -54,10 +53,8 @@ class OpcodeInfo {
   void Write(Stream&);
 
  private:
-  template <typename T>
-  std::pair<const T*, size_t> GetDataArray() const;
-  template <typename T>
-  const T* GetData(size_t expected_size = 1) const;
+  template <typename T> std::pair<const T*, size_t> GetDataArray() const;
+  template <typename T> const T* GetData(size_t expected_size = 1) const;
 
   template <typename T, typename F>
   void WriteArray(Stream& stream, F&& write_func);

@@ -80,9 +80,7 @@ Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
   std::string filename_str = filename.to_string();
   const char* filename_cstr = filename_str.c_str();
 
-  if (filename == "-") {
-    return ReadStdin(out_data);
-  }
+  if (filename == "-") { return ReadStdin(out_data); }
 
   struct stat statbuf;
   if (stat(filename_cstr, &statbuf) < 0) {
@@ -134,13 +132,9 @@ Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
 void InitStdio() {
 #if COMPILER_IS_MSVC
   int result = _setmode(_fileno(stdout), _O_BINARY);
-  if (result == -1) {
-    perror("Cannot set mode binary to stdout");
-  }
+  if (result == -1) { perror("Cannot set mode binary to stdout"); }
   result = _setmode(_fileno(stderr), _O_BINARY);
-  if (result == -1) {
-    perror("Cannot set mode binary to stderr");
-  }
+  if (result == -1) { perror("Cannot set mode binary to stderr"); }
 #endif
 }
 

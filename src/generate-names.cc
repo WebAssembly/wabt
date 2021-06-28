@@ -109,9 +109,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 NameGenerator::NameGenerator(NameOpts opts) : visitor_(this), opts_(opts) {}
 
 // static
-bool NameGenerator::HasName(const std::string& str) {
-  return !str.empty();
-}
+bool NameGenerator::HasName(const std::string& str) { return !str.empty(); }
 
 void NameGenerator::GenerateName(const char* prefix,
                                  Index index,
@@ -132,9 +130,7 @@ void NameGenerator::GenerateName(const char* prefix,
       *str += std::to_string(index);
     }
   }
-  if (disambiguator != 0) {
-    *str += '_' + std::to_string(disambiguator);
-  }
+  if (disambiguator != 0) { *str += '_' + std::to_string(disambiguator); }
 }
 
 void NameGenerator::MaybeGenerateName(const char* prefix,
@@ -167,9 +163,7 @@ void NameGenerator::MaybeGenerateAndBindName(BindingHash* bindings,
                                              const char* prefix,
                                              Index index,
                                              std::string* str) {
-  if (!HasName(*str)) {
-    GenerateAndBindName(bindings, prefix, index, str);
-  }
+  if (!HasName(*str)) { GenerateAndBindName(bindings, prefix, index, str); }
 }
 
 void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
@@ -196,9 +190,7 @@ void NameGenerator::GenerateAndBindLocalNames(Func* func) {
                                 &index_to_name);
   for (size_t i = 0; i < index_to_name.size(); ++i) {
     const std::string& old_name = index_to_name[i];
-    if (!old_name.empty()) {
-      continue;
-    }
+    if (!old_name.empty()) { continue; }
 
     const char* prefix = i < func->GetNumParams() ? "p" : "l";
     std::string new_name;
@@ -398,12 +390,8 @@ Result NameGenerator::VisitModule(Module* module) {
   module_ = module;
   // Visit imports and exports first to give better names, derived from the
   // import/export name.
-  for (auto* import : module->imports) {
-    CHECK_RESULT(VisitImport(import));
-  }
-  for (auto* export_ : module->exports) {
-    CHECK_RESULT(VisitExport(export_));
-  }
+  for (auto* import : module->imports) { CHECK_RESULT(VisitImport(import)); }
+  for (auto* export_ : module->exports) { CHECK_RESULT(VisitExport(export_)); }
 
   VisitAll(module->globals, &NameGenerator::VisitGlobal);
   VisitAll(module->types, &NameGenerator::VisitType);

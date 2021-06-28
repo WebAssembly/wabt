@@ -50,9 +50,7 @@ struct TestObject : intrusive_list_base<TestObject> {
   TestObject& operator=(const TestObject&) = delete;
 
   ~TestObject() {
-    if (!moved) {
-      creation_count--;
-    }
+    if (!moved) { creation_count--; }
   }
 
   int data;
@@ -77,8 +75,7 @@ class IntrusiveListTest : public ::testing::Test {
 
   TestObjectList NewList(const std::vector<int>& data_values) {
     TestObjectList result;
-    for (auto data_value : data_values)
-      result.emplace_back(data_value);
+    for (auto data_value : data_values) result.emplace_back(data_value);
     return result;
   }
 
@@ -107,9 +104,7 @@ class IntrusiveListTest : public ::testing::Test {
 
 }  // end anonymous namespace
 
-TEST_F(IntrusiveListTest, default_constructor) {
-  TestObjectList list;
-}
+TEST_F(IntrusiveListTest, default_constructor) { TestObjectList list; }
 
 TEST_F(IntrusiveListTest, node_constructor) {
   TestObjectList list(MakeUnique<TestObject>(1));

@@ -24,20 +24,15 @@ namespace interp {
 template <typename T>
 void WABT_VECTORCALL Istream::EmitAt(Offset offset, T val) {
   u32 new_size = offset + sizeof(T);
-  if (new_size > data_.size()) {
-    data_.resize(new_size);
-  }
+  if (new_size > data_.size()) { data_.resize(new_size); }
   memcpy(data_.data() + offset, &val, sizeof(val));
 }
 
-template <typename T>
-void WABT_VECTORCALL Istream::EmitInternal(T val) {
+template <typename T> void WABT_VECTORCALL Istream::EmitInternal(T val) {
   EmitAt(end(), val);
 }
 
-void Istream::Emit(u32 val) {
-  EmitInternal(val);
-}
+void Istream::Emit(u32 val) { EmitInternal(val); }
 
 void Istream::Emit(Opcode::Enum op) {
   EmitInternal(static_cast<SerializedOpcode>(op));
@@ -96,12 +91,9 @@ void Istream::ResolveFixupU32(Offset fixup_offset) {
   EmitAt(fixup_offset, end());
 }
 
-Istream::Offset Istream::end() const {
-  return static_cast<u32>(data_.size());
-}
+Istream::Offset Istream::end() const { return static_cast<u32>(data_.size()); }
 
-template <typename T>
-T WABT_VECTORCALL Istream::ReadAt(Offset* offset) const {
+template <typename T> T WABT_VECTORCALL Istream::ReadAt(Offset* offset) const {
   assert(*offset + sizeof(T) <= data_.size());
   T result;
   memcpy(&result, data_.data() + *offset, sizeof(T));
@@ -794,9 +786,7 @@ void Istream::Disassemble(Stream* stream, Offset from, Offset to) const {
   assert(from <= data_.size() && to <= data_.size() && from <= to);
 
   Offset pc = from;
-  while (pc < to) {
-    pc = Trace(stream, pc, &source);
-  }
+  while (pc < to) { pc = Trace(stream, pc, &source); }
 }
 
 Istream::Offset Istream::Trace(Stream* stream,
@@ -807,9 +797,7 @@ Istream::Offset Istream::Trace(Stream* stream,
   stream->Writef("%s| %s", source->Header(start).c_str(), instr.op.GetName());
 
   switch (instr.kind) {
-    case InstrKind::Imm_0_Op_0:
-      stream->Writef("\n");
-      break;
+    case InstrKind::Imm_0_Op_0: stream->Writef("\n"); break;
 
     case InstrKind::Imm_0_Op_1:
       stream->Writef(" %s\n", source->Pick(1, instr).c_str());
@@ -897,21 +885,15 @@ Istream::Offset Istream::Trace(Stream* stream,
                      instr.imm_u32x2_u8.idx);
       break;
 
-    case InstrKind::Imm_I32_Op_0:
-      stream->Writef(" %u\n", instr.imm_u32);
-      break;
+    case InstrKind::Imm_I32_Op_0: stream->Writef(" %u\n", instr.imm_u32); break;
 
     case InstrKind::Imm_I64_Op_0:
       stream->Writef(" %" PRIu64 "\n", instr.imm_u64);
       break;
 
-    case InstrKind::Imm_F32_Op_0:
-      stream->Writef(" %g\n", instr.imm_f32);
-      break;
+    case InstrKind::Imm_F32_Op_0: stream->Writef(" %g\n", instr.imm_f32); break;
 
-    case InstrKind::Imm_F64_Op_0:
-      stream->Writef(" %g\n", instr.imm_f64);
-      break;
+    case InstrKind::Imm_F64_Op_0: stream->Writef(" %g\n", instr.imm_f64); break;
 
     case InstrKind::Imm_I32_I32_Op_0:
       stream->Writef(" $%u $%u\n", instr.imm_u32x2.fst, instr.imm_u32x2.snd);

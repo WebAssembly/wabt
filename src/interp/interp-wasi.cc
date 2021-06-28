@@ -227,9 +227,7 @@ class WasiInstance {
     uint32_t out_ptr = params[8].Get<u32>();
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
-    if (trace_stream) {
-      trace_stream->Writef("path_open : %s\n", path);
-    }
+    if (trace_stream) { trace_stream->Writef("path_open : %s\n", path); }
     uvwasi_fd_t outfd;
     results[0].Set<u32>(uvwasi_path_open(
         uvwasi, dirfd, dirflags, path, path_len, oflags, fs_rights_base,
@@ -348,9 +346,7 @@ class WasiInstance {
      */
     uvwasi_fd_t fd = params[0].Get<u32>();
     uint32_t prestat_ptr = params[1].Get<u32>();
-    if (trace_stream) {
-      trace_stream->Writef("fd_prestat_get %d\n", fd);
-    }
+    if (trace_stream) { trace_stream->Writef("fd_prestat_get %d\n", fd); }
     uvwasi_prestat_t buf;
     results[0].Set<u32>(uvwasi_fd_prestat_get(uvwasi, fd, &buf));
     __wasi_prestat_t* prestat;
@@ -411,9 +407,7 @@ class WasiInstance {
   Result fd_fdstat_get(const Values& params, Values& results, Trap::Ptr* trap) {
     int32_t fd = params[0].Get<u32>();
     uint32_t stat_ptr = params[1].Get<u32>();
-    if (trace_stream) {
-      trace_stream->Writef("fd_fdstat_get %d\n", fd);
-    }
+    if (trace_stream) { trace_stream->Writef("fd_fdstat_get %d\n", fd); }
     CHECK_RESULT(getMemPtr<__wasi_fdstat_t>(stat_ptr, 1, nullptr, trap));
     uvwasi_fdstat_t host_statbuf;
     results[0].Set<u32>(uvwasi_fd_fdstat_get(uvwasi, fd, &host_statbuf));
@@ -430,9 +424,7 @@ class WasiInstance {
     int32_t iovptr = params[1].Get<u32>();
     int32_t iovcnt = params[2].Get<u32>();
     int32_t out_ptr = params[2].Get<u32>();
-    if (trace_stream) {
-      trace_stream->Writef("fd_read %d [%d]\n", fd, iovcnt);
-    }
+    if (trace_stream) { trace_stream->Writef("fd_read %d [%d]\n", fd, iovcnt); }
     __wasi_iovec_t* wasm_iovs;
     CHECK_RESULT(getMemPtr<__wasi_iovec_t>(iovptr, iovcnt, &wasm_iovs, trap));
     std::vector<uvwasi_iovec_t> iovs(iovcnt);
@@ -719,9 +711,7 @@ Result WasiRunStart(const Instance::Ptr& instance,
       }
       start = store->UnsafeGet<Func>(instance->funcs()[export_.index]);
     }
-    if (start && memory) {
-      break;
-    }
+    if (start && memory) { break; }
   }
 
   if (!start) {
@@ -748,9 +738,7 @@ Result WasiRunStart(const Instance::Ptr& instance,
   Values results;
   Trap::Ptr trap;
   Result res = start->Call(*store, params, results, &trap, trace_stream);
-  if (trap) {
-    WriteTrap(err_stream, "error", trap);
-  }
+  if (trap) { WriteTrap(err_stream, "error", trap); }
 
   // Unregister memory
   wasiInstances.erase(instance.get());

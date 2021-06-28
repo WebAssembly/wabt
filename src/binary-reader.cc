@@ -74,8 +74,7 @@ class BinaryReader {
   Result ReadModule();
 
  private:
-  template <typename T, T BinaryReader::*member>
-  struct ValueRestoreGuard {
+  template <typename T, T BinaryReader::*member> struct ValueRestoreGuard {
     explicit ValueRestoreGuard(BinaryReader* this_)
         : this_(this_), previous_value_(this_->*member) {}
     ~ValueRestoreGuard() { this_->*member = previous_value_; }
@@ -219,9 +218,7 @@ Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode, const char* where) {
   std::vector<uint8_t> bytes = opcode.GetBytes();
   assert(bytes.size() > 0);
 
-  for (uint8_t byte : bytes) {
-    message += StringPrintf(" 0x%x", byte);
-  }
+  for (uint8_t byte : bytes) { message += StringPrintf(" 0x%x", byte); }
 
   PrintError("%s", message.c_str());
   return Result::Error;
@@ -436,25 +433,19 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::I32:
     case Type::I64:
     case Type::F32:
-    case Type::F64:
-      return true;
+    case Type::F64: return true;
 
-    case Type::V128:
-      return options_.features.simd_enabled();
+    case Type::V128: return options_.features.simd_enabled();
 
     case Type::FuncRef:
-    case Type::ExternRef:
-      return options_.features.reference_types_enabled();
+    case Type::ExternRef: return options_.features.reference_types_enabled();
 
-    default:
-      return false;
+    default: return false;
   }
 }
 
 bool BinaryReader::IsBlockType(Type type) {
-  if (IsConcreteType(type) || type == Type::Void) {
-    return true;
-  }
+  if (IsConcreteType(type) || type == Type::Void) { return true; }
 
   if (!(options_.features.multi_value_enabled() && type.IsIndex())) {
     return false;
@@ -530,11 +521,9 @@ Result BinaryReader::ReadInitExpr(Index index, Type required) {
       break;
     }
 
-    case Opcode::End:
-      return Result::Ok;
+    case Opcode::End: return Result::Ok;
 
-    default:
-      return ReportUnexpectedOpcode(opcode, "in initializer expression");
+    default: return ReportUnexpectedOpcode(opcode, "in initializer expression");
   }
 
   if (required == Type::I32 && opcode != Opcode::I32Const &&
@@ -569,9 +558,7 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   ERROR_IF(is_64, "tables may not be 64-bit");
   ERROR_UNLESS(unknown_flags == 0, "malformed table limits flag: %d", flags);
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
-  if (has_max) {
-    CHECK_RESULT(ReadU32Leb128(&max, "table max elem count"));
-  }
+  if (has_max) { CHECK_RESULT(ReadU32Leb128(&max, "table max elem count")); }
 
   out_elem_limits->has_max = has_max;
   out_elem_limits->initial = initial;
@@ -595,9 +582,7 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
            "memory64 not allowed");
   if (is_64) {
     CHECK_RESULT(ReadU64Leb128(&initial, "memory initial page count"));
-    if (has_max) {
-      CHECK_RESULT(ReadU64Leb128(&max, "memory max page count"));
-    }
+    if (has_max) { CHECK_RESULT(ReadU64Leb128(&max, "memory max page count")); }
   } else {
     uint32_t initial32;
     CHECK_RESULT(ReadU32Leb128(&initial32, "memory initial page count"));
@@ -1751,8 +1736,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK(OnOpcodeBare);
         break;
 
-      default:
-        return ReportUnexpectedOpcode(opcode);
+      default: return ReportUnexpectedOpcode(opcode);
     }
   }
   ERROR_UNLESS(state_.offset == end_offset,
@@ -1942,8 +1926,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::GlobalIndexI32:
       case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
-      case RelocType::TableNumberLEB:
-        break;
+      case RelocType::TableNumberLEB: break;
 
       default:
         PrintError("unknown reloc type: %s", GetRelocTypeName(type));
@@ -2033,8 +2016,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                 case SymbolType::Table:
                   CALLBACK(OnTableSymbol, i, flags, name, index);
                   break;
-                default:
-                  WABT_UNREACHABLE;
+                default: WABT_UNREACHABLE;
               }
               break;
             }
@@ -2704,8 +2686,7 @@ Result BinaryReader::ReadSections() {
         section_result = ReadDataCountSection(section_size);
         result |= section_result;
         break;
-      case BinarySection::Invalid:
-        WABT_UNREACHABLE;
+      case BinarySection::Invalid: WABT_UNREACHABLE;
     }
 
     if (Succeeded(section_result) && state_.offset != read_end_) {
@@ -2715,9 +2696,7 @@ Result BinaryReader::ReadSections() {
     }
 
     if (Failed(section_result)) {
-      if (stop_on_first_error) {
-        return Result::Error;
-      }
+      if (stop_on_first_error) { return Result::Error; }
 
       // If we're continuing after failing to read this section, move the
       // offset to the expected section end. This way we may be able to read
@@ -2725,9 +2704,7 @@ Result BinaryReader::ReadSections() {
       state_.offset = read_end_;
     }
 
-    if (section != BinarySection::Custom) {
-      last_known_section_ = section;
-    }
+    if (section != BinarySection::Custom) { last_known_section_ = section; }
   }
 
   return result;

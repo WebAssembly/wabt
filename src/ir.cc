@@ -108,9 +108,7 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
 
 const Export* Module::GetExport(string_view name) const {
   Index index = export_bindings.FindIndex(name);
-  if (index >= exports.size()) {
-    return nullptr;
-  }
+  if (index >= exports.size()) { return nullptr; }
   return exports[index];
 }
 
@@ -148,31 +146,23 @@ Index Module::GetElemSegmentIndex(const Var& var) const {
 
 bool Module::IsImport(ExternalKind kind, const Var& var) const {
   switch (kind) {
-    case ExternalKind::Func:
-      return GetFuncIndex(var) < num_func_imports;
+    case ExternalKind::Func: return GetFuncIndex(var) < num_func_imports;
 
-    case ExternalKind::Global:
-      return GetGlobalIndex(var) < num_global_imports;
+    case ExternalKind::Global: return GetGlobalIndex(var) < num_global_imports;
 
-    case ExternalKind::Memory:
-      return GetMemoryIndex(var) < num_memory_imports;
+    case ExternalKind::Memory: return GetMemoryIndex(var) < num_memory_imports;
 
-    case ExternalKind::Table:
-      return GetTableIndex(var) < num_table_imports;
+    case ExternalKind::Table: return GetTableIndex(var) < num_table_imports;
 
-    case ExternalKind::Tag:
-      return GetTagIndex(var) < num_tag_imports;
+    case ExternalKind::Tag: return GetTagIndex(var) < num_tag_imports;
 
-    default:
-      return false;
+    default: return false;
   }
 }
 
 void LocalTypes::Set(const TypeVector& types) {
   decls_.clear();
-  if (types.empty()) {
-    return;
-  }
+  if (types.empty()) { return; }
 
   Type type = types[0];
   Index count = 1;
@@ -197,9 +187,7 @@ Index LocalTypes::size() const {
 Type LocalTypes::operator[](Index i) const {
   Index count = 0;
   for (auto decl : decls_) {
-    if (i < count + decl.second) {
-      return decl.first;
-    }
+    if (i < count + decl.second) { return decl.first; }
     count += decl.second;
   }
   assert(i < count);
@@ -222,9 +210,7 @@ Type Func::GetLocalType(const Var& var) const {
 }
 
 Index Func::GetLocalIndex(const Var& var) const {
-  if (var.is_index()) {
-    return var.index();
-  }
+  if (var.is_index()) { return var.index(); }
   return bindings.FindIndex(var);
 }
 
@@ -234,9 +220,7 @@ const Func* Module::GetFunc(const Var& var) const {
 
 Func* Module::GetFunc(const Var& var) {
   Index index = func_bindings.FindIndex(var);
-  if (index >= funcs.size()) {
-    return nullptr;
-  }
+  if (index >= funcs.size()) { return nullptr; }
   return funcs[index];
 }
 
@@ -246,9 +230,7 @@ const Global* Module::GetGlobal(const Var& var) const {
 
 Global* Module::GetGlobal(const Var& var) {
   Index index = global_bindings.FindIndex(var);
-  if (index >= globals.size()) {
-    return nullptr;
-  }
+  if (index >= globals.size()) { return nullptr; }
   return globals[index];
 }
 
@@ -258,9 +240,7 @@ const Table* Module::GetTable(const Var& var) const {
 
 Table* Module::GetTable(const Var& var) {
   Index index = table_bindings.FindIndex(var);
-  if (index >= tables.size()) {
-    return nullptr;
-  }
+  if (index >= tables.size()) { return nullptr; }
   return tables[index];
 }
 
@@ -270,17 +250,13 @@ const Memory* Module::GetMemory(const Var& var) const {
 
 Memory* Module::GetMemory(const Var& var) {
   Index index = memory_bindings.FindIndex(var);
-  if (index >= memories.size()) {
-    return nullptr;
-  }
+  if (index >= memories.size()) { return nullptr; }
   return memories[index];
 }
 
 Tag* Module::GetTag(const Var& var) const {
   Index index = GetTagIndex(var);
-  if (index >= tags.size()) {
-    return nullptr;
-  }
+  if (index >= tags.size()) { return nullptr; }
   return tags[index];
 }
 
@@ -290,9 +266,7 @@ const DataSegment* Module::GetDataSegment(const Var& var) const {
 
 DataSegment* Module::GetDataSegment(const Var& var) {
   Index index = data_segment_bindings.FindIndex(var);
-  if (index >= data_segments.size()) {
-    return nullptr;
-  }
+  if (index >= data_segments.size()) { return nullptr; }
   return data_segments[index];
 }
 
@@ -302,9 +276,7 @@ const ElemSegment* Module::GetElemSegment(const Var& var) const {
 
 ElemSegment* Module::GetElemSegment(const Var& var) {
   Index index = elem_segment_bindings.FindIndex(var);
-  if (index >= elem_segments.size()) {
-    return nullptr;
-  }
+  if (index >= elem_segments.size()) { return nullptr; }
   return elem_segments[index];
 }
 
@@ -314,18 +286,14 @@ const FuncType* Module::GetFuncType(const Var& var) const {
 
 FuncType* Module::GetFuncType(const Var& var) {
   Index index = type_bindings.FindIndex(var);
-  if (index >= types.size()) {
-    return nullptr;
-  }
+  if (index >= types.size()) { return nullptr; }
   return dyn_cast<FuncType>(types[index]);
 }
 
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
   for (size_t i = 0; i < types.size(); ++i) {
     if (auto* func_type = dyn_cast<FuncType>(types[i])) {
-      if (func_type->sig == sig) {
-        return i;
-      }
+      if (func_type->sig == sig) { return i; }
     }
   }
   return kInvalidIndex;
@@ -462,9 +430,7 @@ void Module::AppendField(std::unique_ptr<ImportModuleField> field) {
   }
 
   assert(name && bindings && index != kInvalidIndex);
-  if (!name->empty()) {
-    bindings->emplace(*name, Binding(field->loc, index));
-  }
+  if (!name->empty()) { bindings->emplace(*name, Binding(field->loc, index)); }
   imports.push_back(import);
   fields.push_back(std::move(field));
 }
@@ -560,9 +526,7 @@ Module* Script::GetFirstModule() {
 
 const Module* Script::GetModule(const Var& var) const {
   Index index = module_bindings.FindIndex(var);
-  if (index >= commands.size()) {
-    return nullptr;
-  }
+  if (index >= commands.size()) { return nullptr; }
   auto* command = cast<ModuleCommand>(commands[index].get());
   return &command->module;
 }
@@ -586,13 +550,9 @@ Var::Var(Index index, const Location& loc)
 Var::Var(string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
-Var::Var(Var&& rhs) : Var(kInvalidIndex) {
-  *this = std::move(rhs);
-}
+Var::Var(Var&& rhs) : Var(kInvalidIndex) { *this = std::move(rhs); }
 
-Var::Var(const Var& rhs) : Var(kInvalidIndex) {
-  *this = rhs;
-}
+Var::Var(const Var& rhs) : Var(kInvalidIndex) { *this = rhs; }
 
 Var& Var::operator=(Var&& rhs) {
   loc = rhs.loc;
@@ -614,9 +574,7 @@ Var& Var::operator=(const Var& rhs) {
   return *this;
 }
 
-Var::~Var() {
-  Destroy();
-}
+Var::~Var() { Destroy(); }
 
 void Var::set_index(Index index) {
   Destroy();
@@ -630,14 +588,10 @@ void Var::set_name(std::string&& name) {
   Construct(name_, std::move(name));
 }
 
-void Var::set_name(string_view name) {
-  set_name(name.to_string());
-}
+void Var::set_name(string_view name) { set_name(name.to_string()); }
 
 void Var::Destroy() {
-  if (is_name()) {
-    Destruct(name_);
-  }
+  if (is_name()) { Destruct(name_); }
 }
 
 uint8_t ElemSegment::GetFlags(const Module* module) const {
@@ -648,19 +602,13 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
   switch (kind) {
     case SegmentKind::Active: {
       Index table_index = module->GetTableIndex(table_var);
-      if (table_index != 0) {
-        flags |= SegExplicitIndex;
-      }
+      if (table_index != 0) { flags |= SegExplicitIndex; }
       break;
     }
 
-    case SegmentKind::Passive:
-      flags |= SegPassive;
-      break;
+    case SegmentKind::Passive: flags |= SegPassive; break;
 
-    case SegmentKind::Declared:
-      flags |= SegDeclared;
-      break;
+    case SegmentKind::Declared: flags |= SegDeclared; break;
   }
 
   all_ref_func = all_ref_func &&
@@ -668,9 +616,7 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
                              [](const ElemExpr& elem_expr) {
                                return elem_expr.kind == ElemExprKind::RefFunc;
                              });
-  if (!all_ref_func) {
-    flags |= SegUseElemExprs;
-  }
+  if (!all_ref_func) { flags |= SegUseElemExprs; }
 
   return flags;
 }
@@ -678,14 +624,10 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
 uint8_t DataSegment::GetFlags(const Module* module) const {
   uint8_t flags = 0;
 
-  if (kind == SegmentKind::Passive) {
-    flags |= SegPassive;
-  }
+  if (kind == SegmentKind::Passive) { flags |= SegPassive; }
 
   Index memory_index = module->GetMemoryIndex(memory_var);
-  if (memory_index != 0) {
-    flags |= SegExplicitIndex;
-  }
+  if (memory_index != 0) { flags |= SegExplicitIndex; }
 
   return flags;
 }

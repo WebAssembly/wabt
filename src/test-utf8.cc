@@ -44,18 +44,14 @@ void assert_is_valid_utf8(bool expected,
       << cu0 << ", " << cu1 << ", " << cu2 << ", " << cu3;
 }
 
-bool is_in_range(int x, int low, int high) {
-  return x >= low && x < high;
-}
+bool is_in_range(int x, int low, int high) { return x >= low && x < high; }
 
 }  // end anonymous namespace
 
 #define FOR_RANGE(var, low, high) for (int var = low; var < high; var++)
 #define FOR_EACH_BYTE(var) FOR_RANGE(var, 0, 0x100)
 
-TEST(utf8, valid_empty) {
-  assert_is_valid_utf8(true, 0);
-}
+TEST(utf8, valid_empty) { assert_is_valid_utf8(true, 0); }
 
 TEST(utf8, valid_1_byte) {
   FOR_RANGE(cu0, 0, 0x80) { assert_is_valid_utf8(true, 1, cu0); }
@@ -92,9 +88,7 @@ TEST(utf8, valid_3_bytes_e0) {
 TEST(utf8, valid_3_bytes) {
   FOR_RANGE(cu0, 0xe1, 0xf0) {
     // Handle 0xed in valid_3_bytes_ed.
-    if (cu0 == 0xed) {
-      continue;
-    }
+    if (cu0 == 0xed) { continue; }
 
     FOR_EACH_BYTE(cu1) {
       FOR_EACH_BYTE(cu2) {

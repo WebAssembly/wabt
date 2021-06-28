@@ -44,9 +44,7 @@ const Label* ModuleContext::GetLabel(const Var& var) const {
   if (var.is_name()) {
     for (Index i = GetLabelStackSize(); i > 0; --i) {
       auto label = &label_stack_[i - 1];
-      if (label->name == var.name()) {
-        return label;
-      }
+      if (label->name == var.name()) { return label; }
     }
   } else if (var.index() < GetLabelStackSize()) {
     auto label = &label_stack_[GetLabelStackSize() - var.index() - 1];
@@ -57,9 +55,7 @@ const Label* ModuleContext::GetLabel(const Var& var) const {
 
 Index ModuleContext::GetLabelArity(const Var& var) const {
   auto label = GetLabel(var);
-  if (!label) {
-    return 0;
-  }
+  if (!label) { return 0; }
 
   return label->label_type == LabelType::Loop ? label->param_types.size()
                                               : label->result_types.size();
@@ -80,9 +76,7 @@ void ModuleContext::BeginBlock(LabelType label_type, const Block& block) {
                             block.decl.sig.result_types);
 }
 
-void ModuleContext::EndBlock() {
-  label_stack_.pop_back();
-}
+void ModuleContext::EndBlock() { label_stack_.pop_back(); }
 
 void ModuleContext::BeginFunc(const Func& func) {
   label_stack_.clear();
@@ -91,9 +85,7 @@ void ModuleContext::BeginFunc(const Func& func) {
   current_func_ = &func;
 }
 
-void ModuleContext::EndFunc() {
-  current_func_ = nullptr;
-}
+void ModuleContext::EndFunc() { current_func_ = nullptr; }
 
 ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
   switch (expr.type()) {
@@ -101,13 +93,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::AtomicRmw:
     case ExprType::Binary:
     case ExprType::Compare:
-    case ExprType::TableGrow:
-      return {2, 1};
+    case ExprType::TableGrow: return {2, 1};
 
     case ExprType::AtomicStore:
     case ExprType::Store:
-    case ExprType::TableSet:
-      return {2, 0};
+    case ExprType::TableSet: return {2, 0};
 
     case ExprType::Block:
       return {0, cast<BlockExpr>(&expr)->block.decl.sig.GetNumResults()};
@@ -151,24 +141,20 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::MemorySize:
     case ExprType::TableSize:
     case ExprType::RefNull:
-    case ExprType::RefFunc:
-      return {0, 1};
+    case ExprType::RefFunc: return {0, 1};
 
-    case ExprType::Unreachable:
-      return {0, 1, true};
+    case ExprType::Unreachable: return {0, 1, true};
 
     case ExprType::DataDrop:
     case ExprType::ElemDrop:
-    case ExprType::AtomicFence:
-      return {0, 0};
+    case ExprType::AtomicFence: return {0, 0};
 
     case ExprType::MemoryInit:
     case ExprType::TableInit:
     case ExprType::MemoryFill:
     case ExprType::MemoryCopy:
     case ExprType::TableCopy:
-    case ExprType::TableFill:
-      return {3, 0};
+    case ExprType::TableFill: return {3, 0};
 
     case ExprType::AtomicLoad:
     case ExprType::Convert:
@@ -179,13 +165,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::TableGet:
     case ExprType::RefIsNull:
     case ExprType::LoadSplat:
-    case ExprType::LoadZero:
-      return {1, 1};
+    case ExprType::LoadZero: return {1, 1};
 
     case ExprType::Drop:
     case ExprType::GlobalSet:
-    case ExprType::LocalSet:
-      return {1, 0};
+    case ExprType::LocalSet: return {1, 0};
 
     case ExprType::If:
       return {1, cast<IfExpr>(&expr)->true_.decl.sig.GetNumResults()};
@@ -193,20 +177,17 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::Loop:
       return {0, cast<LoopExpr>(&expr)->block.decl.sig.GetNumResults()};
 
-    case ExprType::Nop:
-      return {0, 0};
+    case ExprType::Nop: return {0, 0};
 
     case ExprType::Return:
       return {static_cast<Index>(current_func_->decl.sig.result_types.size()),
               1, true};
 
-    case ExprType::Rethrow:
-      return {0, 0, true};
+    case ExprType::Rethrow: return {0, 0, true};
 
     case ExprType::AtomicRmwCmpxchg:
     case ExprType::AtomicWait:
-    case ExprType::Select:
-      return {3, 1};
+    case ExprType::Select: return {3, 1};
 
     case ExprType::Throw: {
       auto throw_ = cast<ThrowExpr>(&expr);
@@ -220,8 +201,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::Try:
       return {0, cast<TryExpr>(&expr)->block.decl.sig.GetNumResults()};
 
-    case ExprType::Ternary:
-      return {3, 1};
+    case ExprType::Ternary: return {3, 1};
 
     case ExprType::SimdLaneOp: {
       const Opcode opcode = cast<SimdLaneOpExpr>(&expr)->opcode;
@@ -233,16 +213,14 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
         case Opcode::I32X4ExtractLane:
         case Opcode::I64X2ExtractLane:
         case Opcode::F32X4ExtractLane:
-        case Opcode::F64X2ExtractLane:
-          return {1, 1};
+        case Opcode::F64X2ExtractLane: return {1, 1};
 
         case Opcode::I8X16ReplaceLane:
         case Opcode::I16X8ReplaceLane:
         case Opcode::I32X4ReplaceLane:
         case Opcode::I64X2ReplaceLane:
         case Opcode::F32X4ReplaceLane:
-        case Opcode::F64X2ReplaceLane:
-          return {2, 1};
+        case Opcode::F64X2ReplaceLane: return {2, 1};
 
         default:
           fprintf(stderr, "Invalid Opcode for expr type: %s\n",
@@ -257,8 +235,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       return {2, 1};
     }
 
-    case ExprType::SimdShuffleOp:
-      return {2, 1};
+    case ExprType::SimdShuffleOp: return {2, 1};
   }
 
   WABT_UNREACHABLE;

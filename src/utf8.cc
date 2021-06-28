@@ -22,8 +22,9 @@ namespace wabt {
 
 namespace {
 
+// clang-format off
 const int s_utf8_length[256] = {
-    // 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+ // 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x00
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x10
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x20
@@ -41,11 +42,10 @@ const int s_utf8_length[256] = {
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  // 0xe0
     4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xf0
 };
+// clang-format on
 
 // Returns true if this is a valid continuation byte.
-bool IsCont(uint8_t c) {
-  return (c & 0xc0) == 0x80;
-}
+bool IsCont(uint8_t c) { return (c & 0xc0) == 0x80; }
 
 }  // end anonymous namespace
 
@@ -55,23 +55,16 @@ bool IsValidUtf8(const char* s, size_t s_length) {
   while (p < end) {
     uint8_t cu0 = *p;
     int length = s_utf8_length[cu0];
-    if (p + length > end) {
-      return false;
-    }
+    if (p + length > end) { return false; }
 
     switch (length) {
-      case 0:
-        return false;
+      case 0: return false;
 
-      case 1:
-        p++;
-        break;
+      case 1: p++; break;
 
       case 2:
         p++;
-        if (!IsCont(*p++)) {
-          return false;
-        }
+        if (!IsCont(*p++)) { return false; }
         break;
 
       case 3: {

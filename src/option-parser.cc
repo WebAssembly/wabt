@@ -111,23 +111,15 @@ int OptionParser::Match(const char* s,
     if (full[i] == '\0') {
       // Perfect match. Return +1, so it will be preferred over a longer option
       // with the same prefix.
-      if (s[i] == '\0') {
-        return i + 1;
-      }
+      if (s[i] == '\0') { return i + 1; }
 
       // We want to fail if s is longer than full, e.g. --foobar vs. --foo.
       // However, if s ends with an '=', it's OK.
-      if (!(has_argument && s[i] == '=')) {
-        return -1;
-      }
+      if (!(has_argument && s[i] == '=')) { return -1; }
       break;
     }
-    if (s[i] == '\0') {
-      break;
-    }
-    if (s[i] != full[i]) {
-      return -1;
-    }
+    if (s[i] == '\0') { break; }
+    if (s[i] != full[i]) { return -1; }
   }
   return i;
 }
@@ -154,9 +146,7 @@ void OptionParser::HandleArgument(size_t* arg_index, const char* arg_value) {
   argument.callback(arg_value);
   argument.handled_count++;
 
-  if (argument.count == ArgumentCount::One) {
-    (*arg_index)++;
-  }
+  if (argument.count == ArgumentCount::One) { (*arg_index)++; }
 }
 
 void OptionParser::Parse(int argc, char* argv[]) {
@@ -282,9 +272,7 @@ void OptionParser::PrintHelp() {
   for (size_t i = 0; i < arguments_.size(); ++i) {
     Argument& argument = arguments_[i];
     switch (argument.count) {
-      case ArgumentCount::One:
-        printf(" %s", argument.name.c_str());
-        break;
+      case ArgumentCount::One: printf(" %s", argument.name.c_str()); break;
 
       case ArgumentCount::OneOrMore:
         printf(" %s+", argument.name.c_str());
@@ -314,15 +302,11 @@ void OptionParser::PrintHelp() {
       continue;
     }
 
-    if (length > longest_name_length) {
-      longest_name_length = length;
-    }
+    if (length > longest_name_length) { longest_name_length = length; }
   }
 
   for (const Option& option : options_) {
-    if (!option.short_name && option.long_name.empty()) {
-      continue;
-    }
+    if (!option.short_name && option.long_name.empty()) { continue; }
 
     std::string line;
     if (option.short_name) {
@@ -345,9 +329,7 @@ void OptionParser::PrintHelp() {
     size_t remaining = longest_name_length + kExtraSpace + 2 - flag.size();
     line += flag + std::string(remaining, ' ');
 
-    if (!option.help.empty()) {
-      line += option.help;
-    }
+    if (!option.help.empty()) { line += option.help; }
     printf("%s\n", line.c_str());
   }
 }

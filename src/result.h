@@ -44,18 +44,12 @@ inline Result& Result::operator|=(Result rhs) {
   return *this;
 }
 
-inline bool Succeeded(Result result) {
-  return result == Result::Ok;
-}
-inline bool Failed(Result result) {
-  return result == Result::Error;
-}
+inline bool Succeeded(Result result) { return result == Result::Ok; }
+inline bool Failed(Result result) { return result == Result::Error; }
 
-#define CHECK_RESULT(expr)          \
-  do {                              \
-    if (Failed(expr)) {             \
-      return ::wabt::Result::Error; \
-    }                               \
+#define CHECK_RESULT(expr)                              \
+  do {                                                  \
+    if (Failed(expr)) { return ::wabt::Result::Error; } \
   } while (0)
 
 }  // namespace wabt

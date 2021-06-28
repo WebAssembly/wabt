@@ -134,8 +134,7 @@ class WatWriter : ModuleContext {
   void WriteEndBlock();
   void WriteConst(const Const& const_);
   void WriteExpr(const Expr* expr);
-  template <typename T>
-  void WriteLoadStoreExpr(const Expr* expr);
+  template <typename T> void WriteLoadStoreExpr(const Expr* expr);
   void WriteExprList(const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
   template <typename T>
@@ -194,9 +193,7 @@ class WatWriter : ModuleContext {
   Index elem_segment_index_ = 0;
 };
 
-void WatWriter::Indent() {
-  indent_ += INDENT_SIZE;
-}
+void WatWriter::Indent() { indent_ += INDENT_SIZE; }
 
 void WatWriter::Dedent() {
   indent_ -= INDENT_SIZE;
@@ -213,23 +210,18 @@ void WatWriter::WriteIndent() {
     stream_->WriteData(s_indent, s_indent_len);
     to_write -= s_indent_len;
   }
-  if (to_write > 0) {
-    stream_->WriteData(s_indent, to_write);
-  }
+  if (to_write > 0) { stream_->WriteData(s_indent, to_write); }
 }
 
 void WatWriter::WriteNextChar() {
   switch (next_char_) {
-    case NextChar::Space:
-      stream_->WriteChar(' ');
-      break;
+    case NextChar::Space: stream_->WriteChar(' '); break;
     case NextChar::Newline:
     case NextChar::ForceNewline:
       stream_->WriteChar('\n');
       WriteIndent();
       break;
-    case NextChar::None:
-      break;
+    case NextChar::None: break;
   }
   next_char_ = NextChar::None;
 }
@@ -246,9 +238,7 @@ void WABT_PRINTF_FORMAT(2, 3) WatWriter::Writef(const char* format, ...) {
   next_char_ = NextChar::Space;
 }
 
-void WatWriter::WritePutc(char c) {
-  stream_->WriteChar(c);
-}
+void WatWriter::WritePutc(char c) { stream_->WriteChar(c); }
 
 void WatWriter::WritePuts(const char* s, NextChar next_char) {
   size_t len = strlen(s);
@@ -256,18 +246,14 @@ void WatWriter::WritePuts(const char* s, NextChar next_char) {
   next_char_ = next_char;
 }
 
-void WatWriter::WritePutsSpace(const char* s) {
-  WritePuts(s, NextChar::Space);
-}
+void WatWriter::WritePutsSpace(const char* s) { WritePuts(s, NextChar::Space); }
 
 void WatWriter::WritePutsNewline(const char* s) {
   WritePuts(s, NextChar::Newline);
 }
 
 void WatWriter::WriteNewline(bool force) {
-  if (next_char_ == NextChar::ForceNewline) {
-    WriteNextChar();
-  }
+  if (next_char_ == NextChar::ForceNewline) { WriteNextChar(); }
   next_char_ = force ? NextChar::ForceNewline : NextChar::Newline;
 }
 
@@ -286,20 +272,14 @@ void WatWriter::WriteOpenSpace(const char* name) {
 }
 
 void WatWriter::WriteClose(NextChar next_char) {
-  if (next_char_ != NextChar::ForceNewline) {
-    next_char_ = NextChar::None;
-  }
+  if (next_char_ != NextChar::ForceNewline) { next_char_ = NextChar::None; }
   Dedent();
   WritePuts(")", next_char);
 }
 
-void WatWriter::WriteCloseNewline() {
-  WriteClose(NextChar::Newline);
-}
+void WatWriter::WriteCloseNewline() { WriteClose(NextChar::Newline); }
 
-void WatWriter::WriteCloseSpace() {
-  WriteClose(NextChar::Space);
-}
+void WatWriter::WriteCloseSpace() { WriteClose(NextChar::Space); }
 
 void WatWriter::WriteString(const std::string& str, NextChar next_char) {
   WritePuts(str.c_str(), next_char);
@@ -366,14 +346,10 @@ void WatWriter::WriteVar(const Var& var, NextChar next_char) {
   }
 }
 
-bool VarIsZero(const Var& var) {
-  return var.is_index() && var.index() == 0;
-}
+bool VarIsZero(const Var& var) { return var.is_index() && var.index() == 0; }
 
 void WatWriter::WriteVarUnlessZero(const Var& var, NextChar next_char) {
-  if (!VarIsZero(var)) {
-    WriteVar(var, next_char);
-  }
+  if (!VarIsZero(var)) { WriteVar(var, next_char); }
 }
 
 void WatWriter::WriteBrVar(const Var& var, NextChar next_char) {
@@ -402,15 +378,9 @@ void WatWriter::WriteType(Type type, NextChar next_char) {
 
 void WatWriter::WriteTypes(const TypeVector& types, const char* name) {
   if (types.size()) {
-    if (name) {
-      WriteOpenSpace(name);
-    }
-    for (Type type : types) {
-      WriteType(type, NextChar::Space);
-    }
-    if (name) {
-      WriteCloseSpace();
-    }
+    if (name) { WriteOpenSpace(name); }
+    for (Type type : types) { WriteType(type, NextChar::Space); }
+    if (name) { WriteCloseSpace(); }
   }
 }
 
@@ -424,14 +394,10 @@ void WatWriter::WriteBeginBlock(LabelType label_type,
                                 const char* text) {
   WritePutsSpace(text);
   bool has_label = !block.label.empty();
-  if (has_label) {
-    WriteString(block.label, NextChar::Space);
-  }
+  if (has_label) { WriteString(block.label, NextChar::Space); }
   WriteTypes(block.decl.sig.param_types, "param");
   WriteTypes(block.decl.sig.result_types, "result");
-  if (!has_label) {
-    Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
-  }
+  if (!has_label) { Writef(" ;; label = @%" PRIindex, GetLabelStackSize()); }
   WriteNewline(FORCE_NEWLINE);
   BeginBlock(label_type, block);
   Indent();
@@ -486,19 +452,14 @@ void WatWriter::WriteConst(const Const& const_) {
       break;
     }
 
-    default:
-      assert(0);
-      break;
+    default: assert(0); break;
   }
 }
 
-template <typename T>
-void WatWriter::WriteLoadStoreExpr(const Expr* expr) {
+template <typename T> void WatWriter::WriteLoadStoreExpr(const Expr* expr) {
   auto typed_expr = cast<T>(expr);
   WritePutsSpace(typed_expr->opcode.GetName());
-  if (typed_expr->offset) {
-    Writef("offset=%" PRIaddress, typed_expr->offset);
-  }
+  if (typed_expr->offset) { Writef("offset=%" PRIaddress, typed_expr->offset); }
   if (!typed_expr->opcode.IsNaturallyAligned(typed_expr->align)) {
     Writef("align=%" PRIaddress, typed_expr->align);
   }
@@ -982,9 +943,7 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(
     SimdLoadLaneExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
-  if (expr->offset) {
-    writer_->Writef("offset=%" PRIaddress, expr->offset);
-  }
+  if (expr->offset) { writer_->Writef("offset=%" PRIaddress, expr->offset); }
   if (!expr->opcode.IsNaturallyAligned(expr->align)) {
     writer_->Writef("align=%" PRIaddress, expr->align);
   }
@@ -996,9 +955,7 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(
 Result WatWriter::ExprVisitorDelegate::OnSimdStoreLaneExpr(
     SimdStoreLaneExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
-  if (expr->offset) {
-    writer_->Writef("offset=%" PRIaddress, expr->offset);
-  }
+  if (expr->offset) { writer_->Writef("offset=%" PRIaddress, expr->offset); }
   if (!expr->opcode.IsNaturallyAligned(expr->align)) {
     writer_->Writef("align=%" PRIaddress, expr->align);
   }
@@ -1054,9 +1011,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
 
 void WatWriter::WriteFoldedExprList(const ExprList& exprs) {
   WABT_TRACE(WriteFoldedExprList);
-  for (const Expr& expr : exprs) {
-    WriteFoldedExpr(&expr);
-  }
+  for (const Expr& expr : exprs) { WriteFoldedExpr(&expr); }
 }
 
 void WatWriter::PushExpr(const Expr* expr,
@@ -1211,9 +1166,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
 
 void WatWriter::FlushExprTreeVector(const std::vector<ExprTree>& expr_trees) {
   WABT_TRACE_ARGS(FlushExprTreeVector, "%zu", expr_trees.size());
-  for (auto expr_tree : expr_trees) {
-    FlushExprTree(expr_tree);
-  }
+  for (auto expr_tree : expr_trees) { FlushExprTree(expr_tree); }
 }
 
 void WatWriter::FlushExprTreeStack() {
@@ -1248,23 +1201,15 @@ void WatWriter::WriteTypeBindings(const char* prefix,
   for (Type type : types) {
     const std::string& name = index_to_name[binding_index_offset + index];
     bool has_name = !name.empty();
-    if ((has_name || prev_has_name) && !first) {
-      WriteCloseSpace();
-    }
-    if (has_name || prev_has_name || first) {
-      WriteOpenSpace(prefix);
-    }
-    if (has_name) {
-      WriteString(name, NextChar::Space);
-    }
+    if ((has_name || prev_has_name) && !first) { WriteCloseSpace(); }
+    if (has_name || prev_has_name || first) { WriteOpenSpace(prefix); }
+    if (has_name) { WriteString(name, NextChar::Space); }
     WriteType(type, NextChar::Space);
     prev_has_name = has_name;
     first = false;
     ++index;
   }
-  if (types.size() != 0) {
-    WriteCloseSpace();
-  }
+  if (types.size() != 0) { WriteCloseSpace(); }
 }
 
 void WatWriter::WriteBeginFunc(const Func& func) {
@@ -1357,16 +1302,10 @@ void WatWriter::WriteTag(const Tag& tag) {
 }
 
 void WatWriter::WriteLimits(const Limits& limits) {
-  if (limits.is_64) {
-    Writef("i64");
-  }
+  if (limits.is_64) { Writef("i64"); }
   Writef("%" PRIu64, limits.initial);
-  if (limits.has_max) {
-    Writef("%" PRIu64, limits.max);
-  }
-  if (limits.is_shared) {
-    Writef("shared");
-  }
+  if (limits.has_max) { Writef("%" PRIu64, limits.max); }
+  if (limits.is_shared) { Writef("shared"); }
 }
 
 void WatWriter::WriteTable(const Table& table) {
@@ -1392,9 +1331,7 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     WriteCloseSpace();
   }
 
-  if (!(flags & SegPassive)) {
-    WriteInitExpr(segment.offset);
-  }
+  if (!(flags & SegPassive)) { WriteInitExpr(segment.offset); }
 
   if ((flags & SegDeclared) == SegDeclared) {
     WritePuts("declare", NextChar::Space);
@@ -1440,9 +1377,7 @@ void WatWriter::WriteMemory(const Memory& memory) {
 void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
   WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
-  if (segment.kind != SegmentKind::Passive) {
-    WriteInitExpr(segment.offset);
-  }
+  if (segment.kind != SegmentKind::Passive) { WriteInitExpr(segment.offset); }
   WriteQuotedData(segment.data.data(), segment.data.size());
   WriteCloseNewline();
   data_segment_index_++;
@@ -1474,9 +1409,7 @@ void WatWriter::WriteImport(const Import& import) {
       WriteCloseSpace();
       break;
 
-    case ExternalKind::Tag:
-      WriteTag(cast<TagImport>(&import)->tag);
-      break;
+    case ExternalKind::Tag: WriteTag(cast<TagImport>(&import)->tag); break;
   }
 
   if (options_.inline_import) {
@@ -1487,9 +1420,7 @@ void WatWriter::WriteImport(const Import& import) {
 }
 
 void WatWriter::WriteExport(const Export& export_) {
-  if (options_.inline_export && IsInlineExport(export_)) {
-    return;
-  }
+  if (options_.inline_export && IsInlineExport(export_)) { return; }
   WriteOpenSpace("export");
   WriteQuotedString(export_.name, NextChar::Space);
   WriteOpenSpace(GetKindName(export_.kind));
@@ -1535,13 +1466,9 @@ void WatWriter::WriteTypeEntry(const TypeEntry& type) {
 }
 
 void WatWriter::WriteField(const Field& field) {
-  if (field.mutable_) {
-    WriteOpenSpace("mut");
-  }
+  if (field.mutable_) { WriteOpenSpace("mut"); }
   WriteType(field.type, NextChar::Space);
-  if (field.mutable_) {
-    WriteCloseSpace();
-  }
+  if (field.mutable_) { WriteCloseSpace(); }
 }
 
 void WatWriter::WriteStartFunction(const Var& start) {
@@ -1603,9 +1530,7 @@ Result WatWriter::WriteModule() {
 }
 
 void WatWriter::BuildInlineExportMap() {
-  if (!options_.inline_export) {
-    return;
-  }
+  if (!options_.inline_export) { return; }
 
   for (Export* export_ : module.exports) {
     Index index = kInvalidIndex;
@@ -1619,14 +1544,10 @@ void WatWriter::BuildInlineExportMap() {
     //
     //   (func (export "e") (import "module" "field"))
     //
-    if (!options_.inline_import && module.IsImport(*export_)) {
-      continue;
-    }
+    if (!options_.inline_import && module.IsImport(*export_)) { continue; }
 
     switch (export_->kind) {
-      case ExternalKind::Func:
-        index = module.GetFuncIndex(export_->var);
-        break;
+      case ExternalKind::Func: index = module.GetFuncIndex(export_->var); break;
 
       case ExternalKind::Table:
         index = module.GetTableIndex(export_->var);
@@ -1640,9 +1561,7 @@ void WatWriter::BuildInlineExportMap() {
         index = module.GetGlobalIndex(export_->var);
         break;
 
-      case ExternalKind::Tag:
-        index = module.GetTagIndex(export_->var);
-        break;
+      case ExternalKind::Tag: index = module.GetTagIndex(export_->var); break;
     }
 
     if (index != kInvalidIndex) {
@@ -1653,9 +1572,7 @@ void WatWriter::BuildInlineExportMap() {
 }
 
 void WatWriter::WriteInlineExports(ExternalKind kind, Index index) {
-  if (!options_.inline_export) {
-    return;
-  }
+  if (!options_.inline_export) { return; }
 
   auto iter_pair = inline_export_map_.equal_range(std::make_pair(kind, index));
   for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
@@ -1669,13 +1586,9 @@ void WatWriter::WriteInlineExports(ExternalKind kind, Index index) {
 bool WatWriter::IsInlineExport(const Export& export_) {
   Index index;
   switch (export_.kind) {
-    case ExternalKind::Func:
-      index = module.GetFuncIndex(export_.var);
-      break;
+    case ExternalKind::Func: index = module.GetFuncIndex(export_.var); break;
 
-    case ExternalKind::Table:
-      index = module.GetTableIndex(export_.var);
-      break;
+    case ExternalKind::Table: index = module.GetTableIndex(export_.var); break;
 
     case ExternalKind::Memory:
       index = module.GetMemoryIndex(export_.var);
@@ -1685,9 +1598,7 @@ bool WatWriter::IsInlineExport(const Export& export_) {
       index = module.GetGlobalIndex(export_.var);
       break;
 
-    case ExternalKind::Tag:
-      index = module.GetTagIndex(export_.var);
-      break;
+    case ExternalKind::Tag: index = module.GetTagIndex(export_.var); break;
   }
 
   return inline_export_map_.find(std::make_pair(export_.kind, index)) !=
@@ -1695,9 +1606,7 @@ bool WatWriter::IsInlineExport(const Export& export_) {
 }
 
 void WatWriter::BuildInlineImportMap() {
-  if (!options_.inline_import) {
-    return;
-  }
+  if (!options_.inline_import) { return; }
 
   for (const Import* import : module.imports) {
     inline_import_map_[static_cast<size_t>(import->kind())].push_back(import);
@@ -1705,15 +1614,11 @@ void WatWriter::BuildInlineImportMap() {
 }
 
 void WatWriter::WriteInlineImport(ExternalKind kind, Index index) {
-  if (!options_.inline_import) {
-    return;
-  }
+  if (!options_.inline_import) { return; }
 
   size_t kind_index = static_cast<size_t>(kind);
 
-  if (index >= inline_import_map_[kind_index].size()) {
-    return;
-  }
+  if (index >= inline_import_map_[kind_index].size()) { return; }
 
   const Import* import = inline_import_map_[kind_index][index];
   WriteOpenSpace("import");

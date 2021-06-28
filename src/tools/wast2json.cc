@@ -106,9 +106,7 @@ int ProgramMain(int argc, char** argv) {
   Result result = ReadFile(s_infile, &file_data);
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
       s_infile, file_data.data(), file_data.size());
-  if (Failed(result)) {
-    WABT_FATAL("unable to read file: %s\n", s_infile);
-  }
+  if (Failed(result)) { WABT_FATAL("unable to read file: %s\n", s_infile); }
 
   Errors errors;
   std::unique_ptr<Script> script;
@@ -121,9 +119,7 @@ int ProgramMain(int argc, char** argv) {
   }
 
   if (Succeeded(result)) {
-    if (s_outfile.empty()) {
-      s_outfile = DefaultOuputName(s_infile);
-    }
+    if (s_outfile.empty()) { s_outfile = DefaultOuputName(s_infile); }
 
     std::vector<FilenameMemoryStreamPair> module_streams;
     MemoryStream json_stream;
@@ -134,17 +130,13 @@ int ProgramMain(int argc, char** argv) {
                                    output_basename, s_write_binary_options,
                                    &module_streams, s_log_stream.get());
 
-    if (Succeeded(result)) {
-      result = json_stream.WriteToFile(s_outfile);
-    }
+    if (Succeeded(result)) { result = json_stream.WriteToFile(s_outfile); }
 
     if (Succeeded(result)) {
       for (auto iter = module_streams.begin(); iter != module_streams.end();
            ++iter) {
         result = iter->stream->WriteToFile(iter->filename);
-        if (!Succeeded(result)) {
-          break;
-        }
+        if (!Succeeded(result)) { break; }
       }
     }
   }

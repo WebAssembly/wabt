@@ -26,8 +26,7 @@ namespace wabt {
 
 // TODO(karlschimpf) Complete the API
 // Note: Capacity must be a power of 2.
-template <class T, size_t kCapacity>
-class CircularArray {
+template <class T, size_t kCapacity> class CircularArray {
  public:
   typedef T value_type;
   typedef value_type& reference;
@@ -97,9 +96,7 @@ class CircularArray {
   size_type size() const { return size_; }
 
   void clear() {
-    while (!empty()) {
-      pop_back();
-    }
+    while (!empty()) { pop_back(); }
   }
 
  private:

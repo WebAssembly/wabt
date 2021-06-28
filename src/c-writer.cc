@@ -59,8 +59,7 @@ struct Label {
   bool used = false;
 };
 
-template <int>
-struct Name {
+template <int> struct Name {
   explicit Name(const std::string& name) : name(name) {}
   const std::string& name;
 };
@@ -113,13 +112,9 @@ struct CloseBrace {};
 
 int GetShiftMask(Type type) {
   switch (type) {
-    case Type::I32:
-      return 31;
-    case Type::I64:
-      return 63;
-    default:
-      WABT_UNREACHABLE;
-      return 0;
+    case Type::I32: return 31;
+    case Type::I64: return 63;
+    default: WABT_UNREACHABLE; return 0;
   }
 }
 
@@ -306,9 +301,7 @@ static const char kImplicitFuncLabel[] = "$Bfunc";
 #include "src/prebuilt/wasm2c.include.c"
 #undef SECTION_NAME
 
-size_t CWriter::MarkTypeStack() const {
-  return type_stack_.size();
-}
+size_t CWriter::MarkTypeStack() const { return type_stack_.size(); }
 
 void CWriter::ResetTypeStack(size_t mark) {
   assert(mark <= type_stack_.size());
@@ -320,9 +313,7 @@ Type CWriter::StackType(Index index) const {
   return *(type_stack_.rbegin() + index);
 }
 
-void CWriter::PushType(Type type) {
-  type_stack_.push_back(type);
-}
+void CWriter::PushType(Type type) { type_stack_.push_back(type); }
 
 void CWriter::PushTypes(const TypeVector& types) {
   type_stack_.insert(type_stack_.end(), types.begin(), types.end());
@@ -360,8 +351,7 @@ const Label* CWriter::FindLabel(const Var& var) {
     assert(var.is_name());
     for (Index i = label_stack_.size(); i > 0; --i) {
       label = &label_stack_[i - 1];
-      if (label->name == var.name())
-        break;
+      if (label->name == var.name()) break;
     }
   }
 
@@ -375,45 +365,31 @@ bool CWriter::IsTopLabelUsed() const {
   return label_stack_.back().used;
 }
 
-void CWriter::PopLabel() {
-  label_stack_.pop_back();
-}
+void CWriter::PopLabel() { label_stack_.pop_back(); }
 
 // static
-std::string CWriter::AddressOf(const std::string& s) {
-  return "(&" + s + ")";
-}
+std::string CWriter::AddressOf(const std::string& s) { return "(&" + s + ")"; }
 
 // static
-std::string CWriter::Deref(const std::string& s) {
-  return "(*" + s + ")";
-}
+std::string CWriter::Deref(const std::string& s) { return "(*" + s + ")"; }
 
 // static
 char CWriter::MangleType(Type type) {
   switch (type) {
-    case Type::I32:
-      return 'i';
-    case Type::I64:
-      return 'j';
-    case Type::F32:
-      return 'f';
-    case Type::F64:
-      return 'd';
-    default:
-      WABT_UNREACHABLE;
+    case Type::I32: return 'i';
+    case Type::I64: return 'j';
+    case Type::F32: return 'f';
+    case Type::F64: return 'd';
+    default: WABT_UNREACHABLE;
   }
 }
 
 // static
 std::string CWriter::MangleTypes(const TypeVector& types) {
-  if (types.empty())
-    return std::string("v");
+  if (types.empty()) return std::string("v");
 
   std::string result;
-  for (auto type : types) {
-    result += MangleType(type);
-  }
+  for (auto type : types) { result += MangleType(type); }
   return result;
 }
 
@@ -457,8 +433,7 @@ std::string CWriter::ExportName(string_view mangled_name) {
 
 // static
 std::string CWriter::LegalizeName(string_view name) {
-  if (name.empty())
-    return "_";
+  if (name.empty()) return "_";
 
   std::string result;
   result = isalpha(name[0]) ? name[0] : '_';
@@ -488,9 +463,7 @@ std::string CWriter::DefineName(SymbolSet* set, string_view name) {
 }
 
 string_view StripLeadingDollar(string_view name) {
-  if (!name.empty() && name[0] == '$') {
-    name.remove_prefix(1);
-  }
+  if (!name.empty() && name[0] == '$') { name.remove_prefix(1); }
   return name;
 }
 
@@ -525,9 +498,7 @@ std::string CWriter::DefineStackVarName(Index index,
   return unique;
 }
 
-void CWriter::Indent(int size) {
-  indent_ += size;
-}
+void CWriter::Indent(int size) { indent_ += size; }
 
 void CWriter::Dedent(int size) {
   indent_ -= size;
@@ -544,9 +515,7 @@ void CWriter::WriteIndent() {
     stream_->WriteData(s_indent, s_indent_len);
     to_write -= s_indent_len;
   }
-  if (to_write > 0) {
-    stream_->WriteData(s_indent, to_write);
-  }
+  if (to_write > 0) { stream_->WriteData(s_indent, to_write); }
 }
 
 void CWriter::WriteData(const void* src, size_t size) {
@@ -578,13 +547,9 @@ void CWriter::Write(CloseBrace) {
   Write("}");
 }
 
-void CWriter::Write(Index index) {
-  Writef("%" PRIindex, index);
-}
+void CWriter::Write(Index index) { Writef("%" PRIindex, index); }
 
-void CWriter::Write(string_view s) {
-  WriteData(s.data(), s.size());
-}
+void CWriter::Write(string_view s) { WriteData(s.data(), s.size()); }
 
 void CWriter::Write(const LocalName& name) {
   assert(local_sym_map_.count(name.name) == 1);
@@ -598,9 +563,7 @@ std::string CWriter::GetGlobalName(const std::string& name) const {
   return iter->second;
 }
 
-void CWriter::Write(const GlobalName& name) {
-  Write(GetGlobalName(name.name));
-}
+void CWriter::Write(const GlobalName& name) { Write(GetGlobalName(name.name)); }
 
 void CWriter::Write(const ExternalPtr& name) {
   bool is_import = import_syms_.count(name.name) != 0;
@@ -631,8 +594,7 @@ void CWriter::Write(const GotoLabel& goto_label) {
     assert(label->sig.size() == 1);
     assert(type_stack_.size() >= label->type_stack_size);
     Index dst = type_stack_.size() - label->type_stack_size - 1;
-    if (dst != 0)
-      Write(StackVar(dst, label->sig[0]), " = ", StackVar(0), "; ");
+    if (dst != 0) Write(StackVar(dst, label->sig[0]), " = ", StackVar(0), "; ");
   }
 
   if (goto_label.var.is_name()) {
@@ -646,8 +608,7 @@ void CWriter::Write(const GotoLabel& goto_label) {
 }
 
 void CWriter::Write(const LabelDecl& label) {
-  if (IsTopLabelUsed())
-    Write(label.name, ":;", Newline());
+  if (IsTopLabelUsed()) Write(label.name, ":;", Newline());
 }
 
 void CWriter::Write(const GlobalVar& var) {
@@ -675,52 +636,29 @@ void CWriter::Write(const StackVar& sv) {
 
 void CWriter::Write(Type type) {
   switch (type) {
-    case Type::I32:
-      Write("u32");
-      break;
-    case Type::I64:
-      Write("u64");
-      break;
-    case Type::F32:
-      Write("f32");
-      break;
-    case Type::F64:
-      Write("f64");
-      break;
-    default:
-      WABT_UNREACHABLE;
+    case Type::I32: Write("u32"); break;
+    case Type::I64: Write("u64"); break;
+    case Type::F32: Write("f32"); break;
+    case Type::F64: Write("f64"); break;
+    default: WABT_UNREACHABLE;
   }
 }
 
 void CWriter::Write(TypeEnum type) {
   switch (type.type) {
-    case Type::I32:
-      Write("WASM_RT_I32");
-      break;
-    case Type::I64:
-      Write("WASM_RT_I64");
-      break;
-    case Type::F32:
-      Write("WASM_RT_F32");
-      break;
-    case Type::F64:
-      Write("WASM_RT_F64");
-      break;
-    default:
-      WABT_UNREACHABLE;
+    case Type::I32: Write("WASM_RT_I32"); break;
+    case Type::I64: Write("WASM_RT_I64"); break;
+    case Type::F32: Write("WASM_RT_F32"); break;
+    case Type::F64: Write("WASM_RT_F64"); break;
+    default: WABT_UNREACHABLE;
   }
 }
 
 void CWriter::Write(SignedType type) {
   switch (type.type) {
-    case Type::I32:
-      Write("s32");
-      break;
-    case Type::I64:
-      Write("s64");
-      break;
-    default:
-      WABT_UNREACHABLE;
+    case Type::I32: Write("s32"); break;
+    case Type::I64: Write("s64"); break;
+    default: WABT_UNREACHABLE;
   }
 }
 
@@ -734,9 +672,7 @@ void CWriter::Write(const ResultType& rt) {
 
 void CWriter::Write(const Const& const_) {
   switch (const_.type()) {
-    case Type::I32:
-      Writef("%uu", static_cast<int32_t>(const_.u32()));
-      break;
+    case Type::I32: Writef("%uu", static_cast<int32_t>(const_.u32())); break;
 
     case Type::I64:
       Writef("%" PRIu64 "ull", static_cast<int64_t>(const_.u64()));
@@ -789,28 +725,23 @@ void CWriter::Write(const Const& const_) {
       break;
     }
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
 void CWriter::WriteInitExpr(const ExprList& expr_list) {
-  if (expr_list.empty())
-    return;
+  if (expr_list.empty()) return;
 
   assert(expr_list.size() == 1);
   const Expr* expr = &expr_list.front();
   switch (expr_list.front().type()) {
-    case ExprType::Const:
-      Write(cast<ConstExpr>(expr)->const_);
-      break;
+    case ExprType::Const: Write(cast<ConstExpr>(expr)->const_); break;
 
     case ExprType::GlobalGet:
       Write(GlobalVar(cast<GlobalGetExpr>(expr)->var));
       break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
@@ -860,8 +791,7 @@ void CWriter::WriteFuncTypes() {
 }
 
 void CWriter::WriteImports() {
-  if (module_->imports.empty())
-    return;
+  if (module_->imports.empty()) return;
 
   Write(Newline());
 
@@ -907,8 +837,7 @@ void CWriter::WriteImports() {
         break;
       }
 
-      default:
-        WABT_UNREACHABLE;
+      default: WABT_UNREACHABLE;
     }
 
     Write(Newline());
@@ -916,8 +845,7 @@ void CWriter::WriteImports() {
 }
 
 void CWriter::WriteFuncDeclarations() {
-  if (module_->funcs.size() == module_->num_func_imports)
-    return;
+  if (module_->funcs.size() == module_->num_func_imports) return;
 
   Write(Newline());
 
@@ -940,8 +868,7 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
     Write("void");
   } else {
     for (Index i = 0; i < decl.GetNumParams(); ++i) {
-      if (i != 0)
-        Write(", ");
+      if (i != 0) Write(", ");
       Write(decl.GetParamType(i));
     }
   }
@@ -984,8 +911,7 @@ void CWriter::WriteGlobal(const Global& global, const std::string& name) {
 }
 
 void CWriter::WriteMemories() {
-  if (module_->memories.size() == module_->num_memory_imports)
-    return;
+  if (module_->memories.size() == module_->num_memory_imports) return;
 
   Write(Newline());
 
@@ -1007,8 +933,7 @@ void CWriter::WriteMemory(const std::string& name) {
 }
 
 void CWriter::WriteTables() {
-  if (module_->tables.size() == module_->num_table_imports)
-    return;
+  if (module_->tables.size() == module_->num_table_imports) return;
 
   Write(Newline());
 
@@ -1043,11 +968,9 @@ void CWriter::WriteDataInitializers() {
         size_t i = 0;
         for (uint8_t x : data_segment->data) {
           Writef("0x%02x, ", x);
-          if ((++i % 12) == 0)
-            Write(Newline());
+          if ((++i % 12) == 0) Write(Newline());
         }
-        if (i > 0)
-          Write(Newline());
+        if (i > 0) Write(Newline());
         Write(CloseBrace(), ";", Newline());
         ++data_segment_index;
       }
@@ -1118,18 +1041,13 @@ void CWriter::WriteInitExports() {
 }
 
 void CWriter::WriteExports(WriteExportsKind kind) {
-  if (module_->exports.empty())
-    return;
+  if (module_->exports.empty()) return;
 
-  if (kind != WriteExportsKind::Initializers) {
-    Write(Newline());
-  }
+  if (kind != WriteExportsKind::Initializers) { Write(Newline()); }
 
   for (const Export* export_ : module_->exports) {
     Write("/* export: '", export_->name, "' */", Newline());
-    if (kind == WriteExportsKind::Declarations) {
-      Write("extern ");
-    }
+    if (kind == WriteExportsKind::Declarations) { Write("extern "); }
 
     std::string mangled_name;
     std::string internal_name;
@@ -1180,8 +1098,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         break;
       }
 
-      default:
-        WABT_UNREACHABLE;
+      default: WABT_UNREACHABLE;
     }
 
     if (kind == WriteExportsKind::Initializers) {
@@ -1209,8 +1126,7 @@ void CWriter::WriteFuncs() {
   Index func_index = 0;
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
-    if (!is_import)
-      Write(Newline(), *func, Newline());
+    if (!is_import) Write(Newline(), *func, Newline());
     ++func_index;
   }
 }
@@ -1274,8 +1190,7 @@ void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
     for (Index i = 0; i < func_->GetNumParams(); ++i) {
       if (i != 0) {
         Write(", ");
-        if ((i % 8) == 0)
-          Write(Newline());
+        if ((i % 8) == 0) Write(Newline());
       }
       Write(func_->GetParamType(i), " ",
             DefineLocalScopeName(index_to_name[i]));
@@ -1297,8 +1212,7 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
           Indent(4);
         } else {
           Write(", ");
-          if ((count % 8) == 0)
-            Write(Newline());
+          if ((count % 8) == 0) Write(Newline());
         }
 
         Write(DefineLocalScopeName(index_to_name[num_params + local_index]),
@@ -1327,8 +1241,7 @@ void CWriter::WriteStackVarDeclarations() {
           Indent(4);
         } else {
           Write(", ");
-          if ((count % 8) == 0)
-            Write(Newline());
+          if ((count % 8) == 0) Write(Newline());
         }
 
         Write(name);
@@ -1345,9 +1258,7 @@ void CWriter::WriteStackVarDeclarations() {
 void CWriter::Write(const ExprList& exprs) {
   for (const Expr& expr : exprs) {
     switch (expr.type()) {
-      case ExprType::Binary:
-        Write(*cast<BinaryExpr>(&expr));
-        break;
+      case ExprType::Binary: Write(*cast<BinaryExpr>(&expr)); break;
 
       case ExprType::Block: {
         const Block& block = cast<BlockExpr>(&expr)->block;
@@ -1400,9 +1311,7 @@ void CWriter::Write(const ExprList& exprs) {
 
         Write(GlobalVar(var), "(");
         for (Index i = 0; i < num_params; ++i) {
-          if (i != 0) {
-            Write(", ");
-          }
+          if (i != 0) { Write(", "); }
           Write(StackVar(num_params - i - 1));
         }
         Write(");", Newline());
@@ -1439,9 +1348,7 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::Compare:
-        Write(*cast<CompareExpr>(&expr));
-        break;
+      case ExprType::Compare: Write(*cast<CompareExpr>(&expr)); break;
 
       case ExprType::Const: {
         const Const& const_ = cast<ConstExpr>(&expr)->const_;
@@ -1450,13 +1357,9 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::Convert:
-        Write(*cast<ConvertExpr>(&expr));
-        break;
+      case ExprType::Convert: Write(*cast<ConvertExpr>(&expr)); break;
 
-      case ExprType::Drop:
-        DropTypes(1);
-        break;
+      case ExprType::Drop: DropTypes(1); break;
 
       case ExprType::GlobalGet: {
         const Var& var = cast<GlobalGetExpr>(&expr)->var;
@@ -1491,9 +1394,7 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::Load:
-        Write(*cast<LoadExpr>(&expr));
-        break;
+      case ExprType::Load: Write(*cast<LoadExpr>(&expr)); break;
 
       case ExprType::LocalGet: {
         const Var& var = cast<LocalGetExpr>(&expr)->var;
@@ -1545,9 +1446,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::TableFill:
       case ExprType::RefFunc:
       case ExprType::RefNull:
-      case ExprType::RefIsNull:
-        UNIMPLEMENTED("...");
-        break;
+      case ExprType::RefIsNull: UNIMPLEMENTED("..."); break;
 
       case ExprType::MemoryGrow: {
         assert(module_->memories.size() == 1);
@@ -1568,8 +1467,7 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::Nop:
-        break;
+      case ExprType::Nop: break;
 
       case ExprType::Return:
         // Goto the function label instead; this way we can do shared function
@@ -1587,17 +1485,11 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::Store:
-        Write(*cast<StoreExpr>(&expr));
-        break;
+      case ExprType::Store: Write(*cast<StoreExpr>(&expr)); break;
 
-      case ExprType::Unary:
-        Write(*cast<UnaryExpr>(&expr));
-        break;
+      case ExprType::Unary: Write(*cast<UnaryExpr>(&expr)); break;
 
-      case ExprType::Ternary:
-        Write(*cast<TernaryExpr>(&expr));
-        break;
+      case ExprType::Ternary: Write(*cast<TernaryExpr>(&expr)); break;
 
       case ExprType::SimdLaneOp: {
         Write(*cast<SimdLaneOpExpr>(&expr));
@@ -1619,17 +1511,11 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::LoadSplat:
-        Write(*cast<LoadSplatExpr>(&expr));
-        break;
+      case ExprType::LoadSplat: Write(*cast<LoadSplatExpr>(&expr)); break;
 
-      case ExprType::LoadZero:
-        Write(*cast<LoadZeroExpr>(&expr));
-        break;
+      case ExprType::LoadZero: Write(*cast<LoadZeroExpr>(&expr)); break;
 
-      case ExprType::Unreachable:
-        Write("UNREACHABLE;", Newline());
-        return;
+      case ExprType::Unreachable: Write("UNREACHABLE;", Newline()); return;
 
       case ExprType::AtomicLoad:
       case ExprType::AtomicRmw:
@@ -1642,9 +1528,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::ReturnCall:
       case ExprType::ReturnCallIndirect:
       case ExprType::Throw:
-      case ExprType::Try:
-        UNIMPLEMENTED("...");
-        break;
+      case ExprType::Try: UNIMPLEMENTED("..."); break;
     }
   }
 }
@@ -1695,23 +1579,17 @@ void CWriter::Write(const BinaryExpr& expr) {
     case Opcode::I32Add:
     case Opcode::I64Add:
     case Opcode::F32Add:
-    case Opcode::F64Add:
-      WriteInfixBinaryExpr(expr.opcode, "+");
-      break;
+    case Opcode::F64Add: WriteInfixBinaryExpr(expr.opcode, "+"); break;
 
     case Opcode::I32Sub:
     case Opcode::I64Sub:
     case Opcode::F32Sub:
-    case Opcode::F64Sub:
-      WriteInfixBinaryExpr(expr.opcode, "-");
-      break;
+    case Opcode::F64Sub: WriteInfixBinaryExpr(expr.opcode, "-"); break;
 
     case Opcode::I32Mul:
     case Opcode::I64Mul:
     case Opcode::F32Mul:
-    case Opcode::F64Mul:
-      WriteInfixBinaryExpr(expr.opcode, "*");
-      break;
+    case Opcode::F64Mul: WriteInfixBinaryExpr(expr.opcode, "*"); break;
 
     case Opcode::I32DivS:
       WritePrefixBinaryExpr(expr.opcode, "I32_DIV_S");
@@ -1722,14 +1600,10 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I32DivU:
-    case Opcode::I64DivU:
-      WritePrefixBinaryExpr(expr.opcode, "DIV_U");
-      break;
+    case Opcode::I64DivU: WritePrefixBinaryExpr(expr.opcode, "DIV_U"); break;
 
     case Opcode::F32Div:
-    case Opcode::F64Div:
-      WriteInfixBinaryExpr(expr.opcode, "/");
-      break;
+    case Opcode::F64Div: WriteInfixBinaryExpr(expr.opcode, "/"); break;
 
     case Opcode::I32RemS:
       WritePrefixBinaryExpr(expr.opcode, "I32_REM_S");
@@ -1740,24 +1614,16 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I32RemU:
-    case Opcode::I64RemU:
-      WritePrefixBinaryExpr(expr.opcode, "REM_U");
-      break;
+    case Opcode::I64RemU: WritePrefixBinaryExpr(expr.opcode, "REM_U"); break;
 
     case Opcode::I32And:
-    case Opcode::I64And:
-      WriteInfixBinaryExpr(expr.opcode, "&");
-      break;
+    case Opcode::I64And: WriteInfixBinaryExpr(expr.opcode, "&"); break;
 
     case Opcode::I32Or:
-    case Opcode::I64Or:
-      WriteInfixBinaryExpr(expr.opcode, "|");
-      break;
+    case Opcode::I64Or: WriteInfixBinaryExpr(expr.opcode, "|"); break;
 
     case Opcode::I32Xor:
-    case Opcode::I64Xor:
-      WriteInfixBinaryExpr(expr.opcode, "^");
-      break;
+    case Opcode::I64Xor: WriteInfixBinaryExpr(expr.opcode, "^"); break;
 
     case Opcode::I32Shl:
     case Opcode::I64Shl:
@@ -1783,31 +1649,19 @@ void CWriter::Write(const BinaryExpr& expr) {
       DropTypes(1);
       break;
 
-    case Opcode::I32Rotl:
-      WritePrefixBinaryExpr(expr.opcode, "I32_ROTL");
-      break;
+    case Opcode::I32Rotl: WritePrefixBinaryExpr(expr.opcode, "I32_ROTL"); break;
 
-    case Opcode::I64Rotl:
-      WritePrefixBinaryExpr(expr.opcode, "I64_ROTL");
-      break;
+    case Opcode::I64Rotl: WritePrefixBinaryExpr(expr.opcode, "I64_ROTL"); break;
 
-    case Opcode::I32Rotr:
-      WritePrefixBinaryExpr(expr.opcode, "I32_ROTR");
-      break;
+    case Opcode::I32Rotr: WritePrefixBinaryExpr(expr.opcode, "I32_ROTR"); break;
 
-    case Opcode::I64Rotr:
-      WritePrefixBinaryExpr(expr.opcode, "I64_ROTR");
-      break;
+    case Opcode::I64Rotr: WritePrefixBinaryExpr(expr.opcode, "I64_ROTR"); break;
 
     case Opcode::F32Min:
-    case Opcode::F64Min:
-      WritePrefixBinaryExpr(expr.opcode, "FMIN");
-      break;
+    case Opcode::F64Min: WritePrefixBinaryExpr(expr.opcode, "FMIN"); break;
 
     case Opcode::F32Max:
-    case Opcode::F64Max:
-      WritePrefixBinaryExpr(expr.opcode, "FMAX");
-      break;
+    case Opcode::F64Max: WritePrefixBinaryExpr(expr.opcode, "FMAX"); break;
 
     case Opcode::F32Copysign:
       WritePrefixBinaryExpr(expr.opcode, "copysignf");
@@ -1817,8 +1671,7 @@ void CWriter::Write(const BinaryExpr& expr) {
       WritePrefixBinaryExpr(expr.opcode, "copysign");
       break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
@@ -1839,9 +1692,7 @@ void CWriter::Write(const CompareExpr& expr) {
       break;
 
     case Opcode::I32LtS:
-    case Opcode::I64LtS:
-      WriteSignedBinaryExpr(expr.opcode, "<");
-      break;
+    case Opcode::I64LtS: WriteSignedBinaryExpr(expr.opcode, "<"); break;
 
     case Opcode::I32LtU:
     case Opcode::I64LtU:
@@ -1851,9 +1702,7 @@ void CWriter::Write(const CompareExpr& expr) {
       break;
 
     case Opcode::I32LeS:
-    case Opcode::I64LeS:
-      WriteSignedBinaryExpr(expr.opcode, "<=");
-      break;
+    case Opcode::I64LeS: WriteSignedBinaryExpr(expr.opcode, "<="); break;
 
     case Opcode::I32LeU:
     case Opcode::I64LeU:
@@ -1863,9 +1712,7 @@ void CWriter::Write(const CompareExpr& expr) {
       break;
 
     case Opcode::I32GtS:
-    case Opcode::I64GtS:
-      WriteSignedBinaryExpr(expr.opcode, ">");
-      break;
+    case Opcode::I64GtS: WriteSignedBinaryExpr(expr.opcode, ">"); break;
 
     case Opcode::I32GtU:
     case Opcode::I64GtU:
@@ -1875,9 +1722,7 @@ void CWriter::Write(const CompareExpr& expr) {
       break;
 
     case Opcode::I32GeS:
-    case Opcode::I64GeS:
-      WriteSignedBinaryExpr(expr.opcode, ">=");
-      break;
+    case Opcode::I64GeS: WriteSignedBinaryExpr(expr.opcode, ">="); break;
 
     case Opcode::I32GeU:
     case Opcode::I64GeU:
@@ -1886,17 +1731,14 @@ void CWriter::Write(const CompareExpr& expr) {
       WriteInfixBinaryExpr(expr.opcode, ">=", AssignOp::Disallowed);
       break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
 void CWriter::Write(const ConvertExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Eqz:
-    case Opcode::I64Eqz:
-      WriteSimpleUnaryExpr(expr.opcode, "!");
-      break;
+    case Opcode::I64Eqz: WriteSimpleUnaryExpr(expr.opcode, "!"); break;
 
     case Opcode::I64ExtendI32S:
       WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s32)");
@@ -1906,9 +1748,7 @@ void CWriter::Write(const ConvertExpr& expr) {
       WriteSimpleUnaryExpr(expr.opcode, "(u64)");
       break;
 
-    case Opcode::I32WrapI64:
-      WriteSimpleUnaryExpr(expr.opcode, "(u32)");
-      break;
+    case Opcode::I32WrapI64: WriteSimpleUnaryExpr(expr.opcode, "(u32)"); break;
 
     case Opcode::I32TruncF32S:
       WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_S_F32");
@@ -1949,9 +1789,7 @@ void CWriter::Write(const ConvertExpr& expr) {
     case Opcode::I32TruncSatF32U:
     case Opcode::I64TruncSatF32U:
     case Opcode::I32TruncSatF64U:
-    case Opcode::I64TruncSatF64U:
-      UNIMPLEMENTED(expr.opcode.GetName());
-      break;
+    case Opcode::I64TruncSatF64U: UNIMPLEMENTED(expr.opcode.GetName()); break;
 
     case Opcode::F32ConvertI32S:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)(s32)");
@@ -2007,59 +1845,29 @@ void CWriter::Write(const ConvertExpr& expr) {
       WriteSimpleUnaryExpr(expr.opcode, "i64_reinterpret_f64");
       break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
 void CWriter::Write(const LoadExpr& expr) {
   const char* func = nullptr;
   switch (expr.opcode) {
-    case Opcode::I32Load:
-      func = "i32_load";
-      break;
-    case Opcode::I64Load:
-      func = "i64_load";
-      break;
-    case Opcode::F32Load:
-      func = "f32_load";
-      break;
-    case Opcode::F64Load:
-      func = "f64_load";
-      break;
-    case Opcode::I32Load8S:
-      func = "i32_load8_s";
-      break;
-    case Opcode::I64Load8S:
-      func = "i64_load8_s";
-      break;
-    case Opcode::I32Load8U:
-      func = "i32_load8_u";
-      break;
-    case Opcode::I64Load8U:
-      func = "i64_load8_u";
-      break;
-    case Opcode::I32Load16S:
-      func = "i32_load16_s";
-      break;
-    case Opcode::I64Load16S:
-      func = "i64_load16_s";
-      break;
-    case Opcode::I32Load16U:
-      func = "i32_load16_u";
-      break;
-    case Opcode::I64Load16U:
-      func = "i64_load16_u";
-      break;
-    case Opcode::I64Load32S:
-      func = "i64_load32_s";
-      break;
-    case Opcode::I64Load32U:
-      func = "i64_load32_u";
-      break;
+    case Opcode::I32Load: func = "i32_load"; break;
+    case Opcode::I64Load: func = "i64_load"; break;
+    case Opcode::F32Load: func = "f32_load"; break;
+    case Opcode::F64Load: func = "f64_load"; break;
+    case Opcode::I32Load8S: func = "i32_load8_s"; break;
+    case Opcode::I64Load8S: func = "i64_load8_s"; break;
+    case Opcode::I32Load8U: func = "i32_load8_u"; break;
+    case Opcode::I64Load8U: func = "i64_load8_u"; break;
+    case Opcode::I32Load16S: func = "i32_load16_s"; break;
+    case Opcode::I64Load16S: func = "i64_load16_s"; break;
+    case Opcode::I32Load16U: func = "i32_load16_u"; break;
+    case Opcode::I64Load16U: func = "i64_load16_u"; break;
+    case Opcode::I64Load32S: func = "i64_load32_s"; break;
+    case Opcode::I64Load32U: func = "i64_load32_u"; break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 
   assert(module_->memories.size() == 1);
@@ -2068,8 +1876,7 @@ void CWriter::Write(const LoadExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(", ExternalPtr(memory->name),
         ", (u64)(", StackVar(0), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
+  if (expr.offset != 0) Write(" + ", expr.offset, "u");
   Write(");", Newline());
   DropTypes(1);
   PushType(result_type);
@@ -2078,65 +1885,37 @@ void CWriter::Write(const LoadExpr& expr) {
 void CWriter::Write(const StoreExpr& expr) {
   const char* func = nullptr;
   switch (expr.opcode) {
-    case Opcode::I32Store:
-      func = "i32_store";
-      break;
-    case Opcode::I64Store:
-      func = "i64_store";
-      break;
-    case Opcode::F32Store:
-      func = "f32_store";
-      break;
-    case Opcode::F64Store:
-      func = "f64_store";
-      break;
-    case Opcode::I32Store8:
-      func = "i32_store8";
-      break;
-    case Opcode::I64Store8:
-      func = "i64_store8";
-      break;
-    case Opcode::I32Store16:
-      func = "i32_store16";
-      break;
-    case Opcode::I64Store16:
-      func = "i64_store16";
-      break;
-    case Opcode::I64Store32:
-      func = "i64_store32";
-      break;
+    case Opcode::I32Store: func = "i32_store"; break;
+    case Opcode::I64Store: func = "i64_store"; break;
+    case Opcode::F32Store: func = "f32_store"; break;
+    case Opcode::F64Store: func = "f64_store"; break;
+    case Opcode::I32Store8: func = "i32_store8"; break;
+    case Opcode::I64Store8: func = "i64_store8"; break;
+    case Opcode::I32Store16: func = "i32_store16"; break;
+    case Opcode::I64Store16: func = "i64_store16"; break;
+    case Opcode::I64Store32: func = "i64_store32"; break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 
   assert(module_->memories.size() == 1);
   Memory* memory = module_->memories[0];
 
   Write(func, "(", ExternalPtr(memory->name), ", (u64)(", StackVar(1), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+  if (expr.offset != 0) Write(" + ", expr.offset);
   Write(", ", StackVar(0), ");", Newline());
   DropTypes(2);
 }
 
 void CWriter::Write(const UnaryExpr& expr) {
   switch (expr.opcode) {
-    case Opcode::I32Clz:
-      WriteSimpleUnaryExpr(expr.opcode, "I32_CLZ");
-      break;
+    case Opcode::I32Clz: WriteSimpleUnaryExpr(expr.opcode, "I32_CLZ"); break;
 
-    case Opcode::I64Clz:
-      WriteSimpleUnaryExpr(expr.opcode, "I64_CLZ");
-      break;
+    case Opcode::I64Clz: WriteSimpleUnaryExpr(expr.opcode, "I64_CLZ"); break;
 
-    case Opcode::I32Ctz:
-      WriteSimpleUnaryExpr(expr.opcode, "I32_CTZ");
-      break;
+    case Opcode::I32Ctz: WriteSimpleUnaryExpr(expr.opcode, "I32_CTZ"); break;
 
-    case Opcode::I64Ctz:
-      WriteSimpleUnaryExpr(expr.opcode, "I64_CTZ");
-      break;
+    case Opcode::I64Ctz: WriteSimpleUnaryExpr(expr.opcode, "I64_CTZ"); break;
 
     case Opcode::I32Popcnt:
       WriteSimpleUnaryExpr(expr.opcode, "I32_POPCNT");
@@ -2147,49 +1926,27 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Neg:
-    case Opcode::F64Neg:
-      WriteSimpleUnaryExpr(expr.opcode, "-");
-      break;
+    case Opcode::F64Neg: WriteSimpleUnaryExpr(expr.opcode, "-"); break;
 
-    case Opcode::F32Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "fabsf");
-      break;
+    case Opcode::F32Abs: WriteSimpleUnaryExpr(expr.opcode, "fabsf"); break;
 
-    case Opcode::F64Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "fabs");
-      break;
+    case Opcode::F64Abs: WriteSimpleUnaryExpr(expr.opcode, "fabs"); break;
 
-    case Opcode::F32Sqrt:
-      WriteSimpleUnaryExpr(expr.opcode, "sqrtf");
-      break;
+    case Opcode::F32Sqrt: WriteSimpleUnaryExpr(expr.opcode, "sqrtf"); break;
 
-    case Opcode::F64Sqrt:
-      WriteSimpleUnaryExpr(expr.opcode, "sqrt");
-      break;
+    case Opcode::F64Sqrt: WriteSimpleUnaryExpr(expr.opcode, "sqrt"); break;
 
-    case Opcode::F32Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "ceilf");
-      break;
+    case Opcode::F32Ceil: WriteSimpleUnaryExpr(expr.opcode, "ceilf"); break;
 
-    case Opcode::F64Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "ceil");
-      break;
+    case Opcode::F64Ceil: WriteSimpleUnaryExpr(expr.opcode, "ceil"); break;
 
-    case Opcode::F32Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "floorf");
-      break;
+    case Opcode::F32Floor: WriteSimpleUnaryExpr(expr.opcode, "floorf"); break;
 
-    case Opcode::F64Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "floor");
-      break;
+    case Opcode::F64Floor: WriteSimpleUnaryExpr(expr.opcode, "floor"); break;
 
-    case Opcode::F32Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "truncf");
-      break;
+    case Opcode::F32Trunc: WriteSimpleUnaryExpr(expr.opcode, "truncf"); break;
 
-    case Opcode::F64Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "trunc");
-      break;
+    case Opcode::F64Trunc: WriteSimpleUnaryExpr(expr.opcode, "trunc"); break;
 
     case Opcode::F32Nearest:
       WriteSimpleUnaryExpr(expr.opcode, "nearbyintf");
@@ -2203,12 +1960,9 @@ void CWriter::Write(const UnaryExpr& expr) {
     case Opcode::I32Extend16S:
     case Opcode::I64Extend8S:
     case Opcode::I64Extend16S:
-    case Opcode::I64Extend32S:
-      UNIMPLEMENTED(expr.opcode.GetName());
-      break;
+    case Opcode::I64Extend32S: UNIMPLEMENTED(expr.opcode.GetName()); break;
 
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
@@ -2222,8 +1976,7 @@ void CWriter::Write(const TernaryExpr& expr) {
       PushType(result_type);
       break;
     }
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 }
 
@@ -2256,8 +2009,7 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
       DropTypes(2);
       break;
     }
-    default:
-      WABT_UNREACHABLE;
+    default: WABT_UNREACHABLE;
   }
 
   PushType(result_type);
@@ -2288,16 +2040,13 @@ void CWriter::Write(const LoadSplatExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
         ExternalPtr(memory->name), ", (u64)(", StackVar(0));
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+  if (expr.offset != 0) Write(" + ", expr.offset);
   Write("));", Newline());
   DropTypes(1);
   PushType(result_type);
 }
 
-void CWriter::Write(const LoadZeroExpr& expr) {
-  UNIMPLEMENTED("SIMD support");
-}
+void CWriter::Write(const LoadZeroExpr& expr) { UNIMPLEMENTED("SIMD support"); }
 
 void CWriter::WriteCHeader() {
   stream_ = h_stream_;

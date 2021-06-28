@@ -214,10 +214,8 @@ class WastParser {
   Result ParseAction(ActionPtr*);
   Result ParseScriptModule(std::unique_ptr<ScriptModule>*);
 
-  template <typename T>
-  Result ParseActionCommand(TokenType, CommandPtr*);
-  template <typename T>
-  Result ParseAssertActionCommand(TokenType, CommandPtr*);
+  template <typename T> Result ParseActionCommand(TokenType, CommandPtr*);
+  template <typename T> Result ParseAssertActionCommand(TokenType, CommandPtr*);
   template <typename T>
   Result ParseAssertActionTextCommand(TokenType, CommandPtr*);
   template <typename T>

@@ -76,13 +76,9 @@ struct WabtParseWastResult {
 
 extern "C" {
 
-wabt::Features* wabt_new_features(void) {
-  return new wabt::Features();
-}
+wabt::Features* wabt_new_features(void) { return new wabt::Features(); }
 
-void wabt_destroy_features(wabt::Features* f) {
-  delete f;
-}
+void wabt_destroy_features(wabt::Features* f) { delete f; }
 
 #define WABT_FEATURE(variable, flag, default_, help)                   \
   bool wabt_##variable##_enabled(wabt::Features* f) {                  \
@@ -245,18 +241,12 @@ WabtWriteModuleResult* wabt_write_text_module(wabt::Module* module,
   return result;
 }
 
-void wabt_destroy_module(wabt::Module* module) {
-  delete module;
-}
+void wabt_destroy_module(wabt::Module* module) { delete module; }
 
-void wabt_destroy_wast_lexer(wabt::WastLexer* lexer) {
-  delete lexer;
-}
+void wabt_destroy_wast_lexer(wabt::WastLexer* lexer) { delete lexer; }
 
 // Errors
-wabt::Errors* wabt_new_errors(void) {
-  return new wabt::Errors();
-}
+wabt::Errors* wabt_new_errors(void) { return new wabt::Errors(); }
 
 wabt::OutputBuffer* wabt_format_text_errors(wabt::Errors* errors,
                                             wabt::WastLexer* lexer) {
@@ -280,9 +270,7 @@ wabt::OutputBuffer* wabt_format_binary_errors(wabt::Errors* errors) {
   return result;
 }
 
-void wabt_destroy_errors(wabt::Errors* errors) {
-  delete errors;
-}
+void wabt_destroy_errors(wabt::Errors* errors) { delete errors; }
 
 // WabtParseWatResult
 wabt::Result::Enum wabt_parse_wat_result_get_result(

@@ -27,9 +27,7 @@ namespace {
 
 std::string repeat(std::string s, size_t count) {
   std::string result;
-  for (size_t i = 0; i < count; ++i) {
-    result += s;
-  }
+  for (size_t i = 0; i < count; ++i) { result += s; }
   return result;
 }
 
