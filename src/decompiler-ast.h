@@ -46,8 +46,8 @@ struct Node {
   // Node specific annotations.
   union {
     struct {
-      Index var_start, var_count;
-    };               // FlushedVar/FlushToVars
+      Index var_start, var_count;  // FlushedVar/FlushToVars
+    };
     const Var* var;  // Decl/DeclInit.
     LabelType lt;    // br/br_if target.
   } u;
