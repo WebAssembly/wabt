@@ -139,7 +139,7 @@ TEST_F(InterpTest, Disassemble) {
   auto buf = stream.ReleaseOutputBuffer();
 
   ExpectBufferStrEq(*buf,
-                    R"(   0| alloca 1
+R"(   0| alloca 1
    8| i32.const 1
   16| local.set $2, %[-1]
   24| local.get $1
@@ -187,7 +187,7 @@ TEST_F(InterpTest, Fac_Trace) {
 
   auto buf = stream.ReleaseOutputBuffer();
   ExpectBufferStrEq(*buf,
-                    R"(#0.    0: V:1  | alloca 1
+R"(#0.    0: V:1  | alloca 1
 #0.    8: V:2  | i32.const 1
 #0.   16: V:3  | local.set $2, 1
 #0.   24: V:2  | local.get $1
@@ -251,7 +251,7 @@ TEST_F(InterpTest, Local_Trace) {
 
   auto buf = stream.ReleaseOutputBuffer();
   ExpectBufferStrEq(*buf,
-                    R"(#0.    0: V:0  | alloca 4
+R"(#0.    0: V:0  | alloca 4
 #0.    8: V:4  | i32.const 0
 #0.   16: V:5  | local.set $5, 0
 #0.   24: V:4  | i64.const 1
