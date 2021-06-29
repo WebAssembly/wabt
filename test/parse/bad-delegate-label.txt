@@ -9,7 +9,7 @@
   )
 )
 (;; STDERR ;;;
-out/test/parse/bad-delegate-label.txt:8:14: error: invalid label variable for try-delegate
+out/test/parse/bad-delegate-label.txt:8:14: error: undefined label variable "$t"
     delegate $t
              ^^
 ;;; STDERR ;;)

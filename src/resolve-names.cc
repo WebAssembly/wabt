@@ -412,21 +412,13 @@ Result NameResolver::OnCatchExpr(TryExpr*, Catch* catch_) {
 }
 
 Result NameResolver::OnDelegateExpr(TryExpr* expr) {
-  Var* delegate_target = &expr->delegate_target;
-  bool was_name = delegate_target->is_name();
-  ResolveLabelVar(delegate_target);
-  if (was_name) {
-    // Invalid label (of the immediate try-delegate block) used.
-    if (delegate_target->index() == 0) {
-      PrintError(&delegate_target->loc, "invalid label variable for try-delegate");
-      return Result::Ok;
-    }
-    // Adjust label by one, because a delegate instruction cannot target its
-    // immediately enclosing try block.
-    delegate_target->set_index(delegate_target->index() - 1);
-  }
   // Pop the label here as a try-delegate has no `end` instruction.
   PopLabel();
+
+  // We resolve *after* popping the label in order to ensure that the
+  // delegate label starts counting after the current try-delegate.
+  ResolveLabelVar(&expr->delegate_target);
+
   return Result::Ok;
 }
 
