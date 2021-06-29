@@ -106,7 +106,9 @@ void BinaryWriterSpec::WriteKey(const char* key) {
   json_stream_->Writef("\"%s\": ", key);
 }
 
-void BinaryWriterSpec::WriteSeparator() { json_stream_->Writef(", "); }
+void BinaryWriterSpec::WriteSeparator() {
+  json_stream_->Writef(", ");
+}
 
 void BinaryWriterSpec::WriteEscapedString(string_view s) {
   json_stream_->WriteChar('"');
@@ -283,7 +285,9 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
           default: WABT_UNREACHABLE;
         }
 
-        if (lane != const_.lane_count() - 1) { WriteSeparator(); }
+        if (lane != const_.lane_count() - 1) {
+          WriteSeparator();
+        }
       }
 
       json_stream_->Writef("]");
@@ -302,7 +306,9 @@ void BinaryWriterSpec::WriteConstVector(const ConstVector& consts) {
   for (size_t i = 0; i < consts.size(); ++i) {
     const Const& const_ = consts[i];
     WriteConst(const_);
-    if (i != consts.size() - 1) { WriteSeparator(); }
+    if (i != consts.size() - 1) {
+      WriteSeparator();
+    }
   }
   json_stream_->Writef("]");
 }

@@ -162,7 +162,8 @@ struct v128 {
   }
   void set_zero() { std::fill(std::begin(v), std::end(v), 0); }
 
-  template <typename T> T To(int lane) const {
+  template <typename T>
+  T To(int lane) const {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
@@ -171,7 +172,8 @@ struct v128 {
     return result;
   }
 
-  template <typename T> void From(int lane, T data) {
+  template <typename T>
+  void From(int lane, T data) {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T),
@@ -191,14 +193,16 @@ static const Address kInvalidAddress = ~0;
 static const Index kInvalidIndex = ~0;
 static const Offset kInvalidOffset = ~0;
 
-template <typename Dst, typename Src> Dst WABT_VECTORCALL Bitcast(Src&& value) {
+template <typename Dst, typename Src>
+Dst WABT_VECTORCALL Bitcast(Src&& value) {
   static_assert(sizeof(Src) == sizeof(Dst), "Bitcast sizes must match.");
   Dst result;
   memcpy(&result, &value, sizeof(result));
   return result;
 }
 
-template <typename T> void ZeroMemory(T& v) {
+template <typename T>
+void ZeroMemory(T& v) {
   WABT_STATIC_ASSERT(std::is_pod<T>::value);
   memset(&v, 0, sizeof(v));
 }
@@ -210,7 +214,10 @@ void Construct(T& placement, Args&&... args) {
 }
 
 // Placement destruct
-template <typename T> void Destruct(T& placement) { placement.~T(); }
+template <typename T>
+void Destruct(T& placement) {
+  placement.~T();
+}
 
 inline std::string WABT_PRINTF_FORMAT(1, 2)
     StringPrintf(const char* format, ...) {
@@ -453,7 +460,8 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
   }
 }
 
-template <typename T> void ConvertBackslashToSlash(T begin, T end) {
+template <typename T>
+void ConvertBackslashToSlash(T begin, T end) {
   std::replace(begin, end, '\\', '/');
 }
 

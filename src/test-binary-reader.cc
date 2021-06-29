@@ -43,7 +43,9 @@ TEST(BinaryReader, DisabledOpcodes) {
   // Loop through all opcodes.
   for (uint32_t i = 0; i < static_cast<uint32_t>(Opcode::Invalid); ++i) {
     Opcode opcode(static_cast<Opcode::Enum>(i));
-    if (opcode.IsEnabled(options.features)) { continue; }
+    if (opcode.IsEnabled(options.features)) {
+      continue;
+    }
 
     // Use a shorter name to make the clang-formatted table below look nicer.
     std::vector<uint8_t> b = opcode.GetBytes();

@@ -37,9 +37,11 @@
 
 namespace wabt {
 
-template <typename T> class intrusive_list;
+template <typename T>
+class intrusive_list;
 
-template <typename T> class intrusive_list_base {
+template <typename T>
+class intrusive_list_base {
  private:
   friend class intrusive_list<T>;
 
@@ -47,7 +49,8 @@ template <typename T> class intrusive_list_base {
   mutable T* prev_ = nullptr;
 };
 
-template <typename T> class intrusive_list {
+template <typename T>
+class intrusive_list {
  public:
   // types:
   typedef T value_type;
@@ -97,8 +100,10 @@ template <typename T> class intrusive_list {
   const_reference back() const;
 
   // modifiers:
-  template <class... Args> void emplace_front(Args&&... args);
-  template <class... Args> void emplace_back(Args&&... args);
+  template <class... Args>
+  void emplace_front(Args&&... args);
+  template <class... Args>
+  void emplace_back(Args&&... args);
   void push_front(std::unique_ptr<T> node);
   void push_front(T&& node);
   void push_back(std::unique_ptr<T> node);
@@ -108,7 +113,8 @@ template <typename T> class intrusive_list {
   std::unique_ptr<T> extract_front();
   std::unique_ptr<T> extract_back();
 
-  template <class... Args> iterator emplace(iterator pos, Args&&... args);
+  template <class... Args>
+  iterator emplace(iterator pos, Args&&... args);
   iterator insert(iterator pos, std::unique_ptr<T> node);
   iterator insert(iterator pos, T&& node);
   std::unique_ptr<T> extract(iterator it);
@@ -133,7 +139,8 @@ template <typename T> class intrusive_list {
 };
 
 /// iterator
-template <typename T> class intrusive_list<T>::iterator {
+template <typename T>
+class intrusive_list<T>::iterator {
  public:
   typedef std::ptrdiff_t difference_type;
   typedef std::bidirectional_iterator_tag iterator_category;
@@ -195,7 +202,8 @@ template <typename T> class intrusive_list<T>::iterator {
 };
 
 /// const_iterator
-template <typename T> class intrusive_list<T>::const_iterator {
+template <typename T>
+class intrusive_list<T>::const_iterator {
  public:
   typedef std::ptrdiff_t difference_type;
   typedef std::bidirectional_iterator_tag iterator_category;
@@ -257,14 +265,16 @@ template <typename T> class intrusive_list<T>::const_iterator {
   T* node_;
 };
 
-template <typename T> inline intrusive_list<T>::intrusive_list() {}
+template <typename T>
+inline intrusive_list<T>::intrusive_list() {}
 
 template <typename T>
 inline intrusive_list<T>::intrusive_list(std::unique_ptr<T> node) {
   push_back(std::move(node));
 }
 
-template <typename T> inline intrusive_list<T>::intrusive_list(T&& node) {
+template <typename T>
+inline intrusive_list<T>::intrusive_list(T&& node) {
   push_back(std::move(node));
 }
 
@@ -275,7 +285,10 @@ inline intrusive_list<T>::intrusive_list(intrusive_list&& other)
   other.size_ = 0;
 }
 
-template <typename T> inline intrusive_list<T>::~intrusive_list() { clear(); }
+template <typename T>
+inline intrusive_list<T>::~intrusive_list() {
+  clear();
+}
 
 template <typename T>
 inline intrusive_list<T>& intrusive_list<T>::operator=(
@@ -366,7 +379,8 @@ inline typename intrusive_list<T>::size_type intrusive_list<T>::size()
   return size_;
 }
 
-template <typename T> inline bool intrusive_list<T>::empty() const noexcept {
+template <typename T>
+inline bool intrusive_list<T>::empty() const noexcept {
   return size_ == 0;
 }
 
@@ -423,7 +437,8 @@ inline void intrusive_list<T>::push_front(std::unique_ptr<T> node) {
   size_++;
 }
 
-template <typename T> inline void intrusive_list<T>::push_front(T&& node) {
+template <typename T>
+inline void intrusive_list<T>::push_front(T&& node) {
   push_front(MakeUnique<T>(std::move(node)));
 }
 
@@ -442,15 +457,18 @@ inline void intrusive_list<T>::push_back(std::unique_ptr<T> node) {
   size_++;
 }
 
-template <typename T> inline void intrusive_list<T>::push_back(T&& node) {
+template <typename T>
+inline void intrusive_list<T>::push_back(T&& node) {
   push_back(MakeUnique<T>(std::move(node)));
 }
 
-template <typename T> inline void intrusive_list<T>::pop_front() {
+template <typename T>
+inline void intrusive_list<T>::pop_front() {
   extract_front();
 }
 
-template <typename T> inline void intrusive_list<T>::pop_back() {
+template <typename T>
+inline void intrusive_list<T>::pop_back() {
   extract_back();
 }
 
@@ -561,7 +579,8 @@ template <typename T>
 inline typename intrusive_list<T>::iterator intrusive_list<T>::erase(
     iterator first,
     iterator last) {
-  while (first != last) first = erase(first);
+  while (first != last)
+    first = erase(first);
   return first;
 }
 
@@ -572,7 +591,8 @@ inline void intrusive_list<T>::swap(intrusive_list& other) {
   std::swap(size_, other.size_);
 }
 
-template <typename T> inline void intrusive_list<T>::clear() noexcept {
+template <typename T>
+inline void intrusive_list<T>::clear() noexcept {
   for (T* iter = first_; iter;) {
     T* next = iter->next_;
     delete iter;
@@ -604,7 +624,8 @@ inline void intrusive_list<T>::splice(iterator pos,
                                       intrusive_list& other,
                                       iterator first,
                                       iterator last) {
-  while (first != last) insert(pos, other.extract(first++));
+  while (first != last)
+    insert(pos, other.extract(first++));
 }
 
 }  // namespace wabt

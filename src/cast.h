@@ -61,7 +61,8 @@
 
 namespace wabt {
 
-template <typename Derived, typename Base> bool isa(const Base* base) {
+template <typename Derived, typename Base>
+bool isa(const Base* base) {
   WABT_STATIC_ASSERT((std::is_base_of<Base, Derived>::value));
   return Derived::classof(base);
 }
@@ -72,7 +73,8 @@ const Derived* cast(const Base* base) {
   return static_cast<const Derived*>(base);
 };
 
-template <typename Derived, typename Base> Derived* cast(Base* base) {
+template <typename Derived, typename Base>
+Derived* cast(Base* base) {
   assert(isa<Derived>(base));
   return static_cast<Derived*>(base);
 };
@@ -82,7 +84,8 @@ const Derived* dyn_cast(const Base* base) {
   return isa<Derived>(base) ? static_cast<const Derived*>(base) : nullptr;
 };
 
-template <typename Derived, typename Base> Derived* dyn_cast(Base* base) {
+template <typename Derived, typename Base>
+Derived* dyn_cast(Base* base) {
   return isa<Derived>(base) ? static_cast<Derived*>(base) : nullptr;
 };
 

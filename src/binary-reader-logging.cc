@@ -52,7 +52,9 @@ BinaryReaderLogging::BinaryReaderLogging(Stream* stream,
                                          BinaryReaderDelegate* forward)
     : stream_(stream), reader_(forward), indent_(0) {}
 
-void BinaryReaderLogging::Indent() { indent_ += INDENT_SIZE; }
+void BinaryReaderLogging::Indent() {
+  indent_ += INDENT_SIZE;
+}
 
 void BinaryReaderLogging::Dedent() {
   indent_ -= INDENT_SIZE;
@@ -69,7 +71,9 @@ void BinaryReaderLogging::WriteIndent() {
     stream_->WriteData(s_indent, s_indent_len);
     i -= s_indent_len;
   }
-  if (i > 0) { stream_->WriteData(s_indent, indent_); }
+  if (i > 0) {
+    stream_->WriteData(s_indent, indent_);
+  }
 }
 
 void BinaryReaderLogging::LogType(Type type) {
@@ -84,7 +88,9 @@ void BinaryReaderLogging::LogTypes(Index type_count, Type* types) {
   LOGF_NOINDENT("[");
   for (Index i = 0; i < type_count; ++i) {
     LogType(types[i]);
-    if (i != type_count - 1) { LOGF_NOINDENT(", "); }
+    if (i != type_count - 1) {
+      LOGF_NOINDENT(", ");
+    }
   }
   LOGF_NOINDENT("]");
 }
@@ -94,9 +100,13 @@ void BinaryReaderLogging::LogTypes(TypeVector& types) {
 }
 
 void BinaryReaderLogging::LogField(TypeMut field) {
-  if (field.mutable_) { LOGF_NOINDENT("(mut "); }
+  if (field.mutable_) {
+    LOGF_NOINDENT("(mut ");
+  }
   LogType(field.type);
-  if (field.mutable_) { LOGF_NOINDENT(")"); }
+  if (field.mutable_) {
+    LOGF_NOINDENT(")");
+  }
 }
 
 bool BinaryReaderLogging::OnError(const Error& error) {
@@ -150,7 +160,9 @@ Result BinaryReaderLogging::OnStructType(Index index,
   LOGF_NOINDENT("[");
   for (Index i = 0; i < field_count; ++i) {
     LogField(fields[i]);
-    if (i != field_count - 1) { LOGF_NOINDENT(", "); }
+    if (i != field_count - 1) {
+      LOGF_NOINDENT(", ");
+    }
   }
   LOGF_NOINDENT("])\n");
   return reader_->OnStructType(index, field_count, fields);
@@ -310,7 +322,9 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
   LOGF("OnBrTableExpr(num_targets: %" PRIindex ", depths: [", num_targets);
   for (Index i = 0; i < num_targets; ++i) {
     LOGF_NOINDENT("%" PRIindex, target_depths[i]);
-    if (i != num_targets - 1) { LOGF_NOINDENT(", "); }
+    if (i != num_targets - 1) {
+      LOGF_NOINDENT(", ");
+    }
   }
   LOGF_NOINDENT("], default: %" PRIindex ")\n", default_target_depth);
   return reader_->OnBrTableExpr(num_targets, target_depths,
@@ -894,7 +908,9 @@ Result BinaryReaderLogging::OnOpcode(Opcode opcode) {
   return reader_->OnOpcode(opcode);
 }
 
-Result BinaryReaderLogging::OnOpcodeBare() { return reader_->OnOpcodeBare(); }
+Result BinaryReaderLogging::OnOpcodeBare() {
+  return reader_->OnOpcodeBare();
+}
 
 Result BinaryReaderLogging::OnOpcodeIndex(Index value) {
   return reader_->OnOpcodeIndex(value);
@@ -943,6 +959,8 @@ Result BinaryReaderLogging::OnOpcodeType(Type type) {
   return reader_->OnOpcodeType(type);
 }
 
-Result BinaryReaderLogging::OnEndFunc() { return reader_->OnEndFunc(); }
+Result BinaryReaderLogging::OnEndFunc() {
+  return reader_->OnEndFunc();
+}
 
 }  // namespace wabt

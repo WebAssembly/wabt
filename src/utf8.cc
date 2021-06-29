@@ -45,7 +45,9 @@ const int s_utf8_length[256] = {
 // clang-format on
 
 // Returns true if this is a valid continuation byte.
-bool IsCont(uint8_t c) { return (c & 0xc0) == 0x80; }
+bool IsCont(uint8_t c) {
+  return (c & 0xc0) == 0x80;
+}
 
 }  // end anonymous namespace
 
@@ -55,7 +57,9 @@ bool IsValidUtf8(const char* s, size_t s_length) {
   while (p < end) {
     uint8_t cu0 = *p;
     int length = s_utf8_length[cu0];
-    if (p + length > end) { return false; }
+    if (p + length > end) {
+      return false;
+    }
 
     switch (length) {
       case 0: return false;
@@ -64,7 +68,9 @@ bool IsValidUtf8(const char* s, size_t s_length) {
 
       case 2:
         p++;
-        if (!IsCont(*p++)) { return false; }
+        if (!IsCont(*p++)) {
+          return false;
+        }
         break;
 
       case 3: {

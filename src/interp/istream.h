@@ -146,10 +146,13 @@ class Istream {
   Offset Trace(Stream*, Offset, TraceSource*) const;
 
  private:
-  template <typename T> void WABT_VECTORCALL EmitAt(Offset, T val);
-  template <typename T> void WABT_VECTORCALL EmitInternal(T val);
+  template <typename T>
+  void WABT_VECTORCALL EmitAt(Offset, T val);
+  template <typename T>
+  void WABT_VECTORCALL EmitInternal(T val);
 
-  template <typename T> T WABT_VECTORCALL ReadAt(Offset*) const;
+  template <typename T>
+  T WABT_VECTORCALL ReadAt(Offset*) const;
 
   Buffer data_;
 };

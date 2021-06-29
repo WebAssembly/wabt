@@ -66,10 +66,14 @@ void WriteLimits(Stream* stream, const Limits* limits) {
   WriteU32Leb128(stream, flags, "limits: flags");
   if (limits->is_64) {
     WriteU64Leb128(stream, limits->initial, "limits: initial");
-    if (limits->has_max) { WriteU64Leb128(stream, limits->max, "limits: max"); }
+    if (limits->has_max) {
+      WriteU64Leb128(stream, limits->max, "limits: max");
+    }
   } else {
     WriteU32Leb128(stream, limits->initial, "limits: initial");
-    if (limits->has_max) { WriteU32Leb128(stream, limits->max, "limits: max"); }
+    if (limits->has_max) {
+      WriteU32Leb128(stream, limits->max, "limits: max");
+    }
   }
 }
 
@@ -262,7 +266,9 @@ class SymbolTable {
         flags |= WABT_SYMBOL_FLAG_NO_STRIP;
       }
     }
-    if (exported) { flags |= WABT_SYMBOL_FLAG_EXPORTED; }
+    if (exported) {
+      flags |= WABT_SYMBOL_FLAG_EXPORTED;
+    }
 
     map->push_back(symbols_.size());
     symbols_.emplace_back(name, flags, sym);
@@ -551,9 +557,13 @@ void BinaryWriter::EndSubsection() {
   last_subsection_leb_size_guess_ = 0;
 }
 
-Index BinaryWriter::GetLabelVarDepth(const Var* var) { return var->index(); }
+Index BinaryWriter::GetLabelVarDepth(const Var* var) {
+  return var->index();
+}
 
-Index BinaryWriter::GetTagVarDepth(const Var* var) { return var->index(); }
+Index BinaryWriter::GetTagVarDepth(const Var* var) {
+  return var->index();
+}
 
 Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
   switch (reloc_type) {
@@ -1045,7 +1055,9 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
 }
 
 void BinaryWriter::WriteExprList(const Func* func, const ExprList& exprs) {
-  for (const Expr& expr : exprs) { WriteExpr(func, &expr); }
+  for (const Expr& expr : exprs) {
+    WriteExpr(func, &expr);
+  }
 }
 
 void BinaryWriter::WriteInitExpr(const ExprList& expr) {
@@ -1201,10 +1213,14 @@ void BinaryWriter::WriteNames(const std::vector<T*>& elems,
                               NameSectionSubsection type) {
   size_t num_named_elems = 0;
   for (const T* elem : elems) {
-    if (!elem->name.empty()) { num_named_elems++; }
+    if (!elem->name.empty()) {
+      num_named_elems++;
+    }
   }
 
-  if (!num_named_elems) { return; }
+  if (!num_named_elems) {
+    return;
+  }
 
   WriteU32Leb128(stream_, type, "name subsection type");
   BeginSubsection("name subsection");
@@ -1213,7 +1229,9 @@ void BinaryWriter::WriteNames(const std::vector<T*>& elems,
   WriteU32Leb128(stream_, num_named_elems, "num names");
   for (size_t i = 0; i < elems.size(); ++i) {
     const T* elem = elems[i];
-    if (elem->name.empty()) { continue; }
+    if (elem->name.empty()) {
+      continue;
+    }
     WriteU32Leb128(stream_, i, "elem index");
     wabt_snprintf(desc, sizeof(desc), "elem name %" PRIzd, i);
     WriteDebugName(stream_, elem->name, desc);
@@ -1225,7 +1243,9 @@ Result BinaryWriter::WriteModule() {
   stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   stream_->WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
 
-  if (options_.relocatable) { CHECK_RESULT(symtab_.Populate(module_)); }
+  if (options_.relocatable) {
+    CHECK_RESULT(symtab_.Populate(module_));
+  }
 
   if (module_->types.size()) {
     BeginKnownSection(BinarySection::Type);
@@ -1451,7 +1471,9 @@ Result BinaryWriter::WriteModule() {
                        "table index");
       }
       // 3. optional target location within the table (active segments only)
-      if (!(flags & SegPassive)) { WriteInitExpr(segment->offset); }
+      if (!(flags & SegPassive)) {
+        WriteInitExpr(segment->offset);
+      }
       // 4. type of item in the following list (omitted for "legacy" segments)
       if (flags & (SegPassive | SegExplicitIndex)) {
         if (flags & SegUseElemExprs) {

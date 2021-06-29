@@ -604,7 +604,9 @@ TEST(ParseFloat, RoundingSpec) {
       {"-0x1.fffffefffffffffffp127", 0xff7fffff},
   };
 
-  for (auto test : kTests) { AssertHexFloatEquals(test.output, test.input); }
+  for (auto test : kTests) {
+    AssertHexFloatEquals(test.output, test.input);
+  }
 }
 
 TEST(ParseFloat, OutOfRange) {
@@ -790,7 +792,9 @@ TEST(ParseDouble, RoundingSpec) {
       {"-0x1.fffffffffffff7ffffffp1023", 18442240474082181119ull},
   };
 
-  for (auto test : kTests) { AssertHexDoubleEquals(test.output, test.input); }
+  for (auto test : kTests) {
+    AssertHexDoubleEquals(test.output, test.input);
+  }
 }
 
 void AssertWriteUint128Equals(const v128& value, const std::string& expected) {

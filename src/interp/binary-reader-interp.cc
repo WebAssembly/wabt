@@ -316,7 +316,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
 // static
 const Location BinaryReaderInterp::loc{kInvalidOffset};
 
-void FixupMap::Clear() { map.clear(); }
+void FixupMap::Clear() {
+  map.clear();
+}
 
 void FixupMap::Append(Index index, Offset offset) {
   map[index].push_back(offset);
@@ -324,8 +326,12 @@ void FixupMap::Append(Index index, Offset offset) {
 
 void FixupMap::Resolve(Istream& istream, Index index) {
   auto iter = map.find(index);
-  if (iter == map.end()) { return; }
-  for (Offset offset : iter->second) { istream.ResolveFixupU32(offset); }
+  if (iter == map.end()) {
+    return;
+  }
+  for (Offset offset : iter->second) {
+    istream.ResolveFixupU32(offset);
+  }
   map.erase(iter);
 }
 
@@ -342,7 +348,9 @@ Label* BinaryReaderInterp::GetLabel(Index depth) {
   return &label_stack_[label_stack_.size() - depth - 1];
 }
 
-Label* BinaryReaderInterp::TopLabel() { return GetLabel(0); }
+Label* BinaryReaderInterp::TopLabel() {
+  return GetLabel(0);
+}
 
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderInterp::PrintError(const char* format,
                                                              ...) {
@@ -806,7 +814,9 @@ void BinaryReaderInterp::PushLabel(Istream::Offset offset,
   label_stack_.push_back(Label{offset, fixup_offset});
 }
 
-void BinaryReaderInterp::PopLabel() { label_stack_.pop_back(); }
+void BinaryReaderInterp::PopLabel() {
+  label_stack_.pop_back();
+}
 
 Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
   Index defined_index = index - num_func_imports();

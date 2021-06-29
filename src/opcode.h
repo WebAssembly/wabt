@@ -156,7 +156,9 @@ struct Opcode {
 };
 
 // static
-inline Opcode Opcode::FromCode(uint32_t code) { return FromCode(0, code); }
+inline Opcode Opcode::FromCode(uint32_t code) {
+  return FromCode(0, code);
+}
 
 // static
 inline Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {

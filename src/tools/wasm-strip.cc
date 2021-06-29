@@ -60,7 +60,9 @@ class BinaryReaderStrip : public BinaryReaderNop {
   Result BeginSection(Index section_index,
                       BinarySection section_type,
                       Offset size) override {
-    if (section_type == BinarySection::Custom) { return Result::Ok; }
+    if (section_type == BinarySection::Custom) {
+      return Result::Ok;
+    }
     stream_.WriteU8Enum(section_type, "section code");
     WriteU32Leb128(&stream_, size, "section size");
     stream_.WriteData(state->data + state->offset, size, "section data");
@@ -97,7 +99,9 @@ int ProgramMain(int argc, char** argv) {
     result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
     FormatErrorsToFile(errors, Location::Type::Binary);
 
-    if (Succeeded(result)) { result = reader.WriteToFile(s_filename); }
+    if (Succeeded(result)) {
+      result = reader.WriteToFile(s_filename);
+    }
   }
   return result != Result::Ok;
 }

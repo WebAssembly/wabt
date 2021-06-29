@@ -51,13 +51,17 @@ Result LexerSourceLineFinder::GetSourceLine(const Location& loc,
     out_source_line->line += "...";
     clamped.start += 3;
   }
-  if (has_end_ellipsis) { clamped.end -= 3; }
+  if (has_end_ellipsis) {
+    clamped.end -= 3;
+  }
 
   std::vector<char> read_line;
   CHECK_RESULT(source_->ReadRange(clamped, &read_line));
   out_source_line->line.append(read_line.begin(), read_line.end());
 
-  if (has_end_ellipsis) { out_source_line->line += "..."; }
+  if (has_end_ellipsis) {
+    out_source_line->line += "...";
+  }
 
   return Result::Ok;
 }
@@ -86,7 +90,9 @@ Result LexerSourceLineFinder::GetLineOffsets(int find_line,
   while (!IsLineCached(find_line) && !eof_) {
     CHECK_RESULT(source_->Tell(&buffer_file_offset));
     size_t read_size = source_->Fill(buffer.data(), buffer.size());
-    if (read_size < buffer.size()) { eof_ = true; }
+    if (read_size < buffer.size()) {
+      eof_ = true;
+    }
 
     for (auto iter = buffer.begin(), end = iter + read_size; iter < end;
          ++iter) {

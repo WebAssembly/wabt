@@ -225,7 +225,9 @@ void cat_concatenate(std::string& s, const T& t, const Ts&... args) {
   cat_concatenate(s, args...);
 }
 
-inline size_t cat_compute_size() { return 0; }
+inline size_t cat_compute_size() {
+  return 0;
+}
 
 template <typename T, typename... Ts>
 size_t cat_compute_size(const T& t, const Ts&... args) {
@@ -233,7 +235,8 @@ size_t cat_compute_size(const T& t, const Ts&... args) {
 }
 
 // Is able to concatenate any combination of string/string_view/char*
-template <typename... Ts> std::string cat(const Ts&... args) {
+template <typename... Ts>
+std::string cat(const Ts&... args) {
   std::string s;
   s.reserve(cat_compute_size(args...));
   cat_concatenate(s, args...);
@@ -297,7 +300,9 @@ constexpr inline string_view::size_type string_view::length() const noexcept {
   return size_;
 }
 
-constexpr inline bool string_view::empty() const noexcept { return size_ == 0; }
+constexpr inline bool string_view::empty() const noexcept {
+  return size_ == 0;
+}
 
 constexpr inline string_view::const_reference string_view::operator[](
     size_type pos) const {
@@ -333,7 +338,8 @@ inline std::ostream& operator<<(std::ostream& os, string_view sv) {
 namespace std {
 
 // hash support
-template <> struct hash<::wabt::string_view> {
+template <>
+struct hash<::wabt::string_view> {
   ::wabt::hash_code operator()(const ::wabt::string_view& sv) {
     return ::wabt::HashRange(sv.begin(), sv.end());
   }

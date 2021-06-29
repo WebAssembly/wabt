@@ -37,13 +37,17 @@ namespace {
 
 static const size_t kMaxErrorTokenLength = 80;
 
-bool IsPowerOfTwo(uint32_t x) { return x && ((x & (x - 1)) == 0); }
+bool IsPowerOfTwo(uint32_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
 
 template <typename OutputIter>
 void RemoveEscapes(string_view text, OutputIter dest) {
   // Remove surrounding quotes; if any. This may be empty if the string was
   // invalid (e.g. if it contained a bad escape sequence).
-  if (text.size() <= 2) { return; }
+  if (text.size() <= 2) {
+    return;
+  }
 
   text = text.substr(1, text.size() - 2);
 
@@ -86,7 +90,8 @@ typedef std::vector<string_view> TextVector;
 
 template <typename OutputIter>
 void RemoveEscapes(const TextVector& texts, OutputIter out) {
-  for (string_view text : texts) RemoveEscapes(text, out);
+  for (string_view text : texts)
+    RemoveEscapes(text, out);
 }
 
 bool IsPlainInstr(TokenType token_type) {
@@ -177,7 +182,9 @@ bool IsCatch(TokenType token_type) {
 }
 
 bool IsModuleField(TokenTypePair pair) {
-  if (pair[0] != TokenType::Lpar) { return false; }
+  if (pair[0] != TokenType::Lpar) {
+    return false;
+  }
 
   switch (pair[1]) {
     case TokenType::Data:
@@ -196,7 +203,9 @@ bool IsModuleField(TokenTypePair pair) {
 }
 
 bool IsCommand(TokenTypePair pair) {
-  if (pair[0] != TokenType::Lpar) { return false; }
+  if (pair[0] != TokenType::Lpar) {
+    return false;
+  }
 
   switch (pair[1]) {
     case TokenType::AssertExhaustion:
@@ -462,11 +471,15 @@ void WastParser::Error(Location loc, const char* format, ...) {
 }
 
 Token WastParser::GetToken() {
-  if (tokens_.empty()) { tokens_.push_back(lexer_->GetToken(this)); }
+  if (tokens_.empty()) {
+    tokens_.push_back(lexer_->GetToken(this));
+  }
   return tokens_.front();
 }
 
-Location WastParser::GetLocation() { return GetToken().loc; }
+Location WastParser::GetLocation() {
+  return GetToken().loc;
+}
 
 TokenType WastParser::Peek(size_t n) {
   while (tokens_.size() <= n) {
@@ -501,13 +514,17 @@ TokenTypePair WastParser::PeekPair() {
   return TokenTypePair{{Peek(), Peek(1)}};
 }
 
-bool WastParser::PeekMatch(TokenType type) { return Peek() == type; }
+bool WastParser::PeekMatch(TokenType type) {
+  return Peek() == type;
+}
 
 bool WastParser::PeekMatchLpar(TokenType type) {
   return Peek() == TokenType::Lpar && Peek(1) == type;
 }
 
-bool WastParser::PeekMatchExpr() { return IsExpr(PeekPair()); }
+bool WastParser::PeekMatchExpr() {
+  return IsExpr(PeekPair());
+}
 
 bool WastParser::Match(TokenType type) {
   if (PeekMatch(type)) {
@@ -548,7 +565,9 @@ Token WastParser::Consume() {
 Result WastParser::Synchronize(SynchronizeFunc func) {
   static const int kMaxConsumed = 10;
   for (int i = 0; i < kMaxConsumed; ++i) {
-    if (func(PeekPair())) { return Result::Ok; }
+    if (func(PeekPair())) {
+      return Result::Ok;
+    }
 
     Token token = Consume();
     if (token.token_type() == TokenType::Reserved) {
@@ -609,7 +628,9 @@ Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
 
 bool WastParser::ParseBindVarOpt(std::string* name) {
   WABT_TRACE(ParseBindVarOpt);
-  if (!PeekMatch(TokenType::Var)) { return false; }
+  if (!PeekMatch(TokenType::Var)) {
+    return false;
+  }
   Token token = Consume();
   *name = token.text().to_string();
   return true;
@@ -688,7 +709,8 @@ Result WastParser::ParseTextList(std::vector<uint8_t>* out_data) {
 bool WastParser::ParseTextListOpt(std::vector<uint8_t>* out_data) {
   WABT_TRACE(ParseTextListOpt);
   TextVector texts;
-  while (PeekMatch(TokenType::Text)) texts.push_back(Consume().text());
+  while (PeekMatch(TokenType::Text))
+    texts.push_back(Consume().text());
 
   RemoveEscapes(texts, std::back_inserter(*out_data));
   return !texts.empty();
@@ -697,7 +719,9 @@ bool WastParser::ParseTextListOpt(std::vector<uint8_t>* out_data) {
 Result WastParser::ParseVarList(VarVector* out_var_list) {
   WABT_TRACE(ParseVarList);
   Var var;
-  while (ParseVarOpt(&var)) { out_var_list->emplace_back(var); }
+  while (ParseVarOpt(&var)) {
+    out_var_list->emplace_back(var);
+  }
   if (out_var_list->empty()) {
     return ErrorExpected({"a var"}, "12 or $foo");
   } else {
@@ -724,21 +748,29 @@ bool WastParser::ParseElemExprOpt(ElemExpr* out_elem_expr) {
   } else {
     return false;
   }
-  if (lpar) { EXPECT(Rpar); }
-  if (item) { EXPECT(Rpar); }
+  if (lpar) {
+    EXPECT(Rpar);
+  }
+  if (item) {
+    EXPECT(Rpar);
+  }
   return true;
 }
 
 bool WastParser::ParseElemExprListOpt(ElemExprVector* out_list) {
   ElemExpr elem_expr;
-  while (ParseElemExprOpt(&elem_expr)) { out_list->push_back(elem_expr); }
+  while (ParseElemExprOpt(&elem_expr)) {
+    out_list->push_back(elem_expr);
+  }
   return !out_list->empty();
 }
 
 bool WastParser::ParseElemExprVarListOpt(ElemExprVector* out_list) {
   WABT_TRACE(ParseElemExprVarListOpt);
   Var var;
-  while (ParseVarOpt(&var)) { out_list->emplace_back(var); }
+  while (ParseVarOpt(&var)) {
+    out_list->emplace_back(var);
+  }
   return !out_list->empty();
 }
 
@@ -818,7 +850,9 @@ Result WastParser::ParseRefType(Type* out_type) {
 
 bool WastParser::ParseRefTypeOpt(Type* out_type) {
   WABT_TRACE(ParseRefTypeOpt);
-  if (!PeekMatch(TokenType::ValueType)) { return false; }
+  if (!PeekMatch(TokenType::ValueType)) {
+    return false;
+  }
 
   Token token = Consume();
   Type type = token.type();
@@ -917,7 +951,9 @@ Result WastParser::ParseLimits(Limits* out_limits) {
     out_limits->has_max = false;
   }
 
-  if (Match(TokenType::Shared)) { out_limits->is_shared = true; }
+  if (Match(TokenType::Shared)) {
+    out_limits->is_shared = true;
+  }
 
   return Result::Ok;
 }
@@ -1076,7 +1112,9 @@ Result WastParser::ParseElemModuleField(Module* module) {
   bool has_name = ParseBindVarOpt(&initial_name);
 
   std::string segment_name = initial_name;
-  if (!options_->features.bulk_memory_enabled()) { segment_name = ""; }
+  if (!options_->features.bulk_memory_enabled()) {
+    segment_name = "";
+  }
   auto field = MakeUnique<ElemSegmentModuleField>(loc, segment_name);
   if (options_->features.reference_types_enabled() &&
       Match(TokenType::Declare)) {
@@ -1115,7 +1153,9 @@ Result WastParser::ParseElemModuleField(Module* module) {
     ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
     field->elem_segment.elem_type = Type::FuncRef;
-    if (PeekMatch(TokenType::Func)) { EXPECT(Func); }
+    if (PeekMatch(TokenType::Func)) {
+      EXPECT(Func);
+    }
     ParseElemExprVarListOpt(&field->elem_segment.elem_exprs);
   }
   EXPECT(Rpar);
@@ -2066,7 +2106,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       uint64_t lane_idx = 0;
       Result result = ParseSimdLane(loc, &lane_idx);
 
-      if (Failed(result)) { return Result::Error; }
+      if (Failed(result)) {
+        return Result::Error;
+      }
 
       out_expr->reset(new SimdLaneOpExpr(token.opcode(), lane_idx, loc));
       break;
@@ -2084,7 +2126,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       uint64_t lane_idx = 0;
       Result result = ParseSimdLane(loc, &lane_idx);
 
-      if (Failed(result)) { return Result::Error; }
+      if (Failed(result)) {
+        return Result::Error;
+      }
 
       out_expr->reset(
           new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
@@ -2103,7 +2147,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       uint64_t lane_idx = 0;
       Result result = ParseSimdLane(loc, &lane_idx);
 
-      if (Failed(result)) { return Result::Error; }
+      if (Failed(result)) {
+        return Result::Error;
+      }
 
       out_expr->reset(
           new SimdStoreLaneExpr(token.opcode(), align, offset, lane_idx, loc));
@@ -2118,7 +2164,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         Location loc = GetLocation();
         uint64_t lane_idx;
         Result result = ParseSimdLane(loc, &lane_idx);
-        if (Failed(result)) { return Result::Error; }
+        if (Failed(result)) {
+          return Result::Error;
+        }
 
         values.set_u8(lane, static_cast<uint8_t>(lane_idx));
       }
@@ -2197,7 +2245,9 @@ Result WastParser::ParseSimdV128Const(Const* const_,
       case TokenType::Float:
       case TokenType::NanArithmetic:
       case TokenType::NanCanonical:
-        if (integer) { goto error; }
+        if (integer) {
+          goto error;
+        }
         break;
 
       error:
@@ -2363,7 +2413,9 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
       result = ParseSimdV128Const(const_, token.token_type(), const_type);
       // ParseSimdV128Const report error already, just return here if parser get
       // errors.
-      if (Failed(result)) { return Result::Error; }
+      if (Failed(result)) {
+        return Result::Error;
+      }
       break;
 
     default:
@@ -2524,7 +2576,9 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       }
       CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
       expr->block.end_loc = GetLocation();
-      if (expr->kind != TryKind::Delegate) { EXPECT(End); }
+      if (expr->kind != TryKind::Delegate) {
+        EXPECT(End);
+      }
       CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
       *out_expr = std::move(expr);
       break;
@@ -2599,7 +2653,9 @@ Result WastParser::ParseExprList(ExprList* exprs) {
 
 Result WastParser::ParseExpr(ExprList* exprs) {
   WABT_TRACE(ParseExpr);
-  if (!PeekMatch(TokenType::Lpar)) { return Result::Error; }
+  if (!PeekMatch(TokenType::Lpar)) {
+    return Result::Error;
+  }
 
   if (IsPlainInstr(Peek(1))) {
     Consume();
@@ -2752,7 +2808,9 @@ Result WastParser::ParseCatchInstrList(CatchVector* catches) {
     parsedCatch = true;
   }
 
-  if (!parsedCatch) { return ErrorExpected({"catch"}); }
+  if (!parsedCatch) {
+    return ErrorExpected({"catch"});
+  }
 
   return Result::Ok;
 }
@@ -3010,7 +3068,9 @@ Result WastParser::ParseOutputCommand(CommandPtr*) {
   Var var;
   std::string text;
   ParseVarOpt(&var);
-  if (Peek() == TokenType::Text) { CHECK_RESULT(ParseQuotedText(&text)); }
+  if (Peek() == TokenType::Text) {
+    CHECK_RESULT(ParseQuotedText(&text));
+  }
   EXPECT(Rpar);
   return Result::Error;
 }

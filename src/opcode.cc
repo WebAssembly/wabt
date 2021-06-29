@@ -46,7 +46,9 @@ Opcode::Info Opcode::infos_[] = {
 #undef WABT_OPCODE
 
 Opcode::Info Opcode::GetInfo() const {
-  if (enum_ < Invalid) { return infos_[enum_]; }
+  if (enum_ < Invalid) {
+    return infos_[enum_];
+  }
 
   Info invalid_info = infos_[Opcode::Invalid];
   DecodeInvalidOpcode(enum_, &invalid_info.prefix, &invalid_info.code);
@@ -60,7 +62,9 @@ bool Opcode::IsNaturallyAligned(Address alignment) const {
 }
 
 Address Opcode::GetAlignment(Address alignment) const {
-  if (alignment == WABT_USE_NATURAL_ALIGNMENT) { return GetMemorySize(); }
+  if (alignment == WABT_USE_NATURAL_ALIGNMENT) {
+    return GetMemorySize();
+  }
   return alignment;
 }
 

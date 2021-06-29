@@ -31,9 +31,13 @@ const char* GetName(Mutability mut) {
   return kNames[int(mut)];
 }
 
-const char* GetName(ValueType type) { return type.GetName(); }
+const char* GetName(ValueType type) {
+  return type.GetName();
+}
 
-const char* GetName(ExternKind kind) { return GetKindName(kind); }
+const char* GetName(ExternKind kind) {
+  return GetKindName(kind);
+}
 
 const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
@@ -84,7 +88,9 @@ Result Match(const FuncType& expected,
              const FuncType& actual,
              std::string* out_msg) {
   if (expected.params != actual.params || expected.results != actual.results) {
-    if (out_msg) { *out_msg = "import signature mismatch"; }
+    if (out_msg) {
+      *out_msg = "import signature mismatch";
+    }
     return Result::Error;
   }
   return Result::Ok;
@@ -175,7 +181,9 @@ bool CanGrow(const Limits& limits, T old_size, T delta, T* new_size) {
 //// FuncDesc ////
 
 ValueType FuncDesc::GetLocalType(Index index) const {
-  if (index < type.params.size()) { return type.params[index]; }
+  if (index < type.params.size()) {
+    return type.params[index];
+  }
   index -= type.params.size();
 
   auto iter = std::lower_bound(
@@ -194,9 +202,15 @@ Store::Store(const Features& features) : features_(features) {
 
 bool Store::HasValueType(Ref ref, ValueType type) const {
   // TODO opt?
-  if (!IsValid(ref)) { return false; }
-  if (type == ValueType::ExternRef) { return true; }
-  if (ref == Ref::Null) { return true; }
+  if (!IsValid(ref)) {
+    return false;
+  }
+  if (type == ValueType::ExternRef) {
+    return true;
+  }
+  if (ref == Ref::Null) {
+    return true;
+  }
 
   Object* obj = objects_.Get(ref.index).get();
   switch (type) {
@@ -207,7 +221,9 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   }
 }
 
-Store::RootList::Index Store::NewRoot(Ref ref) { return roots_.New(ref); }
+Store::RootList::Index Store::NewRoot(Ref ref) {
+  return roots_.New(ref);
+}
 
 Store::RootList::Index Store::CopyRoot(RootList::Index index) {
   // roots_.Get() returns a reference to an element in an internal vector, and
@@ -218,7 +234,9 @@ Store::RootList::Index Store::CopyRoot(RootList::Index index) {
   return roots_.New(obj_index);
 }
 
-void Store::DeleteRoot(RootList::Index index) { roots_.Delete(index); }
+void Store::DeleteRoot(RootList::Index index) {
+  roots_.Delete(index);
+}
 
 void Store::Collect() {
   size_t object_count = objects_.size();
@@ -227,7 +245,9 @@ void Store::Collect() {
 
   // First mark all roots.
   for (RootList::Index i = 0; i < roots_.size(); ++i) {
-    if (roots_.IsUsed(i)) { Mark(roots_.Get(i)); }
+    if (roots_.IsUsed(i)) {
+      Mark(roots_.Get(i));
+    }
   }
 
   // TODO: better GC algo.
@@ -247,19 +267,27 @@ void Store::Collect() {
 
   // Delete all unmarked objects.
   for (size_t i = 0; i < object_count; ++i) {
-    if (objects_.IsUsed(i) && !all_marked[i]) { objects_.Delete(i); }
+    if (objects_.IsUsed(i) && !all_marked[i]) {
+      objects_.Delete(i);
+    }
   }
 }
 
-void Store::Mark(Ref ref) { marks_[ref.index] = true; }
+void Store::Mark(Ref ref) {
+  marks_[ref.index] = true;
+}
 
 void Store::Mark(const RefVec& refs) {
-  for (auto&& ref : refs) { Mark(ref); }
+  for (auto&& ref : refs) {
+    Mark(ref);
+  }
 }
 
 //// Object ////
 Object::~Object() {
-  if (finalizer_) { finalizer_(this); }
+  if (finalizer_) {
+    finalizer_(this);
+  }
 }
 
 //// Foreign ////
@@ -268,7 +296,9 @@ Foreign::Foreign(Store&, void* ptr) : Object(skind), ptr_(ptr) {}
 void Foreign::Mark(Store&) {}
 
 //// Frame ////
-void Frame::Mark(Store& store) { store.Mark(func); }
+void Frame::Mark(Store& store) {
+  store.Mark(func);
+}
 
 //// Trap ////
 Trap::Trap(Store& store,
@@ -277,7 +307,9 @@ Trap::Trap(Store& store,
     : Object(skind), message_(msg), trace_(trace) {}
 
 void Trap::Mark(Store& store) {
-  for (auto&& frame : trace_) { frame.Mark(store); }
+  for (auto&& frame : trace_) {
+    frame.Mark(store);
+  }
 }
 
 //// Extern ////
@@ -330,7 +362,9 @@ Result Func::Call(Thread& thread,
 DefinedFunc::DefinedFunc(Store& store, Ref instance, FuncDesc desc)
     : Func(skind, desc.type), instance_(instance), desc_(desc) {}
 
-void DefinedFunc::Mark(Store& store) { store.Mark(instance_); }
+void DefinedFunc::Mark(Store& store) {
+  store.Mark(instance_);
+}
 
 Result DefinedFunc::Match(Store& store,
                           const ImportType& import_type,
@@ -345,9 +379,13 @@ Result DefinedFunc::DoCall(Thread& thread,
   assert(params.size() == type_.params.size());
   thread.PushValues(type_.params, params);
   RunResult result = thread.PushCall(*this, out_trap);
-  if (result == RunResult::Trap) { return Result::Error; }
+  if (result == RunResult::Trap) {
+    return Result::Error;
+  }
   result = thread.Run(out_trap);
-  if (result == RunResult::Trap) { return Result::Error; }
+  if (result == RunResult::Trap) {
+    return Result::Error;
+  }
   thread.PopValues(type_.results, &results);
   return Result::Ok;
 }
@@ -376,7 +414,9 @@ Table::Table(Store&, TableType type) : Extern(skind), type_(type) {
   elements_.resize(type.limits.initial);
 }
 
-void Table::Mark(Store& store) { store.Mark(elements_); }
+void Table::Mark(Store& store) {
+  store.Mark(elements_);
+}
 
 Result Table::Match(Store& store,
                     const ImportType& import_type,
@@ -587,7 +627,9 @@ Global::Global(Store& store, GlobalType type, Value value)
     : Extern(skind), type_(type), value_(value) {}
 
 void Global::Mark(Store& store) {
-  if (IsReference(type_.type)) { store.Mark(value_.Get<Ref>()); }
+  if (IsReference(type_.type)) {
+    store.Mark(value_.Get<Ref>());
+  }
 }
 
 Result Global::Match(Store& store,
@@ -604,7 +646,9 @@ Result Global::Set(Store& store, Ref ref) {
   return Result::Error;
 }
 
-void Global::UnsafeSet(Value value) { value_ = value; }
+void Global::UnsafeSet(Value value) {
+  value_ = value;
+}
 
 //// Tag ////
 Tag::Tag(Store&, TagType type) : Extern(skind), type_(type) {}
@@ -661,7 +705,9 @@ Module::Module(Store&, ModuleDesc desc)
 void Module::Mark(Store&) {}
 
 //// ElemSegment ////
-void ElemSegment::Mark(Store& store) { store.Mark(elements_); }
+void ElemSegment::Mark(Store& store) {
+  store.Mark(elements_);
+}
 
 //// Instance ////
 Instance::Instance(Store& store, Ref module) : Object(skind), module_(module) {
@@ -755,7 +801,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
   }
 
   // Datas.
-  for (auto&& desc : mod->desc().datas) { inst->datas_.emplace_back(&desc); }
+  for (auto&& desc : mod->desc().datas) {
+    inst->datas_.emplace_back(&desc);
+  }
 
   // Initialization.
   enum Pass { Check, Init };
@@ -826,7 +874,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
   for (auto&& start : mod->desc().starts) {
     Func::Ptr func{store, inst->funcs_[start.func_index]};
     Values results;
-    if (Failed(func->Call(store, {}, results, out_trap))) { return {}; }
+    if (Failed(func->Call(store, {}, results, out_trap))) {
+      return {};
+    }
   }
 
   return inst;
@@ -841,7 +891,9 @@ void Instance::Mark(Store& store) {
   store.Mark(globals_);
   store.Mark(tags_);
   store.Mark(exports_);
-  for (auto&& elem : elems_) { elem.Mark(store); }
+  for (auto&& elem : elems_) {
+    elem.Mark(store);
+  }
 }
 
 //// Thread ////
@@ -850,29 +902,40 @@ Thread::Thread(Store& store, const Options& options)
   frames_.reserve(options.call_stack_size);
   values_.reserve(options.value_stack_size);
   trace_stream_ = options.trace_stream;
-  if (options.trace_stream) { trace_source_ = MakeUnique<TraceSource>(this); }
+  if (options.trace_stream) {
+    trace_source_ = MakeUnique<TraceSource>(this);
+  }
 }
 
 void Thread::Mark(Store& store) {
-  for (auto&& frame : frames_) { frame.Mark(store); }
-  for (auto index : refs_) { store.Mark(values_[index].Get<Ref>()); }
+  for (auto&& frame : frames_) {
+    frame.Mark(store);
+  }
+  for (auto index : refs_) {
+    store.Mark(values_[index].Get<Ref>());
+  }
 }
 
 void Thread::PushValues(const ValueTypes& types, const Values& values) {
   assert(types.size() == values.size());
   for (size_t i = 0; i < types.size(); ++i) {
-    if (IsReference(types[i])) { refs_.push_back(values_.size()); }
+    if (IsReference(types[i])) {
+      refs_.push_back(values_.size());
+    }
     values_.push_back(values[i]);
   }
 }
 
 #define TRAP(msg) *out_trap = Trap::New(store_, (msg), frames_), RunResult::Trap
-#define TRAP_IF(cond, msg) \
-  if (WABT_UNLIKELY((cond))) { return TRAP(msg); }
+#define TRAP_IF(cond, msg)     \
+  if (WABT_UNLIKELY((cond))) { \
+    return TRAP(msg);          \
+  }
 #define TRAP_UNLESS(cond, msg) TRAP_IF(!(cond), msg)
 
 Instance* Thread::GetCallerInstance() {
-  if (frames_.size() < 2) return nullptr;
+  if (frames_.size() < 2)
+    return nullptr;
   return frames_[frames_.size() - 2].inst;
 }
 
@@ -901,7 +964,9 @@ RunResult Thread::PushCall(const HostFunc& func, Trap::Ptr* out_trap) {
 
 RunResult Thread::PopCall() {
   frames_.pop_back();
-  if (frames_.empty()) { return RunResult::Return; }
+  if (frames_.empty()) {
+    return RunResult::Return;
+  }
 
   auto& frame = frames_.back();
   if (!frame.inst) {
@@ -940,7 +1005,9 @@ RunResult Thread::Run(int num_instructions, Trap::Ptr* out_trap) {
   DefinedFunc::Ptr func{store_, frames_.back().func};
   for (; num_instructions > 0; --num_instructions) {
     auto result = StepInternal(out_trap);
-    if (result != RunResult::Ok) { return result; }
+    if (result != RunResult::Ok) {
+      return result;
+    }
   }
   return RunResult::Ok;
 }
@@ -955,10 +1022,15 @@ Value& Thread::Pick(Index index) {
   return values_[values_.size() - index];
 }
 
-template <typename T> T WABT_VECTORCALL Thread::Pop() { return Pop().Get<T>(); }
+template <typename T>
+T WABT_VECTORCALL Thread::Pop() {
+  return Pop().Get<T>();
+}
 
 Value Thread::Pop() {
-  if (!refs_.empty() && refs_.back() >= values_.size()) { refs_.pop_back(); }
+  if (!refs_.empty() && refs_.back() >= values_.size()) {
+    refs_.pop_back();
+  }
   auto value = values_.back();
   values_.pop_back();
   return value;
@@ -968,15 +1040,19 @@ u64 Thread::PopPtr(const Memory::Ptr& memory) {
   return memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
 }
 
-template <typename T> void WABT_VECTORCALL Thread::Push(T value) {
+template <typename T>
+void WABT_VECTORCALL Thread::Push(T value) {
   Push(Value::Make(value));
 }
 
-template <> void Thread::Push<bool>(bool value) {
+template <>
+void Thread::Push<bool>(bool value) {
   Push(Value::Make(static_cast<u32>(value ? 1 : 0)));
 }
 
-void Thread::Push(Value value) { values_.push_back(value); }
+void Thread::Push(Value value) {
+  values_.push_back(value);
+}
 
 void Thread::Push(Ref ref) {
   refs_.push_back(values_.size());
@@ -989,7 +1065,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
   u32& pc = frames_.back().offset;
   auto& istream = mod_->desc().istream;
 
-  if (trace_stream_) { istream.Trace(trace_stream_, pc, trace_source_.get()); }
+  if (trace_stream_) {
+    istream.Trace(trace_stream_, pc, trace_source_.get());
+  }
 
   auto instr = istream.Read(&pc);
   switch (instr.op) {
@@ -998,12 +1076,16 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::Br: pc = instr.imm_u32; break;
 
     case O::BrIf:
-      if (Pop<u32>()) { pc = instr.imm_u32; }
+      if (Pop<u32>()) {
+        pc = instr.imm_u32;
+      }
       break;
 
     case O::BrTable: {
       auto key = Pop<u32>();
-      if (key >= instr.imm_u32) { key = instr.imm_u32; }
+      if (key >= instr.imm_u32) {
+        key = instr.imm_u32;
+      }
       pc += key * Istream::kBrTableEntrySize;
       break;
     }
@@ -1282,7 +1364,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       break;
 
     case O::InterpBrUnless:
-      if (!Pop<u32>()) { pc = instr.imm_u32; }
+      if (!Pop<u32>()) {
+        pc = instr.imm_u32;
+      }
       break;
 
     case O::InterpCallImport: {
@@ -1814,7 +1898,8 @@ RunResult Thread::DoStore(Instr instr, Trap::Ptr* out_trap) {
   return RunResult::Ok;
 }
 
-template <typename R, typename T> RunResult Thread::DoUnop(UnopFunc<R, T> f) {
+template <typename R, typename T>
+RunResult Thread::DoUnop(UnopFunc<R, T> f) {
   Push<R>(f(Pop<T>()));
   return RunResult::Ok;
 }
@@ -1828,7 +1913,8 @@ RunResult Thread::DoUnop(UnopTrapFunc<R, T> f, Trap::Ptr* out_trap) {
   return RunResult::Ok;
 }
 
-template <typename R, typename T> RunResult Thread::DoBinop(BinopFunc<R, T> f) {
+template <typename R, typename T>
+RunResult Thread::DoBinop(BinopFunc<R, T> f) {
   auto rhs = Pop<T>();
   auto lhs = Pop<T>();
   Push<R>(f(lhs, rhs));
@@ -1858,7 +1944,8 @@ RunResult Thread::DoConvert(Trap::Ptr* out_trap) {
   return RunResult::Ok;
 }
 
-template <typename R, typename T> RunResult Thread::DoReinterpret() {
+template <typename R, typename T>
+RunResult Thread::DoReinterpret() {
   Push(Bitcast<R>(Pop<T>()));
   return RunResult::Ok;
 }
@@ -1980,7 +2067,8 @@ RunResult Thread::DoTableFill(Instr instr, Trap::Ptr* out_trap) {
   return RunResult::Ok;
 }
 
-template <typename R, typename T> RunResult Thread::DoSimdSplat() {
+template <typename R, typename T>
+RunResult Thread::DoSimdSplat() {
   auto val = Pop<T>();
   R result;
   std::fill(std::begin(result.v), std::end(result.v), val);
@@ -1988,12 +2076,14 @@ template <typename R, typename T> RunResult Thread::DoSimdSplat() {
   return RunResult::Ok;
 }
 
-template <typename R, typename T> RunResult Thread::DoSimdExtract(Instr instr) {
+template <typename R, typename T>
+RunResult Thread::DoSimdExtract(Instr instr) {
   Push<T>(Pop<R>()[instr.imm_u8]);
   return RunResult::Ok;
 }
 
-template <typename R, typename T> RunResult Thread::DoSimdReplace(Instr instr) {
+template <typename R, typename T>
+RunResult Thread::DoSimdReplace(Instr instr) {
   auto val = Pop<T>();
   auto simd = Pop<R>();
   simd[instr.imm_u8] = val;
@@ -2001,17 +2091,48 @@ template <typename R, typename T> RunResult Thread::DoSimdReplace(Instr instr) {
   return RunResult::Ok;
 }
 
-template <typename T> struct Simd128;
-template <> struct Simd128<s8> { using Type = s8x16; };
-template <> struct Simd128<u8> { using Type = u8x16; };
-template <> struct Simd128<s16> { using Type = s16x8; };
-template <> struct Simd128<u16> { using Type = u16x8; };
-template <> struct Simd128<s32> { using Type = s32x4; };
-template <> struct Simd128<u32> { using Type = u32x4; };
-template <> struct Simd128<s64> { using Type = s64x2; };
-template <> struct Simd128<u64> { using Type = u64x2; };
-template <> struct Simd128<f32> { using Type = f32x4; };
-template <> struct Simd128<f64> { using Type = f64x2; };
+template <typename T>
+struct Simd128;
+template <>
+struct Simd128<s8> {
+  using Type = s8x16;
+};
+template <>
+struct Simd128<u8> {
+  using Type = u8x16;
+};
+template <>
+struct Simd128<s16> {
+  using Type = s16x8;
+};
+template <>
+struct Simd128<u16> {
+  using Type = u16x8;
+};
+template <>
+struct Simd128<s32> {
+  using Type = s32x4;
+};
+template <>
+struct Simd128<u32> {
+  using Type = u32x4;
+};
+template <>
+struct Simd128<s64> {
+  using Type = s64x2;
+};
+template <>
+struct Simd128<u64> {
+  using Type = u64x2;
+};
+template <>
+struct Simd128<f32> {
+  using Type = f32x4;
+};
+template <>
+struct Simd128<f64> {
+  using Type = f64x2;
+};
 
 template <typename R, typename T>
 RunResult Thread::DoSimdUnop(UnopFunc<R, T> f) {
@@ -2031,8 +2152,12 @@ RunResult Thread::DoSimdUnopZero(UnopFunc<R, T> f) {
   auto val = Pop<ST>();
   SR result;
   std::transform(std::begin(val.v), std::end(val.v), std::begin(result.v), f);
-  for (u8 i = 0; i < ST::lanes; ++i) { result[i] = f(val[i]); }
-  for (u8 i = ST::lanes; i < SR::lanes; ++i) { result[i] = 0; }
+  for (u8 i = 0; i < ST::lanes; ++i) {
+    result[i] = f(val[i]);
+  }
+  for (u8 i = ST::lanes; i < SR::lanes; ++i) {
+    result[i] = 0;
+  }
   Push(result);
   return RunResult::Ok;
 }
@@ -2045,7 +2170,9 @@ RunResult Thread::DoSimdBinop(BinopFunc<R, T> f) {
   auto rhs = Pop<ST>();
   auto lhs = Pop<ST>();
   SR result;
-  for (u8 i = 0; i < SR::lanes; ++i) { result[i] = f(lhs[i], rhs[i]); }
+  for (u8 i = 0; i < SR::lanes; ++i) {
+    result[i] = f(lhs[i], rhs[i]);
+  }
   Push(result);
   return RunResult::Ok;
 }
@@ -2063,7 +2190,8 @@ RunResult Thread::DoSimdBitSelect() {
   return RunResult::Ok;
 }
 
-template <typename S, u8 count> RunResult Thread::DoSimdIsTrue() {
+template <typename S, u8 count>
+RunResult Thread::DoSimdIsTrue() {
   using L = typename S::LaneType;
   auto val = Pop<S>();
   Push(std::count_if(std::begin(val.v), std::end(val.v),
@@ -2071,11 +2199,14 @@ template <typename S, u8 count> RunResult Thread::DoSimdIsTrue() {
   return RunResult::Ok;
 }
 
-template <typename S> RunResult Thread::DoSimdBitmask() {
+template <typename S>
+RunResult Thread::DoSimdBitmask() {
   auto val = Pop<S>();
   u32 result = 0;
   for (u8 i = 0; i < S::lanes; ++i) {
-    if (val[i] < 0) { result |= 1 << i; }
+    if (val[i] < 0) {
+      result |= 1 << i;
+    }
   }
   Push(result);
   return RunResult::Ok;
@@ -2089,7 +2220,9 @@ RunResult Thread::DoSimdShift(BinopFunc<R, T> f) {
   auto amount = Pop<u32>();
   auto lhs = Pop<ST>();
   SR result;
-  for (u8 i = 0; i < SR::lanes; ++i) { result[i] = f(lhs[i], amount); }
+  for (u8 i = 0; i < SR::lanes; ++i) {
+    result[i] = f(lhs[i], amount);
+  }
   Push(result);
   return RunResult::Ok;
 }
@@ -2174,13 +2307,16 @@ RunResult Thread::DoSimdShuffle(Instr instr) {
   return RunResult::Ok;
 }
 
-template <typename S, typename T> RunResult Thread::DoSimdNarrow() {
+template <typename S, typename T>
+RunResult Thread::DoSimdNarrow() {
   using SL = typename S::LaneType;
   using TL = typename T::LaneType;
   auto rhs = Pop<T>();
   auto lhs = Pop<T>();
   S result;
-  for (u8 i = 0; i < T::lanes; ++i) { result[i] = Saturate<SL, TL>(lhs[i]); }
+  for (u8 i = 0; i < T::lanes; ++i) {
+    result[i] = Saturate<SL, TL>(lhs[i]);
+  }
   for (u8 i = 0; i < T::lanes; ++i) {
     result[T::lanes + i] = Saturate<SL, TL>(rhs[i]);
   }
@@ -2188,7 +2324,8 @@ template <typename S, typename T> RunResult Thread::DoSimdNarrow() {
   return RunResult::Ok;
 }
 
-template <typename S, typename T, bool low> RunResult Thread::DoSimdConvert() {
+template <typename S, typename T, bool low>
+RunResult Thread::DoSimdConvert() {
   using SL = typename S::LaneType;
   auto val = Pop<T>();
   S result;
@@ -2199,7 +2336,8 @@ template <typename S, typename T, bool low> RunResult Thread::DoSimdConvert() {
   return RunResult::Ok;
 }
 
-template <typename S, typename T, bool low> RunResult Thread::DoSimdExtmul() {
+template <typename S, typename T, bool low>
+RunResult Thread::DoSimdExtmul() {
   auto rhs = Pop<T>();
   auto lhs = Pop<T>();
   S result;
@@ -2219,12 +2357,15 @@ RunResult Thread::DoSimdLoadExtend(Instr instr, Trap::Ptr* out_trap) {
     return RunResult::Trap;
   }
   S result;
-  for (u8 i = 0; i < S::lanes; ++i) { result[i] = val[i]; }
+  for (u8 i = 0; i < S::lanes; ++i) {
+    result[i] = val[i];
+  }
   Push(result);
   return RunResult::Ok;
 }
 
-template <typename S, typename T> RunResult Thread::DoSimdExtaddPairwise() {
+template <typename S, typename T>
+RunResult Thread::DoSimdExtaddPairwise() {
   auto val = Pop<T>();
   S result;
   using U = typename S::LaneType;
@@ -2236,7 +2377,8 @@ template <typename S, typename T> RunResult Thread::DoSimdExtaddPairwise() {
   return RunResult::Ok;
 }
 
-template <typename S, typename T> RunResult Thread::DoSimdDot() {
+template <typename S, typename T>
+RunResult Thread::DoSimdDot() {
   using SL = typename S::LaneType;
   auto rhs = Pop<T>();
   auto lhs = Pop<T>();

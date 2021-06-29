@@ -25,11 +25,15 @@ namespace {
 std::string TypesToString(const TypeVector& types,
                           const char* prefix = nullptr) {
   std::string result = "[";
-  if (prefix) { result += prefix; }
+  if (prefix) {
+    result += prefix;
+  }
 
   for (size_t i = 0; i < types.size(); ++i) {
     result += types[i].GetName();
-    if (i < types.size() - 1) { result += ", "; }
+    if (i < types.size() - 1) {
+      result += ", ";
+    }
   }
   result += "]";
   return result;
@@ -67,15 +71,21 @@ Result TypeChecker::GetLabel(Index depth, Label** out_label) {
 }
 
 Result TypeChecker::GetRethrowLabel(Index depth, Label** out_label) {
-  if (Failed(GetLabel(depth, out_label))) { return Result::Error; }
+  if (Failed(GetLabel(depth, out_label))) {
+    return Result::Error;
+  }
 
-  if ((*out_label)->label_type == LabelType::Catch) { return Result::Ok; }
+  if ((*out_label)->label_type == LabelType::Catch) {
+    return Result::Ok;
+  }
 
   std::string candidates;
   for (Index idx = 0; idx < label_stack_.size(); idx++) {
     LabelType type = label_stack_[label_stack_.size() - idx - 1].label_type;
     if (type == LabelType::Catch) {
-      if (!candidates.empty()) { candidates.append(", "); }
+      if (!candidates.empty()) {
+        candidates.append(", ");
+      }
       candidates.append(std::to_string(idx));
     }
   }
@@ -96,7 +106,9 @@ Result TypeChecker::TopLabel(Label** out_label) {
 
 bool TypeChecker::IsUnreachable() {
   Label* label;
-  if (Failed(TopLabel(&label))) { return true; }
+  if (Failed(TopLabel(&label))) {
+    return true;
+  }
   return label->unreachable;
 }
 
@@ -170,11 +182,15 @@ Result TypeChecker::DropTypes(size_t drop_count) {
 }
 
 void TypeChecker::PushType(Type type) {
-  if (type != Type::Void) { type_stack_.push_back(type); }
+  if (type != Type::Void) {
+    type_stack_.push_back(type);
+  }
 }
 
 void TypeChecker::PushTypes(const TypeVector& types) {
-  for (Type type : types) { PushType(type); }
+  for (Type type : types) {
+    PushType(type);
+  }
 }
 
 Result TypeChecker::CheckTypeStackEnd(const char* desc) {
@@ -188,8 +204,12 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
-  if (expected == Type::Any || actual == Type::Any) { return Result::Ok; }
-  if (actual != expected) { return Result::Error; }
+  if (expected == Type::Any || actual == Type::Any) {
+    return Result::Ok;
+  }
+  if (actual != expected) {
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
@@ -316,11 +336,15 @@ Result TypeChecker::CheckOpcode3(Opcode opcode,
 void TypeChecker::PrintStackIfFailed(Result result,
                                      const char* desc,
                                      const TypeVector& expected) {
-  if (Succeeded(result)) { return; }
+  if (Succeeded(result)) {
+    return;
+  }
 
   size_t limit = 0;
   Label* label;
-  if (Succeeded(TopLabel(&label))) { limit = label->type_stack_limit; }
+  if (Succeeded(TopLabel(&label))) {
+    limit = label->type_stack_limit;
+  }
 
   TypeVector actual;
   size_t max_depth = type_stack_.size() - limit;
@@ -392,7 +416,9 @@ Result TypeChecker::OnAtomicNotify(Opcode opcode, const Limits& limits) {
   return CheckOpcode2(opcode, &limits);
 }
 
-Result TypeChecker::OnBinary(Opcode opcode) { return CheckOpcode2(opcode); }
+Result TypeChecker::OnBinary(Opcode opcode) {
+  return CheckOpcode2(opcode);
+}
 
 Result TypeChecker::OnBlock(const TypeVector& param_types,
                             const TypeVector& result_types) {
@@ -448,7 +474,9 @@ Result TypeChecker::OnBrTableTarget(Index depth) {
   return result;
 }
 
-Result TypeChecker::EndBrTable() { return SetUnreachable(); }
+Result TypeChecker::EndBrTable() {
+  return SetUnreachable();
+}
 
 Result TypeChecker::OnCall(const TypeVector& param_types,
                            const TypeVector& result_types) {
@@ -488,7 +516,9 @@ Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnCompare(Opcode opcode) { return CheckOpcode2(opcode); }
+Result TypeChecker::OnCompare(Opcode opcode) {
+  return CheckOpcode2(opcode);
+}
 
 Result TypeChecker::OnCatch(const TypeVector& sig) {
   Result result = Result::Ok;
@@ -509,7 +539,9 @@ Result TypeChecker::OnConst(Type type) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnConvert(Opcode opcode) { return CheckOpcode1(opcode); }
+Result TypeChecker::OnConvert(Opcode opcode) {
+  return CheckOpcode1(opcode);
+}
 
 Result TypeChecker::OnDelegate(Index depth) {
   Result result = Result::Ok;
@@ -649,7 +681,9 @@ Result TypeChecker::OnMemoryCopy(const Limits& limits) {
   return CheckOpcode3(Opcode::MemoryCopy, &limits, &limits, &limits);
 }
 
-Result TypeChecker::OnDataDrop(uint32_t segment) { return Result::Ok; }
+Result TypeChecker::OnDataDrop(uint32_t segment) {
+  return Result::Ok;
+}
 
 Result TypeChecker::OnMemoryFill(const Limits& limits) {
   return CheckOpcode3(Opcode::MemoryFill, &limits, nullptr, &limits);
@@ -668,9 +702,13 @@ Result TypeChecker::OnMemorySize(const Limits& limits) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnTableCopy() { return CheckOpcode3(Opcode::TableCopy); }
+Result TypeChecker::OnTableCopy() {
+  return CheckOpcode3(Opcode::TableCopy);
+}
 
-Result TypeChecker::OnElemDrop(uint32_t segment) { return Result::Ok; }
+Result TypeChecker::OnElemDrop(uint32_t segment) {
+  return Result::Ok;
+}
 
 Result TypeChecker::OnTableInit(uint32_t table, uint32_t segment) {
   return CheckOpcode3(Opcode::TableInit);
@@ -716,7 +754,9 @@ Result TypeChecker::OnRefIsNullExpr() {
   Result result = PeekType(0, &type);
   if (!type.IsRef()) {
     TypeVector actual;
-    if (Succeeded(result)) { actual.push_back(type); }
+    if (Succeeded(result)) {
+      actual.push_back(type);
+    }
     std::string message =
         "type mismatch in ref.is_null, expected reference but got " +
         TypesToString(actual);
@@ -790,9 +830,13 @@ Result TypeChecker::OnTry(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnUnary(Opcode opcode) { return CheckOpcode1(opcode); }
+Result TypeChecker::OnUnary(Opcode opcode) {
+  return CheckOpcode1(opcode);
+}
 
-Result TypeChecker::OnTernary(Opcode opcode) { return CheckOpcode3(opcode); }
+Result TypeChecker::OnTernary(Opcode opcode) {
+  return CheckOpcode3(opcode);
+}
 
 Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
   Result result = Result::Ok;
@@ -866,7 +910,9 @@ Result TypeChecker::OnSimdShuffleOp(Opcode opcode, v128 lane_idx) {
   return result;
 }
 
-Result TypeChecker::OnUnreachable() { return SetUnreachable(); }
+Result TypeChecker::OnUnreachable() {
+  return SetUnreachable();
+}
 
 Result TypeChecker::OnUnwind() {
   Result result = Result::Ok;

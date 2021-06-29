@@ -44,7 +44,8 @@ class ElemSegment;
 class Module;
 class Instance;
 class Thread;
-template <typename T> class RefPtr;
+template <typename T>
+class RefPtr;
 
 using s8 = int8_t;
 using u8 = uint8_t;
@@ -63,8 +64,10 @@ using Buffer = std::vector<u8>;
 using ValueType = wabt::Type;
 using ValueTypes = std::vector<ValueType>;
 
-template <typename T> bool HasType(ValueType);
-template <typename T> void RequireType(ValueType);
+template <typename T>
+bool HasType(ValueType);
+template <typename T>
+void RequireType(ValueType);
 bool IsReference(ValueType);
 bool TypesMatch(ValueType expected, ValueType actual);
 
@@ -132,7 +135,8 @@ struct Ref {
 };
 using RefVec = std::vector<Ref>;
 
-template <typename T, u8 L> struct Simd {
+template <typename T, u8 L>
+struct Simd {
   using LaneType = T;
   static const u8 lanes = L;
 
@@ -390,11 +394,13 @@ struct Frame {
   Module* mod;
 };
 
-template <typename T> class FreeList {
+template <typename T>
+class FreeList {
  public:
   using Index = size_t;
 
-  template <typename... Args> Index New(Args&&...);
+  template <typename... Args>
+  Index New(Args&&...);
   void Delete(Index);
 
   bool IsUsed(Index) const;
@@ -437,11 +443,15 @@ class Store {
 
   bool IsValid(Ref) const;
   bool HasValueType(Ref, ValueType) const;
-  template <typename T> bool Is(Ref) const;
+  template <typename T>
+  bool Is(Ref) const;
 
-  template <typename T, typename... Args> RefPtr<T> Alloc(Args&&...);
-  template <typename T> Result Get(Ref, RefPtr<T>* out);
-  template <typename T> RefPtr<T> UnsafeGet(Ref);
+  template <typename T, typename... Args>
+  RefPtr<T> Alloc(Args&&...);
+  template <typename T>
+  Result Get(Ref, RefPtr<T>* out);
+  template <typename T>
+  RefPtr<T> UnsafeGet(Ref);
 
   RootList::Index NewRoot(Ref);
   RootList::Index CopyRoot(RootList::Index);
@@ -456,7 +466,8 @@ class Store {
   const Features& features() const;
 
  private:
-  template <typename T> friend class RefPtr;
+  template <typename T>
+  friend class RefPtr;
 
   Features features_;
   ObjectList objects_;
@@ -464,7 +475,8 @@ class Store {
   std::vector<bool> marks_;
 };
 
-template <typename T> class RefPtr {
+template <typename T>
+class RefPtr {
  public:
   RefPtr();
   RefPtr(Store&, Ref);
@@ -474,12 +486,17 @@ template <typename T> class RefPtr {
   RefPtr& operator=(RefPtr&&);
   ~RefPtr();
 
-  template <typename U> RefPtr(const RefPtr<U>&);
-  template <typename U> RefPtr& operator=(const RefPtr<U>&);
-  template <typename U> RefPtr(RefPtr&&);
-  template <typename U> RefPtr& operator=(RefPtr&&);
+  template <typename U>
+  RefPtr(const RefPtr<U>&);
+  template <typename U>
+  RefPtr& operator=(const RefPtr<U>&);
+  template <typename U>
+  RefPtr(RefPtr&&);
+  template <typename U>
+  RefPtr& operator=(RefPtr&&);
 
-  template <typename U> RefPtr<U> As();
+  template <typename U>
+  RefPtr<U> As();
 
   bool empty() const;
   void reset();
@@ -498,7 +515,8 @@ template <typename T> class RefPtr {
   friend bool operator!=(const RefPtr<U>& lhs, const RefPtr<V>& rhs);
 
  private:
-  template <typename U> friend class RefPtr;
+  template <typename U>
+  friend class RefPtr;
 
   T* obj_;
   Store* store_;
@@ -514,10 +532,13 @@ struct Value {
   static Value WABT_VECTORCALL Make(f64);
   static Value WABT_VECTORCALL Make(v128);
   static Value WABT_VECTORCALL Make(Ref);
-  template <typename T, u8 L> static Value WABT_VECTORCALL Make(Simd<T, L>);
+  template <typename T, u8 L>
+  static Value WABT_VECTORCALL Make(Simd<T, L>);
 
-  template <typename T> T WABT_VECTORCALL Get() const;
-  template <typename T> void WABT_VECTORCALL Set(T);
+  template <typename T>
+  T WABT_VECTORCALL Get() const;
+  template <typename T>
+  void WABT_VECTORCALL Set(T);
 
  private:
   union {
@@ -798,8 +819,10 @@ class Memory : public Extern {
   bool IsValidAccess(u64 offset, u64 addend, u64 size) const;
   bool IsValidAtomicAccess(u64 offset, u64 addend, u64 size) const;
 
-  template <typename T> Result Load(u64 offset, u64 addend, T* out) const;
-  template <typename T> Result WABT_VECTORCALL Store(u64 offset, u64 addend, T);
+  template <typename T>
+  Result Load(u64 offset, u64 addend, T* out) const;
+  template <typename T>
+  Result WABT_VECTORCALL Store(u64 offset, u64 addend, T);
   Result Grow(u64 pages);
   Result Fill(u64 offset, u8 value, u64 size);
   Result Init(u64 dst_offset, const DataSegment&, u64 src_offset, u64 size);
@@ -810,8 +833,10 @@ class Memory : public Extern {
                      u64 size);
 
   // Fake atomics; just checks alignment.
-  template <typename T> Result AtomicLoad(u64 offset, u64 addend, T* out) const;
-  template <typename T> Result AtomicStore(u64 offset, u64 addend, T);
+  template <typename T>
+  Result AtomicLoad(u64 offset, u64 addend, T* out) const;
+  template <typename T>
+  Result AtomicStore(u64 offset, u64 addend, T);
   template <typename T, typename F>
   Result AtomicRmw(u64 offset, u64 addend, T, F&& func, T* out);
   template <typename T>
@@ -850,11 +875,14 @@ class Global : public Extern {
   Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
 
   Value Get() const;
-  template <typename T> Result Get(T* out) const;
-  template <typename T> Result WABT_VECTORCALL Set(T);
+  template <typename T>
+  Result Get(T* out) const;
+  template <typename T>
+  Result WABT_VECTORCALL Set(T);
   Result Set(Store&, Ref);
 
-  template <typename T> T WABT_VECTORCALL UnsafeGet() const;
+  template <typename T>
+  T WABT_VECTORCALL UnsafeGet() const;
   void UnsafeSet(Value);
 
   const ExternType& extern_type() override;
@@ -1050,32 +1078,41 @@ class Thread : public Object {
 
   Value& Pick(Index);
 
-  template <typename T> T WABT_VECTORCALL Pop();
+  template <typename T>
+  T WABT_VECTORCALL Pop();
   Value Pop();
   u64 PopPtr(const Memory::Ptr& memory);
 
-  template <typename T> void WABT_VECTORCALL Push(T);
+  template <typename T>
+  void WABT_VECTORCALL Push(T);
   void Push(Value);
   void Push(Ref);
 
-  template <typename R, typename T> using UnopFunc = R WABT_VECTORCALL(T);
+  template <typename R, typename T>
+  using UnopFunc = R WABT_VECTORCALL(T);
   template <typename R, typename T>
   using UnopTrapFunc = RunResult WABT_VECTORCALL(T, R*, std::string*);
-  template <typename R, typename T> using BinopFunc = R WABT_VECTORCALL(T, T);
+  template <typename R, typename T>
+  using BinopFunc = R WABT_VECTORCALL(T, T);
   template <typename R, typename T>
   using BinopTrapFunc = RunResult WABT_VECTORCALL(T, T, R*, std::string*);
 
-  template <typename R, typename T> RunResult DoUnop(UnopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoUnop(UnopFunc<R, T>);
   template <typename R, typename T>
   RunResult DoUnop(UnopTrapFunc<R, T>, Trap::Ptr* out_trap);
-  template <typename R, typename T> RunResult DoBinop(BinopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoBinop(BinopFunc<R, T>);
   template <typename R, typename T>
   RunResult DoBinop(BinopTrapFunc<R, T>, Trap::Ptr* out_trap);
 
-  template <typename R, typename T> RunResult DoConvert(Trap::Ptr* out_trap);
-  template <typename R, typename T> RunResult DoReinterpret();
+  template <typename R, typename T>
+  RunResult DoConvert(Trap::Ptr* out_trap);
+  template <typename R, typename T>
+  RunResult DoReinterpret();
 
-  template <typename T> RunResult Load(Instr, T* out, Trap::Ptr* out_trap);
+  template <typename T>
+  RunResult Load(Instr, T* out, Trap::Ptr* out_trap);
   template <typename T, typename V = T>
   RunResult DoLoad(Instr, Trap::Ptr* out_trap);
   template <typename T, typename V = T>
@@ -1095,33 +1132,49 @@ class Thread : public Object {
   RunResult DoTableSize(Instr);
   RunResult DoTableFill(Instr, Trap::Ptr* out_trap);
 
-  template <typename R, typename T> RunResult DoSimdSplat();
-  template <typename R, typename T> RunResult DoSimdExtract(Instr);
-  template <typename R, typename T> RunResult DoSimdReplace(Instr);
+  template <typename R, typename T>
+  RunResult DoSimdSplat();
+  template <typename R, typename T>
+  RunResult DoSimdExtract(Instr);
+  template <typename R, typename T>
+  RunResult DoSimdReplace(Instr);
 
-  template <typename R, typename T> RunResult DoSimdUnop(UnopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoSimdUnop(UnopFunc<R, T>);
   // Like DoSimdUnop but zeroes top half.
-  template <typename R, typename T> RunResult DoSimdUnopZero(UnopFunc<R, T>);
-  template <typename R, typename T> RunResult DoSimdBinop(BinopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoSimdUnopZero(UnopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoSimdBinop(BinopFunc<R, T>);
   RunResult DoSimdBitSelect();
-  template <typename S, u8 count> RunResult DoSimdIsTrue();
-  template <typename S> RunResult DoSimdBitmask();
-  template <typename R, typename T> RunResult DoSimdShift(BinopFunc<R, T>);
+  template <typename S, u8 count>
+  RunResult DoSimdIsTrue();
+  template <typename S>
+  RunResult DoSimdBitmask();
+  template <typename R, typename T>
+  RunResult DoSimdShift(BinopFunc<R, T>);
   template <typename S, typename T>
   RunResult DoSimdLoadSplat(Instr, Trap::Ptr* out_trap);
-  template <typename S> RunResult DoSimdLoadLane(Instr, Trap::Ptr* out_trap);
-  template <typename S> RunResult DoSimdStoreLane(Instr, Trap::Ptr* out_trap);
+  template <typename S>
+  RunResult DoSimdLoadLane(Instr, Trap::Ptr* out_trap);
+  template <typename S>
+  RunResult DoSimdStoreLane(Instr, Trap::Ptr* out_trap);
   template <typename S, typename T>
   RunResult DoSimdLoadZero(Instr, Trap::Ptr* out_trap);
   RunResult DoSimdSwizzle();
   RunResult DoSimdShuffle(Instr);
-  template <typename S, typename T> RunResult DoSimdNarrow();
-  template <typename S, typename T, bool low> RunResult DoSimdConvert();
-  template <typename S, typename T> RunResult DoSimdDot();
+  template <typename S, typename T>
+  RunResult DoSimdNarrow();
+  template <typename S, typename T, bool low>
+  RunResult DoSimdConvert();
+  template <typename S, typename T>
+  RunResult DoSimdDot();
   template <typename S, typename T>
   RunResult DoSimdLoadExtend(Instr, Trap::Ptr* out_trap);
-  template <typename S, typename T> RunResult DoSimdExtaddPairwise();
-  template <typename S, typename T, bool low> RunResult DoSimdExtmul();
+  template <typename S, typename T>
+  RunResult DoSimdExtaddPairwise();
+  template <typename S, typename T, bool low>
+  RunResult DoSimdExtmul();
 
   template <typename T, typename V = T>
   RunResult DoAtomicLoad(Instr, Trap::Ptr* out_trap);

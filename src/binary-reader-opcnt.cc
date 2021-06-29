@@ -50,14 +50,17 @@ OpcodeInfo::OpcodeInfo(Opcode opcode, Kind kind, T* data, size_t count, T extra)
 
 template <typename T>
 std::pair<const T*, size_t> OpcodeInfo::GetDataArray() const {
-  if (data_.empty()) { return std::pair<const T*, size_t>(nullptr, 0); }
+  if (data_.empty()) {
+    return std::pair<const T*, size_t>(nullptr, 0);
+  }
 
   assert(data_.size() % sizeof(T) == 0);
   return std::make_pair(reinterpret_cast<const T*>(data_.data()),
                         data_.size() / sizeof(T));
 }
 
-template <typename T> const T* OpcodeInfo::GetData(size_t expected_size) const {
+template <typename T>
+const T* OpcodeInfo::GetData(size_t expected_size) const {
   auto pair = GetDataArray<T>();
   assert(pair.second == expected_size);
   return pair.first;
@@ -141,12 +144,24 @@ bool operator!=(const OpcodeInfo& lhs, const OpcodeInfo& rhs) {
 }
 
 bool operator<(const OpcodeInfo& lhs, const OpcodeInfo& rhs) {
-  if (lhs.opcode_ < rhs.opcode_) { return true; }
-  if (lhs.opcode_ > rhs.opcode_) { return false; }
-  if (lhs.kind_ < rhs.kind_) { return true; }
-  if (lhs.kind_ > rhs.kind_) { return false; }
-  if (lhs.data_ < rhs.data_) { return true; }
-  if (lhs.data_ > rhs.data_) { return false; }
+  if (lhs.opcode_ < rhs.opcode_) {
+    return true;
+  }
+  if (lhs.opcode_ > rhs.opcode_) {
+    return false;
+  }
+  if (lhs.kind_ < rhs.kind_) {
+    return true;
+  }
+  if (lhs.kind_ > rhs.kind_) {
+    return false;
+  }
+  if (lhs.data_ < rhs.data_) {
+    return true;
+  }
+  if (lhs.data_ > rhs.data_) {
+    return false;
+  }
   return false;
 }
 
@@ -184,13 +199,15 @@ class BinaryReaderOpcnt : public BinaryReaderNop {
   Result OnEndFunc() override;
 
  private:
-  template <typename... Args> Result Emplace(Args&&... args);
+  template <typename... Args>
+  Result Emplace(Args&&... args);
 
   OpcodeInfoCounts* opcode_counts_;
   Opcode current_opcode_;
 };
 
-template <typename... Args> Result BinaryReaderOpcnt::Emplace(Args&&... args) {
+template <typename... Args>
+Result BinaryReaderOpcnt::Emplace(Args&&... args) {
   auto pair = opcode_counts_->emplace(
       std::piecewise_construct, std::make_tuple(std::forward<Args>(args)...),
       std::make_tuple(0));

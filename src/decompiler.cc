@@ -68,7 +68,9 @@ struct Decompiler {
 
     size_t width() {
       size_t w = 0;
-      for (auto& s : v) { w = std::max(w, s.size()); }
+      for (auto& s : v) {
+        w = std::max(w, s.size());
+      }
       return w;
     }
 
@@ -155,7 +157,8 @@ struct Decompiler {
       Value bin{{}, precedence};
       std::move(left.v.begin(), left.v.end(), std::back_inserter(bin.v));
       bin.v.back().append(infix.data(), infix.size());
-      if (indent_right) IndentValue(right, indent_amount, {});
+      if (indent_right)
+        IndentValue(right, indent_amount, {});
       std::move(right.v.begin(), right.v.end(), std::back_inserter(bin.v));
       return bin;
     }
@@ -180,7 +183,8 @@ struct Decompiler {
       // Single line.
       auto s = std::string(prefix);
       for (auto& child : args) {
-        if (&child != &args[0]) s += ", ";
+        if (&child != &args[0])
+          s += ", ";
         s += child.v[0];
       }
       s += postfix;
@@ -193,11 +197,13 @@ struct Decompiler {
       for (auto& child : args) {
         IndentValue(child, ident_with_name ? prefix.size() : indent_amount,
                     !i && ident_with_name ? prefix : string_view{});
-        if (i < args.size() - 1) child.v.back() += ",";
+        if (i < args.size() - 1)
+          child.v.back() += ",";
         std::move(child.v.begin(), child.v.end(), std::back_inserter(ml.v));
         i++;
       }
-      if (!ident_with_name) ml.v.insert(ml.v.begin(), std::string(prefix));
+      if (!ident_with_name)
+        ml.v.insert(ml.v.begin(), std::string(prefix));
       ml.v.back() += postfix;
       return ml;
     }
@@ -208,11 +214,13 @@ struct Decompiler {
     return name[0] == '$' ? name.substr(1) : name;
   }
 
-  template <ExprType T> Value Get(const VarExpr<T>& ve) {
+  template <ExprType T>
+  Value Get(const VarExpr<T>& ve) {
     return Value{{std::string(VarName(ve.var.name()))}, Precedence::Atomic};
   }
 
-  template <ExprType T> Value Set(Value& child, const VarExpr<T>& ve) {
+  template <ExprType T>
+  Value Set(Value& child, const VarExpr<T>& ve) {
     return WrapChild(child, VarName(ve.var.name()) + " = ", "",
                      Precedence::Assign);
   }
@@ -232,9 +240,11 @@ struct Decompiler {
 
   bool ConstIntVal(const Expr* e, uint64_t& dest) {
     dest = 0;
-    if (!e || e->type() != ExprType::Const) return false;
+    if (!e || e->type() != ExprType::Const)
+      return false;
     auto& c = cast<ConstExpr>(e)->const_;
-    if (c.type() != Type::I32 && c.type() != Type::I64) return false;
+    if (c.type() != Type::I32 && c.type() != Type::I64)
+      return false;
     dest = c.type() == Type::I32 ? c.u32() : c.u64();
     return true;
   }
@@ -335,13 +345,16 @@ struct Decompiler {
 
   Value DecompileExpr(const Node& n, const Node* parent) {
     std::vector<Value> args;
-    for (auto& c : n.children) { args.push_back(DecompileExpr(c, &n)); }
+    for (auto& c : n.children) {
+      args.push_back(DecompileExpr(c, &n));
+    }
     // First deal with the specialized node types.
     switch (n.ntype) {
       case NodeType::FlushToVars: {
         std::string decls = "let ";
         for (Index i = 0; i < n.u.var_count; i++) {
-          if (i) decls += ", ";
+          if (i)
+            decls += ", ";
           decls += TempVarName(n.u.var_start + i);
         }
         decls += " = ";
@@ -354,7 +367,8 @@ struct Decompiler {
         Value stats{{}, Precedence::None};
         for (size_t i = 0; i < n.children.size(); i++) {
           auto& s = args[i].v.back();
-          if (s.back() != '}' && s.back() != ':') s += ';';
+          if (s.back() != '}' && s.back() != ':')
+            s += ';';
           std::move(args[i].v.begin(), args[i].v.end(),
                     std::back_inserter(stats.v));
         }
@@ -471,7 +485,9 @@ struct Decompiler {
       case ExprType::If: {
         auto ife = cast<IfExpr>(n.e);
         Value* elsep = nullptr;
-        if (!ife->false_.empty()) { elsep = &args[2]; }
+        if (!ife->false_.empty()) {
+          elsep = &args[2];
+        }
         auto& thenp = args[1];
         auto& ifs = args[0];
         bool multiline = ifs.v.size() > 1 || thenp.v.size() > 1;
@@ -498,7 +514,8 @@ struct Decompiler {
           return std::move(ifs);
         } else {
           auto s = cat("if (", ifs.v[0], ") { ", thenp.v[0], " }");
-          if (elsep) s += cat(" else { ", elsep->v[0], " }");
+          if (elsep)
+            s += cat(" else { ", elsep->v[0], " }");
           return Value{{std::move(s)}, Precedence::If};
         }
       }
@@ -624,8 +641,10 @@ struct Decompiler {
     // as the export has the original name..
     auto xport = mc.module.GetExport(name);
     auto is_export = xport && xport->kind == kind;
-    if (is_export) s += "export ";
-    if (is_import) s += "import ";
+    if (is_export)
+      s += "export ";
+    if (is_import)
+      s += "import ";
     return is_import;
   }
 
@@ -652,7 +671,9 @@ struct Decompiler {
         s += s_hexdigits[c & 0xf];
       }
       if (s.size() - line_start > target_exp_width) {
-        if (line_start == 0) { s = "  " + s; }
+        if (line_start == 0) {
+          s = "  " + s;
+        }
         s += "\"\n  ";
         line_start = s.size();
         s += "\"";
@@ -677,7 +698,8 @@ struct Decompiler {
       s += ";\n";
       memory_index++;
     }
-    if (!mc.module.memories.empty()) s += "\n";
+    if (!mc.module.memories.empty())
+      s += "\n";
 
     // Globals.
     Index global_index = 0;
@@ -685,11 +707,14 @@ struct Decompiler {
       auto is_import =
           CheckImportExport(s, ExternalKind::Global, global_index, g->name);
       s += cat("global ", g->name, ":", GetDecompTypeName(g->type));
-      if (!is_import) { s += cat(" = ", InitExp(g->init_expr)); }
+      if (!is_import) {
+        s += cat(" = ", InitExp(g->init_expr));
+      }
       s += ";\n";
       global_index++;
     }
-    if (!mc.module.globals.empty()) s += "\n";
+    if (!mc.module.globals.empty())
+      s += "\n";
 
     // Tables.
     Index table_index = 0;
@@ -704,17 +729,21 @@ struct Decompiler {
       s += ";\n";
       table_index++;
     }
-    if (!mc.module.tables.empty()) s += "\n";
+    if (!mc.module.tables.empty())
+      s += "\n";
 
     // Data.
     for (auto dat : mc.module.data_segments) {
       s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset), ") = ");
       auto ds = BinaryToString(dat->data);
-      if (ds.size() > target_exp_width / 2) { s += "\n"; }
+      if (ds.size() > target_exp_width / 2) {
+        s += "\n";
+      }
       s += ds;
       s += ";\n";
     }
-    if (!mc.module.data_segments.empty()) s += "\n";
+    if (!mc.module.data_segments.empty())
+      s += "\n";
 
     // Code.
     Index func_index = 0;
@@ -731,7 +760,8 @@ struct Decompiler {
       }
       s += cat("function ", f->name, "(");
       for (Index i = 0; i < f->GetNumParams(); i++) {
-        if (i) s += ", ";
+        if (i)
+          s += ", ";
         auto t = f->GetParamType(i);
         auto name = "$" + IndexToAlphaName(i);
         s += LocalDecl(name, t);
@@ -743,7 +773,8 @@ struct Decompiler {
         } else {
           s += ":(";
           for (Index i = 0; i < f->GetNumResults(); i++) {
-            if (i) s += ", ";
+            if (i)
+              s += ", ";
             s += GetDecompTypeName(f->GetResultType(i));
           }
           s += ")";

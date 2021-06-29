@@ -139,7 +139,9 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
   auto&& module_desc = module->desc();
 
   for (auto&& export_ : module_desc.exports) {
-    if (export_.type.type->kind != ExternalKind::Func) { continue; }
+    if (export_.type.type->kind != ExternalKind::Func) {
+      continue;
+    }
     auto* func_type = cast<FuncType>(export_.type.type.get());
     if (func_type->params.empty()) {
       if (s_trace_stream) {
@@ -205,7 +207,9 @@ static Result ReadModule(const char* module_filename,
   CHECK_RESULT(ReadBinaryInterp(file_data.data(), file_data.size(), options,
                                 errors, &module_desc));
 
-  if (s_verbose) { module_desc.istream.Disassemble(stream); }
+  if (s_verbose) {
+    module_desc.istream.Disassemble(stream);
+  }
 
   *out_module = Module::New(s_store, module_desc);
   return Result::Ok;
@@ -301,7 +305,9 @@ static Result ReadAndRunModule(const char* module_filename) {
   Instance::Ptr instance;
   CHECK_RESULT(InstantiateModule(imports, module, &instance));
 
-  if (s_run_all_exports) { RunAllExports(instance, &errors); }
+  if (s_run_all_exports) {
+    RunAllExports(instance, &errors);
+  }
 #ifdef WITH_WASI
   if (s_wasi) {
     CHECK_RESULT(

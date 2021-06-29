@@ -31,8 +31,12 @@
 #if COMPILER_IS_MSVC
 int wabt_vsnprintf(char* str, size_t size, const char* format, va_list ap) {
   int result = -1;
-  if (size != 0) { result = _vsnprintf_s(str, size, _TRUNCATE, format, ap); }
-  if (result == -1) { result = _vscprintf(format, ap); }
+  if (size != 0) {
+    result = _vsnprintf_s(str, size, _TRUNCATE, format, ap);
+  }
+  if (result == -1) {
+    result = _vscprintf(format, ap);
+  }
   return result;
 }
 
@@ -89,7 +93,9 @@ double wabt_convert_uint64_to_double(uint64_t x) {
   static const double c = 18446744073709551616.0;
   double result;
   __asm fild x;
-  if (x & 0x8000000000000000ULL) { __asm fadd c; }
+  if (x & 0x8000000000000000ULL) {
+    __asm fadd c;
+  }
   __asm fstp result;
   ResetPrecisionControl(old_ctrl);
   return result;
@@ -118,7 +124,9 @@ float wabt_convert_uint64_to_float(uint64_t x) {
   static const float c = 18446744073709551616.0f;
   float result;
   __asm fild x;
-  if (x & 0x8000000000000000ULL) { __asm fadd c; }
+  if (x & 0x8000000000000000ULL) {
+    __asm fadd c;
+  }
   __asm fstp result;
   ResetPrecisionControl(old_ctrl);
   return result;

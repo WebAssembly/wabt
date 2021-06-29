@@ -59,7 +59,8 @@ struct Label {
   bool used = false;
 };
 
-template <int> struct Name {
+template <int>
+struct Name {
   explicit Name(const std::string& name) : name(name) {}
   const std::string& name;
 };
@@ -301,7 +302,9 @@ static const char kImplicitFuncLabel[] = "$Bfunc";
 #include "src/prebuilt/wasm2c.include.c"
 #undef SECTION_NAME
 
-size_t CWriter::MarkTypeStack() const { return type_stack_.size(); }
+size_t CWriter::MarkTypeStack() const {
+  return type_stack_.size();
+}
 
 void CWriter::ResetTypeStack(size_t mark) {
   assert(mark <= type_stack_.size());
@@ -313,7 +316,9 @@ Type CWriter::StackType(Index index) const {
   return *(type_stack_.rbegin() + index);
 }
 
-void CWriter::PushType(Type type) { type_stack_.push_back(type); }
+void CWriter::PushType(Type type) {
+  type_stack_.push_back(type);
+}
 
 void CWriter::PushTypes(const TypeVector& types) {
   type_stack_.insert(type_stack_.end(), types.begin(), types.end());
@@ -351,7 +356,8 @@ const Label* CWriter::FindLabel(const Var& var) {
     assert(var.is_name());
     for (Index i = label_stack_.size(); i > 0; --i) {
       label = &label_stack_[i - 1];
-      if (label->name == var.name()) break;
+      if (label->name == var.name())
+        break;
     }
   }
 
@@ -365,13 +371,19 @@ bool CWriter::IsTopLabelUsed() const {
   return label_stack_.back().used;
 }
 
-void CWriter::PopLabel() { label_stack_.pop_back(); }
+void CWriter::PopLabel() {
+  label_stack_.pop_back();
+}
 
 // static
-std::string CWriter::AddressOf(const std::string& s) { return "(&" + s + ")"; }
+std::string CWriter::AddressOf(const std::string& s) {
+  return "(&" + s + ")";
+}
 
 // static
-std::string CWriter::Deref(const std::string& s) { return "(*" + s + ")"; }
+std::string CWriter::Deref(const std::string& s) {
+  return "(*" + s + ")";
+}
 
 // static
 char CWriter::MangleType(Type type) {
@@ -386,10 +398,13 @@ char CWriter::MangleType(Type type) {
 
 // static
 std::string CWriter::MangleTypes(const TypeVector& types) {
-  if (types.empty()) return std::string("v");
+  if (types.empty())
+    return std::string("v");
 
   std::string result;
-  for (auto type : types) { result += MangleType(type); }
+  for (auto type : types) {
+    result += MangleType(type);
+  }
   return result;
 }
 
@@ -433,7 +448,8 @@ std::string CWriter::ExportName(string_view mangled_name) {
 
 // static
 std::string CWriter::LegalizeName(string_view name) {
-  if (name.empty()) return "_";
+  if (name.empty())
+    return "_";
 
   std::string result;
   result = isalpha(name[0]) ? name[0] : '_';
@@ -463,7 +479,9 @@ std::string CWriter::DefineName(SymbolSet* set, string_view name) {
 }
 
 string_view StripLeadingDollar(string_view name) {
-  if (!name.empty() && name[0] == '$') { name.remove_prefix(1); }
+  if (!name.empty() && name[0] == '$') {
+    name.remove_prefix(1);
+  }
   return name;
 }
 
@@ -498,7 +516,9 @@ std::string CWriter::DefineStackVarName(Index index,
   return unique;
 }
 
-void CWriter::Indent(int size) { indent_ += size; }
+void CWriter::Indent(int size) {
+  indent_ += size;
+}
 
 void CWriter::Dedent(int size) {
   indent_ -= size;
@@ -515,7 +535,9 @@ void CWriter::WriteIndent() {
     stream_->WriteData(s_indent, s_indent_len);
     to_write -= s_indent_len;
   }
-  if (to_write > 0) { stream_->WriteData(s_indent, to_write); }
+  if (to_write > 0) {
+    stream_->WriteData(s_indent, to_write);
+  }
 }
 
 void CWriter::WriteData(const void* src, size_t size) {
@@ -547,9 +569,13 @@ void CWriter::Write(CloseBrace) {
   Write("}");
 }
 
-void CWriter::Write(Index index) { Writef("%" PRIindex, index); }
+void CWriter::Write(Index index) {
+  Writef("%" PRIindex, index);
+}
 
-void CWriter::Write(string_view s) { WriteData(s.data(), s.size()); }
+void CWriter::Write(string_view s) {
+  WriteData(s.data(), s.size());
+}
 
 void CWriter::Write(const LocalName& name) {
   assert(local_sym_map_.count(name.name) == 1);
@@ -563,7 +589,9 @@ std::string CWriter::GetGlobalName(const std::string& name) const {
   return iter->second;
 }
 
-void CWriter::Write(const GlobalName& name) { Write(GetGlobalName(name.name)); }
+void CWriter::Write(const GlobalName& name) {
+  Write(GetGlobalName(name.name));
+}
 
 void CWriter::Write(const ExternalPtr& name) {
   bool is_import = import_syms_.count(name.name) != 0;
@@ -594,7 +622,8 @@ void CWriter::Write(const GotoLabel& goto_label) {
     assert(label->sig.size() == 1);
     assert(type_stack_.size() >= label->type_stack_size);
     Index dst = type_stack_.size() - label->type_stack_size - 1;
-    if (dst != 0) Write(StackVar(dst, label->sig[0]), " = ", StackVar(0), "; ");
+    if (dst != 0)
+      Write(StackVar(dst, label->sig[0]), " = ", StackVar(0), "; ");
   }
 
   if (goto_label.var.is_name()) {
@@ -608,7 +637,8 @@ void CWriter::Write(const GotoLabel& goto_label) {
 }
 
 void CWriter::Write(const LabelDecl& label) {
-  if (IsTopLabelUsed()) Write(label.name, ":;", Newline());
+  if (IsTopLabelUsed())
+    Write(label.name, ":;", Newline());
 }
 
 void CWriter::Write(const GlobalVar& var) {
@@ -730,7 +760,8 @@ void CWriter::Write(const Const& const_) {
 }
 
 void CWriter::WriteInitExpr(const ExprList& expr_list) {
-  if (expr_list.empty()) return;
+  if (expr_list.empty())
+    return;
 
   assert(expr_list.size() == 1);
   const Expr* expr = &expr_list.front();
@@ -791,7 +822,8 @@ void CWriter::WriteFuncTypes() {
 }
 
 void CWriter::WriteImports() {
-  if (module_->imports.empty()) return;
+  if (module_->imports.empty())
+    return;
 
   Write(Newline());
 
@@ -845,7 +877,8 @@ void CWriter::WriteImports() {
 }
 
 void CWriter::WriteFuncDeclarations() {
-  if (module_->funcs.size() == module_->num_func_imports) return;
+  if (module_->funcs.size() == module_->num_func_imports)
+    return;
 
   Write(Newline());
 
@@ -868,7 +901,8 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
     Write("void");
   } else {
     for (Index i = 0; i < decl.GetNumParams(); ++i) {
-      if (i != 0) Write(", ");
+      if (i != 0)
+        Write(", ");
       Write(decl.GetParamType(i));
     }
   }
@@ -911,7 +945,8 @@ void CWriter::WriteGlobal(const Global& global, const std::string& name) {
 }
 
 void CWriter::WriteMemories() {
-  if (module_->memories.size() == module_->num_memory_imports) return;
+  if (module_->memories.size() == module_->num_memory_imports)
+    return;
 
   Write(Newline());
 
@@ -933,7 +968,8 @@ void CWriter::WriteMemory(const std::string& name) {
 }
 
 void CWriter::WriteTables() {
-  if (module_->tables.size() == module_->num_table_imports) return;
+  if (module_->tables.size() == module_->num_table_imports)
+    return;
 
   Write(Newline());
 
@@ -968,9 +1004,11 @@ void CWriter::WriteDataInitializers() {
         size_t i = 0;
         for (uint8_t x : data_segment->data) {
           Writef("0x%02x, ", x);
-          if ((++i % 12) == 0) Write(Newline());
+          if ((++i % 12) == 0)
+            Write(Newline());
         }
-        if (i > 0) Write(Newline());
+        if (i > 0)
+          Write(Newline());
         Write(CloseBrace(), ";", Newline());
         ++data_segment_index;
       }
@@ -1041,13 +1079,18 @@ void CWriter::WriteInitExports() {
 }
 
 void CWriter::WriteExports(WriteExportsKind kind) {
-  if (module_->exports.empty()) return;
+  if (module_->exports.empty())
+    return;
 
-  if (kind != WriteExportsKind::Initializers) { Write(Newline()); }
+  if (kind != WriteExportsKind::Initializers) {
+    Write(Newline());
+  }
 
   for (const Export* export_ : module_->exports) {
     Write("/* export: '", export_->name, "' */", Newline());
-    if (kind == WriteExportsKind::Declarations) { Write("extern "); }
+    if (kind == WriteExportsKind::Declarations) {
+      Write("extern ");
+    }
 
     std::string mangled_name;
     std::string internal_name;
@@ -1126,7 +1169,8 @@ void CWriter::WriteFuncs() {
   Index func_index = 0;
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
-    if (!is_import) Write(Newline(), *func, Newline());
+    if (!is_import)
+      Write(Newline(), *func, Newline());
     ++func_index;
   }
 }
@@ -1190,7 +1234,8 @@ void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
     for (Index i = 0; i < func_->GetNumParams(); ++i) {
       if (i != 0) {
         Write(", ");
-        if ((i % 8) == 0) Write(Newline());
+        if ((i % 8) == 0)
+          Write(Newline());
       }
       Write(func_->GetParamType(i), " ",
             DefineLocalScopeName(index_to_name[i]));
@@ -1212,7 +1257,8 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
           Indent(4);
         } else {
           Write(", ");
-          if ((count % 8) == 0) Write(Newline());
+          if ((count % 8) == 0)
+            Write(Newline());
         }
 
         Write(DefineLocalScopeName(index_to_name[num_params + local_index]),
@@ -1241,7 +1287,8 @@ void CWriter::WriteStackVarDeclarations() {
           Indent(4);
         } else {
           Write(", ");
-          if ((count % 8) == 0) Write(Newline());
+          if ((count % 8) == 0)
+            Write(Newline());
         }
 
         Write(name);
@@ -1311,7 +1358,9 @@ void CWriter::Write(const ExprList& exprs) {
 
         Write(GlobalVar(var), "(");
         for (Index i = 0; i < num_params; ++i) {
-          if (i != 0) { Write(", "); }
+          if (i != 0) {
+            Write(", ");
+          }
           Write(StackVar(num_params - i - 1));
         }
         Write(");", Newline());
@@ -1899,7 +1948,8 @@ void CWriter::Write(const LoadExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(", ExternalPtr(memory->name),
         ", (u64)(", StackVar(0), ")");
-  if (expr.offset != 0) Write(" + ", expr.offset, "u");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset, "u");
   Write(");", Newline());
   DropTypes(1);
   PushType(result_type);
@@ -1925,7 +1975,8 @@ void CWriter::Write(const StoreExpr& expr) {
   Memory* memory = module_->memories[0];
 
   Write(func, "(", ExternalPtr(memory->name), ", (u64)(", StackVar(1), ")");
-  if (expr.offset != 0) Write(" + ", expr.offset);
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
   Write(", ", StackVar(0), ");", Newline());
   DropTypes(2);
 }
@@ -2077,13 +2128,16 @@ void CWriter::Write(const LoadSplatExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
         ExternalPtr(memory->name), ", (u64)(", StackVar(0));
-  if (expr.offset != 0) Write(" + ", expr.offset);
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
   Write("));", Newline());
   DropTypes(1);
   PushType(result_type);
 }
 
-void CWriter::Write(const LoadZeroExpr& expr) { UNIMPLEMENTED("SIMD support"); }
+void CWriter::Write(const LoadZeroExpr& expr) {
+  UNIMPLEMENTED("SIMD support");
+}
 
 void CWriter::WriteCHeader() {
   stream_ = h_stream_;

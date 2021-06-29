@@ -44,7 +44,9 @@ const Label* ModuleContext::GetLabel(const Var& var) const {
   if (var.is_name()) {
     for (Index i = GetLabelStackSize(); i > 0; --i) {
       auto label = &label_stack_[i - 1];
-      if (label->name == var.name()) { return label; }
+      if (label->name == var.name()) {
+        return label;
+      }
     }
   } else if (var.index() < GetLabelStackSize()) {
     auto label = &label_stack_[GetLabelStackSize() - var.index() - 1];
@@ -55,7 +57,9 @@ const Label* ModuleContext::GetLabel(const Var& var) const {
 
 Index ModuleContext::GetLabelArity(const Var& var) const {
   auto label = GetLabel(var);
-  if (!label) { return 0; }
+  if (!label) {
+    return 0;
+  }
 
   return label->label_type == LabelType::Loop ? label->param_types.size()
                                               : label->result_types.size();
@@ -76,7 +80,9 @@ void ModuleContext::BeginBlock(LabelType label_type, const Block& block) {
                             block.decl.sig.result_types);
 }
 
-void ModuleContext::EndBlock() { label_stack_.pop_back(); }
+void ModuleContext::EndBlock() {
+  label_stack_.pop_back();
+}
 
 void ModuleContext::BeginFunc(const Func& func) {
   label_stack_.clear();
@@ -85,7 +91,9 @@ void ModuleContext::BeginFunc(const Func& func) {
   current_func_ = &func;
 }
 
-void ModuleContext::EndFunc() { current_func_ = nullptr; }
+void ModuleContext::EndFunc() {
+  current_func_ = nullptr;
+}
 
 ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
   switch (expr.type()) {

@@ -24,15 +24,20 @@ namespace interp {
 template <typename T>
 void WABT_VECTORCALL Istream::EmitAt(Offset offset, T val) {
   u32 new_size = offset + sizeof(T);
-  if (new_size > data_.size()) { data_.resize(new_size); }
+  if (new_size > data_.size()) {
+    data_.resize(new_size);
+  }
   memcpy(data_.data() + offset, &val, sizeof(val));
 }
 
-template <typename T> void WABT_VECTORCALL Istream::EmitInternal(T val) {
+template <typename T>
+void WABT_VECTORCALL Istream::EmitInternal(T val) {
   EmitAt(end(), val);
 }
 
-void Istream::Emit(u32 val) { EmitInternal(val); }
+void Istream::Emit(u32 val) {
+  EmitInternal(val);
+}
 
 void Istream::Emit(Opcode::Enum op) {
   EmitInternal(static_cast<SerializedOpcode>(op));
@@ -91,9 +96,12 @@ void Istream::ResolveFixupU32(Offset fixup_offset) {
   EmitAt(fixup_offset, end());
 }
 
-Istream::Offset Istream::end() const { return static_cast<u32>(data_.size()); }
+Istream::Offset Istream::end() const {
+  return static_cast<u32>(data_.size());
+}
 
-template <typename T> T WABT_VECTORCALL Istream::ReadAt(Offset* offset) const {
+template <typename T>
+T WABT_VECTORCALL Istream::ReadAt(Offset* offset) const {
   assert(*offset + sizeof(T) <= data_.size());
   T result;
   memcpy(&result, data_.data() + *offset, sizeof(T));
@@ -786,7 +794,9 @@ void Istream::Disassemble(Stream* stream, Offset from, Offset to) const {
   assert(from <= data_.size() && to <= data_.size() && from <= to);
 
   Offset pc = from;
-  while (pc < to) { pc = Trace(stream, pc, &source); }
+  while (pc < to) {
+    pc = Trace(stream, pc, &source);
+  }
 }
 
 Istream::Offset Istream::Trace(Stream* stream,

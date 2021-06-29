@@ -74,7 +74,8 @@ class BinaryReader {
   Result ReadModule();
 
  private:
-  template <typename T, T BinaryReader::*member> struct ValueRestoreGuard {
+  template <typename T, T BinaryReader::*member>
+  struct ValueRestoreGuard {
     explicit ValueRestoreGuard(BinaryReader* this_)
         : this_(this_), previous_value_(this_->*member) {}
     ~ValueRestoreGuard() { this_->*member = previous_value_; }
@@ -218,7 +219,9 @@ Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode, const char* where) {
   std::vector<uint8_t> bytes = opcode.GetBytes();
   assert(bytes.size() > 0);
 
-  for (uint8_t byte : bytes) { message += StringPrintf(" 0x%x", byte); }
+  for (uint8_t byte : bytes) {
+    message += StringPrintf(" 0x%x", byte);
+  }
 
   PrintError("%s", message.c_str());
   return Result::Error;
@@ -445,7 +448,9 @@ bool BinaryReader::IsConcreteType(Type type) {
 }
 
 bool BinaryReader::IsBlockType(Type type) {
-  if (IsConcreteType(type) || type == Type::Void) { return true; }
+  if (IsConcreteType(type) || type == Type::Void) {
+    return true;
+  }
 
   if (!(options_.features.multi_value_enabled() && type.IsIndex())) {
     return false;
@@ -558,7 +563,9 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   ERROR_IF(is_64, "tables may not be 64-bit");
   ERROR_UNLESS(unknown_flags == 0, "malformed table limits flag: %d", flags);
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
-  if (has_max) { CHECK_RESULT(ReadU32Leb128(&max, "table max elem count")); }
+  if (has_max) {
+    CHECK_RESULT(ReadU32Leb128(&max, "table max elem count"));
+  }
 
   out_elem_limits->has_max = has_max;
   out_elem_limits->initial = initial;
@@ -582,7 +589,9 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
            "memory64 not allowed");
   if (is_64) {
     CHECK_RESULT(ReadU64Leb128(&initial, "memory initial page count"));
-    if (has_max) { CHECK_RESULT(ReadU64Leb128(&max, "memory max page count")); }
+    if (has_max) {
+      CHECK_RESULT(ReadU64Leb128(&max, "memory max page count"));
+    }
   } else {
     uint32_t initial32;
     CHECK_RESULT(ReadU32Leb128(&initial32, "memory initial page count"));
@@ -2696,7 +2705,9 @@ Result BinaryReader::ReadSections() {
     }
 
     if (Failed(section_result)) {
-      if (stop_on_first_error) { return Result::Error; }
+      if (stop_on_first_error) {
+        return Result::Error;
+      }
 
       // If we're continuing after failing to read this section, move the
       // offset to the expected section end. This way we may be able to read
@@ -2704,7 +2715,9 @@ Result BinaryReader::ReadSections() {
       state_.offset = read_end_;
     }
 
-    if (section != BinarySection::Custom) { last_known_section_ = section; }
+    if (section != BinarySection::Custom) {
+      last_known_section_ = section;
+    }
   }
 
   return result;

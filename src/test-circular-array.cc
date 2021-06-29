@@ -53,7 +53,9 @@ struct TestObject {
   }
 
   ~TestObject() {
-    if (!moved) { destruct_count++; }
+    if (!moved) {
+      destruct_count++;
+    }
   }
 
   int data = 0;

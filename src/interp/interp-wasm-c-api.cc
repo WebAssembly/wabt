@@ -88,7 +88,10 @@ struct wasm_externtype_t {
   wasm_externtype_t(const wasm_externtype_t& other) = delete;
   wasm_externtype_t& operator=(const wasm_externtype_t& other) = delete;
 
-  template <typename T> T* As() const { return cast<T>(I.get()); }
+  template <typename T>
+  T* As() const {
+    return cast<T>(I.get());
+  }
 
   std::unique_ptr<ExternType> I;
 
@@ -246,7 +249,10 @@ struct wasm_store_t {
 struct wasm_ref_t {
   wasm_ref_t(RefPtr<Object> ptr) : I(ptr) {}
 
-  template <typename T> T* As() const { return cast<T>(I.get()); }
+  template <typename T>
+  T* As() const {
+    return cast<T>(I.get());
+  }
 
   RefPtr<Object> I;
 };
@@ -501,14 +507,18 @@ static void print_sig(const FuncType& sig) {
   fprintf(stderr, "(");
   bool first = true;
   for (auto Type : sig.params) {
-    if (!first) { fprintf(stderr, ", "); }
+    if (!first) {
+      fprintf(stderr, ", ");
+    }
     first = false;
     fprintf(stderr, "%s", Type.GetName());
   }
   fprintf(stderr, ") -> (");
   first = true;
   for (auto Type : sig.results) {
-    if (!first) { fprintf(stderr, ", "); }
+    if (!first) {
+      fprintf(stderr, ", ");
+    }
     first = false;
     fprintf(stderr, "%s", Type.GetName());
   }
@@ -563,11 +573,15 @@ void wasm_trap_trace(const wasm_trap_t* trap, own wasm_frame_vec_t* out) {
 
 // wasm_config
 
-own wasm_config_t* wasm_config_new() { return new wasm_config_t(); }
+own wasm_config_t* wasm_config_new() {
+  return new wasm_config_t();
+}
 
 // wasm_engine
 
-own wasm_engine_t* wasm_engine_new() { return new wasm_engine_t(); }
+own wasm_engine_t* wasm_engine_new() {
+  return new wasm_engine_t();
+}
 
 own wasm_engine_t* wasm_engine_new_with_config(own wasm_config_t*) {
   assert(false);
@@ -600,7 +614,9 @@ bool wasm_module_validate(wasm_store_t* store, const wasm_byte_vec_t* binary) {
   // TODO: Optimize this; for now it is generating a new module and discarding
   // it. But since this call only needs to validate, it could do much less.
   wasm_module_t* module = wasm_module_new(store, binary);
-  if (module == nullptr) { return false; }
+  if (module == nullptr) {
+    return false;
+  }
   wasm_module_delete(module);
   return true;
 }
@@ -920,8 +936,12 @@ wasm_table_size_t wasm_table_size(const wasm_table_t* table) {
 own wasm_ref_t* wasm_table_get(const wasm_table_t* table,
                                wasm_table_size_t index) {
   Ref ref;
-  if (Failed(table->As<Table>()->Get(index, &ref))) { return nullptr; }
-  if (ref == Ref::Null) { return nullptr; }
+  if (Failed(table->As<Table>()->Get(index, &ref))) {
+    return nullptr;
+  }
+  if (ref == Ref::Null) {
+    return nullptr;
+  }
   return new wasm_ref_t{table->I.store()->UnsafeGet<Object>(ref)};
 }
 
@@ -1072,7 +1092,9 @@ void wasm_val_vec_new(own wasm_val_vec_t* vec,
                       own wasm_val_t const src[]) {
   TRACE0();
   wasm_val_vec_new_uninitialized(vec, size);
-  for (size_t i = 0; i < size; ++i) { vec->data[i] = src[i]; }
+  for (size_t i = 0; i < size; ++i) {
+    vec->data[i] = src[i];
+  }
 }
 
 void wasm_val_vec_copy(own wasm_val_vec_t* out, const wasm_val_vec_t* vec) {
@@ -1085,7 +1107,9 @@ void wasm_val_vec_copy(own wasm_val_vec_t* out, const wasm_val_vec_t* vec) {
 
 void wasm_val_vec_delete(own wasm_val_vec_t* vec) {
   TRACE0();
-  for (size_t i = 0; i < vec->size; ++i) { wasm_val_delete(&vec->data[i]); }
+  for (size_t i = 0; i < vec->size; ++i) {
+    wasm_val_delete(&vec->data[i]);
+  }
   delete[] vec->data;
   vec->size = 0;
 }
@@ -1096,7 +1120,9 @@ void wasm_val_vec_delete(own wasm_val_vec_t* vec) {
                              own wasm_##name##_t* const src[]) {        \
     TRACE0();                                                           \
     wasm_##name##_vec_new_uninitialized(vec, size);                     \
-    for (size_t i = 0; i < size; ++i) { vec->data[i] = src[i]; }        \
+    for (size_t i = 0; i < size; ++i) {                                 \
+      vec->data[i] = src[i];                                            \
+    }                                                                   \
   }                                                                     \
   void wasm_##name##_vec_copy(own wasm_##name##_vec_t* out,             \
                               const wasm_##name##_vec_t* vec) {         \
@@ -1108,7 +1134,9 @@ void wasm_val_vec_delete(own wasm_val_vec_t* vec) {
   }                                                                     \
   void wasm_##name##_vec_delete(wasm_##name##_vec_t* vec) {             \
     TRACE0();                                                           \
-    for (size_t i = 0; i < vec->size; ++i) { delete vec->data[i]; }     \
+    for (size_t i = 0; i < vec->size; ++i) {                            \
+      delete vec->data[i];                                              \
+    }                                                                   \
     delete[] vec->data;                                                 \
     vec->size = 0;                                                      \
   }

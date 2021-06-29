@@ -39,10 +39,18 @@ inline void RenameToIdentifier(std::string& name,
     // but these names are sometimes several lines long, so would be great
     // to trim down. One quick way to do that is to remove anything between
     // nested (), which usually means the parameter list.
-    if (c == '(') { nesting++; }
-    if (c == ')') { nesting--; }
-    if (nesting) { continue; }
-    if (!isalnum(static_cast<unsigned char>(c))) { c = '_'; }
+    if (c == '(') {
+      nesting++;
+    }
+    if (c == ')') {
+      nesting--;
+    }
+    if (nesting) {
+      continue;
+    }
+    if (!isalnum(static_cast<unsigned char>(c))) {
+      c = '_';
+    }
     if (c == '_') {
       if (s.empty()) {
         continue;  // Skip leading.
@@ -55,10 +63,14 @@ inline void RenameToIdentifier(std::string& name,
     if (filter && (c == '_' || read == name.size())) {
       // We found a "word" inside a snake_case identifier.
       auto word_end = s.size();
-      if (c == '_') { word_end--; }
+      if (c == '_') {
+        word_end--;
+      }
       assert(word_end > word_start);
       auto word = string_view(s.c_str() + word_start, word_end - word_start);
-      if (filter->find(word) != filter->end()) { s.resize(word_start); }
+      if (filter->find(word) != filter->end()) {
+        s.resize(word_start);
+      }
       word_start = s.size();
     }
   }
@@ -69,7 +81,9 @@ inline void RenameToIdentifier(std::string& name,
   // easily be hundreds of chars in size), just cut the identifier
   // down, it will be disambiguated below, if needed.
   const size_t max_identifier_length = 100;
-  if (s.size() > max_identifier_length) { s.resize(max_identifier_length); }
+  if (s.size() > max_identifier_length) {
+    s.resize(max_identifier_length);
+  }
   // Remove original binding first, such that it doesn't match with our
   // new name.
   bh.erase(name);
@@ -77,7 +91,9 @@ inline void RenameToIdentifier(std::string& name,
   Index disambiguator = 0;
   auto base_len = s.size();
   for (;;) {
-    if (bh.count(s) == 0) { break; }
+    if (bh.count(s) == 0) {
+      break;
+    }
     disambiguator++;
     s.resize(base_len);
     s += '_';
@@ -114,7 +130,9 @@ void RenameToContents(std::vector<DataSegment*>& segs, BindingHash& bh) {
     }
     s = "d_";
     for (auto c : seg->data) {
-      if (isalnum(c) || c == '_') { s += static_cast<char>(c); }
+      if (isalnum(c) || c == '_') {
+        s += static_cast<char>(c);
+      }
       if (s.size() >= max_content_identifier_size) {
         // We truncate any very long names, since those make for hard to
         // format output. They can be somewhat long though, since data segment
@@ -132,7 +150,9 @@ void RenameToContents(std::vector<DataSegment*>& segs, BindingHash& bh) {
     // GenerateNames do, but if we come up with a clashing name here it is
     // likely a sign of not very meaningful binary data, so it is easier to
     // just keep the original generated name in that case.
-    if (bh.count(s) != 0) { continue; }
+    if (bh.count(s) != 0) {
+      continue;
+    }
     // Remove original entry.
     bh.erase(seg->name);
     seg->name = s;

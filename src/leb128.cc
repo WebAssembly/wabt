@@ -87,13 +87,17 @@ Offset WriteU32Leb128Raw(uint8_t* dest, uint8_t* dest_end, uint32_t value) {
   uint8_t data[MAX_U32_LEB128_BYTES];
   Offset length = 0;
   LEB128_LOOP_UNTIL(value == 0);
-  if (static_cast<Offset>(dest_end - dest) < length) { return 0; }
+  if (static_cast<Offset>(dest_end - dest) < length) {
+    return 0;
+  }
   memcpy(dest, data, length);
   return length;
 }
 
 Offset WriteFixedU32Leb128Raw(uint8_t* data, uint8_t* end, uint32_t value) {
-  if (end - data < MAX_U32_LEB128_BYTES) { return 0; }
+  if (end - data < MAX_U32_LEB128_BYTES) {
+    return 0;
+  }
   data[0] = (value & 0x7f) | 0x80;
   data[1] = ((value >> 7) & 0x7f) | 0x80;
   data[2] = ((value >> 14) & 0x7f) | 0x80;
@@ -149,7 +153,9 @@ void WriteFixedS32Leb128(Stream* stream, uint32_t value, const char* desc) {
   data[3] = ((value >> 21) & 0x7f) | 0x80;
   // The last byte needs to be sign-extended.
   data[4] = ((value >> 28) & 0x0f);
-  if (static_cast<int32_t>(value) < 0) { data[4] |= 0x70; }
+  if (static_cast<int32_t>(value) < 0) {
+    data[4] |= 0x70;
+  }
   stream->WriteData(data, MAX_U32_LEB128_BYTES, desc);
 }
 
@@ -190,7 +196,9 @@ size_t ReadU32Leb128(const uint8_t* p,
     return 4;
   } else if (p + 4 < end && (p[4] & 0x80) == 0) {
     // The top bits set represent values > 32 bits.
-    if (p[4] & 0xf0) { return 0; }
+    if (p[4] & 0xf0) {
+      return 0;
+    }
     *out_value = LEB128_5(uint32_t);
     return 5;
   } else {
@@ -232,7 +240,9 @@ size_t ReadU64Leb128(const uint8_t* p,
     return 9;
   } else if (p + 9 < end && (p[9] & 0x80) == 0) {
     // The top bits set represent values > 32 bits.
-    if (p[9] & 0xf0) { return 0; }
+    if (p[9] & 0xf0) {
+      return 0;
+    }
     *out_value = LEB128_10(uint64_t);
     return 10;
   } else {

@@ -127,7 +127,9 @@ void NameResolver::PushLabel(const std::string& label) {
   labels_.push_back(label);
 }
 
-void NameResolver::PopLabel() { labels_.pop_back(); }
+void NameResolver::PopLabel() {
+  labels_.pop_back();
+}
 
 void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
                                           const char* desc) {
@@ -210,7 +212,9 @@ void NameResolver::ResolveElemSegmentVar(Var* var) {
 
 void NameResolver::ResolveLocalVar(Var* var) {
   if (var->is_name()) {
-    if (!current_func_) { return; }
+    if (!current_func_) {
+      return;
+    }
 
     Index index = current_func_->GetLocalIndex(*var);
     if (index == kInvalidIndex) {
@@ -224,7 +228,9 @@ void NameResolver::ResolveLocalVar(Var* var) {
 }
 
 void NameResolver::ResolveBlockDeclarationVar(BlockDeclaration* decl) {
-  if (decl->has_func_type) { ResolveFuncTypeVar(&decl->type_var); }
+  if (decl->has_func_type) {
+    ResolveFuncTypeVar(&decl->type_var);
+  }
 }
 
 Result NameResolver::BeginBlockExpr(BlockExpr* expr) {
@@ -260,7 +266,8 @@ Result NameResolver::OnBrIfExpr(BrIfExpr* expr) {
 }
 
 Result NameResolver::OnBrTableExpr(BrTableExpr* expr) {
-  for (Var& target : expr->targets) ResolveLabelVar(&target);
+  for (Var& target : expr->targets)
+    ResolveLabelVar(&target);
   ResolveLabelVar(&expr->default_target);
   return Result::Ok;
 }
@@ -271,7 +278,9 @@ Result NameResolver::OnCallExpr(CallExpr* expr) {
 }
 
 Result NameResolver::OnCallIndirectExpr(CallIndirectExpr* expr) {
-  if (expr->decl.has_func_type) { ResolveFuncTypeVar(&expr->decl.type_var); }
+  if (expr->decl.has_func_type) {
+    ResolveFuncTypeVar(&expr->decl.type_var);
+  }
   ResolveTableVar(&expr->table);
   return Result::Ok;
 }
@@ -282,7 +291,9 @@ Result NameResolver::OnReturnCallExpr(ReturnCallExpr* expr) {
 }
 
 Result NameResolver::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
-  if (expr->decl.has_func_type) { ResolveFuncTypeVar(&expr->decl.type_var); }
+  if (expr->decl.has_func_type) {
+    ResolveFuncTypeVar(&expr->decl.type_var);
+  }
   ResolveTableVar(&expr->table);
   return Result::Ok;
 }
@@ -392,7 +403,9 @@ Result NameResolver::EndTryExpr(TryExpr*) {
 }
 
 Result NameResolver::OnCatchExpr(TryExpr*, Catch* catch_) {
-  if (!catch_->IsCatchAll()) { ResolveTagVar(&catch_->var); }
+  if (!catch_->IsCatchAll()) {
+    ResolveTagVar(&catch_->var);
+  }
   return Result::Ok;
 }
 
@@ -415,7 +428,9 @@ Result NameResolver::OnRethrowExpr(RethrowExpr* expr) {
 
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
-  if (func->decl.has_func_type) { ResolveFuncTypeVar(&func->decl.type_var); }
+  if (func->decl.has_func_type) {
+    ResolveFuncTypeVar(&func->decl.type_var);
+  }
 
   func->bindings.FindDuplicates(
       [=](const BindingHash::value_type& a, const BindingHash::value_type& b) {
@@ -447,7 +462,9 @@ void NameResolver::VisitGlobal(Global* global) {
 }
 
 void NameResolver::VisitTag(Tag* tag) {
-  if (tag->decl.has_func_type) { ResolveFuncTypeVar(&tag->decl.type_var); }
+  if (tag->decl.has_func_type) {
+    ResolveFuncTypeVar(&tag->decl.type_var);
+  }
 }
 
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
@@ -475,15 +492,20 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->memory_bindings, "memory");
   CheckDuplicateBindings(&module->tag_bindings, "tag");
 
-  for (Func* func : module->funcs) VisitFunc(func);
-  for (Export* export_ : module->exports) VisitExport(export_);
-  for (Global* global : module->globals) VisitGlobal(global);
-  for (Tag* tag : module->tags) VisitTag(tag);
+  for (Func* func : module->funcs)
+    VisitFunc(func);
+  for (Export* export_ : module->exports)
+    VisitExport(export_);
+  for (Global* global : module->globals)
+    VisitGlobal(global);
+  for (Tag* tag : module->tags)
+    VisitTag(tag);
   for (ElemSegment* elem_segment : module->elem_segments)
     VisitElemSegment(elem_segment);
   for (DataSegment* data_segment : module->data_segments)
     VisitDataSegment(data_segment);
-  for (Var* start : module->starts) ResolveFuncVar(start);
+  for (Var* start : module->starts)
+    ResolveFuncVar(start);
   current_module_ = nullptr;
   return result_;
 }

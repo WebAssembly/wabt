@@ -120,7 +120,9 @@ int ProgramMain(int argc, char** argv) {
         result = ValidateModule(&module, &errors, options);
       }
 
-      if (s_generate_names) { result = GenerateNames(&module); }
+      if (s_generate_names) {
+        result = GenerateNames(&module);
+      }
 
       if (Succeeded(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied

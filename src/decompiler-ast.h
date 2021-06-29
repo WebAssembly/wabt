@@ -88,7 +88,8 @@ struct AST {
   }
 
   ~AST() {
-    if (f) mc.EndFunc();
+    if (f)
+      mc.EndFunc();
   }
 
   // Create a new node, take nargs existing nodes on the exp stack as children.
@@ -103,17 +104,21 @@ struct AST {
     return exp_stack.back();
   }
 
-  template <ExprType T> void PreDecl(const VarExpr<T>& ve) {
+  template <ExprType T>
+  void PreDecl(const VarExpr<T>& ve) {
     // FIXME: this is slow, and would be better to avoid in callers.
     // See https://github.com/WebAssembly/wabt/issues/1565
     // And https://github.com/WebAssembly/wabt/issues/1665
     for (auto& n : predecls) {
-      if (n.u.var->name() == ve.var.name()) { return; }
+      if (n.u.var->name() == ve.var.name()) {
+        return;
+      }
     }
     predecls.emplace_back(NodeType::Decl, ExprType::Nop, nullptr, &ve.var);
   }
 
-  template <ExprType T> void Get(const VarExpr<T>& ve, bool local) {
+  template <ExprType T>
+  void Get(const VarExpr<T>& ve, bool local) {
     if (local) {
       auto ret = vars_defined.insert({ve.var.name(), {cur_block_id, false}});
       if (ret.second) {
@@ -129,7 +134,8 @@ struct AST {
     InsertNode(NodeType::Expr, T, &ve, 0);
   }
 
-  template <ExprType T> void Set(const VarExpr<T>& ve, bool local) {
+  template <ExprType T>
+  void Set(const VarExpr<T>& ve, bool local) {
     // Seen this var before?
     if (local &&
         vars_defined.insert({ve.var.name(), {cur_block_id, false}}).second) {

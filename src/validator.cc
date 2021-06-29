@@ -205,17 +205,25 @@ void ScriptValidator::CheckResultTypes(const Location* loc,
 }
 
 Type Validator::GetDeclarationType(const FuncDeclaration& decl) {
-  if (decl.has_func_type) { return Type(decl.type_var.index()); }
+  if (decl.has_func_type) {
+    return Type(decl.type_var.index());
+  }
   if (decl.sig.param_types.empty()) {
-    if (decl.sig.result_types.empty()) { return Type::Void; }
-    if (decl.sig.result_types.size() == 1) { return decl.sig.result_types[0]; }
+    if (decl.sig.result_types.empty()) {
+      return Type::Void;
+    }
+    if (decl.sig.result_types.size() == 1) {
+      return decl.sig.result_types[0];
+    }
   }
   return Type(current_module_->GetFuncTypeIndex(decl));
 }
 
 Var Validator::GetFuncTypeIndex(const Location& default_loc,
                                 const FuncDeclaration& decl) {
-  if (decl.has_func_type) { return decl.type_var; }
+  if (decl.has_func_type) {
+    return decl.type_var;
+  }
   return Var(current_module_->GetFuncTypeIndex(decl), default_loc);
 }
 

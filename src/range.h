@@ -19,7 +19,8 @@
 
 namespace wabt {
 
-template <typename T> struct Range {
+template <typename T>
+struct Range {
   Range() : start(0), end(0) {}
   Range(T start, T end) : start(start), end(end) {}
   T start;

@@ -84,7 +84,8 @@ struct LoadStoreTracking {
   };
 
   void Track(const Node& n) {
-    for (auto& c : n.children) Track(c);
+    for (auto& c : n.children)
+      Track(c);
     switch (n.etype) {
       case ExprType::Load: {
         auto& le = *cast<LoadExpr>(n.e);
@@ -125,7 +126,9 @@ struct LoadStoreTracking {
     // We want to associate memory ops of a certain offset & size as being
     // relative to a uniquely identifiable pointer, such as a local.
     auto name = AddrExpName(addr_exp);
-    if (name.empty()) { return; }
+    if (name.empty()) {
+      return;
+    }
     auto& var = vars[name];
     auto& access = var.accesses[offset];
     // Check if previous access at this offset (if any) is of same size
@@ -134,7 +137,8 @@ struct LoadStoreTracking {
                              (access.type != type) || (access.align != align)))
       access.is_uniform = false;
     // Also exclude weird alignment accesses from structs.
-    if (!opc.IsNaturallyAligned(align)) access.is_uniform = false;
+    if (!opc.IsNaturallyAligned(align))
+      access.is_uniform = false;
     access.byte_size = byte_size;
     access.type = type;
     access.align = align;
@@ -203,11 +207,14 @@ struct LoadStoreTracking {
 
   std::string GenTypeDecl(const std::string& name) const {
     auto it = vars.find(name);
-    if (it == vars.end()) { return ""; }
+    if (it == vars.end()) {
+      return "";
+    }
     if (it->second.struct_layout) {
       std::string s = "{ ";
       for (auto& access : it->second.accesses) {
-        if (access.second.idx) s += ", ";
+        if (access.second.idx)
+          s += ", ";
         s += IdxToName(access.second.idx);
         s += ':';
         s += GetDecompTypeName(access.second.type);
@@ -226,16 +233,22 @@ struct LoadStoreTracking {
 
   std::string GenAccess(uint64_t offset, const Node& addr_exp) const {
     auto name = AddrExpName(addr_exp);
-    if (name.empty()) { return ""; }
+    if (name.empty()) {
+      return "";
+    }
     auto it = vars.find(name);
-    if (it == vars.end()) { return ""; }
+    if (it == vars.end()) {
+      return "";
+    }
     if (it->second.struct_layout) {
       auto ait = it->second.accesses.find(offset);
       assert(ait != it->second.accesses.end());
       return IdxToName(ait->second.idx);
     }
     // Not a struct, see if it is a typed pointer.
-    if (it->second.same_type != Type::Void) { return "*"; }
+    if (it->second.same_type != Type::Void) {
+      return "*";
+    }
     return "";
   }
 

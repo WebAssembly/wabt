@@ -32,14 +32,18 @@ namespace wabt {
 Stream::Stream(Stream* log_stream)
     : offset_(0), result_(Result::Ok), log_stream_(log_stream) {}
 
-void Stream::AddOffset(ssize_t delta) { offset_ += delta; }
+void Stream::AddOffset(ssize_t delta) {
+  offset_ += delta;
+}
 
 void Stream::WriteDataAt(size_t at,
                          const void* src,
                          size_t size,
                          const char* desc,
                          PrintChars print_chars) {
-  if (Failed(result_)) { return; }
+  if (Failed(result_)) {
+    return;
+  }
   if (log_stream_) {
     log_stream_->WriteMemoryDump(src, size, at, print_chars, nullptr, desc);
   }
@@ -55,7 +59,9 @@ void Stream::WriteData(const void* src,
 }
 
 void Stream::MoveData(size_t dst_offset, size_t src_offset, size_t size) {
-  if (Failed(result_)) { return; }
+  if (Failed(result_)) {
+    return;
+  }
   if (log_stream_) {
     log_stream_->Writef(
         "; move data: [%" PRIzx ", %" PRIzx ") -> [%" PRIzx ", %" PRIzx ")\n",
@@ -65,13 +71,17 @@ void Stream::MoveData(size_t dst_offset, size_t src_offset, size_t size) {
 }
 
 void Stream::Truncate(size_t size) {
-  if (Failed(result_)) { return; }
+  if (Failed(result_)) {
+    return;
+  }
   if (log_stream_) {
     log_stream_->Writef("; truncate to %" PRIzd " (0x%" PRIzx ")\n", size,
                         size);
   }
   result_ = TruncateImpl(size);
-  if (Succeeded(result_) && offset_ > size) { offset_ = size; }
+  if (Succeeded(result_) && offset_ > size) {
+    offset_ = size;
+  }
 }
 
 void Stream::Writef(const char* format, ...) {
@@ -90,7 +100,9 @@ void Stream::WriteMemoryDump(const void* start,
   while (p < end) {
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
-    if (prefix) { Writef("%s", prefix); }
+    if (prefix) {
+      Writef("%s", prefix);
+    }
     Writef("%07" PRIzx ": ", reinterpret_cast<intptr_t>(p) -
                                  reinterpret_cast<intptr_t>(start) + offset);
     while (p < line_end) {
@@ -113,7 +125,9 @@ void Stream::WriteMemoryDump(const void* start,
     }
 
     /* if there are multiple lines, only print the desc on the last one */
-    if (p >= end && desc) { Writef("  ; %s", desc); }
+    if (p >= end && desc) {
+      Writef("  ; %s", desc);
+    }
     WriteChar('\n');
   }
 }
@@ -164,9 +178,13 @@ void MemoryStream::Clear() {
 Result MemoryStream::WriteDataImpl(size_t dst_offset,
                                    const void* src,
                                    size_t size) {
-  if (size == 0) { return Result::Ok; }
+  if (size == 0) {
+    return Result::Ok;
+  }
   size_t end = dst_offset + size;
-  if (end > buf_->data.size()) { buf_->data.resize(end); }
+  if (end > buf_->data.size()) {
+    buf_->data.resize(end);
+  }
   uint8_t* dst = &buf_->data[dst_offset];
   memcpy(dst, src, size);
   return Result::Ok;
@@ -175,11 +193,15 @@ Result MemoryStream::WriteDataImpl(size_t dst_offset,
 Result MemoryStream::MoveDataImpl(size_t dst_offset,
                                   size_t src_offset,
                                   size_t size) {
-  if (size == 0) { return Result::Ok; }
+  if (size == 0) {
+    return Result::Ok;
+  }
   size_t src_end = src_offset + size;
   size_t dst_end = dst_offset + size;
   size_t end = src_end > dst_end ? src_end : dst_end;
-  if (end > buf_->data.size()) { buf_->data.resize(end); }
+  if (end > buf_->data.size()) {
+    buf_->data.resize(end);
+  }
 
   uint8_t* dst = &buf_->data[dst_offset];
   uint8_t* src = &buf_->data[src_offset];
@@ -188,7 +210,9 @@ Result MemoryStream::MoveDataImpl(size_t dst_offset,
 }
 
 Result MemoryStream::TruncateImpl(size_t size) {
-  if (size > buf_->data.size()) { return Result::Error; }
+  if (size > buf_->data.size()) {
+    return Result::Error;
+  }
   buf_->data.resize(size);
   return Result::Ok;
 }
@@ -209,7 +233,9 @@ FileStream::FileStream(string_view filename, Stream* log_stream)
 FileStream::FileStream(FILE* file, Stream* log_stream)
     : Stream(log_stream), file_(file), offset_(0), should_close_(false) {}
 
-FileStream::FileStream(FileStream&& other) { *this = std::move(other); }
+FileStream::FileStream(FileStream&& other) {
+  *this = std::move(other);
+}
 
 FileStream& FileStream::operator=(FileStream&& other) {
   file_ = other.file_;
@@ -223,16 +249,23 @@ FileStream& FileStream::operator=(FileStream&& other) {
 
 FileStream::~FileStream() {
   // We don't want to close existing files (stdout/sterr, for example).
-  if (should_close_) { fclose(file_); }
+  if (should_close_) {
+    fclose(file_);
+  }
 }
 
 void FileStream::Flush() {
-  if (file_) fflush(file_);
+  if (file_)
+    fflush(file_);
 }
 
 Result FileStream::WriteDataImpl(size_t at, const void* data, size_t size) {
-  if (!file_) { return Result::Error; }
-  if (size == 0) { return Result::Ok; }
+  if (!file_) {
+    return Result::Error;
+  }
+  if (size == 0) {
+    return Result::Ok;
+  }
   if (at != offset_) {
     if (fseek(file_, at, SEEK_SET) != 0) {
       ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", size, errno);
@@ -251,15 +284,21 @@ Result FileStream::WriteDataImpl(size_t at, const void* data, size_t size) {
 Result FileStream::MoveDataImpl(size_t dst_offset,
                                 size_t src_offset,
                                 size_t size) {
-  if (!file_) { return Result::Error; }
-  if (size == 0) { return Result::Ok; }
+  if (!file_) {
+    return Result::Error;
+  }
+  if (size == 0) {
+    return Result::Ok;
+  }
   // TODO(binji): implement if needed.
   ERROR0("FileStream::MoveDataImpl not implemented!\n");
   return Result::Error;
 }
 
 Result FileStream::TruncateImpl(size_t size) {
-  if (!file_) { return Result::Error; }
+  if (!file_) {
+    return Result::Error;
+  }
   // TODO(binji): implement if needed.
   ERROR0("FileStream::TruncateImpl not implemented!\n");
   return Result::Error;

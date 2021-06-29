@@ -25,7 +25,9 @@ namespace {
 void assert_string_view_eq(const char* s, string_view sv) {
   size_t len = std::strlen(s);
   ASSERT_EQ(len, sv.size());
-  for (size_t i = 0; i < len; ++i) { ASSERT_EQ(s[i], sv[i]); }
+  for (size_t i = 0; i < len; ++i) {
+    ASSERT_EQ(s[i], sv[i]);
+  }
 }
 
 }  // end anonymous namespace

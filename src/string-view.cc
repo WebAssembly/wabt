@@ -37,9 +37,13 @@ void string_view::swap(string_view& s) noexcept {
   std::swap(size_, s.size_);
 }
 
-string_view::operator std::string() const { return std::string(data_, size_); }
+string_view::operator std::string() const {
+  return std::string(data_, size_);
+}
 
-std::string string_view::to_string() const { return std::string(data_, size_); }
+std::string string_view::to_string() const {
+  return std::string(data_, size_);
+}
 
 constexpr string_view::size_type string_view::max_size() const noexcept {
   return std::numeric_limits<size_type>::max();
@@ -63,7 +67,9 @@ string_view string_view::substr(size_type pos, size_type n) const {
 int string_view::compare(string_view s) const noexcept {
   size_type rlen = std::min(size_, s.size_);
   int result = traits_type::compare(data_, s.data_, rlen);
-  if (result != 0 || size_ == s.size_) { return result; }
+  if (result != 0 || size_ == s.size_) {
+    return result;
+  }
   return size_ < s.size_ ? -1 : 1;
 }
 

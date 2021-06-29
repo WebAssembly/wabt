@@ -102,7 +102,9 @@ static void WriteBufferToFile(string_view filename,
                               const OutputBuffer& buffer) {
   if (s_dump_module) {
     std::unique_ptr<FileStream> stream = FileStream::CreateStdout();
-    if (s_verbose) { stream->Writef(";; dump\n"); }
+    if (s_verbose) {
+      stream->Writef(";; dump\n");
+    }
     if (!buffer.data.empty()) {
       stream->WriteMemoryDump(buffer.data.data(), buffer.data.size());
     }
@@ -128,7 +130,9 @@ int ProgramMain(int argc, char** argv) {
   Result result = ReadFile(s_infile, &file_data);
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
       s_infile, file_data.data(), file_data.size());
-  if (Failed(result)) { WABT_FATAL("unable to read file: %s\n", s_infile); }
+  if (Failed(result)) {
+    WABT_FATAL("unable to read file: %s\n", s_infile);
+  }
 
   Errors errors;
   std::unique_ptr<Module> module;
@@ -146,7 +150,9 @@ int ProgramMain(int argc, char** argv) {
     result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
 
     if (Succeeded(result)) {
-      if (s_outfile.empty()) { s_outfile = DefaultOuputName(s_infile); }
+      if (s_outfile.empty()) {
+        s_outfile = DefaultOuputName(s_infile);
+      }
       WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
     }
   }

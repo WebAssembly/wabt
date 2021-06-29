@@ -76,7 +76,9 @@ void WriteValues(Stream* stream,
   assert(types.size() == values.size());
   for (size_t i = 0; i < values.size(); ++i) {
     WriteValue(stream, TypedValue{types[i], values[i]});
-    if (i != values.size() - 1) { stream->Writef(", "); }
+    if (i != values.size() - 1) {
+      stream->Writef(", ");
+    }
   }
 }
 

@@ -289,7 +289,9 @@ Result SharedValidator::OnElemSegment(const Location& loc,
                                       Var table_var,
                                       SegmentKind kind) {
   Result result = Result::Ok;
-  if (kind == SegmentKind::Active) { result |= CheckTableIndex(table_var); }
+  if (kind == SegmentKind::Active) {
+    result |= CheckTableIndex(table_var);
+  }
   elems_.push_back(ElemType{Type::Void});  // Updated in OnElemSegmentElemType.
   return result;
 }
@@ -344,13 +346,17 @@ Result SharedValidator::OnElemSegmentElemExpr_Other(const Location& loc) {
                     "ref.null or ref.func.");
 }
 
-void SharedValidator::OnDataCount(Index count) { data_segments_ = count; }
+void SharedValidator::OnDataCount(Index count) {
+  data_segments_ = count;
+}
 
 Result SharedValidator::OnDataSegment(const Location& loc,
                                       Var memory_var,
                                       SegmentKind kind) {
   Result result = Result::Ok;
-  if (kind == SegmentKind::Active) { result |= CheckMemoryIndex(memory_var); }
+  if (kind == SegmentKind::Active) {
+    result |= CheckMemoryIndex(memory_var);
+  }
   return result;
 }
 
@@ -419,7 +425,9 @@ Result SharedValidator::CheckIndexWithValue(Var var,
                                             T* out,
                                             const char* desc) {
   Result result = CheckIndex(var, values.size(), desc);
-  if (out) { *out = Succeeded(result) ? values[var.index()] : T{}; }
+  if (out) {
+    *out = Succeeded(result) ? values[var.index()] : T{};
+  }
   return result;
 }
 
@@ -449,7 +457,9 @@ Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
                       sig_var.index());
   }
 
-  if (out) { *out = iter->second; }
+  if (out) {
+    *out = iter->second;
+  }
   return Result::Ok;
 }
 
@@ -547,7 +557,9 @@ Index SharedValidator::GetLocalCount() const {
   return locals_.empty() ? 0 : locals_.back().end;
 }
 
-static bool is_power_of_two(uint32_t x) { return x && ((x & (x - 1)) == 0); }
+static bool is_power_of_two(uint32_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
 
 Result SharedValidator::CheckAlign(const Location& loc,
                                    Address alignment,
