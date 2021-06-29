@@ -38,10 +38,20 @@ const char* GetSectionName(BinarySection sec) {
   }
 }
 
+// clang-format off
 const char* NameSubsectionName[] = {
-    "module", "function", "local",  "label",   "type",
-    "table",  "memory",   "global", "elemseg", "dataseg",
+    "module",
+    "function",
+    "local",
+    "label",
+    "type",
+    "table",
+    "memory",
+    "global",
+    "elemseg",
+    "dataseg",
 };
+// clang-format on
 
 const char* GetNameSectionSubsectionName(NameSectionSubsection subsec) {
   return NameSubsectionName[size_t(subsec)];

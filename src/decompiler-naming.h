@@ -154,11 +154,25 @@ void RenameAll(Module& module) {
   // We also filter common C++ keywords/STL idents that make for huge
   // identifiers.
   // FIXME: this can obviously give bad results if the input is not C++..
+  // clang-format off
   std::set<string_view> filter = {
-      {"const"},    {"std"},   {"allocator"}, {"char"},  {"basic"},
-      {"traits"},   {"wchar"}, {"t"},         {"void"},  {"int"},
-      {"unsigned"}, {"2"},     {"cxxabiv1"},  {"short"}, {"4096ul"},
+      {"const"},
+      {"std"},
+      {"allocator"},
+      {"char"},
+      {"basic"},
+      {"traits"},
+      {"wchar"},
+      {"t"},
+      {"void"},
+      {"int"},
+      {"unsigned"},
+      {"2"},
+      {"cxxabiv1"},
+      {"short"},
+      {"4096ul"},
   };
+  // clang-format on
   RenameToIdentifiers(module.funcs, module.func_bindings, &filter);
   // Also do this for some other kinds of names, but without the keyword
   // substitution.
