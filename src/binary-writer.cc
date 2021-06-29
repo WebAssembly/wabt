@@ -1110,7 +1110,7 @@ void BinaryWriter::WriteGlobalHeader(const Global* global) {
 }
 
 void BinaryWriter::WriteTagType(const Tag* tag) {
-  WriteU32Leb128(stream_, 0, "tag attribute");
+  stream_->WriteU8(0, "tag attribute");
   WriteU32Leb128(stream_, module_->GetFuncTypeIndex(tag->decl),
                  "tag signature index");
 }
