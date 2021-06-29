@@ -55,7 +55,8 @@ Token WastLexer::GetToken(WastParser* parser) {
   while (true) {
     token_start_ = cursor_;
     switch (PeekChar()) {
-      case kEof: return BareToken(TokenType::Eof);
+      case kEof:
+        return BareToken(TokenType::Eof);
 
       case '(':
         if (MatchString("(;")) {
@@ -73,7 +74,9 @@ Token WastLexer::GetToken(WastParser* parser) {
         }
         break;
 
-      case ')': ReadChar(); return BareToken(TokenType::Rpar);
+      case ')':
+        ReadChar();
+        return BareToken(TokenType::Rpar);
 
       case ';':
         if (MatchString(";;")) {
@@ -91,17 +94,22 @@ Token WastLexer::GetToken(WastParser* parser) {
       case ' ':
       case '\t':
       case '\r':
-      case '\n': ReadWhitespace(); continue;
+      case '\n':
+        ReadWhitespace();
+        continue;
 
-      case '"': return GetStringToken(parser);
+      case '"':
+        return GetStringToken(parser);
 
       case '+':
       case '-':
         ReadChar();
         switch (PeekChar()) {
-          case 'i': return GetInfToken();
+          case 'i':
+            return GetInfToken();
 
-          case 'n': return GetNanToken();
+          case 'n':
+            return GetNanToken();
 
           case '0':
             return MatchString("0x") ? GetHexNumberToken(TokenType::Int)
@@ -114,9 +122,11 @@ Token WastLexer::GetToken(WastParser* parser) {
           case '6':
           case '7':
           case '8':
-          case '9': return GetNumberToken(TokenType::Int);
+          case '9':
+            return GetNumberToken(TokenType::Int);
 
-          default: return GetReservedToken();
+          default:
+            return GetReservedToken();
         }
         break;
 
@@ -132,17 +142,23 @@ Token WastLexer::GetToken(WastParser* parser) {
       case '6':
       case '7':
       case '8':
-      case '9': return GetNumberToken(TokenType::Nat);
+      case '9':
+        return GetNumberToken(TokenType::Nat);
 
-      case '$': return GetIdToken();
+      case '$':
+        return GetIdToken();
 
-      case 'a': return GetNameEqNumToken("align=", TokenType::AlignEqNat);
+      case 'a':
+        return GetNameEqNumToken("align=", TokenType::AlignEqNat);
 
-      case 'i': return GetInfToken();
+      case 'i':
+        return GetInfToken();
 
-      case 'n': return GetNanToken();
+      case 'n':
+        return GetNanToken();
 
-      case 'o': return GetNameEqNumToken("offset=", TokenType::OffsetEqNat);
+      case 'o':
+        return GetNameEqNumToken("offset=", TokenType::OffsetEqNat);
 
       default:
         if (IsKeyword(PeekChar())) {
@@ -217,7 +233,9 @@ bool WastLexer::ReadBlockComment(WastParser* parser) {
   int nesting = 1;
   while (true) {
     switch (ReadChar()) {
-      case kEof: ERROR("EOF in block comment"); return false;
+      case kEof:
+        ERROR("EOF in block comment");
+        return false;
 
       case ';':
         if (MatchChar(')') && --nesting == 0) {
@@ -231,7 +249,9 @@ bool WastLexer::ReadBlockComment(WastParser* parser) {
         }
         break;
 
-      case '\n': Newline(); break;
+      case '\n':
+        Newline();
+        break;
     }
   }
 }
@@ -239,9 +259,12 @@ bool WastLexer::ReadBlockComment(WastParser* parser) {
 bool WastLexer::ReadLineComment() {
   while (true) {
     switch (ReadChar()) {
-      case kEof: return false;
+      case kEof:
+        return false;
 
-      case '\n': Newline(); return true;
+      case '\n':
+        Newline();
+        return true;
     }
   }
 }
@@ -251,14 +274,17 @@ void WastLexer::ReadWhitespace() {
     switch (PeekChar()) {
       case ' ':
       case '\t':
-      case '\r': ReadChar(); break;
+      case '\r':
+        ReadChar();
+        break;
 
       case '\n':
         ReadChar();
         Newline();
         break;
 
-      default: return;
+      default:
+        return;
     }
   }
 }
@@ -270,7 +296,8 @@ Token WastLexer::GetStringToken(WastParser* parser) {
   ReadChar();
   while (in_string) {
     switch (ReadChar()) {
-      case kEof: return BareToken(TokenType::Eof);
+      case kEof:
+        return BareToken(TokenType::Eof);
 
       case '\n':
         token_start_ = cursor_ - 1;
@@ -279,7 +306,9 @@ Token WastLexer::GetStringToken(WastParser* parser) {
         Newline();
         continue;
 
-      case '"': in_string = false; break;
+      case '"':
+        in_string = false;
+        break;
 
       case '\\': {
         switch (ReadChar()) {

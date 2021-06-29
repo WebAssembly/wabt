@@ -450,13 +450,20 @@ static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
 
 static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
   switch (type) {
-    case SymbolType::Function: return "func";
-    case SymbolType::Global: return "global";
-    case SymbolType::Data: return "data";
-    case SymbolType::Section: return "section";
-    case SymbolType::Tag: return "tag";
-    case SymbolType::Table: return "table";
-    default: return "<error_symbol_type>";
+    case SymbolType::Function:
+      return "func";
+    case SymbolType::Global:
+      return "global";
+    case SymbolType::Data:
+      return "data";
+    case SymbolType::Section:
+      return "section";
+    case SymbolType::Tag:
+      return "tag";
+    case SymbolType::Table:
+      return "table";
+    default:
+      return "<error_symbol_type>";
   }
 }
 

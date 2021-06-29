@@ -129,7 +129,8 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
              version);
       break;
     }
-    case ObjdumpMode::RawData: break;
+    case ObjdumpMode::RawData:
+      break;
   }
 
   return Result::Ok;
@@ -164,12 +165,18 @@ string_view BinaryReaderObjdumpBase::GetSymbolName(Index symbol_index) const {
     return "<illegal_symbol_index>";
   ObjdumpSymbol& sym = objdump_state_->symtab[symbol_index];
   switch (sym.kind) {
-    case SymbolType::Function: return GetFunctionName(sym.index);
-    case SymbolType::Data: return sym.name;
-    case SymbolType::Global: return GetGlobalName(sym.index);
-    case SymbolType::Section: return GetSectionName(sym.index);
-    case SymbolType::Tag: return GetTagName(sym.index);
-    case SymbolType::Table: return GetTableName(sym.index);
+    case SymbolType::Function:
+      return GetFunctionName(sym.index);
+    case SymbolType::Data:
+      return sym.name;
+    case SymbolType::Global:
+      return GetGlobalName(sym.index);
+    case SymbolType::Section:
+      return GetSectionName(sym.index);
+    case SymbolType::Tag:
+      return GetTagName(sym.index);
+    case SymbolType::Table:
+      return GetTableName(sym.index);
   }
   WABT_UNREACHABLE;
 }
@@ -237,12 +244,17 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
         SetFunctionName(index, name);
         break;
       */
-      case NameSectionSubsection::Global: SetGlobalName(index, name); break;
-      case NameSectionSubsection::Table: SetTableName(index, name); break;
+      case NameSectionSubsection::Global:
+        SetGlobalName(index, name);
+        break;
+      case NameSectionSubsection::Table:
+        SetTableName(index, name);
+        break;
       case NameSectionSubsection::DataSegment:
         SetSegmentName(index, name);
         break;
-      default: break;
+      default:
+        break;
     }
     return Result::Ok;
   }
@@ -588,8 +600,10 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
         case Opcode::Else:
         case Opcode::Catch:
         case Opcode::CatchAll:
-        case Opcode::Unwind: indent_level--;
-        default: break;
+        case Opcode::Unwind:
+          indent_level--;
+        default:
+          break;
       }
       for (int j = 0; j < indent_level; j++) {
         printf("  ");
@@ -1092,7 +1106,8 @@ Result BinaryReaderObjdump::BeginSection(Index section_index,
       }
       break;
     case ObjdumpMode::Prepass:
-    case ObjdumpMode::Disassemble: break;
+    case ObjdumpMode::Disassemble:
+      break;
   }
   return Result::Ok;
 }
@@ -1161,8 +1176,12 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
   }
   printf(") -> ");
   switch (result_count) {
-    case 0: printf("nil"); break;
-    case 1: printf("%s", result_types[0].GetName()); break;
+    case 0:
+      printf("nil");
+      break;
+    case 1:
+      printf("%s", result_types[0].GetName());
+      break;
     default:
       printf("(");
       for (Index i = 0; i < result_count; i++) {
@@ -1535,8 +1554,12 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
 Result BinaryReaderObjdump::InitExprToConstOffset(const InitExpr& expr,
                                                   uint32_t* out_offset) {
   switch (expr.type) {
-    case InitExprType::I32: *out_offset = expr.value.i32; break;
-    case InitExprType::Global: *out_offset = 0; break;
+    case InitExprType::I32:
+      *out_offset = expr.value.i32;
+      break;
+    case InitExprType::Global:
+      *out_offset = 0;
+      break;
     case InitExprType::I64:
     case InitExprType::F32:
     case InitExprType::F64:
@@ -1797,9 +1820,15 @@ Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
   SymbolBinding binding =
       static_cast<SymbolBinding>(flags & WABT_SYMBOL_MASK_BINDING);
   switch (binding) {
-    case SymbolBinding::Global: binding_name = "global"; break;
-    case SymbolBinding::Local: binding_name = "local"; break;
-    case SymbolBinding::Weak: binding_name = "weak"; break;
+    case SymbolBinding::Global:
+      binding_name = "global";
+      break;
+    case SymbolBinding::Local:
+      binding_name = "local";
+      break;
+    case SymbolBinding::Weak:
+      binding_name = "weak";
+      break;
   }
   flags &= ~WABT_SYMBOL_MASK_BINDING;
 
@@ -1807,8 +1836,12 @@ Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
   SymbolVisibility vis =
       static_cast<SymbolVisibility>(flags & WABT_SYMBOL_MASK_VISIBILITY);
   switch (vis) {
-    case SymbolVisibility::Hidden: vis_name = "hidden"; break;
-    case SymbolVisibility::Default: vis_name = "default"; break;
+    case SymbolVisibility::Hidden:
+      vis_name = "hidden";
+      break;
+    case SymbolVisibility::Default:
+      vis_name = "default";
+      break;
   }
   flags &= ~WABT_SYMBOL_MASK_VISIBILITY;
 

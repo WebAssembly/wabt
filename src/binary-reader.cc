@@ -436,14 +436,18 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::I32:
     case Type::I64:
     case Type::F32:
-    case Type::F64: return true;
+    case Type::F64:
+      return true;
 
-    case Type::V128: return options_.features.simd_enabled();
+    case Type::V128:
+      return options_.features.simd_enabled();
 
     case Type::FuncRef:
-    case Type::ExternRef: return options_.features.reference_types_enabled();
+    case Type::ExternRef:
+      return options_.features.reference_types_enabled();
 
-    default: return false;
+    default:
+      return false;
   }
 }
 
@@ -526,9 +530,11 @@ Result BinaryReader::ReadInitExpr(Index index, Type required) {
       break;
     }
 
-    case Opcode::End: return Result::Ok;
+    case Opcode::End:
+      return Result::Ok;
 
-    default: return ReportUnexpectedOpcode(opcode, "in initializer expression");
+    default:
+      return ReportUnexpectedOpcode(opcode, "in initializer expression");
   }
 
   if (required == Type::I32 && opcode != Opcode::I32Const &&
@@ -1745,7 +1751,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK(OnOpcodeBare);
         break;
 
-      default: return ReportUnexpectedOpcode(opcode);
+      default:
+        return ReportUnexpectedOpcode(opcode);
     }
   }
   ERROR_UNLESS(state_.offset == end_offset,
@@ -1935,7 +1942,8 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::GlobalIndexI32:
       case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
-      case RelocType::TableNumberLEB: break;
+      case RelocType::TableNumberLEB:
+        break;
 
       default:
         PrintError("unknown reloc type: %s", GetRelocTypeName(type));
@@ -2025,7 +2033,8 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                 case SymbolType::Table:
                   CALLBACK(OnTableSymbol, i, flags, name, index);
                   break;
-                default: WABT_UNREACHABLE;
+                default:
+                  WABT_UNREACHABLE;
               }
               break;
             }
@@ -2695,7 +2704,8 @@ Result BinaryReader::ReadSections() {
         section_result = ReadDataCountSection(section_size);
         result |= section_result;
         break;
-      case BinarySection::Invalid: WABT_UNREACHABLE;
+      case BinarySection::Invalid:
+        WABT_UNREACHABLE;
     }
 
     if (Succeeded(section_result) && state_.offset != read_end_) {

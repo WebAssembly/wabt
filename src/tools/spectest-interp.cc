@@ -174,13 +174,21 @@ struct ExpectedValue {
 
 int LaneCountFromType(Type type) {
   switch (type) {
-    case Type::I8: return 16;
-    case Type::I16: return 8;
-    case Type::I32: return 4;
-    case Type::I64: return 2;
-    case Type::F32: return 4;
-    case Type::F64: return 2;
-    default: assert(false); return 0;
+    case Type::I8:
+      return 16;
+    case Type::I16:
+      return 8;
+    case Type::I32:
+      return 4;
+    case Type::I64:
+      return 2;
+    case Type::F32:
+      return 4;
+    case Type::F64:
+      return 2;
+    default:
+      assert(false);
+      return 0;
   }
 }
 
@@ -226,7 +234,8 @@ ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
         result.value.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
         break;
 
-      default: WABT_UNREACHABLE;
+      default:
+        WABT_UNREACHABLE;
     }
   }
   return result;
@@ -244,13 +253,21 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
 
   for (int lane = 0; lane < lane_count; ++lane) {
     switch (lane_type) {
-      case Type::I8: result.value.Set<u32>(vec.u8(lane)); break;
+      case Type::I8:
+        result.value.Set<u32>(vec.u8(lane));
+        break;
 
-      case Type::I16: result.value.Set<u32>(vec.u16(lane)); break;
+      case Type::I16:
+        result.value.Set<u32>(vec.u16(lane));
+        break;
 
-      case Type::I32: result.value.Set<u32>(vec.u32(lane)); break;
+      case Type::I32:
+        result.value.Set<u32>(vec.u32(lane));
+        break;
 
-      case Type::I64: result.value.Set<u64>(vec.u64(lane)); break;
+      case Type::I64:
+        result.value.Set<u64>(vec.u64(lane));
+        break;
 
       case Type::F32:
         result.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
@@ -260,7 +277,8 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
         result.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
         break;
 
-      default: WABT_UNREACHABLE;
+      default:
+        WABT_UNREACHABLE;
     }
   }
   return result;
@@ -414,14 +432,18 @@ int JSONParser::ReadChar() {
 void JSONParser::SkipWhitespace() {
   while (1) {
     switch (ReadChar()) {
-      case -1: return;
+      case -1:
+        return;
 
       case ' ':
       case '\t':
       case '\n':
-      case '\r': break;
+      case '\r':
+        break;
 
-      default: PutbackChar(); return;
+      default:
+        PutbackChar();
+        return;
     }
   }
 }
@@ -1332,7 +1354,8 @@ ActionResult CommandRunner::RunAction(int line_number,
       break;
     }
 
-    default: WABT_UNREACHABLE;
+    default:
+      WABT_UNREACHABLE;
   }
 
   return result;
@@ -1614,7 +1637,8 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
     case Type::F32:
     case Type::F64:
       switch (ev.nan[0]) {
-        case ExpectedNan::None: return TypedValueToString(ev.value);
+        case ExpectedNan::None:
+          return TypedValueToString(ev.value);
 
         case ExpectedNan::Arithmetic:
           return StringPrintf("%s:nan:arithmetic", ev.value.type.GetName());
@@ -1633,7 +1657,8 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
       return result;
     }
 
-    default: break;
+    default:
+      break;
   }
   return TypedValueToString(ev.value);
 }
@@ -1721,7 +1746,8 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
       break;
 
-    default: WABT_UNREACHABLE;
+    default:
+      WABT_UNREACHABLE;
   }
 
   if (!ok && print_error) {

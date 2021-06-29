@@ -75,10 +75,12 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::Unwind:
     case Opcode::Delegate:
     case Opcode::Throw:
-    case Opcode::Rethrow: return features.exceptions_enabled();
+    case Opcode::Rethrow:
+      return features.exceptions_enabled();
 
     case Opcode::ReturnCallIndirect:
-    case Opcode::ReturnCall: return features.tail_call_enabled();
+    case Opcode::ReturnCall:
+      return features.tail_call_enabled();
 
     case Opcode::I32TruncSatF32S:
     case Opcode::I32TruncSatF32U:
@@ -87,13 +89,15 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64TruncSatF32S:
     case Opcode::I64TruncSatF32U:
     case Opcode::I64TruncSatF64S:
-    case Opcode::I64TruncSatF64U: return features.sat_float_to_int_enabled();
+    case Opcode::I64TruncSatF64U:
+      return features.sat_float_to_int_enabled();
 
     case Opcode::I32Extend8S:
     case Opcode::I32Extend16S:
     case Opcode::I64Extend8S:
     case Opcode::I64Extend16S:
-    case Opcode::I64Extend32S: return features.sign_extension_enabled();
+    case Opcode::I64Extend32S:
+      return features.sign_extension_enabled();
 
     case Opcode::MemoryAtomicNotify:
     case Opcode::MemoryAtomicWait32:
@@ -161,7 +165,8 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I32AtomicRmw16CmpxchgU:
     case Opcode::I64AtomicRmw8CmpxchgU:
     case Opcode::I64AtomicRmw16CmpxchgU:
-    case Opcode::I64AtomicRmw32CmpxchgU: return features.threads_enabled();
+    case Opcode::I64AtomicRmw32CmpxchgU:
+      return features.threads_enabled();
 
     case Opcode::V128Const:
     case Opcode::V128Load:
@@ -318,7 +323,8 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::V128Store64Lane:
     case Opcode::I8X16Abs:
     case Opcode::I16X8Abs:
-    case Opcode::I32X4Abs: return features.simd_enabled();
+    case Opcode::I32X4Abs:
+      return features.simd_enabled();
 
     case Opcode::MemoryInit:
     case Opcode::DataDrop:
@@ -326,23 +332,27 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::MemoryFill:
     case Opcode::TableInit:
     case Opcode::ElemDrop:
-    case Opcode::TableCopy: return features.bulk_memory_enabled();
+    case Opcode::TableCopy:
+      return features.bulk_memory_enabled();
 
     case Opcode::TableGet:
     case Opcode::TableSet:
     case Opcode::TableGrow:
     case Opcode::TableSize:
     case Opcode::RefNull:
-    case Opcode::RefIsNull: return features.reference_types_enabled();
+    case Opcode::RefIsNull:
+      return features.reference_types_enabled();
 
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:
     case Opcode::InterpBrUnless:
     case Opcode::InterpCallImport:
     case Opcode::InterpData:
-    case Opcode::InterpDropKeep: return false;
+    case Opcode::InterpDropKeep:
+      return false;
 
-    default: return true;
+    default:
+      return true;
   }
 }
 
@@ -352,25 +362,34 @@ uint32_t Opcode::GetSimdLaneCount() const {
     case Opcode::I8X16ExtractLaneU:
     case Opcode::I8X16ReplaceLane:
     case Opcode::V128Load8Lane:
-    case Opcode::V128Store8Lane: return 16; break;
+    case Opcode::V128Store8Lane:
+      return 16;
+      break;
     case Opcode::I16X8ExtractLaneS:
     case Opcode::I16X8ExtractLaneU:
     case Opcode::I16X8ReplaceLane:
     case Opcode::V128Load16Lane:
-    case Opcode::V128Store16Lane: return 8; break;
+    case Opcode::V128Store16Lane:
+      return 8;
+      break;
     case Opcode::F32X4ExtractLane:
     case Opcode::F32X4ReplaceLane:
     case Opcode::I32X4ExtractLane:
     case Opcode::I32X4ReplaceLane:
     case Opcode::V128Load32Lane:
-    case Opcode::V128Store32Lane: return 4; break;
+    case Opcode::V128Store32Lane:
+      return 4;
+      break;
     case Opcode::F64X2ExtractLane:
     case Opcode::F64X2ReplaceLane:
     case Opcode::I64X2ExtractLane:
     case Opcode::I64X2ReplaceLane:
     case Opcode::V128Load64Lane:
-    case Opcode::V128Store64Lane: return 2; break;
-    default: WABT_UNREACHABLE;
+    case Opcode::V128Store64Lane:
+      return 2;
+      break;
+    default:
+      WABT_UNREACHABLE;
   }
 }
 

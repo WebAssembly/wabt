@@ -299,7 +299,8 @@ class SymbolTable {
         case ExternalKind::Table:
           exported_tables.insert(module->GetTableIndex(export_->var));
           break;
-        case ExternalKind::Memory: break;
+        case ExternalKind::Memory:
+          break;
         case ExternalKind::Global:
           exported_globals.insert(module->GetGlobalIndex(export_->var));
           break;
@@ -567,9 +568,12 @@ Index BinaryWriter::GetTagVarDepth(const Var* var) {
 
 Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
   switch (reloc_type) {
-    case RelocType::FuncIndexLEB: return symtab_.FunctionSymbolIndex(index);
-    case RelocType::TableNumberLEB: return symtab_.TableSymbolIndex(index);
-    case RelocType::GlobalIndexLEB: return symtab_.GlobalSymbolIndex(index);
+    case RelocType::FuncIndexLEB:
+      return symtab_.FunctionSymbolIndex(index);
+    case RelocType::TableNumberLEB:
+      return symtab_.TableSymbolIndex(index);
+    case RelocType::GlobalIndexLEB:
+      return symtab_.GlobalSymbolIndex(index);
     case RelocType::TypeIndexLEB:
       // Type indexes don't create entries in the symbol table; instead their
       // index is used directly.
@@ -792,14 +796,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
           WriteOpcode(stream_, Opcode::V128Const);
           stream_->WriteU128(const_.vec128(), "v128 literal");
           break;
-        default: assert(0);
+        default:
+          assert(0);
       }
       break;
     }
     case ExprType::Convert:
       WriteOpcode(stream_, cast<ConvertExpr>(expr)->opcode);
       break;
-    case ExprType::Drop: WriteOpcode(stream_, Opcode::Drop); break;
+    case ExprType::Drop:
+      WriteOpcode(stream_, Opcode::Drop);
+      break;
     case ExprType::GlobalGet: {
       Index index = module_->GetGlobalIndex(cast<GlobalGetExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::GlobalGet);
@@ -950,14 +957,20 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteType(stream_, cast<RefNullExpr>(expr)->type, "ref.null type");
       break;
     }
-    case ExprType::RefIsNull: WriteOpcode(stream_, Opcode::RefIsNull); break;
-    case ExprType::Nop: WriteOpcode(stream_, Opcode::Nop); break;
+    case ExprType::RefIsNull:
+      WriteOpcode(stream_, Opcode::RefIsNull);
+      break;
+    case ExprType::Nop:
+      WriteOpcode(stream_, Opcode::Nop);
+      break;
     case ExprType::Rethrow:
       WriteOpcode(stream_, Opcode::Rethrow);
       WriteU32Leb128(stream_, GetLabelVarDepth(&cast<RethrowExpr>(expr)->var),
                      "rethrow depth");
       break;
-    case ExprType::Return: WriteOpcode(stream_, Opcode::Return); break;
+    case ExprType::Return:
+      WriteOpcode(stream_, Opcode::Return);
+      break;
     case ExprType::Select: {
       auto* select_expr = cast<SelectExpr>(expr);
       if (select_expr->result_type.empty()) {
@@ -1143,7 +1156,8 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
       case RelocType::GlobalIndexLEB:
       case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
-      case RelocType::TableNumberLEB: break;
+      case RelocType::TableNumberLEB:
+        break;
       default:
         fprintf(stderr, "warning: unsupported relocation type: %s\n",
                 GetRelocTypeName(reloc.type));

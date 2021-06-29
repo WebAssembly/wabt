@@ -220,13 +220,16 @@ void WatWriter::WriteIndent() {
 
 void WatWriter::WriteNextChar() {
   switch (next_char_) {
-    case NextChar::Space: stream_->WriteChar(' '); break;
+    case NextChar::Space:
+      stream_->WriteChar(' ');
+      break;
     case NextChar::Newline:
     case NextChar::ForceNewline:
       stream_->WriteChar('\n');
       WriteIndent();
       break;
-    case NextChar::None: break;
+    case NextChar::None:
+      break;
   }
   next_char_ = NextChar::None;
 }
@@ -483,7 +486,9 @@ void WatWriter::WriteConst(const Const& const_) {
       break;
     }
 
-    default: assert(0); break;
+    default:
+      assert(0);
+      break;
   }
 }
 
@@ -1469,7 +1474,9 @@ void WatWriter::WriteImport(const Import& import) {
       WriteCloseSpace();
       break;
 
-    case ExternalKind::Tag: WriteTag(cast<TagImport>(&import)->tag); break;
+    case ExternalKind::Tag:
+      WriteTag(cast<TagImport>(&import)->tag);
+      break;
   }
 
   if (options_.inline_import) {
@@ -1617,7 +1624,9 @@ void WatWriter::BuildInlineExportMap() {
     }
 
     switch (export_->kind) {
-      case ExternalKind::Func: index = module.GetFuncIndex(export_->var); break;
+      case ExternalKind::Func:
+        index = module.GetFuncIndex(export_->var);
+        break;
 
       case ExternalKind::Table:
         index = module.GetTableIndex(export_->var);
@@ -1631,7 +1640,9 @@ void WatWriter::BuildInlineExportMap() {
         index = module.GetGlobalIndex(export_->var);
         break;
 
-      case ExternalKind::Tag: index = module.GetTagIndex(export_->var); break;
+      case ExternalKind::Tag:
+        index = module.GetTagIndex(export_->var);
+        break;
     }
 
     if (index != kInvalidIndex) {
@@ -1658,9 +1669,13 @@ void WatWriter::WriteInlineExports(ExternalKind kind, Index index) {
 bool WatWriter::IsInlineExport(const Export& export_) {
   Index index;
   switch (export_.kind) {
-    case ExternalKind::Func: index = module.GetFuncIndex(export_.var); break;
+    case ExternalKind::Func:
+      index = module.GetFuncIndex(export_.var);
+      break;
 
-    case ExternalKind::Table: index = module.GetTableIndex(export_.var); break;
+    case ExternalKind::Table:
+      index = module.GetTableIndex(export_.var);
+      break;
 
     case ExternalKind::Memory:
       index = module.GetMemoryIndex(export_.var);
@@ -1670,7 +1685,9 @@ bool WatWriter::IsInlineExport(const Export& export_) {
       index = module.GetGlobalIndex(export_.var);
       break;
 
-    case ExternalKind::Tag: index = module.GetTagIndex(export_.var); break;
+    case ExternalKind::Tag:
+      index = module.GetTagIndex(export_.var);
+      break;
   }
 
   return inline_export_map_.find(std::make_pair(export_.kind, index)) !=

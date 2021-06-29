@@ -435,15 +435,18 @@ Result FloatParser<T>::Parse(LiteralType literal_type,
 #endif
   switch (literal_type) {
     case LiteralType::Int:
-    case LiteralType::Float: return ParseFloat(s, end, out_bits);
+    case LiteralType::Float:
+      return ParseFloat(s, end, out_bits);
 
-    case LiteralType::Hexfloat: return ParseHex(s, end, out_bits);
+    case LiteralType::Hexfloat:
+      return ParseHex(s, end, out_bits);
 
     case LiteralType::Infinity:
       ParseInfinity(s, end, out_bits);
       return Result::Ok;
 
-    case LiteralType::Nan: return ParseNan(s, end, out_bits);
+    case LiteralType::Nan:
+      return ParseNan(s, end, out_bits);
   }
 
   WABT_UNREACHABLE;

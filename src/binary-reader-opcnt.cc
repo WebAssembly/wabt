@@ -81,7 +81,8 @@ void OpcodeInfo::Write(Stream& stream) {
   stream.Writef("%s", opcode_.GetName());
 
   switch (kind_) {
-    case Kind::Bare: break;
+    case Kind::Bare:
+      break;
 
     case Kind::Uint32:
       stream.Writef(" %u (0x%x)", *GetData<uint32_t>(), *GetData<uint32_t>());
@@ -92,7 +93,9 @@ void OpcodeInfo::Write(Stream& stream) {
                     *GetData<uint64_t>());
       break;
 
-    case Kind::Index: stream.Writef(" %" PRIindex, *GetData<Index>()); break;
+    case Kind::Index:
+      stream.Writef(" %" PRIindex, *GetData<Index>());
+      break;
 
     case Kind::Float32: {
       stream.Writef(" %g", *GetData<float>());

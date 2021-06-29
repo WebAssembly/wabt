@@ -445,15 +445,25 @@ void NameResolver::VisitFunc(Func* func) {
 
 void NameResolver::VisitExport(Export* export_) {
   switch (export_->kind) {
-    case ExternalKind::Func: ResolveFuncVar(&export_->var); break;
+    case ExternalKind::Func:
+      ResolveFuncVar(&export_->var);
+      break;
 
-    case ExternalKind::Table: ResolveTableVar(&export_->var); break;
+    case ExternalKind::Table:
+      ResolveTableVar(&export_->var);
+      break;
 
-    case ExternalKind::Memory: ResolveMemoryVar(&export_->var); break;
+    case ExternalKind::Memory:
+      ResolveMemoryVar(&export_->var);
+      break;
 
-    case ExternalKind::Global: ResolveGlobalVar(&export_->var); break;
+    case ExternalKind::Global:
+      ResolveGlobalVar(&export_->var);
+      break;
 
-    case ExternalKind::Tag: ResolveTagVar(&export_->var); break;
+    case ExternalKind::Tag:
+      ResolveTagVar(&export_->var);
+      break;
   }
 }
 

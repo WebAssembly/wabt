@@ -71,29 +71,47 @@ class Type {
 
   const char* GetName() const {
     switch (enum_) {
-      case Type::I32: return "i32";
-      case Type::I64: return "i64";
-      case Type::F32: return "f32";
-      case Type::F64: return "f64";
-      case Type::V128: return "v128";
-      case Type::I8: return "i8";
-      case Type::I16: return "i16";
-      case Type::FuncRef: return "funcref";
-      case Type::Func: return "func";
-      case Type::Void: return "void";
-      case Type::Any: return "any";
-      case Type::ExternRef: return "externref";
-      default: return "<type_index>";
+      case Type::I32:
+        return "i32";
+      case Type::I64:
+        return "i64";
+      case Type::F32:
+        return "f32";
+      case Type::F64:
+        return "f64";
+      case Type::V128:
+        return "v128";
+      case Type::I8:
+        return "i8";
+      case Type::I16:
+        return "i16";
+      case Type::FuncRef:
+        return "funcref";
+      case Type::Func:
+        return "func";
+      case Type::Void:
+        return "void";
+      case Type::Any:
+        return "any";
+      case Type::ExternRef:
+        return "externref";
+      default:
+        return "<type_index>";
     }
   }
 
   const char* GetRefKindName() const {
     switch (enum_) {
-      case Type::FuncRef: return "func";
-      case Type::ExternRef: return "extern";
-      case Type::Struct: return "struct";
-      case Type::Array: return "array";
-      default: return "<invalid>";
+      case Type::FuncRef:
+        return "func";
+      case Type::ExternRef:
+        return "extern";
+      case Type::Struct:
+        return "struct";
+      case Type::Array:
+        return "array";
+      default:
+        return "<invalid>";
     }
   }
 
@@ -119,7 +137,8 @@ class Type {
   TypeVector GetInlineVector() const {
     assert(!IsIndex());
     switch (enum_) {
-      case Type::Void: return TypeVector();
+      case Type::Void:
+        return TypeVector();
 
       case Type::I32:
       case Type::I64:
@@ -127,9 +146,11 @@ class Type {
       case Type::F64:
       case Type::V128:
       case Type::FuncRef:
-      case Type::ExternRef: return TypeVector(this, this + 1);
+      case Type::ExternRef:
+        return TypeVector(this, this + 1);
 
-      default: WABT_UNREACHABLE;
+      default:
+        WABT_UNREACHABLE;
     }
   }
 

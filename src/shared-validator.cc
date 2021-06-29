@@ -256,15 +256,25 @@ Result SharedValidator::OnExport(const Location& loc,
   export_names_.insert(name_str);
 
   switch (kind) {
-    case ExternalKind::Func: result |= CheckFuncIndex(item_var); break;
+    case ExternalKind::Func:
+      result |= CheckFuncIndex(item_var);
+      break;
 
-    case ExternalKind::Table: result |= CheckTableIndex(item_var); break;
+    case ExternalKind::Table:
+      result |= CheckTableIndex(item_var);
+      break;
 
-    case ExternalKind::Memory: result |= CheckMemoryIndex(item_var); break;
+    case ExternalKind::Memory:
+      result |= CheckMemoryIndex(item_var);
+      break;
 
-    case ExternalKind::Global: result |= CheckGlobalIndex(item_var); break;
+    case ExternalKind::Global:
+      result |= CheckGlobalIndex(item_var);
+      break;
 
-    case ExternalKind::Tag: result |= CheckTagIndex(item_var); break;
+    case ExternalKind::Tag:
+      result |= CheckTagIndex(item_var);
+      break;
   }
   return result;
 }

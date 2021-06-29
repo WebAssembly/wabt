@@ -601,7 +601,9 @@ Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
           validator_.OnGlobalInitExpr_RefFunc(loc, Var(init_expr_.index_)));
       break;
 
-    default: CHECK_RESULT(validator_.OnGlobalInitExpr_Other(loc)); break;
+    default:
+      CHECK_RESULT(validator_.OnGlobalInitExpr_Other(loc));
+      break;
   }
 
   GlobalDesc& global = module_.globals.back();
@@ -669,11 +671,21 @@ Result BinaryReaderInterp::OnExport(Index index,
 
   std::unique_ptr<ExternType> type;
   switch (kind) {
-    case ExternalKind::Func: type = func_types_[item_index].Clone(); break;
-    case ExternalKind::Table: type = table_types_[item_index].Clone(); break;
-    case ExternalKind::Memory: type = memory_types_[item_index].Clone(); break;
-    case ExternalKind::Global: type = global_types_[item_index].Clone(); break;
-    case ExternalKind::Tag: type = tag_types_[item_index].Clone(); break;
+    case ExternalKind::Func:
+      type = func_types_[item_index].Clone();
+      break;
+    case ExternalKind::Table:
+      type = table_types_[item_index].Clone();
+      break;
+    case ExternalKind::Memory:
+      type = memory_types_[item_index].Clone();
+      break;
+    case ExternalKind::Global:
+      type = global_types_[item_index].Clone();
+      break;
+    case ExternalKind::Tag:
+      type = tag_types_[item_index].Clone();
+      break;
   }
   module_.exports.push_back(
       ExportDesc{ExportType(name.to_string(), std::move(type)), item_index});
@@ -717,7 +729,9 @@ Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
           loc, Var(init_expr_.index_)));
       break;
 
-    default: CHECK_RESULT(validator_.OnElemSegmentInitExpr_Other(loc)); break;
+    default:
+      CHECK_RESULT(validator_.OnElemSegmentInitExpr_Other(loc));
+      break;
   }
 
   ElemDesc& elem = module_.elems.back();
@@ -776,7 +790,9 @@ Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
           loc, Var(init_expr_.index_)));
       break;
 
-    default: CHECK_RESULT(validator_.OnDataSegmentInitExpr_Other(loc)); break;
+    default:
+      CHECK_RESULT(validator_.OnDataSegmentInitExpr_Other(loc));
+      break;
   }
 
   DataDesc& data = module_.datas.back();

@@ -807,7 +807,9 @@ Istream::Offset Istream::Trace(Stream* stream,
   stream->Writef("%s| %s", source->Header(start).c_str(), instr.op.GetName());
 
   switch (instr.kind) {
-    case InstrKind::Imm_0_Op_0: stream->Writef("\n"); break;
+    case InstrKind::Imm_0_Op_0:
+      stream->Writef("\n");
+      break;
 
     case InstrKind::Imm_0_Op_1:
       stream->Writef(" %s\n", source->Pick(1, instr).c_str());
@@ -895,15 +897,21 @@ Istream::Offset Istream::Trace(Stream* stream,
                      instr.imm_u32x2_u8.idx);
       break;
 
-    case InstrKind::Imm_I32_Op_0: stream->Writef(" %u\n", instr.imm_u32); break;
+    case InstrKind::Imm_I32_Op_0:
+      stream->Writef(" %u\n", instr.imm_u32);
+      break;
 
     case InstrKind::Imm_I64_Op_0:
       stream->Writef(" %" PRIu64 "\n", instr.imm_u64);
       break;
 
-    case InstrKind::Imm_F32_Op_0: stream->Writef(" %g\n", instr.imm_f32); break;
+    case InstrKind::Imm_F32_Op_0:
+      stream->Writef(" %g\n", instr.imm_f32);
+      break;
 
-    case InstrKind::Imm_F64_Op_0: stream->Writef(" %g\n", instr.imm_f64); break;
+    case InstrKind::Imm_F64_Op_0:
+      stream->Writef(" %g\n", instr.imm_f64);
+      break;
 
     case InstrKind::Imm_I32_I32_Op_0:
       stream->Writef(" $%u $%u\n", instr.imm_u32x2.fst, instr.imm_u32x2.snd);

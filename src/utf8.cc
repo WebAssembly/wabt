@@ -62,9 +62,12 @@ bool IsValidUtf8(const char* s, size_t s_length) {
     }
 
     switch (length) {
-      case 0: return false;
+      case 0:
+        return false;
 
-      case 1: p++; break;
+      case 1:
+        p++;
+        break;
 
       case 2:
         p++;

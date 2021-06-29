@@ -400,7 +400,9 @@ struct Decompiler {
       case NodeType::Expr:
         // We're going to fall thru to the second switch to deal with ExprType.
         break;
-      case NodeType::Uninitialized: assert(false); break;
+      case NodeType::Uninitialized:
+        assert(false);
+        break;
     }
     // Existing ExprTypes.
     switch (n.etype) {
@@ -421,8 +423,10 @@ struct Decompiler {
             double d = Bitcast<double>(c.f64_bits());
             return Value{{to_string(d)}, Precedence::Atomic};
           }
-          case Type::V128: return Value{{"V128"}, Precedence::Atomic};  // FIXME
-          default: WABT_UNREACHABLE;
+          case Type::V128:
+            return Value{{"V128"}, Precedence::Atomic};  // FIXME
+          default:
+            WABT_UNREACHABLE;
         }
       }
       case ExprType::LocalGet: {
@@ -595,7 +599,9 @@ struct Decompiler {
         std::string name;
         auto precedence = Precedence::Atomic;
         switch (n.etype) {
-          case ExprType::Call: name = cast<CallExpr>(n.e)->var.name(); break;
+          case ExprType::Call:
+            name = cast<CallExpr>(n.e)->var.name();
+            break;
           case ExprType::ReturnCall:
             name = "return_call " + cast<ReturnCallExpr>(n.e)->var.name();
             precedence = Precedence::None;
@@ -614,16 +620,30 @@ struct Decompiler {
             // leave it as a function call.
             name = "select_if";
             break;
-          case ExprType::MemoryGrow: name = "memory_grow"; break;
-          case ExprType::MemorySize: name = "memory_size"; break;
-          case ExprType::MemoryCopy: name = "memory_copy"; break;
-          case ExprType::MemoryFill: name = "memory_fill"; break;
-          case ExprType::RefIsNull: name = "is_null"; break;
-          case ExprType::CallIndirect: name = "call_indirect"; break;
+          case ExprType::MemoryGrow:
+            name = "memory_grow";
+            break;
+          case ExprType::MemorySize:
+            name = "memory_size";
+            break;
+          case ExprType::MemoryCopy:
+            name = "memory_copy";
+            break;
+          case ExprType::MemoryFill:
+            name = "memory_fill";
+            break;
+          case ExprType::RefIsNull:
+            name = "is_null";
+            break;
+          case ExprType::CallIndirect:
+            name = "call_indirect";
+            break;
           case ExprType::ReturnCallIndirect:
             name = "return_call call_indirect";
             break;
-          default: name = GetExprTypeName(n.etype); break;
+          default:
+            name = GetExprTypeName(n.etype);
+            break;
         }
         return WrapNAry(args, name + "(", ")", precedence);
       }

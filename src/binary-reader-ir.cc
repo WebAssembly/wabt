@@ -823,7 +823,8 @@ Result BinaryReaderIR::OnEndExpr() {
 
     case LabelType::Func:
     case LabelType::Catch:
-    case LabelType::Unwind: break;
+    case LabelType::Unwind:
+      break;
   }
 
   return PopLabel();
@@ -1391,13 +1392,20 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Local:
     case NameSectionSubsection::Module:
     case NameSectionSubsection::Label:
-    case NameSectionSubsection::Type: break;
-    case NameSectionSubsection::Global: SetGlobalName(index, name); break;
-    case NameSectionSubsection::Table: SetTableName(index, name); break;
+    case NameSectionSubsection::Type:
+      break;
+    case NameSectionSubsection::Global:
+      SetGlobalName(index, name);
+      break;
+    case NameSectionSubsection::Table:
+      SetTableName(index, name);
+      break;
     case NameSectionSubsection::DataSegment:
       SetDataSegmentName(index, name);
       break;
-    case NameSectionSubsection::Memory: SetMemoryName(index, name); break;
+    case NameSectionSubsection::Memory:
+      SetMemoryName(index, name);
+      break;
     case NameSectionSubsection::ElemSegment:
       SetElemSegmentName(index, name);
       break;

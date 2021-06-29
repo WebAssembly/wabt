@@ -409,6 +409,6 @@ T WABT_VECTORCALL SaturatingRoundingQMul(T lhs, T rhs) {
 }  // namespace interp
 }  // namespace wabt
 
-// clang-format off
+// clang-format on
 
 #endif  // WABT_INTERP_MATH_H_

@@ -108,13 +108,20 @@ struct Const {
 
   int lane_count() const {
     switch (lane_type()) {
-      case Type::I8: return 16;
-      case Type::I16: return 8;
-      case Type::I32: return 4;
-      case Type::I64: return 2;
-      case Type::F32: return 4;
-      case Type::F64: return 2;
-      default: WABT_UNREACHABLE;
+      case Type::I8:
+        return 16;
+      case Type::I16:
+        return 8;
+      case Type::I32:
+        return 4;
+      case Type::I64:
+        return 2;
+      case Type::F32:
+        return 4;
+      case Type::F64:
+        return 2;
+      default:
+        WABT_UNREACHABLE;
     }
   }
 

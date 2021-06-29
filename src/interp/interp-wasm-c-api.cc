@@ -185,7 +185,8 @@ std::unique_ptr<wasm_externtype_t> wasm_externtype_t::New(
     case ExternKind::Global:
       return MakeUnique<wasm_globaltype_t>(*cast<GlobalType>(ptr.get()));
 
-    case ExternKind::Tag: break;
+    case ExternKind::Tag:
+      break;
   }
 
   assert(false);
@@ -322,36 +323,56 @@ struct wasm_instance_t : wasm_ref_t {
 // Type conversion utilities
 static ValueType ToWabtValueType(wasm_valkind_t kind) {
   switch (kind) {
-    case WASM_I32: return ValueType::I32;
-    case WASM_I64: return ValueType::I64;
-    case WASM_F32: return ValueType::F32;
-    case WASM_F64: return ValueType::F64;
-    case WASM_ANYREF: return ValueType::ExternRef;
-    case WASM_FUNCREF: return ValueType::FuncRef;
-    default: TRACE("unexpected wasm_valkind_t: %d", kind); WABT_UNREACHABLE;
+    case WASM_I32:
+      return ValueType::I32;
+    case WASM_I64:
+      return ValueType::I64;
+    case WASM_F32:
+      return ValueType::F32;
+    case WASM_F64:
+      return ValueType::F64;
+    case WASM_ANYREF:
+      return ValueType::ExternRef;
+    case WASM_FUNCREF:
+      return ValueType::FuncRef;
+    default:
+      TRACE("unexpected wasm_valkind_t: %d", kind);
+      WABT_UNREACHABLE;
   }
   WABT_UNREACHABLE;
 }
 
 static wasm_valkind_t FromWabtValueType(ValueType type) {
   switch (type) {
-    case ValueType::I32: return WASM_I32;
-    case ValueType::I64: return WASM_I64;
-    case ValueType::F32: return WASM_F32;
-    case ValueType::F64: return WASM_F64;
-    case ValueType::ExternRef: return WASM_ANYREF;
-    case ValueType::FuncRef: return WASM_FUNCREF;
-    default: WABT_UNREACHABLE;
+    case ValueType::I32:
+      return WASM_I32;
+    case ValueType::I64:
+      return WASM_I64;
+    case ValueType::F32:
+      return WASM_F32;
+    case ValueType::F64:
+      return WASM_F64;
+    case ValueType::ExternRef:
+      return WASM_ANYREF;
+    case ValueType::FuncRef:
+      return WASM_FUNCREF;
+    default:
+      WABT_UNREACHABLE;
   }
 }
 
 static wasm_externkind_t FromWabtExternKind(ExternKind kind) {
   switch (kind) {
-    case ExternalKind::Func: return WASM_EXTERN_FUNC;
-    case ExternalKind::Global: return WASM_EXTERN_GLOBAL;
-    case ExternalKind::Table: return WASM_EXTERN_TABLE;
-    case ExternalKind::Memory: return WASM_EXTERN_MEMORY;
-    case ExternalKind::Tag: WABT_UNREACHABLE;
+    case ExternalKind::Func:
+      return WASM_EXTERN_FUNC;
+    case ExternalKind::Global:
+      return WASM_EXTERN_GLOBAL;
+    case ExternalKind::Table:
+      return WASM_EXTERN_TABLE;
+    case ExternalKind::Memory:
+      return WASM_EXTERN_MEMORY;
+    case ExternalKind::Tag:
+      WABT_UNREACHABLE;
   }
   WABT_UNREACHABLE;
 }
@@ -386,15 +407,25 @@ static TypedValue ToWabtValue(const wasm_val_t& value) {
   TypedValue out;
   out.type = ToWabtValueType(value.kind);
   switch (value.kind) {
-    case WASM_I32: out.value.Set(value.of.i32); break;
-    case WASM_I64: out.value.Set(value.of.i64); break;
-    case WASM_F32: out.value.Set(value.of.f32); break;
-    case WASM_F64: out.value.Set(value.of.f64); break;
+    case WASM_I32:
+      out.value.Set(value.of.i32);
+      break;
+    case WASM_I64:
+      out.value.Set(value.of.i64);
+      break;
+    case WASM_F32:
+      out.value.Set(value.of.f32);
+      break;
+    case WASM_F64:
+      out.value.Set(value.of.f64);
+      break;
     case WASM_ANYREF:
     case WASM_FUNCREF:
       out.value.Set(value.of.ref ? value.of.ref->I->self() : Ref::Null);
       break;
-    default: TRACE("unexpected wasm type: %d", value.kind); assert(false);
+    default:
+      TRACE("unexpected wasm type: %d", value.kind);
+      assert(false);
   }
   TRACE("-> %s", TypedValueToString(out).c_str());
   return out;

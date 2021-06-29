@@ -148,17 +148,23 @@ Index Module::GetElemSegmentIndex(const Var& var) const {
 
 bool Module::IsImport(ExternalKind kind, const Var& var) const {
   switch (kind) {
-    case ExternalKind::Func: return GetFuncIndex(var) < num_func_imports;
+    case ExternalKind::Func:
+      return GetFuncIndex(var) < num_func_imports;
 
-    case ExternalKind::Global: return GetGlobalIndex(var) < num_global_imports;
+    case ExternalKind::Global:
+      return GetGlobalIndex(var) < num_global_imports;
 
-    case ExternalKind::Memory: return GetMemoryIndex(var) < num_memory_imports;
+    case ExternalKind::Memory:
+      return GetMemoryIndex(var) < num_memory_imports;
 
-    case ExternalKind::Table: return GetTableIndex(var) < num_table_imports;
+    case ExternalKind::Table:
+      return GetTableIndex(var) < num_table_imports;
 
-    case ExternalKind::Tag: return GetTagIndex(var) < num_tag_imports;
+    case ExternalKind::Tag:
+      return GetTagIndex(var) < num_tag_imports;
 
-    default: return false;
+    default:
+      return false;
   }
 }
 
@@ -648,9 +654,13 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
       break;
     }
 
-    case SegmentKind::Passive: flags |= SegPassive; break;
+    case SegmentKind::Passive:
+      flags |= SegPassive;
+      break;
 
-    case SegmentKind::Declared: flags |= SegDeclared; break;
+    case SegmentKind::Declared:
+      flags |= SegDeclared;
+      break;
   }
 
   all_ref_func = all_ref_func &&

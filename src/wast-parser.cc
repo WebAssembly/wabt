@@ -58,12 +58,24 @@ void RemoveEscapes(string_view text, OutputIter dest) {
     if (*src == '\\') {
       src++;
       switch (*src) {
-        case 'n': *dest++ = '\n'; break;
-        case 'r': *dest++ = '\r'; break;
-        case 't': *dest++ = '\t'; break;
-        case '\\': *dest++ = '\\'; break;
-        case '\'': *dest++ = '\''; break;
-        case '\"': *dest++ = '\"'; break;
+        case 'n':
+          *dest++ = '\n';
+          break;
+        case 'r':
+          *dest++ = '\r';
+          break;
+        case 't':
+          *dest++ = '\t';
+          break;
+        case '\\':
+          *dest++ = '\\';
+          break;
+        case '\'':
+          *dest++ = '\'';
+          break;
+        case '\"':
+          *dest++ = '\"';
+          break;
         default: {
           // The string should be validated already, so we know this is a hex
           // sequence.
@@ -150,8 +162,10 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::SimdLaneOp:
     case TokenType::SimdLoadLane:
     case TokenType::SimdStoreLane:
-    case TokenType::SimdShuffleOp: return true;
-    default: return false;
+    case TokenType::SimdShuffleOp:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -160,8 +174,10 @@ bool IsBlockInstr(TokenType token_type) {
     case TokenType::Block:
     case TokenType::Loop:
     case TokenType::If:
-    case TokenType::Try: return true;
-    default: return false;
+    case TokenType::Try:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -197,8 +213,10 @@ bool IsModuleField(TokenTypePair pair) {
     case TokenType::Import:
     case TokenType::Memory:
     case TokenType::Start:
-    case TokenType::Table: return true;
-    default: return false;
+    case TokenType::Table:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -219,8 +237,10 @@ bool IsCommand(TokenTypePair pair) {
     case TokenType::Input:
     case TokenType::Module:
     case TokenType::Output:
-    case TokenType::Register: return true;
-    default: return false;
+    case TokenType::Register:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -498,11 +518,16 @@ TokenType WastParser::Peek(size_t n) {
         cur = lexer_->GetToken(this);
         switch (cur.token_type()) {
           case TokenType::Lpar:
-          case TokenType::LparAnn: indent++; break;
+          case TokenType::LparAnn:
+            indent++;
+            break;
 
-          case TokenType::Rpar: indent--; break;
+          case TokenType::Rpar:
+            indent--;
+            break;
 
-          default: break;
+          default:
+            break;
         }
       }
     }
@@ -784,12 +809,16 @@ Result WastParser::ParseValueType(Type* out_type) {
   Type type = token.type();
   bool is_enabled;
   switch (type) {
-    case Type::V128: is_enabled = options_->features.simd_enabled(); break;
+    case Type::V128:
+      is_enabled = options_->features.simd_enabled();
+      break;
     case Type::FuncRef:
     case Type::ExternRef:
       is_enabled = options_->features.reference_types_enabled();
       break;
-    default: is_enabled = true; break;
+    default:
+      is_enabled = true;
+      break;
   }
 
   if (!is_enabled) {
@@ -1047,17 +1076,28 @@ Result WastParser::ParseModuleFieldList(Module* module) {
 Result WastParser::ParseModuleField(Module* module) {
   WABT_TRACE(ParseModuleField);
   switch (Peek(1)) {
-    case TokenType::Data: return ParseDataModuleField(module);
-    case TokenType::Elem: return ParseElemModuleField(module);
-    case TokenType::Tag: return ParseTagModuleField(module);
-    case TokenType::Export: return ParseExportModuleField(module);
-    case TokenType::Func: return ParseFuncModuleField(module);
-    case TokenType::Type: return ParseTypeModuleField(module);
-    case TokenType::Global: return ParseGlobalModuleField(module);
-    case TokenType::Import: return ParseImportModuleField(module);
-    case TokenType::Memory: return ParseMemoryModuleField(module);
-    case TokenType::Start: return ParseStartModuleField(module);
-    case TokenType::Table: return ParseTableModuleField(module);
+    case TokenType::Data:
+      return ParseDataModuleField(module);
+    case TokenType::Elem:
+      return ParseElemModuleField(module);
+    case TokenType::Tag:
+      return ParseTagModuleField(module);
+    case TokenType::Export:
+      return ParseExportModuleField(module);
+    case TokenType::Func:
+      return ParseFuncModuleField(module);
+    case TokenType::Type:
+      return ParseTypeModuleField(module);
+    case TokenType::Global:
+      return ParseGlobalModuleField(module);
+    case TokenType::Import:
+      return ParseImportModuleField(module);
+    case TokenType::Memory:
+      return ParseMemoryModuleField(module);
+    case TokenType::Start:
+      return ParseStartModuleField(module);
+    case TokenType::Table:
+      return ParseTableModuleField(module);
     default:
       assert(
           !"ParseModuleField should only be called if IsModuleField() is true");
@@ -1416,7 +1456,8 @@ Result WastParser::ParseImportModuleField(Module* module) {
       break;
     }
 
-    default: return ErrorExpected({"an external kind"});
+    default:
+      return ErrorExpected({"an external kind"});
   }
 
   field->import->module_name = module_name;
@@ -1565,12 +1606,23 @@ Result WastParser::ParseExportDesc(Export* export_) {
   WABT_TRACE(ParseExportDesc);
   EXPECT(Lpar);
   switch (Peek()) {
-    case TokenType::Func: export_->kind = ExternalKind::Func; break;
-    case TokenType::Table: export_->kind = ExternalKind::Table; break;
-    case TokenType::Memory: export_->kind = ExternalKind::Memory; break;
-    case TokenType::Global: export_->kind = ExternalKind::Global; break;
-    case TokenType::Tag: export_->kind = ExternalKind::Tag; break;
-    default: return ErrorExpected({"an external kind"});
+    case TokenType::Func:
+      export_->kind = ExternalKind::Func;
+      break;
+    case TokenType::Table:
+      export_->kind = ExternalKind::Table;
+      break;
+    case TokenType::Memory:
+      export_->kind = ExternalKind::Memory;
+      break;
+    case TokenType::Global:
+      export_->kind = ExternalKind::Global;
+      break;
+    case TokenType::Tag:
+      export_->kind = ExternalKind::Tag;
+      break;
+    default:
+      return ErrorExpected({"an external kind"});
   }
   Consume();
   CHECK_RESULT(ParseVar(&export_->var));
@@ -2324,9 +2376,14 @@ Result WastParser::ParseExpectedNan(ExpectedNan* expected) {
   WABT_TRACE(ParseExpectedNan);
   TokenType token_type = Peek();
   switch (token_type) {
-    case TokenType::NanArithmetic: *expected = ExpectedNan::Arithmetic; break;
-    case TokenType::NanCanonical: *expected = ExpectedNan::Canonical; break;
-    default: return Result::Error;
+    case TokenType::NanArithmetic:
+      *expected = ExpectedNan::Arithmetic;
+      break;
+    case TokenType::NanCanonical:
+      *expected = ExpectedNan::Canonical;
+      break;
+    default:
+      return Result::Error;
   }
   Consume();
   return Result::Ok;
@@ -2378,8 +2435,10 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
         // OK.
         break;
       case TokenType::NanArithmetic:
-      case TokenType::NanCanonical: break;
-      default: return ErrorExpected({"a numeric literal"}, "123, -45, 6.7e8");
+      case TokenType::NanCanonical:
+        break;
+      default:
+        return ErrorExpected({"a numeric literal"}, "123, -45, 6.7e8");
     }
   }
 
@@ -2403,9 +2462,13 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
       break;
     }
 
-    case Opcode::F32Const: result = ParseF32(const_, const_type); break;
+    case Opcode::F32Const:
+      result = ParseF32(const_, const_type);
+      break;
 
-    case Opcode::F64Const: result = ParseF64(const_, const_type); break;
+    case Opcode::F64Const:
+      result = ParseF64(const_, const_type);
+      break;
 
     case Opcode::V128Const:
       ErrorUnlessOpcodeEnabled(opcode_token);
@@ -2456,7 +2519,8 @@ Result WastParser::ParseExternref(Const* const_) {
       end = sv.end();
       break;
     }
-    default: return ErrorExpected({"a numeric literal"}, "123");
+    default:
+      return ErrorExpected({"a numeric literal"}, "123");
   }
 
   uint64_t ref_bits;
@@ -2482,7 +2546,9 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
     Consume();
     Const const_;
     switch (Peek()) {
-      case TokenType::Const: CHECK_RESULT(ParseConst(&const_, type)); break;
+      case TokenType::Const:
+        CHECK_RESULT(ParseConst(&const_, type));
+        break;
       case TokenType::RefNull: {
         auto token = Consume();
         Type type;
@@ -2499,8 +2565,12 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         const_.set_funcref();
         break;
       }
-      case TokenType::RefExtern: CHECK_RESULT(ParseExternref(&const_)); break;
-      default: assert(!"unreachable"); return Result::Error;
+      case TokenType::RefExtern:
+        CHECK_RESULT(ParseExternref(&const_));
+        break;
+      default:
+        assert(!"unreachable");
+        return Result::Error;
     }
     EXPECT(Rpar);
     consts->push_back(const_);
@@ -2881,23 +2951,30 @@ Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
     case TokenType::AssertMalformed:
       return ParseAssertMalformedCommand(out_command);
 
-    case TokenType::AssertReturn: return ParseAssertReturnCommand(out_command);
+    case TokenType::AssertReturn:
+      return ParseAssertReturnCommand(out_command);
 
-    case TokenType::AssertTrap: return ParseAssertTrapCommand(out_command);
+    case TokenType::AssertTrap:
+      return ParseAssertTrapCommand(out_command);
 
     case TokenType::AssertUnlinkable:
       return ParseAssertUnlinkableCommand(out_command);
 
     case TokenType::Get:
-    case TokenType::Invoke: return ParseActionCommand(out_command);
+    case TokenType::Invoke:
+      return ParseActionCommand(out_command);
 
-    case TokenType::Module: return ParseModuleCommand(script, out_command);
+    case TokenType::Module:
+      return ParseModuleCommand(script, out_command);
 
-    case TokenType::Register: return ParseRegisterCommand(out_command);
+    case TokenType::Register:
+      return ParseRegisterCommand(out_command);
 
-    case TokenType::Input: return ParseInputCommand(out_command);
+    case TokenType::Input:
+      return ParseInputCommand(out_command);
 
-    case TokenType::Output: return ParseOutputCommand(out_command);
+    case TokenType::Output:
+      return ParseOutputCommand(out_command);
 
     default:
       assert(!"ParseCommand should only be called when IsCommand() is true");
@@ -3100,7 +3177,8 @@ Result WastParser::ParseAction(ActionPtr* out_action) {
       break;
     }
 
-    default: return ErrorExpected({"invoke", "get"});
+    default:
+      return ErrorExpected({"invoke", "get"});
   }
   EXPECT(Rpar);
   return Result::Ok;

@@ -282,7 +282,9 @@ void OptionParser::PrintHelp() {
   for (size_t i = 0; i < arguments_.size(); ++i) {
     Argument& argument = arguments_[i];
     switch (argument.count) {
-      case ArgumentCount::One: printf(" %s", argument.name.c_str()); break;
+      case ArgumentCount::One:
+        printf(" %s", argument.name.c_str());
+        break;
 
       case ArgumentCount::OneOrMore:
         printf(" %s+", argument.name.c_str());
