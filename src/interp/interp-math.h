@@ -66,66 +66,32 @@ T WABT_VECTORCALL CanonNaN(T val) {
 
 template <typename T> T ShiftMask(T val) { return val & (sizeof(T) * 8 - 1); }
 
+// clang-format off
 template <typename T> bool WABT_VECTORCALL IntEqz(T val) { return val == 0; }
-template <typename T> bool WABT_VECTORCALL Eq(T lhs, T rhs) {
-  return lhs == rhs;
-}
-template <typename T> bool WABT_VECTORCALL Ne(T lhs, T rhs) {
-  return lhs != rhs;
-}
-template <typename T> bool WABT_VECTORCALL Lt(T lhs, T rhs) {
-  return lhs < rhs;
-}
-template <typename T> bool WABT_VECTORCALL Le(T lhs, T rhs) {
-  return lhs <= rhs;
-}
-template <typename T> bool WABT_VECTORCALL Gt(T lhs, T rhs) {
-  return lhs > rhs;
-}
-template <typename T> bool WABT_VECTORCALL Ge(T lhs, T rhs) {
-  return lhs >= rhs;
-}
+template <typename T> bool WABT_VECTORCALL Eq(T lhs, T rhs) { return lhs == rhs; }
+template <typename T> bool WABT_VECTORCALL Ne(T lhs, T rhs) { return lhs != rhs; }
+template <typename T> bool WABT_VECTORCALL Lt(T lhs, T rhs) { return lhs < rhs; }
+template <typename T> bool WABT_VECTORCALL Le(T lhs, T rhs) { return lhs <= rhs; }
+template <typename T> bool WABT_VECTORCALL Gt(T lhs, T rhs) { return lhs > rhs; }
+template <typename T> bool WABT_VECTORCALL Ge(T lhs, T rhs) { return lhs >= rhs; }
 template <typename T> T WABT_VECTORCALL IntClz(T val) { return Clz(val); }
 template <typename T> T WABT_VECTORCALL IntCtz(T val) { return Ctz(val); }
-template <typename T> T WABT_VECTORCALL IntPopcnt(T val) {
-  return Popcount(val);
-}
+template <typename T> T WABT_VECTORCALL IntPopcnt(T val) { return Popcount(val); }
 template <typename T> T WABT_VECTORCALL IntNot(T val) { return ~val; }
 template <typename T> T WABT_VECTORCALL IntNeg(T val) { return ~val + 1; }
-template <typename T> T WABT_VECTORCALL Add(T lhs, T rhs) {
-  return CanonNaN(lhs + rhs);
-}
-template <typename T> T WABT_VECTORCALL Sub(T lhs, T rhs) {
-  return CanonNaN(lhs - rhs);
-}
-template <typename T> T WABT_VECTORCALL IntAnd(T lhs, T rhs) {
-  return lhs & rhs;
-}
-template <typename T> T WABT_VECTORCALL IntOr(T lhs, T rhs) {
-  return lhs | rhs;
-}
-template <typename T> T WABT_VECTORCALL IntXor(T lhs, T rhs) {
-  return lhs ^ rhs;
-}
-template <typename T> T WABT_VECTORCALL IntShl(T lhs, T rhs) {
-  return lhs << ShiftMask(rhs);
-}
-template <typename T> T WABT_VECTORCALL IntShr(T lhs, T rhs) {
-  return lhs >> ShiftMask(rhs);
-}
-template <typename T> T WABT_VECTORCALL IntMin(T lhs, T rhs) {
-  return std::min(lhs, rhs);
-}
-template <typename T> T WABT_VECTORCALL IntMax(T lhs, T rhs) {
-  return std::max(lhs, rhs);
-}
-template <typename T> T WABT_VECTORCALL IntAndNot(T lhs, T rhs) {
-  return lhs & ~rhs;
-}
-template <typename T> T WABT_VECTORCALL IntAvgr(T lhs, T rhs) {
-  return (lhs + rhs + 1) / 2;
-}
+template <typename T> T WABT_VECTORCALL Add(T lhs, T rhs) { return CanonNaN(lhs + rhs); }
+template <typename T> T WABT_VECTORCALL Sub(T lhs, T rhs) { return CanonNaN(lhs - rhs); }
+template <typename T> T WABT_VECTORCALL IntAnd(T lhs, T rhs) { return lhs & rhs; }
+template <typename T> T WABT_VECTORCALL IntOr(T lhs, T rhs) { return lhs | rhs; }
+template <typename T> T WABT_VECTORCALL IntXor(T lhs, T rhs) { return lhs ^ rhs; }
+template <typename T> T WABT_VECTORCALL IntShl(T lhs, T rhs) { return lhs << ShiftMask(rhs); }
+template <typename T> T WABT_VECTORCALL IntShr(T lhs, T rhs) { return lhs >> ShiftMask(rhs); }
+template <typename T> T WABT_VECTORCALL IntMin(T lhs, T rhs) { return std::min(lhs, rhs); }
+template <typename T> T WABT_VECTORCALL IntMax(T lhs, T rhs) { return std::max(lhs, rhs); }
+template <typename T> T WABT_VECTORCALL IntAndNot(T lhs, T rhs) { return lhs & ~rhs; }
+template <typename T> T WABT_VECTORCALL IntAvgr(T lhs, T rhs) { return (lhs + rhs + 1) / 2; }
 template <typename T> T WABT_VECTORCALL Xchg(T lhs, T rhs) { return rhs; }
+// clang-format on
 
 // This is a wrapping absolute value function, so a negative number that is not
 // representable as a positive number will be unchanged (e.g. abs(-128) = 128).
@@ -163,30 +129,14 @@ template <typename T> struct Mask { using Type = T; };
 template <> struct Mask<f32> { using Type = u32; };
 template <> struct Mask<f64> { using Type = u64; };
 
-template <typename T>
-typename Mask<T>::Type WABT_VECTORCALL EqMask(T lhs, T rhs) {
-  return lhs == rhs ? -1 : 0;
-}
-template <typename T>
-typename Mask<T>::Type WABT_VECTORCALL NeMask(T lhs, T rhs) {
-  return lhs != rhs ? -1 : 0;
-}
-template <typename T>
-typename Mask<T>::Type WABT_VECTORCALL LtMask(T lhs, T rhs) {
-  return lhs < rhs ? -1 : 0;
-}
-template <typename T>
-typename Mask<T>::Type WABT_VECTORCALL LeMask(T lhs, T rhs) {
-  return lhs <= rhs ? -1 : 0;
-}
-template <typename T>
-typename Mask<T>::Type WABT_VECTORCALL GtMask(T lhs, T rhs) {
-  return lhs > rhs ? -1 : 0;
-}
-template <typename T>
-typename Mask<T>::Type WABT_VECTORCALL GeMask(T lhs, T rhs) {
-  return lhs >= rhs ? -1 : 0;
-}
+// clang-format off
+template <typename T> typename Mask<T>::Type WABT_VECTORCALL EqMask(T lhs, T rhs) { return lhs == rhs ? -1 : 0; }
+template <typename T> typename Mask<T>::Type WABT_VECTORCALL NeMask(T lhs, T rhs) { return lhs != rhs ? -1 : 0; }
+template <typename T> typename Mask<T>::Type WABT_VECTORCALL LtMask(T lhs, T rhs) { return lhs < rhs ? -1 : 0; }
+template <typename T> typename Mask<T>::Type WABT_VECTORCALL LeMask(T lhs, T rhs) { return lhs <= rhs ? -1 : 0; }
+template <typename T> typename Mask<T>::Type WABT_VECTORCALL GtMask(T lhs, T rhs) { return lhs > rhs ? -1 : 0; }
+template <typename T> typename Mask<T>::Type WABT_VECTORCALL GeMask(T lhs, T rhs) { return lhs >= rhs ? -1 : 0; }
+// clang-format on
 
 template <typename T> T WABT_VECTORCALL IntRotl(T lhs, T rhs) {
   return (lhs << ShiftMask(rhs)) | (lhs >> ShiftMask<T>(0 - rhs));
@@ -287,22 +237,14 @@ template <typename T> T WABT_VECTORCALL FloatCopysign(T lhs, T rhs) {
 #else
 #endif
 
+// clang-format off
 template <typename T> T WABT_VECTORCALL FloatNeg(T val) { return -val; }
-template <typename T> T WABT_VECTORCALL FloatCeil(T val) {
-  return CanonNaN(std::ceil(val));
-}
-template <typename T> T WABT_VECTORCALL FloatFloor(T val) {
-  return CanonNaN(std::floor(val));
-}
-template <typename T> T WABT_VECTORCALL FloatTrunc(T val) {
-  return CanonNaN(std::trunc(val));
-}
-template <typename T> T WABT_VECTORCALL FloatNearest(T val) {
-  return CanonNaN(std::nearbyint(val));
-}
-template <typename T> T WABT_VECTORCALL FloatSqrt(T val) {
-  return CanonNaN(std::sqrt(val));
-}
+template <typename T> T WABT_VECTORCALL FloatCeil(T val) { return CanonNaN(std::ceil(val)); }
+template <typename T> T WABT_VECTORCALL FloatFloor(T val) { return CanonNaN(std::floor(val)); }
+template <typename T> T WABT_VECTORCALL FloatTrunc(T val) { return CanonNaN(std::trunc(val)); }
+template <typename T> T WABT_VECTORCALL FloatNearest(T val) { return CanonNaN(std::nearbyint(val)); }
+template <typename T> T WABT_VECTORCALL FloatSqrt(T val) { return CanonNaN(std::sqrt(val)); }
+// clang-format on
 
 template <typename T> T WABT_VECTORCALL FloatDiv(T lhs, T rhs) {
   // IEE754 specifies what should happen when dividing a float by zero, but
@@ -345,33 +287,17 @@ template <typename T> T WABT_VECTORCALL FloatPMax(T lhs, T rhs) {
   return std::max(lhs, rhs);
 }
 
-template <typename R, typename T> bool WABT_VECTORCALL CanConvert(T val) {
-  return true;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<s32, f32>(f32 val) {
-  return val >= -2147483648.f && val < 2147483648.f;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<s32, f64>(f64 val) {
-  return val > -2147483649. && val < 2147483648.;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<u32, f32>(f32 val) {
-  return val > -1.f && val < 4294967296.f;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<u32, f64>(f64 val) {
-  return val > -1. && val < 4294967296.;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<s64, f32>(f32 val) {
-  return val >= -9223372036854775808.f && val < 9223372036854775808.f;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<s64, f64>(f64 val) {
-  return val >= -9223372036854775808. && val < 9223372036854775808.;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<u64, f32>(f32 val) {
-  return val > -1.f && val < 18446744073709551616.f;
-}
-template <> inline bool WABT_VECTORCALL CanConvert<u64, f64>(f64 val) {
-  return val > -1. && val < 18446744073709551616.;
-}
+// clang-format off
+template <typename R, typename T> bool WABT_VECTORCALL CanConvert(T val) { return true; }
+template <> inline bool WABT_VECTORCALL CanConvert<s32, f32>(f32 val) { return val >= -2147483648.f && val < 2147483648.f; }
+template <> inline bool WABT_VECTORCALL CanConvert<s32, f64>(f64 val) { return val > -2147483649. && val < 2147483648.; }
+template <> inline bool WABT_VECTORCALL CanConvert<u32, f32>(f32 val) { return val > -1.f && val < 4294967296.f; }
+template <> inline bool WABT_VECTORCALL CanConvert<u32, f64>(f64 val) { return val > -1. && val < 4294967296.; }
+template <> inline bool WABT_VECTORCALL CanConvert<s64, f32>(f32 val) { return val >= -9223372036854775808.f && val < 9223372036854775808.f; }
+template <> inline bool WABT_VECTORCALL CanConvert<s64, f64>(f64 val) { return val >= -9223372036854775808. && val < 9223372036854775808.; }
+template <> inline bool WABT_VECTORCALL CanConvert<u64, f32>(f32 val) { return val > -1.f && val < 18446744073709551616.f; }
+template <> inline bool WABT_VECTORCALL CanConvert<u64, f64>(f64 val) { return val > -1. && val < 18446744073709551616.; }
+// clang-format on
 
 template <typename R, typename T> R WABT_VECTORCALL Convert(T val) {
   assert((CanConvert<R, T>(val)));

@@ -347,183 +347,56 @@ inline bool TypesMatch(ValueType expected, ValueType actual) {
 }
 
 //// Value ////
-inline Value WABT_VECTORCALL Value::Make(s32 val) {
-  Value res;
-  res.i32_ = val;
-  res.SetType(ValueType::I32);
-  return res;
-}
-inline Value WABT_VECTORCALL Value::Make(u32 val) {
-  Value res;
-  res.i32_ = val;
-  res.SetType(ValueType::I32);
-  return res;
-}
-inline Value WABT_VECTORCALL Value::Make(s64 val) {
-  Value res;
-  res.i64_ = val;
-  res.SetType(ValueType::I64);
-  return res;
-}
-inline Value WABT_VECTORCALL Value::Make(u64 val) {
-  Value res;
-  res.i64_ = val;
-  res.SetType(ValueType::I64);
-  return res;
-}
-inline Value WABT_VECTORCALL Value::Make(f32 val) {
-  Value res;
-  res.f32_ = val;
-  res.SetType(ValueType::F32);
-  return res;
-}
-inline Value WABT_VECTORCALL Value::Make(f64 val) {
-  Value res;
-  res.f64_ = val;
-  res.SetType(ValueType::F64);
-  return res;
-}
-inline Value WABT_VECTORCALL Value::Make(v128 val) {
-  Value res;
-  res.v128_ = val;
-  res.SetType(ValueType::V128);
-  return res;
-}
-inline Value WABT_VECTORCALL Value::Make(Ref val) {
-  Value res;
-  res.ref_ = val;
-  res.SetType(ValueType::ExternRef);
-  return res;
-}
-template <typename T, u8 L> Value WABT_VECTORCALL Value::Make(Simd<T, L> val) {
+// clang-format off
+inline Value WABT_VECTORCALL Value::Make(s32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
+inline Value WABT_VECTORCALL Value::Make(u32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
+inline Value WABT_VECTORCALL Value::Make(s64 val) { Value res; res.i64_ = val; res.SetType(ValueType::I64); return res; }
+inline Value WABT_VECTORCALL Value::Make(u64 val) { Value res; res.i64_ = val; res.SetType(ValueType::I64); return res; }
+inline Value WABT_VECTORCALL Value::Make(f32 val) { Value res; res.f32_ = val; res.SetType(ValueType::F32); return res; }
+inline Value WABT_VECTORCALL Value::Make(f64 val) { Value res; res.f64_ = val; res.SetType(ValueType::F64); return res; }
+inline Value WABT_VECTORCALL Value::Make(v128 val) { Value res; res.v128_ = val; res.SetType(ValueType::V128); return res; }
+inline Value WABT_VECTORCALL Value::Make(Ref val) { Value res; res.ref_ = val; res.SetType(ValueType::ExternRef); return res; }
+template <typename T, u8 L>
+Value WABT_VECTORCALL Value::Make(Simd<T, L> val) {
   Value res;
   res.v128_ = Bitcast<v128>(val);
   res.SetType(ValueType::V128);
   return res;
 }
 
-template <> inline s8 WABT_VECTORCALL Value::Get<s8>() const {
-  CheckType(ValueType::I32);
-  return i32_;
-}
-template <> inline u8 WABT_VECTORCALL Value::Get<u8>() const {
-  CheckType(ValueType::I32);
-  return i32_;
-}
-template <> inline s16 WABT_VECTORCALL Value::Get<s16>() const {
-  CheckType(ValueType::I32);
-  return i32_;
-}
-template <> inline u16 WABT_VECTORCALL Value::Get<u16>() const {
-  CheckType(ValueType::I32);
-  return i32_;
-}
-template <> inline s32 WABT_VECTORCALL Value::Get<s32>() const {
-  CheckType(ValueType::I32);
-  return i32_;
-}
-template <> inline u32 WABT_VECTORCALL Value::Get<u32>() const {
-  CheckType(ValueType::I32);
-  return i32_;
-}
-template <> inline s64 WABT_VECTORCALL Value::Get<s64>() const {
-  CheckType(ValueType::I64);
-  return i64_;
-}
-template <> inline u64 WABT_VECTORCALL Value::Get<u64>() const {
-  CheckType(ValueType::I64);
-  return i64_;
-}
-template <> inline f32 WABT_VECTORCALL Value::Get<f32>() const {
-  CheckType(ValueType::F32);
-  return f32_;
-}
-template <> inline f64 WABT_VECTORCALL Value::Get<f64>() const {
-  CheckType(ValueType::F64);
-  return f64_;
-}
-template <> inline v128 WABT_VECTORCALL Value::Get<v128>() const {
-  CheckType(ValueType::V128);
-  return v128_;
-}
-template <> inline Ref WABT_VECTORCALL Value::Get<Ref>() const {
-  CheckType(ValueType::ExternRef);
-  return ref_;
-}
+template <> inline s8 WABT_VECTORCALL Value::Get<s8>() const { CheckType(ValueType::I32); return i32_; }
+template <> inline u8 WABT_VECTORCALL Value::Get<u8>() const { CheckType(ValueType::I32); return i32_; }
+template <> inline s16 WABT_VECTORCALL Value::Get<s16>() const { CheckType(ValueType::I32); return i32_; }
+template <> inline u16 WABT_VECTORCALL Value::Get<u16>() const { CheckType(ValueType::I32); return i32_; }
+template <> inline s32 WABT_VECTORCALL Value::Get<s32>() const { CheckType(ValueType::I32); return i32_; }
+template <> inline u32 WABT_VECTORCALL Value::Get<u32>() const { CheckType(ValueType::I32); return i32_; }
+template <> inline s64 WABT_VECTORCALL Value::Get<s64>() const { CheckType(ValueType::I64); return i64_; }
+template <> inline u64 WABT_VECTORCALL Value::Get<u64>() const { CheckType(ValueType::I64); return i64_; }
+template <> inline f32 WABT_VECTORCALL Value::Get<f32>() const { CheckType(ValueType::F32); return f32_; }
+template <> inline f64 WABT_VECTORCALL Value::Get<f64>() const { CheckType(ValueType::F64); return f64_; }
+template <> inline v128 WABT_VECTORCALL Value::Get<v128>() const { CheckType(ValueType::V128); return v128_; }
+template <> inline Ref WABT_VECTORCALL Value::Get<Ref>() const { CheckType(ValueType::ExternRef); return ref_; }
 
-template <> inline s8x16 WABT_VECTORCALL Value::Get<s8x16>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<s8x16>(v128_);
-}
-template <> inline u8x16 WABT_VECTORCALL Value::Get<u8x16>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<u8x16>(v128_);
-}
-template <> inline s16x8 WABT_VECTORCALL Value::Get<s16x8>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<s16x8>(v128_);
-}
-template <> inline u16x8 WABT_VECTORCALL Value::Get<u16x8>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<u16x8>(v128_);
-}
-template <> inline s32x4 WABT_VECTORCALL Value::Get<s32x4>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<s32x4>(v128_);
-}
-template <> inline u32x4 WABT_VECTORCALL Value::Get<u32x4>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<u32x4>(v128_);
-}
-template <> inline s64x2 WABT_VECTORCALL Value::Get<s64x2>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<s64x2>(v128_);
-}
-template <> inline u64x2 WABT_VECTORCALL Value::Get<u64x2>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<u64x2>(v128_);
-}
-template <> inline f32x4 WABT_VECTORCALL Value::Get<f32x4>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<f32x4>(v128_);
-}
-template <> inline f64x2 WABT_VECTORCALL Value::Get<f64x2>() const {
-  CheckType(ValueType::V128);
-  return Bitcast<f64x2>(v128_);
-}
+template <> inline s8x16 WABT_VECTORCALL Value::Get<s8x16>() const { CheckType(ValueType::V128); return Bitcast<s8x16>(v128_); }
+template <> inline u8x16 WABT_VECTORCALL Value::Get<u8x16>() const { CheckType(ValueType::V128); return Bitcast<u8x16>(v128_); }
+template <> inline s16x8 WABT_VECTORCALL Value::Get<s16x8>() const { CheckType(ValueType::V128); return Bitcast<s16x8>(v128_); }
+template <> inline u16x8 WABT_VECTORCALL Value::Get<u16x8>() const { CheckType(ValueType::V128); return Bitcast<u16x8>(v128_); }
+template <> inline s32x4 WABT_VECTORCALL Value::Get<s32x4>() const { CheckType(ValueType::V128); return Bitcast<s32x4>(v128_); }
+template <> inline u32x4 WABT_VECTORCALL Value::Get<u32x4>() const { CheckType(ValueType::V128); return Bitcast<u32x4>(v128_); }
+template <> inline s64x2 WABT_VECTORCALL Value::Get<s64x2>() const { CheckType(ValueType::V128); return Bitcast<s64x2>(v128_); }
+template <> inline u64x2 WABT_VECTORCALL Value::Get<u64x2>() const { CheckType(ValueType::V128); return Bitcast<u64x2>(v128_); }
+template <> inline f32x4 WABT_VECTORCALL Value::Get<f32x4>() const { CheckType(ValueType::V128); return Bitcast<f32x4>(v128_); }
+template <> inline f64x2 WABT_VECTORCALL Value::Get<f64x2>() const { CheckType(ValueType::V128); return Bitcast<f64x2>(v128_); }
 
-template <> inline void WABT_VECTORCALL Value::Set<s32>(s32 val) {
-  i32_ = val;
-  SetType(ValueType::I32);
-}
-template <> inline void WABT_VECTORCALL Value::Set<u32>(u32 val) {
-  i32_ = val;
-  SetType(ValueType::I32);
-}
-template <> inline void WABT_VECTORCALL Value::Set<s64>(s64 val) {
-  i64_ = val;
-  SetType(ValueType::I64);
-}
-template <> inline void WABT_VECTORCALL Value::Set<u64>(u64 val) {
-  i64_ = val;
-  SetType(ValueType::I64);
-}
-template <> inline void WABT_VECTORCALL Value::Set<f32>(f32 val) {
-  f32_ = val;
-  SetType(ValueType::F32);
-}
-template <> inline void WABT_VECTORCALL Value::Set<f64>(f64 val) {
-  f64_ = val;
-  SetType(ValueType::F64);
-}
-template <> inline void WABT_VECTORCALL Value::Set<v128>(v128 val) {
-  v128_ = val;
-  SetType(ValueType::V128);
-}
-template <> inline void WABT_VECTORCALL Value::Set<Ref>(Ref val) {
-  ref_ = val;
-  SetType(ValueType::ExternRef);
-}
+template <> inline void WABT_VECTORCALL Value::Set<s32>(s32 val) { i32_ = val; SetType(ValueType::I32); }
+template <> inline void WABT_VECTORCALL Value::Set<u32>(u32 val) { i32_ = val; SetType(ValueType::I32); }
+template <> inline void WABT_VECTORCALL Value::Set<s64>(s64 val) { i64_ = val; SetType(ValueType::I64); }
+template <> inline void WABT_VECTORCALL Value::Set<u64>(u64 val) { i64_ = val; SetType(ValueType::I64); }
+template <> inline void WABT_VECTORCALL Value::Set<f32>(f32 val) { f32_ = val; SetType(ValueType::F32); }
+template <> inline void WABT_VECTORCALL Value::Set<f64>(f64 val) { f64_ = val; SetType(ValueType::F64); }
+template <> inline void WABT_VECTORCALL Value::Set<v128>(v128 val) { v128_ = val; SetType(ValueType::V128); }
+template <> inline void WABT_VECTORCALL Value::Set<Ref>(Ref val) { ref_ = val; SetType(ValueType::ExternRef); }
+// clang-format on
 
 //// Store ////
 inline bool Store::IsValid(Ref ref) const {
