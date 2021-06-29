@@ -380,7 +380,6 @@ typedef std::vector<Catch> CatchVector;
 enum class TryKind {
   Invalid,
   Catch,
-  Unwind,
   Delegate
 };
 
@@ -609,7 +608,6 @@ class TryExpr : public ExprMixin<ExprType::Try> {
   TryKind kind;
   Block block;
   CatchVector catches;
-  ExprList unwind;
   Var delegate_target;
 };
 
