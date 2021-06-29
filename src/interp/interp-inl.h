@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// clang-format off
+
 #include <cassert>
 #include <limits>
 #include <string>
@@ -255,7 +257,7 @@ RefPtr<T>::RefPtr(const RefPtr<U>& other)
 
 template <typename T>
 template <typename U>
-RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other) {
+RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other){
   obj_ = other.obj_;
   store_ = other.store_;
   root_index_ = store_ ? store_->CopyRoot(other.root_index_) : 0;
@@ -351,40 +353,16 @@ bool operator!=(const RefPtr<U>& lhs, const RefPtr<V>& rhs) {
 }
 
 //// ValueType ////
-inline bool IsReference(ValueType type) {
-  return type.IsRef();
-}
-template <>
-inline bool HasType<s32>(ValueType type) {
-  return type == ValueType::I32;
-}
-template <>
-inline bool HasType<u32>(ValueType type) {
-  return type == ValueType::I32;
-}
-template <>
-inline bool HasType<s64>(ValueType type) {
-  return type == ValueType::I64;
-}
-template <>
-inline bool HasType<u64>(ValueType type) {
-  return type == ValueType::I64;
-}
-template <>
-inline bool HasType<f32>(ValueType type) {
-  return type == ValueType::F32;
-}
-template <>
-inline bool HasType<f64>(ValueType type) {
-  return type == ValueType::F64;
-}
-template <>
-inline bool HasType<Ref>(ValueType type) {
-  return IsReference(type);
-}
+inline bool IsReference(ValueType type) { return type.IsRef(); }
+template <> inline bool HasType<s32>(ValueType type) { return type == ValueType::I32; }
+template <> inline bool HasType<u32>(ValueType type) { return type == ValueType::I32; }
+template <> inline bool HasType<s64>(ValueType type) { return type == ValueType::I64; }
+template <> inline bool HasType<u64>(ValueType type) { return type == ValueType::I64; }
+template <> inline bool HasType<f32>(ValueType type) { return type == ValueType::F32; }
+template <> inline bool HasType<f64>(ValueType type) { return type == ValueType::F64; }
+template <> inline bool HasType<Ref>(ValueType type) { return IsReference(type); }
 
-template <typename T>
-void RequireType(ValueType type) {
+template <typename T> void RequireType(ValueType type) {
   assert(HasType<T>(type));
 }
 
@@ -395,7 +373,6 @@ inline bool TypesMatch(ValueType expected, ValueType actual) {
 }
 
 //// Value ////
-// clang-format off
 inline Value WABT_VECTORCALL Value::Make(s32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
 inline Value WABT_VECTORCALL Value::Make(u32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
 inline Value WABT_VECTORCALL Value::Make(s64 val) { Value res; res.i64_ = val; res.SetType(ValueType::I64); return res; }
@@ -444,7 +421,6 @@ template <> inline void WABT_VECTORCALL Value::Set<f32>(f32 val) { f32_ = val; S
 template <> inline void WABT_VECTORCALL Value::Set<f64>(f64 val) { f64_ = val; SetType(ValueType::F64); }
 template <> inline void WABT_VECTORCALL Value::Set<v128>(v128 val) { v128_ = val; SetType(ValueType::V128); }
 template <> inline void WABT_VECTORCALL Value::Set<Ref>(Ref val) { ref_ = val; SetType(ValueType::ExternRef); }
-// clang-format on
 
 //// Store ////
 inline bool Store::IsValid(Ref ref) const {
@@ -559,8 +535,10 @@ inline bool Extern::classof(const Object* obj) {
     case ObjectKind::Table:
     case ObjectKind::Memory:
     case ObjectKind::Global:
-    case ObjectKind::Tag: return true;
-    default: return false;
+    case ObjectKind::Tag:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -571,8 +549,10 @@ inline Extern::Extern(ObjectKind kind) : Object(kind) {}
 inline bool Func::classof(const Object* obj) {
   switch (obj->kind()) {
     case ObjectKind::DefinedFunc:
-    case ObjectKind::HostFunc: return true;
-    default: return false;
+    case ObjectKind::HostFunc:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -656,8 +636,10 @@ inline Memory::Ptr Memory::New(interp::Store& store, MemoryType type) {
 
 inline bool Memory::IsValidAccess(u64 offset, u64 addend, u64 size) const {
   // FIXME: make this faster.
-  return offset <= data_.size() && addend <= data_.size() &&
-         size <= data_.size() && offset + addend + size <= data_.size();
+  return offset <= data_.size() &&
+         addend <= data_.size() &&
+         size <= data_.size() &&
+         offset + addend + size <= data_.size();
 }
 
 inline bool Memory::IsValidAtomicAccess(u64 offset,
@@ -672,8 +654,7 @@ Result Memory::Load(u64 offset, u64 addend, T* out) const {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0,
-                          offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -681,8 +662,7 @@ template <typename T>
 T WABT_VECTORCALL Memory::UnsafeLoad(u64 offset, u64 addend) const {
   assert(IsValidAccess(offset, addend, sizeof(T)));
   T val;
-  wabt::MemcpyEndianAware(&val, data_.data(), sizeof(T), data_.size(), 0,
-                          offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(&val, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
   return val;
 }
 
@@ -691,8 +671,7 @@ Result WABT_VECTORCALL Memory::Store(u64 offset, u64 addend, T val) {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T),
-                          offset + addend, 0, sizeof(T));
+  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 
@@ -701,8 +680,7 @@ Result Memory::AtomicLoad(u64 offset, u64 addend, T* out) const {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0,
-                          offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -711,8 +689,7 @@ Result Memory::AtomicStore(u64 offset, u64 addend, T val) {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T),
-                          offset + addend, 0, sizeof(T));
+  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 
@@ -947,6 +924,8 @@ inline Thread::Ptr Thread::New(Store& store, const Options& options) {
 inline Store& Thread::store() {
   return store_;
 }
+
+// clang-format on
 
 }  // namespace interp
 }  // namespace wabt
