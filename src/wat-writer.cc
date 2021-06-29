@@ -904,6 +904,7 @@ Result WatWriter::ExprVisitorDelegate::OnUnwindExpr(TryExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnDelegateExpr(TryExpr* expr) {
   writer_->Dedent();
+  writer_->EndBlock();
   writer_->WritePutsSpace(Opcode::Delegate_Opcode.GetName());
   writer_->WriteVar(expr->delegate_target, NextChar::Newline);
   return Result::Ok;
