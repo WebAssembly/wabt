@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func (try (do) (foo)))
+(;; STDERR ;;;
+out/test/parse/expr/bad-try-clause.txt:5:20: error: unexpected token "foo", expected catch, catch_all or delegate.
+  (func (try (do) (foo)))
+                   ^^^
+;;; STDERR ;;)

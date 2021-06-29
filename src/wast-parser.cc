@@ -2784,6 +2784,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
               break;
             }
             default:
+              ErrorExpected({"catch", "catch_all", "delegate"});
               break;
           }
         }
