@@ -589,11 +589,10 @@ Result TypeChecker::OnElse() {
 }
 
 Result TypeChecker::OnEnd(Label* label,
-                          TypeVector& check_type,
                           const char* sig_desc,
                           const char* end_desc) {
   Result result = Result::Ok;
-  result |= PopAndCheckSignature(check_type, sig_desc);
+  result |= PopAndCheckSignature(label->result_types, sig_desc);
   result |= CheckTypeStackEnd(end_desc);
   ResetTypeStackToLabel(label);
   PushTypes(label->result_types);
@@ -617,7 +616,7 @@ Result TypeChecker::OnEnd() {
   }
 
   const char* desc = s_label_type_name[static_cast<int>(label->label_type)];
-  result |= OnEnd(label, label->result_types, desc, desc);
+  result |= OnEnd(label, desc, desc);
   return result;
 }
 
@@ -910,7 +909,7 @@ Result TypeChecker::EndFunction() {
   Label* label;
   CHECK_RESULT(TopLabel(&label));
   result |= CheckLabelType(label, LabelType::Func);
-  result |= OnEnd(label, label->result_types, "implicit return", "function");
+  result |= OnEnd(label, "implicit return", "function");
   return result;
 }
 
