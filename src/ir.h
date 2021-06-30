@@ -378,7 +378,7 @@ struct Catch {
 typedef std::vector<Catch> CatchVector;
 
 enum class TryKind {
-  Invalid,
+  Plain,
   Catch,
   Delegate
 };
@@ -603,7 +603,7 @@ class IfExpr : public ExprMixin<ExprType::If> {
 class TryExpr : public ExprMixin<ExprType::Try> {
  public:
   explicit TryExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Invalid) {}
+      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Plain) {}
 
   TryKind kind;
   Block block;

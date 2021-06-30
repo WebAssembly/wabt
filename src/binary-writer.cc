@@ -1012,8 +1012,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
                          GetLabelVarDepth(&try_expr->delegate_target),
                          "delegate depth");
           break;
-        case TryKind::Invalid:
-          // Should not occur.
+        case TryKind::Plain:
+          WriteOpcode(stream_, Opcode::End);
           break;
       }
       break;

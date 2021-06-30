@@ -110,8 +110,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
             case TryKind::Delegate:
               CHECK_RESULT(delegate_->OnDelegateExpr(try_expr));
               break;
-            case TryKind::Invalid:
-              // Should not happen.
+            case TryKind::Plain:
+              CHECK_RESULT(delegate_->EndTryExpr(try_expr));
               break;
           }
         }
