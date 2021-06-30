@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// clang-format off
-
 #ifndef WABT_INTERP_MATH_H_
 #define WABT_INTERP_MATH_H_
 
@@ -213,17 +211,19 @@ inline f64 WABT_VECTORCALL FloatAbs(f64 val) {
 template <>
 inline f32 WABT_VECTORCALL FloatCopysign(f32 lhs, f32 rhs) {
   return _mm_cvtss_f32(
-    _mm_or_ps(
-      _mm_and_ps(_mm_set1_ps(lhs), _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff))),
-      _mm_and_ps(_mm_set1_ps(rhs), _mm_castsi128_ps(_mm_set1_epi32(0x80000000)))));
+      _mm_or_ps(_mm_and_ps(_mm_set1_ps(lhs),
+                           _mm_castsi128_ps(_mm_set1_epi32(0x7fffffff))),
+                _mm_and_ps(_mm_set1_ps(rhs),
+                           _mm_castsi128_ps(_mm_set1_epi32(0x80000000)))));
 }
 
 template <>
 inline f64 WABT_VECTORCALL FloatCopysign(f64 lhs, f64 rhs) {
-  return _mm_cvtsd_f64(
-    _mm_or_pd(
-      _mm_and_pd(_mm_set1_pd(lhs), _mm_castsi128_pd(_mm_set1_epi64x(0x7fffffffffffffffull))),
-      _mm_and_pd(_mm_set1_pd(rhs), _mm_castsi128_pd(_mm_set1_epi64x(0x8000000000000000ull)))));
+  return _mm_cvtsd_f64(_mm_or_pd(
+      _mm_and_pd(_mm_set1_pd(lhs),
+                 _mm_castsi128_pd(_mm_set1_epi64x(0x7fffffffffffffffull))),
+      _mm_and_pd(_mm_set1_pd(rhs),
+                 _mm_castsi128_pd(_mm_set1_epi64x(0x8000000000000000ull)))));
 }
 
 #else
@@ -408,7 +408,5 @@ T WABT_VECTORCALL SaturatingRoundingQMul(T lhs, T rhs) {
 
 }  // namespace interp
 }  // namespace wabt
-
-// clang-format on
 
 #endif  // WABT_INTERP_MATH_H_
