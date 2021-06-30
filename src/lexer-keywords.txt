@@ -628,4 +628,3 @@ i64.trunc_u:sat/f64, TokenType::Convert, Opcode::I64TruncSatF64U
 set_global, TokenType::GlobalSet, Opcode::GlobalSet
 set_local, TokenType::LocalSet, Opcode::LocalSet
 tee_local, TokenType::LocalTee, Opcode::LocalTee
-unwind, TokenType::Unwind, Opcode::Unwind

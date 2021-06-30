@@ -1011,18 +1011,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
           }
           WriteOpcode(stream_, Opcode::End);
           break;
-        case TryKind::Unwind:
-          WriteOpcode(stream_, Opcode::Unwind);
-          WriteExprList(func, try_expr->unwind);
-          WriteOpcode(stream_, Opcode::End);
-          break;
         case TryKind::Delegate:
           WriteOpcode(stream_, Opcode::Delegate);
           WriteU32Leb128(stream_, GetLabelVarDepth(&try_expr->delegate_target),
                          "delegate depth");
           break;
-        case TryKind::Invalid:
-          // Should not occur.
+        case TryKind::Plain:
+          WriteOpcode(stream_, Opcode::End);
           break;
       }
       break;
@@ -1114,7 +1109,7 @@ void BinaryWriter::WriteGlobalHeader(const Global* global) {
 }
 
 void BinaryWriter::WriteTagType(const Tag* tag) {
-  WriteU32Leb128(stream_, 0, "tag attribute");
+  stream_->WriteU8(0, "tag attribute");
   WriteU32Leb128(stream_, module_->GetFuncTypeIndex(tag->decl),
                  "tag signature index");
 }

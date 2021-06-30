@@ -145,9 +145,8 @@ WABT_TOKEN(Throw, "throw")
 WABT_TOKEN(Try, "try")
 WABT_TOKEN(Unary, "UNARY")
 WABT_TOKEN(Unreachable, "unreachable")
-WABT_TOKEN(Unwind, "unwind")
 WABT_TOKEN_FIRST(Opcode, AtomicFence)
-WABT_TOKEN_LAST(Opcode, Unwind)
+WABT_TOKEN_LAST(Opcode, Unreachable)
 
 /* Tokens with string data. */
 WABT_TOKEN(AlignEqNat, "align=")

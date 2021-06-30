@@ -290,7 +290,6 @@ class BinaryReaderDelegate {
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnTernaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
-  virtual Result OnUnwindExpr() = 0;
   virtual Result EndFunctionBody(Index index) = 0;
   virtual Result EndCodeSection() = 0;
 

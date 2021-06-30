@@ -3,6 +3,12 @@
 (module
   (tag (param i32))
 
+  ;; no catch
+  (func
+    try
+      nop
+    end)
+
   ;; bare
   (func
     try

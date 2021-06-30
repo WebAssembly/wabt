@@ -401,7 +401,7 @@ struct Catch {
 };
 typedef std::vector<Catch> CatchVector;
 
-enum class TryKind { Invalid, Catch, Unwind, Delegate };
+enum class TryKind { Plain, Catch, Delegate };
 
 class Expr : public intrusive_list_base<Expr> {
  public:
@@ -623,12 +623,11 @@ class IfExpr : public ExprMixin<ExprType::If> {
 class TryExpr : public ExprMixin<ExprType::Try> {
  public:
   explicit TryExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Invalid) {}
+      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Plain) {}
 
   TryKind kind;
   Block block;
   CatchVector catches;
-  ExprList unwind;
   Var delegate_target;
 };
 

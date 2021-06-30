@@ -158,7 +158,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 611,
+      TOTAL_KEYWORDS = 610,
       MIN_WORD_LENGTH = 2,
       MAX_WORD_LENGTH = 29,
       MIN_HASH_VALUE = 19,
@@ -457,8 +457,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"i64x2.bitmask", TokenType::Unary, Opcode::I64X2Bitmask},
 #line 383 "src/lexer-keywords.txt"
       {"i64.atomic.store32", TokenType::AtomicStore, Opcode::I64AtomicStore32},
-#line 631 "src/lexer-keywords.txt"
-      {"unwind", TokenType::Unwind, Opcode::Unwind},
+      {""},
 #line 407 "src/lexer-keywords.txt"
       {"i64.load32_u", TokenType::Load, Opcode::I64Load32U},
       {""},

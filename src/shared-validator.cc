@@ -1241,11 +1241,4 @@ Result SharedValidator::OnUnreachable(const Location& loc) {
   return result;
 }
 
-Result SharedValidator::OnUnwind(const Location& loc) {
-  Result result = Result::Ok;
-  expr_loc_ = &loc;
-  result |= typechecker_.OnUnwind();
-  return result;
-}
-
 }  // namespace wabt

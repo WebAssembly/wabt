@@ -181,7 +181,6 @@ class SharedValidator {
   Result OnTry(const Location&, Type sig_type);
   Result OnUnary(const Location&, Opcode);
   Result OnUnreachable(const Location&);
-  Result OnUnwind(const Location&);
 
  private:
   struct FuncType {

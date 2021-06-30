@@ -23,12 +23,6 @@
         end
       end
     end)
-
-  (func
-    try
-    unwind
-      rethrow 0
-    end)
   )
 (;; STDERR ;;;
 out/test/typecheck/bad-rethrow-depth.txt:15:13: error: invalid rethrow depth: 0 (catches: 1, 3)
@@ -49,7 +43,4 @@ out/test/typecheck/bad-rethrow-depth.txt:20:13: error: invalid rethrow depth: 2 
 out/test/typecheck/bad-rethrow-depth.txt:21:13: error: invalid rethrow depth: 2 (catches: 0, 1, 3)
             rethrow 2
             ^^^^^^^
-out/test/typecheck/bad-rethrow-depth.txt:30:7: error: rethrow not in try catch block
-      rethrow 0
-      ^^^^^^^
 ;;; STDERR ;;)

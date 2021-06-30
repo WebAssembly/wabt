@@ -1435,12 +1435,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::Unwind: {
-        CALLBACK0(OnUnwindExpr);
-        CALLBACK0(OnOpcodeBare);
-        break;
-      }
-
       case Opcode::Delegate: {
         Index index;
         CHECK_RESULT(ReadIndex(&index, "depth"));
@@ -2119,8 +2113,8 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
 }
 
 Result BinaryReader::ReadTagType(Index* out_sig_index) {
-  uint32_t attribute;
-  CHECK_RESULT(ReadU32Leb128(&attribute, "tag attribute"));
+  uint8_t attribute;
+  CHECK_RESULT(ReadU8(&attribute, "tag attribute"));
   ERROR_UNLESS(attribute == 0, "tag attribute must be 0");
   CHECK_RESULT(ReadIndex(out_sig_index, "tag signature index"));
   return Result::Ok;

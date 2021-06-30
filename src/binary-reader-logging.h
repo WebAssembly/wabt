@@ -222,7 +222,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
-  Result OnUnwindExpr() override;
   Result OnAtomicWaitExpr(Opcode opcode,
                           Address alignment_log2,
                           Address offset) override;
