@@ -136,8 +136,10 @@ struct Decompiler {
 
   void BracketIfNeeded(Value& val, Precedence parent_precedence) {
     if (parent_precedence < val.precedence ||
-        (parent_precedence == val.precedence && Associative(parent_precedence)))
+        (parent_precedence == val.precedence &&
+         Associative(parent_precedence))) {
       return;
+    }
     val = WrapChild(val, "(", ")", Precedence::Atomic);
   }
 
@@ -157,8 +159,9 @@ struct Decompiler {
       Value bin{{}, precedence};
       std::move(left.v.begin(), left.v.end(), std::back_inserter(bin.v));
       bin.v.back().append(infix.data(), infix.size());
-      if (indent_right)
+      if (indent_right) {
         IndentValue(right, indent_amount, {});
+      }
       std::move(right.v.begin(), right.v.end(), std::back_inserter(bin.v));
       return bin;
     }
@@ -240,11 +243,13 @@ struct Decompiler {
 
   bool ConstIntVal(const Expr* e, uint64_t& dest) {
     dest = 0;
-    if (!e || e->type() != ExprType::Const)
+    if (!e || e->type() != ExprType::Const) {
       return false;
+    }
     auto& c = cast<ConstExpr>(e)->const_;
-    if (c.type() != Type::I32 && c.type() != Type::I64)
+    if (c.type() != Type::I32 && c.type() != Type::I64) {
       return false;
+    }
     dest = c.type() == Type::I32 ? c.u32() : c.u64();
     return true;
   }

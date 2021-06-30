@@ -602,21 +602,11 @@ Result Memory::Copy(Memory& dst,
 Value Instance::ResolveInitExpr(Store& store, InitExpr init) {
   Value result;
   switch (init.kind) {
-    case InitExprKind::I32:
-      result.Set(init.i32_);
-      break;
-    case InitExprKind::I64:
-      result.Set(init.i64_);
-      break;
-    case InitExprKind::F32:
-      result.Set(init.f32_);
-      break;
-    case InitExprKind::F64:
-      result.Set(init.f64_);
-      break;
-    case InitExprKind::V128:
-      result.Set(init.v128_);
-      break;
+    case InitExprKind::I32:      result.Set(init.i32_); break;
+    case InitExprKind::I64:      result.Set(init.i64_); break;
+    case InitExprKind::F32:      result.Set(init.f32_); break;
+    case InitExprKind::F64:      result.Set(init.f64_); break;
+    case InitExprKind::V128:     result.Set(init.v128_); break;
     case InitExprKind::GlobalGet: {
       Global::Ptr global{store, globals_[init.index_]};
       result = global->Get();
@@ -763,21 +753,11 @@ Instance::Ptr Instance::Instantiate(Store& store,
     inst->imports_.push_back(extern_ref);
 
     switch (import_desc.type.type->kind) {
-      case ExternKind::Func:
-        inst->funcs_.push_back(extern_ref);
-        break;
-      case ExternKind::Table:
-        inst->tables_.push_back(extern_ref);
-        break;
-      case ExternKind::Memory:
-        inst->memories_.push_back(extern_ref);
-        break;
-      case ExternKind::Global:
-        inst->globals_.push_back(extern_ref);
-        break;
-      case ExternKind::Tag:
-        inst->tags_.push_back(extern_ref);
-        break;
+      case ExternKind::Func:   inst->funcs_.push_back(extern_ref); break;
+      case ExternKind::Table:  inst->tables_.push_back(extern_ref); break;
+      case ExternKind::Memory: inst->memories_.push_back(extern_ref); break;
+      case ExternKind::Global: inst->globals_.push_back(extern_ref); break;
+      case ExternKind::Tag:    inst->tags_.push_back(extern_ref); break;
     }
   }
 
@@ -812,21 +792,11 @@ Instance::Ptr Instance::Instantiate(Store& store,
   for (auto&& desc : mod->desc().exports) {
     Ref ref;
     switch (desc.type.type->kind) {
-      case ExternKind::Func:
-        ref = inst->funcs_[desc.index];
-        break;
-      case ExternKind::Table:
-        ref = inst->tables_[desc.index];
-        break;
-      case ExternKind::Memory:
-        ref = inst->memories_[desc.index];
-        break;
-      case ExternKind::Global:
-        ref = inst->globals_[desc.index];
-        break;
-      case ExternKind::Tag:
-        ref = inst->tags_[desc.index];
-        break;
+      case ExternKind::Func:   ref = inst->funcs_[desc.index]; break;
+      case ExternKind::Table:  ref = inst->tables_[desc.index]; break;
+      case ExternKind::Memory: ref = inst->memories_[desc.index]; break;
+      case ExternKind::Global: ref = inst->globals_[desc.index]; break;
+      case ExternKind::Tag:    ref = inst->tags_[desc.index]; break;
     }
     inst->exports_.push_back(ref);
   }
@@ -1106,7 +1076,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
   }
 
   auto instr = istream.Read(&pc);
-  // clang-format off
   switch (instr.op) {
     case O::Unreachable:
       return TRAP("unreachable executed");
@@ -1831,7 +1800,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       WABT_UNREACHABLE;
       break;
   }
-  // clang-format on
 
   return RunResult::Ok;
 }
@@ -2089,7 +2057,6 @@ RunResult Thread::DoSimdReplace(Instr instr) {
   return RunResult::Ok;
 }
 
-// clang-format off
 template <typename T> struct Simd128;
 template <> struct Simd128<s8> { using Type = s8x16; };
 template <> struct Simd128<u8> { using Type = u8x16; };
@@ -2101,7 +2068,6 @@ template <> struct Simd128<s64> { using Type = s64x2; };
 template <> struct Simd128<u64> { using Type = u64x2; };
 template <> struct Simd128<f32> { using Type = f32x4; };
 template <> struct Simd128<f64> { using Type = f64x2; };
-// clang-format on
 
 template <typename R, typename T>
 RunResult Thread::DoSimdUnop(UnopFunc<R, T> f) {
@@ -2444,44 +2410,29 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
     // the stack may have different a different type. This is likely to occur
     // with an index; try to see which type we should expect.
     switch (instr.op) {
-      case Opcode::GlobalSet:
-        type = GetGlobalType(instr.imm_u32);
-        break;
+      case Opcode::GlobalSet: type = GetGlobalType(instr.imm_u32); break;
       case Opcode::LocalSet:
-      case Opcode::LocalTee:
-        type = GetLocalType(instr.imm_u32);
-        break;
+      case Opcode::LocalTee:  type = GetLocalType(instr.imm_u32); break;
       case Opcode::TableSet:
       case Opcode::TableGrow:
-      case Opcode::TableFill:
-        type = GetTableElementType(instr.imm_u32);
-        break;
-      default:
-        return "?";
+      case Opcode::TableFill: type = GetTableElementType(instr.imm_u32); break;
+      default: return "?";
     }
   }
 
   switch (type) {
-    case ValueType::I32:
-      return StringPrintf("%u", val.Get<u32>());
-    case ValueType::I64:
-      return StringPrintf("%" PRIu64, val.Get<u64>());
-    case ValueType::F32:
-      return StringPrintf("%g", val.Get<f32>());
-    case ValueType::F64:
-      return StringPrintf("%g", val.Get<f64>());
+    case ValueType::I32: return StringPrintf("%u", val.Get<u32>());
+    case ValueType::I64: return StringPrintf("%" PRIu64, val.Get<u64>());
+    case ValueType::F32: return StringPrintf("%g", val.Get<f32>());
+    case ValueType::F64: return StringPrintf("%g", val.Get<f64>());
     case ValueType::V128: {
       auto v = val.Get<v128>();
       return StringPrintf("0x%08x 0x%08x 0x%08x 0x%08x", v.u32(0), v.u32(1),
                           v.u32(2), v.u32(3));
     }
 
-    case ValueType::FuncRef:
-      reftype = "funcref";
-      break;
-    case ValueType::ExternRef:
-      reftype = "externref";
-      break;
+    case ValueType::FuncRef:    reftype = "funcref"; break;
+    case ValueType::ExternRef:  reftype = "externref"; break;
 
     default:
       WABT_UNREACHABLE;

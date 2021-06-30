@@ -1076,28 +1076,17 @@ Result WastParser::ParseModuleFieldList(Module* module) {
 Result WastParser::ParseModuleField(Module* module) {
   WABT_TRACE(ParseModuleField);
   switch (Peek(1)) {
-    case TokenType::Data:
-      return ParseDataModuleField(module);
-    case TokenType::Elem:
-      return ParseElemModuleField(module);
-    case TokenType::Tag:
-      return ParseTagModuleField(module);
-    case TokenType::Export:
-      return ParseExportModuleField(module);
-    case TokenType::Func:
-      return ParseFuncModuleField(module);
-    case TokenType::Type:
-      return ParseTypeModuleField(module);
-    case TokenType::Global:
-      return ParseGlobalModuleField(module);
-    case TokenType::Import:
-      return ParseImportModuleField(module);
-    case TokenType::Memory:
-      return ParseMemoryModuleField(module);
-    case TokenType::Start:
-      return ParseStartModuleField(module);
-    case TokenType::Table:
-      return ParseTableModuleField(module);
+    case TokenType::Data:   return ParseDataModuleField(module);
+    case TokenType::Elem:   return ParseElemModuleField(module);
+    case TokenType::Tag:    return ParseTagModuleField(module);
+    case TokenType::Export: return ParseExportModuleField(module);
+    case TokenType::Func:   return ParseFuncModuleField(module);
+    case TokenType::Type:   return ParseTypeModuleField(module);
+    case TokenType::Global: return ParseGlobalModuleField(module);
+    case TokenType::Import: return ParseImportModuleField(module);
+    case TokenType::Memory: return ParseMemoryModuleField(module);
+    case TokenType::Start:  return ParseStartModuleField(module);
+    case TokenType::Table:  return ParseTableModuleField(module);
     default:
       assert(
           !"ParseModuleField should only be called if IsModuleField() is true");
@@ -1606,21 +1595,11 @@ Result WastParser::ParseExportDesc(Export* export_) {
   WABT_TRACE(ParseExportDesc);
   EXPECT(Lpar);
   switch (Peek()) {
-    case TokenType::Func:
-      export_->kind = ExternalKind::Func;
-      break;
-    case TokenType::Table:
-      export_->kind = ExternalKind::Table;
-      break;
-    case TokenType::Memory:
-      export_->kind = ExternalKind::Memory;
-      break;
-    case TokenType::Global:
-      export_->kind = ExternalKind::Global;
-      break;
-    case TokenType::Tag:
-      export_->kind = ExternalKind::Tag;
-      break;
+    case TokenType::Func:   export_->kind = ExternalKind::Func; break;
+    case TokenType::Table:  export_->kind = ExternalKind::Table; break;
+    case TokenType::Memory: export_->kind = ExternalKind::Memory; break;
+    case TokenType::Global: export_->kind = ExternalKind::Global; break;
+    case TokenType::Tag:    export_->kind = ExternalKind::Tag; break;
     default:
       return ErrorExpected({"an external kind"});
   }
@@ -2244,32 +2223,12 @@ Result WastParser::ParseSimdV128Const(Const* const_,
   uint8_t lane_count = 0;
   bool integer = true;
   switch (token_type) {
-    case TokenType::I8X16: {
-      lane_count = 16;
-      break;
-    }
-    case TokenType::I16X8: {
-      lane_count = 8;
-      break;
-    }
-    case TokenType::I32X4: {
-      lane_count = 4;
-      break;
-    }
-    case TokenType::I64X2: {
-      lane_count = 2;
-      break;
-    }
-    case TokenType::F32X4: {
-      lane_count = 4;
-      integer = false;
-      break;
-    }
-    case TokenType::F64X2: {
-      lane_count = 2;
-      integer = false;
-      break;
-    }
+    case TokenType::I8X16: { lane_count = 16; break; }
+    case TokenType::I16X8: { lane_count = 8; break; }
+    case TokenType::I32X4: { lane_count = 4; break; }
+    case TokenType::I64X2: { lane_count = 2; break; }
+    case TokenType::F32X4: { lane_count = 4; integer = false; break; }
+    case TokenType::F64X2: { lane_count = 2; integer = false; break; }
     default: {
       Error(const_->loc,
             "Unexpected type at start of simd constant. "

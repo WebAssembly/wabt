@@ -26,36 +26,21 @@ namespace wabt {
 // Names starting with "u" are unsigned, the rest are "signed or doesn't matter"
 inline const char* GetDecompTypeName(Type t) {
   switch (t) {
-    case Type::I8:
-      return "byte";
-    case Type::I8U:
-      return "ubyte";
-    case Type::I16:
-      return "short";
-    case Type::I16U:
-      return "ushort";
-    case Type::I32:
-      return "int";
-    case Type::I32U:
-      return "uint";
-    case Type::I64:
-      return "long";
-    case Type::F32:
-      return "float";
-    case Type::F64:
-      return "double";
-    case Type::V128:
-      return "simd";
-    case Type::Func:
-      return "func";
-    case Type::FuncRef:
-      return "funcref";
-    case Type::ExternRef:
-      return "externref";
-    case Type::Void:
-      return "void";
-    default:
-      return "ILLEGAL";
+    case Type::I8: return "byte";
+    case Type::I8U: return "ubyte";
+    case Type::I16: return "short";
+    case Type::I16U: return "ushort";
+    case Type::I32: return "int";
+    case Type::I32U: return "uint";
+    case Type::I64: return "long";
+    case Type::F32: return "float";
+    case Type::F64: return "double";
+    case Type::V128: return "simd";
+    case Type::Func: return "func";
+    case Type::FuncRef: return "funcref";
+    case Type::ExternRef: return "externref";
+    case Type::Void: return "void";
+    default: return "ILLEGAL";
   }
 }
 
@@ -70,12 +55,9 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
     // FIXME: change into a new column in opcode.def instead?
     auto is_unsigned = name.substr(name.size() - 2) == "_u";
     switch (opc.GetMemorySize()) {
-      case 1:
-        return is_unsigned ? Type::I8U : Type::I8;
-      case 2:
-        return is_unsigned ? Type::I16U : Type::I16;
-      case 4:
-        return is_unsigned ? Type::I32U : Type::I32;
+      case 1: return is_unsigned ? Type::I8U : Type::I8;
+      case 2: return is_unsigned ? Type::I16U : Type::I16;
+      case 4: return is_unsigned ? Type::I32U : Type::I32;
     }
   }
   return operand_type;
@@ -102,8 +84,9 @@ struct LoadStoreTracking {
   };
 
   void Track(const Node& n) {
-    for (auto& c : n.children)
+    for (auto& c : n.children) {
       Track(c);
+    }
     switch (n.etype) {
       case ExprType::Load: {
         auto& le = *cast<LoadExpr>(n.e);
@@ -233,8 +216,9 @@ struct LoadStoreTracking {
     if (it->second.struct_layout) {
       std::string s = "{ ";
       for (auto& access : it->second.accesses) {
-        if (access.second.idx)
+        if (access.second.idx) {
           s += ", ";
+        }
         s += IdxToName(access.second.idx);
         s += ':';
         s += GetDecompTypeName(access.second.type);

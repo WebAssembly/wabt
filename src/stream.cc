@@ -255,8 +255,9 @@ FileStream::~FileStream() {
 }
 
 void FileStream::Flush() {
-  if (file_)
+  if (file_) {
     fflush(file_);
+  }
 }
 
 Result FileStream::WriteDataImpl(size_t at, const void* data, size_t size) {

@@ -671,21 +671,11 @@ Result BinaryReaderInterp::OnExport(Index index,
 
   std::unique_ptr<ExternType> type;
   switch (kind) {
-    case ExternalKind::Func:
-      type = func_types_[item_index].Clone();
-      break;
-    case ExternalKind::Table:
-      type = table_types_[item_index].Clone();
-      break;
-    case ExternalKind::Memory:
-      type = memory_types_[item_index].Clone();
-      break;
-    case ExternalKind::Global:
-      type = global_types_[item_index].Clone();
-      break;
-    case ExternalKind::Tag:
-      type = tag_types_[item_index].Clone();
-      break;
+    case ExternalKind::Func:   type = func_types_[item_index].Clone(); break;
+    case ExternalKind::Table:  type = table_types_[item_index].Clone(); break;
+    case ExternalKind::Memory: type = memory_types_[item_index].Clone(); break;
+    case ExternalKind::Global: type = global_types_[item_index].Clone(); break;
+    case ExternalKind::Tag:    type = tag_types_[item_index].Clone(); break;
   }
   module_.exports.push_back(
       ExportDesc{ExportType(name.to_string(), std::move(type)), item_index});

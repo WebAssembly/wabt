@@ -88,8 +88,9 @@ struct AST {
   }
 
   ~AST() {
-    if (f)
+    if (f) {
       mc.EndFunc();
+    }
   }
 
   // Create a new node, take nargs existing nodes on the exp stack as children.

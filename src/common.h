@@ -42,8 +42,10 @@
 
 #define WABT_USE(x) static_cast<void>(x)
 
-#define WABT_PAGE_SIZE 0x10000    // 64k
-#define WABT_MAX_PAGES32 0x10000  // # of pages that fit in 32-bit address space
+// 64k
+#define WABT_PAGE_SIZE 0x10000
+// # of pages that fit in 32-bit address space
+#define WABT_MAX_PAGES32 0x10000
 // # of pages that fit in 64-bit address space
 #define WABT_MAX_PAGES64 0x1000000000000
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
