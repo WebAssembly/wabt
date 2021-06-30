@@ -200,13 +200,15 @@ struct Decompiler {
       for (auto& child : args) {
         IndentValue(child, ident_with_name ? prefix.size() : indent_amount,
                     !i && ident_with_name ? prefix : string_view{});
-        if (i < args.size() - 1)
+        if (i < args.size() - 1) {
           child.v.back() += ",";
+        }
         std::move(child.v.begin(), child.v.end(), std::back_inserter(ml.v));
         i++;
       }
-      if (!ident_with_name)
+      if (!ident_with_name) {
         ml.v.insert(ml.v.begin(), std::string(prefix));
+      }
       ml.v.back() += postfix;
       return ml;
     }
@@ -358,8 +360,9 @@ struct Decompiler {
       case NodeType::FlushToVars: {
         std::string decls = "let ";
         for (Index i = 0; i < n.u.var_count; i++) {
-          if (i)
+          if (i) {
             decls += ", ";
+          }
           decls += TempVarName(n.u.var_start + i);
         }
         decls += " = ";
@@ -372,8 +375,9 @@ struct Decompiler {
         Value stats{{}, Precedence::None};
         for (size_t i = 0; i < n.children.size(); i++) {
           auto& s = args[i].v.back();
-          if (s.back() != '}' && s.back() != ':')
+          if (s.back() != '}' && s.back() != ':') {
             s += ';';
+          }
           std::move(args[i].v.begin(), args[i].v.end(),
                     std::back_inserter(stats.v));
         }

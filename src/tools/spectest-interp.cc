@@ -174,21 +174,13 @@ struct ExpectedValue {
 
 int LaneCountFromType(Type type) {
   switch (type) {
-    case Type::I8:
-      return 16;
-    case Type::I16:
-      return 8;
-    case Type::I32:
-      return 4;
-    case Type::I64:
-      return 2;
-    case Type::F32:
-      return 4;
-    case Type::F64:
-      return 2;
-    default:
-      assert(false);
-      return 0;
+    case Type::I8: return 16;
+    case Type::I16: return 8;
+    case Type::I32: return 4;
+    case Type::I64: return 2;
+    case Type::F32: return 4;
+    case Type::F64: return 2;
+    default: assert(false); return 0;
   }
 }
 

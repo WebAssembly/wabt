@@ -649,8 +649,9 @@ Result ParseInt64(const char* s,
 namespace {
 uint32_t AddWithCarry(uint32_t x, uint32_t y, uint32_t* carry) {
   // Increments *carry if the addition overflows, otherwise leaves carry alone.
-  if ((0xffffffff - x) < y)
+  if ((0xffffffff - x) < y) {
     ++*carry;
+  }
   return x + y;
 }
 
