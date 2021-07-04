@@ -19,8 +19,8 @@
 #define CALL_INDIRECT(table, t, ft, x, ...)          \
   (LIKELY((x) < table.size && table.data[x].func &&  \
           table.data[x].func_type == func_types[ft]) \
-       ? ((t)table.data[x].func)(__VA_ARGS__)        \
-       : TRAP(CALL_INDIRECT))
+       || TRAP(CALL_INDIRECT)                        \
+       , ((t)table.data[x].func)(__VA_ARGS__))
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define MEMCHECK(mem, a, t)
