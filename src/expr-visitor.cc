@@ -215,6 +215,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnCallIndirectExpr(cast<CallIndirectExpr>(expr)));
       break;
 
+    case ExprType::CallRef:
+      CHECK_RESULT(delegate_->OnCallRefExpr(cast<CallRefExpr>(expr)));
+      break;
+
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(cast<CompareExpr>(expr)));
       break;

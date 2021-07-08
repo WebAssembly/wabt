@@ -116,6 +116,7 @@ def main(args):
     parser.add_argument('--fold-exprs', action='store_true')
     parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-saturating-float-to-int', action='store_true')
+    parser.add_argument('--enable-function-references', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
     parser.add_argument('--enable-simd', action='store_true')
     parser.add_argument('--enable-sign-extension', action='store_true')
@@ -141,6 +142,7 @@ def main(args):
             options.enable_saturating_float_to_int,
         '--enable-sign-extension': options.enable_sign_extension,
         '--enable-simd': options.enable_simd,
+        '--enable-function-references': options.enable_function_references,
         '--enable-threads': options.enable_threads,
         '--enable-bulk-memory': options.enable_bulk_memory,
         '--enable-tail-call': options.enable_tail_call,
@@ -163,6 +165,7 @@ def main(args):
         '--enable-simd': options.enable_simd,
         '--enable-bulk-memory': options.enable_bulk_memory,
         '--enable-tail-call': options.enable_tail_call,
+        '--enable-function-references': options.enable_function_references,
         '--enable-reference-types': options.enable_reference_types,
         '--enable-threads': options.enable_threads,
         '--enable-memory64': options.enable_memory64,

@@ -1,0 +1,108 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-function-references
+
+(module
+  (func (export "main") (result i32)
+    i32.const 10
+    ref.func $foo
+    call_ref
+  )
+  (func $foo (param $x i32) (result i32)
+    (i32.add (local.get $x)
+             (i32.const 19))
+  )
+  (elem declare funcref (ref.func $foo))
+)
+
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 02                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 01                                        ; num results
+000000e: 7f                                        ; i32
+; func type 1
+000000f: 60                                        ; func
+0000010: 01                                        ; num params
+0000011: 7f                                        ; i32
+0000012: 01                                        ; num results
+0000013: 7f                                        ; i32
+0000009: 0a                                        ; FIXUP section size
+; section "Function" (3)
+0000014: 03                                        ; section code
+0000015: 00                                        ; section size (guess)
+0000016: 02                                        ; num functions
+0000017: 00                                        ; function 0 signature index
+0000018: 01                                        ; function 1 signature index
+0000015: 03                                        ; FIXUP section size
+; section "Export" (7)
+0000019: 07                                        ; section code
+000001a: 00                                        ; section size (guess)
+000001b: 01                                        ; num exports
+000001c: 04                                        ; string length
+000001d: 6d61 696e                                main  ; export name
+0000021: 00                                        ; export kind
+0000022: 00                                        ; export func index
+000001a: 08                                        ; FIXUP section size
+; section "Elem" (9)
+0000023: 09                                        ; section code
+0000024: 00                                        ; section size (guess)
+0000025: 01                                        ; num elem segments
+; elem segment header 0
+0000026: 03                                        ; segment flags
+0000027: 00                                        ; elem list type
+0000028: 01                                        ; num elems
+0000029: 01                                        ; elem function index
+0000024: 05                                        ; FIXUP section size
+; section "DataCount" (12)
+000002a: 0c                                        ; section code
+000002b: 00                                        ; section size (guess)
+000002c: 00                                        ; data count
+000002b: 01                                        ; FIXUP section size
+; section "Code" (10)
+000002d: 0a                                        ; section code
+000002e: 00                                        ; section size (guess)
+000002f: 02                                        ; num functions
+; function body 0
+0000030: 00                                        ; func body size (guess)
+0000031: 00                                        ; local decl count
+0000032: 41                                        ; i32.const
+0000033: 0a                                        ; i32 literal
+0000034: d2                                        ; ref.func
+0000035: 01                                        ; function index
+0000036: 14                                        ; call_ref
+0000037: 0b                                        ; end
+0000030: 07                                        ; FIXUP func body size
+; function body 1
+0000038: 00                                        ; func body size (guess)
+0000039: 00                                        ; local decl count
+000003a: 20                                        ; local.get
+000003b: 00                                        ; local index
+000003c: 41                                        ; i32.const
+000003d: 13                                        ; i32 literal
+000003e: 6a                                        ; i32.add
+000003f: 0b                                        ; end
+0000038: 07                                        ; FIXUP func body size
+000002e: 11                                        ; FIXUP section size
+; move data: [2d, 40) -> [2a, 3d)
+; truncate to 61 (0x3d)
+;;; STDERR ;;)
+(;; STDOUT ;;;
+call_ref.wasm:	file format wasm 0x1
+Code Disassembly:
+00002e func[0] <main>:
+ 00002f: 41 0a                      | i32.const 10
+ 000031: d2 01                      | ref.func 1
+ 000033: 14                         | call_ref
+ 000034: 0b                         | end
+000036 func[1]:
+ 000037: 20 00                      | local.get 0
+ 000039: 41 13                      | i32.const 19
+ 00003b: 6a                         | i32.add
+ 00003c: 0b                         | end
+;;; STDOUT ;;)
