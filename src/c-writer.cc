@@ -1257,8 +1257,7 @@ void CWriter::Write(const Func& func) {
   if (num_results == 1) {
     Write("return ", StackVar(0), ";", Newline());
   } else if (num_results >= 2) {
-    Write("{", Newline());
-    Indent();
+    Write(OpenBrace());
     Write(ResultType(func.decl.sig.result_types), " tmp;", Newline());
     for (Index i = 0; i < num_results; ++i) {
       Type type = func.GetResultType(i);
@@ -1266,8 +1265,7 @@ void CWriter::Write(const Func& func) {
       Write(StackVar(num_results - i - 1), ";", Newline());
     }
     Write("return tmp;", Newline());
-    Dedent();
-    Write("}", Newline());
+    Write(CloseBrace(), Newline());
   }
 
   stream_ = c_stream_;
@@ -1421,8 +1419,7 @@ void CWriter::Write(const ExprList& exprs) {
         Index num_results = func.GetNumResults();
         assert(type_stack_.size() >= num_params);
         if (num_results > 1) {
-          Write("{", Newline());
-          Indent();
+          Write(OpenBrace());
           Write("struct ", MangleMultivalueTypes(func.decl.sig.result_types));
           Write(" tmp = ");
         } else if (num_results == 1) {
@@ -1446,8 +1443,7 @@ void CWriter::Write(const ExprList& exprs) {
             Writef(" = tmp.%c%d;", MangleType(type), i);
             Write(Newline());
           }
-          Dedent();
-          Write("}", Newline());
+          Write(CloseBrace(), Newline());
         } else {
           PushTypes(func.decl.sig.result_types);
         }
@@ -1460,8 +1456,7 @@ void CWriter::Write(const ExprList& exprs) {
         Index num_results = decl.GetNumResults();
         assert(type_stack_.size() > num_params);
         if (num_results > 1) {
-          Write("{", Newline());
-          Indent();
+          Write(OpenBrace());
           Write("struct ", MangleMultivalueTypes(decl.sig.result_types));
           Write(" tmp = ");
         } else if (num_results == 1) {
@@ -1490,8 +1485,7 @@ void CWriter::Write(const ExprList& exprs) {
             Writef(" = tmp.%c%d;", MangleType(type), i);
             Write(Newline());
           }
-          Dedent();
-          Write("}", Newline());
+          Write(CloseBrace(), Newline());
         } else {
           PushTypes(decl.sig.result_types);
         }
