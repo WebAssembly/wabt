@@ -95,7 +95,7 @@ int main(int argc, char const *argv[])
     }
 
     char const * wasm2c_module_path = argv[1];
-    char const * wasm_module_name = "currlib_";
+    char const * wasm_module_name = "";
 
     if (argc >= 3) {
         wasm_module_name = argv[2];
