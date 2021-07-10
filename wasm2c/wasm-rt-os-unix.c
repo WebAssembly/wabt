@@ -19,6 +19,12 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#ifdef VERBOSE_LOGGING
+#define VERBOSE_LOG(...) { printf(__VA_ARGS__); }
+#else
+#define VERBOSE_LOG(...)
+#endif
+
 size_t os_getpagesize() {
   return getpagesize();
 }
@@ -108,6 +114,13 @@ void* os_mmap_aligned(void* addr,
   size_t padded_length = requested_length + alignment + alignment_offset;
   uintptr_t unaligned = (uintptr_t)os_mmap(addr, padded_length, prot, flags);
 
+  VERBOSE_LOGGING("os_mmap_aligned: alignment:%llu, alignment_offset:%llu, requested_length:%llu, padded_length: %llu, initial mapping: %p\n",
+    (unsigned long long) alignment,
+    (unsigned long long) alignment_offset,
+    (unsigned long long) requested_length,
+    (unsigned long long) padded_length,
+    (void*) unaligned);
+
   if (!unaligned) {
     return (void*)unaligned;
   }
@@ -129,6 +142,7 @@ void* os_mmap_aligned(void* addr,
   if (aligned < unaligned ||
       (aligned + (requested_length - 1)) > (unaligned + (padded_length - 1)) ||
       (aligned + alignment_offset) % alignment != 0) {
+    VERBOSE_LOGGING("os_mmap_aligned: sanity check fail. aligned: %p\n", (void*) aligned);
     os_munmap((void*)unaligned, padded_length);
     return NULL;
   }
@@ -148,6 +162,7 @@ void* os_mmap_aligned(void* addr,
     }
   }
 
+  VERBOSE_LOGGING("os_mmap_aligned: final mapping: %p\n", (void*) aligned);
   return (void*)aligned;
 }
 
@@ -213,5 +228,7 @@ int os_clock_getres(int clock_id, struct timespec* out_struct) {
   #endif
   return ret;
 }
+
+#undef VERBOSE_LOG
 
 #endif

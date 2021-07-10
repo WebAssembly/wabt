@@ -12,6 +12,12 @@
 
 #include <Windows.h>
 
+#ifdef VERBOSE_LOGGING
+#define VERBOSE_LOG(...) { printf(__VA_ARGS__); }
+#else
+#define VERBOSE_LOG(...)
+#endif
+
 #define DONT_USE_VIRTUAL_ALLOC2
 
 size_t os_getpagesize() {
@@ -151,6 +157,13 @@ void* os_mmap_aligned(void* addr,
     size_t padded_length = requested_length + alignment + alignment_offset;
     uintptr_t unaligned = (uintptr_t)os_mmap(addr, padded_length, prot, flags);
 
+    VERBOSE_LOGGING("os_mmap_aligned: alignment:%llu, alignment_offset:%llu, requested_length:%llu, padded_length: %llu, initial mapping: %p\n",
+      (unsigned long long) alignment,
+      (unsigned long long) alignment_offset,
+      (unsigned long long) requested_length,
+      (unsigned long long) padded_length,
+      (void*) unaligned);
+
     if (!unaligned) {
       return (void*)unaligned;
     }
@@ -177,6 +190,7 @@ void* os_mmap_aligned(void* addr,
         (aligned + (requested_length - 1)) >
             (unaligned + (padded_length - 1)) ||
         (aligned + alignment_offset) % alignment != 0) {
+      VERBOSE_LOGGING("os_mmap_aligned: sanity check fail. aligned: %p\n", (void*) aligned);
       os_munmap((void*)unaligned, padded_length);
       return NULL;
     }
@@ -185,6 +199,7 @@ void* os_mmap_aligned(void* addr,
     os_munmap((void*)unaligned, padded_length);
     aligned =
         (uintptr_t)os_mmap((void*)aligned, requested_length, prot, flags);
+    VERBOSE_LOGGING("os_mmap_aligned: final mapping: %p\n", (void*) aligned);
     return (void*)aligned;
   }
 }
@@ -218,5 +233,8 @@ int os_clock_getres(int clock_id, struct timespec* out_struct) {
   out_struct->tv_nsec = 1000;
   return 0;
 }
+
+#undef VERBOSE_LOG
+#undef DONT_USE_VIRTUAL_ALLOC2
 
 #endif
