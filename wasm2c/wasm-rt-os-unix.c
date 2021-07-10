@@ -114,7 +114,7 @@ void* os_mmap_aligned(void* addr,
   size_t padded_length = requested_length + alignment + alignment_offset;
   uintptr_t unaligned = (uintptr_t)os_mmap(addr, padded_length, prot, flags);
 
-  VERBOSE_LOGGING("os_mmap_aligned: alignment:%llu, alignment_offset:%llu, requested_length:%llu, padded_length: %llu, initial mapping: %p\n",
+  VERBOSE_LOG("os_mmap_aligned: alignment:%llu, alignment_offset:%llu, requested_length:%llu, padded_length: %llu, initial mapping: %p\n",
     (unsigned long long) alignment,
     (unsigned long long) alignment_offset,
     (unsigned long long) requested_length,
@@ -142,7 +142,7 @@ void* os_mmap_aligned(void* addr,
   if (aligned < unaligned ||
       (aligned + (requested_length - 1)) > (unaligned + (padded_length - 1)) ||
       (aligned + alignment_offset) % alignment != 0) {
-    VERBOSE_LOGGING("os_mmap_aligned: sanity check fail. aligned: %p\n", (void*) aligned);
+    VERBOSE_LOG("os_mmap_aligned: sanity check fail. aligned: %p\n", (void*) aligned);
     os_munmap((void*)unaligned, padded_length);
     return NULL;
   }
@@ -162,7 +162,7 @@ void* os_mmap_aligned(void* addr,
     }
   }
 
-  VERBOSE_LOGGING("os_mmap_aligned: final mapping: %p\n", (void*) aligned);
+  VERBOSE_LOG("os_mmap_aligned: final mapping: %p\n", (void*) aligned);
   return (void*)aligned;
 }
 
