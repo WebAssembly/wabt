@@ -563,17 +563,19 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii, (wasm_sandbox_wa
 
 // Original file: Modified emscripten/tools/wasm2c/os.c
 
+#ifdef WASM2C_WASI_EXIT_HOST_ON_MODULE_EXIT
 IMPORT_IMPL(void, Z_wasi_snapshot_preview1Z_proc_exitZ_vi, (wasm_sandbox_wasi_data* wasi_data, u32 x), {
-  #ifdef WASM2C_WASI_EXIT_HOST_ON_MODULE_EXIT
     exit(1);
-  #else
+  });
+#else
+IMPORT_IMPL(void, Z_wasi_snapshot_preview1Z_proc_exitZ_vi, (wasm_sandbox_wasi_data* wasi_data, u32 x), {
     // upstream emscripten implements this as exit(x)
     // This seems like a bad idea as a misbehaving sandbox will cause the app to exit
     // Since this is a library sandboxing runtime, it's fine to do nothing here.
     // Worst case the library continues execution and returns malformed data, which is already a possibility in any sandbox library
     VERBOSE_LOG("wasm2c module called proc_exit: this is a noop in this runtime\n");
-  #endif
 });
+#endif
 
 IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 pcount, u32 pbuf_size), {
   // TODO: Allow the sandbox to have its own env
