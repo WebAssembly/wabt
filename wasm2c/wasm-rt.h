@@ -196,6 +196,8 @@ extern void wasm_rt_allocate_memory(wasm_rt_memory_t*,
                                     uint32_t initial_pages,
                                     uint32_t max_pages);
 
+extern void wasm_rt_deallocate_memory(wasm_rt_memory_t*);
+
 /** Grow a Memory object by `pages`, and return the previous page count. If
  * this new page count is greater than the maximum page count, the grow fails
  * and 0xffffffffu (UINT32_MAX) is returned instead.
@@ -223,9 +225,13 @@ extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
 
-extern void wasm_rt_expand_table(wasm_rt_table_t* table);
+extern void wasm_rt_deallocate_table(wasm_rt_table_t*);
 
-extern void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data);
+extern void wasm_rt_expand_table(wasm_rt_table_t*);
+
+extern void wasm_rt_init_wasi(wasm_sandbox_wasi_data*);
+
+extern void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data*);
 
 extern void wasm2c_ensure_linked();
 

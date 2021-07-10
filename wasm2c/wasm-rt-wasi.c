@@ -339,7 +339,7 @@ IMPORT_IMPL(u32, Z_envZ___sys_accessZ_iii, (wasm_sandbox_wasi_data* wasi_data, u
 
 
 IMPORT_IMPL(u32, Z_envZ___sys_openZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u32 path, u32 flags, u32 varargs), {
-  VERBOSE_LOG("  open: %s %d %d\n", MEMACCESS(wasi_data->heap_memory, path), flags, wasm_i32_load(varargs));
+  VERBOSE_LOG("  open: %s %d\n", MEMACCESS(wasi_data->heap_memory, path), flags);
 
   // only permit opening the null file
   if (!is_null_file(wasi_data, path)) {
@@ -790,4 +790,8 @@ void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
   (void) wasm_i64_store8;
   (void) wasm_i64_store16;
   (void) wasm_i64_store32;
+}
+
+void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data* wasi_data) {
+
 }

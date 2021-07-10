@@ -1135,6 +1135,10 @@ void CWriter::WriteDataInitializers() {
 
   Write("sbx->wasi_data.heap_memory = &(sbx->", ExternalRef(memory->name), ");", Newline());
   Write(CloseBrace(), Newline());
+
+  Write(Newline(), "static void cleanup_memory(wasm2c_sandbox_t* const sbx) ", OpenBrace());
+  Write("wasm_rt_deallocate_memory(&(sbx->", ExternalRef(memory->name), "));", Newline());
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteElemInitializers() {
@@ -1174,6 +1178,12 @@ void CWriter::WriteElemInitializers() {
     ++elem_segment_index;
   }
   Write("sbx->", ExternalRef(table->name), "_current_index = offset + ", std::to_string(first_unused_elem), ";", Newline());
+  Write(CloseBrace(), Newline());
+
+  Write(Newline(), "static void cleanup_table(wasm2c_sandbox_t* const sbx) ", OpenBrace());
+  if (table && module_->num_table_imports == 0) {
+    Write("wasm_rt_deallocate_table(&(sbx->", ExternalRef(table->name), "));", Newline());
+  }
   Write(CloseBrace(), Newline());
 }
 
@@ -1268,7 +1278,11 @@ void CWriter::WriteInit() {
   Write("return sbx;", Newline());
   Write(CloseBrace(), Newline(), Newline());
 
-  Write("static void destroy_wasm2c_sandbox(void* sbx) ", OpenBrace());
+  Write("static void destroy_wasm2c_sandbox(void* aSbx) ", OpenBrace());
+  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) aSbx;", Newline());
+  Write("cleanup_memory(sbx);", Newline());
+  Write("cleanup_table(sbx);", Newline());
+  Write("wasm_rt_cleanup_wasi(&(sbx->wasi_data));", Newline());
   Write("free(sbx);", Newline());
   Write(CloseBrace(), Newline(), Newline());
 

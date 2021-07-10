@@ -114,6 +114,14 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   memory->max_pages = max_pages;
 }
 
+void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
+#if WASM_USING_GUARD_PAGES == 1
+  os_munmap(memory->data, 0x200000000ul);
+#else
+  os_munmap(memory->data, memory->size);
+#endif
+}
+
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t old_pages = memory->pages;
   uint32_t new_pages = memory->pages + delta;
@@ -157,6 +165,10 @@ void wasm_rt_allocate_table(wasm_rt_table_t* table,
   table->max_size = max_elements;
   table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
   assert(table->data != 0);
+}
+
+void wasm_rt_deallocate_table(wasm_rt_table_t* table) {
+  free(table->data);
 }
 
 #define SATURATING_U32_ADD(ret_ptr, a, b) { \
