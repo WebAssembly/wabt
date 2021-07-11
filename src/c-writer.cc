@@ -872,7 +872,7 @@ void CWriter::WriteFuncTypes() {
     Write(OpenBrace());
     Write("wasm_rt_type_t param_ret_types[] = { ");
     bool first = true;
-    if (num_results == 0 && num_results == 0) {
+    if (num_results == 0 && num_params == 0) {
       // Make sure array has at least one element
       Write("/* void(*)(void) */ WASM_RT_I32 ");
     } else {
