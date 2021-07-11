@@ -82,12 +82,7 @@ uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
 void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs, uint32_t* p_func_type_count) {
   // Use a u64 to iterate over u32 arrays to prevent infinite loops
   const uint32_t func_count = *p_func_type_count;
-  for (uint64_t func_index = 0; func_index < func_count; func_index++){
-    uint32_t idx = func_index - 1;
-    if (idx >= *p_func_type_count) {
-      // bad index for cleanup. Treat as a noop.
-      return;
-    }
+  for (uint64_t idx = 0; idx < func_count; idx++){
     wasm_func_type_t* func_type = &((*p_func_type_structs)[idx]);
     if (func_type->params != 0) {
       free(func_type->params);
