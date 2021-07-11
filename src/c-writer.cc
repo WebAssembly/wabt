@@ -899,6 +899,17 @@ void CWriter::WriteFuncTypes() {
     ++func_type_index;
   }
   Write(CloseBrace(), Newline());
+
+  Write("static void cleanup_func_types(wasm2c_sandbox_t* const sbx) ", OpenBrace());
+  {
+    // Use a u64 to iterate over u32 arrays to prevent infinite loops
+    Write("for (u64 i = 0; i < sbx->func_type_count; i++)", OpenBrace());
+    {
+      Write("wasm_rt_cleanup_func_type(&sbx->func_type_structs, &sbx->func_type_count, (u32) i);", Newline());
+    }
+    Write(CloseBrace(), Newline());
+  }
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteImports() {
@@ -1281,6 +1292,7 @@ void CWriter::WriteInit() {
   Write("static void destroy_wasm2c_sandbox(void* aSbx) ", OpenBrace());
   Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) aSbx;", Newline());
   Write("cleanup_memory(sbx);", Newline());
+  Write("cleanup_func_types(sbx);", Newline());
   Write("cleanup_table(sbx);", Newline());
   Write("wasm_rt_cleanup_wasi(&(sbx->wasi_data));", Newline());
   Write("free(sbx);", Newline());
