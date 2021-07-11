@@ -26,8 +26,7 @@ size_t os_getpagesize() {
   return S.dwPageSize;
 }
 
-void* os_mmap(void* hint, size_t size, int prot, int flags) {
-  DWORD alloc_flag = MEM_RESERVE | MEM_COMMIT;
+static void* win_mmap(void* hint, size_t size, int prot, int flags, DWORD alloc_flag) {
   DWORD flProtect = PAGE_NOACCESS;
   size_t request_size, page_size;
   void* addr;
@@ -54,6 +53,11 @@ void* os_mmap(void* hint, size_t size, int prot, int flags) {
 
   addr = VirtualAlloc((LPVOID)hint, request_size, alloc_flag, flProtect);
   return addr;
+}
+
+void* os_mmap(void* hint, size_t size, int prot, int flags) {
+  DWORD alloc_flag = MEM_RESERVE | MEM_COMMIT;
+  return win_mmap(hint, size, prot, flags, alloc_flag);
 }
 
 #ifndef DONT_USE_VIRTUAL_ALLOC2
@@ -133,7 +137,8 @@ int os_mprotect(void* addr, size_t size, int prot) {
     flProtect = PAGE_READONLY;
 
   DWORD old;
-  return VirtualProtect((LPVOID)addr, size, flProtect, &old);
+  BOOL succeeded = VirtualProtect((LPVOID)addr, size, flProtect, &old);
+  return succeeded? 0 : -1;
 }
 
 #ifndef DONT_USE_VIRTUAL_ALLOC2
@@ -155,7 +160,7 @@ void* os_mmap_aligned(void* addr,
 #endif
   {
     size_t padded_length = requested_length + alignment + alignment_offset;
-    uintptr_t unaligned = (uintptr_t)os_mmap(addr, padded_length, prot, flags);
+    uintptr_t unaligned = (uintptr_t)win_mmap(addr, padded_length, prot, flags, MEM_RESERVE);
 
     VERBOSE_LOG("os_mmap_aligned: alignment:%llu, alignment_offset:%llu, requested_length:%llu, padded_length: %llu, initial mapping: %p\n",
       (unsigned long long) alignment,
@@ -198,10 +203,16 @@ void* os_mmap_aligned(void* addr,
     // windows does not support partial unmapping, so unmap and remap
     os_munmap((void*)unaligned, padded_length);
     aligned =
-        (uintptr_t)os_mmap((void*)aligned, requested_length, prot, flags);
+        (uintptr_t)win_mmap((void*)aligned, requested_length, prot, flags, MEM_RESERVE);
     VERBOSE_LOG("os_mmap_aligned: final mapping: %p\n", (void*) aligned);
     return (void*)aligned;
   }
+}
+
+int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot) {
+  uintptr_t addr = (uintptr_t)win_mmap(curr_heap_end_pointer, expanded_size, prot, MMAP_MAP_NONE, MEM_COMMIT);
+  int ret = addr? 0 : -1;
+  return ret;
 }
 
 #define BILLION 1000000000LL

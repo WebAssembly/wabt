@@ -166,6 +166,10 @@ void* os_mmap_aligned(void* addr,
   return (void*)aligned;
 }
 
+int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot) {
+  return os_mprotect(curr_heap_end_pointer, expanded_size, prot);
+}
+
 #if defined(__APPLE__) && defined(__MACH__)
   static mach_timebase_info_data_t timebase = { 0, 0 }; /* numer = 0, denom = 0 */
   static struct timespec           inittime = { 0, 0 }; /* nanoseconds since 1-Jan-1970 to init() */
