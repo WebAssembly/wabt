@@ -762,9 +762,11 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_was
 /////////////////////////////////////////////////////////////
 ////////// Misc
 /////////////////////////////////////////////////////////////
+void wasm_rt_sys_init() {
+  os_clock_init();
+}
 
 void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
-  os_clock_init();
   init_fds(wasi_data);
   // Remove unused function warnings
   (void) wasm_i32_load;

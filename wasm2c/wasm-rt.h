@@ -138,6 +138,7 @@ typedef struct wasm_sandbox_wasi_data {
 
 } wasm_sandbox_wasi_data;
 
+typedef void (*wasm_rt_sys_init_t)(void);
 typedef void* (*create_wasm2c_sandbox_t)(void);
 typedef void (*destroy_wasm2c_sandbox_t)(void* sbx_ptr);
 typedef void* (*lookup_wasm2c_nonfunc_export_t)(void* sbx_ptr, const char* name);
@@ -146,6 +147,7 @@ typedef uint32_t (*add_wasm2c_callback_t)(void* sbx_ptr, uint32_t func_type_idx,
 typedef void (*remove_wasm2c_callback_t)(void* sbx_ptr, uint32_t callback_idx);
 
 typedef struct wasm2c_sandbox_funcs_t {
+  wasm_rt_sys_init_t wasm_rt_sys_init;
   create_wasm2c_sandbox_t create_wasm2c_sandbox;
   destroy_wasm2c_sandbox_t destroy_wasm2c_sandbox;
   lookup_wasm2c_nonfunc_export_t lookup_wasm2c_nonfunc_export;
@@ -233,10 +235,15 @@ extern void wasm_rt_deallocate_table(wasm_rt_table_t*);
 
 extern void wasm_rt_expand_table(wasm_rt_table_t*);
 
+// One time init function for wasm runtime. Should be called once for the current process
+extern void wasm_rt_sys_init();
+
+// Initialize wasi for the given sandbox. Called prior to sandbox execution.
 extern void wasm_rt_init_wasi(wasm_sandbox_wasi_data*);
 
 extern void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data*);
 
+// Helper function that host can use to ensure wasm2c code is loaded correctly when using dynamic libraries
 extern void wasm2c_ensure_linked();
 
 #ifdef __cplusplus

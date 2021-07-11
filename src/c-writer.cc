@@ -1301,6 +1301,7 @@ void CWriter::WriteInit() {
   Write("FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() ", OpenBrace());
   {
     Write("wasm2c_sandbox_funcs_t ret;", Newline());
+    Write("ret.wasm_rt_sys_init = &wasm_rt_sys_init;", Newline());
     Write("ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;", Newline());
     Write("ret.destroy_wasm2c_sandbox = &destroy_wasm2c_sandbox;", Newline());
     Write("ret.lookup_wasm2c_nonfunc_export = &lookup_wasm2c_nonfunc_export;", Newline());
