@@ -902,12 +902,7 @@ void CWriter::WriteFuncTypes() {
 
   Write("static void cleanup_func_types(wasm2c_sandbox_t* const sbx) ", OpenBrace());
   {
-    // Use a u64 to iterate over u32 arrays to prevent infinite loops
-    Write("for (u64 i = 0; i < sbx->func_type_count; i++)", OpenBrace());
-    {
-      Write("wasm_rt_cleanup_func_type(&sbx->func_type_structs, &sbx->func_type_count, (u32) i);", Newline());
-    }
-    Write(CloseBrace(), Newline());
+    Write("wasm_rt_cleanup_func_types(&sbx->func_type_structs, &sbx->func_type_count);", Newline());
   }
   Write(CloseBrace(), Newline());
 }

@@ -186,9 +186,8 @@ extern uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_struct
                                            uint32_t results,
                                            wasm_rt_type_t* types);
 
-void wasm_rt_cleanup_func_type(wasm_func_type_t** p_func_type_structs,
-                               uint32_t* p_func_type_count,
-                               uint32_t func_index);
+void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs,
+                               uint32_t* p_func_type_count);
 
 /** Initialize a Memory object with an initial page size of `initial_pages` and
  * a maximum page size of `max_pages`.
