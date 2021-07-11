@@ -117,7 +117,10 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
     perror("mmap failed");
     abort();
   }
-  os_mmap_commit(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
+  int ret = os_mmap_commit(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
+  if (ret != 0) {
+    abort();
+  }
   // This is a valid way to initialize a constant field that is not undefined behavior
   // https://stackoverflow.com/questions/9691404/how-to-initialize-const-in-a-struct-in-c-with-malloc
   // Summary: malloc of a struct, followed by a write to the constant fields is still defined behavior iff
@@ -153,7 +156,10 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t delta_size = delta * PAGE_SIZE;
 
 #if WASM_USING_GUARD_PAGES == 1
-  os_mmap_commit(memory->data + old_size, delta_size, MMAP_PROT_READ | MMAP_PROT_WRITE);
+  int ret = os_mmap_commit(memory->data + old_size, delta_size, MMAP_PROT_READ | MMAP_PROT_WRITE);
+  if (ret != 0) {
+    return (uint32_t)-1;
+  }
 #else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
