@@ -248,4 +248,7 @@ int os_clock_getres(int clock_id, struct timespec* out_struct) {
 #undef VERBOSE_LOG
 #undef DONT_USE_VIRTUAL_ALLOC2
 
+#else
+  // https://stackoverflow.com/questions/26541150/warning-iso-c-forbids-an-empty-translation-unit
+  typedef int make_iso_compilers_happy;
 #endif

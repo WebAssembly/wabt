@@ -145,9 +145,9 @@ static ret _##name params { \
   VERBOSE_LOG("[import: " #name "]\n"); \
   body \
 } \
-ret (*name) params = _##name;
+ret (*name) params = _##name
 
-#define STUB_IMPORT_IMPL(ret, name, params, returncode) IMPORT_IMPL(ret, name, params, { return returncode; });
+#define STUB_IMPORT_IMPL(ret, name, params, returncode) IMPORT_IMPL(ret, name, params, { return returncode; })
 
 // Generic abort method for a runtime error in the runtime.
 
