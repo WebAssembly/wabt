@@ -370,6 +370,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTagType(Index index, Index sig_index) override;
   Result EndTagSection() override;
 
+  /* Branch Hints section */
+  Result BeginBranchHintsSection(Offset size) override;
+  Result OnBranchHintsFuncCount(Index count) override;
+  Result OnBranchHintsCount(Index function_index, Index count) override;
+  Result OnBranchHint(BranchHintKind kind, Offset code_offset) override;
+  Result EndBranchHintsSection() override;
+
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprV128ConstExpr(Index index, v128 value) override;

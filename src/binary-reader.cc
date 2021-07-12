@@ -132,6 +132,7 @@ class BinaryReader {
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadBranchHintsSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
@@ -2137,6 +2138,43 @@ Result BinaryReader::ReadTagSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadBranchHintsSection(Offset section_size) {
+  CALLBACK(BeginBranchHintsSection, section_size);
+
+  Index num_funcions;
+  CHECK_RESULT(ReadCount(&num_funcions, "function count"));
+  CALLBACK(OnBranchHintsFuncCount, num_funcions);
+
+  for (Index i = 0; i < num_funcions; ++i) {
+    Index function_index;
+    CHECK_RESULT(ReadCount(&function_index, "function index"));
+
+    uint8_t reserved;
+    CHECK_RESULT(ReadU8(&reserved, "reserved"));
+    ERROR_UNLESS(reserved == 0x0, "unexpected reserved 0 byte (got %u)", reserved);
+
+    Index num_hints;
+    CHECK_RESULT(ReadCount(&num_hints, "hint count"));
+
+    CALLBACK(OnBranchHintsCount, function_index, num_hints);
+
+    for (Index j = 0; j < num_hints; ++j) {
+      uint32_t kind;
+      CHECK_RESULT(ReadU32Leb128(&kind, "kind"));
+      ERROR_UNLESS(kind == 0x0 || kind == 0x1, "unexpected hint kind (got %u)", kind);
+      BranchHintKind branch_kind = static_cast<BranchHintKind>(kind);
+
+      Offset code_offset;
+      CHECK_RESULT(ReadOffset(&code_offset, "code offset"));
+
+      CALLBACK(OnBranchHint, branch_kind, code_offset);
+    }
+  }
+
+  CALLBACK(EndBranchHintsSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadCustomSection(Index section_index,
                                        Offset section_size) {
   string_view section_name;
@@ -2155,6 +2193,8 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
+  } else if (section_name == WABT_BINARY_SECTION_BRANCH_HINTS) {
+    CHECK_RESULT(ReadBranchHintsSection(section_size));
   } else {
     // This is an unknown custom section, skip it.
     state_.offset = read_end_;

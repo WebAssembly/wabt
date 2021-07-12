@@ -32,6 +32,7 @@
 #define WABT_BINARY_SECTION_RELOC "reloc"
 #define WABT_BINARY_SECTION_LINKING "linking"
 #define WABT_BINARY_SECTION_DYLINK "dylink"
+#define WABT_BINARY_SECTION_BRANCH_HINTS "branchHints"
 
 #define WABT_FOREACH_BINARY_SECTION(V) \
   V(Custom, custom, 0)                 \

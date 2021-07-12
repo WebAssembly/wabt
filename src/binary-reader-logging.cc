@@ -664,6 +664,12 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
   return reader_->OnComdatEntry(kind, index);
 }
 
+Result BinaryReaderLogging::OnBranchHint(BranchHintKind kind, Offset code_offset) {
+  LOGF("OnBranchHint(kind: %d, offset: %" PRIzd ")\n",
+       static_cast<int>(kind), code_offset);
+  return reader_->OnBranchHint(kind, code_offset);
+}
+
 #define DEFINE_BEGIN(name)                        \
   Result BinaryReaderLogging::name(Offset size) { \
     LOGF(#name "(%" PRIzd ")\n", size);           \
@@ -901,6 +907,11 @@ DEFINE_BEGIN(BeginTagSection);
 DEFINE_INDEX(OnTagCount);
 DEFINE_INDEX_INDEX(OnTagType, "index", "sig_index")
 DEFINE_END(EndTagSection);
+
+DEFINE_BEGIN(BeginBranchHintsSection);
+DEFINE_INDEX(OnBranchHintsFuncCount);
+DEFINE_INDEX_INDEX(OnBranchHintsCount, "func_index", "count");
+DEFINE_END(EndBranchHintsSection);
 
 // We don't need to log these (the individual opcodes are logged instead), but
 // we still need to forward the calls.

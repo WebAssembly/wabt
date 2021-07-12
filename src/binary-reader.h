@@ -447,6 +447,13 @@ class BinaryReaderDelegate {
   virtual Result OnTagType(Index index, Index sig_index) = 0;
   virtual Result EndTagSection() = 0;
 
+  /* Branch Hints section */
+  virtual Result BeginBranchHintsSection(Offset size) = 0;
+  virtual Result OnBranchHintsFuncCount(Index count) = 0;
+  virtual Result OnBranchHintsCount(Index function_index, Index count) = 0;
+  virtual Result OnBranchHint(BranchHintKind kind, Offset code_offset) = 0;
+  virtual Result EndBranchHintsSection() = 0;
+
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */
   virtual Result OnInitExprF32ConstExpr(Index index, uint32_t value) = 0;
