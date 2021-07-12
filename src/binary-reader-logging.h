@@ -370,6 +370,15 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTagType(Index index, Index sig_index) override;
   Result EndTagSection() override;
 
+  /* Code Annotation sections */
+  Result BeginCodeAnnotationSection(string_view name, Offset size) override;
+  Result OnCodeAnnotationFuncCount(Index count) override;
+  Result OnCodeAnnotationCount(Index function_index, Index count) override;
+  Result OnCodeAnnotation(Offset offset,
+                          const void* data,
+                          Address size) override;
+  Result EndCodeAnnotationSection() override;
+
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprV128ConstExpr(Index index, v128 value) override;

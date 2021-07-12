@@ -133,6 +133,8 @@ class BinaryReader {
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylink0Section(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadCodeAnnotationSection(string_view name,
+                                   Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
@@ -2195,6 +2197,57 @@ Result BinaryReader::ReadTagSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadCodeAnnotationSection(string_view name,
+                                               Offset section_size) {
+  CALLBACK(BeginCodeAnnotationSection, name, section_size);
+
+  Index num_funcions;
+  CHECK_RESULT(ReadCount(&num_funcions, "function count"));
+  CALLBACK(OnCodeAnnotationFuncCount, num_funcions);
+
+  Index last_function_index = kInvalidIndex;
+  for (Index i = 0; i < num_funcions; ++i) {
+    Index function_index;
+    CHECK_RESULT(ReadCount(&function_index, "function index"));
+    ERROR_UNLESS(function_index >= num_func_imports_,
+                 "function import can't be annotated (got %" PRIindex ")",
+                 function_index);
+    ERROR_UNLESS(function_index < NumTotalFuncs(),
+                 "invalid function index: %" PRIindex, function_index);
+    ERROR_UNLESS(function_index != last_function_index,
+                 "duplicate function index: %" PRIindex, function_index);
+    ERROR_UNLESS(last_function_index == kInvalidIndex ||
+                     function_index > last_function_index,
+                 "function index out of order: %" PRIindex, function_index);
+    last_function_index = function_index;
+
+    Index num_annotations;
+    CHECK_RESULT(ReadCount(&num_annotations, "annotations count"));
+
+    CALLBACK(OnCodeAnnotationCount, function_index, num_annotations);
+
+    Offset last_code_offset = kInvalidOffset;
+    for (Index j = 0; j < num_annotations; ++j) {
+      Offset code_offset;
+      CHECK_RESULT(ReadOffset(&code_offset, "code offset"));
+      ERROR_UNLESS(code_offset != last_code_offset,
+                   "duplicate code offset: %" PRIzx, code_offset);
+      ERROR_UNLESS(
+          last_code_offset == kInvalidOffset || code_offset > last_code_offset,
+          "code offset out of order: %" PRIzx, code_offset);
+      last_code_offset = code_offset;
+
+      Address data_size;
+      const void* data;
+      CHECK_RESULT(ReadBytes(&data, &data_size, "code annotation data"));
+      CALLBACK(OnCodeAnnotation, code_offset, data, data_size);
+    }
+  }
+
+  CALLBACK(EndCodeAnnotationSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadCustomSection(Index section_index,
                                        Offset section_size) {
   string_view section_name;
@@ -2215,6 +2268,12 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
+  } else if (options_.features.code_annotations_enabled() &&
+             section_name.find(WABT_BINARY_SECTION_CODE_ANNOTATION) == 0) {
+    string_view annotation_name = section_name;
+    annotation_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_ANNOTATION) -
+                                  1);
+    CHECK_RESULT(ReadCodeAnnotationSection(annotation_name, section_size));
   } else {
     // This is an unknown custom section, skip it.
     state_.offset = read_end_;

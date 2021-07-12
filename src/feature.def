@@ -34,5 +34,6 @@ WABT_FEATURE(tail_call,           "tail-call",               false,   "Tail-call
 WABT_FEATURE(bulk_memory,         "bulk-memory",             false,   "Bulk-memory operations")
 WABT_FEATURE(reference_types,     "reference-types",         false,   "Reference types (externref)")
 WABT_FEATURE(annotations,         "annotations",             false,   "Custom annotation syntax")
+WABT_FEATURE(code_annotations,    "code-annotations",        false,   "Code annotations")
 WABT_FEATURE(gc,                  "gc",                      false,   "Garbage collection")
 WABT_FEATURE(memory64,            "memory64",                false,   "64-bit memory")

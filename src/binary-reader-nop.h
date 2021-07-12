@@ -455,6 +455,21 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTagType(Index index, Index sig_index) override { return Result::Ok; }
   Result EndTagSection() override { return Result::Ok; }
 
+  /* Code Annotation sections */
+  Result BeginCodeAnnotationSection(string_view name, Offset size) override {
+    return Result::Ok;
+  }
+  Result OnCodeAnnotationFuncCount(Index count) override { return Result::Ok; }
+  Result OnCodeAnnotationCount(Index function_index, Index count) override {
+    return Result::Ok;
+  }
+  Result OnCodeAnnotation(Offset offset,
+                          const void* data,
+                          Address size) override {
+    return Result::Ok;
+  }
+  Result EndCodeAnnotationSection() override { return Result::Ok; }
+
   /* Dylink section */
   Result BeginDylinkSection(Offset size) override { return Result::Ok; }
   Result OnDylinkInfo(uint32_t mem_size,

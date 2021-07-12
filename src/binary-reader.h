@@ -447,6 +447,15 @@ class BinaryReaderDelegate {
   virtual Result OnTagType(Index index, Index sig_index) = 0;
   virtual Result EndTagSection() = 0;
 
+  /* Code Annotation sections */
+  virtual Result BeginCodeAnnotationSection(string_view name, Offset size) = 0;
+  virtual Result OnCodeAnnotationFuncCount(Index count) = 0;
+  virtual Result OnCodeAnnotationCount(Index function_index, Index count) = 0;
+  virtual Result OnCodeAnnotation(Offset offset,
+                                  const void* data,
+                                  Address size) = 0;
+  virtual Result EndCodeAnnotationSection() = 0;
+
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */
   virtual Result OnInitExprF32ConstExpr(Index index, uint32_t value) = 0;

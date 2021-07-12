@@ -33,6 +33,7 @@
 #define WABT_BINARY_SECTION_LINKING "linking"
 #define WABT_BINARY_SECTION_DYLINK "dylink"
 #define WABT_BINARY_SECTION_DYLINK0 "dylink.0"
+#define WABT_BINARY_SECTION_CODE_ANNOTATION "code_annotation."
 
 #define WABT_FOREACH_BINARY_SECTION(V) \
   V(Custom, custom, 0)                 \

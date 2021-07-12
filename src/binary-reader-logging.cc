@@ -657,6 +657,22 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
   return reader_->OnComdatEntry(kind, index);
 }
 
+Result BinaryReaderLogging::BeginCodeAnnotationSection(string_view name,
+                                                       Offset size) {
+  LOGF("BeginCodeAnnotationSection('" PRIstringview "', size:%" PRIzd ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), size);
+  Indent();
+  return reader_->BeginCodeAnnotationSection(name, size);
+}
+Result BinaryReaderLogging::OnCodeAnnotation(Offset code_offset,
+                                             const void* data,
+                                             Address size) {
+  string_view content(static_cast<const char*>(data), size);
+  LOGF("OnCodeAnnotation(offset: %" PRIzd ", data: \"" PRIstringview "\")\n",
+       code_offset, WABT_PRINTF_STRING_VIEW_ARG(content));
+  return reader_->OnCodeAnnotation(code_offset, data, size);
+}
+
 #define DEFINE_BEGIN(name)                        \
   Result BinaryReaderLogging::name(Offset size) { \
     LOGF(#name "(%" PRIzd ")\n", size);           \
@@ -895,6 +911,10 @@ DEFINE_BEGIN(BeginTagSection);
 DEFINE_INDEX(OnTagCount);
 DEFINE_INDEX_INDEX(OnTagType, "index", "sig_index")
 DEFINE_END(EndTagSection);
+
+DEFINE_INDEX(OnCodeAnnotationFuncCount);
+DEFINE_INDEX_INDEX(OnCodeAnnotationCount, "func_index", "count");
+DEFINE_END(EndCodeAnnotationSection);
 
 // We don't need to log these (the individual opcodes are logged instead), but
 // we still need to forward the calls.
