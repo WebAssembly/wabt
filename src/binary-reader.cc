@@ -2212,7 +2212,7 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
-  } else if (section_name == WABT_BINARY_SECTION_BRANCH_HINTS) {
+  } else if (options_.features.branch_hinting_enabled() && section_name == WABT_BINARY_SECTION_BRANCH_HINTS) {
     CHECK_RESULT(ReadBranchHintsSection(section_size));
   } else {
     // This is an unknown custom section, skip it.
