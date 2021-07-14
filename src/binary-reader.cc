@@ -2145,9 +2145,21 @@ Result BinaryReader::ReadBranchHintsSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_funcions, "function count"));
   CALLBACK(OnBranchHintsFuncCount, num_funcions);
 
+  Index last_function_index = kInvalidIndex;
   for (Index i = 0; i < num_funcions; ++i) {
     Index function_index;
     CHECK_RESULT(ReadCount(&function_index, "function index"));
+    ERROR_UNLESS(function_index >= num_func_imports_,
+                 "function import not allowed as hinted (got %" PRIindex ")",
+                 function_index);
+    ERROR_UNLESS(function_index < NumTotalFuncs(),
+                 "invalid function index: %" PRIindex, function_index);
+    ERROR_UNLESS(function_index != last_function_index,
+                 "duplicate function name: %" PRIindex, function_index);
+    ERROR_UNLESS(last_function_index == kInvalidIndex ||
+                     function_index > last_function_index,
+                 "function index out of order: %" PRIindex, function_index);
+    last_function_index = function_index;
 
     uint8_t reserved;
     CHECK_RESULT(ReadU8(&reserved, "reserved"));
@@ -2158,6 +2170,7 @@ Result BinaryReader::ReadBranchHintsSection(Offset section_size) {
 
     CALLBACK(OnBranchHintsCount, function_index, num_hints);
 
+    Offset last_code_offset = kInvalidOffset;
     for (Index j = 0; j < num_hints; ++j) {
       uint32_t kind;
       CHECK_RESULT(ReadU32Leb128(&kind, "kind"));
@@ -2166,6 +2179,12 @@ Result BinaryReader::ReadBranchHintsSection(Offset section_size) {
 
       Offset code_offset;
       CHECK_RESULT(ReadOffset(&code_offset, "code offset"));
+      ERROR_UNLESS(code_offset != last_code_offset,
+                   "duplicate code offset: %" PRIzx, code_offset);
+      ERROR_UNLESS(last_code_offset == kInvalidOffset ||
+                       code_offset > last_code_offset,
+                   "code offset out of order: %" PRIzx, code_offset);
+      last_code_offset = code_offset;
 
       CALLBACK(OnBranchHint, branch_kind, code_offset);
     }
