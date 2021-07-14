@@ -1,0 +1,68 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-branch-hinting
+;;; ARGS2: --enable-branch-hinting
+magic
+version
+section(TYPE) {
+  count[1]
+  function params[2] i32 i32 results[1] i32
+}
+section(FUNCTION) {
+  count[2]
+  type[0]
+  type[0]
+}
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[0]
+}
+section("branchHints") {
+  function_count[2]
+  function_index[1]
+  reserved[0]
+  hint_count[1]
+  hint_kind[1]
+  hint_offset[8]
+  function_index[0]
+  reserved[0]
+  hint_count[1]
+  hint_kind[1]
+  hint_offset[8]
+}
+
+section(CODE) {
+  count[2]
+  func {
+    locals[decl_count[1] i32_count[2] i32]
+    get_local 1
+    get_local 0
+    i32.sub
+    i32.const 0
+    i32.eq
+    if void
+      i32.const 100
+      return
+    end
+    i32.const 1
+    return
+  }
+  func {
+    locals[decl_count[1] i32_count[2] i32]
+    get_local 1
+    get_local 0
+    i32.sub
+    i32.const 0
+    i32.eq
+    if void
+      i32.const 100
+      return
+    end
+    i32.const 1
+    return
+  }
+}
+(;; STDERR ;;;
+0000030: error: function index out of order: 0
+0000030: error: function index out of order: 0
+;;; STDERR ;;)
