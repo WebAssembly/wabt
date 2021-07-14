@@ -247,7 +247,15 @@ class CWriter(object):
         elif len(expected) == 0:
             self._WriteAssertActionCommand(command)
         else:
-            raise Error('Unexpected result with multiple values: %s' % expected)
+            result_types = [result['type'] for result in expected]
+            # type, fmt, f, compare, expected, found
+            self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, (%s), (%s));\n' %
+                                ("struct wasm_multi_" + MangleTypes(result_types),
+                                 " ".join("MULTI_" + ty for ty in result_types),
+                                 self._Action(command),
+                                 self._CompareList(expected),
+                                 self._ConstantList(expected),
+                                 self._FoundList(result_types)))
 
     def _WriteAssertActionCommand(self, command):
         assert_map = {
@@ -277,6 +285,20 @@ class CWriter(object):
 
     def _ConstantList(self, consts):
         return ', '.join(self._Constant(const) for const in consts)
+
+    def _Found(self, num, type_):
+        return "actual.%s%s" % (MangleType(type_), num)
+
+    def _FoundList(self, types):
+        return ', '.join(self._Found(num, type_) for num, type_ in enumerate(types))
+
+    def _Compare(self, num, const):
+        return "is_equal_%s(%s, %s)" % (const['type'],
+                                        self._Constant(const),
+                                        self._Found(num, const['type']))
+
+    def _CompareList(self, consts):
+        return ' && '.join(self._Compare(num, const) for num, const in enumerate(consts))
 
     def _ActionSig(self, action, expected):
         type_ = action['type']
