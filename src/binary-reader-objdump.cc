@@ -1013,6 +1013,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnTagCount(Index count) override;
   Result OnTagType(Index index, Index sig_index) override;
 
+  Result OnBranchHintsFuncCount(Index count) override;
+  Result OnBranchHintsCount(Index function_index, Index count) override;
+  Result OnBranchHint(BranchHintKind kind, Offset code_offset) override;
+
  private:
   Result InitExprToConstOffset(const InitExpr& expr, uint32_t* out_offset);
   Result HandleInitExpr(const InitExpr& expr);
@@ -2026,6 +2030,31 @@ Result BinaryReaderObjdump::OnTagType(Index index, Index sig_index) {
     return Result::Ok;
   }
   printf(" - tag[%" PRIindex "] sig=%" PRIindex "\n", index, sig_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnBranchHintsFuncCount(Index count) {
+  printf("  - hinted functions [count=%d]\n", count);
+  return Result::Ok;
+}
+Result BinaryReaderObjdump::OnBranchHintsCount(Index function_index, Index count) {
+  printf("   - branch hints [function_index=%" PRIindex " count=%d]\n", function_index, count);
+  return Result::Ok;
+}
+Result BinaryReaderObjdump::OnBranchHint(BranchHintKind kind, Offset code_offset) {
+  const char* kind_str;
+  switch(kind) {
+    case BranchHintKind::LikelyNotTaken:
+      kind_str = "likely_not_taken";
+      break;
+    case BranchHintKind::LikelyTaken:
+      kind_str = "likely_taken";
+      break;
+    default:
+      err_stream_->Writef("invalid branch hint kind: %d\n", static_cast<int>(kind));
+      return Result::Error;
+  }
+  printf("    - branch hint [kind=%s code_offset=%" PRIzx "]\n", kind_str, code_offset);
   return Result::Ok;
 }
 
