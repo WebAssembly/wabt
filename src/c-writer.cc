@@ -1701,6 +1701,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::ReturnCallIndirect:
       case ExprType::Throw:
       case ExprType::Try:
+      case ExprType::CallRef:
         UNIMPLEMENTED("...");
         break;
     }

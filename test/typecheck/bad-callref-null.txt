@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(module
+  (func (export "main") (result i32)
+    (call_ref (i32.const 10)
+              (ref.null func)
+    )
+  )
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-callref-null.txt:6:6: error: type mismatch in call_ref, expected reference but got [funcref]
+    (call_ref (i32.const 10)
+     ^^^^^^^^
+;;; STDERR ;;)

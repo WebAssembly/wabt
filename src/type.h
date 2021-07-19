@@ -55,18 +55,30 @@ class Type {
     I32U = 7,  // Not actually specified, but used internally with load/store
   };
 
+  enum class Nullable : bool {
+    No = false,
+    Yes = true,
+  };
+
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code) : enum_(static_cast<Enum>(code)) {}
-  Type(Enum e) : enum_(e) {}
+  Type(int32_t code, Nullable nullable = Nullable::Yes)
+      : enum_(static_cast<Enum>(code)), nullable(nullable) {}
+  Type(Enum e) : enum_(e), nullable(Nullable::Yes) {}
   operator Enum() const { return enum_; }
 
   bool IsRef() const {
+    return enum_ == Type::ExternRef || enum_ == Type::FuncRef || IsIndex();
+  }
+
+  bool IsFuncOrExternRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef;
   }
 
-  bool IsNullableRef() const {
-    // Currently all reftypes are nullable
-    return IsRef();
+  bool IsNullableRef() const { return IsRef() && IsNullable(); }
+
+  bool IsNullable() const {
+    assert(IsRef());
+    return static_cast<bool>(nullable);
   }
 
   const char* GetName() const {
@@ -138,6 +150,7 @@ class Type {
 
  private:
   Enum enum_;
+  Nullable nullable;
 };
 
 }  // namespace wabt

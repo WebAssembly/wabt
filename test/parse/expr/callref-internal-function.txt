@@ -1,0 +1,14 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+(module
+  (func (export "main") (result i32)
+    (call_ref (i32.const 10)
+              (ref.func $foo)
+    )
+  )
+  (func $foo (param $x i32) (result i32)
+    (i32.add (local.get $x)
+             (i32.const 19))
+  )
+  (elem declare funcref (ref.func $foo))
+)

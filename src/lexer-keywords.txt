@@ -31,6 +31,7 @@ br_if, TokenType::BrIf, Opcode::BrIf
 br_table, TokenType::BrTable, Opcode::BrTable
 br, TokenType::Br, Opcode::Br
 call_indirect, TokenType::CallIndirect, Opcode::CallIndirect
+call_ref, TokenType::CallRef, Opcode::CallRef
 call, TokenType::Call, Opcode::Call
 catch, TokenType::Catch, Opcode::Catch
 catch_all, TokenType::CatchAll, Opcode::CatchAll

@@ -77,6 +77,7 @@ class TypeChecker {
   Result OnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types);
+  Result OnFuncRef(Index* out_index);
   Result OnReturnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCatch(const TypeVector& sig);
