@@ -177,6 +177,9 @@ FUNC_EXPORT void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr
       } else {
         data->alloc_state = ALLOC_STATE::UNINIT;
       }
+
+      // This memory is now "previously used" memory
+      data->used_state = USED_STATE::FREED;
     });
   }
 }
@@ -225,7 +228,9 @@ FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* fu
   check_heap_base_straddle(mem, func_name, ptr, ptr_size);
 
   bool malloc_read_family = is_malloc_family_function(func_name, true, true);
-  bool overread_func = is_overread_function(func_name);
+  bool malloc_core_family = is_malloc_family_function(func_name, false, false);
+  bool malloc_any_family  = malloc_read_family;
+  bool overread_func_family = is_overread_function(func_name);
 
   memory_state_iterate(mem, ptr, ptr_size, [&](uint32_t index, cell_data_t* data){
     // Is this function exempt from checking
@@ -240,7 +245,7 @@ FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* fu
     bool is_first_iteration = index == ptr;
     // Functions that intentionally read beyond the end of an allocation for performance
     // The limit is upto 7 bytes past the end of the allocation
-    if (overread_func && !is_first_iteration) {
+    if (overread_func_family && !is_first_iteration) {
       exempt = true;
     }
 
@@ -255,6 +260,25 @@ FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* fu
       }
 #endif
     }
+
+    // Accessing C globals --- infer if this is malloc or program data
+    if (index < mem->shadow_memory.heap_base) {
+      if (malloc_core_family) {
+        // Accessing C globals from core malloc functions
+        if(data->own_state == OWN_STATE::PROGRAM) {
+          report_error(func_name, "Core malloc functions reading non malloc globals", index, data);
+        }
+        data->own_state = OWN_STATE::MALLOC;
+      } else if (malloc_any_family) {
+        // Accessing C globals from malloc wrapper functions
+        // hard to infer as these access both regular and chunk memory, so leave things unchanged
+      } else {
+        if(data->own_state == OWN_STATE::MALLOC) {
+          report_error(func_name, "Program reading malloc globals", index, data);
+        }
+        data->own_state = OWN_STATE::PROGRAM;
+      }
+    }
   });
 }
 
@@ -262,6 +286,8 @@ FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* f
   check_heap_base_straddle(mem, func_name, ptr, ptr_size);
 
   bool malloc_write_family = is_malloc_family_function(func_name, false /* calloc shouldn't modify metadata */, true);
+  bool malloc_core_family = is_malloc_family_function(func_name, false, false);
+  bool malloc_any_family  = is_malloc_family_function(func_name, true, true);
 
   memory_state_iterate(mem, ptr, ptr_size, [&](uint32_t index, cell_data_t* data){
     // Is this function exempt from checking
@@ -278,6 +304,25 @@ FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* f
         report_error(func_name, "Writing uninitialized memory", index, data);
       } else if (data->alloc_state == ALLOC_STATE::ALLOCED) {
         data->alloc_state = ALLOC_STATE::INITIALIZED;
+      }
+    }
+
+    // Accessing C globals --- infer if this is malloc or program data
+    if (index < mem->shadow_memory.heap_base) {
+      if (malloc_core_family) {
+        // Accessing C globals from core malloc functions
+        if(data->own_state == OWN_STATE::PROGRAM) {
+          report_error(func_name, "Core malloc functions writing non malloc globals", index, data);
+        }
+        data->own_state = OWN_STATE::MALLOC;
+      } else if (malloc_any_family) {
+        // Accessing C globals from malloc wrapper functions
+        // hard to infer as these access both regular and chunk memory, so leave things unchanged
+      } else {
+        if(data->own_state == OWN_STATE::MALLOC) {
+          report_error(func_name, "Program writing malloc globals", index, data);
+        }
+        data->own_state = OWN_STATE::PROGRAM;
       }
     }
   });
