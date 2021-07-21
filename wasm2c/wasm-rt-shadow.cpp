@@ -15,12 +15,6 @@
 #include <map>
 #include <functional>
 
-#if defined(_WIN32)
-  #define FUNC_EXPORT __declspec(dllexport)
-#else
-  #define FUNC_EXPORT
-#endif
-
 typedef enum class ALLOC_STATE : uint8_t {
   UNINIT = 0, ALLOCED, INITIALIZED,
 } ALLOC_STATE;
@@ -67,7 +61,7 @@ static cell_data_t unpack(wasm2c_shadow_memory_cell_t byte) {
   return ret;
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_create(wasm_rt_memory_t* mem) {
+void wasm2c_shadow_memory_create(wasm_rt_memory_t* mem) {
   uint64_t new_size = ((uint64_t) mem->size) * sizeof(wasm2c_shadow_memory_cell_t);
   mem->shadow_memory.data = (wasm2c_shadow_memory_cell_t*) calloc(new_size, 1);
   assert(mem->shadow_memory.data != 0);
@@ -76,7 +70,7 @@ FUNC_EXPORT void wasm2c_shadow_memory_create(wasm_rt_memory_t* mem) {
   mem->shadow_memory.heap_base = 0;
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_expand(wasm_rt_memory_t* mem) {
+void wasm2c_shadow_memory_expand(wasm_rt_memory_t* mem) {
   uint64_t new_size = ((uint64_t) mem->size) * sizeof(wasm2c_shadow_memory_cell_t);
   uint8_t* new_data = (uint8_t*) realloc(mem->shadow_memory.data, new_size);
   assert(mem->shadow_memory.data != 0);
@@ -88,7 +82,7 @@ FUNC_EXPORT void wasm2c_shadow_memory_expand(wasm_rt_memory_t* mem) {
 
 #define allocation_sizes_map(mem) ((std::map<uint32_t, uint32_t>*) mem->shadow_memory.allocation_sizes_map)
 
-FUNC_EXPORT void wasm2c_shadow_memory_destroy(wasm_rt_memory_t* mem) {
+void wasm2c_shadow_memory_destroy(wasm_rt_memory_t* mem) {
   free(mem->shadow_memory.data);
   mem->shadow_memory.data = 0;
   mem->shadow_memory.data_size = 0;
@@ -114,7 +108,7 @@ static inline void memory_state_iterate(wasm_rt_memory_t* mem, uint32_t ptr, uin
   }
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_reserve(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size) {
+void wasm2c_shadow_memory_reserve(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size) {
   memory_state_iterate(mem, ptr, ptr_size, [&](uint32_t index, cell_data_t* data){
     if (data->alloc_state == ALLOC_STATE::UNINIT) {
       data->alloc_state = ALLOC_STATE::ALLOCED;
@@ -142,7 +136,7 @@ static void report_error(const char* func_name, const char* error_message, uint3
   #endif
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_dlmalloc(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size) {
+void wasm2c_shadow_memory_dlmalloc(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size) {
   const char* func_name = "<MALLOC>";
   if (ptr < mem->shadow_memory.heap_base) {
     report_error(func_name, "malloc returning a pointer outside the heap", ptr, 0);
@@ -160,7 +154,7 @@ FUNC_EXPORT void wasm2c_shadow_memory_dlmalloc(wasm_rt_memory_t* mem, uint32_t p
   (*alloc_map)[ptr] = ptr_size;
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr) {
+void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr) {
   const char* func_name = "<FREE>";
 
   auto alloc_map = allocation_sizes_map(mem);
@@ -184,7 +178,7 @@ FUNC_EXPORT void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr
   }
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_mark_globals_heap_boundary(wasm_rt_memory_t* mem, uint32_t ptr) {
+void wasm2c_shadow_memory_mark_globals_heap_boundary(wasm_rt_memory_t* mem, uint32_t ptr) {
   mem->shadow_memory.heap_base = ptr;
   wasm2c_shadow_memory_reserve(mem, 0, ptr);
 }
@@ -224,7 +218,7 @@ static bool is_overread_function(const char* func_name) {
   return strcmp(func_name, "w2c_strlen") == 0;
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size) {
+WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size) {
   check_heap_base_straddle(mem, func_name, ptr, ptr_size);
 
   bool malloc_read_family = is_malloc_family_function(func_name, true, true);
@@ -282,7 +276,7 @@ FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* fu
   });
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size) {
+WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size) {
   check_heap_base_straddle(mem, func_name, ptr, ptr_size);
 
   bool malloc_write_family = is_malloc_family_function(func_name, false /* calloc shouldn't modify metadata */, true);
@@ -328,7 +322,7 @@ FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* f
   });
 }
 
-FUNC_EXPORT void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t* mem) {
+WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t* mem) {
   auto alloc_map = allocation_sizes_map(mem);
   puts("{ ");
   int counter = 0;

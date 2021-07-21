@@ -21,6 +21,12 @@
 #include <stddef.h>
 #include <setjmp.h>
 
+#if defined(_WIN32)
+  #define WASM2C_FUNC_EXPORT __declspec(dllexport)
+#else
+  #define WASM2C_FUNC_EXPORT
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -268,9 +274,9 @@ extern void wasm2c_shadow_memory_expand(wasm_rt_memory_t* mem);
 // Cleanup
 extern void wasm2c_shadow_memory_destroy(wasm_rt_memory_t* mem);
 // Perform checks for the load operation that completed
-extern void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size);
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size);
 // Perform checks for the store operation that completed
-extern void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size);
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const char* func_name, uint32_t ptr, uint32_t ptr_size);
 // Mark an area as allocated, if it is currently unused. If already used, this is a noop.
 extern void wasm2c_shadow_memory_reserve(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size);
 // Perform checks for the malloc operation that completed
@@ -281,7 +287,7 @@ extern void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr);
 // Shadow asan will check that all malloc metadata structures below this boundary are only accessed by malloc related functions
 extern void wasm2c_shadow_memory_mark_globals_heap_boundary(wasm_rt_memory_t* mem, uint32_t ptr);
 // Print a list of all allocations currently active
-extern void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t* mem);
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t* mem);
 
 #ifdef __cplusplus
 }
