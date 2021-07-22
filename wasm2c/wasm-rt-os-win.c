@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <Windows.h>
 
@@ -215,12 +216,16 @@ int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot) 
   return ret;
 }
 
-static LARGE_INTEGER g_counts_per_sec;
+typedef struct {
+  LARGE_INTEGER counts_per_sec;
+} wasi_win_clock_info_t;
+
+static wasi_win_clock_info_t g_wasi_win_clock_info;
 static int g_os_data_initialized = 0;
 
 void os_init() {
   // From here: https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows/38212960#38212960
-  if (QueryPerformanceFrequency(&g_counts_per_sec) == 0) {
+  if (QueryPerformanceFrequency(&g_wasi_win_clock_info.counts_per_sec) == 0) {
     abort();
   }
   g_os_data_initialized = 1;
@@ -231,11 +236,11 @@ void os_clock_init(void** clock_data_pointer) {
     os_init();
   }
 
-  LARGE_INTEGER* alloc = (LARGE_INTEGER*) malloc(sizeof(LARGE_INTEGER));
+  wasi_win_clock_info_t* alloc = (wasi_win_clock_info_t*) malloc(sizeof(wasi_win_clock_info_t));
   if (!alloc) {
     abort();
   }
-  memcpy(alloc, &g_counts_per_sec, sizeof(LARGE_INTEGER));
+  memcpy(alloc, &g_wasi_win_clock_info, sizeof(wasi_win_clock_info_t));
   *clock_data_pointer = alloc;
 }
 
@@ -247,18 +252,18 @@ void os_clock_cleanup(void** clock_data_pointer) {
 }
 
 int os_clock_gettime(void* clock_data, int clock_id, struct timespec* out_struct) {
-  LARGE_INTEGER* alloc = (LARGE_INTEGER*) clock_data;
+  wasi_win_clock_info_t* alloc = (wasi_win_clock_info_t*) clock_data;
 
   LARGE_INTEGER count;
   (void)clock_id;
 
-  if (alloc->QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
+  if (alloc->g_wasi_win_clock_info.QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
     return -1;
   }
 
 #define BILLION 1000000000LL
-  out_struct->tv_sec = count.QuadPart / alloc->QuadPart;
-  out_struct->tv_nsec = ((count.QuadPart % alloc->QuadPart) * BILLION) / alloc->QuadPart;
+  out_struct->tv_sec = count.QuadPart / alloc->g_wasi_win_clock_info.QuadPart;
+  out_struct->tv_nsec = ((count.QuadPart % alloc->g_wasi_win_clock_info.QuadPart) * BILLION) / alloc->g_wasi_win_clock_info.QuadPart;
 #undef BILLION
 
   return 0;

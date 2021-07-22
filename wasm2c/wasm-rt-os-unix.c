@@ -10,6 +10,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
   // Macs priors to OSX 10.12 don't have the clock functions. So we will use mac specific options
