@@ -156,6 +156,8 @@ typedef struct wasm_sandbox_wasi_data {
   int wasm_fd_to_native[WASM2C_WASI_MAX_FDS];
   uint32_t next_wasm_fd;
 
+  void* clock_data;
+
 } wasm_sandbox_wasi_data;
 
 typedef void (*wasm_rt_sys_init_t)(void);

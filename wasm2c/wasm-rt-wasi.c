@@ -756,7 +756,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_w
   }
 
   struct timespec out_struct;
-  int ret = os_clock_gettime(clock_id, &out_struct);
+  int ret = os_clock_gettime(wasi_data->clock_data, clock_id, &out_struct);
   wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
   wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
   return ret;
@@ -768,7 +768,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_was
   }
 
   struct timespec out_struct;
-  int ret = os_clock_getres(clock_id, &out_struct);
+  int ret = os_clock_getres(wasi_data->clock_data, clock_id, &out_struct);
   wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
   wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
   return ret;
@@ -778,11 +778,12 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_was
 ////////// Misc
 /////////////////////////////////////////////////////////////
 void wasm_rt_sys_init() {
-  os_clock_init();
+  os_init();
 }
 
 void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
   init_fds(wasi_data);
+  os_clock_init(&(wasi_data->clock_data));
   // Remove unused function warnings
   (void) wasm_i32_load;
   (void) wasm_i64_load;
@@ -810,5 +811,5 @@ void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
 }
 
 void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data* wasi_data) {
-
+  os_clock_cleanup(&(wasi_data->clock_data));
 }

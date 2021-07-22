@@ -215,30 +215,56 @@ int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot) 
   return ret;
 }
 
-#define BILLION 1000000000LL
 static LARGE_INTEGER g_counts_per_sec;
+static int g_os_data_initialized = 0;
 
-void os_clock_init() {
+void os_init() {
   // From here: https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows/38212960#38212960
   if (QueryPerformanceFrequency(&g_counts_per_sec) == 0) {
     abort();
   }
+  g_os_data_initialized = 1;
 }
 
-int os_clock_gettime(int clock_id, struct timespec* out_struct) {
+void os_clock_init(void** clock_data_pointer) {
+  if (!g_os_data_initialized) {
+    os_init();
+  }
+
+  LARGE_INTEGER* alloc = (LARGE_INTEGER*) malloc(sizeof(LARGE_INTEGER));
+  if (!alloc) {
+    abort();
+  }
+  memcpy(alloc, &g_counts_per_sec, sizeof(LARGE_INTEGER));
+  *clock_data_pointer = alloc;
+}
+
+void os_clock_cleanup(void** clock_data_pointer) {
+  if (*clock_data_pointer == 0) {
+    free(*clock_data_pointer);
+    *clock_data_pointer = 0;
+  }
+}
+
+int os_clock_gettime(void* clock_data, int clock_id, struct timespec* out_struct) {
+  LARGE_INTEGER* alloc = (LARGE_INTEGER*) clock_data;
+
   LARGE_INTEGER count;
   (void)clock_id;
 
-  if (g_counts_per_sec.QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
+  if (alloc->QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
     return -1;
   }
 
-  out_struct->tv_sec = count.QuadPart / g_counts_per_sec.QuadPart;
-  out_struct->tv_nsec = ((count.QuadPart % g_counts_per_sec.QuadPart) * BILLION) / g_counts_per_sec.QuadPart;
+#define BILLION 1000000000LL
+  out_struct->tv_sec = count.QuadPart / alloc->QuadPart;
+  out_struct->tv_nsec = ((count.QuadPart % alloc->QuadPart) * BILLION) / alloc->QuadPart;
+#undef BILLION
+
   return 0;
 }
 
-int os_clock_getres(int clock_id, struct timespec* out_struct) {
+int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct) {
   (void)clock_id;
   out_struct->tv_sec = 0;
   out_struct->tv_nsec = 1000;
