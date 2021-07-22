@@ -178,7 +178,7 @@ int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot) 
     uint64_t                  initclock; /* ticks since boot to init() */
   } wasi_mac_clock_info_t;
 
-  static wasi_mach_clock_info_t g_wasi_mac_clock_info;
+  static wasi_mac_clock_info_t g_wasi_mac_clock_info;
   static int g_os_data_initialized = 0;
 #endif
 
