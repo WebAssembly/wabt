@@ -227,10 +227,13 @@ class CWriter {
   std::string GetMainMemoryName();
   void WriteGlobalInitializers();
   void WriteGlobals();
+  void WriteGlobalsExport();
   void WriteGlobal(const Global&, const std::string&);
   void WriteMemories();
+  void WriteMemoriesExport();
   void WriteMemory(const std::string&);
   void WriteTables();
+  void WriteTablesExport();
   void WriteTable(const std::string&);
   void WriteDataInitializers();
   void WriteElemInitializers();
@@ -1032,6 +1035,24 @@ void CWriter::WriteGlobals() {
   }
 }
 
+void CWriter::WriteGlobalsExport() {
+  Index global_index = 0;
+  if (module_->globals.size() != module_->num_global_imports) {
+
+    for (const Global* global : module_->globals) {
+      bool is_import = global_index < module_->num_global_imports;
+      if (!is_import) {
+        std::string curr_global_name = GetGlobalName(global->name);
+        Writef("if (strcmp(\"%s\", name) == 0)", curr_global_name.c_str());
+        Write(OpenBrace());
+        Write("return &(sbx->", curr_global_name, ");", Newline());
+        Write(CloseBrace(), Newline());
+      }
+      ++global_index;
+    }
+  }
+}
+
 std::string CWriter::GetMainMemoryName() {
   assert (!(module_->memories.size() == module_->num_memory_imports));
   assert(module_->memories.size() <= 1);
@@ -1099,6 +1120,25 @@ void CWriter::WriteMemories() {
   }
 }
 
+void CWriter::WriteMemoriesExport() {
+  if (module_->memories.size() == module_->num_memory_imports)
+    return;
+
+  assert(module_->memories.size() <= 1);
+  Index memory_index = 0;
+  for (const Memory* memory : module_->memories) {
+    bool is_import = memory_index < module_->num_memory_imports;
+    if (!is_import) {
+      std::string curr_memory_name = GetGlobalName(memory->name);
+      Writef("if (strcmp(\"%s\", name) == 0)", curr_memory_name.c_str());
+      Write(OpenBrace());
+      Write("return &(sbx->", curr_memory_name, ");", Newline());
+      Write(CloseBrace(), Newline());
+    }
+    ++memory_index;
+  }
+}
+
 void CWriter::WriteMemory(const std::string& name) {
   Write("wasm_rt_memory_t ", name, ";");
 }
@@ -1117,6 +1157,25 @@ void CWriter::WriteTables() {
       Write(Newline());
       WriteTable(curr_table_name);
       Write(Newline());
+    }
+    ++table_index;
+  }
+}
+
+void CWriter::WriteTablesExport() {
+  if (module_->tables.size() == module_->num_table_imports)
+    return;
+
+  assert(module_->tables.size() <= 1);
+  Index table_index = 0;
+  for (const Table* table : module_->tables) {
+    bool is_import = table_index < module_->num_table_imports;
+    if (!is_import) {
+      std::string curr_table_name = GetGlobalName(table->name);
+      Writef("if (strcmp(\"%s\", name) == 0)", curr_table_name.c_str());
+      Write(OpenBrace());
+      Write("return &(sbx->", curr_table_name, ");", Newline());
+      Write(CloseBrace(), Newline());
     }
     ++table_index;
   }
@@ -1226,24 +1285,10 @@ void CWriter::WriteElemInitializers() {
 void CWriter::WriteExportLookup() {
   Write(Newline(), "static void* lookup_wasm2c_nonfunc_export(void* sbx_ptr, const char* name) ", OpenBrace());
   Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
-  for (const Export* export_ : module_->exports) {
-    switch (export_->kind) {
-      case ExternalKind::Func: {
-        break;
-      }
-      case ExternalKind::Global :
-      case ExternalKind::Memory :
-      case ExternalKind::Table: {
-        Writef("if (strcmp(\"%s\", name) == 0)", export_->name.c_str());
-        Write(OpenBrace());
-        Write("return &(sbx->w2c_", export_->name, ");", Newline());
-        Write(CloseBrace(), Newline());
-        break;
-      }
-      default:
-        WABT_UNREACHABLE;
-    }
-  }
+
+  WriteMemoriesExport();
+  WriteTablesExport();
+  WriteGlobalsExport();
 
   Write("return 0;", Newline());
   Write(CloseBrace(), Newline());
