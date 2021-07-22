@@ -257,13 +257,13 @@ int os_clock_gettime(void* clock_data, int clock_id, struct timespec* out_struct
   LARGE_INTEGER count;
   (void)clock_id;
 
-  if (alloc->g_wasi_win_clock_info.QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
+  if (alloc->counts_per_sec.QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
     return -1;
   }
 
 #define BILLION 1000000000LL
-  out_struct->tv_sec = count.QuadPart / alloc->g_wasi_win_clock_info.QuadPart;
-  out_struct->tv_nsec = ((count.QuadPart % alloc->g_wasi_win_clock_info.QuadPart) * BILLION) / alloc->g_wasi_win_clock_info.QuadPart;
+  out_struct->tv_sec = count.QuadPart / alloc->counts_per_sec.QuadPart;
+  out_struct->tv_nsec = ((count.QuadPart % alloc->counts_per_sec.QuadPart) * BILLION) / alloc->counts_per_sec.QuadPart;
 #undef BILLION
 
   return 0;
