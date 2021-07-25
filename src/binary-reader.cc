@@ -1745,6 +1745,11 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK(OnOpcodeBare);
         break;
 
+      case Opcode::CallRef:
+        CALLBACK(OnCallRefExpr);
+        CALLBACK(OnOpcodeBare);
+        break;
+
       default:
         return ReportUnexpectedOpcode(opcode);
     }

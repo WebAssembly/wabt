@@ -75,6 +75,7 @@ class ExprVisitor::Delegate {
   virtual Result OnBrTableExpr(BrTableExpr*) = 0;
   virtual Result OnCallExpr(CallExpr*) = 0;
   virtual Result OnCallIndirectExpr(CallIndirectExpr*) = 0;
+  virtual Result OnCallRefExpr(CallRefExpr*) = 0;
   virtual Result OnCompareExpr(CompareExpr*) = 0;
   virtual Result OnConstExpr(ConstExpr*) = 0;
   virtual Result OnConvertExpr(ConvertExpr*) = 0;
@@ -147,6 +148,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnBrTableExpr(BrTableExpr*) override { return Result::Ok; }
   Result OnCallExpr(CallExpr*) override { return Result::Ok; }
   Result OnCallIndirectExpr(CallIndirectExpr*) override { return Result::Ok; }
+  Result OnCallRefExpr(CallRefExpr*) override { return Result::Ok; }
   Result OnCompareExpr(CompareExpr*) override { return Result::Ok; }
   Result OnConstExpr(ConstExpr*) override { return Result::Ok; }
   Result OnConvertExpr(ConvertExpr*) override { return Result::Ok; }

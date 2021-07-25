@@ -489,6 +489,27 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
+Result TypeChecker::OnFuncRef(Index* out_index) {
+  Type type;
+  Result result = PeekType(0, &type);
+  if (!type.IsIndex()) {
+    TypeVector actual;
+    if (Succeeded(result)) {
+      actual.push_back(type);
+    }
+    std::string message =
+        "type mismatch in call_ref, expected reference but got " +
+        TypesToString(actual);
+    PrintError("%s", message.c_str());
+    result = Result::Error;
+  }
+  if (Succeeded(result)) {
+    *out_index = type.GetIndex();
+  }
+  result |= DropTypes(1);
+  return result;
+}
+
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
                                  const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "return_call");
@@ -728,8 +749,12 @@ Result TypeChecker::OnTableFill(Type elem_type) {
   return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
 }
 
-Result TypeChecker::OnRefFuncExpr(Index) {
-  PushType(Type::FuncRef);
+Result TypeChecker::OnRefFuncExpr(Index func_index) {
+  if (features_.function_references_enabled()) {
+    PushType(Type(func_index));
+  } else {
+    PushType(Type::FuncRef);
+  }
   return Result::Ok;
 }
 

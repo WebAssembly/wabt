@@ -25,6 +25,7 @@ options:
       --disable-sign-extension                 Disable Sign-extension operators
       --enable-simd                            Enable SIMD support
       --enable-threads                         Enable Threading support
+      --enable-function-references             Enable Typed function references
       --disable-multi-value                    Disable Multi-value
       --enable-tail-call                       Enable Tail-call support
       --enable-bulk-memory                     Enable Bulk-memory operations

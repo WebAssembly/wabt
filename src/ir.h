@@ -295,6 +295,7 @@ enum class ExprType {
   BrTable,
   Call,
   CallIndirect,
+  CallRef,
   Compare,
   Const,
   Convert,
@@ -576,6 +577,16 @@ class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
 
   FuncDeclaration decl;
   Var table;
+};
+
+class CallRefExpr : public ExprMixin<ExprType::CallRef> {
+ public:
+  explicit CallRefExpr(const Location &loc = Location())
+      : ExprMixin<ExprType::CallRef>(loc) {}
+
+  // This field is setup only during Validate phase,
+  // so keep that in mind when you use it.
+  Var function_type_index;
 };
 
 template <ExprType TypeEnum>

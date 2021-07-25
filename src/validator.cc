@@ -93,6 +93,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCallRefExpr(CallRefExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -271,6 +272,17 @@ Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
   result_ |= validator_.OnCallIndirect(
       expr->loc, GetFuncTypeIndex(expr->loc, expr->decl), expr->table);
   return Result::Ok;
+}
+
+Result Validator::OnCallRefExpr(CallRefExpr* expr) {
+  Index function_type_index;
+  result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
+  if (Succeeded(result_)) {
+    expr->function_type_index = Var{function_type_index};
+    return Result::Ok;
+  }
+
+  return Result::Error;
 }
 
 Result Validator::OnCompareExpr(CompareExpr* expr) {

@@ -120,6 +120,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::ReturnCallIndirect:
     case TokenType::Call:
     case TokenType::CallIndirect:
+    case TokenType::CallRef:
     case TokenType::LocalGet:
     case TokenType::LocalSet:
     case TokenType::LocalTee:
@@ -1860,6 +1861,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
       *out_expr = std::move(expr);
+      break;
+    }
+
+    case TokenType::CallRef: {
+      ErrorUnlessOpcodeEnabled(Consume());
+      out_expr->reset(new CallRefExpr(loc));
       break;
     }
 

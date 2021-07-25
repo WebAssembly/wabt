@@ -1791,6 +1791,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::ReturnCall:
     case O::SelectT:
 
+    case O::CallRef:
     case O::Try:
     case O::Catch:
     case O::CatchAll:
