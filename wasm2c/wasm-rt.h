@@ -181,8 +181,11 @@ typedef struct wasm2c_sandbox_funcs_t {
 /** Stop execution immediately and jump back to the call to `wasm_rt_try`.
  *  The result of `wasm_rt_try` will be the provided trap reason.
  *
- *  This is typically called by the generated code, and not the embedder. */
-WASM_RT_NO_RETURN extern void wasm_rt_trap(wasm_rt_trap_t);
+ *  This is typically called by the generated code, and not the embedder. 
+ *
+ *  This function returns a char as it can be easily converted to any integer type
+ * */
+WASM_RT_NO_RETURN extern char wasm_rt_trap(wasm_rt_trap_t);
 
 /** Register a function type with the given signature. The returned function
  * index is guaranteed to be the same for all calls with the same signature.

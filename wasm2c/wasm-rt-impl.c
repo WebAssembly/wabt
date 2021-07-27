@@ -28,7 +28,7 @@
 
 #define PAGE_SIZE 65536
 
-void wasm_rt_trap(wasm_rt_trap_t code) {
+char wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
   abort();
 }

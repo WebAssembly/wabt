@@ -12,7 +12,7 @@
   #define LIKELY(x) __builtin_expect(!!(x), 1)
 #endif
 
-#define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
+#define TRAP(x) wasm_rt_trap(WASM_RT_TRAP_##x)
 
 #define FUNC_PROLOGUE
 
