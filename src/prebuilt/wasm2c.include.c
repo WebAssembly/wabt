@@ -15,7 +15,7 @@ const char SECTION_NAME(declarations)[] =
 "  #define LIKELY(x) __builtin_expect(!!(x), 1)\n"
 "#endif\n"
 "\n"
-"#define TRAP(x) wasm_rt_trap(WASM_RT_TRAP_##x)\n"
+"#define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)\n"
 "\n"
 "#define FUNC_PROLOGUE\n"
 "\n"
