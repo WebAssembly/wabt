@@ -21,7 +21,7 @@ const char SECTION_NAME(declarations)[] =
 "\n"
 "#define FUNC_EPILOGUE\n"
 "\n"
-"#define UNREACHABLE TRAP(UNREACHABLE)\n"
+"#define UNREACHABLE (void) TRAP(UNREACHABLE)\n"
 "\n"
 "#define CALL_INDIRECT(table, t, ft, x, func_types, ...) \\\n"
 "  (LIKELY((x) < table.size && table.data[x].func &&     \\\n"

@@ -18,7 +18,7 @@
 
 #define FUNC_EPILOGUE
 
-#define UNREACHABLE TRAP(UNREACHABLE)
+#define UNREACHABLE (void) TRAP(UNREACHABLE)
 
 #define CALL_INDIRECT(table, t, ft, x, func_types, ...) \
   (LIKELY((x) < table.size && table.data[x].func &&     \

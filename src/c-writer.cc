@@ -1333,7 +1333,7 @@ void CWriter::WriteCallbackAddRemove() {
       Write(CloseBrace(), Newline());
     }
     Write(CloseBrace(), Newline());
-    Write("TRAP(CALL_INDIRECT);", Newline());
+    Write("(void) TRAP(CALL_INDIRECT);", Newline());
   }
   Write(CloseBrace(), Newline());
 
