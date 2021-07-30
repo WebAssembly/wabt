@@ -142,7 +142,7 @@ void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
 #if WASM_USING_GUARD_PAGES == 1
   os_munmap(memory->data, 0x200000000ul);
 #else
-  os_munmap(memory->data, memory->size);
+  free(memory->data);
 #endif
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_destroy(memory);

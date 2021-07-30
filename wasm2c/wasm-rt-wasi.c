@@ -637,7 +637,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii, (wasm_sandbox_wasi_d
       VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
     }
-    if (result != len) {
+    if ((size_t) result != len) {
       VERBOSE_LOG("    amount error, %ld %d\n", result, len);
       return WASI_DEFAULT_ERROR;
     }
@@ -669,7 +669,7 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readZ_iiiii, (wasm_sandbox_wasi_da
       return WASI_DEFAULT_ERROR;
     }
     num += result;
-    if (result != len) {
+    if ((size_t) result != len) {
       break; // nothing more to read
     }
   }
