@@ -741,24 +741,17 @@ static int check_clock(u32 clock_id) {
          clock_id == WASM_CLOCK_PROCESS_CPUTIME || clock_id == WASM_CLOCK_THREAD_CPUTIME_ID;
 }
 
-// out is a pointer index to a struct of the form
-// // https://github.com/WebAssembly/wasi-libc/blob/659ff414560721b1660a19685110e484a081c3d4/libc-bottom-half/headers/public/__struct_timespec.h
-// struct timespec {
-//   // https://github.com/WebAssembly/wasi-libc/blob/659ff414560721b1660a19685110e484a081c3d4/libc-bottom-half/headers/public/__typedef_time_t.h
-//   // time is long long in wasm32 which is an i64
-//   time_t tv_sec
-//   // long in wasm is an i32
-//   long tv_nsec;
-// }
-IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u64 max_lag, u32 out), {
+// out is a pointer to a u64 timestamp in nanoseconds
+// https://github.com/WebAssembly/WASI/blob/main/phases/snapshot/docs.md#-timestamp-u64
+IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji, (wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 precision, u32 out), {
   if (!check_clock(clock_id)) {
     return WASI_INVAL_ERROR;
   }
 
   struct timespec out_struct;
   int ret = os_clock_gettime(wasi_data->clock_data, clock_id, &out_struct);
-  wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
-  wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
+  u64 result = out_struct.tv_sec*1000000 + out_struct.tv_nsec/1000;
+  wasm_i64_store(wasi_data->heap_memory, out, result);
   return ret;
 });
 
@@ -769,8 +762,8 @@ IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_clock_res_getZ_iii, (wasm_sandbox_was
 
   struct timespec out_struct;
   int ret = os_clock_getres(wasi_data->clock_data, clock_id, &out_struct);
-  wasm_i64_store(wasi_data->heap_memory, out, (u64) out_struct.tv_sec);
-  wasm_i32_store(wasi_data->heap_memory, out + sizeof(u64), (u32) out_struct.tv_nsec);
+  u64 result = out_struct.tv_sec*1000000 + out_struct.tv_nsec/1000;
+  wasm_i64_store(wasi_data->heap_memory, out, result);
   return ret;
 });
 
