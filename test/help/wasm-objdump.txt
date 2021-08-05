@@ -18,4 +18,5 @@ options:
       --debug                  Print extra debug information
   -x, --details                Show section details
   -r, --reloc                  Show relocations inline with disassembly
+      --section-offsets        Print section offsets instead of file offsets in code disassembly
 ;;; STDOUT ;;)
