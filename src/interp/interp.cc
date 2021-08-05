@@ -1634,10 +1634,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I8X16Swizzle:     return DoSimdSwizzle();
     case O::I8X16Shuffle:     return DoSimdShuffle(instr);
 
-    case O::V128Load8Splat:    return DoSimdLoadSplat<u8x16, u32>(instr, out_trap);
-    case O::V128Load16Splat:   return DoSimdLoadSplat<u16x8, u32>(instr, out_trap);
-    case O::V128Load32Splat:   return DoSimdLoadSplat<u32x4, u32>(instr, out_trap);
-    case O::V128Load64Splat:   return DoSimdLoadSplat<u64x2, u64>(instr, out_trap);
+    case O::V128Load8Splat:    return DoSimdLoadSplat<u8x16>(instr, out_trap);
+    case O::V128Load16Splat:   return DoSimdLoadSplat<u16x8>(instr, out_trap);
+    case O::V128Load32Splat:   return DoSimdLoadSplat<u32x4>(instr, out_trap);
+    case O::V128Load64Splat:   return DoSimdLoadSplat<u64x2>(instr, out_trap);
 
     case O::V128Load8Lane:    return DoSimdLoadLane<u8x16>(instr, out_trap);
     case O::V128Load16Lane:   return DoSimdLoadLane<u16x8>(instr, out_trap);
@@ -2040,7 +2040,9 @@ template <typename R, typename T>
 RunResult Thread::DoSimdSplat() {
   auto val = Pop<T>();
   R result;
-  std::fill(std::begin(result.v), std::end(result.v), val);
+  for (int i = 0; i < result.lanes; i++) {
+    result[i] = val;
+  }
   Push(result);
   return RunResult::Ok;
 }
@@ -2078,7 +2080,9 @@ RunResult Thread::DoSimdUnop(UnopFunc<R, T> f) {
   using SR = typename Simd128<R>::Type;
   auto val = Pop<ST>();
   SR result;
-  std::transform(std::begin(val.v), std::end(val.v), std::begin(result.v), f);
+  for (int i = 0; i < val.lanes; i++) {
+    result[i] = f(val[i]);
+  }
   Push(result);
   return RunResult::Ok;
 }
@@ -2089,7 +2093,6 @@ RunResult Thread::DoSimdUnopZero(UnopFunc<R, T> f) {
   using SR = typename Simd128<R>::Type;
   auto val = Pop<ST>();
   SR result;
-  std::transform(std::begin(val.v), std::end(val.v), std::begin(result.v), f);
   for (u8 i = 0; i < ST::lanes; ++i) {
     result[i] = f(val[i]);
   }
@@ -2130,10 +2133,13 @@ RunResult Thread::DoSimdBitSelect() {
 
 template <typename S, u8 count>
 RunResult Thread::DoSimdIsTrue() {
-  using L = typename S::LaneType;
   auto val = Pop<S>();
-  Push(std::count_if(std::begin(val.v), std::end(val.v),
-                     [](L x) { return x != 0; }) >= count);
+  int num_true = 0;
+  for (int i = 0; i < val.lanes; i++) {
+    num_true += val[i] != 0 ? 1 : 0;
+  }
+  Push(num_true >= count);
+
   return RunResult::Ok;
 }
 
@@ -2165,7 +2171,7 @@ RunResult Thread::DoSimdShift(BinopFunc<R, T> f) {
   return RunResult::Ok;
 }
 
-template <typename S, typename T>
+template <typename S>
 RunResult Thread::DoSimdLoadSplat(Instr instr, Trap::Ptr* out_trap) {
   using L = typename S::LaneType;
   L val;
@@ -2173,7 +2179,9 @@ RunResult Thread::DoSimdLoadSplat(Instr instr, Trap::Ptr* out_trap) {
     return RunResult::Trap;
   }
   S result;
-  std::fill(std::begin(result.v), std::end(result.v), val);
+  for (int i = 0; i < result.lanes; i++) {
+    result[i] = val;
+  }
   Push(result);
   return RunResult::Ok;
 }
@@ -2214,7 +2222,9 @@ RunResult Thread::DoSimdLoadZero(Instr instr, Trap::Ptr* out_trap) {
     return RunResult::Trap;
   }
   S result;
-  std::fill(std::begin(result.v), std::end(result.v), 0);
+  for (int i = 0; i < result.lanes; i++) {
+    result[i] = 0;
+  }
   result[0] = val;
   Push(result);
   return RunResult::Ok;

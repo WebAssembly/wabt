@@ -137,8 +137,6 @@ struct Simd {
   using LaneType = T;
   static const u8 lanes = L;
 
-  T v[L];
-
   inline T& operator[](u8 idx) {
 #if WABT_BIG_ENDIAN
     idx = (~idx) & (L-1);
@@ -151,6 +149,9 @@ struct Simd {
 #endif
     return v[idx];
   }
+
+private:
+  T v[L];
 };
 using s8x16 = Simd<s8, 16>;
 using u8x16 = Simd<u8, 16>;
@@ -1150,7 +1151,7 @@ class Thread : public Object {
   RunResult DoSimdBitmask();
   template <typename R, typename T>
   RunResult DoSimdShift(BinopFunc<R, T>);
-  template <typename S, typename T>
+  template <typename S>
   RunResult DoSimdLoadSplat(Instr, Trap::Ptr* out_trap);
   template <typename S>
   RunResult DoSimdLoadLane(Instr, Trap::Ptr* out_trap);
