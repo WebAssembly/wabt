@@ -197,9 +197,9 @@ void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
 }
 
 Offset BinaryReaderObjdumpBase::GetPrintOffset(Offset offset) const {
-  return
-      options_->section_offsets ?
-      offset - GetSectionStart(BinarySection::Code) : offset;
+  return options_->section_offsets
+             ? offset - GetSectionStart(BinarySection::Code)
+             : offset;
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(Index count, Index section_index) {
