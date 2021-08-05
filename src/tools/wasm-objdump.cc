@@ -60,6 +60,9 @@ static void ParseOptions(int argc, char** argv) {
                    []() { s_objdump_options.details = true; });
   parser.AddOption('r', "reloc", "Show relocations inline with disassembly",
                    []() { s_objdump_options.relocs = true; });
+  parser.AddOption(0, "section-offsets",
+                   "Print section offsets instead of file offsets",
+                   []() { s_objdump_options.section_offsets = true; });
   parser.AddArgument(
       "filename", OptionParser::ArgumentCount::OneOrMore,
       [](const char* argument) { s_infiles.push_back(argument); });

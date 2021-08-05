@@ -60,6 +60,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   string_view GetSegmentName(Index index) const;
   string_view GetTableName(Index index) const;
   void PrintRelocation(const Reloc& reloc, Offset offset) const;
+  Offset GetPrintOffset(Offset offset) const;
   Offset GetSectionStart(BinarySection section_code) const {
     return section_starts_[static_cast<size_t>(section_code)];
   }
@@ -193,6 +194,12 @@ void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
            WABT_PRINTF_STRING_VIEW_ARG(GetSymbolName(reloc.index)));
   }
   printf("\n");
+}
+
+Offset BinaryReaderObjdumpBase::GetPrintOffset(Offset offset) const {
+  return
+      options_->section_offsets ?
+      offset - GetSectionStart(BinarySection::Code) : offset;
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(Index count, Index section_index) {
@@ -540,7 +547,7 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
   Offset offset = current_opcode_offset;
   size_t data_size = state->offset - offset;
 
-  printf(" %06" PRIzx " (%06" PRIzx "):", offset, offset - GetSectionStart(BinarySection::Code));
+  printf(" %06" PRIzx ":", GetPrintOffset(offset));
   for (size_t i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT;
        i++, offset++) {
     printf(" %02x", data_[offset]);
@@ -577,7 +584,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
   while (offset < offset_end) {
     // Print bytes, but only display a maximum of IMMEDIATE_OCTET_COUNT on each
     // line.
-    printf(" %06" PRIzx " (%06" PRIzx "):", offset, offset - GetSectionStart(BinarySection::Code));
+    printf(" %06" PRIzx ":", GetPrintOffset(offset));
     size_t i;
     for (i = 0; offset < offset_end && i < IMMEDIATE_OCTET_COUNT;
          ++i, ++offset) {
@@ -777,8 +784,8 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
 
 Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
                                                          Offset size) {
-  printf("%06" PRIzx " (%06" PRIzx ") func[%" PRIindex "]", state->offset,
-         state->offset - GetSectionStart(BinarySection::Code), index);
+  printf("%06" PRIzx " func[%" PRIindex "]", GetPrintOffset(state->offset),
+         index);
   auto name = GetFunctionName(index);
   if (!name.empty()) {
     printf(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
