@@ -1150,7 +1150,7 @@ class Thread : public Object {
   RunResult DoSimdBitmask();
   template <typename R, typename T>
   RunResult DoSimdShift(BinopFunc<R, T>);
-  template <typename S, typename T>
+  template <typename S>
   RunResult DoSimdLoadSplat(Instr, Trap::Ptr* out_trap);
   template <typename S>
   RunResult DoSimdLoadLane(Instr, Trap::Ptr* out_trap);
