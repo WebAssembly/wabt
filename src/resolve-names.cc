@@ -412,7 +412,13 @@ Result NameResolver::OnCatchExpr(TryExpr*, Catch* catch_) {
 }
 
 Result NameResolver::OnDelegateExpr(TryExpr* expr) {
+  // Pop the label here as a try-delegate has no `end` instruction.
+  PopLabel();
+
+  // We resolve *after* popping the label in order to ensure that the
+  // delegate label starts counting after the current try-delegate.
   ResolveLabelVar(&expr->delegate_target);
+
   return Result::Ok;
 }
 

@@ -120,6 +120,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::ReturnCallIndirect:
     case TokenType::Call:
     case TokenType::CallIndirect:
+    case TokenType::CallRef:
     case TokenType::LocalGet:
     case TokenType::LocalSet:
     case TokenType::LocalTee:
@@ -1863,6 +1864,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
+    case TokenType::CallRef: {
+      ErrorUnlessOpcodeEnabled(Consume());
+      out_expr->reset(new CallRefExpr(loc));
+      break;
+    }
+
     case TokenType::ReturnCall:
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<ReturnCallExpr>(loc, out_expr));
@@ -2591,18 +2598,12 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       if (IsCatch(Peek())) {
         CHECK_RESULT(ParseCatchInstrList(&expr->catches));
         expr->kind = TryKind::Catch;
-      } else if (PeekMatch(TokenType::Unwind)) {
-        Consume();
-        CHECK_RESULT(ParseInstrList(&expr->unwind));
-        expr->kind = TryKind::Unwind;
       } else if (PeekMatch(TokenType::Delegate)) {
         Consume();
         Var var;
         CHECK_RESULT(ParseVar(&var));
         expr->delegate_target = var;
         expr->kind = TryKind::Delegate;
-      } else {
-        return ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
       }
       CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
       expr->block.end_loc = GetLocation();
@@ -2771,32 +2772,28 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         EXPECT(Do);
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
         EXPECT(Rpar);
-        EXPECT(Lpar);
-        TokenType type = Peek();
-        switch (type) {
-          case TokenType::Catch:
-          case TokenType::CatchAll:
-            CHECK_RESULT(ParseCatchExprList(&expr->catches));
-            expr->kind = TryKind::Catch;
-            break;
-          case TokenType::Unwind:
-            Consume();
-            CHECK_RESULT(ParseTerminatingInstrList(&expr->unwind));
-            expr->kind = TryKind::Unwind;
-            EXPECT(Rpar);
-            break;
-          case TokenType::Delegate: {
-            Consume();
-            Var var;
-            CHECK_RESULT(ParseVar(&var));
-            expr->delegate_target = var;
-            expr->kind = TryKind::Delegate;
-            EXPECT(Rpar);
-            break;
+        if (PeekMatch(TokenType::Lpar)) {
+          Consume();
+          TokenType type = Peek();
+          switch (type) {
+            case TokenType::Catch:
+            case TokenType::CatchAll:
+              CHECK_RESULT(ParseCatchExprList(&expr->catches));
+              expr->kind = TryKind::Catch;
+              break;
+            case TokenType::Delegate: {
+              Consume();
+              Var var;
+              CHECK_RESULT(ParseVar(&var));
+              expr->delegate_target = var;
+              expr->kind = TryKind::Delegate;
+              EXPECT(Rpar);
+              break;
+            }
+            default:
+              ErrorExpected({"catch", "catch_all", "delegate"});
+              break;
           }
-          default:
-            ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
-            break;
         }
         CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
         expr->block.end_loc = GetLocation();

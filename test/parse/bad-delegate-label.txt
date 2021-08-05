@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func
+    try $t
+      nop
+    delegate $t
+  )
+)
+(;; STDERR ;;;
+out/test/parse/bad-delegate-label.txt:8:14: error: undefined label variable "$t"
+    delegate $t
+             ^^
+;;; STDERR ;;)

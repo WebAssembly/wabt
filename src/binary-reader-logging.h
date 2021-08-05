@@ -169,6 +169,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnCallRefExpr() override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDelegateExpr(Index depth) override;
@@ -222,7 +223,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
-  Result OnUnwindExpr() override;
   Result OnAtomicWaitExpr(Opcode opcode,
                           Address alignment_log2,
                           Address offset) override;

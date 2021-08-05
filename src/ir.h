@@ -295,6 +295,7 @@ enum class ExprType {
   BrTable,
   Call,
   CallIndirect,
+  CallRef,
   Compare,
   Const,
   Convert,
@@ -378,9 +379,8 @@ struct Catch {
 typedef std::vector<Catch> CatchVector;
 
 enum class TryKind {
-  Invalid,
+  Plain,
   Catch,
-  Unwind,
   Delegate
 };
 
@@ -579,6 +579,16 @@ class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
   Var table;
 };
 
+class CallRefExpr : public ExprMixin<ExprType::CallRef> {
+ public:
+  explicit CallRefExpr(const Location &loc = Location())
+      : ExprMixin<ExprType::CallRef>(loc) {}
+
+  // This field is setup only during Validate phase,
+  // so keep that in mind when you use it.
+  Var function_type_index;
+};
+
 template <ExprType TypeEnum>
 class BlockExprBase : public ExprMixin<TypeEnum> {
  public:
@@ -604,12 +614,11 @@ class IfExpr : public ExprMixin<ExprType::If> {
 class TryExpr : public ExprMixin<ExprType::Try> {
  public:
   explicit TryExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Invalid) {}
+      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Plain) {}
 
   TryKind kind;
   Block block;
   CatchVector catches;
-  ExprList unwind;
   Var delegate_target;
 };
 

@@ -140,6 +140,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
                ci_expr->decl.GetNumResults() };
     }
 
+    case ExprType::CallRef: {
+      const Var& var = cast<CallRefExpr>(&expr)->function_type_index;
+      return { GetFuncParamCount(var) + 1, GetFuncResultCount(var) };
+    }
+
     case ExprType::ReturnCallIndirect: {
       const auto* rci_expr = cast<ReturnCallIndirectExpr>(&expr);
       return { rci_expr->decl.GetNumParams() + 1,

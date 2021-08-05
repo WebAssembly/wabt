@@ -802,6 +802,7 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
+DEFINE0(OnCallRefExpr)
 DEFINE_INDEX_DESC(OnCatchExpr, "tag_index");
 DEFINE0(OnCatchAllExpr);
 DEFINE_OPCODE(OnCompareExpr)
@@ -844,7 +845,6 @@ DEFINE_LOAD_STORE_OPCODE(OnLoadZeroExpr);
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
 DEFINE_INDEX_DESC(OnThrowExpr, "tag_index")
 DEFINE0(OnUnreachableExpr)
-DEFINE0(OnUnwindExpr)
 DEFINE_OPCODE(OnUnaryExpr)
 DEFINE_OPCODE(OnTernaryExpr)
 DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(OnSimdLoadLaneExpr);

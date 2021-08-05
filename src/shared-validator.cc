@@ -763,6 +763,23 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   return result;
 }
 
+Result SharedValidator::OnCallRef(const Location& loc, Index* function_type_index) {
+  Result result = Result::Ok;
+  expr_loc_ = &loc;
+  Index func_index;
+  result |= typechecker_.OnFuncRef(&func_index);
+  if (Failed(result)) {
+    return result;
+  }
+  FuncType func_type;
+  result |= CheckFuncTypeIndex(Var(func_index, loc), &func_type);
+  result |= typechecker_.OnCall(func_type.params, func_type.results);
+  if (Succeeded(result)) {
+    *function_type_index = func_index;
+  }
+  return result;
+}
+
 Result SharedValidator::OnCatch(const Location& loc,
                                 Var tag_var,
                                 bool is_catch_all) {
@@ -1238,13 +1255,6 @@ Result SharedValidator::OnUnreachable(const Location& loc) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
   result |= typechecker_.OnUnreachable();
-  return result;
-}
-
-Result SharedValidator::OnUnwind(const Location& loc) {
-  Result result = Result::Ok;
-  expr_loc_ = &loc;
-  result |= typechecker_.OnUnwind();
   return result;
 }
 

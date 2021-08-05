@@ -516,6 +516,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCallRefExpr(CallRefExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -558,7 +559,6 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
-  Result OnUnwindExpr(TryExpr*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -632,6 +632,12 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
   writer_->WriteOpenSpace("type");
   writer_->WriteVar(expr->decl.type_var, NextChar::Newline);
   writer_->WriteCloseNewline();
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(
+    CallRefExpr* expr) {
+  writer_->WritePutsSpace(Opcode::CallRef_Opcode.GetName());
   return Result::Ok;
 }
 
@@ -894,16 +900,9 @@ Result WatWriter::ExprVisitorDelegate::OnCatchExpr(
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnUnwindExpr(TryExpr* expr) {
-  writer_->Dedent();
-  writer_->WritePutsNewline(Opcode::Unwind_Opcode.GetName());
-  writer_->Indent();
-  writer_->SetTopLabelType(LabelType::Unwind);
-  return Result::Ok;
-}
-
 Result WatWriter::ExprVisitorDelegate::OnDelegateExpr(TryExpr* expr) {
   writer_->Dedent();
+  writer_->EndBlock();
   writer_->WritePutsSpace(Opcode::Delegate_Opcode.GetName());
   writer_->WriteVar(expr->delegate_target, NextChar::Newline);
   return Result::Ok;
@@ -1173,22 +1172,14 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
             WriteCloseNewline();
           }
           break;
-        case TryKind::Unwind:
-          WritePuts("(", NextChar::None);
-          WritePutsNewline(Opcode::Unwind_Opcode.GetName());
-          Indent();
-          WriteFoldedExprList(try_expr->unwind);
-          FlushExprTreeStack();
-          WriteCloseNewline();
-          break;
         case TryKind::Delegate:
           WritePuts("(", NextChar::None);
           WritePutsSpace(Opcode::Delegate_Opcode.GetName());
           WriteVar(try_expr->delegate_target, NextChar::None);
           WritePuts(")", NextChar::Newline);
           break;
-        case TryKind::Invalid:
-          // Should not occur.
+        case TryKind::Plain:
+          // Nothing to do.
           break;
       }
       WriteCloseNewline();

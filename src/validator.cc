@@ -93,6 +93,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCallRefExpr(CallRefExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -135,7 +136,6 @@ class Validator : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
-  Result OnUnwindExpr(TryExpr*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -272,6 +272,17 @@ Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
   result_ |= validator_.OnCallIndirect(
       expr->loc, GetFuncTypeIndex(expr->loc, expr->decl), expr->table);
   return Result::Ok;
+}
+
+Result Validator::OnCallRefExpr(CallRefExpr* expr) {
+  Index function_type_index;
+  result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
+  if (Succeeded(result_)) {
+    expr->function_type_index = Var{function_type_index};
+    return Result::Ok;
+  }
+
+  return Result::Error;
 }
 
 Result Validator::OnCompareExpr(CompareExpr* expr) {
@@ -496,11 +507,6 @@ Result Validator::BeginTryExpr(TryExpr* expr) {
 Result Validator::OnCatchExpr(TryExpr*, Catch* catch_) {
   result_ |= validator_.OnCatch(catch_->loc, catch_->var,
                                 catch_->IsCatchAll());
-  return Result::Ok;
-}
-
-Result Validator::OnUnwindExpr(TryExpr* expr) {
-  result_ |= validator_.OnUnwind(expr->loc);
   return Result::Ok;
 }
 

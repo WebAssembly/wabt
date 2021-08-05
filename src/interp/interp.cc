@@ -1791,10 +1791,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::ReturnCall:
     case O::SelectT:
 
+    case O::CallRef:
     case O::Try:
     case O::Catch:
     case O::CatchAll:
-    case O::Unwind:
     case O::Delegate:
     case O::Throw:
     case O::Rethrow:
@@ -2186,7 +2186,7 @@ RunResult Thread::DoSimdLoadLane(Instr instr, Trap::Ptr* out_trap) {
   if (Load<T>(instr, &val, out_trap) != RunResult::Ok) {
     return RunResult::Trap;
   }
-  result.v[instr.imm_u32x2_u8.idx] = val;
+  result[instr.imm_u32x2_u8.idx] = val;
   Push(result);
   return RunResult::Ok;
 }
@@ -2196,7 +2196,7 @@ RunResult Thread::DoSimdStoreLane(Instr instr, Trap::Ptr* out_trap) {
   using T = typename S::LaneType;
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2_u8.fst]};
   auto result = Pop<S>();
-  T val = result.v[instr.imm_u32x2_u8.idx];
+  T val = result[instr.imm_u32x2_u8.idx];
   u64 offset = PopPtr(memory);
   TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2_u8.snd, val)),
           StringPrintf("out of bounds memory access: access at %" PRIu64

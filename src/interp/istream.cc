@@ -751,6 +751,7 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_v128 = ReadAt<v128>(offset);
       break;
 
+    case Opcode::CallRef:
     case Opcode::Block:
     case Opcode::Catch:
     case Opcode::CatchAll:
@@ -764,7 +765,6 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::Rethrow:
     case Opcode::Throw:
     case Opcode::Try:
-    case Opcode::Unwind:
     case Opcode::ReturnCall:
       // Not used.
       break;

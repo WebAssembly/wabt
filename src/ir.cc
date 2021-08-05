@@ -39,6 +39,7 @@ const char* ExprTypeName[] = {
   "BrTable",
   "Call",
   "CallIndirect",
+  "CallRef",
   "Compare",
   "Const",
   "Convert",
