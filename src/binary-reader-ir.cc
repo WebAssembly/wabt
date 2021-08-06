@@ -1086,7 +1086,7 @@ Result BinaryReaderIR::OnSimdLoadLaneExpr(Opcode opcode,
                                           Address offset,
                                           uint64_t value) {
   return AppendExpr(
-      MakeUnique<SimdLoadLaneExpr>(opcode, alignment_log2, offset, value));
+      MakeUnique<SimdLoadLaneExpr>(opcode, 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
@@ -1094,7 +1094,7 @@ Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
                                           Address offset,
                                           uint64_t value) {
   return AppendExpr(
-      MakeUnique<SimdStoreLaneExpr>(opcode, alignment_log2, offset, value));
+      MakeUnique<SimdStoreLaneExpr>(opcode, 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
