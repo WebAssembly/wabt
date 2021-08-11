@@ -15,7 +15,7 @@
 #
 
 cmake_minimum_required(VERSION 3.0.0)
-project(WABT VERSION 1.0.23)
+project(WABT VERSION 1.0.24)
 include(GNUInstallDirs)
 
 if (POLICY CMP0077)
