@@ -18,6 +18,7 @@ struct TokenInfo {
 };
 %%
 array, Type::Array, TokenType::Array
+assert_exception, TokenType::AssertException
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
 assert_malformed, TokenType::AssertMalformed

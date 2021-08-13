@@ -309,6 +309,12 @@ typedef AssertModuleCommand<CommandType::AssertUnlinkable>
 typedef AssertModuleCommand<CommandType::AssertUninstantiable>
     AssertUninstantiableCommand;
 
+class AssertExceptionCommand
+    : public CommandMixin<CommandType::AssertException> {
+ public:
+  Action action;
+};
+
 // An extremely simple JSON parser that only knows how to parse the expected
 // format from wat2wasm.
 class JSONParser {
@@ -1102,6 +1108,17 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
+  } else if (Match("\"assert_exception\"")) {
+    if (!s_features.exceptions_enabled()) {
+      PrintError("invalid command: exceptions not allowed");
+      return wabt::Result::Error;
+    }
+    auto command = MakeUnique<AssertExceptionCommand>();
+    EXPECT(",");
+    CHECK_RESULT(ParseLine(&command->line));
+    EXPECT(",");
+    CHECK_RESULT(ParseAction(&command->action));
+    *out_command = std::move(command);
   } else {
     PrintError("unknown command type");
     return wabt::Result::Error;
@@ -1170,6 +1187,7 @@ class CommandRunner {
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
+  wabt::Result OnAssertExceptionCommand(const AssertExceptionCommand*);
 
   wabt::Result CheckAssertReturnResult(const AssertReturnCommand* command,
                                        int index,
@@ -1294,6 +1312,11 @@ wabt::Result CommandRunner::Run(const Script& script) {
       case CommandType::AssertExhaustion:
         TallyCommand(OnAssertExhaustionCommand(
             cast<AssertExhaustionCommand>(command.get())));
+        break;
+
+      case CommandType::AssertException:
+        TallyCommand(OnAssertExceptionCommand(
+            cast<AssertExceptionCommand>(command.get())));
         break;
     }
   }
@@ -1804,6 +1827,18 @@ wabt::Result CommandRunner::OnAssertExhaustionCommand(
   PrintError(command->line, "assert_exhaustion passed: %s",
              result.trap->message().c_str());
 #endif
+  return wabt::Result::Ok;
+}
+
+wabt::Result CommandRunner::OnAssertExceptionCommand(
+    const AssertExceptionCommand* command) {
+  ActionResult result =
+      RunAction(command->line, &command->action, RunVerbosity::Quiet);
+  if (!result.trap || result.trap->message() != "uncaught exception") {
+    PrintError(command->line, "expected an exception to be thrown");
+    return wabt::Result::Error;
+  }
+
   return wabt::Result::Ok;
 }
 

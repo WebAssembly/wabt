@@ -1013,6 +1013,7 @@ void ScriptValidator::CheckCommand(const Command* command) {
     case CommandType::AssertInvalid:
     case CommandType::AssertUnlinkable:
     case CommandType::AssertUninstantiable:
+    case CommandType::AssertException:
       // Ignore.
       break;
 

@@ -1,0 +1,7 @@
+;;; TOOL: run-interp-spec
+;;; ARGS:
+;;; ERROR: 1
+(assert_exception (invoke "foo"))
+(;; STDERR ;;;
+out/test/parse/assert/bad-assertexception/bad-assertexception.json:3:30: invalid command: exceptions not allowed
+;;; STDERR ;;)

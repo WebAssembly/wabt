@@ -135,6 +135,7 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "assert_return",
       "assert_trap",
       "assert_exhaustion",
+      "assert_exception",
   };
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) == kCommandTypeCount);
 
@@ -577,6 +578,14 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteKey("expected");
         WriteActionResultType(*assert_exhaustion_command->action);
+        break;
+      }
+
+      case CommandType::AssertException: {
+        auto* assert_exception_command = cast<AssertExceptionCommand>(command);
+        WriteLocation(assert_exception_command->action->loc);
+        WriteSeparator();
+        WriteAction(*assert_exception_command->action);
         break;
       }
     }
