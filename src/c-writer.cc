@@ -987,7 +987,7 @@ void CWriter::WriteEntryFuncs() {
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
-      WriteEntryFunc(func->decl, DefineGlobalScopeName(func->name), true /* add_storage_class */);
+      WriteEntryFunc(func->decl, GetGlobalName(func->name), true /* add_storage_class */);
       Write(Newline());
     }
     ++func_index;
