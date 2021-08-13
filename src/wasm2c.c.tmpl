@@ -22,42 +22,43 @@
 #define FUNC_EPILOGUE
 #endif
 
-#ifndef EXTERNAL_CALLBACK_PROLOGUE
-#define EXTERNAL_CALLBACK_PROLOGUE
+#ifdef EXTERNAL_CALLBACK_PROLOGUE
+#define EXTERNAL_CALLBACK_PROLOGUE_EXEC                                  \
+  if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) { \
+    EXTERNAL_CALLBACK_PROLOGUE;                                          \
+  }
+#else
+#define EXTERNAL_CALLBACK_PROLOGUE_EXEC
 #endif
 
-#ifndef EXTERNAL_CALLBACK_EPILOGUE
-#define EXTERNAL_CALLBACK_EPILOGUE
+#ifdef EXTERNAL_CALLBACK_EPILOGUE
+#define EXTERNAL_CALLBACK_EPILOGUE_EXEC                                  \
+  if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) { \
+    EXTERNAL_CALLBACK_EPILOGUE;                                          \
+  }
+#else
+#define EXTERNAL_CALLBACK_EPILOGUE_EXEC
 #endif
 
 #define UNREACHABLE (void) TRAP(UNREACHABLE)
 
 #define CALL_INDIRECT_VOID(table, t, ft, x, func_types, ...)                                         \
   if (LIKELY((x) < table.size && table.data[x].func && table.data[x].func_type == func_types[ft])) { \
-    if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) {                           \
-      EXTERNAL_CALLBACK_PROLOGUE;                                                                    \
-    }                                                                                                \
+    EXTERNAL_CALLBACK_PROLOGUE_EXEC;                                                                 \
     ((t)table.data[x].func)(__VA_ARGS__);                                                            \
-    if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) {                           \
-      EXTERNAL_CALLBACK_EPILOGUE;                                                                    \
-    }                                                                                                \
+    EXTERNAL_CALLBACK_EPILOGUE_EXEC;                                                                 \
   } else {                                                                                           \
     (void) TRAP(CALL_INDIRECT);                                                                      \
   }
 
 #define CALL_INDIRECT_RES(res, table, t, ft, x, func_types, ...)                                     \
   if (LIKELY((x) < table.size && table.data[x].func && table.data[x].func_type == func_types[ft])) { \
-    if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) {                           \
-      EXTERNAL_CALLBACK_PROLOGUE;                                                                    \
-    }                                                                                                \
+    EXTERNAL_CALLBACK_PROLOGUE_EXEC;                                                                 \
     res = ((t)table.data[x].func)(__VA_ARGS__);                                                      \
-    if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) {                           \
-      EXTERNAL_CALLBACK_EPILOGUE;                                                                    \
-    }                                                                                                \
+    EXTERNAL_CALLBACK_EPILOGUE_EXEC;                                                                 \
   } else {                                                                                           \
     (void) TRAP(CALL_INDIRECT);                                                                      \
   }
-
 
 #if defined(WASM_CHECK_SHADOW_MEMORY)
 #  define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)  wasm2c_shadow_memory_load(mem, func_name, ptr, ptr_size)

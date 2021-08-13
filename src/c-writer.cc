@@ -222,6 +222,8 @@ class CWriter {
   std::string GetFuncStaticOrExport(std::string);
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&, bool add_storage_class);
+  void WriteEntryFuncs();
+  void WriteEntryFunc(const FuncDeclaration&, const std::string&, bool add_storage_class);
   void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
   std::string GetMainMemoryName();
   void WriteGlobalInitializers();
@@ -973,6 +975,27 @@ void CWriter::WriteFuncDeclarations() {
   }
 }
 
+
+void CWriter::WriteEntryFuncs() {
+  if (module_->funcs.size() == module_->num_func_imports)
+    return;
+
+  Write(Newline());
+  Write("#if defined(ENTRY_PROLOGUE) || defined(ENTRY_EPILOGUE)", Newline());
+
+  Index func_index = 0;
+  for (const Func* func : module_->funcs) {
+    bool is_import = func_index < module_->num_func_imports;
+    if (!is_import) {
+      WriteEntryFunc(func->decl, DefineGlobalScopeName(func->name), true /* add_storage_class */);
+      Write(Newline());
+    }
+    ++func_index;
+  }
+
+  Write("#endif", Newline());
+}
+
 std::string CWriter::GetFuncStaticOrExport(std::string name) {
   std::string static_export_string = "";
   if (name.rfind("w2c___", 0) == 0 || name == "w2c_main") {
@@ -998,6 +1021,38 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
     Write(", ", decl.GetParamType(i));
   }
   Write(")");
+}
+
+void CWriter::WriteEntryFunc(const FuncDeclaration& decl,
+                             const std::string& name,
+                             bool add_storage_class) {
+  // LLVM adds some extra function calls to all wasm objects prefixed with "__".
+  // Keep this static (private), else we cause symbol collisions when linking multiple wasm modules
+  // Additionally windows dlls have to export functions explicitly
+  if (add_storage_class) {
+    Write(GetFuncStaticOrExport(name));
+  }
+  Write(ResultType(decl.sig.result_types), " w2centry_", name, "(wasm2c_sandbox_t* const sbx");
+  for (Index i = 0; i < decl.GetNumParams(); ++i) {
+    Write(", ", decl.GetParamType(i), " p", std::to_string(i));
+  }
+  Write(") ", OpenBrace());
+  {
+    Write("ENTRY_PROLOGUE;", Newline());
+    if (!decl.sig.result_types.empty()) {
+      Write(ResultType(decl.sig.result_types), " ret = ");
+    }
+    Write(name, "(sbx");
+    for (Index i = 0; i < decl.GetNumParams(); ++i) {
+      Write(", p", std::to_string(i));
+    }
+    Write(");", Newline());
+    Write("ENTRY_EPILOGUE;", Newline());
+    if (!decl.sig.result_types.empty()) {
+      Write("return ret;", Newline());
+    }
+  }
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
@@ -2550,6 +2605,7 @@ void CWriter::WriteCSource() {
   WriteSandboxStruct();
   WriteFuncTypes();
   WriteFuncDeclarations();
+  WriteEntryFuncs();
   WriteGlobalInitializers();
   WriteFuncs();
   WriteDataInitializers();
