@@ -23,39 +23,39 @@
 #endif
 
 #ifdef EXTERNAL_CALLBACK_PROLOGUE
-#define EXTERNAL_CALLBACK_PROLOGUE_EXEC                                  \
+#define EXTERNAL_CALLBACK_PROLOGUE_EXEC(table, x)                        \
   if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) { \
     EXTERNAL_CALLBACK_PROLOGUE;                                          \
   }
 #else
-#define EXTERNAL_CALLBACK_PROLOGUE_EXEC
+#define EXTERNAL_CALLBACK_PROLOGUE_EXEC(table, x)
 #endif
 
 #ifdef EXTERNAL_CALLBACK_EPILOGUE
-#define EXTERNAL_CALLBACK_EPILOGUE_EXEC                                  \
+#define EXTERNAL_CALLBACK_EPILOGUE_EXEC(table, x)                        \
   if (UNLIKELY(table.data[x].func_class == WASM_RT_EXTERNAL_FUNCTION)) { \
     EXTERNAL_CALLBACK_EPILOGUE;                                          \
   }
 #else
-#define EXTERNAL_CALLBACK_EPILOGUE_EXEC
+#define EXTERNAL_CALLBACK_EPILOGUE_EXEC(table, x)
 #endif
 
 #define UNREACHABLE (void) TRAP(UNREACHABLE)
 
 #define CALL_INDIRECT_VOID(table, t, ft, x, func_types, ...)                                         \
   if (LIKELY((x) < table.size && table.data[x].func && table.data[x].func_type == func_types[ft])) { \
-    EXTERNAL_CALLBACK_PROLOGUE_EXEC;                                                                 \
+    EXTERNAL_CALLBACK_PROLOGUE_EXEC(table, x);                                                       \
     ((t)table.data[x].func)(__VA_ARGS__);                                                            \
-    EXTERNAL_CALLBACK_EPILOGUE_EXEC;                                                                 \
+    EXTERNAL_CALLBACK_EPILOGUE_EXEC(table, x);                                                       \
   } else {                                                                                           \
     (void) TRAP(CALL_INDIRECT);                                                                      \
   }
 
 #define CALL_INDIRECT_RES(res, table, t, ft, x, func_types, ...)                                     \
   if (LIKELY((x) < table.size && table.data[x].func && table.data[x].func_type == func_types[ft])) { \
-    EXTERNAL_CALLBACK_PROLOGUE_EXEC;                                                                 \
+    EXTERNAL_CALLBACK_PROLOGUE_EXEC(table, x);                                                       \
     res = ((t)table.data[x].func)(__VA_ARGS__);                                                      \
-    EXTERNAL_CALLBACK_EPILOGUE_EXEC;                                                                 \
+    EXTERNAL_CALLBACK_EPILOGUE_EXEC(table, x);                                                       \
   } else {                                                                                           \
     (void) TRAP(CALL_INDIRECT);                                                                      \
   }
