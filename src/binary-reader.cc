@@ -2278,8 +2278,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
     } else {
       uint8_t type;
       CHECK_RESULT(ReadU8(&type, "type form"));
-      ERROR_UNLESS(type == 0x60, "unexpected type form (got " PRItypecode ")",
-                   WABT_PRINTF_TYPE_CODE(type));
+      ERROR_UNLESS(type == 0x60, "unexpected type form (got %#x)", type);
       form = Type::Func;
     }
 
