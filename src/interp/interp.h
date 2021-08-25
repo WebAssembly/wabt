@@ -78,6 +78,7 @@ enum class ObjectKind {
   Null,
   Foreign,
   Trap,
+  Exception,
   DefinedFunc,
   HostFunc,
   Table,
@@ -305,6 +306,29 @@ struct LocalDesc {
   u32 end;
 };
 
+// Metadata for representing exception handlers associated with a function's
+// code. This is needed to look up exceptions from call frames from interpreter
+// instructions.
+struct CatchDesc {
+  Index tag_index;
+  u32 offset;
+};
+
+// The Try kind is for catch-less try blocks, which have a HandlerDesc that
+// is ignored as the block cannot ever catch an exception.
+enum class HandlerKind { Catch, Delegate };
+
+struct HandlerDesc {
+  HandlerKind kind;
+  u32 start_offset;
+  u32 end_offset;
+  std::vector<CatchDesc> catches;
+  union {
+    u32 catch_all_offset;
+    u32 delegate_offset;
+  };
+};
+
 struct FuncDesc {
   // Includes params.
   ValueType GetLocalType(Index) const;
@@ -312,6 +336,7 @@ struct FuncDesc {
   FuncType type;
   std::vector<LocalDesc> locals;
   u32 code_offset;
+  std::vector<HandlerDesc> handlers;
 };
 
 struct TableDesc {
@@ -378,13 +403,19 @@ struct ModuleDesc {
 //// Runtime ////
 
 struct Frame {
-  explicit Frame(Ref func, u32 values, u32 offset, Instance*, Module*);
+  explicit Frame(Ref func,
+                 u32 values,
+                 u32 offset,
+                 u32 exceptions,
+                 Instance*,
+                 Module*);
 
   void Mark(Store&);
 
   Ref func;
   u32 values;  // Height of the value stack at this activation.
   u32 offset;  // Istream offset; either the return PC, or the current PC.
+  u32 exceptions;  // Height of the exception stack at this activation.
 
   // Cached for convenience. Both are null if func is a HostFunc.
   Instance* inst;
@@ -645,6 +676,27 @@ class Trap : public Object {
 
   std::string message_;
   std::vector<Frame> trace_;
+};
+
+class Exception : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Exception;
+  static const char* GetTypeName() { return "Exception"; }
+  using Ptr = RefPtr<Exception>;
+
+  static Exception::Ptr New(Store&, Ref tag, Values& args);
+
+  Ref tag() const;
+  Values& args();
+
+ private:
+  friend Store;
+  explicit Exception(Store&, Ref, Values&);
+  void Mark(Store&) override;
+
+  Ref tag_;
+  Values args_;
 };
 
 class Extern : public Object {
@@ -1025,6 +1077,7 @@ enum class RunResult {
   Ok,
   Return,
   Trap,
+  Exception,
 };
 
 // TODO: Kinda weird to have a thread as an object, but it makes reference
@@ -1183,11 +1236,17 @@ class Thread : public Object {
   template <typename T, typename V = T>
   RunResult DoAtomicRmwCmpxchg(Instr, Trap::Ptr* out_trap);
 
+  RunResult DoThrow(Ref exn_ref);
+
   RunResult StepInternal(Trap::Ptr* out_trap);
 
   std::vector<Frame> frames_;
   std::vector<Value> values_;
   std::vector<u32> refs_;  // Index into values_.
+
+  // Exception handling requires tracking a separate stack of caught
+  // exceptions for catch blocks.
+  RefVec exceptions_;
 
   // Cached for convenience.
   Store& store_;

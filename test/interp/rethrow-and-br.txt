@@ -1,0 +1,73 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-exceptions --enable-tail-call
+(module
+  (tag $e1)
+  (tag $e2)
+  (func (export "rethrow-br") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (catch $e1
+            (try $l
+              (do (throw $e2))
+              (catch $e2
+                ;; exception stack has two entries
+                ;; br should reset to height of one
+                (br $l)))
+            ;; exception stack has one entry
+            (rethrow 0)))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "rethrow-br-if") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (catch $e1
+            (try $l
+              (do (throw $e2))
+              (catch $e2
+                (i32.const 1)
+                (br_if $l)))
+            (rethrow 0)))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "rethrow-br-table") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (catch $e1
+            (try $l
+              (do (throw $e2))
+              (catch $e2
+                (i32.const 1)
+                (br_table 1 $l 1)))
+            (rethrow 0)))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func $helper (result i32)
+    (try (result i32)
+      (do (throw $e1))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "rethrow-return-call") (result i32)
+    (try (result i32)
+      (do (throw $e1))
+      (catch $e1
+        (try $l
+          (do (throw $e2))
+          (catch $e2
+            (return_call $helper)))
+        (i32.const 0))))
+  )
+(;; STDOUT ;;;
+rethrow-br() => i32:1
+rethrow-br-if() => i32:1
+rethrow-br-table() => i32:1
+rethrow-return-call() => i32:1
+;;; STDOUT ;;)

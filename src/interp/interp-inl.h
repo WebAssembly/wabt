@@ -128,9 +128,15 @@ inline ExportType& ExportType::operator=(const ExportType& other) {
 inline Frame::Frame(Ref func,
                     u32 values,
                     u32 offset,
+                    u32 exceptions,
                     Instance* inst,
                     Module* mod)
-    : func(func), values(values), offset(offset), inst(inst), mod(mod) {}
+    : func(func),
+      values(values),
+      offset(offset),
+      exceptions(exceptions),
+      inst(inst),
+      mod(mod) {}
 
 //// FreeList ////
 template <typename T>
@@ -522,6 +528,25 @@ inline Trap::Ptr Trap::New(Store& store,
 
 inline std::string Trap::message() const {
   return message_;
+}
+
+//// Exception ////
+// static
+inline bool Exception::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+// static
+inline Exception::Ptr Exception::New(Store& store, Ref tag, Values& args) {
+  return store.Alloc<Exception>(store, tag, args);
+}
+
+inline Ref Exception::tag() const {
+  return tag_;
+}
+
+inline Values& Exception::args() {
+  return args_;
 }
 
 //// Extern ////
