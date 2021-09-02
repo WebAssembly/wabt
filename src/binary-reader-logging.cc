@@ -550,6 +550,22 @@ Result BinaryReaderLogging::OnDylinkNeeded(string_view so_name) {
   return reader_->OnDylinkNeeded(so_name);
 }
 
+Result BinaryReaderLogging::OnDylinkExport(string_view name, uint32_t flags) {
+  LOGF("OnDylinkExport(name: " PRIstringview ", flags: 0x%x)\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags);
+  return reader_->OnDylinkExport(name, flags);
+}
+
+Result BinaryReaderLogging::OnDylinkImport(string_view module,
+                                           string_view name,
+                                           uint32_t flags) {
+  LOGF("OnDylinkImport(module: " PRIstringview ", name: " PRIstringview
+       ", flags: 0x%x)\n",
+       WABT_PRINTF_STRING_VIEW_ARG(module), WABT_PRINTF_STRING_VIEW_ARG(name),
+       flags);
+  return reader_->OnDylinkImport(module, name, flags);
+}
+
 Result BinaryReaderLogging::OnRelocCount(Index count,
                                          Index section_index) {
   LOGF("OnRelocCount(count: %" PRIindex ", section: %" PRIindex ")\n", count,
@@ -882,6 +898,8 @@ DEFINE_INDEX_INDEX(OnInitExprRefFunc, "index", "func_index")
 
 DEFINE_BEGIN(BeginDylinkSection)
 DEFINE_INDEX(OnDylinkNeededCount)
+DEFINE_INDEX(OnDylinkExportCount)
+DEFINE_INDEX(OnDylinkImportCount)
 DEFINE_END(EndDylinkSection)
 
 DEFINE_BEGIN(BeginLinkingSection)

@@ -973,6 +973,12 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                       uint32_t table_align_log2) override;
   Result OnDylinkNeededCount(Index count) override;
   Result OnDylinkNeeded(string_view so_name) override;
+  Result OnDylinkImportCount(Index count) override;
+  Result OnDylinkExportCount(Index count) override;
+  Result OnDylinkImport(string_view module,
+                        string_view name,
+                        uint32_t flags) override;
+  Result OnDylinkExport(string_view name, uint32_t flags) override;
 
   Result OnRelocCount(Index count, Index section_index) override;
   Result OnReloc(RelocType type,
@@ -1766,6 +1772,30 @@ Result BinaryReaderObjdump::OnDylinkNeededCount(Index count) {
     PrintDetails(" - needed_dynlibs[%u]:\n", count);
   }
   return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkImportCount(Index count) {
+  PrintDetails(" - imports[%u]:\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkExportCount(Index count) {
+  PrintDetails(" - exports[%u]:\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkExport(string_view name, uint32_t flags) {
+  PrintDetails("  - " PRIstringview, WABT_PRINTF_STRING_VIEW_ARG(name));
+  return PrintSymbolFlags(flags);
+}
+
+Result BinaryReaderObjdump::OnDylinkImport(string_view module,
+                                           string_view name,
+                                           uint32_t flags) {
+  PrintDetails("  - " PRIstringview "." PRIstringview,
+               WABT_PRINTF_STRING_VIEW_ARG(module),
+               WABT_PRINTF_STRING_VIEW_ARG(name));
+  return PrintSymbolFlags(flags);
 }
 
 Result BinaryReaderObjdump::OnDylinkNeeded(string_view so_name) {
