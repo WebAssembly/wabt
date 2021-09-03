@@ -283,6 +283,7 @@ void os_print_last_error(const char* msg) {
     //The api creates the buffer that holds the message
     size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+    (void) size;
     //Copy the error message into a std::string.
     printf("%s. %s\n", msg, messageBuffer);
     LocalFree(messageBuffer);
