@@ -287,7 +287,7 @@ void os_print_last_error(const char* msg) {
     printf("%s. %s\n", msg, messageBuffer);
     LocalFree(messageBuffer);
   } else {
-    prinf("%s. No error code.\n", msg);
+    printf("%s. No error code.\n", msg);
   }
 }
 
