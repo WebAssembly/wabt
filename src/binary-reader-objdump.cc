@@ -1867,6 +1867,10 @@ Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
     PrintDetails(" no_strip");
     flags &= ~WABT_SYMBOL_FLAG_NO_STRIP;
   }
+  if (flags & WABT_SYMBOL_FLAG_TLS) {
+    PrintDetails(" tls");
+    flags &= ~WABT_SYMBOL_FLAG_TLS;
+  }
   if (flags != 0) {
     PrintDetails(" unknown_flags=%#x", flags);
   }
