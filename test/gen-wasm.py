@@ -77,6 +77,10 @@ NAMED_VALUES = {
     'LINKING_COMDAT_INFO': 7,
     'LINKING_SYMBOL_TABLE': 8,
 
+    # dylink.0 subsection codes
+    'DYLINK_MEM_INFO': 1,
+    'DYLINK_NEEDED': 2,
+
     # external kinds
     'func_kind': 0,
     'table_kind': 1,

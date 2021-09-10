@@ -131,6 +131,7 @@ class BinaryReader {
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadDylink0Section(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
@@ -1954,6 +1955,59 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadDylink0Section(Offset section_size) {
+  CALLBACK(BeginDylinkSection, section_size);
+
+  while (state_.offset < read_end_) {
+    uint32_t dylink_type;
+    Offset subsection_size;
+    CHECK_RESULT(ReadU32Leb128(&dylink_type, "type"));
+    CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
+    size_t subsection_end = state_.offset + subsection_size;
+    ERROR_UNLESS(subsection_end <= read_end_,
+                 "invalid sub-section size: extends past end");
+    ReadEndRestoreGuard guard(this);
+    read_end_ = subsection_end;
+
+    switch (static_cast<DylinkEntryType>(dylink_type)) {
+      case DylinkEntryType::MemInfo: {
+        uint32_t mem_size;
+        uint32_t mem_align;
+        uint32_t table_size;
+        uint32_t table_align;
+
+        CHECK_RESULT(ReadU32Leb128(&mem_size, "mem_size"));
+        CHECK_RESULT(ReadU32Leb128(&mem_align, "mem_align"));
+        CHECK_RESULT(ReadU32Leb128(&table_size, "table_size"));
+        CHECK_RESULT(ReadU32Leb128(&table_align, "table_align"));
+        CALLBACK(OnDylinkInfo, mem_size, mem_align, table_size, table_align);
+        break;
+      }
+      case DylinkEntryType::Needed: {
+        uint32_t count;
+        CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
+        CALLBACK(OnDylinkNeededCount, count);
+        while (count--) {
+          string_view so_name;
+          CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
+          CALLBACK(OnDylinkNeeded, so_name);
+        }
+        break;
+      }
+      default:
+        // Unknown subsection, skip it.
+        state_.offset = subsection_end;
+        break;
+    }
+    ERROR_UNLESS(state_.offset == subsection_end,
+                 "unfinished sub-section (expected end: 0x%" PRIzx ")",
+                 subsection_end);
+  }
+
+  CALLBACK0(EndDylinkSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadDylinkSection(Offset section_size) {
   CALLBACK(BeginDylinkSection, section_size);
   uint32_t mem_size;
@@ -2153,6 +2207,8 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
     did_read_names_section_ = true;
+  } else if (section_name == WABT_BINARY_SECTION_DYLINK0) {
+    CHECK_RESULT(ReadDylink0Section(section_size));
   } else if (section_name == WABT_BINARY_SECTION_DYLINK) {
     CHECK_RESULT(ReadDylinkSection(section_size));
   } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
