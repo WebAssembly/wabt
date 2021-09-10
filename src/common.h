@@ -336,6 +336,11 @@ enum class LinkingEntryType {
   SymbolTable = 8,
 };
 
+enum class DylinkEntryType {
+  MemInfo = 1,
+  Needed = 2,
+};
+
 enum class SymbolType {
   Function = 0,
   Data = 1,
