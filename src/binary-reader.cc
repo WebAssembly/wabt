@@ -2008,7 +2008,6 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
           CHECK_RESULT(ReadU32Leb128(&flags, "sym flags"));
           SymbolType sym_type = static_cast<SymbolType>(kind);
-          CALLBACK(OnSymbol, i, sym_type, flags);
           switch (sym_type) {
             case SymbolType::Function:
             case SymbolType::Global:

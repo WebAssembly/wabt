@@ -328,7 +328,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginLinkingSection(Offset size) override;
   Result OnSymbolCount(Index count) override;
-  Result OnSymbol(Index sybmol_index, SymbolType type, uint32_t flags) override;
   Result OnDataSymbol(Index index,
                       uint32_t flags,
                       string_view name,
