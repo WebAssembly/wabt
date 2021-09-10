@@ -568,13 +568,6 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   return reader_->OnReloc(type, offset, index, addend);
 }
 
-Result BinaryReaderLogging::OnSymbol(Index symbol_index,
-                                     SymbolType type,
-                                     uint32_t flags) {
-  LOGF("OnSymbol(type: %s flags: 0x%x)\n", GetSymbolTypeName(type), flags);
-  return reader_->OnSymbol(symbol_index, type, flags);
-}
-
 Result BinaryReaderLogging::OnDataSymbol(Index index,
                                          uint32_t flags,
                                          string_view name,
