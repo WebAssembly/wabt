@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_load_splat.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_load_splat.wast:119: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
 out/test/spec/simd/simd_load_splat.wast:120: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536

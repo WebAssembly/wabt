@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_f32x4_pmin_pmax.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_f32x4_pmin_pmax.wast:11629: assert_malformed passed:
   out/test/spec/simd/simd_f32x4_pmin_pmax/simd_f32x4_pmin_pmax.1.wat:1:33: error: unexpected token "i8x16.pmin", expected an instr.

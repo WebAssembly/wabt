@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i16x8_sat_arith.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_i16x8_sat_arith.wast:609: assert_malformed passed:
   out/test/spec/simd/simd_i16x8_sat_arith/simd_i16x8_sat_arith.1.wat:1:22: error: unexpected token "i16x8.add_sat", expected an instr.

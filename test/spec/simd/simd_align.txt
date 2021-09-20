@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_align.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_align.wast:54: assert_invalid passed:
   error: alignment must not be larger than natural alignment (16)

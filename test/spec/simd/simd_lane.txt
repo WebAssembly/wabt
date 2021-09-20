@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_lane.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_lane.wast:398: assert_malformed passed:
   out/test/spec/simd/simd_lane/simd_lane.1.wat:1:21: error: invalid literal "-1"

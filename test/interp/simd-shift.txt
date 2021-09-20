@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-simd
 (module
   ;; i8x16 shl
   (func (export "i8x16_shl_0") (result v128)

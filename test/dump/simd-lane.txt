@@ -1,5 +1,4 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-simd
 
 (module
   ;; i8x16 extract lane signed/unsigned

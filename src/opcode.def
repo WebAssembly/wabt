@@ -261,7 +261,7 @@ WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd0, RefNull, "ref.null", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd1, RefIsNull, "ref.is_null", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd2, RefFunc, "ref.func", "")
 
-/* Simd opcodes (--enable-simd) */
+/* Simd opcodes */
 WABT_OPCODE(V128, I32,  ___,  ___,  16, 0xfd, 0x00, V128Load,  "v128.load", "")
 WABT_OPCODE(V128, I32,   ___, ___,  8,  0xfd, 0x01, V128Load8X8S, "v128.load8x8_s", "")
 WABT_OPCODE(V128, I32,   ___, ___,  8,  0xfd, 0x02, V128Load8X8U, "v128.load8x8_u", "")

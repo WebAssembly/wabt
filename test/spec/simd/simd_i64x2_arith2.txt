@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i64x2_arith2.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_i64x2_arith2.wast:59: assert_invalid passed:
   error: type mismatch in i64x2.abs, expected [v128] but got [f32]

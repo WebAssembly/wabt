@@ -92,7 +92,6 @@ def main(args):
     ProcessProposalDir('sign-extension-ops', '--enable-sign-extension')
     ProcessProposalDir('bulk-memory-operations', '--enable-bulk-memory')
     ProcessProposalDir('reference-types', '--enable-reference-types')
-    ProcessProposalDir('simd', '--enable-simd')
     ProcessProposalDir('memory64', '--enable-memory64')
 
     return 0

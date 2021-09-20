@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_f64x2_cmp.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_f64x2_cmp.wast:7954: assert_malformed passed:
   out/test/spec/simd/simd_f64x2_cmp/simd_f64x2_cmp.1.wat:1:66: error: unexpected token "f2x64.eq", expected an instr.

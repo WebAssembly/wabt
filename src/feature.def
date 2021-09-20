@@ -26,7 +26,7 @@ WABT_FEATURE(exceptions,          "exceptions",              false,   "Experimen
 WABT_FEATURE(mutable_globals,     "mutable-globals",         true,    "Import/export mutable globals")
 WABT_FEATURE(sat_float_to_int,    "saturating-float-to-int", true,    "Saturating float-to-int operators")
 WABT_FEATURE(sign_extension,      "sign-extension",          true,    "Sign-extension operators")
-WABT_FEATURE(simd,                "simd",                    false,   "SIMD support")
+WABT_FEATURE(simd,                "simd",                    true,   "SIMD support")
 WABT_FEATURE(threads,             "threads",                 false,   "Threading support")
 WABT_FEATURE(function_references, "function-references",     false,   "Typed function references")
 WABT_FEATURE(multi_value,         "multi-value",             true,    "Multi-value")

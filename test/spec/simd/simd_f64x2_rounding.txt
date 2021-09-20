@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_f64x2_rounding.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_f64x2_rounding.wast:367: assert_malformed passed:
   out/test/spec/simd/simd_f64x2_rounding/simd_f64x2_rounding.1.wat:1:33: error: unexpected token "i8x16.ceil", expected an instr.
