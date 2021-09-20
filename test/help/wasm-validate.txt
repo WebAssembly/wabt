@@ -17,7 +17,7 @@ options:
       --disable-mutable-globals                Disable Import/export mutable globals
       --disable-saturating-float-to-int        Disable Saturating float-to-int operators
       --disable-sign-extension                 Disable Sign-extension operators
-      --enable-simd                            Enable SIMD support
+      --disable-simd                           Disable SIMD support
       --enable-threads                         Enable Threading support
       --enable-function-references             Enable Typed function references
       --disable-multi-value                    Disable Multi-value

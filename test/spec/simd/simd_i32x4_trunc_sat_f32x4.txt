@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i32x4_trunc_sat_f32x4.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_i32x4_trunc_sat_f32x4.wast:218: assert_invalid passed:
   error: type mismatch in i32x4.trunc_sat_f32x4_s, expected [v128] but got [i32]

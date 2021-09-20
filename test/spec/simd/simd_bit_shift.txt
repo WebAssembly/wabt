@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_bit_shift.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_bit_shift.wast:976: assert_invalid passed:
   error: type mismatch in i8x16.shl, expected [v128, i32] but got [i32, i32]

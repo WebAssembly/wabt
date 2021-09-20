@@ -93,8 +93,11 @@
 ; truncate to 61 (0x3d)
 ;;; STDERR ;;)
 (;; STDOUT ;;;
+
 call_ref.wasm:	file format wasm 0x1
+
 Code Disassembly:
+
 00002e func[0] <main>:
  00002f: 41 0a                      | i32.const 10
  000031: d2 01                      | ref.func 1

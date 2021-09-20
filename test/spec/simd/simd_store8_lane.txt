@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_store8_lane.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_store8_lane.wast:411: assert_invalid passed:
   error: type mismatch in v128.store8_lane, expected [i32, v128] but got [v128, i32]

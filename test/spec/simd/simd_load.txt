@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_load.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_load.wast:141: assert_malformed passed:
   out/test/spec/simd/simd_load/simd_load.14.wat:1:37: error: unexpected token "v128.load8", expected an expr.

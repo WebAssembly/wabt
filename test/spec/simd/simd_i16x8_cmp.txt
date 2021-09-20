@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i16x8_cmp.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_i16x8_cmp.wast:1455: assert_invalid passed:
   error: type mismatch in i16x8.eq, expected [v128, v128] but got [i32, f32]

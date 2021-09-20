@@ -1,5 +1,5 @@
 ;;; RUN: %(wasm2c)s
-;;; ARGS: --enable-simd %(in_file)s
+;;; ARGS: --enable-exceptions %(in_file)s
 ;;; ERROR: 1
 (;; STDERR ;;;
 wasm2c currently support only default feature flags.

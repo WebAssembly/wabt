@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_splat.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_splat.wast:122: assert_malformed passed:
   out/test/spec/simd/simd_splat/simd_splat.1.wat:1:22: error: unexpected token "v128.splat", expected an instr.

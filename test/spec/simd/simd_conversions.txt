@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_conversions.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_conversions.wast:605: assert_malformed passed:
   out/test/spec/simd/simd_conversions/simd_conversions.1.wat:1:22: error: unexpected token "i32x4.trunc_sat_f32x4", expected an instr.

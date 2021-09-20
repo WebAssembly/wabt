@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-simd
 (module
   (func
     v128.const i32x4 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f

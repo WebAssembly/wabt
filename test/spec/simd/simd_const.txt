@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_const.wast
-;;; ARGS*: --enable-simd --enable-reference-types
 ;;; NOTE: reference types is only required because the test uses two tables
 (;; STDOUT ;;;
 out/test/spec/simd/simd_const.wast:130: assert_malformed passed:

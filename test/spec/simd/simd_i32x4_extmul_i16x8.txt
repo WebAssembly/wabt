@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i32x4_extmul_i16x8.wast
-;;; ARGS*: --enable-simd
 (;; STDOUT ;;;
 out/test/spec/simd/simd_i32x4_extmul_i16x8.wast:333: assert_invalid passed:
   error: type mismatch in i32x4.extmul_low_i16x8_s, expected [v128, v128] but got [i32, f32]

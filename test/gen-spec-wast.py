@@ -243,7 +243,6 @@ def main(args):
     parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-saturating-float-to-int', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
-    parser.add_argument('--enable-simd', action='store_true')
     parser.add_argument('--enable-sign-extension', action='store_true')
     parser.add_argument('--enable-multi-value', action='store_true')
     parser.add_argument('--enable-bulk-memory', action='store_true')
@@ -262,7 +261,6 @@ def main(args):
         '--enable-saturating-float-to-int':
             options.enable_saturating_float_to_int,
         '--enable-sign-extension': options.enable_sign_extension,
-        '--enable-simd': options.enable_simd,
         '--enable-threads': options.enable_threads,
         '--enable-bulk-memory': options.enable_bulk_memory,
         '--enable-tail-call': options.enable_tail_call,
