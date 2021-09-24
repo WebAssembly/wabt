@@ -40,6 +40,7 @@ const char* ExprTypeName[] = {
   "Call",
   "CallIndirect",
   "CallRef",
+  "CodeAnnotation",
   "Compare",
   "Const",
   "Convert",

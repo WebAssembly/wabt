@@ -21,6 +21,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <vector>
 
 #include "src/binary-reader-nop.h"
@@ -42,6 +43,51 @@ struct LabelNode {
 
 LabelNode::LabelNode(LabelType label_type, ExprList* exprs, Expr* context)
     : label_type(label_type), exprs(exprs), context(context) {}
+
+class CodeAnnotationExprQueue {
+ private:
+  struct Entry {
+    Func* func;
+    std::deque<std::unique_ptr<CodeAnnotationExpr>> func_queue;
+    Entry(Func* f) : func(f) {}
+  };
+  std::deque<Entry> entries;
+
+ public:
+  CodeAnnotationExprQueue() {}
+  void push_func(Func* f) { entries.emplace_back(f); }
+  void push_annotation(std::unique_ptr<CodeAnnotationExpr> ann) {
+    assert(!entries.empty());
+    entries.back().func_queue.push_back(std::move(ann));
+  }
+
+  std::unique_ptr<CodeAnnotationExpr> pop_match(Func* f, Offset offset) {
+    std::unique_ptr<CodeAnnotationExpr> ret;
+    if (entries.empty())
+      return ret;
+
+    auto& current_entry = entries.front();
+
+    if (current_entry.func != f)
+      return ret;
+    if (current_entry.func_queue.empty()) {
+      entries.pop_front();
+      return ret;
+    }
+
+    auto& current_annotation = current_entry.func_queue.front();
+    if (current_annotation->loc.offset + current_entry.func->loc.offset !=
+        offset) {
+      return ret;
+    }
+
+    current_annotation->loc = Location(offset);
+    ret = std::move(current_annotation);
+    current_entry.func_queue.pop_front();
+
+    return ret;
+  }
+};
 
 class BinaryReaderIR : public BinaryReaderNop {
  public:
@@ -117,6 +163,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
+  Result OnOpcode(Opcode opcode) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Address alignment_log2,
                           Address offset) override;
@@ -257,6 +304,15 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTagType(Index index, Index sig_index) override;
   Result EndTagSection() override { return Result::Ok; }
 
+  /* Code Annotation sections */
+  Result BeginCodeAnnotationSection(string_view name, Offset size) override;
+  Result OnCodeAnnotationFuncCount(Index count) override;
+  Result OnCodeAnnotationCount(Index function_index, Index count) override;
+  Result OnCodeAnnotation(Offset offset,
+                          const void* data,
+                          Address size) override;
+  Result EndCodeAnnotationSection() override;
+
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprV128ConstExpr(Index index, v128 value) override;
@@ -312,6 +368,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   std::vector<LabelNode> label_stack_;
   ExprList* current_init_expr_ = nullptr;
   const char* filename_;
+
+  CodeAnnotationExprQueue code_annotations_;
+  string_view current_annotation_name_;
 };
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
@@ -650,12 +709,22 @@ Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
 
 Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
   current_func_ = module_->funcs[index];
+  current_func_->loc = GetLocation();
   PushLabel(LabelType::Func, &current_func_->exprs);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   current_func_->local_types.AppendDecl(type, count);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnOpcode(Opcode opcode) {
+  std::unique_ptr<CodeAnnotationExpr> annotation =
+      code_annotations_.pop_match(current_func_, GetLocation().offset - 1);
+  if (annotation) {
+    return AppendExpr(std::move(annotation));
+  }
   return Result::Ok;
 }
 
@@ -1393,6 +1462,38 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
                count, num_params_and_locals);
     return Result::Error;
   }
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginCodeAnnotationSection(string_view name,
+                                                  Offset size) {
+  current_annotation_name_ = name;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCodeAnnotationFuncCount(Index count) {
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCodeAnnotationCount(Index function_index,
+                                             Index count) {
+  code_annotations_.push_func(module_->funcs[function_index]);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCodeAnnotation(Offset offset,
+                                        const void* data,
+                                        Address size) {
+  std::vector<uint8_t> data_(static_cast<const uint8_t*>(data),
+                          static_cast<const uint8_t*>(data) + size);
+  auto ann = MakeUnique<CodeAnnotationExpr>(
+      current_annotation_name_.to_string(), std::move(data_));
+  ann->loc.offset = offset;
+  code_annotations_.push_annotation(std::move(ann));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::EndCodeAnnotationSection() {
   return Result::Ok;
 }
 

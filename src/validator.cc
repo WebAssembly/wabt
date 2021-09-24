@@ -94,6 +94,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnCallRefExpr(CallRefExpr*) override;
+  Result OnCodeAnnotationExpr(CodeAnnotationExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -283,6 +284,10 @@ Result Validator::OnCallRefExpr(CallRefExpr* expr) {
   }
 
   return Result::Error;
+}
+
+Result Validator::OnCodeAnnotationExpr(CodeAnnotationExpr* expr) {
+  return Result::Ok;
 }
 
 Result Validator::OnCompareExpr(CompareExpr* expr) {

@@ -166,6 +166,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::DataDrop:
     case ExprType::ElemDrop:
     case ExprType::AtomicFence:
+    case ExprType::CodeAnnotation:
       return { 0, 0 };
 
     case ExprType::MemoryInit:
