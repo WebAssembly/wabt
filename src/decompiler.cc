@@ -585,6 +585,12 @@ struct Decompiler {
         ts += "](";
         return WrapChild(args[0], ts, ")", Precedence::Atomic);
       }
+      case ExprType::CodeAnnotation: {
+        auto cae = cast<CodeAnnotationExpr>(n.e);
+        std::string c = "// @code_annotation." + cae->name + " ";
+        c += BinaryToString(cae->data);
+        return Value{{std::move(c)}, Precedence::None};
+      }
       default: {
         // Everything that looks like a function call.
         std::string name;
