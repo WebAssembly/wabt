@@ -50,12 +50,22 @@ uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
                                     uint32_t result_count,
                                     wasm_rt_type_t* types) {
   wasm_func_type_t func_type;
+
   func_type.param_count = param_count;
-  func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
-  assert(func_type.params != 0);
+  if (func_type.param_count != 0) {
+    func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
+    assert(func_type.params != 0);
+  } else {
+    func_type.params = 0;
+  }
+
   func_type.result_count = result_count;
-  func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
-  assert(func_type.results != 0);
+  if (func_type.result_count != 0) {
+    func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
+    assert(func_type.results != 0);
+  } else {
+    func_type.results = 0;
+  }
 
   uint32_t i;
   for (i = 0; i < param_count; ++i)
@@ -66,8 +76,12 @@ uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
   for (i = 0; i < *p_func_type_count; ++i) {
     wasm_func_type_t* func_types = *p_func_type_structs;
     if (func_types_are_equal(&func_types[i], &func_type)) {
-      free(func_type.params);
-      free(func_type.results);
+      if (func_type.params) {
+        free(func_type.params);
+      }
+      if (func_type.results) {
+        free(func_type.results);
+      }
       return i + 1;
     }
   }
