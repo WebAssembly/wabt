@@ -461,6 +461,7 @@ class Store {
   ObjectList::Index object_count() const;
 
   const Features& features() const;
+  void setFeatures(const Features& features) { features_ = features; }
 
  private:
   template <typename T>
