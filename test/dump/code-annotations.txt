@@ -1,0 +1,36 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-annotations --enable-code-annotations
+;;; ARGS1: --headers --details
+(module
+  (func $f (param i32) (result i32)
+    i32.const 1234
+    local.get 0
+    (@code_annotation.test "aa\01a") i32.add
+    return))
+(;; STDOUT ;;;
+code-annotations.wasm:	file format wasm 0x1
+Sections:
+     Type start=0x0000000a end=0x00000010 (size=0x00000006) count: 1
+ Function start=0x00000012 end=0x00000014 (size=0x00000002) count: 1
+   Custom start=0x00000016 end=0x00000034 (size=0x0000001e) "code_annotation.test"
+     Code start=0x00000036 end=0x00000041 (size=0x0000000b) count: 1
+Section Details:
+Type[1]:
+ - type[0] (i32) -> i32
+Function[1]:
+ - func[0] sig=0
+Custom:
+ - name: "code_annotation.test"
+   - func[0]:
+    - ann[6]:
+     - 0000000: 6161 0161                                aa.a
+Code[1]:
+ - func[0] size=9
+Code Disassembly:
+000038 func[0]:
+ 000039: 41 d2 09                   | i32.const 1234
+ 00003c: 20 00                      | local.get 0
+ 00003e: 6a                         | i32.add
+ 00003f: 0f                         | return
+ 000040: 0b                         | end
+;;; STDOUT ;;)

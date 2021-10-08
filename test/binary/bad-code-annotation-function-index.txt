@@ -1,0 +1,58 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS1: -x
+magic
+version
+section(TYPE) {
+  count[1]
+  function params[0] results[1] i32
+}
+section(FUNCTION) {
+  count[1]
+  type[0]
+}
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[0]
+}
+section("code_annotation.test") {
+  function_count[1]
+  function_index[2]
+  ann_count[1]
+  ann_offset[1]
+  ann_data_size[1]
+  ann_data[1]
+}
+
+section(CODE) {
+  count[1]
+  func {
+    local_decls[0]
+    i32.const 1
+    return
+  }
+}
+
+(;; STDERR ;;;
+0000031: warning: invalid function index: 2
+;;; STDERR ;;)
+
+(;; STDOUT ;;;
+bad-code-annotation-function-index.wasm:	file format wasm 0x1
+Section Details:
+Type[1]:
+ - type[0] () -> i32
+Function[1]:
+ - func[0] sig=0
+Memory[1]:
+ - memory[0] pages: initial=0
+Custom:
+ - name: "code_annotation.test"
+Code[1]:
+ - func[0] size=5
+Code Disassembly:
+000039 func[0]:
+ 00003a: 41 01                      | i32.const 1
+ 00003c: 0f                         | return
+ 00003d: 0b                         | end
+;;; STDOUT ;;)

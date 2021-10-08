@@ -1,0 +1,78 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS1: -x
+magic
+version
+section(TYPE) {
+  count[1]
+  function params[0] results[1] i32
+}
+section(FUNCTION) {
+  count[2]
+  type[0]
+  type[0]
+}
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[0]
+}
+section("code_annotation.test") {
+  function_count[2]
+  function_index[1]
+  ann_count[1]
+  ann_offset[1]
+  ann_data_size[1]
+  ann_data[1]
+  function_index[0]
+  ann_count[1]
+  ann_offset[1]
+  ann_data_size[1]
+  ann_data[1]
+}
+
+section(CODE) {
+  count[2]
+  func {
+    local_decls[0]
+    i32.const 1
+    return
+  }
+  func {
+    local_decls[0]
+    i32.const 1
+    return
+  }
+}
+
+(;; STDERR ;;;
+0000037: warning: function index out of order: 0
+;;; STDERR ;;)
+
+(;; STDOUT ;;;
+bad-code-annotation-function-out-of-order.wasm:	file format wasm 0x1
+Section Details:
+Type[1]:
+ - type[0] () -> i32
+Function[2]:
+ - func[0] sig=0
+ - func[1] sig=0
+Memory[1]:
+ - memory[0] pages: initial=0
+Custom:
+ - name: "code_annotation.test"
+   - func[1]:
+    - ann[1]:
+     - 0000000: 01                                       .
+Code[2]:
+ - func[0] size=5
+ - func[1] size=5
+Code Disassembly:
+00003f func[0]:
+ 000040: 41 01                      | i32.const 1
+ 000042: 0f                         | return
+ 000043: 0b                         | end
+000045 func[1]:
+ 000046: 41 01                      | i32.const 1
+ 000048: 0f                         | return
+ 000049: 0b                         | end
+;;; STDOUT ;;)
