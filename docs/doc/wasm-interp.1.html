@@ -7,6 +7,12 @@
     td.head-rtitle, td.foot-os { text-align: right; }
     td.head-vol { text-align: center; }
     div.Pp { margin: 1ex 0ex; }
+    div.Nd, div.Bf, div.Op { display: inline; }
+    span.Pa, span.Ad { font-style: italic; }
+    span.Ms { font-weight: bold; }
+    dl.Bl-diag > dt { font-weight: bold; }
+    code.Nm, code.Fl, code.Cm, code.Ic, code.In, code.Fd, code.Fn,
+    code.Cd { font-weight: bold; font-family: inherit; }
   </style>
   <title>WABT(1)</title>
 </head>
@@ -19,95 +25,103 @@
   </tr>
 </table>
 <div class="manual-text">
-<h1 class="Sh" title="Sh" id="NAME"><a class="selflink" href="#NAME">NAME</a></h1>
-<b class="Nm" title="Nm">wasm-interp</b> &#x2014;
-  <span class="Nd" title="Nd">decode and run a WebAssembly binary file</span>
-<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="selflink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<code class="Nm">wasm-interp</code> &#x2014;
+<div class="Nd">decode and run a WebAssembly binary file</div>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
 <table class="Nm">
   <tr>
-    <td><b class="Nm" title="Nm">wasm-interp</b></td>
-    <td>[<span class="Op">options</span>]
-      <var class="Ar" title="Ar">file</var></td>
+    <td><code class="Nm">wasm-interp</code></td>
+    <td>[options] <var class="Ar">file</var></td>
   </tr>
 </table>
-<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="selflink" href="#DESCRIPTION">DESCRIPTION</a></h1>
-<b class="Nm" title="Nm">wasm-interp</b> decodes and runs a WebAssembly binary
-  file using a stack-based interpreter.
-<div class="Pp"></div>
-The options are as follows:
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<code class="Nm">wasm-interp</code> decodes and runs a WebAssembly binary file
+  using a stack-based interpreter.
+<p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
-  <dt class="It-tag"><a class="selflink" href="#v"><b class="Fl" title="Fl" id="v">-v</b></a>,
-    <b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-verbose</b></dt>
-  <dd class="It-tag">Use multiple times for more info</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-help</b></dt>
-  <dd class="It-tag">Print a help message</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-exceptions</b></dt>
-  <dd class="It-tag">Experimental exception handling</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-disable-mutable-globals</b></dt>
-  <dd class="It-tag">Import/export mutable globals</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-saturating-float-to-int</b></dt>
-  <dd class="It-tag">Saturating float-to-int operators</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-sign-extension</b></dt>
-  <dd class="It-tag">Sign-extension operators</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-simd</b></dt>
-  <dd class="It-tag">SIMD support</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-threads</b></dt>
-  <dd class="It-tag">Threading support</dd>
-  <dt class="It-tag"><a class="selflink" href="#V"><b class="Fl" title="Fl" id="V">-V</b></a>,
-    <b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-value-stack-size=SIZE</b></dt>
-  <dd class="It-tag">Size in elements of the value stack</dd>
-  <dt class="It-tag"><a class="selflink" href="#C"><b class="Fl" title="Fl" id="C">-C</b></a>,
-    <b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-call-stack-size=SIZE</b></dt>
-  <dd class="It-tag">Size in elements of the call stack</dd>
-  <dt class="It-tag"><a class="selflink" href="#t"><b class="Fl" title="Fl" id="t">-t</b></a>,
-    <b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-trace</b></dt>
-  <dd class="It-tag">Trace execution</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-run-all-exports</b></dt>
-  <dd class="It-tag">Run all the exported functions, in order. Useful for
-      testing</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-host-print</b></dt>
-  <dd class="It-tag">Include an importable function named &quot;host.print&quot;
-      for printing to stdout</dd>
+  <dt><a class="permalink" href="#v"><code class="Fl" id="v">-v</code></a>,
+    <code class="Fl">-</code><code class="Fl">-verbose</code></dt>
+  <dd>Use multiple times for more info</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-help</code></dt>
+  <dd>Print a help message</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-exceptions</code></dt>
+  <dd>Experimental exception handling</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-disable-mutable-globals</code></dt>
+  <dd>Import/export mutable globals</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-saturating-float-to-int</code></dt>
+  <dd>Saturating float-to-int operators</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-sign-extension</code></dt>
+  <dd>Sign-extension operators</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-disable-simd</code></dt>
+  <dd>SIMD support</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-threads</code></dt>
+  <dd>Threading support</dd>
+  <dt><a class="permalink" href="#V"><code class="Fl" id="V">-V</code></a>,
+    <code class="Fl">-</code><code class="Fl">-value-stack-size=SIZE</code></dt>
+  <dd>Size in elements of the value stack</dd>
+  <dt><a class="permalink" href="#C"><code class="Fl" id="C">-C</code></a>,
+    <code class="Fl">-</code><code class="Fl">-call-stack-size=SIZE</code></dt>
+  <dd>Size in elements of the call stack</dd>
+  <dt><a class="permalink" href="#t"><code class="Fl" id="t">-t</code></a>,
+    <code class="Fl">-</code><code class="Fl">-trace</code></dt>
+  <dd>Trace execution</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-run-all-exports</code></dt>
+  <dd>Run all the exported functions, in order. Useful for testing</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-host-print</code></dt>
+  <dd>Include an importable function named &quot;host.print&quot; for printing
+      to stdout</dd>
 </dl>
-<h1 class="Sh" title="Sh" id="EXAMPLES"><a class="selflink" href="#EXAMPLES">EXAMPLES</a></h1>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
 Parse binary file test.wasm, and type-check it
-<div class="Pp"></div>
-<div class="D1"><code class="Li">$ wasm-interp test.wasm</code></div>
-<div class="Pp"></div>
-Parse test.wasm and run all its exported functions
-<div class="Pp"></div>
-<div class="D1"><code class="Li">$ wasm-interp test.wasm
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm</code></div>
+<p class="Pp">Parse test.wasm and run all its exported functions</p>
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm
   --run-all-exports</code></div>
-<div class="Pp"></div>
-Parse test.wasm, run the exported functions and trace the output
-<div class="Pp"></div>
-<div class="D1"><code class="Li">$ wasm-interp test.wasm --run-all-exports
-  --trace</code></div>
-<div class="Pp"></div>
-Parse test.wasm and run all its exported functions, setting the value stack size
-  to 100 elements
-<div class="Pp"></div>
-<div class="D1"><code class="Li">$ wasm-interp test.wasm -V 100
+<p class="Pp">Parse test.wasm, run the exported functions and trace the
+  output</p>
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm
+  --run-all-exports --trace</code></div>
+<p class="Pp">Parse test.wasm and run all its exported functions, setting the
+    value stack size to 100 elements</p>
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm -V 100
   --run-all-exports</code></div>
-<h1 class="Sh" title="Sh" id="SEE_ALSO"><a class="selflink" href="#SEE_ALSO">SEE
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
   ALSO</a></h1>
-<a class="Xr" title="Xr" href="wasm-objdump.1.html">wasm-objdump(1)</a>,
-  <a class="Xr" title="Xr" href="wasm-opcodecnt.1.html">wasm-opcodecnt(1)</a>,
-  <a class="Xr" title="Xr" href="wasm-strip.1.html">wasm-strip(1)</a>,
-  <a class="Xr" title="Xr" href="wasm-validate.1.html">wasm-validate(1)</a>,
-  <a class="Xr" title="Xr" href="wasm2c.1.html">wasm2c(1)</a>,
-  <a class="Xr" title="Xr" href="wasm2wat.1.html">wasm2wat(1)</a>,
-  <a class="Xr" title="Xr" href="wast2json.1.html">wast2json(1)</a>,
-  <a class="Xr" title="Xr" href="wat-desugar.1.html">wat-desugar(1)</a>,
-  <a class="Xr" title="Xr" href="wat2wasm.1.html">wat2wasm(1)</a>,
-  <a class="Xr" title="Xr" href="spectest-interp.1.html">spectest-interp(1)</a>
-<h1 class="Sh" title="Sh" id="BUGS"><a class="selflink" href="#BUGS">BUGS</a></h1>
+<a class="Xr" href="wasm-objdump.1.html">wasm-objdump(1)</a>,
+  <a class="Xr" href="wasm-opcodecnt.1.html">wasm-opcodecnt(1)</a>,
+  <a class="Xr" href="wasm-strip.1.html">wasm-strip(1)</a>,
+  <a class="Xr" href="wasm-validate.1.html">wasm-validate(1)</a>,
+  <a class="Xr" href="wasm2c.1.html">wasm2c(1)</a>,
+  <a class="Xr" href="wasm2wat.1.html">wasm2wat(1)</a>,
+  <a class="Xr" href="wast2json.1.html">wast2json(1)</a>,
+  <a class="Xr" href="wat-desugar.1.html">wat-desugar(1)</a>,
+  <a class="Xr" href="wat2wasm.1.html">wat2wasm(1)</a>,
+  <a class="Xr" href="spectest-interp.1.html">spectest-interp(1)</a>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="BUGS"><a class="permalink" href="#BUGS">BUGS</a></h1>
 If you find a bug, please report it at
-<div>&#x00A0;</div>
-<a class="Lk" title="Lk" href="https://github.com/WebAssembly/wabt/issues">https://github.com/WebAssembly/wabt/issues</a>.</div>
+<br/>
+<a class="Lk" href="https://github.com/WebAssembly/wabt/issues">https://github.com/WebAssembly/wabt/issues</a>.
+</section>
+</div>
 <table class="foot">
   <tr>
-    <td class="foot-date">December 17, 2018</td>
+    <td class="foot-date">October 7, 2021</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>
