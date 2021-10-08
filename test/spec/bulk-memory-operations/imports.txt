@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/imports.wast
-;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 called host spectest.print_i32(i32:13) =>
 called host spectest.print_i32_f32(i32:14, f32:42.000000) =>

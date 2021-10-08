@@ -25,7 +25,7 @@ options:
       --enable-function-references             Enable Typed function references
       --disable-multi-value                    Disable Multi-value
       --enable-tail-call                       Enable Tail-call support
-      --enable-bulk-memory                     Enable Bulk-memory operations
+      --disable-bulk-memory                    Disable Bulk-memory operations
       --enable-reference-types                 Enable Reference types (externref)
       --enable-annotations                     Enable Custom annotation syntax
       --enable-gc                              Enable Garbage collection

@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: -v --enable-bulk-memory
+;;; ARGS0: -v
 ;;; NOTE: using (table 0) syntax should still be MVP compatible when possible
 (module
   (table 1 funcref)

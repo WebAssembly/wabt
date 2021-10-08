@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/bulk.wast
-;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 fill(i32:1, i32:255, i32:3) =>
 fill(i32:0, i32:48042, i32:2) =>

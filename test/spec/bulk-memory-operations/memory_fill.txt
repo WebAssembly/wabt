@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/memory_fill.wast
-;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 test() =>
 out/test/spec/bulk-memory-operations/memory_fill.wast:43: assert_trap passed: out of bounds memory access: memory.fill out of bounds
