@@ -2623,6 +2623,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     }
     CALLBACK(BeginDataSegment, i, memory_index, flags);
     if (!(flags & SegPassive)) {
+      ERROR_UNLESS(memories.size() > 0, "no memory to copy data to");
       CALLBACK(BeginDataSegmentInitExpr, i);
       CHECK_RESULT(ReadInitExpr(i, memories[0].IndexType()));
       CALLBACK(EndDataSegmentInitExpr, i);
