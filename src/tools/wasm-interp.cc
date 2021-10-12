@@ -325,6 +325,7 @@ int ProgramMain(int argc, char** argv) {
   s_stderr_stream = FileStream::CreateStderr();
 
   ParseOptions(argc, argv);
+  s_store.setFeatures(s_features);
 
   wabt::Result result = ReadAndRunModule(s_infile);
   return result != wabt::Result::Ok;
