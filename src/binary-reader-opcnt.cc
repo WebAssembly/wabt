@@ -113,7 +113,23 @@ void OpcodeInfo::Write(Stream& stream) {
       break;
     }
 
+    case Kind::V128: {
+      auto data = *GetData<v128>();
+      auto l0 = data.u32(0);
+      auto l1 = data.u32(1);
+      auto l2 = data.u32(2);
+      auto l3 = data.u32(3);
+      stream.Writef(" %u %u %u %u (0x%x 0x%x 0x%x 0x%x)", l0, l1, l2, l3, l0,
+                    l1, l2, l3);
+      break;
+    }
+
     case Kind::Uint32Uint32:
+      WriteArray<uint32_t>(
+          stream, [&stream](uint32_t value) { stream.Writef("%u", value); });
+      break;
+
+    case Kind::Uint32Uint32Uint32:
       WriteArray<uint32_t>(
           stream, [&stream](uint32_t value) { stream.Writef("%u", value); });
       break;
@@ -191,9 +207,13 @@ class BinaryReaderOpcnt : public BinaryReaderNop {
   Result OnOpcodeUint32(uint32_t value) override;
   Result OnOpcodeIndex(Index value) override;
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
+  Result OnOpcodeUint32Uint32Uint32(uint32_t value,
+                                    uint32_t value2,
+                                    uint32_t value3) override;
   Result OnOpcodeUint64(uint64_t value) override;
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
+  Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
@@ -246,6 +266,14 @@ Result BinaryReaderOpcnt::OnOpcodeUint32Uint32(uint32_t value0,
   return Emplace(current_opcode_, OpcodeInfo::Kind::Uint32Uint32, array, 2);
 }
 
+Result BinaryReaderOpcnt::OnOpcodeUint32Uint32Uint32(uint32_t value0,
+                                                     uint32_t value1,
+                                                     uint32_t value2) {
+  uint32_t array[3] = {value0, value1, value2};
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Uint32Uint32Uint32, array,
+                 3);
+}
+
 Result BinaryReaderOpcnt::OnOpcodeUint64(uint64_t value) {
   return Emplace(current_opcode_, OpcodeInfo::Kind::Uint64, &value);
 }
@@ -256,6 +284,10 @@ Result BinaryReaderOpcnt::OnOpcodeF32(uint32_t value) {
 
 Result BinaryReaderOpcnt::OnOpcodeF64(uint64_t value) {
   return Emplace(current_opcode_, OpcodeInfo::Kind::Float64, &value);
+}
+
+Result BinaryReaderOpcnt::OnOpcodeV128(v128 value) {
+  return Emplace(current_opcode_, OpcodeInfo::Kind::V128, &value);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeBlockSig(Type sig_type) {

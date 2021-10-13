@@ -39,8 +39,10 @@ class OpcodeInfo {
     Float32,
     Float64,
     Uint32Uint32,
+    Uint32Uint32Uint32,
     BlockSig,
     BrTable,
+    V128,
   };
 
   explicit OpcodeInfo(Opcode, Kind);
