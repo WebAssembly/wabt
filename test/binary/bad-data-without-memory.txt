@@ -12,5 +12,3 @@ section(DATACOUNT) { count[1] }
 000000c: error: no memory to copy data to
 000000c: error: no memory to copy data to
 ;;; STDERR ;;)
-
-

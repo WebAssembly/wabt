@@ -1519,7 +1519,8 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  if (options_.features.bulk_memory_enabled()) {
+  if (options_.features.bulk_memory_enabled() &&
+      module_->data_segments.size()) {
     // Keep track of the data count section offset so it can be removed if
     // it isn't needed.
     data_count_start_ = stream_->offset();
@@ -1560,7 +1561,7 @@ Result BinaryWriter::WriteModule() {
 
   // Remove the DataCount section if there are no instructions that require it.
   if (options_.features.bulk_memory_enabled() &&
-      !has_data_segment_instruction_) {
+      module_->data_segments.size() && !has_data_segment_instruction_) {
     Offset size = stream_->offset() - data_count_end_;
     if (size) {
       // If the DataCount section was followed by anything, assert that it's

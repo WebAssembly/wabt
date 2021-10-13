@@ -47,44 +47,37 @@
 0000019: 00                                        ; tag attribute
 000001a: 00                                        ; tag signature index
 0000017: 03                                        ; FIXUP section size
-; section "DataCount" (12)
-000001b: 0c                                        ; section code
-000001c: 00                                        ; section size (guess)
-000001d: 00                                        ; data count
-000001c: 01                                        ; FIXUP section size
 ; section "Code" (10)
-000001e: 0a                                        ; section code
-000001f: 00                                        ; section size (guess)
-0000020: 01                                        ; num functions
+000001b: 0a                                        ; section code
+000001c: 00                                        ; section size (guess)
+000001d: 01                                        ; num functions
 ; function body 0
-0000021: 00                                        ; func body size (guess)
-0000022: 00                                        ; local decl count
-0000023: 06                                        ; try
-0000024: 7f                                        ; i32
-0000025: 06                                        ; try
-0000026: 40                                        ; void
-0000027: 01                                        ; nop
-0000028: 18                                        ; delegate
-0000029: 01                                        ; delegate depth
-000002a: 06                                        ; try
-000002b: 40                                        ; void
-000002c: 01                                        ; nop
-000002d: 18                                        ; delegate
-000002e: 00                                        ; delegate depth
-000002f: 41                                        ; i32.const
-0000030: 07                                        ; i32 literal
-0000031: 07                                        ; catch
-0000032: 00                                        ; catch tag
-0000033: 1a                                        ; drop
-0000034: 41                                        ; i32.const
-0000035: 08                                        ; i32 literal
-0000036: 0b                                        ; end
-0000037: 1a                                        ; drop
-0000038: 0b                                        ; end
-0000021: 17                                        ; FIXUP func body size
-000001f: 19                                        ; FIXUP section size
-; move data: [1e, 39) -> [1b, 36)
-; truncate to 54 (0x36)
+000001e: 00                                        ; func body size (guess)
+000001f: 00                                        ; local decl count
+0000020: 06                                        ; try
+0000021: 7f                                        ; i32
+0000022: 06                                        ; try
+0000023: 40                                        ; void
+0000024: 01                                        ; nop
+0000025: 18                                        ; delegate
+0000026: 01                                        ; delegate depth
+0000027: 06                                        ; try
+0000028: 40                                        ; void
+0000029: 01                                        ; nop
+000002a: 18                                        ; delegate
+000002b: 00                                        ; delegate depth
+000002c: 41                                        ; i32.const
+000002d: 07                                        ; i32 literal
+000002e: 07                                        ; catch
+000002f: 00                                        ; catch tag
+0000030: 1a                                        ; drop
+0000031: 41                                        ; i32.const
+0000032: 08                                        ; i32 literal
+0000033: 0b                                        ; end
+0000034: 1a                                        ; drop
+0000035: 0b                                        ; end
+000001e: 17                                        ; FIXUP func body size
+000001c: 19                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 

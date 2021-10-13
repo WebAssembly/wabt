@@ -59,38 +59,31 @@
 0000028: 01                                        ; num elems
 0000029: 01                                        ; elem function index
 0000024: 05                                        ; FIXUP section size
-; section "DataCount" (12)
-000002a: 0c                                        ; section code
-000002b: 00                                        ; section size (guess)
-000002c: 00                                        ; data count
-000002b: 01                                        ; FIXUP section size
 ; section "Code" (10)
-000002d: 0a                                        ; section code
-000002e: 00                                        ; section size (guess)
-000002f: 02                                        ; num functions
+000002a: 0a                                        ; section code
+000002b: 00                                        ; section size (guess)
+000002c: 02                                        ; num functions
 ; function body 0
-0000030: 00                                        ; func body size (guess)
-0000031: 00                                        ; local decl count
-0000032: 41                                        ; i32.const
-0000033: 0a                                        ; i32 literal
-0000034: d2                                        ; ref.func
-0000035: 01                                        ; function index
-0000036: 14                                        ; call_ref
-0000037: 0b                                        ; end
-0000030: 07                                        ; FIXUP func body size
+000002d: 00                                        ; func body size (guess)
+000002e: 00                                        ; local decl count
+000002f: 41                                        ; i32.const
+0000030: 0a                                        ; i32 literal
+0000031: d2                                        ; ref.func
+0000032: 01                                        ; function index
+0000033: 14                                        ; call_ref
+0000034: 0b                                        ; end
+000002d: 07                                        ; FIXUP func body size
 ; function body 1
-0000038: 00                                        ; func body size (guess)
-0000039: 00                                        ; local decl count
-000003a: 20                                        ; local.get
-000003b: 00                                        ; local index
-000003c: 41                                        ; i32.const
-000003d: 13                                        ; i32 literal
-000003e: 6a                                        ; i32.add
-000003f: 0b                                        ; end
-0000038: 07                                        ; FIXUP func body size
-000002e: 11                                        ; FIXUP section size
-; move data: [2d, 40) -> [2a, 3d)
-; truncate to 61 (0x3d)
+0000035: 00                                        ; func body size (guess)
+0000036: 00                                        ; local decl count
+0000037: 20                                        ; local.get
+0000038: 00                                        ; local index
+0000039: 41                                        ; i32.const
+000003a: 13                                        ; i32 literal
+000003b: 6a                                        ; i32.add
+000003c: 0b                                        ; end
+0000035: 07                                        ; FIXUP func body size
+000002b: 11                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
