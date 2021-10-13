@@ -81,7 +81,8 @@ def F64ToC(f64_bits):
 
 
 def MangleType(t):
-    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd'}[t]
+    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd',
+            'externref': 'e', 'funcref': 'f'}[t]
 
 
 def MangleTypes(types):
@@ -237,6 +238,8 @@ class CWriter(object):
                     'f32': 'ASSERT_RETURN_F32',
                     'i64': 'ASSERT_RETURN_I64',
                     'f64': 'ASSERT_RETURN_F64',
+                    'externref': 'ASSERT_RETURN_EXTERNREF',
+                    'funcref': 'ASSERT_RETURN_FUNCREF',
                 }
 
                 assert_macro = assert_map[type_]
@@ -280,6 +283,10 @@ class CWriter(object):
             return F32ToC(int(value))
         elif type_ == 'f64':
             return F64ToC(int(value))
+        elif type_ == 'externref':
+            return 'externref(%s)' % value
+        elif type_ == 'funcref':
+            return 'funcref(%s)' % value
         else:
             assert False
 
@@ -379,8 +386,6 @@ def main(args):
             error_cmdline=options.error_cmdline)
         wast2json.verbose = options.print_cmd
         wast2json.AppendOptionalArgs({'-v': options.verbose})
-        wast2json.AppendArg('--disable-reference-types')
-        wast2json.AppendArg('--disable-bulk-memory')
 
         json_file_path = utils.ChangeDir(
             utils.ChangeExt(options.file, '.json'), out_dir)

@@ -492,7 +492,7 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
 Result TypeChecker::OnFuncRef(Index* out_index) {
   Type type;
   Result result = PeekType(0, &type);
-  if (!type.IsIndex()) {
+  if (!(type == Type::Any || type.IsIndex())) {
     TypeVector actual;
     if (Succeeded(result)) {
       actual.push_back(type);
@@ -766,7 +766,7 @@ Result TypeChecker::OnRefNullExpr(Type type) {
 Result TypeChecker::OnRefIsNullExpr() {
   Type type;
   Result result = PeekType(0, &type);
-  if (!type.IsRef()) {
+  if (!(type == Type::Any || type.IsRef())) {
     TypeVector actual;
     if (Succeeded(result)) {
       actual.push_back(type);
