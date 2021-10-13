@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/ref_func.wast
-;;; ARGS*: --enable-reference-types
 (;; STDERR ;;;
 out/test/spec/reference-types/ref_func.wast:98:15: error: function is not declared in any elem sections
     (ref.func $f1)

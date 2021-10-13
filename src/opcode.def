@@ -251,7 +251,7 @@ WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0c, TableInit, "table.init", "")
 WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x0d, ElemDrop, "elem.drop", "")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0e, TableCopy, "table.copy", "")
 
-/* Reference types (--enable-reference-types) */
+/* Reference types */
 WABT_OPCODE(___,  I32,  ___,  ___,  0,  0,    0x25, TableGet, "table.get", "")
 WABT_OPCODE(___,  I32,  ___,  ___,  0,  0,    0x26, TableSet, "table.set", "")
 WABT_OPCODE(___,  ___,  I32,  ___,  0,  0xfc, 0x0f, TableGrow, "table.grow", "")

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/table.wast:14: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)

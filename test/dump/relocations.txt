@@ -28,9 +28,9 @@ Sections:
    Global start=0x00000048 end=0x0000004e (size=0x00000006) count: 1
    Export start=0x00000050 end=0x00000055 (size=0x00000005) count: 1
      Elem start=0x00000057 end=0x0000005e (size=0x00000007) count: 1
-     Code start=0x00000060 end=0x00000082 (size=0x00000022) count: 1
-   Custom start=0x00000084 end=0x000000a5 (size=0x00000021) "linking"
-   Custom start=0x000000a7 end=0x000000c0 (size=0x00000019) "reloc.Code"
+     Code start=0x00000060 end=0x00000086 (size=0x00000026) count: 1
+   Custom start=0x00000088 end=0x000000a9 (size=0x00000021) "linking"
+   Custom start=0x000000ab end=0x000000c7 (size=0x0000001c) "reloc.Code"
 
 Section Details:
 
@@ -53,7 +53,7 @@ Elem[1]:
  - segment[0] flags=0 table=0 count=1 - init i32=0
   - elem[0] = func[1] <__extern.bar>
 Code[1]:
- - func[2] size=32 <f>
+ - func[2] size=36 <f>
 Custom:
  - name: "linking"
   - symbol table [count=5]
@@ -64,11 +64,12 @@ Custom:
    - 4: G <g> global=0 [ binding=global vis=default ]
 Custom:
  - name: "reloc.Code"
-  - relocations for section: 7 (Code) [4]
+  - relocations for section: 7 (Code) [5]
    - R_WASM_GLOBAL_INDEX_LEB offset=0x000004(file=0x000064) symbol=4 <g>
    - R_WASM_FUNCTION_INDEX_LEB offset=0x00000a(file=0x00006a) symbol=2 <f>
    - R_WASM_FUNCTION_INDEX_LEB offset=0x000010(file=0x000070) symbol=0 <__extern.foo>
    - R_WASM_TYPE_INDEX_LEB offset=0x00001b(file=0x00007b) type=2
+   - R_WASM_TABLE_NUMBER_LEB offset=0x000020(file=0x000080) symbol=3 <>
 
 Code Disassembly:
 
@@ -81,7 +82,9 @@ Code Disassembly:
            000070: R_WASM_FUNCTION_INDEX_LEB 0 <__extern.foo>
  000075: 41 d2 09                   | i32.const 1234
  000078: 41 00                      | i32.const 0
- 00007a: 11 82 80 80 80 00 00       | call_indirect 2 0
+ 00007a: 11 82 80 80 80 00 80 80 80 | call_indirect 2 0
+ 000083: 80 00                      | 
            00007b: R_WASM_TYPE_INDEX_LEB 2
- 000081: 0b                         | end
+ 000085: 0b                         | end
+           000080: R_WASM_TABLE_NUMBER_LEB 3 <>
 ;;; STDOUT ;;)

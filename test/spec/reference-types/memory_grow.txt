@@ -1,7 +1,6 @@
 ;;; SLOW:
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/memory_grow.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/memory_grow.wast:15: assert_trap passed: out of bounds memory access: access at 0+4 >= max value 0
 out/test/spec/reference-types/memory_grow.wast:16: assert_trap passed: out of bounds memory access: access at 0+4 >= max value 0

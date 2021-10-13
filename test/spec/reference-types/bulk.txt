@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/bulk.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 fill(i32:1, i32:255, i32:3) =>
 fill(i32:0, i32:48042, i32:2) =>

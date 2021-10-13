@@ -1,6 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/memory64/binary.wast
-;;; ARGS*: --enable-memory64
+;;; ARGS*: --enable-memory64 --disable-reference-types
 (;; STDOUT ;;;
 out/test/spec/memory64/binary.wast:6: assert_malformed passed:
   0000000: error: unable to read uint32_t: magic

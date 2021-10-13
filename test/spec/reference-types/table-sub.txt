@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table-sub.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/table-sub.wast:2: assert_invalid passed:
   error: type mismatch at table.copy. got externref, expected funcref

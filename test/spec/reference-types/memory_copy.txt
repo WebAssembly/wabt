@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/memory_copy.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 test() =>
 test() =>

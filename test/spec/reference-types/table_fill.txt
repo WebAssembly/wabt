@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table_fill.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/table_fill.wast:50: assert_trap passed: out of bounds table access: table.fill out of bounds
 out/test/spec/reference-types/table_fill.wast:58: assert_trap passed: out of bounds table access: table.fill out of bounds

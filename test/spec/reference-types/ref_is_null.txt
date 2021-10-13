@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/ref_is_null.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 init(externref:1) =>
 deinit() =>

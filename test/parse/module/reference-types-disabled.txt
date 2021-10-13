@@ -1,4 +1,5 @@
 ;;; TOOL: wat2wasm
+;;; ARGS: --disable-reference-types
 ;;; ERROR: 1
 
 (module
@@ -11,19 +12,19 @@
   )
 )
 (;; STDERR ;;;
-out/test/parse/module/reference-types-disabled.txt:5:15: error: value type not allowed: externref
+out/test/parse/module/reference-types-disabled.txt:6:15: error: value type not allowed: externref
   (table $t 1 externref)
               ^^^^^^^^^
-out/test/parse/module/reference-types-disabled.txt:9:5: error: opcode not allowed: table.get
+out/test/parse/module/reference-types-disabled.txt:10:5: error: opcode not allowed: table.get
     table.get $t
     ^^^^^^^^^
-out/test/parse/module/reference-types-disabled.txt:10:5: error: opcode not allowed: table.set
+out/test/parse/module/reference-types-disabled.txt:11:5: error: opcode not allowed: table.set
     table.set $t
     ^^^^^^^^^
-out/test/parse/module/reference-types-disabled.txt:9:15: error: undefined table variable "$t"
+out/test/parse/module/reference-types-disabled.txt:10:15: error: undefined table variable "$t"
     table.get $t
               ^^
-out/test/parse/module/reference-types-disabled.txt:10:15: error: undefined table variable "$t"
+out/test/parse/module/reference-types-disabled.txt:11:15: error: undefined table variable "$t"
     table.set $t
               ^^
 ;;; STDERR ;;)

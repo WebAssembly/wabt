@@ -1,4 +1,5 @@
 ;;; TOOL: run-interp-spec
+;;; ARGS*: --disable-reference-types
 ;;; STDIN_FILE: third_party/testsuite/binary.wast
 (;; STDOUT ;;;
 out/test/spec/binary.wast:6: assert_malformed passed:

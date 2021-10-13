@@ -23,7 +23,7 @@ options:
       --disable-multi-value                    Disable Multi-value
       --enable-tail-call                       Enable Tail-call support
       --disable-bulk-memory                    Disable Bulk-memory operations
-      --enable-reference-types                 Enable Reference types (externref)
+      --disable-reference-types                Disable Reference types (externref)
       --enable-annotations                     Enable Custom annotation syntax
       --enable-gc                              Enable Garbage collection
       --enable-memory64                        Enable 64-bit memory

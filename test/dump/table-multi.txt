@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-reference-types -v
+;;; ARGS0: -v
 ;;; ARGS1: -x
 (module
   (func (param i32))
