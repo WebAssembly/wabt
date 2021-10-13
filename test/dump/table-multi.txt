@@ -60,23 +60,16 @@
 000002d: 01                                        ; num elems
 000002e: 00                                        ; elem function index
 000001f: 0f                                        ; FIXUP section size
-; section "DataCount" (12)
-000002f: 0c                                        ; section code
-0000030: 00                                        ; section size (guess)
-0000031: 00                                        ; data count
-0000030: 01                                        ; FIXUP section size
 ; section "Code" (10)
-0000032: 0a                                        ; section code
-0000033: 00                                        ; section size (guess)
-0000034: 01                                        ; num functions
+000002f: 0a                                        ; section code
+0000030: 00                                        ; section size (guess)
+0000031: 01                                        ; num functions
 ; function body 0
-0000035: 00                                        ; func body size (guess)
-0000036: 00                                        ; local decl count
-0000037: 0b                                        ; end
-0000035: 02                                        ; FIXUP func body size
-0000033: 04                                        ; FIXUP section size
-; move data: [32, 38) -> [2f, 35)
-; truncate to 53 (0x35)
+0000032: 00                                        ; func body size (guess)
+0000033: 00                                        ; local decl count
+0000034: 0b                                        ; end
+0000032: 02                                        ; FIXUP func body size
+0000030: 04                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
