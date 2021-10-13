@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table_copy.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 test() =>
 out/test/spec/reference-types/table_copy.wast:46: assert_trap passed: uninitialized table element

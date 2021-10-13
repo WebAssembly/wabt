@@ -1,11 +1,12 @@
 ;;; TOOL: wat2wasm
+;;; ARGS: --disable-reference-types
 ;;; ERROR: 1
 (module
   (func (param i32))
   (table anyfunc (elem 0))
   (table anyfunc (elem 0)))
 (;; STDERR ;;;
-out/test/parse/module/bad-table-too-many.txt:6:4: error: only one table allowed
+out/test/parse/module/bad-table-too-many.txt:7:4: error: only one table allowed
   (table anyfunc (elem 0)))
    ^^^^^
 ;;; STDERR ;;)

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/binary-leb128.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/binary-leb128.wast:218: assert_malformed passed:
   000000c: error: unable to read u32 leb128: memory initial page count

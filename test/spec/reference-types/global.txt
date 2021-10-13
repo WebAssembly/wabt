@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/global.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/global.wast:232: assert_trap passed: undefined table index
 out/test/spec/reference-types/global.wast:254: assert_invalid passed:

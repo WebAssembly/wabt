@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; ARGS*: --disable-bulk-memory
+;;; ARGS*: --disable-reference-types --disable-bulk-memory
 ;;; ERROR: 1
 
 (module

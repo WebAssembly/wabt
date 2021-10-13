@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --enable-reference-types
+;;; ARGS: --stdout
 (module
   (table 2 funcref)
   (elem declare funcref (ref.func $f) (ref.null func))

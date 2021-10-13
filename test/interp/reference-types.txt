@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-reference-types
 
 (module
   (table $t_func 1 funcref)

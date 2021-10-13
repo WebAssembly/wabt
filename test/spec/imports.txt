@@ -1,4 +1,5 @@
 ;;; TOOL: run-interp-spec
+;;; ARGS*: --disable-reference-types
 ;;; STDIN_FILE: third_party/testsuite/imports.wast
 (;; STDOUT ;;;
 called host spectest.print_i32(i32:13) =>

@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-reference-types
 
 (module
   (table $foo 1 externref)

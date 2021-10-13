@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table_grow.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/table_grow.wast:14: assert_trap passed: out of bounds table access: table.set at 0 >= max value 0
 out/test/spec/reference-types/table_grow.wast:15: assert_trap passed: out of bounds table access: table.get at 0 >= max value 0

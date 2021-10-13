@@ -379,6 +379,7 @@ def main(args):
             find_exe.GetWast2JsonExecutable(options.bindir),
             error_cmdline=options.error_cmdline)
         wast2json.AppendOptionalArgs({'-v': options.verbose})
+        wast2json.AppendArg('--disable-reference-types')
         wast2json.AppendArg('--disable-bulk-memory')
 
         json_file_path = utils.ChangeDir(

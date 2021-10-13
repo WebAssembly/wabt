@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/call_indirect.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/call_indirect.wast:498: assert_trap passed: indirect call signature mismatch
 out/test/spec/reference-types/call_indirect.wast:499: assert_trap passed: indirect call signature mismatch

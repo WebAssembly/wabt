@@ -121,7 +121,7 @@ def main(args):
     parser.add_argument('--enable-sign-extension', action='store_true')
     parser.add_argument('--enable-multi-value', action='store_true')
     parser.add_argument('--enable-tail-call', action='store_true')
-    parser.add_argument('--enable-reference-types', action='store_true')
+    parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--inline-exports', action='store_true')
     parser.add_argument('--inline-imports', action='store_true')
@@ -142,7 +142,7 @@ def main(args):
         '--enable-function-references': options.enable_function_references,
         '--enable-threads': options.enable_threads,
         '--enable-tail-call': options.enable_tail_call,
-        '--enable-reference-types': options.enable_reference_types,
+        '--disable-reference-types': options.disable_reference_types,
         '--enable-memory64': options.enable_memory64,
         '--reloc': options.reloc,
         '--no-check': options.no_check,
@@ -160,7 +160,7 @@ def main(args):
         '--enable-sign-extension': options.enable_sign_extension,
         '--enable-tail-call': options.enable_tail_call,
         '--enable-function-references': options.enable_function_references,
-        '--enable-reference-types': options.enable_reference_types,
+        '--disable-reference-types': options.disable_reference_types,
         '--enable-threads': options.enable_threads,
         '--enable-memory64': options.enable_memory64,
         '--inline-exports': options.inline_exports,

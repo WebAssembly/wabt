@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/memory_fill.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 test() =>
 out/test/spec/reference-types/memory_fill.wast:44: assert_trap passed: out of bounds memory access: memory.fill out of bounds

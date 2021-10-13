@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/select.wast
-;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
 out/test/spec/reference-types/select.wast:260: assert_trap passed: unreachable executed
 out/test/spec/reference-types/select.wast:261: assert_trap passed: unreachable executed
