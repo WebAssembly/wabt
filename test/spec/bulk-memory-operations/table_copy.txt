@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/table_copy.wast
-;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 test() =>
 out/test/spec/bulk-memory-operations/table_copy.wast:40: assert_trap passed: uninitialized table element

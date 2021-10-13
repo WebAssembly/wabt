@@ -88,9 +88,11 @@ static void ParseOptions(int argc, char** argv) {
 #undef WABT_FEATURE
 
   if (any_non_default_feature) {
-    fprintf(stderr, "wasm2c currently support only default feature flags.\n");
+    fprintf(stderr,
+            "wasm2c currently only supports a fixed set of features.\n");
     exit(1);
   }
+  s_features.disable_bulk_memory();
 }
 
 // TODO(binji): copied from binary-writer-spec.cc, probably should share.

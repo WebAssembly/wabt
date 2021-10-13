@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/custom.wast
-;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 out/test/spec/bulk-memory-operations/custom.wast:61: assert_malformed passed:
   0000009: error: unable to read u32 leb128: section size

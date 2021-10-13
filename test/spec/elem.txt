@@ -1,4 +1,5 @@
 ;;; TOOL: run-interp-spec
+;;; ARGS*: --disable-bulk-memory
 ;;; STDIN_FILE: third_party/testsuite/elem.wast
 (;; STDOUT ;;;
 out/test/spec/elem.wast:143: assert_unlinkable passed:

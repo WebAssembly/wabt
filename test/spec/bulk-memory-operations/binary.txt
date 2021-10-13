@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/binary.wast
-;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 out/test/spec/bulk-memory-operations/binary.wast:6: assert_malformed passed:
   0000000: error: unable to read uint32_t: magic

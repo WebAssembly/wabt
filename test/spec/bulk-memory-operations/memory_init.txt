@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/memory_init.wast
-;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 test() =>
 test() =>

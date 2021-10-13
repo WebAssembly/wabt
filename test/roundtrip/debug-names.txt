@@ -1,5 +1,4 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --debug-names --enable-bulk-memory
 (module $m1
   (memory $foo_memory 1)
   (table $bar_table 0 funcref)

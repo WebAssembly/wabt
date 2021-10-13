@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --debug-names --enable-bulk-memory
+;;; ARGS0: --debug-names
 
 (module
   (memory 1)

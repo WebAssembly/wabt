@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-bulk-memory
 ;;; ERROR: 1
 
 (module
@@ -34,7 +33,7 @@
 
 
 (;; STDERR ;;;
-out/test/typecheck/bad-bulk-memory-type-mismatch.txt:9:17: error: unexpected token 0, expected ).
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:8:17: error: unexpected token 0, expected ).
   (elem funcref 0)
                 ^
 ;;; STDERR ;;)

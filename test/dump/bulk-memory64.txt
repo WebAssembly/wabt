@@ -1,5 +1,4 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-bulk-memory
 
 (module
   (memory i64 1)

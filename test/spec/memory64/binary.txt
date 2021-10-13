@@ -59,7 +59,7 @@ out/test/spec/memory64/binary.wast:44: assert_malformed passed:
 out/test/spec/memory64/binary.wast:45: assert_malformed passed:
   0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
 out/test/spec/memory64/binary.wast:48: assert_malformed passed:
-  000000a: error: invalid section code: 12
+  000000a: error: unable to read u32 leb128: data count
 out/test/spec/memory64/binary.wast:49: assert_malformed passed:
   000000a: error: invalid section code: 127
 out/test/spec/memory64/binary.wast:50: assert_malformed passed:

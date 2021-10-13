@@ -21,6 +21,6 @@ set -o errexit
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 
-ENABLE="--enable-except --enable-sat --enable-sign --enable-thread --enable-multi --enable-tail --enable-bulk --enable-ref"
+ENABLE="--enable-except --enable-sat --enable-sign --enable-thread --enable-multi --enable-tail --enable-ref"
 
 ${FUZZ_BIN_DIR}/afl-fuzz -x fuzz-in/wast.dict -i fuzz-in/wast/ -o fuzz-out -- out/gcc-fuzz/Debug/wat2wasm @@ ${ENABLE}
