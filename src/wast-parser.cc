@@ -2424,7 +2424,11 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
   Result result;
   switch (opcode) {
     case Opcode::I32Const: {
-      auto sv = Consume().literal().text;
+      auto token = Consume();
+      if (!token.HasLiteral()) {
+        return Result::Error;
+      }
+      auto sv = token.literal().text;
       uint32_t u32;
       result = ParseInt32(sv.begin(), sv.end(), &u32,
                           ParseIntType::SignedAndUnsigned);
@@ -2433,7 +2437,11 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
     }
 
     case Opcode::I64Const: {
-      auto sv = Consume().literal().text;
+      auto token = Consume();
+      if (!token.HasLiteral()) {
+        return Result::Error;
+      }
+      auto sv = token.literal().text;
       uint64_t u64;
       result = ParseInt64(sv.begin(), sv.end(), &u64,
                           ParseIntType::SignedAndUnsigned);
