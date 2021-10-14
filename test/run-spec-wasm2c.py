@@ -326,8 +326,8 @@ class CWriter(object):
             raise Error('Unexpected action type: %s' % type_)
 
 
-def Compile(cc, c_filename, *args):
-    o_filename = utils.ChangeExt(c_filename, '.o')
+def Compile(cc, c_filename, out_dir, *args):
+    o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, '.o'), out_dir)
     cc.RunWithArgs('-c', c_filename, '-o', o_filename, *args)
     return o_filename
 
@@ -415,7 +415,7 @@ def main(args):
 
         # Compile wasm-rt-impl.
         wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
-        o_filenames.append(Compile(cc, wasm_rt_impl_c, includes))
+        o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
@@ -423,10 +423,10 @@ def main(args):
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename)
             if options.compile:
                 defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
-                o_filenames.append(Compile(cc, c_filename, includes, defines))
+                o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
 
         if options.compile:
-            o_filenames.append(Compile(cc, main_filename, includes, defines))
+            o_filenames.append(Compile(cc, main_filename, out_dir, includes, defines))
             main_exe = utils.ChangeExt(json_file_path, '')
             Link(cc, o_filenames, main_exe, '-lm')
 
