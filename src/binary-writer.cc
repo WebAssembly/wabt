@@ -1495,24 +1495,17 @@ Result BinaryWriter::WriteModule() {
       // preceeded by length
       WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elems");
       if (flags & SegUseElemExprs) {
-        for (const ElemExpr& elem_expr : segment->elem_exprs) {
-          switch (elem_expr.kind) {
-            case ElemExprKind::RefNull:
-              WriteOpcode(stream_, Opcode::RefNull);
-              WriteType(stream_, elem_expr.type, "elem expr ref.null type");
-              break;
-
-            case ElemExprKind::RefFunc:
-              WriteOpcode(stream_, Opcode::RefFunc);
-              WriteU32Leb128(stream_, module_->GetFuncIndex(elem_expr.var), "elem expr function index");
-              break;
-          }
-          WriteOpcode(stream_, Opcode::End);
+        for (const ExprList& elem_expr : segment->elem_exprs) {
+          WriteInitExpr(elem_expr);
         }
       } else {
-        for (const ElemExpr& elem_expr : segment->elem_exprs) {
-          assert(elem_expr.kind == ElemExprKind::RefFunc);
-          WriteU32Leb128(stream_, module_->GetFuncIndex(elem_expr.var), "elem function index");
+        for (const ExprList& elem_expr : segment->elem_exprs) {
+          assert(elem_expr.size() == 1);
+          const Expr* expr = &elem_expr.front();
+          assert(expr->type() == ExprType::RefFunc);
+          WriteU32Leb128(stream_,
+                         module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var),
+                         "elem function index");
         }
       }
     }

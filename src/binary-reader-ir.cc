@@ -1171,7 +1171,10 @@ Result BinaryReaderIR::OnElemSegmentElemExpr_RefNull(Index segment_index,
                                                      Type type) {
   assert(segment_index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[segment_index];
-  segment->elem_exprs.emplace_back(type);
+  Location loc = GetLocation();
+  ExprList init_expr;
+  init_expr.push_back(MakeUnique<RefNullExpr>(type, loc));
+  segment->elem_exprs.push_back(std::move(init_expr));
   return Result::Ok;
 }
 
@@ -1179,7 +1182,10 @@ Result BinaryReaderIR::OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                                      Index func_index) {
   assert(segment_index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[segment_index];
-  segment->elem_exprs.emplace_back(Var(func_index, GetLocation()));
+  Location loc = GetLocation();
+  ExprList init_expr;
+  init_expr.push_back(MakeUnique<RefFuncExpr>(Var(func_index, loc), loc));
+  segment->elem_exprs.push_back(std::move(init_expr));
   return Result::Ok;
 }
 

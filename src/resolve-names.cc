@@ -488,9 +488,10 @@ void NameResolver::VisitTag(Tag* tag) {
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
-  for (ElemExpr& elem_expr : segment->elem_exprs) {
-    if (elem_expr.kind == ElemExprKind::RefFunc) {
-      ResolveFuncVar(&elem_expr.var);
+  for (ExprList& elem_expr : segment->elem_exprs) {
+    if (elem_expr.size() == 1 &&
+        elem_expr.front().type() == ExprType::RefFunc) {
+      ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
     }
   }
 }

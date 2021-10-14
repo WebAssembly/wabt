@@ -1105,11 +1105,13 @@ void CWriter::WriteElemInitializers() {
     Write(";", Newline());
 
     size_t i = 0;
-    for (const ElemExpr& elem_expr : elem_segment->elem_exprs) {
+    for (const ExprList& elem_expr : elem_segment->elem_exprs) {
       // We don't support the bulk-memory proposal here, so we know that we
       // don't have any passive segments (where ref.null can be used).
-      assert(elem_expr.kind == ElemExprKind::RefFunc);
-      const Func* func = module_->GetFunc(elem_expr.var);
+      assert(elem_expr.size() == 1);
+      const Expr* expr = &elem_expr.front();
+      assert(expr->type() == ExprType::RefFunc);
+      const Func* func = module_->GetFunc(cast<RefFuncExpr>(expr)->var);
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
 
       Write(ExternalRef(table->name), ".data[offset + ", i,

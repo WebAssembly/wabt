@@ -786,22 +786,7 @@ struct Table {
   Type elem_type;
 };
 
-enum class ElemExprKind {
-  RefNull,
-  RefFunc,
-};
-
-struct ElemExpr {
-  ElemExpr() : kind(ElemExprKind::RefNull), type(Type::FuncRef) {}
-  explicit ElemExpr(Var var) : kind(ElemExprKind::RefFunc), var(var) {}
-  explicit ElemExpr(Type type) : kind(ElemExprKind::RefNull), type(type) {}
-
-  ElemExprKind kind;
-  Var var;    // Only used when kind == RefFunc.
-  Type type;  // Only used when kind == RefNull
-};
-
-typedef std::vector<ElemExpr> ElemExprVector;
+typedef std::vector<ExprList> ExprListVector;
 
 struct ElemSegment {
   explicit ElemSegment(string_view name) : name(name.to_string()) {}
@@ -812,7 +797,7 @@ struct ElemSegment {
   Var table_var;
   Type elem_type;
   ExprList offset;
-  ElemExprVector elem_exprs;
+  ExprListVector elem_exprs;
 };
 
 struct Memory {

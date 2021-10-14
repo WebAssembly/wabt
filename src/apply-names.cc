@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "src/cast.h"
 #include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/string-view.h"
@@ -460,9 +461,10 @@ Result NameApplier::VisitElemSegment(Index elem_segment_index,
                                      ElemSegment* segment) {
   CHECK_RESULT(UseNameForTableVar(&segment->table_var));
   CHECK_RESULT(visitor_.VisitExprList(segment->offset));
-  for (ElemExpr& elem_expr : segment->elem_exprs) {
-    if (elem_expr.kind == ElemExprKind::RefFunc) {
-      CHECK_RESULT(UseNameForFuncVar(&elem_expr.var));
+  for (ExprList& elem_expr : segment->elem_exprs) {
+    Expr* expr = &elem_expr.front();
+    if (expr->type() == ExprType::RefFunc) {
+      CHECK_RESULT(UseNameForFuncVar(&cast<RefFuncExpr>(expr)->var));
     }
   }
   return Result::Ok;
