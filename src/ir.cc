@@ -664,11 +664,12 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
       break;
   }
 
-  all_ref_func = all_ref_func &&
-                 std::all_of(elem_exprs.begin(), elem_exprs.end(),
-                             [](const ElemExpr& elem_expr) {
-                               return elem_expr.kind == ElemExprKind::RefFunc;
-                             });
+  all_ref_func =
+      all_ref_func &&
+      std::all_of(elem_exprs.begin(), elem_exprs.end(),
+                  [](const ExprList& elem_expr) {
+                    return elem_expr.front().type() == ExprType::RefFunc;
+                  });
   if (!all_ref_func) {
     flags |= SegUseElemExprs;
   }

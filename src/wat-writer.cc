@@ -1396,20 +1396,13 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     WritePuts("func", NextChar::Space);
   }
 
-  for (const ElemExpr& expr : segment.elem_exprs) {
+  for (const ExprList& expr : segment.elem_exprs) {
     if (flags & SegUseElemExprs) {
-      if (expr.kind == ElemExprKind::RefNull) {
-        WriteOpenSpace("ref.null");
-        WriteRefKind(expr.type, NextChar::Space);
-        WriteCloseSpace();
-      } else {
-        WriteOpenSpace("ref.func");
-        WriteVar(expr.var, NextChar::Space);
-        WriteCloseSpace();
-      }
+      WriteInitExpr(expr);
     } else {
-      assert(expr.kind == ElemExprKind::RefFunc);
-      WriteVar(expr.var, NextChar::Space);
+      assert(expr.size() == 1);
+      assert(expr.front().type() == ExprType::RefFunc);
+      WriteVar(cast<const RefFuncExpr>(&expr.front())->var, NextChar::Space);
     }
   }
   WriteCloseNewline();

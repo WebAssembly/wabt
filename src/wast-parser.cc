@@ -755,47 +755,42 @@ Result WastParser::ParseVarList(VarVector* out_var_list) {
   }
 }
 
-bool WastParser::ParseElemExprOpt(ElemExpr* out_elem_expr) {
-  Location loc = GetLocation();
+bool WastParser::ParseElemExprOpt(ExprList* out_elem_expr) {
+  WABT_TRACE(ParseElemExprOpt);
   bool item = MatchLpar(TokenType::Item);
-  bool lpar = Match(TokenType::Lpar);
-  if (Match(TokenType::RefNull)) {
-    if (!(options_->features.bulk_memory_enabled() ||
-          options_->features.reference_types_enabled())) {
-      Error(loc, "ref.null not allowed");
+  ExprList exprs;
+  if (item) {
+    if (ParseTerminatingInstrList(&exprs) != Result::Ok) {
+      return false;
     }
-    Type type;
-    CHECK_RESULT(ParseRefKind(&type));
-    *out_elem_expr = ElemExpr(type);
-  } else if (Match(TokenType::RefFunc)) {
-    Var var;
-    CHECK_RESULT(ParseVar(&var));
-    *out_elem_expr = ElemExpr(var);
+    EXPECT(Rpar);
   } else {
+    if (ParseExpr(&exprs) != Result::Ok) {
+      return false;
+    }
+  }
+  if (!exprs.size()) {
     return false;
   }
-  if (lpar) {
-    EXPECT(Rpar);
-  }
-  if (item) {
-    EXPECT(Rpar);
-  }
+  *out_elem_expr = std::move(exprs);
   return true;
 }
 
-bool WastParser::ParseElemExprListOpt(ElemExprVector* out_list) {
-  ElemExpr elem_expr;
+bool WastParser::ParseElemExprListOpt(ExprListVector* out_list) {
+  ExprList elem_expr;
   while (ParseElemExprOpt(&elem_expr)) {
-    out_list->push_back(elem_expr);
+    out_list->push_back(std::move(elem_expr));
   }
   return !out_list->empty();
 }
 
-bool WastParser::ParseElemExprVarListOpt(ElemExprVector* out_list) {
+bool WastParser::ParseElemExprVarListOpt(ExprListVector* out_list) {
   WABT_TRACE(ParseElemExprVarListOpt);
   Var var;
+  ExprList init_expr;
   while (ParseVarOpt(&var)) {
-    out_list->emplace_back(var);
+    init_expr.push_back(MakeUnique<RefFuncExpr>(var));
+    out_list->push_back(std::move(init_expr));
   }
   return !out_list->empty();
 }
@@ -1562,9 +1557,9 @@ Result WastParser::ParseTableModuleField(Module* module) {
     elem_segment.elem_type = elem_type;
     // Syntax is either an optional list of var (legacy), or a non-empty list
     // of elem expr.
-    ElemExpr elem_expr;
+    ExprList elem_expr;
     if (ParseElemExprOpt(&elem_expr)) {
-      elem_segment.elem_exprs.push_back(elem_expr);
+      elem_segment.elem_exprs.push_back(std::move(elem_expr));
       // Parse the rest.
       ParseElemExprListOpt(&elem_segment.elem_exprs);
     } else {

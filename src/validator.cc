@@ -755,7 +755,7 @@ Result Validator::CheckModule() {
             break;
 
           default:
-            result_ |= validator_.OnGlobalInitExpr_Other(field.loc);
+            result_ |= validator_.OnGlobalInitExpr_Other(expr->loc);
             break;
         }
       } else {
@@ -813,7 +813,7 @@ Result Validator::CheckModule() {
           }
 
           default:
-            result_ |= validator_.OnElemSegmentInitExpr_Other(field.loc);
+            result_ |= validator_.OnElemSegmentInitExpr_Other(expr->loc);
             break;
         }
       } else if (f->elem_segment.offset.size() > 1) {
@@ -822,17 +822,23 @@ Result Validator::CheckModule() {
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        switch (elem_expr.kind) {
-          case ElemExprKind::RefNull:
-            // TODO: better location?
-            result_ |= validator_.OnElemSegmentElemExpr_RefNull(field.loc,
-                                                                elem_expr.type);
-            break;
-
-          case ElemExprKind::RefFunc:
-            result_ |= validator_.OnElemSegmentElemExpr_RefFunc(
-                elem_expr.var.loc, elem_expr.var);
-            break;
+        if (elem_expr.size() == 1) {
+          const Expr* expr = &elem_expr.front();
+          switch (expr->type()) {
+            case ExprType::RefNull:
+              result_ |= validator_.OnElemSegmentElemExpr_RefNull(
+                  expr->loc, cast<RefNullExpr>(expr)->type);
+              break;
+            case ExprType::RefFunc:
+              result_ |= validator_.OnElemSegmentElemExpr_RefFunc(
+                  expr->loc, cast<RefFuncExpr>(expr)->var);
+              break;
+            default:
+              result_ |= validator_.OnElemSegmentElemExpr_Other(expr->loc);
+              break;
+          }
+        } else if (elem_expr.size() > 1) {
+          result_ |= validator_.OnElemSegmentElemExpr_Other(field.loc);
         }
       }
     }
@@ -882,7 +888,7 @@ Result Validator::CheckModule() {
           }
 
           default:
-            result_ |= validator_.OnDataSegmentInitExpr_Other(field.loc);
+            result_ |= validator_.OnDataSegmentInitExpr_Other(expr->loc);
             break;
         }
       } else if (f->data_segment.offset.size() > 1) {
