@@ -644,7 +644,13 @@ Result BinaryReaderIR::OnStartFunction(Index func_index) {
 }
 
 Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
-  assert(module_->num_func_imports + count == module_->funcs.size());
+  // Can hit this case on a malformed module if we don't stop on first error.
+  if (module_->num_func_imports + count != module_->funcs.size()) {
+    PrintError(
+        "number of imported func + func count in code section does not match "
+        "actual number of funcs in module");
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
