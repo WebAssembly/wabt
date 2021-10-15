@@ -42,6 +42,9 @@ const char SECTION_NAME(top)[] =
 "#endif\n"
 "\n"
 "FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)();\n"
+"\n"
+"struct wasm2c_sandbox_t;\n"
+"typedef struct wasm2c_sandbox_t wasm2c_sandbox_t;\n"
 ;
 
 const char SECTION_NAME(bottom)[] =
