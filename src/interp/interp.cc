@@ -456,6 +456,9 @@ Result Table::Grow(Store& store, u32 count, Ref ref) {
   u32 new_size;
   if (store.HasValueType(ref, type_.element) &&
       CanGrow<u32>(type_.limits, old_size, count, &new_size)) {
+    // Grow the limits of the table too, so that if it is used as an
+    // import to another module its new size is honored.
+    type_.limits.initial += count;
     elements_.resize(new_size);
     Fill(store, old_size, ref, new_size - old_size);
     return Result::Ok;
@@ -529,6 +532,9 @@ Result Memory::Match(class Store& store,
 Result Memory::Grow(u64 count) {
   u64 new_pages;
   if (CanGrow<u64>(type_.limits, pages_, count, &new_pages)) {
+    // Grow the limits of the memory too, so that if it is used as an
+    // import to another module its new size is honored.
+    type_.limits.initial += count;
 #if WABT_BIG_ENDIAN
     auto old_size = data_.size();
 #endif

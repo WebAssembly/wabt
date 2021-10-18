@@ -1,64 +1,60 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --disable-bulk-memory
 ;;; STDIN_FILE: third_party/testsuite/elem.wast
 (;; STDOUT ;;;
-out/test/spec/elem.wast:143: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/elem.wast:152: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/elem.wast:161: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/elem.wast:170: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [1, 1) >= max value 0
-out/test/spec/elem.wast:178: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:186: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:195: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:203: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:212: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [4294967295, 4294967296) >= max value 10
-out/test/spec/elem.wast:220: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [4294967295, 4294967296) >= max value 10
-out/test/spec/elem.wast:229: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [4294967286, 4294967287) >= max value 10
-out/test/spec/elem.wast:237: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [4294967286, 4294967287) >= max value 10
-out/test/spec/elem.wast:248: assert_invalid passed:
+out/test/spec/elem.wast:321: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/elem.wast:331: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/elem.wast:336: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
-out/test/spec/elem.wast:258: assert_invalid passed:
+out/test/spec/elem.wast:346: assert_invalid passed:
   0000014: error: expected i32 init_expr
-out/test/spec/elem.wast:266: assert_invalid passed:
+out/test/spec/elem.wast:354: assert_invalid passed:
+  0000014: error: expected i32 init_expr
+out/test/spec/elem.wast:362: assert_invalid passed:
   error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
   0000013: error: EndElemSegmentInitExpr callback failed
-out/test/spec/elem.wast:274: assert_invalid passed:
+out/test/spec/elem.wast:370: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/elem.wast:282: assert_invalid passed:
+out/test/spec/elem.wast:378: assert_invalid passed:
   000002b: error: expected END opcode after initializer expression
-out/test/spec/elem.wast:291: assert_invalid passed:
+out/test/spec/elem.wast:387: assert_invalid passed:
   000002b: error: expected END opcode after initializer expression
-out/test/spec/elem.wast:301: assert_invalid passed:
+out/test/spec/elem.wast:397: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/elem.wast:309: assert_invalid passed:
+out/test/spec/elem.wast:405: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/elem.wast:317: assert_invalid passed:
+out/test/spec/elem.wast:413: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/elem.wast:325: assert_invalid passed:
+out/test/spec/elem.wast:421: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/test/spec/elem.wast:339: assert_invalid passed:
+out/test/spec/elem.wast:435: assert_invalid passed:
   0000000: error: global variable out of range: 0 (max 0)
   error: initializer expression cannot reference a mutable global
   0000015: error: EndElemSegmentInitExpr callback failed
-out/test/spec/elem.wast:347: assert_invalid passed:
+out/test/spec/elem.wast:443: assert_invalid passed:
   0000000: error: global variable out of range: 1 (max 1)
   error: initializer expression cannot reference a mutable global
   000002b: error: EndElemSegmentInitExpr callback failed
-out/test/spec/elem.wast:356: assert_invalid passed:
+out/test/spec/elem.wast:452: assert_invalid passed:
   error: initializer expression cannot reference a mutable global
   000002f: error: EndElemSegmentInitExpr callback failed
-out/test/spec/elem.wast:414: assert_trap passed: uninitialized table element
-38/38 tests passed.
+out/test/spec/elem.wast:463: assert_invalid passed:
+  error: type mismatch at elem expression. got externref, expected funcref
+  0000018: error: OnElemSegmentElemExpr_RefNull callback failed
+out/test/spec/elem.wast:471: assert_invalid passed:
+  0000019: error: expected END opcode after element expression
+out/test/spec/elem.wast:479: assert_invalid passed:
+  0000017: error: expected ref.null or ref.func in passive element segment
+  0000018: error: expected END opcode after element expression
+out/test/spec/elem.wast:487: assert_invalid passed:
+  0000017: error: expected ref.null or ref.func in passive element segment
+  0000018: error: expected END opcode after element expression
+out/test/spec/elem.wast:495: assert_invalid passed:
+  0000022: error: expected ref.null or ref.func in passive element segment
+  0000023: error: expected END opcode after element expression
+out/test/spec/elem.wast:504: assert_invalid passed:
+  0000017: error: expected ref.null or ref.func in passive element segment
+  0000018: error: expected END opcode after element expression
+out/test/spec/elem.wast:561: assert_trap passed: uninitialized table element
+47/47 tests passed.
 ;;; STDOUT ;;)

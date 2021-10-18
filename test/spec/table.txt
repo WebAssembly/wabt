@@ -1,13 +1,6 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --disable-reference-types
 ;;; STDIN_FILE: third_party/testsuite/table.wast
 (;; STDOUT ;;;
-out/test/spec/table.wast:11: assert_invalid passed:
-  error: only one table allowed
-  0000011: error: OnTable callback failed
-out/test/spec/table.wast:12: assert_invalid passed:
-  error: only one table allowed
-  0000024: error: OnTable callback failed
 out/test/spec/table.wast:14: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   000000c: error: BeginElemSegment callback failed
@@ -47,5 +40,5 @@ out/test/spec/table.wast:51: assert_malformed passed:
   out/test/spec/table/table.18.wat:1:39: error: redefinition of table "$foo"
   (import "" "" (table $foo 1 funcref))(import "" "" (table $foo 1 funcref))
                                         ^^^^^^
-12/12 tests passed.
+10/10 tests passed.
 ;;; STDOUT ;;)

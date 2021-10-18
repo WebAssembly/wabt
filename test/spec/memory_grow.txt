@@ -11,18 +11,24 @@ out/test/spec/memory_grow.wast:25: assert_trap passed: out of bounds memory acce
 out/test/spec/memory_grow.wast:286: assert_trap passed: undefined table index
 out/test/spec/memory_grow.wast:313: assert_invalid passed:
   error: type mismatch in memory.grow, expected [i32] but got []
-  000001e: error: OnMemoryGrowExpr callback failed
+  000001f: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory_grow.wast:322: assert_invalid passed:
   error: type mismatch in memory.grow, expected [i32] but got []
-  0000022: error: OnMemoryGrowExpr callback failed
+  0000023: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory_grow.wast:332: assert_invalid passed:
   error: type mismatch in memory.grow, expected [i32] but got []
-  0000022: error: OnMemoryGrowExpr callback failed
+  0000023: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory_grow.wast:342: assert_invalid passed:
   error: type mismatch in memory.grow, expected [i32] but got []
-  0000024: error: OnMemoryGrowExpr callback failed
-out/test/spec/memory_grow.wast:355: assert_invalid passed:
+  0000025: error: OnMemoryGrowExpr callback failed
+out/test/spec/memory_grow.wast:353: assert_invalid passed:
   error: type mismatch in memory.grow, expected [i32] but got [f32]
   0000024: error: OnMemoryGrowExpr callback failed
-89/89 tests passed.
+out/test/spec/memory_grow.wast:363: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000021: error: EndFunctionBody callback failed
+out/test/spec/memory_grow.wast:372: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f32] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+91/91 tests passed.
 ;;; STDOUT ;;)
