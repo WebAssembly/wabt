@@ -342,9 +342,15 @@ Result CheckFuncTypeVarMatchesExplicit(const Location& loc,
       // ResolveFuncTypeWithEmptySignature), but if they are provided then we
       // have to check. If we get here then the type var is invalid, so we
       // can't check whether they match.
-      errors->emplace_back(ErrorLevel::Error, loc,
-                           StringPrintf("invalid func type index %" PRIindex,
-                                        decl.type_var.index()));
+      if (decl.type_var.is_index()) {
+        errors->emplace_back(ErrorLevel::Error, loc,
+                             StringPrintf("invalid func type index %" PRIindex,
+                                          decl.type_var.index()));
+      } else {
+        errors->emplace_back(ErrorLevel::Error, loc,
+                             StringPrintf("expected func type identifier %s",
+                                          decl.type_var.name().c_str()));
+      }
       result = Result::Error;
     }
   }
