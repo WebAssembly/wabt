@@ -1022,7 +1022,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnTagType(Index index, Index sig_index) override;
 
  private:
-  Result InitExprToConstOffset(const InitExpr& expr, uint32_t* out_offset);
+  Result InitExprToConstOffset(const InitExpr& expr, uint64_t* out_offset);
   Result HandleInitExpr(const InitExpr& expr);
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
@@ -1042,8 +1042,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   uint8_t data_flags_ = 0;
   uint8_t elem_flags_ = 0;
   Index data_mem_index_ = 0;
-  uint32_t data_offset_ = 0;
-  uint32_t elem_offset_ = 0;
+  uint64_t data_offset_ = 0;
+  uint64_t elem_offset_ = 0;
 };
 
 BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
@@ -1441,7 +1441,7 @@ Result BinaryReaderObjdump::OnExport(Index index,
 
 Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index,
                                                           Type type) {
-  PrintDetails("  - elem[%" PRIindex "] = ref.null %s\n",
+  PrintDetails("  - elem[%" PRIzd "] = ref.null %s\n",
                elem_offset_ + elem_index_, type.GetName());
   elem_index_++;
   return Result::Ok;
@@ -1449,7 +1449,7 @@ Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index,
 
 Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                                           Index func_index) {
-  PrintDetails("  - elem[%" PRIindex "] = func[%" PRIindex "]",
+  PrintDetails("  - elem[%" PRIzd "] = func[%" PRIindex "]",
                elem_offset_ + elem_index_, func_index);
   auto name = GetFunctionName(func_index);
   if (!name.empty()) {
@@ -1557,21 +1557,23 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
 }
 
 Result BinaryReaderObjdump::InitExprToConstOffset(const InitExpr& expr,
-                                                  uint32_t* out_offset) {
+                                                  uint64_t* out_offset) {
   switch (expr.type) {
     case InitExprType::I32:
       *out_offset = expr.value.i32;
       break;
+    case InitExprType::I64:
+      *out_offset = expr.value.i64;
+      break;
     case InitExprType::Global:
       *out_offset = 0;
       break;
-    case InitExprType::I64:
     case InitExprType::F32:
     case InitExprType::F64:
     case InitExprType::V128:
     case InitExprType::FuncRef:
     case InitExprType::NullRef:
-      err_stream_->Writef("Segment/Elem offset must be an i32 init expr");
+      err_stream_->Writef("Invalid init expr for segment/elem offset");
       return Result::Error;
       break;
   }
