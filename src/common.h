@@ -339,6 +339,8 @@ enum class LinkingEntryType {
 enum class DylinkEntryType {
   MemInfo = 1,
   Needed = 2,
+  ExportInfo = 3,
+  ImportInfo = 4,
 };
 
 enum class SymbolType {

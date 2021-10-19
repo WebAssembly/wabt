@@ -395,6 +395,12 @@ class BinaryReaderDelegate {
                               uint32_t mem_align_log2,
                               uint32_t table_size,
                               uint32_t table_align_log2) = 0;
+  virtual Result OnDylinkImportCount(Index count) = 0;
+  virtual Result OnDylinkExportCount(Index count) = 0;
+  virtual Result OnDylinkImport(string_view module,
+                                string_view name,
+                                uint32_t flags) = 0;
+  virtual Result OnDylinkExport(string_view name, uint32_t flags) = 0;
   virtual Result OnDylinkNeededCount(Index count) = 0;
   virtual Result OnDylinkNeeded(string_view so_name) = 0;
   virtual Result EndDylinkSection() = 0;

@@ -1969,6 +1969,7 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
     ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
+    uint32_t count;
     switch (static_cast<DylinkEntryType>(dylink_type)) {
       case DylinkEntryType::MemInfo: {
         uint32_t mem_size;
@@ -1983,8 +1984,7 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
         CALLBACK(OnDylinkInfo, mem_size, mem_align, table_size, table_align);
         break;
       }
-      case DylinkEntryType::Needed: {
-        uint32_t count;
+      case DylinkEntryType::Needed:
         CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
         CALLBACK(OnDylinkNeededCount, count);
         while (count--) {
@@ -1993,7 +1993,30 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
           CALLBACK(OnDylinkNeeded, so_name);
         }
         break;
-      }
+      case DylinkEntryType::ImportInfo:
+        CHECK_RESULT(ReadU32Leb128(&count, "count"));
+        CALLBACK(OnDylinkImportCount, count);
+        for (Index i = 0; i < count; ++i) {
+          uint32_t flags = 0;
+          string_view module;
+          string_view field;
+          CHECK_RESULT(ReadStr(&module, "module"));
+          CHECK_RESULT(ReadStr(&field, "field"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
+          CALLBACK(OnDylinkImport, module, field, flags);
+        }
+        break;
+      case DylinkEntryType::ExportInfo:
+        CHECK_RESULT(ReadU32Leb128(&count, "count"));
+        CALLBACK(OnDylinkExportCount, count);
+        for (Index i = 0; i < count; ++i) {
+          uint32_t flags = 0;
+          string_view name;
+          CHECK_RESULT(ReadStr(&name, "name"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
+          CALLBACK(OnDylinkExport, name, flags);
+        }
+        break;
       default:
         // Unknown subsection, skip it.
         state_.offset = subsection_end;

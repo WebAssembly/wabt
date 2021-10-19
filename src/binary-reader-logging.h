@@ -324,6 +324,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                       uint32_t table_align) override;
   Result OnDylinkNeededCount(Index count) override;
   Result OnDylinkNeeded(string_view needed) override;
+  Result OnDylinkImportCount(Index count) override;
+  Result OnDylinkExportCount(Index count) override;
+  Result OnDylinkImport(string_view module,
+                        string_view name,
+                        uint32_t flags) override;
+  Result OnDylinkExport(string_view name, uint32_t flags) override;
   Result EndDylinkSection() override;
 
   Result BeginLinkingSection(Offset size) override;

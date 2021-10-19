@@ -465,6 +465,16 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnDylinkNeededCount(Index count) override { return Result::Ok; }
   Result OnDylinkNeeded(string_view so_name) override { return Result::Ok; }
+  Result OnDylinkImportCount(Index count) override { return Result::Ok; }
+  Result OnDylinkExportCount(Index count) override { return Result::Ok; }
+  Result OnDylinkImport(string_view module,
+                        string_view name,
+                        uint32_t flags) override {
+    return Result::Ok;
+  }
+  Result OnDylinkExport(string_view name, uint32_t flags) override {
+    return Result::Ok;
+  }
   Result EndDylinkSection() override { return Result::Ok; }
 
   /* Linking section */

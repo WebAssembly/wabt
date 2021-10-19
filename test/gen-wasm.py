@@ -80,6 +80,8 @@ NAMED_VALUES = {
     # dylink.0 subsection codes
     'DYLINK_MEM_INFO': 1,
     'DYLINK_NEEDED': 2,
+    'DYLINK_EXPORT_INFO': 3,
+    'DYLINK_IMPORT_INFO': 4,
 
     # external kinds
     'func_kind': 0,
