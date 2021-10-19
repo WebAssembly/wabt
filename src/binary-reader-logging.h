@@ -332,6 +332,11 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnDylinkExport(string_view name, uint32_t flags) override;
   Result EndDylinkSection() override;
 
+  Result BeginTargetFeaturesSection(Offset size) override;
+  Result OnFeatureCount(Index count) override;
+  Result OnFeature(uint8_t prefix, string_view name) override;
+  Result EndTargetFeaturesSection() override;
+
   Result BeginLinkingSection(Offset size) override;
   Result OnSymbolCount(Index count) override;
   Result OnDataSymbol(Index index,

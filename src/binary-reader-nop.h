@@ -477,6 +477,14 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndDylinkSection() override { return Result::Ok; }
 
+  /* target_features section */
+  Result BeginTargetFeaturesSection(Offset size) override { return Result::Ok; }
+  Result OnFeatureCount(Index count) override { return Result::Ok; }
+  Result OnFeature(uint8_t prefix, string_view name) override {
+    return Result::Ok;
+  }
+  Result EndTargetFeaturesSection() override { return Result::Ok; }
+
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnSymbolCount(Index count) override { return Result::Ok; }

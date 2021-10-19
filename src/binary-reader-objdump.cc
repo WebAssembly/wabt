@@ -986,6 +986,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                  Index index,
                  uint32_t addend) override;
 
+  Result OnFeature(uint8_t prefix, string_view name) override;
+
   Result OnSymbolCount(Index count) override;
   Result OnDataSymbol(Index index,
                       uint32_t flags,
@@ -1022,7 +1024,6 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnComdatCount(Index count) override;
   Result OnComdatBegin(string_view name, uint32_t flags, Index count) override;
   Result OnComdatEntry(ComdatType kind, Index index) override;
-  Result EndLinkingSection() override { return Result::Ok; }
 
   Result OnTagCount(Index count) override;
   Result OnTagType(Index index, Index sig_index) override;
@@ -1839,6 +1840,12 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
     PrintDetails("%#x", signed_addend);
   }
   PrintDetails("\n");
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnFeature(uint8_t prefix, string_view name) {
+  PrintDetails("  - [%c] " PRIstringview "\n", prefix,
+               WABT_PRINTF_STRING_VIEW_ARG(name));
   return Result::Ok;
 }
 

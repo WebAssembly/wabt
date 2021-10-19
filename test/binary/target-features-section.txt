@@ -1,0 +1,28 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+magic
+version
+section("target_features") {
+  count[3]
+  prefix['-']
+  str("foo")
+  prefix['+']
+  str("bar")
+  prefix['=']
+  str("baz")
+}
+(;; STDOUT ;;;
+
+target-features-section.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "target_features"
+  - [-] foo
+  - [+] bar
+  - [=] baz
+
+Code Disassembly:
+
+;;; STDOUT ;;)

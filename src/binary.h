@@ -31,6 +31,7 @@
 #define WABT_BINARY_SECTION_NAME "name"
 #define WABT_BINARY_SECTION_RELOC "reloc"
 #define WABT_BINARY_SECTION_LINKING "linking"
+#define WABT_BINARY_SECTION_TARGET_FEATURES "target_features"
 #define WABT_BINARY_SECTION_DYLINK "dylink"
 #define WABT_BINARY_SECTION_DYLINK0 "dylink.0"
 
