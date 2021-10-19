@@ -65,12 +65,11 @@ class Executable(object):
         stderr = ''
         error = None
         try:
-            process = subprocess.run(cmd, check=False, stdout=self.stdout_handle,
+            process = subprocess.run(cmd, check=False, text=True,
+                                     stdout=self.stdout_handle,
                                      stderr=self.stderr_handle, **kwargs)
-            if process.stdout:
-                stdout = process.stdout.decode('utf-8', 'ignore')
-            if process.stdout:
-                stderr = process.stderr.decode('utf-8', 'ignore')
+            stdout = process.stdout
+            stderr = process.stderr
             if process.returncode < 0:
                 # Terminated by signal
                 signame = SIGNAMES.get(-process.returncode, '<unknown>')
