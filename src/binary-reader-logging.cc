@@ -584,6 +584,12 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   return reader_->OnReloc(type, offset, index, addend);
 }
 
+Result BinaryReaderLogging::OnFeature(uint8_t prefix, string_view name) {
+  LOGF("OnFeature(prefix: '%c', name: '" PRIstringview "')\n", prefix,
+       WABT_PRINTF_STRING_VIEW_ARG(name));
+  return reader_->OnFeature(prefix, name);
+}
+
 Result BinaryReaderLogging::OnDataSymbol(Index index,
                                          uint32_t flags,
                                          string_view name,
@@ -901,6 +907,10 @@ DEFINE_INDEX(OnDylinkNeededCount)
 DEFINE_INDEX(OnDylinkExportCount)
 DEFINE_INDEX(OnDylinkImportCount)
 DEFINE_END(EndDylinkSection)
+
+DEFINE_BEGIN(BeginTargetFeaturesSection)
+DEFINE_INDEX(OnFeatureCount)
+DEFINE_END(EndTargetFeaturesSection)
 
 DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolCount)

@@ -132,6 +132,7 @@ class BinaryReader {
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylink0Section(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadTargetFeaturesSections(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
@@ -2057,6 +2058,22 @@ Result BinaryReader::ReadDylinkSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadTargetFeaturesSections(Offset section_size) {
+  CALLBACK(BeginTargetFeaturesSection, section_size);
+  uint32_t count;
+  CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
+  CALLBACK(OnFeatureCount, count);
+  while (count--) {
+    uint8_t prefix;
+    string_view name;
+    CHECK_RESULT(ReadU8(&prefix, "prefix"));
+    CHECK_RESULT(ReadStr(&name, "feature name"));
+    CALLBACK(OnFeature, prefix, name);
+  }
+  CALLBACK0(EndTargetFeaturesSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadLinkingSection(Offset section_size) {
   CALLBACK(BeginLinkingSection, section_size);
   uint32_t version;
@@ -2236,6 +2253,8 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
     // Reloc sections always begin with "reloc."
     CHECK_RESULT(ReadRelocSection(section_size));
+  } else if (section_name == WABT_BINARY_SECTION_TARGET_FEATURES) {
+    CHECK_RESULT(ReadTargetFeaturesSections(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
   } else {

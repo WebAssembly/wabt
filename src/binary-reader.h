@@ -405,6 +405,12 @@ class BinaryReaderDelegate {
   virtual Result OnDylinkNeeded(string_view so_name) = 0;
   virtual Result EndDylinkSection() = 0;
 
+  /* target_features section */
+  virtual Result BeginTargetFeaturesSection(Offset size) = 0;
+  virtual Result OnFeatureCount(Index count) = 0;
+  virtual Result OnFeature(uint8_t prefix, string_view name) = 0;
+  virtual Result EndTargetFeaturesSection() = 0;
+
   /* Linking section */
   virtual Result BeginLinkingSection(Offset size) = 0;
   virtual Result OnSymbolCount(Index count) = 0;
