@@ -1051,8 +1051,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   bool reading_elem_init_expr_ = false;
   bool reading_data_init_expr_ = false;
   bool reading_global_init_expr_ = false;
-  InitExpr data_init_expr_;
-  InitExpr elem_init_expr_;
+  InitExpr* data_init_expr_;
+  InitExpr* elem_init_expr_;
   uint8_t data_flags_ = 0;
   uint8_t elem_flags_ = 0;
   Index data_mem_index_ = 0;
@@ -1500,7 +1500,10 @@ Result BinaryReaderObjdump::OnElemSegmentElemExprCount(Index index,
   if (elem_flags_ & SegPassive) {
     PrintDetails("\n");
   } else {
-    PrintInitExpr(elem_init_expr_);
+    if (elem_init_expr_ == nullptr) {
+      return Result::Error;
+    }
+    PrintInitExpr(*elem_init_expr_);
   }
   return Result::Ok;
 }
@@ -1596,10 +1599,10 @@ Result BinaryReaderObjdump::InitExprToConstOffset(const InitExpr& expr,
 
 Result BinaryReaderObjdump::HandleInitExpr(const InitExpr& expr) {
   if (reading_data_init_expr_) {
-    data_init_expr_ = expr;
+    *data_init_expr_ = expr;
     return InitExprToConstOffset(expr, &data_offset_);
   } else if (reading_elem_init_expr_) {
-    elem_init_expr_ = expr;
+    *elem_init_expr_ = expr;
     return InitExprToConstOffset(expr, &elem_offset_);
   } else if (reading_global_init_expr_) {
     PrintInitExpr(expr);
@@ -1733,7 +1736,10 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   if (data_flags_ & SegPassive) {
     PrintDetails("\n");
   } else {
-    PrintInitExpr(data_init_expr_);
+    if (data_init_expr_ == nullptr) {
+      return Result::Error;
+    }
+    PrintInitExpr(*data_init_expr_);
   }
 
   out_stream_->WriteMemoryDump(src_data, size, data_offset_, PrintChars::Yes,
