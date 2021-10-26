@@ -78,6 +78,8 @@ typedef enum {
   WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH,   /** Invalid call_indirect, as function being invoked has an unexpected type. */
   WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR,     /** Invalid call_indirect, for other reason. */
   WASM_RT_TRAP_EXHAUSTION,                    /** Call stack exhausted. */
+  WASM_RT_TRAP_SHADOW_MEM,                    /** Trap due to shadow memory mismatch */
+  WASM_RT_TRAP_WASI,                          /** Trap due to WASI error */
 } wasm_rt_trap_t;
 
 /** Value types. Used to define function signatures. */

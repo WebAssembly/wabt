@@ -28,7 +28,68 @@
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
+  const char* error_message = "wasm2c: unknown trap";
+  switch(code)
+  {
+    case WASM_RT_TRAP_OOB: {
+      error_message = "wasm2c: WASM_RT_TRAP_OOB";
+      break;
+    }
+    case WASM_RT_TRAP_INT_OVERFLOW: {
+      error_message = "wasm2c: WASM_RT_TRAP_INT_OVERFLOW";
+      break;
+    }
+    case WASM_RT_TRAP_DIV_BY_ZERO: {
+      error_message = "wasm2c: WASM_RT_TRAP_DIV_BY_ZERO";
+      break;
+    }
+    case WASM_RT_TRAP_INVALID_CONVERSION: {
+      error_message = "wasm2c: WASM_RT_TRAP_INVALID_CONVERSION";
+      break;
+    }
+    case WASM_RT_TRAP_UNREACHABLE: {
+      error_message = "wasm2c: WASM_RT_TRAP_UNREACHABLE";
+      break;
+    }
+    case WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION: {
+      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION";
+      break;
+    }
+    case WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX: {
+      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX";
+      break;
+    }
+    case WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR: {
+      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR";
+      break;
+    }
+    case WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH: {
+      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH";
+      break;
+    }
+    case WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR: {
+      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR";
+      break;
+    }
+    case WASM_RT_TRAP_EXHAUSTION: {
+      error_message = "wasm2c: WASM_RT_TRAP_EXHAUSTION";
+      break;
+    }
+    case WASM_RT_TRAP_SHADOW_MEM: {
+      error_message = "wasm2c: WASM_RT_TRAP_SHADOW_MEM";
+      break;
+    }
+    case WASM_RT_TRAP_WASI: {
+      error_message = "wasm2c: WASM_RT_TRAP_WASI";
+      break;
+    }
+  };
+#ifdef WASM_RT_CUSTOM_TRAP_HANDLER
+  WASM_RT_CUSTOM_TRAP_HANDLER(error_message);
+#else
+  printf("Error: %s\n", error_message);
   abort();
+#endif
 }
 
 void wasm_rt_callback_error_trap(wasm_rt_table_t* table, uint32_t func_index, uint32_t expected_func_type) {
