@@ -26,6 +26,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WASM_RT_CUSTOM_TRAP_HANDLER
+  // forward declare the signatire of any custom trap handler
+  void WASM_RT_CUSTOM_TRAP_HANDLER(const char*);
+#endif
+
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
   const char* error_message = "wasm2c: unknown trap";
