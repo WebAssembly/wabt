@@ -96,7 +96,7 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
 #ifdef WASM_RT_CUSTOM_TRAP_HANDLER
   WASM_RT_CUSTOM_TRAP_HANDLER(error_message);
 #else
-  printf("Error: %s\n", error_message);
+  fprintf(stderr, "Error: %s\n", error_message);
   abort();
 #endif
 }
