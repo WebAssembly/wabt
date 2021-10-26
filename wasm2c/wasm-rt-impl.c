@@ -27,7 +27,7 @@
 #include <string.h>
 
 #ifdef WASM_RT_CUSTOM_TRAP_HANDLER
-  // forward declare the signatire of any custom trap handler
+  // forward declare the signature of any custom trap handler
   void WASM_RT_CUSTOM_TRAP_HANDLER(const char*);
 #endif
 
