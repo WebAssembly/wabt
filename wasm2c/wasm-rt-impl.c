@@ -32,10 +32,14 @@
 #endif
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
-  assert(code != WASM_RT_TRAP_NONE);
   const char* error_message = "wasm2c: unknown trap";
   switch(code)
   {
+    case WASM_RT_TRAP_NONE: {
+      // this should never happen
+      error_message = "wasm2c: WASM_RT_TRAP_NONE";
+      break;
+    }
     case WASM_RT_TRAP_OOB: {
       error_message = "wasm2c: WASM_RT_TRAP_OOB";
       break;
