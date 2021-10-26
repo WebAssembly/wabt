@@ -64,7 +64,9 @@ extern "C" {
 #define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
-/** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
+/** Reason a trap occurred. Provide this to `wasm_rt_trap`.
+ * If you update this enum also update the error message in wasm_rt_trap.
+ */
 typedef enum {
   WASM_RT_TRAP_NONE,                          /** No error. */
   WASM_RT_TRAP_OOB,                           /** Out-of-bounds access in linear memory. */
