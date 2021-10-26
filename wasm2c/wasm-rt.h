@@ -66,14 +66,18 @@ extern "C" {
 
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
 typedef enum {
-  WASM_RT_TRAP_NONE,         /** No error. */
-  WASM_RT_TRAP_OOB,          /** Out-of-bounds access in linear memory. */
-  WASM_RT_TRAP_INT_OVERFLOW, /** Integer overflow on divide or truncation. */
-  WASM_RT_TRAP_DIV_BY_ZERO,  /** Integer divide by zero. */
-  WASM_RT_TRAP_INVALID_CONVERSION, /** Conversion from NaN to integer. */
-  WASM_RT_TRAP_UNREACHABLE,        /** Unreachable instruction executed. */
-  WASM_RT_TRAP_CALL_INDIRECT,      /** Invalid call_indirect, for any reason. */
-  WASM_RT_TRAP_EXHAUSTION,         /** Call stack exhausted. */
+  WASM_RT_TRAP_NONE,                          /** No error. */
+  WASM_RT_TRAP_OOB,                           /** Out-of-bounds access in linear memory. */
+  WASM_RT_TRAP_INT_OVERFLOW,                  /** Integer overflow on divide or truncation. */
+  WASM_RT_TRAP_DIV_BY_ZERO,                   /** Integer divide by zero. */
+  WASM_RT_TRAP_INVALID_CONVERSION,            /** Conversion from NaN to integer. */
+  WASM_RT_TRAP_UNREACHABLE,                   /** Unreachable instruction executed. */
+  WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION, /** Invalid call_indirect, as func table cannot grow/grow further. */
+  WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX,       /** Invalid call_indirect, due to index larger than func table. */
+  WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR,        /** Invalid call_indirect, as function being invoked is null. */
+  WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH,   /** Invalid call_indirect, as function being invoked has an unexpected type. */
+  WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR,     /** Invalid call_indirect, for other reason. */
+  WASM_RT_TRAP_EXHAUSTION,                    /** Call stack exhausted. */
 } wasm_rt_trap_t;
 
 /** Value types. Used to define function signatures. */
@@ -196,6 +200,12 @@ typedef struct wasm2c_sandbox_funcs_t {
  *
  *  This is typically called by the generated code, and not the embedder. */
 WASM_RT_NO_RETURN extern void wasm_rt_trap(wasm_rt_trap_t);
+
+/** An indirect callback function failed.
+ *  Deduce the reason for the failure and then call trap.
+ *
+ *  This is typically called by the generated code, and not the embedder. */
+WASM_RT_NO_RETURN extern void wasm_rt_callback_error_trap(wasm_rt_table_t* table, uint32_t func_index, uint32_t expected_func_type);
 
 /** Register a function type with the given signature. The returned function
  * index is guaranteed to be the same for all calls with the same signature.

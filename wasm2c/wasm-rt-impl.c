@@ -31,6 +31,18 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
   abort();
 }
 
+void wasm_rt_callback_error_trap(wasm_rt_table_t* table, uint32_t func_index, uint32_t expected_func_type) {
+  if (func_index >= table->size) {
+    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX);
+  } else if (!table->data[func_index].func) {
+    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR);
+  } else if (table->data[func_index].func_type != expected_func_type) {
+    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH);
+  }
+  wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR);
+}
+
+
 static bool func_types_are_equal(wasm_func_type_t* a, wasm_func_type_t* b) {
   if (a->param_count != b->param_count || a->result_count != b->result_count)
     return 0;
@@ -254,23 +266,23 @@ void wasm_rt_deallocate_table(wasm_rt_table_t* table) {
 }
 
 #define WASM_SATURATING_U32_ADD(ret_ptr, a, b) { \
-  if ((a) > (UINT32_MAX - (b))) {             \
-    /* add will overflowed */               \
-    *ret_ptr = UINT32_MAX;                  \
-  } else {                                  \
-    *ret_ptr = (a) + (b);                   \
-  }                                         \
+  if ((a) > (UINT32_MAX - (b))) {                \
+    /* add will overflowed */                    \
+    *ret_ptr = UINT32_MAX;                       \
+  } else {                                       \
+    *ret_ptr = (a) + (b);                        \
+  }                                              \
 }
 
-#define WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY(ret_ptr, a, b) { \
-  if ((a) > (SIZE_MAX / (b))) {                            \
-    /* multiple will overflowed */                       \
-    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT);            \
-  } else {                                               \
-    /* convert to size by assigning */                   \
-    *ret_ptr = a;                                        \
-    *ret_ptr = *ret_ptr * b;                             \
-  }                                                      \
+#define WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY(ret_ptr, a, b) {            \
+  if ((a) > (SIZE_MAX / (b))) {                                          \
+    /* multiple will overflowed */                                       \
+    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION);            \
+  } else {                                                               \
+    /* convert to size by assigning */                                   \
+    *ret_ptr = a;                                                        \
+    *ret_ptr = *ret_ptr * b;                                             \
+  }                                                                      \
 }
 
 void wasm_rt_expand_table(wasm_rt_table_t* table) {
@@ -283,7 +295,7 @@ void wasm_rt_expand_table(wasm_rt_table_t* table) {
 
   if (table->size == new_size) {
     // table is already as large as we allowed, can't expand further
-    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT);
+    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION);
   }
 
   size_t allocation_size = 0;
