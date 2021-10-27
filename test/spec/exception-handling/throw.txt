@@ -1,0 +1,15 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/throw.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+out/test/spec/exception-handling/throw.wast:47: assert_invalid passed:
+  0000000: error: tag variable out of range: 0 (max 0)
+  0000019: error: OnThrowExpr callback failed
+out/test/spec/exception-handling/throw.wast:48: assert_invalid passed:
+  error: type mismatch in throw, expected [i32] but got []
+  0000022: error: OnThrowExpr callback failed
+out/test/spec/exception-handling/throw.wast:50: assert_invalid passed:
+  error: type mismatch in throw, expected [i32] but got [i64]
+  0000024: error: OnThrowExpr callback failed
+10/10 tests passed.
+;;; STDOUT ;;)

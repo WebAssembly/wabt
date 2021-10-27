@@ -1,0 +1,35 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/try_catch.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+out/test/spec/exception-handling/try_catch.wast:157: assert_trap passed: unreachable executed
+out/test/spec/exception-handling/try_catch.wast:160: assert_trap passed: integer divide by zero
+out/test/spec/exception-handling/try_catch.wast:214: assert_malformed passed:
+  out/test/spec/exception-handling/try_catch/try_catch.3.wat:1:16: error: unexpected token "catch_all", expected an instr.
+  (module (func (catch_all)))
+                 ^^^^^^^^^
+out/test/spec/exception-handling/try_catch.wast:219: assert_malformed passed:
+  out/test/spec/exception-handling/try_catch/try_catch.4.wat:1:25: error: unexpected token "catch", expected an instr.
+  (module (tag $e) (func (catch $e)))
+                          ^^^^^
+out/test/spec/exception-handling/try_catch.wast:224: assert_malformed passed:
+  out/test/spec/exception-handling/try_catch/try_catch.5.wat:1:38: error: multiple catch_all clauses not allowed
+  (module (func (try (do) (catch_all) (catch_all))))
+                                       ^^^^^^^^^
+out/test/spec/exception-handling/try_catch.wast:230: assert_invalid passed:
+  error: type mismatch in try, expected [i32] but got []
+  000001b: error: OnEndExpr callback failed
+out/test/spec/exception-handling/try_catch.wast:232: assert_invalid passed:
+  error: type mismatch in try, expected [i32] but got [i64]
+  000001d: error: OnEndExpr callback failed
+out/test/spec/exception-handling/try_catch.wast:234: assert_invalid passed:
+  error: type mismatch in try catch, expected [] but got [i32]
+  0000023: error: OnEndExpr callback failed
+out/test/spec/exception-handling/try_catch.wast:236: assert_invalid passed:
+  error: type mismatch in try catch, expected [i32] but got [i64]
+  0000028: error: OnEndExpr callback failed
+out/test/spec/exception-handling/try_catch.wast:241: assert_invalid passed:
+  error: type mismatch in try catch, expected [] but got [i32]
+  000001d: error: OnEndExpr callback failed
+35/35 tests passed.
+;;; STDOUT ;;)

@@ -1,0 +1,9 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/tag.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+out/test/spec/exception-handling/tag.wast:19: assert_invalid passed:
+  error: Tag signature must have 0 results.
+  0000014: error: OnTagType callback failed
+1/1 tests passed.
+;;; STDOUT ;;)
