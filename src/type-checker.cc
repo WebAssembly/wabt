@@ -569,10 +569,6 @@ Result TypeChecker::OnDelegate(Index depth) {
   // Delegate starts counting after the current try, as the delegate
   // instruction is not actually in the try block.
   CHECK_RESULT(GetLabel(depth + 1, &label));
-  if (Failed(Check2LabelTypes(label, LabelType::Try, LabelType::Func))) {
-    PrintError("try-delegate must target a try block or function label");
-    result = Result::Error;
-  }
 
   Label* try_label;
   CHECK_RESULT(TopLabel(&try_label));
