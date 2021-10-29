@@ -1197,13 +1197,31 @@ Result WastParser::ParseElemModuleField(Module* module) {
 Result WastParser::ParseTagModuleField(Module* module) {
   WABT_TRACE(ParseTagModuleField);
   EXPECT(Lpar);
-  auto field = MakeUnique<TagModuleField>(GetLocation());
   EXPECT(Tag);
-  ParseBindVarOpt(&field->tag.name);
-  CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
-  CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
+  std::string name;
+  ParseBindVarOpt(&name);
+
+  ModuleFieldList export_fields;
+  CHECK_RESULT(ParseInlineExports(&export_fields, ExternalKind::Tag));
+
+  if (PeekMatchLpar(TokenType::Import)) {
+    CheckImportOrdering(module);
+    auto import = MakeUnique<TagImport>(name);
+    CHECK_RESULT(ParseInlineImport(import.get()));
+    CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
+    CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
+    auto field =
+        MakeUnique<ImportModuleField>(std::move(import), GetLocation());
+    module->AppendField(std::move(field));
+  } else {
+    auto field = MakeUnique<TagModuleField>(GetLocation(), name);
+    CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
+    CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
+    module->AppendField(std::move(field));
+  }
+
+  AppendInlineExportFields(module, &export_fields, module->tags.size() - 1);
   EXPECT(Rpar);
-  module->AppendField(std::move(field));
   return Result::Ok;
 }
 
