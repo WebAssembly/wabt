@@ -91,9 +91,10 @@ class Istream {
   using SerializedOpcode = u32;  // TODO: change to u16
   using Offset = u32;
   static const Offset kInvalidOffset = ~0;
-  // Each br_table entry is made up of two instructions:
+  // Each br_table entry is made up of three instructions:
   //
   //   interp_drop_keep $drop $keep
+  //   interp_catch_drop $catches
   //   br $label
   //
   // Each opcode is a SerializedOpcode, and each immediate is a u32.

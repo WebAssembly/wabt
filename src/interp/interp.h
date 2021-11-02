@@ -314,8 +314,8 @@ struct CatchDesc {
   u32 offset;
 };
 
-// The Try kind is for catch-less try blocks, which have a HandlerDesc that
-// is ignored as the block cannot ever catch an exception.
+// Handlers for a catch-less `try` or `try-catch` block are included in the
+// Catch kind. `try-delegate` instructions create a Delegate handler.
 enum class HandlerKind { Catch, Delegate };
 
 struct HandlerDesc {
