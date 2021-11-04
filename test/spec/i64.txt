@@ -98,5 +98,5 @@ out/test/spec/i64.wast:484: assert_invalid passed:
 out/test/spec/i64.wast:485: assert_invalid passed:
   error: type mismatch in i64.ne, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
-413/413 tests passed.
+415/415 tests passed.
 ;;; STDOUT ;;)
