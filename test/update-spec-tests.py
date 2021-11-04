@@ -90,6 +90,7 @@ def main(args):
     ProcessProposalDir('nontrapping-float-to-int-conversions',
                        '--enable-saturating-float-to-int')
     ProcessProposalDir('sign-extension-ops', '--enable-sign-extension')
+    ProcessProposalDir('simd')  # Already enabled by default.
     ProcessProposalDir('memory64', '--enable-memory64')
 
     return 0
