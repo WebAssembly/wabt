@@ -801,29 +801,31 @@ Result BinaryReaderIR::OnElseExpr() {
 }
 
 Result BinaryReaderIR::OnEndExpr() {
-  LabelNode* label;
-  Expr* expr;
-  CHECK_RESULT(TopLabelExpr(&label, &expr));
-  switch (label->label_type) {
-    case LabelType::Block:
-      cast<BlockExpr>(expr)->block.end_loc = GetLocation();
-      break;
-    case LabelType::Loop:
-      cast<LoopExpr>(expr)->block.end_loc = GetLocation();
-      break;
-    case LabelType::If:
-      cast<IfExpr>(expr)->true_.end_loc = GetLocation();
-      break;
-    case LabelType::Else:
-      cast<IfExpr>(expr)->false_end_loc = GetLocation();
-      break;
-    case LabelType::Try:
-      cast<TryExpr>(expr)->block.end_loc = GetLocation();
-      break;
+  if (label_stack_.size() > 1) {
+    LabelNode* label;
+    Expr* expr;
+    CHECK_RESULT(TopLabelExpr(&label, &expr));
+    switch (label->label_type) {
+      case LabelType::Block:
+        cast<BlockExpr>(expr)->block.end_loc = GetLocation();
+        break;
+      case LabelType::Loop:
+        cast<LoopExpr>(expr)->block.end_loc = GetLocation();
+        break;
+      case LabelType::If:
+        cast<IfExpr>(expr)->true_.end_loc = GetLocation();
+        break;
+      case LabelType::Else:
+        cast<IfExpr>(expr)->false_end_loc = GetLocation();
+        break;
+      case LabelType::Try:
+        cast<TryExpr>(expr)->block.end_loc = GetLocation();
+        break;
 
-    case LabelType::Func:
-    case LabelType::Catch:
-      break;
+      case LabelType::Func:
+      case LabelType::Catch:
+        break;
+    }
   }
 
   return PopLabel();
@@ -1078,7 +1080,6 @@ Result BinaryReaderIR::OnUnreachableExpr() {
 }
 
 Result BinaryReaderIR::EndFunctionBody(Index index) {
-  CHECK_RESULT(PopLabel());
   current_func_ = nullptr;
   return Result::Ok;
 }

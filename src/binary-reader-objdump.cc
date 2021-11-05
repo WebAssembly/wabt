@@ -485,7 +485,6 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
                        Index default_target_depth) override;
   Result OnDelegateExpr(Index) override;
   Result OnEndExpr() override;
-  Result OnEndFunc() override;
 
  private:
   void LogOpcode(size_t data_size, const char* fmt, ...);
@@ -766,11 +765,6 @@ Result BinaryReaderObjdumpDisassemble::OnDelegateExpr(Index depth) {
   if (indent_level > 0) {
     indent_level--;
   }
-  return Result::Ok;
-}
-
-Result BinaryReaderObjdumpDisassemble::OnEndFunc() {
-  LogOpcode(0, nullptr);
   return Result::Ok;
 }
 

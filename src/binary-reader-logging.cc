@@ -981,8 +981,4 @@ Result BinaryReaderLogging::OnOpcodeType(Type type) {
   return reader_->OnOpcodeType(type);
 }
 
-Result BinaryReaderLogging::OnEndFunc() {
-  return reader_->OnEndFunc();
-}
-
 }  // namespace wabt
