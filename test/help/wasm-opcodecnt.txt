@@ -29,6 +29,7 @@ options:
       --enable-gc                              Enable Garbage collection
       --enable-memory64                        Enable 64-bit memory
       --enable-multi-memory                    Enable Multi-memory
+      --enable-extended-const                  Enable Extended constant expressions
       --enable-all                             Enable all features
   -o, --output=FILENAME                        Output file for the opcode counts, by default use stdout
   -c, --cutoff=N                               Cutoff for reporting counts less than N

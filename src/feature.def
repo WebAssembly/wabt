@@ -37,3 +37,4 @@ WABT_FEATURE(annotations,         "annotations",             false,   "Custom an
 WABT_FEATURE(gc,                  "gc",                      false,   "Garbage collection")
 WABT_FEATURE(memory64,            "memory64",                false,   "64-bit memory")
 WABT_FEATURE(multi_memory,        "multi-memory",            false,   "Multi-memory")
+WABT_FEATURE(extended_const,      "extended-const",          false,   "Extended constant expressions")

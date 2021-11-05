@@ -632,31 +632,18 @@ Result Memory::Copy(Memory& dst,
   return Result::Error;
 }
 
-Value Instance::ResolveInitExpr(Store& store, InitExpr init) {
-  Value result;
-  switch (init.kind) {
-    case InitExprKind::I32:      result.Set(init.i32_); break;
-    case InitExprKind::I64:      result.Set(init.i64_); break;
-    case InitExprKind::F32:      result.Set(init.f32_); break;
-    case InitExprKind::F64:      result.Set(init.f64_); break;
-    case InitExprKind::V128:     result.Set(init.v128_); break;
-    case InitExprKind::GlobalGet: {
-      Global::Ptr global{store, globals_[init.index_]};
-      result = global->Get();
-      break;
-    }
-    case InitExprKind::RefFunc: {
-      result.Set(funcs_[init.index_]);
-      break;
-    }
-    case InitExprKind::RefNull:
-      result.Set(Ref::Null);
-      break;
-
-    case InitExprKind::None:
-      WABT_UNREACHABLE;
+Result Instance::CallInitFunc(Store& store,
+                              const Ref func_ref,
+                              Value* result,
+                              Trap::Ptr* out_trap) {
+  Values results;
+  Func::Ptr func{store, func_ref};
+  if (Failed(func->Call(store, {}, results, out_trap))) {
+    return Result::Error;
   }
-  return result;
+  assert(results.size() == 1);
+  *result = results[0];
+  return Result::Ok;
 }
 
 //// Global ////
@@ -811,9 +798,12 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
   // Globals.
   for (auto&& desc : mod->desc().globals) {
-    inst->globals_.push_back(
-        Global::New(store, desc.type, inst->ResolveInitExpr(store, desc.init))
-            .ref());
+    Value value;
+    Ref func_ref = DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+    if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
+      return {};
+    }
+    inst->globals_.push_back(Global::New(store, desc.type, value).ref());
   }
 
   // Tags.
@@ -858,7 +848,13 @@ Instance::Ptr Instance::Instantiate(Store& store,
       if (desc.mode == SegmentMode::Active) {
         Result result;
         Table::Ptr table{store, inst->tables_[desc.table_index]};
-        u32 offset = inst->ResolveInitExpr(store, desc.offset).Get<u32>();
+        Value value;
+        Ref func_ref =
+            DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+        if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
+          return {};
+        }
+        u32 offset = value.Get<u32>();
         if (pass == Check) {
           result = table->IsValidRange(offset, segment.size()) ? Result::Ok
                                                                : Result::Error;
@@ -888,7 +884,12 @@ Instance::Ptr Instance::Instantiate(Store& store,
       if (desc.mode == SegmentMode::Active) {
         Result result;
         Memory::Ptr memory{store, inst->memories_[desc.memory_index]};
-        Value offset_op = inst->ResolveInitExpr(store, desc.offset);
+        Value offset_op;
+        Ref func_ref =
+            DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+        if (Failed(inst->CallInitFunc(store, func_ref, &offset_op, out_trap))) {
+          return {};
+        }
         u64 offset = memory->type().limits.is_64 ? offset_op.Get<u64>()
                                                  : offset_op.Get<u32>();
         if (pass == Check) {

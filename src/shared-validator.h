@@ -244,6 +244,7 @@ class SharedValidator {
     Index end;
   };
 
+  bool ValidInitOpcode(Opcode opcode) const;
   Result CheckInstr(Opcode opcode, const Location& loc);
   Result CheckType(const Location&,
                    Type actual,
