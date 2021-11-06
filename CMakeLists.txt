@@ -22,6 +22,16 @@ if (POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif (POLICY CMP0077)
 
+if (WASI)
+  set(CMAKE_SYSTEM_NAME WASI)
+  set(CMAKE_SYSTEM_VERSION 1)
+  set(CMAKE_SYSTEM_PROCESSOR wasm32)
+  set(triple wasm32-wasi)
+
+  set(CMAKE_C_COMPILER_TARGET ${triple})
+  set(CMAKE_CXX_COMPILER_TARGET ${triple})
+endif ()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Check if wabt is being used directly or via add_subdirectory, FetchContent, etc
@@ -351,7 +361,7 @@ set(WABT_LIBRARY_SRC
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 
-IF (NOT WIN32)
+IF (NOT WIN32 AND NOT WASI)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
   install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
   install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -465,12 +475,14 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
-  # wasm2c
-  wabt_executable(
-    NAME wasm2c
-    SOURCES src/tools/wasm2c.cc src/c-writer.cc
-    INSTALL
-  )
+  if (NOT WASI)
+    # wasm2c
+    wabt_executable(
+      NAME wasm2c
+      SOURCES src/tools/wasm2c.cc src/c-writer.cc
+      INSTALL
+    )
+  endif ()
 
   # wasm-opcodecnt
   wabt_executable(
@@ -579,13 +591,6 @@ if (BUILD_TESTS)
       third_party/gtest/googletest/src/gtest_main.cc
     )
   endif ()
-
-  if (BUILD_TESTS)
-    find_package(Threads)
-    if (NOT USE_SYSTEM_GTEST)
-      if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
-        message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
-      endif ()
 
   # hexfloat-test
   set(HEXFLOAT_TEST_SRCS
