@@ -323,6 +323,8 @@ extern void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr);
 extern void wasm2c_shadow_memory_mark_globals_heap_boundary(wasm_rt_memory_t* mem, uint32_t ptr);
 // Print a list of all allocations currently active
 WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t* mem);
+// Print the size of allocations currently active
+WASM2C_FUNC_EXPORT uint64_t wasm2c_shadow_memory_print_total_allocations(wasm_rt_memory_t* mem);
 
 #ifdef __cplusplus
 }
