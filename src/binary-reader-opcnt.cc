@@ -219,7 +219,6 @@ class BinaryReaderOpcnt : public BinaryReaderNop {
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnEndExpr() override;
-  Result OnEndFunc() override;
 
  private:
   template <typename... Args>
@@ -302,10 +301,6 @@ Result BinaryReaderOpcnt::OnBrTableExpr(Index num_targets,
 }
 
 Result BinaryReaderOpcnt::OnEndExpr() {
-  return Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
-}
-
-Result BinaryReaderOpcnt::OnEndFunc() {
   return Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
 }
 

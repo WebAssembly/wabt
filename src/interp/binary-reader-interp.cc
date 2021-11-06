@@ -1018,6 +1018,9 @@ Result BinaryReaderInterp::OnElseExpr() {
 }
 
 Result BinaryReaderInterp::OnEndExpr() {
+  if (label_stack_.size() == 1) {
+    return Result::Ok;
+  }
   SharedValidator::Label* label;
   CHECK_RESULT(validator_.GetLabel(0, &label));
   LabelType label_type = label->label_type;

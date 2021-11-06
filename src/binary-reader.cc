@@ -782,11 +782,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::End:
+        CALLBACK0(OnEndExpr);
         if (state_.offset == end_offset) {
           seen_end_opcode = true;
-          CALLBACK0(OnEndFunc);
-        } else {
-          CALLBACK0(OnEndExpr);
         }
         break;
 
