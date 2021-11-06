@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -15,11 +15,10 @@
 # limitations under the License.
 #
 
+"""Convert a JSON descrption of a spec test into a JavaScript."""
+
 import argparse
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+import io
 import json
 import os
 import re
@@ -163,14 +162,17 @@ def EscapeJSString(s):
 
 def IsValidJSConstant(const):
     type_ = const['type']
+    value = const['value']
+    if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
+        return True
     if type_ == 'i32':
         return True
     elif type_ == 'i64':
         return False
     elif type_ == 'f32':
-        return not IsNaNF32(int(const['value']))
+        return not IsNaNF32(int(value))
     elif type_ == 'f64':
-        return not IsNaNF64(int(const['value']))
+        return not IsNaNF64(int(value))
 
 
 def IsValidJSAction(action):
@@ -184,8 +186,7 @@ def IsValidJSCommand(command):
         expected = command['expected']
         return (IsValidJSAction(action) and
                 all(IsValidJSConstant(x) for x in expected))
-    elif type_ in ('assert_return_canonical_nan', 'assert_return_arithmetic_nan',
-                   'assert_trap', 'assert_exhaustion'):
+    elif type_ in ('assert_trap', 'assert_exhaustion'):
         return IsValidJSAction(action)
 
 
@@ -199,8 +200,7 @@ def CollectInvalidModuleCommands(commands):
             module_name = command.get('name')
             if module_name:
                 module_map[module_name] = pair
-        elif command['type'] in ('assert_return', 'assert_return_canonical_nan',
-                                 'assert_return_arithmetic_nan', 'assert_trap',
+        elif command['type'] in ('assert_return', 'assert_trap',
                                  'assert_exhaustion'):
             if IsValidJSCommand(command):
                 continue
@@ -250,15 +250,16 @@ class ModuleExtender(object):
             self._Action(command['action'])
             for expected in command['expected']:
                 self._Reinterpret(expected['type'])
-                self._Constant(expected)
-                self._Reinterpret(expected['type'])
+                if expected['value'] in ('nan:canonical', 'nan:arithmetic'):
+                    self._NanBitmask(expected['value'] == 'nan:canonical', expected['type'])
+                    self._And(expected['type'])
+                    self._QuietNan(expected['type'])
+                else:
+                    self._Constant(expected)
+                    self._Reinterpret(expected['type'])
                 self._Eq(expected['type'])
                 self.lines.extend(['i32.eqz', 'br_if 0'])
             self.lines.extend(['return', 'end', 'unreachable', ')'])
-        elif command_type == 'assert_return_canonical_nan':
-            self._AssertReturnNan(new_field, command, True)
-        elif command_type == 'assert_return_arithmetic_nan':
-            self._AssertReturnNan(new_field, command, False)
         elif command_type in ('assert_trap', 'assert_exhaustion'):
             self.lines.append('(func (export "%s")' % new_field)
             self._Action(command['action'])
@@ -270,22 +271,6 @@ class ModuleExtender(object):
         command['action']['field'] = new_field
         command['action']['args'] = []
         command['expected'] = []
-
-    def _AssertReturnNan(self, new_field, command, canonical):
-        type_ = command['expected'][0]['type']
-        self.lines.append('(func (export "%s")' % new_field)
-        self.lines.append('block')
-        self._Action(command['action'])
-        self._Reinterpret(type_)
-        self._NanBitmask(canonical, type_)
-        self._And(type_)
-        self._QuietNan(type_)
-        self._Eq(type_)
-        self.lines.extend(
-            ['i32.eqz', 'br_if 0', 'return', 'end', 'unreachable', ')'])
-
-        # Change the command to assert_return, it won't return NaN anymore.
-        command['type'] = 'assert_return'
 
     def _GetExports(self, wat):
         result = {}
@@ -354,14 +339,16 @@ class ModuleExtender(object):
     def _Constant(self, const):
         inst = None
         type_ = const['type']
+        value = const['value']
+        assert value not in ('nan:canonical', 'nan:arithmetic')
         if type_ == 'i32':
-            inst = 'i32.const %s' % const['value']
+            inst = 'i32.const %s' % value
         elif type_ == 'i64':
-            inst = 'i64.const %s' % const['value']
+            inst = 'i64.const %s' % value
         elif type_ == 'f32':
-            inst = F32ToWasm(int(const['value']))
+            inst = F32ToWasm(int(value))
         elif type_ == 'f64':
-            inst = F64ToWasm(int(const['value']))
+            inst = F64ToWasm(int(value))
         self.lines.append(inst)
 
     def _RunWasm2Wat(self, wasm_path):
@@ -401,8 +388,6 @@ class JSWriter(object):
             'assert_unlinkable': self._WriteAssertModuleCommand,
             'assert_uninstantiable': self._WriteAssertModuleCommand,
             'assert_return': self._WriteAssertReturnCommand,
-            'assert_return_canonical_nan': self._WriteAssertActionCommand,
-            'assert_return_arithmetic_nan': self._WriteAssertActionCommand,
             'assert_trap': self._WriteAssertActionCommand,
             'assert_exhaustion': self._WriteAssertActionCommand,
         }
@@ -461,13 +446,15 @@ class JSWriter(object):
     def _Constant(self, const):
         assert IsValidJSConstant(const), 'Invalid JS const: %s' % const
         type_ = const['type']
-        value = int(const['value'])
+        value = const['value']
+        if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
+            return value
         if type_ == 'i32':
-            return I32ToJS(value)
+            return I32ToJS(int(value))
         elif type_ == 'f32':
-            return F32ToJS(value)
+            return F32ToJS(int(value))
         elif type_ == 'f64':
-            return F64ToJS(value)
+            return F64ToJS(int(value))
         else:
             assert False
 
@@ -488,7 +475,7 @@ class JSWriter(object):
 
 
 def main(args):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
     parser.add_argument('-P', '--prefix', metavar='PATH', help='prefix file.',
                         default=os.path.join(SCRIPT_DIR, 'gen-spec-prefix.js'))
@@ -532,10 +519,9 @@ def main(args):
             if assert_commands:
                 wasm_path = os.path.join(json_dir, module_command['filename'])
                 new_module_filename = extender.Extend(wasm_path, assert_commands)
-                module_command['filename'] = os.path.relpath(new_module_filename,
-                                                             json_dir)
+                module_command['filename'] = new_module_filename
 
-        output = StringIO()
+        output = io.StringIO()
         if options.prefix:
             with open(options.prefix) as prefix_file:
                 output.write(prefix_file.read())

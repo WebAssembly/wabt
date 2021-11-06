@@ -1,0 +1,54 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (tag $e)
+  (func
+    try $l1
+      nop
+    catch $e
+      block $l2
+        try $l3
+          nop
+        catch $e
+          try $l4
+            rethrow $l3
+            rethrow 1
+            rethrow $l1
+            rethrow 3
+          catch $e
+            rethrow $l4
+            rethrow 0
+            rethrow $l3
+            rethrow 1
+            rethrow $l1
+            rethrow 3
+          end
+        end
+      end
+    end)
+
+  (func
+    try $l1
+      nop
+    catch_all
+      block $l2
+        try $l3
+          nop
+        catch_all
+          try $l4
+            rethrow $l3
+            rethrow 1
+            rethrow $l1
+            rethrow 3
+          catch_all
+            rethrow $l4
+            rethrow 0
+            rethrow $l3
+            rethrow 1
+            rethrow $l1
+            rethrow 3
+          end
+        end
+      end
+    end)
+  )

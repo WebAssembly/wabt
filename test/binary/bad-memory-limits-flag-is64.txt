@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(MEMORY) {
+  count[1]
+  flags[4]
+}
+(;; STDERR ;;;
+000000c: error: memory64 not allowed
+000000c: error: memory64 not allowed
+;;; STDERR ;;)

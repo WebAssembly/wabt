@@ -1,4 +1,5 @@
 ;;; TOOL: run-gen-wasm-interp
+;;; ARGS1: --disable-bulk-memory
 ;;; ERROR: 1
 magic
 version
@@ -14,5 +15,5 @@ section(DATA) {
   data[str("overflow")]
 }
 (;; STDERR ;;;
-error: data segment is out of bounds: [0, 8) >= max value 0
+error initializing module: out of bounds memory access: data segment is out of bounds: [0, 8) >= max value 0
 ;;; STDERR ;;)

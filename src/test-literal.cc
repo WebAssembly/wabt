@@ -426,13 +426,13 @@ TEST(ParseUint64, Overflow) {
 }
 
 TEST(ParseUint128, Basic) {
-  AssertUint128Equals({{0, 0, 0, 0}}, "0");
-  AssertUint128Equals({{1, 0, 0, 0}}, "1");
-  AssertUint128Equals({{0x100f0e0d, 0x0c0b0a09, 0x08070605, 0x04030201}},
+  AssertUint128Equals({0, 0, 0, 0}, "0");
+  AssertUint128Equals({1, 0, 0, 0}, "1");
+  AssertUint128Equals({0x100f0e0d, 0x0c0b0a09, 0x08070605, 0x04030201},
                       "5332529520247008778714484145835150861");
-  AssertUint128Equals({{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}},
+  AssertUint128Equals({0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff},
                       "340282366920938463463374607431768211455");
-  AssertUint128Equals({{0, 0, 1, 0}}, "18446744073709551616");
+  AssertUint128Equals({0, 0, 1, 0}, "18446744073709551616");
 }
 
 TEST(ParseUint128, Invalid) {
@@ -808,22 +808,21 @@ void AssertWriteUint128Equals(const v128& value, const std::string& expected) {
 }
 
 TEST(WriteUint128, Basic) {
-  AssertWriteUint128Equals({{0, 0, 0, 0}}, "0");
-  AssertWriteUint128Equals({{1, 0, 0, 0}}, "1");
-  AssertWriteUint128Equals({{0x100f0e0d, 0x0c0b0a09, 0x08070605, 0x04030201}},
+  AssertWriteUint128Equals({0, 0, 0, 0}, "0");
+  AssertWriteUint128Equals({1, 0, 0, 0}, "1");
+  AssertWriteUint128Equals({0x100f0e0d, 0x0c0b0a09, 0x08070605, 0x04030201},
                            "5332529520247008778714484145835150861");
-  AssertWriteUint128Equals({{0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff}},
+  AssertWriteUint128Equals({0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff},
                            "272314856204801878456120017448021860915");
-  AssertWriteUint128Equals({{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}},
+  AssertWriteUint128Equals({0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff},
                            "340282366920938463463374607431768211455");
-  AssertWriteUint128Equals({{0, 0, 1, 0}}, "18446744073709551616");
+  AssertWriteUint128Equals({0, 0, 1, 0}, "18446744073709551616");
 }
 
 TEST(WriteUint128, BufferTooSmall) {
   {
     char buffer[20];
-    WriteUint128(buffer, 20,
-                 {{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}});
+    WriteUint128(buffer, 20, {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff});
     ASSERT_EQ(buffer[19], '\0');
     std::string actual(buffer, buffer + 19);
     ASSERT_EQ("3402823669209384634", actual);
@@ -831,7 +830,7 @@ TEST(WriteUint128, BufferTooSmall) {
 
   {
     char buffer[3];
-    WriteUint128(buffer, 3, {{123, 0, 0, 0}});
+    WriteUint128(buffer, 3, {123, 0, 0, 0});
     ASSERT_EQ(buffer[0], '1');
     ASSERT_EQ(buffer[1], '2');
     ASSERT_EQ(buffer[2], '\0');

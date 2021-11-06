@@ -1,0 +1,12 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/memory_grow64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64/memory_grow64.wast:15: assert_trap passed: out of bounds memory access: access at 0+4 >= max value 0
+out/test/spec/memory64/memory_grow64.wast:16: assert_trap passed: out of bounds memory access: access at 0+4 >= max value 0
+out/test/spec/memory64/memory_grow64.wast:17: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 0
+out/test/spec/memory64/memory_grow64.wast:18: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 0
+out/test/spec/memory64/memory_grow64.wast:24: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory64/memory_grow64.wast:25: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+45/45 tests passed.
+;;; STDOUT ;;)

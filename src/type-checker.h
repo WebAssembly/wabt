@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "src/common.h"
+#include "src/feature.h"
 #include "src/opcode.h"
 
 namespace wabt {
@@ -46,8 +47,7 @@ class TypeChecker {
     bool unreachable;
   };
 
-  TypeChecker() = default;
-  explicit TypeChecker(const ErrorCallback&);
+  explicit TypeChecker(const Features& features) : features_(features) {}
 
   void set_error_callback(const ErrorCallback& error_callback) {
     error_callback_ = error_callback;
@@ -57,63 +57,70 @@ class TypeChecker {
 
   bool IsUnreachable();
   Result GetLabel(Index depth, Label** out_label);
+  Result GetRethrowLabel(Index depth, Label** out_label);
 
   Result BeginFunction(const TypeVector& sig);
-  Result OnAtomicLoad(Opcode);
-  Result OnAtomicNotify(Opcode);
-  Result OnAtomicStore(Opcode);
-  Result OnAtomicRmw(Opcode);
-  Result OnAtomicRmwCmpxchg(Opcode);
-  Result OnAtomicWait(Opcode);
+  Result OnAtomicFence(uint32_t consistency_model);
+  Result OnAtomicLoad(Opcode, const Limits& limits);
+  Result OnAtomicNotify(Opcode, const Limits& limits);
+  Result OnAtomicStore(Opcode, const Limits& limits);
+  Result OnAtomicRmw(Opcode, const Limits& limits);
+  Result OnAtomicRmwCmpxchg(Opcode, const Limits& limits);
+  Result OnAtomicWait(Opcode, const Limits& limits);
   Result OnBinary(Opcode);
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
-  Result OnBrOnExn(Index depth, const TypeVector& types);
   Result BeginBrTable();
   Result OnBrTableTarget(Index depth);
   Result EndBrTable();
   Result OnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types);
+  Result OnFuncRef(Index* out_index);
   Result OnReturnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnCatch();
+  Result OnCatch(const TypeVector& sig);
   Result OnCompare(Opcode);
   Result OnConst(Type);
   Result OnConvert(Opcode);
+  Result OnDelegate(Index depth);
   Result OnDrop();
   Result OnElse();
   Result OnEnd();
   Result OnGlobalGet(Type);
   Result OnGlobalSet(Type);
   Result OnIf(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnLoad(Opcode);
+  Result OnLoad(Opcode, const Limits& limits);
   Result OnLocalGet(Type);
   Result OnLocalSet(Type);
   Result OnLocalTee(Type);
   Result OnLoop(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnMemoryCopy();
+  Result OnMemoryCopy(const Limits& limits);
   Result OnDataDrop(Index);
-  Result OnMemoryFill();
-  Result OnMemoryGrow();
-  Result OnMemoryInit(Index);
-  Result OnMemorySize();
+  Result OnMemoryFill(const Limits& limits);
+  Result OnMemoryGrow(const Limits& limits);
+  Result OnMemoryInit(Index, const Limits& limits);
+  Result OnMemorySize(const Limits& limits);
   Result OnTableCopy();
   Result OnElemDrop(Index);
-  Result OnTableInit(Index);
-  Result OnTableGet(Index);
-  Result OnTableSet(Index);
-  Result OnTableGrow(Index);
-  Result OnTableSize(Index);
-  Result OnRefNullExpr();
+  Result OnTableInit(Index, Index);
+  Result OnTableGet(Type elem_type);
+  Result OnTableSet(Type elem_type);
+  Result OnTableGrow(Type elem_type);
+  Result OnTableSize();
+  Result OnTableFill(Type elem_type);
+  Result OnRefFuncExpr(Index func_index);
+  Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
-  Result OnRethrow();
+  Result OnRethrow(Index depth);
   Result OnReturn();
-  Result OnSelect();
+  Result OnSelect(const TypeVector& result_types);
   Result OnSimdLaneOp(Opcode, uint64_t);
+  Result OnSimdLoadLane(Opcode, const Limits& limits, uint64_t);
+  Result OnSimdStoreLane(Opcode, const Limits& limits, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
-  Result OnStore(Opcode);
+  Result OnStore(Opcode, const Limits& limits);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);
@@ -133,6 +140,7 @@ class TypeChecker {
                  const TypeVector& result_types);
   Result PopLabel();
   Result CheckLabelType(Label* label, LabelType label_type);
+  Result Check2LabelTypes(Label* label, LabelType label_type1, LabelType label_type2);
   Result GetThisFunctionLabel(Label **label);
   Result PeekType(Index depth, Type* out_type);
   Result PeekAndCheckType(Index depth, Type expected);
@@ -147,20 +155,25 @@ class TypeChecker {
   Result PopAndCheckCall(const TypeVector& param_types,
                          const TypeVector& result_types,
                          const char* desc);
-    Result PopAndCheck1Type(Type expected, const char* desc);
+  Result PopAndCheck1Type(Type expected, const char* desc);
   Result PopAndCheck2Types(Type expected1, Type expected2, const char* desc);
   Result PopAndCheck3Types(Type expected1,
                            Type expected2,
                            Type expected3,
                            const char* desc);
-  Result CheckOpcode1(Opcode opcode);
-  Result CheckOpcode2(Opcode opcode);
-  Result CheckOpcode3(Opcode opcode);
+  Result CheckOpcode1(Opcode opcode,
+                      const Limits* limits = nullptr,
+                      bool has_address_operands = false);
+  Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
+  Result CheckOpcode3(Opcode opcode,
+                      const Limits* limits1 = nullptr,
+                      const Limits* limits2 = nullptr,
+                      const Limits* limits3 = nullptr);
   Result OnEnd(Label* label, const char* sig_desc, const char* end_desc);
 
   template <typename... Args>
   void PrintStackIfFailed(Result result, const char* desc, Args... args) {
-    // Minor optimzation, check result before constructing the vector to pass
+    // Minor optimization, check result before constructing the vector to pass
     // to the other overload of PrintStackIfFailed.
     if (Failed(result)) {
       PrintStackIfFailed(result, desc, {args...});
@@ -175,6 +188,7 @@ class TypeChecker {
   // Cache the expected br_table signature. It will be initialized to `nullptr`
   // to represent "any".
   TypeVector* br_table_sig_ = nullptr;
+  Features features_;
 };
 
 }  // namespace wabt

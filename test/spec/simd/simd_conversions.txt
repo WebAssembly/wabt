@@ -1,0 +1,179 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_conversions.wast
+(;; STDOUT ;;;
+out/test/spec/simd/simd_conversions.wast:605: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.1.wat:1:22: error: unexpected token "i32x4.trunc_sat_f32x4", expected an instr.
+  (func (result v128) (i32x4.trunc_sat_f32x4 (v128.const f32x4 0.0 0.0 0.0 0.0)))
+                       ^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:608: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.2.wat:1:22: error: unexpected token "i32x4.trunc_s_sat_f32x4", expected an instr.
+  (func (result v128) (i32x4.trunc_s_sat_f32x4 (v128.const f32x4 -2.0 -1.0 1.0 ...
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:611: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.3.wat:1:22: error: unexpected token "i32x4.trunc_u_sat_f32x4", expected an instr.
+  (func (result v128) (i32x4.trunc_u_sat_f32x4 (v128.const f32x4 -2.0 -1.0 1.0 ...
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:614: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.4.wat:1:22: error: unexpected token "i32x4.convert_f32x4", expected an instr.
+  (func (result v128) (i32x4.convert_f32x4 (v128.const f32x4 -1 0 1 2)))
+                       ^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:617: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.5.wat:1:22: error: unexpected token "i32x4.convert_s_f32x4", expected an instr.
+  (func (result v128) (i32x4.convert_s_f32x4 (v128.const f32x4 -1 0 1 2)))
+                       ^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:620: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.6.wat:1:22: error: unexpected token "i32x4.convert_u_f32x4", expected an instr.
+  (func (result v128) (i32x4.convert_u_f32x4 (v128.const f32x4 -1 0 1 2)))
+                       ^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:624: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.7.wat:1:22: error: unexpected token "i64x2.trunc_sat_f64x2_s", expected an instr.
+  (func (result v128) (i64x2.trunc_sat_f64x2_s (v128.const f64x2 0.0 0.0)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:627: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.8.wat:1:22: error: unexpected token "i64x2.trunc_sat_f64x2_u", expected an instr.
+  (func (result v128) (i64x2.trunc_sat_f64x2_u (v128.const f64x2 -2.0 -1.0)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:630: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.9.wat:1:22: error: unexpected token "f64x2.convert_i64x2_s", expected an instr.
+  (func (result v128) (f64x2.convert_i64x2_s (v128.const i64x2 1 2)))
+                       ^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:633: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.10.wat:1:22: error: unexpected token "f64x2.convert_i64x2_u", expected an instr.
+  (func (result v128) (f64x2.convert_i64x2_u (v128.const i64x2 1 2)))
+                       ^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:637: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.11.wat:1:22: error: unexpected token "i8x16.narrow_i16x8", expected an instr.
+  (func (result v128) (i8x16.narrow_i16x8 (v128.const i16x8 0 0 0 0 0 0 0 0) (v...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:640: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.12.wat:1:22: error: unexpected token "i16x8.narrow_i8x16", expected an instr.
+  (func (result v128) (i16x8.narrow_i8x16 (v128.const i16x8 0 0 0 0 0 0 0 0) (v...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:643: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.13.wat:1:22: error: unexpected token "i16x8.narrow_i8x16_s", expected an instr.
+  (func (result v128) (i16x8.narrow_i8x16_s (v128.const i8x16 0 0 0 0 0 0 0 0 0...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:646: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.14.wat:1:22: error: unexpected token "i16x8.narrow_i8x16_u", expected an instr.
+  (func (result v128) (i16x8.narrow_i8x16_u (v128.const i8x16 0 0 0 0 0 0 0 0 0...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:649: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.15.wat:1:22: error: unexpected token "i16x8.narrow_i32x4", expected an instr.
+  (func (result v128) (i16x8.narrow_i32x4 (v128.const i16x8 0 0 0 0 0 0 0 0) (v...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:652: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.16.wat:1:22: error: unexpected token "i32x4.narrow_i16x8", expected an instr.
+  (func (result v128) (i32x4.narrow_i16x8 (v128.const i16x8 0 0 0 0 0 0 0 0) (v...
+                       ^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:655: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.17.wat:1:22: error: unexpected token "i32x4.narrow_i16x8_s", expected an instr.
+  (func (result v128) (i32x4.narrow_i16x8_s (v128.const i8x16 0 0 0 0 0 0 0 0 0...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:658: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.18.wat:1:22: error: unexpected token "i32x4.narrow_i16x8_u", expected an instr.
+  (func (result v128) (i32x4.narrow_i16x8_u (v128.const i8x16 0 0 0 0 0 0 0 0 0...
+                       ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:662: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.19.wat:1:22: error: unexpected token "i16x8.extend_low_i8x16", expected an instr.
+  (func (result v128) (i16x8.extend_low_i8x16 (v128.const i8x16 0 0 0 0 0 0 0 0...
+                       ^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:665: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.20.wat:1:22: error: unexpected token "i8x16.extend_low_i16x8_s", expected an instr.
+  (func (result v128) (i8x16.extend_low_i16x8_s (v128.const i16x8 0 0 0 0 0 0 0...
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:668: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.21.wat:1:22: error: unexpected token "i8x16.extend_low_i16x8_u", expected an instr.
+  (func (result v128) (i8x16.extend_low_i16x8_u (v128.const i16x8 0 0 0 0 0 0 0...
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:671: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.22.wat:1:22: error: unexpected token "i16x8.extend_high_i8x16", expected an instr.
+  (func (result v128) (i16x8.extend_high_i8x16 (v128.const i8x16 0 0 0 0 0 0 0 ...
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:674: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.23.wat:1:22: error: unexpected token "i8x16.extend_high_i16x8_s", expected an instr.
+  (func (result v128) (i8x16.extend_high_i16x8_s (v128.const i16x8 0 0 0 0 0 0 ...
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:677: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.24.wat:1:22: error: unexpected token "i8x16.extend_high_i16x8_u", expected an instr.
+  (func (result v128) (i8x16.extend_high_i16x8_u (v128.const i16x8 0 0 0 0 0 0 ...
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:680: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.25.wat:1:22: error: unexpected token "i32x4.extend_low_i16x8", expected an instr.
+  (func (result v128) (i32x4.extend_low_i16x8 (v128.const i16x8 0 0 0 0 0 0 0 0)))
+                       ^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:683: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.26.wat:1:22: error: unexpected token "i16x8.extend_low_i32x4_s", expected an instr.
+  (func (result v128) (i16x8.extend_low_i32x4_s (v128.const i32x4 0 0 0 0)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:686: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.27.wat:1:22: error: unexpected token "i16x8.extend_low_i32x4_u", expected an instr.
+  (func (result v128) (i16x8.extend_low_i32x4_u (v128.const i32x4 0 0 0 0)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:689: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.28.wat:1:22: error: unexpected token "i32x4.extend_high_i16x8", expected an instr.
+  (func (result v128) (i32x4.extend_high_i16x8 (v128.const i16x8 0 0 0 0 0 0 0 ...
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:692: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.29.wat:1:22: error: unexpected token "i16x8.extend_high_i32x4_s", expected an instr.
+  (func (result v128) (i16x8.extend_high_i32x4_s (v128.const i32x4 0 0 0 0)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:695: assert_malformed passed:
+  out/test/spec/simd/simd_conversions/simd_conversions.30.wat:1:22: error: unexpected token "i16x8.extend_high_i32x4_u", expected an instr.
+  (func (result v128) (i16x8.extend_high_i32x4_u (v128.const i32x4 0 0 0 0)))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd/simd_conversions.wast:702: assert_invalid passed:
+  error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got [i32]
+  000001d: error: OnConvertExpr callback failed
+out/test/spec/simd/simd_conversions.wast:703: assert_invalid passed:
+  error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got [i64]
+  000001d: error: OnConvertExpr callback failed
+out/test/spec/simd/simd_conversions.wast:704: assert_invalid passed:
+  error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got [i32]
+  000001d: error: OnConvertExpr callback failed
+out/test/spec/simd/simd_conversions.wast:705: assert_invalid passed:
+  error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got [i64]
+  000001d: error: OnConvertExpr callback failed
+out/test/spec/simd/simd_conversions.wast:707: assert_invalid passed:
+  error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [i32, i64]
+  000001e: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:708: assert_invalid passed:
+  error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [i32, i64]
+  000001e: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:709: assert_invalid passed:
+  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [f32, f64]
+  0000029: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:710: assert_invalid passed:
+  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [f32, f64]
+  0000029: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:821: assert_invalid passed:
+  error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got []
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/simd/simd_conversions.wast:829: assert_invalid passed:
+  error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got []
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/simd/simd_conversions.wast:837: assert_invalid passed:
+  error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:845: assert_invalid passed:
+  error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:853: assert_invalid passed:
+  error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:861: assert_invalid passed:
+  error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:869: assert_invalid passed:
+  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:877: assert_invalid passed:
+  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:885: assert_invalid passed:
+  error: type mismatch in i16x8.narrow_i32x4_u, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_conversions.wast:893: assert_invalid passed:
+  error: type mismatch in i16x8.narrow_i32x4_u, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+280/280 tests passed.
+;;; STDOUT ;;)

@@ -3,14 +3,14 @@
 ;;; ARGS1: --headers -x
 (module
   (import "bar" "foo" (func $foo)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
@@ -32,12 +32,12 @@
 000001c: 00                                        ; section size (guess)
 000001d: 04                                        ; string length
 000001e: 6e61 6d65                                name  ; custom section name
-0000022: 01                                        ; function name type
+0000022: 01                                        ; name subsection type
 0000023: 00                                        ; subsection size (guess)
-0000024: 01                                        ; num functions
-0000025: 00                                        ; function index
+0000024: 01                                        ; num names
+0000025: 00                                        ; elem index
 0000026: 03                                        ; string length
-0000027: 666f 6f                                  foo  ; func name 0
+0000027: 666f 6f                                  foo  ; elem name 0
 0000023: 06                                        ; FIXUP subsection size
 000002a: 02                                        ; local name type
 000002b: 00                                        ; subsection size (guess)
@@ -46,6 +46,8 @@
 000002e: 00                                        ; num locals
 000002b: 03                                        ; FIXUP subsection size
 000001c: 12                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 debug-import-names.wasm:	file format wasm 0x1
 

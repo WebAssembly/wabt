@@ -48,6 +48,11 @@ class WastParser {
   std::unique_ptr<Script> ReleaseScript();
 
  private:
+  enum class ConstType {
+    Normal,
+    Expectation,
+  };
+
   void ErrorUnlessOpcodeEnabled(const Token&);
 
   // Print an error message listing the expected tokens, as well as an example
@@ -113,7 +118,7 @@ class WastParser {
   // synchronized.
   Result Synchronize(SynchronizeFunc);
 
-  void ParseBindVarOpt(std::string* name);
+  bool ParseBindVarOpt(std::string* name);
   Result ParseVar(Var* out_var);
   bool ParseVarOpt(Var* out_var, Var default_var = Var());
   Result ParseOffsetExpr(ExprList* out_expr_list);
@@ -121,23 +126,26 @@ class WastParser {
   Result ParseTextList(std::vector<uint8_t>* out_data);
   bool ParseTextListOpt(std::vector<uint8_t>* out_data);
   Result ParseVarList(VarVector* out_var_list);
-  Result ParseElemExprVarList(ElemExprVector* out_list);
-  bool ParseElemExprVarListOpt(ElemExprVector* out_list);
+  bool ParseElemExprOpt(ExprList* out_elem_expr);
+  bool ParseElemExprListOpt(ExprListVector* out_list);
+  bool ParseElemExprVarListOpt(ExprListVector* out_list);
   Result ParseValueType(Type* out_type);
   Result ParseValueTypeList(TypeVector* out_type_list);
+  Result ParseRefKind(Type* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
   Result ParseQuotedText(std::string* text);
-  bool ParseOffsetOpt(uint32_t* offset);
-  bool ParseAlignOpt(uint32_t* align);
+  bool ParseOffsetOpt(Address* offset);
+  bool ParseAlignOpt(Address* align);
+  Result ParseLimitsIndex(Limits*);
   Result ParseLimits(Limits*);
-  Result ParseNat(uint64_t*);
+  Result ParseNat(uint64_t*, bool is_64);
 
   Result ParseModuleFieldList(Module*);
   Result ParseModuleField(Module*);
   Result ParseDataModuleField(Module*);
   Result ParseElemModuleField(Module*);
-  Result ParseEventModuleField(Module*);
+  Result ParseTagModuleField(Module*);
   Result ParseExportModuleField(Module*);
   Result ParseFuncModuleField(Module*);
   Result ParseTypeModuleField(Module*);
@@ -163,9 +171,12 @@ class WastParser {
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
   Result ParsePlainInstr(std::unique_ptr<Expr>*);
-  Result ParseConst(Const*);
-  Result ParseHostRef(Const*);
-  Result ParseConstList(ConstVector*);
+  Result ParseF32(Const*, ConstType type);
+  Result ParseF64(Const*, ConstType type);
+  Result ParseConst(Const*, ConstType type);
+  Result ParseExternref(Const*);
+  Result ParseExpectedNan(ExpectedNan* expected);
+  Result ParseConstList(ConstVector*, ConstType type);
   Result ParseBlockInstr(std::unique_ptr<Expr>*);
   Result ParseLabelOpt(std::string*);
   Result ParseEndLabelOpt(const std::string&);
@@ -173,12 +184,17 @@ class WastParser {
   Result ParseBlock(Block*);
   Result ParseExprList(ExprList*);
   Result ParseExpr(ExprList*);
+  Result ParseCatchInstrList(CatchVector* catches);
+  Result ParseCatchExprList(CatchVector* catches);
   Result ParseGlobalType(Global*);
+  Result ParseField(Field*);
+  Result ParseFieldList(std::vector<Field>*);
 
   template <typename T>
   Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
   Result ParsePlainLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
+  Result ParseSimdLane(Location, uint64_t*);
 
   Result ParseCommandList(Script*, CommandPtrVector*);
   Result ParseCommand(Script*, CommandPtr*);
@@ -186,13 +202,14 @@ class WastParser {
   Result ParseAssertInvalidCommand(CommandPtr*);
   Result ParseAssertMalformedCommand(CommandPtr*);
   Result ParseAssertReturnCommand(CommandPtr*);
-  Result ParseAssertReturnArithmeticNanCommand(CommandPtr*);
-  Result ParseAssertReturnCanonicalNanCommand(CommandPtr*);
+  Result ParseAssertReturnFuncCommand(CommandPtr*);
   Result ParseAssertTrapCommand(CommandPtr*);
   Result ParseAssertUnlinkableCommand(CommandPtr*);
   Result ParseActionCommand(CommandPtr*);
   Result ParseModuleCommand(Script*, CommandPtr*);
   Result ParseRegisterCommand(CommandPtr*);
+  Result ParseInputCommand(CommandPtr*);
+  Result ParseOutputCommand(CommandPtr*);
 
   Result ParseAction(ActionPtr*);
   Result ParseScriptModule(std::unique_ptr<ScriptModule>*);
@@ -206,7 +223,7 @@ class WastParser {
   template <typename T>
   Result ParseAssertScriptModuleCommand(TokenType, CommandPtr*);
 
-  Result ParseSimdV128Const(Const*, TokenType);
+  Result ParseSimdV128Const(Const*, TokenType, ConstType);
 
   void CheckImportOrdering(Module*);
 

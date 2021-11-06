@@ -3,10 +3,13 @@
 (module
   (func (result i32)
     try (result i32)
+      i32.const 6
+    end
+    drop
+    try (result i32)
       nop
       i32.const 7
-    catch
-      drop
+    catch_all
       i32.const 8
     end
   )
@@ -15,10 +18,14 @@
 (module
   (type (;0;) (func (result i32)))
   (func (;0;) (type 0) (result i32)
+    (drop
+      (try (result i32)  ;; label = @1
+        (do
+          (i32.const 6))))
     (try (result i32)  ;; label = @1
-      (nop)
-      (i32.const 7)
-      (catch
-        (drop)
+      (do
+        (nop)
+        (i32.const 7))
+      (catch_all
         (i32.const 8)))))
 ;;; STDOUT ;;)

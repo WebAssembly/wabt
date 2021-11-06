@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -26,11 +26,8 @@ REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 EXECUTABLES = [
     'wat2wasm', 'wast2json', 'wasm2wat', 'wasm-objdump', 'wasm-interp',
     'wasm-opcodecnt', 'wat-desugar', 'spectest-interp', 'wasm-validate',
-    'wasm2c', 'wasm-strip'
+    'wasm2c', 'wasm-strip', 'wasm-decompile'
 ]
-
-GEN_WASM_PY = os.path.join(SCRIPT_DIR, 'gen-wasm.py')
-GEN_SPEC_JS_PY = os.path.join(SCRIPT_DIR, 'gen-spec-js.py')
 
 
 def GetDefaultPath():
@@ -110,3 +107,7 @@ def GetWasm2CExecutable(override=None):
 
 def GetWasmStripExecutable(override=None):
     return FindExecutable('wasm-strip', override)
+
+
+def GetWasmDecompileExecutable(override=None):
+    return FindExecutable('wasm-decompile', override)

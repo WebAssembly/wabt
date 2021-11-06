@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] sig[0] }
+section(EXPORT) { count[1] str("foo") func_kind func[leb_u32(4294967295)] }
+section(CODE) { count[1] func { locals[0] } }
+(;; STDERR ;;;
+out/test/binary/bad-export-out-of-range/bad-export-out-of-range.wasm:000001f: error: function variable out of range: 4294967295 (max 1)
+out/test/binary/bad-export-out-of-range/bad-export-out-of-range.wasm:000001f: error: function variable out of range: 4294967295 (max 1)
+;;; STDERR ;;)

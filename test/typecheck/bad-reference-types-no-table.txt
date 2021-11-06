@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-reference-types
 ;;; ERROR: 1
 
 (module
@@ -11,10 +10,10 @@
   )
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-reference-types-no-table.txt:9:15: error: undefined table variable "$t"
+out/test/typecheck/bad-reference-types-no-table.txt:8:15: error: undefined table variable "$t"
     table.get $t
               ^^
-out/test/typecheck/bad-reference-types-no-table.txt:10:15: error: undefined table variable "$t"
+out/test/typecheck/bad-reference-types-no-table.txt:9:15: error: undefined table variable "$t"
     table.set $t
               ^^
 ;;; STDERR ;;)

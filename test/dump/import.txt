@@ -6,16 +6,16 @@
   (import "ignored" "test2" (func (param i32) (result i32)))
   (import "ignored" "testmem" (memory 0))
   (import "ignored" "testtable" (table 0 anyfunc))
-  (import "ignored" "testevent" (event (param i32)))
+  (import "ignored" "testtag" (tag (param i32)))
 )
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 03                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 04                                        ; num params
 000000d: 7f                                        ; i32
@@ -23,13 +23,13 @@
 000000f: 7d                                        ; f32
 0000010: 7c                                        ; f64
 0000011: 00                                        ; num results
-; type 1
+; func type 1
 0000012: 60                                        ; func
 0000013: 01                                        ; num params
 0000014: 7f                                        ; i32
 0000015: 01                                        ; num results
 0000016: 7f                                        ; i32
-; type 2
+; func type 2
 0000017: 60                                        ; func
 0000018: 01                                        ; num params
 0000019: 7f                                        ; i32
@@ -73,12 +73,14 @@
 ; import header 4
 0000066: 07                                        ; string length
 0000067: 6967 6e6f 7265 64                        ignored  ; import module name
-000006e: 09                                        ; string length
-000006f: 7465 7374 6576 656e 74                   testevent  ; import field name
-0000078: 04                                        ; import kind
-0000079: 00                                        ; event attribute
-000007a: 02                                        ; event signature index
-000001c: 5e                                        ; FIXUP section size
+000006e: 07                                        ; string length
+000006f: 7465 7374 7461 67                        testtag  ; import field name
+0000076: 04                                        ; import kind
+0000077: 00                                        ; tag attribute
+0000078: 02                                        ; tag signature index
+000001c: 5c                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 import.wasm:	file format wasm 0x1
 
@@ -92,8 +94,8 @@ Import[5]:
  - func[0] sig=0 <ignored.test> <- ignored.test
  - func[1] sig=1 <ignored.test2> <- ignored.test2
  - memory[0] pages: initial=0 <- ignored.testmem
- - table[0] elem_type=funcref init=0 max=0 <- ignored.testtable
- - event[0] sig=2 <ignored.testevent> <- ignored.testevent
+ - table[0] type=funcref initial=0 <- ignored.testtable
+ - tag[0] sig=2 <ignored.testtag> <- ignored.testtag
 
 Code Disassembly:
 

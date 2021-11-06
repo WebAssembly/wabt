@@ -1,11 +1,19 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
+  (tag (param i32))
+
+  ;; no catch
+  (func
+    try
+      nop
+    end)
+
   ;; bare
   (func
     try
       nop
-    catch
+    catch 0
       drop
     end)
 
@@ -13,7 +21,7 @@
   (func
     try $foo
       nop
-    catch
+    catch 0
       drop
     end)
 
@@ -21,7 +29,7 @@
   (func
     try (result i32)
       i32.const 1
-    catch
+    catch 0
       drop
       i32.const 2
     end

@@ -77,6 +77,8 @@ class Stream {
 
   void MoveData(size_t dst_offset, size_t src_offset, size_t size);
 
+  void Truncate(size_t size);
+
   void WABT_PRINTF_FORMAT(2, 3) Writef(const char* format, ...);
 
   // Specified as uint32_t instead of uint8_t so we can check if the value
@@ -134,11 +136,19 @@ class Stream {
   virtual Result MoveDataImpl(size_t dst_offset,
                               size_t src_offset,
                               size_t size) = 0;
+  virtual Result TruncateImpl(size_t size) = 0;
 
  private:
   template <typename T>
   void Write(const T& data, const char* desc, PrintChars print_chars) {
+#if WABT_BIG_ENDIAN
+    char tmp[sizeof(T)];
+    memcpy(tmp, &data, sizeof(tmp));
+    SwapBytesSized(tmp, sizeof(tmp));
+    WriteData(tmp, sizeof(tmp), desc, print_chars);
+#else
     WriteData(&data, sizeof(data), desc, print_chars);
+#endif
   }
 
   size_t offset_;
@@ -177,6 +187,7 @@ class MemoryStream : public Stream {
   Result MoveDataImpl(size_t dst_offset,
                       size_t src_offset,
                       size_t size) override;
+  Result TruncateImpl(size_t size) override;
 
  private:
   std::unique_ptr<OutputBuffer> buf_;
@@ -189,7 +200,7 @@ class FileStream : public Stream {
   explicit FileStream(FILE*, Stream* log_stream = nullptr);
   FileStream(FileStream&&);
   FileStream& operator=(FileStream&&);
-  ~FileStream();
+  ~FileStream() override;
 
   static std::unique_ptr<FileStream> CreateStdout();
   static std::unique_ptr<FileStream> CreateStderr();
@@ -203,6 +214,7 @@ class FileStream : public Stream {
   Result MoveDataImpl(size_t dst_offset,
                       size_t src_offset,
                       size_t size) override;
+  Result TruncateImpl(size_t size) override;
 
  private:
   FILE* file_;

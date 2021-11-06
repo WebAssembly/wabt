@@ -28,7 +28,7 @@ namespace wabt {
 class OptionParser {
  public:
   enum class HasArgument { No, Yes };
-  enum class ArgumentCount { One, OneOrMore };
+  enum class ArgumentCount { One, OneOrMore, ZeroOrMore };
 
   struct Option;
   typedef std::function<void(const char*)> Callback;
@@ -78,7 +78,6 @@ class OptionParser {
                  const char* metavar,
                  const char* help,
                  const Callback&);
-  void AddHelpOption();
 
  private:
   static int Match(const char* s, const std::string& full, bool has_argument);

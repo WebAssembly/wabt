@@ -97,32 +97,32 @@ out/test/spec/local_tee.wast:580: assert_invalid passed:
 out/test/spec/local_tee.wast:589: assert_invalid passed:
   error: type mismatch in local.tee, expected [i32] but got []
   000001f: error: OnLocalTeeExpr callback failed
-out/test/spec/local_tee.wast:602: assert_invalid passed:
-  error: invalid local_index: 3 (max 2)
-  000001d: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:606: assert_invalid passed:
-  error: invalid local_index: 14324343 (max 2)
-  0000020: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:611: assert_invalid passed:
-  error: invalid local_index: 2 (max 2)
-  000001b: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:615: assert_invalid passed:
-  error: invalid local_index: 714324343 (max 2)
-  0000021: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:620: assert_invalid passed:
-  error: invalid local_index: 3 (max 3)
-  000001e: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:624: assert_invalid passed:
-  error: invalid local_index: 214324343 (max 3)
-  0000021: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:629: assert_invalid passed:
+out/test/spec/local_tee.wast:599: assert_invalid passed:
   error: type mismatch in local.tee, expected [i32] but got [f32]
   0000021: error: OnLocalTeeExpr callback failed
-out/test/spec/local_tee.wast:633: assert_invalid passed:
+out/test/spec/local_tee.wast:603: assert_invalid passed:
   error: type mismatch in local.tee, expected [i32] but got [f32]
   0000022: error: OnLocalTeeExpr callback failed
-out/test/spec/local_tee.wast:637: assert_invalid passed:
+out/test/spec/local_tee.wast:607: assert_invalid passed:
   error: type mismatch in local.tee, expected [f64] but got [i64]
   0000020: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:615: assert_invalid passed:
+  0000000: error: local variable out of range (max 2)
+  000001f: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:619: assert_invalid passed:
+  0000000: error: local variable out of range (max 2)
+  0000022: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:624: assert_invalid passed:
+  0000000: error: local variable out of range (max 2)
+  000001d: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:628: assert_invalid passed:
+  0000000: error: local variable out of range (max 2)
+  0000021: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:633: assert_invalid passed:
+  0000000: error: local variable out of range (max 3)
+  0000020: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:637: assert_invalid passed:
+  0000000: error: local variable out of range (max 3)
+  0000023: error: OnLocalTeeExpr callback failed
 96/96 tests passed.
 ;;; STDOUT ;;)

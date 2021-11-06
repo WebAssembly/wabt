@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/WebAssembly/wabt.svg?branch=master)](https://travis-ci.org/WebAssembly/wabt) [![Windows status](https://ci.appveyor.com/api/projects/status/8vl5jwtk5ch6r84t/branch/master?svg=true)](https://ci.appveyor.com/project/WebAssembly/wabt/branch/master)
+[![Github CI Status](https://github.com/WebAssembly/wabt/workflows/CI/badge.svg)](https://github.com/WebAssembly/wabt)
 
 # WABT: The WebAssembly Binary Toolkit
 
@@ -8,6 +8,7 @@ WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
  - [**wasm2wat**](https://webassembly.github.io/wabt/doc/wasm2wat.1.html): the inverse of wat2wasm, translate from the binary format back to the text format (also known as a .wat)
  - [**wasm-objdump**](https://webassembly.github.io/wabt/doc/wasm-objdump.1.html): print information about a wasm binary. Similiar to objdump.
  - [**wasm-interp**](https://webassembly.github.io/wabt/doc/wasm-interp.1.html): decode and run a WebAssembly binary file using a stack-based interpreter
+ - [**wasm-decompile**](https://webassembly.github.io/wabt/doc/wasm-decompile.1.html): decompile a wasm binary into readable C-like syntax.
  - [**wat-desugar**](https://webassembly.github.io/wabt/doc/wat-desugar.1.html): parse .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and print "canonical" flat format
  - [**wasm2c**](https://webassembly.github.io/wabt/doc/wasm2c.1.html): convert a WebAssembly binary file to a C source and header
  - [**wasm-strip**](https://webassembly.github.io/wabt/doc/wasm-strip.1.html): remove sections of a WebAssembly binary file
@@ -36,25 +37,27 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 ## Supported Proposals
 
 * Proposal: Name and link to the WebAssembly proposal repo
-* flag: Flag to pass to the tool to enable support for the feature
+* flag: Flag to pass to the tool to enable/disable support for the feature
+* default: Whether the feature is enabled by default
 * binary: Whether wabt can read/write the binary format
 * text: Whether wabt can read/write the text format
 * validate: Whether wabt can validate the syntax
 * interpret: Whether wabt can execute these operations in `wasm-interp` or `spectest-interp`
 
-| Proposal | flag | binary | text | validate | interpret |
-| - | - | - | - | - | - |
-| [exception handling][] | `--enable-exceptions` | ✓ | ✓ | ✓ | ✓ |
-| [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ |
-| [nontrapping float-to-int conversions][] | `--enable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ |
-| [sign extension][] | `--enable-sign-extension` | ✓ | ✓ | ✓ | ✓ |
-| [simd][] | `--enable-simd` | ✓ | ✓ | ✓ | ✓ |
-| [threads][] | `--enable-threads` | ✓ | ✓ | ✓ | ✓ |
-| [multi-value][] | `--enable-multi-value` | ✓ | ✓ | ✓ | ✓ |
-| [tail-call][] | `--enable-tail-call` | ✓ | ✓ | ✓ | ✓ |
-| [bulk memory][] | `--enable-bulk-memory` | ✓ | ✓ | ✓ | ✓ |
-| [reference types][] | `--enable-reference-types` | ✓ | ✓ | ✓ | |
-| [annotations][] | `--enable-annotations` | | ✓ | | |
+| Proposal | flag | default | binary | text | validate | interpret |
+| - | - | - | - | - | - | - |
+| [exception handling][] | `--enable-exceptions` | | ✓ | ✓ | ✓ | ✓ |
+| [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [sign extension][] | `--disable-sign-extension` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [simd][] | `--disable-simd` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [threads][] | `--enable-threads` | | ✓ | ✓ | ✓ | ✓ |
+| [multi-value][] | `--disable-multi-value` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [tail-call][] | `--enable-tail-call` | | ✓ | ✓ | ✓ | ✓ |
+| [bulk memory][] | `--disable-bulk-memory` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [reference types][] | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [annotations][] | `--enable-annotations` | | | ✓ | | |
+| [memory64][] | `--enable-memory64` | | | | | |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
@@ -67,6 +70,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [bulk memory]: https://github.com/WebAssembly/bulk-memory-operations
 [reference types]: https://github.com/WebAssembly/reference-types
 [annotations]: https://github.com/WebAssembly/annotations
+[memory64]: https://github.com/WebAssembly/memory64
 
 ## Cloning
 
@@ -75,6 +79,7 @@ Clone as normal, but don't forget to get the submodules as well:
 ```console
 $ git clone --recursive https://github.com/WebAssembly/wabt
 $ cd wabt
+$ git submodule update --init
 ```
 
 This will fetch the testsuite and gtest repos, which are needed for some tests.
@@ -90,21 +95,24 @@ $ cmake ..
 $ cmake --build .
 ```
 
-This will produce build files using CMake's default build generator. Read the CMake
-documentation for more information.
+This will produce build files using CMake's default build generator. Read the
+CMake documentation for more information.
 
-**NOTE**: You must create a separate directory for the build artifacts (e.g. `build` above).
-Running `cmake` from the repo root directory will not work since the build produces an
-executable called `wasm2c` which conflicts with the `wasm2c` directory.
+**NOTE**: You must create a separate directory for the build artifacts (e.g.
+`build` above).  Running `cmake` from the repo root directory will not work
+since the build produces an executable called `wasm2c` which conflicts with the
+`wasm2c` directory.
 
 ## Building using the top-level `Makefile` (Linux and macOS)
 
-**NOTE**: Under the hood, this uses `make` to run CMake, which then calls `make` again.
-On some systems (typically macOS), this doesn't build properly. If you see these errors,
-you can build using CMake directly as described above.
+**NOTE**: Under the hood, this uses `make` to run CMake, which then calls
+`ninja` to perform that actual build.  On some systems (typically macOS), this
+doesn't build properly. If you see these errors, you can build using CMake
+directly as described above.
 
-You'll need [CMake](https://cmake.org). If you just run `make`, it will run CMake for you, 
-and put the result in `out/clang/Debug/` by default:
+You'll need [CMake](https://cmake.org) and [Ninja](https://ninja-build.org). If
+you just run `make`, it will run CMake for you, and put the result in
+`out/clang/Debug/` by default:
 
 > Note: If you are on macOS, you will need to use CMake version 3.2 or higher
 
@@ -119,9 +127,9 @@ There are many make targets available for other configurations as well. They
 are generated from every combination of a compiler, build type and
 configuration.
 
- - compilers: `gcc`, `clang`, `gcc-i686`, `gcc-fuzz`
+ - compilers: `gcc`, `clang`, `gcc-i686`, `emcc`
  - build types: `debug`, `release`
- - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `no-tests`
+ - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `fuzz`, `no-tests`
 
 They are combined with dashes, for example:
 
@@ -182,30 +190,26 @@ If you want to add new keywords, you'll need to install
 [gperf](https://www.gnu.org/software/gperf/). Before you upload your PR, please
 run `make update-gperf` to update the prebuilt C++ sources in `src/prebuilt/`.
 
-## Running wat2wasm and wast2json
+## Running wat2wasm
 
 Some examples:
 
 ```sh
 # parse and typecheck test.wat
-$ out/wat2wasm test.wat
+$ bin/wat2wasm test.wat
 
 # parse test.wat and write to binary file test.wasm
-$ out/wat2wasm test.wat -o test.wasm
+$ bin/wat2wasm test.wat -o test.wasm
 
 # parse spec-test.wast, and write verbose output to stdout (including the
 # meaning of every byte)
-$ out/wat2wasm spec-test.wast -v
-
-# parse spec-test.wast, and write files to spec-test.json. Modules are written
-# to spec-test.0.wasm, spec-test.1.wasm, etc.
-$ out/wast2json spec-test.wast -o spec-test.json
+$ bin/wat2wasm spec-test.wast -v
 ```
 
 You can use `--help` to get additional help:
 
 ```console
-$ out/wat2wasm --help
+$ bin/wat2wasm --help
 ```
 
 Or try the [online demo](https://webassembly.github.io/wabt/demo/wat2wasm/).
@@ -216,16 +220,16 @@ Some examples:
 
 ```sh
 # parse binary file test.wasm and write text file test.wat
-$ out/wasm2wat test.wasm -o test.wat
+$ bin/wasm2wat test.wasm -o test.wat
 
 # parse test.wasm and write test.wat
-$ out/wasm2wat test.wasm -o test.wat
+$ bin/wasm2wat test.wasm -o test.wat
 ```
 
 You can use `--help` to get additional help:
 
 ```console
-$ out/wasm2wat --help
+$ bin/wasm2wat --help
 ```
 
 Or try the [online demo](https://webassembly.github.io/wabt/demo/wasm2wat/).
@@ -236,27 +240,49 @@ Some examples:
 
 ```sh
 # parse binary file test.wasm, and type-check it
-$ out/wasm-interp test.wasm
+$ bin/wasm-interp test.wasm
 
 # parse test.wasm and run all its exported functions
-$ out/wasm-interp test.wasm --run-all-exports
+$ bin/wasm-interp test.wasm --run-all-exports
 
 # parse test.wasm, run the exported functions and trace the output
-$ out/wasm-interp test.wasm --run-all-exports --trace
+$ bin/wasm-interp test.wasm --run-all-exports --trace
 
 # parse test.json and run the spec tests
-$ out/wasm-interp test.json --spec
+$ bin/wasm-interp test.json --spec
 
 # parse test.wasm and run all its exported functions, setting the value stack
 # size to 100 elements
-$ out/wasm-interp test.wasm -V 100 --run-all-exports
+$ bin/wasm-interp test.wasm -V 100 --run-all-exports
 ```
 
 You can use `--help` to get additional help:
 
 ```console
-$ out/wasm-interp --help
+$ bin/wasm-interp --help
 ```
+
+## Running wast2json
+
+See [wast2json.md](docs/wast2json.md).
+
+## Running wasm-decompile
+
+For example:
+
+```sh
+# parse binary file test.wasm and write text file test.dcmp
+$ bin/wasm-decompile test.wasm -o test.dcmp
+```
+
+You can use `--help` to get additional help:
+
+```console
+$ bin/wasm-decompile --help
+```
+
+See [decompiler.md](docs/decompiler.md) for more information on the language
+being generated.
 
 ## Running wasm2c
 
@@ -282,7 +308,7 @@ There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
 (MSAN), Leak Sanitizer (LSAN) and Undefine Behavior Sanitizer (UBSAN). You can
 read about the behaviors of the sanitizers in the link above, but essentially
 the Address Sanitizer finds invalid memory accesses (use after free, access
-out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory, 
+out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory,
 the Leak Sanitizer finds memory leaks, and the Undefined Behavior Sanitizer
 finds undefined behavior (surprise!).
 
@@ -299,18 +325,29 @@ $ make test-clang-release-asan
 ...
 ```
 
-The Travis bots run all of these tests (and more). Before you land a change,
+The GitHub actions bots run all of these tests (and more). Before you land a change,
 you should run them too. One easy way is to use the `test-everything` target:
 
 ```console
 $ make test-everything
 ```
 
-To run everything the Travis bots do, you can use the following scripts:
+## Fuzzing
+
+To build using the [LLVM fuzzer support](https://llvm.org/docs/LibFuzzer.html),
+append `fuzz` to the target:
 
 ```console
-$ CC=gcc scripts/travis-build.sh
-$ CC=gcc scripts/travis-test.sh
-$ CC=clang scripts/travis-build.sh
-$ CC=clang scripts/travis-test.sh
+$ make clang-debug-fuzz
 ```
+
+This will produce a `wasm2wat_fuzz` binary. It can be used to fuzz the binary
+reader, as well as reproduce fuzzer errors found by
+[oss-fuzz](https://github.com/google/oss-fuzz/tree/master/projects/wabt).
+
+```console
+$ out/clang/Debug/fuzz/wasm2wat_fuzz ...
+```
+
+See the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for
+more information about how to use this tool.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -97,7 +97,7 @@ def main(args):
         with open(options.output, 'w') as out_file:
             out_file.write(out_data)
     else:
-        print out_data
+        print(out_data)
     return 0
 
 

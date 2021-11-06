@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-exceptions
+;;; ARGS2: --enable-exceptions
+magic
+version
+section(GLOBAL) { count[0] }
+section(TAG) { count[0] }
+(;; STDERR ;;;
+000000d: error: section Tag out of order
+000000d: error: section Tag out of order
+;;; STDERR ;;)

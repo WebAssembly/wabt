@@ -1,5 +1,63 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/unreachable.wast
 (;; STDOUT ;;;
-61/61 tests passed.
+out/test/spec/unreachable.wast:221: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:222: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:223: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:224: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:226: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:227: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:228: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:229: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:231: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:232: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:233: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:234: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:237: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:238: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:239: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:242: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:244: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:245: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:246: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:248: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:249: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:250: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:251: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:252: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:254: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:256: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:257: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:259: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:261: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:264: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:265: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:266: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:267: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:268: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:270: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:271: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:272: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:274: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:275: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:276: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:277: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:279: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:280: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:281: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:283: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:284: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:286: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:287: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:288: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:289: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:291: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:293: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:294: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:296: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:298: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:299: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:301: assert_trap passed: unreachable executed
+out/test/spec/unreachable.wast:303: assert_trap passed: unreachable executed
+63/63 tests passed.
 ;;; STDOUT ;;)

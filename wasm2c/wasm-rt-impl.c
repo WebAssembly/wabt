@@ -20,8 +20,15 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#include <signal.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
 
 #define PAGE_SIZE 65536
 
@@ -35,6 +42,10 @@ typedef struct FuncType {
 uint32_t wasm_rt_call_stack_depth;
 uint32_t g_saved_call_stack_depth;
 
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+bool g_signal_handler_installed = false;
+#endif
+
 jmp_buf g_jmp_buf;
 FuncType* g_func_types;
 uint32_t g_func_type_count;
@@ -42,13 +53,13 @@ uint32_t g_func_type_count;
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
   wasm_rt_call_stack_depth = g_saved_call_stack_depth;
-  longjmp(g_jmp_buf, code);
+  WASM_RT_LONGJMP(g_jmp_buf, code);
 }
 
 static bool func_types_are_equal(FuncType* a, FuncType* b) {
   if (a->param_count != b->param_count || a->result_count != b->result_count)
     return 0;
-  int i;
+  uint32_t i;
   for (i = 0; i < a->param_count; ++i)
     if (a->params[i] != b->params[i])
       return 0;
@@ -91,13 +102,47 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
   return idx + 1;
 }
 
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+static void signal_handler(int sig, siginfo_t* si, void* unused) {
+  wasm_rt_trap(WASM_RT_TRAP_OOB);
+}
+#endif
+
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
+  uint32_t byte_length = initial_pages * PAGE_SIZE;
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  if (!g_signal_handler_installed) {
+    g_signal_handler_installed = true;
+    struct sigaction sa;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_sigaction = signal_handler;
+
+    /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
+    if (sigaction(SIGSEGV, &sa, NULL) != 0 ||
+        sigaction(SIGBUS, &sa, NULL) != 0) {
+      perror("sigaction failed");
+      abort();
+    }
+  }
+
+  /* Reserve 8GiB. */
+  void* addr =
+      mmap(NULL, 0x200000000ul, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (addr == (void*)-1) {
+    perror("mmap failed");
+    abort();
+  }
+  mprotect(addr, byte_length, PROT_READ | PROT_WRITE);
+  memory->data = addr;
+#else
+  memory->data = calloc(byte_length, 1);
+#endif
+  memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
-  memory->size = initial_pages * PAGE_SIZE;
-  memory->data = calloc(memory->size, 1);
 }
 
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
@@ -109,15 +154,28 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint32_t)-1;
   }
+  uint32_t old_size = old_pages * PAGE_SIZE;
   uint32_t new_size = new_pages * PAGE_SIZE;
+  uint32_t delta_size = delta * PAGE_SIZE;
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  uint8_t* new_data = memory->data;
+  mprotect(new_data + old_size, delta_size, PROT_READ | PROT_WRITE);
+#else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
     return (uint32_t)-1;
   }
+#if !WABT_BIG_ENDIAN
+  memset(new_data + old_size, 0, delta_size);
+#endif
+#endif
+#if WABT_BIG_ENDIAN
+  memmove(new_data + new_size - old_size, new_data, old_size);
+  memset(new_data, 0, delta_size);
+#endif
   memory->pages = new_pages;
   memory->size = new_size;
   memory->data = new_data;
-  memset(memory->data + old_pages * PAGE_SIZE, 0, delta * PAGE_SIZE);
   return old_pages;
 }
 

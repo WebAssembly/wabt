@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
 import os
 import sys
@@ -24,6 +23,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_DIR = SCRIPT_DIR
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 TESTSUITE_DIR = os.path.join(REPO_ROOT_DIR, 'third_party', 'testsuite')
+PROPOSALS_DIR = os.path.join(TESTSUITE_DIR, 'proposals')
 SPEC_TEST_DIR = os.path.join(TEST_DIR, 'spec')
 WASM2C_SPEC_TEST_DIR = os.path.join(TEST_DIR, 'wasm2c', 'spec')
 
@@ -64,14 +64,14 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
 
         with open(test_filename, 'w') as f:
             f.write(';;; TOOL: %s\n' % tool)
-            f.write(';;; STDIN_FILE: %s\n' % wast_filename)
+            f.write(';;; STDIN_FILE: %s\n' % wast_filename.replace(os.sep, '/'))
             if flags:
                 f.write(';;; ARGS*: %s\n' % flags)
 
 
 def ProcessProposalDir(name, flags=None):
     ProcessDir(os.path.join(SPEC_TEST_DIR, name),
-               os.path.join(TESTSUITE_DIR, 'proposals', name),
+               os.path.join(PROPOSALS_DIR, name),
                'run-interp-spec',
                flags)
 
@@ -86,12 +86,33 @@ def main(args):
     ProcessDir(SPEC_TEST_DIR, TESTSUITE_DIR, 'run-interp-spec')
     ProcessDir(WASM2C_SPEC_TEST_DIR, TESTSUITE_DIR, 'run-spec-wasm2c')
 
-    ProcessProposalDir('multi-value', '--enable-multi-value')
-    ProcessProposalDir('mutable-global')  # Already enabled by default.
-    ProcessProposalDir('nontrapping-float-to-int-conversions',
-                       '--enable-saturating-float-to-int')
-    ProcessProposalDir('sign-extension-ops', '--enable-sign-extension')
-    ProcessProposalDir('bulk-memory-operations', '--enable-bulk-memory')
+    all_proposals = [e.name for e in os.scandir(PROPOSALS_DIR) if e.is_dir()]
+
+    flags = {
+        'memory64': '--enable-memory64'
+    }
+
+    unimplemented = set([
+        'gc',
+        'tail-call',
+        'function-references',
+        'multi-memory',
+        'threads',
+        'annotations',
+        'exception-handling',
+        'extended-const',
+    ])
+
+    # sanity check to verify that all flags are valid
+    for proposal in flags:
+        assert proposal in all_proposals, proposal
+    # sanity check to verify that all unimplemented are valid
+    for proposal in unimplemented:
+        assert proposal in all_proposals, proposal
+
+    proposals = [p for p in all_proposals if p not in unimplemented]
+    for proposal in proposals:
+        ProcessProposalDir(proposal, flags.get(proposal))
 
     return 0
 

@@ -1,0 +1,116 @@
+;;; TOOL: run-gen-wasm-decompile
+;; NOTE: same test as in test/binary/names.txt
+magic
+version
+section(TYPE) {
+  count[2]
+  function params[0] results[1] i32
+  function params[0] results[0]
+}
+section(FUNCTION) {
+  count[4]
+  type[0]
+  type[1]
+  type[1]
+  type[1]
+}
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[0]
+}
+section(GLOBAL) {
+  count[2]
+  ;; This has both a sym and export name, prefer sym.
+  type[i32] mut[0] init_expr[i32.const 0 end]
+  ;; This only has an export name.
+  type[i32] mut[0] init_expr[i32.const 0 end]
+}
+section(EXPORT) {
+  count[5]
+  str("F1_EXPORT") func_kind func[1]
+  str("F2_EXPORT") func_kind func[2]
+  str("F3_EXPORT") func_kind func[3]
+  str("G0_EXPORT") global_kind global[0]
+  str("G1_EXPORT") global_kind global[1]
+}
+section(CODE) {
+  count[4]
+  ;; Test name section.
+  func {
+    locals[decl_count[1] i32_count[1] i32]
+    get_local 0
+  }
+  ;; Test naming priorities
+  ;; If there's a name section name, prefer that over sym/export.
+  func { locals[0] }
+  ;; If there's no name section name, prefer sym over export.
+  func { locals[0] }
+  ;; If there's only export, use that.
+  func { locals[0] }
+}
+section(DATA) {
+  count[2]
+  ;; These can only be named thru symbols.
+  memory_index[0]
+  offset[i32.const 0 end]
+  data[str("Hello, World!")]
+  memory_index[0]
+  offset[i32.const 10 end]
+  data[str("bar")]
+}
+section("name") {
+  section(NAME_MODULE) {
+    str("M0")
+  }
+  section(NAME_FUNCTION) {
+    func_count[2]
+    index[0]
+    str("F0")
+    index[1]
+    str("F1_NS")
+  }
+  section(NAME_LOCALS) {
+    func_count[1]
+    index[0]
+    local_count[1]
+    index[0]
+    str("L0")
+  }
+}
+section("linking") {
+  metadata_version[2]
+  section(LINKING_SYMBOL_TABLE) {
+    num_symbols[5]
+    type[0] flags[1] index[1] str("F1_SYM")
+    type[0] flags[1] index[2] str("F2_SYM")
+    type[2] flags[1] index[0] str("G0_SYM")
+
+    type[1] flags[4] str("D0_SYM") segment[0] offset[0] size[1]
+    type[1] flags[4] str("D1_SYM") segment[1] offset[0] size[1]
+  }
+}
+(;; STDOUT ;;;
+memory M_a(initial: 0, max: 0);
+
+global G0_SYM:int = 0;
+export global G1_EXPORT:int = 0;
+
+data D0_SYM(offset: 0) = "Hello, World!";
+data D1_SYM(offset: 10) = "bar";
+
+function F0():int {
+  var L0:int;
+  return L0;
+}
+
+function F1_NS() {
+}
+
+function F2_SYM() {
+}
+
+export function F3_EXPORT() {
+}
+
+;;; STDOUT ;;)

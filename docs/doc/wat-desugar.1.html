@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    table.head, table.foot { width: 100%; }
+    td.head-rtitle, td.foot-os { text-align: right; }
+    td.head-vol { text-align: center; }
+    div.Pp { margin: 1ex 0ex; }
+    div.Nd, div.Bf, div.Op { display: inline; }
+    span.Pa, span.Ad { font-style: italic; }
+    span.Ms { font-weight: bold; }
+    dl.Bl-diag > dt { font-weight: bold; }
+    code.Nm, code.Fl, code.Cm, code.Ic, code.In, code.Fd, code.Fn,
+    code.Cd { font-weight: bold; font-family: inherit; }
+  </style>
+  <title>WABT(1)</title>
+</head>
+<body>
+<table class="head">
+  <tr>
+    <td class="head-ltitle">WABT(1)</td>
+    <td class="head-vol">General Commands Manual</td>
+    <td class="head-rtitle">WABT(1)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<code class="Nm">wat-desugar</code> &#x2014;
+<div class="Nd">parse .wat text form and print canonical flat format</div>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<table class="Nm">
+  <tr>
+    <td><code class="Nm">wat-desugar</code></td>
+    <td>[options] <var class="Ar">file</var></td>
+  </tr>
+</table>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<code class="Nm">wat-desugar</code> parses .wat text form as supported by the
+  spec interpreter (s-expressions, flat syntax, or mixed) and prints
+  &quot;canonical&quot; flat format.
+<p class="Pp">The options are as follows:</p>
+<dl class="Bl-tag">
+  <dt><code class="Fl">-</code><code class="Fl">-help</code></dt>
+  <dd>Print a help message</dd>
+  <dt><a class="permalink" href="#o"><code class="Fl" id="o">-o</code></a>,
+    <code class="Fl">-</code><code class="Fl">-output=FILE</code></dt>
+  <dd>Output file for the formatted file</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-debug-parser</code></dt>
+  <dd>Turn on debugging the parser of wat files</dd>
+  <dt><a class="permalink" href="#f"><code class="Fl" id="f">-f</code></a>,
+    <code class="Fl">-</code><code class="Fl">-fold-exprs</code></dt>
+  <dd>Write folded expressions where possible</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-exceptions</code></dt>
+  <dd>Experimental exception handling</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-disable-mutable-globals</code></dt>
+  <dd>Import/export mutable globals</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-saturating-float-to-int</code></dt>
+  <dd>Saturating float-to-int operators</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-sign-extension</code></dt>
+  <dd>Sign-extension operators</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-disable-simd</code></dt>
+  <dd>SIMD support</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-threads</code></dt>
+  <dd>Threading support</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-inline-exports</code></dt>
+  <dd>Write all exports inline</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-inline-imports</code></dt>
+  <dd>Write all imports inline</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-generate-names</code></dt>
+  <dd>Give auto-generated names to non-named functions, types, etc.</dd>
+</dl>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
+Write output to stdout
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wat-desugar test.wat</code></div>
+<p class="Pp">Write output to test2.wat</p>
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wat-desugar test.wat -o
+  test2.wat</code></div>
+<p class="Pp">Generate names for indexed variables</p>
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wat-desugar --generate-names
+  test.wat</code></div>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<a class="Xr" href="wasm-interp.1.html">wasm-interp(1)</a>,
+  <a class="Xr" href="wasm-objdump.1.html">wasm-objdump(1)</a>,
+  <a class="Xr" href="wasm-opcodecnt.1.html">wasm-opcodecnt(1)</a>,
+  <a class="Xr" href="wasm-strip.1.html">wasm-strip(1)</a>,
+  <a class="Xr" href="wasm-validate.1.html">wasm-validate(1)</a>,
+  <a class="Xr" href="wasm2c.1.html">wasm2c(1)</a>,
+  <a class="Xr" href="wasm2wat.1.html">wasm2wat(1)</a>,
+  <a class="Xr" href="wast2json.1.html">wast2json(1)</a>,
+  <a class="Xr" href="wat2wasm.1,.html">wat2wasm(1,)</a>
+  <a class="Xr" href="spectest-interp.1.html">spectest-interp(1)</a>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="BUGS"><a class="permalink" href="#BUGS">BUGS</a></h1>
+If you find a bug, please report it at
+<br/>
+<a class="Lk" href="https://github.com/WebAssembly/wabt/issues">https://github.com/WebAssembly/wabt/issues</a>.
+</section>
+</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">October 7, 2021</td>
+    <td class="foot-os">Debian</td>
+  </tr>
+</table>
+</body>
+</html>

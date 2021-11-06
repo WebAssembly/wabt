@@ -69,9 +69,8 @@ static void ParseOptions(int argc, char* argv[]) {
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
   });
-  parser.AddHelpOption();
   parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
                    []() { s_debug_parsing = true; });
   parser.AddOption('d', "dump-module",
@@ -140,25 +139,21 @@ int ProgramMain(int argc, char** argv) {
   WastParseOptions parse_wast_options(s_features);
   result = ParseWatModule(lexer.get(), &module, &errors, &parse_wast_options);
 
-  if (Succeeded(result)) {
-    result = ResolveNamesModule(module.get(), &errors);
+  if (Succeeded(result) && s_validate) {
+    ValidateOptions options(s_features);
+    result = ValidateModule(module.get(), &errors, options);
+  }
 
-    if (Succeeded(result) && s_validate) {
-      ValidateOptions options(s_features);
-      result = ValidateModule(module.get(), &errors, options);
-    }
+  if (Succeeded(result)) {
+    MemoryStream stream(s_log_stream.get());
+    s_write_binary_options.features = s_features;
+    result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
 
     if (Succeeded(result)) {
-      MemoryStream stream(s_log_stream.get());
-      s_write_binary_options.features = s_features;
-      result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
-
-      if (Succeeded(result)) {
-        if (s_outfile.empty()) {
-          s_outfile = DefaultOuputName(s_infile);
-        }
-        WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
+      if (s_outfile.empty()) {
+        s_outfile = DefaultOuputName(s_infile);
       }
+      WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
     }
   }
 

@@ -1,0 +1,105 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -r
+;;; ARGS1:
+(module
+  (global $g i32 (i32.const 0))
+  (func $previous_func
+    (drop (get_global 0)))
+  (func $long_func
+    (drop (get_global 0))
+    (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
+    (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
+    (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
+    (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
+    (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
+    (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
+    (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
+  )
+  (export "long_func" (func $long_func)))
+(;; STDOUT ;;;
+
+relocations-long-func-bodies.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+00002e func[0] <previous_func>:
+ 00002f: 23 80 80 80 80 00          | global.get 0 <g>
+           000030: R_WASM_GLOBAL_INDEX_LEB 2 <g>
+ 000035: 1a                         | drop
+ 000036: 0b                         | end
+000038 func[1] <long_func>:
+ 000039: 23 80 80 80 80 00          | global.get 0 <g>
+           00003a: R_WASM_GLOBAL_INDEX_LEB 2 <g>
+ 00003f: 1a                         | drop
+ 000040: 41 00                      | i32.const 0
+ 000042: 1a                         | drop
+ 000043: 41 00                      | i32.const 0
+ 000045: 1a                         | drop
+ 000046: 41 00                      | i32.const 0
+ 000048: 1a                         | drop
+ 000049: 41 00                      | i32.const 0
+ 00004b: 1a                         | drop
+ 00004c: 41 00                      | i32.const 0
+ 00004e: 1a                         | drop
+ 00004f: 41 00                      | i32.const 0
+ 000051: 1a                         | drop
+ 000052: 41 00                      | i32.const 0
+ 000054: 1a                         | drop
+ 000055: 41 00                      | i32.const 0
+ 000057: 1a                         | drop
+ 000058: 41 00                      | i32.const 0
+ 00005a: 1a                         | drop
+ 00005b: 41 00                      | i32.const 0
+ 00005d: 1a                         | drop
+ 00005e: 41 00                      | i32.const 0
+ 000060: 1a                         | drop
+ 000061: 41 00                      | i32.const 0
+ 000063: 1a                         | drop
+ 000064: 41 00                      | i32.const 0
+ 000066: 1a                         | drop
+ 000067: 41 00                      | i32.const 0
+ 000069: 1a                         | drop
+ 00006a: 41 00                      | i32.const 0
+ 00006c: 1a                         | drop
+ 00006d: 41 00                      | i32.const 0
+ 00006f: 1a                         | drop
+ 000070: 41 00                      | i32.const 0
+ 000072: 1a                         | drop
+ 000073: 41 00                      | i32.const 0
+ 000075: 1a                         | drop
+ 000076: 41 00                      | i32.const 0
+ 000078: 1a                         | drop
+ 000079: 41 00                      | i32.const 0
+ 00007b: 1a                         | drop
+ 00007c: 41 00                      | i32.const 0
+ 00007e: 1a                         | drop
+ 00007f: 41 00                      | i32.const 0
+ 000081: 1a                         | drop
+ 000082: 41 00                      | i32.const 0
+ 000084: 1a                         | drop
+ 000085: 41 00                      | i32.const 0
+ 000087: 1a                         | drop
+ 000088: 41 00                      | i32.const 0
+ 00008a: 1a                         | drop
+ 00008b: 41 00                      | i32.const 0
+ 00008d: 1a                         | drop
+ 00008e: 41 00                      | i32.const 0
+ 000090: 1a                         | drop
+ 000091: 41 00                      | i32.const 0
+ 000093: 1a                         | drop
+ 000094: 41 00                      | i32.const 0
+ 000096: 1a                         | drop
+ 000097: 41 00                      | i32.const 0
+ 000099: 1a                         | drop
+ 00009a: 41 00                      | i32.const 0
+ 00009c: 1a                         | drop
+ 00009d: 41 00                      | i32.const 0
+ 00009f: 1a                         | drop
+ 0000a0: 41 00                      | i32.const 0
+ 0000a2: 1a                         | drop
+ 0000a3: 41 00                      | i32.const 0
+ 0000a5: 1a                         | drop
+ 0000a6: 41 00                      | i32.const 0
+ 0000a8: 1a                         | drop
+ 0000a9: 0b                         | end
+;;; STDOUT ;;)

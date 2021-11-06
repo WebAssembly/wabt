@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
 import difflib
 import fnmatch
@@ -24,6 +23,7 @@ import os
 import re
 import shlex
 import shutil
+import struct
 import subprocess
 import sys
 import threading
@@ -36,8 +36,9 @@ IS_WINDOWS = sys.platform == 'win32'
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(TEST_DIR)
 OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
-DEFAULT_TIMEOUT = 10    # seconds
+DEFAULT_TIMEOUT = 120    # seconds
 SLOW_TIMEOUT_MULTIPLIER = 3
+
 
 # default configurations for tests
 TOOLS = {
@@ -48,7 +49,7 @@ TOOLS = {
     ],
     'wast2json': [
         ('RUN', '%(wast2json)s'),
-        ('ARGS', ['%(in_file)s']),
+        ('ARGS', ['%(in_file)s', '-o', '%(out_dir)s/out.json']),
         ('VERBOSE-ARGS', ['-v']),
     ],
     'wat-desugar': [
@@ -88,6 +89,11 @@ TOOLS = {
         ('RUN', '%(wasm-interp)s %(temp_file)s.wasm --run-all-exports'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
+    'run-interp-wasi': [
+        ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-interp)s --wasi %(temp_file)s.wasm'),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
     'run-interp-spec': [
         ('RUN', '%(wast2json)s %(in_file)s -o %(temp_file)s.json'),
         ('RUN', '%(spectest-interp)s %(temp_file)s.json'),
@@ -118,6 +124,12 @@ TOOLS = {
         ('RUN', '%(wasm-objdump)s -h %(temp_file)s.wasm'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
+    'run-gen-wasm-decompile': [
+        ('RUN', '%(gen_wasm_py)s %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-validate)s %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-decompile)s %(temp_file)s.wasm'),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
     'run-opcodecnt': [
         ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
         ('RUN', '%(wasm-opcodecnt)s %(temp_file)s.wasm'),
@@ -134,10 +146,15 @@ TOOLS = {
             '%(in_file)s',
             '--bindir=%(bindir)s',
             '--no-error-cmdline',
+            '--cflags=-DWABT_BIG_ENDIAN=' + '01'[struct.pack('<h', *struct.unpack('=h', b'\x00\x01'))[0]],
             '-o',
             '%(out_dir)s',
         ]),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-wasm-decompile': [
+        ('RUN', '%(wat2wasm)s --enable-all %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-decompile)s --enable-all %(temp_file)s.wasm'),
     ]
 }
 
@@ -157,8 +174,11 @@ def Indent(s, spaces):
 
 
 def DiffLines(expected, actual):
-    expected_lines = [line for line in expected.splitlines() if line]
-    actual_lines = [line for line in actual.splitlines() if line]
+    def Decode(s):
+        return s.decode('utf-8', 'replace')
+
+    expected_lines = [Decode(line) for line in expected.splitlines() if line]
+    actual_lines = [Decode(line) for line in actual.splitlines() if line]
     return list(
         difflib.unified_diff(expected_lines, actual_lines, fromfile='expected',
                              tofile='actual', lineterm=''))
@@ -197,6 +217,7 @@ class CommandTemplate(object):
     def __init__(self, exe):
         self.args = SplitArgs(exe)
         self.verbose_args = []
+        self.stdin = None
         self.expected_returncode = 0
 
     def AppendArgs(self, args):
@@ -211,6 +232,9 @@ class CommandTemplate(object):
                 self.verbose_args.append([])
             self.verbose_args[level] += SplitArgs(level_args)
 
+    def SetStdin(self, filename):
+        self.stdin = filename
+
     def _Format(self, cmd, variables):
         return [arg % variables for arg in cmd]
 
@@ -223,14 +247,18 @@ class CommandTemplate(object):
         if extra_args:
             args += extra_args
         args = self._Format(args, variables)
-        return Command(self, FixPythonExecutable(args))
+        stdin = self.stdin
+        if stdin:
+            stdin = stdin % variables
+        return Command(self, FixPythonExecutable(args), stdin)
 
 
 class Command(object):
 
-    def __init__(self, template, args):
+    def __init__(self, template, args, stdin):
         self.template = template
         self.args = args
+        self.stdin = stdin
 
     def GetExpectedReturncode(self):
         return self.template.expected_returncode
@@ -257,23 +285,27 @@ class Command(object):
             kwargs = {}
             if not IS_WINDOWS:
                 kwargs['preexec_fn'] = os.setsid
+            stdin_data = None
+            if self.stdin:
+                stdin_data = open(self.stdin, 'rb').read()
 
             # http://stackoverflow.com/a/10012262: subprocess with a timeout
             # http://stackoverflow.com/a/22582602: kill subprocess and children
             process = subprocess.Popen(self.args, cwd=cwd, env=env,
                                        stdout=None if console_out else subprocess.PIPE,
                                        stderr=None if console_out else subprocess.PIPE,
-                                       universal_newlines=True, **kwargs)
+                                       stdin=None if not self.stdin else subprocess.PIPE,
+                                       **kwargs)
             timer = threading.Timer(timeout, KillProcess)
             try:
                 timer.start()
-                stdout, stderr = process.communicate()
+                stdout, stderr = process.communicate(input=stdin_data)
             finally:
                 returncode = process.returncode
                 process = None
                 timer.cancel()
             if is_timeout.Get():
-                raise Error('TIMEOUT\nSTDOUT:\n%s\nSTDERR:\n%s\n' % (stdout, stderr))
+                raise Error('TIMEOUT')
             duration = time.time() - start_time
         except OSError as e:
             raise Error(str(e))
@@ -310,8 +342,8 @@ class TestResult(object):
 
     def __init__(self):
         self.results = []
-        self.stdout = ''
-        self.stderr = ''
+        self.stdout = b''
+        self.stderr = b''
         self.duration = 0
 
     def GetLastCommand(self):
@@ -464,6 +496,8 @@ class TestInfo(object):
             pass
         elif key == 'TOOL':
             self.SetTool(value)
+        elif key == 'STDIN':
+            self.GetLastCommand().SetStdin(value)
         elif key == 'ENV':
             # Pattern: FOO=1 BAR=stuff
             self.env = dict(x.split('=') for x in value.split())
@@ -474,7 +508,8 @@ class TestInfo(object):
         self.filename = filename
 
         test_path = os.path.join(REPO_ROOT_DIR, filename)
-        with open(test_path) as f:
+        # Read/write as binary because spec tests may have invalid UTF-8 codes.
+        with open(test_path, 'rb') as f:
             state = 'header'
             empty = True
             header_lines = []
@@ -483,9 +518,9 @@ class TestInfo(object):
             stderr_lines = []
             for line in f.readlines():
                 empty = False
-                m = re.match(r'\s*\(;; (STDOUT|STDERR) ;;;$', line)
+                m = re.match(b'\\s*\\(;; (STDOUT|STDERR) ;;;$', line.strip())
                 if m:
-                    directive = m.group(1)
+                    directive = m.group(1).decode('utf-8')
                     if directive == 'STDERR':
                         state = 'stderr'
                         continue
@@ -493,9 +528,9 @@ class TestInfo(object):
                         state = 'stdout'
                         continue
                 else:
-                    m = re.match(r'\s*;;;(.*)$', line)
+                    m = re.match(b'\\s*;;;(.*)$', line)
                     if m:
-                        directive = m.group(1).strip()
+                        directive = m.group(1).decode('utf-8').strip()
                         if state == 'header':
                             key, value = directive.split(':', 1)
                             key = key.strip()
@@ -512,7 +547,7 @@ class TestInfo(object):
                         state = 'input'
 
                 if state == 'header':
-                    header_lines.append(line)
+                    header_lines.append(line.decode('utf-8'))
                 if state == 'input':
                     if self.input_filename:
                         raise Error('Can\'t have STDIN_FILE and input')
@@ -525,9 +560,9 @@ class TestInfo(object):
             raise Error('empty test file')
 
         self.header = ''.join(header_lines)
-        self.input_ = ''.join(input_lines)
-        self.expected_stdout = ''.join(stdout_lines)
-        self.expected_stderr = ''.join(stderr_lines)
+        self.input_ = b''.join(input_lines)
+        self.expected_stdout = b''.join(stdout_lines)
+        self.expected_stderr = b''.join(stderr_lines)
 
         if not self.cmds:
             raise Error('test has no commands')
@@ -550,23 +585,23 @@ class TestInfo(object):
             else:
                 # add an empty line for each header line so the line numbers match
                 gen_input_file.write(('\n' * self.header.count('\n')).encode('ascii'))
-                gen_input_file.write(self.input_.encode('ascii'))
+                gen_input_file.write(self.input_)
             gen_input_file.flush()
             return gen_input_file.name
 
     def Rebase(self, stdout, stderr):
         test_path = os.path.join(REPO_ROOT_DIR, self.filename)
         with open(test_path, 'wb') as f:
-            f.write(self.header)
+            f.write(self.header.encode('ascii'))
             f.write(self.input_)
             if stderr:
-                f.write('(;; STDERR ;;;\n')
+                f.write(b'(;; STDERR ;;;\n')
                 f.write(stderr)
-                f.write(';;; STDERR ;;)\n')
+                f.write(b';;; STDERR ;;)\n')
             if stdout:
-                f.write('(;; STDOUT ;;;\n')
+                f.write(b'(;; STDOUT ;;;\n')
                 f.write(stdout)
-                f.write(';;; STDOUT ;;)\n')
+                f.write(b';;; STDOUT ;;)\n')
 
     def Diff(self, stdout, stderr):
         msg = ''
@@ -645,9 +680,13 @@ class Status(object):
         sys.stderr.write('\r%s\r' % (' ' * self.last_length))
 
 
-def FindTestFiles(ext, filter_pattern_re):
+def FindTestFiles(ext, filter_pattern_re, exclude_dirs):
     tests = []
     for root, dirs, files in os.walk(TEST_DIR):
+        for ex in exclude_dirs:
+            if ex in dirs:
+                # Filtering out dirs here causes os.walk not to descend into them
+                dirs.remove(ex)
         for f in files:
             path = os.path.join(root, f)
             if os.path.splitext(f)[1] == ext:
@@ -756,7 +795,7 @@ def HandleTestResult(status, info, result, rebase=False):
 
 # Source : http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
 def YesNoPrompt(question, default='yes'):
-    """Ask a yes/no question via raw_input() and return their answer.
+    """Ask a yes/no question via input() and return their answer.
 
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
@@ -777,7 +816,7 @@ def YesNoPrompt(question, default='yes'):
 
     while True:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
@@ -880,12 +919,17 @@ def main(args):
             parser.error('--stop-interactive only works with -j1')
 
     if options.patterns:
+        exclude_dirs = []
         pattern_re = '|'.join(
             fnmatch.translate('*%s*' % p) for p in options.patterns)
     else:
         pattern_re = '.*'
+        # By default, exclude wasi tests because WASI support is not include
+        # by int the build by default.
+        # TODO(sbc): Find some way to detect the WASI support.
+        exclude_dirs = ['wasi']
 
-    test_names = FindTestFiles('.txt', pattern_re)
+    test_names = FindTestFiles('.txt', pattern_re, exclude_dirs)
 
     if options.list:
         for test_name in test_names:
@@ -898,8 +942,8 @@ def main(args):
     variables = {}
     variables['test_dir'] = os.path.abspath(TEST_DIR)
     variables['bindir'] = options.bindir
-    variables['gen_wasm_py'] = find_exe.GEN_WASM_PY
-    variables['gen_spec_js_py'] = find_exe.GEN_SPEC_JS_PY
+    variables['gen_wasm_py'] = os.path.join(TEST_DIR, 'gen-wasm.py')
+    variables['gen_spec_js_py'] = os.path.join(TEST_DIR, 'gen-spec-js.py')
     for exe_basename in find_exe.EXECUTABLES:
         exe_override = os.path.join(options.bindir, exe_basename)
         variables[exe_basename] = find_exe.FindExecutable(exe_basename,
@@ -940,8 +984,13 @@ def main(args):
     if status.failed:
         sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
         for info, result in status.failed_tests:
-            last_cmd = result.GetLastCommand() if result is not None else ''
-            sys.stderr.write('- %s\n    %s\n' % (info.GetName(), last_cmd))
+            if isinstance(result, TestResult):
+                msg = result.GetLastCommand()
+            elif isinstance(result, Error):
+                msg = result
+            else:
+                msg = ''
+            sys.stderr.write('- %s\n    %s\n' % (info.GetName(), msg))
         ret = 1
 
     return ret

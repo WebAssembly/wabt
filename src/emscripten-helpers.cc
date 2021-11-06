@@ -36,7 +36,6 @@
 #include "src/filenames.h"
 #include "src/generate-names.h"
 #include "src/ir.h"
-#include "src/resolve-names.h"
 #include "src/stream.h"
 #include "src/validator.h"
 #include "src/wast-lexer.h"
@@ -142,11 +141,6 @@ WabtReadBinaryResult* wabt_read_binary(const void* data,
       wabt::ReadBinaryIr(filename, data, size, options, errors, module);
   result->module.reset(module);
   return result;
-}
-
-wabt::Result::Enum wabt_resolve_names_module(wabt::Module* module,
-                                             wabt::Errors* errors) {
-  return ResolveNamesModule(module, errors);
 }
 
 wabt::Result::Enum wabt_validate_module(wabt::Module* module,

@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v
 (module (memory 1))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Memory" (5)
@@ -12,6 +12,8 @@
 000000b: 00                                        ; limits: flags
 000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 memory-1-byte.wasm:	file format wasm 0x1
 

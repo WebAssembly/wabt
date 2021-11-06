@@ -1,48 +1,82 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
 (;; STDOUT ;;;
-out/test/spec/memory.wast:8: assert_invalid passed:
-  000000b: error: memory count must be 0 or 1
-out/test/spec/memory.wast:9: assert_invalid passed:
-  error: only one memory allowed
+out/test/spec/memory.wast:10: assert_invalid passed:
+  error: only one memory block allowed
+  000000f: error: OnMemory callback failed
+out/test/spec/memory.wast:11: assert_invalid passed:
+  error: only one memory block allowed
   0000023: error: OnMemory callback failed
-out/test/spec/memory.wast:18: assert_invalid passed:
-  000000b: error: data section without memory section
-out/test/spec/memory.wast:19: assert_invalid passed:
-  000000b: error: data section without memory section
 out/test/spec/memory.wast:20: assert_invalid passed:
-  000000b: error: data section without memory section
-out/test/spec/memory.wast:23: assert_invalid passed:
-  error: f32.load requires an imported or defined memory.
-  000001c: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:27: assert_invalid passed:
-  error: f32.store requires an imported or defined memory.
-  0000021: error: OnStoreExpr callback failed
-out/test/spec/memory.wast:31: assert_invalid passed:
-  error: i32.load8_s requires an imported or defined memory.
-  000001c: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:35: assert_invalid passed:
-  error: i32.store8 requires an imported or defined memory.
-  000001e: error: OnStoreExpr callback failed
-out/test/spec/memory.wast:39: assert_invalid passed:
-  error: memory.size requires an imported or defined memory.
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/memory.wast:21: assert_invalid passed:
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/memory.wast:22: assert_invalid passed:
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/memory.wast:25: assert_invalid passed:
+  000001b: error: load/store memory 0 out of range 0
+out/test/spec/memory.wast:29: assert_invalid passed:
+  0000020: error: load/store memory 0 out of range 0
+out/test/spec/memory.wast:33: assert_invalid passed:
+  000001b: error: load/store memory 0 out of range 0
+out/test/spec/memory.wast:37: assert_invalid passed:
+  000001d: error: load/store memory 0 out of range 0
+out/test/spec/memory.wast:41: assert_invalid passed:
+  error: memory variable out of range: 0 (max 0)
   0000019: error: OnMemorySizeExpr callback failed
-out/test/spec/memory.wast:43: assert_invalid passed:
-  error: memory.grow requires an imported or defined memory.
+out/test/spec/memory.wast:45: assert_invalid passed:
+  error: memory variable out of range: 0 (max 0)
   000001b: error: OnMemoryGrowExpr callback failed
-out/test/spec/memory.wast:49: assert_invalid passed:
-  000000e: error: memory initial size must be <= max size
-out/test/spec/memory.wast:53: assert_invalid passed:
-  000000f: error: invalid memory initial size
-out/test/spec/memory.wast:57: assert_invalid passed:
-  0000011: error: invalid memory initial size
-out/test/spec/memory.wast:61: assert_invalid passed:
-  0000011: error: invalid memory initial size
-out/test/spec/memory.wast:65: assert_invalid passed:
-  0000010: error: invalid memory max size
-out/test/spec/memory.wast:69: assert_invalid passed:
-  0000012: error: invalid memory max size
-out/test/spec/memory.wast:73: assert_invalid passed:
-  0000012: error: invalid memory max size
-63/63 tests passed.
+out/test/spec/memory.wast:51: assert_invalid passed:
+  error: max pages (0) must be >= initial pages (1)
+  000000e: error: OnMemory callback failed
+out/test/spec/memory.wast:55: assert_invalid passed:
+  error: initial pages (65537) must be <= (65536)
+  000000f: error: OnMemory callback failed
+out/test/spec/memory.wast:59: assert_invalid passed:
+  error: initial pages (2147483648) must be <= (65536)
+  0000011: error: OnMemory callback failed
+out/test/spec/memory.wast:63: assert_invalid passed:
+  error: initial pages (4294967295) must be <= (65536)
+  0000011: error: OnMemory callback failed
+out/test/spec/memory.wast:67: assert_invalid passed:
+  error: max pages (65537) must be <= (65536)
+  0000010: error: OnMemory callback failed
+out/test/spec/memory.wast:71: assert_invalid passed:
+  error: max pages (2147483648) must be <= (65536)
+  0000012: error: OnMemory callback failed
+out/test/spec/memory.wast:75: assert_invalid passed:
+  error: max pages (4294967295) must be <= (65536)
+  0000012: error: OnMemory callback failed
+out/test/spec/memory.wast:80: assert_malformed passed:
+  out/test/spec/memory/memory.27.wat:1:9: error: invalid int "0x1_0000_0000"
+  (memory 0x1_0000_0000)
+          ^^^^^^^^^^^^^
+out/test/spec/memory.wast:84: assert_malformed passed:
+  out/test/spec/memory/memory.28.wat:1:9: error: invalid int "0x1_0000_0000"
+  (memory 0x1_0000_0000 0x1_0000_0000)
+          ^^^^^^^^^^^^^
+  out/test/spec/memory/memory.28.wat:1:23: error: invalid int "0x1_0000_0000"
+  (memory 0x1_0000_0000 0x1_0000_0000)
+                        ^^^^^^^^^^^^^
+out/test/spec/memory.wast:88: assert_malformed passed:
+  out/test/spec/memory/memory.29.wat:1:11: error: invalid int "0x1_0000_0000"
+  (memory 0 0x1_0000_0000)
+            ^^^^^^^^^^^^^
+out/test/spec/memory.wast:231: assert_malformed passed:
+  out/test/spec/memory/memory.31.wat:1:17: error: redefinition of memory "$foo"
+  (memory $foo 1)(memory $foo 1)
+                  ^^^^^^
+out/test/spec/memory.wast:235: assert_malformed passed:
+  out/test/spec/memory/memory.32.wat:1:32: error: redefinition of memory "$foo"
+  (import "" "" (memory $foo 1))(memory $foo 1)
+                                 ^^^^^^
+out/test/spec/memory.wast:239: assert_malformed passed:
+  out/test/spec/memory/memory.33.wat:1:32: error: redefinition of memory "$foo"
+  (import "" "" (memory $foo 1))(import "" "" (memory $foo 1))
+                                 ^^^^^^
+69/69 tests passed.
 ;;; STDOUT ;;)

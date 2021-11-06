@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
 import os
 import struct
@@ -45,6 +44,8 @@ NAMED_VALUES = {
     'v128': 0x7b,    # -5
     'anyfunc': 0x70,    # -0x10
     'function': 0x60,    # -0x20
+    'struct': 0x5f,    # -0x21
+    'array': 0x5e,    # -0x22
     'void': 0x40,    # -0x40
     'magic': (0, 0x61, 0x73, 0x6d),
     'version': (1, 0, 0, 0),
@@ -63,7 +64,7 @@ NAMED_VALUES = {
     'CODE': 10,
     'DATA': 11,
     'DATACOUNT': 12,
-    'EVENT': 13,
+    'TAG': 13,
 
     # name subsection codes
     'NAME_MODULE': 0,
@@ -75,6 +76,12 @@ NAMED_VALUES = {
     'LINKING_INIT_FUNCTIONS': 6,
     'LINKING_COMDAT_INFO': 7,
     'LINKING_SYMBOL_TABLE': 8,
+
+    # dylink.0 subsection codes
+    'DYLINK_MEM_INFO': 1,
+    'DYLINK_NEEDED': 2,
+    'DYLINK_EXPORT_INFO': 3,
+    'DYLINK_IMPORT_INFO': 4,
 
     # external kinds
     'func_kind': 0,
@@ -255,6 +262,19 @@ NAMED_VALUES = {
     "i64.reinterpret/f64": 0xbd,
     "f32.reinterpret/i32": 0xbe,
     "f64.reinterpret/i64": 0xbf,
+
+    # bulk memory
+    "memory.init": (0xfc, 0x08),
+    "data.drop": (0xfc, 0x09),
+    "memory.copy": (0xfc, 0x0a),
+    "memory.fill": (0xfc, 0x0b),
+    "table.init": (0xfc, 0x0c),
+    "elem.drop": (0xfc, 0x0d),
+    "table.copy": (0xfc, 0x0e),
+
+    # exceptions
+    "try": 0x06,
+    "catch_all": 0x19,
 }
 
 keywords = {

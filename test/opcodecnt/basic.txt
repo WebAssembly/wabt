@@ -15,8 +15,8 @@
   (func
     i32.const 0
     i32.load
-    f32.const 1
     f32.const 2
+    f32.const 3
     f32.add
     br 0))
 (;; STDOUT ;;;
@@ -41,6 +41,6 @@ i32.const 0 (0x0): 1
 i32.const 1 (0x1): 1
 i32.const 2 (0x2): 1
 f32.const 2 (0x1p+1): 1
-f32.const 1 (0x1p+0): 1
+f32.const 3 (0x1.8p+1): 1
 f32.add: 1
 ;;; STDOUT ;;)

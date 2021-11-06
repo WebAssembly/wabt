@@ -1,0 +1,31 @@
+;;; TOOL: run-interp-wasi
+;;; ARGS: --trace
+;;; ERROR: 1
+;;
+;; Just like the write_stdout.txt, but with an interior point that is OOB.
+;; Specifically rather than pointing to the `hello` string at address zero,
+;; iovec[0].buf points to memsize - 1 (65536 - 1 = 65535 = 0xffff)
+;;
+
+(import "wasi_snapshot_preview1" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
+(memory (export "memory") 1)
+(data (i32.const  0) "hello\n\00\00")
+(data (i32.const  8) "\08\00\00\00")
+(data (i32.const 12) "\ff\ff\00\00\06\00\00\00")
+(data (i32.const 20) "\00\00\00\00")
+
+(func (export "_start")
+  (call $fd_write (i32.const 1) (i32.const 12) (i32.const 1) (i32.const 20))
+  drop
+)
+(;; STDERR ;;;
+error: out of bounds memory access: [65535, 65541) >= max value 65536
+;;; STDERR ;;)
+(;; STDOUT ;;;
+#0.    0: V:0  | i32.const 1
+#0.    8: V:1  | i32.const 12
+#0.   16: V:2  | i32.const 1
+#0.   24: V:3  | i32.const 20
+#0.   32: V:4  | call_import $0
+>>> running wasi function "fd_write":
+;;; STDOUT ;;)

@@ -1,23 +1,23 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (event $e (param i32))
+  (tag $e (param i32))
   (func
     i32.const 1
     throw $e))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 01                                        ; num params
 000000d: 7f                                        ; i32
 000000e: 00                                        ; num results
-; type 1
+; func type 1
 000000f: 60                                        ; func
 0000010: 00                                        ; num params
 0000011: 00                                        ; num results
@@ -28,13 +28,13 @@
 0000014: 01                                        ; num functions
 0000015: 01                                        ; function 0 signature index
 0000013: 02                                        ; FIXUP section size
-; section "Event" (13)
+; section "Tag" (13)
 0000016: 0d                                        ; section code
 0000017: 00                                        ; section size (guess)
-0000018: 01                                        ; event count
-; event 0
-0000019: 00                                        ; event attribute
-000001a: 00                                        ; event signature index
+0000018: 01                                        ; tag count
+; tag 0
+0000019: 00                                        ; tag attribute
+000001a: 00                                        ; tag signature index
 0000017: 03                                        ; FIXUP section size
 ; section "Code" (10)
 000001b: 0a                                        ; section code
@@ -46,10 +46,12 @@
 0000020: 41                                        ; i32.const
 0000021: 01                                        ; i32 literal
 0000022: 08                                        ; throw
-0000023: 00                                        ; throw event
+0000023: 00                                        ; throw tag
 0000024: 0b                                        ; end
 000001e: 06                                        ; FIXUP func body size
 000001c: 08                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 throw.wasm:	file format wasm 0x1
 

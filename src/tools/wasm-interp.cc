@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -24,18 +23,18 @@
 #include <vector>
 
 #include "src/binary-reader.h"
-#include "src/cast.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/interp/binary-reader-interp.h"
+#include "src/interp/interp-util.h"
+#include "src/interp/interp-wasi.h"
 #include "src/interp/interp.h"
-#include "src/literal.h"
 #include "src/option-parser.h"
-#include "src/resolve-names.h"
 #include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-lexer.h"
-#include "src/wast-parser.h"
+
+#ifdef WITH_WASI
+#include "uvwasi.h"
+#endif
 
 using namespace wabt;
 using namespace wabt::interp;
@@ -48,14 +47,16 @@ static bool s_run_all_exports;
 static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
+static bool s_wasi;
+static std::vector<std::string> s_wasi_env;
+static std::vector<std::string> s_wasi_argv;
+static std::vector<std::string> s_wasi_dirs;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
+static std::unique_ptr<FileStream> s_stderr_stream;
 
-enum class RunVerbosity {
-  Quiet = 0,
-  Verbose = 1,
-};
+static Store s_store;
 
 static const char s_description[] =
     R"(  read a file in the wasm binary format, and run in it a stack-based
@@ -81,9 +82,8 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
   });
-  parser.AddHelpOption();
   s_features.AddOptions(&parser);
   parser.AddOption('V', "value-stack-size", "SIZE",
                    "Size in elements of the value stack",
@@ -99,6 +99,17 @@ static void ParseOptions(int argc, char** argv) {
                    });
   parser.AddOption('t', "trace", "Trace execution",
                    []() { s_trace_stream = s_stdout_stream.get(); });
+  parser.AddOption("wasi",
+                   "Assume input module is WASI compliant (Export "
+                   " WASI API the the module and invoke _start function)",
+                   []() { s_wasi = true; });
+  parser.AddOption(
+      'e', "env", "ENV",
+      "Pass the given environment string in the WASI runtime",
+      [](const std::string& argument) { s_wasi_env.push_back(argument); });
+  parser.AddOption(
+      'd', "dir", "DIR", "Pass the given directory the the WASI runtime",
+      [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -115,122 +126,206 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
+  parser.AddArgument(
+      "arg", OptionParser::ArgumentCount::ZeroOrMore,
+      [](const char* argument) { s_wasi_argv.push_back(argument); });
   parser.Parse(argc, argv);
 }
 
-static void RunAllExports(interp::Module* module,
-                          Executor* executor,
-                          RunVerbosity verbose) {
-  TypedValues args;
-  TypedValues results;
-  for (const interp::Export& export_ : module->exports) {
-    if (export_.kind != ExternalKind::Func) {
+Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
+  Result result = Result::Ok;
+
+  auto module = s_store.UnsafeGet<Module>(instance->module());
+  auto&& module_desc = module->desc();
+
+  for (auto&& export_ : module_desc.exports) {
+    if (export_.type.type->kind != ExternalKind::Func) {
       continue;
     }
-    ExecResult exec_result = executor->RunExport(&export_, args);
-    if (verbose == RunVerbosity::Verbose) {
-      WriteCall(s_stdout_stream.get(), string_view(), export_.name, args,
-                exec_result.values, exec_result.result);
+    auto* func_type = cast<FuncType>(export_.type.type.get());
+    if (func_type->params.empty()) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef(">>> running export \"%s\":\n",
+                               export_.type.name.c_str());
+      }
+      auto func = s_store.UnsafeGet<Func>(instance->funcs()[export_.index]);
+      Values params;
+      Values results;
+      Trap::Ptr trap;
+      result |= func->Call(s_store, params, results, &trap, s_trace_stream);
+      WriteCall(s_stdout_stream.get(), export_.type.name, *func_type, params,
+                results, trap);
     }
+  }
+
+  return result;
+}
+
+static void BindImports(const Module::Ptr& module, RefVec& imports) {
+  auto* stream = s_stdout_stream.get();
+
+  for (auto&& import : module->desc().imports) {
+    if (import.type.type->kind == ExternKind::Func &&
+        ((s_host_print && import.type.module == "host" &&
+          import.type.name == "print") ||
+         s_dummy_import_func)) {
+      auto func_type = *cast<FuncType>(import.type.type.get());
+      auto import_name = StringPrintf("%s.%s", import.type.module.c_str(),
+                                      import.type.name.c_str());
+
+      auto host_func =
+          HostFunc::New(s_store, func_type,
+                        [=](Thread& thread, const Values& params,
+                            Values& results, Trap::Ptr* trap) -> Result {
+                          printf("called host ");
+                          WriteCall(stream, import_name, func_type, params,
+                                    results, *trap);
+                          return Result::Ok;
+                        });
+      imports.push_back(host_func.ref());
+      continue;
+    }
+
+    // By default, just push an null reference. This won't resolve, and
+    // instantiation will fail.
+    imports.push_back(Ref::Null);
   }
 }
 
-static wabt::Result ReadModule(const char* module_filename,
-                               Environment* env,
-                               Errors* errors,
-                               DefinedModule** out_module) {
-  wabt::Result result;
+static Result ReadModule(const char* module_filename,
+                         Errors* errors,
+                         Module::Ptr* out_module) {
+  auto* stream = s_stdout_stream.get();
   std::vector<uint8_t> file_data;
+  CHECK_RESULT(ReadFile(module_filename, &file_data));
 
-  *out_module = nullptr;
+  ModuleDesc module_desc;
+  const bool kReadDebugNames = true;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+  CHECK_RESULT(ReadBinaryInterp(file_data.data(), file_data.size(), options,
+                                errors, &module_desc));
 
-  result = ReadFile(module_filename, &file_data);
-  if (Succeeded(result)) {
-    const bool kReadDebugNames = true;
-    const bool kStopOnFirstError = true;
-    const bool kFailOnCustomSectionError = true;
-    ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                              kStopOnFirstError, kFailOnCustomSectionError);
-    result = ReadBinaryInterp(env, file_data.data(), file_data.size(), options,
-                              errors, out_module);
-
-    if (Succeeded(result)) {
-      if (s_verbose) {
-        env->DisassembleModule(s_stdout_stream.get(), *out_module);
-      }
-    }
-  }
-  return result;
-}
-
-static interp::Result PrintCallback(const HostFunc* func,
-                                    const interp::FuncSignature* sig,
-                                    const TypedValues& args,
-                                    TypedValues& results) {
-  printf("called host ");
-  WriteCall(s_stdout_stream.get(), func->module_name, func->field_name, args,
-            results, interp::Result::Ok);
-  return interp::Result::Ok;
-}
-
-static void InitEnvironment(Environment* env) {
-  if (s_host_print) {
-    auto* host_module = env->AppendHostModule("host");
-    host_module->on_unknown_func_export =
-        [](Environment* env, HostModule* host_module, string_view name,
-           Index sig_index) -> Index {
-      if (name != "print") {
-        return kInvalidIndex;
-      }
-
-      return host_module->AppendFuncExport(name, sig_index, PrintCallback)
-          .second;
-    };
+  if (s_verbose) {
+    module_desc.istream.Disassemble(stream);
   }
 
-  if (s_dummy_import_func) {
-    env->on_unknown_module = [](Environment* env, string_view name) {
-      auto* host_module = env->AppendHostModule(name);
-      host_module->on_unknown_func_export =
-          [](Environment* env, HostModule* host_module, string_view name,
-             Index sig_index) -> Index {
-        return host_module->AppendFuncExport(name, sig_index, PrintCallback)
-            .second;
-      };
-      return true;
-    };
-  }
+  *out_module = Module::New(s_store, module_desc);
+  return Result::Ok;
 }
 
-static wabt::Result ReadAndRunModule(const char* module_filename) {
-  wabt::Result result;
-  Environment env;
-  InitEnvironment(&env);
+static Result InstantiateModule(RefVec& imports,
+                                const Module::Ptr& module,
+                                Instance::Ptr* out_instance) {
+  RefPtr<Trap> trap;
+  *out_instance = Instance::Instantiate(s_store, module.ref(), imports, &trap);
+  if (!*out_instance) {
+    WriteTrap(s_stderr_stream.get(), "error initializing module", trap);
+    return Result::Error;
+  }
+  return Result::Ok;
+}
 
+static Result ReadAndRunModule(const char* module_filename) {
   Errors errors;
-  DefinedModule* module = nullptr;
-  result = ReadModule(module_filename, &env, &errors, &module);
-  FormatErrorsToFile(errors, Location::Type::Binary);
-  if (Succeeded(result)) {
-    Executor executor(&env, s_trace_stream, s_thread_options);
-    ExecResult exec_result = executor.RunStartFunction(module);
-    if (exec_result.result == interp::Result::Ok) {
-      if (s_run_all_exports) {
-        RunAllExports(module, &executor, RunVerbosity::Verbose);
-      }
-    } else {
-      WriteResult(s_stdout_stream.get(), "error running start function",
-                  exec_result.result);
-    }
+  Module::Ptr module;
+  Result result = ReadModule(module_filename, &errors, &module);
+  if (!Succeeded(result)) {
+    FormatErrorsToFile(errors, Location::Type::Binary);
+    return result;
   }
-  return result;
+
+  RefVec imports;
+
+#if WITH_WASI
+  uvwasi_t uvwasi;
+#endif
+
+  if (s_wasi) {
+#if WITH_WASI
+    uvwasi_errno_t err;
+    uvwasi_options_t init_options;
+
+    std::vector<const char*> argv;
+    argv.push_back(module_filename);
+    for (auto& s : s_wasi_argv) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef("wasi: arg: \"%s\"\n", s.c_str());
+      }
+      argv.push_back(s.c_str());
+    }
+    argv.push_back(nullptr);
+
+    std::vector<const char*> envp;
+    for (auto& s : s_wasi_env) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef("wasi: env: \"%s\"\n", s.c_str());
+      }
+      envp.push_back(s.c_str());
+    }
+    envp.push_back(nullptr);
+
+    std::vector<uvwasi_preopen_t> dirs;
+    for (auto& dir : s_wasi_dirs) {
+      if (s_trace_stream) {
+        s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
+      }
+      dirs.push_back({dir.c_str(), dir.c_str()});
+    }
+
+    /* Setup the initialization options. */
+    init_options.in = 0;
+    init_options.out = 1;
+    init_options.err = 2;
+    init_options.fd_table_size = 3;
+    init_options.argc = argv.size() - 1;
+    init_options.argv = argv.data();
+    init_options.envp = envp.data();
+    init_options.preopenc = dirs.size();
+    init_options.preopens = dirs.data();
+    init_options.allocator = NULL;
+
+    err = uvwasi_init(&uvwasi, &init_options);
+    if (err != UVWASI_ESUCCESS) {
+      s_stderr_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
+      return Result::Error;
+    }
+    CHECK_RESULT(WasiBindImports(module, imports, s_stderr_stream.get(),
+                                 s_trace_stream));
+#else
+    s_stderr_stream.get()->Writef("wasi support not compiled in\n");
+    return Result::Error;
+#endif
+  } else {
+    BindImports(module, imports);
+  }
+  BindImports(module, imports);
+
+  Instance::Ptr instance;
+  CHECK_RESULT(InstantiateModule(imports, module, &instance));
+
+  if (s_run_all_exports) {
+    RunAllExports(instance, &errors);
+  }
+#ifdef WITH_WASI
+  if (s_wasi) {
+    CHECK_RESULT(
+        WasiRunStart(instance, &uvwasi, s_stderr_stream.get(), s_trace_stream));
+  }
+#endif
+
+  return Result::Ok;
 }
 
 int ProgramMain(int argc, char** argv) {
   InitStdio();
   s_stdout_stream = FileStream::CreateStdout();
+  s_stderr_stream = FileStream::CreateStderr();
 
   ParseOptions(argc, argv);
+  s_store.setFeatures(s_features);
 
   wabt::Result result = ReadAndRunModule(s_infile);
   return result != wabt::Result::Ok;

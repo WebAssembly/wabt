@@ -10,21 +10,21 @@
     drop
     ;; call local func
     call 1))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 02                                        ; num params
 000000d: 7f                                        ; i32
 000000e: 7d                                        ; f32
 000000f: 01                                        ; num results
 0000010: 7f                                        ; i32
-; type 1
+; func type 1
 0000011: 60                                        ; func
 0000012: 00                                        ; num params
 0000013: 01                                        ; num results
@@ -67,6 +67,8 @@
 0000037: 0b                                        ; end
 0000029: 0e                                        ; FIXUP func body size
 0000027: 10                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 callimport.wasm:	file format wasm 0x1
 

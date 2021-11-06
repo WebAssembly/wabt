@@ -1,0 +1,835 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs
+
+(module
+  (memory 1)
+  (func
+    (local v128)
+    i32.const 0 v128.load drop
+    i32.const 0 v128.load8x8_s drop
+    i32.const 0 v128.load8x8_u drop
+    i32.const 0 v128.load16x4_s drop
+    i32.const 0 v128.load16x4_u drop
+    i32.const 0 v128.load32x2_s drop
+    i32.const 0 v128.load32x2_u drop
+    i32.const 0 v128.load8_splat drop
+    i32.const 0 v128.load16_splat drop
+    i32.const 0 v128.load32_splat drop
+    i32.const 0 v128.load64_splat drop
+    i32.const 0 local.get 0 v128.store
+    v128.const i32x4 0 0 0 0 drop
+
+    local.get 0 local.get 0 i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 drop
+    local.get 0 local.get 0 i8x16.swizzle drop
+
+    i32.const 0 i8x16.splat drop
+    i32.const 0 i16x8.splat drop
+    i32.const 0 i32x4.splat drop
+    i64.const 0 i64x2.splat drop
+    f32.const 0 f32x4.splat drop
+    f64.const 0 f64x2.splat drop
+    local.get 0 i8x16.extract_lane_s 0 drop
+    local.get 0 i8x16.extract_lane_u 0 drop
+    local.get 0 i32.const 0 i8x16.replace_lane 0 drop
+    local.get 0 i16x8.extract_lane_s 0 drop
+    local.get 0 i16x8.extract_lane_u 0 drop
+    local.get 0 i32.const 0 i16x8.replace_lane 0 drop
+    local.get 0 i32x4.extract_lane 0 drop
+    local.get 0 i32.const 0 i32x4.replace_lane 0 drop
+    local.get 0 i64x2.extract_lane 0 drop
+    local.get 0 i64.const 0 i64x2.replace_lane 0 drop
+    local.get 0 f32x4.extract_lane 0 drop
+    local.get 0 f32.const 0 f32x4.replace_lane 0 drop
+    local.get 0 f64x2.extract_lane 0 drop
+    local.get 0 f64.const 0 f64x2.replace_lane 0 drop
+
+    local.get 0 local.get 0 i8x16.eq drop
+    local.get 0 local.get 0 i8x16.ne drop
+    local.get 0 local.get 0 i8x16.lt_s drop
+    local.get 0 local.get 0 i8x16.lt_u drop
+    local.get 0 local.get 0 i8x16.gt_s drop
+    local.get 0 local.get 0 i8x16.gt_u drop
+    local.get 0 local.get 0 i8x16.le_s drop
+    local.get 0 local.get 0 i8x16.le_u drop
+    local.get 0 local.get 0 i8x16.ge_s drop
+    local.get 0 local.get 0 i8x16.ge_u drop
+    local.get 0 local.get 0 i16x8.eq drop
+    local.get 0 local.get 0 i16x8.ne drop
+    local.get 0 local.get 0 i16x8.lt_s drop
+    local.get 0 local.get 0 i16x8.lt_u drop
+    local.get 0 local.get 0 i16x8.gt_s drop
+    local.get 0 local.get 0 i16x8.gt_u drop
+    local.get 0 local.get 0 i16x8.le_s drop
+    local.get 0 local.get 0 i16x8.le_u drop
+    local.get 0 local.get 0 i16x8.ge_s drop
+    local.get 0 local.get 0 i16x8.ge_u drop
+    local.get 0 local.get 0 i32x4.eq drop
+    local.get 0 local.get 0 i32x4.ne drop
+    local.get 0 local.get 0 i32x4.lt_s drop
+    local.get 0 local.get 0 i32x4.lt_u drop
+    local.get 0 local.get 0 i32x4.gt_s drop
+    local.get 0 local.get 0 i32x4.gt_u drop
+    local.get 0 local.get 0 i32x4.le_s drop
+    local.get 0 local.get 0 i32x4.le_u drop
+    local.get 0 local.get 0 i32x4.ge_s drop
+    local.get 0 local.get 0 i32x4.ge_u drop
+    local.get 0 local.get 0 f32x4.eq drop
+    local.get 0 local.get 0 f32x4.ne drop
+    local.get 0 local.get 0 f32x4.lt drop
+    local.get 0 local.get 0 f32x4.gt drop
+    local.get 0 local.get 0 f32x4.le drop
+    local.get 0 local.get 0 f32x4.ge drop
+    local.get 0 local.get 0 f64x2.eq drop
+    local.get 0 local.get 0 f64x2.ne drop
+    local.get 0 local.get 0 f64x2.lt drop
+    local.get 0 local.get 0 f64x2.gt drop
+    local.get 0 local.get 0 f64x2.le drop
+    local.get 0 local.get 0 f64x2.ge drop
+
+    local.get 0 v128.not drop
+    local.get 0 local.get 0 v128.and drop
+    local.get 0 local.get 0 v128.andnot drop
+    local.get 0 local.get 0 v128.or drop
+    local.get 0 local.get 0 v128.xor drop
+    local.get 0 local.get 0 local.get 0 v128.bitselect drop
+    local.get 0 v128.any_true drop
+
+    local.get 0 i8x16.abs drop
+    local.get 0 i8x16.neg drop
+    local.get 0 i8x16.all_true drop
+    local.get 0 local.get 0 i8x16.narrow_i16x8_s drop
+    local.get 0 local.get 0 i8x16.narrow_i16x8_u drop
+    local.get 0 i32.const 0 i8x16.shl drop
+    local.get 0 i32.const 0 i8x16.shr_s drop
+    local.get 0 i32.const 0 i8x16.shr_u drop
+    local.get 0 local.get 0 i8x16.add drop
+    local.get 0 local.get 0 i8x16.add_sat_s drop
+    local.get 0 local.get 0 i8x16.add_sat_u drop
+    local.get 0 local.get 0 i8x16.sub drop
+    local.get 0 local.get 0 i8x16.sub_sat_s drop
+    local.get 0 local.get 0 i8x16.sub_sat_u drop
+    local.get 0 local.get 0 i8x16.min_s drop
+    local.get 0 local.get 0 i8x16.min_u drop
+    local.get 0 local.get 0 i8x16.max_s drop
+    local.get 0 local.get 0 i8x16.max_u drop
+    local.get 0 local.get 0 i8x16.avgr_u drop
+
+    local.get 0 i16x8.abs drop
+    local.get 0 i16x8.neg drop
+    local.get 0 i16x8.all_true drop
+    local.get 0 local.get 0 i16x8.narrow_i32x4_s drop
+    local.get 0 local.get 0 i16x8.narrow_i32x4_u drop
+    local.get 0 i16x8.extend_low_i8x16_s drop
+    local.get 0 i16x8.extend_high_i8x16_s drop
+    local.get 0 i16x8.extend_low_i8x16_u drop
+    local.get 0 i16x8.extend_high_i8x16_u drop
+    local.get 0 i32.const 0 i16x8.shl drop
+    local.get 0 i32.const 0 i16x8.shr_s drop
+    local.get 0 i32.const 0 i16x8.shr_u drop
+    local.get 0 local.get 0 i16x8.add drop
+    local.get 0 local.get 0 i16x8.add_sat_s drop
+    local.get 0 local.get 0 i16x8.add_sat_u drop
+    local.get 0 local.get 0 i16x8.sub drop
+    local.get 0 local.get 0 i16x8.sub_sat_s drop
+    local.get 0 local.get 0 i16x8.sub_sat_u drop
+    local.get 0 local.get 0 i16x8.mul drop
+    local.get 0 local.get 0 i16x8.min_s drop
+    local.get 0 local.get 0 i16x8.min_u drop
+    local.get 0 local.get 0 i16x8.max_s drop
+    local.get 0 local.get 0 i16x8.max_u drop
+    local.get 0 local.get 0 i16x8.avgr_u drop
+
+    local.get 0 i32x4.abs drop
+    local.get 0 i32x4.neg drop
+    local.get 0 i32x4.all_true drop
+    local.get 0 i32x4.extend_low_i16x8_s drop
+    local.get 0 i32x4.extend_high_i16x8_s drop
+    local.get 0 i32x4.extend_low_i16x8_u drop
+    local.get 0 i32x4.extend_high_i16x8_u drop
+    local.get 0 i32.const 0 i32x4.shl drop
+    local.get 0 i32.const 0 i32x4.shr_s drop
+    local.get 0 i32.const 0 i32x4.shr_u drop
+    local.get 0 local.get 0 i32x4.add drop
+    local.get 0 local.get 0 i32x4.sub drop
+    local.get 0 local.get 0 i32x4.mul drop
+    local.get 0 local.get 0 i32x4.min_s drop
+    local.get 0 local.get 0 i32x4.min_u drop
+    local.get 0 local.get 0 i32x4.max_s drop
+    local.get 0 local.get 0 i32x4.max_u drop
+
+    local.get 0 i64x2.neg drop
+    local.get 0 i32.const 0 i64x2.shl drop
+    local.get 0 i32.const 0 i64x2.shr_s drop
+    local.get 0 i32.const 0 i64x2.shr_u drop
+    local.get 0 local.get 0 i64x2.add drop
+    local.get 0 local.get 0 i64x2.sub drop
+    local.get 0 local.get 0 i64x2.mul drop
+
+    local.get 0 f32x4.abs drop
+    local.get 0 f32x4.neg drop
+    local.get 0 f32x4.sqrt drop
+    local.get 0 local.get 0 f32x4.add drop
+    local.get 0 local.get 0 f32x4.sub drop
+    local.get 0 local.get 0 f32x4.mul drop
+    local.get 0 local.get 0 f32x4.div drop
+    local.get 0 local.get 0 f32x4.min drop
+    local.get 0 local.get 0 f32x4.max drop
+
+    local.get 0 f64x2.abs drop
+    local.get 0 f64x2.neg drop
+    local.get 0 f64x2.sqrt drop
+    local.get 0 local.get 0 f64x2.add drop
+    local.get 0 local.get 0 f64x2.sub drop
+    local.get 0 local.get 0 f64x2.mul drop
+    local.get 0 local.get 0 f64x2.div drop
+    local.get 0 local.get 0 f64x2.min drop
+    local.get 0 local.get 0 f64x2.max drop
+
+    local.get 0 i32x4.trunc_sat_f32x4_s drop
+    local.get 0 i32x4.trunc_sat_f32x4_u drop
+    local.get 0 f32x4.convert_i32x4_s drop
+    local.get 0 f32x4.convert_i32x4_u drop
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (local v128)
+    (drop
+      (v128.load
+        (i32.const 0)))
+    (drop
+      (v128.load8x8_s
+        (i32.const 0)))
+    (drop
+      (v128.load8x8_u
+        (i32.const 0)))
+    (drop
+      (v128.load16x4_s
+        (i32.const 0)))
+    (drop
+      (v128.load16x4_u
+        (i32.const 0)))
+    (drop
+      (v128.load32x2_s
+        (i32.const 0)))
+    (drop
+      (v128.load32x2_u
+        (i32.const 0)))
+    (drop
+      (v128.load8_splat
+        (i32.const 0)))
+    (drop
+      (v128.load16_splat
+        (i32.const 0)))
+    (drop
+      (v128.load32_splat
+        (i32.const 0)))
+    (drop
+      (v128.load64_splat
+        (i32.const 0)))
+    (v128.store
+      (i32.const 0)
+      (local.get 0))
+    (drop
+      (v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000))
+    (drop
+      (i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.swizzle
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.splat
+        (i32.const 0)))
+    (drop
+      (i16x8.splat
+        (i32.const 0)))
+    (drop
+      (i32x4.splat
+        (i32.const 0)))
+    (drop
+      (i64x2.splat
+        (i64.const 0)))
+    (drop
+      (f32x4.splat
+        (f32.const 0x0p+0 (;=0;))))
+    (drop
+      (f64x2.splat
+        (f64.const 0x0p+0 (;=0;))))
+    (drop
+      (i8x16.extract_lane_s 0
+        (local.get 0)))
+    (drop
+      (i8x16.extract_lane_u 0
+        (local.get 0)))
+    (drop
+      (i8x16.replace_lane 0
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i16x8.extract_lane_s 0
+        (local.get 0)))
+    (drop
+      (i16x8.extract_lane_u 0
+        (local.get 0)))
+    (drop
+      (i16x8.replace_lane 0
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i32x4.extract_lane 0
+        (local.get 0)))
+    (drop
+      (i32x4.replace_lane 0
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i64x2.extract_lane 0
+        (local.get 0)))
+    (drop
+      (i64x2.replace_lane 0
+        (local.get 0)
+        (i64.const 0)))
+    (drop
+      (f32x4.extract_lane 0
+        (local.get 0)))
+    (drop
+      (f32x4.replace_lane 0
+        (local.get 0)
+        (f32.const 0x0p+0 (;=0;))))
+    (drop
+      (f64x2.extract_lane 0
+        (local.get 0)))
+    (drop
+      (f64x2.replace_lane 0
+        (local.get 0)
+        (f64.const 0x0p+0 (;=0;))))
+    (drop
+      (i8x16.eq
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.ne
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.lt_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.lt_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.gt_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.gt_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.le_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.le_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.ge_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.ge_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.eq
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.ne
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.lt_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.lt_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.gt_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.gt_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.le_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.le_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.ge_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.ge_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.eq
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.ne
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.lt_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.lt_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.gt_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.gt_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.le_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.le_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.ge_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.ge_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.eq
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.ne
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.lt
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.gt
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.le
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.ge
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.eq
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.ne
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.lt
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.gt
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.le
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.ge
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (v128.not
+        (local.get 0)))
+    (drop
+      (v128.and
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (v128.andnot
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (v128.or
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (v128.xor
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (v128.bitselect
+        (local.get 0)
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (v128.any_true
+        (local.get 0)))
+    (drop
+      (i8x16.abs
+        (local.get 0)))
+    (drop
+      (i8x16.neg
+        (local.get 0)))
+    (drop
+      (i8x16.all_true
+        (local.get 0)))
+    (drop
+      (i8x16.narrow_i16x8_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.narrow_i16x8_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.shl
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i8x16.shr_s
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i8x16.shr_u
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i8x16.add
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.add_sat_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.add_sat_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.sub
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.sub_sat_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.sub_sat_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.min_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.min_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.max_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.max_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i8x16.avgr_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.abs
+        (local.get 0)))
+    (drop
+      (i16x8.neg
+        (local.get 0)))
+    (drop
+      (i16x8.all_true
+        (local.get 0)))
+    (drop
+      (i16x8.narrow_i32x4_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.narrow_i32x4_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.extend_low_i8x16_s
+        (local.get 0)))
+    (drop
+      (i16x8.extend_high_i8x16_s
+        (local.get 0)))
+    (drop
+      (i16x8.extend_low_i8x16_u
+        (local.get 0)))
+    (drop
+      (i16x8.extend_high_i8x16_u
+        (local.get 0)))
+    (drop
+      (i16x8.shl
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i16x8.shr_s
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i16x8.shr_u
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i16x8.add
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.add_sat_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.add_sat_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.sub
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.sub_sat_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.sub_sat_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.mul
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.min_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.min_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.max_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.max_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i16x8.avgr_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.abs
+        (local.get 0)))
+    (drop
+      (i32x4.neg
+        (local.get 0)))
+    (drop
+      (i32x4.all_true
+        (local.get 0)))
+    (drop
+      (i32x4.extend_low_i16x8_s
+        (local.get 0)))
+    (drop
+      (i32x4.extend_high_i16x8_s
+        (local.get 0)))
+    (drop
+      (i32x4.extend_low_i16x8_u
+        (local.get 0)))
+    (drop
+      (i32x4.extend_high_i16x8_u
+        (local.get 0)))
+    (drop
+      (i32x4.shl
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i32x4.shr_s
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i32x4.shr_u
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i32x4.add
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.sub
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.mul
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.min_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.min_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.max_s
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.max_u
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i64x2.neg
+        (local.get 0)))
+    (drop
+      (i64x2.shl
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i64x2.shr_s
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i64x2.shr_u
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (i64x2.add
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i64x2.sub
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i64x2.mul
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.abs
+        (local.get 0)))
+    (drop
+      (f32x4.neg
+        (local.get 0)))
+    (drop
+      (f32x4.sqrt
+        (local.get 0)))
+    (drop
+      (f32x4.add
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.sub
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.mul
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.div
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.min
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f32x4.max
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.abs
+        (local.get 0)))
+    (drop
+      (f64x2.neg
+        (local.get 0)))
+    (drop
+      (f64x2.sqrt
+        (local.get 0)))
+    (drop
+      (f64x2.add
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.sub
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.mul
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.div
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.min
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (f64x2.max
+        (local.get 0)
+        (local.get 0)))
+    (drop
+      (i32x4.trunc_sat_f32x4_s
+        (local.get 0)))
+    (drop
+      (i32x4.trunc_sat_f32x4_u
+        (local.get 0)))
+    (drop
+      (f32x4.convert_i32x4_s
+        (local.get 0)))
+    (drop
+      (f32x4.convert_i32x4_u
+        (local.get 0))))
+  (memory (;0;) 1))
+;;; STDOUT ;;)

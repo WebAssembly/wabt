@@ -1,0 +1,38 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i64x2_arith.wast
+(;; STDOUT ;;;
+out/test/spec/simd/simd_i64x2_arith.wast:546: assert_invalid passed:
+  error: type mismatch in i64x2.neg, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:547: assert_invalid passed:
+  error: type mismatch in i64x2.add, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:548: assert_invalid passed:
+  error: type mismatch in i64x2.sub, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:549: assert_invalid passed:
+  error: type mismatch in i64x2.mul, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:554: assert_invalid passed:
+  error: type mismatch in i64x2.neg, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:562: assert_invalid passed:
+  error: type mismatch in i64x2.add, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:570: assert_invalid passed:
+  error: type mismatch in i64x2.add, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:578: assert_invalid passed:
+  error: type mismatch in i64x2.sub, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:586: assert_invalid passed:
+  error: type mismatch in i64x2.sub, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:594: assert_invalid passed:
+  error: type mismatch in i64x2.mul, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd/simd_i64x2_arith.wast:602: assert_invalid passed:
+  error: type mismatch in i64x2.mul, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+198/198 tests passed.
+;;; STDOUT ;;)

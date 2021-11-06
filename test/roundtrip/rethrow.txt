@@ -1,0 +1,23 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-exceptions
+(module
+  (tag $e0 (param i32))
+
+  (func
+    try
+    catch $e0
+      rethrow 0
+    end
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32)))
+  (type (;1;) (func))
+  (func (;0;) (type 1)
+    try  ;; label = @1
+    catch 0
+      rethrow 0 (;@1;)
+    end)
+  (tag (;0;) (type 0) (param i32)))
+;;; STDOUT ;;)

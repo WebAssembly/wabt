@@ -3,7 +3,7 @@
 (module
   (memory 1)
   (data (i32.add (i32.const 1) (i32.const 2)) "foo"))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Memory" (5)
@@ -14,12 +14,18 @@
 000000b: 00                                        ; limits: flags
 000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
+; section "DataCount" (12)
+000000d: 0c                                        ; section code
+000000e: 00                                        ; section size (guess)
+000000f: 01                                        ; data count
+000000e: 01                                        ; FIXUP section size
+; truncate to 13 (0xd)
 ; section "Data" (11)
 000000d: 0b                                        ; section code
 000000e: 00                                        ; section size (guess)
 000000f: 01                                        ; num data segments
 ; data segment header 0
-0000010: 00                                      
+0000010: 00                                        ; segment flags
 0000011: 41                                        ; i32.const
 0000012: 01                                        ; i32 literal
 0000013: 41                                        ; i32.const
@@ -30,4 +36,4 @@
 ; data segment data 0
 0000018: 666f 6f                                   ; data segment data
 000000e: 0c                                        ; FIXUP section size
-;;; STDOUT ;;)
+;;; STDERR ;;)

@@ -1,67 +1,94 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
+  (tag $e (param i32))
   (func
+    try
+      nop
+    end
     try $try1 (result i32)
       nop
       i32.const 7
-    catch
+    catch $e
       drop
       i32.const 8
     end
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
-000000a: 01                                        ; num types
-; type 0
+000000a: 02                                        ; num types
+; func type 0
 000000b: 60                                        ; func
-000000c: 00                                        ; num params
-000000d: 00                                        ; num results
-0000009: 04                                        ; FIXUP section size
+000000c: 01                                        ; num params
+000000d: 7f                                        ; i32
+000000e: 00                                        ; num results
+; func type 1
+000000f: 60                                        ; func
+0000010: 00                                        ; num params
+0000011: 00                                        ; num results
+0000009: 08                                        ; FIXUP section size
 ; section "Function" (3)
-000000e: 03                                        ; section code
-000000f: 00                                        ; section size (guess)
-0000010: 01                                        ; num functions
-0000011: 00                                        ; function 0 signature index
-000000f: 02                                        ; FIXUP section size
-; section "Code" (10)
-0000012: 0a                                        ; section code
+0000012: 03                                        ; section code
 0000013: 00                                        ; section size (guess)
 0000014: 01                                        ; num functions
+0000015: 01                                        ; function 0 signature index
+0000013: 02                                        ; FIXUP section size
+; section "Tag" (13)
+0000016: 0d                                        ; section code
+0000017: 00                                        ; section size (guess)
+0000018: 01                                        ; tag count
+; tag 0
+0000019: 00                                        ; tag attribute
+000001a: 00                                        ; tag signature index
+0000017: 03                                        ; FIXUP section size
+; section "Code" (10)
+000001b: 0a                                        ; section code
+000001c: 00                                        ; section size (guess)
+000001d: 01                                        ; num functions
 ; function body 0
-0000015: 00                                        ; func body size (guess)
-0000016: 00                                        ; local decl count
-0000017: 06                                        ; try
-0000018: 7f                                        ; i32
-0000019: 01                                        ; nop
-000001a: 41                                        ; i32.const
-000001b: 07                                        ; i32 literal
-000001c: 07                                        ; catch
-000001d: 1a                                        ; drop
-000001e: 41                                        ; i32.const
-000001f: 08                                        ; i32 literal
-0000020: 0b                                        ; end
-0000021: 1a                                        ; drop
-0000022: 0b                                        ; end
-0000015: 0d                                        ; FIXUP func body size
-0000013: 0f                                        ; FIXUP section size
+000001e: 00                                        ; func body size (guess)
+000001f: 00                                        ; local decl count
+0000020: 06                                        ; try
+0000021: 40                                        ; void
+0000022: 01                                        ; nop
+0000023: 0b                                        ; end
+0000024: 06                                        ; try
+0000025: 7f                                        ; i32
+0000026: 01                                        ; nop
+0000027: 41                                        ; i32.const
+0000028: 07                                        ; i32 literal
+0000029: 07                                        ; catch
+000002a: 00                                        ; catch tag
+000002b: 1a                                        ; drop
+000002c: 41                                        ; i32.const
+000002d: 08                                        ; i32 literal
+000002e: 0b                                        ; end
+000002f: 1a                                        ; drop
+0000030: 0b                                        ; end
+000001e: 12                                        ; FIXUP func body size
+000001c: 14                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 try.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 06 7f                      | try i32
- 000019: 01                         |   nop
- 00001a: 41 07                      |   i32.const 7
- 00001c: 07                         | catch
- 00001d: 1a                         |   drop
- 00001e: 41 08                      |   i32.const 8
- 000020: 0b                         | end
- 000021: 1a                         | drop
- 000022: 0b                         | end
+00001f func[0]:
+ 000020: 06 40                      | try
+ 000022: 01                         |   nop
+ 000023: 0b                         | end
+ 000024: 06 7f                      | try i32
+ 000026: 01                         |   nop
+ 000027: 41 07                      |   i32.const 7
+ 000029: 07 00                      | catch 0
+ 00002b: 1a                         |   drop
+ 00002c: 41 08                      |   i32.const 8
+ 00002e: 0b                         | end
+ 00002f: 1a                         | drop
+ 000030: 0b                         | end
 ;;; STDOUT ;;)

@@ -2,7 +2,7 @@
 ;;; ARGS0: -v --debug-names
 ;;; ARGS1: -x
 (module $my_module)
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "name"
@@ -20,6 +20,8 @@
 000001d: 00                                        ; num functions
 000001c: 01                                        ; FIXUP subsection size
 0000009: 14                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 module-name.wasm:	file format wasm 0x1
 module name: <my_module>

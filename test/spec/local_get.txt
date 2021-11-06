@@ -32,22 +32,22 @@ out/test/spec/local_get.wast:193: assert_invalid passed:
   error: type mismatch in function, expected [] but got [f64]
   000001c: error: EndFunctionBody callback failed
 out/test/spec/local_get.wast:201: assert_invalid passed:
-  error: invalid local_index: 3 (max 2)
+  0000000: error: local variable out of range (max 2)
   000001d: error: OnLocalGetExpr callback failed
 out/test/spec/local_get.wast:205: assert_invalid passed:
-  error: invalid local_index: 14324343 (max 2)
+  0000000: error: local variable out of range (max 2)
   0000020: error: OnLocalGetExpr callback failed
 out/test/spec/local_get.wast:210: assert_invalid passed:
-  error: invalid local_index: 2 (max 2)
+  0000000: error: local variable out of range (max 2)
   000001b: error: OnLocalGetExpr callback failed
 out/test/spec/local_get.wast:214: assert_invalid passed:
-  error: invalid local_index: 714324343 (max 2)
+  0000000: error: local variable out of range (max 2)
   000001f: error: OnLocalGetExpr callback failed
 out/test/spec/local_get.wast:219: assert_invalid passed:
-  error: invalid local_index: 3 (max 3)
+  0000000: error: local variable out of range (max 3)
   000001e: error: OnLocalGetExpr callback failed
 out/test/spec/local_get.wast:223: assert_invalid passed:
-  error: invalid local_index: 214324343 (max 3)
+  0000000: error: local variable out of range (max 3)
   0000021: error: OnLocalGetExpr callback failed
 35/35 tests passed.
 ;;; STDOUT ;;)

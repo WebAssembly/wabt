@@ -12,18 +12,18 @@
     block (result i32)
       i32.const 1
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
-; type 1
+; func type 1
 000000e: 60                                        ; func
 000000f: 00                                        ; num params
 0000010: 01                                        ; num results
@@ -62,6 +62,8 @@
 000002a: 0b                                        ; end
 0000023: 07                                        ; FIXUP func body size
 0000018: 12                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 block.wasm:	file format wasm 0x1
 

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/type.wast
-;;; NOTE: Two tests don't pass because they use quoted modules with assert_invalid, which isn't currently supported by wabt.
 (;; STDOUT ;;;
 out/test/spec/type.wast:44: assert_malformed passed:
   out/test/spec/type/type.1.wat:1:27: error: unexpected token "param", expected param or result.
@@ -10,9 +9,5 @@ out/test/spec/type.wast:48: assert_malformed passed:
   out/test/spec/type/type.2.wat:1:21: error: unexpected token $x, expected ).
   (type (func (result $x i32)))
                       ^^
-out/test/spec/type.wast:53: assert_invalid passed:
-  000000e: error: result count must be 0 or 1
-out/test/spec/type.wast:57: assert_invalid passed:
-  000000e: error: result count must be 0 or 1
-4/4 tests passed.
+2/2 tests passed.
 ;;; STDOUT ;;)

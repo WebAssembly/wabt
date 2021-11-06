@@ -19,14 +19,14 @@
     set_local 4
     f32.const 0
     set_local 5))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 02                                        ; num params
 000000d: 7f                                        ; i32
@@ -81,6 +81,8 @@
 0000042: 0b                                        ; end
 0000017: 2b                                        ; FIXUP func body size
 0000015: 2d                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 setlocal-param.wasm:	file format wasm 0x1
 

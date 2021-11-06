@@ -1,0 +1,196 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/load64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64/load64.wast:214: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.1.wat:1:47: error: unexpected token "i32.load32", expected an instr.
+  (memory i64 1)(func (param i64) (result i32) (i32.load32 (local.get 0)))
+                                                ^^^^^^^^^^
+out/test/spec/memory64/load64.wast:221: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.2.wat:1:47: error: unexpected token "i32.load32_u", expected an instr.
+  (memory i64 1)(func (param i64) (result i32) (i32.load32_u (local.get 0)))
+                                                ^^^^^^^^^^^^
+out/test/spec/memory64/load64.wast:228: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.3.wat:1:47: error: unexpected token "i32.load32_s", expected an instr.
+  (memory i64 1)(func (param i64) (result i32) (i32.load32_s (local.get 0)))
+                                                ^^^^^^^^^^^^
+out/test/spec/memory64/load64.wast:235: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.4.wat:1:47: error: unexpected token "i32.load64", expected an instr.
+  (memory i64 1)(func (param i64) (result i32) (i32.load64 (local.get 0)))
+                                                ^^^^^^^^^^
+out/test/spec/memory64/load64.wast:242: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.5.wat:1:47: error: unexpected token "i32.load64_u", expected an instr.
+  (memory i64 1)(func (param i64) (result i32) (i32.load64_u (local.get 0)))
+                                                ^^^^^^^^^^^^
+out/test/spec/memory64/load64.wast:249: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.6.wat:1:47: error: unexpected token "i32.load64_s", expected an instr.
+  (memory i64 1)(func (param i64) (result i32) (i32.load64_s (local.get 0)))
+                                                ^^^^^^^^^^^^
+out/test/spec/memory64/load64.wast:257: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.7.wat:1:47: error: unexpected token "i64.load64", expected an instr.
+  (memory i64 1)(func (param i64) (result i64) (i64.load64 (local.get 0)))
+                                                ^^^^^^^^^^
+out/test/spec/memory64/load64.wast:264: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.8.wat:1:47: error: unexpected token "i64.load64_u", expected an instr.
+  (memory i64 1)(func (param i64) (result i64) (i64.load64_u (local.get 0)))
+                                                ^^^^^^^^^^^^
+out/test/spec/memory64/load64.wast:271: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.9.wat:1:47: error: unexpected token "i64.load64_s", expected an instr.
+  (memory i64 1)(func (param i64) (result i64) (i64.load64_s (local.get 0)))
+                                                ^^^^^^^^^^^^
+out/test/spec/memory64/load64.wast:279: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.10.wat:1:47: error: unexpected token "f32.load32", expected an instr.
+  (memory i64 1)(func (param i64) (result f32) (f32.load32 (local.get 0)))
+                                                ^^^^^^^^^^
+out/test/spec/memory64/load64.wast:286: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.11.wat:1:47: error: unexpected token "f32.load64", expected an instr.
+  (memory i64 1)(func (param i64) (result f32) (f32.load64 (local.get 0)))
+                                                ^^^^^^^^^^
+out/test/spec/memory64/load64.wast:294: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.12.wat:1:47: error: unexpected token "f64.load32", expected an instr.
+  (memory i64 1)(func (param i64) (result f64) (f64.load32 (local.get 0)))
+                                                ^^^^^^^^^^
+out/test/spec/memory64/load64.wast:301: assert_malformed passed:
+  out/test/spec/memory64/load64/load64.13.wat:1:47: error: unexpected token "f64.load64", expected an instr.
+  (memory i64 1)(func (param i64) (result f64) (f64.load64 (local.get 0)))
+                                                ^^^^^^^^^^
+out/test/spec/memory64/load64.wast:312: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:316: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:320: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:324: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:328: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:332: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:336: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:340: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:344: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:348: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:352: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:356: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:360: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [f32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:364: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [f64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/load64.wast:371: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:372: assert_invalid passed:
+  error: type mismatch in i32.load8_s, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:373: assert_invalid passed:
+  error: type mismatch in i32.load8_u, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:374: assert_invalid passed:
+  error: type mismatch in i32.load16_s, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:375: assert_invalid passed:
+  error: type mismatch in i32.load16_u, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:376: assert_invalid passed:
+  error: type mismatch in i64.load, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:377: assert_invalid passed:
+  error: type mismatch in i64.load8_s, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:378: assert_invalid passed:
+  error: type mismatch in i64.load8_u, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:379: assert_invalid passed:
+  error: type mismatch in i64.load16_s, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:380: assert_invalid passed:
+  error: type mismatch in i64.load16_u, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:381: assert_invalid passed:
+  error: type mismatch in i64.load32_s, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:382: assert_invalid passed:
+  error: type mismatch in i64.load32_u, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:383: assert_invalid passed:
+  error: type mismatch in f32.load, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:384: assert_invalid passed:
+  error: type mismatch in f64.load, expected [i64] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:388: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:397: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:407: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:417: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:427: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000028: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:437: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:447: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:457: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:467: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:476: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:485: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:495: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  000003c: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:512: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:522: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:532: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  0000027: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:542: assert_invalid passed:
+  error: type mismatch in i64.load, expected [i64] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:551: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/memory64/load64.wast:560: assert_invalid passed:
+  error: type mismatch in i32.load, expected [i64] but got []
+  000001f: error: OnLoadExpr callback failed
+96/96 tests passed.
+;;; STDOUT ;;)

@@ -7,3 +7,9 @@
 [submodule "third_party/ply"]
 	path = third_party/ply
 	url = https://github.com/dabeaz/ply
+[submodule "third_party/wasm-c-api"]
+	path = third_party/wasm-c-api
+	url = https://github.com/WebAssembly/wasm-c-api
+[submodule "third_party/uvwasi"]
+	path = third_party/uvwasi
+	url = https://github.com/nodejs/uvwasi

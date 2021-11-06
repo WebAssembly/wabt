@@ -40,23 +40,23 @@
 
 using namespace wabt;
 
-Label* ModuleContext::GetLabel(const Var& var) {
+const Label* ModuleContext::GetLabel(const Var& var) const {
   if (var.is_name()) {
     for (Index i = GetLabelStackSize(); i > 0; --i) {
-      Label* label = &label_stack_[i - 1];
+      auto label = &label_stack_[i - 1];
       if (label->name == var.name()) {
         return label;
       }
     }
   } else if (var.index() < GetLabelStackSize()) {
-    Label* label = &label_stack_[GetLabelStackSize() - var.index() - 1];
+    auto label = &label_stack_[GetLabelStackSize() - var.index() - 1];
     return label;
   }
   return nullptr;
 }
 
-Index ModuleContext::GetLabelArity(const Var& var) {
-  Label* label = GetLabel(var);
+Index ModuleContext::GetLabelArity(const Var& var) const {
+  auto label = GetLabel(var);
   if (!label) {
     return 0;
   }
@@ -65,12 +65,12 @@ Index ModuleContext::GetLabelArity(const Var& var) {
                                               : label->result_types.size();
 }
 
-Index ModuleContext::GetFuncParamCount(const Var& var) {
+Index ModuleContext::GetFuncParamCount(const Var& var) const {
   const Func* func = module.GetFunc(var);
   return func ? func->GetNumParams() : 0;
 }
 
-Index ModuleContext::GetFuncResultCount(const Var& var) {
+Index ModuleContext::GetFuncResultCount(const Var& var) const {
   const Func* func = module.GetFunc(var);
   return func ? func->GetNumResults() : 0;
 }
@@ -95,7 +95,7 @@ void ModuleContext::EndFunc() {
   current_func_ = nullptr;
 }
 
-ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
+ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
   switch (expr.type()) {
     case ExprType::AtomicNotify:
     case ExprType::AtomicRmw:
@@ -120,9 +120,6 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
       return { arity + 1, arity };
     }
 
-    case ExprType::BrOnExn:
-      return { 1, 1 };
-
     case ExprType::BrTable:
       return { GetLabelArity(cast<BrTableExpr>(&expr)->default_target) + 1, 1,
                true };
@@ -143,6 +140,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
                ci_expr->decl.GetNumResults() };
     }
 
+    case ExprType::CallRef: {
+      const Var& var = cast<CallRefExpr>(&expr)->function_type_index;
+      return { GetFuncParamCount(var) + 1, GetFuncResultCount(var) };
+    }
+
     case ExprType::ReturnCallIndirect: {
       const auto* rci_expr = cast<ReturnCallIndirectExpr>(&expr);
       return { rci_expr->decl.GetNumParams() + 1,
@@ -155,6 +157,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
     case ExprType::MemorySize:
     case ExprType::TableSize:
     case ExprType::RefNull:
+    case ExprType::RefFunc:
       return { 0, 1 };
 
     case ExprType::Unreachable:
@@ -162,6 +165,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
 
     case ExprType::DataDrop:
     case ExprType::ElemDrop:
+    case ExprType::AtomicFence:
       return { 0, 0 };
 
     case ExprType::MemoryInit:
@@ -169,6 +173,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
     case ExprType::MemoryFill:
     case ExprType::MemoryCopy:
     case ExprType::TableCopy:
+    case ExprType::TableFill:
       return { 3, 0 };
 
     case ExprType::AtomicLoad:
@@ -179,6 +184,8 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
     case ExprType::Unary:
     case ExprType::TableGet:
     case ExprType::RefIsNull:
+    case ExprType::LoadSplat:
+    case ExprType::LoadZero:
       return { 1, 1 };
 
     case ExprType::Drop:
@@ -211,15 +218,14 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
     case ExprType::Throw: {
       auto throw_ = cast<ThrowExpr>(&expr);
       Index operand_count = 0;
-      if (Event* event = module.GetEvent(throw_->var)) {
-        operand_count = event->decl.sig.param_types.size();
+      if (Tag* tag = module.GetTag(throw_->var)) {
+        operand_count = tag->decl.sig.param_types.size();
       }
       return { operand_count, 0, true };
     }
 
     case ExprType::Try:
       return { 0, cast<TryExpr>(&expr)->block.decl.sig.GetNumResults() };
-      break;
 
     case ExprType::Ternary:
       return { 3, 1 };
@@ -253,12 +259,14 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
       }
     }
 
+    case ExprType::SimdLoadLane:
+    case ExprType::SimdStoreLane: {
+      return { 2, 1 };
+    }
+
     case ExprType::SimdShuffleOp:
       return { 2, 1 };
-
-    default:
-      fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(expr));
-      assert(0);
-      return { 0, 0 };
   }
+
+  WABT_UNREACHABLE;
 }

@@ -9,7 +9,7 @@
     return_call_indirect)
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-returncallindirect-no-table.txt:9:5: error: return_call_indirect requires table 0 to be an imported or defined table.
+out/test/typecheck/bad-returncallindirect-no-table.txt:9:5: error: table variable out of range: 0 (max 0)
     return_call_indirect)
     ^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

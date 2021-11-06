@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-bulk-memory
 (module
   (memory 0)
 
@@ -9,4 +8,4 @@
   (func)
 
   (table 0 funcref)
-  (elem funcref 1))
+  (elem func 1))

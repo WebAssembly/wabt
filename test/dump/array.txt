@@ -1,0 +1,18 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-gc
+;;; ARGS1: -x
+(type (array i32))
+(type (array (mut i64)))
+(;; STDOUT ;;;
+
+array.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[2]:
+ - type[0] (array i32)
+ - type[1] (array (mut i64))
+
+Code Disassembly:
+
+;;; STDOUT ;;)

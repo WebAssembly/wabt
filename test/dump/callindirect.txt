@@ -7,14 +7,14 @@
     i32.const 0
     call_indirect (type $t))
   (table anyfunc (elem $f)))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 01                                        ; num params
 000000d: 7f                                        ; i32
@@ -41,12 +41,12 @@
 000001b: 00                                        ; section size (guess)
 000001c: 01                                        ; num elem segments
 ; elem segment header 0
-000001d: 00                                      
+000001d: 00                                        ; segment flags
 000001e: 41                                        ; i32.const
 000001f: 00                                        ; i32 literal
 0000020: 0b                                        ; end
-0000021: 01                                        ; num elem exprs
-0000022: 00                                        ; elem expr function index
+0000021: 01                                        ; num elems
+0000022: 00                                        ; elem function index
 000001b: 07                                        ; FIXUP section size
 ; section "Code" (10)
 0000023: 0a                                        ; section code
@@ -65,6 +65,8 @@
 000002f: 0b                                        ; end
 0000026: 09                                        ; FIXUP func body size
 0000024: 0b                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 callindirect.wasm:	file format wasm 0x1
 

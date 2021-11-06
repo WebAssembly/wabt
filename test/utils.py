@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import contextlib
 import os
 import json
@@ -44,8 +43,6 @@ class Executable(object):
         self.basename = kwargs.get('basename',
                                    os.path.basename(exe)).replace('.exe', '')
         self.error_cmdline = kwargs.get('error_cmdline', True)
-        self.clean_stdout = kwargs.get('clean_stdout')
-        self.clean_stderr = kwargs.get('clean_stderr')
         self.stdout_handle = self._ForwardHandle(kwargs.get('forward_stdout'))
         self.stderr_handle = self._ForwardHandle(kwargs.get('forward_stderr'))
         self.verbose = False
@@ -68,24 +65,18 @@ class Executable(object):
         stderr = ''
         error = None
         try:
-            process = subprocess.Popen(cmd, stdout=self.stdout_handle,
-                                       stderr=self.stderr_handle, **kwargs)
-            stdout, stderr = process.communicate()
-            if stdout:
-                stdout = stdout.decode('utf-8', 'ignore')
-            if stderr:
-                stderr = stderr.decode('utf-8', 'ignore')
-            if self.clean_stdout:
-                stdout = self.clean_stdout(stdout)
-            if self.clean_stderr:
-                stderr = self.clean_stderr(stderr)
+            process = subprocess.run(cmd, check=False, text=True,
+                                     stdout=self.stdout_handle,
+                                     stderr=self.stderr_handle, **kwargs)
+            stdout = process.stdout
+            stderr = process.stderr
             if process.returncode < 0:
                 # Terminated by signal
                 signame = SIGNAMES.get(-process.returncode, '<unknown>')
                 error = Error('Signal raised running "%s": %s\n%s' % (err_cmd_str,
                               signame, stderr))
             elif process.returncode > 0:
-                error = Error('Error running "%s":\n%s' % (err_cmd_str, stderr))
+                error = Error('Error running "%s" (%d):\n%s' % (err_cmd_str, process.returncode, stderr))
         except OSError as e:
             error = Error('Error running "%s": %s' % (err_cmd_str, str(e)))
         return stdout, stderr, error
@@ -141,9 +132,6 @@ def ChangeDir(path, new_dir):
 
 
 def Hexdump(data):
-    if type(data) is str:
-        data = bytearray(data, 'ascii')
-
     DUMP_OCTETS_PER_LINE = 16
     DUMP_OCTETS_PER_GROUP = 2
 
@@ -155,7 +143,7 @@ def Hexdump(data):
         line_end = p + DUMP_OCTETS_PER_LINE
         line = '%07x: ' % p
         while p < line_end:
-            for i in xrange(DUMP_OCTETS_PER_GROUP):
+            for i in range(DUMP_OCTETS_PER_GROUP):
                 if p < end:
                     line += '%02x' % data[p]
                 else:
@@ -164,7 +152,7 @@ def Hexdump(data):
             line += ' '
         line += ' '
         p = line_start
-        for i in xrange(DUMP_OCTETS_PER_LINE):
+        for i in range(DUMP_OCTETS_PER_LINE):
             if p >= end:
                 break
             x = data[p]

@@ -7,6 +7,6 @@ section(MEMORY) {
   initial[leb_u32(65537)]
 }
 (;; STDERR ;;;
-000000f: error: invalid memory initial size
-000000f: error: invalid memory initial size
+out/test/binary/bad-memory-init-size/bad-memory-init-size.wasm:000000f: error: initial pages (65537) must be <= (65536)
+out/test/binary/bad-memory-init-size/bad-memory-init-size.wasm:000000f: error: initial pages (65537) must be <= (65536)
 ;;; STDERR ;;)

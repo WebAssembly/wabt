@@ -79,9 +79,11 @@ std::string Token::to_string() const {
     return opcode_.GetName();
   } else if (HasText()) {
     return text_.to_string();
+  } else if (IsTokenTypeRefKind(token_type_)) {
+    return type_.GetRefKindName();
   } else {
     assert(HasType());
-    return GetTypeName(type_);
+    return type_.GetName();
   }
 }
 

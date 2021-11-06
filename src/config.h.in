@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#cmakedefine CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION}"
+
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 
 /* Whether <alloca.h> is available */
@@ -30,9 +32,6 @@
 
 /* Whether snprintf is defined by stdio.h */
 #cmakedefine01 HAVE_SNPRINTF
-
-/* Whether sysconf is defined by unistd.h */
-#cmakedefine01 HAVE_SYSCONF
 
 /* Whether ssize_t is defined by stddef.h */
 #cmakedefine01 HAVE_SSIZE_T
@@ -67,6 +66,8 @@
 #define WABT_INLINE inline
 #define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
+
+#define WABT_VECTORCALL
 
 #if __MINGW32__
 // mingw defaults to printf format specifier being ms_printf (which doesn't
@@ -105,6 +106,8 @@
 #define WABT_LIKELY(x) (x)
 #define WABT_PRINTF_FORMAT(format_arg, first_arg)
 
+#define WABT_VECTORCALL __vectorcall
+
 #else
 
 #error unknown compiler
@@ -127,6 +130,7 @@ inline int Ctz(unsigned x) { return x ? __builtin_ctz(x) : sizeof(x) * 8; }
 inline int Ctz(unsigned long x) { return x ? __builtin_ctzl(x) : sizeof(x) * 8; }
 inline int Ctz(unsigned long long x) { return x ? __builtin_ctzll(x) : sizeof(x) * 8; }
 
+inline int Popcount(uint8_t x) { return __builtin_popcount(x); }
 inline int Popcount(unsigned x) { return __builtin_popcount(x); }
 inline int Popcount(unsigned long x) { return __builtin_popcountl(x); }
 inline int Popcount(unsigned long long x) { return __builtin_popcountll(x); }
@@ -209,6 +213,10 @@ inline int Ctz(unsigned __int64 mask) {
 #endif
 }
 
+inline int Popcount(uint8_t value) {
+  return __popcnt(value);
+}
+
 inline int Popcount(unsigned long value) {
   return __popcnt(value);
 }
@@ -278,7 +286,16 @@ int wabt_vsnprintf(char* str, size_t size, const char* format, va_list ap);
 #endif
 
 #if !HAVE_SSIZE_T
+#if COMPILER_IS_MSVC
+/* define ssize_t identically to how LLVM does, to avoid conflicts if including both */
+#if defined(_WIN64)
+typedef signed __int64 ssize_t;
+#else
+typedef signed int ssize_t;
+#endif /* _WIN64 */
+#else
 typedef long ssize_t;
+#endif
 #endif
 
 #if !HAVE_STRCASECMP

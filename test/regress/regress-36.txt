@@ -1,0 +1,9 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --disable-bulk-memory
+;;; ERROR: 1
+(data "hello")
+(;; STDERR ;;;
+out/test/regress/regress-36.txt:4:2: error: passive data segments are not allowed
+(data "hello")
+ ^^^^
+;;; STDERR ;;)

@@ -1,0 +1,24 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout
+(module
+  (table $t 0 funcref)
+  (table $u 0 funcref)
+  (elem $e 0)
+  (func
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    table.init $u $e)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    table.init 1 0)
+  (table (;0;) 0 funcref)
+  (table (;1;) 0 funcref)
+  (elem (;0;) func))
+;;; STDOUT ;;)

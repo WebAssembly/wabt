@@ -53,14 +53,14 @@
       br 0       ;; depth 1 (due to implicit block)
       end
     end))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
@@ -353,6 +353,8 @@
 0000015: 9002                                      ; FIXUP func body size
 ; move data: [14, 127) -> [15, 128)
 0000013: 9302                                      ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 loop-257-exprs-br.wasm:	file format wasm 0x1
 

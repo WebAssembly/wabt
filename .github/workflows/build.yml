@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  create:
+    tags:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+    - name: install tools
+      run: |
+        pip3 install flake8==3.7.8
+        sudo apt-get install clang-format
+    - run: flake8
+    - run: ./scripts/clang-format-diff.sh
+  build:
+    name: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: install ninja (linux)
+      run: sudo apt-get install ninja-build
+      if: matrix.os == 'ubuntu-latest'
+    - name: install ninja (osx)
+      run: brew install ninja
+      if: matrix.os == 'macos-latest'
+    - name: install ninja (win)
+      run: choco install ninja
+      if: matrix.os == 'windows-latest'
+    - name: mkdir
+      run: mkdir -p out
+    - name: cmake
+      run: cmake .. -G Ninja -DWERROR=ON
+      working-directory: out
+      if: matrix.os != 'windows-latest'
+    - name: cmake (windows)
+      run: cmake .. -DWERROR=ON
+      working-directory: out
+      if: matrix.os == 'windows-latest'
+    - name: build
+      run: cmake --build out
+    - name: unittests
+      run: cmake --build out --target run-unittests
+    - name: c-api-tests
+      run: cmake --build out --target run-c-api-tests
+    - name: tests
+      run: cmake --build out --target run-tests
+  emscripten:
+    name: emscripten
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: build
+      run: |
+        docker run -di --name emscripten -v $(pwd):/src trzeci/emscripten:1.39.10-upstream bash
+        docker exec emscripten emcc -v
+        docker exec emscripten emcmake cmake .
+        docker exec emscripten make -j 2 VERBOSE=1
+
+  build-asan:
+    name: asan
+    runs-on: ubuntu-latest
+    env:
+      USE_NINJA: "1"
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - run: sudo apt-get install ninja-build
+    - run: make clang-debug-asan
+    - run: make clang-release-asan
+    - run: make test-clang-debug-asan
+    - run: make test-clang-release-asan
+
+  build-ubsan:
+    name: ubsan
+    runs-on: ubuntu-latest
+    env:
+      USE_NINJA: "1"
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - run: sudo apt-get install ninja-build
+    - run: make clang-debug-ubsan
+    - run: make clang-release-ubsan
+    - run: make test-clang-debug-ubsan
+    - run: make test-clang-release-ubsan

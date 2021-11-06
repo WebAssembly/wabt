@@ -1,28 +1,23 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-bulk-memory
 ;;; ERROR: 1
 
 (module
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
-    elem.drop 0
     i32.const 0 i32.const 0 i32.const 0 table.copy
   )
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-bulk-memory-no-table.txt:7:41: error: table.init requires table 0 to be an imported or defined table.
+out/test/typecheck/bad-bulk-memory-no-table.txt:6:41: error: table variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                         ^^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-table.txt:7:52: error: elem_segment variable out of range (max 0)
+out/test/typecheck/bad-bulk-memory-no-table.txt:6:52: error: elem_segment variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                                    ^
-out/test/typecheck/bad-bulk-memory-no-table.txt:8:5: error: elem.drop requires table 0 to be an imported or defined table.
-    elem.drop 0
-    ^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-table.txt:8:15: error: elem_segment variable out of range (max 0)
-    elem.drop 0
-              ^
-out/test/typecheck/bad-bulk-memory-no-table.txt:9:41: error: table.copy requires table 0 to be an imported or defined table.
+out/test/typecheck/bad-bulk-memory-no-table.txt:7:41: error: table variable out of range: 0 (max 0)
+    i32.const 0 i32.const 0 i32.const 0 table.copy
+                                        ^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-no-table.txt:7:41: error: table variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.copy
                                         ^^^^^^^^^^
 ;;; STDERR ;;)

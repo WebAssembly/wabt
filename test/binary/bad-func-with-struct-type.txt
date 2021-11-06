@@ -1,0 +1,12 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-gc
+;;; ARGS2: --enable-gc
+magic
+version
+section(TYPE) { count[1] struct field_count[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) { count[1] func { locals[0] } }
+(;; STDERR ;;;
+out/test/binary/bad-func-with-struct-type/bad-func-with-struct-type.wasm:0000011: error: type 0 is not a function
+out/test/binary/bad-func-with-struct-type/bad-func-with-struct-type.wasm:0000011: error: type 0 is not a function
+;;; STDERR ;;)

@@ -82,13 +82,13 @@
 
 ))
 (;; STDERR ;;;
-out/test/parse/expr/atomic-disabled.txt:7:29: error: opcode not allowed: atomic.notify
+out/test/parse/expr/atomic-disabled.txt:7:29: error: opcode not allowed: memory.atomic.notify
     i32.const 0 i32.const 0 atomic.notify drop
                             ^^^^^^^^^^^^^
-out/test/parse/expr/atomic-disabled.txt:8:41: error: opcode not allowed: i32.atomic.wait
+out/test/parse/expr/atomic-disabled.txt:8:41: error: opcode not allowed: memory.atomic.wait32
     i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
                                         ^^^^^^^^^^^^^^^
-out/test/parse/expr/atomic-disabled.txt:9:41: error: opcode not allowed: i64.atomic.wait
+out/test/parse/expr/atomic-disabled.txt:9:41: error: opcode not allowed: memory.atomic.wait64
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
                                         ^^^^^^^^^^^^^^^
 out/test/parse/expr/atomic-disabled.txt:11:17: error: opcode not allowed: i32.atomic.load

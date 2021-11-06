@@ -41,7 +41,7 @@ Custom:
 Custom:
  - name: "linking"
   - symbol table [count=1]
-   - 0: S <mysection> section=1 binding=global vis=default
+   - 0: S <mysection> section=1 [ binding=global vis=default ]
 Custom:
  - name: "reloc.TYPE"
   - relocations for section: 0 (Type) [0]

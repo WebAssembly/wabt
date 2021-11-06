@@ -1,0 +1,10 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section_code[0x81 0]  ;; Section code is not LEB128 encoded
+section_size[1]
+type_count[0]
+(;; STDERR ;;;
+000000a: error: invalid section code: 129
+000000a: error: invalid section code: 129
+;;; STDERR ;;)

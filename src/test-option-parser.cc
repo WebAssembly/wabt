@@ -20,6 +20,8 @@
 
 using namespace wabt;
 
+#define ERROR_ENDING "\nTry '--help' for more information."
+
 TEST(OptionParser, LongFlag) {
   bool flag = false;
   OptionParser parser("prog", "desc");
@@ -48,13 +50,22 @@ TEST(OptionParser, ShortFlagCombined) {
   EXPECT_EQ(7, count);
 }
 
-TEST(OptionParser, UnknownFlag) {
+TEST(OptionParser, UnknownShortOption) {
   std::string error;
   OptionParser parser("prog", "desc");
   parser.SetErrorCallback([&](const char* msg) { error = msg; });
   const char* args[] = {"prog name", "-f"};
   parser.Parse(2, const_cast<char**>(args));
-  EXPECT_EQ("unknown option '-f'", error);
+  EXPECT_EQ(error, "prog: unknown option '-f'" ERROR_ENDING);
+}
+
+TEST(OptionParser, UnknownLongOption) {
+  std::string error;
+  OptionParser parser("prog", "desc");
+  parser.SetErrorCallback([&](const char* msg) { error = msg; });
+  const char* args[] = {"prog name", "--foo"};
+  parser.Parse(2, const_cast<char**>(args));
+  EXPECT_EQ(error, "prog: unknown option '--foo'" ERROR_ENDING);
 }
 
 TEST(OptionParser, ShortAndLongParam) {
@@ -77,7 +88,18 @@ TEST(OptionParser, MissingParam) {
   const char* args[] = {"prog name", "--param"};
   parser.Parse(2, const_cast<char**>(args));
   EXPECT_EQ("", param);
-  EXPECT_EQ("option '--param' requires argument", error);
+  EXPECT_EQ(error, "prog: option '--param' requires argument" ERROR_ENDING);
+}
+
+TEST(OptionParser, MissingArgument) {
+  std::string error;
+  OptionParser parser("prog", "desc");
+  parser.AddArgument("arg", OptionParser::ArgumentCount::One,
+                     [&](const char* arg) {});
+  parser.SetErrorCallback([&](const char* msg) { error = msg; });
+  const char* args[] = {"prog name"};
+  parser.Parse(1, const_cast<char**>(args));
+  EXPECT_EQ(error, "prog: expected arg argument." ERROR_ENDING);
 }
 
 TEST(OptionParser, FlagCombinedAfterShortParam) {
@@ -94,7 +116,7 @@ TEST(OptionParser, FlagCombinedAfterShortParam) {
   parser.Parse(3, const_cast<char**>(args));
   EXPECT_EQ("", param);
   EXPECT_TRUE(has_x);
-  EXPECT_EQ("unexpected argument 'stuff'", error);
+  EXPECT_EQ(error, "prog: unexpected argument 'stuff'" ERROR_ENDING);
 }
 
 
@@ -116,7 +138,7 @@ TEST(OptionParser, TooManyArguments) {
                      [&](const char* arg) {});
   const char* args[] = {"prog name", "hello", "goodbye"};
   parser.Parse(3, const_cast<char**>(args));
-  EXPECT_EQ("unexpected argument 'goodbye'", error);
+  EXPECT_EQ(error, "prog: unexpected argument 'goodbye'" ERROR_ENDING);
 }
 
 TEST(OptionParser, OneOrMoreArguments) {
@@ -127,4 +149,33 @@ TEST(OptionParser, OneOrMoreArguments) {
   const char* args[] = {"prog name", "hello", "goodbye"};
   parser.Parse(3, const_cast<char**>(args));
   EXPECT_EQ("hellogoodbye", argument);
+}
+
+TEST(OptionParser, ZeroOrMoreArguments) {
+  std::string argument;
+  OptionParser parser("prog", "desc");
+  parser.AddArgument("arg", OptionParser::ArgumentCount::ZeroOrMore,
+                     [&](const char* arg) { argument += arg; });
+
+  const char* args_none[] = {"prog name"};
+  parser.Parse(1, const_cast<char**>(args_none));
+  EXPECT_EQ("", argument);
+
+  const char* args_many[] = {"prog name", "hello", "goodbye"};
+  parser.Parse(3, const_cast<char**>(args_many));
+  EXPECT_EQ("hellogoodbye", argument);
+}
+
+TEST(OptionParser, StopProccessing) {
+  std::string argument;
+  bool has_x = false;
+  OptionParser parser("prog", "desc");
+  parser.AddArgument("arg", OptionParser::ArgumentCount::ZeroOrMore,
+                     [&](const char* arg) { argument += arg; });
+  parser.AddOption('x', "x", "help", [&]() { has_x = true; });
+
+  const char* args_many[] = {"prog name", "-x", "--", "foo", "-x", "-y", "bar"};
+  parser.Parse(7, const_cast<char**>(args_many));
+  EXPECT_TRUE(has_x);
+  EXPECT_EQ("foo-x-ybar", argument);
 }

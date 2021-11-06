@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func (result i32)
+    try (result i32)
+      i32.const 1
+    catch_all
+    end
+  ))
+(;; STDERR ;;;
+out/test/typecheck/bad-empty-catch-all.txt:9:5: error: type mismatch in try catch, expected [i32] but got []
+    end
+    ^^^
+;;; STDERR ;;)

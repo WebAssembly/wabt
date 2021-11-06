@@ -50,6 +50,16 @@ OptionParser::OptionParser(const char* program_name, const char* description)
     : program_name_(program_name),
       description_(description),
       on_error_([this](const std::string& message) { DefaultError(message); }) {
+
+  // Add common options
+  AddOption("help", "Print this help message", [this]() {
+    PrintHelp();
+    exit(0);
+  });
+  AddOption("version", "Print version information", []() {
+    printf("%s\n", CMAKE_PROJECT_VERSION);
+    exit(0);
+  });
 }
 
 void OptionParser::AddOption(const Option& option) {
@@ -89,13 +99,6 @@ void OptionParser::AddOption(char short_name,
   AddOption(option);
 }
 
-void OptionParser::AddHelpOption() {
-  AddOption("help", "Print this help message", [this]() {
-    PrintHelp();
-    exit(0);
-  });
-}
-
 void OptionParser::SetErrorCallback(const Callback& callback) {
   on_error_ = callback;
 }
@@ -132,7 +135,11 @@ int OptionParser::Match(const char* s,
 
 void OptionParser::Errorf(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  on_error_(buffer);
+  std::string msg(program_name_);
+  msg += ": ";
+  msg += buffer;
+  msg += "\nTry '--help' for more information.";
+  on_error_(msg.c_str());
 }
 
 void OptionParser::DefaultError(const std::string& message) {
@@ -155,108 +162,117 @@ void OptionParser::HandleArgument(size_t* arg_index, const char* arg_value) {
 
 void OptionParser::Parse(int argc, char* argv[]) {
   size_t arg_index = 0;
+  bool processing_options = true;
 
   for (int i = 1; i < argc; ++i) {
     const char* arg = argv[i];
-    if (arg[0] == '-') {
-      if (arg[1] == '-') {
-        // Long option.
-        int best_index = -1;
-        int best_length = 0;
-        int best_count = 0;
-        for (size_t j = 0; j < options_.size(); ++j) {
-          const Option& option = options_[j];
-          if (!option.long_name.empty()) {
-            int match_length =
-                Match(&arg[2], option.long_name, option.has_argument);
-            if (match_length > best_length) {
-              best_index = j;
-              best_length = match_length;
-              best_count = 1;
-            } else if (match_length == best_length && best_length > 0) {
-              best_count++;
-            }
-          }
-        }
+    if (!processing_options || arg[0] != '-') {
+      // Non-option argument.
+      HandleArgument(&arg_index, arg);
+      continue;
+    }
 
-        if (best_count > 1) {
-          Errorf("ambiguous option '%s'", arg);
-          continue;
-        } else if (best_count == 0) {
-          Errorf("unknown option '%s'", arg);
-          continue;
-        }
-
-        const Option& best_option = options_[best_index];
-        const char* option_argument = nullptr;
-        if (best_option.has_argument) {
-          if (arg[best_length + 1] != 0 &&    // This byte is 0 on a full match.
-              arg[best_length + 2] == '=') {  // +2 to skip "--".
-            option_argument = &arg[best_length + 3];
-          } else {
-            if (i + 1 == argc || argv[i + 1][0] == '-') {
-              Errorf("option '--%s' requires argument",
-                     best_option.long_name.c_str());
-              continue;
-            }
-            ++i;
-            option_argument = argv[i];
-          }
-        }
-        best_option.callback(option_argument);
-      } else {
-        // Short option.
-        if (arg[1] == '\0') {
-          // Just "-".
-          HandleArgument(&arg_index, arg);
-          continue;
-        }
-
-        // Allow short names to be combined, e.g. "-d -v" => "-dv".
-        for (int k = 1; arg[k]; ++k) {
-          bool matched = false;
-          for (const Option& option : options_) {
-            if (option.short_name && arg[k] == option.short_name) {
-              const char* option_argument = nullptr;
-              if (option.has_argument) {
-                // A short option with a required argument cannot be followed
-                // by other short options_.
-                if (arg[k + 1] != '\0') {
-                  Errorf("option '-%c' requires argument", option.short_name);
-                  break;
-                }
-
-                if (i + 1 == argc || argv[i + 1][0] == '-') {
-                  Errorf("option '-%c' requires argument", option.short_name);
-                  break;
-                }
-                ++i;
-                option_argument = argv[i];
-              }
-              option.callback(option_argument);
-              matched = true;
-              break;
-            }
-          }
-
-          if (!matched) {
-            Errorf("unknown option '-%c'", arg[k]);
-            continue;
+    if (arg[1] == '-') {
+      if (arg[2] == '\0') {
+        // -- on its own means stop processing args, everything should
+        // be treated as positional.
+        processing_options = false;
+        continue;
+      }
+      // Long option.
+      int best_index = -1;
+      int best_length = 0;
+      int best_count = 0;
+      for (size_t j = 0; j < options_.size(); ++j) {
+        const Option& option = options_[j];
+        if (!option.long_name.empty()) {
+          int match_length =
+              Match(&arg[2], option.long_name, option.has_argument);
+          if (match_length > best_length) {
+            best_index = j;
+            best_length = match_length;
+            best_count = 1;
+          } else if (match_length == best_length && best_length > 0) {
+            best_count++;
           }
         }
       }
+
+      if (best_count > 1) {
+        Errorf("ambiguous option '%s'", arg);
+        continue;
+      } else if (best_count == 0) {
+        Errorf("unknown option '%s'", arg);
+        continue;
+      }
+
+      const Option& best_option = options_[best_index];
+      const char* option_argument = nullptr;
+      if (best_option.has_argument) {
+        if (arg[best_length + 1] != 0 &&    // This byte is 0 on a full match.
+            arg[best_length + 2] == '=') {  // +2 to skip "--".
+          option_argument = &arg[best_length + 3];
+        } else {
+          if (i + 1 == argc || argv[i + 1][0] == '-') {
+            Errorf("option '--%s' requires argument",
+                   best_option.long_name.c_str());
+            continue;
+          }
+          ++i;
+          option_argument = argv[i];
+        }
+      }
+      best_option.callback(option_argument);
     } else {
-      // Non-option argument.
-      HandleArgument(&arg_index, arg);
+      // Short option.
+      if (arg[1] == '\0') {
+        // Just "-".
+        HandleArgument(&arg_index, arg);
+        continue;
+      }
+
+      // Allow short names to be combined, e.g. "-d -v" => "-dv".
+      for (int k = 1; arg[k]; ++k) {
+        bool matched = false;
+        for (const Option& option : options_) {
+          if (option.short_name && arg[k] == option.short_name) {
+            const char* option_argument = nullptr;
+            if (option.has_argument) {
+              // A short option with a required argument cannot be followed
+              // by other short options_.
+              if (arg[k + 1] != '\0') {
+                Errorf("option '-%c' requires argument", option.short_name);
+                break;
+              }
+
+              if (i + 1 == argc || argv[i + 1][0] == '-') {
+                Errorf("option '-%c' requires argument", option.short_name);
+                break;
+              }
+              ++i;
+              option_argument = argv[i];
+            }
+            option.callback(option_argument);
+            matched = true;
+            break;
+          }
+        }
+
+        if (!matched) {
+          Errorf("unknown option '-%c'", arg[k]);
+          continue;
+        }
+      }
     }
   }
 
   // For now, all arguments must be provided. Check that the last Argument was
   // handled at least once.
   if (!arguments_.empty() && arguments_.back().handled_count == 0) {
-    PrintHelp();
     for (size_t i = arg_index; i < arguments_.size(); ++i) {
-      Errorf("expected %s argument.\n", arguments_[i].name.c_str());
+      if (arguments_[i].count != ArgumentCount::ZeroOrMore) {
+        Errorf("expected %s argument.", arguments_[i].name.c_str());
+      }
     }
   }
 }
@@ -273,6 +289,10 @@ void OptionParser::PrintHelp() {
 
       case ArgumentCount::OneOrMore:
         printf(" %s+", argument.name.c_str());
+        break;
+
+      case ArgumentCount::ZeroOrMore:
+        printf(" [%s]...", argument.name.c_str());
         break;
     }
   }

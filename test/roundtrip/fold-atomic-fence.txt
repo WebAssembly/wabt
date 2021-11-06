@@ -1,0 +1,13 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-threads
+(module
+  (func $f
+    atomic.fence
+    atomic.fence))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (atomic.fence)
+    (atomic.fence)))
+;;; STDOUT ;;)

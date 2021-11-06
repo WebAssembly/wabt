@@ -1,0 +1,16 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (tag (param i32))
+
+  (func
+    try
+      try
+        nop
+      delegate 0
+      try
+        nop
+      delegate 1
+    catch 0
+      drop
+    end))

@@ -1,0 +1,90 @@
+name: Build Release
+
+# Trigger whenever a release is created
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    name: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+
+    - name: install ninja (linux)
+      run: sudo apt-get install ninja-build
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: install ninja (osx)
+      run: brew install ninja
+      if: matrix.os == 'macos-latest'
+
+    - name: install ninja (win)
+      run: choco install ninja
+      if: matrix.os == 'windows-latest'
+
+    - name: mkdir
+      run: mkdir -p out
+
+    - name: cmake (unix)
+      run: cmake -S . -B out -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
+      if: matrix.os != 'windows-latest'
+
+    - name: cmake (win)
+      # -G "Visual Studio 15 2017"
+      run: cmake -S . -B out -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
+      if: matrix.os == 'windows-latest'
+
+    - name: build
+      run: cmake --build out --config Release --target install
+
+    - name: strip
+      run: find bin/ -type f -perm -u=x -exec strip {} +
+      if: matrix.os != 'windows-latest'
+
+    - name: archive
+      id: archive
+      run: |
+        OSNAME=$(echo ${{ matrix.os }} | sed 's/-latest//')
+        VERSION=${{ github.event.release.tag_name }}
+        PKGNAME="wabt-$VERSION-$OSNAME"
+        TARBALL=$PKGNAME.tar.gz
+        SHASUM=$PKGNAME.tar.gz.sha256
+        mv install wabt-$VERSION
+        tar -czf $TARBALL wabt-$VERSION
+        scripts/sha256sum.py $TARBALL > $SHASUM
+        echo "::set-output name=tarball::$TARBALL"
+        echo "::set-output name=shasum::$SHASUM"
+
+    - name: upload tarball
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./${{ steps.archive.outputs.tarball }}
+        asset_name: ${{ steps.archive.outputs.tarball }}
+        asset_content_type: application/gzip
+
+    - name: upload shasum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./${{ steps.archive.outputs.shasum }}
+        asset_name: ${{ steps.archive.outputs.shasum }}
+        asset_content_type: text/plain

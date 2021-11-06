@@ -1,0 +1,17 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+;;; ARGS: --enable-exceptions
+(module
+  (tag $e)
+  (func
+    block
+      try
+        rethrow 0
+      catch $e
+      end
+    end))
+(;; STDERR ;;;
+out/test/typecheck/bad-rethrow-not-in-catch.txt:9:9: error: rethrow not in try catch block
+        rethrow 0
+        ^^^^^^^
+;;; STDERR ;;)

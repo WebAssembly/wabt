@@ -14,6 +14,6 @@ section(ELEM) {
   addr[end]
 }
 (;; STDERR ;;;
-error: type mismatch in elem segment initializer expression, expected i32 but got void
+error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
 0000013: error: EndElemSegmentInitExpr callback failed
 ;;; STDERR ;;)

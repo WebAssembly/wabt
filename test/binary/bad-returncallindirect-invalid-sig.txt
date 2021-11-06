@@ -1,0 +1,20 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-tail-call
+;;; ARGS2: --enable-tail-call
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(TABLE) { count[1] anyfunc flags[0] min[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.const 0
+    return_call_indirect leb_i32(100) 0
+  }
+}
+(;; STDERR ;;;
+out/test/binary/bad-returncallindirect-invalid-sig/bad-returncallindirect-invalid-sig.wasm:0000023: error: function type variable out of range: 100 (max 1)
+out/test/binary/bad-returncallindirect-invalid-sig/bad-returncallindirect-invalid-sig.wasm:0000023: error: function type variable out of range: 100 (max 1)
+;;; STDERR ;;)

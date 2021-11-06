@@ -5,7 +5,7 @@
   (memory 1)
   (data (i32.const 10) "hello")
   (data (i32.const 20) "goodbye, Lorem ipsum dolor sit amet, consectetur"))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Memory" (5)
@@ -16,12 +16,18 @@
 000000b: 00                                        ; limits: flags
 000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
+; section "DataCount" (12)
+000000d: 0c                                        ; section code
+000000e: 00                                        ; section size (guess)
+000000f: 02                                        ; data count
+000000e: 01                                        ; FIXUP section size
+; truncate to 13 (0xd)
 ; section "Data" (11)
 000000d: 0b                                        ; section code
 000000e: 00                                        ; section size (guess)
 000000f: 02                                        ; num data segments
 ; data segment header 0
-0000010: 00                                      
+0000010: 00                                        ; segment flags
 0000011: 41                                        ; i32.const
 0000012: 0a                                        ; i32 literal
 0000013: 0b                                        ; end
@@ -29,7 +35,7 @@
 ; data segment data 0
 0000015: 6865 6c6c 6f                              ; data segment data
 ; data segment header 1
-000001a: 00                                      
+000001a: 00                                        ; segment flags
 000001b: 41                                        ; i32.const
 000001c: 14                                        ; i32 literal
 000001d: 0b                                        ; end
@@ -39,6 +45,8 @@
 000002f: 7073 756d 2064 6f6c 6f72 2073 6974 2061 
 000003f: 6d65 742c 2063 6f6e 7365 6374 6574 7572   ; data segment data
 000000e: 40                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 memory.wasm:	file format wasm 0x1
 
@@ -47,9 +55,9 @@ Section Details:
 Memory[1]:
  - memory[0] pages: initial=1
 Data[2]:
- - segment[0] size=5 - init i32=10
+ - segment[0] memory=0 size=5 - init i32=10
   - 000000a: 6865 6c6c 6f                             hello
- - segment[1] size=48 - init i32=20
+ - segment[1] memory=0 size=48 - init i32=20
   - 0000014: 676f 6f64 6279 652c 204c 6f72 656d 2069  goodbye, Lorem i
   - 0000024: 7073 756d 2064 6f6c 6f72 2073 6974 2061  psum dolor sit a
   - 0000034: 6d65 742c 2063 6f6e 7365 6374 6574 7572  met, consectetur

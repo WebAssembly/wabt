@@ -1,134 +1,154 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/call_indirect.wast
 (;; STDOUT ;;;
-out/test/spec/call_indirect.wast:594: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.1.wat:1:122: error: unexpected token "param", expected an expr.
+out/test/spec/call_indirect.wast:498: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:499: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:500: assert_trap passed: undefined table index
+out/test/spec/call_indirect.wast:501: assert_trap passed: undefined table index
+out/test/spec/call_indirect.wast:502: assert_trap passed: undefined table index
+out/test/spec/call_indirect.wast:508: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:509: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:515: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:516: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:522: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:523: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:529: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:530: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:652: assert_trap passed: undefined table index
+out/test/spec/call_indirect.wast:657: assert_trap passed: undefined table index
+out/test/spec/call_indirect.wast:661: assert_trap passed: uninitialized table element
+out/test/spec/call_indirect.wast:662: assert_trap passed: indirect call signature mismatch
+out/test/spec/call_indirect.wast:663: assert_trap passed: undefined table index
+out/test/spec/call_indirect.wast:669: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.2.wat:1:122: error: unexpected token "param", expected an expr.
   ...indirect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const ...
                                         ^^^^^
-  out/test/spec/call_indirect/call_indirect.1.wat:1:166: error: unexpected token ), expected EOF.
+  out/test/spec/call_indirect/call_indirect.2.wat:1:166: error: unexpected token ), expected EOF.
   ...irect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const 0)  ))
                                                                                  ^
-out/test/spec/call_indirect.wast:606: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.2.wat:1:109: error: unexpected token "type", expected an expr.
+out/test/spec/call_indirect.wast:681: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.3.wat:1:109: error: unexpected token "type", expected an expr.
   ... i32)  (call_indirect (param i32) (type $sig) (result i32)    (i32.const 0...
                                         ^^^^
-  out/test/spec/call_indirect/call_indirect.2.wat:1:166: error: unexpected token ), expected EOF.
+  out/test/spec/call_indirect/call_indirect.3.wat:1:166: error: unexpected token ), expected EOF.
   ...irect (param i32) (type $sig) (result i32)    (i32.const 0) (i32.const 0)  ))
                                                                                  ^
-out/test/spec/call_indirect.wast:618: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.3.wat:1:122: error: unexpected token "type", expected an expr.
+out/test/spec/call_indirect.wast:693: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.4.wat:1:122: error: unexpected token "type", expected an expr.
   ...indirect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const ...
                                         ^^^^
-  out/test/spec/call_indirect/call_indirect.3.wat:1:166: error: unexpected token ), expected EOF.
+  out/test/spec/call_indirect/call_indirect.4.wat:1:166: error: unexpected token ), expected EOF.
   ...irect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
                                                                                  ^
-out/test/spec/call_indirect.wast:630: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.4.wat:1:110: error: unexpected token "type", expected an expr.
+out/test/spec/call_indirect.wast:705: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.5.wat:1:110: error: unexpected token "type", expected an expr.
   ...i32)  (call_indirect (result i32) (type $sig) (param i32)    (i32.const 0)...
                                         ^^^^
-  out/test/spec/call_indirect/call_indirect.4.wat:1:166: error: unexpected token ), expected EOF.
+  out/test/spec/call_indirect/call_indirect.5.wat:1:166: error: unexpected token ), expected EOF.
   ...irect (result i32) (type $sig) (param i32)    (i32.const 0) (i32.const 0)  ))
                                                                                  ^
-out/test/spec/call_indirect.wast:642: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.5.wat:1:110: error: unexpected token "param", expected an expr.
+out/test/spec/call_indirect.wast:717: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.6.wat:1:110: error: unexpected token "param", expected an expr.
   ...i32)  (call_indirect (result i32) (param i32) (type $sig)    (i32.const 0)...
                                         ^^^^^
-  out/test/spec/call_indirect/call_indirect.5.wat:1:166: error: unexpected token ), expected EOF.
+  out/test/spec/call_indirect/call_indirect.6.wat:1:166: error: unexpected token ), expected EOF.
   ...irect (result i32) (param i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
                                                                                  ^
-out/test/spec/call_indirect.wast:654: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.6.wat:1:67: error: unexpected token "param", expected an expr.
+out/test/spec/call_indirect.wast:729: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.7.wat:1:67: error: unexpected token "param", expected an expr.
   ...t i32)  (call_indirect (result i32) (param i32) (i32.const 0) (i32.const 0)))
                                           ^^^^^
-  out/test/spec/call_indirect/call_indirect.6.wat:1:106: error: unexpected token ), expected EOF.
+  out/test/spec/call_indirect/call_indirect.7.wat:1:106: error: unexpected token ), expected EOF.
   ...t i32)  (call_indirect (result i32) (param i32) (i32.const 0) (i32.const 0)))
                                                                                  ^
-out/test/spec/call_indirect.wast:664: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.7.wat:1:46: error: unexpected token $x, expected ).
+out/test/spec/call_indirect.wast:739: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.8.wat:1:46: error: unexpected token $x, expected ).
   ...e 0 funcref)(func (call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
                                              ^^
-  out/test/spec/call_indirect/call_indirect.7.wat:1:82: error: unexpected token ), expected EOF.
+  out/test/spec/call_indirect/call_indirect.8.wat:1:82: error: unexpected token ), expected EOF.
   ...e 0 funcref)(func (call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
                                                                                  ^
-out/test/spec/call_indirect.wast:671: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.8.wat:1:57: error: expected 0 results, got 1
+out/test/spec/call_indirect.wast:746: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.9.wat:1:57: error: expected 0 results, got 1
   ...0 funcref)(func (result i32)  (call_indirect (type $sig) (result i32) (i32...
                                     ^^^^^^^^^^^^^
-out/test/spec/call_indirect.wast:681: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.9.wat:1:82: error: expected 1 arguments, got 0
+out/test/spec/call_indirect.wast:756: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.10.wat:1:82: error: expected 1 arguments, got 0
   ...0 funcref)(func (result i32)  (call_indirect (type $sig) (result i32) (i32...
                                     ^^^^^^^^^^^^^
-out/test/spec/call_indirect.wast:691: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.10.wat:1:69: error: expected 1 results, got 0
+out/test/spec/call_indirect.wast:766: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.11.wat:1:69: error: expected 1 results, got 0
   ...i32)))(table 0 funcref)(func  (call_indirect (type $sig) (param i32) (i32....
                                     ^^^^^^^^^^^^^
-out/test/spec/call_indirect.wast:701: assert_malformed passed:
-  out/test/spec/call_indirect/call_indirect.11.wat:1:86: error: expected 2 arguments, got 1
+out/test/spec/call_indirect.wast:776: assert_malformed passed:
+  out/test/spec/call_indirect/call_indirect.12.wat:1:86: error: expected 2 arguments, got 1
   ...0 funcref)(func (result i32)  (call_indirect (type $sig) (param i32) (resu...
                                     ^^^^^^^^^^^^^
-out/test/spec/call_indirect.wast:716: assert_invalid passed:
-  error: found call_indirect operator, but no table
+out/test/spec/call_indirect.wast:791: assert_invalid passed:
+  0000000: error: table variable out of range: 0 (max 0)
   000001c: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:724: assert_invalid passed:
+out/test/spec/call_indirect.wast:799: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
   0000023: error: OnConvertExpr callback failed
-out/test/spec/call_indirect.wast:732: assert_invalid passed:
+out/test/spec/call_indirect.wast:807: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [i64]
   0000027: error: OnConvertExpr callback failed
-out/test/spec/call_indirect.wast:741: assert_invalid passed:
+out/test/spec/call_indirect.wast:816: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got []
   0000026: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:749: assert_invalid passed:
+out/test/spec/call_indirect.wast:824: assert_invalid passed:
   error: type mismatch in call_indirect, expected [f64, i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:757: assert_invalid passed:
+out/test/spec/call_indirect.wast:832: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
   0000025: error: EndFunctionBody callback failed
-out/test/spec/call_indirect.wast:765: assert_invalid passed:
+out/test/spec/call_indirect.wast:840: assert_invalid passed:
   error: type mismatch in function, expected [] but got [f64, i32]
   000002e: error: EndFunctionBody callback failed
-out/test/spec/call_indirect.wast:776: assert_invalid passed:
+out/test/spec/call_indirect.wast:851: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:784: assert_invalid passed:
+out/test/spec/call_indirect.wast:859: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got [... i64]
   0000028: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:793: assert_invalid passed:
+out/test/spec/call_indirect.wast:868: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:803: assert_invalid passed:
+out/test/spec/call_indirect.wast:878: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:813: assert_invalid passed:
+out/test/spec/call_indirect.wast:888: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, f64] but got [f64, i32]
   0000032: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:823: assert_invalid passed:
+out/test/spec/call_indirect.wast:898: assert_invalid passed:
   error: type mismatch in call_indirect, expected [f64, i32] but got [i32, f64]
   0000032: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:834: assert_invalid passed:
+out/test/spec/call_indirect.wast:909: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got []
   0000036: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:847: assert_invalid passed:
+out/test/spec/call_indirect.wast:922: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   0000039: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:860: assert_invalid passed:
+out/test/spec/call_indirect.wast:935: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got []
   0000036: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:873: assert_invalid passed:
+out/test/spec/call_indirect.wast:948: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   0000039: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:886: assert_invalid passed:
+out/test/spec/call_indirect.wast:961: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got []
   000003a: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:902: assert_invalid passed:
+out/test/spec/call_indirect.wast:977: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000003d: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:922: assert_invalid passed:
-  0000021: error: invalid call_indirect signature index
-out/test/spec/call_indirect.wast:929: assert_invalid passed:
-  0000025: error: invalid call_indirect signature index
-out/test/spec/call_indirect.wast:940: assert_invalid passed:
-  error: invalid func_index: 0 (max 0)
+out/test/spec/call_indirect.wast:997: assert_invalid passed:
+  0000000: error: function type variable out of range: 1 (max 1)
+  0000022: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:1004: assert_invalid passed:
+  0000000: error: function type variable out of range: 1012321300 (max 1)
+  0000026: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:1015: assert_invalid passed:
+  0000000: error: function variable out of range: 0 (max 0)
   0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
-151/151 tests passed.
+167/167 tests passed.
 ;;; STDOUT ;;)

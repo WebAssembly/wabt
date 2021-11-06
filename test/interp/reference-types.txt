@@ -1,0 +1,54 @@
+;;; TOOL: run-interp
+
+(module
+  (table $t_func 1 funcref)
+  (table $t_extern 1 externref)
+  (elem funcref (ref.func 2) (ref.null func))
+  (elem externref (ref.null extern))
+  (global $g (mut funcref) (ref.null func))
+
+  (func (export "ref_null_func") (result funcref)
+    ref.null func
+  )
+
+  (func (export "ref_null_extern") (result externref)
+    ref.null extern
+  )
+
+  (func $ref_is_null_func (export "ref_is_null_func") (result i32)
+    global.get $g
+    ref.is_null
+  )
+
+  (func $ref_func (export "ref_func") (result funcref)
+    ref.func $ref_is_null_func
+  )
+
+  (func $table_set (export "table_set")
+    i32.const 0
+    call $ref_func
+    table.set $t_func
+  )
+
+  (func (export "table_get") (result i32)
+    call $table_set
+    i32.const 0
+    table.get $t_func
+    ref.is_null
+  )
+
+  (func $global_set (export "global_set") (result funcref)
+    ref.func $ref_is_null_func
+    global.set $g
+    global.get $g
+  )
+)
+(;; STDOUT ;;;
+ref_null_func() => funcref:0
+ref_null_extern() => externref:0
+ref_is_null_func() => i32:1
+ref_func() => funcref:5
+table_set() =>
+table_get() => i32:0
+global_set() => funcref:5
+;;; STDOUT ;;)

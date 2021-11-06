@@ -17,8 +17,8 @@
 #ifndef WABT_BINARY_READER_OBJDUMP_H_
 #define WABT_BINARY_READER_OBJDUMP_H_
 
+#include <map>
 #include <string>
-#include <vector>
 
 #include "src/common.h"
 #include "src/feature.h"
@@ -45,6 +45,7 @@ struct ObjdumpOptions {
   bool disassemble;
   bool debug;
   bool relocs;
+  bool section_offsets;
   ObjdumpMode mode;
   const char* filename;
   const char* section_name;
@@ -59,9 +60,8 @@ struct ObjdumpSymbol {
 struct ObjdumpNames {
   string_view Get(Index index) const;
   void Set(Index index, string_view name);
-  void push_back(string_view name);
 
-  std::vector<std::string> names;
+  std::map<Index, std::string> names;
 };
 
 // read_binary_objdump uses this state to store information from previous runs
@@ -72,8 +72,9 @@ struct ObjdumpState {
   ObjdumpNames function_names;
   ObjdumpNames global_names;
   ObjdumpNames section_names;
-  ObjdumpNames event_names;
+  ObjdumpNames tag_names;
   ObjdumpNames segment_names;
+  ObjdumpNames table_names;
   std::vector<ObjdumpSymbol> symtab;
 };
 

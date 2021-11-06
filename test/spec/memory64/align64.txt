@@ -1,0 +1,302 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/align64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64/align64.wast:28: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.23.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load8_s align=0 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:34: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.24.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load8_s align=7 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:40: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.25.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load8_u align=0 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:46: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.26.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load8_u align=7 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:52: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.27.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load16_s align=0 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:58: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.28.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load16_s align=7 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:64: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.29.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load16_u align=0 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:70: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.30.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load16_u align=7 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:76: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.31.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load align=0 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:82: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.32.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i32.load align=7 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:88: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.33.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load8_s align=0 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:94: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.34.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load8_s align=7 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:100: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.35.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load8_u align=0 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:106: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.36.wat:1:49: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load8_u align=7 (i64.const 0)))))
+                                                  ^^^^^^^
+out/test/spec/memory64/align64.wast:112: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.37.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load16_s align=0 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:118: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.38.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load16_s align=7 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:124: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.39.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load16_u align=0 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:130: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.40.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load16_u align=7 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:136: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.41.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load32_s align=0 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:142: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.42.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load32_s align=7 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:148: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.43.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load32_u align=0 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:154: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.44.wat:1:50: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load32_u align=7 (i64.const 0)))))
+                                                   ^^^^^^^
+out/test/spec/memory64/align64.wast:160: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.45.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load align=0 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:166: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.46.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (i64.load align=7 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:172: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.47.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (f32.load align=0 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:178: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.48.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (f32.load align=7 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:184: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.49.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (f64.load align=0 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:190: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.50.wat:1:46: error: alignment must be power-of-two
+  (module (memory i64 0) (func (drop (f64.load align=7 (i64.const 0)))))
+                                               ^^^^^^^
+out/test/spec/memory64/align64.wast:197: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.51.wat:1:42: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i32.store8 align=0 (i64.const 0) (i32.const 0))))
+                                           ^^^^^^^
+out/test/spec/memory64/align64.wast:203: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.52.wat:1:42: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i32.store8 align=7 (i64.const 0) (i32.const 0))))
+                                           ^^^^^^^
+out/test/spec/memory64/align64.wast:209: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.53.wat:1:43: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i32.store16 align=0 (i64.const 0) (i32.const 0))))
+                                            ^^^^^^^
+out/test/spec/memory64/align64.wast:215: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.54.wat:1:43: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i32.store16 align=7 (i64.const 0) (i32.const 0))))
+                                            ^^^^^^^
+out/test/spec/memory64/align64.wast:221: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.55.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i32.store align=0 (i64.const 0) (i32.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:227: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.56.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i32.store align=7 (i64.const 0) (i32.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:233: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.57.wat:1:42: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store8 align=0 (i64.const 0) (i64.const 0))))
+                                           ^^^^^^^
+out/test/spec/memory64/align64.wast:239: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.58.wat:1:42: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store8 align=7 (i64.const 0) (i64.const 0))))
+                                           ^^^^^^^
+out/test/spec/memory64/align64.wast:245: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.59.wat:1:43: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store16 align=0 (i64.const 0) (i64.const 0))))
+                                            ^^^^^^^
+out/test/spec/memory64/align64.wast:251: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.60.wat:1:43: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store16 align=7 (i64.const 0) (i64.const 0))))
+                                            ^^^^^^^
+out/test/spec/memory64/align64.wast:257: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.61.wat:1:43: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store32 align=0 (i64.const 0) (i64.const 0))))
+                                            ^^^^^^^
+out/test/spec/memory64/align64.wast:263: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.62.wat:1:43: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store32 align=7 (i64.const 0) (i64.const 0))))
+                                            ^^^^^^^
+out/test/spec/memory64/align64.wast:269: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.63.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store align=0 (i64.const 0) (i64.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:275: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.64.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (i64.store align=7 (i64.const 0) (i64.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:281: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.65.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (f32.store align=0 (i64.const 0) (f32.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:287: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.66.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (f32.store align=7 (i64.const 0) (f32.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:293: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.67.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (f64.store align=0 (i64.const 0) (f32.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:299: assert_malformed passed:
+  out/test/spec/memory64/align64/align64.68.wat:1:41: error: alignment must be power-of-two
+  (module (memory i64 0) (func (f64.store align=7 (i64.const 0) (f32.const 0))))
+                                          ^^^^^^^
+out/test/spec/memory64/align64.wast:306: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:310: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:314: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:318: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:322: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:326: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:330: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:334: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:338: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:342: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:346: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:350: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:354: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:358: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:363: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:367: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:371: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:375: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:379: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:383: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:387: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:391: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:395: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:399: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:403: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:407: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:411: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:415: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/memory64/align64.wast:420: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:424: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:428: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:432: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:436: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:440: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:444: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:448: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000026: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:452: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  000002a: error: OnStoreExpr callback failed
+out/test/spec/memory64/align64.wast:864: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
+131/131 tests passed.
+;;; STDOUT ;;)

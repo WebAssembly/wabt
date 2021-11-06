@@ -1,4 +1,6 @@
 ;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --disable-reference-types
+;;; ARGS2: --disable-reference-types
 magic
 version
 section(TYPE) { count[1] function params[0] results[0]}

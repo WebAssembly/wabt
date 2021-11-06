@@ -86,10 +86,10 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 
   Result VisitFunc(Index func_index, Func* func);
   Result VisitGlobal(Index global_index, Global* global);
-  Result VisitFuncType(Index func_type_index, FuncType* func_type);
+  Result VisitType(Index func_type_index, TypeEntry* type);
   Result VisitTable(Index table_index, Table* table);
   Result VisitMemory(Index memory_index, Memory* memory);
-  Result VisitEvent(Index event_index, Event* event);
+  Result VisitTag(Index tag_index, Tag* tag);
   Result VisitDataSegment(Index data_segment_index, DataSegment* data_segment);
   Result VisitElemSegment(Index elem_segment_index, ElemSegment* elem_segment);
   Result VisitImport(Import* import);
@@ -103,7 +103,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Index num_table_imports_ = 0;
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
-  Index num_event_imports_ = 0;
+  Index num_tag_imports_ = 0;
 
   NameOpts opts_;
 };
@@ -120,7 +120,7 @@ void NameGenerator::GenerateName(const char* prefix,
                                  Index index,
                                  unsigned disambiguator,
                                  std::string* str) {
-  if (!(opts_ & NameOpts::NoDollar)) *str = "$";
+  *str = "$";
   *str += prefix;
   if (index != kInvalidIndex) {
     if (opts_ & NameOpts::AlphaNames) {
@@ -241,10 +241,9 @@ Result NameGenerator::VisitGlobal(Index global_index, Global* global) {
   return Result::Ok;
 }
 
-Result NameGenerator::VisitFuncType(Index func_type_index,
-                                    FuncType* func_type) {
-  MaybeGenerateAndBindName(&module_->func_type_bindings, "t", func_type_index,
-                           &func_type->name);
+Result NameGenerator::VisitType(Index type_index, TypeEntry* type) {
+  MaybeGenerateAndBindName(&module_->type_bindings, "t", type_index,
+                           &type->name);
   return Result::Ok;
 }
 
@@ -260,9 +259,8 @@ Result NameGenerator::VisitMemory(Index memory_index, Memory* memory) {
   return Result::Ok;
 }
 
-Result NameGenerator::VisitEvent(Index event_index, Event* event) {
-  MaybeGenerateAndBindName(&module_->event_bindings, "e", event_index,
-                           &event->name);
+Result NameGenerator::VisitTag(Index tag_index, Tag* tag) {
+  MaybeGenerateAndBindName(&module_->tag_bindings, "e", tag_index, &tag->name);
   return Result::Ok;
 }
 
@@ -318,11 +316,11 @@ Result NameGenerator::VisitImport(Import* import) {
       }
       break;
 
-    case ExternalKind::Event:
-      if (auto* event_import = cast<EventImport>(import)) {
-        bindings = &module_->event_bindings;
-        name = &event_import->event.name;
-        index = num_event_imports_++;
+    case ExternalKind::Tag:
+      if (auto* tag_import = cast<TagImport>(import)) {
+        bindings = &module_->tag_bindings;
+        name = &tag_import->tag.name;
+        index = num_tag_imports_++;
       }
       break;
   }
@@ -374,11 +372,11 @@ Result NameGenerator::VisitExport(Export* export_) {
       }
       break;
 
-    case ExternalKind::Event:
-      if (Event* event = module_->GetEvent(export_->var)) {
-        index = module_->GetEventIndex(export_->var);
-        bindings = &module_->event_bindings;
-        name = &event->name;
+    case ExternalKind::Tag:
+      if (Tag* tag = module_->GetTag(export_->var)) {
+        index = module_->GetTagIndex(export_->var);
+        bindings = &module_->tag_bindings;
+        name = &tag->name;
       }
       break;
   }
@@ -411,11 +409,11 @@ Result NameGenerator::VisitModule(Module* module) {
   }
 
   VisitAll(module->globals, &NameGenerator::VisitGlobal);
-  VisitAll(module->func_types, &NameGenerator::VisitFuncType);
+  VisitAll(module->types, &NameGenerator::VisitType);
   VisitAll(module->funcs, &NameGenerator::VisitFunc);
   VisitAll(module->tables, &NameGenerator::VisitTable);
   VisitAll(module->memories, &NameGenerator::VisitMemory);
-  VisitAll(module->events, &NameGenerator::VisitEvent);
+  VisitAll(module->tags, &NameGenerator::VisitTag);
   VisitAll(module->data_segments, &NameGenerator::VisitDataSegment);
   VisitAll(module->elem_segments, &NameGenerator::VisitElemSegment);
   module_ = nullptr;

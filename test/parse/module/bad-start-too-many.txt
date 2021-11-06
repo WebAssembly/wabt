@@ -6,7 +6,7 @@
   (func)
   (func))
 (;; STDERR ;;;
-out/test/parse/module/bad-start-too-many.txt:5:4: error: only one start function allowed
+out/test/parse/module/bad-start-too-many.txt:5:4: error: multiple start sections
   (start 1)
    ^^^^^
 ;;; STDERR ;;)

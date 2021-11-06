@@ -1,9 +1,8 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-reference-types
 (module
-  (func (param anyref) (result anyref)
+  (func (param externref) (result externref)
     i32.const 0
-    if (result anyref)
+    if (result externref)
       local.get 0
     else
       local.get 0

@@ -1,6 +1,0 @@
-;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/sign-extension-ops/i64.wast
-;;; ARGS*: --enable-sign-extension
-(;; STDOUT ;;;
-383/383 tests passed.
-;;; STDOUT ;;)

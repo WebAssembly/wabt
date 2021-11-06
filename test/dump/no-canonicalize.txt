@@ -21,25 +21,25 @@
     i32.const 2
     i32.mul
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 0000 0000 00                              ; section size (guess)
 000000e: 03                                        ; num types
-; type 0
+; func type 0
 000000f: 60                                        ; func
 0000010: 01                                        ; num params
 0000011: 7f                                        ; i32
 0000012: 01                                        ; num results
 0000013: 7f                                        ; i32
-; type 1
+; func type 1
 0000014: 60                                        ; func
 0000015: 01                                        ; num params
 0000016: 7f                                        ; i32
 0000017: 00                                        ; num results
-; type 2
+; func type 2
 0000018: 60                                        ; func
 0000019: 02                                        ; num params
 000001a: 7f                                        ; i32
@@ -98,13 +98,13 @@
 000005d: 0000 0000 00                              ; section size (guess)
 0000062: 01                                        ; num elem segments
 ; elem segment header 0
-0000063: 00                                      
+0000063: 00                                        ; segment flags
 0000064: 41                                        ; i32.const
 0000065: 00                                        ; i32 literal
 0000066: 0b                                        ; end
-0000067: 02                                        ; num elem exprs
-0000068: 02                                        ; elem expr function index
-0000069: 03                                        ; elem expr function index
+0000067: 02                                        ; num elems
+0000068: 02                                        ; elem function index
+0000069: 03                                        ; elem function index
 000005d: 8880 8080 00                              ; FIXUP section size
 ; section "Code" (10)
 000006a: 0a                                        ; section code
@@ -146,6 +146,8 @@
 0000099: 0b                                        ; end
 000008d: 8880 8080 00                              ; FIXUP func body size
 000006b: aa80 8080 00                              ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 no-canonicalize.wasm:	file format wasm 0x1
 

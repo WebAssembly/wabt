@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: -v --enable-sign-extension
+;;; ARGS0: -v
 (module
   (func
     i32.const 0
@@ -21,14 +21,14 @@
     i64.const 0
     i64.extend32_s
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
@@ -69,6 +69,8 @@
 000002b: 0b                                        ; end
 0000015: 16                                        ; FIXUP func body size
 0000013: 18                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 unary-extend.wasm:	file format wasm 0x1
 

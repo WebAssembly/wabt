@@ -8,6 +8,6 @@ section(MEMORY) {
   max[leb_u32(65537)]
 }
 (;; STDERR ;;;
-0000010: error: invalid memory max size
-0000010: error: invalid memory max size
+out/test/binary/bad-memory-max-size/bad-memory-max-size.wasm:0000010: error: max pages (65537) must be <= (65536)
+out/test/binary/bad-memory-max-size/bad-memory-max-size.wasm:0000010: error: max pages (65537) must be <= (65536)
 ;;; STDERR ;;)

@@ -63,10 +63,19 @@ struct Opcode {
     return *GetInfo().decomp ? GetInfo().decomp : GetInfo().name;
   }
   Type GetResultType() const { return GetInfo().result_type; }
-  Type GetParamType1() const { return GetInfo().param1_type; }
-  Type GetParamType2() const { return GetInfo().param2_type; }
-  Type GetParamType3() const { return GetInfo().param3_type; }
+  Type GetParamType1() const { return GetInfo().param_types[0]; }
+  Type GetParamType2() const { return GetInfo().param_types[1]; }
+  Type GetParamType3() const { return GetInfo().param_types[2]; }
+  Type GetParamType(int n) const { return GetInfo().param_types[n - 1]; }
   Address GetMemorySize() const { return GetInfo().memory_size; }
+
+  // If this is a load/store op, the type depends on the memory used.
+  Type GetMemoryParam(Type param,
+                      const Limits* limits,
+                      bool has_address_operands) {
+    return limits && limits->is_64 && has_address_operands ? Type(Type::I64)
+                                                           : param;
+  }
 
   // Get the byte sequence for this opcode, including prefix.
   std::vector<uint8_t> GetBytes() const;
@@ -98,9 +107,7 @@ struct Opcode {
     const char* name;
     const char* decomp;
     Type result_type;
-    Type param1_type;
-    Type param2_type;
-    Type param3_type;
+    Type param_types[3];
     Address memory_size;
     uint8_t prefix;
     uint32_t code;

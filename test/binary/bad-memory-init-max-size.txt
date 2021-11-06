@@ -8,6 +8,6 @@ section(MEMORY) {
   max[1]
 }
 (;; STDERR ;;;
-000000e: error: memory initial size must be <= max size
-000000e: error: memory initial size must be <= max size
+out/test/binary/bad-memory-init-max-size/bad-memory-init-max-size.wasm:000000e: error: max pages (1) must be >= initial pages (2)
+out/test/binary/bad-memory-init-max-size/bad-memory-init-max-size.wasm:000000e: error: max pages (1) must be >= initial pages (2)
 ;;; STDERR ;;)

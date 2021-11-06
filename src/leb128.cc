@@ -134,8 +134,29 @@ void WriteS32Leb128(Stream* stream, uint32_t value, const char* desc) {
   WriteS32Leb128(stream, Bitcast<int32_t>(value), desc);
 }
 
+void WriteU64Leb128(Stream* stream, uint64_t value, const char* desc) {
+  uint8_t data[MAX_U64_LEB128_BYTES];
+  Offset length = 0;
+  LEB128_LOOP_UNTIL(value == 0);
+  stream->WriteData(data, length, desc);
+}
+
 void WriteS64Leb128(Stream* stream, uint64_t value, const char* desc) {
   WriteS64Leb128(stream, Bitcast<int64_t>(value), desc);
+}
+
+void WriteFixedS32Leb128(Stream* stream, uint32_t value, const char* desc) {
+  uint8_t data[MAX_U32_LEB128_BYTES];
+  data[0] = (value & 0x7f) | 0x80;
+  data[1] = ((value >> 7) & 0x7f) | 0x80;
+  data[2] = ((value >> 14) & 0x7f) | 0x80;
+  data[3] = ((value >> 21) & 0x7f) | 0x80;
+  // The last byte needs to be sign-extended.
+  data[4] = ((value >> 28) & 0x0f);
+  if (static_cast<int32_t>(value) < 0) {
+    data[4] |= 0x70;
+  }
+  stream->WriteData(data, MAX_U32_LEB128_BYTES, desc);
 }
 
 #undef LEB128_LOOP_UNTIL
@@ -180,6 +201,50 @@ size_t ReadU32Leb128(const uint8_t* p,
     }
     *out_value = LEB128_5(uint32_t);
     return 5;
+  } else {
+    // past the end.
+    *out_value = 0;
+    return 0;
+  }
+}
+
+size_t ReadU64Leb128(const uint8_t* p,
+                     const uint8_t* end,
+                     uint64_t* out_value) {
+  if (p < end && (p[0] & 0x80) == 0) {
+    *out_value = LEB128_1(uint64_t);
+    return 1;
+  } else if (p + 1 < end && (p[1] & 0x80) == 0) {
+    *out_value = LEB128_2(uint64_t);
+    return 2;
+  } else if (p + 2 < end && (p[2] & 0x80) == 0) {
+    *out_value = LEB128_3(uint64_t);
+    return 3;
+  } else if (p + 3 < end && (p[3] & 0x80) == 0) {
+    *out_value = LEB128_4(uint64_t);
+    return 4;
+  } else if (p + 4 < end && (p[4] & 0x80) == 0) {
+    *out_value = LEB128_5(uint64_t);
+    return 5;
+  } else if (p + 5 < end && (p[5] & 0x80) == 0) {
+    *out_value = LEB128_6(uint64_t);
+    return 6;
+  } else if (p + 6 < end && (p[6] & 0x80) == 0) {
+    *out_value = LEB128_7(uint64_t);
+    return 7;
+  } else if (p + 7 < end && (p[7] & 0x80) == 0) {
+    *out_value = LEB128_8(uint64_t);
+    return 8;
+  } else if (p + 8 < end && (p[8] & 0x80) == 0) {
+    *out_value = LEB128_9(uint64_t);
+    return 9;
+  } else if (p + 9 < end && (p[9] & 0x80) == 0) {
+    // The top bits set represent values > 32 bits.
+    if (p[9] & 0xf0) {
+      return 0;
+    }
+    *out_value = LEB128_10(uint64_t);
+    return 10;
   } else {
     // past the end.
     *out_value = 0;

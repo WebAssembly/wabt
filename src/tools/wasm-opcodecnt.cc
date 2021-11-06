@@ -57,10 +57,9 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
     s_read_binary_options.log_stream = s_log_stream.get();
   });
-  parser.AddHelpOption();
   s_features.AddOptions(&parser);
   parser.AddOption('o', "output", "FILENAME",
                    "Output file for the opcode counts, by default use stdout",

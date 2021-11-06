@@ -46,9 +46,9 @@ i64.atomic.load8_u() => i64:255
 i64.atomic.load16_u() => i64:65535
 i64.atomic.load32_u() => i64:1104019456
 i64.atomic.load() => i64:4741727461962678271
-bad.align-i32.atomic.load16_u() => error: atomic memory access is unaligned
-bad.align-i32.atomic.load() => error: atomic memory access is unaligned
-bad.align-i64.atomic.load16_u() => error: atomic memory access is unaligned
-bad.align-i64.atomic.load32_u() => error: atomic memory access is unaligned
-bad.align-i64.atomic.load() => error: atomic memory access is unaligned
+bad.align-i32.atomic.load16_u() => error: invalid atomic access at 1+0
+bad.align-i32.atomic.load() => error: invalid atomic access at 2+0
+bad.align-i64.atomic.load16_u() => error: invalid atomic access at 1+0
+bad.align-i64.atomic.load32_u() => error: invalid atomic access at 2+0
+bad.align-i64.atomic.load() => error: invalid atomic access at 4+0
 ;;; STDOUT ;;)

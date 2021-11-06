@@ -4,14 +4,14 @@
   (func)
   (func)
   (elem (i32.const 0) 0 1))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
@@ -28,13 +28,13 @@
 0000014: 00                                        ; section size (guess)
 0000015: 01                                        ; num elem segments
 ; elem segment header 0
-0000016: 00                                      
+0000016: 00                                        ; segment flags
 0000017: 41                                        ; i32.const
 0000018: 00                                        ; i32 literal
 0000019: 0b                                        ; end
-000001a: 02                                        ; num elem exprs
-000001b: 00                                        ; elem expr function index
-000001c: 01                                        ; elem expr function index
+000001a: 02                                        ; num elems
+000001b: 00                                        ; elem function index
+000001c: 01                                        ; elem function index
 0000014: 08                                        ; FIXUP section size
 ; section "Code" (10)
 000001d: 0a                                        ; section code
@@ -51,4 +51,4 @@
 0000025: 0b                                        ; end
 0000023: 02                                        ; FIXUP func body size
 000001e: 07                                        ; FIXUP section size
-;;; STDOUT ;;)
+;;; STDERR ;;)

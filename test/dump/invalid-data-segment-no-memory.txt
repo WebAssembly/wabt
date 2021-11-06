@@ -2,15 +2,21 @@
 ;;; ARGS: -v --no-check
 (module
   (data (i32.const 0) "hello"))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "DataCount" (12)
+0000008: 0c                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; data count
+0000009: 01                                        ; FIXUP section size
+; truncate to 8 (0x8)
 ; section "Data" (11)
 0000008: 0b                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num data segments
 ; data segment header 0
-000000b: 00                                      
+000000b: 00                                        ; segment flags
 000000c: 41                                        ; i32.const
 000000d: 00                                        ; i32 literal
 000000e: 0b                                        ; end
@@ -18,4 +24,4 @@
 ; data segment data 0
 0000010: 6865 6c6c 6f                              ; data segment data
 0000009: 0b                                        ; FIXUP section size
-;;; STDOUT ;;)
+;;; STDERR ;;)

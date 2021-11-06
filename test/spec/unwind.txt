@@ -1,5 +1,13 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/unwind.wast
 (;; STDOUT ;;;
+out/test/spec/unwind.wast:212: assert_trap passed: unreachable executed
+out/test/spec/unwind.wast:221: assert_trap passed: unreachable executed
+out/test/spec/unwind.wast:230: assert_trap passed: unreachable executed
+out/test/spec/unwind.wast:239: assert_trap passed: unreachable executed
+out/test/spec/unwind.wast:245: assert_trap passed: unreachable executed
+out/test/spec/unwind.wast:251: assert_trap passed: unreachable executed
+out/test/spec/unwind.wast:257: assert_trap passed: unreachable executed
+out/test/spec/unwind.wast:263: assert_trap passed: unreachable executed
 49/49 tests passed.
 ;;; STDOUT ;;)

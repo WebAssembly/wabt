@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-simd
 (module
   ;; v128.bitselect
   (func (export  "func_v128_bitselect_0") (result  v128)

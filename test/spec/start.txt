@@ -2,7 +2,8 @@
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;
 out/test/spec/start.wast:2: assert_invalid passed:
-  0000015: error: invalid start function index: 1
+  0000000: error: function variable out of range: 1 (max 1)
+  0000015: error: OnStartFunction callback failed
 out/test/spec/start.wast:7: assert_invalid passed:
   error: start function must not return anything
   0000016: error: OnStartFunction callback failed
@@ -16,5 +17,9 @@ inc() =>
 called host spectest.print_i32(i32:1) =>
 called host spectest.print_i32(i32:2) =>
 called host spectest.print() =>
-14/14 tests passed.
+out/test/spec/start.wast:103: assert_malformed passed:
+  out/test/spec/start/start.9.wat:1:69: error: multiple start sections
+  (module (func $a (unreachable)) (func $b (unreachable)) (start $a) (start $b))
+                                                                      ^^^^^
+15/15 tests passed.
 ;;; STDOUT ;;)

@@ -45,7 +45,7 @@
     drop
     i32.const 0
     i32.const 1
-    call_indirect (type $t0) $T0
+    call_indirect $T0 (type $t0)
     drop
     local.get $param1
     drop
@@ -54,5 +54,5 @@
   (table $T0 1 1 funcref)
   (export "baz" (func $import))
   (export "quux" (func $func0))
-  (elem $e0 (i32.const 0) $import))
+  (elem $e0 (i32.const 0) func $import))
 ;;; STDOUT ;;)

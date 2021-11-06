@@ -1,0 +1,47 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-memory64
+(module
+  (memory i64 1)
+  (func
+    i64.const 0
+    i32.load
+    drop
+    i64.const 0
+    i32.load8_s
+    drop
+    i64.const 0
+    i32.load16_s
+    drop
+    i64.const 0
+    i32.load8_u
+    drop
+    i64.const 0
+    i32.load16_u
+    drop
+    i64.const 0
+    i64.load
+    drop
+    i64.const 0
+    i64.load8_s
+    drop
+    i64.const 0
+    i64.load16_s
+    drop
+    i64.const 0
+    i64.load32_s
+    drop
+    i64.const 0
+    i64.load8_u
+    drop
+    i64.const 0
+    i64.load16_u
+    drop
+    i64.const 0
+    i64.load32_u
+    drop
+    i64.const 0
+    f32.load
+    drop
+    i64.const 0
+    f64.load
+    drop))

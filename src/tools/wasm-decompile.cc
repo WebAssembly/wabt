@@ -52,7 +52,6 @@ int ProgramMain(int argc, char** argv) {
       "  # parse binary file test.wasm and write text file test.dcmp\n"
       "  $ wasm-decompile test.wasm -o test.dcmp\n";
     OptionParser parser("wasm-decompile", s_description);
-    parser.AddHelpOption();
     parser.AddOption(
         'o', "output", "FILENAME",
         "Output file for the decompiled file, by default use stdout",
@@ -84,14 +83,17 @@ int ProgramMain(int argc, char** argv) {
     result = ReadBinaryIr(infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
     if (Succeeded(result)) {
+      ValidateOptions options(features);
+      result = ValidateModule(&module, &errors, options);
       if (Succeeded(result)) {
-        ValidateOptions options(features);
-        result = ValidateModule(&module, &errors, options);
+        result = GenerateNames(&module,
+                               static_cast<NameOpts>(NameOpts::AlphaNames));
       }
-      // FIXME: do we need these?
-      result = GenerateNames(&module,
-                             static_cast<NameOpts>(NameOpts::AlphaNames |
-                                                   NameOpts::NoDollar));
+      if (Succeeded(result)) {
+        // Must be called after ReadBinaryIr & GenerateNames, and before
+        // ApplyNames, see comments at definition.
+        RenameAll(module);
+      }
       if (Succeeded(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */
@@ -99,9 +101,10 @@ int ProgramMain(int argc, char** argv) {
         WABT_USE(dummy_result);
       }
       if (Succeeded(result)) {
+        auto s = Decompile(module, decompile_options);
         FileStream stream(!outfile.empty() ? FileStream(outfile)
                                              : FileStream(stdout));
-        result = Decompile(stream, module, decompile_options);
+        stream.WriteData(s.data(), s.size());
       }
     }
     FormatErrorsToFile(errors, Location::Type::Binary);

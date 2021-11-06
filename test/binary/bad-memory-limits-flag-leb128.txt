@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(MEMORY) {
+  count[1]
+  flags[0x81 0]
+}
+(;; STDERR ;;;
+000000c: error: malformed memory limits flag: 129
+000000c: error: malformed memory limits flag: 129
+;;; STDERR ;;)

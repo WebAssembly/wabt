@@ -18,8 +18,8 @@
   (func $f1 (type $t0))
   (func $f2 (type $t1) (result i32)
     i32.const 0
-    call_indirect (type $t0) $T0
+    call_indirect $T0 (type $t0)
     i32.const 1)
   (table $T0 1 1 funcref)
-  (elem $e0 (i32.const 0) $foo.bar))
+  (elem $e0 (i32.const 0) func $foo.bar))
 ;;; STDOUT ;;)

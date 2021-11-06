@@ -15,12 +15,8 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import argparse
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+import io
 import json
 import os
 import re
@@ -85,7 +81,8 @@ def F64ToC(f64_bits):
 
 
 def MangleType(t):
-    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd'}[t]
+    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd',
+            'externref': 'e', 'funcref': 'f'}[t]
 
 
 def MangleTypes(types):
@@ -95,13 +92,13 @@ def MangleTypes(types):
 
 
 def MangleName(s):
-    result = 'Z_'
-    for c in s.encode('utf-8'):
-        # NOTE(binji): Z is not allowed.
-        if c in '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY0123456789':
-            result += c
-        else:
-            result += 'Z%02X' % ord(c)
+    def Mangle(match):
+        s = match.group(0)
+        return b'Z%02X' % s[0]
+
+    # NOTE(binji): Z is not allowed.
+    pattern = b'([^_a-zA-Y0-9])'
+    result = 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
     return result
 
 
@@ -195,8 +192,6 @@ class CWriter(object):
             'assert_uninstantiable': self._WriteAssertUninstantiableCommand,
             'action': self._WriteActionCommand,
             'assert_return': self._WriteAssertReturnCommand,
-            'assert_return_canonical_nan': self._WriteAssertReturnNanCommand,
-            'assert_return_arithmetic_nan': self._WriteAssertReturnNanCommand,
             'assert_trap': self._WriteAssertActionCommand,
             'assert_exhaustion': self._WriteAssertActionCommand,
         }
@@ -221,37 +216,49 @@ class CWriter(object):
     def _WriteAssertReturnCommand(self, command):
         expected = command['expected']
         if len(expected) == 1:
-            assert_map = {
-                'i32': 'ASSERT_RETURN_I32',
-                'f32': 'ASSERT_RETURN_F32',
-                'i64': 'ASSERT_RETURN_I64',
-                'f64': 'ASSERT_RETURN_F64',
-            }
-
             type_ = expected[0]['type']
-            assert_macro = assert_map[type_]
-            self.out_file.write('%s(%s, %s);\n' %
-                                (assert_macro,
-                                 self._Action(command),
-                                 self._ConstantList(expected)))
+            value = expected[0]['value']
+            if value == 'nan:canonical':
+                assert_map = {
+                    'f32': 'ASSERT_RETURN_CANONICAL_NAN_F32',
+                    'f64': 'ASSERT_RETURN_CANONICAL_NAN_F64',
+                }
+                assert_macro = assert_map[(type_)]
+                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+            elif value == 'nan:arithmetic':
+                assert_map = {
+                    'f32': 'ASSERT_RETURN_ARITHMETIC_NAN_F32',
+                    'f64': 'ASSERT_RETURN_ARITHMETIC_NAN_F64',
+                }
+                assert_macro = assert_map[(type_)]
+                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+            else:
+                assert_map = {
+                    'i32': 'ASSERT_RETURN_I32',
+                    'f32': 'ASSERT_RETURN_F32',
+                    'i64': 'ASSERT_RETURN_I64',
+                    'f64': 'ASSERT_RETURN_F64',
+                    'externref': 'ASSERT_RETURN_EXTERNREF',
+                    'funcref': 'ASSERT_RETURN_FUNCREF',
+                }
+
+                assert_macro = assert_map[type_]
+                self.out_file.write('%s(%s, %s);\n' %
+                                    (assert_macro,
+                                     self._Action(command),
+                                     self._ConstantList(expected)))
         elif len(expected) == 0:
             self._WriteAssertActionCommand(command)
         else:
-            raise Error('Unexpected result with multiple values: %s' % expected)
-
-    def _WriteAssertReturnNanCommand(self, command):
-        assert_map = {
-            ('assert_return_canonical_nan', 'f32'): 'ASSERT_RETURN_CANONICAL_NAN_F32',
-            ('assert_return_canonical_nan', 'f64'): 'ASSERT_RETURN_CANONICAL_NAN_F64',
-            ('assert_return_arithmetic_nan', 'f32'): 'ASSERT_RETURN_ARITHMETIC_NAN_F32',
-            ('assert_return_arithmetic_nan', 'f64'): 'ASSERT_RETURN_ARITHMETIC_NAN_F64',
-        }
-
-        expected = command['expected']
-        type_ = expected[0]['type']
-        assert_macro = assert_map[(command['type'], type_)]
-
-        self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+            result_types = [result['type'] for result in expected]
+            # type, fmt, f, compare, expected, found
+            self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, (%s), (%s));\n' %
+                                ("struct wasm_multi_" + MangleTypes(result_types),
+                                 " ".join("MULTI_" + ty for ty in result_types),
+                                 self._Action(command),
+                                 self._CompareList(expected),
+                                 self._ConstantList(expected),
+                                 self._FoundList(result_types)))
 
     def _WriteAssertActionCommand(self, command):
         assert_map = {
@@ -265,20 +272,40 @@ class CWriter(object):
 
     def _Constant(self, const):
         type_ = const['type']
-        value = int(const['value'])
+        value = const['value']
+        if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
+            assert False
         if type_ == 'i32':
-            return '%su' % value
+            return '%su' % int(value)
         elif type_ == 'i64':
-            return '%sull' % value
+            return '%sull' % int(value)
         elif type_ == 'f32':
-            return F32ToC(value)
+            return F32ToC(int(value))
         elif type_ == 'f64':
-            return F64ToC(value)
+            return F64ToC(int(value))
+        elif type_ == 'externref':
+            return 'externref(%s)' % value
+        elif type_ == 'funcref':
+            return 'funcref(%s)' % value
         else:
             assert False
 
     def _ConstantList(self, consts):
         return ', '.join(self._Constant(const) for const in consts)
+
+    def _Found(self, num, type_):
+        return "actual.%s%s" % (MangleType(type_), num)
+
+    def _FoundList(self, types):
+        return ', '.join(self._Found(num, type_) for num, type_ in enumerate(types))
+
+    def _Compare(self, num, const):
+        return "is_equal_%s(%s, %s)" % (const['type'],
+                                        self._Constant(const),
+                                        self._Found(num, const['type']))
+
+    def _CompareList(self, consts):
+        return ' && '.join(self._Compare(num, const) for num, const in enumerate(consts))
 
     def _ActionSig(self, action, expected):
         type_ = action['type']
@@ -307,15 +334,14 @@ class CWriter(object):
 
 
 def Compile(cc, c_filename, out_dir, *args):
-    out_dir = os.path.abspath(out_dir)
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, '.o'), out_dir)
-    cc.RunWithArgs('-c', '-o', o_filename, c_filename, *args, cwd=out_dir)
+    cc.RunWithArgs('-c', c_filename, '-o', o_filename, *args)
     return o_filename
 
 
-def Link(cc, o_filenames, main_exe, out_dir, *args):
+def Link(cc, o_filenames, main_exe, *args):
     args = ['-o', main_exe] + o_filenames + list(args)
-    cc.RunWithArgs(*args, cwd=out_dir)
+    cc.RunWithArgs(*args)
 
 
 def main(args):
@@ -358,6 +384,7 @@ def main(args):
         wast2json = utils.Executable(
             find_exe.GetWast2JsonExecutable(options.bindir),
             error_cmdline=options.error_cmdline)
+        wast2json.verbose = options.print_cmd
         wast2json.AppendOptionalArgs({'-v': options.verbose})
 
         json_file_path = utils.ChangeDir(
@@ -367,8 +394,10 @@ def main(args):
         wasm2c = utils.Executable(
             find_exe.GetWasm2CExecutable(options.bindir),
             error_cmdline=options.error_cmdline)
+        wasm2c.verbose = options.print_cmd
 
         cc = utils.Executable(options.cc, *options.cflags)
+        cc.verbose = options.print_cmd
 
         with open(json_file_path) as json_file:
             spec_json = json.load(json_file)
@@ -378,7 +407,7 @@ def main(args):
             with open(options.prefix) as prefix_file:
                 prefix = prefix_file.read() + '\n'
 
-        output = StringIO()
+        output = io.StringIO()
         cwriter = CWriter(spec_json, prefix, output, out_dir)
         cwriter.Write()
 
@@ -394,32 +423,23 @@ def main(args):
         o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
+            wasm_filename = os.path.join(out_dir, wasm_filename)
             c_filename = utils.ChangeExt(wasm_filename, '.c')
-            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, cwd=out_dir)
+            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename)
             if options.compile:
                 defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
 
         if options.compile:
-            main_c = os.path.basename(main_filename)
-            o_filenames.append(Compile(cc, main_c, out_dir, includes, defines))
-            main_exe = os.path.basename(utils.ChangeExt(json_file_path, ''))
-            Link(cc, o_filenames, main_exe, out_dir, '-lm')
+            o_filenames.append(Compile(cc, main_filename, out_dir, includes, defines))
+            main_exe = utils.ChangeExt(json_file_path, '')
+            Link(cc, o_filenames, main_exe, '-lm')
 
         if options.compile and options.run:
-            utils.Executable(os.path.join(out_dir, main_exe),
-                             forward_stdout=True).RunWithArgs()
+            utils.Executable(main_exe, forward_stdout=True).RunWithArgs()
 
     return 0
 
 
 if __name__ == '__main__':
-    try:
-        sys.exit(main(sys.argv[1:]))
-    except Error as e:
-        # TODO(binji): gcc will output unicode quotes in errors since the terminal
-        # environment allows it, but python2 stderr will always attempt to convert
-        # to ascii first, which fails. This will replace the invalid characters
-        # instead, which is ugly, but works.
-        sys.stderr.write(u'{0}\n'.format(e).encode('ascii', 'replace'))
-        sys.exit(1)
+    sys.exit(main(sys.argv[1:]))

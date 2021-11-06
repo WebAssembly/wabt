@@ -1,0 +1,207 @@
+;;; TOOL: run-wasm-decompile
+
+(module
+  (import "ns" "fi" (func))
+  (import "ns" "g3" (global i32))
+  (import "ns" "tab3" (table 0 12 funcref))
+  ;; (import "ns" "m1" (memory 1))  ;; Can test only 1 at a time :(
+
+  (memory (export "m2") 1)
+
+  (global $g1 (mut i32) (i32.const 10))
+  (global (export "g2") (mut i32) (i32.const 11))
+
+  (table $tab1 0 10 funcref)
+  (table (export "tab2") 0 11 funcref)
+
+  (data 0 (offset (i32.const 0)) "Hello, World!\n\00")
+  (data 0 (offset (i32.const 100)) "abcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyz")
+  (data 0 (offset (i32.const 200)) "hi")  ;; Too short for data derived name
+  (data 0 (offset (i32.const 300)) "Hello, World!\n\00")  ;; Duplicate.
+
+  (func $f (param i32 i32) (result i32) (local i64 f32 f64)
+    i64.const 8
+    set_local 2
+    f32.const 6.0
+    set_local 3
+    f64.const 7.0
+    tee_local 4
+    f64.const 10.0
+    f64.lt
+    if
+      i32.const 1
+      i32.const 2
+      i32.load offset=3 align=1
+      i32.const 5
+      i32.add
+      i32.store offset=4
+    end
+    get_local 0
+    get_global $g1
+    i32.add
+    i32.const 9
+    call $f
+    drop
+    loop
+      block
+        i32.const 0
+        if (result i32)
+          i32.const 1
+        else
+          i32.const 2
+        end
+        br_if 0
+        br 1
+      end
+      i32.const 1
+      br_if 0
+    end
+    i32.const 1
+    i32.const 2
+    i32.const 1
+    i32.const 1
+    i32.eq
+    select
+    drop
+    block
+      block
+        block
+          block
+            block
+              local.get 0
+              br_table 3 2 1 0 4
+              unreachable
+            end
+            i32.const 100
+            return
+          end
+          i32.const 101
+          return
+        end
+        i32.const 102
+        return
+      end
+      i32.const 103
+      return
+    end
+    i32.const 104
+    drop
+    i32.const 1
+    block (param i32)   ;; block with input
+      br_if 0
+    end
+    block (result i32)  ;; block as an exp.
+    i32.const 2
+    i32.const 0
+    br_if 0
+    drop
+    i32.const 3
+    end
+    set_local 0
+    nop
+    ref.null func
+    ref.is_null
+    drop
+    i32.const 0  ;; fi
+    call_indirect
+    i32.const 0
+  )
+  (func $g (param) (result) (local i32)
+    ;; This is rare, but requires special handling: uses of local outside scope
+    ;; of first definition.
+    loop
+      i32.const 1
+      tee_local 0
+      br_if 0
+    end
+    get_local 0
+    drop
+  )
+  ;; LLD outputs a name section with de-mangled C++ function signatures as names,
+  ;; so have to make sure special chars get removed.
+  (func (export "void signature-&<>(int a)") (param) (result))
+  (func (export "void signature-&[](int a)") (param) (result))
+  (func $not-exported (param) (result))
+  (export "f" (func $f))
+)
+
+(;; STDOUT ;;;
+export memory m2(initial: 1, max: 0);
+
+import global ns_g3:int;
+global g_b:int = 10;
+export global g2:int = 11;
+
+import table ns_tab3:funcref;
+table T_b:funcref(min: 0, max: 10);
+export table tab2:funcref(min: 0, max: 11);
+
+data d_HelloWorld(offset: 0) = "Hello, World!\0a\00";
+data d_abcdefghijklmnoqrstuvwxyzabc(offset: 100) =
+  "abcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstu"
+  "vwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmno"
+  "qrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghij"
+  "klmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyz";
+data d_c(offset: 200) = "hi";
+data d_d(offset: 300) = "Hello, World!\0a\00";
+
+import function ns_fi();
+
+export function f(a:int, b:int):int {
+  var c:long = 8L;
+  var d:float = 6.0f;
+  var e:double = 7.0;
+  if (e < 10.0) { d_HelloWorld[5@4]:int = d_HelloWorld[5]:int@1 + 5 }
+  f(a + g_b, 9);
+  loop L_b {
+    if (if (0) { 1 } else { 2 }) goto B_c;
+    continue L_b;
+    label B_c:
+    if (1) continue L_b;
+  }
+  select_if(1, 2, 1 == 1);
+  br_table[B_f, B_g, B_h, B_i, ..B_e](a);
+  unreachable;
+  label B_i:
+  return 100;
+  label B_h:
+  return 101;
+  label B_g:
+  return 102;
+  label B_f:
+  return 103;
+  label B_e:
+  104;
+  if (1) goto B_j;
+  label B_j:
+  a = {
+        2;
+        if (0) goto B_k;
+        3;
+        label B_k:
+      }
+  nop;
+  is_null(null);
+  call_indirect(0);
+  return 0;
+}
+
+function f_c() {
+  var a:int;
+  loop L_a {
+    a = 1;
+    if (a) continue L_a;
+  }
+  a;
+}
+
+function signature() {
+}
+
+function signature_1() {
+}
+
+function f_f() {
+}
+
+;;; STDOUT ;;)

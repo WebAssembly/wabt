@@ -1,0 +1,12 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TABLE) {
+  count[1]
+  anyfunc
+  flags[8]
+}
+(;; STDERR ;;;
+000000d: error: malformed table limits flag: 8
+000000d: error: malformed table limits flag: 8
+;;; STDERR ;;)

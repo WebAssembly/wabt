@@ -4,14 +4,14 @@
   (func (export "main") (result i32)
     i32.const 42
     return))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 01                                        ; num results
@@ -48,7 +48,7 @@
 BeginModule(version: 1)
   BeginTypeSection(5)
     OnTypeCount(1)
-    OnType(index: 0, params: [], results: [i32])
+    OnFuncType(index: 0, params: [], results: [i32])
   EndTypeSection
   BeginFunctionSection(2)
     OnFunctionCount(1)
@@ -64,9 +64,12 @@ BeginModule(version: 1)
     OnLocalDeclCount(0)
     OnI32ConstExpr(42 (0x2a))
     OnReturnExpr
+    OnEndExpr
     EndFunctionBody(0)
   EndCodeSection
 EndModule
+;;; STDERR ;;)
+(;; STDOUT ;;;
    0| i32.const 42
    8| return
   12| return

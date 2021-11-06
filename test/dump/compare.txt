@@ -115,14 +115,14 @@
     f64.const 0
     f64.ge
     drop))
-(;; STDOUT ;;;
+(;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
-; type 0
+; func type 0
 000000b: 60                                        ; func
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
@@ -310,6 +310,8 @@
 0000015: 9f02                                      ; FIXUP func body size
 ; move data: [14, 136) -> [15, 137)
 0000013: a202                                      ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
 
 compare.wasm:	file format wasm 0x1
 

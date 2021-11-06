@@ -22,10 +22,6 @@
 
 #include "src/literal.h"
 
-#if HAVE_SYSCONF
-#include <unistd.h>
-#endif
-
 #define FOREACH_UINT32_MULTIPLIER 1
 
 #define FOREACH_UINT32(bits) \
@@ -35,15 +31,15 @@
   for (; bits >= last_bits;  \
        last_bits = bits, bits += num_threads_ * FOREACH_UINT32_MULTIPLIER)
 
-#define LOG_COMPLETION(bits)                                                 \
-  if (shard == 0) {                                                          \
-    int top_byte = bits >> 24;                                               \
-    if (top_byte != last_top_byte) {                                         \
-      printf("value: 0x%08x (%d%%)\r", bits,                                 \
-             static_cast<int>(static_cast<float>(bits) * 100 / UINT32_MAX)); \
-      fflush(stdout);                                                        \
-      last_top_byte = top_byte;                                              \
-    }                                                                        \
+#define LOG_COMPLETION(bits)                                                  \
+  if (shard == 0) {                                                           \
+    int top_byte = bits >> 24;                                                \
+    if (top_byte != last_top_byte) {                                          \
+      printf("value: 0x%08x (%d%%)\r", bits,                                  \
+             static_cast<int>(static_cast<double>(bits) * 100 / UINT32_MAX)); \
+      fflush(stdout);                                                         \
+      last_top_byte = top_byte;                                               \
+    }                                                                         \
   }
 
 #define LOG_DONE()     \
@@ -74,13 +70,9 @@ class ThreadedTest : public ::testing::Test {
   static const int kDefaultNumThreads = 2;
 
   virtual void SetUp() {
-#if HAVE_SYSCONF
-    num_threads_ = sysconf(_SC_NPROCESSORS_ONLN);
-    if (num_threads_ == -1)
+    num_threads_ = std::thread::hardware_concurrency();
+    if (num_threads_ == 0)
       num_threads_ = kDefaultNumThreads;
-#else
-    num_threads_ = kDefaultNumThreads;
-#endif
   }
 
   virtual void RunShard(int shard) = 0;

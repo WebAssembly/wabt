@@ -1,0 +1,35 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/table_fill.wast
+(;; STDOUT ;;;
+out/test/spec/table_fill.wast:50: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill.wast:58: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill.wast:63: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill.wast:71: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, externref, i32] but got []
+  0000020: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:80: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, externref, i32] but got [externref, i32]
+  0000024: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:89: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, externref, i32] but got [i32, i32]
+  0000024: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:98: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, externref, i32] but got [i32, externref]
+  0000024: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:107: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, externref, i32] but got [f32, externref, i32]
+  0000029: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:116: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, funcref, i32] but got [i32, externref, i32]
+  0000027: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:125: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, externref, i32] but got [i32, externref, f32]
+  0000029: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:135: assert_invalid passed:
+  error: type mismatch in table.fill, expected [i32, funcref, i32] but got [i32, externref, i32]
+  000002a: error: OnTableFillExpr callback failed
+out/test/spec/table_fill.wast:146: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  0000028: error: EndFunctionBody callback failed
+44/44 tests passed.
+;;; STDOUT ;;)

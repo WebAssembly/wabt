@@ -1,0 +1,14 @@
+;;; TOOL: wat-desugar
+(module
+  (func)
+  (func
+    ref.func 0
+    drop))
+(;; STDOUT ;;;
+(module
+  (func (;0;))
+  (func (;1;)
+    ref.func 0
+    drop)
+  (type (;0;) (func)))
+;;; STDOUT ;;)

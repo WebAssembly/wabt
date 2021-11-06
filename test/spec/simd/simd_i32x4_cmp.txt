@@ -1,0 +1,135 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/simd/simd_i32x4_cmp.wast
+(;; STDOUT ;;;
+out/test/spec/simd/simd_i32x4_cmp.wast:1461: assert_invalid passed:
+  error: type mismatch in i32x4.eq, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1462: assert_invalid passed:
+  error: type mismatch in i32x4.ge_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1463: assert_invalid passed:
+  error: type mismatch in i32x4.ge_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1464: assert_invalid passed:
+  error: type mismatch in i32x4.gt_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1465: assert_invalid passed:
+  error: type mismatch in i32x4.gt_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1466: assert_invalid passed:
+  error: type mismatch in i32x4.le_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1467: assert_invalid passed:
+  error: type mismatch in i32x4.le_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1468: assert_invalid passed:
+  error: type mismatch in i32x4.lt_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1469: assert_invalid passed:
+  error: type mismatch in i32x4.lt_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1470: assert_invalid passed:
+  error: type mismatch in i32x4.ne, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1749: assert_invalid passed:
+  error: type mismatch in i32x4.eq, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1757: assert_invalid passed:
+  error: type mismatch in i32x4.eq, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1765: assert_invalid passed:
+  error: type mismatch in i32x4.ne, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1773: assert_invalid passed:
+  error: type mismatch in i32x4.ne, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1781: assert_invalid passed:
+  error: type mismatch in i32x4.lt_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1789: assert_invalid passed:
+  error: type mismatch in i32x4.lt_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1797: assert_invalid passed:
+  error: type mismatch in i32x4.lt_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1805: assert_invalid passed:
+  error: type mismatch in i32x4.lt_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1813: assert_invalid passed:
+  error: type mismatch in i32x4.le_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1821: assert_invalid passed:
+  error: type mismatch in i32x4.le_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1829: assert_invalid passed:
+  error: type mismatch in i32x4.le_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1837: assert_invalid passed:
+  error: type mismatch in i32x4.le_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1845: assert_invalid passed:
+  error: type mismatch in i32x4.gt_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1853: assert_invalid passed:
+  error: type mismatch in i32x4.gt_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1861: assert_invalid passed:
+  error: type mismatch in i32x4.gt_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1869: assert_invalid passed:
+  error: type mismatch in i32x4.gt_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1877: assert_invalid passed:
+  error: type mismatch in i32x4.ge_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1885: assert_invalid passed:
+  error: type mismatch in i32x4.ge_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1893: assert_invalid passed:
+  error: type mismatch in i32x4.ge_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1901: assert_invalid passed:
+  error: type mismatch in i32x4.ge_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd/simd_i32x4_cmp.wast:1910: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.32.wat:1:65: error: unexpected token "i4x32.eq", expected an instr.
+  ...v128) (param $y v128) (result v128) (i4x32.eq (local.get $x) (local.get $y)))
+                                          ^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1911: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.33.wat:1:65: error: unexpected token "i4x32.ne", expected an instr.
+  ...v128) (param $y v128) (result v128) (i4x32.ne (local.get $x) (local.get $y)))
+                                          ^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1912: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.34.wat:1:65: error: unexpected token "i4x32.lt_s", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.lt_s (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1913: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.35.wat:1:65: error: unexpected token "i4x32.lt_u", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.lt_u (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1914: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.36.wat:1:65: error: unexpected token "i4x32.le_s", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.le_s (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1915: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.37.wat:1:65: error: unexpected token "i4x32.le_u", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.le_u (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1916: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.38.wat:1:65: error: unexpected token "i4x32.gt_s", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.gt_s (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1917: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.39.wat:1:65: error: unexpected token "i4x32.gt_u", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.gt_u (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1918: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.40.wat:1:65: error: unexpected token "i4x32.ge_s", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.ge_s (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+out/test/spec/simd/simd_i32x4_cmp.wast:1919: assert_malformed passed:
+  out/test/spec/simd/simd_i32x4_cmp/simd_i32x4_cmp.41.wat:1:65: error: unexpected token "i4x32.ge_u", expected an instr.
+  ...28) (param $y v128) (result v128) (i4x32.ge_u (local.get $x) (local.get $y)))
+                                        ^^^^^^^^^^
+473/473 tests passed.
+;;; STDOUT ;;)

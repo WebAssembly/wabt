@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "src/cast.h"
 #include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/string-view.h"
@@ -39,9 +40,9 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
-  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
+  Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
@@ -57,14 +58,19 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnDataDropExpr(DataDropExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
+  Result OnTableCopyExpr(TableCopyExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
   Result OnTableGetExpr(TableGetExpr*) override;
   Result OnTableSetExpr(TableSetExpr*) override;
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
+  Result OnTableFillExpr(TableFillExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnDelegateExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
+  Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
   void PushLabel(const std::string& label);
@@ -76,16 +82,17 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result UseNameForGlobalVar(Var* var);
   Result UseNameForTableVar(Var* var);
   Result UseNameForMemoryVar(Var* var);
-  Result UseNameForEventVar(Var* var);
+  Result UseNameForTagVar(Var* var);
   Result UseNameForDataSegmentVar(Var* var);
   Result UseNameForElemSegmentVar(Var* var);
   Result UseNameForParamAndLocalVar(Func* func, Var* var);
   Result VisitFunc(Index func_index, Func* func);
   Result VisitGlobal(Global* global);
-  Result VisitEvent(Event* event);
+  Result VisitTag(Tag* tag);
   Result VisitExport(Index export_index, Export* export_);
   Result VisitElemSegment(Index elem_segment_index, ElemSegment* segment);
   Result VisitDataSegment(Index data_segment_index, DataSegment* segment);
+  Result VisitStart(Var* start_var);
 
   Module* module_ = nullptr;
   Func* current_func_ = nullptr;
@@ -177,12 +184,12 @@ Result NameApplier::UseNameForMemoryVar(Var* var) {
   return Result::Ok;
 }
 
-Result NameApplier::UseNameForEventVar(Var* var) {
-  Event* event = module_->GetEvent(*var);
-  if (!event) {
+Result NameApplier::UseNameForTagVar(Var* var) {
+  Tag* tag = module_->GetTag(*var);
+  if (!tag) {
     return Result::Error;
   }
-  UseNameForVar(event->name, var);
+  UseNameForVar(tag->name, var);
   return Result::Ok;
 }
 
@@ -257,8 +264,15 @@ Result NameApplier::OnElemDropExpr(ElemDropExpr* expr)  {
   return Result::Ok;
 }
 
+Result NameApplier::OnTableCopyExpr(TableCopyExpr* expr) {
+  CHECK_RESULT(UseNameForTableVar(&expr->dst_table));
+  CHECK_RESULT(UseNameForTableVar(&expr->src_table));
+  return Result::Ok;
+}
+
 Result NameApplier::OnTableInitExpr(TableInitExpr* expr)  {
-  CHECK_RESULT(UseNameForElemSegmentVar(&expr->var));
+  CHECK_RESULT(UseNameForElemSegmentVar(&expr->segment_index));
+  CHECK_RESULT(UseNameForTableVar(&expr->table_index));
   return Result::Ok;
 }
 
@@ -282,6 +296,11 @@ Result NameApplier::OnTableSizeExpr(TableSizeExpr* expr)  {
   return Result::Ok;
 }
 
+Result NameApplier::OnTableFillExpr(TableFillExpr* expr)  {
+  CHECK_RESULT(UseNameForTableVar(&expr->var));
+  return Result::Ok;
+}
+
 Result NameApplier::OnBrExpr(BrExpr* expr) {
   string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
@@ -291,13 +310,6 @@ Result NameApplier::OnBrExpr(BrExpr* expr) {
 Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
   string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
-  return Result::Ok;
-}
-
-Result NameApplier::OnBrOnExnExpr(BrOnExnExpr* expr) {
-  string_view label = FindLabelByVar(&expr->label_var);
-  UseNameForVar(label, &expr->label_var);
-  CHECK_RESULT(UseNameForEventVar(&expr->event_var));
   return Result::Ok;
 }
 
@@ -322,12 +334,36 @@ Result NameApplier::EndTryExpr(TryExpr*) {
   return Result::Ok;
 }
 
+Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
+  if (!expr->IsCatchAll()) {
+    CHECK_RESULT(UseNameForTagVar(&expr->var));
+  }
+  return Result::Ok;
+}
+
+Result NameApplier::OnDelegateExpr(TryExpr* expr) {
+  string_view label = FindLabelByVar(&expr->delegate_target);
+  UseNameForVar(label, &expr->delegate_target);
+  return Result::Ok;
+}
+
 Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
-  CHECK_RESULT(UseNameForEventVar(&expr->var));
+  CHECK_RESULT(UseNameForTagVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
+  string_view label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
 Result NameApplier::OnCallExpr(CallExpr* expr) {
+  CHECK_RESULT(UseNameForFuncVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnRefFuncExpr(RefFuncExpr* expr) {
   CHECK_RESULT(UseNameForFuncVar(&expr->var));
   return Result::Ok;
 }
@@ -407,9 +443,9 @@ Result NameApplier::VisitGlobal(Global* global) {
   return Result::Ok;
 }
 
-Result NameApplier::VisitEvent(Event* event) {
-  if (event->decl.has_func_type) {
-    CHECK_RESULT(UseNameForFuncTypeVar(&event->decl.type_var));
+Result NameApplier::VisitTag(Tag* tag) {
+  if (tag->decl.has_func_type) {
+    CHECK_RESULT(UseNameForFuncTypeVar(&tag->decl.type_var));
   }
   return Result::Ok;
 }
@@ -425,9 +461,10 @@ Result NameApplier::VisitElemSegment(Index elem_segment_index,
                                      ElemSegment* segment) {
   CHECK_RESULT(UseNameForTableVar(&segment->table_var));
   CHECK_RESULT(visitor_.VisitExprList(segment->offset));
-  for (ElemExpr& elem_expr : segment->elem_exprs) {
-    if (elem_expr.kind == ElemExprKind::RefFunc) {
-      CHECK_RESULT(UseNameForFuncVar(&elem_expr.var));
+  for (ExprList& elem_expr : segment->elem_exprs) {
+    Expr* expr = &elem_expr.front();
+    if (expr->type() == ExprType::RefFunc) {
+      CHECK_RESULT(UseNameForFuncVar(&cast<RefFuncExpr>(expr)->var));
     }
   }
   return Result::Ok;
@@ -440,20 +477,27 @@ Result NameApplier::VisitDataSegment(Index data_segment_index,
   return Result::Ok;
 }
 
+Result NameApplier::VisitStart(Var* start_var) {
+  CHECK_RESULT(UseNameForFuncVar(start_var));
+  return Result::Ok;
+}
+
 Result NameApplier::VisitModule(Module* module) {
   module_ = module;
   for (size_t i = 0; i < module->funcs.size(); ++i)
     CHECK_RESULT(VisitFunc(i, module->funcs[i]));
   for (size_t i = 0; i < module->globals.size(); ++i)
     CHECK_RESULT(VisitGlobal(module->globals[i]));
-  for (size_t i = 0; i < module->events.size(); ++i)
-    CHECK_RESULT(VisitEvent(module->events[i]));
+  for (size_t i = 0; i < module->tags.size(); ++i)
+    CHECK_RESULT(VisitTag(module->tags[i]));
   for (size_t i = 0; i < module->exports.size(); ++i)
     CHECK_RESULT(VisitExport(i, module->exports[i]));
   for (size_t i = 0; i < module->elem_segments.size(); ++i)
     CHECK_RESULT(VisitElemSegment(i, module->elem_segments[i]));
   for (size_t i = 0; i < module->data_segments.size(); ++i)
     CHECK_RESULT(VisitDataSegment(i, module->data_segments[i]));
+  for (size_t i = 0; i < module->starts.size(); ++i)
+    CHECK_RESULT(VisitStart(module->starts[i]));
   module_ = nullptr;
   return Result::Ok;
 }

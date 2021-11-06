@@ -19,6 +19,7 @@
 #include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -29,10 +30,10 @@
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/interp/binary-reader-interp.h"
+#include "src/interp/interp-util.h"
 #include "src/interp/interp.h"
 #include "src/literal.h"
 #include "src/option-parser.h"
-#include "src/resolve-names.h"
 #include "src/stream.h"
 #include "src/validator.h"
 #include "src/wast-lexer.h"
@@ -68,9 +69,8 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
-    s_log_stream = FileStream::CreateStdout();
+    s_log_stream = FileStream::CreateStderr();
   });
-  parser.AddHelpOption();
   s_features.AddOptions(&parser);
   parser.AddOption('V', "value-stack-size", "SIZE",
                    "Size in elements of the value stack",
@@ -141,7 +141,8 @@ class Action {
   ActionType type = ActionType::Invoke;
   std::string module_name;
   std::string field_name;
-  TypedValues args;
+  ValueTypes types;
+  Values args;
 };
 
 template <CommandType TypeEnum>
@@ -151,10 +152,6 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
 };
 
 typedef ActionCommandBase<CommandType::Action> ActionCommand;
-typedef ActionCommandBase<CommandType::AssertReturnCanonicalNan>
-    AssertReturnCanonicalNanCommand;
-typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
-    AssertReturnArithmeticNanCommand;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
@@ -162,10 +159,127 @@ class RegisterCommand : public CommandMixin<CommandType::Register> {
   std::string name;
 };
 
+struct ExpectedValue {
+  TypedValue value;
+  Type lane_type;             // Only valid if value.type == Type::V128.
+  // Up to 4 NaN values used, depending on |value.type| and |lane_type|:
+  //   | type  | lane_type | valid                 |
+  //   | f32   |           | nan[0]                |
+  //   | f64   |           | nan[0]                |
+  //   | v128  | f32       | nan[0] through nan[3] |
+  //   | v128  | f64       | nan[0],nan[1]         |
+  //   | *     | *         | none valid            |
+  ExpectedNan nan[4];
+};
+
+int LaneCountFromType(Type type) {
+  switch (type) {
+    case Type::I8: return 16;
+    case Type::I16: return 8;
+    case Type::I32: return 4;
+    case Type::I64: return 2;
+    case Type::F32: return 4;
+    case Type::F64: return 2;
+    default: assert(false); return 0;
+  }
+}
+
+ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
+  int lane_count = LaneCountFromType(ev.lane_type);
+  assert(ev.value.type == Type::V128);
+  assert(lane < lane_count);
+
+  ExpectedValue result;
+  result.value.type = ev.lane_type;
+
+  v128 vec = ev.value.value.Get<v128>();
+
+  for (int lane = 0; lane < lane_count; ++lane) {
+    switch (ev.lane_type) {
+      case Type::I8:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u32>(vec.u8(lane));
+        break;
+
+      case Type::I16:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u32>(vec.u16(lane));
+        break;
+
+      case Type::I32:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u32>(vec.u32(lane));
+        break;
+
+      case Type::I64:
+        result.nan[0] = ExpectedNan::None;
+        result.value.value.Set<u64>(vec.u64(lane));
+        break;
+
+      case Type::F32:
+        result.nan[0] = ev.nan[lane];
+        result.value.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
+        break;
+
+      case Type::F64:
+        result.nan[0] = ev.nan[lane];
+        result.value.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
+        break;
+
+      default:
+        WABT_UNREACHABLE;
+    }
+  }
+  return result;
+}
+
+TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
+  int lane_count = LaneCountFromType(lane_type);
+  assert(tv.type == Type::V128);
+  assert(lane < lane_count);
+
+  TypedValue result;
+  result.type = lane_type;
+
+  v128 vec = tv.value.Get<v128>();
+
+  for (int lane = 0; lane < lane_count; ++lane) {
+    switch (lane_type) {
+      case Type::I8:
+        result.value.Set<u32>(vec.u8(lane));
+        break;
+
+      case Type::I16:
+        result.value.Set<u32>(vec.u16(lane));
+        break;
+
+      case Type::I32:
+        result.value.Set<u32>(vec.u32(lane));
+        break;
+
+      case Type::I64:
+        result.value.Set<u64>(vec.u64(lane));
+        break;
+
+      case Type::F32:
+        result.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
+        break;
+
+      case Type::F64:
+        result.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
+        break;
+
+      default:
+        WABT_UNREACHABLE;
+    }
+  }
+  return result;
+}
+
 class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
  public:
   Action action;
-  TypedValues expected;
+  std::vector<ExpectedValue> expected;
 };
 
 template <CommandType TypeEnum>
@@ -207,6 +321,10 @@ class JSONParser {
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
 
+  // Whether to allow parsing of expectation-only forms (e.g. `nan:canonical`,
+  // `nan:arithmetic`, etc.)
+  enum class AllowExpected { No, Yes };
+
   void PutbackChar();
   int ReadChar();
   void SkipWhitespace();
@@ -218,10 +336,33 @@ class JSONParser {
   wabt::Result ParseKeyStringValue(const char* key, std::string* out_string);
   wabt::Result ParseOptNameStringValue(std::string* out_string);
   wabt::Result ParseLine(uint32_t* out_line_number);
+  wabt::Result ParseType(Type* out_type);
   wabt::Result ParseTypeObject(Type* out_type);
   wabt::Result ParseTypeVector(TypeVector* out_types);
   wabt::Result ParseConst(TypedValue* out_value);
-  wabt::Result ParseConstVector(TypedValues* out_values);
+  wabt::Result ParseI32Value(uint32_t* out_value, string_view value_str);
+  wabt::Result ParseI64Value(uint64_t* out_value, string_view value_str);
+  wabt::Result ParseF32Value(uint32_t* out_value,
+                             ExpectedNan* out_nan,
+                             string_view value_str,
+                             AllowExpected);
+  wabt::Result ParseF64Value(uint64_t* out_value,
+                             ExpectedNan* out_nan,
+                             string_view value_str,
+                             AllowExpected);
+  wabt::Result ParseLaneConstValue(Type lane_type,
+                                   int lane,
+                                   ExpectedValue* out_value,
+                                   string_view value_str,
+                                   AllowExpected);
+  wabt::Result ParseConstValue(Type type,
+                               Value* out_value,
+                               ExpectedNan* out_nan,
+                               string_view value_str,
+                               AllowExpected);
+  wabt::Result ParseConstVector(ValueTypes* out_types, Values* out_values);
+  wabt::Result ParseExpectedValue(ExpectedValue* out_value, AllowExpected);
+  wabt::Result ParseExpectedValues(std::vector<ExpectedValue>* out_values);
   wabt::Result ParseAction(Action* out_action);
   wabt::Result ParseActionResult();
   wabt::Result ParseModuleType(ModuleType* out_type);
@@ -427,31 +568,41 @@ wabt::Result JSONParser::ParseLine(uint32_t* out_line_number) {
   return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseTypeObject(Type* out_type) {
+wabt::Result JSONParser::ParseType(Type* out_type) {
   std::string type_str;
-  EXPECT("{");
-  PARSE_KEY_STRING_VALUE("type", &type_str);
-  EXPECT("}");
+  CHECK_RESULT(ParseString(&type_str));
 
   if (type_str == "i32") {
     *out_type = Type::I32;
-    return wabt::Result::Ok;
   } else if (type_str == "f32") {
     *out_type = Type::F32;
-    return wabt::Result::Ok;
   } else if (type_str == "i64") {
     *out_type = Type::I64;
-    return wabt::Result::Ok;
   } else if (type_str == "f64") {
     *out_type = Type::F64;
-    return wabt::Result::Ok;
   } else if (type_str == "v128") {
     *out_type = Type::V128;
-    return wabt::Result::Ok;
+  } else if (type_str == "i8") {
+    *out_type = Type::I8;
+  } else if (type_str == "i16") {
+    *out_type = Type::I16;
+  } else if (type_str == "funcref") {
+    *out_type = Type::FuncRef;
+  } else if (type_str == "externref") {
+    *out_type = Type::ExternRef;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
   }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseTypeObject(Type* out_type) {
+  EXPECT("{");
+  EXPECT_KEY("type");
+  CHECK_RESULT(ParseType(out_type));
+  EXPECT("}");
+  return wabt::Result::Ok;
 }
 
 wabt::Result JSONParser::ParseTypeVector(TypeVector* out_types) {
@@ -471,58 +622,258 @@ wabt::Result JSONParser::ParseTypeVector(TypeVector* out_types) {
 }
 
 wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
-  std::string type_str;
-  std::string value_str;
-  EXPECT("{");
-  PARSE_KEY_STRING_VALUE("type", &type_str);
-  EXPECT(",");
-  PARSE_KEY_STRING_VALUE("value", &value_str);
-  EXPECT("}");
-
-  const char* value_start = value_str.data();
-  const char* value_end = value_str.data() + value_str.size();
-
-  if (type_str == "i32") {
-    uint32_t value;
-    CHECK_RESULT(
-        ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly));
-    out_value->type = Type::I32;
-    out_value->value.i32 = value;
-    return wabt::Result::Ok;
-  } else if (type_str == "f32") {
-    uint32_t value_bits;
-    CHECK_RESULT(ParseInt32(value_start, value_end, &value_bits,
-                            ParseIntType::UnsignedOnly));
-    out_value->type = Type::F32;
-    out_value->value.f32_bits = value_bits;
-    return wabt::Result::Ok;
-  } else if (type_str == "i64") {
-    uint64_t value;
-    CHECK_RESULT(
-        ParseInt64(value_start, value_end, &value, ParseIntType::UnsignedOnly));
-    out_value->type = Type::I64;
-    out_value->value.i64 = value;
-    return wabt::Result::Ok;
-  } else if (type_str == "f64") {
-    uint64_t value_bits;
-    CHECK_RESULT(ParseInt64(value_start, value_end, &value_bits,
-                            ParseIntType::UnsignedOnly));
-    out_value->type = Type::F64;
-    out_value->value.f64_bits = value_bits;
-    return wabt::Result::Ok;
-  } else if (type_str == "v128") {
-    v128 value_bits;
-    CHECK_RESULT(ParseUint128(value_start, value_end, &value_bits));
-    out_value->type = Type::V128;
-    out_value->value.v128_bits = value_bits;
-    return wabt::Result::Ok;
-  } else {
-    PrintError("unknown type: \"%s\"", type_str.c_str());
-    return wabt::Result::Error;
-  }
+  ExpectedValue expected;
+  CHECK_RESULT(ParseExpectedValue(&expected, AllowExpected::No));
+  *out_value = expected.value;
+  return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseConstVector(TypedValues* out_values) {
+wabt::Result JSONParser::ParseI32Value(uint32_t* out_value,
+                                       string_view value_str) {
+  if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid i32 literal");
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseI64Value(uint64_t* out_value,
+                                       string_view value_str) {
+  if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid i64 literal");
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseF32Value(uint32_t* out_value,
+                                       ExpectedNan* out_nan,
+                                       string_view value_str,
+                                       AllowExpected allow_expected) {
+  if (allow_expected == AllowExpected::Yes) {
+    *out_value = 0;
+    if (value_str == "nan:canonical") {
+      *out_nan = ExpectedNan::Canonical;
+      return wabt::Result::Ok;
+    } else if (value_str == "nan:arithmetic") {
+      *out_nan = ExpectedNan::Arithmetic;
+      return wabt::Result::Ok;
+    }
+  }
+
+  *out_nan = ExpectedNan::None;
+  if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid f32 literal");
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseF64Value(uint64_t* out_value,
+                                       ExpectedNan* out_nan,
+                                       string_view value_str,
+                                       AllowExpected allow_expected) {
+  if (allow_expected == AllowExpected::Yes) {
+    *out_value = 0;
+    if (value_str == "nan:canonical") {
+      *out_nan = ExpectedNan::Canonical;
+      return wabt::Result::Ok;
+    } else if (value_str == "nan:arithmetic") {
+      *out_nan = ExpectedNan::Arithmetic;
+      return wabt::Result::Ok;
+    }
+  }
+
+  *out_nan = ExpectedNan::None;
+  if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
+                        ParseIntType::UnsignedOnly))) {
+    PrintError("invalid f64 literal");
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
+                                             int lane,
+                                             ExpectedValue* out_value,
+                                             string_view value_str,
+                                             AllowExpected allow_expected) {
+  v128 v = out_value->value.value.Get<v128>();
+
+  switch (lane_type) {
+    case Type::I8: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      v.set_u8(lane, value);
+      break;
+    }
+
+    case Type::I16: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      v.set_u16(lane, value);
+      break;
+    }
+
+    case Type::I32: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      v.set_u32(lane, value);
+      break;
+    }
+
+    case Type::I64: {
+      uint64_t value;
+      CHECK_RESULT(ParseI64Value(&value, value_str));
+      v.set_u64(lane, value);
+      break;
+    }
+
+    case Type::F32: {
+      ExpectedNan nan;
+      uint32_t value_bits;
+      CHECK_RESULT(ParseF32Value(&value_bits, &nan, value_str, allow_expected));
+      v.set_f32_bits(lane, value_bits);
+      assert(lane < 4);
+      out_value->nan[lane] = nan;
+      break;
+    }
+
+    case Type::F64: {
+      ExpectedNan nan;
+      uint64_t value_bits;
+      CHECK_RESULT(ParseF64Value(&value_bits, &nan, value_str, allow_expected));
+      v.set_f64_bits(lane, value_bits);
+      assert(lane < 2);
+      out_value->nan[lane] = nan;
+      break;
+    }
+
+    default:
+      PrintError("unknown concrete type: \"%s\"", lane_type.GetName());
+      return wabt::Result::Error;
+  }
+
+  out_value->value.value.Set<v128>(v);
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseConstValue(Type type,
+                                         Value* out_value,
+                                         ExpectedNan* out_nan,
+                                         string_view value_str,
+                                         AllowExpected allow_expected) {
+  *out_nan = ExpectedNan::None;
+
+  switch (type) {
+    case Type::I32: {
+      uint32_t value;
+      CHECK_RESULT(ParseI32Value(&value, value_str));
+      out_value->Set(value);
+      break;
+    }
+
+    case Type::F32: {
+      uint32_t value_bits;
+      CHECK_RESULT(
+          ParseF32Value(&value_bits, out_nan, value_str, allow_expected));
+      out_value->Set(Bitcast<f32>(value_bits));
+      break;
+    }
+
+    case Type::I64: {
+      uint64_t value;
+      CHECK_RESULT(ParseI64Value(&value, value_str));
+      out_value->Set(value);
+      break;
+    }
+
+    case Type::F64: {
+      uint64_t value_bits;
+      CHECK_RESULT(
+          ParseF64Value(&value_bits, out_nan, value_str, allow_expected));
+      out_value->Set(Bitcast<f64>(value_bits));
+      break;
+    }
+
+    case Type::V128:
+      assert(false);  // Should use ParseLaneConstValue instead.
+      break;
+
+    case Type::FuncRef:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        assert(allow_expected == AllowExpected::Yes);
+        out_value->Set(Ref{1});
+      }
+      break;
+
+    case Type::ExternRef:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        uint32_t value;
+        CHECK_RESULT(ParseI32Value(&value, value_str));
+        // TODO: hack, just whatever ref is at this index; but skip null (which
+        // is always 0).
+        out_value->Set(Ref{value + 1});
+      }
+      break;
+
+    default:
+      PrintError("unknown concrete type: \"%s\"", type.GetName());
+      return wabt::Result::Error;
+  }
+
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value,
+                                            AllowExpected allow_expected) {
+  Type type;
+  std::string value_str;
+  EXPECT("{");
+  EXPECT_KEY("type");
+  CHECK_RESULT(ParseType(&type));
+  EXPECT(",");
+  if (type == Type::V128) {
+    Type lane_type;
+    EXPECT_KEY("lane_type");
+    CHECK_RESULT(ParseType(&lane_type));
+    EXPECT(",");
+    EXPECT_KEY("value");
+    EXPECT("[");
+
+    int lane_count = LaneCountFromType(lane_type);
+    for (int lane = 0; lane < lane_count; ++lane) {
+      CHECK_RESULT(ParseString(&value_str));
+      CHECK_RESULT(ParseLaneConstValue(lane_type, lane, out_value, value_str,
+                                       allow_expected));
+      if (lane < lane_count - 1) {
+        EXPECT(",");
+      }
+    }
+    EXPECT("]");
+    out_value->value.type = type;
+    out_value->lane_type = lane_type;
+  } else {
+    PARSE_KEY_STRING_VALUE("value", &value_str);
+    CHECK_RESULT(ParseConstValue(type, &out_value->value.value,
+                                 &out_value->nan[0], value_str,
+                                 allow_expected));
+    out_value->value.type = type;
+  }
+  EXPECT("}");
+
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseExpectedValues(
+    std::vector<ExpectedValue>* out_values) {
   out_values->clear();
   EXPECT("[");
   bool first = true;
@@ -530,9 +881,26 @@ wabt::Result JSONParser::ParseConstVector(TypedValues* out_values) {
     if (!first) {
       EXPECT(",");
     }
-    TypedValue value;
-    CHECK_RESULT(ParseConst(&value));
+    ExpectedValue value;
+    CHECK_RESULT(ParseExpectedValue(&value, AllowExpected::Yes));
     out_values->push_back(value);
+    first = false;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseConstVector(ValueTypes* out_types, Values* out_values) {
+  out_values->clear();
+  EXPECT("[");
+  bool first = true;
+  while (!Match("]")) {
+    if (!first) {
+      EXPECT(",");
+    }
+    TypedValue tv;
+    CHECK_RESULT(ParseConst(&tv));
+    out_types->push_back(tv.type);
+    out_values->push_back(tv.value);
     first = false;
   }
   return wabt::Result::Ok;
@@ -558,7 +926,7 @@ wabt::Result JSONParser::ParseAction(Action* out_action) {
   if (out_action->type == ActionType::Invoke) {
     EXPECT(",");
     EXPECT_KEY("args");
-    CHECK_RESULT(ParseConstVector(&out_action->args));
+    CHECK_RESULT(ParseConstVector(&out_action->types, &out_action->args));
   }
   EXPECT("}");
   return wabt::Result::Ok;
@@ -710,25 +1078,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
     EXPECT_KEY("expected");
-    CHECK_RESULT(ParseConstVector(&command->expected));
-    *out_command = std::move(command);
-  } else if (Match("\"assert_return_canonical_nan\"")) {
-    auto command = MakeUnique<AssertReturnCanonicalNanCommand>();
-    EXPECT(",");
-    CHECK_RESULT(ParseLine(&command->line));
-    EXPECT(",");
-    CHECK_RESULT(ParseAction(&command->action));
-    EXPECT(",");
-    CHECK_RESULT(ParseActionResult());
-    *out_command = std::move(command);
-  } else if (Match("\"assert_return_arithmetic_nan\"")) {
-    auto command = MakeUnique<AssertReturnArithmeticNanCommand>();
-    EXPECT(",");
-    CHECK_RESULT(ParseLine(&command->line));
-    EXPECT(",");
-    CHECK_RESULT(ParseAction(&command->action));
-    EXPECT(",");
-    CHECK_RESULT(ParseActionResult());
+    CHECK_RESULT(ParseExpectedValues(&command->expected));
     *out_command = std::move(command);
   } else if (Match("\"assert_trap\"")) {
     auto command = MakeUnique<AssertTrapCommand>();
@@ -780,21 +1130,34 @@ wabt::Result JSONParser::ParseScript(Script* out_script) {
   return wabt::Result::Ok;
 }
 
+struct ActionResult {
+  ValueTypes types;
+  Values values;
+  Trap::Ptr trap;
+};
+
 class CommandRunner {
  public:
   CommandRunner();
-
   wabt::Result Run(const Script& script);
 
   int passed() const { return passed_; }
   int total() const { return total_; }
 
  private:
+  using ExportMap = std::map<std::string, Extern::Ptr>;
+  using Registry = std::map<std::string, ExportMap>;
+
   void WABT_PRINTF_FORMAT(3, 4)
       PrintError(uint32_t line_number, const char* format, ...);
-  ExecResult RunAction(int line_number,
-                       const Action* action,
-                       RunVerbosity verbose);
+  ActionResult RunAction(int line_number,
+                         const Action* action,
+                         RunVerbosity verbose);
+
+  interp::Module::Ptr ReadModule(string_view module_filename, Errors* errors);
+  Extern::Ptr GetImport(const std::string&, const std::string&);
+  void PopulateImports(const interp::Module::Ptr&, RefVec*);
+  void PopulateExports(const Instance::Ptr&, ExportMap*);
 
   wabt::Result OnModuleCommand(const ModuleCommand*);
   wabt::Result OnActionCommand(const ActionCommand*);
@@ -805,64 +1168,80 @@ class CommandRunner {
   wabt::Result OnAssertUninstantiableCommand(
       const AssertUninstantiableCommand*);
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
-  template <typename NanCommand>
-  wabt::Result OnAssertReturnNanCommand(const NanCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
+
+  wabt::Result CheckAssertReturnResult(const AssertReturnCommand* command,
+                                       int index,
+                                       ExpectedValue expected,
+                                       TypedValue actual,
+                                       bool print_error);
 
   void TallyCommand(wabt::Result);
 
   wabt::Result ReadInvalidTextModule(string_view module_filename,
-                                     Environment* env,
                                      const std::string& header);
   wabt::Result ReadInvalidModule(int line_number,
-                                 string_view module_filename,
-                                 Environment* env,
-                                 ModuleType module_type,
-                                 const char* desc);
+                           string_view module_filename,
+                           ModuleType module_type,
+                           const char* desc);
+  wabt::Result ReadUnlinkableModule(int line_number,
+                              string_view module_filename,
+                              ModuleType module_type,
+                              const char* desc);
 
-  Environment env_;
-  Executor executor_;
-  DefinedModule* last_module_ = nullptr;
+  Store store_;
+  Registry registry_;  // Used when importing.
+  Registry instances_;  // Used when referencing module by name in invoke.
+  ExportMap last_instance_;
   int passed_ = 0;
   int total_ = 0;
 
   std::string source_filename_;
 };
 
-static interp::Result PrintCallback(const HostFunc* func,
-                                    const interp::FuncSignature* sig,
-                                    const TypedValues& args,
-                                    TypedValues& results) {
-  printf("called host ");
-  WriteCall(s_stdout_stream.get(), func->module_name, func->field_name, args,
-            results, interp::Result::Ok);
-  return interp::Result::Ok;
-}
+CommandRunner::CommandRunner() : store_(s_features) {
+  auto&& spectest = registry_["spectest"];
 
-static void InitEnvironment(Environment* env) {
-  HostModule* host_module = env->AppendHostModule("spectest");
-  host_module->AppendFuncExport("print", {{}, {}}, PrintCallback);
-  host_module->AppendFuncExport("print_i32", {{Type::I32}, {}}, PrintCallback);
-  host_module->AppendFuncExport("print_f32", {{Type::F32}, {}}, PrintCallback);
-  host_module->AppendFuncExport("print_f64", {{Type::F64}, {}}, PrintCallback);
-  host_module->AppendFuncExport("print_i32_f32", {{Type::I32, Type::F32}, {}},
-                                PrintCallback);
-  host_module->AppendFuncExport("print_f64_f64", {{Type::F64, Type::F64}, {}},
-                                PrintCallback);
+  // Initialize print functions for the spec test.
+  struct {
+    const char* name;
+    interp::FuncType type;
+  } const print_funcs[] = {
+      {"print", interp::FuncType{{}, {}}},
+      {"print_i32", interp::FuncType{{ValueType::I32}, {}}},
+      {"print_f32", interp::FuncType{{ValueType::F32}, {}}},
+      {"print_f64", interp::FuncType{{ValueType::F64}, {}}},
+      {"print_i32_f32", interp::FuncType{{ValueType::I32, ValueType::F32}, {}}},
+      {"print_f64_f64", interp::FuncType{{ValueType::F64, ValueType::F64}, {}}},
+  };
 
-  host_module->AppendTableExport("table", Type::Funcref, Limits(10, 20));
-  host_module->AppendMemoryExport("memory", Limits(1, 2));
+  for (auto&& print : print_funcs) {
+    auto import_name = StringPrintf("spectest.%s", print.name);
+    spectest[print.name] = HostFunc::New(
+        store_, print.type,
+        [=](Thread& inst, const Values& params, Values& results,
+            Trap::Ptr* trap) -> wabt::Result {
+          printf("called host ");
+          WriteCall(s_stdout_stream.get(), import_name, print.type, params,
+                    results, *trap);
+          return wabt::Result::Ok;
+        });
+  }
 
-  host_module->AppendGlobalExport("global_i32", false, uint32_t(666));
-  host_module->AppendGlobalExport("global_i64", false, uint64_t(666));
-  host_module->AppendGlobalExport("global_f32", false, float(666.6f));
-  host_module->AppendGlobalExport("global_f64", false, double(666.6));
-}
+  spectest["table"] =
+      interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
 
-CommandRunner::CommandRunner()
-    : executor_(&env_, s_trace_stream, s_thread_options) {
-  InitEnvironment(&env_);
+  spectest["memory"] = interp::Memory::New(store_, MemoryType{Limits{1, 2}});
+
+  spectest["global_i32"] = interp::Global::New(
+      store_, GlobalType{ValueType::I32, Mutability::Const}, Value::Make(u32{666}));
+  spectest["global_i64"] = interp::Global::New(
+      store_, GlobalType{ValueType::I64, Mutability::Const}, Value::Make(u64{666}));
+  spectest["global_f32"] = interp::Global::New(
+      store_, GlobalType{ValueType::F32, Mutability::Const}, Value::Make(f32{666}));
+  spectest["global_f64"] = interp::Global::New(
+      store_, GlobalType{ValueType::F64, Mutability::Const}, Value::Make(f64{666}));
 }
 
 wabt::Result CommandRunner::Run(const Script& script) {
@@ -907,16 +1286,6 @@ wabt::Result CommandRunner::Run(const Script& script) {
             OnAssertReturnCommand(cast<AssertReturnCommand>(command.get())));
         break;
 
-      case CommandType::AssertReturnCanonicalNan:
-        TallyCommand(OnAssertReturnNanCommand(
-            cast<AssertReturnCanonicalNanCommand>(command.get())));
-        break;
-
-      case CommandType::AssertReturnArithmeticNan:
-        TallyCommand(OnAssertReturnNanCommand(
-            cast<AssertReturnArithmeticNanCommand>(command.get())));
-        break;
-
       case CommandType::AssertTrap:
         TallyCommand(
             OnAssertTrapCommand(cast<AssertTrapCommand>(command.get())));
@@ -937,76 +1306,59 @@ void CommandRunner::PrintError(uint32_t line_number, const char* format, ...) {
   printf("%s:%u: %s\n", source_filename_.c_str(), line_number, buffer);
 }
 
-static ExecResult GetGlobalExportByName(Environment* env,
-                                        interp::Module* module,
-                                        string_view name) {
-  interp::Export* export_ = module->GetExport(name);
-  if (!export_) {
-    return ExecResult(interp::Result::UnknownExport);
-  }
-  if (export_->kind != ExternalKind::Global) {
-    return ExecResult(interp::Result::ExportKindMismatch);
+ActionResult CommandRunner::RunAction(int line_number,
+                                      const Action* action,
+                                      RunVerbosity verbose) {
+  ExportMap& module = !action->module_name.empty()
+                          ? instances_[action->module_name]
+                          : last_instance_;
+  Extern::Ptr extern_ = module[action->field_name];
+  if (!extern_) {
+    PrintError(line_number, "unknown invoke \"%s.%s\"",
+               action->module_name.c_str(), action->field_name.c_str());
+    return {};
   }
 
-  interp::Global* global = env->GetGlobal(export_->index);
-  return ExecResult(interp::Result::Ok, {global->typed_value});
-}
-
-ExecResult CommandRunner::RunAction(int line_number,
-                                    const Action* action,
-                                    RunVerbosity verbose) {
-  interp::Module* module;
-  if (!action->module_name.empty()) {
-    module = env_.FindModule(action->module_name);
-  } else {
-    module = env_.GetLastModule();
-  }
-  assert(module);
-
-  ExecResult exec_result;
+  ActionResult result;
 
   switch (action->type) {
-    case ActionType::Invoke:
-      exec_result =
-          executor_.RunExportByName(module, action->field_name, action->args);
+    case ActionType::Invoke: {
+      auto* func = cast<interp::Func>(extern_.get());
+      func->Call(store_, action->args, result.values, &result.trap,
+                 s_trace_stream);
+      result.types = func->type().results;
       if (verbose == RunVerbosity::Verbose) {
-        WriteCall(s_stdout_stream.get(), string_view(), action->field_name,
-                  action->args, exec_result.values, exec_result.result);
+        WriteCall(s_stdout_stream.get(), action->field_name, func->type(),
+                  action->args, result.values, result.trap);
       }
       break;
+    }
 
-    case ActionType::Get:
-      exec_result = GetGlobalExportByName(&env_, module, action->field_name);
+    case ActionType::Get: {
+      auto* global = cast<interp::Global>(extern_.get());
+      result.values.push_back(global->Get());
+      result.types.push_back(global->type().type);
       break;
+    }
 
     default:
       WABT_UNREACHABLE;
   }
 
-  return exec_result;
+  return result;
 }
 
 wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
-                                                  Environment* env,
-                                                  const std::string& header) {
+                                            const std::string& header) {
   std::vector<uint8_t> file_data;
   wabt::Result result = ReadFile(module_filename, &file_data);
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
       module_filename, file_data.data(), file_data.size());
   Errors errors;
   if (Succeeded(result)) {
-    std::unique_ptr<::Script> script;
+    std::unique_ptr<wabt::Module> module;
     WastParseOptions options(s_features);
-    result = ParseWastScript(lexer.get(), &script, &errors, &options);
-    if (Succeeded(result)) {
-      wabt::Module* module = script->GetFirstModule();
-      result = ResolveNamesModule(module, &errors);
-      if (Succeeded(result)) {
-        ValidateOptions options(s_features);
-        // Don't do a full validation, just validate the function signatures.
-        result = ValidateFuncSignatures(module, &errors, options);
-      }
-    }
+    result = ParseWatModule(lexer.get(), &module, &errors, &options);
   }
 
   auto line_finder = lexer->MakeLineFinder();
@@ -1015,98 +1367,128 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
   return result;
 }
 
-static wabt::Result ReadModule(string_view module_filename,
-                               Environment* env,
-                               Errors* errors,
-                               DefinedModule** out_module) {
-  wabt::Result result;
+interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
+                                               Errors* errors) {
   std::vector<uint8_t> file_data;
 
-  *out_module = nullptr;
-
-  result = ReadFile(module_filename, &file_data);
-  if (Succeeded(result)) {
-    const bool kReadDebugNames = true;
-    const bool kStopOnFirstError = true;
-    const bool kFailOnCustomSectionError = true;
-    ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                              kStopOnFirstError, kFailOnCustomSectionError);
-    result = ReadBinaryInterp(env, file_data.data(), file_data.size(), options,
-                              errors, out_module);
-
-    if (Succeeded(result)) {
-      if (s_verbose) {
-        env->DisassembleModule(s_stdout_stream.get(), *out_module);
-      }
-    }
+  if (Failed(ReadFile(module_filename, &file_data))) {
+    return {};
   }
-  return result;
+
+  const bool kReadDebugNames = true;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+  ModuleDesc module_desc;
+  if (Failed(ReadBinaryInterp(file_data.data(), file_data.size(), options,
+                              errors, &module_desc))) {
+    return {};
+  }
+
+  if (s_verbose) {
+    module_desc.istream.Disassemble(s_stdout_stream.get());
+  }
+
+  return interp::Module::New(store_, module_desc);
 }
 
 wabt::Result CommandRunner::ReadInvalidModule(int line_number,
-                                              string_view module_filename,
-                                              Environment* env,
-                                              ModuleType module_type,
-                                              const char* desc) {
+                                        string_view module_filename,
+                                        ModuleType module_type,
+                                        const char* desc) {
   std::string header = StringPrintf(
       "%s:%d: %s passed", source_filename_.c_str(), line_number, desc);
 
   switch (module_type) {
     case ModuleType::Text: {
-      return ReadInvalidTextModule(module_filename, env, header);
+      return ReadInvalidTextModule(module_filename, header);
     }
 
     case ModuleType::Binary: {
-      DefinedModule* module;
       Errors errors;
-      wabt::Result result = ReadModule(module_filename, env, &errors, &module);
-      FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
-                         PrintHeader::Once);
-      return result;
+      auto module = ReadModule(module_filename, &errors);
+      if (!module) {
+        FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
+                           PrintHeader::Once);
+        return wabt::Result::Error;
+      } else {
+        return wabt::Result::Ok;
+      }
     }
   }
 
   WABT_UNREACHABLE;
 }
 
+Extern::Ptr CommandRunner::GetImport(const std::string& module,
+                                     const std::string& name) {
+  auto mod_iter = registry_.find(module);
+  if (mod_iter != registry_.end()) {
+    auto extern_iter = mod_iter->second.find(name);
+    if (extern_iter != mod_iter->second.end()) {
+      return extern_iter->second;
+    }
+  }
+  return {};
+}
+
+void CommandRunner::PopulateImports(const interp::Module::Ptr& module,
+                                    RefVec* imports) {
+  for (auto&& import : module->desc().imports) {
+    auto extern_ = GetImport(import.type.module, import.type.name);
+    imports->push_back(extern_ ? extern_.ref() : Ref::Null);
+  }
+}
+
+void CommandRunner::PopulateExports(const Instance::Ptr& instance,
+                                    ExportMap* map) {
+  map->clear();
+  interp::Module::Ptr module{store_, instance->module()};
+  for (size_t i = 0; i < module->export_types().size(); ++i) {
+    const ExportType& export_type = module->export_types()[i];
+    (*map)[export_type.name] = store_.UnsafeGet<Extern>(instance->exports()[i]);
+  }
+}
+
 wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
-  Environment::MarkPoint mark = env_.Mark();
   Errors errors;
-  wabt::Result result = ReadModule(command->filename, &env_,
-                                   &errors, &last_module_);
+  auto module = ReadModule(command->filename, &errors);
   FormatErrorsToFile(errors, Location::Type::Binary);
 
-  if (Failed(result)) {
-    env_.ResetToMarkPoint(mark);
+  if (!module) {
     PrintError(command->line, "error reading module: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
   }
 
-  ExecResult exec_result = executor_.RunStartFunction(last_module_);
-  if (exec_result.result != interp::Result::Ok) {
-    env_.ResetToMarkPoint(mark);
-    WriteResult(s_stdout_stream.get(), "error running start function",
-                exec_result.result);
+  RefVec imports;
+  PopulateImports(module, &imports);
+
+  Trap::Ptr trap;
+  auto instance = Instance::Instantiate(store_, module.ref(), imports, &trap);
+  if (trap) {
+    assert(!instance);
+    PrintError(command->line, "error instantiating module: \"%s\"",
+               trap->message().c_str());
     return wabt::Result::Error;
   }
 
+  PopulateExports(instance, &last_instance_);
   if (!command->name.empty()) {
-    last_module_->name = command->name;
-    env_.EmplaceModuleBinding(command->name,
-                              Binding(env_.GetModuleCount() - 1));
+    instances_[command->name] = last_instance_;
   }
 
   return wabt::Result::Ok;
 }
 
 wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
-  ExecResult exec_result =
+  ActionResult result =
       RunAction(command->line, &command->action, RunVerbosity::Verbose);
 
-  if (exec_result.result != interp::Result::Ok) {
+  if (result.trap) {
     PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result));
+               result.trap->message().c_str());
     return wabt::Result::Error;
   }
 
@@ -1115,12 +1497,8 @@ wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
 
 wabt::Result CommandRunner::OnAssertMalformedCommand(
     const AssertMalformedCommand* command) {
-  Environment env;
-  InitEnvironment(&env);
-
-  wabt::Result result =
-      ReadInvalidModule(command->line, command->filename, &env, command->type,
-                        "assert_malformed");
+  wabt::Result result = ReadInvalidModule(command->line, command->filename,
+                                    command->type, "assert_malformed");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be malformed: \"%s\"",
                command->filename.c_str());
@@ -1131,44 +1509,52 @@ wabt::Result CommandRunner::OnAssertMalformedCommand(
 }
 
 wabt::Result CommandRunner::OnRegisterCommand(const RegisterCommand* command) {
-  Index module_index;
   if (!command->name.empty()) {
-    module_index = env_.FindModuleIndex(command->name);
+    auto instance_iter = instances_.find(command->name);
+    if (instance_iter == instances_.end()) {
+      PrintError(command->line, "unknown module in register");
+      return wabt::Result::Error;
+    }
+    registry_[command->as] = instance_iter->second;
   } else {
-    module_index = env_.GetLastModuleIndex();
+    registry_[command->as] = last_instance_;
   }
 
-  if (module_index == kInvalidIndex) {
-    PrintError(command->line, "unknown module in register");
-    return wabt::Result::Error;
-  }
-
-  env_.EmplaceRegisteredModuleBinding(command->as, Binding(module_index));
   return wabt::Result::Ok;
 }
 
 wabt::Result CommandRunner::OnAssertUnlinkableCommand(
     const AssertUnlinkableCommand* command) {
-  wabt::Result result =
-      ReadInvalidModule(command->line, command->filename, &env_, command->type,
-                        "assert_unlinkable");
+  Errors errors;
+  auto module = ReadModule(command->filename, &errors);
 
-  if (Succeeded(result)) {
+  if (!module) {
+    PrintError(command->line, "unable to compile unlinkable module: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
+  RefVec imports;
+  PopulateImports(module, &imports);
+
+  Trap::Ptr trap;
+  auto instance = Instance::Instantiate(store_, module.ref(), imports, &trap);
+  if (!trap) {
     PrintError(command->line, "expected module to be unlinkable: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
   }
 
+  // TODO: Change to one-line error.
+  PrintError(command->line, "assert_unlinkable passed:\n  error: %s",
+             trap->message().c_str());
   return wabt::Result::Ok;
 }
 
 wabt::Result CommandRunner::OnAssertInvalidCommand(
     const AssertInvalidCommand* command) {
-  Environment env;
-  InitEnvironment(&env);
-
-  wabt::Result result = ReadInvalidModule(
-      command->line, command->filename, &env, command->type, "assert_invalid");
+  wabt::Result result = ReadInvalidModule(command->line, command->filename,
+                                    command->type, "assert_invalid");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be invalid: \"%s\"",
                command->filename.c_str());
@@ -1181,164 +1567,243 @@ wabt::Result CommandRunner::OnAssertInvalidCommand(
 wabt::Result CommandRunner::OnAssertUninstantiableCommand(
     const AssertUninstantiableCommand* command) {
   Errors errors;
-  DefinedModule* module;
-  wabt::Result result = ReadModule(command->filename, &env_, &errors, &module);
-  FormatErrorsToFile(errors, Location::Type::Binary);
+  auto module = ReadModule(command->filename, &errors);
 
-  if (Succeeded(result)) {
-    ExecResult exec_result = executor_.RunStartFunction(module);
-    if (exec_result.result == interp::Result::Ok) {
-      PrintError(command->line, "expected error running start function: \"%s\"",
-                 command->filename.c_str());
-      result = wabt::Result::Error;
-    } else {
-      result = wabt::Result::Ok;
-    }
-  } else {
-    PrintError(command->line, "error reading module: \"%s\"",
+  if (!module) {
+    PrintError(command->line, "unable to compile uninstantiable module: \"%s\"",
                command->filename.c_str());
-    result = wabt::Result::Error;
+    return wabt::Result::Error;
   }
 
-  // Don't reset env_ here; if the start function fails, the environment is
-  // still modified. For example, a table may have been populated with a
-  // function from this module.
-  return result;
+  RefVec imports;
+  PopulateImports(module, &imports);
+
+  Trap::Ptr trap;
+  auto instance = Instance::Instantiate(store_, module.ref(), imports, &trap);
+  if (!trap) {
+    PrintError(command->line, "expected module to be uninstantiable: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
+  // TODO: print error when assertion passes.
+#if 0
+  PrintError(command->line, "assert_uninstantiable passed: %s",
+             trap->message().c_str());
+#endif
+  return wabt::Result::Ok;
 }
 
-static bool TypedValuesAreEqual(const TypedValue& tv1, const TypedValue& tv2) {
-  if (tv1.type != tv2.type) {
-    return false;
-  }
+static bool WABT_VECTORCALL IsCanonicalNan(f32 val) {
+  const u32 kQuietNan = 0x7fc00000U;
+  const u32 kQuietNegNan = 0xffc00000U;
+  u32 bits = Bitcast<u32>(val);
+  return bits == kQuietNan || bits == kQuietNegNan;
+}
 
-  switch (tv1.type) {
-    case Type::I32:
-      return tv1.value.i32 == tv2.value.i32;
+static bool WABT_VECTORCALL IsCanonicalNan(f64 val) {
+  const u64 kQuietNan = 0x7ff8000000000000ULL;
+  const u64 kQuietNegNan = 0xfff8000000000000ULL;
+  u64 bits = Bitcast<u64>(val);
+  return bits == kQuietNan || bits == kQuietNegNan;
+}
+
+static bool WABT_VECTORCALL IsArithmeticNan(f32 val) {
+  const u32 kQuietNan = 0x7fc00000U;
+  return (Bitcast<u32>(val) & kQuietNan) == kQuietNan;
+}
+
+static bool WABT_VECTORCALL IsArithmeticNan(f64 val) {
+  const u64 kQuietNan = 0x7ff8000000000000ULL;
+  return (Bitcast<u64>(val) & kQuietNan) == kQuietNan;
+}
+
+static std::string ExpectedValueToString(const ExpectedValue& ev) {
+  // Extend TypedValueToString to print expected nan values too.
+  switch (ev.value.type) {
     case Type::F32:
-      return tv1.value.f32_bits == tv2.value.f32_bits;
-    case Type::I64:
-      return tv1.value.i64 == tv2.value.i64;
     case Type::F64:
-      return tv1.value.f64_bits == tv2.value.f64_bits;
-    case Type::V128:
-      return tv1.value.v128_bits == tv2.value.v128_bits;
+      switch (ev.nan[0]) {
+        case ExpectedNan::None:
+          return TypedValueToString(ev.value);
+
+        case ExpectedNan::Arithmetic:
+          return StringPrintf("%s:nan:arithmetic", ev.value.type.GetName());
+
+        case ExpectedNan::Canonical:
+          return StringPrintf("%s:nan:canonical", ev.value.type.GetName());
+      }
+      break;
+
+    case Type::V128: {
+      int lane_count = LaneCountFromType(ev.lane_type);
+      std::string result = "v128 ";
+      for (int lane = 0; lane < lane_count; ++lane) {
+        result += ExpectedValueToString(GetLane(ev, lane));
+      }
+      return result;
+    }
+
+    default:
+      break;
+  }
+  return TypedValueToString(ev.value);
+}
+
+wabt::Result CommandRunner::CheckAssertReturnResult(
+    const AssertReturnCommand* command,
+    int index,
+    ExpectedValue expected,
+    TypedValue actual,
+    bool print_error) {
+  assert(expected.value.type == actual.type ||
+         IsReference(expected.value.type));
+  bool ok = true;
+  switch (expected.value.type) {
+    case Type::I8:
+    case Type::I16:
+    case Type::I32:
+      ok = expected.value.value.Get<u32>() == actual.value.Get<u32>();
+      break;
+
+    case Type::I64:
+      ok = expected.value.value.Get<u64>() == actual.value.Get<u64>();
+      break;
+
+    case Type::F32:
+      switch (expected.nan[0]) {
+        case ExpectedNan::Arithmetic:
+          ok = IsArithmeticNan(actual.value.Get<f32>());
+          break;
+
+        case ExpectedNan::Canonical:
+          ok = IsCanonicalNan(actual.value.Get<f32>());
+          break;
+
+        case ExpectedNan::None:
+          ok = Bitcast<u32>(expected.value.value.Get<f32>()) ==
+               Bitcast<u32>(actual.value.Get<f32>());
+          break;
+      }
+      break;
+
+    case Type::F64:
+      switch (expected.nan[0]) {
+        case ExpectedNan::Arithmetic:
+          ok = IsArithmeticNan(actual.value.Get<f64>());
+          break;
+
+        case ExpectedNan::Canonical:
+          ok = IsCanonicalNan(actual.value.Get<f64>());
+          break;
+
+        case ExpectedNan::None:
+          ok = Bitcast<u64>(expected.value.value.Get<f64>()) ==
+               Bitcast<u64>(actual.value.Get<f64>());
+          break;
+      }
+      break;
+
+    case Type::V128: {
+      // Compare each lane as if it were its own value.
+      for (int lane = 0; lane < LaneCountFromType(expected.lane_type); ++lane) {
+        ExpectedValue lane_expected = GetLane(expected, lane);
+        TypedValue lane_actual = GetLane(actual, expected.lane_type, lane);
+
+        if (Failed(CheckAssertReturnResult(command, index, lane_expected,
+                                           lane_actual, false))) {
+          PrintError(command->line,
+                     "mismatch in lane %u of result %u of assert_return: "
+                     "expected %s, got %s",
+                     lane, index, ExpectedValueToString(lane_expected).c_str(),
+                     TypedValueToString(lane_actual).c_str());
+          ok = false;
+        }
+      }
+      break;
+    }
+
+    case Type::FuncRef:
+      // A funcref expectation only requires that the reference be a function,
+      // but it doesn't check the actual index.
+      ok = (actual.type == Type::FuncRef);
+      break;
+
+    case Type::ExternRef:
+      ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
+      break;
+
     default:
       WABT_UNREACHABLE;
   }
+
+  if (!ok && print_error) {
+    PrintError(command->line,
+               "mismatch in result %u of assert_return: expected %s, got %s",
+               index, ExpectedValueToString(expected).c_str(),
+               TypedValueToString(actual).c_str());
+  }
+  return ok ? wabt::Result::Ok : wabt::Result::Error;
 }
 
 wabt::Result CommandRunner::OnAssertReturnCommand(
     const AssertReturnCommand* command) {
-  ExecResult exec_result =
+  ActionResult action_result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
 
-  if (exec_result.result != interp::Result::Ok) {
+  if (action_result.trap) {
     PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result));
+               action_result.trap->message().c_str());
     return wabt::Result::Error;
   }
 
-  if (exec_result.values.size() != command->expected.size()) {
+  if (action_result.values.size() != command->expected.size()) {
     PrintError(command->line,
                "result length mismatch in assert_return: expected %" PRIzd
                ", got %" PRIzd,
-               command->expected.size(), exec_result.values.size());
+               command->expected.size(), action_result.values.size());
     return wabt::Result::Error;
   }
 
   wabt::Result result = wabt::Result::Ok;
-  for (size_t i = 0; i < exec_result.values.size(); ++i) {
-    const TypedValue& expected_tv = command->expected[i];
-    const TypedValue& actual_tv = exec_result.values[i];
-    if (!TypedValuesAreEqual(expected_tv, actual_tv)) {
-      PrintError(command->line,
-                 "mismatch in result %" PRIzd
-                 " of assert_return: expected %s, got %s",
-                 i, TypedValueToString(expected_tv).c_str(),
-                 TypedValueToString(actual_tv).c_str());
-      result = wabt::Result::Error;
-    }
+  for (size_t i = 0; i < action_result.values.size(); ++i) {
+    const ExpectedValue& expected = command->expected[i];
+    TypedValue actual{action_result.types[i], action_result.values[i]};
+
+    result |= CheckAssertReturnResult(command, i, expected, actual, true);
   }
 
   return result;
 }
 
-template <typename NanCommand>
-wabt::Result CommandRunner::OnAssertReturnNanCommand(
-    const NanCommand* command) {
-  ExecResult exec_result =
-      RunAction(command->line, &command->action, RunVerbosity::Quiet);
-
-  if (exec_result.result != interp::Result::Ok) {
-    PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result));
-    return wabt::Result::Error;
-  }
-
-  if (exec_result.values.size() != 1) {
-    PrintError(command->line, "expected one result, got %" PRIzd,
-               exec_result.values.size());
-    return wabt::Result::Error;
-  }
-
-  const bool is_canonical =
-      command->type == CommandType::AssertReturnCanonicalNan;
-
-  const TypedValue& actual = exec_result.values[0];
-  switch (actual.type) {
-    case Type::F32: {
-      bool is_nan = is_canonical ? IsCanonicalNan(actual.value.f32_bits)
-                                 : IsArithmeticNan(actual.value.f32_bits);
-      if (!is_nan) {
-        PrintError(command->line, "expected result to be nan, got %s",
-                   TypedValueToString(actual).c_str());
-        return wabt::Result::Error;
-      }
-      break;
-    }
-
-    case Type::F64: {
-      bool is_nan = is_canonical ? IsCanonicalNan(actual.value.f64_bits)
-                                 : IsArithmeticNan(actual.value.f64_bits);
-      if (!is_nan) {
-        PrintError(command->line, "expected result to be nan, got %s",
-                   TypedValueToString(actual).c_str());
-        return wabt::Result::Error;
-      }
-      break;
-    }
-
-    default:
-      PrintError(command->line, "expected result type to be f32 or f64, got %s",
-                 GetTypeName(actual.type));
-      return wabt::Result::Error;
-  }
-
-  return wabt::Result::Ok;
-}
-
 wabt::Result CommandRunner::OnAssertTrapCommand(
     const AssertTrapCommand* command) {
-  ExecResult exec_result =
+  ActionResult result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
-  if (exec_result.result == interp::Result::Ok) {
+  if (!result.trap) {
     PrintError(command->line, "expected trap: \"%s\"", command->text.c_str());
     return wabt::Result::Error;
   }
 
+  PrintError(command->line, "assert_trap passed: %s",
+             result.trap->message().c_str());
   return wabt::Result::Ok;
 }
 
 wabt::Result CommandRunner::OnAssertExhaustionCommand(
     const AssertExhaustionCommand* command) {
-  ExecResult exec_result =
+  ActionResult result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
-  if (exec_result.result != interp::Result::TrapCallStackExhausted &&
-      exec_result.result != interp::Result::TrapValueStackExhausted) {
-    PrintError(command->line, "expected call stack exhaustion");
+  if (!result.trap || result.trap->message() != "call stack exhausted") {
+    PrintError(command->line, "expected trap: \"%s\"", command->text.c_str());
     return wabt::Result::Error;
   }
 
+  // TODO: print message when assertion passes.
+#if 0
+  PrintError(command->line, "assert_exhaustion passed: %s",
+             result.trap->message().c_str());
+#endif
   return wabt::Result::Ok;
 }
 

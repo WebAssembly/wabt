@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-sign-extension
 (module
   (func
     i32.const 0

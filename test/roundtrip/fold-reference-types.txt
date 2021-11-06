@@ -1,22 +1,50 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --fold-exprs --enable-reference-types
+;;; ARGS: --stdout --fold-exprs
 
 (module
-  (table $t 1 anyref)
+  (table $t 1 externref)
+  (elem declare func 0)
   (func
-    i32.const 0
-    i32.const 0
-    table.get $t
-    table.set $t
+    (local externref)
+
+    i32.const 0 table.get $t drop
+    i32.const 0 local.get 0 table.set $t
+    local.get 0 i32.const 0 table.grow $t drop
+    table.size $t drop
+    i32.const 0 local.get 0 i32.const 0 table.fill $t
+    ref.null extern drop
+    local.get 0 ref.is_null drop
+    ref.func 0 drop
   )
 )
 (;; STDOUT ;;;
 (module
   (type (;0;) (func))
   (func (;0;) (type 0)
+    (local externref)
+    (drop
+      (table.get 0
+        (i32.const 0)))
     (table.set 0
       (i32.const 0)
-      (table.get 0
-        (i32.const 0))))
-  (table (;0;) 1 anyref))
+      (local.get 0))
+    (drop
+      (table.grow 0
+        (local.get 0)
+        (i32.const 0)))
+    (drop
+      (table.size 0))
+    (table.fill 0
+      (i32.const 0)
+      (local.get 0)
+      (i32.const 0))
+    (drop
+      (ref.null extern))
+    (drop
+      (ref.is_null
+        (local.get 0)))
+    (drop
+      (ref.func 0)))
+  (table (;0;) 1 externref)
+  (elem (;0;) declare func 0))
 ;;; STDOUT ;;)

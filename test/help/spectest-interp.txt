@@ -10,21 +10,25 @@ examples:
   $ spectest-interp test.json
 
 options:
-  -v, --verbose                               Use multiple times for more info
-      --help                                  Print this help message
-      --enable-exceptions                     Enable Experimental exception handling
-      --disable-mutable-globals               Disable Import/export mutable globals
-      --enable-saturating-float-to-int        Enable Saturating float-to-int operators
-      --enable-sign-extension                 Enable Sign-extension operators
-      --enable-simd                           Enable SIMD support
-      --enable-threads                        Enable Threading support
-      --enable-multi-value                    Enable Multi-value
-      --enable-tail-call                      Enable Tail-call support
-      --enable-bulk-memory                    Enable Bulk-memory operations
-      --enable-reference-types                Enable Reference types (anyref)
-      --enable-annotations                    Enable Custom annotation syntax
-      --enable-all                            Enable all features
-  -V, --value-stack-size=SIZE                 Size in elements of the value stack
-  -C, --call-stack-size=SIZE                  Size in elements of the call stack
-  -t, --trace                                 Trace execution
+      --help                                   Print this help message
+      --version                                Print version information
+  -v, --verbose                                Use multiple times for more info
+      --enable-exceptions                      Enable Experimental exception handling
+      --disable-mutable-globals                Disable Import/export mutable globals
+      --disable-saturating-float-to-int        Disable Saturating float-to-int operators
+      --disable-sign-extension                 Disable Sign-extension operators
+      --disable-simd                           Disable SIMD support
+      --enable-threads                         Enable Threading support
+      --enable-function-references             Enable Typed function references
+      --disable-multi-value                    Disable Multi-value
+      --enable-tail-call                       Enable Tail-call support
+      --disable-bulk-memory                    Disable Bulk-memory operations
+      --disable-reference-types                Disable Reference types (externref)
+      --enable-annotations                     Enable Custom annotation syntax
+      --enable-gc                              Enable Garbage collection
+      --enable-memory64                        Enable 64-bit memory
+      --enable-all                             Enable all features
+  -V, --value-stack-size=SIZE                  Size in elements of the value stack
+  -C, --call-stack-size=SIZE                   Size in elements of the call stack
+  -t, --trace                                  Trace execution
 ;;; STDOUT ;;)

@@ -24,13 +24,12 @@ namespace wabt {
 Opcode::Info Opcode::infos_[] = {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text, decomp)                                             \
-  {text, decomp, Type::rtype, Type::type1,                                    \
-   Type::type2, Type::type3, mem_size,                                        \
-   prefix,      code,        PrefixCode(prefix, code)},
+  {text,     decomp, Type::rtype, {Type::type1, Type::type2, Type::type3},    \
+   mem_size, prefix, code,        PrefixCode(prefix, code)},
 #include "src/opcode.def"
 #undef WABT_OPCODE
 
-  {"<invalid>", "", Type::Void, Type::Void, Type::Void, Type::Void, 0, 0, 0, 0},
+  {"<invalid>", "", Type::Void, {Type::Void, Type::Void, Type::Void}, 0, 0, 0, 0},
 };
 
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
@@ -66,9 +65,9 @@ bool Opcode::IsEnabled(const Features& features) const {
   switch (enum_) {
     case Opcode::Try:
     case Opcode::Catch:
+    case Opcode::Delegate:
     case Opcode::Throw:
     case Opcode::Rethrow:
-    case Opcode::BrOnExn:
       return features.exceptions_enabled();
 
     case Opcode::ReturnCallIndirect:
@@ -92,9 +91,10 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64Extend32S:
       return features.sign_extension_enabled();
 
-    case Opcode::AtomicNotify:
-    case Opcode::I32AtomicWait:
-    case Opcode::I64AtomicWait:
+    case Opcode::MemoryAtomicNotify:
+    case Opcode::MemoryAtomicWait32:
+    case Opcode::MemoryAtomicWait64:
+    case Opcode::AtomicFence:
     case Opcode::I32AtomicLoad:
     case Opcode::I64AtomicLoad:
     case Opcode::I32AtomicLoad8U:
@@ -191,21 +191,20 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I16X8Sub:
     case Opcode::I32X4Sub:
     case Opcode::I64X2Sub:
-    case Opcode::I8X16Mul:
     case Opcode::I16X8Mul:
     case Opcode::I32X4Mul:
     case Opcode::I8X16Neg:
     case Opcode::I16X8Neg:
     case Opcode::I32X4Neg:
     case Opcode::I64X2Neg:
-    case Opcode::I8X16AddSaturateS:
-    case Opcode::I8X16AddSaturateU:
-    case Opcode::I16X8AddSaturateS:
-    case Opcode::I16X8AddSaturateU:
-    case Opcode::I8X16SubSaturateS:
-    case Opcode::I8X16SubSaturateU:
-    case Opcode::I16X8SubSaturateS:
-    case Opcode::I16X8SubSaturateU:
+    case Opcode::I8X16AddSatS:
+    case Opcode::I8X16AddSatU:
+    case Opcode::I16X8AddSatS:
+    case Opcode::I16X8AddSatU:
+    case Opcode::I8X16SubSatS:
+    case Opcode::I8X16SubSatU:
+    case Opcode::I16X8SubSatS:
+    case Opcode::I16X8SubSatU:
     case Opcode::I8X16Shl:
     case Opcode::I16X8Shl:
     case Opcode::I32X4Shl:
@@ -223,10 +222,11 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::V128Xor:
     case Opcode::V128Not:
     case Opcode::V128BitSelect:
-    case Opcode::I8X16AnyTrue:
-    case Opcode::I16X8AnyTrue:
-    case Opcode::I32X4AnyTrue:
-    case Opcode::I64X2AnyTrue:
+    case Opcode::V128AnyTrue:
+    case Opcode::I8X16Bitmask:
+    case Opcode::I16X8Bitmask:
+    case Opcode::I32X4Bitmask:
+    case Opcode::I64X2Bitmask:
     case Opcode::I8X16AllTrue:
     case Opcode::I16X8AllTrue:
     case Opcode::I32X4AllTrue:
@@ -278,9 +278,13 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::F32X4Abs:
     case Opcode::F64X2Abs:
     case Opcode::F32X4Min:
+    case Opcode::F32X4PMin:
     case Opcode::F64X2Min:
+    case Opcode::F64X2PMin:
     case Opcode::F32X4Max:
+    case Opcode::F32X4PMax:
     case Opcode::F64X2Max:
+    case Opcode::F64X2PMax:
     case Opcode::F32X4Add:
     case Opcode::F64X2Add:
     case Opcode::F32X4Sub:
@@ -293,18 +297,25 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::F64X2Sqrt:
     case Opcode::F32X4ConvertI32X4S:
     case Opcode::F32X4ConvertI32X4U:
-    case Opcode::F64X2ConvertI64X2S:
-    case Opcode::F64X2ConvertI64X2U:
     case Opcode::I32X4TruncSatF32X4S:
     case Opcode::I32X4TruncSatF32X4U:
-    case Opcode::I64X2TruncSatF64X2S:
-    case Opcode::I64X2TruncSatF64X2U:
-    case Opcode::V8X16Swizzle:
-    case Opcode::V8X16Shuffle:
-    case Opcode::I8X16LoadSplat:
-    case Opcode::I16X8LoadSplat:
-    case Opcode::I32X4LoadSplat:
-    case Opcode::I64X2LoadSplat:
+    case Opcode::I8X16Swizzle:
+    case Opcode::I8X16Shuffle:
+    case Opcode::V128Load8Splat:
+    case Opcode::V128Load16Splat:
+    case Opcode::V128Load32Splat:
+    case Opcode::V128Load64Splat:
+    case Opcode::V128Load8Lane:
+    case Opcode::V128Load16Lane:
+    case Opcode::V128Load32Lane:
+    case Opcode::V128Load64Lane:
+    case Opcode::V128Store8Lane:
+    case Opcode::V128Store16Lane:
+    case Opcode::V128Store32Lane:
+    case Opcode::V128Store64Lane:
+    case Opcode::I8X16Abs:
+    case Opcode::I16X8Abs:
+    case Opcode::I32X4Abs:
       return features.simd_enabled();
 
     case Opcode::MemoryInit:
@@ -324,10 +335,13 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::RefIsNull:
       return features.reference_types_enabled();
 
+    case Opcode::CallRef:
+      return features.function_references_enabled();
+
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:
     case Opcode::InterpBrUnless:
-    case Opcode::InterpCallHost:
+    case Opcode::InterpCallImport:
     case Opcode::InterpData:
     case Opcode::InterpDropKeep:
       return false;
@@ -342,23 +356,31 @@ uint32_t Opcode::GetSimdLaneCount() const {
     case Opcode::I8X16ExtractLaneS:
     case Opcode::I8X16ExtractLaneU:
     case Opcode::I8X16ReplaceLane:
+    case Opcode::V128Load8Lane:
+    case Opcode::V128Store8Lane:
       return 16;
       break;
     case Opcode::I16X8ExtractLaneS:
     case Opcode::I16X8ExtractLaneU:
     case Opcode::I16X8ReplaceLane:
+    case Opcode::V128Load16Lane:
+    case Opcode::V128Store16Lane:
       return 8;
       break;
     case Opcode::F32X4ExtractLane:
     case Opcode::F32X4ReplaceLane:
     case Opcode::I32X4ExtractLane:
     case Opcode::I32X4ReplaceLane:
+    case Opcode::V128Load32Lane:
+    case Opcode::V128Store32Lane:
       return 4;
       break;
     case Opcode::F64X2ExtractLane:
     case Opcode::F64X2ReplaceLane:
     case Opcode::I64X2ExtractLane:
     case Opcode::I64X2ReplaceLane:
+    case Opcode::V128Load64Lane:
+    case Opcode::V128Store64Lane:
       return 2;
       break;
     default:

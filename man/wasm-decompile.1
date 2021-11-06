@@ -1,0 +1,55 @@
+.Dd $Mdocdate$
+.Dt WABT 1
+.Os
+.Sh NAME
+.Nm wasm-decompile
+.Nd translate from the binary format to readable C-like syntax
+.Sh SYNOPSIS
+.Nm wasm-decompile
+.Op options
+.Ar file
+.Sh DESCRIPTION
+.Nm
+translate from the binary format to readable C-like syntax.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl v , Fl Fl verbose
+Use multiple times for more info
+.It Fl Fl help
+Print a help message
+.It Fl o , Fl Fl output=FILENAME
+Output file for the generated wast file, by default use stdout
+.It Fl Fl enable-exceptions
+Experimental exception handling
+.It Fl Fl disable-mutable-globals
+Import/export mutable globals
+.It Fl Fl enable-saturating-float-to-int
+Saturating float-to-int operators
+.It Fl Fl enable-sign-extension
+Sign-extension operators
+.It Fl Fl disable-simd
+SIMD support
+.It Fl Fl enable-threads
+Threading support
+.El
+.Sh EXAMPLES
+Parse binary file test.wasm and write text file test.dcmp
+.Pp
+.Dl $ wasm-decompile test.wasm -o test.dcmp
+.Sh SEE ALSO
+.Xr wasm2wat 1 ,
+.Xr wasm-interp 1 ,
+.Xr wasm-objdump 1 ,
+.Xr wasm-opcodecnt 1 ,
+.Xr wasm-strip 1 ,
+.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
+.Xr wast2json 1 ,
+.Xr wat-desugar 1 ,
+.Xr wat2wasm 1 ,
+.Xr spectest-interp 1
+.Sh BUGS
+If you find a bug, please report it at
+.br
+.Lk https://github.com/WebAssembly/wabt/issues .

@@ -33,6 +33,8 @@
 
 namespace wabt {
 
+struct Module;
+
 enum class VarType {
   Index,
   Name,
@@ -72,54 +74,113 @@ struct Var {
 typedef std::vector<Var> VarVector;
 
 struct Const {
-  Const() : Const(I32Tag(), 0, Location()) {}
+  static constexpr uintptr_t kRefNullBits = ~uintptr_t(0);
+
+  Const() : Const(Type::I32, uint32_t(0)) {}
 
   static Const I32(uint32_t val = 0, const Location& loc = Location()) {
-    return Const(I32Tag(), val, loc);
+    return Const(Type::I32, val, loc);
   }
-
   static Const I64(uint64_t val = 0, const Location& loc = Location()) {
-    return Const(I64Tag(), val, loc);
+    return Const(Type::I64, val, loc);
   }
-
   static Const F32(uint32_t val = 0, const Location& loc = Location()) {
-    return Const(F32Tag(), val, loc);
+    return Const(Type::F32, val, loc);
   }
-
   static Const F64(uint64_t val = 0, const Location& loc = Location()) {
-    return Const(F64Tag(), val, loc);
+    return Const(Type::F64, val, loc);
   }
-
   static Const V128(v128 val, const Location& loc = Location()) {
-    return Const(V128Tag(), val, loc);
+    return Const(Type::V128, val, loc);
   }
 
+  Type type() const { return type_; }
+  Type lane_type() const { assert(type_ == Type::V128); return lane_type_; }
+
+  int lane_count() const {
+    switch (lane_type()) {
+      case Type::I8:  return 16;
+      case Type::I16: return 8;
+      case Type::I32: return 4;
+      case Type::I64: return 2;
+      case Type::F32: return 4;
+      case Type::F64: return 2;
+      default: WABT_UNREACHABLE;
+    }
+  }
+
+  uint32_t u32() const { return data_.u32(0); }
+  uint64_t u64() const { return data_.u64(0); }
+  uint32_t f32_bits() const { return data_.f32_bits(0); }
+  uint64_t f64_bits() const { return data_.f64_bits(0); }
+  uintptr_t ref_bits() const { return data_.To<uintptr_t>(0); }
+  v128 vec128() const { return data_; }
+
+  template <typename T>
+  T v128_lane(int lane) const { return data_.To<T>(lane); }
+
+  void set_u32(uint32_t x) { From(Type::I32, x); }
+  void set_u64(uint64_t x) { From(Type::I64, x); }
+  void set_f32(uint32_t x) { From(Type::F32, x); }
+  void set_f64(uint64_t x) { From(Type::F64, x); }
+
+  void set_v128_u8(int lane, uint8_t x) { set_v128_lane(lane, Type::I8, x); }
+  void set_v128_u16(int lane, uint16_t x) { set_v128_lane(lane, Type::I16, x); }
+  void set_v128_u32(int lane, uint32_t x) { set_v128_lane(lane, Type::I32, x); }
+  void set_v128_u64(int lane, uint64_t x) { set_v128_lane(lane, Type::I64, x); }
+  void set_v128_f32(int lane, uint32_t x) { set_v128_lane(lane, Type::F32, x); }
+  void set_v128_f64(int lane, uint64_t x) { set_v128_lane(lane, Type::F64, x); }
+
+  // Only used for expectations. (e.g. wast assertions)
+  void set_f32(ExpectedNan nan) { set_f32(0); set_expected_nan(0, nan); }
+  void set_f64(ExpectedNan nan) { set_f64(0); set_expected_nan(0, nan); }
+  void set_funcref()            { From<uintptr_t>(Type::FuncRef, 0); }
+  void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
+  void set_null(Type type)      { From<uintptr_t>(type, kRefNullBits); }
+
+  bool is_expected_nan(int lane = 0) const {
+    return expected_nan(lane) != ExpectedNan::None;
+  }
+
+  ExpectedNan expected_nan(int lane = 0) const {
+    return lane < 4 ? nan_[lane] : ExpectedNan::None;
+  }
+
+  void set_expected_nan(int lane, ExpectedNan nan) {
+    if (lane < 4) {
+      nan_[lane] = nan;
+    }
+  }
+
+  // v128 support
   Location loc;
-  Type type;
-  union {
-    uint32_t u32;
-    uint64_t u64;
-    uint32_t f32_bits;
-    uint64_t f64_bits;
-    uintptr_t ref_bits;
-    v128 v128_bits;
-  };
 
  private:
-  // Struct tags to differentiate constructors.
-  struct I32Tag {};
-  struct I64Tag {};
-  struct F32Tag {};
-  struct F64Tag {};
-  struct RefTag {};
-  struct V128Tag {};
+  template <typename T>
+  void set_v128_lane(int lane, Type lane_type, T x) {
+    lane_type_ = lane_type;
+    From(Type::V128, x, lane);
+    set_expected_nan(lane, ExpectedNan::None);
+  }
 
-  Const(I32Tag, uint32_t val = 0, const Location& loc = Location());
-  Const(I64Tag, uint64_t val = 0, const Location& loc = Location());
-  Const(F32Tag, uint32_t val = 0, const Location& loc = Location());
-  Const(F64Tag, uint64_t val = 0, const Location& loc = Location());
-  Const(RefTag, uintptr_t val = 0, const Location& loc = Location());
-  Const(V128Tag, v128 val = {{0, 0, 0, 0}}, const Location& loc = Location());
+  template <typename T>
+  Const(Type type, T data, const Location& loc = Location()) : loc(loc) {
+    From<T>(type, data);
+  }
+
+  template <typename T>
+  void From(Type type, T data, int lane = 0) {
+    static_assert(sizeof(T) <= sizeof(data_), "Invalid cast!");
+    assert((lane + 1) * sizeof(T) <= sizeof(data_));
+    type_ = type;
+    data_.From<T>(lane, data);
+    set_expected_nan(lane, ExpectedNan::None);
+  }
+
+  Type type_;
+  Type lane_type_;    // Only valid if type_ == Type::V128.
+  v128 data_;
+  ExpectedNan nan_[4];
 };
 typedef std::vector<Const> ConstVector;
 
@@ -135,16 +196,77 @@ struct FuncSignature {
   bool operator==(const FuncSignature&) const;
 };
 
-struct FuncType {
-  explicit FuncType(string_view name) : name(name.to_string()) {}
+enum class TypeEntryKind {
+  Func,
+  Struct,
+  Array,
+};
+
+class TypeEntry {
+ public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(TypeEntry);
+
+  virtual ~TypeEntry() = default;
+
+  TypeEntryKind kind() const { return kind_; }
+
+  Location loc;
+  std::string name;
+
+ protected:
+  explicit TypeEntry(TypeEntryKind kind,
+                     string_view name = string_view(),
+                     const Location& loc = Location())
+      : loc(loc), name(name.to_string()), kind_(kind) {}
+
+  TypeEntryKind kind_;
+};
+
+class FuncType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Func;
+  }
+
+  explicit FuncType(string_view name = string_view())
+      : TypeEntry(TypeEntryKind::Func, name) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
   Type GetParamType(Index index) const { return sig.GetParamType(index); }
   Type GetResultType(Index index) const { return sig.GetResultType(index); }
 
-  std::string name;
   FuncSignature sig;
+};
+
+struct Field {
+  std::string name;
+  Type type = Type::Void;
+  bool mutable_ = false;
+};
+
+class StructType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Struct;
+  }
+
+  explicit StructType(string_view name = string_view())
+      : TypeEntry(TypeEntryKind::Struct) {}
+
+  std::vector<Field> fields;
+};
+
+class ArrayType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Array;
+  }
+
+  explicit ArrayType(string_view name = string_view())
+      : TypeEntry(TypeEntryKind::Array) {}
+
+  Field field;
 };
 
 struct FuncDeclaration {
@@ -164,15 +286,16 @@ enum class ExprType {
   AtomicRmwCmpxchg,
   AtomicStore,
   AtomicNotify,
+  AtomicFence,
   AtomicWait,
   Binary,
   Block,
   Br,
   BrIf,
-  BrOnExn,
   BrTable,
   Call,
   CallIndirect,
+  CallRef,
   Compare,
   Const,
   Convert,
@@ -193,6 +316,7 @@ enum class ExprType {
   MemorySize,
   Nop,
   RefIsNull,
+  RefFunc,
   RefNull,
   Rethrow,
   Return,
@@ -200,8 +324,11 @@ enum class ExprType {
   ReturnCallIndirect,
   Select,
   SimdLaneOp,
+  SimdLoadLane,
+  SimdStoreLane,
   SimdShuffleOp,
   LoadSplat,
+  LoadZero,
   Store,
   TableCopy,
   ElemDrop,
@@ -210,6 +337,7 @@ enum class ExprType {
   TableGrow,
   TableSize,
   TableSet,
+  TableFill,
   Ternary,
   Throw,
   Try,
@@ -235,6 +363,25 @@ struct Block {
   BlockDeclaration decl;
   ExprList exprs;
   Location end_loc;
+};
+
+struct Catch {
+  explicit Catch(const Location& loc = Location()) : loc(loc) {}
+  explicit Catch(const Var& var, const Location& loc = Location())
+      : loc(loc), var(var) {}
+  Location loc;
+  Var var;
+  ExprList exprs;
+  bool IsCatchAll() const {
+    return var.is_index() && var.index() == kInvalidIndex;
+  }
+};
+typedef std::vector<Catch> CatchVector;
+
+enum class TryKind {
+  Plain,
+  Catch,
+  Delegate
 };
 
 class Expr : public intrusive_list_base<Expr> {
@@ -269,13 +416,20 @@ typedef ExprMixin<ExprType::MemoryGrow> MemoryGrowExpr;
 typedef ExprMixin<ExprType::MemorySize> MemorySizeExpr;
 typedef ExprMixin<ExprType::MemoryCopy> MemoryCopyExpr;
 typedef ExprMixin<ExprType::MemoryFill> MemoryFillExpr;
-typedef ExprMixin<ExprType::TableCopy> TableCopyExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
-typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
-typedef ExprMixin<ExprType::Select> SelectExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
-typedef ExprMixin<ExprType::RefNull> RefNullExpr;
+
+template <ExprType TypeEnum>
+class RefTypeExpr : public ExprMixin<TypeEnum> {
+ public:
+  RefTypeExpr(Type type, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), type(type) {}
+
+  Type type;
+};
+
+typedef RefTypeExpr<ExprType::RefNull> RefNullExpr;
 typedef ExprMixin<ExprType::RefIsNull> RefIsNullExpr;
 
 template <ExprType TypeEnum>
@@ -302,6 +456,40 @@ class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
   uint64_t val;
 };
 
+class SimdLoadLaneExpr : public OpcodeExpr<ExprType::SimdLoadLane> {
+ public:
+  SimdLoadLaneExpr(Opcode opcode,
+                   Address align,
+                   Address offset,
+                   uint64_t val,
+                   const Location& loc = Location())
+      : OpcodeExpr<ExprType::SimdLoadLane>(opcode, loc),
+        align(align),
+        offset(offset),
+        val(val) {}
+
+  Address align;
+  Address offset;
+  uint64_t val;
+};
+
+class SimdStoreLaneExpr : public OpcodeExpr<ExprType::SimdStoreLane> {
+ public:
+  SimdStoreLaneExpr(Opcode opcode,
+                    Address align,
+                    Address offset,
+                    uint64_t val,
+                    const Location& loc = Location())
+      : OpcodeExpr<ExprType::SimdStoreLane>(opcode, loc),
+        align(align),
+        offset(offset),
+        val(val) {}
+
+  Address align;
+  Address offset;
+  uint64_t val;
+};
+
 class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
  public:
   SimdShuffleOpExpr(Opcode opcode, v128 val, const Location& loc = Location())
@@ -323,6 +511,7 @@ class VarExpr : public ExprMixin<TypeEnum> {
 typedef VarExpr<ExprType::Br> BrExpr;
 typedef VarExpr<ExprType::BrIf> BrIfExpr;
 typedef VarExpr<ExprType::Call> CallExpr;
+typedef VarExpr<ExprType::RefFunc> RefFuncExpr;
 typedef VarExpr<ExprType::GlobalGet> GlobalGetExpr;
 typedef VarExpr<ExprType::GlobalSet> GlobalSetExpr;
 typedef VarExpr<ExprType::LocalGet> LocalGetExpr;
@@ -330,15 +519,47 @@ typedef VarExpr<ExprType::LocalSet> LocalSetExpr;
 typedef VarExpr<ExprType::LocalTee> LocalTeeExpr;
 typedef VarExpr<ExprType::ReturnCall> ReturnCallExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
+typedef VarExpr<ExprType::Rethrow> RethrowExpr;
 
 typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
 typedef VarExpr<ExprType::DataDrop> DataDropExpr;
-typedef VarExpr<ExprType::TableInit> TableInitExpr;
 typedef VarExpr<ExprType::ElemDrop> ElemDropExpr;
 typedef VarExpr<ExprType::TableGet> TableGetExpr;
 typedef VarExpr<ExprType::TableSet> TableSetExpr;
 typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
 typedef VarExpr<ExprType::TableSize> TableSizeExpr;
+typedef VarExpr<ExprType::TableFill> TableFillExpr;
+
+class SelectExpr : public ExprMixin<ExprType::Select> {
+ public:
+  SelectExpr(TypeVector type, const Location& loc = Location())
+      : ExprMixin<ExprType::Select>(loc), result_type(type) {}
+  TypeVector result_type;
+};
+
+class TableInitExpr : public ExprMixin<ExprType::TableInit> {
+ public:
+  TableInitExpr(const Var& segment_index,
+                const Var& table_index,
+                const Location& loc = Location())
+      : ExprMixin<ExprType::TableInit>(loc),
+        segment_index(segment_index),
+        table_index(table_index) {}
+
+  Var segment_index;
+  Var table_index;
+};
+
+class TableCopyExpr : public ExprMixin<ExprType::TableCopy> {
+ public:
+  TableCopyExpr(const Var& dst,
+                const Var& src,
+                const Location& loc = Location())
+      : ExprMixin<ExprType::TableCopy>(loc), dst_table(dst), src_table(src) {}
+
+  Var dst_table;
+  Var src_table;
+};
 
 class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
  public:
@@ -356,6 +577,16 @@ class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
 
   FuncDeclaration decl;
   Var table;
+};
+
+class CallRefExpr : public ExprMixin<ExprType::CallRef> {
+ public:
+  explicit CallRefExpr(const Location &loc = Location())
+      : ExprMixin<ExprType::CallRef>(loc) {}
+
+  // This field is setup only during Validate phase,
+  // so keep that in mind when you use it.
+  Var function_type_index;
 };
 
 template <ExprType TypeEnum>
@@ -383,19 +614,12 @@ class IfExpr : public ExprMixin<ExprType::If> {
 class TryExpr : public ExprMixin<ExprType::Try> {
  public:
   explicit TryExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::Try>(loc) {}
+      : ExprMixin<ExprType::Try>(loc), kind(TryKind::Plain) {}
 
+  TryKind kind;
   Block block;
-  ExprList catch_;
-};
-
-class BrOnExnExpr : public ExprMixin<ExprType::BrOnExn> {
- public:
-  BrOnExnExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::BrOnExn>(loc) {}
-
-  Var label_var;
-  Var event_var;
+  CatchVector catches;
+  Var delegate_target;
 };
 
 class BrTableExpr : public ExprMixin<ExprType::BrTable> {
@@ -421,7 +645,7 @@ class LoadStoreExpr : public ExprMixin<TypeEnum> {
  public:
   LoadStoreExpr(Opcode opcode,
                 Address align,
-                uint32_t offset,
+                Address offset,
                 const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc),
         opcode(opcode),
@@ -430,7 +654,7 @@ class LoadStoreExpr : public ExprMixin<TypeEnum> {
 
   Opcode opcode;
   Address align;
-  uint32_t offset;
+  Address offset;
 };
 
 typedef LoadStoreExpr<ExprType::Load> LoadExpr;
@@ -442,9 +666,20 @@ typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
 typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
 typedef LoadStoreExpr<ExprType::AtomicNotify> AtomicNotifyExpr;
 typedef LoadStoreExpr<ExprType::LoadSplat> LoadSplatExpr;
+typedef LoadStoreExpr<ExprType::LoadZero> LoadZeroExpr;
 
-struct Event {
-  explicit Event(string_view name) : name(name.to_string()) {}
+class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
+ public:
+  explicit AtomicFenceExpr(uint32_t consistency_model,
+                           const Location& loc = Location())
+      : ExprMixin<ExprType::AtomicFence>(loc),
+        consistency_model(consistency_model) {}
+
+  uint32_t consistency_model;
+};
+
+struct Tag {
+  explicit Tag(string_view name) : name(name.to_string()) {}
 
   std::string name;
   FuncDeclaration decl;
@@ -544,37 +779,25 @@ struct Global {
 
 struct Table {
   explicit Table(string_view name)
-      : name(name.to_string()), elem_type(Type::Funcref) {}
+      : name(name.to_string()), elem_type(Type::FuncRef) {}
 
   std::string name;
   Limits elem_limits;
   Type elem_type;
 };
 
-enum class ElemExprKind {
-  RefNull,
-  RefFunc,
-};
-
-struct ElemExpr {
-  ElemExpr() : kind(ElemExprKind::RefNull) {}
-  explicit ElemExpr(Var var) : kind(ElemExprKind::RefFunc), var(var) {}
-
-  ElemExprKind kind;
-  Var var;  // Only used when kind == RefFunc.
-};
-
-typedef std::vector<ElemExpr> ElemExprVector;
+typedef std::vector<ExprList> ExprListVector;
 
 struct ElemSegment {
   explicit ElemSegment(string_view name) : name(name.to_string()) {}
+  uint8_t GetFlags(const Module*) const;
 
+  SegmentKind kind = SegmentKind::Active;
   std::string name;
   Var table_var;
-  bool passive = false;
-  Type elem_type;  // If passive == false, this is always Type::Funcref.
+  Type elem_type;
   ExprList offset;
-  ElemExprVector elem_exprs;
+  ExprListVector elem_exprs;
 };
 
 struct Memory {
@@ -586,10 +809,11 @@ struct Memory {
 
 struct DataSegment {
   explicit DataSegment(string_view name) : name(name.to_string()) {}
+  uint8_t GetFlags(const Module*) const;
 
+  SegmentKind kind = SegmentKind::Active;
   std::string name;
   Var memory_var;
-  bool passive = false;
   ExprList offset;
   std::vector<uint8_t> data;
 };
@@ -653,12 +877,12 @@ class GlobalImport : public ImportMixin<ExternalKind::Global> {
   Global global;
 };
 
-class EventImport : public ImportMixin<ExternalKind::Event> {
+class TagImport : public ImportMixin<ExternalKind::Tag> {
  public:
-  explicit EventImport(string_view name = string_view())
-      : ImportMixin<ExternalKind::Event>(), event(name) {}
+  explicit TagImport(string_view name = string_view())
+      : ImportMixin<ExternalKind::Tag>(), tag(name) {}
 
-  Event event;
+  Tag tag;
 };
 
 struct Export {
@@ -672,13 +896,13 @@ enum class ModuleFieldType {
   Global,
   Import,
   Export,
-  FuncType,
+  Type,
   Table,
   ElemSegment,
   Memory,
   DataSegment,
   Start,
-  Event
+  Tag
 };
 
 class ModuleField : public intrusive_list_base<ModuleField> {
@@ -748,13 +972,12 @@ class ExportModuleField : public ModuleFieldMixin<ModuleFieldType::Export> {
   Export export_;
 };
 
-class FuncTypeModuleField : public ModuleFieldMixin<ModuleFieldType::FuncType> {
+class TypeModuleField : public ModuleFieldMixin<ModuleFieldType::Type> {
  public:
-  explicit FuncTypeModuleField(const Location& loc = Location(),
-                               string_view name = string_view())
-      : ModuleFieldMixin<ModuleFieldType::FuncType>(loc), func_type(name) {}
+  explicit TypeModuleField(const Location& loc = Location())
+      : ModuleFieldMixin<ModuleFieldType::Type>(loc) {}
 
-  FuncType func_type;
+  std::unique_ptr<TypeEntry> type;
 };
 
 class TableModuleField : public ModuleFieldMixin<ModuleFieldType::Table> {
@@ -797,13 +1020,13 @@ class DataSegmentModuleField
   DataSegment data_segment;
 };
 
-class EventModuleField : public ModuleFieldMixin<ModuleFieldType::Event> {
+class TagModuleField : public ModuleFieldMixin<ModuleFieldType::Tag> {
  public:
-  explicit EventModuleField(const Location& loc = Location(),
-                            string_view name = string_view())
-      : ModuleFieldMixin<ModuleFieldType::Event>(loc), event(name) {}
+  explicit TagModuleField(const Location& loc = Location(),
+                          string_view name = string_view())
+      : ModuleFieldMixin<ModuleFieldType::Tag>(loc), tag(name) {}
 
-  Event event;
+  Tag tag;
 };
 
 class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
@@ -833,8 +1056,8 @@ struct Module {
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
   const Export* GetExport(string_view) const;
-  Event* GetEvent(const Var&) const;
-  Index GetEventIndex(const Var&) const;
+  Tag* GetTag(const Var&) const;
+  Index GetTagIndex(const Var&) const;
   const DataSegment* GetDataSegment(const Var&) const;
   DataSegment* GetDataSegment(const Var&);
   Index GetDataSegmentIndex(const Var&) const;
@@ -850,10 +1073,10 @@ struct Module {
   // TODO(binji): move this into a builder class?
   void AppendField(std::unique_ptr<DataSegmentModuleField>);
   void AppendField(std::unique_ptr<ElemSegmentModuleField>);
-  void AppendField(std::unique_ptr<EventModuleField>);
+  void AppendField(std::unique_ptr<TagModuleField>);
   void AppendField(std::unique_ptr<ExportModuleField>);
   void AppendField(std::unique_ptr<FuncModuleField>);
-  void AppendField(std::unique_ptr<FuncTypeModuleField>);
+  void AppendField(std::unique_ptr<TypeModuleField>);
   void AppendField(std::unique_ptr<GlobalModuleField>);
   void AppendField(std::unique_ptr<ImportModuleField>);
   void AppendField(std::unique_ptr<MemoryModuleField>);
@@ -866,7 +1089,7 @@ struct Module {
   std::string name;
   ModuleFieldList fields;
 
-  Index num_event_imports = 0;
+  Index num_tag_imports = 0;
   Index num_func_imports = 0;
   Index num_table_imports = 0;
   Index num_memory_imports = 0;
@@ -874,23 +1097,23 @@ struct Module {
 
   // Cached for convenience; the pointers are shared with values that are
   // stored in either ModuleField or Import.
-  std::vector<Event*> events;
+  std::vector<Tag*> tags;
   std::vector<Func*> funcs;
   std::vector<Global*> globals;
   std::vector<Import*> imports;
   std::vector<Export*> exports;
-  std::vector<FuncType*> func_types;
+  std::vector<TypeEntry*> types;
   std::vector<Table*> tables;
   std::vector<ElemSegment*> elem_segments;
   std::vector<Memory*> memories;
   std::vector<DataSegment*> data_segments;
   std::vector<Var*> starts;
 
-  BindingHash event_bindings;
+  BindingHash tag_bindings;
   BindingHash func_bindings;
   BindingHash global_bindings;
   BindingHash export_bindings;
-  BindingHash func_type_bindings;
+  BindingHash type_bindings;
   BindingHash table_bindings;
   BindingHash memory_bindings;
   BindingHash data_segment_bindings;
@@ -1010,8 +1233,6 @@ enum class CommandType {
   AssertUnlinkable,
   AssertUninstantiable,
   AssertReturn,
-  AssertReturnCanonicalNan,
-  AssertReturnArithmeticNan,
   AssertTrap,
   AssertExhaustion,
 
@@ -1051,10 +1272,6 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
 };
 
 typedef ActionCommandBase<CommandType::Action> ActionCommand;
-typedef ActionCommandBase<CommandType::AssertReturnCanonicalNan>
-    AssertReturnCanonicalNanCommand;
-typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
-    AssertReturnArithmeticNanCommand;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:

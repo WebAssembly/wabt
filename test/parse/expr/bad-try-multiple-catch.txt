@@ -6,31 +6,32 @@
   (func
     try
       nop
-    catch
+    catch_all
       nop
-    catch
+    catch_all
       nop
     end)
 
   ;; folded
   (func
     (try
-      (nop)
-      (catch
+      (do
         (nop))
-      (catch
+      (catch_all
+        (nop))
+      (catch_all
         (nop))))
 (;; STDERR ;;;
-out/test/parse/expr/bad-try-multiple-catch.txt:11:5: error: unexpected token catch, expected end.
-    catch
-    ^^^^^
+out/test/parse/expr/bad-try-multiple-catch.txt:11:5: error: multiple catch_all clauses not allowed
+    catch_all
+    ^^^^^^^^^
 out/test/parse/expr/bad-try-multiple-catch.txt:13:5: error: unexpected token end, expected ).
     end)
     ^^^
-out/test/parse/expr/bad-try-multiple-catch.txt:21:7: error: unexpected token (, expected ).
-      (catch
-      ^
-out/test/parse/expr/bad-try-multiple-catch.txt:22:16: error: unexpected token ), expected EOF.
+out/test/parse/expr/bad-try-multiple-catch.txt:22:8: error: multiple catch_all clauses not allowed
+      (catch_all
+       ^^^^^^^^^
+out/test/parse/expr/bad-try-multiple-catch.txt:23:16: error: unexpected token ), expected EOF.
         (nop))))
                ^
 ;;; STDERR ;;)

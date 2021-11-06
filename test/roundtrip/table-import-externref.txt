@@ -1,0 +1,11 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout
+(module
+  (table (import "m" "func") 1 funcref)
+  (table (import "m" "extern") 1 externref)
+)
+(;; STDOUT ;;;
+(module
+  (import "m" "func" (table (;0;) 1 funcref))
+  (import "m" "extern" (table (;1;) 1 externref)))
+;;; STDOUT ;;)

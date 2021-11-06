@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 WebAssembly Community Group participants
+ * Copyright 2020 WebAssembly Community Group participants
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,724 +17,1205 @@
 #ifndef WABT_INTERP_H_
 #define WABT_INTERP_H_
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <functional>
-#include <map>
 #include <memory>
-#include <utility>
+#include <string>
+#include <type_traits>
 #include <vector>
 
-#include "src/binding-hash.h"
+#include "src/cast.h"
 #include "src/common.h"
+#include "src/feature.h"
 #include "src/opcode.h"
-#include "src/stream.h"
+#include "src/result.h"
+#include "src/string-view.h"
+
+#include "src/interp/istream.h"
 
 namespace wabt {
-
 namespace interp {
 
-#define FOREACH_INTERP_RESULT(V)                                            \
-  V(Ok, "ok")                                                               \
-  /* returned from the top-most function */                                 \
-  V(Returned, "returned")                                                   \
-  /* memory access is out of bounds */                                      \
-  V(TrapMemoryAccessOutOfBounds, "out of bounds memory access")             \
-  /* atomic memory access is unaligned  */                                  \
-  V(TrapAtomicMemoryAccessUnaligned, "atomic memory access is unaligned")   \
-  /* converting from float -> int would overflow int */                     \
-  V(TrapIntegerOverflow, "integer overflow")                                \
-  /* dividend is zero in integer divide */                                  \
-  V(TrapIntegerDivideByZero, "integer divide by zero")                      \
-  /* converting from float -> int where float is nan */                     \
-  V(TrapInvalidConversionToInteger, "invalid conversion to integer")        \
-  /* function table index is out of bounds */                               \
-  V(TrapUndefinedTableIndex, "undefined table index")                       \
-  /* function table element is uninitialized */                             \
-  V(TrapUninitializedTableElement, "uninitialized table element")           \
-  /* unreachable instruction executed */                                    \
-  V(TrapUnreachable, "unreachable executed")                                \
-  /* call indirect signature doesn't match function table signature */      \
-  V(TrapIndirectCallSignatureMismatch, "indirect call signature mismatch")  \
-  /* ran out of call stack frames (probably infinite recursion) */          \
-  V(TrapCallStackExhausted, "call stack exhausted")                         \
-  /* ran out of value stack space */                                        \
-  V(TrapValueStackExhausted, "value stack exhausted")                       \
-  /* we called a host function, but the return value didn't match the */    \
-  /* expected type */                                                       \
-  V(TrapHostResultTypeMismatch, "host result type mismatch")                \
-  /* we called an import function, but it didn't complete succesfully */    \
-  V(TrapHostTrapped, "host function trapped")                               \
-  /* the data segment has been dropped. */                                  \
-  V(TrapDataSegmentDropped, "data segment dropped")                         \
-  /* the element segment has been dropped. */                               \
-  V(TrapElemSegmentDropped, "element segment dropped")                      \
-  /* table access is out of bounds */                                       \
-  V(TrapTableAccessOutOfBounds, "out of bounds table access")               \
-  /* we attempted to call a function with the an argument list that doesn't \
-   * match the function signature */                                        \
-  V(ArgumentTypeMismatch, "argument type mismatch")                         \
-  /* we tried to get an export by name that doesn't exist */                \
-  V(UnknownExport, "unknown export")                                        \
-  /* the expected export kind doesn't match. */                             \
-  V(ExportKindMismatch, "export kind mismatch")
+class Store;
+class Object;
+class Trap;
+class DataSegment;
+class ElemSegment;
+class Module;
+class Instance;
+class Thread;
+template <typename T> class RefPtr;
 
-enum class Result {
-#define V(Name, str) Name,
-  FOREACH_INTERP_RESULT(V)
-#undef V
+using s8 = int8_t;
+using u8 = uint8_t;
+using s16 = int16_t;
+using u16 = uint16_t;
+using s32 = int32_t;
+using u32 = uint32_t;
+using Index = uint32_t;
+using s64 = int64_t;
+using u64 = uint64_t;
+using f32 = float;
+using f64 = double;
+
+using Buffer = std::vector<u8>;
+
+using ValueType = wabt::Type;
+using ValueTypes = std::vector<ValueType>;
+
+template <typename T> bool HasType(ValueType);
+template <typename T> void RequireType(ValueType);
+bool IsReference(ValueType);
+bool TypesMatch(ValueType expected, ValueType actual);
+
+using ExternKind = ExternalKind;
+enum class Mutability { Const, Var };
+enum class TagAttr { Exception };
+using SegmentMode = SegmentKind;
+enum class ElemKind { RefNull, RefFunc };
+
+enum class ObjectKind {
+  Null,
+  Foreign,
+  Trap,
+  DefinedFunc,
+  HostFunc,
+  Table,
+  Memory,
+  Global,
+  Tag,
+  Module,
+  Instance,
+  Thread,
 };
 
-typedef uint32_t IstreamOffset;
-static const IstreamOffset kInvalidIstreamOffset = ~0;
+const char* GetName(Mutability);
+const char* GetName(ValueType);
+const char* GetName(ExternKind);
+const char* GetName(ObjectKind);
 
-struct FuncSignature {
-  FuncSignature() = default;
-  FuncSignature(std::vector<Type> param_types, std::vector<Type> result_types);
-  FuncSignature(Index param_count,
-                Type* param_types,
-                Index result_count,
-                Type* result_types);
-
-  std::vector<Type> param_types;
-  std::vector<Type> result_types;
+enum class InitExprKind {
+  None,
+  I32,
+  I64,
+  F32,
+  F64,
+  V128,
+  GlobalGet,
+  RefNull,
+  RefFunc
 };
 
-struct Table {
-  explicit Table(Type elem_type, const Limits& limits)
-      : elem_type(elem_type),
-        limits(limits),
-        func_indexes(limits.initial, kInvalidIndex) {}
-
-  Type elem_type;
-  Limits limits;
-  std::vector<Index> func_indexes;
+struct InitExpr {
+  InitExprKind kind;
+  union {
+    u32 i32_;
+    u64 i64_;
+    f32 f32_;
+    f64 f64_;
+    v128 v128_;
+    Index index_;
+    Type type_;
+  };
 };
 
-struct Memory {
-  Memory() = default;
-  explicit Memory(const Limits& limits)
-      : page_limits(limits), data(limits.initial * WABT_PAGE_SIZE) {}
+struct Ref {
+  static const Ref Null;
 
-  Limits page_limits;
-  std::vector<char> data;
+  Ref() = default;
+  explicit Ref(size_t index);
+
+  friend bool operator==(Ref, Ref);
+  friend bool operator!=(Ref, Ref);
+
+  size_t index;
 };
+using RefVec = std::vector<Ref>;
 
-struct DataSegment {
-  DataSegment() = default;
+template <typename T, u8 L>
+struct Simd {
+  using LaneType = T;
+  static const u8 lanes = L;
 
-  std::vector<char> data;
-  bool dropped = false;
-};
+  T v[L];
 
-struct ElemSegment {
-  ElemSegment() = default;
-
-  std::vector<Index> elems;
-  bool dropped = false;
-};
-
-// ValueTypeRep converts from one type to its representation on the
-// stack. For example, float -> uint32_t. See Value below.
-template <typename T>
-struct ValueTypeRepT;
-
-template <> struct ValueTypeRepT<int32_t> { typedef uint32_t type; };
-template <> struct ValueTypeRepT<uint32_t> { typedef uint32_t type; };
-template <> struct ValueTypeRepT<int64_t> { typedef uint64_t type; };
-template <> struct ValueTypeRepT<uint64_t> { typedef uint64_t type; };
-template <> struct ValueTypeRepT<float> { typedef uint32_t type; };
-template <> struct ValueTypeRepT<double> { typedef uint64_t type; };
-template <> struct ValueTypeRepT<v128> { typedef v128 type; };
-
-template <typename T>
-using ValueTypeRep = typename ValueTypeRepT<T>::type;
-
-union Value {
-  uint32_t i32;
-  uint64_t i64;
-  ValueTypeRep<float> f32_bits;
-  ValueTypeRep<double> f64_bits;
-  ValueTypeRep<v128> v128_bits;
-};
-
-struct TypedValue {
-  TypedValue() {}
-  explicit TypedValue(Type type) : type(type) {}
-  TypedValue(Type type, const Value& value) : type(type), value(value) {}
-
-  void SetZero() { ZeroMemory(value); }
-  void set_i32(uint32_t x) { value.i32 = x; }
-  void set_i64(uint64_t x) { value.i64 = x; }
-  void set_f32(float x) { memcpy(&value.f32_bits, &x, sizeof(x)); }
-  void set_f64(double x) { memcpy(&value.f64_bits, &x, sizeof(x)); }
-
-  uint32_t get_i32() const { return value.i32; }
-  uint64_t get_i64() const { return value.i64; }
-  float get_f32() const {
-    float x;
-    memcpy(&x, &value.f32_bits, sizeof(x));
-    return x;
+  inline T& operator[](u8 idx) {
+#if WABT_BIG_ENDIAN
+    idx = (~idx) & (L-1);
+#endif
+    return v[idx];
   }
-  double get_f64() const {
-    double x;
-    memcpy(&x, &value.f64_bits, sizeof(x));
-    return x;
+  inline T operator[](u8 idx) const {
+#if WABT_BIG_ENDIAN
+    idx = (~idx) & (L-1);
+#endif
+    return v[idx];
   }
+};
+using s8x16 = Simd<s8, 16>;
+using u8x16 = Simd<u8, 16>;
+using s16x8 = Simd<s16, 8>;
+using u16x8 = Simd<u16, 8>;
+using s32x4 = Simd<s32, 4>;
+using u32x4 = Simd<u32, 4>;
+using s64x2 = Simd<s64, 2>;
+using u64x2 = Simd<u64, 2>;
+using f32x4 = Simd<f32, 4>;
+using f64x2 = Simd<f64, 2>;
 
-  Type type;
-  Value value;
+// Used for load extend instructions.
+using s8x8 = Simd<s8, 8>;
+using u8x8 = Simd<u8, 8>;
+using s16x4 = Simd<s16, 4>;
+using u16x4 = Simd<u16, 4>;
+using s32x2 = Simd<s32, 2>;
+using u32x2 = Simd<u32, 2>;
+
+//// Types ////
+
+bool CanGrow(const Limits&, u32 old_size, u32 delta, u32* new_size);
+Result Match(const Limits& expected,
+             const Limits& actual,
+             std::string* out_msg);
+
+struct ExternType {
+  explicit ExternType(ExternKind);
+  virtual ~ExternType() {}
+  virtual std::unique_ptr<ExternType> Clone() const = 0;
+
+  ExternKind kind;
 };
 
-typedef std::vector<TypedValue> TypedValues;
+struct FuncType : ExternType {
+  static const ExternKind skind = ExternKind::Func;
+  static bool classof(const ExternType* type);
 
-struct Global {
-  Global() : mutable_(false), import_index(kInvalidIndex) {}
-  Global(const TypedValue& typed_value, bool mutable_)
-      : typed_value(typed_value), mutable_(mutable_) {}
+  explicit FuncType(ValueTypes params, ValueTypes results);
 
-  TypedValue typed_value;
-  bool mutable_;
-  Index import_index; /* or INVALID_INDEX if not imported */
+  std::unique_ptr<ExternType> Clone() const override;
+
+  friend Result Match(const FuncType& expected,
+                      const FuncType& actual,
+                      std::string* out_msg);
+
+  ValueTypes params;
+  ValueTypes results;
 };
 
-struct Import {
-  explicit Import(ExternalKind kind) : kind(kind) {}
-  Import(ExternalKind kind, string_view module_name, string_view field_name)
-      : kind(kind),
-        module_name(module_name.to_string()),
-        field_name(field_name.to_string()) {}
+struct TableType : ExternType {
+  static const ExternKind skind = ExternKind::Table;
+  static bool classof(const ExternType* type);
 
-  ExternalKind kind;
-  std::string module_name;
-  std::string field_name;
+  explicit TableType(ValueType, Limits);
+
+  std::unique_ptr<ExternType> Clone() const override;
+
+  friend Result Match(const TableType& expected,
+                      const TableType& actual,
+                      std::string* out_msg);
+
+  ValueType element;
+  Limits limits;
 };
 
-struct FuncImport : Import {
-  FuncImport() : Import(ExternalKind::Func) {}
-  FuncImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Func, module_name, field_name) {}
+struct MemoryType : ExternType {
+  static const ExternKind skind = ExternKind::Memory;
+  static bool classof(const ExternType* type);
 
-  Index sig_index = kInvalidIndex;
-};
+  explicit MemoryType(Limits);
 
-struct TableImport : Import {
-  TableImport() : Import(ExternalKind::Table) {}
-  TableImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Table, module_name, field_name) {}
+  std::unique_ptr<ExternType> Clone() const override;
+
+  friend Result Match(const MemoryType& expected,
+                      const MemoryType& actual,
+                      std::string* out_msg);
 
   Limits limits;
 };
 
-struct MemoryImport : Import {
-  MemoryImport() : Import(ExternalKind::Memory) {}
-  MemoryImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Memory, module_name, field_name) {}
+struct GlobalType : ExternType {
+  static const ExternKind skind = ExternKind::Global;
+  static bool classof(const ExternType* type);
 
-  Limits limits;
+  explicit GlobalType(ValueType, Mutability);
+
+  std::unique_ptr<ExternType> Clone() const override;
+
+  friend Result Match(const GlobalType& expected,
+                      const GlobalType& actual,
+                      std::string* out_msg);
+
+  ValueType type;
+  Mutability mut;
 };
 
-struct GlobalImport : Import {
-  GlobalImport() : Import(ExternalKind::Global) {}
-  GlobalImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Global, module_name, field_name) {}
+struct TagType : ExternType {
+  static const ExternKind skind = ExternKind::Tag;
+  static bool classof(const ExternType* type);
 
-  Type type = Type::Void;
-  bool mutable_ = false;
+  explicit TagType(TagAttr, const ValueTypes&);
+
+  std::unique_ptr<ExternType> Clone() const override;
+
+  friend Result Match(const TagType& expected,
+                      const TagType& actual,
+                      std::string* out_msg);
+
+  TagAttr attr;
+  ValueTypes signature;
 };
 
-struct EventImport : Import {
-  EventImport() : Import(ExternalKind::Event) {}
-  EventImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Event, module_name, field_name) {}
+struct ImportType {
+  explicit ImportType(std::string module,
+                      std::string name,
+                      std::unique_ptr<ExternType>);
+  ImportType(const ImportType&);
+  ImportType& operator=(const ImportType&);
+
+  std::string module;
+  std::string name;
+  std::unique_ptr<ExternType> type;
 };
 
-struct Func;
-
-struct Func {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Func);
-  Func(Index sig_index, bool is_host)
-      : sig_index(sig_index), is_host(is_host) {}
-  virtual ~Func() {}
-
-  Index sig_index;
-  bool is_host;
-};
-
-struct DefinedFunc : Func {
-  DefinedFunc(Index sig_index)
-      : Func(sig_index, false),
-        offset(kInvalidIstreamOffset),
-        local_decl_count(0),
-        local_count(0) {}
-
-  static bool classof(const Func* func) { return !func->is_host; }
-
-  IstreamOffset offset;
-  Index local_decl_count;
-  Index local_count;
-  std::vector<Type> param_and_local_types;
-};
-
-struct HostFunc : Func {
-  using Callback = std::function<Result(const HostFunc*,
-                                        const FuncSignature*,
-                                        const TypedValues& args,
-                                        TypedValues& results)>;
-
-  HostFunc(string_view module_name,
-           string_view field_name,
-           Index sig_index,
-           Callback callback)
-      : Func(sig_index, true),
-        module_name(module_name.to_string()),
-        field_name(field_name.to_string()),
-        callback(callback) {}
-
-  static bool classof(const Func* func) { return func->is_host; }
-
-  std::string module_name;
-  std::string field_name;
-  Callback callback;
-};
-
-struct Export {
-  Export(string_view name, ExternalKind kind, Index index)
-      : name(name.to_string()), kind(kind), index(index) {}
+struct ExportType {
+  explicit ExportType(std::string name, std::unique_ptr<ExternType>);
+  ExportType(const ExportType&);
+  ExportType& operator=(const ExportType&);
 
   std::string name;
-  ExternalKind kind;
+  std::unique_ptr<ExternType> type;
+};
+
+//// Structure ////
+
+struct ImportDesc {
+  ImportType type;
+};
+
+struct LocalDesc {
+  ValueType type;
+  u32 count;
+  // One past the last local index that has this type. For example, a vector of
+  // LocalDesc might look like:
+  //
+  //   {{I32, 2, 2}, {I64, 3, 5}, {F32, 1, 6}, ...}
+  //
+  // This makes it possible to use a binary search to find the type of a local
+  // at a given index.
+  u32 end;
+};
+
+struct FuncDesc {
+  // Includes params.
+  ValueType GetLocalType(Index) const;
+
+  FuncType type;
+  std::vector<LocalDesc> locals;
+  u32 code_offset;
+};
+
+struct TableDesc {
+  TableType type;
+};
+
+struct MemoryDesc {
+  MemoryType type;
+};
+
+struct GlobalDesc {
+  GlobalType type;
+  InitExpr init;
+};
+
+struct TagDesc {
+  TagType type;
+};
+
+struct ExportDesc {
+  ExportType type;
   Index index;
 };
 
-class Environment;
-struct DefinedModule;
-struct HostModule;
-
-struct Module {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Module);
-  explicit Module(bool is_host);
-  Module(string_view name, bool is_host);
-  virtual ~Module() = default;
-
-  // Function exports are special-cased to allow for overloading functions by
-  // name.
-  Export* GetFuncExport(Environment*, string_view name, Index sig_index);
-  Export* GetExport(string_view name);
-  virtual Index OnUnknownFuncExport(string_view name, Index sig_index) = 0;
-
-  // Returns export index.
-  Index AppendExport(ExternalKind kind, Index item_index, string_view name);
-
-  std::string name;
-  std::vector<Export> exports;
-  BindingHash export_bindings;
-  Index memory_index; /* kInvalidIndex if not defined */
-  Index table_index;  /* kInvalidIndex if not defined */
-  bool is_host;
+struct StartDesc {
+  Index func_index;
 };
 
-struct DefinedModule : Module {
-  DefinedModule();
-  static bool classof(const Module* module) { return !module->is_host; }
-
-  Index OnUnknownFuncExport(string_view name, Index sig_index) override {
-    return kInvalidIndex;
-  }
-
-  std::vector<FuncImport> func_imports;
-  std::vector<TableImport> table_imports;
-  std::vector<MemoryImport> memory_imports;
-  std::vector<GlobalImport> global_imports;
-  std::vector<EventImport> event_imports;
-  Index start_func_index; /* kInvalidIndex if not defined */
-  IstreamOffset istream_start;
-  IstreamOffset istream_end;
+struct DataDesc {
+  Buffer data;
+  SegmentMode mode;
+  Index memory_index;
+  InitExpr offset;
 };
 
-struct HostModule : Module {
-  HostModule(Environment* env, string_view name);
-  static bool classof(const Module* module) { return module->is_host; }
+struct ElemExpr {
+  ElemKind kind;
+  Index index;
+};
 
-  Index OnUnknownFuncExport(string_view name, Index sig_index) override;
+struct ElemDesc {
+  std::vector<ElemExpr> elements;
+  ValueType type;
+  SegmentMode mode;
+  Index table_index;
+  InitExpr offset;
+};
 
-  std::pair<HostFunc*, Index> AppendFuncExport(string_view name,
-                                               const FuncSignature&,
-                                               HostFunc::Callback);
-  std::pair<HostFunc*, Index> AppendFuncExport(string_view name,
-                                               Index sig_index,
-                                               HostFunc::Callback);
-  std::pair<Table*, Index> AppendTableExport(string_view name,
-                                             Type elem_type,
-                                             const Limits&);
-  std::pair<Memory*, Index> AppendMemoryExport(string_view name, const Limits&);
-  std::pair<Global*, Index> AppendGlobalExport(string_view name,
-                                               Type,
-                                               bool mutable_);
+struct ModuleDesc {
+  std::vector<FuncType> func_types;
+  std::vector<ImportDesc> imports;
+  std::vector<FuncDesc> funcs;
+  std::vector<TableDesc> tables;
+  std::vector<MemoryDesc> memories;
+  std::vector<GlobalDesc> globals;
+  std::vector<TagDesc> tags;
+  std::vector<ExportDesc> exports;
+  std::vector<StartDesc> starts;
+  std::vector<ElemDesc> elems;
+  std::vector<DataDesc> datas;
+  Istream istream;
+};
 
-  // Convenience functions.
-  std::pair<Global*, Index> AppendGlobalExport(string_view name,
-                                               bool mutable_,
-                                               uint32_t);
-  std::pair<Global*, Index> AppendGlobalExport(string_view name,
-                                               bool mutable_,
-                                               uint64_t);
-  std::pair<Global*, Index> AppendGlobalExport(string_view name,
-                                               bool mutable_,
-                                               float);
-  std::pair<Global*, Index> AppendGlobalExport(string_view name,
-                                               bool mutable_,
-                                               double);
+//// Runtime ////
 
-  // Should return an Export index if a new function was created via
-  // AppendFuncExport, or kInvalidIndex if no function was created.
-  std::function<
-      Index(Environment*, HostModule*, string_view name, Index sig_index)>
-      on_unknown_func_export;
+struct Frame {
+  explicit Frame(Ref func, u32 values, u32 offset, Instance*, Module*);
+
+  void Mark(Store&);
+
+  Ref func;
+  u32 values;  // Height of the value stack at this activation.
+  u32 offset;  // Istream offset; either the return PC, or the current PC.
+
+  // Cached for convenience. Both are null if func is a HostFunc.
+  Instance* inst;
+  Module* mod;
+};
+
+template <typename T>
+class FreeList {
+ public:
+  using Index = size_t;
+
+  template <typename... Args>
+  Index New(Args&&...);
+  void Delete(Index);
+
+  bool IsUsed(Index) const;
+
+  const T& Get(Index) const;
+  T& Get(Index);
+
+  Index size() const;  // 1 greater than the maximum index.
+  Index count() const; // The number of used elements.
 
  private:
-  Environment* env_;
+  // TODO: Optimize memory layout? We could probably store all of this
+  // information in one uintptr_t.
+  //
+  // For example, when T is a pointer to an Object (e.g. Store::ObjectList), we
+  // can assume alignment to 4 bytes at least. Given a 32-bit pointer, we can
+  // expect the following layout:
+  //
+  //   nnnnnnnn nnnnnnnn nnnnnnnn nnnnnnn0 f
+  //
+  // where:
+  //   f: "is_free": 0 when the payload is of type T
+  //                 1 when the payload is the index of the next free object
+  //   n: the payload
+  //
+  // When T is a Ref (see Store::RootList below), we'd need to store the
+  // "is_free" bit in most-significant bit instead.
+  //
+  std::vector<T> list_;
+  std::vector<size_t> free_;
+  std::vector<bool> is_free_;
 };
 
-class Environment {
+class Store {
  public:
-  // Used to track and reset the state of the environment.
-  struct MarkPoint {
-    size_t modules_size = 0;
-    size_t sigs_size = 0;
-    size_t funcs_size = 0;
-    size_t memories_size = 0;
-    size_t tables_size = 0;
-    size_t globals_size = 0;
-    size_t data_segments_size = 0;
-    size_t elem_segments_size = 0;
-    size_t istream_size = 0;
+  using ObjectList = FreeList<std::unique_ptr<Object>>;
+  using RootList = FreeList<Ref>;
+
+  explicit Store(const Features& = Features{});
+
+  bool IsValid(Ref) const;
+  bool HasValueType(Ref, ValueType) const;
+  template <typename T>
+  bool Is(Ref) const;
+
+  template <typename T, typename... Args>
+  RefPtr<T> Alloc(Args&&...);
+  template <typename T>
+  Result Get(Ref, RefPtr<T>* out);
+  template <typename T>
+  RefPtr<T> UnsafeGet(Ref);
+
+  RootList::Index NewRoot(Ref);
+  RootList::Index CopyRoot(RootList::Index);
+  void DeleteRoot(RootList::Index);
+
+  void Collect();
+  void Mark(Ref);
+  void Mark(const RefVec&);
+
+  ObjectList::Index object_count() const;
+
+  const Features& features() const;
+  void setFeatures(const Features& features) { features_ = features; }
+
+ private:
+  template <typename T>
+  friend class RefPtr;
+
+  Features features_;
+  ObjectList objects_;
+  RootList roots_;
+  std::vector<bool> marks_;
+};
+
+template <typename T>
+class RefPtr {
+ public:
+  RefPtr();
+  RefPtr(Store&, Ref);
+  RefPtr(const RefPtr&);
+  RefPtr& operator=(const RefPtr&);
+  RefPtr(RefPtr&&);
+  RefPtr& operator=(RefPtr&&);
+  ~RefPtr();
+
+  template <typename U>
+  RefPtr(const RefPtr<U>&);
+  template <typename U>
+  RefPtr& operator=(const RefPtr<U>&);
+  template <typename U>
+  RefPtr(RefPtr&&);
+  template <typename U>
+  RefPtr& operator=(RefPtr&&);
+
+  template <typename U>
+  RefPtr<U> As();
+
+  bool empty() const;
+  void reset();
+
+  T* get() const;
+  T* operator->() const;
+  T& operator*() const;
+  explicit operator bool() const;
+
+  Ref ref() const;
+  Store* store() const;
+
+  template <typename U, typename V>
+  friend bool operator==(const RefPtr<U>& lhs, const RefPtr<V>& rhs);
+  template <typename U, typename V>
+  friend bool operator!=(const RefPtr<U>& lhs, const RefPtr<V>& rhs);
+
+ private:
+  template <typename U>
+  friend class RefPtr;
+
+  T* obj_;
+  Store* store_;
+  Store::RootList::Index root_index_;
+};
+
+struct Value {
+  static Value WABT_VECTORCALL Make(s32);
+  static Value WABT_VECTORCALL Make(u32);
+  static Value WABT_VECTORCALL Make(s64);
+  static Value WABT_VECTORCALL Make(u64);
+  static Value WABT_VECTORCALL Make(f32);
+  static Value WABT_VECTORCALL Make(f64);
+  static Value WABT_VECTORCALL Make(v128);
+  static Value WABT_VECTORCALL Make(Ref);
+  template <typename T, u8 L>
+  static Value WABT_VECTORCALL Make(Simd<T, L>);
+
+  template <typename T>
+  T WABT_VECTORCALL Get() const;
+  template <typename T>
+  void WABT_VECTORCALL Set(T);
+
+ private:
+  union {
+    u32 i32_;
+    u64 i64_;
+    f32 f32_;
+    f64 f64_;
+    v128 v128_;
+    Ref ref_;
   };
 
-  Environment();
-
-  OutputBuffer& istream() { return *istream_; }
-  void SetIstream(std::unique_ptr<OutputBuffer> istream) {
-    istream_ = std::move(istream);
+ public:
+#ifndef NDEBUG
+  Value() : v128_(0, 0, 0, 0), type(ValueType::Any) {}
+  void SetType(ValueType t) { type = t; }
+  void CheckType(ValueType t) const {
+    // Sadly we must allow Any here, since locals may be uninitialized.
+    // Alternatively we could modify InterpAlloca to set the type.
+    assert(t == type || type == ValueType::Any);
   }
-  std::unique_ptr<OutputBuffer> ReleaseIstream() { return std::move(istream_); }
+  ValueType type;
+#else
+  Value() : v128_(0, 0, 0, 0) {}
+  void SetType(ValueType) {}
+  void CheckType(ValueType) const {}
+#endif
+};
+using Values = std::vector<Value>;
 
-  Index GetFuncSignatureCount() const { return sigs_.size(); }
-  Index GetFuncCount() const { return funcs_.size(); }
-  Index GetGlobalCount() const { return globals_.size(); }
-  Index GetMemoryCount() const { return memories_.size(); }
-  Index GetTableCount() const { return tables_.size(); }
-  Index GetDataSegmentCount() const { return data_segments_.size(); }
-  Index GetElemSegmentCount() const { return elem_segments_.size(); }
-  Index GetModuleCount() const { return modules_.size(); }
+struct TypedValue {
+  ValueType type;
+  Value value;
+};
+using TypedValues = std::vector<TypedValue>;
 
-  Index GetLastModuleIndex() const {
-    return modules_.empty() ? kInvalidIndex : modules_.size() - 1;
-  }
-  Index FindModuleIndex(string_view name) const;
+using Finalizer = std::function<void(Object*)>;
 
-  FuncSignature* GetFuncSignature(Index index) { return &sigs_[index]; }
-  Func* GetFunc(Index index) {
-    assert(index < funcs_.size());
-    return funcs_[index].get();
-  }
-  Global* GetGlobal(Index index) {
-    assert(index < globals_.size());
-    return &globals_[index];
-  }
-  Memory* GetMemory(Index index) {
-    assert(index < memories_.size());
-    return &memories_[index];
-  }
-  Table* GetTable(Index index) {
-    assert(index < tables_.size());
-    return &tables_[index];
-  }
-  DataSegment* GetDataSegment(Index index) {
-    assert(index < data_segments_.size());
-    return &data_segments_[index];
-  }
-  ElemSegment* GetElemSegment(Index index) {
-    assert(index < elem_segments_.size());
-    return &elem_segments_[index];
-  }
-  Module* GetModule(Index index) {
-    assert(index < modules_.size());
-    return modules_[index].get();
-  }
+class Object {
+ public:
+  static bool classof(const Object* obj);
+  static const char* GetTypeName() { return "Object"; }
+  using Ptr = RefPtr<Object>;
 
-  Module* GetLastModule() {
-    return modules_.empty() ? nullptr : modules_.back().get();
-  }
-  Module* FindModule(string_view name);
-  Module* FindRegisteredModule(string_view name);
+  Object(const Object&) = delete;
+  Object& operator=(const Object&) = delete;
 
-  template <typename... Args>
-  FuncSignature* EmplaceBackFuncSignature(Args&&... args) {
-    sigs_.emplace_back(std::forward<Args>(args)...);
-    return &sigs_.back();
-  }
+  virtual ~Object();
 
-  template <typename... Args>
-  Func* EmplaceBackFunc(Args&&... args) {
-    funcs_.emplace_back(std::forward<Args>(args)...);
-    return funcs_.back().get();
-  }
+  ObjectKind kind() const;
+  Ref self() const;
 
-  template <typename... Args>
-  Global* EmplaceBackGlobal(Args&&... args) {
-    globals_.emplace_back(std::forward<Args>(args)...);
-    return &globals_.back();
-  }
+  void* host_info() const;
+  void set_host_info(void*);
 
-  template <typename... Args>
-  Table* EmplaceBackTable(Args&&... args) {
-    tables_.emplace_back(std::forward<Args>(args)...);
-    return &tables_.back();
-  }
+  Finalizer get_finalizer() const;
+  void set_finalizer(Finalizer);
 
-  template <typename... Args>
-  Memory* EmplaceBackMemory(Args&&... args) {
-    memories_.emplace_back(std::forward<Args>(args)...);
-    return &memories_.back();
-  }
+ protected:
+  friend Store;
+  explicit Object(ObjectKind);
+  virtual void Mark(Store&) {}
 
-  template <typename... Args>
-  DataSegment* EmplaceBackDataSegment(Args&&... args) {
-    data_segments_.emplace_back(std::forward<Args>(args)...);
-    return &data_segments_.back();
-  }
-
-  template <typename... Args>
-  ElemSegment* EmplaceBackElemSegment(Args&&... args) {
-    elem_segments_.emplace_back(std::forward<Args>(args)...);
-    return &elem_segments_.back();
-  }
-
-  template <typename... Args>
-  Module* EmplaceBackModule(Args&&... args) {
-    modules_.emplace_back(std::forward<Args>(args)...);
-    return modules_.back().get();
-  }
-
-  template <typename... Args>
-  void EmplaceModuleBinding(Args&&... args) {
-    module_bindings_.emplace(std::forward<Args>(args)...);
-  }
-
-  template <typename... Args>
-  void EmplaceRegisteredModuleBinding(Args&&... args) {
-    registered_module_bindings_.emplace(std::forward<Args>(args)...);
-  }
-
-  HostModule* AppendHostModule(string_view name);
-
-  bool FuncSignaturesAreEqual(Index sig_index_0, Index sig_index_1) const;
-
-  MarkPoint Mark();
-  void ResetToMarkPoint(const MarkPoint&);
-
-  void Disassemble(Stream* stream, IstreamOffset from, IstreamOffset to);
-  void DisassembleModule(Stream* stream, Module*);
-
-  // Called when a module name isn't found in registered_module_bindings_. If
-  // you want to provide a module with this name, call AppendHostModule() with
-  // this name and return true.
-  std::function<bool(Environment*, string_view name)> on_unknown_module;
-
- private:
-  friend class Thread;
-
-  std::vector<std::unique_ptr<Module>> modules_;
-  std::vector<FuncSignature> sigs_;
-  std::vector<std::unique_ptr<Func>> funcs_;
-  std::vector<Memory> memories_;
-  std::vector<Table> tables_;
-  std::vector<Global> globals_;
-  std::vector<DataSegment> data_segments_;
-  std::vector<ElemSegment> elem_segments_;
-  std::unique_ptr<OutputBuffer> istream_;
-  BindingHash module_bindings_;
-  BindingHash registered_module_bindings_;
+  ObjectKind kind_;
+  Finalizer finalizer_ = nullptr;
+  void* host_info_ = nullptr;
+  Ref self_ = Ref::Null;
 };
 
-class Thread {
+class Foreign : public Object {
  public:
+  static const ObjectKind skind = ObjectKind::Foreign;
+  static bool classof(const Object* obj);
+  static const char* GetTypeName() { return "Foreign"; }
+  using Ptr = RefPtr<Foreign>;
+
+  static Foreign::Ptr New(Store&, void*);
+
+  void* ptr();
+
+ private:
+  friend Store;
+  explicit Foreign(Store&, void*);
+  void Mark(Store&) override;
+
+  void* ptr_;
+};
+
+class Trap : public Object {
+ public:
+  static const ObjectKind skind = ObjectKind::Trap;
+  static bool classof(const Object* obj);
+  using Ptr = RefPtr<Trap>;
+
+  static Trap::Ptr New(Store&,
+                       const std::string& msg,
+                       const std::vector<Frame>& trace = std::vector<Frame>());
+
+  std::string message() const;
+
+ private:
+  friend Store;
+  explicit Trap(Store&,
+                const std::string& msg,
+                const std::vector<Frame>& trace = std::vector<Frame>());
+  void Mark(Store&) override;
+
+  std::string message_;
+  std::vector<Frame> trace_;
+};
+
+class Extern : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const char* GetTypeName() { return "Foreign"; }
+  using Ptr = RefPtr<Extern>;
+
+  virtual Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) = 0;
+  virtual const ExternType& extern_type() = 0;
+
+ protected:
+  friend Store;
+  explicit Extern(ObjectKind);
+
+  template <typename T>
+  Result MatchImpl(Store&,
+                   const ImportType&,
+                   const T& actual,
+                   Trap::Ptr* out_trap);
+};
+
+class Func : public Extern {
+ public:
+  static bool classof(const Object* obj);
+  using Ptr = RefPtr<Func>;
+
+  Result Call(Thread& thread,
+              const Values& params,
+              Values& results,
+              Trap::Ptr* out_trap);
+
+  // Convenience function that creates new Thread.
+  Result Call(Store&,
+              const Values& params,
+              Values& results,
+              Trap::Ptr* out_trap,
+              Stream* = nullptr);
+
+  const ExternType& extern_type() override;
+  const FuncType& type() const;
+
+ protected:
+  explicit Func(ObjectKind, FuncType);
+  virtual Result DoCall(Thread& thread,
+                        const Values& params,
+                        Values& results,
+                        Trap::Ptr* out_trap) = 0;
+
+  FuncType type_;
+};
+
+class DefinedFunc : public Func {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::DefinedFunc;
+  static const char* GetTypeName() { return "DefinedFunc"; }
+  using Ptr = RefPtr<DefinedFunc>;
+
+  static DefinedFunc::Ptr New(Store&, Ref instance, FuncDesc);
+
+  Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
+
+  Ref instance() const;
+  const FuncDesc& desc() const;
+
+ protected:
+  Result DoCall(Thread& thread,
+                const Values& params,
+                Values& results,
+                Trap::Ptr* out_trap) override;
+
+ private:
+  friend Store;
+  explicit DefinedFunc(Store&, Ref instance, FuncDesc);
+  void Mark(Store&) override;
+
+  Ref instance_;
+  FuncDesc desc_;
+};
+
+class HostFunc : public Func {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::HostFunc;
+  static const char* GetTypeName() { return "HostFunc"; }
+  using Ptr = RefPtr<HostFunc>;
+
+  using Callback = std::function<Result(Thread& thread,
+                                        const Values& params,
+                                        Values& results,
+                                        Trap::Ptr* out_trap)>;
+
+  static HostFunc::Ptr New(Store&, FuncType, Callback);
+
+  Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
+
+ protected:
+  Result DoCall(Thread& thread,
+                const Values& params,
+                Values& results,
+                Trap::Ptr* out_trap) override;
+
+ private:
+  friend Store;
+  friend Thread;
+  explicit HostFunc(Store&, FuncType, Callback);
+  void Mark(Store&) override;
+
+  Callback callback_;
+};
+
+class Table : public Extern {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Table;
+  static const char* GetTypeName() { return "Table"; }
+  using Ptr = RefPtr<Table>;
+
+  static Table::Ptr New(Store&, TableType);
+
+  Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
+
+  bool IsValidRange(u32 offset, u32 size) const;
+
+  Result Get(u32 offset, Ref* out) const;
+  Result Set(Store&, u32 offset, Ref);
+  Result Grow(Store&, u32 count, Ref);
+  Result Fill(Store&, u32 offset, Ref, u32 size);
+  Result Init(Store&,
+              u32 dst_offset,
+              const ElemSegment&,
+              u32 src_offset,
+              u32 size);
+  static Result Copy(Store&,
+                     Table& dst,
+                     u32 dst_offset,
+                     const Table& src,
+                     u32 src_offset,
+                     u32 size);
+
+  // Unsafe API.
+  Ref UnsafeGet(u32 offset) const;
+
+  const ExternType& extern_type() override;
+  const TableType& type() const;
+  const RefVec& elements() const;
+  u32 size() const;
+
+ private:
+  friend Store;
+  explicit Table(Store&, TableType);
+  void Mark(Store&) override;
+
+  TableType type_;
+  RefVec elements_;
+};
+
+class Memory : public Extern {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Memory;
+  static const char* GetTypeName() { return "Memory"; }
+  using Ptr = RefPtr<Memory>;
+
+  static Memory::Ptr New(Store&, MemoryType);
+
+  Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
+
+  bool IsValidAccess(u64 offset, u64 addend, u64 size) const;
+  bool IsValidAtomicAccess(u64 offset, u64 addend, u64 size) const;
+
+  template <typename T>
+  Result Load(u64 offset, u64 addend, T* out) const;
+  template <typename T>
+  Result WABT_VECTORCALL Store(u64 offset, u64 addend, T);
+  Result Grow(u64 pages);
+  Result Fill(u64 offset, u8 value, u64 size);
+  Result Init(u64 dst_offset, const DataSegment&, u64 src_offset, u64 size);
+  static Result Copy(Memory& dst,
+                     u64 dst_offset,
+                     const Memory& src,
+                     u64 src_offset,
+                     u64 size);
+
+  // Fake atomics; just checks alignment.
+  template <typename T>
+  Result AtomicLoad(u64 offset, u64 addend, T* out) const;
+  template <typename T>
+  Result AtomicStore(u64 offset, u64 addend, T);
+  template <typename T, typename F>
+  Result AtomicRmw(u64 offset, u64 addend, T, F&& func, T* out);
+  template <typename T>
+  Result AtomicRmwCmpxchg(u64 offset, u64 addend, T expect, T replace, T* out);
+
+  u64 ByteSize() const;
+  u64 PageSize() const;
+
+  // Unsafe API.
+  template <typename T>
+  T WABT_VECTORCALL UnsafeLoad(u64 offset, u64 addend) const;
+  u8* UnsafeData();
+
+  const ExternType& extern_type() override;
+  const MemoryType& type() const;
+
+ private:
+  friend class Store;
+  explicit Memory(class Store&, MemoryType);
+  void Mark(class Store&) override;
+
+  MemoryType type_;
+  Buffer data_;
+  u64 pages_;
+};
+
+class Global : public Extern {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Global;
+  static const char* GetTypeName() { return "Global"; }
+  using Ptr = RefPtr<Global>;
+
+  static Global::Ptr New(Store&, GlobalType, Value);
+
+  Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
+
+  Value Get() const;
+  template <typename T>
+  Result Get(T* out) const;
+  template <typename T>
+  Result WABT_VECTORCALL Set(T);
+  Result Set(Store&, Ref);
+
+  template <typename T>
+  T WABT_VECTORCALL UnsafeGet() const;
+  void UnsafeSet(Value);
+
+  const ExternType& extern_type() override;
+  const GlobalType& type() const;
+
+ private:
+  friend Store;
+  explicit Global(Store&, GlobalType, Value);
+  void Mark(Store&) override;
+
+  GlobalType type_;
+  Value value_;
+};
+
+class Tag : public Extern {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Tag;
+  static const char* GetTypeName() { return "Tag"; }
+  using Ptr = RefPtr<Tag>;
+
+  static Tag::Ptr New(Store&, TagType);
+
+  Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
+
+  const ExternType& extern_type() override;
+  const TagType& type() const;
+
+ private:
+  friend Store;
+  explicit Tag(Store&, TagType);
+  void Mark(Store&) override;
+
+  TagType type_;
+};
+
+class ElemSegment {
+ public:
+  explicit ElemSegment(const ElemDesc*, RefPtr<Instance>&);
+
+  bool IsValidRange(u32 offset, u32 size) const;
+  void Drop();
+
+  const ElemDesc& desc() const;
+  const RefVec& elements() const;
+  u32 size() const;
+
+ private:
+  friend Instance;
+  void Mark(Store&);
+
+  const ElemDesc* desc_;  // Borrowed from the Module.
+  RefVec elements_;
+};
+
+class DataSegment {
+ public:
+  explicit DataSegment(const DataDesc*);
+
+  bool IsValidRange(u64 offset, u64 size) const;
+  void Drop();
+
+  const DataDesc& desc() const;
+  u64 size() const;
+
+ private:
+  const DataDesc* desc_;  // Borrowed from the Module.
+  u64 size_;
+};
+
+class Module : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Module;
+  static const char* GetTypeName() { return "Module"; }
+  using Ptr = RefPtr<Module>;
+
+  static Module::Ptr New(Store&, ModuleDesc);
+
+  const ModuleDesc& desc() const;
+  const std::vector<ImportType>& import_types() const;
+  const std::vector<ExportType>& export_types() const;
+
+ private:
+  friend Store;
+  friend Instance;
+  explicit Module(Store&, ModuleDesc);
+  void Mark(Store&) override;
+
+  ModuleDesc desc_;
+  std::vector<ImportType> import_types_;
+  std::vector<ExportType> export_types_;
+};
+
+class Instance : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Instance;
+  static const char* GetTypeName() { return "Instance"; }
+  using Ptr = RefPtr<Instance>;
+
+  static Instance::Ptr Instantiate(Store&,
+                                   Ref module,
+                                   const RefVec& imports,
+                                   Trap::Ptr* out_trap);
+
+  Ref module() const;
+  const RefVec& imports() const;
+  const RefVec& funcs() const;
+  const RefVec& tables() const;
+  const RefVec& memories() const;
+  const RefVec& globals() const;
+  const RefVec& tags() const;
+  const RefVec& exports() const;
+  const std::vector<ElemSegment>& elems() const;
+  std::vector<ElemSegment>& elems();
+  const std::vector<DataSegment>& datas() const;
+  std::vector<DataSegment>& datas();
+
+ private:
+  friend Store;
+  friend ElemSegment;
+  friend DataSegment;
+  explicit Instance(Store&, Ref module);
+  void Mark(Store&) override;
+
+  Value ResolveInitExpr(Store&, InitExpr);
+
+  Ref module_;
+  RefVec imports_;
+  RefVec funcs_;
+  RefVec tables_;
+  RefVec memories_;
+  RefVec globals_;
+  RefVec tags_;
+  RefVec exports_;
+  std::vector<ElemSegment> elems_;
+  std::vector<DataSegment> datas_;
+};
+
+enum class RunResult {
+  Ok,
+  Return,
+  Trap,
+};
+
+// TODO: Kinda weird to have a thread as an object, but it makes reference
+// marking simpler.
+class Thread : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Thread;
+  static const char* GetTypeName() { return "Thread"; }
+  using Ptr = RefPtr<Thread>;
+
   struct Options {
-    static const uint32_t kDefaultValueStackSize = 512 * 1024 / sizeof(Value);
-    static const uint32_t kDefaultCallStackSize = 64 * 1024;
+    static const u32 kDefaultValueStackSize = 64 * 1024 / sizeof(Value);
+    static const u32 kDefaultCallStackSize = 64 * 1024 / sizeof(Frame);
 
-    explicit Options(uint32_t value_stack_size = kDefaultValueStackSize,
-                     uint32_t call_stack_size = kDefaultCallStackSize);
-
-    uint32_t value_stack_size;
-    uint32_t call_stack_size;
+    u32 value_stack_size = kDefaultValueStackSize;
+    u32 call_stack_size = kDefaultCallStackSize;
+    Stream* trace_stream = nullptr;
   };
 
-  explicit Thread(Environment*, const Options& = Options());
+  static Thread::Ptr New(Store&, const Options&);
 
-  Environment* env() { return env_; }
+  RunResult Run(Trap::Ptr* out_trap);
+  RunResult Run(int num_instructions, Trap::Ptr* out_trap);
+  RunResult Step(Trap::Ptr* out_trap);
 
-  void set_pc(IstreamOffset offset) { pc_ = offset; }
-  IstreamOffset pc() const { return pc_; }
+  Store& store();
 
-  void Reset();
-  Index NumValues() const { return value_stack_top_; }
-  Result Push(Value) WABT_WARN_UNUSED;
+  Instance* GetCallerInstance();
+
+ private:
+  friend Store;
+  friend DefinedFunc;
+
+  struct TraceSource;
+
+  explicit Thread(Store&, const Options&);
+  void Mark(Store&) override;
+
+  RunResult PushCall(Ref func, u32 offset, Trap::Ptr* out_trap);
+  RunResult PushCall(const DefinedFunc&, Trap::Ptr* out_trap);
+  RunResult PushCall(const HostFunc&, Trap::Ptr* out_trap);
+  RunResult PopCall();
+  RunResult DoCall(const Func::Ptr&, Trap::Ptr* out_trap);
+  RunResult DoReturnCall(const Func::Ptr&, Trap::Ptr* out_trap);
+
+  void PushValues(const ValueTypes&, const Values&);
+  void PopValues(const ValueTypes&, Values*);
+
+  Value& Pick(Index);
+
+  template <typename T>
+  T WABT_VECTORCALL Pop();
   Value Pop();
-  Value ValueAt(Index at) const;
+  u64 PopPtr(const Memory::Ptr& memory);
 
-  void Trace(Stream*);
-  Result Run(int num_instructions = 1);
-
-  Result CallHost(HostFunc*);
-
- private:
-  const uint8_t* GetIstream() const { return env_->istream_->data.data(); }
-
-  Memory* ReadMemory(const uint8_t** pc);
-  template <typename MemType>
-  Result GetAccessAddress(const uint8_t** pc, void** out_address);
-  template <typename MemType>
-  Result GetAtomicAccessAddress(const uint8_t** pc, void** out_address);
-
-  Table* ReadTable(const uint8_t** pc);
-
-  DataSegment* ReadDataSegment(const uint8_t** pc);
-  ElemSegment* ReadElemSegment(const uint8_t** pc);
-
-  Value& Top();
-  Value& Pick(Index depth);
-
-  // Push/Pop values with conversions, e.g. Push<float> will convert to the
-  // ValueTypeRep (uint32_t) and push that. Similarly, Pop<float> will pop the
-  // value and convert to float.
   template <typename T>
-  Result Push(T) WABT_WARN_UNUSED;
+  void WABT_VECTORCALL Push(T);
+  void Push(Value);
+  void Push(Ref);
+
+  template <typename R, typename T>
+  using UnopFunc = R WABT_VECTORCALL(T);
+  template <typename R, typename T>
+  using UnopTrapFunc = RunResult WABT_VECTORCALL(T, R*, std::string*);
+  template <typename R, typename T>
+  using BinopFunc = R WABT_VECTORCALL(T, T);
+  template <typename R, typename T>
+  using BinopTrapFunc = RunResult WABT_VECTORCALL(T, T, R*, std::string*);
+
+  template <typename R, typename T>
+  RunResult DoUnop(UnopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoUnop(UnopTrapFunc<R, T>, Trap::Ptr* out_trap);
+  template <typename R, typename T>
+  RunResult DoBinop(BinopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoBinop(BinopTrapFunc<R, T>, Trap::Ptr* out_trap);
+
+  template <typename R, typename T>
+  RunResult DoConvert(Trap::Ptr* out_trap);
+  template <typename R, typename T>
+  RunResult DoReinterpret();
+
   template <typename T>
-  T Pop();
+  RunResult Load(Instr, T* out, Trap::Ptr* out_trap);
+  template <typename T, typename V = T>
+  RunResult DoLoad(Instr, Trap::Ptr* out_trap);
+  template <typename T, typename V = T>
+  RunResult DoStore(Instr, Trap::Ptr* out_trap);
 
-  // Push/Pop values without conversions, e.g. PushRep<float> will take a
-  // uint32_t argument which is the integer representation of that float value.
-  // Similarly, PopRep<float> will not convert the value to a float.
-  template <typename T>
-  Result PushRep(ValueTypeRep<T>) WABT_WARN_UNUSED;
-  template <typename T>
-  ValueTypeRep<T> PopRep();
+  RunResult DoMemoryInit(Instr, Trap::Ptr* out_trap);
+  RunResult DoDataDrop(Instr);
+  RunResult DoMemoryCopy(Instr, Trap::Ptr* out_trap);
+  RunResult DoMemoryFill(Instr, Trap::Ptr* out_trap);
 
-  void DropKeep(uint32_t drop_count, uint32_t keep_count);
+  RunResult DoTableInit(Instr, Trap::Ptr* out_trap);
+  RunResult DoElemDrop(Instr);
+  RunResult DoTableCopy(Instr, Trap::Ptr* out_trap);
+  RunResult DoTableGet(Instr, Trap::Ptr* out_trap);
+  RunResult DoTableSet(Instr, Trap::Ptr* out_trap);
+  RunResult DoTableGrow(Instr, Trap::Ptr* out_trap);
+  RunResult DoTableSize(Instr);
+  RunResult DoTableFill(Instr, Trap::Ptr* out_trap);
 
-  Result PushCall(const uint8_t* pc) WABT_WARN_UNUSED;
-  IstreamOffset PopCall();
+  template <typename R, typename T>
+  RunResult DoSimdSplat();
+  template <typename R, typename T>
+  RunResult DoSimdExtract(Instr);
+  template <typename R, typename T>
+  RunResult DoSimdReplace(Instr);
 
-  template <typename R, typename T> using UnopFunc      = R(T);
-  template <typename R, typename T> using UnopTrapFunc  = Result(T, R*);
-  template <typename R, typename T> using BinopFunc     = R(T, T);
-  template <typename R, typename T> using BinopTrapFunc = Result(T, T, R*);
+  template <typename R, typename T>
+  RunResult DoSimdUnop(UnopFunc<R, T>);
+  // Like DoSimdUnop but zeroes top half.
+  template <typename R, typename T>
+  RunResult DoSimdUnopZero(UnopFunc<R, T>);
+  template <typename R, typename T>
+  RunResult DoSimdBinop(BinopFunc<R, T>);
+  RunResult DoSimdBitSelect();
+  template <typename S, u8 count>
+  RunResult DoSimdIsTrue();
+  template <typename S>
+  RunResult DoSimdBitmask();
+  template <typename R, typename T>
+  RunResult DoSimdShift(BinopFunc<R, T>);
+  template <typename S>
+  RunResult DoSimdLoadSplat(Instr, Trap::Ptr* out_trap);
+  template <typename S>
+  RunResult DoSimdLoadLane(Instr, Trap::Ptr* out_trap);
+  template <typename S>
+  RunResult DoSimdStoreLane(Instr, Trap::Ptr* out_trap);
+  template <typename S, typename T>
+  RunResult DoSimdLoadZero(Instr, Trap::Ptr* out_trap);
+  RunResult DoSimdSwizzle();
+  RunResult DoSimdShuffle(Instr);
+  template <typename S, typename T>
+  RunResult DoSimdNarrow();
+  template <typename S, typename T, bool low>
+  RunResult DoSimdConvert();
+  template <typename S, typename T>
+  RunResult DoSimdDot();
+  template <typename S, typename T>
+  RunResult DoSimdLoadExtend(Instr, Trap::Ptr* out_trap);
+  template <typename S, typename T>
+  RunResult DoSimdExtaddPairwise();
+  template <typename S, typename T, bool low>
+  RunResult DoSimdExtmul();
 
-  template <typename MemType, typename ResultType = MemType>
-  Result Load(const uint8_t** pc) WABT_WARN_UNUSED;
-  template <typename MemType, typename ResultType = MemType>
-  Result Store(const uint8_t** pc) WABT_WARN_UNUSED;
-  template <typename MemType, typename ResultType = MemType>
-  Result AtomicLoad(const uint8_t** pc) WABT_WARN_UNUSED;
-  template <typename MemType, typename ResultType = MemType>
-  Result AtomicStore(const uint8_t** pc) WABT_WARN_UNUSED;
-  template <typename MemType, typename ResultType = MemType>
-  Result AtomicRmw(BinopFunc<ResultType, ResultType>,
-                   const uint8_t** pc) WABT_WARN_UNUSED;
-  template <typename MemType, typename ResultType = MemType>
-  Result AtomicRmwCmpxchg(const uint8_t** pc) WABT_WARN_UNUSED;
+  template <typename T, typename V = T>
+  RunResult DoAtomicLoad(Instr, Trap::Ptr* out_trap);
+  template <typename T, typename V = T>
+  RunResult DoAtomicStore(Instr, Trap::Ptr* out_trap);
+  template <typename R, typename T>
+  RunResult DoAtomicRmw(BinopFunc<T, T>, Instr, Trap::Ptr* out_trap);
+  template <typename T, typename V = T>
+  RunResult DoAtomicRmwCmpxchg(Instr, Trap::Ptr* out_trap);
 
-  Result MemoryInit(const uint8_t** pc) WABT_WARN_UNUSED;
-  Result DataDrop(const uint8_t** pc) WABT_WARN_UNUSED;
-  Result MemoryCopy(const uint8_t** pc) WABT_WARN_UNUSED;
-  Result MemoryFill(const uint8_t** pc) WABT_WARN_UNUSED;
-  Result TableInit(const uint8_t** pc) WABT_WARN_UNUSED;
-  Result ElemDrop(const uint8_t** pc) WABT_WARN_UNUSED;
-  Result TableCopy(const uint8_t** pc) WABT_WARN_UNUSED;
+  RunResult StepInternal(Trap::Ptr* out_trap);
 
-  template <typename R, typename T = R>
-  Result Unop(UnopFunc<R, T> func) WABT_WARN_UNUSED;
-  template <typename R, typename T = R>
-  Result UnopTrap(UnopTrapFunc<R, T> func) WABT_WARN_UNUSED;
+  std::vector<Frame> frames_;
+  std::vector<Value> values_;
+  std::vector<u32> refs_;  // Index into values_.
 
-  template <typename T, typename L, typename R, typename P = R>
-  Result SimdUnop(UnopFunc<R, P> func) WABT_WARN_UNUSED;
+  // Cached for convenience.
+  Store& store_;
+  Instance* inst_ = nullptr;
+  Module* mod_ = nullptr;
 
-  template <typename R, typename T = R>
-  Result Binop(BinopFunc<R, T> func) WABT_WARN_UNUSED;
-  template <typename R, typename T = R>
-  Result BinopTrap(BinopTrapFunc<R, T> func) WABT_WARN_UNUSED;
-
-  template <typename T, typename L, typename R, typename P = R>
-  Result SimdBinop(BinopFunc<R, P> func) WABT_WARN_UNUSED;
-
-  template <typename T, typename L, typename R, typename P = R>
-  Result SimdRelBinop(BinopFunc<R, P> func) WABT_WARN_UNUSED;
-
-  Environment* env_ = nullptr;
-  std::vector<Value> value_stack_;
-  std::vector<IstreamOffset> call_stack_;
-  uint32_t value_stack_top_ = 0;
-  uint32_t call_stack_top_ = 0;
-  IstreamOffset pc_ = 0;
+  // Tracing.
+  Stream* trace_stream_;
+  std::unique_ptr<TraceSource> trace_source_;
 };
 
-struct ExecResult {
-  ExecResult() = default;
-  explicit ExecResult(Result result) : result(result) {}
-  ExecResult(Result result, const TypedValues& values)
-      : result(result), values(values) {}
-
-  Result result = Result::Ok;
-  TypedValues values;
-};
-
-class Executor {
+struct Thread::TraceSource : Istream::TraceSource {
  public:
-  explicit Executor(Environment*,
-                    Stream* trace_stream = nullptr,
-                    const Thread::Options& options = Thread::Options());
-
-  ExecResult RunFunction(Index func_index, const TypedValues& args);
-  ExecResult RunStartFunction(DefinedModule* module);
-  ExecResult RunExport(const Export*, const TypedValues& args);
-  ExecResult RunExportByName(Module* module,
-                             string_view name,
-                             const TypedValues& args);
+  explicit TraceSource(Thread*);
+  std::string Header(Istream::Offset) override;
+  std::string Pick(Index, Instr) override;
 
  private:
-  Result RunDefinedFunction(IstreamOffset function_offset);
-  Result PushArgs(const FuncSignature*, const TypedValues& args);
-  void CopyResults(const FuncSignature*, TypedValues* out_results);
+  ValueType GetLocalType(Index);
+  ValueType GetGlobalType(Index);
+  ValueType GetTableElementType(Index);
 
-  Environment* env_ = nullptr;
-  Stream* trace_stream_ = nullptr;
-  Thread thread_;
+  Thread* thread_;
 };
-
-bool IsCanonicalNan(uint32_t f32_bits);
-bool IsCanonicalNan(uint64_t f64_bits);
-bool IsArithmeticNan(uint32_t f32_bits);
-bool IsArithmeticNan(uint64_t f64_bits);
-
-std::string TypedValueToString(const TypedValue&);
-const char* ResultToString(Result);
-
-bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max);
-
-void WriteTypedValue(Stream* stream, const TypedValue&);
-void WriteTypedValues(Stream* stream, const TypedValues&);
-void WriteResult(Stream* stream, const char* desc, Result);
-void WriteCall(Stream* stream,
-               string_view module_name,
-               string_view func_name,
-               const TypedValues& args,
-               const TypedValues& results,
-               Result);
 
 }  // namespace interp
 }  // namespace wabt
 
-#endif /* WABT_INTERP_H_ */
+#include "src/interp/interp-inl.h"
+
+#endif  // WABT_INTERP_H_

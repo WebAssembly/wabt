@@ -1,0 +1,20 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --disable-bulk-memory
+;;; ARGS2: --disable-bulk-memory
+magic
+version
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[0]
+}
+section(DATA) {
+  count[1]
+  memory_index[1]
+  offset[i32.const 0 end]
+  data[str("")]
+}
+(;; STDERR ;;;
+0000011: error: invalid memory index 1: bulk memory not allowed
+0000011: error: invalid memory index 1: bulk memory not allowed
+;;; STDERR ;;)

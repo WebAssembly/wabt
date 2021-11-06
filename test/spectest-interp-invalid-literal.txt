@@ -1,0 +1,17 @@
+;;; RUN: %(spectest-interp)s %(in_file)s
+;;; ERROR: 1
+{
+  "source_filename": "test.wast",
+  "commands": [
+    {"type": "module", "line": 1, "filename": "test.0.wasm"}, 
+    {
+      "type": "assert_return",
+      "line": 3,
+      "action": {"type": "invoke", "field": "f", "args": []},
+      "expected": [{"type": "i32", "value": "xx"}]
+    }
+  ]
+}
+(;; STDERR ;;;
+out/test/spectest-interp-invalid-literal.txt:11:49: invalid i32 literal
+;;; STDERR ;;)

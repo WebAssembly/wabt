@@ -1,45 +1,55 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/data.wast
 (;; STDOUT ;;;
-out/test/spec/data.wast:162: assert_unlinkable passed:
-  error: data segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/data.wast:170: assert_unlinkable passed:
-  error: data segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/data.wast:178: assert_unlinkable passed:
-  error: data segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/data.wast:186: assert_unlinkable passed:
-  error: data segment is out of bounds: [1, 1) >= max value 0
-out/test/spec/data.wast:194: assert_unlinkable passed:
-  error: data segment is out of bounds: [1, 1) >= max value 0
-out/test/spec/data.wast:211: assert_unlinkable passed:
-  error: data segment is out of bounds: [666, 667) >= max value 0
-out/test/spec/data.wast:220: assert_unlinkable passed:
-  error: data segment is out of bounds: [65536, 65537) >= max value 65536
-out/test/spec/data.wast:227: assert_unlinkable passed:
-  error: data segment is out of bounds: [65536, 65537) >= max value 65536
-out/test/spec/data.wast:235: assert_unlinkable passed:
-  error: data segment is out of bounds: [131072, 131073) >= max value 131072
-out/test/spec/data.wast:243: assert_unlinkable passed:
-  error: data segment is out of bounds: [131072, 131073) >= max value 131072
-out/test/spec/data.wast:251: assert_unlinkable passed:
-  error: data segment is out of bounds: [4294967295, 4294967296) >= max value 65536
-out/test/spec/data.wast:258: assert_unlinkable passed:
-  error: data segment is out of bounds: [4294967295, 4294967296) >= max value 65536
-out/test/spec/data.wast:266: assert_unlinkable passed:
-  error: data segment is out of bounds: [4294967196, 4294967197) >= max value 131072
-out/test/spec/data.wast:273: assert_unlinkable passed:
-  error: data segment is out of bounds: [4294967196, 4294967197) >= max value 65536
-out/test/spec/data.wast:283: assert_invalid passed:
-  000000b: error: data section without memory section
-out/test/spec/data.wast:292: assert_invalid passed:
+out/test/spec/data.wast:293: assert_invalid passed:
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/data.wast:301: assert_invalid passed:
+  0000000: error: memory variable out of range: 1 (max 1)
+  0000012: error: BeginDataSegment callback failed
+out/test/spec/data.wast:314: assert_invalid passed:
+  0000000: error: memory variable out of range: 0 (max 0)
+  000000c: error: BeginDataSegment callback failed
+out/test/spec/data.wast:325: assert_invalid passed:
+  0000000: error: memory variable out of range: 1 (max 0)
+  000000d: error: BeginDataSegment callback failed
+out/test/spec/data.wast:337: assert_invalid passed:
+  0000000: error: memory variable out of range: 1 (max 1)
+  0000012: error: BeginDataSegment callback failed
+out/test/spec/data.wast:359: assert_invalid passed:
+  0000000: error: memory variable out of range: 1 (max 0)
+  000000d: error: BeginDataSegment callback failed
+out/test/spec/data.wast:378: assert_invalid passed:
   0000013: error: expected i32 init_expr
-out/test/spec/data.wast:300: assert_invalid passed:
+out/test/spec/data.wast:386: assert_invalid passed:
+  0000013: error: expected i32 init_expr
+out/test/spec/data.wast:394: assert_invalid passed:
+  error: invalid data segment offset, must be a constant expression; either iXX.const or global.get.
+  0000012: error: EndDataSegmentInitExpr callback failed
+out/test/spec/data.wast:402: assert_invalid passed:
   0000014: error: expected END opcode after initializer expression
-out/test/spec/data.wast:308: assert_invalid passed:
-  0000012: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/data.wast:316: assert_invalid passed:
-  0000012: error: unexpected opcode in initializer expression: 0x1
-out/test/spec/data.wast:324: assert_invalid passed:
+out/test/spec/data.wast:410: assert_invalid passed:
+  000002a: error: expected END opcode after initializer expression
+out/test/spec/data.wast:419: assert_invalid passed:
+  000002a: error: expected END opcode after initializer expression
+out/test/spec/data.wast:428: assert_invalid passed:
   0000014: error: expected END opcode after initializer expression
-20/20 tests passed.
+out/test/spec/data.wast:436: assert_invalid passed:
+  0000012: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/data.wast:444: assert_invalid passed:
+  0000012: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/data.wast:452: assert_invalid passed:
+  0000014: error: expected END opcode after initializer expression
+out/test/spec/data.wast:466: assert_invalid passed:
+  0000000: error: global variable out of range: 0 (max 0)
+  error: initializer expression cannot reference a mutable global
+  0000014: error: EndDataSegmentInitExpr callback failed
+out/test/spec/data.wast:474: assert_invalid passed:
+  0000000: error: global variable out of range: 1 (max 1)
+  error: initializer expression cannot reference a mutable global
+  000002a: error: EndDataSegmentInitExpr callback failed
+out/test/spec/data.wast:483: assert_invalid passed:
+  error: initializer expression cannot reference a mutable global
+  000002e: error: EndDataSegmentInitExpr callback failed
+33/33 tests passed.
 ;;; STDOUT ;;)

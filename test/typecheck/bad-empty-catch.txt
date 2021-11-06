@@ -2,13 +2,14 @@
 ;;; ARGS: --enable-exceptions
 ;;; ERROR: 1
 (module
+  (tag (param i32))
   (func
     try
-    catch
+    catch 0
     end
   ))
 (;; STDERR ;;;
-out/test/typecheck/bad-empty-catch.txt:7:5: error: type mismatch in try catch, expected [] but got [exnref]
-    catch
-    ^^^^^
+out/test/typecheck/bad-empty-catch.txt:9:5: error: type mismatch in try catch, expected [] but got [i32]
+    end
+    ^^^
 ;;; STDERR ;;)

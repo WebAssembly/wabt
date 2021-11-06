@@ -49,7 +49,7 @@ Errors ParseInvalidModule(std::string text) {
 
 TEST(WastParser, LongToken) {
   std::string text;
-  text = "(module (data ";
+  text = "(module (memory ";
   text += repeat("a", 0x5000);
   text += "))";
 
@@ -58,9 +58,9 @@ TEST(WastParser, LongToken) {
 
   ASSERT_EQ(ErrorLevel::Error, errors[0].error_level);
   ASSERT_EQ(1, errors[0].loc.line);
-  ASSERT_EQ(15, errors[0].loc.first_column);
+  ASSERT_EQ(17, errors[0].loc.first_column);
   ASSERT_STREQ(
-      R"(unexpected token aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..., expected ).)",
+      R"(unexpected token "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...", expected a natural number (e.g. 123).)",
       errors[0].message.c_str());
 }
 

@@ -1,0 +1,21 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    data.drop 0
+  }
+}
+section(DATA) {
+  count[1]
+  flags[1]
+  data[str("")]
+}
+(;; STDERR ;;;
+0000019: error: data.drop requires data count section
+0000019: error: data.drop requires data count section
+;;; STDERR ;;)

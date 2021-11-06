@@ -7,6 +7,8 @@ All end-to-end tests are written using a text format that is parsed by
 `test/run-tests.py`. All files with the extension `.txt` recursively under the
 `test` directory will be run as tests.
 
+The test runner itself is written in python and requires python 3.5 or above.
+
 ## Running the test suite
 
 To run all the tests with default configuration:
@@ -105,9 +107,10 @@ The currently supported list of keys:
 - `ARGS`: additional args to pass to the executable
 - `ARGS{N}`: additional args to the Nth `RUN` command (zero-based)
 - `ARGS*`: additional args to all `RUN` commands
+- `STDIN`: name of a file to be read and used stdin of the executable
 - `ENV`: environment variables to set, separated by spaces
 - `ERROR`: the expected return value from the executable, defaults to 0
-- `SLOW`: if defined, this test's timeout is doubled.
+- `SLOW`: if defined, this test's timeout is increased (currently by 3x).
 - `SKIP`: if defined, this test is not run. You can use the value as a comment.
 - `TODO`,`NOTE`: useful place to put additional info about the test.
 
@@ -139,7 +142,9 @@ The currently supported list of tools (see
   binary files), then parse via `wasm2wat` and display the result
 - `run-gen-wasm-interp`: parse a "gen-wasm" text file, generate a wasm file,
   the run `wasm-interp` on it, which runes all exported functions in an
-  interpreter
+  interpreter.
+- `run-gen-wasm-decompile`: parse a "gen-wasm" text file (which can describe
+  invalid binary files), then parse via `wasm-decompile` and display the result.
 - `run-opcodecnt`: parse a wasm text file, convert it to binary, then display
   opcode usage counts.
 - `run-gen-spec-js`: parse wasm spec test text file, convert it to a JSON file
@@ -148,6 +153,7 @@ The currently supported list of tools (see
 - `run-spec-wasm2c`: similar to `run-gen-spec-js`, but the output instead will
   be C source files, that are then compiled with the default C compiler (`cc`).
   Finally, the native executable is run.
+- `run-wasm-decompile`: parse wat with `wat2wasm` then `wasm-decompile`.
 
 
 ## Test subdirectories
