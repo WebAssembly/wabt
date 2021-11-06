@@ -138,16 +138,16 @@ typedef struct {
   /** The current size of the linear memory, in bytes. */
   uint32_t size;
 
+  /** 32-bit platforms use masking for sandboxing. This sets the mask, which is
+   * computed based on the heap size */
+#if UINTPTR_MAX == 0xffffffff
+  const uint32_t mem_mask;
+#endif
+
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_t shadow_memory;
 #endif
 } wasm_rt_memory_t;
-
-// Wasm's 32-bit implementation uses masking.
-#if UINTPTR_MAX == 0xffffffff
-// Set the mask for 16MB
-# define WASM_HEAP_MASK 0xffffff
-#endif
 
 /** A Table object. */
 typedef struct {
@@ -188,7 +188,7 @@ typedef struct wasm_sandbox_wasi_data {
 } wasm_sandbox_wasi_data;
 
 typedef void (*wasm_rt_sys_init_t)(void);
-typedef void* (*create_wasm2c_sandbox_t)(void);
+typedef void* (*create_wasm2c_sandbox_t)(uint32_t max_wasm_pages);
 typedef void (*destroy_wasm2c_sandbox_t)(void* sbx_ptr);
 typedef void* (*lookup_wasm2c_nonfunc_export_t)(void* sbx_ptr, const char* name);
 typedef uint32_t (*lookup_wasm2c_func_index_t)(void* sbx_ptr, uint32_t param_count, uint32_t result_count, wasm_rt_type_t* types);
