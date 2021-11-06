@@ -227,6 +227,11 @@ static int is_power_of_two(uint64_t x)
 # error "Unknown pointer size"
 #endif
 
+uint64_t wasm_rt_get_default_max_linear_memory_size() {
+  uint64_t ret = ((uint64_t) WASM_HEAP_DEFAULT_MAX_PAGES) * WASM_PAGE_SIZE;
+  return ret;
+}
+
 bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
