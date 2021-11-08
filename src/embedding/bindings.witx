@@ -14,7 +14,7 @@ flags WasmFeature {
 }
 
 wat2wasm: function(wat: string, features: WasmFeature) -> expected<list<u8>, string>
-wasm2wat: function(wasm: pull-buffer<u8>, features: WasmFeature) -> expected<string, string>
+wasm2wat: function(wasm: list<u8>, features: WasmFeature) -> expected<string, string>
 
 # resource WasmModule {
 #   from_wat: function(filename: string, wat: string, features: WasmFeature) -> WasmModule

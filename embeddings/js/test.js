@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import { WABT, WasmFeature } from './input.js';
 
-let contents = await readFile(new URL('../out/wasi/Debug/libwabt.wasm', import.meta.url));
+let contents = await readFile(new URL('../../out/wasi/Debug/libwabt.wasm', import.meta.url));
 let wabt = new WABT();
 await wabt.instantiate(contents, {
     "wasi_snapshot_preview1": {
