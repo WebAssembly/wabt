@@ -2,8 +2,29 @@ export type Result<T, E> = { tag: "ok", val: T } | { tag: "err", val: E };
 export type WasmFeature = number;
 export const WASM_FEATURE_EXCEPTIONS = 1;
 export const WASM_FEATURE_MUTABLE_GLOBALS = 2;
-export enum Errno {
-  Base = 0,
+export const WASM_FEATURE_SAT_FLOAT_TO_INT = 4;
+export const WASM_FEATURE_SIGN_EXTENSION = 8;
+export const WASM_FEATURE_SIMD = 16;
+export const WASM_FEATURE_THREADS = 32;
+export const WASM_FEATURE_MULTI_VALUE = 64;
+export const WASM_FEATURE_TAIL_CALL = 128;
+export const WASM_FEATURE_BULK_MEMORY = 256;
+export const WASM_FEATURE_REFERENCE_TYPES = 512;
+export const WASM_FEATURE_ANNOTATIONS = 1024;
+export const WASM_FEATURE_GC = 2048;
+export enum WasmFeature {
+    Exceptions=1,
+    MutableGlobals=2,
+    SatFloatToInt=4,
+    SignExtension=8,
+    SIMD=16,
+    Threads=32,
+    MultiValue=64,
+    TailCall=128,
+    BulkMemory=256,
+    ReferenceTypes=512,
+    Annotations=1024,
+    GC=2048,
 }
 export class Input {
   

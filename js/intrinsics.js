@@ -1,6 +1,13 @@
 
 let DATA_VIEW = new DataView(new ArrayBuffer());
 
+export class UnexpectedError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "UnexpectedError";
+    }
+  }
+  
 export function data_view(mem) {
   if (DATA_VIEW.buffer !== mem.buffer) DATA_VIEW = new DataView(mem.buffer);
   return DATA_VIEW;
@@ -12,6 +19,7 @@ export function validate_flags(flags, mask) {
   throw new TypeError('flags have extraneous bits set');
   return flags;
 }
+export const UTF8_DECODER = new TextDecoder('utf-8');
 
 const UTF8_ENCODER = new TextEncoder('utf-8');
 

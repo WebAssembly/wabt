@@ -1,13 +1,19 @@
 flags WasmFeature {
   exceptions,
   mutable_globals,
+  sat_float_to_int,
+  sign_extension,
+  simd,
+  threads,
+  multi_value,
+  tail_call,
+  bulk_memory,
+  reference_types,
+  annotations,
+  gc,
 }
 
-enum errno {
-    base
-}
-
-wat2wasm: function(wat: string, features: WasmFeature) -> expected<list<u8>, errno>
+wat2wasm: function(wat: string, features: WasmFeature) -> expected<list<u8>, string>
 
 # resource WasmModule {
 #   from_wat: function(filename: string, wat: string, features: WasmFeature) -> WasmModule
