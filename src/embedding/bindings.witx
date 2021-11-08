@@ -1,0 +1,18 @@
+flags WasmFeature {
+  exceptions,
+  mutable_globals,
+}
+
+enum errno {
+    base
+}
+
+wat2wasm: function(wat: string, features: WasmFeature) -> expected<list<u8>, errno>
+
+# resource WasmModule {
+#   from_wat: function(filename: string, wat: string, features: WasmFeature) -> WasmModule
+#   from_wasm: function(wasm: pull-buffer<u8>, features: WasmFeature) -> WasmModule
+#   validate: function(self: WasmModule) -> bool
+#   to_text: function(self: WasmModule) -> string
+#   to_binary: function(self: WasmModule) -> push-buffer<u8>
+# }

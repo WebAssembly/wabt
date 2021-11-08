@@ -30,6 +30,10 @@ if (WASI)
 
   set(CMAKE_C_COMPILER_TARGET ${triple})
   set(CMAKE_CXX_COMPILER_TARGET ${triple})
+
+  # set(CMAKE_EXECUTABLE_SUFFIX .wasm)
+  # set(CMAKE_EXECUTABLE_SUFFIX_C .wasm)
+  # set(CMAKE_EXECUTABLE_SUFFIX_CXX .wasm)
 endif ()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -702,6 +706,35 @@ if (BUILD_TOOLS OR BUILD_TESTS)
     endforeach()
   endif ()
 endif ()
+
+
+if (WASI)
+  # flags for all emscripten builds
+
+  # exceptions are never needed
+  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -mexec-model=reactor")
+  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -mexec-model=reactor")
+
+  # libwabt.wasm
+
+  # just dump everything into one binary so we can reference it from JavaScript
+  add_definitions(-Wno-warn-absolute-paths)
+  add_executable(libwabt src/embedding/bindings.cc)
+  #set_source_files_properties(src/embedding/bindings.cc PROPERTIES CMAKE_CXX_FLAGS -mexec-model=reactor)
+  # set_source_files_properties( src/embedding/bindings.cc PROPERTIES COMPILE_FLAGS "-mexec-model=reactor" )
+  # SET_TARGET_PROPERTIES( libwabt PROPERTIES CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -mexec-model=reactor" )
+  # set_property(TARGET libwabt PROPERTY CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -mexec-model=reactor")
+  add_dependencies(everything libwabt)
+  target_link_libraries(libwabt wabt)
+  set_target_properties(libwabt
+    PROPERTIES
+    FLAGS "-fno-exceptions -mexec-model=reactor"
+  )
+
+  # set_target_properties(libwabt PROPERTIES OUTPUT_NAME libwabt.wasm)
+  # set_target_properties(libwabt PROPERTIES COMPILE_FLAGS "-mexec-model=reactor")
+
+endif()
 
 if (EMSCRIPTEN)
   # flags for all emscripten builds
