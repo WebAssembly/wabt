@@ -86,4 +86,5 @@ export class Input {
   imports?: any,
   ): Promise<void>;
   wat2wasm(wat: string, features: WasmFeature): Result<Uint8Array, Errno>;
+  wasm2wat(wasm: Uint8Array, features: WasmFeature): Result<string, string>;
 }

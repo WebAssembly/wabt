@@ -16,7 +16,7 @@ extern "C"
   void input_string_set(input_string_t *ret, const char *s);
   void input_string_dup(input_string_t *ret, const char *s);
   void input_string_free(input_string_t *ret);
-  typedef uint8_t input_wasm_feature_t;
+  typedef uint16_t input_wasm_feature_t;
   #define INPUT_WASM_FEATURE_EXCEPTIONS (1 << 0)
   #define INPUT_WASM_FEATURE_MUTABLE_GLOBALS (1 << 1)
   #define INPUT_WASM_FEATURE_SAT_FLOAT_TO_INT (1 << 2)
@@ -43,7 +43,17 @@ extern "C"
     } val;
   } input_expected_list_u8_string_t;
   void input_expected_list_u8_string_free(input_expected_list_u8_string_t *ptr);
+  typedef struct {
+    // 0 if `val` is `ok`, 1 otherwise
+    uint8_t tag;
+    union {
+      input_string_t ok;
+      input_string_t err;
+    } val;
+  } input_expected_string_string_t;
+  void input_expected_string_string_free(input_expected_string_string_t *ptr);
   void input_wat2wasm(input_string_t *wat, input_wasm_feature_t features, input_expected_list_u8_string_t *ret0);
+  void input_wasm2wat(input_list_u8_t *wasm, input_wasm_feature_t features, input_expected_string_string_t *ret0);
   #ifdef __cplusplus
 }
 #endif

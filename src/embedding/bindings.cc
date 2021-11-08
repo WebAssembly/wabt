@@ -80,7 +80,36 @@ __wasm_export_input_wat2wasm(int32_t arg, int32_t arg0, int32_t arg1) {
   *((int32_t*)(ptr + 0)) = variant;
   return ptr;
 }
-
+__attribute__((export_name("wasm2wat"))) int32_t
+__wasm_export_input_wasm2wat(int32_t arg, int32_t arg0, int32_t arg1) {
+  input_list_u8_t arg2 = (input_list_u8_t){(uint8_t*)(arg), (size_t)(arg0)};
+  input_expected_string_string_t ret;
+  input_wasm2wat(&arg2, arg1, &ret);
+  int32_t variant;
+  int32_t variant4;
+  int32_t variant5;
+  switch ((int32_t)(ret).tag) {
+    case 0: {
+      const input_string_t* payload = &(ret).val.ok;
+      variant = 0;
+      variant4 = (int32_t)(*payload).ptr;
+      variant5 = (int32_t)(*payload).len;
+      break;
+    }
+    case 1: {
+      const input_string_t* payload3 = &(ret).val.err;
+      variant = 1;
+      variant4 = (int32_t)(*payload3).ptr;
+      variant5 = (int32_t)(*payload3).len;
+      break;
+    }
+  }
+  int32_t ptr = (int32_t)&RET_AREA;
+  *((int32_t*)(ptr + 16)) = variant5;
+  *((int32_t*)(ptr + 8)) = variant4;
+  *((int32_t*)(ptr + 0)) = variant;
+  return ptr;
+}
 
 #include <cstddef>
 
@@ -122,6 +151,7 @@ void input_wat2wasm(input_string_t* wat,
       wabt::ParseWatModule(finalLexer, &module, errors, &options);
 
   if (parseResult != wabt::Result::Ok) {
+    // Line finder triggers bus error in Node
     // auto line_finder = lexer->MakeLineFinder();
     std::string string_result =
         FormatErrorsToString(*errors, wabt::Location::Type::Binary);
@@ -130,7 +160,6 @@ void input_wat2wasm(input_string_t* wat,
     ret0->tag = 1;
     input_string_set(&ret0->val.err, string_result.c_str());
     return;
-    // result.val = input_string_t
   }
   wabt::Module* moduleFinal = module.get();
 
@@ -153,21 +182,56 @@ void input_wat2wasm(input_string_t* wat,
     okval.len = realOut->data.size();
     ret0->val.ok = okval;
     return;
-  }
-  else {
+  } else {
     ret0->tag = 1;
     return;
   }
-  //   return lexer.release();
-  // }
+}
 
-  // WabtParseWatResult* wabt_parse_wat(wabt::WastLexer* lexer,
-  //                                    wabt::Features* features,
-  //                                    wabt::Errors* errors) {
-  //   wabt::WastParseOptions options(*features);
-  //   WabtParseWatResult* result = new WabtParseWatResult();
-  //   std::unique_ptr<wabt::Module> module;
-  //   result->result = wabt::ParseWatModule(lexer, &module, errors, &options);
-  //   result->module = std::move(module);
-  //   return result;
+void input_wasm2wat(input_list_u8_t* wasm,
+                    input_wasm_feature_t features,
+                    input_expected_string_string_t* ret0) {
+  wabt::ReadBinaryOptions options;
+  wabt::Features* wabtfeatures;
+  wabtfeatures = new wabt::Features();
+  options.features = *wabtfeatures;
+  // options.read_debug_names = read_debug_names;
+
+  wabt::Module* module = new wabt::Module();
+  // TODO(binji): Pass through from wabt_read_binary parameter.
+  const char* filename = "<binary>";
+  wabt::Result parseResult;
+  wabt::Errors* errors = new wabt::Errors();
+  parseResult = wabt::ReadBinaryIr(filename, wasm->ptr, wasm->len, options,
+                                   errors, module);
+
+  if (parseResult != wabt::Result::Ok) {
+    std::string string_result =
+        FormatErrorsToString(*errors, wabt::Location::Type::Binary);
+    ret0->tag = 1;
+    input_string_set(&ret0->val.err, string_result.c_str());
+    return;
+  }
+
+  wabt::WriteWatOptions watoptions;
+  watoptions.fold_exprs = false;
+  watoptions.inline_export = false;
+
+  wabt::MemoryStream stream;
+  wabt::Result watResult;
+  watResult = WriteWat(&stream, module, watoptions);
+  if (watResult == wabt::Result::Ok) {
+    input_string_t okval;
+    std::unique_ptr<wabt::OutputBuffer> output_buffer;
+    output_buffer = stream.ReleaseOutputBuffer();
+    wabt::OutputBuffer* realOut = output_buffer.release();
+    std::string string_result(realOut->data.begin(), realOut->data.end());
+    input_string_set(&okval, string_result.c_str());
+    ret0->tag = 0;
+    ret0->val.ok = okval;
+    return;
+  } else {
+    ret0->tag = 1;
+    return;
+  }
 }
