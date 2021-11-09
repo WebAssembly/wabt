@@ -232,6 +232,11 @@ uint64_t wasm_rt_get_default_max_linear_memory_size() {
   return ret;
 }
 
+static uint64_t compute_heap_reserve_space(uint32_t chosen_max_pages) {
+  const uint64_t heap_reserve_size = ((uint64_t) chosen_max_pages) * WASM_PAGE_SIZE + WASM_HEAP_GUARD_PAGE_SIZE;
+  return heap_reserve_size;
+}
+
 bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
@@ -249,7 +254,7 @@ bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   // Guard pages already allocates memory incrementally thus we don't need to look at WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
   void* addr = NULL;
   const uint64_t retries = 10;
-  const uint64_t heap_reserve_size = ((uint64_t) chosen_max_pages) * WASM_PAGE_SIZE + WASM_HEAP_GUARD_PAGE_SIZE;
+  const uint64_t heap_reserve_size = compute_heap_reserve_space(chosen_max_pages);
 
   // 32-bit platforms rely on masking for sandboxing
   // thus we require the heap reserve size to always be a power of 2
@@ -306,7 +311,7 @@ bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 
 void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
 #ifdef WASM_USE_GUARD_PAGES
-  const uint64_t heap_reserve_size = ((uint64_t) memory->max_pages) * WASM_PAGE_SIZE + WASM_HEAP_GUARD_PAGE_SIZE;
+  const uint64_t heap_reserve_size = compute_heap_reserve_space(memory->max_pages);
   os_munmap(memory->data, heap_reserve_size);
 #else
   free(memory->data);
