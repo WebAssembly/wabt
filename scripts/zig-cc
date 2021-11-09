@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/Users/syrusakbary/Downloads/zig-macos-aarch64-0.9.0-dev.1561+5ebdc8c46/zig cc $@
