@@ -1,5 +1,5 @@
 /bin
-/build
+/build*
 /out
 /fuzz-out
 /emscripten

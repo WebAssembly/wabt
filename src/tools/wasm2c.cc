@@ -70,6 +70,12 @@ static void ParseOptions(int argc, char** argv) {
         s_outfile = argument;
         ConvertBackslashToSlash(&s_outfile);
       });
+  parser.AddOption(
+      'n', "modname", "MODNAME",
+      "Unique name for the module being generated. Each wasm sandboxed module in a single application should have a unique name.",
+      [](const char* argument) {
+        s_write_c_options.mod_name = argument;
+      });
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });

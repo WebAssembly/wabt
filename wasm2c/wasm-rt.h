@@ -17,7 +17,16 @@
 #ifndef WASM_RT_H_
 #define WASM_RT_H_
 
+#include <setjmp.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+
+#if defined(_WIN32)
+#define WASM2C_FUNC_EXPORT __declspec(dllexport)
+#else
+#define WASM2C_FUNC_EXPORT
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,40 +44,32 @@ extern "C" {
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
-/** Enable memory checking via a signal handler via the following definition:
- *
- * #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
- *
- * This is usually 10%-25% faster, but requires OS-specific support.
- * */
-
-/** Check whether the signal handler is supported at all. */
-#if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
-    defined(__WORDSIZE) && __WORDSIZE == 64
-
-/* If the signal handler is supported, then use it by default. */
-#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
+/** Check if we should use guard page model.
+ * This is enabled by default unless WASM_USE_EXPLICIT_BOUNDS_CHECKS is defined.
+ */
+#if defined(WASM_USE_GUARD_PAGES) && defined(WASM_USE_EXPLICIT_BOUNDS_CHECKS)
+#error \
+    "Cannot define both WASM_USE_GUARD_PAGES and WASM_USE_EXPLICIT_BOUNDS_CHECKS"
+#elif !defined(WASM_USE_GUARD_PAGES) && \
+    !defined(WASM_USE_EXPLICIT_BOUNDS_CHECKS)
+// default to guard pages
+#define WASM_USE_GUARD_PAGES
 #endif
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 1
-#endif
+/** Define WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC if you want the runtime to
+ * incrementally allocate heap/linear memory Note that this memory may be moved
+ * when it needs to expand
+ */
 
+#if defined(_MSC_VER)
+#define WASM_RT_NO_RETURN __declspec(noreturn)
 #else
-
-/* The signal handler is not supported, error out if the user was trying to
- * enable it. */
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#error "Signal handler is not supported for this OS/Architecture!"
+#define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
-
-#endif
-
-/** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
+/** Reason a trap occurred. Provide this to `wasm_rt_trap`.
+ * If you update this enum also update the error message in wasm_rt_trap.
+ */
 typedef enum {
   WASM_RT_TRAP_NONE,         /** No error. */
   WASM_RT_TRAP_OOB,          /** Out-of-bounds access in linear memory. */
@@ -76,8 +77,21 @@ typedef enum {
   WASM_RT_TRAP_DIV_BY_ZERO,  /** Integer divide by zero. */
   WASM_RT_TRAP_INVALID_CONVERSION, /** Conversion from NaN to integer. */
   WASM_RT_TRAP_UNREACHABLE,        /** Unreachable instruction executed. */
-  WASM_RT_TRAP_CALL_INDIRECT,      /** Invalid call_indirect, for any reason. */
-  WASM_RT_TRAP_EXHAUSTION,         /** Call stack exhausted. */
+  WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION, /** Invalid call_indirect, as func
+                                                 table cannot grow/grow further.
+                                               */
+  WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX, /** Invalid call_indirect, due to index
+                                           larger than func table. */
+  WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR,  /** Invalid call_indirect, as function
+                                           being invoked is null. */
+  WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH, /** Invalid call_indirect, as
+                                               function being invoked has an
+                                               unexpected type. */
+  WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR,   /** Invalid call_indirect, for other
+                                               reason. */
+  WASM_RT_TRAP_EXHAUSTION,                  /** Call stack exhausted. */
+  WASM_RT_TRAP_SHADOW_MEM, /** Trap due to shadow memory mismatch */
+  WASM_RT_TRAP_WASI,       /** Trap due to WASI error */
 } wasm_rt_trap_t;
 
 /** Value types. Used to define function signatures. */
@@ -93,8 +107,17 @@ typedef enum {
  * call. */
 typedef void (*wasm_rt_anyfunc_t)(void);
 
+/**
+ * The class of the indirect function being invoked
+ */
+typedef enum {
+  WASM_RT_INTERNAL_FUNCTION,
+  WASM_RT_EXTERNAL_FUNCTION
+} wasm_rt_elem_target_class_t;
+
 /** A single element of a Table. */
 typedef struct {
+  wasm_rt_elem_target_class_t func_class;
   /** The index as returned from `wasm_rt_register_func_type`. */
   uint32_t func_type;
   /** The function. The embedder must know the actual C signature of the
@@ -102,15 +125,39 @@ typedef struct {
   wasm_rt_anyfunc_t func;
 } wasm_rt_elem_t;
 
+typedef uint8_t wasm2c_shadow_memory_cell_t;
+
+typedef struct {
+  wasm2c_shadow_memory_cell_t* data;
+  size_t data_size;
+  void* allocation_sizes_map;
+  uint32_t heap_base;
+} wasm2c_shadow_memory_t;
+
 /** A Memory object. */
 typedef struct {
   /** The linear memory data, with a byte length of `size`. */
+#if defined(WASM_USE_GUARD_PAGES) || \
+    !defined(WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC)
+  uint8_t* const data;
+#else
   uint8_t* data;
+#endif
   /** The current and maximum page count for this Memory object. If there is no
    * maximum, `max_pages` is 0xffffffffu (i.e. UINT32_MAX). */
   uint32_t pages, max_pages;
   /** The current size of the linear memory, in bytes. */
   uint32_t size;
+
+  /** 32-bit platforms use masking for sandboxing. This sets the mask, which is
+   * computed based on the heap size */
+#if UINTPTR_MAX == 0xffffffff
+  const uint32_t mem_mask;
+#endif
+
+#if defined(WASM_CHECK_SHADOW_MEMORY)
+  wasm2c_shadow_memory_t shadow_memory;
+#endif
 } wasm_rt_memory_t;
 
 /** A Table object. */
@@ -124,11 +171,73 @@ typedef struct {
   uint32_t size;
 } wasm_rt_table_t;
 
+typedef struct wasm_func_type_t {
+  wasm_rt_type_t* params;
+  wasm_rt_type_t* results;
+  uint32_t param_count;
+  uint32_t result_count;
+} wasm_func_type_t;
+
+#define WASM2C_WASI_MAX_SETJMP_STACK 32
+#define WASM2C_WASI_MAX_FDS 32
+typedef struct wasm_sandbox_wasi_data {
+  wasm_rt_memory_t* heap_memory;
+
+  uint32_t tempRet0;
+
+  uint32_t next_setjmp_index;
+  jmp_buf setjmp_stack[WASM2C_WASI_MAX_SETJMP_STACK];
+
+  uint32_t main_argc;
+  char** main_argv;
+
+  int wasm_fd_to_native[WASM2C_WASI_MAX_FDS];
+  uint32_t next_wasm_fd;
+
+  void* clock_data;
+
+} wasm_sandbox_wasi_data;
+
+typedef void (*wasm_rt_sys_init_t)(void);
+typedef void* (*create_wasm2c_sandbox_t)(uint32_t max_wasm_pages);
+typedef void (*destroy_wasm2c_sandbox_t)(void* sbx_ptr);
+typedef void* (*lookup_wasm2c_nonfunc_export_t)(void* sbx_ptr,
+                                                const char* name);
+typedef uint32_t (*lookup_wasm2c_func_index_t)(void* sbx_ptr,
+                                               uint32_t param_count,
+                                               uint32_t result_count,
+                                               wasm_rt_type_t* types);
+typedef uint32_t (*add_wasm2c_callback_t)(
+    void* sbx_ptr,
+    uint32_t func_type_idx,
+    void* func_ptr,
+    wasm_rt_elem_target_class_t func_class);
+typedef void (*remove_wasm2c_callback_t)(void* sbx_ptr, uint32_t callback_idx);
+
+typedef struct wasm2c_sandbox_funcs_t {
+  wasm_rt_sys_init_t wasm_rt_sys_init;
+  create_wasm2c_sandbox_t create_wasm2c_sandbox;
+  destroy_wasm2c_sandbox_t destroy_wasm2c_sandbox;
+  lookup_wasm2c_nonfunc_export_t lookup_wasm2c_nonfunc_export;
+  lookup_wasm2c_func_index_t lookup_wasm2c_func_index;
+  add_wasm2c_callback_t add_wasm2c_callback;
+  remove_wasm2c_callback_t remove_wasm2c_callback;
+} wasm2c_sandbox_funcs_t;
+
 /** Stop execution immediately and jump back to the call to `wasm_rt_try`.
  *  The result of `wasm_rt_try` will be the provided trap reason.
  *
  *  This is typically called by the generated code, and not the embedder. */
-extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
+WASM_RT_NO_RETURN extern void wasm_rt_trap(wasm_rt_trap_t);
+
+/** An indirect callback function failed.
+ *  Deduce the reason for the failure and then call trap.
+ *
+ *  This is typically called by the generated code, and not the embedder. */
+WASM_RT_NO_RETURN extern void wasm_rt_callback_error_trap(
+    wasm_rt_table_t* table,
+    uint32_t func_index,
+    uint32_t expected_func_type);
 
 /** Register a function type with the given signature. The returned function
  * index is guaranteed to be the same for all calls with the same signature.
@@ -148,9 +257,20 @@ extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
  *    wasm_rt_register_func_type(2, 1, WASM_RT_I32, WASM_RT_F32, WASM_RT_I64);
  *    => returns 1
  *  ``` */
-extern uint32_t wasm_rt_register_func_type(uint32_t params,
-                                           uint32_t results,
-                                           ...);
+extern uint32_t wasm_rt_register_func_type(
+    wasm_func_type_t** p_func_type_structs,
+    uint32_t* p_func_type_count,
+    uint32_t params,
+    uint32_t results,
+    wasm_rt_type_t* types);
+
+extern void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs,
+                                       uint32_t* p_func_type_count);
+
+/**
+ * Return the default value of the maximum size allowed for wasm memory.
+ */
+extern uint64_t wasm_rt_get_default_max_linear_memory_size();
 
 /** Initialize a Memory object with an initial page size of `initial_pages` and
  * a maximum page size of `max_pages`.
@@ -160,9 +280,11 @@ extern uint32_t wasm_rt_register_func_type(uint32_t params,
  *    // 1 initial page (65536 bytes), and a maximum of 2 pages.
  *    wasm_rt_allocate_memory(&my_memory, 1, 2);
  *  ``` */
-extern void wasm_rt_allocate_memory(wasm_rt_memory_t*,
+extern bool wasm_rt_allocate_memory(wasm_rt_memory_t*,
                                     uint32_t initial_pages,
                                     uint32_t max_pages);
+
+extern void wasm_rt_deallocate_memory(wasm_rt_memory_t*);
 
 /** Grow a Memory object by `pages`, and return the previous page count. If
  * this new page count is greater than the maximum page count, the grow fails
@@ -191,8 +313,64 @@ extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
 
-/** Current call stack depth. */
-extern uint32_t wasm_rt_call_stack_depth;
+extern void wasm_rt_deallocate_table(wasm_rt_table_t*);
+
+extern void wasm_rt_expand_table(wasm_rt_table_t*);
+
+// One time init function for wasm runtime. Should be called once for the
+// current process
+extern void wasm_rt_sys_init();
+
+// Initialize wasi for the given sandbox. Called prior to sandbox execution.
+extern void wasm_rt_init_wasi(wasm_sandbox_wasi_data*);
+
+extern void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data*);
+
+// Helper function that host can use to ensure wasm2c code is loaded correctly
+// when using dynamic libraries
+extern void wasm2c_ensure_linked();
+
+// Runtime functions for shadow memory
+
+// Create the shadow memory
+extern void wasm2c_shadow_memory_create(wasm_rt_memory_t* mem);
+// Expand the shadow memory to match wasm memory
+extern void wasm2c_shadow_memory_expand(wasm_rt_memory_t* mem);
+// Cleanup
+extern void wasm2c_shadow_memory_destroy(wasm_rt_memory_t* mem);
+// Perform checks for the load operation that completed
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem,
+                                                         const char* func_name,
+                                                         uint32_t ptr,
+                                                         uint32_t ptr_size);
+// Perform checks for the store operation that completed
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem,
+                                                          const char* func_name,
+                                                          uint32_t ptr,
+                                                          uint32_t ptr_size);
+// Mark an area as allocated, if it is currently unused. If already used, this
+// is a noop.
+extern void wasm2c_shadow_memory_reserve(wasm_rt_memory_t* mem,
+                                         uint32_t ptr,
+                                         uint32_t ptr_size);
+// Perform checks for the malloc operation that completed
+extern void wasm2c_shadow_memory_dlmalloc(wasm_rt_memory_t* mem,
+                                          uint32_t ptr,
+                                          uint32_t ptr_size);
+// Perform checks for the free operation that will be run
+extern void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr);
+// Pass on information about the boundary between wasm globals and heap
+// Shadow asan will check that all malloc metadata structures below this
+// boundary are only accessed by malloc related functions
+extern void wasm2c_shadow_memory_mark_globals_heap_boundary(
+    wasm_rt_memory_t* mem,
+    uint32_t ptr);
+// Print a list of all allocations currently active
+WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_print_allocations(
+    wasm_rt_memory_t* mem);
+// Print the size of allocations currently active
+WASM2C_FUNC_EXPORT uint64_t
+wasm2c_shadow_memory_print_total_allocations(wasm_rt_memory_t* mem);
 
 #ifdef __cplusplus
 }

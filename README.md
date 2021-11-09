@@ -1,4 +1,4 @@
-[![Github CI Status](https://github.com/WebAssembly/wabt/workflows/CI/badge.svg)](https://github.com/WebAssembly/wabt)
+[![Build](https://github.com/PLSysSec/wasm2c_sandbox_compiler/actions/workflows/cmake.yml/badge.svg)](https://github.com/PLSysSec/wasm2c_sandbox_compiler/actions/workflows/cmake.yml)
 
 # WABT: The WebAssembly Binary Toolkit
 
