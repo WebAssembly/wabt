@@ -61,6 +61,7 @@
   }
 
 #if defined(WASM2C_MALLOC_FAIL_CALLBACK)
+void WASM2C_MALLOC_FAIL_CALLBACK(u32 ptr_size);
 # define WASM2C_MALLOC_FAIL_CHECK(ptr, ptr_size)  \
   if (!ptr) {                                     \
     WASM2C_MALLOC_FAIL_CALLBACK(ptr_size);        \

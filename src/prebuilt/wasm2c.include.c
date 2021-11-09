@@ -64,6 +64,7 @@ const char SECTION_NAME(declarations)[] =
 "  }\n"
 "\n"
 "#if defined(WASM2C_MALLOC_FAIL_CALLBACK)\n"
+"void WASM2C_MALLOC_FAIL_CALLBACK(u32 ptr_size);\n"
 "# define WASM2C_MALLOC_FAIL_CHECK(ptr, ptr_size)  \\\n"
 "  if (!ptr) {                                     \\\n"
 "    WASM2C_MALLOC_FAIL_CALLBACK(ptr_size);        \\\n"
