@@ -948,6 +948,7 @@ void Thread::Mark(Store& store) {
   for (auto index: refs_) {
     store.Mark(values_[index].Get<Ref>());
   }
+  store.Mark(exceptions_);
 }
 
 void Thread::PushValues(const ValueTypes& types, const Values& values) {
