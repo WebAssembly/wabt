@@ -65,7 +65,8 @@ class SharedValidator {
                     Index param_count,
                     const Type* param_types,
                     Index result_count,
-                    const Type* result_types);
+                    const Type* result_types,
+                    Index type_index);
   Result OnStructType(const Location&, Index field_count, TypeMut* fields);
   Result OnArrayType(const Location&, TypeMut field);
 
@@ -180,11 +181,14 @@ class SharedValidator {
  private:
   struct FuncType {
     FuncType() = default;
-    FuncType(const TypeVector& params, const TypeVector& results)
-        : params(params), results(results) {}
+    FuncType(const TypeVector& params,
+             const TypeVector& results,
+             Index type_index)
+        : params(params), results(results), type_index(type_index) {}
 
     TypeVector params;
     TypeVector results;
+    Index type_index;
   };
 
   struct StructType {
@@ -276,6 +280,8 @@ class SharedValidator {
                              Type sig_type,
                              TypeVector* out_param_types,
                              TypeVector* out_result_types);
+
+  Index GetFunctionTypeIndex(Index func_index) const;
 
   TypeVector ToTypeVector(Index count, const Type* types);
 

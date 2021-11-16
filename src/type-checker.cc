@@ -206,6 +206,12 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
   if (expected == Type::Any || actual == Type::Any) {
     return Result::Ok;
   }
+
+  if (expected == Type::Reference && actual == Type::Reference) {
+    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+               ? Result::Ok
+               : Result::Error;
+  }
   if (actual != expected) {
     return Result::Error;
   }
@@ -489,10 +495,10 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnFuncRef(Index* out_index) {
+Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
   Type type;
   Result result = PeekType(0, &type);
-  if (!(type == Type::Any || type.IsIndex())) {
+  if (!(type == Type::Any || type.IsReferenceWithIndex())) {
     TypeVector actual;
     if (Succeeded(result)) {
       actual.push_back(type);
@@ -504,7 +510,7 @@ Result TypeChecker::OnFuncRef(Index* out_index) {
     result = Result::Error;
   }
   if (Succeeded(result)) {
-    *out_index = type.GetIndex();
+    *out_index = type.GetReferenceIndex();
   }
   result |= DropTypes(1);
   return result;
@@ -745,9 +751,9 @@ Result TypeChecker::OnTableFill(Type elem_type) {
   return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
 }
 
-Result TypeChecker::OnRefFuncExpr(Index func_index) {
+Result TypeChecker::OnRefFuncExpr(Index type_index) {
   if (features_.function_references_enabled()) {
-    PushType(Type(func_index));
+    PushType(Type(Type::Reference, type_index));
   } else {
     PushType(Type::FuncRef);
   }
