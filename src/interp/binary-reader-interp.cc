@@ -1222,15 +1222,18 @@ Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
                                                     Index table_index) {
   FuncType& func_type = module_.func_types[sig_index];
 
-  Index drop_count, keep_count;
+  Index drop_count, keep_count, catch_drop_count;
   // +1 to include the index of the function.
   CHECK_RESULT(
       GetReturnCallDropKeepCount(func_type, +1, &drop_count, &keep_count));
+  CHECK_RESULT(
+      validator_.GetCatchCount(label_stack_.size() - 1, &catch_drop_count));
   // The validator must be run after we get the drop/keep counts, since it
   // changes the type stack.
   CHECK_RESULT(
       validator_.OnReturnCallIndirect(loc, Var(sig_index), Var(table_index)));
   istream_.EmitDropKeep(drop_count, keep_count);
+  istream_.EmitCatchDrop(catch_drop_count);
   istream_.Emit(Opcode::ReturnCallIndirect, table_index, sig_index);
   return Result::Ok;
 }
@@ -1538,6 +1541,9 @@ Result BinaryReaderInterp::OnCatchExpr(Index tag_index) {
   HandlerDesc& desc = func_->handlers[label->handler_desc_index];
   desc.kind = HandlerKind::Catch;
   // Jump to the end of the block at the end of the previous try or catch.
+  if (label->kind == LabelKind::Block) {
+    istream_.EmitCatchDrop(1);
+  }
   Istream::Offset offset = label->offset;
   istream_.Emit(Opcode::Br);
   assert(offset == Istream::kInvalidOffset);
@@ -1561,6 +1567,9 @@ Result BinaryReaderInterp::OnCatchAllExpr() {
   Label* label = TopLabel();
   HandlerDesc& desc = func_->handlers[label->handler_desc_index];
   desc.kind = HandlerKind::Catch;
+  if (label->kind == LabelKind::Block) {
+    istream_.EmitCatchDrop(1);
+  }
   Istream::Offset offset = label->offset;
   istream_.Emit(Opcode::Br);
   assert(offset == Istream::kInvalidOffset);

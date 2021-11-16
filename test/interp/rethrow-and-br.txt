@@ -3,6 +3,8 @@
 (module
   (tag $e1)
   (tag $e2)
+  (type $helper-type (func (result i32)))
+  (table anyfunc (elem $helper))
   (func (export "rethrow-br") (result i32)
     (try (result i32)
       (do
@@ -64,6 +66,16 @@
           (catch $e2
             (return_call $helper)))
         (i32.const 0))))
+  (func (export "rethrow-return-call-indirect") (result i32)
+    (try (result i32)
+      (do (throw $e1))
+      (catch $e1
+        (try $l
+          (do (throw $e2))
+          (catch $e2
+            (i32.const 0)
+            (return_call_indirect (type $helper-type))))
+        (i32.const 0))))
   (func $helper-2
     (try
       (do (throw $e2))
@@ -107,6 +119,7 @@ rethrow-br() => i32:1
 rethrow-br-if() => i32:1
 rethrow-br-table() => i32:1
 rethrow-return-call() => i32:1
+rethrow-return-call-indirect() => i32:1
 rethrow-return() => i32:1
 rethrow-throw() => i32:1
 ;;; STDOUT ;;)

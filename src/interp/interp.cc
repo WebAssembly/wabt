@@ -999,6 +999,9 @@ RunResult Thread::PushCall(const HostFunc& func, Trap::Ptr* out_trap) {
 }
 
 RunResult Thread::PopCall() {
+  // Sanity check that the exception stack was popped correctly.
+  assert(frames_.back().exceptions == exceptions_.size());
+
   frames_.pop_back();
   if (frames_.empty()) {
     return RunResult::Return;
