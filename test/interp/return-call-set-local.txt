@@ -1,0 +1,20 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-tail-call
+(module
+  (func (export "f") (result i32)
+    (i64.const 1)
+    (return_call $g))
+
+  (func $g (param i64) (result i32)
+    (i32.const 3)
+    (return_call $h))
+
+  (func $h (param i32) (result i32)
+    (i32.const 2)
+    (local.set 0)
+    (local.get 0)
+    return)
+)
+(;; STDOUT ;;;
+f() => i32:2
+;;; STDOUT ;;)
