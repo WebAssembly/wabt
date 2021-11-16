@@ -1516,7 +1516,7 @@ Result BinaryReaderInterp::OnRethrowExpr(Index depth) {
 Result BinaryReaderInterp::OnTryExpr(Type sig_type) {
   u32 exn_stack_height;
   CHECK_RESULT(
-    validator_.GetCatchCount(label_stack_.size() - 1, &exn_stack_height));
+      validator_.GetCatchCount(label_stack_.size() - 1, &exn_stack_height));
   u32 value_stack_height = validator_.type_stack_size();
   CHECK_RESULT(validator_.OnTry(loc, sig_type));
   // Push a label that tracks mapping of exn -> catch

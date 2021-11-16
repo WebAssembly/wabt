@@ -1837,7 +1837,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     }
     case O::Rethrow: {
       u32 exn_index = instr.imm_u32;
-      Exception::Ptr exn{store_, exceptions_[exceptions_.size() - exn_index - 1]};
+      Exception::Ptr exn{store_,
+                         exceptions_[exceptions_.size() - exn_index - 1]};
       return DoThrow(exn);
     }
 
