@@ -285,7 +285,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   void PushLabel(LabelKind label = LabelKind::Block,
                  Istream::Offset offset = Istream::kInvalidOffset,
                  Istream::Offset fixup_offset = Istream::kInvalidOffset,
-                 u32 handler_desc_index = 0);
+                 u32 handler_desc_index = kInvalidIndex);
   void PopLabel();
 
   void PrintError(const char* format, ...);
@@ -906,14 +906,18 @@ Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
   CHECK_RESULT(validator_.BeginFunctionBody(loc, index));
 
   // Push implicit func label (equivalent to return).
-  // With exception handling it acts as a catch-less try block.
+  // With exception handling it acts as a catch-less try block, which is
+  // needed to support delegating to the caller of a function using the
+  // try-delegate instruction.
   PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset,
             func_->handlers.size());
   func_->handlers.push_back(HandlerDesc{HandlerKind::Catch,
                                         istream_.end(),
                                         Istream::kInvalidOffset,
                                         {},
-                                        {Istream::kInvalidOffset}});
+                                        {Istream::kInvalidOffset},
+                                        static_cast<u32>(func_->locals.size()),
+                                        0});
   return Result::Ok;
 }
 
@@ -1105,7 +1109,7 @@ Result BinaryReaderInterp::OnEndExpr() {
     // so that it can trigger an exception rethrow when it's reached.
     Label* local_label = TopLabel();
     HandlerDesc& desc = func_->handlers[local_label->handler_desc_index];
-    desc.end_offset = istream_.end();
+    desc.try_end_offset = istream_.end();
     assert(desc.catches.size() == 0);
   } else if (label_type == LabelType::Catch) {
     istream_.EmitCatchDrop(1);
@@ -1118,7 +1122,7 @@ Result BinaryReaderInterp::OnEndExpr() {
 Result BinaryReaderInterp::OnBrExpr(Index depth) {
   Index drop_count, keep_count, catch_drop_count;
   CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
-  CHECK_RESULT(validator_.GetCatchDepth(depth, &catch_drop_count));
+  CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
   CHECK_RESULT(validator_.OnBr(loc, Var(depth)));
   EmitBr(depth, drop_count, keep_count, catch_drop_count);
   return Result::Ok;
@@ -1128,7 +1132,7 @@ Result BinaryReaderInterp::OnBrIfExpr(Index depth) {
   Index drop_count, keep_count, catch_drop_count;
   CHECK_RESULT(validator_.OnBrIf(loc, Var(depth)));
   CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
-  CHECK_RESULT(validator_.GetCatchDepth(depth, &catch_drop_count));
+  CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
   // Flip the br_if so if <cond> is true it can drop values from the stack.
   istream_.Emit(Opcode::InterpBrUnless);
   auto fixup = istream_.EmitFixupU32();
@@ -1148,9 +1152,9 @@ Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
     Index depth = target_depths[i];
     CHECK_RESULT(validator_.OnBrTableTarget(loc, Var(depth)));
     CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
-    CHECK_RESULT(validator_.GetCatchDepth(depth, &catch_drop_count));
+    CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
     // Emit DropKeep directly (instead of using EmitDropKeep) so the
-    // instruction has a fixed size.
+    // instruction has a fixed size. Same for CatchDrop as well.
     istream_.Emit(Opcode::InterpDropKeep, drop_count, keep_count);
     istream_.Emit(Opcode::InterpCatchDrop, catch_drop_count);
     EmitBr(depth, 0, 0, 0);
@@ -1159,7 +1163,7 @@ Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
   CHECK_RESULT(
       GetBrDropKeepCount(default_target_depth, &drop_count, &keep_count));
   CHECK_RESULT(
-      validator_.GetCatchDepth(default_target_depth, &catch_drop_count));
+      validator_.GetCatchCount(default_target_depth, &catch_drop_count));
   // The default case doesn't need a fixed size, since it is never jumped over.
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.Emit(Opcode::InterpCatchDrop, catch_drop_count);
@@ -1196,7 +1200,7 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
   CHECK_RESULT(
       GetReturnCallDropKeepCount(func_type, 0, &drop_count, &keep_count));
   CHECK_RESULT(
-      validator_.GetCatchDepth(label_stack_.size() - 1, &catch_drop_count));
+      validator_.GetCatchCount(label_stack_.size() - 1, &catch_drop_count));
   // The validator must be run after we get the drop/keep counts, since it
   // will change the type stack.
   CHECK_RESULT(validator_.OnReturnCall(loc, Var(func_index)));
@@ -1390,10 +1394,13 @@ Result BinaryReaderInterp::OnNopExpr() {
 }
 
 Result BinaryReaderInterp::OnReturnExpr() {
-  Index drop_count, keep_count;
+  Index drop_count, keep_count, catch_drop_count;
   CHECK_RESULT(GetReturnDropKeepCount(&drop_count, &keep_count));
+  CHECK_RESULT(
+      validator_.GetCatchCount(label_stack_.size() - 1, &catch_drop_count));
   CHECK_RESULT(validator_.OnReturn(loc));
   istream_.EmitDropKeep(drop_count, keep_count);
+  istream_.EmitCatchDrop(catch_drop_count);
   istream_.Emit(Opcode::Return);
   return Result::Ok;
 }
@@ -1499,7 +1506,7 @@ Result BinaryReaderInterp::OnThrowExpr(Index tag_index) {
 Result BinaryReaderInterp::OnRethrowExpr(Index depth) {
   Index catch_depth;
   CHECK_RESULT(validator_.OnRethrow(loc, Var(depth)));
-  CHECK_RESULT(validator_.GetCatchDepth(depth, &catch_depth));
+  CHECK_RESULT(validator_.GetCatchCount(depth, &catch_depth));
   // The rethrow opcode takes an index into the exception stack rather than
   // the number of catch nestings, so we subtract one here.
   istream_.Emit(Opcode::Rethrow, catch_depth - 1);
@@ -1507,6 +1514,10 @@ Result BinaryReaderInterp::OnRethrowExpr(Index depth) {
 }
 
 Result BinaryReaderInterp::OnTryExpr(Type sig_type) {
+  u32 exn_stack_height;
+  CHECK_RESULT(
+    validator_.GetCatchCount(label_stack_.size() - 1, &exn_stack_height));
+  u32 value_stack_height = validator_.type_stack_size();
   CHECK_RESULT(validator_.OnTry(loc, sig_type));
   // Push a label that tracks mapping of exn -> catch
   PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset,
@@ -1515,7 +1526,9 @@ Result BinaryReaderInterp::OnTryExpr(Type sig_type) {
                                         istream_.end(),
                                         Istream::kInvalidOffset,
                                         {},
-                                        {Istream::kInvalidOffset}});
+                                        {Istream::kInvalidOffset},
+                                        value_stack_height,
+                                        exn_stack_height});
   return Result::Ok;
 }
 
@@ -1527,11 +1540,17 @@ Result BinaryReaderInterp::OnCatchExpr(Index tag_index) {
   // Jump to the end of the block at the end of the previous try or catch.
   Istream::Offset offset = label->offset;
   istream_.Emit(Opcode::Br);
-  if (offset == Istream::kInvalidOffset) {
-    depth_fixups_.Append(label_stack_.size() - 1, istream_.end());
-  }
+  assert(offset == Istream::kInvalidOffset);
+  depth_fixups_.Append(label_stack_.size() - 1, istream_.end());
   istream_.Emit(offset);
-  desc.end_offset = istream_.end();
+  // The offset is only set after the first catch block, as the offset range
+  // should only cover the try block itself.
+  if (desc.try_end_offset == Istream::kInvalidOffset) {
+    desc.try_end_offset = istream_.end();
+  }
+  // The label kind is switched to Block from Try in order to distinguish
+  // catch blocks from try blocks. This is needed for operations like
+  // GetNearestTryLabel, where we need to only find try blocks.
   label->kind = LabelKind::Block;
   desc.catches.push_back(CatchDesc{tag_index, istream_.end()});
   return Result::Ok;
@@ -1544,11 +1563,12 @@ Result BinaryReaderInterp::OnCatchAllExpr() {
   desc.kind = HandlerKind::Catch;
   Istream::Offset offset = label->offset;
   istream_.Emit(Opcode::Br);
-  if (offset == Istream::kInvalidOffset) {
-    depth_fixups_.Append(label_stack_.size() - 1, istream_.end());
-  }
+  assert(offset == Istream::kInvalidOffset);
+  depth_fixups_.Append(label_stack_.size() - 1, istream_.end());
   istream_.Emit(offset);
-  desc.end_offset = istream_.end();
+  if (desc.try_end_offset == Istream::kInvalidOffset) {
+    desc.try_end_offset = istream_.end();
+  }
   label->kind = LabelKind::Block;
   desc.catch_all_offset = istream_.end();
   return Result::Ok;
@@ -1557,18 +1577,18 @@ Result BinaryReaderInterp::OnCatchAllExpr() {
 Result BinaryReaderInterp::OnDelegateExpr(Index depth) {
   CHECK_RESULT(validator_.OnDelegate(loc, Var(depth)));
   Label* label = TopLabel();
+  assert(label->kind == LabelKind::Try);
   HandlerDesc& desc = func_->handlers[label->handler_desc_index];
   desc.kind = HandlerKind::Delegate;
   Istream::Offset offset = label->offset;
   istream_.Emit(Opcode::Br);
-  if (offset == Istream::kInvalidOffset) {
-    depth_fixups_.Append(label_stack_.size() - 1, istream_.end());
-  }
+  assert(offset == Istream::kInvalidOffset);
+  depth_fixups_.Append(label_stack_.size() - 1, istream_.end());
   istream_.Emit(offset);
-  desc.end_offset = istream_.end();
+  desc.try_end_offset = istream_.end();
   Label* target_label = GetNearestTryLabel(depth + 1);
   assert(target_label);
-  desc.delegate_offset = target_label->handler_desc_index;
+  desc.delegate_handler_index = target_label->handler_desc_index;
   FixupTopLabel();
   PopLabel();
   return Result::Ok;

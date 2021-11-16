@@ -58,7 +58,7 @@ class TypeChecker {
   bool IsUnreachable();
   Result GetLabel(Index depth, Label** out_label);
   Result GetRethrowLabel(Index depth, Label** out_label);
-  Result GetCatchDepth(Index depth, Index* out_depth);
+  Result GetCatchCount(Index depth, Index* out_depth);
 
   Result BeginFunction(const TypeVector& sig);
   Result OnAtomicFence(uint32_t consistency_model);

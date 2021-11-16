@@ -127,14 +127,14 @@ inline ExportType& ExportType::operator=(const ExportType& other) {
 //// Frame ////
 inline Frame::Frame(Ref func,
                     u32 values,
-                    u32 offset,
                     u32 exceptions,
+                    u32 offset,
                     Instance* inst,
                     Module* mod)
     : func(func),
       values(values),
-      offset(offset),
       exceptions(exceptions),
+      offset(offset),
       inst(inst),
       mod(mod) {}
 

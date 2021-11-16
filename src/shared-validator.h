@@ -51,8 +51,8 @@ class SharedValidator {
   Result GetLabel(Index depth, Label** out_label) {
     return typechecker_.GetLabel(depth, out_label);
   }
-  Result GetCatchDepth(Index depth, Index* out_depth) {
-    return typechecker_.GetCatchDepth(depth, out_depth);
+  Result GetCatchCount(Index depth, Index* out_count) {
+    return typechecker_.GetCatchCount(depth, out_count);
   }
 
   Result WABT_PRINTF_FORMAT(3, 4)

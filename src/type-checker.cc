@@ -100,20 +100,20 @@ Result TypeChecker::GetRethrowLabel(Index depth, Label** out_label) {
   return Result::Error;
 }
 
-Result TypeChecker::GetCatchDepth(Index depth, Index* out_depth) {
+Result TypeChecker::GetCatchCount(Index depth, Index* out_count) {
   Label* unused;
   if (Failed(GetLabel(depth, &unused))) {
     return Result::Error;
   }
 
-  Index catch_depth = 0;
+  Index catch_count = 0;
   for (Index idx = 0; idx <= depth; idx++) {
     LabelType type = label_stack_[label_stack_.size() - idx - 1].label_type;
     if (type == LabelType::Catch) {
-      catch_depth++;
+      catch_count++;
     }
   }
-  *out_depth = catch_depth;
+  *out_count = catch_count;
 
   return Result::Ok;
 }

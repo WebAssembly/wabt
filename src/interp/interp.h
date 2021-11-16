@@ -320,13 +320,16 @@ enum class HandlerKind { Catch, Delegate };
 
 struct HandlerDesc {
   HandlerKind kind;
-  u32 start_offset;
-  u32 end_offset;
+  u32 try_start_offset;
+  u32 try_end_offset;
   std::vector<CatchDesc> catches;
   union {
     u32 catch_all_offset;
-    u32 delegate_offset;
+    u32 delegate_handler_index;
   };
+  // Local stack heights at the handler site that need to be restored.
+  u32 values;
+  u32 exceptions;
 };
 
 struct FuncDesc {
@@ -405,8 +408,8 @@ struct ModuleDesc {
 struct Frame {
   explicit Frame(Ref func,
                  u32 values,
-                 u32 offset,
                  u32 exceptions,
+                 u32 offset,
                  Instance*,
                  Module*);
 
@@ -414,8 +417,8 @@ struct Frame {
 
   Ref func;
   u32 values;  // Height of the value stack at this activation.
-  u32 offset;  // Istream offset; either the return PC, or the current PC.
   u32 exceptions;  // Height of the exception stack at this activation.
+  u32 offset;  // Istream offset; either the return PC, or the current PC.
 
   // Cached for convenience. Both are null if func is a HostFunc.
   Instance* inst;
@@ -1236,7 +1239,7 @@ class Thread : public Object {
   template <typename T, typename V = T>
   RunResult DoAtomicRmwCmpxchg(Instr, Trap::Ptr* out_trap);
 
-  RunResult DoThrow(Ref exn_ref);
+  RunResult DoThrow(Exception::Ptr exn_ref);
 
   RunResult StepInternal(Trap::Ptr* out_trap);
 
