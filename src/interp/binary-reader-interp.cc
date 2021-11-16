@@ -1555,8 +1555,9 @@ Result BinaryReaderInterp::OnCatchExpr(Index tag_index) {
     desc.try_end_offset = istream_.end();
   }
   // The label kind is switched to Block from Try in order to distinguish
-  // catch blocks from try blocks. This is needed for operations like
-  // GetNearestTryLabel, where we need to only find try blocks.
+  // catch blocks from try blocks. This is used to ensure that a try-delegate
+  // inside this catch will not delegate to the catch, and instead find outer
+  // try blocks to use as a delegate target.
   label->kind = LabelKind::Block;
   desc.catches.push_back(CatchDesc{tag_index, istream_.end()});
   return Result::Ok;
