@@ -2446,7 +2446,7 @@ RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
 
 RunResult Thread::DoThrow(Exception::Ptr exn) {
   Istream::Offset target_offset = Istream::kInvalidOffset;
-  HandlerDesc* target_handler = nullptr;
+  u32 target_values, target_exceptions;
   Tag::Ptr exn_tag{store_, exn->tag()};
   bool popped_frame = false;
   bool had_catch_all = false;
@@ -2484,13 +2484,15 @@ RunResult Thread::DoThrow(Exception::Ptr exn) {
           Tag::Ptr catch_tag{store_, catch_tag_ref};
           if (exn_tag == catch_tag) {
             target_offset = _catch.offset;
-            target_handler = &*iter;
+            target_values = (*iter).values;
+            target_exceptions = (*iter).exceptions;
             goto found_handler;
           }
         }
         if (handler.catch_all_offset != Istream::kInvalidOffset) {
           target_offset = handler.catch_all_offset;
-          target_handler = &*iter;
+          target_values = (*iter).values;
+          target_exceptions = (*iter).exceptions;
           had_catch_all = true;
           goto found_handler;
         }
@@ -2507,7 +2509,6 @@ RunResult Thread::DoThrow(Exception::Ptr exn) {
 
 found_handler:
   assert(target_offset != Istream::kInvalidOffset);
-  assert(target_handler);
 
   Frame& target_frame = frames_.back();
   // If the throw crosses call frames, we need to reset the state to that
@@ -2518,8 +2519,8 @@ found_handler:
     inst_ = target_frame.inst;
     mod_ = target_frame.mod;
   }
-  values_.resize(target_frame.values + target_handler->values);
-  exceptions_.resize(target_frame.exceptions + target_handler->exceptions);
+  values_.resize(target_frame.values + target_values);
+  exceptions_.resize(target_frame.exceptions + target_exceptions);
   // Jump to the handler.
   target_frame.offset = target_offset;
   // When an exception is caught, it needs to be tracked in a stack
