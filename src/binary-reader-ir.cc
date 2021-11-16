@@ -185,7 +185,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTableGrowExpr(Index table_index) override;
   Result OnTableSizeExpr(Index table_index) override;
   Result OnTableFillExpr(Index table_index) override;
-  Result OnRefFuncExpr(Index func_index) override;
+  Result OnRefFuncExpr(Index type_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
@@ -943,8 +943,8 @@ Result BinaryReaderIR::OnTableFillExpr(Index table_index) {
   return AppendExpr(MakeUnique<TableFillExpr>(Var(table_index)));
 }
 
-Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
-  return AppendExpr(MakeUnique<RefFuncExpr>(Var(func_index)));
+Result BinaryReaderIR::OnRefFuncExpr(Index type_index) {
+  return AppendExpr(MakeUnique<RefFuncExpr>(Var(type_index)));
 }
 
 Result BinaryReaderIR::OnRefNullExpr(Type type) {

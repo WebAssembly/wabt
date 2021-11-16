@@ -188,6 +188,13 @@ struct FuncSignature {
   TypeVector param_types;
   TypeVector result_types;
 
+  // Some types can have names, for example (ref $foo) has type $foo.
+  // So to use this type we need to translate its name into
+  // a proper index from the module type section.
+  // This is the mapping from parameter/result index to its name.
+  std::unordered_map<uint32_t, std::string> param_type_names;
+  std::unordered_map<uint32_t, std::string> result_type_names;
+
   Index GetNumParams() const { return param_types.size(); }
   Index GetNumResults() const { return result_types.size(); }
   Type GetParamType(Index index) const { return param_types[index]; }
