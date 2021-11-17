@@ -1,6 +1,5 @@
 /bin
 /build
-/out
 /fuzz-out
 /emscripten
 *.pyc
