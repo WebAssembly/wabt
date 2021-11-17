@@ -1540,10 +1540,11 @@ Result BinaryReaderInterp::OnCatchExpr(Index tag_index) {
   Label* label = TopLabel();
   HandlerDesc& desc = func_->handlers[label->handler_desc_index];
   desc.kind = HandlerKind::Catch;
-  // Jump to the end of the block at the end of the previous try or catch.
+  // Drop the previous block's exception if it was a catch.
   if (label->kind == LabelKind::Block) {
     istream_.EmitCatchDrop(1);
   }
+  // Jump to the end of the block at the end of the previous try or catch.
   Istream::Offset offset = label->offset;
   istream_.Emit(Opcode::Br);
   assert(offset == Istream::kInvalidOffset);

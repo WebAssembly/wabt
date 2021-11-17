@@ -122,8 +122,7 @@
       (catch $e1)))
   (func (export "try-catch-stack-size-2") (result i32)
     (i32.const 1)
-    (call $helper))
-        )
+    (call $helper)))
 (;; STDOUT ;;;
 throw-uncaught() => error: uncaught exception
 throw-uncaught-2() => error: uncaught exception
