@@ -100,6 +100,24 @@ Result TypeChecker::GetRethrowLabel(Index depth, Label** out_label) {
   return Result::Error;
 }
 
+Result TypeChecker::GetCatchCount(Index depth, Index* out_count) {
+  Label* unused;
+  if (Failed(GetLabel(depth, &unused))) {
+    return Result::Error;
+  }
+
+  Index catch_count = 0;
+  for (Index idx = 0; idx <= depth; idx++) {
+    LabelType type = label_stack_[label_stack_.size() - idx - 1].label_type;
+    if (type == LabelType::Catch) {
+      catch_count++;
+    }
+  }
+  *out_count = catch_count;
+
+  return Result::Ok;
+}
+
 Result TypeChecker::TopLabel(Label** out_label) {
   return GetLabel(0, out_label);
 }

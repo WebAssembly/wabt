@@ -313,6 +313,21 @@ void Trap::Mark(Store& store) {
   }
 }
 
+//// Exception ////
+Exception::Exception(Store& store, Ref tag, Values& args)
+    : Object(skind), tag_(tag), args_(args) {}
+
+void Exception::Mark(Store& store) {
+  Tag::Ptr tag(store, tag_);
+  store.Mark(tag_);
+  ValueTypes params = tag->type().signature;
+  for (size_t i = 0; i < params.size(); i++) {
+    if (params[i].IsRef()) {
+      store.Mark(args_[i].Get<Ref>());
+    }
+  }
+}
+
 //// Extern ////
 template <typename T>
 Result Extern::MatchImpl(Store& store,
@@ -385,6 +400,11 @@ Result DefinedFunc::DoCall(Thread& thread,
   }
   result = thread.Run(out_trap);
   if (result == RunResult::Trap) {
+    return Result::Error;
+  } else if (result == RunResult::Exception) {
+    // While this is not actually a trap, it is a convenient way
+    // to report an uncaught exception.
+    *out_trap = Trap::New(thread.store(), "uncaught exception");
     return Result::Error;
   }
   thread.PopValues(type_.results, &results);
@@ -928,6 +948,7 @@ void Thread::Mark(Store& store) {
   for (auto index: refs_) {
     store.Mark(values_[index].Get<Ref>());
   }
+  store.Mark(exceptions_);
 }
 
 void Thread::PushValues(const ValueTypes& types, const Values& values) {
@@ -955,7 +976,8 @@ Instance* Thread::GetCallerInstance() {
 
 RunResult Thread::PushCall(Ref func, u32 offset, Trap::Ptr* out_trap) {
   TRAP_IF(frames_.size() == frames_.capacity(), "call stack exhausted");
-  frames_.emplace_back(func, values_.size(), offset, inst_, mod_);
+  frames_.emplace_back(func, values_.size(), exceptions_.size(), offset, inst_,
+                       mod_);
   return RunResult::Ok;
 }
 
@@ -963,8 +985,8 @@ RunResult Thread::PushCall(const DefinedFunc& func, Trap::Ptr* out_trap) {
   TRAP_IF(frames_.size() == frames_.capacity(), "call stack exhausted");
   inst_ = store_.UnsafeGet<Instance>(func.instance()).get();
   mod_ = store_.UnsafeGet<Module>(inst_->module()).get();
-  frames_.emplace_back(func.self(), values_.size(), func.desc().code_offset,
-                       inst_, mod_);
+  frames_.emplace_back(func.self(), values_.size(), exceptions_.size(),
+                       func.desc().code_offset, inst_, mod_);
   return RunResult::Ok;
 }
 
@@ -972,11 +994,15 @@ RunResult Thread::PushCall(const HostFunc& func, Trap::Ptr* out_trap) {
   TRAP_IF(frames_.size() == frames_.capacity(), "call stack exhausted");
   inst_ = nullptr;
   mod_ = nullptr;
-  frames_.emplace_back(func.self(), values_.size(), 0, inst_, mod_);
+  frames_.emplace_back(func.self(), values_.size(), exceptions_.size(), 0,
+                       inst_, mod_);
   return RunResult::Ok;
 }
 
 RunResult Thread::PopCall() {
+  // Sanity check that the exception stack was popped correctly.
+  assert(frames_.back().exceptions == exceptions_.size());
+
   frames_.pop_back();
   if (frames_.empty()) {
     return RunResult::Return;
@@ -1414,6 +1440,24 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       break;
     }
 
+    case O::InterpCatchDrop: {
+      auto drop = instr.imm_u32;
+      for (u32 i = 0; i < drop; i++) {
+        exceptions_.pop_back();
+      }
+      break;
+    }
+
+    // This operation adjusts the function reference of the reused frame
+    // after a return_call. This ensures the correct exception handlers are
+    // used for the call.
+    case O::InterpAdjustFrameForReturnCall: {
+      Ref new_func_ref = inst_->funcs()[instr.imm_u32];
+      Frame& current_frame = frames_.back();
+      current_frame.func = new_func_ref;
+      break;
+    }
+
     case O::I32TruncSatF32S: return DoUnop(IntTruncSat<s32, f32>);
     case O::I32TruncSatF32U: return DoUnop(IntTruncSat<u32, f32>);
     case O::I32TruncSatF64S: return DoUnop(IntTruncSat<s32, f64>);
@@ -1786,6 +1830,22 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I64AtomicRmw16CmpxchgU: return DoAtomicRmwCmpxchg<u64, u16>(instr, out_trap);
     case O::I64AtomicRmw32CmpxchgU: return DoAtomicRmwCmpxchg<u64, u32>(instr, out_trap);
 
+    case O::Throw: {
+      u32 tag_index = instr.imm_u32;
+      Values params;
+      Ref tag_ref = inst_->tags()[tag_index];
+      Tag::Ptr tag{store_, tag_ref};
+      PopValues(tag->type().signature, &params);
+      Exception::Ptr exn = Exception::New(store_, tag_ref, params);
+      return DoThrow(exn);
+    }
+    case O::Rethrow: {
+      u32 exn_index = instr.imm_u32;
+      Exception::Ptr exn{store_,
+                         exceptions_[exceptions_.size() - exn_index - 1]};
+      return DoThrow(exn);
+    }
+
     // The following opcodes are either never generated or should never be
     // executed.
     case O::Nop:
@@ -1802,8 +1862,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::Catch:
     case O::CatchAll:
     case O::Delegate:
-    case O::Throw:
-    case O::Rethrow:
     case O::InterpData:
     case O::Invalid:
       WABT_UNREACHABLE;
@@ -2387,6 +2445,96 @@ RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
           StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<T>(old));
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoThrow(Exception::Ptr exn) {
+  Istream::Offset target_offset = Istream::kInvalidOffset;
+  u32 target_values, target_exceptions;
+  Tag::Ptr exn_tag{store_, exn->tag()};
+  bool popped_frame = false;
+  bool had_catch_all = false;
+
+  // DoThrow is responsible for unwinding the stack at the point at which an
+  // exception is thrown, and also branching to the appropriate catch within
+  // the target try-catch. In a compiler, the tag dispatch might be done in
+  // generated code in a landing pad, but this is easier for the interpreter.
+  while (!frames_.empty()) {
+    const Frame& frame = frames_.back();
+    DefinedFunc::Ptr func{store_, frame.func};
+    u32 pc = frame.offset;
+    auto handlers = func->desc().handlers;
+
+    // We iterate in reverse order, in order to traverse handlers from most
+    // specific (pushed last) to least specific within a nested stack of
+    // try-catch blocks.
+    auto iter = handlers.rbegin();
+    while (iter != handlers.rend()) {
+      const HandlerDesc& handler = *iter;
+      if (pc >= handler.try_start_offset && pc < handler.try_end_offset) {
+        // For a try-delegate, skip part of the traversal by directly going
+        // up to an outer handler specified by the delegate depth.
+        if (handler.kind == HandlerKind::Delegate) {
+          // Subtract one as we're trying to get a reverse iterator that is
+          // offset by `delegate_handler_index` from the first item.
+          iter = handlers.rend() - handler.delegate_handler_index - 1;
+          continue;
+        }
+        // Otherwise, check for a matching catch tag or catch_all.
+        for (auto _catch : handler.catches) {
+          // Here we have to be careful to use the target frame's instance
+          // to look up the tag rather than the throw's instance.
+          Ref catch_tag_ref = frame.inst->tags()[_catch.tag_index];
+          Tag::Ptr catch_tag{store_, catch_tag_ref};
+          if (exn_tag == catch_tag) {
+            target_offset = _catch.offset;
+            target_values = (*iter).values;
+            target_exceptions = (*iter).exceptions;
+            goto found_handler;
+          }
+        }
+        if (handler.catch_all_offset != Istream::kInvalidOffset) {
+          target_offset = handler.catch_all_offset;
+          target_values = (*iter).values;
+          target_exceptions = (*iter).exceptions;
+          had_catch_all = true;
+          goto found_handler;
+        }
+      }
+      iter++;
+    }
+    frames_.pop_back();
+    popped_frame = true;
+  }
+
+  // If the call frames are empty now, the exception is uncaught.
+  assert(frames_.empty());
+  return RunResult::Exception;
+
+found_handler:
+  assert(target_offset != Istream::kInvalidOffset);
+
+  Frame& target_frame = frames_.back();
+  // If the throw crosses call frames, we need to reset the state to that
+  // call frame's values. The stack heights may need to be offset by the
+  // handler's heights as we may be jumping into the middle of the function
+  // code after some stack height changes.
+  if (popped_frame) {
+    inst_ = target_frame.inst;
+    mod_ = target_frame.mod;
+  }
+  values_.resize(target_frame.values + target_values);
+  exceptions_.resize(target_frame.exceptions + target_exceptions);
+  // Jump to the handler.
+  target_frame.offset = target_offset;
+  // When an exception is caught, it needs to be tracked in a stack
+  // to allow for rethrows. This stack is popped on leaving the try-catch
+  // or by control instructions such as `br`.
+  exceptions_.push_back(exn.ref());
+  // Also push exception payload values if applicable.
+  if (!had_catch_all) {
+    PushValues(exn_tag->type().signature, exn->args());
+  }
   return RunResult::Ok;
 }
 

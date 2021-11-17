@@ -1,0 +1,81 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-exceptions
+(module
+  (tag $e1)
+  (tag $e2)
+  (func (export "try-delegate") (result i32)
+    (try $l (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (delegate $l))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "try-delegate-2") (result i32)
+    (try $l (result i32)
+      (do
+        (try
+          (do
+            (try
+              (do (throw $e1))
+              (delegate $l)))
+          (catch_all))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "try-delegate-uncaught") (result i32)
+    (try $l (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (delegate $l))
+        (i32.const 0))
+      (catch $e2
+        (i32.const 0))))
+  (func (export "try-delegate-to-caller") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (delegate 1))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "try-delegate-to-delegate") (result i32)
+    (try $l1 (result i32)
+      (do
+        (try $l2
+          (do
+            (try
+              (do
+                (try
+                  (do (throw $e1))
+                  (delegate $l2)))
+              (catch_all)))
+          (delegate $l1))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "try-delegate-to-block") (result i32)
+    (try (result i32)
+      (do
+        (block $l
+          (try
+            (do
+              (try
+                (do (throw $e1))
+                (delegate $l)))
+            (catch_all)))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  )
+(;; STDOUT ;;;
+try-delegate() => i32:1
+try-delegate-2() => i32:1
+try-delegate-uncaught() => error: uncaught exception
+try-delegate-to-caller() => error: uncaught exception
+try-delegate-to-delegate() => i32:1
+try-delegate-to-block() => i32:1
+;;; STDOUT ;;)
