@@ -43,26 +43,33 @@ class Type {
     I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
+    Reference = -0x15,  // 0x6b
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
     Void = -0x40,       // 0x40
     ___ = Void,         // Convenient for the opcode table in opcode.h
 
-    Any = 0,          // Not actually specified, but useful for type-checking
+    Any = 0,   // Not actually specified, but useful for type-checking
     I8U = 4,   // Not actually specified, but used internally with load/store
     I16U = 6,  // Not actually specified, but used internally with load/store
     I32U = 7,  // Not actually specified, but used internally with load/store
   };
 
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code) : enum_(static_cast<Enum>(code)) {}
-  Type(Enum e) : enum_(e) {}
+  Type(int32_t code) : enum_(static_cast<Enum>(code)), index_(UINT32_MAX) {}
+  Type(Enum e) : enum_(e), index_(UINT32_MAX) {}
+  Type(Enum e, Index index) : enum_(e), index_(index) {
+    assert(e == Enum::Reference);
+  }
   operator Enum() const { return enum_; }
 
   bool IsRef() const {
-    return enum_ == Type::ExternRef || enum_ == Type::FuncRef;
+    return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
+           enum_ == Type::Reference;
   }
+
+  bool IsReferenceWithIndex() const { return enum_ == Type::Reference; }
 
   bool IsNullableRef() const {
     // Currently all reftypes are nullable
@@ -83,6 +90,10 @@ class Type {
       case Type::Void:      return "void";
       case Type::Any:       return "any";
       case Type::ExternRef: return "externref";
+
+      // TODO(dbezhetskov): add index for reference type.
+      case Type::Reference:
+        return "reference";
       default:              return "<type_index>";
     }
   }
@@ -116,6 +127,11 @@ class Type {
     return static_cast<Index>(enum_);
   }
 
+  Index GetReferenceIndex() const {
+    assert(enum_ == Enum::Reference);
+    return index_;
+  }
+
   TypeVector GetInlineVector() const {
     assert(!IsIndex());
     switch (enum_) {
@@ -129,6 +145,7 @@ class Type {
       case Type::V128:
       case Type::FuncRef:
       case Type::ExternRef:
+      case Type::Reference:
         return TypeVector(this, this + 1);
 
       default:
@@ -138,6 +155,7 @@ class Type {
 
  private:
   Enum enum_;
+  Index index_;
 };
 
 }  // namespace wabt

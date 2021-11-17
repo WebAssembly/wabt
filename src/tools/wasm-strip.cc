@@ -90,6 +90,7 @@ int ProgramMain(int argc, char** argv) {
   if (Succeeded(result)) {
     Errors errors;
     Features features;
+    features.EnableAll();
     const bool kReadDebugNames = false;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = false;

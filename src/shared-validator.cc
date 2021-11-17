@@ -48,15 +48,17 @@ Result SharedValidator::OnFuncType(const Location& loc,
                                    Index param_count,
                                    const Type* param_types,
                                    Index result_count,
-                                   const Type* result_types) {
+                                   const Type* result_types,
+                                   Index type_index) {
   Result result = Result::Ok;
   if (!options_.features.multi_value_enabled() && result_count > 1) {
     result |=
         PrintError(loc, "multiple result values not currently supported.");
   }
-  func_types_.emplace(num_types_++,
-                      FuncType{ToTypeVector(param_count, param_types),
-                               ToTypeVector(result_count, result_types)});
+  func_types_.emplace(
+      num_types_++,
+      FuncType{ToTypeVector(param_count, param_types),
+               ToTypeVector(result_count, result_types), type_index});
   return result;
 }
 
@@ -531,6 +533,11 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
   return result;
 }
 
+Index SharedValidator::GetFunctionTypeIndex(Index func_index) const {
+  assert(func_index < funcs_.size());
+  return funcs_[func_index].type_index;
+}
+
 Result SharedValidator::BeginFunctionBody(const Location& loc,
                                           Index func_index) {
   expr_loc_ = &loc;
@@ -763,11 +770,12 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnCallRef(const Location& loc, Index* function_type_index) {
+Result SharedValidator::OnCallRef(const Location& loc,
+                                  Index* function_type_index) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
   Index func_index;
-  result |= typechecker_.OnFuncRef(&func_index);
+  result |= typechecker_.OnIndexedFuncRef(&func_index);
   if (Failed(result)) {
     return result;
   }
@@ -1021,7 +1029,7 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = Result::Ok;
   expr_loc_ = &loc;
   result |= CheckDeclaredFunc(func_var);
-  result |= typechecker_.OnRefFuncExpr(func_var.index());
+  result |= typechecker_.OnRefFuncExpr(GetFunctionTypeIndex(func_var.index()));
   return result;
 }
 

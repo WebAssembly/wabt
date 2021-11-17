@@ -629,11 +629,12 @@ Result Validator::CheckModule() {
       switch (f->type->kind()) {
         case TypeEntryKind::Func: {
           FuncType* func_type = cast<FuncType>(f->type.get());
-          result_ |= validator_.OnFuncType(field.loc,
-                                           func_type->sig.param_types.size(),
-                                           func_type->sig.param_types.data(),
-                                           func_type->sig.result_types.size(),
-                                           func_type->sig.result_types.data());
+          result_ |= validator_.OnFuncType(
+              field.loc, func_type->sig.param_types.size(),
+              func_type->sig.param_types.data(),
+              func_type->sig.result_types.size(),
+              func_type->sig.result_types.data(),
+              module->GetFuncTypeIndex(func_type->sig));
           break;
         }
 

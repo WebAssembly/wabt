@@ -531,6 +531,7 @@ nop, TokenType::Nop, Opcode::Nop
 offset, TokenType::Offset
 output, TokenType::Output
 param, TokenType::Param
+ref, TokenType::Ref
 quote, TokenType::Quote
 ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc

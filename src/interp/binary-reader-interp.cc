@@ -190,7 +190,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnMemoryFillExpr() override;
   Result OnMemoryInitExpr(Index segment_index) override;
   Result OnMemorySizeExpr() override;
-  Result OnRefFuncExpr(Index func_index) override;
+  Result OnRefFuncExpr(Index type_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
@@ -450,7 +450,7 @@ Result BinaryReaderInterp::OnFuncType(Index index,
                                       Index result_count,
                                       Type* result_types) {
   CHECK_RESULT(validator_.OnFuncType(loc, param_count, param_types,
-                                     result_count, result_types));
+                                     result_count, result_types, index));
   module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
                                         ToInterp(result_count, result_types)));
   return Result::Ok;
@@ -1273,9 +1273,9 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
-  CHECK_RESULT(validator_.OnRefFunc(loc, Var(func_index)));
-  istream_.Emit(Opcode::RefFunc, func_index);
+Result BinaryReaderInterp::OnRefFuncExpr(Index type_index) {
+  CHECK_RESULT(validator_.OnRefFunc(loc, Var(type_index)));
+  istream_.Emit(Opcode::RefFunc, type_index);
   return Result::Ok;
 }
 

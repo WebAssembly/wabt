@@ -322,7 +322,13 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   uint32_t type = 0;
   CHECK_RESULT(ReadS32Leb128(&type, desc));
-  *out_value = static_cast<Type>(type);
+  if (static_cast<Type::Enum>(type) == Type::Reference) {
+    uint32_t heap_type = 0;
+    CHECK_RESULT(ReadS32Leb128(&heap_type, desc));
+    *out_value = Type(Type::Reference, heap_type);
+  } else {
+    *out_value = static_cast<Type>(type);
+  }
   return Result::Ok;
 }
 
@@ -447,6 +453,9 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::FuncRef:
     case Type::ExternRef:
       return options_.features.reference_types_enabled();
+
+    case Type::Reference:
+      return options_.features.function_references_enabled();
 
     default:
       return false;
