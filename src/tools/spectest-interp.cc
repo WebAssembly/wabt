@@ -43,7 +43,7 @@ using namespace wabt;
 using namespace wabt::interp;
 
 static int s_verbose;
-static const char* s_infile;
+static std::string s_infile;
 static Thread::Options s_thread_options;
 static Stream* s_trace_stream;
 static Features s_features;
@@ -88,7 +88,10 @@ static void ParseOptions(int argc, char** argv) {
                    []() { s_trace_stream = s_stdout_stream.get(); });
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
-                     [](const char* argument) { s_infile = argument; });
+                     [](const char* argument) {
+                       s_infile = argument;
+                       ConvertBackslashToSlash(&s_infile);
+                     });
   parser.Parse(argc, argv);
 }
 
