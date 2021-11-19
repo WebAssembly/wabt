@@ -1,0 +1,11 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_i64x2_arith2.wast
+(;; STDOUT ;;;
+out/test/spec/simd_i64x2_arith2.wast:59: assert_invalid passed:
+  error: type mismatch in i64x2.abs, expected [v128] but got [f32]
+  0000020: error: OnUnaryExpr callback failed
+out/test/spec/simd_i64x2_arith2.wast:64: assert_invalid passed:
+  error: type mismatch in i64x2.abs, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+23/23 tests passed.
+;;; STDOUT ;;)
