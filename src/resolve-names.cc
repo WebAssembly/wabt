@@ -51,13 +51,18 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
+  Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
   Result OnDataDropExpr(DataDropExpr*) override;
+  Result OnMemoryFillExpr(MemoryFillExpr*) override;
+  Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
+  Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableCopyExpr(TableCopyExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
@@ -67,6 +72,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
+  Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -321,6 +327,11 @@ Result NameResolver::EndIfExpr(IfExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnLoadExpr(LoadExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
 Result NameResolver::OnLocalGetExpr(LocalGetExpr* expr) {
   ResolveLocalVar(&expr->var);
   return Result::Ok;
@@ -336,13 +347,35 @@ Result NameResolver::OnLocalTeeExpr(LocalTeeExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
+  ResolveMemoryVar(&expr->srcmemidx);
+  ResolveMemoryVar(&expr->destmemidx);
+  return Result::Ok;
+}
+
 Result NameResolver::OnDataDropExpr(DataDropExpr* expr) {
   ResolveDataSegmentVar(&expr->var);
   return Result::Ok;
 }
 
+Result NameResolver::OnMemoryFillExpr(MemoryFillExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
 Result NameResolver::OnMemoryInitExpr(MemoryInitExpr* expr) {
   ResolveDataSegmentVar(&expr->var);
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnMemorySizeExpr(MemorySizeExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
 }
 
@@ -390,6 +423,11 @@ Result NameResolver::OnTableFillExpr(TableFillExpr* expr) {
 
 Result NameResolver::OnRefFuncExpr(RefFuncExpr* expr) {
   ResolveFuncVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStoreExpr(StoreExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
 }
 

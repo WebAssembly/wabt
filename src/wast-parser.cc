@@ -1024,6 +1024,27 @@ bool WastParser::ParseAlignOpt(Address* out_align) {
   }
 }
 
+Result WastParser::ParseMemidx(Location loc, Var* out_memidx) {
+  WABT_TRACE(ParseMemidx);
+  if (PeekMatchLpar(TokenType::Memory)) {
+    if (!options_->features.multi_memory_enabled()) {
+      Error(loc, "Specifying memory variable is not allowed");
+      return Result::Error;
+    }
+    EXPECT(Lpar);
+    EXPECT(Memory);
+    CHECK_RESULT(ParseVar(out_memidx));
+    EXPECT(Rpar);
+  } else {
+    if (ParseVarOpt(out_memidx, Var(0, loc)) &&
+        !options_->features.multi_memory_enabled()) {
+      Error(loc, "Specifying memory variable is not allowed");
+      return Result::Error;
+    }
+  }
+  return Result::Ok;
+}
+
 Result WastParser::ParseLimitsIndex(Limits* out_limits) {
   WABT_TRACE(ParseLimitsIndex);
 
@@ -1861,6 +1882,34 @@ Result WastParser::ParsePlainInstrVar(Location loc,
 }
 
 template <typename T>
+Result WastParser::ParseMemoryInstrVar(Location loc,
+                                       std::unique_ptr<Expr>* out_expr) {
+  Var memidx;
+  Var var;
+  if (PeekMatchLpar(TokenType::Memory)) {
+    if (!options_->features.multi_memory_enabled()) {
+      Error(loc, "Specifying memory variable is not allowed");
+      return Result::Error;
+    }
+    CHECK_RESULT(ParseMemidx(loc, &memidx));
+    CHECK_RESULT(ParseVar(&var));
+    out_expr->reset(new T(var, memidx, loc));
+  } else {
+    CHECK_RESULT(ParseVar(&memidx));
+    if (ParseVarOpt(&var, Var(0, loc))) {
+      if (!options_->features.multi_memory_enabled()) {
+        Error(loc, "Specifiying memory variable is not allowed");
+        return Result::Error;
+      }
+      out_expr->reset(new T(var, memidx, loc));
+    } else {
+      out_expr->reset(new T(memidx, var, loc));
+    }
+  }
+  return Result::Ok;
+}
+
+template <typename T>
 Result WastParser::ParsePlainLoadStoreInstr(Location loc,
                                             Token token,
                                             std::unique_ptr<Expr>* out_expr) {
@@ -1870,6 +1919,41 @@ Result WastParser::ParsePlainLoadStoreInstr(Location loc,
   ParseOffsetOpt(&offset);
   ParseAlignOpt(&align);
   out_expr->reset(new T(opcode, align, offset, loc));
+  return Result::Ok;
+}
+
+template <typename T>
+Result WastParser::ParseMemoryLoadStoreInstr(Location loc,
+                                             Token token,
+                                             std::unique_ptr<Expr>* out_expr) {
+  Opcode opcode = token.opcode();
+  Var memidx;
+  Address offset;
+  Address align;
+  CHECK_RESULT(ParseMemidx(loc, &memidx));
+  ParseOffsetOpt(&offset);
+  ParseAlignOpt(&align);
+  out_expr->reset(new T(opcode, memidx, align, offset, loc));
+  return Result::Ok;
+}
+
+template <typename T>
+Result WastParser::ParseMemoryExpr(Location loc,
+                                   std::unique_ptr<Expr>* out_expr) {
+  Var memidx;
+  CHECK_RESULT(ParseMemidx(loc, &memidx));
+  out_expr->reset(new T(memidx, loc));
+  return Result::Ok;
+}
+
+template <typename T>
+Result WastParser::ParseMemoryBinaryExpr(Location loc,
+                                         std::unique_ptr<Expr>* out_expr) {
+  Var srcmemidx;
+  Var destmemidx;
+  CHECK_RESULT(ParseMemidx(loc, &srcmemidx));
+  CHECK_RESULT(ParseMemidx(loc, &destmemidx));
+  out_expr->reset(new T(srcmemidx, destmemidx, loc));
   return Result::Ok;
 }
 
@@ -2019,12 +2103,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::Load:
       CHECK_RESULT(
-          ParsePlainLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
+          ParseMemoryLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Store:
       CHECK_RESULT(
-          ParsePlainLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
+          ParseMemoryLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Const: {
@@ -2061,12 +2145,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::MemoryCopy:
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new MemoryCopyExpr(loc));
+      CHECK_RESULT(ParseMemoryBinaryExpr<MemoryCopyExpr>(loc, out_expr));
       break;
 
     case TokenType::MemoryFill:
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new MemoryFillExpr(loc));
+      CHECK_RESULT(ParseMemoryExpr<MemoryFillExpr>(loc, out_expr));
       break;
 
     case TokenType::DataDrop:
@@ -2076,17 +2160,17 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::MemoryInit:
       ErrorUnlessOpcodeEnabled(Consume());
-      CHECK_RESULT(ParsePlainInstrVar<MemoryInitExpr>(loc, out_expr));
+      CHECK_RESULT(ParseMemoryInstrVar<MemoryInitExpr>(loc, out_expr));
       break;
 
     case TokenType::MemorySize:
       Consume();
-      out_expr->reset(new MemorySizeExpr(loc));
+      CHECK_RESULT(ParseMemoryExpr<MemorySizeExpr>(loc, out_expr));
       break;
 
     case TokenType::MemoryGrow:
       Consume();
-      out_expr->reset(new MemoryGrowExpr(loc));
+      CHECK_RESULT(ParseMemoryExpr<MemoryGrowExpr>(loc, out_expr));
       break;
 
     case TokenType::TableCopy: {

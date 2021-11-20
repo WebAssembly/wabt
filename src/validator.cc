@@ -334,7 +334,7 @@ Result Validator::EndIfExpr(IfExpr* expr) {
 }
 
 Result Validator::OnLoadExpr(LoadExpr* expr) {
-  result_ |= validator_.OnLoad(expr->loc, expr->opcode,
+  result_ |= validator_.OnLoad(expr->loc, expr->opcode, expr->memidx,
                                expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
@@ -365,7 +365,8 @@ Result Validator::EndLoopExpr(LoopExpr* expr) {
 }
 
 Result Validator::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
-  result_ |= validator_.OnMemoryCopy(expr->loc);
+  result_ |=
+      validator_.OnMemoryCopy(expr->loc, expr->srcmemidx, expr->destmemidx);
   return Result::Ok;
 }
 
@@ -375,22 +376,22 @@ Result Validator::OnDataDropExpr(DataDropExpr* expr) {
 }
 
 Result Validator::OnMemoryFillExpr(MemoryFillExpr* expr) {
-  result_ |= validator_.OnMemoryFill(expr->loc);
+  result_ |= validator_.OnMemoryFill(expr->loc, expr->memidx);
   return Result::Ok;
 }
 
 Result Validator::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
-  result_ |= validator_.OnMemoryGrow(expr->loc);
+  result_ |= validator_.OnMemoryGrow(expr->loc, expr->memidx);
   return Result::Ok;
 }
 
 Result Validator::OnMemoryInitExpr(MemoryInitExpr* expr) {
-  result_ |= validator_.OnMemoryInit(expr->loc, expr->var);
+  result_ |= validator_.OnMemoryInit(expr->loc, expr->var, expr->memidx);
   return Result::Ok;
 }
 
 Result Validator::OnMemorySizeExpr(MemorySizeExpr* expr) {
-  result_ |= validator_.OnMemorySize(expr->loc);
+  result_ |= validator_.OnMemorySize(expr->loc, expr->memidx);
   return Result::Ok;
 }
 
@@ -484,7 +485,7 @@ Result Validator::OnSelectExpr(SelectExpr* expr) {
 }
 
 Result Validator::OnStoreExpr(StoreExpr* expr) {
-  result_ |= validator_.OnStore(expr->loc, expr->opcode,
+  result_ |= validator_.OnStore(expr->loc, expr->opcode, expr->memidx,
                                 expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }

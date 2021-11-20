@@ -418,14 +418,39 @@ class ExprMixin : public Expr {
   explicit ExprMixin(const Location& loc = Location()) : Expr(TypeEnum, loc) {}
 };
 
+template <ExprType TypeEnum>
+class MemoryExpr : public ExprMixin<TypeEnum> {
+ public:
+  MemoryExpr(Var memidx, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), memidx(memidx) {}
+
+  Var memidx;
+};
+
+template <ExprType TypeEnum>
+class MemoryBinaryExpr : public ExprMixin<TypeEnum> {
+ public:
+  MemoryBinaryExpr(Var srcmemidx,
+                   Var destmemidx,
+                   const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc),
+        srcmemidx(srcmemidx),
+        destmemidx(destmemidx) {}
+
+  Var srcmemidx;
+  Var destmemidx;
+};
+
 typedef ExprMixin<ExprType::Drop> DropExpr;
-typedef ExprMixin<ExprType::MemoryGrow> MemoryGrowExpr;
-typedef ExprMixin<ExprType::MemorySize> MemorySizeExpr;
-typedef ExprMixin<ExprType::MemoryCopy> MemoryCopyExpr;
-typedef ExprMixin<ExprType::MemoryFill> MemoryFillExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
+
+typedef MemoryExpr<ExprType::MemoryGrow> MemoryGrowExpr;
+typedef MemoryExpr<ExprType::MemorySize> MemorySizeExpr;
+typedef MemoryExpr<ExprType::MemoryFill> MemoryFillExpr;
+
+typedef MemoryBinaryExpr<ExprType::MemoryCopy> MemoryCopyExpr;
 
 template <ExprType TypeEnum>
 class RefTypeExpr : public ExprMixin<TypeEnum> {
@@ -515,6 +540,15 @@ class VarExpr : public ExprMixin<TypeEnum> {
   Var var;
 };
 
+template <ExprType TypeEnum>
+class MemoryVarExpr : public MemoryExpr<TypeEnum> {
+ public:
+  MemoryVarExpr(const Var& var, Var memidx, const Location& loc = Location())
+      : MemoryExpr<TypeEnum>(memidx, loc), var(var) {}
+
+  Var var;
+};
+
 typedef VarExpr<ExprType::Br> BrExpr;
 typedef VarExpr<ExprType::BrIf> BrIfExpr;
 typedef VarExpr<ExprType::Call> CallExpr;
@@ -528,7 +562,6 @@ typedef VarExpr<ExprType::ReturnCall> ReturnCallExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
 typedef VarExpr<ExprType::Rethrow> RethrowExpr;
 
-typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
 typedef VarExpr<ExprType::DataDrop> DataDropExpr;
 typedef VarExpr<ExprType::ElemDrop> ElemDropExpr;
 typedef VarExpr<ExprType::TableGet> TableGetExpr;
@@ -536,6 +569,8 @@ typedef VarExpr<ExprType::TableSet> TableSetExpr;
 typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
 typedef VarExpr<ExprType::TableSize> TableSizeExpr;
 typedef VarExpr<ExprType::TableFill> TableFillExpr;
+
+typedef MemoryVarExpr<ExprType::MemoryInit> MemoryInitExpr;
 
 class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
@@ -664,8 +699,27 @@ class LoadStoreExpr : public ExprMixin<TypeEnum> {
   Address offset;
 };
 
-typedef LoadStoreExpr<ExprType::Load> LoadExpr;
-typedef LoadStoreExpr<ExprType::Store> StoreExpr;
+template <ExprType TypeEnum>
+class MemoryLoadStoreExpr : public MemoryExpr<TypeEnum> {
+ public:
+  MemoryLoadStoreExpr(Opcode opcode,
+                      Var memidx,
+                      Address align,
+                      Address offset,
+                      const Location& loc = Location())
+      : MemoryExpr<TypeEnum>(memidx, loc),
+        opcode(opcode),
+        align(align),
+        offset(offset) {}
+
+  Opcode opcode;
+  Address align;
+  Address offset;
+};
+
+typedef MemoryLoadStoreExpr<ExprType::Load> LoadExpr;
+typedef MemoryLoadStoreExpr<ExprType::Store> StoreExpr;
+
 typedef LoadStoreExpr<ExprType::AtomicLoad> AtomicLoadExpr;
 typedef LoadStoreExpr<ExprType::AtomicStore> AtomicStoreExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmw> AtomicRmwExpr;

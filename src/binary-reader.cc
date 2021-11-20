@@ -110,6 +110,7 @@ class BinaryReader {
   Result ReadIndex(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
   Result ReadAlignment(Address* align_log2, const char* desc) WABT_WARN_UNUSED;
+  Result ReadMemidx(Index* memidx, const char* desc) WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadField(TypeMut* out_value) WABT_WARN_UNUSED;
 
@@ -398,11 +399,19 @@ Result BinaryReader::ReadOffset(Offset* offset, const char* desc) {
 Result BinaryReader::ReadAlignment(Address* alignment_log2, const char* desc) {
   uint32_t value;
   CHECK_RESULT(ReadU32Leb128(&value, desc));
-  if (value >= 32) {
+  if (value >= 128 ||
+      (value >= 32 && !options_.features.multi_memory_enabled())) {
     PrintError("invalid %s: %u", desc, value);
     return Result::Error;
   }
   *alignment_log2 = value;
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadMemidx(Index* memidx, const char* desc) {
+  CHECK_RESULT(ReadIndex(memidx, desc));
+  ERROR_UNLESS(*memidx < memories.size(), "memory index %u out of range",
+               *memidx);
   return Result::Ok;
 }
 
@@ -953,8 +962,20 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-        CALLBACK(OnLoadExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        Index memidx = 0;
+        if (alignment_log2 >> 6) {
+          ERROR_IF(!options_.features.multi_memory_enabled(),
+                   "multi_memory not allowed");
+          CHECK_RESULT(ReadMemidx(&memidx, "store memidx"));
+          alignment_log2 = alignment_log2 & ((1 << 6) - 1);
+        }
+
+        CALLBACK(OnLoadExpr, opcode, memidx, alignment_log2, offset);
+        if (memidx) {
+          CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, memidx);
+        } else {
+          CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        }
         break;
       }
 
@@ -972,27 +993,48 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadAlignment(&alignment_log2, "store alignment"));
         Address offset;
         CHECK_RESULT(ReadAddress(&offset, 0, "store offset"));
+        Index memidx = 0;
+        if (alignment_log2 >> 6) {
+          ERROR_IF(!options_.features.multi_memory_enabled(),
+                   "multi_memory not allowed");
+          CHECK_RESULT(ReadMemidx(&memidx, "store memidx"));
+          alignment_log2 = alignment_log2 & ((1 << 6) - 1);
+        }
 
-        CALLBACK(OnStoreExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CALLBACK(OnStoreExpr, opcode, memidx, alignment_log2, offset);
+        if (memidx) {
+          CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, memidx);
+        } else {
+          CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        }
         break;
       }
 
       case Opcode::MemorySize: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "memory.size reserved"));
-        ERROR_UNLESS(reserved == 0, "memory.size reserved value must be 0");
-        CALLBACK0(OnMemorySizeExpr);
-        CALLBACK(OnOpcodeUint32, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "memory.size reserved"));
+          ERROR_UNLESS(reserved == 0, "memory.size reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.size memidx"));
+        }
+        CALLBACK(OnMemorySizeExpr, memidx);
+        CALLBACK(OnOpcodeUint32, memidx);
         break;
       }
 
       case Opcode::MemoryGrow: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "memory.grow reserved"));
-        ERROR_UNLESS(reserved == 0, "memory.grow reserved value must be 0");
-        CALLBACK0(OnMemoryGrowExpr);
-        CALLBACK(OnOpcodeUint32, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "memory.grow reserved"));
+          ERROR_UNLESS(reserved == 0, "memory.grow reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.grow memidx"));
+        }
+        CALLBACK(OnMemoryGrowExpr, memidx);
+        CALLBACK(OnOpcodeUint32, memidx);
         break;
       }
 
@@ -1640,11 +1682,16 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         ERROR_IF(data_count_ == kInvalidIndex,
                  "memory.init requires data count section");
         CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnMemoryInitExpr, segment);
-        CALLBACK(OnOpcodeUint32Uint32, segment, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+          ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.init memidx"));
+        }
+        CALLBACK(OnMemoryInitExpr, segment, memidx);
+        CALLBACK(OnOpcodeUint32Uint32, segment, memidx);
         break;
       }
 
@@ -1665,21 +1712,34 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::MemoryFill: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnMemoryFillExpr);
-        CALLBACK(OnOpcodeUint32, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "memory.fill reserved"));
+          ERROR_UNLESS(reserved == 0, "memory.fill reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.fill memidx"));
+        }
+        CALLBACK(OnMemoryFillExpr, memidx);
+        CALLBACK(OnOpcodeUint32, memidx);
         break;
       }
+
       case Opcode::MemoryCopy: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnMemoryCopyExpr);
-        CALLBACK(OnOpcodeUint32Uint32, reserved, reserved);
+        Index srcmemidx = 0;
+        Index destmemidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+          ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+          CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+          ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&srcmemidx, "memory.copy srcmemidx"));
+          CHECK_RESULT(ReadMemidx(&destmemidx, "memory.copy destmemindex"));
+        }
+        CALLBACK(OnMemoryCopyExpr, srcmemidx, destmemidx);
+        CALLBACK(OnOpcodeUint32Uint32, srcmemidx, destmemidx);
         break;
       }
 
