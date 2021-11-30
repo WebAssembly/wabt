@@ -89,14 +89,14 @@ def main(args):
     all_proposals = [e.name for e in os.scandir(PROPOSALS_DIR) if e.is_dir()]
 
     flags = {
-        'memory64': '--enable-memory64'
+        'memory64': '--enable-memory64',
+        'multi-memory': '--enable-multi-memory'
     }
 
     unimplemented = set([
         'gc',
         'tail-call',
         'function-references',
-        'multi-memory',
         'threads',
         'annotations',
         'exception-handling',

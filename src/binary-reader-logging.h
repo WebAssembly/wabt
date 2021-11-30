@@ -185,18 +185,19 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
   Result OnLoadExpr(Opcode opcode,
+                    Index memidx,
                     Address alignment_log2,
                     Address offset) override;
   Result OnLocalGetExpr(Index local_index) override;
   Result OnLocalSetExpr(Index local_index) override;
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
-  Result OnMemoryCopyExpr() override;
+  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override;
   Result OnDataDropExpr(Index segment_index) override;
-  Result OnMemoryFillExpr() override;
-  Result OnMemoryGrowExpr() override;
-  Result OnMemoryInitExpr(Index segment_index) override;
-  Result OnMemorySizeExpr() override;
+  Result OnMemoryFillExpr(Index memidx) override;
+  Result OnMemoryGrowExpr(Index memidx) override;
+  Result OnMemoryInitExpr(Index segment_index, Index memidx) override;
+  Result OnMemorySizeExpr(Index memidx) override;
   Result OnTableCopyExpr(Index dst_index, Index src_index) override;
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
@@ -215,6 +216,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnReturnExpr() override;
   Result OnSelectExpr(Index result_count, Type* result_types) override;
   Result OnStoreExpr(Opcode opcode,
+                     Index memidx,
                      Address alignment_log2,
                      Address offset) override;
   Result OnThrowExpr(Index tag_index) override;

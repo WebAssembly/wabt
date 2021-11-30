@@ -748,6 +748,15 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
     return reader_->name(opcode, alignment_log2, offset);                 \
   }
 
+#define DEFINE_MEMORY_LOAD_STORE_OPCODE(name)                                 \
+  Result BinaryReaderLogging::name(Opcode opcode, Index memidx,               \
+                                   Address alignment_log2, Address offset) {  \
+    LOGF(#name "(opcode: \"%s\" (%u), memidx: %" PRIindex                     \
+               ", align log2: %" PRIaddress ", offset: %" PRIaddress ")\n",   \
+         opcode.GetName(), opcode.GetCode(), memidx, alignment_log2, offset); \
+    return reader_->name(opcode, memidx, alignment_log2, offset);             \
+  }
+
 #define DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(name)                             \
   Result BinaryReaderLogging::name(Opcode opcode, Address alignment_log2,    \
                                    Address offset, uint64_t value) {         \
@@ -828,16 +837,16 @@ DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
 DEFINE_INDEX_DESC(OnGlobalGetExpr, "index")
 DEFINE_INDEX_DESC(OnGlobalSetExpr, "index")
-DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
+DEFINE_MEMORY_LOAD_STORE_OPCODE(OnLoadExpr);
 DEFINE_INDEX_DESC(OnLocalGetExpr, "index")
 DEFINE_INDEX_DESC(OnLocalSetExpr, "index")
 DEFINE_INDEX_DESC(OnLocalTeeExpr, "index")
-DEFINE0(OnMemoryCopyExpr)
+DEFINE_INDEX_INDEX(OnMemoryCopyExpr, "src_memory_index", "dest_memory_index")
 DEFINE_INDEX(OnDataDropExpr)
-DEFINE0(OnMemoryFillExpr)
-DEFINE0(OnMemoryGrowExpr)
-DEFINE_INDEX(OnMemoryInitExpr)
-DEFINE0(OnMemorySizeExpr)
+DEFINE_INDEX(OnMemoryFillExpr)
+DEFINE_INDEX(OnMemoryGrowExpr)
+DEFINE_INDEX_INDEX(OnMemoryInitExpr, "segment_index", "memory_index")
+DEFINE_INDEX(OnMemorySizeExpr)
 DEFINE_INDEX_INDEX(OnTableCopyExpr, "dst_index", "src_index")
 DEFINE_INDEX(OnElemDropExpr)
 DEFINE_INDEX_INDEX(OnTableInitExpr, "segment_index", "table_index")
@@ -857,7 +866,7 @@ DEFINE_INDEX_INDEX(OnReturnCallIndirectExpr, "sig_index", "table_index")
 DEFINE0(OnReturnExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadSplatExpr);
 DEFINE_LOAD_STORE_OPCODE(OnLoadZeroExpr);
-DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
+DEFINE_MEMORY_LOAD_STORE_OPCODE(OnStoreExpr);
 DEFINE_INDEX_DESC(OnThrowExpr, "tag_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE_OPCODE(OnUnaryExpr)

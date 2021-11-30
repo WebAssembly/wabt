@@ -135,7 +135,7 @@ Result SharedValidator::OnTable(const Location& loc,
 
 Result SharedValidator::OnMemory(const Location& loc, const Limits& limits) {
   Result result = Result::Ok;
-  if (memories_.size() > 0) {
+  if (memories_.size() > 0 && !options_.features.multi_memory_enabled()) {
     result |= PrintError(loc, "only one memory block allowed");
   }
   result |= CheckLimits(
@@ -903,11 +903,12 @@ Result SharedValidator::OnIf(const Location& loc, Type sig_type) {
 
 Result SharedValidator::OnLoad(const Location& loc,
                                Opcode opcode,
+                               Var memidx,
                                Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckMemoryIndex(memidx, &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnLoad(opcode, mt.limits);
   return result;
@@ -974,16 +975,19 @@ Result SharedValidator::OnLoop(const Location& loc, Type sig_type) {
   return result;
 }
 
-Result SharedValidator::OnMemoryCopy(const Location& loc) {
+Result SharedValidator::OnMemoryCopy(const Location& loc,
+                                     Var srcmemidx,
+                                     Var destmemidx) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckMemoryIndex(srcmemidx, &mt);
+  result |= CheckMemoryIndex(destmemidx, &mt);
   result |= typechecker_.OnMemoryCopy(mt.limits);
   return result;
 }
 
-Result SharedValidator::OnMemoryFill(const Location& loc) {
+Result SharedValidator::OnMemoryFill(const Location& loc, Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;
@@ -992,30 +996,32 @@ Result SharedValidator::OnMemoryFill(const Location& loc) {
   return result;
 }
 
-Result SharedValidator::OnMemoryGrow(const Location& loc) {
+Result SharedValidator::OnMemoryGrow(const Location& loc, Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckMemoryIndex(memidx, &mt);
   result |= typechecker_.OnMemoryGrow(mt.limits);
   return result;
 }
 
-Result SharedValidator::OnMemoryInit(const Location& loc, Var segment_var) {
+Result SharedValidator::OnMemoryInit(const Location& loc,
+                                     Var segment_var,
+                                     Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckMemoryIndex(memidx, &mt);
   result |= CheckDataSegmentIndex(segment_var);
   result |= typechecker_.OnMemoryInit(segment_var.index(), mt.limits);
   return result;
 }
 
-Result SharedValidator::OnMemorySize(const Location& loc) {
+Result SharedValidator::OnMemorySize(const Location& loc, Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckMemoryIndex(memidx, &mt);
   result |= typechecker_.OnMemorySize(mt.limits);
   return result;
 }
@@ -1144,11 +1150,12 @@ Result SharedValidator::OnSimdShuffleOp(const Location& loc,
 
 Result SharedValidator::OnStore(const Location& loc,
                                 Opcode opcode,
+                                Var memidx,
                                 Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
   expr_loc_ = &loc;
-  result |= CheckMemoryIndex(Var(0, loc), &mt);
+  result |= CheckMemoryIndex(memidx, &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnStore(opcode, mt.limits);
   return result;

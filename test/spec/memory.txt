@@ -25,10 +25,10 @@ out/test/spec/memory.wast:33: assert_invalid passed:
 out/test/spec/memory.wast:37: assert_invalid passed:
   000001d: error: load/store memory 0 out of range 0
 out/test/spec/memory.wast:41: assert_invalid passed:
-  error: memory variable out of range: 0 (max 0)
+  0000000: error: memory variable out of range: 0 (max 0)
   0000019: error: OnMemorySizeExpr callback failed
 out/test/spec/memory.wast:45: assert_invalid passed:
-  error: memory variable out of range: 0 (max 0)
+  0000000: error: memory variable out of range: 0 (max 0)
   000001b: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory.wast:51: assert_invalid passed:
   error: max pages (0) must be >= initial pages (1)

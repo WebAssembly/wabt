@@ -39,7 +39,7 @@
 000001b: 00                                        ; func body size (guess)
 000001c: 00                                        ; local decl count
 000001d: 3f                                        ; memory.size
-000001e: 00                                        ; memory.size reserved
+000001e: 00                                        ; memory.size memidx
 000001f: 0b                                        ; end
 000001b: 04                                        ; FIXUP func body size
 0000019: 06                                        ; FIXUP section size

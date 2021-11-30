@@ -196,19 +196,20 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
   Result OnLoadExpr(Opcode opcode,
+                    Index memidx,
                     Address alignment_log2,
                     Address offset) override;
   Result OnLocalGetExpr(Index local_index) override;
   Result OnLocalSetExpr(Index local_index) override;
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
-  Result OnMemoryCopyExpr() override;
+  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override;
   Result OnDataDropExpr(Index segment_index) override;
-  Result OnMemoryGrowExpr() override;
-  Result OnMemoryFillExpr() override;
-  Result OnMemoryInitExpr(Index segment_index) override;
-  Result OnMemorySizeExpr() override;
-  Result OnRefFuncExpr(Index type_index) override;
+  Result OnMemoryGrowExpr(Index memidx) override;
+  Result OnMemoryFillExpr(Index memidx) override;
+  Result OnMemoryInitExpr(Index segment_index, Index memidx) override;
+  Result OnMemorySizeExpr(Index memidx) override;
+  Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
@@ -216,6 +217,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnReturnExpr() override;
   Result OnSelectExpr(Index result_count, Type* result_types) override;
   Result OnStoreExpr(Opcode opcode,
+                     Index memidx,
                      Address alignment_log2,
                      Address offset) override;
   Result OnUnaryExpr(Opcode opcode) override;
@@ -1331,30 +1333,34 @@ Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
 }
 
 Result BinaryReaderInterp::OnLoadExpr(Opcode opcode,
+                                      Index memidx,
                                       Address align_log2,
                                       Address offset) {
-  CHECK_RESULT(validator_.OnLoad(loc, opcode, GetAlignment(align_log2)));
-  istream_.Emit(opcode, kMemoryIndex0, offset);
+  CHECK_RESULT(
+      validator_.OnLoad(loc, opcode, Var(memidx), GetAlignment(align_log2)));
+  istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnStoreExpr(Opcode opcode,
+                                       Index memidx,
                                        Address align_log2,
                                        Address offset) {
-  CHECK_RESULT(validator_.OnStore(loc, opcode, GetAlignment(align_log2)));
-  istream_.Emit(opcode, kMemoryIndex0, offset);
+  CHECK_RESULT(
+      validator_.OnStore(loc, opcode, Var(memidx), GetAlignment(align_log2)));
+  istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnMemoryGrowExpr() {
-  CHECK_RESULT(validator_.OnMemoryGrow(loc));
-  istream_.Emit(Opcode::MemoryGrow, kMemoryIndex0);
+Result BinaryReaderInterp::OnMemoryGrowExpr(Index memidx) {
+  CHECK_RESULT(validator_.OnMemoryGrow(loc, Var(memidx)));
+  istream_.Emit(Opcode::MemoryGrow, memidx);
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnMemorySizeExpr() {
-  CHECK_RESULT(validator_.OnMemorySize(loc));
-  istream_.Emit(Opcode::MemorySize, kMemoryIndex0);
+Result BinaryReaderInterp::OnMemorySizeExpr(Index memidx) {
+  CHECK_RESULT(validator_.OnMemorySize(loc, Var(memidx)));
+  istream_.Emit(Opcode::MemorySize, memidx);
   return Result::Ok;
 }
 
@@ -1447,9 +1453,9 @@ Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnMemoryCopyExpr() {
-  CHECK_RESULT(validator_.OnMemoryCopy(loc));
-  istream_.Emit(Opcode::MemoryCopy, kMemoryIndex0, kMemoryIndex0);
+Result BinaryReaderInterp::OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) {
+  CHECK_RESULT(validator_.OnMemoryCopy(loc, Var(srcmemidx), Var(destmemidx)));
+  istream_.Emit(Opcode::MemoryCopy, srcmemidx, destmemidx);
   return Result::Ok;
 }
 
@@ -1459,15 +1465,15 @@ Result BinaryReaderInterp::OnDataDropExpr(Index segment_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnMemoryFillExpr() {
-  CHECK_RESULT(validator_.OnMemoryFill(loc));
-  istream_.Emit(Opcode::MemoryFill, kMemoryIndex0);
+Result BinaryReaderInterp::OnMemoryFillExpr(Index memidx) {
+  CHECK_RESULT(validator_.OnMemoryFill(loc, Var(memidx)));
+  istream_.Emit(Opcode::MemoryFill, memidx);
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index) {
-  CHECK_RESULT(validator_.OnMemoryInit(loc, Var(segment_index)));
-  istream_.Emit(Opcode::MemoryInit, kMemoryIndex0, segment_index);
+Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index, Index memidx) {
+  CHECK_RESULT(validator_.OnMemoryInit(loc, Var(segment_index), Var(memidx)));
+  istream_.Emit(Opcode::MemoryInit, memidx, segment_index);
   return Result::Ok;
 }
 

@@ -256,6 +256,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnI64ConstExpr(uint64_t value) override { return Result::Ok; }
   Result OnIfExpr(Type sig_type) override { return Result::Ok; }
   Result OnLoadExpr(Opcode opcode,
+                    Index memidx,
                     Address alignment_log2,
                     Address offset) override {
     return Result::Ok;
@@ -264,12 +265,16 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnLocalSetExpr(Index local_index) override { return Result::Ok; }
   Result OnLocalTeeExpr(Index local_index) override { return Result::Ok; }
   Result OnLoopExpr(Type sig_type) override { return Result::Ok; }
-  Result OnMemoryCopyExpr() override { return Result::Ok; }
+  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override {
+    return Result::Ok;
+  }
   Result OnDataDropExpr(Index segment_index) override { return Result::Ok; }
-  Result OnMemoryFillExpr() override { return Result::Ok; }
-  Result OnMemoryGrowExpr() override { return Result::Ok; }
-  Result OnMemoryInitExpr(Index segment_index) override { return Result::Ok; }
-  Result OnMemorySizeExpr() override { return Result::Ok; }
+  Result OnMemoryFillExpr(Index memidx) override { return Result::Ok; }
+  Result OnMemoryGrowExpr(Index memidx) override { return Result::Ok; }
+  Result OnMemoryInitExpr(Index segment_index, Index memidx) override {
+    return Result::Ok;
+  }
+  Result OnMemorySizeExpr(Index memidx) override { return Result::Ok; }
   Result OnTableCopyExpr(Index dst_index, Index src_index) override {
     return Result::Ok;
   }
@@ -294,6 +299,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnStoreExpr(Opcode opcode,
+                     Index memidx,
                      Address alignment_log2,
                      Address offset) override {
     return Result::Ok;
