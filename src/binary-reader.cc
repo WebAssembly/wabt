@@ -119,7 +119,7 @@ class BinaryReader {
 
   Index NumTotalFuncs();
 
-  Result ReadInitExpr(Index index, Type required = Type::Any) WABT_WARN_UNUSED;
+  Result ReadInitExpr(Index index) WABT_WARN_UNUSED;
   Result ReadTable(Type* out_elem_type,
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
@@ -129,6 +129,7 @@ class BinaryReader {
                      Index memory,
                      const char* desc) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
+  Result ReadInstructions(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
@@ -487,91 +488,9 @@ Index BinaryReader::NumTotalFuncs() {
   return num_func_imports_ + num_function_signatures_;
 }
 
-Result BinaryReader::ReadInitExpr(Index index, Type required) {
-  Opcode opcode;
-  CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
-  ERROR_UNLESS_OPCODE_ENABLED(opcode);
-
-  switch (opcode) {
-    case Opcode::I32Const: {
-      uint32_t value = 0;
-      CHECK_RESULT(ReadS32Leb128(&value, "init_expr i32.const value"));
-      CALLBACK(OnInitExprI32ConstExpr, index, value);
-      break;
-    }
-
-    case Opcode::I64Const: {
-      uint64_t value = 0;
-      CHECK_RESULT(ReadS64Leb128(&value, "init_expr i64.const value"));
-      CALLBACK(OnInitExprI64ConstExpr, index, value);
-      break;
-    }
-
-    case Opcode::F32Const: {
-      uint32_t value_bits = 0;
-      CHECK_RESULT(ReadF32(&value_bits, "init_expr f32.const value"));
-      CALLBACK(OnInitExprF32ConstExpr, index, value_bits);
-      break;
-    }
-
-    case Opcode::F64Const: {
-      uint64_t value_bits = 0;
-      CHECK_RESULT(ReadF64(&value_bits, "init_expr f64.const value"));
-      CALLBACK(OnInitExprF64ConstExpr, index, value_bits);
-      break;
-    }
-
-    case Opcode::V128Const: {
-      v128 value_bits;
-      ZeroMemory(value_bits);
-      CHECK_RESULT(ReadV128(&value_bits, "init_expr v128.const value"));
-      CALLBACK(OnInitExprV128ConstExpr, index, value_bits);
-      break;
-    }
-
-    case Opcode::GlobalGet: {
-      Index global_index;
-      CHECK_RESULT(ReadIndex(&global_index, "init_expr global.get index"));
-      CALLBACK(OnInitExprGlobalGetExpr, index, global_index);
-      break;
-    }
-
-    case Opcode::RefNull: {
-      Type type;
-      CHECK_RESULT(ReadRefType(&type, "ref.null type"));
-      CALLBACK(OnInitExprRefNull, index, type);
-      break;
-    }
-
-    case Opcode::RefFunc: {
-      Index func_index;
-      CHECK_RESULT(ReadIndex(&func_index, "init_expr ref.func index"));
-      CALLBACK(OnInitExprRefFunc, index, func_index);
-      break;
-    }
-
-    case Opcode::End:
-      return Result::Ok;
-
-    default:
-      return ReportUnexpectedOpcode(opcode, "in initializer expression");
-  }
-
-  if (required == Type::I32 && opcode != Opcode::I32Const &&
-    opcode != Opcode::GlobalGet) {
-    PrintError("expected i32 init_expr");
-    return Result::Error;
-  }
-  if (required == Type::I64 && opcode != Opcode::I64Const &&
-      opcode != Opcode::GlobalGet) {
-    PrintError("expected i64 init_expr");
-    return Result::Error;
-  }
-
-  CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
-  ERROR_UNLESS(opcode == Opcode::End,
-               "expected END opcode after initializer expression");
-  return Result::Ok;
+Result BinaryReader::ReadInitExpr(Index index) {
+  // Read instructions until END opcode is reached.
+  return ReadInstructions(UINT32_MAX);
 }
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
@@ -672,8 +591,17 @@ Result BinaryReader::ReadAddress(Address* out_value,
 }
 
 Result BinaryReader::ReadFunctionBody(Offset end_offset) {
+  return ReadInstructions(end_offset);
+}
+
+//
+// end_offset == UINT32_MAX means read until and end
+//  instruction is seen.
+// end_offset < UINT32_MAX means read until a given location
+//
+Result BinaryReader::ReadInstructions(Offset end_offset) {
   bool seen_end_opcode = false;
-  while (state_.offset < end_offset) {
+  while (end_offset == UINT32_MAX || state_.offset < end_offset) {
     Opcode opcode;
     CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
     CALLBACK(OnOpcode, opcode);
@@ -801,6 +729,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::End:
         CALLBACK0(OnEndExpr);
+        if (end_offset == UINT32_MAX) {
+          return Result::Ok;
+        }
         if (state_.offset == end_offset) {
           seen_end_opcode = true;
         }
@@ -2616,7 +2547,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
 
     if (!(flags & SegPassive)) {
       CALLBACK(BeginElemSegmentInitExpr, i);
-      CHECK_RESULT(ReadInitExpr(i, Type::I32));
+      CHECK_RESULT(ReadInitExpr(i));
       CALLBACK(EndElemSegmentInitExpr, i);
     }
 
@@ -2733,7 +2664,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     if (!(flags & SegPassive)) {
       ERROR_UNLESS(memories.size() > 0, "no memory to copy data to");
       CALLBACK(BeginDataSegmentInitExpr, i);
-      CHECK_RESULT(ReadInitExpr(i, memories[0].IndexType()));
+      CHECK_RESULT(ReadInitExpr(i));
       CALLBACK(EndDataSegmentInitExpr, i);
     }
 

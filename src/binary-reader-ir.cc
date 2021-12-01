@@ -259,15 +259,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTagType(Index index, Index sig_index) override;
   Result EndTagSection() override { return Result::Ok; }
 
-  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
-  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index, Type type) override;
-  Result OnInitExprRefFunc(Index index, Index func_index) override;
-
   Result OnDataSymbol(Index index, uint32_t flags, string_view name,
                        Index segment, uint32_t offset, uint32_t size) override;
   Result OnFunctionSymbol(Index index, uint32_t flags, string_view name,
@@ -289,6 +280,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   void PushLabel(LabelType label_type,
                  ExprList* first,
                  Expr* context = nullptr);
+  Result EndInitExpr();
   Result PopLabel();
   Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
@@ -313,6 +305,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Func* current_func_ = nullptr;
   std::vector<LabelNode> label_stack_;
   ExprList* current_init_expr_ = nullptr;
+  bool current_init_expr_ended_ = false;
   const char* filename_;
 };
 
@@ -374,10 +367,14 @@ Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
 }
 
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
-  expr->loc = GetLocation();
-  LabelNode* label;
-  CHECK_RESULT(TopLabel(&label));
-  label->exprs->push_back(std::move(expr));
+  if (current_init_expr_) {
+    current_init_expr_->push_back(std::move(expr));
+  } else {
+    expr->loc = GetLocation();
+    LabelNode* label;
+    CHECK_RESULT(TopLabel(&label));
+    label->exprs->push_back(std::move(expr));
+  }
   return Result::Ok;
 }
 
@@ -611,12 +608,12 @@ Result BinaryReaderIR::BeginGlobalInitExpr(Index index) {
   assert(index == module_->globals.size() - 1);
   Global* global = module_->globals[index];
   current_init_expr_ = &global->init_expr;
+  current_init_expr_ended_ = false;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndGlobalInitExpr(Index index) {
-  current_init_expr_ = nullptr;
-  return Result::Ok;
+  return EndInitExpr();
 }
 
 Result BinaryReaderIR::OnExportCount(Index count) {
@@ -803,6 +800,11 @@ Result BinaryReaderIR::OnElseExpr() {
 }
 
 Result BinaryReaderIR::OnEndExpr() {
+  if (current_init_expr_) {
+    assert(!current_init_expr_ended_);
+    current_init_expr_ended_ = true;
+    return Result::Ok;
+  }
   if (label_stack_.size() > 1) {
     LabelNode* label;
     Expr* expr;
@@ -1157,12 +1159,22 @@ Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
   assert(index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[index];
   current_init_expr_ = &segment->offset;
+  current_init_expr_ended_ = false;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::EndInitExpr() {
+  if (!current_init_expr_ended_) {
+    PrintError("expected END opcode after initializer expression");
+    return Result::Error;
+  }
+  current_init_expr_ = nullptr;
+  current_init_expr_ended_ = false;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndElemSegmentInitExpr(Index index) {
-  current_init_expr_ = nullptr;
-  return Result::Ok;
+  return EndInitExpr();
 }
 
 Result BinaryReaderIR::OnElemSegmentElemType(Index index, Type elem_type) {
@@ -1229,12 +1241,12 @@ Result BinaryReaderIR::BeginDataSegmentInitExpr(Index index) {
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
   current_init_expr_ = &segment->offset;
+  current_init_expr_ended_ = false;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndDataSegmentInitExpr(Index index) {
-  current_init_expr_ = nullptr;
-  return Result::Ok;
+  return EndInitExpr();
 }
 
 Result BinaryReaderIR::OnDataSegmentData(Index index,
@@ -1413,62 +1425,6 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
                count, num_params_and_locals);
     return Result::Error;
   }
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprF32ConstExpr(Index index, uint32_t value) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(
-      MakeUnique<ConstExpr>(Const::F32(value, loc), loc));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprF64ConstExpr(Index index, uint64_t value) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(
-      MakeUnique<ConstExpr>(Const::F64(value, loc), loc));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprV128ConstExpr(Index index, v128 value) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(
-      MakeUnique<ConstExpr>(Const::V128(value, loc), loc));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprGlobalGetExpr(Index index,
-                                               Index global_index) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(
-      MakeUnique<GlobalGetExpr>(Var(global_index, loc), loc));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprI32ConstExpr(Index index, uint32_t value) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(
-      MakeUnique<ConstExpr>(Const::I32(value, loc), loc));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(
-      MakeUnique<ConstExpr>(Const::I64(value, loc), loc));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprRefNull(Index index, Type type) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(MakeUnique<RefNullExpr>(type, loc));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnInitExprRefFunc(Index index, Index func_index) {
-  Location loc = GetLocation();
-  current_init_expr_->push_back(
-      MakeUnique<RefFuncExpr>(Var(func_index, loc), loc));
   return Result::Ok;
 }
 

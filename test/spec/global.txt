@@ -9,22 +9,29 @@ out/test/spec/global.wast:278: assert_invalid passed:
   error: can't global.set on immutable global at index 0.
   0000035: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:287: assert_invalid passed:
-  0000013: error: expected END opcode after initializer expression
+  error: Unepxected opcode in init expr
+  0000013: error: OnUnaryExpr callback failed
 out/test/spec/global.wast:292: assert_invalid passed:
-  000000e: error: unexpected opcode in initializer expression: 0x20
+  0000000: error: local variable out of range (max 0)
+  000000f: error: OnLocalGetExpr callback failed
 out/test/spec/global.wast:297: assert_invalid passed:
-  0000013: error: expected END opcode after initializer expression
+  error: Unepxected opcode in init expr
+  0000013: error: OnUnaryExpr callback failed
 out/test/spec/global.wast:302: assert_invalid passed:
-  0000010: error: expected END opcode after initializer expression
+  error: Unepxected opcode in init expr
+  0000010: error: OnNopExpr callback failed
 out/test/spec/global.wast:307: assert_invalid passed:
-  0000010: error: expected END opcode after initializer expression
+  error: Unepxected opcode in init expr
+  0000010: error: OnUnaryExpr callback failed
 out/test/spec/global.wast:312: assert_invalid passed:
-  000000e: error: unexpected opcode in initializer expression: 0x1
+  error: Unepxected opcode in init expr
+  000000e: error: OnNopExpr callback failed
 out/test/spec/global.wast:317: assert_invalid passed:
   error: type mismatch at global initializer expression. got f32, expected i32
   0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:322: assert_invalid passed:
-  0000010: error: expected END opcode after initializer expression
+  error: expected END opcode after initializer expression
+  0000011: error: OnI32ConstExpr callback failed
 out/test/spec/global.wast:327: assert_invalid passed:
   error: invalid global initializer expression, must be a constant expression
   000000e: error: EndGlobalInitExpr callback failed
@@ -32,9 +39,11 @@ out/test/spec/global.wast:332: assert_invalid passed:
   error: type mismatch at global initializer expression. got externref, expected funcref
   0000018: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:337: assert_invalid passed:
-  0000026: error: expected END opcode after initializer expression
+  error: expected END opcode after initializer expression
+  0000027: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:342: assert_invalid passed:
-  0000026: error: expected END opcode after initializer expression
+  error: expected END opcode after initializer expression
+  0000027: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:347: assert_invalid passed:
   0000000: error: initializer expression can only reference an imported global
   0000010: error: EndGlobalInitExpr callback failed

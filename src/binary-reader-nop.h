@@ -549,33 +549,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result EndLinkingSection() override { return Result::Ok; }
-
-  /* InitExpr - used by elem, data and global sections; these functions are
-   * only called between calls to Begin*InitExpr and End*InitExpr */
-  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprV128ConstExpr(Index index, v128 value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override {
-    return Result::Ok;
-  }
-  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprRefNull(Index index, Type type) override {
-    return Result::Ok;
-  }
-  Result OnInitExprRefFunc(Index index, Index func_index) override {
-    return Result::Ok;
-  }
 };
 
 }  // namespace wabt
