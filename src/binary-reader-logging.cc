@@ -491,48 +491,6 @@ Result BinaryReaderLogging::OnNameEntry(NameSectionSubsection type,
   return reader_->OnNameEntry(type, index, name);
 }
 
-Result BinaryReaderLogging::OnInitExprF32ConstExpr(Index index,
-                                                   uint32_t value_bits) {
-  float value;
-  memcpy(&value, &value_bits, sizeof(value));
-  LOGF("OnInitExprF32ConstExpr(index: %" PRIindex ", value: %g (0x04%x))\n",
-       index, value, value_bits);
-  return reader_->OnInitExprF32ConstExpr(index, value_bits);
-}
-
-Result BinaryReaderLogging::OnInitExprF64ConstExpr(Index index,
-                                                   uint64_t value_bits) {
-  double value;
-  memcpy(&value, &value_bits, sizeof(value));
-  LOGF("OnInitExprF64ConstExpr(index: %" PRIindex " value: %g (0x08%" PRIx64
-       "))\n",
-       index, value, value_bits);
-  return reader_->OnInitExprF64ConstExpr(index, value_bits);
-}
-
-Result BinaryReaderLogging::OnInitExprV128ConstExpr(Index index,
-                                                    v128 value_bits) {
-  LOGF("OnInitExprV128ConstExpr(index: %" PRIindex
-       " value: ( 0x%08x 0x%08x 0x%08x 0x%08x))\n",
-       index, value_bits.u32(0), value_bits.u32(1), value_bits.u32(2),
-       value_bits.u32(3));
-  return reader_->OnInitExprV128ConstExpr(index, value_bits);
-}
-
-Result BinaryReaderLogging::OnInitExprI32ConstExpr(Index index,
-                                                   uint32_t value) {
-  LOGF("OnInitExprI32ConstExpr(index: %" PRIindex ", value: %u)\n", index,
-       value);
-  return reader_->OnInitExprI32ConstExpr(index, value);
-}
-
-Result BinaryReaderLogging::OnInitExprI64ConstExpr(Index index,
-                                                   uint64_t value) {
-  LOGF("OnInitExprI64ConstExpr(index: %" PRIindex ", value: %" PRIu64 ")\n",
-       index, value);
-  return reader_->OnInitExprI64ConstExpr(index, value);
-}
-
 Result BinaryReaderLogging::OnDylinkInfo(uint32_t mem_size,
                                          uint32_t mem_align,
                                          uint32_t table_size,
@@ -906,10 +864,6 @@ DEFINE_END(EndNamesSection)
 
 DEFINE_BEGIN(BeginRelocSection)
 DEFINE_END(EndRelocSection)
-
-DEFINE_INDEX_INDEX(OnInitExprGlobalGetExpr, "index", "global_index")
-DEFINE_INDEX_TYPE(OnInitExprRefNull)
-DEFINE_INDEX_INDEX(OnInitExprRefFunc, "index", "func_index")
 
 DEFINE_BEGIN(BeginDylinkSection)
 DEFINE_INDEX(OnDylinkNeededCount)

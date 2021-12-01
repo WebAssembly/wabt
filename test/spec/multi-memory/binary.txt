@@ -73,41 +73,41 @@ out/test/spec/multi-memory/binary.wast:165: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:178: assert_malformed passed:
   000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:188: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:198: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:209: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:219: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:231: assert_malformed passed:
   000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:239: assert_malformed passed:
   000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:249: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:259: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:269: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:279: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:290: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:300: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:310: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:320: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:331: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:341: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:351: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:361: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:374: assert_malformed passed:
   000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:382: assert_malformed passed:
@@ -119,13 +119,13 @@ out/test/spec/multi-memory/binary.wast:420: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:439: assert_malformed passed:
   0000024: error: unable to read u32 leb128: store offset
 out/test/spec/multi-memory/binary.wast:460: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:470: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:481: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:491: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:503: assert_malformed passed:
   000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:511: assert_malformed passed:
@@ -147,21 +147,21 @@ out/test/spec/multi-memory/binary.wast:632: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:651: assert_malformed passed:
   0000024: error: unable to read u32 leb128: store offset
 out/test/spec/multi-memory/binary.wast:673: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:683: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:693: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:703: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:714: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:724: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:734: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:744: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:756: assert_malformed passed:
   0000017: error: unable to read u32 leb128: local type count
 out/test/spec/multi-memory/binary.wast:773: assert_malformed passed:

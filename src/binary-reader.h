@@ -460,17 +460,6 @@ class BinaryReaderDelegate {
   virtual Result OnTagType(Index index, Index sig_index) = 0;
   virtual Result EndTagSection() = 0;
 
-  /* InitExpr - used by elem, data and global sections; these functions are
-   * only called between calls to Begin*InitExpr and End*InitExpr */
-  virtual Result OnInitExprF32ConstExpr(Index index, uint32_t value) = 0;
-  virtual Result OnInitExprF64ConstExpr(Index index, uint64_t value) = 0;
-  virtual Result OnInitExprV128ConstExpr(Index index, v128 value) = 0;
-  virtual Result OnInitExprGlobalGetExpr(Index index, Index global_index) = 0;
-  virtual Result OnInitExprI32ConstExpr(Index index, uint32_t value) = 0;
-  virtual Result OnInitExprI64ConstExpr(Index index, uint64_t value) = 0;
-  virtual Result OnInitExprRefNull(Index index, Type type) = 0;
-  virtual Result OnInitExprRefFunc(Index index, Index func_index) = 0;
-
   const State* state = nullptr;
 };
 
