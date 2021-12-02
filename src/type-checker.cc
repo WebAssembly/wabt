@@ -769,9 +769,9 @@ Result TypeChecker::OnTableFill(Type elem_type) {
   return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
 }
 
-Result TypeChecker::OnRefFuncExpr(Index type_index) {
+Result TypeChecker::OnRefFuncExpr(Index func_index) {
   if (features_.function_references_enabled()) {
-    PushType(Type(Type::Reference, type_index));
+    PushType(Type(Type::Reference, func_index));
   } else {
     PushType(Type::FuncRef);
   }

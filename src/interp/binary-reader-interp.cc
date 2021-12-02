@@ -1382,9 +1382,9 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnRefFuncExpr(Index type_index) {
-  CHECK_RESULT(validator_.OnRefFunc(loc, Var(type_index)));
-  istream_.Emit(Opcode::RefFunc, type_index);
+Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
+  CHECK_RESULT(validator_.OnRefFunc(loc, Var(func_index)));
+  istream_.Emit(Opcode::RefFunc, func_index);
   return Result::Ok;
 }
 
