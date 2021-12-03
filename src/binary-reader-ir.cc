@@ -305,7 +305,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Func* current_func_ = nullptr;
   std::vector<LabelNode> label_stack_;
   ExprList* current_init_expr_ = nullptr;
-  bool current_init_expr_ended_ = false;
   const char* filename_;
 };
 
@@ -608,7 +607,6 @@ Result BinaryReaderIR::BeginGlobalInitExpr(Index index) {
   assert(index == module_->globals.size() - 1);
   Global* global = module_->globals[index];
   current_init_expr_ = &global->init_expr;
-  current_init_expr_ended_ = false;
   return Result::Ok;
 }
 
@@ -801,8 +799,6 @@ Result BinaryReaderIR::OnElseExpr() {
 
 Result BinaryReaderIR::OnEndExpr() {
   if (current_init_expr_) {
-    assert(!current_init_expr_ended_);
-    current_init_expr_ended_ = true;
     return Result::Ok;
   }
   if (label_stack_.size() > 1) {
@@ -1159,19 +1155,11 @@ Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
   assert(index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[index];
   current_init_expr_ = &segment->offset;
-  current_init_expr_ended_ = false;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndInitExpr() {
-  // This logic is currently duplicated in binary-reader-interp.cpp.
-  // TODO(sbc): Find a way to do this validation in SharedValidator instead.
-  if (!current_init_expr_ended_) {
-    PrintError("expected END opcode after initializer expression");
-    return Result::Error;
-  }
   current_init_expr_ = nullptr;
-  current_init_expr_ended_ = false;
   return Result::Ok;
 }
 
@@ -1243,7 +1231,6 @@ Result BinaryReaderIR::BeginDataSegmentInitExpr(Index index) {
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
   current_init_expr_ = &segment->offset;
-  current_init_expr_ended_ = false;
   return Result::Ok;
 }
 
