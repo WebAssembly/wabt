@@ -382,15 +382,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTagType(Index index, Index sig_index) override;
   Result EndTagSection() override;
 
-  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
-  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index, Type type) override;
-  Result OnInitExprRefFunc(Index index, Index func_index) override;
-
  private:
   void Indent();
   void Dedent();

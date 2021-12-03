@@ -132,6 +132,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   Result OnGlobalCount(Index count) override;
   Result BeginGlobal(Index index, Type type, bool mutable_) override;
+  Result BeginGlobalInitExpr(Index index) override;
   Result EndGlobalInitExpr(Index index) override;
 
   Result OnTagCount(Index count) override;
@@ -255,6 +256,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result BeginElemSegment(Index index,
                           Index table_index,
                           uint8_t flags) override;
+  Result BeginElemSegmentInitExpr(Index index) override;
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
@@ -263,6 +265,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                        Index func_index) override;
 
   Result OnDataCount(Index count) override;
+  Result BeginDataSegmentInitExpr(Index index) override;
   Result EndDataSegmentInitExpr(Index index) override;
   Result BeginDataSegment(Index index,
                           Index memory_index,
@@ -270,15 +273,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnDataSegmentData(Index index,
                            const void* data,
                            Address size) override;
-
-  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
-  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index, Type type) override;
-  Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:
   Label* GetLabel(Index depth);
@@ -303,6 +297,11 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                     Index keep_extra,
                                     Index* out_drop_count,
                                     Index* out_keep_count);
+  Result BeginInitExpr();
+  Result EndInitExpr();
+  Result CheckEmptyInitExpr();
+  Result CheckNotInitExpr();
+
   void EmitBr(Index depth,
               Index drop_count,
               Index keep_count,
@@ -325,6 +324,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   FixupMap depth_fixups_;
   FixupMap func_fixups_;
 
+  bool reading_init_expr_ = false;
   InitExpr init_expr_;
   u32 local_decl_count_;
   u32 local_count_;
@@ -620,7 +620,47 @@ Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::BeginGlobalInitExpr(Index index) {
+  return BeginInitExpr();
+}
+
+Result BinaryReaderInterp::EndInitExpr() {
+  assert(reading_init_expr_);
+  reading_init_expr_ = false;
+  if (!init_expr_.ended) {
+    PrintError("expected END opcode after initializer expression");
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::BeginInitExpr() {
+  assert(!reading_init_expr_);
+  reading_init_expr_ = true;
+  init_expr_.kind = InitExprKind::None;
+  init_expr_.ended = false;
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::CheckEmptyInitExpr() {
+  assert(reading_init_expr_);
+  if (init_expr_.kind != InitExprKind::None) {
+    PrintError("expected END opcode after initializer expression");
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::CheckNotInitExpr() {
+  if (reading_init_expr_) {
+    PrintError("Unepxected opcode in init expr");
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
+  CHECK_RESULT(EndInitExpr());
   switch (init_expr_.kind) {
     case InitExprKind::I32:
       CHECK_RESULT(validator_.OnGlobalInitExpr_Const(loc, ValueType::I32));
@@ -663,58 +703,6 @@ Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
 
   GlobalDesc& global = module_.globals.back();
   global.init = init_expr_;
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprF32ConstExpr(Index index,
-                                                  uint32_t value_bits) {
-  init_expr_.kind = InitExprKind::F32;
-  init_expr_.f32_ = Bitcast<f32>(value_bits);
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprF64ConstExpr(Index index,
-                                                  uint64_t value_bits) {
-  init_expr_.kind = InitExprKind::F64;
-  init_expr_.f64_ = Bitcast<f64>(value_bits);
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprV128ConstExpr(Index index,
-                                                   v128 value_bits) {
-  init_expr_.kind = InitExprKind::V128;
-  init_expr_.v128_ = Bitcast<v128>(value_bits);
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprGlobalGetExpr(Index index,
-                                                   Index global_index) {
-  init_expr_.kind = InitExprKind::GlobalGet;
-  init_expr_.index_ = global_index;
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprI32ConstExpr(Index index, uint32_t value) {
-  init_expr_.kind = InitExprKind::I32;
-  init_expr_.i32_ = value;
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index, uint64_t value) {
-  init_expr_.kind = InitExprKind::I64;
-  init_expr_.i64_ = value;
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprRefNull(Index index, Type type) {
-  init_expr_.kind = InitExprKind::RefNull;
-  init_expr_.type_ = type;
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::OnInitExprRefFunc(Index index, Index func_index) {
-  init_expr_.kind = InitExprKind::RefFunc;
-  init_expr_.index_ = func_index;
   return Result::Ok;
 }
 
@@ -777,7 +765,12 @@ Result BinaryReaderInterp::BeginElemSegment(Index index,
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::BeginElemSegmentInitExpr(Index index) {
+  return BeginInitExpr();
+}
+
 Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
+  CHECK_RESULT(EndInitExpr());
   switch (init_expr_.kind) {
     case InitExprKind::I32:
       CHECK_RESULT(validator_.OnElemSegmentInitExpr_Const(loc, ValueType::I32));
@@ -834,7 +827,12 @@ Result BinaryReaderInterp::OnDataCount(Index count) {
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::BeginDataSegmentInitExpr(Index index) {
+  return BeginInitExpr();
+}
+
 Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
+  CHECK_RESULT(EndInitExpr());
   switch (init_expr_.kind) {
     case InitExprKind::I32:
       CHECK_RESULT(validator_.OnDataSegmentInitExpr_Const(loc, ValueType::I32));
@@ -960,7 +958,7 @@ Index BinaryReaderInterp::num_func_imports() const {
 }
 
 Result BinaryReaderInterp::OnOpcode(Opcode opcode) {
-  if (func_ == nullptr || label_stack_.empty()) {
+  if ((func_ == nullptr || label_stack_.empty()) && !reading_init_expr_) {
     PrintError("Unexpected instruction after end of function");
     return Result::Error;
   }
@@ -968,12 +966,14 @@ Result BinaryReaderInterp::OnOpcode(Opcode opcode) {
 }
 
 Result BinaryReaderInterp::OnUnaryExpr(Opcode opcode) {
+  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnUnary(loc, opcode));
   istream_.Emit(opcode);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTernaryExpr(Opcode opcode) {
+  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnTernary(loc, opcode));
   istream_.Emit(opcode);
   return Result::Ok;
@@ -1100,6 +1100,14 @@ Result BinaryReaderInterp::OnElseExpr() {
 }
 
 Result BinaryReaderInterp::OnEndExpr() {
+  if (reading_init_expr_) {
+    if (init_expr_.ended) {
+      PrintError("duplicate END opcode init initializer expression");
+      return Result::Error;
+    }
+    init_expr_.ended = true;
+    return Result::Ok;
+  }
   if (label_stack_.size() == 1) {
     return Result::Ok;
   }
@@ -1263,41 +1271,78 @@ Result BinaryReaderInterp::OnDropExpr() {
 
 Result BinaryReaderInterp::OnI32ConstExpr(uint32_t value) {
   CHECK_RESULT(validator_.OnConst(loc, Type::I32));
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::I32;
+    init_expr_.i32_ = value;
+    return Result::Ok;
+  }
   istream_.Emit(Opcode::I32Const, value);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnI64ConstExpr(uint64_t value) {
   CHECK_RESULT(validator_.OnConst(loc, Type::I64));
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::I64;
+    init_expr_.i64_ = value;
+    return Result::Ok;
+  }
   istream_.Emit(Opcode::I64Const, value);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnF32ConstExpr(uint32_t value_bits) {
   CHECK_RESULT(validator_.OnConst(loc, Type::F32));
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::F32;
+    init_expr_.f32_ = Bitcast<f32>(value_bits);
+    return Result::Ok;
+  }
   istream_.Emit(Opcode::F32Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
   CHECK_RESULT(validator_.OnConst(loc, Type::F64));
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::F64;
+    init_expr_.f64_ = Bitcast<f64>(value_bits);
+    return Result::Ok;
+  }
   istream_.Emit(Opcode::F64Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
   CHECK_RESULT(validator_.OnConst(loc, Type::V128));
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::V128;
+    init_expr_.v128_ = Bitcast<v128>(value_bits);
+    return Result::Ok;
+  }
   istream_.Emit(Opcode::V128Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::GlobalGet;
+    init_expr_.index_ = global_index;
+    return Result::Ok;
+  }
   CHECK_RESULT(validator_.OnGlobalGet(loc, Var(global_index)));
   istream_.Emit(Opcode::GlobalGet, global_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnGlobalSetExpr(Index global_index) {
+  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnGlobalSet(loc, Var(global_index)));
   istream_.Emit(Opcode::GlobalSet, global_index);
   return Result::Ok;
@@ -1383,6 +1428,12 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
 }
 
 Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::RefFunc;
+    init_expr_.index_ = func_index;
+    return Result::Ok;
+  }
   CHECK_RESULT(validator_.OnRefFunc(loc, Var(func_index)));
   istream_.Emit(Opcode::RefFunc, func_index);
   return Result::Ok;
@@ -1390,6 +1441,12 @@ Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
 
 Result BinaryReaderInterp::OnRefNullExpr(Type type) {
   CHECK_RESULT(validator_.OnRefNull(loc, type));
+  if (reading_init_expr_) {
+    CHECK_RESULT(CheckEmptyInitExpr());
+    init_expr_.kind = InitExprKind::RefNull;
+    init_expr_.type_ = type;
+    return Result::Ok;
+  }
   istream_.Emit(Opcode::RefNull);
   return Result::Ok;
 }
@@ -1401,6 +1458,7 @@ Result BinaryReaderInterp::OnRefIsNullExpr() {
 }
 
 Result BinaryReaderInterp::OnNopExpr() {
+  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnNop(loc));
   return Result::Ok;
 }

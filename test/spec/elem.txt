@@ -7,26 +7,35 @@ out/test/spec/elem.wast:336: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/elem.wast:346: assert_invalid passed:
-  0000014: error: expected i32 init_expr
+  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:354: assert_invalid passed:
-  0000014: error: expected i32 init_expr
+  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:362: assert_invalid passed:
   error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
   0000013: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:370: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  error: expected END opcode after initializer expression
+  0000016: error: OnI32ConstExpr callback failed
 out/test/spec/elem.wast:378: assert_invalid passed:
-  000002b: error: expected END opcode after initializer expression
+  error: expected END opcode after initializer expression
+  000002c: error: OnGlobalGetExpr callback failed
 out/test/spec/elem.wast:387: assert_invalid passed:
-  000002b: error: expected END opcode after initializer expression
+  error: expected END opcode after initializer expression
+  000002c: error: OnI32ConstExpr callback failed
 out/test/spec/elem.wast:397: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  error: Unepxected opcode in init expr
+  0000015: error: OnUnaryExpr callback failed
 out/test/spec/elem.wast:405: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
+  error: Unepxected opcode in init expr
+  0000013: error: OnNopExpr callback failed
 out/test/spec/elem.wast:413: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
+  error: Unepxected opcode in init expr
+  0000013: error: OnNopExpr callback failed
 out/test/spec/elem.wast:421: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  error: Unepxected opcode in init expr
+  0000015: error: OnNopExpr callback failed
 out/test/spec/elem.wast:435: assert_invalid passed:
   0000000: error: global variable out of range: 0 (max 0)
   error: initializer expression cannot reference a mutable global

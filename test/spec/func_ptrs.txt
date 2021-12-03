@@ -10,11 +10,14 @@ out/test/spec/func_ptrs.wast:33: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/func_ptrs.wast:36: assert_invalid passed:
-  0000014: error: expected i32 init_expr
+  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/func_ptrs.wast:40: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  error: Unepxected opcode in init expr
+  0000015: error: OnUnaryExpr callback failed
 out/test/spec/func_ptrs.wast:44: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
+  error: Unepxected opcode in init expr
+  0000013: error: OnNopExpr callback failed
 out/test/spec/func_ptrs.wast:48: assert_invalid passed:
   0000000: error: function type variable out of range: 42 (max 0)
   000000c: error: OnFunction callback failed
