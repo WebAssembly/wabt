@@ -304,7 +304,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Func* current_func_ = nullptr;
   std::vector<LabelNode> label_stack_;
-  ExprList* current_init_expr_ = nullptr;
+  InitExpr* current_init_expr_ = nullptr;
   const char* filename_;
 };
 
@@ -368,7 +368,7 @@ Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
   expr->loc = GetLocation();
   if (current_init_expr_) {
-    current_init_expr_->push_back(std::move(expr));
+    current_init_expr_->exprs.push_back(std::move(expr));
   } else {
     LabelNode* label;
     CHECK_RESULT(TopLabel(&label));
@@ -1188,8 +1188,8 @@ Result BinaryReaderIR::OnElemSegmentElemExpr_RefNull(Index segment_index,
   assert(segment_index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[segment_index];
   Location loc = GetLocation();
-  ExprList init_expr;
-  init_expr.push_back(MakeUnique<RefNullExpr>(type, loc));
+  InitExpr init_expr;
+  init_expr.exprs.push_back(MakeUnique<RefNullExpr>(type, loc));
   segment->elem_exprs.push_back(std::move(init_expr));
   return Result::Ok;
 }
@@ -1199,8 +1199,8 @@ Result BinaryReaderIR::OnElemSegmentElemExpr_RefFunc(Index segment_index,
   assert(segment_index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[segment_index];
   Location loc = GetLocation();
-  ExprList init_expr;
-  init_expr.push_back(MakeUnique<RefFuncExpr>(Var(func_index, loc), loc));
+  InitExpr init_expr;
+  init_expr.exprs.push_back(MakeUnique<RefFuncExpr>(Var(func_index, loc), loc));
   segment->elem_exprs.push_back(std::move(init_expr));
   return Result::Ok;
 }

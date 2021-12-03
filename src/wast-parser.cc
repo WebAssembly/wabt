@@ -823,20 +823,20 @@ bool WastParser::ParseElemExprOpt(ExprList* out_elem_expr) {
   return true;
 }
 
-bool WastParser::ParseElemExprListOpt(ExprListVector* out_list) {
-  ExprList elem_expr;
-  while (ParseElemExprOpt(&elem_expr)) {
-    out_list->push_back(std::move(elem_expr));
+bool WastParser::ParseElemExprListOpt(InitExprVector* out_list) {
+  InitExpr init_expr;
+  while (ParseElemExprOpt(&init_expr.exprs)) {
+    out_list->push_back(std::move(init_expr));
   }
   return !out_list->empty();
 }
 
-bool WastParser::ParseElemExprVarListOpt(ExprListVector* out_list) {
+bool WastParser::ParseElemExprVarListOpt(InitExprVector* out_list) {
   WABT_TRACE(ParseElemExprVarListOpt);
   Var var;
-  ExprList init_expr;
+  InitExpr init_expr;
   while (ParseVarOpt(&var)) {
-    init_expr.push_back(MakeUnique<RefFuncExpr>(var));
+    init_expr.exprs.push_back(MakeUnique<RefFuncExpr>(var));
     out_list->push_back(std::move(init_expr));
   }
   return !out_list->empty();
@@ -1201,10 +1201,10 @@ Result WastParser::ParseDataModuleField(Module* module) {
     EXPECT(Memory);
     CHECK_RESULT(ParseVar(&field->data_segment.memory_var));
     EXPECT(Rpar);
-    CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
+    CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset.exprs));
   } else if (ParseVarOpt(&field->data_segment.memory_var, Var(0, loc))) {
-    CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
-  } else if (!ParseOffsetExprOpt(&field->data_segment.offset)) {
+    CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset.exprs));
+  } else if (!ParseOffsetExprOpt(&field->data_segment.offset.exprs)) {
     if (!options_->features.bulk_memory_enabled()) {
       Error(loc, "passive data segments are not allowed");
       return Result::Error;
@@ -1264,11 +1264,11 @@ Result WastParser::ParseElemModuleField(Module* module) {
   // Parse offset expression, if not declared/passive segment.
   if (options_->features.bulk_memory_enabled()) {
     if (field->elem_segment.kind != SegmentKind::Declared &&
-        !ParseOffsetExprOpt(&field->elem_segment.offset)) {
+        !ParseOffsetExprOpt(&field->elem_segment.offset.exprs)) {
       field->elem_segment.kind = SegmentKind::Passive;
     }
   } else {
-    CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
+    CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset.exprs));
   }
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
@@ -1474,7 +1474,7 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
   } else {
     auto field = MakeUnique<GlobalModuleField>(loc, name);
     CHECK_RESULT(ParseGlobalType(&field->global));
-    CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr));
+    CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr.exprs));
     module->AppendField(std::move(field));
   }
 
@@ -1600,9 +1600,9 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
       auto data_segment_field = MakeUnique<DataSegmentModuleField>(loc);
       DataSegment& data_segment = data_segment_field->data_segment;
       data_segment.memory_var = Var(module->memories.size());
-      data_segment.offset.push_back(MakeUnique<ConstExpr>(
+      data_segment.offset.exprs.push_back(MakeUnique<ConstExpr>(
           field->memory.page_limits.is_64 ? Const::I64(0) : Const::I32(0)));
-      data_segment.offset.back().loc = loc;
+      data_segment.offset.exprs.back().loc = loc;
       ParseTextListOpt(&data_segment.data);
       EXPECT(Rpar);
 
@@ -1672,13 +1672,13 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size());
-    elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
-    elem_segment.offset.back().loc = loc;
+    elem_segment.offset.exprs.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
+    elem_segment.offset.exprs.back().loc = loc;
     elem_segment.elem_type = elem_type;
     // Syntax is either an optional list of var (legacy), or a non-empty list
     // of elem expr.
-    ExprList elem_expr;
-    if (ParseElemExprOpt(&elem_expr)) {
+    InitExpr elem_expr;
+    if (ParseElemExprOpt(&elem_expr.exprs)) {
       elem_segment.elem_exprs.push_back(std::move(elem_expr));
       // Parse the rest.
       ParseElemExprListOpt(&elem_segment.elem_exprs);

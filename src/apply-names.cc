@@ -439,7 +439,7 @@ Result NameApplier::VisitFunc(Index func_index, Func* func) {
 }
 
 Result NameApplier::VisitGlobal(Global* global) {
-  CHECK_RESULT(visitor_.VisitExprList(global->init_expr));
+  CHECK_RESULT(visitor_.VisitExprList(global->init_expr.exprs));
   return Result::Ok;
 }
 
@@ -460,9 +460,9 @@ Result NameApplier::VisitExport(Index export_index, Export* export_) {
 Result NameApplier::VisitElemSegment(Index elem_segment_index,
                                      ElemSegment* segment) {
   CHECK_RESULT(UseNameForTableVar(&segment->table_var));
-  CHECK_RESULT(visitor_.VisitExprList(segment->offset));
-  for (ExprList& elem_expr : segment->elem_exprs) {
-    Expr* expr = &elem_expr.front();
+  CHECK_RESULT(visitor_.VisitExprList(segment->offset.exprs));
+  for (InitExpr& init_expr : segment->elem_exprs) {
+    Expr* expr = &init_expr.exprs.front();
     if (expr->type() == ExprType::RefFunc) {
       CHECK_RESULT(UseNameForFuncVar(&cast<RefFuncExpr>(expr)->var));
     }
@@ -473,7 +473,7 @@ Result NameApplier::VisitElemSegment(Index elem_segment_index,
 Result NameApplier::VisitDataSegment(Index data_segment_index,
                                      DataSegment* segment) {
   CHECK_RESULT(UseNameForMemoryVar(&segment->memory_var));
-  CHECK_RESULT(visitor_.VisitExprList(segment->offset));
+  CHECK_RESULT(visitor_.VisitExprList(segment->offset.exprs));
   return Result::Ok;
 }
 

@@ -372,6 +372,13 @@ struct Block {
   Location end_loc;
 };
 
+struct InitExpr {
+  InitExpr() = default;
+  explicit InitExpr(ExprList exprs) : exprs(std::move(exprs)) {}
+
+  ExprList exprs;
+};
+
 struct Catch {
   explicit Catch(const Location& loc = Location()) : loc(loc) {}
   explicit Catch(const Var& var, const Location& loc = Location())
@@ -835,7 +842,7 @@ struct Global {
   std::string name;
   Type type = Type::Void;
   bool mutable_ = false;
-  ExprList init_expr;
+  InitExpr init_expr;
 };
 
 struct Table {
@@ -847,7 +854,7 @@ struct Table {
   Type elem_type;
 };
 
-typedef std::vector<ExprList> ExprListVector;
+typedef std::vector<InitExpr> InitExprVector;
 
 struct ElemSegment {
   explicit ElemSegment(string_view name) : name(name.to_string()) {}
@@ -857,8 +864,8 @@ struct ElemSegment {
   std::string name;
   Var table_var;
   Type elem_type;
-  ExprList offset;
-  ExprListVector elem_exprs;
+  InitExpr offset;
+  InitExprVector elem_exprs;
 };
 
 struct Memory {
@@ -875,7 +882,7 @@ struct DataSegment {
   SegmentKind kind = SegmentKind::Active;
   std::string name;
   Var memory_var;
-  ExprList offset;
+  InitExpr offset;
   std::vector<uint8_t> data;
 };
 

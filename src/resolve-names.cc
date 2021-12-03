@@ -514,7 +514,7 @@ void NameResolver::VisitExport(Export* export_) {
 }
 
 void NameResolver::VisitGlobal(Global* global) {
-  visitor_.VisitExprList(global->init_expr);
+  visitor_.VisitExprList(global->init_expr.exprs);
 }
 
 void NameResolver::VisitTag(Tag* tag) {
@@ -525,18 +525,18 @@ void NameResolver::VisitTag(Tag* tag) {
 
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
-  visitor_.VisitExprList(segment->offset);
-  for (ExprList& elem_expr : segment->elem_exprs) {
-    if (elem_expr.size() == 1 &&
-        elem_expr.front().type() == ExprType::RefFunc) {
-      ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
+  visitor_.VisitExprList(segment->offset.exprs);
+  for (InitExpr& elem_expr : segment->elem_exprs) {
+    if (elem_expr.exprs.size() == 1 &&
+        elem_expr.exprs.front().type() == ExprType::RefFunc) {
+      ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.exprs.front())->var);
     }
   }
 }
 
 void NameResolver::VisitDataSegment(DataSegment* segment) {
   ResolveMemoryVar(&segment->memory_var);
-  visitor_.VisitExprList(segment->offset);
+  visitor_.VisitExprList(segment->offset.exprs);
 }
 
 Result NameResolver::VisitModule(Module* module) {

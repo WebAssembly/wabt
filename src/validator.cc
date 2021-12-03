@@ -731,8 +731,8 @@ Result Validator::CheckModule() {
       result_ |=
           validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
 
-      if (f->global.init_expr.size() == 1) {
-        const Expr* expr = &f->global.init_expr.front();
+      if (f->global.init_expr.exprs.size() == 1) {
+        const Expr* expr = &f->global.init_expr.exprs.front();
 
         switch (expr->type()) {
           case ExprType::Const:
@@ -798,8 +798,8 @@ Result Validator::CheckModule() {
       validator_.OnElemSegmentElemType(f->elem_segment.elem_type);
 
       // Init expr.
-      if (f->elem_segment.offset.size() == 1) {
-        const Expr* expr = &f->elem_segment.offset.front();
+      if (f->elem_segment.offset.exprs.size() == 1) {
+        const Expr* expr = &f->elem_segment.offset.exprs.front();
 
         switch (expr->type()) {
           case ExprType::Const:
@@ -818,14 +818,14 @@ Result Validator::CheckModule() {
             result_ |= validator_.OnElemSegmentInitExpr_Other(expr->loc);
             break;
         }
-      } else if (f->elem_segment.offset.size() > 1) {
+      } else if (f->elem_segment.offset.exprs.size() > 1) {
         result_ |= validator_.OnElemSegmentInitExpr_Other(field.loc);
       }
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        if (elem_expr.size() == 1) {
-          const Expr* expr = &elem_expr.front();
+        if (elem_expr.exprs.size() == 1) {
+          const Expr* expr = &elem_expr.exprs.front();
           switch (expr->type()) {
             case ExprType::RefNull:
               result_ |= validator_.OnElemSegmentElemExpr_RefNull(
@@ -839,7 +839,7 @@ Result Validator::CheckModule() {
               result_ |= validator_.OnElemSegmentElemExpr_Other(expr->loc);
               break;
           }
-        } else if (elem_expr.size() > 1) {
+        } else if (elem_expr.exprs.size() > 1) {
           result_ |= validator_.OnElemSegmentElemExpr_Other(field.loc);
         }
       }
@@ -873,8 +873,8 @@ Result Validator::CheckModule() {
           field.loc, f->data_segment.memory_var, f->data_segment.kind);
 
       // Init expr.
-      if (f->data_segment.offset.size() == 1) {
-        const Expr* expr = &f->data_segment.offset.front();
+      if (f->data_segment.offset.exprs.size() == 1) {
+        const Expr* expr = &f->data_segment.offset.exprs.front();
 
         switch (expr->type()) {
           case ExprType::Const:
@@ -893,7 +893,7 @@ Result Validator::CheckModule() {
             result_ |= validator_.OnDataSegmentInitExpr_Other(expr->loc);
             break;
         }
-      } else if (f->data_segment.offset.size() > 1) {
+      } else if (f->data_segment.offset.exprs.size() > 1) {
         result_ |= validator_.OnDataSegmentInitExpr_Other(field.loc);
       }
     }

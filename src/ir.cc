@@ -667,8 +667,8 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
   all_ref_func =
       all_ref_func &&
       std::all_of(elem_exprs.begin(), elem_exprs.end(),
-                  [](const ExprList& elem_expr) {
-                    return elem_expr.front().type() == ExprType::RefFunc;
+                  [](const InitExpr& elem_expr) {
+                    return elem_expr.exprs.front().type() == ExprType::RefFunc;
                   });
   if (!all_ref_func) {
     flags |= SegUseElemExprs;

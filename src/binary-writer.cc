@@ -395,7 +395,7 @@ class BinaryWriter {
                                   const char* desc);
   void WriteExpr(const Func* func, const Expr* expr);
   void WriteExprList(const Func* func, const ExprList& exprs);
-  void WriteInitExpr(const ExprList& expr);
+  void WriteInitExpr(const InitExpr& expr);
   void WriteFuncLocals(const Func* func, const LocalTypes& local_types);
   void WriteFunc(const Func* func);
   void WriteTable(const Table* table);
@@ -1112,8 +1112,8 @@ void BinaryWriter::WriteExprList(const Func* func, const ExprList& exprs) {
   }
 }
 
-void BinaryWriter::WriteInitExpr(const ExprList& expr) {
-  WriteExprList(nullptr, expr);
+void BinaryWriter::WriteInitExpr(const InitExpr& expr) {
+  WriteExprList(nullptr, expr.exprs);
   WriteOpcode(stream_, Opcode::End);
 }
 
@@ -1539,13 +1539,13 @@ Result BinaryWriter::WriteModule() {
       // preceeded by length
       WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elems");
       if (flags & SegUseElemExprs) {
-        for (const ExprList& elem_expr : segment->elem_exprs) {
+        for (const InitExpr& elem_expr : segment->elem_exprs) {
           WriteInitExpr(elem_expr);
         }
       } else {
-        for (const ExprList& elem_expr : segment->elem_exprs) {
-          assert(elem_expr.size() == 1);
-          const Expr* expr = &elem_expr.front();
+        for (const InitExpr& elem_expr : segment->elem_exprs) {
+          assert(elem_expr.exprs.size() == 1);
+          const Expr* expr = &elem_expr.exprs.front();
           assert(expr->type() == ExprType::RefFunc);
           WriteU32Leb128(stream_,
                          module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var),
