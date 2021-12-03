@@ -14,6 +14,6 @@ section(ELEM) {
   addr[end]
 }
 (;; STDERR ;;;
-out/test/regress/regress-26/regress-26.wasm:0000013: error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+out/test/regress/regress-26/regress-26.wasm:0000012: error: type mismatch in constant expression, expected [i32] but got []
 0000013: error: EndElemSegmentInitExpr callback failed
 ;;; STDERR ;;)

@@ -9,34 +9,34 @@ out/test/spec/global.wast:278: assert_invalid passed:
   out/test/spec/global/global.2.wasm:0000035: error: can't global.set on immutable global at index 0.
   0000035: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:287: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/global/global.5.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: f32.neg
   0000013: error: OnUnaryExpr callback failed
 out/test/spec/global.wast:292: assert_invalid passed:
-  0000000: error: local variable out of range (max 0)
+  out/test/spec/global/global.6.wasm:000000f: error: invalid initializer: instruction not valid in initializer expression: local.get
   000000f: error: OnLocalGetExpr callback failed
 out/test/spec/global.wast:297: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/global/global.7.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: f32.neg
   0000013: error: OnUnaryExpr callback failed
 out/test/spec/global.wast:302: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/global/global.8.wasm:0000010: error: invalid initializer: instruction not valid in initializer expression: nop
   0000010: error: OnNopExpr callback failed
 out/test/spec/global.wast:307: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/global/global.9.wasm:0000010: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
   0000010: error: OnUnaryExpr callback failed
 out/test/spec/global.wast:312: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/global/global.10.wasm:000000e: error: invalid initializer: instruction not valid in initializer expression: nop
   000000e: error: OnNopExpr callback failed
 out/test/spec/global.wast:317: assert_invalid passed:
-  out/test/spec/global/global.11.wasm:0000013: error: type mismatch at global initializer expression. got f32, expected i32
+  out/test/spec/global/global.11.wasm:0000012: error: type mismatch in constant expression, expected [i32] but got [f32]
   0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:322: assert_invalid passed:
   error: expected END opcode after initializer expression
   0000011: error: OnI32ConstExpr callback failed
 out/test/spec/global.wast:327: assert_invalid passed:
-  out/test/spec/global/global.13.wasm:000000e: error: invalid global initializer expression, must be a constant expression
+  out/test/spec/global/global.13.wasm:000000d: error: type mismatch in constant expression, expected [i32] but got []
   000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:332: assert_invalid passed:
-  out/test/spec/global/global.14.wasm:0000018: error: type mismatch at global initializer expression. got externref, expected funcref
+  out/test/spec/global/global.14.wasm:0000017: error: type mismatch in constant expression, expected [funcref] but got [externref]
   0000018: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:337: assert_invalid passed:
   error: expected END opcode after initializer expression
@@ -46,16 +46,16 @@ out/test/spec/global.wast:342: assert_invalid passed:
   0000027: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:347: assert_invalid passed:
   0000000: error: initializer expression can only reference an imported global
-  0000010: error: EndGlobalInitExpr callback failed
+  000000f: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:352: assert_invalid passed:
   0000000: error: global variable out of range: 1 (max 1)
-  0000010: error: EndGlobalInitExpr callback failed
+  000000f: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:357: assert_invalid passed:
   0000000: error: global variable out of range: 2 (max 2)
-  0000026: error: EndGlobalInitExpr callback failed
+  0000025: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:362: assert_invalid passed:
-  out/test/spec/global/global.20.wasm:000002a: error: initializer expression cannot reference a mutable global
-  000002a: error: EndGlobalInitExpr callback failed
+  out/test/spec/global/global.20.wasm:0000029: error: initializer expression cannot reference a mutable global
+  0000029: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:370: assert_malformed passed:
   0000026: error: global mutability must be 0 or 1
 out/test/spec/global.wast:383: assert_malformed passed:

@@ -1,30 +1,32 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/ref_func.wast
 (;; STDERR ;;;
-out/test/spec/ref_func.wast:98:15: error: function is not declared in any elem sections
-    (ref.func $f1)
-              ^^^
-out/test/spec/ref_func.wast:99:15: error: function is not declared in any elem sections
-    (ref.func $f2)
-              ^^^
-out/test/spec/ref_func.wast:90:29: error: function is not declared in any elem sections
+out/test/spec/ref_func.wast:90:29: error: function 0 is not declared in any elem sections
   (global funcref (ref.func $f1))
                             ^^^
-0000000: error: function is not declared in any elem sections
-000005d: error: OnRefFuncExpr callback failed
+out/test/spec/ref_func.wast:98:15: error: function 0 is not declared in any elem sections
+    (ref.func $f1)
+              ^^^
+out/test/spec/ref_func.wast:99:15: error: function 1 is not declared in any elem sections
+    (ref.func $f2)
+              ^^^
+0000000: error: function 0 is not declared in any elem sections
+0000000: error: function 0 is not declared in any elem sections
+0000000: error: function 1 is not declared in any elem sections
+0000069: error: EndModule callback failed
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 set-g() =>
 set-f() =>
 out/test/spec/ref_func.wast:69: assert_invalid passed:
   0000000: error: function variable out of range: 7 (max 2)
-  0000027: error: EndGlobalInitExpr callback failed
+  0000026: error: OnRefFuncExpr callback failed
 out/test/spec/ref_func.wast:80: error reading module: "out/test/spec/ref_func/ref_func.3.wasm"
 out/test/spec/ref_func.wast:109: assert_invalid passed:
-  0000000: error: function is not declared in any elem sections
-  0000019: error: OnRefFuncExpr callback failed
+  0000000: error: function 0 is not declared in any elem sections
+  000001b: error: EndModule callback failed
 out/test/spec/ref_func.wast:113: assert_invalid passed:
-  0000000: error: function is not declared in any elem sections
-  000001c: error: OnRefFuncExpr callback failed
+  0000000: error: function 0 is not declared in any elem sections
+  000001e: error: EndModule callback failed
 13/13 tests passed.
 ;;; STDOUT ;;)
