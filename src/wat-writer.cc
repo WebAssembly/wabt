@@ -552,6 +552,8 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnBinaryExpr(BinaryExpr*) override;
   Result BeginBlockExpr(BlockExpr*) override;
   Result EndBlockExpr(BlockExpr*) override;
+  Result BeginInitExpr(InitExpr*) override;
+  Result EndInitExpr(InitExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
@@ -636,6 +638,14 @@ Result WatWriter::ExprVisitorDelegate::BeginBlockExpr(BlockExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::EndBlockExpr(BlockExpr* expr) {
   writer_->WriteEndBlock();
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::BeginInitExpr(InitExpr* expr) {
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::EndInitExpr(InitExpr* expr) {
   return Result::Ok;
 }
 

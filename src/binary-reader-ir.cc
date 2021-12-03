@@ -280,6 +280,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   void PushLabel(LabelType label_type,
                  ExprList* first,
                  Expr* context = nullptr);
+  Result BeginInitExpr(InitExpr* init_expr);
   Result EndInitExpr();
   Result PopLabel();
   Result GetLabelAt(LabelNode** label, Index depth);
@@ -367,13 +368,9 @@ Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
 
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
   expr->loc = GetLocation();
-  if (current_init_expr_) {
-    current_init_expr_->exprs.push_back(std::move(expr));
-  } else {
-    LabelNode* label;
-    CHECK_RESULT(TopLabel(&label));
-    label->exprs->push_back(std::move(expr));
-  }
+  LabelNode* label;
+  CHECK_RESULT(TopLabel(&label));
+  label->exprs->push_back(std::move(expr));
   return Result::Ok;
 }
 
@@ -606,8 +603,7 @@ Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
 Result BinaryReaderIR::BeginGlobalInitExpr(Index index) {
   assert(index == module_->globals.size() - 1);
   Global* global = module_->globals[index];
-  current_init_expr_ = &global->init_expr;
-  return Result::Ok;
+  return BeginInitExpr(&global->init_expr);
 }
 
 Result BinaryReaderIR::EndGlobalInitExpr(Index index) {
@@ -798,9 +794,6 @@ Result BinaryReaderIR::OnElseExpr() {
 }
 
 Result BinaryReaderIR::OnEndExpr() {
-  if (current_init_expr_) {
-    return Result::Ok;
-  }
   if (label_stack_.size() > 1) {
     LabelNode* label;
     Expr* expr;
@@ -821,8 +814,12 @@ Result BinaryReaderIR::OnEndExpr() {
       case LabelType::Try:
         cast<TryExpr>(expr)->block.end_loc = GetLocation();
         break;
-
+      case LabelType::InitExpr:
+        current_init_expr_->end_loc = GetLocation();
+        break;
       case LabelType::Func:
+        current_func_->end_loc = GetLocation();
+        break;
       case LabelType::Catch:
         break;
     }
@@ -1151,11 +1148,16 @@ Result BinaryReaderIR::BeginElemSegment(Index index,
   return Result::Ok;
 }
 
+Result BinaryReaderIR::BeginInitExpr(InitExpr* expr) {
+  current_init_expr_ = expr;
+  PushLabel(LabelType::InitExpr, &current_init_expr_->exprs);
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
   assert(index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[index];
-  current_init_expr_ = &segment->offset;
-  return Result::Ok;
+  return BeginInitExpr(&segment->offset);
 }
 
 Result BinaryReaderIR::EndInitExpr() {
@@ -1230,8 +1232,7 @@ Result BinaryReaderIR::BeginDataSegment(Index index,
 Result BinaryReaderIR::BeginDataSegmentInitExpr(Index index) {
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
-  current_init_expr_ = &segment->offset;
-  return Result::Ok;
+  return BeginInitExpr(&segment->offset);
 }
 
 Result BinaryReaderIR::EndDataSegmentInitExpr(Index index) {

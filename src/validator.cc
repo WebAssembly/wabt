@@ -88,6 +88,8 @@ class Validator : public ExprVisitor::Delegate {
   Result OnBinaryExpr(BinaryExpr*) override;
   Result BeginBlockExpr(BlockExpr*) override;
   Result EndBlockExpr(BlockExpr*) override;
+  Result BeginInitExpr(InitExpr*) override;
+  Result EndInitExpr(InitExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
@@ -240,6 +242,20 @@ Result Validator::BeginBlockExpr(BlockExpr* expr) {
 
 Result Validator::EndBlockExpr(BlockExpr* expr) {
   result_ |= validator_.OnEnd(expr->block.end_loc);
+  return Result::Ok;
+}
+
+Result Validator::BeginInitExpr(InitExpr* expr) {
+  /*
+  const Expr& expr = f->global.init_expr.exprs.front();
+  result_ |=
+      validator_.OnBlock(expr->exprs.front()->loc, GetDeclarationType(expr->block.decl));
+      */
+  return Result::Ok;
+}
+
+Result Validator::EndInitExpr(InitExpr* expr) {
+  result_ |= validator_.OnEnd(expr->end_loc);
   return Result::Ok;
 }
 

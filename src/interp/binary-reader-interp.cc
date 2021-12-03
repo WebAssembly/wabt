@@ -1096,6 +1096,7 @@ Result BinaryReaderInterp::OnElseExpr() {
 
 Result BinaryReaderInterp::OnEndExpr() {
   if (reading_init_expr_) {
+    //CHECK_RESULT(validator_.OnEnd(loc));
     return Result::Ok;
   }
   if (label_stack_.size() == 1) {

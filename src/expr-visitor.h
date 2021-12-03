@@ -68,6 +68,8 @@ class ExprVisitor::Delegate {
   virtual ~Delegate() {}
 
   virtual Result OnBinaryExpr(BinaryExpr*) = 0;
+  virtual Result BeginInitExpr(InitExpr*) = 0;
+  virtual Result EndInitExpr(InitExpr*) = 0;
   virtual Result BeginBlockExpr(BlockExpr*) = 0;
   virtual Result EndBlockExpr(BlockExpr*) = 0;
   virtual Result OnBrExpr(BrExpr*) = 0;
@@ -141,6 +143,8 @@ class ExprVisitor::Delegate {
 class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
  public:
   Result OnBinaryExpr(BinaryExpr*) override { return Result::Ok; }
+  Result BeginInitExpr(InitExpr*) override { return Result::Ok; }
+  Result EndInitExpr(InitExpr*) override { return Result::Ok; }
   Result BeginBlockExpr(BlockExpr*) override { return Result::Ok; }
   Result EndBlockExpr(BlockExpr*) override { return Result::Ok; }
   Result OnBrExpr(BrExpr*) override { return Result::Ok; }

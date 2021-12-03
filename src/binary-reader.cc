@@ -131,9 +131,7 @@ class BinaryReader {
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   // ReadInstructions either until and END instruction, or until
   // the given end_offset.
-  Result ReadInstructions(bool stop_on_end,
-                          Offset end_offset,
-                          Opcode* final_opcode) WABT_WARN_UNUSED;
+  Result ReadInstructions(bool stop_on_end, Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
@@ -494,7 +492,7 @@ Index BinaryReader::NumTotalFuncs() {
 
 Result BinaryReader::ReadInitExpr(Index index) {
   // Read instructions until END opcode is reached.
-  return ReadInstructions(/*stop_on_end=*/true, read_end_, NULL);
+  return ReadInstructions(/*stop_on_end=*/true, read_end_);
 }
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
@@ -597,25 +595,19 @@ Result BinaryReader::ReadAddress(Address* out_value,
 Result BinaryReader::ReadFunctionBody(Offset end_offset) {
   Opcode final_opcode(Opcode::Invalid);
   CHECK_RESULT(
-      ReadInstructions(/*stop_on_end=*/false, end_offset, &final_opcode));
+      ReadInstructions(/*stop_on_end=*/false, end_offset));
   ERROR_UNLESS(state_.offset == end_offset,
                "function body longer than given size");
-  ERROR_UNLESS(final_opcode == Opcode::End,
-               "function body must end with END opcode");
   return Result::Ok;
 }
 
 Result BinaryReader::ReadInstructions(bool stop_on_end,
-                                      Offset end_offset,
-                                      Opcode* final_opcode) {
+                                      Offset end_offset) {
   while (state_.offset < end_offset) {
     Opcode opcode;
     CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
     CALLBACK(OnOpcode, opcode);
     ERROR_UNLESS_OPCODE_ENABLED(opcode);
-    if (final_opcode) {
-      *final_opcode = opcode;
-    }
 
     switch (opcode) {
       case Opcode::Unreachable:

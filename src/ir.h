@@ -377,6 +377,7 @@ struct InitExpr {
   explicit InitExpr(ExprList exprs) : exprs(std::move(exprs)) {}
 
   ExprList exprs;
+  Location end_loc;
 };
 
 struct Catch {
@@ -833,6 +834,7 @@ struct Func {
   FuncDeclaration decl;
   LocalTypes local_types;
   BindingHash bindings;
+  Location end_loc;
   ExprList exprs;
 };
 
