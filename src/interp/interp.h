@@ -109,7 +109,6 @@ enum class InitExprKind {
 
 struct InitExpr {
   InitExprKind kind;
-  bool ended = false;
   union {
     u32 i32_;
     u64 i64_;

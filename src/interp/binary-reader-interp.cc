@@ -627,10 +627,6 @@ Result BinaryReaderInterp::BeginGlobalInitExpr(Index index) {
 Result BinaryReaderInterp::EndInitExpr() {
   assert(reading_init_expr_);
   reading_init_expr_ = false;
-  if (!init_expr_.ended) {
-    PrintError("expected END opcode after initializer expression");
-    return Result::Error;
-  }
   return Result::Ok;
 }
 
@@ -638,7 +634,6 @@ Result BinaryReaderInterp::BeginInitExpr() {
   assert(!reading_init_expr_);
   reading_init_expr_ = true;
   init_expr_.kind = InitExprKind::None;
-  init_expr_.ended = false;
   return Result::Ok;
 }
 
@@ -1101,11 +1096,6 @@ Result BinaryReaderInterp::OnElseExpr() {
 
 Result BinaryReaderInterp::OnEndExpr() {
   if (reading_init_expr_) {
-    if (init_expr_.ended) {
-      PrintError("duplicate END opcode init initializer expression");
-      return Result::Error;
-    }
-    init_expr_.ended = true;
     return Result::Ok;
   }
   if (label_stack_.size() == 1) {
