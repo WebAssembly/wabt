@@ -1050,6 +1050,10 @@ void ScriptValidator::CheckCommand(const Command* command) {
       // ignore result type.
       CheckAction(cast<AssertExhaustionCommand>(command)->action.get());
       break;
+    case CommandType::AssertException:
+      // ignore result type.
+      CheckAction(cast<AssertExceptionCommand>(command)->action.get());
+      break;
   }
 }
 

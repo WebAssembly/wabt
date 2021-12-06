@@ -1296,9 +1296,10 @@ enum class CommandType {
   AssertReturn,
   AssertTrap,
   AssertExhaustion,
+  AssertException,
 
   First = Module,
-  Last = AssertExhaustion,
+  Last = AssertException,
 };
 static const int kCommandTypeCount = WABT_ENUM_COUNT(CommandType);
 
@@ -1374,6 +1375,12 @@ typedef AssertModuleCommand<CommandType::AssertUnlinkable>
     AssertUnlinkableCommand;
 typedef AssertModuleCommand<CommandType::AssertUninstantiable>
     AssertUninstantiableCommand;
+
+class AssertExceptionCommand
+    : public CommandMixin<CommandType::AssertException> {
+ public:
+  ActionPtr action;
+};
 
 typedef std::unique_ptr<Command> CommandPtr;
 typedef std::vector<CommandPtr> CommandPtrVector;

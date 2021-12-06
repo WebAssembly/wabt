@@ -164,7 +164,12 @@ std::unique_ptr<ExternType> TagType::Clone() const {
 Result Match(const TagType& expected,
              const TagType& actual,
              std::string* out_msg) {
-  // TODO signature
+  if (expected.signature != actual.signature) {
+    if (out_msg) {
+      *out_msg = "signature mismatch in imported tag";
+    }
+    return Result::Error;
+  }
   return Result::Ok;
 }
 

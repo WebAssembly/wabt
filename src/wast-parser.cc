@@ -227,6 +227,7 @@ bool IsCommand(TokenTypePair pair) {
   }
 
   switch (pair[1]) {
+    case TokenType::AssertException:
     case TokenType::AssertExhaustion:
     case TokenType::AssertInvalid:
     case TokenType::AssertMalformed:
@@ -3114,6 +3115,9 @@ Result WastParser::ParseCommandList(Script* script,
 Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
   WABT_TRACE(ParseCommand);
   switch (Peek(1)) {
+    case TokenType::AssertException:
+      return ParseAssertExceptionCommand(out_command);
+
     case TokenType::AssertExhaustion:
       return ParseAssertExhaustionCommand(out_command);
 
@@ -3152,6 +3156,12 @@ Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
       assert(!"ParseCommand should only be called when IsCommand() is true");
       return Result::Error;
   }
+}
+
+Result WastParser::ParseAssertExceptionCommand(CommandPtr* out_command) {
+  WABT_TRACE(ParseAssertExceptionCommand);
+  return ParseAssertActionCommand<AssertExceptionCommand>(
+      TokenType::AssertException, out_command);
 }
 
 Result WastParser::ParseAssertExhaustionCommand(CommandPtr* out_command) {

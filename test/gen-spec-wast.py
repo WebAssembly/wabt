@@ -138,6 +138,7 @@ class WastWriter(object):
             'assert_return': self._WriteAssertReturnCommand,
             'assert_trap': self._WriteAssertActionCommand,
             'assert_exhaustion': self._WriteAssertActionCommand,
+            'assert_exception': self._WriteAssertActionCommand,
         }
 
         func = command_funcs.get(command['type'])

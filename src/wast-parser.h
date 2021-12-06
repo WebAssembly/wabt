@@ -217,6 +217,7 @@ class WastParser {
 
   Result ParseCommandList(Script*, CommandPtrVector*);
   Result ParseCommand(Script*, CommandPtr*);
+  Result ParseAssertExceptionCommand(CommandPtr*);
   Result ParseAssertExhaustionCommand(CommandPtr*);
   Result ParseAssertInvalidCommand(CommandPtr*);
   Result ParseAssertMalformedCommand(CommandPtr*);
