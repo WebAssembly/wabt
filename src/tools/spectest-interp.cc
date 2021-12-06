@@ -1121,6 +1121,8 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
+    EXPECT(",");
+    CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else {
     PrintError("unknown command type");
@@ -1841,6 +1843,7 @@ wabt::Result CommandRunner::OnAssertExceptionCommand(
     PrintError(command->line, "expected an exception to be thrown");
     return wabt::Result::Error;
   }
+  PrintError(command->line, "assert_exception passed");
 
   return wabt::Result::Ok;
 }

@@ -586,6 +586,9 @@ void BinaryWriterSpec::WriteCommands() {
         WriteLocation(assert_exception_command->action->loc);
         WriteSeparator();
         WriteAction(*assert_exception_command->action);
+        WriteSeparator();
+        WriteKey("expected");
+        WriteActionResultType(*assert_exception_command->action);
         break;
       }
     }

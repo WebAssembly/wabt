@@ -1013,7 +1013,6 @@ void ScriptValidator::CheckCommand(const Command* command) {
     case CommandType::AssertInvalid:
     case CommandType::AssertUnlinkable:
     case CommandType::AssertUninstantiable:
-    case CommandType::AssertException:
       // Ignore.
       break;
 
@@ -1050,6 +1049,10 @@ void ScriptValidator::CheckCommand(const Command* command) {
     case CommandType::AssertExhaustion:
       // ignore result type.
       CheckAction(cast<AssertExhaustionCommand>(command)->action.get());
+      break;
+    case CommandType::AssertException:
+      // ignore result type.
+      CheckAction(cast<AssertExceptionCommand>(command)->action.get());
       break;
   }
 }

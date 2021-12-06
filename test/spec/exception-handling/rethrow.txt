@@ -2,6 +2,13 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/rethrow.wast
 ;;; ARGS*: --enable-exceptions
 (;; STDOUT ;;;
+out/test/spec/exception-handling/rethrow.wast:75: assert_exception passed
+out/test/spec/exception-handling/rethrow.wast:77: assert_exception passed
+out/test/spec/exception-handling/rethrow.wast:80: assert_exception passed
+out/test/spec/exception-handling/rethrow.wast:82: assert_exception passed
+out/test/spec/exception-handling/rethrow.wast:84: assert_exception passed
+out/test/spec/exception-handling/rethrow.wast:85: assert_exception passed
+out/test/spec/exception-handling/rethrow.wast:91: assert_exception passed
 out/test/spec/exception-handling/rethrow.wast:93: assert_invalid passed:
   error: rethrow not in try catch block
   0000019: error: OnRethrowExpr callback failed

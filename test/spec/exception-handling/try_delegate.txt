@@ -2,6 +2,10 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/try_delegate.wast
 ;;; ARGS*: --enable-exceptions
 (;; STDOUT ;;;
+out/test/spec/exception-handling/try_delegate.wast:102: assert_exception passed
+out/test/spec/exception-handling/try_delegate.wast:105: assert_exception passed
+out/test/spec/exception-handling/try_delegate.wast:107: assert_exception passed
+out/test/spec/exception-handling/try_delegate.wast:115: assert_exception passed
 out/test/spec/exception-handling/try_delegate.wast:118: assert_malformed passed:
   out/test/spec/exception-handling/try_delegate/try_delegate.1.wat:1:16: error: unexpected token "delegate", expected an instr.
   (module (func (delegate 0)))

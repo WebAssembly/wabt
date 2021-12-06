@@ -4,6 +4,8 @@
 (;; STDOUT ;;;
 out/test/spec/exception-handling/try_catch.wast:157: assert_trap passed: unreachable executed
 out/test/spec/exception-handling/try_catch.wast:160: assert_trap passed: integer divide by zero
+out/test/spec/exception-handling/try_catch.wast:164: assert_exception passed
+out/test/spec/exception-handling/try_catch.wast:168: assert_exception passed
 out/test/spec/exception-handling/try_catch.wast:214: assert_malformed passed:
   out/test/spec/exception-handling/try_catch/try_catch.3.wat:1:16: error: unexpected token "catch_all", expected an instr.
   (module (func (catch_all)))
