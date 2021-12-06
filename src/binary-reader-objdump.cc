@@ -260,6 +260,9 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
       case NameSectionSubsection::DataSegment:
         SetSegmentName(index, name);
         break;
+      case NameSectionSubsection::Tag:
+        SetTagName(index, name);
+        break;
       default:
         break;
     }
@@ -672,6 +675,10 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
   string_view name;
   if (current_opcode == Opcode::Call &&
       !(name = GetFunctionName(value)).empty()) {
+    LogOpcode(immediate_len, "%d <" PRIstringview ">", value,
+              WABT_PRINTF_STRING_VIEW_ARG(name));
+  } else if (current_opcode == Opcode::Throw &&
+             !(name = GetTagName(value)).empty()) {
     LogOpcode(immediate_len, "%d <" PRIstringview ">", value,
               WABT_PRINTF_STRING_VIEW_ARG(name));
   } else if ((current_opcode == Opcode::GlobalGet ||

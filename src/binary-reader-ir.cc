@@ -295,6 +295,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result SetGlobalName(Index index, string_view name);
   Result SetDataSegmentName(Index index, string_view name);
   Result SetElemSegmentName(Index index, string_view name);
+  Result SetTagName(Index index, string_view name);
 
   std::string GetUniqueName(BindingHash* bindings,
                             const std::string& original_name);
@@ -1369,6 +1370,22 @@ Result BinaryReaderIR::SetMemoryName(Index index, string_view name) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::SetTagName(Index index, string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->tags.size()) {
+    PrintError("invalid tag index: %" PRIindex, index);
+    return Result::Error;
+  }
+  Tag* tag = module_->tags[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->tag_bindings, MakeDollarName(name));
+  tag->name = dollar_name;
+  module_->global_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
   return SetFunctionName(index, name);
 }
@@ -1384,6 +1401,9 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Module:
     case NameSectionSubsection::Label:
     case NameSectionSubsection::Type:
+      break;
+    case NameSectionSubsection::Tag:
+      SetTagName(index, name);
       break;
     case NameSectionSubsection::Global:
       SetGlobalName(index, name);

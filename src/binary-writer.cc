@@ -77,7 +77,7 @@ void WriteLimits(Stream* stream, const Limits* limits) {
     WriteU32Leb128(stream, limits->initial, "limits: initial");
     if (limits->has_max) {
       WriteU32Leb128(stream, limits->max, "limits: max");
-    }  
+    }
   }
 }
 
@@ -1693,6 +1693,7 @@ Result BinaryWriter::WriteModule() {
                             NameSectionSubsection::ElemSegment);
     WriteNames<DataSegment>(module_->data_segments,
                             NameSectionSubsection::DataSegment);
+    WriteNames<Tag>(module_->tags, NameSectionSubsection::Tag);
 
     EndSection();
   }
