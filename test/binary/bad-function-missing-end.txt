@@ -1,0 +1,17 @@
+;;; TOOL: run-gen-wasm-interp
+;;; ERROR: 1
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] sig[0] }
+section(CODE) {
+  count[1]
+  size[4]
+  locals[0]
+  i32.const
+  leb_i32(42)
+  drop
+}
+(;; STDERR ;;;
+000001a: error: function body must end with END opcode
+;;; STDERR ;;)
