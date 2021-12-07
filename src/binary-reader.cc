@@ -1875,6 +1875,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
       case NameSectionSubsection::Global:
       case NameSectionSubsection::ElemSegment:
       case NameSectionSubsection::DataSegment:
+      case NameSectionSubsection::Tag:
         if (subsection_size) {
           Index num_names;
           CHECK_RESULT(ReadCount(&num_names, "name count"));
