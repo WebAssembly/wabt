@@ -136,13 +136,13 @@ out/test/spec/imports.wast:456: assert_unlinkable passed:
 out/test/spec/imports.wast:474: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
 out/test/spec/imports.wast:485: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
 out/test/spec/imports.wast:488: assert_invalid passed:
-  error: only one memory block allowed
+  out/test/spec/imports/imports.97.wasm:0000015: error: only one memory block allowed
   0000015: error: OnImportMemory callback failed
 out/test/spec/imports.wast:492: assert_invalid passed:
-  error: only one memory block allowed
+  out/test/spec/imports/imports.98.wasm:0000015: error: only one memory block allowed
   0000015: error: OnMemory callback failed
 out/test/spec/imports.wast:496: assert_invalid passed:
-  error: only one memory block allowed
+  out/test/spec/imports/imports.99.wasm:000000f: error: only one memory block allowed
   000000f: error: OnMemory callback failed
 out/test/spec/imports.wast:511: assert_unlinkable passed:
   error: invalid import "test.unknown"

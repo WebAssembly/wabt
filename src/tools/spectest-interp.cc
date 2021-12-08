@@ -1409,8 +1409,9 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
   ModuleDesc module_desc;
-  if (Failed(ReadBinaryInterp(file_data.data(), file_data.size(), options,
-                              errors, &module_desc))) {
+  if (Failed(ReadBinaryInterp(module_filename, file_data.data(),
+                              file_data.size(), options, errors,
+                              &module_desc))) {
     return {};
   }
 

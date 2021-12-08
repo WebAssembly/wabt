@@ -2,13 +2,13 @@
 ;;; STDIN_FILE: third_party/testsuite/simd_store8_lane.wast
 (;; STDOUT ;;;
 out/test/spec/simd_store8_lane.wast:411: assert_invalid passed:
-  error: type mismatch in v128.store8_lane, expected [i32, v128] but got [v128, i32]
+  out/test/spec/simd_store8_lane/simd_store8_lane.1.wasm:0000027: error: type mismatch in v128.store8_lane, expected [i32, v128] but got [v128, i32]
   0000027: error: OnSimdStoreLaneExpr callback failed
 out/test/spec/simd_store8_lane.wast:417: assert_invalid passed:
-  error: lane index must be less than 16 (got 16)
+  out/test/spec/simd_store8_lane/simd_store8_lane.2.wasm:0000027: error: lane index must be less than 16 (got 16)
   0000027: error: OnSimdStoreLaneExpr callback failed
 out/test/spec/simd_store8_lane.wast:424: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/simd_store8_lane/simd_store8_lane.3.wasm:0000027: error: alignment must not be larger than natural alignment (1)
   0000027: error: OnSimdStoreLaneExpr callback failed
 51/51 tests passed.
 ;;; STDOUT ;;)

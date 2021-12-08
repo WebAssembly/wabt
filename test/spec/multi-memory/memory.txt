@@ -24,25 +24,25 @@ out/test/spec/multi-memory/memory.wast:38: assert_invalid passed:
 out/test/spec/multi-memory/memory.wast:42: assert_invalid passed:
   000001b: error: memory index 0 out of range
 out/test/spec/multi-memory/memory.wast:48: assert_invalid passed:
-  error: max pages (0) must be >= initial pages (1)
+  out/test/spec/multi-memory/memory/memory.18.wasm:000000e: error: max pages (0) must be >= initial pages (1)
   000000e: error: OnMemory callback failed
 out/test/spec/multi-memory/memory.wast:52: assert_invalid passed:
-  error: initial pages (65537) must be <= (65536)
+  out/test/spec/multi-memory/memory/memory.19.wasm:000000f: error: initial pages (65537) must be <= (65536)
   000000f: error: OnMemory callback failed
 out/test/spec/multi-memory/memory.wast:56: assert_invalid passed:
-  error: initial pages (2147483648) must be <= (65536)
+  out/test/spec/multi-memory/memory/memory.20.wasm:0000011: error: initial pages (2147483648) must be <= (65536)
   0000011: error: OnMemory callback failed
 out/test/spec/multi-memory/memory.wast:60: assert_invalid passed:
-  error: initial pages (4294967295) must be <= (65536)
+  out/test/spec/multi-memory/memory/memory.21.wasm:0000011: error: initial pages (4294967295) must be <= (65536)
   0000011: error: OnMemory callback failed
 out/test/spec/multi-memory/memory.wast:64: assert_invalid passed:
-  error: max pages (65537) must be <= (65536)
+  out/test/spec/multi-memory/memory/memory.22.wasm:0000010: error: max pages (65537) must be <= (65536)
   0000010: error: OnMemory callback failed
 out/test/spec/multi-memory/memory.wast:68: assert_invalid passed:
-  error: max pages (2147483648) must be <= (65536)
+  out/test/spec/multi-memory/memory/memory.23.wasm:0000012: error: max pages (2147483648) must be <= (65536)
   0000012: error: OnMemory callback failed
 out/test/spec/multi-memory/memory.wast:72: assert_invalid passed:
-  error: max pages (4294967295) must be <= (65536)
+  out/test/spec/multi-memory/memory/memory.24.wasm:0000012: error: max pages (4294967295) must be <= (65536)
   0000012: error: OnMemory callback failed
 out/test/spec/multi-memory/memory.wast:77: assert_malformed passed:
   out/test/spec/multi-memory/memory/memory.25.wat:1:9: error: invalid int "0x1_0000_0000"

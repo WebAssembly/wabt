@@ -14,22 +14,22 @@ out/test/spec/simd_store.wast:117: assert_malformed passed:
   (memory 1)(func (v128.store32 (i32.const 0) (v128.const i32x4 0 0 0 0)))
                    ^^^^^^^^^^^^
 out/test/spec/simd_store.wast:128: assert_invalid passed:
-  error: type mismatch in v128.store, expected [i32, v128] but got [f32, v128]
+  out/test/spec/simd_store/simd_store.5.wasm:0000037: error: type mismatch in v128.store, expected [i32, v128] but got [f32, v128]
   0000037: error: OnStoreExpr callback failed
 out/test/spec/simd_store.wast:132: assert_invalid passed:
-  error: type mismatch in v128.store, expected [i32, v128] but got []
+  out/test/spec/simd_store/simd_store.6.wasm:0000024: error: type mismatch in v128.store, expected [i32, v128] but got []
   0000024: error: OnStoreExpr callback failed
 out/test/spec/simd_store.wast:136: assert_invalid passed:
-  error: type mismatch in implicit return, expected [v128] but got []
+  out/test/spec/simd_store/simd_store.7.wasm:0000035: error: type mismatch in implicit return, expected [v128] but got []
   0000036: error: EndFunctionBody callback failed
 out/test/spec/simd_store.wast:144: assert_invalid passed:
-  error: type mismatch in v128.store, expected [i32, v128] but got [v128]
+  out/test/spec/simd_store/simd_store.8.wasm:0000032: error: type mismatch in v128.store, expected [i32, v128] but got [v128]
   0000032: error: OnStoreExpr callback failed
 out/test/spec/simd_store.wast:152: assert_invalid passed:
-  error: type mismatch in v128.store, expected [i32, v128] but got [i32]
+  out/test/spec/simd_store/simd_store.9.wasm:0000022: error: type mismatch in v128.store, expected [i32, v128] but got [i32]
   0000022: error: OnStoreExpr callback failed
 out/test/spec/simd_store.wast:160: assert_invalid passed:
-  error: type mismatch in v128.store, expected [i32, v128] but got []
+  out/test/spec/simd_store/simd_store.10.wasm:0000020: error: type mismatch in v128.store, expected [i32, v128] but got []
   0000020: error: OnStoreExpr callback failed
 26/26 tests passed.
 ;;; STDOUT ;;)

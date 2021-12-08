@@ -88,58 +88,58 @@ out/test/spec/call_indirect.wast:791: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   000001c: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:799: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/call_indirect/call_indirect.14.wasm:0000023: error: type mismatch in i32.eqz, expected [i32] but got []
   0000023: error: OnConvertExpr callback failed
 out/test/spec/call_indirect.wast:807: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got [i64]
+  out/test/spec/call_indirect/call_indirect.15.wasm:0000027: error: type mismatch in i32.eqz, expected [i32] but got [i64]
   0000027: error: OnConvertExpr callback failed
 out/test/spec/call_indirect.wast:816: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32] but got []
+  out/test/spec/call_indirect/call_indirect.16.wasm:0000026: error: type mismatch in call_indirect, expected [i32] but got []
   0000026: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:824: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [f64, i32] but got []
+  out/test/spec/call_indirect/call_indirect.17.wasm:0000027: error: type mismatch in call_indirect, expected [f64, i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:832: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/call_indirect/call_indirect.18.wasm:0000024: error: type mismatch in function, expected [] but got [i32]
   0000025: error: EndFunctionBody callback failed
 out/test/spec/call_indirect.wast:840: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [f64, i32]
+  out/test/spec/call_indirect/call_indirect.19.wasm:000002d: error: type mismatch in function, expected [] but got [f64, i32]
   000002e: error: EndFunctionBody callback failed
 out/test/spec/call_indirect.wast:851: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32] but got []
+  out/test/spec/call_indirect/call_indirect.20.wasm:0000027: error: type mismatch in call_indirect, expected [i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:859: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32] but got [... i64]
+  out/test/spec/call_indirect/call_indirect.21.wasm:0000028: error: type mismatch in call_indirect, expected [i32] but got [... i64]
   0000028: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:868: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  out/test/spec/call_indirect/call_indirect.22.wasm:000002a: error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:878: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  out/test/spec/call_indirect/call_indirect.23.wasm:000002a: error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:888: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32, f64] but got [f64, i32]
+  out/test/spec/call_indirect/call_indirect.24.wasm:0000032: error: type mismatch in call_indirect, expected [i32, f64] but got [f64, i32]
   0000032: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:898: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [f64, i32] but got [i32, f64]
+  out/test/spec/call_indirect/call_indirect.25.wasm:0000032: error: type mismatch in call_indirect, expected [f64, i32] but got [i32, f64]
   0000032: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:909: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32] but got []
+  out/test/spec/call_indirect/call_indirect.26.wasm:0000036: error: type mismatch in call_indirect, expected [i32] but got []
   0000036: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:922: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  out/test/spec/call_indirect/call_indirect.27.wasm:0000039: error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   0000039: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:935: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32] but got []
+  out/test/spec/call_indirect/call_indirect.28.wasm:0000036: error: type mismatch in call_indirect, expected [i32] but got []
   0000036: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:948: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  out/test/spec/call_indirect/call_indirect.29.wasm:0000039: error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   0000039: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:961: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32] but got []
+  out/test/spec/call_indirect/call_indirect.30.wasm:000003a: error: type mismatch in call_indirect, expected [i32] but got []
   000003a: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:977: assert_invalid passed:
-  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  out/test/spec/call_indirect/call_indirect.31.wasm:000003d: error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000003d: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:997: assert_invalid passed:
   0000000: error: function type variable out of range: 1 (max 1)

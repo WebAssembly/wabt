@@ -49,85 +49,85 @@ out/test/spec/loop.wast:593: assert_malformed passed:
   ...2) (result i32)))(func (i32.const 0) (loop (type $sig) (param i32) (result...
                                           ^
 out/test/spec/loop.wast:601: assert_invalid passed:
-  error: type mismatch in loop, expected [] but got [i32]
+  out/test/spec/loop/loop.12.wasm:000001c: error: type mismatch in loop, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
 out/test/spec/loop.wast:609: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/loop/loop.13.wasm:000001b: error: type mismatch in implicit return, expected [i32] but got []
   000001c: error: EndFunctionBody callback failed
 out/test/spec/loop.wast:613: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/loop/loop.14.wasm:000001b: error: type mismatch in implicit return, expected [i64] but got []
   000001c: error: EndFunctionBody callback failed
 out/test/spec/loop.wast:617: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/loop/loop.15.wasm:000001b: error: type mismatch in implicit return, expected [f32] but got []
   000001c: error: EndFunctionBody callback failed
 out/test/spec/loop.wast:621: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/loop/loop.16.wasm:000001b: error: type mismatch in implicit return, expected [f64] but got []
   000001c: error: EndFunctionBody callback failed
 out/test/spec/loop.wast:626: assert_invalid passed:
-  error: type mismatch in loop, expected [] but got [i32]
+  out/test/spec/loop/loop.17.wasm:000001c: error: type mismatch in loop, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
 out/test/spec/loop.wast:632: assert_invalid passed:
-  error: type mismatch in loop, expected [] but got [i32, i32]
+  out/test/spec/loop/loop.18.wasm:000001e: error: type mismatch in loop, expected [] but got [i32, i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/loop.wast:638: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  out/test/spec/loop/loop.19.wasm:000001b: error: type mismatch in loop, expected [i32] but got []
   000001b: error: OnEndExpr callback failed
 out/test/spec/loop.wast:644: assert_invalid passed:
-  error: type mismatch in loop, expected [i32, i32] but got []
+  out/test/spec/loop/loop.20.wasm:000001c: error: type mismatch in loop, expected [i32, i32] but got []
   000001c: error: OnEndExpr callback failed
 out/test/spec/loop.wast:650: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  out/test/spec/loop/loop.21.wasm:000001c: error: type mismatch in loop, expected [i32] but got []
   000001c: error: OnEndExpr callback failed
 out/test/spec/loop.wast:656: assert_invalid passed:
-  error: type mismatch in loop, expected [i32, i32] but got []
+  out/test/spec/loop/loop.22.wasm:000001d: error: type mismatch in loop, expected [i32, i32] but got []
   000001d: error: OnEndExpr callback failed
 out/test/spec/loop.wast:662: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got [f32]
+  out/test/spec/loop/loop.23.wasm:0000020: error: type mismatch in loop, expected [i32] but got [f32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/loop.wast:668: assert_invalid passed:
-  error: type mismatch in loop, expected [i32, i32] but got [i32]
+  out/test/spec/loop/loop.24.wasm:000001e: error: type mismatch in loop, expected [i32, i32] but got [i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/loop.wast:674: assert_invalid passed:
-  error: type mismatch in loop, expected [i32, i32] but got [i32]
+  out/test/spec/loop/loop.25.wasm:0000020: error: type mismatch in loop, expected [i32, i32] but got [i32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/loop.wast:680: assert_invalid passed:
-  error: type mismatch in loop, expected [] but got [i32]
+  out/test/spec/loop/loop.26.wasm:000001f: error: type mismatch in loop, expected [] but got [i32]
   000001f: error: OnEndExpr callback failed
 out/test/spec/loop.wast:686: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got [i64]
+  out/test/spec/loop/loop.27.wasm:000001f: error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
 out/test/spec/loop.wast:693: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  out/test/spec/loop/loop.28.wasm:000001e: error: type mismatch in loop, expected [i32] but got []
   000001e: error: OnEndExpr callback failed
 out/test/spec/loop.wast:702: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  out/test/spec/loop/loop.29.wasm:000001e: error: type mismatch in loop, expected [i32] but got []
   000001e: error: OnEndExpr callback failed
 out/test/spec/loop.wast:711: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  out/test/spec/loop/loop.30.wasm:0000020: error: type mismatch in loop, expected [i32] but got []
   0000020: error: OnEndExpr callback failed
 out/test/spec/loop.wast:721: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  out/test/spec/loop/loop.31.wasm:000001d: error: type mismatch in loop, expected [i32] but got []
   000001d: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:727: assert_invalid passed:
-  error: type mismatch in loop, expected [i32, f64] but got []
+  out/test/spec/loop/loop.32.wasm:000001e: error: type mismatch in loop, expected [i32, f64] but got []
   000001e: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:733: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got [f32]
+  out/test/spec/loop/loop.33.wasm:0000022: error: type mismatch in loop, expected [i32] but got [f32]
   0000022: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:739: assert_invalid passed:
-  error: type mismatch in loop, expected [f32, i32] but got [f32]
+  out/test/spec/loop/loop.34.wasm:0000023: error: type mismatch in loop, expected [f32, i32] but got [f32]
   0000023: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:745: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  out/test/spec/loop/loop.35.wasm:000001f: error: type mismatch in loop, expected [i32] but got []
   000001f: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:751: assert_invalid passed:
-  error: type mismatch in loop, expected [i32, f64] but got []
+  out/test/spec/loop/loop.36.wasm:0000020: error: type mismatch in loop, expected [i32, f64] but got []
   0000020: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:757: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got [f32]
+  out/test/spec/loop/loop.37.wasm:0000024: error: type mismatch in loop, expected [i32] but got [f32]
   0000024: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:763: assert_invalid passed:
-  error: type mismatch in loop, expected [f32, i32] but got [f32]
+  out/test/spec/loop/loop.38.wasm:0000025: error: type mismatch in loop, expected [f32, i32] but got [f32]
   0000025: error: OnLoopExpr callback failed
 out/test/spec/loop.wast:770: assert_malformed passed:
   out/test/spec/loop/loop.39.wat:1:44: error: unexpected token $x, expected ).

@@ -3,10 +3,10 @@
 (;; STDOUT ;;;
 out/test/spec/global.wast:251: assert_trap passed: undefined table index
 out/test/spec/global.wast:273: assert_invalid passed:
-  error: can't global.set on immutable global at index 0.
+  out/test/spec/global/global.1.wasm:0000029: error: can't global.set on immutable global at index 0.
   0000029: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:278: assert_invalid passed:
-  error: can't global.set on immutable global at index 0.
+  out/test/spec/global/global.2.wasm:0000035: error: can't global.set on immutable global at index 0.
   0000035: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:287: assert_invalid passed:
   error: Unepxected opcode in init expr
@@ -27,16 +27,16 @@ out/test/spec/global.wast:312: assert_invalid passed:
   error: Unepxected opcode in init expr
   000000e: error: OnNopExpr callback failed
 out/test/spec/global.wast:317: assert_invalid passed:
-  error: type mismatch at global initializer expression. got f32, expected i32
+  out/test/spec/global/global.11.wasm:0000013: error: type mismatch at global initializer expression. got f32, expected i32
   0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:322: assert_invalid passed:
   error: expected END opcode after initializer expression
   0000011: error: OnI32ConstExpr callback failed
 out/test/spec/global.wast:327: assert_invalid passed:
-  error: invalid global initializer expression, must be a constant expression
+  out/test/spec/global/global.13.wasm:000000e: error: invalid global initializer expression, must be a constant expression
   000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:332: assert_invalid passed:
-  error: type mismatch at global initializer expression. got externref, expected funcref
+  out/test/spec/global/global.14.wasm:0000018: error: type mismatch at global initializer expression. got externref, expected funcref
   0000018: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:337: assert_invalid passed:
   error: expected END opcode after initializer expression
@@ -54,7 +54,7 @@ out/test/spec/global.wast:357: assert_invalid passed:
   0000000: error: global variable out of range: 2 (max 2)
   0000026: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:362: assert_invalid passed:
-  error: initializer expression cannot reference a mutable global
+  out/test/spec/global/global.20.wasm:000002a: error: initializer expression cannot reference a mutable global
   000002a: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:370: assert_malformed passed:
   0000026: error: global mutability must be 0 or 1
@@ -89,40 +89,40 @@ out/test/spec/global.wast:478: assert_invalid passed:
   0000000: error: global variable out of range: 2 (max 2)
   000003d: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:488: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.35.wasm:0000021: error: type mismatch in global.set, expected [i32] but got []
   0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:497: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.36.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
   0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:507: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.37.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
   0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:517: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.38.wasm:0000027: error: type mismatch in global.set, expected [i32] but got []
   0000027: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:527: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.39.wasm:000002a: error: type mismatch in global.set, expected [i32] but got []
   000002a: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:537: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.40.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
   0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:547: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.41.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
   0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:557: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.42.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
   0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:567: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.43.wasm:0000021: error: type mismatch in global.set, expected [i32] but got []
   0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:576: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.44.wasm:0000021: error: type mismatch in global.set, expected [i32] but got []
   0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:585: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.45.wasm:0000027: error: type mismatch in global.set, expected [i32] but got []
   0000027: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:595: assert_invalid passed:
-  error: type mismatch in global.set, expected [i32] but got []
+  out/test/spec/global/global.46.wasm:000003e: error: type mismatch in global.set, expected [i32] but got []
   000003e: error: OnGlobalSetExpr callback failed
 out/test/spec/global.wast:613: assert_malformed passed:
   out/test/spec/global/global.47.wat:1:33: error: redefinition of global "$foo"

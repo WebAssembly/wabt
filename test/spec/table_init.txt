@@ -143,193 +143,193 @@ out/test/spec/table_init.wast:861: assert_trap passed: out of bounds table acces
 test() =>
 out/test/spec/table_init.wast:909: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/table_init.wast:912: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f32]
+  out/test/spec/table_init/table_init.32.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:921: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, i64]
+  out/test/spec/table_init/table_init.33.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, i64]
   000003e: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:930: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f64]
+  out/test/spec/table_init/table_init.34.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:939: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i32]
+  out/test/spec/table_init/table_init.35.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:948: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f32]
+  out/test/spec/table_init/table_init.36.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f32]
   0000044: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:957: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i64]
+  out/test/spec/table_init/table_init.37.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i64]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:966: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f64]
+  out/test/spec/table_init/table_init.38.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f64]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:975: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i32]
+  out/test/spec/table_init/table_init.39.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i32]
   000003e: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:984: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f32]
+  out/test/spec/table_init/table_init.40.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:993: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i64]
+  out/test/spec/table_init/table_init.41.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i64]
   000003e: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1002: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f64]
+  out/test/spec/table_init/table_init.42.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1011: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i32]
+  out/test/spec/table_init/table_init.43.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i32]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1020: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f32]
+  out/test/spec/table_init/table_init.44.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f32]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1029: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i64]
+  out/test/spec/table_init/table_init.45.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1038: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f64]
+  out/test/spec/table_init/table_init.46.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f64]
   000004c: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1047: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i32]
+  out/test/spec/table_init/table_init.47.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1056: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f32]
+  out/test/spec/table_init/table_init.48.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f32]
   0000044: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1065: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i64]
+  out/test/spec/table_init/table_init.49.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i64]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1074: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f64]
+  out/test/spec/table_init/table_init.50.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f64]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1083: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i32]
+  out/test/spec/table_init/table_init.51.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i32]
   0000044: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1092: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f32]
+  out/test/spec/table_init/table_init.52.wasm:0000047: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f32]
   0000047: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1101: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i64]
+  out/test/spec/table_init/table_init.53.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i64]
   0000044: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1110: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f64]
+  out/test/spec/table_init/table_init.54.wasm:000004b: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f64]
   000004b: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1119: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i32]
+  out/test/spec/table_init/table_init.55.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1128: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f32]
+  out/test/spec/table_init/table_init.56.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f32]
   0000044: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1137: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i64]
+  out/test/spec/table_init/table_init.57.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i64]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1146: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f64]
+  out/test/spec/table_init/table_init.58.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f64]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1155: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i32]
+  out/test/spec/table_init/table_init.59.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i32]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1164: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f32]
+  out/test/spec/table_init/table_init.60.wasm:000004b: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f32]
   000004b: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1173: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i64]
+  out/test/spec/table_init/table_init.61.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i64]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1182: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f64]
+  out/test/spec/table_init/table_init.62.wasm:000004f: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f64]
   000004f: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1191: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i32]
+  out/test/spec/table_init/table_init.63.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i32]
   000003e: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1200: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f32]
+  out/test/spec/table_init/table_init.64.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1209: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i64]
+  out/test/spec/table_init/table_init.65.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i64]
   000003e: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1218: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f64]
+  out/test/spec/table_init/table_init.66.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1227: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i32]
+  out/test/spec/table_init/table_init.67.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1236: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f32]
+  out/test/spec/table_init/table_init.68.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f32]
   0000044: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1245: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i64]
+  out/test/spec/table_init/table_init.69.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i64]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1254: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f64]
+  out/test/spec/table_init/table_init.70.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f64]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1263: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i32]
+  out/test/spec/table_init/table_init.71.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i32]
   000003e: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1272: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f32]
+  out/test/spec/table_init/table_init.72.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f32]
   0000041: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1281: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i64]
+  out/test/spec/table_init/table_init.73.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i64]
   000003e: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1290: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f64]
+  out/test/spec/table_init/table_init.74.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1299: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i32]
+  out/test/spec/table_init/table_init.75.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i32]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1308: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f32]
+  out/test/spec/table_init/table_init.76.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f32]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1317: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i64]
+  out/test/spec/table_init/table_init.77.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1326: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f64]
+  out/test/spec/table_init/table_init.78.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f64]
   000004c: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1335: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i32]
+  out/test/spec/table_init/table_init.79.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i32]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1344: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f32]
+  out/test/spec/table_init/table_init.80.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f32]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1353: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i64]
+  out/test/spec/table_init/table_init.81.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1362: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f64]
+  out/test/spec/table_init/table_init.82.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f64]
   000004c: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1371: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i32]
+  out/test/spec/table_init/table_init.83.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i32]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1380: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f32]
+  out/test/spec/table_init/table_init.84.wasm:000004b: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f32]
   000004b: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1389: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i64]
+  out/test/spec/table_init/table_init.85.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i64]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1398: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f64]
+  out/test/spec/table_init/table_init.86.wasm:000004f: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f64]
   000004f: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1407: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i32]
+  out/test/spec/table_init/table_init.87.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i32]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1416: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f32]
+  out/test/spec/table_init/table_init.88.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f32]
   0000048: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1425: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i64]
+  out/test/spec/table_init/table_init.89.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i64]
   0000045: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1434: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f64]
+  out/test/spec/table_init/table_init.90.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f64]
   000004c: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1443: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i32]
+  out/test/spec/table_init/table_init.91.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i32]
   000004c: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1452: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f32]
+  out/test/spec/table_init/table_init.92.wasm:000004f: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f32]
   000004f: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1461: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i64]
+  out/test/spec/table_init/table_init.93.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i64]
   000004c: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1470: assert_invalid passed:
-  error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f64]
+  out/test/spec/table_init/table_init.94.wasm:0000053: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f64]
   0000053: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:1506: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/table_init.wast:1507: assert_trap passed: uninitialized table element

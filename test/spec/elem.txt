@@ -7,13 +7,13 @@ out/test/spec/elem.wast:336: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/elem.wast:346: assert_invalid passed:
-  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  out/test/spec/elem/elem.34.wasm:0000015: error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
   0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:354: assert_invalid passed:
-  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  out/test/spec/elem/elem.35.wasm:0000015: error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
   0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:362: assert_invalid passed:
-  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  out/test/spec/elem/elem.36.wasm:0000013: error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
   0000013: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:370: assert_invalid passed:
   error: expected END opcode after initializer expression
@@ -38,17 +38,17 @@ out/test/spec/elem.wast:421: assert_invalid passed:
   0000015: error: OnNopExpr callback failed
 out/test/spec/elem.wast:435: assert_invalid passed:
   0000000: error: global variable out of range: 0 (max 0)
-  error: initializer expression cannot reference a mutable global
+  out/test/spec/elem/elem.44.wasm:0000015: error: initializer expression cannot reference a mutable global
   0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:443: assert_invalid passed:
   0000000: error: global variable out of range: 1 (max 1)
-  error: initializer expression cannot reference a mutable global
+  out/test/spec/elem/elem.45.wasm:000002b: error: initializer expression cannot reference a mutable global
   000002b: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:452: assert_invalid passed:
-  error: initializer expression cannot reference a mutable global
+  out/test/spec/elem/elem.46.wasm:000002f: error: initializer expression cannot reference a mutable global
   000002f: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:463: assert_invalid passed:
-  error: type mismatch at elem expression. got externref, expected funcref
+  out/test/spec/elem/elem.47.wasm:0000018: error: type mismatch at elem expression. got externref, expected funcref
   0000018: error: OnElemSegmentElemExpr_RefNull callback failed
 out/test/spec/elem.wast:471: assert_invalid passed:
   0000019: error: expected END opcode after element expression

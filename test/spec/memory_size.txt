@@ -2,10 +2,10 @@
 ;;; STDIN_FILE: third_party/testsuite/memory_size.wast
 (;; STDOUT ;;;
 out/test/spec/memory_size.wast:69: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/memory_size/memory_size.4.wasm:000001e: error: type mismatch in function, expected [] but got [i32]
   000001f: error: EndFunctionBody callback failed
 out/test/spec/memory_size.wast:78: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f32] but got [i32]
+  out/test/spec/memory_size/memory_size.5.wasm:000001f: error: type mismatch in implicit return, expected [f32] but got [i32]
   0000020: error: EndFunctionBody callback failed
 38/38 tests passed.
 ;;; STDOUT ;;)

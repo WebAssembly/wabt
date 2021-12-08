@@ -2,10 +2,10 @@
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
 (;; STDOUT ;;;
 out/test/spec/memory.wast:10: assert_invalid passed:
-  error: only one memory block allowed
+  out/test/spec/memory/memory.6.wasm:000000f: error: only one memory block allowed
   000000f: error: OnMemory callback failed
 out/test/spec/memory.wast:11: assert_invalid passed:
-  error: only one memory block allowed
+  out/test/spec/memory/memory.7.wasm:0000023: error: only one memory block allowed
   0000023: error: OnMemory callback failed
 out/test/spec/memory.wast:20: assert_invalid passed:
   0000000: error: memory variable out of range: 0 (max 0)
@@ -31,25 +31,25 @@ out/test/spec/memory.wast:45: assert_invalid passed:
   0000000: error: memory variable out of range: 0 (max 0)
   000001b: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory.wast:51: assert_invalid passed:
-  error: max pages (0) must be >= initial pages (1)
+  out/test/spec/memory/memory.20.wasm:000000e: error: max pages (0) must be >= initial pages (1)
   000000e: error: OnMemory callback failed
 out/test/spec/memory.wast:55: assert_invalid passed:
-  error: initial pages (65537) must be <= (65536)
+  out/test/spec/memory/memory.21.wasm:000000f: error: initial pages (65537) must be <= (65536)
   000000f: error: OnMemory callback failed
 out/test/spec/memory.wast:59: assert_invalid passed:
-  error: initial pages (2147483648) must be <= (65536)
+  out/test/spec/memory/memory.22.wasm:0000011: error: initial pages (2147483648) must be <= (65536)
   0000011: error: OnMemory callback failed
 out/test/spec/memory.wast:63: assert_invalid passed:
-  error: initial pages (4294967295) must be <= (65536)
+  out/test/spec/memory/memory.23.wasm:0000011: error: initial pages (4294967295) must be <= (65536)
   0000011: error: OnMemory callback failed
 out/test/spec/memory.wast:67: assert_invalid passed:
-  error: max pages (65537) must be <= (65536)
+  out/test/spec/memory/memory.24.wasm:0000010: error: max pages (65537) must be <= (65536)
   0000010: error: OnMemory callback failed
 out/test/spec/memory.wast:71: assert_invalid passed:
-  error: max pages (2147483648) must be <= (65536)
+  out/test/spec/memory/memory.25.wasm:0000012: error: max pages (2147483648) must be <= (65536)
   0000012: error: OnMemory callback failed
 out/test/spec/memory.wast:75: assert_invalid passed:
-  error: max pages (4294967295) must be <= (65536)
+  out/test/spec/memory/memory.26.wasm:0000012: error: max pages (4294967295) must be <= (65536)
   0000012: error: OnMemory callback failed
 out/test/spec/memory.wast:80: assert_malformed passed:
   out/test/spec/memory/memory.27.wat:1:9: error: invalid int "0x1_0000_0000"

@@ -14,6 +14,6 @@ section(DATA) {
   data[str("test")]
 }
 (;; STDERR ;;;
-error: invalid data segment offset, must be a constant expression; either iXX.const or global.get.
+out/test/regress/regress-27/regress-27.wasm:0000012: error: invalid data segment offset, must be a constant expression; either iXX.const or global.get.
 0000012: error: EndDataSegmentInitExpr callback failed
 ;;; STDERR ;;)

@@ -2,40 +2,40 @@
 ;;; STDIN_FILE: third_party/testsuite/simd_i64x2_extmul_i32x4.wast
 (;; STDOUT ;;;
 out/test/spec/simd_i64x2_extmul_i32x4.wast:333: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_low_i32x4_s, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.1.wasm:0000022: error: type mismatch in i64x2.extmul_low_i32x4_s, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:334: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_high_i32x4_s, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.2.wasm:0000022: error: type mismatch in i64x2.extmul_high_i32x4_s, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:335: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_low_i32x4_u, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.3.wasm:0000022: error: type mismatch in i64x2.extmul_low_i32x4_u, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:336: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_high_i32x4_u, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.4.wasm:0000022: error: type mismatch in i64x2.extmul_high_i32x4_u, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:341: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_low_i32x4_s, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.5.wasm:000002d: error: type mismatch in i64x2.extmul_low_i32x4_s, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:349: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_low_i32x4_s, expected [v128, v128] but got []
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.6.wasm:000001b: error: type mismatch in i64x2.extmul_low_i32x4_s, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:357: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_high_i32x4_s, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.7.wasm:000002d: error: type mismatch in i64x2.extmul_high_i32x4_s, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:365: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_high_i32x4_s, expected [v128, v128] but got []
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.8.wasm:000001b: error: type mismatch in i64x2.extmul_high_i32x4_s, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:373: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_low_i32x4_u, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.9.wasm:000002d: error: type mismatch in i64x2.extmul_low_i32x4_u, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:381: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_low_i32x4_u, expected [v128, v128] but got []
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.10.wasm:000001b: error: type mismatch in i64x2.extmul_low_i32x4_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:389: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_high_i32x4_u, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.11.wasm:000002d: error: type mismatch in i64x2.extmul_high_i32x4_u, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i64x2_extmul_i32x4.wast:397: assert_invalid passed:
-  error: type mismatch in i64x2.extmul_high_i32x4_u, expected [v128, v128] but got []
+  out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.12.wasm:000001b: error: type mismatch in i64x2.extmul_high_i32x4_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 116/116 tests passed.
 ;;; STDOUT ;;)

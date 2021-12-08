@@ -18,40 +18,40 @@ out/test/spec/simd_i16x8_sat_arith.wast:618: assert_malformed passed:
   (func (result v128) (i16x8.div_sat (v128.const i16x8 1 1 1 1 1 1 1 1) (v128.c...
                        ^^^^^^^^^^^^^
 out/test/spec/simd_i16x8_sat_arith.wast:623: assert_invalid passed:
-  error: type mismatch in i16x8.add_sat_s, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.5.wasm:0000022: error: type mismatch in i16x8.add_sat_s, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:624: assert_invalid passed:
-  error: type mismatch in i16x8.add_sat_u, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.6.wasm:0000022: error: type mismatch in i16x8.add_sat_u, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:625: assert_invalid passed:
-  error: type mismatch in i16x8.sub_sat_s, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.7.wasm:0000022: error: type mismatch in i16x8.sub_sat_s, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:626: assert_invalid passed:
-  error: type mismatch in i16x8.sub_sat_u, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.8.wasm:0000022: error: type mismatch in i16x8.sub_sat_u, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:631: assert_invalid passed:
-  error: type mismatch in i16x8.add_sat_s, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.9.wasm:000002d: error: type mismatch in i16x8.add_sat_s, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:639: assert_invalid passed:
-  error: type mismatch in i16x8.add_sat_s, expected [v128, v128] but got []
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.10.wasm:000001b: error: type mismatch in i16x8.add_sat_s, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:647: assert_invalid passed:
-  error: type mismatch in i16x8.add_sat_u, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.11.wasm:000002d: error: type mismatch in i16x8.add_sat_u, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:655: assert_invalid passed:
-  error: type mismatch in i16x8.add_sat_u, expected [v128, v128] but got []
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.12.wasm:000001b: error: type mismatch in i16x8.add_sat_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:663: assert_invalid passed:
-  error: type mismatch in i16x8.sub_sat_s, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.13.wasm:000002d: error: type mismatch in i16x8.sub_sat_s, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:671: assert_invalid passed:
-  error: type mismatch in i16x8.sub_sat_s, expected [v128, v128] but got []
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.14.wasm:000001b: error: type mismatch in i16x8.sub_sat_s, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:679: assert_invalid passed:
-  error: type mismatch in i16x8.sub_sat_u, expected [v128, v128] but got [v128]
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.15.wasm:000002d: error: type mismatch in i16x8.sub_sat_u, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_i16x8_sat_arith.wast:687: assert_invalid passed:
-  error: type mismatch in i16x8.sub_sat_u, expected [v128, v128] but got []
+  out/test/spec/simd_i16x8_sat_arith/simd_i16x8_sat_arith.16.wasm:000001b: error: type mismatch in i16x8.sub_sat_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 220/220 tests passed.
 ;;; STDOUT ;;)

@@ -14,40 +14,40 @@ out/test/spec/simd_load_extend.wast:236: assert_trap passed: out of bounds memor
 out/test/spec/simd_load_extend.wast:237: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
 out/test/spec/simd_load_extend.wast:238: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
 out/test/spec/simd_load_extend.wast:241: assert_invalid passed:
-  error: type mismatch in v128.load8x8_s, expected [i32] but got [f32]
+  out/test/spec/simd_load_extend/simd_load_extend.1.wasm:0000026: error: type mismatch in v128.load8x8_s, expected [i32] but got [f32]
   0000026: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:242: assert_invalid passed:
-  error: type mismatch in v128.load8x8_u, expected [i32] but got [f32]
+  out/test/spec/simd_load_extend/simd_load_extend.2.wasm:0000026: error: type mismatch in v128.load8x8_u, expected [i32] but got [f32]
   0000026: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:243: assert_invalid passed:
-  error: type mismatch in v128.load16x4_s, expected [i32] but got [f64]
+  out/test/spec/simd_load_extend/simd_load_extend.3.wasm:000002a: error: type mismatch in v128.load16x4_s, expected [i32] but got [f64]
   000002a: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:244: assert_invalid passed:
-  error: type mismatch in v128.load16x4_u, expected [i32] but got [f64]
+  out/test/spec/simd_load_extend/simd_load_extend.4.wasm:000002a: error: type mismatch in v128.load16x4_u, expected [i32] but got [f64]
   000002a: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:245: assert_invalid passed:
-  error: type mismatch in v128.load32x2_s, expected [i32] but got [v128]
+  out/test/spec/simd_load_extend/simd_load_extend.5.wasm:0000033: error: type mismatch in v128.load32x2_s, expected [i32] but got [v128]
   0000033: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:246: assert_invalid passed:
-  error: type mismatch in v128.load32x2_u, expected [i32] but got [v128]
+  out/test/spec/simd_load_extend/simd_load_extend.6.wasm:0000033: error: type mismatch in v128.load32x2_u, expected [i32] but got [v128]
   0000033: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:251: assert_invalid passed:
-  error: type mismatch in v128.load8x8_s, expected [i32] but got []
+  out/test/spec/simd_load_extend/simd_load_extend.7.wasm:0000021: error: type mismatch in v128.load8x8_s, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:259: assert_invalid passed:
-  error: type mismatch in v128.load8x8_u, expected [i32] but got []
+  out/test/spec/simd_load_extend/simd_load_extend.8.wasm:0000021: error: type mismatch in v128.load8x8_u, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:267: assert_invalid passed:
-  error: type mismatch in v128.load16x4_s, expected [i32] but got []
+  out/test/spec/simd_load_extend/simd_load_extend.9.wasm:0000021: error: type mismatch in v128.load16x4_s, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:275: assert_invalid passed:
-  error: type mismatch in v128.load16x4_u, expected [i32] but got []
+  out/test/spec/simd_load_extend/simd_load_extend.10.wasm:0000021: error: type mismatch in v128.load16x4_u, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:283: assert_invalid passed:
-  error: type mismatch in v128.load32x2_s, expected [i32] but got []
+  out/test/spec/simd_load_extend/simd_load_extend.11.wasm:0000021: error: type mismatch in v128.load32x2_s, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:291: assert_invalid passed:
-  error: type mismatch in v128.load32x2_u, expected [i32] but got []
+  out/test/spec/simd_load_extend/simd_load_extend.12.wasm:0000021: error: type mismatch in v128.load32x2_u, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/simd_load_extend.wast:301: assert_malformed passed:
   out/test/spec/simd_load_extend/simd_load_extend.13.wat:1:25: error: unexpected token "i16x8.load16x4_s", expected an expr.

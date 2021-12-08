@@ -3,22 +3,22 @@
 ;;; STDIN_FILE: third_party/testsuite/f32_cmp.wast
 (;; STDOUT ;;;
 out/test/spec/f32_cmp.wast:2417: assert_invalid passed:
-  error: type mismatch in f32.eq, expected [f32, f32] but got [i64, f64]
+  out/test/spec/f32_cmp/f32_cmp.1.wasm:0000024: error: type mismatch in f32.eq, expected [f32, f32] but got [i64, f64]
   0000024: error: OnCompareExpr callback failed
 out/test/spec/f32_cmp.wast:2418: assert_invalid passed:
-  error: type mismatch in f32.ge, expected [f32, f32] but got [i64, f64]
+  out/test/spec/f32_cmp/f32_cmp.2.wasm:0000024: error: type mismatch in f32.ge, expected [f32, f32] but got [i64, f64]
   0000024: error: OnCompareExpr callback failed
 out/test/spec/f32_cmp.wast:2419: assert_invalid passed:
-  error: type mismatch in f32.gt, expected [f32, f32] but got [i64, f64]
+  out/test/spec/f32_cmp/f32_cmp.3.wasm:0000024: error: type mismatch in f32.gt, expected [f32, f32] but got [i64, f64]
   0000024: error: OnCompareExpr callback failed
 out/test/spec/f32_cmp.wast:2420: assert_invalid passed:
-  error: type mismatch in f32.le, expected [f32, f32] but got [i64, f64]
+  out/test/spec/f32_cmp/f32_cmp.4.wasm:0000024: error: type mismatch in f32.le, expected [f32, f32] but got [i64, f64]
   0000024: error: OnCompareExpr callback failed
 out/test/spec/f32_cmp.wast:2421: assert_invalid passed:
-  error: type mismatch in f32.lt, expected [f32, f32] but got [i64, f64]
+  out/test/spec/f32_cmp/f32_cmp.5.wasm:0000024: error: type mismatch in f32.lt, expected [f32, f32] but got [i64, f64]
   0000024: error: OnCompareExpr callback failed
 out/test/spec/f32_cmp.wast:2422: assert_invalid passed:
-  error: type mismatch in f32.ne, expected [f32, f32] but got [i64, f64]
+  out/test/spec/f32_cmp/f32_cmp.6.wasm:0000024: error: type mismatch in f32.ne, expected [f32, f32] but got [i64, f64]
   0000024: error: OnCompareExpr callback failed
 2406/2406 tests passed.
 ;;; STDOUT ;;)

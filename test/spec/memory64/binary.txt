@@ -175,7 +175,7 @@ out/test/spec/memory64/binary.wast:900: assert_malformed passed:
 out/test/spec/memory64/binary.wast:914: assert_malformed passed:
   000001a: error: unfinished section (expected end: 0x1b)
 out/test/spec/memory64/binary.wast:945: assert_malformed passed:
-  error: function type variable out of range: 11 (max 1)
+  out/test/spec/memory64/binary/binary.102.wasm:0000025: error: function type variable out of range: 11 (max 1)
   0000025: error: OnBlockExpr callback failed
 out/test/spec/memory64/binary.wast:980: assert_malformed passed:
   0000017: error: multiple Start sections
