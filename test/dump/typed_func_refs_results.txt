@@ -162,10 +162,12 @@
 000005b: 10                                        ; FIXUP func body size
 0000038: 33                                        ; FIXUP section size
 ;;; STDERR ;;)
-
 (;; STDOUT ;;;
+
 typed_func_refs_results.wasm:	file format wasm 0x1
+
 Code Disassembly:
+
 00003b func[0]:
  00003c: 20 02                      | local.get 2
  00003e: 41 01                      | i32.const 1
