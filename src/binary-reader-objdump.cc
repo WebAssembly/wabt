@@ -491,7 +491,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnEndExpr() override;
 
  private:
-  void LogOpcode(size_t data_size, const char* fmt, ...);
+  void LogOpcode(const char* fmt, ...);
 
   Opcode current_opcode = Opcode::Unreachable;
   Offset current_opcode_offset = 0;
@@ -527,7 +527,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
       Opcode missing_opcode = Opcode::FromCode(data_[last_opcode_end]);
       const char* opcode_name = missing_opcode.GetName();
       fprintf(stderr,
-              "warning: %#" PRIzx " missing opcode callback at %#" PRIzx
+              "error: %#" PRIzx " missing opcode callback at %#" PRIzx
               " (%#02x=%s)\n",
               state->offset, last_opcode_end + 1, data_[last_opcode_end],
               opcode_name);
@@ -583,15 +583,14 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
   return Result::Ok;
 }
 
-void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
-                                               const char* fmt,
-                                               ...) {
+void BinaryReaderObjdumpDisassemble::LogOpcode(const char* fmt, ...) {
   // BinaryReaderObjdumpDisassemble is only used to disassembly function bodies
   // so this should never be called for instructions outside of function bodies
   // (i.e. init expresions).
   assert(in_function_body);
+  const Offset immediate_len = state->offset - current_opcode_offset;
   const Offset opcode_size = current_opcode.GetLength();
-  const Offset total_size = opcode_size + data_size;
+  const Offset total_size = opcode_size + immediate_len;
   // current_opcode_offset has already read past this opcode; rewind it by the
   // size of this opcode, which may be more than one byte.
   Offset offset = current_opcode_offset - opcode_size;
@@ -644,7 +643,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
     printf("\n");
   }
 
-  last_opcode_end = offset_end;
+  last_opcode_end = state->offset;
 
   // Print relocation after then full (potentially multi-line) instruction.
   if (options_->relocs &&
@@ -671,23 +670,22 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
   string_view name;
   if (current_opcode == Opcode::Call &&
       !(name = GetFunctionName(value)).empty()) {
-    LogOpcode(immediate_len, "%d <" PRIstringview ">", value,
+    LogOpcode("%d <" PRIstringview ">", value,
               WABT_PRINTF_STRING_VIEW_ARG(name));
   } else if (current_opcode == Opcode::Throw &&
              !(name = GetTagName(value)).empty()) {
-    LogOpcode(immediate_len, "%d <" PRIstringview ">", value,
+    LogOpcode("%d <" PRIstringview ">", value,
               WABT_PRINTF_STRING_VIEW_ARG(name));
   } else if ((current_opcode == Opcode::GlobalGet ||
               current_opcode == Opcode::GlobalSet) &&
              !(name = GetGlobalName(value)).empty()) {
-    LogOpcode(immediate_len, "%d <" PRIstringview ">", value,
+    LogOpcode("%d <" PRIstringview ">", value,
               WABT_PRINTF_STRING_VIEW_ARG(name));
   } else {
-    LogOpcode(immediate_len, "%d", value);
+    LogOpcode("%d", value);
   }
   return Result::Ok;
 }
@@ -697,8 +695,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndexIndex(Index value,
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(immediate_len, "%" PRIindex " %" PRIindex, value, value2);
+  LogOpcode("%" PRIindex " %" PRIindex, value, value2);
   return Result::Ok;
 }
 
@@ -706,14 +703,13 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32(uint32_t value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
   string_view name;
   if (current_opcode == Opcode::DataDrop &&
       !(name = GetSegmentName(value)).empty()) {
-    LogOpcode(immediate_len, "%d <" PRIstringview ">", value,
+    LogOpcode("%d <" PRIstringview ">", value,
               WABT_PRINTF_STRING_VIEW_ARG(name));
   } else {
-    LogOpcode(immediate_len, "%u", value);
+    LogOpcode("%u", value);
   }
   return Result::Ok;
 }
@@ -722,14 +718,13 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
                                                             uint32_t value2) {
   if (!in_function_body)
     return Result::Ok;
-  Offset immediate_len = state->offset - current_opcode_offset;
   string_view name;
   if (current_opcode == Opcode::MemoryInit &&
       !(name = GetSegmentName(value)).empty()) {
-    LogOpcode(immediate_len, "%u %u <" PRIstringview ">", value, value2,
+    LogOpcode("%u %u <" PRIstringview ">", value, value2,
               WABT_PRINTF_STRING_VIEW_ARG(name));
   } else {
-    LogOpcode(immediate_len, "%u %u", value, value2);
+    LogOpcode("%u %u", value, value2);
   }
   return Result::Ok;
 }
@@ -741,8 +736,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32Uint32(
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(immediate_len, "%u %u %u", value, value2, value3);
+  LogOpcode("%u %u %u", value, value2, value3);
   return Result::Ok;
 }
 
@@ -750,8 +744,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint64(uint64_t value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(immediate_len, "%" PRId64, value);
+  LogOpcode("%" PRId64, value);
   return Result::Ok;
 }
 
@@ -759,10 +752,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeF32(uint32_t value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
   char buffer[WABT_MAX_FLOAT_HEX];
   WriteFloatHex(buffer, sizeof(buffer), value);
-  LogOpcode(immediate_len, buffer);
+  LogOpcode(buffer);
   return Result::Ok;
 }
 
@@ -770,10 +762,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeF64(uint64_t value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
   char buffer[WABT_MAX_DOUBLE_HEX];
   WriteDoubleHex(buffer, sizeof(buffer), value);
-  LogOpcode(immediate_len, buffer);
+  LogOpcode(buffer);
   return Result::Ok;
 }
 
@@ -781,10 +772,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeV128(v128 value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
   // v128 is always dumped as i32x4:
-  LogOpcode(immediate_len, "0x%08x 0x%08x 0x%08x 0x%08x", value.u32(0),
-            value.u32(1), value.u32(2), value.u32(3));
+  LogOpcode("0x%08x 0x%08x 0x%08x 0x%08x", value.u32(0), value.u32(1),
+            value.u32(2), value.u32(3));
   return Result::Ok;
 }
 
@@ -792,11 +782,10 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
   if (current_opcode == Opcode::SelectT) {
-    LogOpcode(immediate_len, type.GetName());
+    LogOpcode(type.GetName());
   } else {
-    LogOpcode(immediate_len, type.GetRefKindName());
+    LogOpcode(type.GetRefKindName());
   }
   return Result::Ok;
 }
@@ -808,7 +797,6 @@ Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
 
   std::string buffer = std::string();
   for (Index i = 0; i < num_targets; i++) {
@@ -816,7 +804,7 @@ Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
   }
   buffer.append(std::to_string(default_target_depth));
 
-  LogOpcode(immediate_len, "%s", buffer.c_str());
+  LogOpcode("%s", buffer.c_str());
   return Result::Ok;
 }
 
@@ -868,11 +856,10 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Type sig_type) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  Offset immediate_len = state->offset - current_opcode_offset;
   if (sig_type != Type::Void) {
-    LogOpcode(immediate_len, "%s", BlockSigToString(sig_type).c_str());
+    LogOpcode("%s", BlockSigToString(sig_type).c_str());
   } else {
-    LogOpcode(immediate_len, nullptr);
+    LogOpcode(nullptr);
   }
   indent_level++;
   return Result::Ok;
