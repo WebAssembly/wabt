@@ -793,7 +793,11 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
     return Result::Ok;
   }
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(immediate_len, type.GetRefKindName());
+  if (current_opcode == Opcode::SelectT) {
+    LogOpcode(immediate_len, type.GetName());
+  } else {
+    LogOpcode(immediate_len, type.GetRefKindName());
+  }
   return Result::Ok;
 }
 

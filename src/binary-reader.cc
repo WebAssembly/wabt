@@ -673,9 +673,13 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
           result_types_[i] = result_type;
         }
 
-        Type* result_types = num_results ? result_types_.data() : nullptr;
-        CALLBACK(OnSelectExpr, num_results, result_types);
-        CALLBACK0(OnOpcodeBare);
+        if (num_results) {
+          CALLBACK(OnSelectExpr, num_results, result_types_.data());
+          CALLBACK(OnOpcodeType, result_types_[0]);
+        } else {
+          CALLBACK(OnSelectExpr, 0, NULL);
+          CALLBACK0(OnOpcodeBare);
+        }
         break;
       }
 
