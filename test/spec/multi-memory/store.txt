@@ -39,31 +39,31 @@ out/test/spec/multi-memory/store.wast:251: assert_malformed passed:
   (memory 1)(func (param i32) (f64.store64 (local.get 0) (f64.const 0)))
                                ^^^^^^^^^^^
 out/test/spec/multi-memory/store.wast:260: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.14.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/multi-memory/store/store.14.wasm:0000026: error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:264: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.15.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/multi-memory/store/store.15.wasm:0000026: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:268: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.16.wasm:0000028: error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/multi-memory/store/store.16.wasm:0000029: error: type mismatch in implicit return, expected [f32] but got []
   0000029: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:272: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.17.wasm:000002c: error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/multi-memory/store/store.17.wasm:000002d: error: type mismatch in implicit return, expected [f64] but got []
   000002d: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:276: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.18.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/multi-memory/store/store.18.wasm:0000026: error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:280: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.19.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/multi-memory/store/store.19.wasm:0000026: error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:284: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.20.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/multi-memory/store/store.20.wasm:0000026: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:288: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.21.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/multi-memory/store/store.21.wasm:0000026: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:292: assert_invalid passed:
-  out/test/spec/multi-memory/store/store.22.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/multi-memory/store/store.22.wasm:0000026: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/store.wast:298: assert_invalid passed:
   out/test/spec/multi-memory/store/store.23.wasm:000001f: error: type mismatch in i32.store, expected [i32, i32] but got []

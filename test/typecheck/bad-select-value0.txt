@@ -11,7 +11,7 @@
 out/test/typecheck/bad-select-value0.txt:8:5: error: type mismatch in select, expected [f64, f64, i32] but got [i32, f64, f32]
     select
     ^^^^^^
-out/test/typecheck/bad-select-value0.txt:8:5: error: type mismatch at end of function, expected [] but got [f64]
-    select
-    ^^^^^^
+out/test/typecheck/bad-select-value0.txt:9:5: error: type mismatch at end of function, expected [] but got [f64]
+    drop))
+    ^^^^
 ;;; STDERR ;;)

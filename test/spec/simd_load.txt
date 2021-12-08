@@ -29,7 +29,7 @@ out/test/spec/simd_load.wast:170: assert_invalid passed:
   out/test/spec/simd_load/simd_load.18.wasm:0000028: error: type mismatch in br_if, expected [i32] but got [v128]
   0000028: error: OnBrIfExpr callback failed
 out/test/spec/simd_load.wast:174: assert_invalid passed:
-  out/test/spec/simd_load/simd_load.19.wasm:0000024: error: type mismatch at end of function, expected [] but got [v128]
+  out/test/spec/simd_load/simd_load.19.wasm:0000025: error: type mismatch at end of function, expected [] but got [v128]
   0000025: error: EndFunctionBody callback failed
 out/test/spec/simd_load.wast:182: assert_invalid passed:
   0000000: error: local variable out of range (max 0)

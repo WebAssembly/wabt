@@ -71,16 +71,16 @@ out/test/spec/local_set.wast:309: assert_invalid passed:
   out/test/spec/local_set/local_set.23.wasm:0000020: error: type mismatch in local.set, expected [f64] but got [i64]
   0000020: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:317: assert_invalid passed:
-  out/test/spec/local_set/local_set.24.wasm:000001d: error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/local_set/local_set.24.wasm:000001e: error: type mismatch in implicit return, expected [i32] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:321: assert_invalid passed:
-  out/test/spec/local_set/local_set.25.wasm:000001d: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/local_set/local_set.25.wasm:000001e: error: type mismatch in implicit return, expected [i64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:325: assert_invalid passed:
-  out/test/spec/local_set/local_set.26.wasm:0000020: error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/local_set/local_set.26.wasm:0000021: error: type mismatch in implicit return, expected [f32] but got []
   0000021: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:329: assert_invalid passed:
-  out/test/spec/local_set/local_set.27.wasm:0000024: error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/local_set/local_set.27.wasm:0000025: error: type mismatch in implicit return, expected [f64] but got []
   0000025: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:337: assert_invalid passed:
   0000000: error: local variable out of range (max 2)

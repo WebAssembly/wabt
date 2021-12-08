@@ -85,7 +85,7 @@ out/test/spec/select.wast:504: assert_invalid passed:
   out/test/spec/select/select.27.wasm:0000025: error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32, f64]
   0000025: error: OnSelectExpr callback failed
 out/test/spec/select.wast:511: assert_invalid passed:
-  out/test/spec/select/select.28.wasm:000001f: error: type mismatch in implicit return, expected [i32] but got [i64]
+  out/test/spec/select/select.28.wasm:0000020: error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
 146/146 tests passed.
 ;;; STDOUT ;;)
