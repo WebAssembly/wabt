@@ -292,7 +292,7 @@ class SharedValidator {
   Errors* errors_;
   TypeChecker typechecker_;  // TODO: Move into SharedValidator.
   // Cached for access by OnTypecheckerError.
-  const Location* expr_loc_ = nullptr;
+  Location expr_loc_ = Location(kInvalidOffset);
 
   Index num_types_ = 0;
   std::map<Index, FuncType> func_types_;

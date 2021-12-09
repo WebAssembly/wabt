@@ -41,7 +41,7 @@ Result WABT_PRINTF_FORMAT(3, 4) SharedValidator::PrintError(const Location& loc,
 }
 
 void SharedValidator::OnTypecheckerError(const char* msg) {
-  PrintError(*expr_loc_, "%s", msg);
+  PrintError(expr_loc_, "%s", msg);
 }
 
 Result SharedValidator::OnFuncType(const Location& loc,
@@ -540,7 +540,7 @@ Index SharedValidator::GetFunctionTypeIndex(Index func_index) const {
 
 Result SharedValidator::BeginFunctionBody(const Location& loc,
                                           Index func_index) {
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   locals_.clear();
   if (func_index < funcs_.size()) {
     for (Type type : funcs_[func_index].params) {
@@ -630,7 +630,7 @@ Result SharedValidator::OnAtomicLoad(const Location& loc,
                                      Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicLoad(opcode, mt.limits);
@@ -642,7 +642,7 @@ Result SharedValidator::OnAtomicNotify(const Location& loc,
                                        Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicNotify(opcode, mt.limits);
@@ -654,7 +654,7 @@ Result SharedValidator::OnAtomicRmwCmpxchg(const Location& loc,
                                            Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicRmwCmpxchg(opcode, mt.limits);
@@ -666,7 +666,7 @@ Result SharedValidator::OnAtomicRmw(const Location& loc,
                                     Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicRmw(opcode, mt.limits);
@@ -678,7 +678,7 @@ Result SharedValidator::OnAtomicStore(const Location& loc,
                                       Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicStore(opcode, mt.limits);
@@ -690,7 +690,7 @@ Result SharedValidator::OnAtomicWait(const Location& loc,
                                      Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAtomicAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnAtomicWait(opcode, mt.limits);
@@ -699,7 +699,7 @@ Result SharedValidator::OnAtomicWait(const Location& loc,
 
 Result SharedValidator::OnBinary(const Location& loc, Opcode opcode) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnBinary(opcode);
   return result;
 }
@@ -707,7 +707,7 @@ Result SharedValidator::OnBinary(const Location& loc, Opcode opcode) {
 Result SharedValidator::OnBlock(const Location& loc, Type sig_type) {
   Result result = Result::Ok;
   TypeVector param_types, result_types;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckBlockSignature(loc, Opcode::Block, sig_type, &param_types,
                                 &result_types);
   result |= typechecker_.OnBlock(param_types, result_types);
@@ -716,42 +716,42 @@ Result SharedValidator::OnBlock(const Location& loc, Type sig_type) {
 
 Result SharedValidator::OnBr(const Location& loc, Var depth) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnBr(depth.index());
   return result;
 }
 
 Result SharedValidator::OnBrIf(const Location& loc, Var depth) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnBrIf(depth.index());
   return result;
 }
 
 Result SharedValidator::BeginBrTable(const Location& loc) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.BeginBrTable();
   return result;
 }
 
 Result SharedValidator::OnBrTableTarget(const Location& loc, Var depth) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnBrTableTarget(depth.index());
   return result;
 }
 
 Result SharedValidator::EndBrTable(const Location& loc) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.EndBrTable();
   return result;
 }
 
 Result SharedValidator::OnCall(const Location& loc, Var func_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   FuncType func_type;
   result |= CheckFuncIndex(func_var, &func_type);
   result |= typechecker_.OnCall(func_type.params, func_type.results);
@@ -762,7 +762,7 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
                                        Var sig_var,
                                        Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   FuncType func_type;
   result |= CheckFuncTypeIndex(sig_var, &func_type);
   result |= CheckTableIndex(table_var);
@@ -773,7 +773,7 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
 Result SharedValidator::OnCallRef(const Location& loc,
                                   Index* function_type_index) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   Index func_index;
   result |= typechecker_.OnIndexedFuncRef(&func_index);
   if (Failed(result)) {
@@ -792,7 +792,7 @@ Result SharedValidator::OnCatch(const Location& loc,
                                 Var tag_var,
                                 bool is_catch_all) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   if (is_catch_all) {
     TypeVector empty;
     result |= typechecker_.OnCatch(empty);
@@ -806,28 +806,28 @@ Result SharedValidator::OnCatch(const Location& loc,
 
 Result SharedValidator::OnCompare(const Location& loc, Opcode opcode) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnCompare(opcode);
   return result;
 }
 
 Result SharedValidator::OnConst(const Location& loc, Type type) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnConst(type);
   return result;
 }
 
 Result SharedValidator::OnConvert(const Location& loc, Opcode opcode) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnConvert(opcode);
   return result;
 }
 
 Result SharedValidator::OnDataDrop(const Location& loc, Var segment_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckDataSegmentIndex(segment_var);
   result |= typechecker_.OnDataDrop(segment_var.index());
   return result;
@@ -835,21 +835,21 @@ Result SharedValidator::OnDataDrop(const Location& loc, Var segment_var) {
 
 Result SharedValidator::OnDelegate(const Location& loc, Var depth) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnDelegate(depth.index());
   return result;
 }
 
 Result SharedValidator::OnDrop(const Location& loc) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnDrop();
   return result;
 }
 
 Result SharedValidator::OnElemDrop(const Location& loc, Var segment_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckElemSegmentIndex(segment_var);
   result |= typechecker_.OnElemDrop(segment_var.index());
   return result;
@@ -863,14 +863,14 @@ Result SharedValidator::OnElse(const Location& loc) {
 
 Result SharedValidator::OnEnd(const Location& loc) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnEnd();
   return result;
 }
 
 Result SharedValidator::OnGlobalGet(const Location& loc, Var global_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   GlobalType global_type;
   result |= CheckGlobalIndex(global_var, &global_type);
   result |= typechecker_.OnGlobalGet(global_type.type);
@@ -886,7 +886,7 @@ Result SharedValidator::OnGlobalSet(const Location& loc, Var global_var) {
         loc, "can't global.set on immutable global at index %" PRIindex ".",
         global_var.index());
   }
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnGlobalSet(global_type.type);
   return result;
 }
@@ -894,7 +894,7 @@ Result SharedValidator::OnGlobalSet(const Location& loc, Var global_var) {
 Result SharedValidator::OnIf(const Location& loc, Type sig_type) {
   Result result = Result::Ok;
   TypeVector param_types, result_types;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckBlockSignature(loc, Opcode::If, sig_type, &param_types,
                                 &result_types);
   result |= typechecker_.OnIf(param_types, result_types);
@@ -907,7 +907,7 @@ Result SharedValidator::OnLoad(const Location& loc,
                                Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(memidx, &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnLoad(opcode, mt.limits);
@@ -919,7 +919,7 @@ Result SharedValidator::OnLoadSplat(const Location& loc,
                                     Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnLoad(opcode, mt.limits);
@@ -931,7 +931,7 @@ Result SharedValidator::OnLoadZero(const Location& loc,
                                    Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnLoad(opcode, mt.limits);
@@ -941,7 +941,7 @@ Result SharedValidator::OnLoadZero(const Location& loc,
 Result SharedValidator::OnLocalGet(const Location& loc, Var local_var) {
   Result result = Result::Ok;
   Type type = Type::Any;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckLocalIndex(local_var, &type);
   result |= typechecker_.OnLocalGet(type);
   return result;
@@ -950,7 +950,7 @@ Result SharedValidator::OnLocalGet(const Location& loc, Var local_var) {
 Result SharedValidator::OnLocalSet(const Location& loc, Var local_var) {
   Result result = Result::Ok;
   Type type = Type::Any;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckLocalIndex(local_var, &type);
   result |= typechecker_.OnLocalSet(type);
   return result;
@@ -959,7 +959,7 @@ Result SharedValidator::OnLocalSet(const Location& loc, Var local_var) {
 Result SharedValidator::OnLocalTee(const Location& loc, Var local_var) {
   Result result = Result::Ok;
   Type type = Type::Any;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckLocalIndex(local_var, &type);
   result |= typechecker_.OnLocalTee(type);
   return result;
@@ -968,7 +968,7 @@ Result SharedValidator::OnLocalTee(const Location& loc, Var local_var) {
 Result SharedValidator::OnLoop(const Location& loc, Type sig_type) {
   Result result = Result::Ok;
   TypeVector param_types, result_types;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckBlockSignature(loc, Opcode::Loop, sig_type, &param_types,
                                 &result_types);
   result |= typechecker_.OnLoop(param_types, result_types);
@@ -980,7 +980,7 @@ Result SharedValidator::OnMemoryCopy(const Location& loc,
                                      Var destmemidx) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(srcmemidx, &mt);
   result |= CheckMemoryIndex(destmemidx, &mt);
   result |= typechecker_.OnMemoryCopy(mt.limits);
@@ -990,7 +990,7 @@ Result SharedValidator::OnMemoryCopy(const Location& loc,
 Result SharedValidator::OnMemoryFill(const Location& loc, Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= typechecker_.OnMemoryFill(mt.limits);
   return result;
@@ -999,7 +999,7 @@ Result SharedValidator::OnMemoryFill(const Location& loc, Var memidx) {
 Result SharedValidator::OnMemoryGrow(const Location& loc, Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(memidx, &mt);
   result |= typechecker_.OnMemoryGrow(mt.limits);
   return result;
@@ -1010,7 +1010,7 @@ Result SharedValidator::OnMemoryInit(const Location& loc,
                                      Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(memidx, &mt);
   result |= CheckDataSegmentIndex(segment_var);
   result |= typechecker_.OnMemoryInit(segment_var.index(), mt.limits);
@@ -1020,20 +1020,20 @@ Result SharedValidator::OnMemoryInit(const Location& loc,
 Result SharedValidator::OnMemorySize(const Location& loc, Var memidx) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(memidx, &mt);
   result |= typechecker_.OnMemorySize(mt.limits);
   return result;
 }
 
 Result SharedValidator::OnNop(const Location& loc) {
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   return Result::Ok;
 }
 
 Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckDeclaredFunc(func_var);
   result |= typechecker_.OnRefFuncExpr(GetFunctionTypeIndex(func_var.index()));
   return result;
@@ -1041,28 +1041,28 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
 
 Result SharedValidator::OnRefIsNull(const Location& loc) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnRefIsNullExpr();
   return result;
 }
 
 Result SharedValidator::OnRefNull(const Location& loc, Type type) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnRefNullExpr(type);
   return result;
 }
 
 Result SharedValidator::OnRethrow(const Location& loc, Var depth) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnRethrow(depth.index());
   return result;
 }
 
 Result SharedValidator::OnReturnCall(const Location& loc, Var func_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   FuncType func_type;
   result |= CheckFuncIndex(func_var, &func_type);
   result |= typechecker_.OnReturnCall(func_type.params, func_type.results);
@@ -1073,7 +1073,7 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
                                              Var sig_var,
                                              Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckTableIndex(table_var);
   FuncType func_type;
   result |= CheckFuncTypeIndex(sig_var, &func_type);
@@ -1084,7 +1084,7 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
 
 Result SharedValidator::OnReturn(const Location& loc) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnReturn();
   return result;
 }
@@ -1093,7 +1093,7 @@ Result SharedValidator::OnSelect(const Location& loc,
                                  Index result_count,
                                  Type* result_types) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   if (result_count > 1) {
     result |=
         PrintError(loc, "invalid arity in select instruction: %" PRIindex ".",
@@ -1108,7 +1108,7 @@ Result SharedValidator::OnSimdLaneOp(const Location& loc,
                                      Opcode opcode,
                                      uint64_t value) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnSimdLaneOp(opcode, value);
   return result;
 }
@@ -1119,7 +1119,7 @@ Result SharedValidator::OnSimdLoadLane(const Location& loc,
                                      uint64_t value) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnSimdLoadLane(opcode, mt.limits, value);
@@ -1132,7 +1132,7 @@ Result SharedValidator::OnSimdStoreLane(const Location& loc,
                                         uint64_t value) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(Var(0, loc), &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnSimdStoreLane(opcode, mt.limits, value);
@@ -1143,7 +1143,7 @@ Result SharedValidator::OnSimdShuffleOp(const Location& loc,
                                         Opcode opcode,
                                         v128 value) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnSimdShuffleOp(opcode, value);
   return result;
 }
@@ -1154,7 +1154,7 @@ Result SharedValidator::OnStore(const Location& loc,
                                 Address alignment) {
   Result result = Result::Ok;
   MemoryType mt;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckMemoryIndex(memidx, &mt);
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= typechecker_.OnStore(opcode, mt.limits);
@@ -1165,7 +1165,7 @@ Result SharedValidator::OnTableCopy(const Location& loc,
                                     Var dst_var,
                                     Var src_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   TableType dst_table;
   TableType src_table;
   result |= CheckTableIndex(dst_var, &dst_table);
@@ -1177,7 +1177,7 @@ Result SharedValidator::OnTableCopy(const Location& loc,
 
 Result SharedValidator::OnTableFill(const Location& loc, Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
   result |= typechecker_.OnTableFill(table_type.element);
@@ -1186,7 +1186,7 @@ Result SharedValidator::OnTableFill(const Location& loc, Var table_var) {
 
 Result SharedValidator::OnTableGet(const Location& loc, Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
   result |= typechecker_.OnTableGet(table_type.element);
@@ -1195,7 +1195,7 @@ Result SharedValidator::OnTableGet(const Location& loc, Var table_var) {
 
 Result SharedValidator::OnTableGrow(const Location& loc, Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
   result |= typechecker_.OnTableGrow(table_type.element);
@@ -1206,7 +1206,7 @@ Result SharedValidator::OnTableInit(const Location& loc,
                                     Var segment_var,
                                     Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   TableType table_type;
   ElemType elem_type;
   result |= CheckTableIndex(table_var, &table_type);
@@ -1218,7 +1218,7 @@ Result SharedValidator::OnTableInit(const Location& loc,
 
 Result SharedValidator::OnTableSet(const Location& loc, Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
   result |= typechecker_.OnTableSet(table_type.element);
@@ -1227,7 +1227,7 @@ Result SharedValidator::OnTableSet(const Location& loc, Var table_var) {
 
 Result SharedValidator::OnTableSize(const Location& loc, Var table_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckTableIndex(table_var);
   result |= typechecker_.OnTableSize();
   return result;
@@ -1235,14 +1235,14 @@ Result SharedValidator::OnTableSize(const Location& loc, Var table_var) {
 
 Result SharedValidator::OnTernary(const Location& loc, Opcode opcode) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnTernary(opcode);
   return result;
 }
 
 Result SharedValidator::OnThrow(const Location& loc, Var tag_var) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   TagType tag_type;
   result |= CheckTagIndex(tag_var, &tag_type);
   result |= typechecker_.OnThrow(tag_type.params);
@@ -1252,7 +1252,7 @@ Result SharedValidator::OnThrow(const Location& loc, Var tag_var) {
 Result SharedValidator::OnTry(const Location& loc, Type sig_type) {
   Result result = Result::Ok;
   TypeVector param_types, result_types;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= CheckBlockSignature(loc, Opcode::Try, sig_type, &param_types,
                                 &result_types);
   result |= typechecker_.OnTry(param_types, result_types);
@@ -1261,14 +1261,14 @@ Result SharedValidator::OnTry(const Location& loc, Type sig_type) {
 
 Result SharedValidator::OnUnary(const Location& loc, Opcode opcode) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnUnary(opcode);
   return result;
 }
 
 Result SharedValidator::OnUnreachable(const Location& loc) {
   Result result = Result::Ok;
-  expr_loc_ = &loc;
+  expr_loc_ = loc;
   result |= typechecker_.OnUnreachable();
   return result;
 }
