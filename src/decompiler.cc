@@ -266,8 +266,8 @@ struct Decompiler {
       // FIXME: make this less expensive with a binary search or whatever.
       for (auto dat : mc.module.data_segments) {
         uint64_t dat_base;
-        if (dat->offset.size() == 1 &&
-            ConstIntVal(&dat->offset.front(), dat_base) &&
+        if (dat->offset.exprs.size() == 1 &&
+            ConstIntVal(&dat->offset.exprs.front(), dat_base) &&
             abs_base >= dat_base &&
             abs_base < dat_base + dat->data.size()) {
           // We are inside the range of this data segment!
@@ -719,7 +719,7 @@ struct Decompiler {
           CheckImportExport(s, ExternalKind::Global, global_index, g->name);
       s += cat("global ", g->name, ":", GetDecompTypeName(g->type));
       if (!is_import) {
-        s += cat(" = ", InitExp(g->init_expr));
+        s += cat(" = ", InitExp(g->init_expr.exprs));
       }
       s += ";\n";
       global_index++;
@@ -745,7 +745,7 @@ struct Decompiler {
 
     // Data.
     for (auto dat : mc.module.data_segments) {
-      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset), ") =");
+      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset.exprs), ") =");
       auto ds = BinaryToString(dat->data);
       if (ds.size() > target_exp_width / 2) {
         s += "\n";

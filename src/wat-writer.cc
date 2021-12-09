@@ -142,7 +142,7 @@ class WatWriter : ModuleContext {
   template <typename T>
   void WriteMemoryLoadStoreExpr(const Expr* expr);
   void WriteExprList(const ExprList& exprs);
-  void WriteInitExpr(const ExprList& expr);
+  void WriteInitExpr(const InitExpr& expr);
   template <typename T>
   void WriteTypeBindings(const char* prefix,
                          const T& types,
@@ -1263,10 +1263,10 @@ void WatWriter::FlushExprTreeStack() {
   FlushExprTreeVector(stack_copy);
 }
 
-void WatWriter::WriteInitExpr(const ExprList& expr) {
-  if (!expr.empty()) {
+void WatWriter::WriteInitExpr(const InitExpr& expr) {
+  if (!expr.exprs.empty()) {
     WritePuts("(", NextChar::None);
-    WriteExprList(expr);
+    WriteExprList(expr.exprs);
     /* clear the next char, so we don't write a newline after the expr */
     next_char_ = NextChar::None;
     WritePuts(")", NextChar::Space);
@@ -1448,13 +1448,13 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     WritePuts("func", NextChar::Space);
   }
 
-  for (const ExprList& expr : segment.elem_exprs) {
+  for (const InitExpr& init_expr : segment.elem_exprs) {
     if (flags & SegUseElemExprs) {
-      WriteInitExpr(expr);
+      WriteInitExpr(init_expr);
     } else {
-      assert(expr.size() == 1);
-      assert(expr.front().type() == ExprType::RefFunc);
-      WriteVar(cast<const RefFuncExpr>(&expr.front())->var, NextChar::Space);
+      assert(init_expr.exprs.size() == 1);
+      assert(init_expr.exprs.front().type() == ExprType::RefFunc);
+      WriteVar(cast<const RefFuncExpr>(&init_expr.exprs.front())->var, NextChar::Space);
     }
   }
   WriteCloseNewline();

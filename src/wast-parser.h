@@ -131,8 +131,8 @@ class WastParser {
   bool ParseTextListOpt(std::vector<uint8_t>* out_data);
   Result ParseVarList(VarVector* out_var_list);
   bool ParseElemExprOpt(ExprList* out_elem_expr);
-  bool ParseElemExprListOpt(ExprListVector* out_list);
-  bool ParseElemExprVarListOpt(ExprListVector* out_list);
+  bool ParseElemExprListOpt(InitExprVector* out_list);
+  bool ParseElemExprVarListOpt(InitExprVector* out_list);
   Result ParseValueType(Var* out_type);
   Result ParseValueTypeList(
       TypeVector* out_type_list,

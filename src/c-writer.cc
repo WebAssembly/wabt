@@ -220,7 +220,7 @@ class CWriter {
   void Write(const StackVar&);
   void Write(const ResultType&);
   void Write(const Const&);
-  void WriteInitExpr(const ExprList&);
+  void WriteInitExpr(const InitExpr&);
   std::string GenerateHeaderGuard() const;
   void WriteSourceTop();
   void WriteMultivalueTypes();
@@ -782,7 +782,9 @@ void CWriter::Write(const Const& const_) {
   }
 }
 
-void CWriter::WriteInitExpr(const ExprList& expr_list) {
+void CWriter::WriteInitExpr(const InitExpr& init_expr) {
+  const ExprList& expr_list = init_expr.exprs;
+
   if (expr_list.empty())
     return;
 
@@ -981,7 +983,7 @@ void CWriter::WriteGlobals() {
   for (const Global* global : module_->globals) {
     bool is_import = global_index < module_->num_global_imports;
     if (!is_import) {
-      assert(!global->init_expr.empty());
+      assert(!global->init_expr.exprs.empty());
       Write(GlobalName(global->name), " = ");
       WriteInitExpr(global->init_expr);
       Write(";", Newline());
@@ -1111,11 +1113,11 @@ void CWriter::WriteElemInitializers() {
     Write(";", Newline());
 
     size_t i = 0;
-    for (const ExprList& elem_expr : elem_segment->elem_exprs) {
+    for (const InitExpr& elem_expr : elem_segment->elem_exprs) {
       // We don't support the bulk-memory proposal here, so we know that we
       // don't have any passive segments (where ref.null can be used).
-      assert(elem_expr.size() == 1);
-      const Expr* expr = &elem_expr.front();
+      assert(elem_expr.exprs.size() == 1);
+      const Expr* expr = &elem_expr.exprs.front();
       assert(expr->type() == ExprType::RefFunc);
       const Func* func = module_->GetFunc(cast<RefFuncExpr>(expr)->var);
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
