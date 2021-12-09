@@ -122,58 +122,58 @@ out/test/spec/simd_conversions.wast:695: assert_malformed passed:
   (func (result v128) (i16x8.extend_high_i32x4_u (v128.const i32x4 0 0 0 0)))
                        ^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/spec/simd_conversions.wast:702: assert_invalid passed:
-  error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got [i32]
+  out/test/spec/simd_conversions/simd_conversions.31.wasm:000001d: error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got [i32]
   000001d: error: OnConvertExpr callback failed
 out/test/spec/simd_conversions.wast:703: assert_invalid passed:
-  error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got [i64]
+  out/test/spec/simd_conversions/simd_conversions.32.wasm:000001d: error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got [i64]
   000001d: error: OnConvertExpr callback failed
 out/test/spec/simd_conversions.wast:704: assert_invalid passed:
-  error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got [i32]
+  out/test/spec/simd_conversions/simd_conversions.33.wasm:000001d: error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got [i32]
   000001d: error: OnConvertExpr callback failed
 out/test/spec/simd_conversions.wast:705: assert_invalid passed:
-  error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got [i64]
+  out/test/spec/simd_conversions/simd_conversions.34.wasm:000001d: error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got [i64]
   000001d: error: OnConvertExpr callback failed
 out/test/spec/simd_conversions.wast:707: assert_invalid passed:
-  error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [i32, i64]
+  out/test/spec/simd_conversions/simd_conversions.35.wasm:000001e: error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [i32, i64]
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:708: assert_invalid passed:
-  error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [i32, i64]
+  out/test/spec/simd_conversions/simd_conversions.36.wasm:000001e: error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [i32, i64]
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:709: assert_invalid passed:
-  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [f32, f64]
+  out/test/spec/simd_conversions/simd_conversions.37.wasm:0000029: error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [f32, f64]
   0000029: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:710: assert_invalid passed:
-  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [f32, f64]
+  out/test/spec/simd_conversions/simd_conversions.38.wasm:0000029: error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [f32, f64]
   0000029: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:821: assert_invalid passed:
-  error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got []
+  out/test/spec/simd_conversions/simd_conversions.40.wasm:000001b: error: type mismatch in f32x4.convert_i32x4_s, expected [v128] but got []
   000001b: error: OnConvertExpr callback failed
 out/test/spec/simd_conversions.wast:829: assert_invalid passed:
-  error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got []
+  out/test/spec/simd_conversions/simd_conversions.41.wasm:000001b: error: type mismatch in f32x4.convert_i32x4_u, expected [v128] but got []
   000001b: error: OnConvertExpr callback failed
 out/test/spec/simd_conversions.wast:837: assert_invalid passed:
-  error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [v128]
+  out/test/spec/simd_conversions/simd_conversions.42.wasm:000002c: error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got [v128]
   000002c: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:845: assert_invalid passed:
-  error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got []
+  out/test/spec/simd_conversions/simd_conversions.43.wasm:000001a: error: type mismatch in i8x16.narrow_i16x8_s, expected [v128, v128] but got []
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:853: assert_invalid passed:
-  error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [v128]
+  out/test/spec/simd_conversions/simd_conversions.44.wasm:000002c: error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got [v128]
   000002c: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:861: assert_invalid passed:
-  error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got []
+  out/test/spec/simd_conversions/simd_conversions.45.wasm:000001a: error: type mismatch in i8x16.narrow_i16x8_u, expected [v128, v128] but got []
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:869: assert_invalid passed:
-  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [v128]
+  out/test/spec/simd_conversions/simd_conversions.46.wasm:000002d: error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:877: assert_invalid passed:
-  error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got []
+  out/test/spec/simd_conversions/simd_conversions.47.wasm:000001b: error: type mismatch in i16x8.narrow_i32x4_s, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:885: assert_invalid passed:
-  error: type mismatch in i16x8.narrow_i32x4_u, expected [v128, v128] but got [v128]
+  out/test/spec/simd_conversions/simd_conversions.48.wasm:000002d: error: type mismatch in i16x8.narrow_i32x4_u, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_conversions.wast:893: assert_invalid passed:
-  error: type mismatch in i16x8.narrow_i32x4_u, expected [v128, v128] but got []
+  out/test/spec/simd_conversions/simd_conversions.49.wasm:000001b: error: type mismatch in i16x8.narrow_i32x4_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 280/280 tests passed.
 ;;; STDOUT ;;)

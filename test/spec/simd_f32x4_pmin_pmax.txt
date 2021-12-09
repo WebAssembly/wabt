@@ -34,22 +34,22 @@ out/test/spec/simd_f32x4_pmin_pmax.wast:11636: assert_malformed passed:
   (memory 1) (func (result v128) (i64x2.pmax (v128.const i32x4 0 0 0 0) (v128.c...
                                   ^^^^^^^^^^
 out/test/spec/simd_f32x4_pmin_pmax.wast:11639: assert_invalid passed:
-  error: type mismatch in f32x4.pmin, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_f32x4_pmin_pmax/simd_f32x4_pmin_pmax.9.wasm:0000022: error: type mismatch in f32x4.pmin, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_f32x4_pmin_pmax.wast:11640: assert_invalid passed:
-  error: type mismatch in f32x4.pmax, expected [v128, v128] but got [i32, f32]
+  out/test/spec/simd_f32x4_pmin_pmax/simd_f32x4_pmin_pmax.10.wasm:0000022: error: type mismatch in f32x4.pmax, expected [v128, v128] but got [i32, f32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/simd_f32x4_pmin_pmax.wast:11645: assert_invalid passed:
-  error: type mismatch in f32x4.pmin, expected [v128, v128] but got [v128]
+  out/test/spec/simd_f32x4_pmin_pmax/simd_f32x4_pmin_pmax.11.wasm:000002d: error: type mismatch in f32x4.pmin, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_f32x4_pmin_pmax.wast:11653: assert_invalid passed:
-  error: type mismatch in f32x4.pmin, expected [v128, v128] but got []
+  out/test/spec/simd_f32x4_pmin_pmax/simd_f32x4_pmin_pmax.12.wasm:000001b: error: type mismatch in f32x4.pmin, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_f32x4_pmin_pmax.wast:11661: assert_invalid passed:
-  error: type mismatch in f32x4.pmax, expected [v128, v128] but got [v128]
+  out/test/spec/simd_f32x4_pmin_pmax/simd_f32x4_pmin_pmax.13.wasm:000002d: error: type mismatch in f32x4.pmax, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_f32x4_pmin_pmax.wast:11669: assert_invalid passed:
-  error: type mismatch in f32x4.pmax, expected [v128, v128] but got []
+  out/test/spec/simd_f32x4_pmin_pmax/simd_f32x4_pmin_pmax.14.wasm:000001b: error: type mismatch in f32x4.pmax, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 3886/3886 tests passed.
 ;;; STDOUT ;;)

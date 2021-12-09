@@ -2,52 +2,52 @@
 ;;; STDIN_FILE: third_party/testsuite/simd_f64x2_arith.wast
 (;; STDOUT ;;;
 out/test/spec/simd_f64x2_arith.wast:5302: assert_invalid passed:
-  error: type mismatch in f64x2.neg, expected [v128] but got [i64]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.2.wasm:000001d: error: type mismatch in f64x2.neg, expected [v128] but got [i64]
   000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5303: assert_invalid passed:
-  error: type mismatch in f64x2.sqrt, expected [v128] but got [i64]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.3.wasm:000001d: error: type mismatch in f64x2.sqrt, expected [v128] but got [i64]
   000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5304: assert_invalid passed:
-  error: type mismatch in f64x2.add, expected [v128, v128] but got [i64, f64]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.4.wasm:0000026: error: type mismatch in f64x2.add, expected [v128, v128] but got [i64, f64]
   0000026: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5305: assert_invalid passed:
-  error: type mismatch in f64x2.sub, expected [v128, v128] but got [i64, f64]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.5.wasm:0000026: error: type mismatch in f64x2.sub, expected [v128, v128] but got [i64, f64]
   0000026: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5306: assert_invalid passed:
-  error: type mismatch in f64x2.mul, expected [v128, v128] but got [i64, f64]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.6.wasm:0000026: error: type mismatch in f64x2.mul, expected [v128, v128] but got [i64, f64]
   0000026: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5307: assert_invalid passed:
-  error: type mismatch in f64x2.div, expected [v128, v128] but got [i64, f64]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.7.wasm:0000026: error: type mismatch in f64x2.div, expected [v128, v128] but got [i64, f64]
   0000026: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5312: assert_invalid passed:
-  error: type mismatch in f64x2.neg, expected [v128] but got []
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.8.wasm:000001b: error: type mismatch in f64x2.neg, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5320: assert_invalid passed:
-  error: type mismatch in f64x2.sqrt, expected [v128] but got []
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.9.wasm:000001b: error: type mismatch in f64x2.sqrt, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5328: assert_invalid passed:
-  error: type mismatch in f64x2.add, expected [v128, v128] but got [v128]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.10.wasm:000002d: error: type mismatch in f64x2.add, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5336: assert_invalid passed:
-  error: type mismatch in f64x2.add, expected [v128, v128] but got []
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.11.wasm:000001b: error: type mismatch in f64x2.add, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5344: assert_invalid passed:
-  error: type mismatch in f64x2.sub, expected [v128, v128] but got [v128]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.12.wasm:000002d: error: type mismatch in f64x2.sub, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5352: assert_invalid passed:
-  error: type mismatch in f64x2.sub, expected [v128, v128] but got []
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.13.wasm:000001b: error: type mismatch in f64x2.sub, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5360: assert_invalid passed:
-  error: type mismatch in f64x2.mul, expected [v128, v128] but got [v128]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.14.wasm:000002d: error: type mismatch in f64x2.mul, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5368: assert_invalid passed:
-  error: type mismatch in f64x2.mul, expected [v128, v128] but got []
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.15.wasm:000001b: error: type mismatch in f64x2.mul, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5376: assert_invalid passed:
-  error: type mismatch in f64x2.div, expected [v128, v128] but got [v128]
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.16.wasm:000002d: error: type mismatch in f64x2.div, expected [v128, v128] but got [v128]
   000002d: error: OnBinaryExpr callback failed
 out/test/spec/simd_f64x2_arith.wast:5384: assert_invalid passed:
-  error: type mismatch in f64x2.div, expected [v128, v128] but got []
+  out/test/spec/simd_f64x2_arith/simd_f64x2_arith.17.wasm:000001b: error: type mismatch in f64x2.div, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
 1822/1822 tests passed.
 ;;; STDOUT ;;)

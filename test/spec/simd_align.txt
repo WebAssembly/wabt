@@ -2,40 +2,40 @@
 ;;; STDIN_FILE: third_party/testsuite/simd_align.wast
 (;; STDOUT ;;;
 out/test/spec/simd_align.wast:54: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (16)
+  out/test/spec/simd_align/simd_align.44.wasm:0000022: error: alignment must not be larger than natural alignment (16)
   0000022: error: OnLoadExpr callback failed
 out/test/spec/simd_align.wast:58: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (16)
+  out/test/spec/simd_align/simd_align.45.wasm:0000034: error: alignment must not be larger than natural alignment (16)
   0000034: error: OnStoreExpr callback failed
 out/test/spec/simd_align.wast:62: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/simd_align/simd_align.46.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnLoadExpr callback failed
 out/test/spec/simd_align.wast:66: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/simd_align/simd_align.47.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnLoadExpr callback failed
 out/test/spec/simd_align.wast:70: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/simd_align/simd_align.48.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnLoadExpr callback failed
 out/test/spec/simd_align.wast:74: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/simd_align/simd_align.49.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnLoadExpr callback failed
 out/test/spec/simd_align.wast:78: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/simd_align/simd_align.50.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnLoadExpr callback failed
 out/test/spec/simd_align.wast:82: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/simd_align/simd_align.51.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnLoadExpr callback failed
 out/test/spec/simd_align.wast:86: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/simd_align/simd_align.52.wasm:0000023: error: alignment must not be larger than natural alignment (1)
   0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd_align.wast:90: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/simd_align/simd_align.53.wasm:0000023: error: alignment must not be larger than natural alignment (2)
   0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd_align.wast:94: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/simd_align/simd_align.54.wasm:0000023: error: alignment must not be larger than natural alignment (4)
   0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd_align.wast:98: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/simd_align/simd_align.55.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnLoadSplatExpr callback failed
 out/test/spec/simd_align.wast:105: assert_malformed passed:
   out/test/spec/simd_align/simd_align.56.wat:1:35: error: unexpected token align=-1, expected ).

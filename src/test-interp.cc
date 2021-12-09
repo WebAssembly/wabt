@@ -30,8 +30,8 @@ class InterpTest : public ::testing::Test {
   void ReadModule(const std::vector<u8>& data) {
     Errors errors;
     ReadBinaryOptions options;
-    Result result = ReadBinaryInterp(data.data(), data.size(), options, &errors,
-                                     &module_desc_);
+    Result result = ReadBinaryInterp("<internal>", data.data(), data.size(),
+                                     options, &errors, &module_desc_);
     ASSERT_EQ(Result::Ok, result)
         << FormatErrorsToString(errors, Location::Type::Binary);
   }

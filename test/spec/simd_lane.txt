@@ -198,196 +198,196 @@ out/test/spec/simd_lane.wast:428: assert_malformed passed:
   ... (result v128) (f64x2.replace_lane 256 (v128.const f64x2 0 0) (f64.const 1)))
                                                                                  ^
 out/test/spec/simd_lane.wast:432: assert_invalid passed:
-  error: lane index must be less than 16 (got 16)
+  out/test/spec/simd_lane/simd_lane.29.wasm:000002d: error: lane index must be less than 16 (got 16)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:433: assert_invalid passed:
-  error: lane index must be less than 16 (got 255)
+  out/test/spec/simd_lane/simd_lane.30.wasm:000002d: error: lane index must be less than 16 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:434: assert_invalid passed:
-  error: lane index must be less than 16 (got 16)
+  out/test/spec/simd_lane/simd_lane.31.wasm:000002d: error: lane index must be less than 16 (got 16)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:435: assert_invalid passed:
-  error: lane index must be less than 16 (got 255)
+  out/test/spec/simd_lane/simd_lane.32.wasm:000002d: error: lane index must be less than 16 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:436: assert_invalid passed:
-  error: lane index must be less than 8 (got 8)
+  out/test/spec/simd_lane/simd_lane.33.wasm:000002d: error: lane index must be less than 8 (got 8)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:437: assert_invalid passed:
-  error: lane index must be less than 8 (got 255)
+  out/test/spec/simd_lane/simd_lane.34.wasm:000002d: error: lane index must be less than 8 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:438: assert_invalid passed:
-  error: lane index must be less than 8 (got 8)
+  out/test/spec/simd_lane/simd_lane.35.wasm:000002d: error: lane index must be less than 8 (got 8)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:439: assert_invalid passed:
-  error: lane index must be less than 8 (got 255)
+  out/test/spec/simd_lane/simd_lane.36.wasm:000002d: error: lane index must be less than 8 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:440: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.37.wasm:000002d: error: lane index must be less than 4 (got 4)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:441: assert_invalid passed:
-  error: lane index must be less than 4 (got 255)
+  out/test/spec/simd_lane/simd_lane.38.wasm:000002d: error: lane index must be less than 4 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:442: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.39.wasm:000002d: error: lane index must be less than 4 (got 4)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:443: assert_invalid passed:
-  error: lane index must be less than 4 (got 255)
+  out/test/spec/simd_lane/simd_lane.40.wasm:000002d: error: lane index must be less than 4 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:444: assert_invalid passed:
-  error: lane index must be less than 16 (got 16)
+  out/test/spec/simd_lane/simd_lane.41.wasm:000002f: error: lane index must be less than 16 (got 16)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:445: assert_invalid passed:
-  error: lane index must be less than 16 (got 255)
+  out/test/spec/simd_lane/simd_lane.42.wasm:000002f: error: lane index must be less than 16 (got 255)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:446: assert_invalid passed:
-  error: lane index must be less than 8 (got 16)
+  out/test/spec/simd_lane/simd_lane.43.wasm:000002f: error: lane index must be less than 8 (got 16)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:447: assert_invalid passed:
-  error: lane index must be less than 8 (got 255)
+  out/test/spec/simd_lane/simd_lane.44.wasm:000002f: error: lane index must be less than 8 (got 255)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:448: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.45.wasm:000002f: error: lane index must be less than 4 (got 4)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:449: assert_invalid passed:
-  error: lane index must be less than 4 (got 255)
+  out/test/spec/simd_lane/simd_lane.46.wasm:000002f: error: lane index must be less than 4 (got 255)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:450: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
+  out/test/spec/simd_lane/simd_lane.47.wasm:000002f: error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.47.wasm:000002f: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:451: assert_invalid passed:
-  error: lane index must be less than 4 (got 255)
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
+  out/test/spec/simd_lane/simd_lane.48.wasm:000002f: error: lane index must be less than 4 (got 255)
+  out/test/spec/simd_lane/simd_lane.48.wasm:000002f: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:452: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.49.wasm:000002d: error: lane index must be less than 2 (got 2)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:453: assert_invalid passed:
-  error: lane index must be less than 2 (got 255)
+  out/test/spec/simd_lane/simd_lane.50.wasm:000002d: error: lane index must be less than 2 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:454: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.51.wasm:000002d: error: lane index must be less than 2 (got 2)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:455: assert_invalid passed:
-  error: lane index must be less than 2 (got 255)
+  out/test/spec/simd_lane/simd_lane.52.wasm:000002d: error: lane index must be less than 2 (got 255)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:456: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.53.wasm:000002f: error: lane index must be less than 2 (got 2)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:457: assert_invalid passed:
-  error: lane index must be less than 2 (got 255)
+  out/test/spec/simd_lane/simd_lane.54.wasm:000002f: error: lane index must be less than 2 (got 255)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:458: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.55.wasm:0000036: error: lane index must be less than 2 (got 2)
   0000036: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:459: assert_invalid passed:
-  error: lane index must be less than 2 (got 255)
+  out/test/spec/simd_lane/simd_lane.56.wasm:0000036: error: lane index must be less than 2 (got 255)
   0000036: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:463: assert_invalid passed:
-  error: lane index must be less than 8 (got 8)
+  out/test/spec/simd_lane/simd_lane.57.wasm:000002d: error: lane index must be less than 8 (got 8)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:464: assert_invalid passed:
-  error: lane index must be less than 8 (got 8)
+  out/test/spec/simd_lane/simd_lane.58.wasm:000002d: error: lane index must be less than 8 (got 8)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:465: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.59.wasm:000002d: error: lane index must be less than 4 (got 4)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:466: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.60.wasm:000002d: error: lane index must be less than 4 (got 4)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:467: assert_invalid passed:
-  error: lane index must be less than 8 (got 8)
+  out/test/spec/simd_lane/simd_lane.61.wasm:000002f: error: lane index must be less than 8 (got 8)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:468: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.62.wasm:000002f: error: lane index must be less than 4 (got 4)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:469: assert_invalid passed:
-  error: lane index must be less than 4 (got 4)
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
+  out/test/spec/simd_lane/simd_lane.63.wasm:000002f: error: lane index must be less than 4 (got 4)
+  out/test/spec/simd_lane/simd_lane.63.wasm:000002f: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:470: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.64.wasm:000002d: error: lane index must be less than 2 (got 2)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:471: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.65.wasm:000002d: error: lane index must be less than 2 (got 2)
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:472: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.66.wasm:000002f: error: lane index must be less than 2 (got 2)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:473: assert_invalid passed:
-  error: lane index must be less than 2 (got 2)
+  out/test/spec/simd_lane/simd_lane.67.wasm:0000036: error: lane index must be less than 2 (got 2)
   0000036: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:477: assert_invalid passed:
-  error: type mismatch in i8x16.extract_lane_s, expected [v128] but got [i32]
+  out/test/spec/simd_lane/simd_lane.68.wasm:000001d: error: type mismatch in i8x16.extract_lane_s, expected [v128] but got [i32]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:478: assert_invalid passed:
-  error: type mismatch in i8x16.extract_lane_u, expected [v128] but got [i64]
+  out/test/spec/simd_lane/simd_lane.69.wasm:000001d: error: type mismatch in i8x16.extract_lane_u, expected [v128] but got [i64]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:479: assert_invalid passed:
-  error: type mismatch in i8x16.extract_lane_s, expected [v128] but got [f32]
+  out/test/spec/simd_lane/simd_lane.70.wasm:0000020: error: type mismatch in i8x16.extract_lane_s, expected [v128] but got [f32]
   0000020: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:480: assert_invalid passed:
-  error: type mismatch in i8x16.extract_lane_u, expected [v128] but got [f64]
+  out/test/spec/simd_lane/simd_lane.71.wasm:0000024: error: type mismatch in i8x16.extract_lane_u, expected [v128] but got [f64]
   0000024: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:481: assert_invalid passed:
-  error: type mismatch in i32x4.extract_lane, expected [v128] but got [i32]
+  out/test/spec/simd_lane/simd_lane.72.wasm:000001d: error: type mismatch in i32x4.extract_lane, expected [v128] but got [i32]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:482: assert_invalid passed:
-  error: type mismatch in f32x4.extract_lane, expected [v128] but got [f32]
+  out/test/spec/simd_lane/simd_lane.73.wasm:0000020: error: type mismatch in f32x4.extract_lane, expected [v128] but got [f32]
   0000020: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:483: assert_invalid passed:
-  error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [i32, i32]
+  out/test/spec/simd_lane/simd_lane.74.wasm:000001f: error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [i32, i32]
   000001f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:484: assert_invalid passed:
-  error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [i64, i32]
+  out/test/spec/simd_lane/simd_lane.75.wasm:000001f: error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [i64, i32]
   000001f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:485: assert_invalid passed:
-  error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [i32, i32]
+  out/test/spec/simd_lane/simd_lane.76.wasm:000001f: error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [i32, i32]
   000001f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:486: assert_invalid passed:
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [f32, i32]
+  out/test/spec/simd_lane/simd_lane.77.wasm:0000022: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [f32, i32]
   0000022: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:487: assert_invalid passed:
-  error: type mismatch in i64x2.extract_lane, expected [v128] but got [i64]
+  out/test/spec/simd_lane/simd_lane.78.wasm:000001d: error: type mismatch in i64x2.extract_lane, expected [v128] but got [i64]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:488: assert_invalid passed:
-  error: type mismatch in f64x2.extract_lane, expected [v128] but got [f64]
+  out/test/spec/simd_lane/simd_lane.79.wasm:0000024: error: type mismatch in f64x2.extract_lane, expected [v128] but got [f64]
   0000024: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:489: assert_invalid passed:
-  error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [i32, i32]
+  out/test/spec/simd_lane/simd_lane.80.wasm:000001f: error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [i32, i32]
   000001f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:490: assert_invalid passed:
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [f32, i32]
+  out/test/spec/simd_lane/simd_lane.81.wasm:0000022: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [f32, i32]
   0000022: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:494: assert_invalid passed:
-  error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [v128, f32]
+  out/test/spec/simd_lane/simd_lane.82.wasm:0000032: error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [v128, f32]
   0000032: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:495: assert_invalid passed:
-  error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [v128, f64]
+  out/test/spec/simd_lane/simd_lane.83.wasm:0000036: error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [v128, f64]
   0000036: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:496: assert_invalid passed:
-  error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [v128, f32]
+  out/test/spec/simd_lane/simd_lane.84.wasm:0000032: error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [v128, f32]
   0000032: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:497: assert_invalid passed:
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
+  out/test/spec/simd_lane/simd_lane.85.wasm:000002f: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:499: assert_invalid passed:
-  error: type mismatch in i64x2.replace_lane, expected [v128, i64] but got [v128, f64]
+  out/test/spec/simd_lane/simd_lane.86.wasm:0000036: error: type mismatch in i64x2.replace_lane, expected [v128, i64] but got [v128, f64]
   0000036: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:500: assert_invalid passed:
-  error: type mismatch in f64x2.replace_lane, expected [v128, f64] but got [v128, i64]
+  out/test/spec/simd_lane/simd_lane.87.wasm:000002f: error: type mismatch in f64x2.replace_lane, expected [v128, f64] but got [v128, i64]
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:503: assert_invalid passed:
-  error: type mismatch in i8x16.swizzle, expected [v128, v128] but got [i32, v128]
+  out/test/spec/simd_lane/simd_lane.88.wasm:000002e: error: type mismatch in i8x16.swizzle, expected [v128, v128] but got [i32, v128]
   000002e: error: OnBinaryExpr callback failed
 out/test/spec/simd_lane.wast:505: assert_invalid passed:
-  error: type mismatch in i8x16.swizzle, expected [v128, v128] but got [v128, i32]
+  out/test/spec/simd_lane/simd_lane.89.wasm:000002e: error: type mismatch in i8x16.swizzle, expected [v128, v128] but got [v128, i32]
   000002e: error: OnBinaryExpr callback failed
 out/test/spec/simd_lane.wast:507: assert_invalid passed:
-  error: type mismatch in i8x16.shuffle, expected [v128, v128] but got [f32, v128]
+  out/test/spec/simd_lane/simd_lane.90.wasm:0000041: error: type mismatch in i8x16.shuffle, expected [v128, v128] but got [f32, v128]
   0000041: error: OnSimdShuffleOpExpr callback failed
 out/test/spec/simd_lane.wast:510: assert_invalid passed:
-  error: type mismatch in i8x16.shuffle, expected [v128, v128] but got [v128, f32]
+  out/test/spec/simd_lane/simd_lane.91.wasm:0000041: error: type mismatch in i8x16.shuffle, expected [v128, v128] but got [v128, f32]
   0000041: error: OnSimdShuffleOpExpr callback failed
 out/test/spec/simd_lane.wast:515: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.92.wat:1:83: error: unexpected token "(", expected a natural number in range [0, 32).
@@ -418,7 +418,7 @@ out/test/spec/simd_lane.wast:525: assert_malformed passed:
   ... 8 7 6 5 4 3 2 1 0)(v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)))
                                                                                  ^
 out/test/spec/simd_lane.wast:529: assert_invalid passed:
-  error: lane index must be less than 32 (got 255)
+  out/test/spec/simd_lane/simd_lane.96.wasm:000004e: error: lane index must be less than 32 (got 255)
   000004e: error: OnSimdShuffleOpExpr callback failed
 out/test/spec/simd_lane.wast:536: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.97.wat:1:21: error: unexpected token "i8x16.extract_lane", expected an instr.
@@ -725,7 +725,7 @@ out/test/spec/simd_lane.wast:902: assert_malformed passed:
   ...)  (i8x16.extract_lane_s (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))
                                                                                 ^
 out/test/spec/simd_lane.wast:910: assert_invalid passed:
-  error: type mismatch in i8x16.extract_lane_s, expected [v128] but got []
+  out/test/spec/simd_lane/simd_lane.157.wasm:000001b: error: type mismatch in i8x16.extract_lane_s, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:918: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.158.wat:1:74: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -739,7 +739,7 @@ out/test/spec/simd_lane.wast:926: assert_malformed passed:
   ...mpty (result i32)  (i16x8.extract_lane_u (v128.const i16x8 0 0 0 0 0 0 0 0)))
                                                                                 ^
 out/test/spec/simd_lane.wast:934: assert_invalid passed:
-  error: type mismatch in i16x8.extract_lane_u, expected [v128] but got []
+  out/test/spec/simd_lane/simd_lane.160.wasm:000001b: error: type mismatch in i16x8.extract_lane_u, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:942: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.161.wat:1:74: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -753,7 +753,7 @@ out/test/spec/simd_lane.wast:950: assert_malformed passed:
   ...-1st-arg-empty (result i32)  (i32x4.extract_lane (v128.const i32x4 0 0 0 0)))
                                                                                 ^
 out/test/spec/simd_lane.wast:958: assert_invalid passed:
-  error: type mismatch in i32x4.extract_lane, expected [v128] but got []
+  out/test/spec/simd_lane/simd_lane.163.wasm:000001b: error: type mismatch in i32x4.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:966: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.164.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -767,7 +767,7 @@ out/test/spec/simd_lane.wast:974: assert_malformed passed:
   ...lane-1st-arg-empty (result i64)  (i64x2.extract_lane (v128.const i64x2 0 0)))
                                                                                 ^
 out/test/spec/simd_lane.wast:982: assert_invalid passed:
-  error: type mismatch in i64x2.extract_lane, expected [v128] but got []
+  out/test/spec/simd_lane/simd_lane.166.wasm:000001b: error: type mismatch in i64x2.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:990: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.167.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -781,7 +781,7 @@ out/test/spec/simd_lane.wast:998: assert_malformed passed:
   ...-1st-arg-empty (result f32)  (f32x4.extract_lane (v128.const f32x4 0 0 0 0)))
                                                                                 ^
 out/test/spec/simd_lane.wast:1006: assert_invalid passed:
-  error: type mismatch in f32x4.extract_lane, expected [v128] but got []
+  out/test/spec/simd_lane/simd_lane.169.wasm:000001b: error: type mismatch in f32x4.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1014: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.170.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -795,7 +795,7 @@ out/test/spec/simd_lane.wast:1022: assert_malformed passed:
   ...lane-1st-arg-empty (result f64)  (f64x2.extract_lane (v128.const f64x2 0 0)))
                                                                                 ^
 out/test/spec/simd_lane.wast:1030: assert_invalid passed:
-  error: type mismatch in f64x2.extract_lane, expected [v128] but got []
+  out/test/spec/simd_lane/simd_lane.172.wasm:000001b: error: type mismatch in f64x2.extract_lane, expected [v128] but got []
   000001b: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1038: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.173.wat:1:70: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -809,10 +809,10 @@ out/test/spec/simd_lane.wast:1046: assert_malformed passed:
   ...place_lane (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (i32.const 1)))
                                                                    ^
 out/test/spec/simd_lane.wast:1054: assert_invalid passed:
-  error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [i32]
+  out/test/spec/simd_lane/simd_lane.175.wasm:000001d: error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [i32]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1062: assert_invalid passed:
-  error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [v128]
+  out/test/spec/simd_lane/simd_lane.176.wasm:000002d: error: type mismatch in i8x16.replace_lane, expected [v128, i32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1070: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.177.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -826,10 +826,10 @@ out/test/spec/simd_lane.wast:1078: assert_malformed passed:
   ...v128)  (i16x8.replace_lane (v128.const i16x8 0 0 0 0 0 0 0 0) (i32.const 1)))
                                                                    ^
 out/test/spec/simd_lane.wast:1086: assert_invalid passed:
-  error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [i32]
+  out/test/spec/simd_lane/simd_lane.179.wasm:000001d: error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [i32]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1094: assert_invalid passed:
-  error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [v128]
+  out/test/spec/simd_lane/simd_lane.180.wasm:000002d: error: type mismatch in i16x8.replace_lane, expected [v128, i32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1102: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.181.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -843,10 +843,10 @@ out/test/spec/simd_lane.wast:1110: assert_malformed passed:
   ...(result v128)  (i32x4.replace_lane (v128.const i32x4 0 0 0 0) (i32.const 1)))
                                                                    ^
 out/test/spec/simd_lane.wast:1118: assert_invalid passed:
-  error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [i32]
+  out/test/spec/simd_lane/simd_lane.183.wasm:000001d: error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [i32]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1126: assert_invalid passed:
-  error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [v128]
+  out/test/spec/simd_lane/simd_lane.184.wasm:000002d: error: type mismatch in i32x4.replace_lane, expected [v128, i32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1134: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.185.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -860,10 +860,10 @@ out/test/spec/simd_lane.wast:1142: assert_malformed passed:
   ...esult v128)  (f32x4.replace_lane (v128.const f32x4 0 0 0 0) (f32.const 1.0)))
                                                                  ^
 out/test/spec/simd_lane.wast:1150: assert_invalid passed:
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [f32]
+  out/test/spec/simd_lane/simd_lane.187.wasm:0000020: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [f32]
   0000020: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1158: assert_invalid passed:
-  error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128]
+  out/test/spec/simd_lane/simd_lane.188.wasm:000002d: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1166: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.189.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -877,10 +877,10 @@ out/test/spec/simd_lane.wast:1174: assert_malformed passed:
   ...pty (result v128)  (i64x2.replace_lane (v128.const i64x2 0 0) (i64.const 1)))
                                                                    ^
 out/test/spec/simd_lane.wast:1182: assert_invalid passed:
-  error: type mismatch in i64x2.replace_lane, expected [v128, i64] but got [i64]
+  out/test/spec/simd_lane/simd_lane.191.wasm:000001d: error: type mismatch in i64x2.replace_lane, expected [v128, i64] but got [i64]
   000001d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1190: assert_invalid passed:
-  error: type mismatch in i64x2.replace_lane, expected [v128, i64] but got [v128]
+  out/test/spec/simd_lane/simd_lane.192.wasm:000002d: error: type mismatch in i64x2.replace_lane, expected [v128, i64] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1198: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.193.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -894,10 +894,10 @@ out/test/spec/simd_lane.wast:1206: assert_malformed passed:
   ...y (result v128)  (f64x2.replace_lane (v128.const f64x2 0 0) (f64.const 1.0)))
                                                                  ^
 out/test/spec/simd_lane.wast:1214: assert_invalid passed:
-  error: type mismatch in f64x2.replace_lane, expected [v128, f64] but got [f64]
+  out/test/spec/simd_lane/simd_lane.195.wasm:0000024: error: type mismatch in f64x2.replace_lane, expected [v128, f64] but got [f64]
   0000024: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1222: assert_invalid passed:
-  error: type mismatch in f64x2.replace_lane, expected [v128, f64] but got [v128]
+  out/test/spec/simd_lane/simd_lane.196.wasm:000002d: error: type mismatch in f64x2.replace_lane, expected [v128, f64] but got [v128]
   000002d: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:1230: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.197.wat:1:71: error: unexpected token ")", expected a natural number in range [0, 32).
@@ -911,7 +911,7 @@ out/test/spec/simd_lane.wast:1238: assert_malformed passed:
   ... 3 5 6 6 7 8 9 10 11 12 13 14 15)    (v128.const i8x16 1 2 3 5 6 6 7 8 9 1...
                                           ^
 out/test/spec/simd_lane.wast:1249: assert_invalid passed:
-  error: type mismatch in i8x16.shuffle, expected [v128, v128] but got [v128]
+  out/test/spec/simd_lane/simd_lane.199.wasm:000003c: error: type mismatch in i8x16.shuffle, expected [v128, v128] but got [v128]
   000003c: error: OnSimdShuffleOpExpr callback failed
 out/test/spec/simd_lane.wast:1259: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.200.wat:1:61: error: unexpected token ")", expected a natural number in range [0, 32).

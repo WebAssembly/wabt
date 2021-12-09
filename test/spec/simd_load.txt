@@ -23,19 +23,19 @@ out/test/spec/simd_load.wast:155: assert_malformed passed:
   (memory 1)(func (local v128) (drop (v128.load32 (i32.const 0))))
                                                                 ^
 out/test/spec/simd_load.wast:166: assert_invalid passed:
-  error: type mismatch in v128.load, expected [i32] but got [f32]
+  out/test/spec/simd_load/simd_load.17.wasm:0000027: error: type mismatch in v128.load, expected [i32] but got [f32]
   0000027: error: OnLoadExpr callback failed
 out/test/spec/simd_load.wast:170: assert_invalid passed:
-  error: type mismatch in br_if, expected [i32] but got [v128]
+  out/test/spec/simd_load/simd_load.18.wasm:0000028: error: type mismatch in br_if, expected [i32] but got [v128]
   0000028: error: OnBrIfExpr callback failed
 out/test/spec/simd_load.wast:174: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [v128]
+  out/test/spec/simd_load/simd_load.19.wasm:0000024: error: type mismatch in function, expected [] but got [v128]
   0000025: error: EndFunctionBody callback failed
 out/test/spec/simd_load.wast:182: assert_invalid passed:
   0000000: error: local variable out of range (max 0)
   000001e: error: OnLocalGetExpr callback failed
 out/test/spec/simd_load.wast:186: assert_invalid passed:
-  error: type mismatch in v128.load, expected [i32] but got []
+  out/test/spec/simd_load/simd_load.21.wasm:0000020: error: type mismatch in v128.load, expected [i32] but got []
   0000020: error: OnLoadExpr callback failed
 25/25 tests passed.
 ;;; STDOUT ;;)

@@ -66,28 +66,28 @@ out/test/spec/simd_f64x2_rounding.wast:382: assert_malformed passed:
   (memory 1) (func (result v128) (i64x2.nearest (v128.const i32x4 0 0 0 0)))
                                   ^^^^^^^^^^^^^
 out/test/spec/simd_f64x2_rounding.wast:385: assert_invalid passed:
-  error: type mismatch in f64x2.ceil, expected [v128] but got [i32]
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.17.wasm:000001c: error: type mismatch in f64x2.ceil, expected [v128] but got [i32]
   000001c: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_rounding.wast:386: assert_invalid passed:
-  error: type mismatch in f64x2.floor, expected [v128] but got [i32]
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.18.wasm:000001c: error: type mismatch in f64x2.floor, expected [v128] but got [i32]
   000001c: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_rounding.wast:387: assert_invalid passed:
-  error: type mismatch in f64x2.trunc, expected [v128] but got [i32]
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.19.wasm:000001c: error: type mismatch in f64x2.trunc, expected [v128] but got [i32]
   000001c: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_rounding.wast:388: assert_invalid passed:
-  error: type mismatch in f64x2.nearest, expected [v128] but got [i32]
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.20.wasm:000001d: error: type mismatch in f64x2.nearest, expected [v128] but got [i32]
   000001d: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_rounding.wast:393: assert_invalid passed:
-  error: type mismatch in f64x2.ceil, expected [v128] but got []
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.21.wasm:000001a: error: type mismatch in f64x2.ceil, expected [v128] but got []
   000001a: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_rounding.wast:401: assert_invalid passed:
-  error: type mismatch in f64x2.floor, expected [v128] but got []
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.22.wasm:000001a: error: type mismatch in f64x2.floor, expected [v128] but got []
   000001a: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_rounding.wast:409: assert_invalid passed:
-  error: type mismatch in f64x2.trunc, expected [v128] but got []
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.23.wasm:000001a: error: type mismatch in f64x2.trunc, expected [v128] but got []
   000001a: error: OnUnaryExpr callback failed
 out/test/spec/simd_f64x2_rounding.wast:417: assert_invalid passed:
-  error: type mismatch in f64x2.nearest, expected [v128] but got []
+  out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.24.wasm:000001b: error: type mismatch in f64x2.nearest, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
 200/200 tests passed.
 ;;; STDOUT ;;)

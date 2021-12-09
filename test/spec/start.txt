@@ -5,10 +5,10 @@ out/test/spec/start.wast:2: assert_invalid passed:
   0000000: error: function variable out of range: 1 (max 1)
   0000015: error: OnStartFunction callback failed
 out/test/spec/start.wast:7: assert_invalid passed:
-  error: start function must not return anything
+  out/test/spec/start/start.1.wasm:0000016: error: start function must not return anything
   0000016: error: OnStartFunction callback failed
 out/test/spec/start.wast:14: assert_invalid passed:
-  error: start function must be nullary
+  out/test/spec/start/start.2.wasm:0000016: error: start function must be nullary
   0000016: error: OnStartFunction callback failed
 inc() =>
 inc() =>

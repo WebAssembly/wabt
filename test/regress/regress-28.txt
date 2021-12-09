@@ -15,6 +15,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-error: type mismatch in function, expected [] but got [any]
+out/test/regress/regress-28/regress-28.wasm:000001b: error: type mismatch in function, expected [] but got [any]
 000001c: error: EndFunctionBody callback failed
 ;;; STDERR ;;)
