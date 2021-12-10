@@ -731,38 +731,12 @@ Result Validator::CheckModule() {
       result_ |=
           validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
 
-      if (f->global.init_expr.size() == 1) {
-        const Expr* expr = &f->global.init_expr.front();
-
-        switch (expr->type()) {
-          case ExprType::Const:
-            result_ |= validator_.OnGlobalInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type());
-            break;
-
-          case ExprType::GlobalGet: {
-            Var var = cast<GlobalGetExpr>(expr)->var;
-            result_ |= validator_.OnGlobalInitExpr_GlobalGet(expr->loc, var);
-            break;
-          }
-
-          case ExprType::RefFunc:
-            result_ |= validator_.OnGlobalInitExpr_RefFunc(
-                expr->loc, cast<RefFuncExpr>(expr)->var);
-            break;
-
-          case ExprType::RefNull:
-            result_ |= validator_.OnGlobalInitExpr_RefNull(
-                expr->loc, cast<RefNullExpr>(expr)->type);
-            break;
-
-          default:
-            result_ |= validator_.OnGlobalInitExpr_Other(expr->loc);
-            break;
-        }
-      } else {
-        result_ |= validator_.OnGlobalInitExpr_Other(field.loc);
-      }
+      // Init expr.
+      result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
+      ExprVisitor visitor(this);
+      result_ |=
+          visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
+      result_ |= validator_.EndInitExpr();
     }
   }
 
@@ -798,28 +772,12 @@ Result Validator::CheckModule() {
       validator_.OnElemSegmentElemType(f->elem_segment.elem_type);
 
       // Init expr.
-      if (f->elem_segment.offset.size() == 1) {
-        const Expr* expr = &f->elem_segment.offset.front();
-
-        switch (expr->type()) {
-          case ExprType::Const:
-            result_ |= validator_.OnElemSegmentInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type());
-            break;
-
-          case ExprType::GlobalGet: {
-            Var var = cast<GlobalGetExpr>(expr)->var;
-            result_ |=
-                validator_.OnElemSegmentInitExpr_GlobalGet(expr->loc, var);
-            break;
-          }
-
-          default:
-            result_ |= validator_.OnElemSegmentInitExpr_Other(expr->loc);
-            break;
-        }
-      } else if (f->elem_segment.offset.size() > 1) {
-        result_ |= validator_.OnElemSegmentInitExpr_Other(field.loc);
+      if (f->elem_segment.offset.size()) {
+        result_ |= validator_.BeginInitExpr(field.loc, Type::I32);
+        ExprVisitor visitor(this);
+        result_ |= visitor.VisitExprList(
+            const_cast<ExprList&>(f->elem_segment.offset));
+        result_ |= validator_.EndInitExpr();
       }
 
       // Element expr.
@@ -873,28 +831,18 @@ Result Validator::CheckModule() {
           field.loc, f->data_segment.memory_var, f->data_segment.kind);
 
       // Init expr.
-      if (f->data_segment.offset.size() == 1) {
-        const Expr* expr = &f->data_segment.offset.front();
-
-        switch (expr->type()) {
-          case ExprType::Const:
-            result_ |= validator_.OnDataSegmentInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type());
-            break;
-
-          case ExprType::GlobalGet: {
-            Var var = cast<GlobalGetExpr>(expr)->var;
-            result_ |=
-                validator_.OnDataSegmentInitExpr_GlobalGet(expr->loc, var);
-            break;
-          }
-
-          default:
-            result_ |= validator_.OnDataSegmentInitExpr_Other(expr->loc);
-            break;
+      if (f->data_segment.offset.size()) {
+        Type offset_type = Type::I32;
+        Index memory_index = module->GetMemoryIndex(f->data_segment.memory_var);
+        if (memory_index < module->memories.size() &&
+            module->memories[memory_index]->page_limits.is_64) {
+          offset_type = Type::I64;
         }
-      } else if (f->data_segment.offset.size() > 1) {
-        result_ |= validator_.OnDataSegmentInitExpr_Other(field.loc);
+        result_ |= validator_.BeginInitExpr(field.loc, offset_type);
+        ExprVisitor visitor(this);
+        result_ |= visitor.VisitExprList(
+            const_cast<ExprList&>(f->data_segment.offset));
+        result_ |= validator_.EndInitExpr();
       }
     }
   }

@@ -10,13 +10,13 @@ out/test/spec/func_ptrs.wast:33: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/func_ptrs.wast:36: assert_invalid passed:
-  out/test/spec/func_ptrs/func_ptrs.3.wasm:0000015: error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  out/test/spec/func_ptrs/func_ptrs.3.wasm:0000014: error: type mismatch in constant expression, expected [i32] but got [i64]
   0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/func_ptrs.wast:40: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/func_ptrs/func_ptrs.4.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
   0000015: error: OnUnaryExpr callback failed
 out/test/spec/func_ptrs.wast:44: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/func_ptrs/func_ptrs.5.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
   0000013: error: OnNopExpr callback failed
 out/test/spec/func_ptrs.wast:48: assert_invalid passed:
   0000000: error: function type variable out of range: 42 (max 0)

@@ -21,13 +21,13 @@ out/test/spec/multi-memory/data.wast:360: assert_invalid passed:
   0000000: error: memory variable out of range: 1 (max 0)
   000000d: error: BeginDataSegment callback failed
 out/test/spec/multi-memory/data.wast:379: assert_invalid passed:
-  out/test/spec/multi-memory/data/data.45.wasm:0000014: error: type mismatch at data segment offset. got i64, expected i32
+  out/test/spec/multi-memory/data/data.45.wasm:0000013: error: type mismatch in constant expression, expected [i32] but got [i64]
   0000014: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:387: assert_invalid passed:
-  out/test/spec/multi-memory/data/data.46.wasm:0000014: error: invalid data segment offset, must be a constant expression; either iXX.const or global.get.
+  out/test/spec/multi-memory/data/data.46.wasm:0000013: error: type mismatch in constant expression, expected [i32] but got [funcref]
   0000014: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:395: assert_invalid passed:
-  out/test/spec/multi-memory/data/data.47.wasm:0000012: error: invalid data segment offset, must be a constant expression; either iXX.const or global.get.
+  out/test/spec/multi-memory/data/data.47.wasm:0000011: error: type mismatch in constant expression, expected [i32] but got []
   0000012: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:403: assert_invalid passed:
   error: expected END opcode after initializer expression
@@ -39,27 +39,25 @@ out/test/spec/multi-memory/data.wast:420: assert_invalid passed:
   error: expected END opcode after initializer expression
   000002b: error: OnI32ConstExpr callback failed
 out/test/spec/multi-memory/data.wast:429: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/multi-memory/data/data.51.wasm:0000014: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
   0000014: error: OnUnaryExpr callback failed
 out/test/spec/multi-memory/data.wast:437: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/multi-memory/data/data.52.wasm:0000012: error: invalid initializer: instruction not valid in initializer expression: nop
   0000012: error: OnNopExpr callback failed
 out/test/spec/multi-memory/data.wast:445: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/multi-memory/data/data.53.wasm:0000012: error: invalid initializer: instruction not valid in initializer expression: nop
   0000012: error: OnNopExpr callback failed
 out/test/spec/multi-memory/data.wast:453: assert_invalid passed:
-  error: Unepxected opcode in init expr
+  out/test/spec/multi-memory/data/data.54.wasm:0000014: error: invalid initializer: instruction not valid in initializer expression: nop
   0000014: error: OnNopExpr callback failed
 out/test/spec/multi-memory/data.wast:467: assert_invalid passed:
   0000000: error: global variable out of range: 0 (max 0)
-  out/test/spec/multi-memory/data/data.55.wasm:0000014: error: initializer expression cannot reference a mutable global
-  0000014: error: EndDataSegmentInitExpr callback failed
+  0000013: error: OnGlobalGetExpr callback failed
 out/test/spec/multi-memory/data.wast:475: assert_invalid passed:
   0000000: error: global variable out of range: 1 (max 1)
-  out/test/spec/multi-memory/data/data.56.wasm:000002a: error: initializer expression cannot reference a mutable global
-  000002a: error: EndDataSegmentInitExpr callback failed
+  0000029: error: OnGlobalGetExpr callback failed
 out/test/spec/multi-memory/data.wast:484: assert_invalid passed:
-  out/test/spec/multi-memory/data/data.57.wasm:000002e: error: initializer expression cannot reference a mutable global
-  000002e: error: EndDataSegmentInitExpr callback failed
+  out/test/spec/multi-memory/data/data.57.wasm:000002d: error: initializer expression cannot reference a mutable global
+  000002d: error: OnGlobalGetExpr callback failed
 33/33 tests passed.
 ;;; STDOUT ;;)

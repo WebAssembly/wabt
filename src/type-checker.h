@@ -129,6 +129,9 @@ class TypeChecker {
   Result OnUnreachable();
   Result EndFunction();
 
+  Result BeginInitExpr(Type type);
+  Result EndInitExpr();
+
   static Result CheckType(Type actual, Type expected);
 
  private:

@@ -224,6 +224,7 @@ inline std::string WABT_PRINTF_FORMAT(1, 2)
 
 enum class LabelType {
   Func,
+  InitExpr,
   Block,
   Loop,
   If,

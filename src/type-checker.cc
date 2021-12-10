@@ -644,7 +644,8 @@ Result TypeChecker::OnEnd(Label* label,
 Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {
-      "function", "block", "loop", "if", "if false branch", "try", "try catch"};
+      "function", "init_expr",       "block", "loop",
+      "if",       "if false branch", "try",   "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -955,6 +956,22 @@ Result TypeChecker::EndFunction() {
   CHECK_RESULT(TopLabel(&label));
   result |= CheckLabelType(label, LabelType::Func);
   result |= OnEnd(label, "implicit return", "function");
+  return result;
+}
+
+Result TypeChecker::BeginInitExpr(Type type) {
+  type_stack_.clear();
+  label_stack_.clear();
+  PushLabel(LabelType::InitExpr, TypeVector(), {type});
+  return Result::Ok;
+}
+
+Result TypeChecker::EndInitExpr() {
+  Result result = Result::Ok;
+  Label* label;
+  CHECK_RESULT(TopLabel(&label));
+  result |= CheckLabelType(label, LabelType::InitExpr);
+  result |= OnEnd(label, "constant expression", "init_expr");
   return result;
 }
 

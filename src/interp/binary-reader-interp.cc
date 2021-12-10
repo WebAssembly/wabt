@@ -299,10 +299,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                     Index keep_extra,
                                     Index* out_drop_count,
                                     Index* out_keep_count);
-  Result BeginInitExpr();
+  Result BeginInitExpr(Type type);
   Result EndInitExpr();
   Result CheckEmptyInitExpr();
-  Result CheckNotInitExpr();
 
   void EmitBr(Index depth,
               Index drop_count,
@@ -626,19 +625,22 @@ Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
 }
 
 Result BinaryReaderInterp::BeginGlobalInitExpr(Index index) {
-  return BeginInitExpr();
+  GlobalType type = global_types_[index];
+  return BeginInitExpr(type.type);
 }
 
 Result BinaryReaderInterp::EndInitExpr() {
   assert(reading_init_expr_);
   reading_init_expr_ = false;
+  CHECK_RESULT(validator_.EndInitExpr());
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::BeginInitExpr() {
+Result BinaryReaderInterp::BeginInitExpr(Type type) {
   assert(!reading_init_expr_);
   reading_init_expr_ = true;
   init_expr_.kind = InitExprKind::None;
+  CHECK_RESULT(validator_.BeginInitExpr(GetLocation(), type));
   return Result::Ok;
 }
 
@@ -651,62 +653,8 @@ Result BinaryReaderInterp::CheckEmptyInitExpr() {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::CheckNotInitExpr() {
-  if (reading_init_expr_) {
-    PrintError("Unepxected opcode in init expr");
-    return Result::Error;
-  }
-  return Result::Ok;
-}
-
 Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
   CHECK_RESULT(EndInitExpr());
-  switch (init_expr_.kind) {
-    case InitExprKind::I32:
-      CHECK_RESULT(
-          validator_.OnGlobalInitExpr_Const(GetLocation(), ValueType::I32));
-      break;
-
-    case InitExprKind::I64:
-      CHECK_RESULT(
-          validator_.OnGlobalInitExpr_Const(GetLocation(), ValueType::I64));
-      break;
-
-    case InitExprKind::F32:
-      CHECK_RESULT(
-          validator_.OnGlobalInitExpr_Const(GetLocation(), ValueType::F32));
-      break;
-
-    case InitExprKind::F64:
-      CHECK_RESULT(
-          validator_.OnGlobalInitExpr_Const(GetLocation(), ValueType::F64));
-      break;
-
-    case InitExprKind::V128:
-      CHECK_RESULT(
-          validator_.OnGlobalInitExpr_Const(GetLocation(), ValueType::V128));
-      break;
-
-    case InitExprKind::GlobalGet:
-      CHECK_RESULT(validator_.OnGlobalInitExpr_GlobalGet(
-          GetLocation(), Var(init_expr_.index_)));
-      break;
-
-    case InitExprKind::RefNull:
-      CHECK_RESULT(
-          validator_.OnGlobalInitExpr_RefNull(GetLocation(), init_expr_.type_));
-      break;
-
-    case InitExprKind::RefFunc:
-      CHECK_RESULT(validator_.OnGlobalInitExpr_RefFunc(GetLocation(),
-                                                       Var(init_expr_.index_)));
-      break;
-
-    default:
-      CHECK_RESULT(validator_.OnGlobalInitExpr_Other(GetLocation()));
-      break;
-  }
-
   GlobalDesc& global = module_.globals.back();
   global.init = init_expr_;
   return Result::Ok;
@@ -772,27 +720,11 @@ Result BinaryReaderInterp::BeginElemSegment(Index index,
 }
 
 Result BinaryReaderInterp::BeginElemSegmentInitExpr(Index index) {
-  return BeginInitExpr();
+  return BeginInitExpr(Type::I32);
 }
 
 Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
   CHECK_RESULT(EndInitExpr());
-  switch (init_expr_.kind) {
-    case InitExprKind::I32:
-      CHECK_RESULT(validator_.OnElemSegmentInitExpr_Const(GetLocation(),
-                                                          ValueType::I32));
-      break;
-
-    case InitExprKind::GlobalGet:
-      CHECK_RESULT(validator_.OnElemSegmentInitExpr_GlobalGet(
-          GetLocation(), Var(init_expr_.index_)));
-      break;
-
-    default:
-      CHECK_RESULT(validator_.OnElemSegmentInitExpr_Other(GetLocation()));
-      break;
-  }
-
   ElemDesc& elem = module_.elems.back();
   elem.offset = init_expr_;
   return Result::Ok;
@@ -836,32 +768,12 @@ Result BinaryReaderInterp::OnDataCount(Index count) {
 }
 
 Result BinaryReaderInterp::BeginDataSegmentInitExpr(Index index) {
-  return BeginInitExpr();
+  MemoryType t = memory_types_[0];
+  return BeginInitExpr(t.limits.is_64 ? Type::I64 : Type::I32);
 }
 
 Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
   CHECK_RESULT(EndInitExpr());
-  switch (init_expr_.kind) {
-    case InitExprKind::I32:
-      CHECK_RESULT(validator_.OnDataSegmentInitExpr_Const(GetLocation(),
-                                                          ValueType::I32));
-      break;
-
-    case InitExprKind::I64:
-      CHECK_RESULT(validator_.OnDataSegmentInitExpr_Const(GetLocation(),
-                                                          ValueType::I64));
-      break;
-
-    case InitExprKind::GlobalGet:
-      CHECK_RESULT(validator_.OnDataSegmentInitExpr_GlobalGet(
-          GetLocation(), Var(init_expr_.index_)));
-      break;
-
-    default:
-      CHECK_RESULT(validator_.OnDataSegmentInitExpr_Other(GetLocation()));
-      break;
-  }
-
   DataDesc& data = module_.datas.back();
   data.offset = init_expr_;
   return Result::Ok;
@@ -977,14 +889,12 @@ Result BinaryReaderInterp::OnOpcode(Opcode opcode) {
 }
 
 Result BinaryReaderInterp::OnUnaryExpr(Opcode opcode) {
-  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnUnary(GetLocation(), opcode));
   istream_.Emit(opcode);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTernaryExpr(Opcode opcode) {
-  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnTernary(GetLocation(), opcode));
   istream_.Emit(opcode);
   return Result::Ok;
@@ -1117,10 +1027,7 @@ Result BinaryReaderInterp::OnElseExpr() {
 }
 
 Result BinaryReaderInterp::OnEndExpr() {
-  if (reading_init_expr_) {
-    return Result::Ok;
-  }
-  if (label_stack_.size() == 1) {
+  if (reading_init_expr_ || label_stack_.size() == 1) {
     return Result::Ok;
   }
   SharedValidator::Label* label;
@@ -1343,19 +1250,18 @@ Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
 }
 
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
+  CHECK_RESULT(validator_.OnGlobalGet(GetLocation(), Var(global_index)));
   if (reading_init_expr_) {
     CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::GlobalGet;
     init_expr_.index_ = global_index;
     return Result::Ok;
   }
-  CHECK_RESULT(validator_.OnGlobalGet(GetLocation(), Var(global_index)));
   istream_.Emit(Opcode::GlobalGet, global_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnGlobalSetExpr(Index global_index) {
-  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnGlobalSet(GetLocation(), Var(global_index)));
   istream_.Emit(Opcode::GlobalSet, global_index);
   return Result::Ok;
@@ -1441,13 +1347,13 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
 }
 
 Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
+  CHECK_RESULT(validator_.OnRefFunc(GetLocation(), Var(func_index)));
   if (reading_init_expr_) {
     CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::RefFunc;
     init_expr_.index_ = func_index;
     return Result::Ok;
   }
-  CHECK_RESULT(validator_.OnRefFunc(GetLocation(), Var(func_index)));
   istream_.Emit(Opcode::RefFunc, func_index);
   return Result::Ok;
 }
@@ -1471,7 +1377,6 @@ Result BinaryReaderInterp::OnRefIsNullExpr() {
 }
 
 Result BinaryReaderInterp::OnNopExpr() {
-  CHECK_RESULT(CheckNotInitExpr());
   CHECK_RESULT(validator_.OnNop(GetLocation()));
   return Result::Ok;
 }
