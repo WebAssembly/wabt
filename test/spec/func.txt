@@ -91,10 +91,10 @@ out/test/spec/func.wast:693: assert_invalid passed:
   out/test/spec/func/func.28.wasm:000001a: error: type mismatch in implicit return, expected [i32, i32] but got []
   000001b: error: EndFunctionBody callback failed
 out/test/spec/func.wast:699: assert_invalid passed:
-  out/test/spec/func/func.29.wasm:0000019: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/func/func.29.wasm:0000019: error: type mismatch at end of function, expected [] but got [i32]
   000001a: error: EndFunctionBody callback failed
 out/test/spec/func.wast:705: assert_invalid passed:
-  out/test/spec/func/func.30.wasm:000001b: error: type mismatch in function, expected [] but got [i32, i64]
+  out/test/spec/func/func.30.wasm:000001b: error: type mismatch at end of function, expected [] but got [i32, i64]
   000001c: error: EndFunctionBody callback failed
 out/test/spec/func.wast:711: assert_invalid passed:
   out/test/spec/func/func.31.wasm:000001d: error: type mismatch in implicit return, expected [i32] but got [f32]
@@ -103,7 +103,7 @@ out/test/spec/func.wast:717: assert_invalid passed:
   out/test/spec/func/func.32.wasm:000001e: error: type mismatch in implicit return, expected [f32, f32] but got [f32]
   000001f: error: EndFunctionBody callback failed
 out/test/spec/func.wast:723: assert_invalid passed:
-  out/test/spec/func/func.33.wasm:0000022: error: type mismatch in function, expected [] but got [f32]
+  out/test/spec/func/func.33.wasm:0000022: error: type mismatch at end of function, expected [] but got [f32]
   0000023: error: EndFunctionBody callback failed
 out/test/spec/func.wast:730: assert_invalid passed:
   out/test/spec/func/func.34.wasm:0000019: error: type mismatch in return, expected [i32] but got []

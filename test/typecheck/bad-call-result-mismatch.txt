@@ -27,19 +27,19 @@
 out/test/typecheck/bad-call-result-mismatch.txt:10:5: error: type mismatch in if, expected [i32] but got []
     if
     ^^
-out/test/typecheck/bad-call-result-mismatch.txt:11:7: error: type mismatch in if true branch, expected [] but got [i64]
+out/test/typecheck/bad-call-result-mismatch.txt:11:7: error: type mismatch at end of `if true` branch, expected [] but got [i64]
       call $direct
       ^^^^
 out/test/typecheck/bad-call-result-mismatch.txt:15:5: error: type mismatch in if, expected [i32] but got []
     if
     ^^
-out/test/typecheck/bad-call-result-mismatch.txt:16:7: error: type mismatch in if true branch, expected [] but got [f32]
+out/test/typecheck/bad-call-result-mismatch.txt:16:7: error: type mismatch at end of `if true` branch, expected [] but got [f32]
       call $import
       ^^^^
 out/test/typecheck/bad-call-result-mismatch.txt:20:5: error: type mismatch in if, expected [i32] but got []
     if
     ^^
-out/test/typecheck/bad-call-result-mismatch.txt:22:7: error: type mismatch in if true branch, expected [] but got [i64]
+out/test/typecheck/bad-call-result-mismatch.txt:22:7: error: type mismatch at end of `if true` branch, expected [] but got [i64]
       call_indirect (type $indirect)
       ^^^^^^^^^^^^^
 ;;; STDERR ;;)

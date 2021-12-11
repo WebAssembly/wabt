@@ -57,22 +57,22 @@
     end)
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-if-multi-mismatch.txt:10:7: error: type mismatch in if true branch, expected [] but got [i32]
+out/test/typecheck/bad-if-multi-mismatch.txt:10:7: error: type mismatch at end of `if true` branch, expected [] but got [i32]
       i64.const 0
       ^^^^^^^^^
-out/test/typecheck/bad-if-multi-mismatch.txt:15:5: error: type mismatch in if false branch, expected [] but got [i32]
+out/test/typecheck/bad-if-multi-mismatch.txt:15:5: error: type mismatch at end of `if false` branch, expected [] but got [i32]
     end
     ^^^
-out/test/typecheck/bad-if-multi-mismatch.txt:22:7: error: type mismatch in if true branch, expected [i32, f64] but got [f64]
+out/test/typecheck/bad-if-multi-mismatch.txt:22:7: error: type mismatch in `if true` branch, expected [i32, f64] but got [f64]
       f64.const 0
       ^^^^^^^^^
-out/test/typecheck/bad-if-multi-mismatch.txt:25:5: error: type mismatch in if false branch, expected [i32, f64] but got [f64]
+out/test/typecheck/bad-if-multi-mismatch.txt:25:5: error: type mismatch in `if false` branch, expected [i32, f64] but got [f64]
     end
     ^^^
-out/test/typecheck/bad-if-multi-mismatch.txt:33:7: error: type mismatch in if true branch, expected [i32, f64] but got [f32, f64]
+out/test/typecheck/bad-if-multi-mismatch.txt:33:7: error: type mismatch in `if true` branch, expected [i32, f64] but got [f32, f64]
       f64.const 0
       ^^^^^^^^^
-out/test/typecheck/bad-if-multi-mismatch.txt:37:5: error: type mismatch in if false branch, expected [i32, f64] but got [f32, f64]
+out/test/typecheck/bad-if-multi-mismatch.txt:37:5: error: type mismatch in `if false` branch, expected [i32, f64] but got [f32, f64]
     end
     ^^^
 out/test/typecheck/bad-if-multi-mismatch.txt:43:5: error: type mismatch in if, expected [i32] but got []

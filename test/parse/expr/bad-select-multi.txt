@@ -14,7 +14,7 @@
 out/test/parse/expr/bad-select-multi.txt:10:5: error: invalid arity in select instruction: 2.
     select (result i32 i32)
     ^^^^^^
-out/test/parse/expr/bad-select-multi.txt:10:5: error: type mismatch in function, expected [] but got [... i32, i32, i32, i32]
+out/test/parse/expr/bad-select-multi.txt:10:5: error: type mismatch at end of function, expected [] but got [... i32, i32, i32, i32]
     select (result i32 i32)
     ^^^^^^
 ;;; STDERR ;;)

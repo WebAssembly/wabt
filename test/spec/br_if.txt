@@ -32,10 +32,10 @@ out/test/spec/br_if.wast:521: assert_invalid passed:
   out/test/spec/br_if/br_if.10.wasm:000001e: error: type mismatch in br_if, expected [i32] but got []
   000001e: error: OnBrIfExpr callback failed
 out/test/spec/br_if.wast:527: assert_invalid passed:
-  out/test/spec/br_if/br_if.11.wasm:0000020: error: type mismatch in block, expected [] but got [i32]
+  out/test/spec/br_if/br_if.11.wasm:0000020: error: type mismatch at end of block, expected [] but got [i32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/br_if.wast:533: assert_invalid passed:
-  out/test/spec/br_if/br_if.12.wasm:0000020: error: type mismatch in block, expected [] but got [i32]
+  out/test/spec/br_if/br_if.12.wasm:0000020: error: type mismatch at end of block, expected [] but got [i32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/br_if.wast:540: assert_invalid passed:
   out/test/spec/br_if/br_if.13.wasm:000001f: error: type mismatch in br_if, expected [i32] but got []

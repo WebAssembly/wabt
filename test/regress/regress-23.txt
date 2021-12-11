@@ -56,16 +56,16 @@
   )
 )
 (;; STDERR ;;;
-out/test/regress/regress-23.txt:13:5: error: type mismatch in if true branch, expected [i32] but got []
+out/test/regress/regress-23.txt:13:5: error: type mismatch in `if true` branch, expected [i32] but got []
     )
     ^
-out/test/regress/regress-23.txt:25:7: error: type mismatch in if true branch, expected [i32] but got []
+out/test/regress/regress-23.txt:25:7: error: type mismatch in `if true` branch, expected [i32] but got []
       )
       ^
-out/test/regress/regress-23.txt:41:3: error: type mismatch in if false branch, expected [i32] but got []
+out/test/regress/regress-23.txt:41:3: error: type mismatch in `if false` branch, expected [i32] but got []
   )
   ^
-out/test/regress/regress-23.txt:56:3: error: type mismatch in if false branch, expected [i32] but got []
+out/test/regress/regress-23.txt:56:3: error: type mismatch in `if false` branch, expected [i32] but got []
   )
   ^
 ;;; STDERR ;;)

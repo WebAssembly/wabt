@@ -216,7 +216,7 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
   Result result = (type_stack_.size() == label->type_stack_limit)
                       ? Result::Ok
                       : Result::Error;
-  PrintStackIfFailed(result, desc);
+  PrintStackIfFailedV(result, desc, {}, /*is_end=*/true);
   return result;
 }
 
@@ -356,9 +356,10 @@ Result TypeChecker::CheckOpcode3(Opcode opcode,
   return result;
 }
 
-void TypeChecker::PrintStackIfFailed(Result result,
-                                     const char* desc,
-                                     const TypeVector& expected) {
+void TypeChecker::PrintStackIfFailedV(Result result,
+                                      const char* desc,
+                                      const TypeVector& expected,
+                                      bool is_end) {
   if (Succeeded(result)) {
     return;
   }
@@ -395,6 +396,9 @@ void TypeChecker::PrintStackIfFailed(Result result,
   }
 
   std::string message = "type mismatch in ";
+  if (is_end) {
+    message = "type mismatch at end of ";
+  }
   message += desc;
   message += ", expected ";
   message += TypesToString(expected);
@@ -620,8 +624,8 @@ Result TypeChecker::OnElse() {
   Label* label;
   CHECK_RESULT(TopLabel(&label));
   result |= CheckLabelType(label, LabelType::If);
-  result |= PopAndCheckSignature(label->result_types, "if true branch");
-  result |= CheckTypeStackEnd("if true branch");
+  result |= PopAndCheckSignature(label->result_types, "`if true` branch");
+  result |= CheckTypeStackEnd("`if true` branch");
   ResetTypeStackToLabel(label);
   PushTypes(label->param_types);
   label->label_type = LabelType::Else;
@@ -644,8 +648,8 @@ Result TypeChecker::OnEnd(Label* label,
 Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {
-      "function", "init_expr",       "block", "loop",
-      "if",       "if false branch", "try",   "try catch"};
+      "function", "initializer expression", "block", "loop",
+      "if",       "`if false` branch",      "try",   "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -971,7 +975,7 @@ Result TypeChecker::EndInitExpr() {
   Label* label;
   CHECK_RESULT(TopLabel(&label));
   result |= CheckLabelType(label, LabelType::InitExpr);
-  result |= OnEnd(label, "constant expression", "init_expr");
+  result |= OnEnd(label, "initializer expression", "initializer expression");
   return result;
 }
 

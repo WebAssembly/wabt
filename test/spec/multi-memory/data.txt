@@ -21,23 +21,23 @@ out/test/spec/multi-memory/data.wast:360: assert_invalid passed:
   0000000: error: memory variable out of range: 1 (max 0)
   000000d: error: BeginDataSegment callback failed
 out/test/spec/multi-memory/data.wast:379: assert_invalid passed:
-  out/test/spec/multi-memory/data/data.45.wasm:0000013: error: type mismatch in constant expression, expected [i32] but got [i64]
+  out/test/spec/multi-memory/data/data.45.wasm:0000013: error: type mismatch in initializer expression, expected [i32] but got [i64]
   0000014: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:387: assert_invalid passed:
-  out/test/spec/multi-memory/data/data.46.wasm:0000013: error: type mismatch in constant expression, expected [i32] but got [funcref]
+  out/test/spec/multi-memory/data/data.46.wasm:0000013: error: type mismatch in initializer expression, expected [i32] but got [funcref]
   0000014: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:395: assert_invalid passed:
-  out/test/spec/multi-memory/data/data.47.wasm:0000011: error: type mismatch in constant expression, expected [i32] but got []
+  out/test/spec/multi-memory/data/data.47.wasm:0000011: error: type mismatch in initializer expression, expected [i32] but got []
   0000012: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:403: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  0000015: error: OnI32ConstExpr callback failed
+  out/test/spec/multi-memory/data/data.48.wasm:0000015: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000016: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:411: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  000002b: error: OnGlobalGetExpr callback failed
+  out/test/spec/multi-memory/data/data.49.wasm:000002b: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002c: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:420: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  000002b: error: OnI32ConstExpr callback failed
+  out/test/spec/multi-memory/data/data.50.wasm:000002b: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002c: error: EndDataSegmentInitExpr callback failed
 out/test/spec/multi-memory/data.wast:429: assert_invalid passed:
   out/test/spec/multi-memory/data/data.51.wasm:0000014: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
   0000014: error: OnUnaryExpr callback failed

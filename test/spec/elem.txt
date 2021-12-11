@@ -7,23 +7,23 @@ out/test/spec/elem.wast:336: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/elem.wast:346: assert_invalid passed:
-  out/test/spec/elem/elem.34.wasm:0000014: error: type mismatch in constant expression, expected [i32] but got [i64]
+  out/test/spec/elem/elem.34.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
   0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:354: assert_invalid passed:
-  out/test/spec/elem/elem.35.wasm:0000014: error: type mismatch in constant expression, expected [i32] but got [funcref]
+  out/test/spec/elem/elem.35.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [funcref]
   0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:362: assert_invalid passed:
-  out/test/spec/elem/elem.36.wasm:0000012: error: type mismatch in constant expression, expected [i32] but got []
+  out/test/spec/elem/elem.36.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
   0000013: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:370: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  0000016: error: OnI32ConstExpr callback failed
+  out/test/spec/elem/elem.37.wasm:0000016: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000017: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:378: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  000002c: error: OnGlobalGetExpr callback failed
+  out/test/spec/elem/elem.38.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:387: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  000002c: error: OnI32ConstExpr callback failed
+  out/test/spec/elem/elem.39.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:397: assert_invalid passed:
   out/test/spec/elem/elem.40.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
   0000015: error: OnUnaryExpr callback failed

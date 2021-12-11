@@ -27,23 +27,23 @@ out/test/spec/global.wast:312: assert_invalid passed:
   out/test/spec/global/global.10.wasm:000000e: error: invalid initializer: instruction not valid in initializer expression: nop
   000000e: error: OnNopExpr callback failed
 out/test/spec/global.wast:317: assert_invalid passed:
-  out/test/spec/global/global.11.wasm:0000012: error: type mismatch in constant expression, expected [i32] but got [f32]
+  out/test/spec/global/global.11.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got [f32]
   0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:322: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  0000011: error: OnI32ConstExpr callback failed
+  out/test/spec/global/global.12.wasm:0000011: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000012: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:327: assert_invalid passed:
-  out/test/spec/global/global.13.wasm:000000d: error: type mismatch in constant expression, expected [i32] but got []
+  out/test/spec/global/global.13.wasm:000000d: error: type mismatch in initializer expression, expected [i32] but got []
   000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:332: assert_invalid passed:
-  out/test/spec/global/global.14.wasm:0000017: error: type mismatch in constant expression, expected [funcref] but got [externref]
+  out/test/spec/global/global.14.wasm:0000017: error: type mismatch in initializer expression, expected [funcref] but got [externref]
   0000018: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:337: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  0000027: error: OnGlobalGetExpr callback failed
+  out/test/spec/global/global.15.wasm:0000027: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000028: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:342: assert_invalid passed:
-  error: expected END opcode after initializer expression
-  0000027: error: OnGlobalGetExpr callback failed
+  out/test/spec/global/global.16.wasm:0000027: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000028: error: EndGlobalInitExpr callback failed
 out/test/spec/global.wast:347: assert_invalid passed:
   0000000: error: initializer expression can only reference an imported global
   000000f: error: OnGlobalGetExpr callback failed

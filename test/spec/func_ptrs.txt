@@ -10,7 +10,7 @@ out/test/spec/func_ptrs.wast:33: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/func_ptrs.wast:36: assert_invalid passed:
-  out/test/spec/func_ptrs/func_ptrs.3.wasm:0000014: error: type mismatch in constant expression, expected [i32] but got [i64]
+  out/test/spec/func_ptrs/func_ptrs.3.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
   0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/func_ptrs.wast:40: assert_invalid passed:
   out/test/spec/func_ptrs/func_ptrs.4.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz

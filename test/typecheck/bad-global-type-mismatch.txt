@@ -3,7 +3,7 @@
 (module
   (global i32 (f32.const 1)))
 (;; STDERR ;;;
-out/test/typecheck/bad-global-type-mismatch.txt:4:16: error: type mismatch in constant expression, expected [i32] but got [f32]
+out/test/typecheck/bad-global-type-mismatch.txt:4:16: error: type mismatch in initializer expression, expected [i32] but got [f32]
   (global i32 (f32.const 1)))
                ^^^^^^^^^
 ;;; STDERR ;;)
