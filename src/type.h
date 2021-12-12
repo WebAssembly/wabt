@@ -22,12 +22,12 @@
 #include <vector>
 
 #include "config.h"
+#include "src/base-types.h"
 
 namespace wabt {
 
 class Type;
 
-using Index = uint32_t;
 using TypeVector = std::vector<Type>;
 
 class Type {
@@ -57,8 +57,8 @@ class Type {
   };
 
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code) : enum_(static_cast<Enum>(code)), index_(UINT32_MAX) {}
-  Type(Enum e) : enum_(e), index_(UINT32_MAX) {}
+  Type(int32_t code) : enum_(static_cast<Enum>(code)), index_(kInvalidIndex) {}
+  Type(Enum e) : enum_(e), index_(kInvalidIndex) {}
   Type(Enum e, Index index) : enum_(e), index_(index) {
     assert(e == Enum::Reference);
   }
