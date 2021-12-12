@@ -537,21 +537,21 @@ static void print_sig(const FuncType& sig) {
 #ifndef NDEBUG
   fprintf(stderr, "(");
   bool first = true;
-  for (auto Type : sig.params) {
+  for (auto type : sig.params) {
     if (!first) {
       fprintf(stderr, ", ");
     }
     first = false;
-    fprintf(stderr, "%s", Type.GetName());
+    fprintf(stderr, "%s", type.GetName().c_str());
   }
   fprintf(stderr, ") -> (");
   first = true;
-  for (auto Type : sig.results) {
+  for (auto type : sig.results) {
     if (!first) {
       fprintf(stderr, ", ");
     }
     first = false;
-    fprintf(stderr, "%s", Type.GetName());
+    fprintf(stderr, "%s", type.GetName().c_str());
   }
   fprintf(stderr, ")\n");
 #endif

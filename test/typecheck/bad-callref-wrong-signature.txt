@@ -21,7 +21,7 @@
 )
 
 (;; STDERR ;;;
-out/test/typecheck/bad-callref-wrong-signature.txt:17:6: error: type mismatch in call, expected [reference] but got [reference]
+out/test/typecheck/bad-callref-wrong-signature.txt:17:6: error: type mismatch in call, expected [(ref 0)] but got [(ref 2)]
     (call $foo (ref.func $mul))
      ^^^^
 ;;; STDERR ;;)

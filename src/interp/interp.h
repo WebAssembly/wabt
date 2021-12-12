@@ -91,7 +91,7 @@ enum class ObjectKind {
 };
 
 const char* GetName(Mutability);
-const char* GetName(ValueType);
+const std::string GetName(ValueType);
 const char* GetName(ExternKind);
 const char* GetName(ObjectKind);
 

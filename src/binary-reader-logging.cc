@@ -80,7 +80,7 @@ void BinaryReaderLogging::LogType(Type type) {
   if (type.IsIndex()) {
     LOGF_NOINDENT("typeidx[%d]", type.GetIndex());
   } else {
-    LOGF_NOINDENT("%s", type.GetName());
+    LOGF_NOINDENT("%s", type.GetName().c_str());
   }
 }
 
@@ -208,7 +208,7 @@ Result BinaryReaderLogging::OnImportTable(Index import_index,
   SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnImportTable(import_index: %" PRIindex ", table_index: %" PRIindex
        ", elem_type: %s, %s)\n",
-       import_index, table_index, elem_type.GetName(), buf);
+       import_index, table_index, elem_type.GetName().c_str(), buf);
   return reader_->OnImportTable(import_index, module_name, field_name,
                                 table_index, elem_type, elem_limits);
 }
@@ -236,7 +236,8 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
   LOGF("OnImportGlobal(import_index: %" PRIindex ", global_index: %" PRIindex
        ", type: %s, mutable: "
        "%s)\n",
-       import_index, global_index, type.GetName(), mutable_ ? "true" : "false");
+       import_index, global_index, type.GetName().c_str(),
+       mutable_ ? "true" : "false");
   return reader_->OnImportGlobal(import_index, module_name, field_name,
                                  global_index, type, mutable_);
 }
@@ -259,7 +260,7 @@ Result BinaryReaderLogging::OnTable(Index index,
   char buf[100];
   SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnTable(index: %" PRIindex ", elem_type: %s, %s)\n", index,
-       elem_type.GetName(), buf);
+       elem_type.GetName().c_str(), buf);
   return reader_->OnTable(index, elem_type, elem_limits);
 }
 
@@ -272,7 +273,7 @@ Result BinaryReaderLogging::OnMemory(Index index, const Limits* page_limits) {
 
 Result BinaryReaderLogging::BeginGlobal(Index index, Type type, bool mutable_) {
   LOGF("BeginGlobal(index: %" PRIindex ", type: %s, mutable: %s)\n", index,
-       type.GetName(), mutable_ ? "true" : "false");
+       type.GetName().c_str(), mutable_ ? "true" : "false");
   return reader_->BeginGlobal(index, type, mutable_);
 }
 
@@ -295,7 +296,7 @@ Result BinaryReaderLogging::OnLocalDecl(Index decl_index,
                                         Index count,
                                         Type type) {
   LOGF("OnLocalDecl(index: %" PRIindex ", count: %" PRIindex ", type: %s)\n",
-       decl_index, count, type.GetName());
+       decl_index, count, type.GetName().c_str());
   return reader_->OnLocalDecl(decl_index, count, type);
 }
 
@@ -412,7 +413,7 @@ Result BinaryReaderLogging::BeginElemSegment(Index index,
 
 Result BinaryReaderLogging::OnElemSegmentElemType(Index index, Type elem_type) {
   LOGF("OnElemSegmentElemType(index: %" PRIindex ", type: %s)\n", index,
-       elem_type.GetName());
+       elem_type.GetName().c_str());
   return reader_->OnElemSegmentElemType(index, elem_type);
 }
 
@@ -657,10 +658,10 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
     return reader_->name(value);                  \
   }
 
-#define DEFINE_TYPE(name)                       \
-  Result BinaryReaderLogging::name(Type type) { \
-    LOGF(#name "(%s)\n", type.GetName());       \
-    return reader_->name(type);                 \
+#define DEFINE_TYPE(name)                         \
+  Result BinaryReaderLogging::name(Type type) {   \
+    LOGF(#name "(%s)\n", type.GetName().c_str()); \
+    return reader_->name(type);                   \
   }
 
 #define DEFINE_INDEX_DESC(name, desc)                 \
@@ -669,10 +670,11 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
     return reader_->name(value);                      \
   }
 
-#define DEFINE_INDEX_TYPE(name)                                              \
-  Result BinaryReaderLogging::name(Index value, Type type) {                 \
-    LOGF(#name "(index: %" PRIindex ", type: %s)\n", value, type.GetName()); \
-    return reader_->name(value, type);                                       \
+#define DEFINE_INDEX_TYPE(name)                              \
+  Result BinaryReaderLogging::name(Index value, Type type) { \
+    LOGF(#name "(index: %" PRIindex ", type: %s)\n", value,  \
+         type.GetName().c_str());                            \
+    return reader_->name(value, type);                       \
   }
 
 #define DEFINE_INDEX_INDEX(name, desc0, desc1)                           \

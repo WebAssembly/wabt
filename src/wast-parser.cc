@@ -322,11 +322,12 @@ Result CheckTypeIndex(const Location& loc,
                       Errors* errors) {
   // Types must match exactly; no subtyping should be allowed.
   if (actual != expected) {
-    errors->emplace_back(ErrorLevel::Error, loc,
-                         StringPrintf("type mismatch for %s %" PRIindex
-                                      " of %s. got %s, expected %s",
-                                      index_kind, index, desc, actual.GetName(),
-                                      expected.GetName()));
+    errors->emplace_back(
+        ErrorLevel::Error, loc,
+        StringPrintf("type mismatch for %s %" PRIindex
+                     " of %s. got %s, expected %s",
+                     index_kind, index, desc, actual.GetName().c_str(),
+                     expected.GetName().c_str()));
     return Result::Error;
   }
   return Result::Ok;
@@ -877,7 +878,7 @@ Result WastParser::ParseValueType(Var* out_type) {
   }
 
   if (!is_enabled) {
-    Error(token.loc, "value type not allowed: %s", type.GetName());
+    Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
     return Result::Error;
   }
 
@@ -923,7 +924,7 @@ Result WastParser::ParseRefKind(Type* out_type) {
        !options_->features.reference_types_enabled()) ||
       ((type == Type::Struct || type == Type::Array) &&
        !options_->features.gc_enabled())) {
-    Error(token.loc, "value type not allowed: %s", type.GetName());
+    Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
     return Result::Error;
   }
 
@@ -941,7 +942,7 @@ Result WastParser::ParseRefType(Type* out_type) {
   Type type = token.type();
   if (type == Type::ExternRef &&
       !options_->features.reference_types_enabled()) {
-    Error(token.loc, "value type not allowed: %s", type.GetName());
+    Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
     return Result::Error;
   }
 

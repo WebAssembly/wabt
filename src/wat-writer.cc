@@ -421,9 +421,7 @@ void WatWriter::WriteRefKind(Type type, NextChar next_char) {
 }
 
 void WatWriter::WriteType(Type type, NextChar next_char) {
-  const char* type_name = type.GetName();
-  assert(type_name);
-  WritePuts(type_name, next_char);
+  WritePuts(type.GetName().c_str(), next_char);
 }
 
 void WatWriter::WriteTypes(const TypeVector& types, const char* name) {

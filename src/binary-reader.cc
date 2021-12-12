@@ -2569,7 +2569,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
-                     elem_type.GetName());
+                     elem_type.GetName().c_str());
         elem_type = Type::FuncRef;
       }
     }
