@@ -940,8 +940,8 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   result |= CheckFuncIndex(func_var);
   if (Succeeded(result)) {
     check_declared_funcs_.push_back(func_var);
-    result |=
-        typechecker_.OnRefFuncExpr(GetFunctionTypeIndex(func_var.index()));
+    Index func_type = GetFunctionTypeIndex(func_var.index());
+    result |= typechecker_.OnRefFuncExpr(func_type);
   }
   return result;
 }
