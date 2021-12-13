@@ -762,7 +762,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
     }
 
     default:
-      PrintError("unknown concrete type: \"%s\"", lane_type.GetName());
+      PrintError("unknown concrete type: \"%s\"", lane_type.GetName().c_str());
       return wabt::Result::Error;
   }
 
@@ -834,7 +834,7 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       break;
 
     default:
-      PrintError("unknown concrete type: \"%s\"", type.GetName());
+      PrintError("unknown concrete type: \"%s\"", type.GetName().c_str());
       return wabt::Result::Error;
   }
 
@@ -1657,10 +1657,12 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
           return TypedValueToString(ev.value);
 
         case ExpectedNan::Arithmetic:
-          return StringPrintf("%s:nan:arithmetic", ev.value.type.GetName());
+          return StringPrintf("%s:nan:arithmetic",
+                              ev.value.type.GetName().c_str());
 
         case ExpectedNan::Canonical:
-          return StringPrintf("%s:nan:canonical", ev.value.type.GetName());
+          return StringPrintf("%s:nan:canonical",
+                              ev.value.type.GetName().c_str());
       }
       break;
 

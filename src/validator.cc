@@ -186,7 +186,8 @@ void ScriptValidator::CheckTypeIndex(const Location* loc,
   if (Failed(TypeChecker::CheckType(actual, expected))) {
     PrintError(loc,
                "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
-               index_kind, index, desc, actual.GetName(), expected.GetName());
+               index_kind, index, desc, actual.GetName().c_str(),
+               expected.GetName().c_str());
   }
 }
 

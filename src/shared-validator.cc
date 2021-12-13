@@ -178,7 +178,7 @@ Result SharedValidator::CheckType(const Location& loc,
                                   const char* desc) {
   if (Failed(TypeChecker::CheckType(actual, expected))) {
     PrintError(loc, "type mismatch at %s. got %s, expected %s", desc,
-               actual.GetName(), expected.GetName());
+               actual.GetName().c_str(), expected.GetName().c_str());
     return Result::Error;
   }
   return Result::Ok;

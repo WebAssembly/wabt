@@ -575,7 +575,7 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
   }
   local_index_ += count;
 
-  printf("] type=%s\n", type.GetName());
+  printf("] type=%s\n", type.GetName().c_str());
 
   last_opcode_end = current_opcode_offset + data_size;
   current_opcode_offset = last_opcode_end;
@@ -783,7 +783,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
     return Result::Ok;
   }
   if (current_opcode == Opcode::SelectT) {
-    LogOpcode(type.GetName());
+    LogOpcode(type.GetName().c_str());
   } else {
     LogOpcode(type.GetRefKindName());
   }
@@ -1257,7 +1257,7 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
     if (i != 0) {
       printf(", ");
     }
-    printf("%s", param_types[i].GetName());
+    printf("%s", param_types[i].GetName().c_str());
   }
   printf(") -> ");
   switch (result_count) {
@@ -1265,7 +1265,7 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
       printf("nil");
       break;
     case 1:
-      printf("%s", result_types[0].GetName());
+      printf("%s", result_types[0].GetName().c_str());
       break;
     default:
       printf("(");
@@ -1273,7 +1273,7 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
         if (i != 0) {
           printf(", ");
         }
-        printf("%s", result_types[i].GetName());
+        printf("%s", result_types[i].GetName().c_str());
       }
       printf(")");
       break;
@@ -1293,7 +1293,7 @@ Result BinaryReaderObjdump::OnStructType(Index index,
     if (fields[i].mutable_) {
       printf(" (mut");
     }
-    printf(" %s", fields[i].type.GetName());
+    printf(" %s", fields[i].type.GetName().c_str());
     if (fields[i].mutable_) {
       printf(")");
     }
@@ -1310,7 +1310,7 @@ Result BinaryReaderObjdump::OnArrayType(Index index, TypeMut field) {
   if (field.mutable_) {
     printf(" (mut");
   }
-  printf(" %s", field.type.GetName());
+  printf(" %s", field.type.GetName().c_str());
   if (field.mutable_) {
     printf(")");
   }
@@ -1396,7 +1396,7 @@ Result BinaryReaderObjdump::OnImportTable(Index import_index,
                                           Type elem_type,
                                           const Limits* elem_limits) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, table_index,
-               elem_type.GetName(), elem_limits->initial);
+               elem_type.GetName().c_str(), elem_limits->initial);
   if (elem_limits->has_max) {
     PrintDetails(" max=%" PRId64, elem_limits->max);
   }
@@ -1435,7 +1435,7 @@ Result BinaryReaderObjdump::OnImportGlobal(Index import_index,
                                            Type type,
                                            bool mutable_) {
   PrintDetails(" - global[%" PRIindex "] %s mutable=%d", global_index,
-               type.GetName(), mutable_);
+               type.GetName().c_str(), mutable_);
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
@@ -1486,7 +1486,7 @@ Result BinaryReaderObjdump::OnTable(Index index,
                                     Type elem_type,
                                     const Limits* elem_limits) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, index,
-               elem_type.GetName(), elem_limits->initial);
+               elem_type.GetName().c_str(), elem_limits->initial);
   if (elem_limits->has_max) {
     PrintDetails(" max=%" PRId64, elem_limits->max);
   }
@@ -1522,7 +1522,7 @@ Result BinaryReaderObjdump::OnExport(Index index,
 Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index,
                                                           Type type) {
   PrintDetails("  - elem[%" PRIzd "] = ref.null %s\n",
-               elem_offset_ + elem_index_, type.GetName());
+               elem_offset_ + elem_index_, type.GetName().c_str());
   elem_index_++;
   return Result::Ok;
 }
@@ -1576,8 +1576,8 @@ Result BinaryReaderObjdump::OnGlobalCount(Index count) {
 }
 
 Result BinaryReaderObjdump::BeginGlobal(Index index, Type type, bool mutable_) {
-  PrintDetails(" - global[%" PRIindex "] %s mutable=%d", index, type.GetName(),
-               mutable_);
+  PrintDetails(" - global[%" PRIindex "] %s mutable=%d", index,
+               type.GetName().c_str(), mutable_);
   string_view name = GetGlobalName(index);
   if (!name.empty()) {
     PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));

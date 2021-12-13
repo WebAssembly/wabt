@@ -53,10 +53,10 @@
 (;; STDOUT ;;;
 (module
   (type (;0;) (func (param f32) (result f32)))
-  (type (;1;) (func (param reference f32 f32) (result f32)))
-  (type (;2;) (func (param reference reference i32) (result reference)))
+  (type (;1;) (func (param (ref 0) f32 f32) (result f32)))
+  (type (;2;) (func (param (ref 0) (ref 0) i32) (result (ref 0))))
   (type (;3;) (func (result f32)))
-  (func (;0;) (type 1) (param reference f32 f32) (result f32)
+  (func (;0;) (type 1) (param (ref 0) f32 f32) (result f32)
     (f32.div
       (f32.sub
         (f32.add
@@ -67,8 +67,8 @@
           (local.get 1)
           (local.get 0)))
       (local.get 2)))
-  (func (;1;) (type 2) (param reference reference i32) (result reference)
-    (if (result reference)  ;; label = @1
+  (func (;1;) (type 2) (param (ref 0) (ref 0) i32) (result (ref 0))
+    (if (result (ref 0))  ;; label = @1
       (i32.eq
         (local.get 2)
         (i32.const 1))

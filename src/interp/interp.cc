@@ -31,7 +31,7 @@ const char* GetName(Mutability mut) {
   return kNames[int(mut)];
 }
 
-const char* GetName(ValueType type) {
+const std::string GetName(ValueType type) {
   return type.GetName();
 }
 
@@ -105,9 +105,9 @@ Result Match(const TableType& expected,
              const TableType& actual,
              std::string* out_msg) {
   if (expected.element != actual.element) {
-    *out_msg =
-        StringPrintf("type mismatch in imported table, expected %s but got %s.",
-                     GetName(expected.element), GetName(actual.element));
+    *out_msg = StringPrintf(
+        "type mismatch in imported table, expected %s but got %s.",
+        GetName(expected.element).c_str(), GetName(actual.element).c_str());
     return Result::Error;
   }
 
@@ -149,7 +149,7 @@ Result Match(const GlobalType& expected,
        !TypesMatch(expected.type, actual.type))) {
     *out_msg = StringPrintf(
         "type mismatch in imported global, expected %s but got %s.",
-        GetName(expected.type), GetName(actual.type));
+        GetName(expected.type).c_str(), GetName(actual.type).c_str());
     return Result::Error;
   }
 

@@ -56,10 +56,10 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type, const char* desc) {
-  WriteS32Leb128(stream, type, desc ? desc : type.GetName());
+  WriteS32Leb128(stream, type, desc ? desc : type.GetName().c_str());
   if (type.IsReferenceWithIndex()) {
     WriteS32Leb128(stream, type.GetReferenceIndex(),
-                   desc ? desc : type.GetName());
+                   desc ? desc : type.GetName().c_str());
   }
 }
 

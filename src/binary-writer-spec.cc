@@ -160,7 +160,7 @@ void BinaryWriterSpec::WriteVar(const Var& var) {
 void BinaryWriterSpec::WriteTypeObject(Type type) {
   json_stream_->Writef("{");
   WriteKey("type");
-  WriteString(type.GetName());
+  WriteString(type.GetName().c_str());
   json_stream_->Writef("}");
 }
 
@@ -259,7 +259,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("v128");
       WriteSeparator();
       WriteKey("lane_type");
-      WriteString(const_.lane_type().GetName());
+      WriteString(const_.lane_type().GetName().c_str());
       WriteSeparator();
       WriteKey("value");
       json_stream_->Writef("[");
