@@ -2,10 +2,10 @@
 ;;; ERROR: 1
 (module
   (func (param i32) (result i32) get_local 0)
-  (export "foo" 0))
+  (export "foo" (func 0)))
 (assert_return (invoke "foo" (i32.const 0)) (f32.const 0))
 (;; STDERR ;;;
-out/test/typecheck/bad-assertreturn-type-mismatch.txt:5:17: error: unexpected token 0, expected (.
-  (export "foo" 0))
-                ^
+out/test/typecheck/bad-assertreturn-type-mismatch.txt:6:17: error: type mismatch for result 0 of action. got f32, expected i32
+(assert_return (invoke "foo" (i32.const 0)) (f32.const 0))
+                ^^^^^^
 ;;; STDERR ;;)
