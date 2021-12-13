@@ -12,7 +12,7 @@
       drop
     end))
 (;; STDERR ;;;
-out/test/typecheck/bad-if-value-void.txt:8:9: error: type mismatch in if true branch, expected [f32] but got []
+out/test/typecheck/bad-if-value-void.txt:8:9: error: type mismatch in `if true` branch, expected [f32] but got []
         nop
         ^^^
 ;;; STDERR ;;)

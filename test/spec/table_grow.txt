@@ -23,7 +23,7 @@ out/test/spec/table_grow.wast:147: assert_invalid passed:
   out/test/spec/table_grow/table_grow.9.wasm:0000026: error: type mismatch in table.grow, expected [funcref, i32] but got [externref, i32]
   0000026: error: OnTableGrowExpr callback failed
 out/test/spec/table_grow.wast:157: assert_invalid passed:
-  out/test/spec/table_grow/table_grow.10.wasm:0000024: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/table_grow/table_grow.10.wasm:0000024: error: type mismatch at end of function, expected [] but got [i32]
   0000025: error: EndFunctionBody callback failed
 out/test/spec/table_grow.wast:166: assert_invalid passed:
   out/test/spec/table_grow/table_grow.11.wasm:0000025: error: type mismatch in implicit return, expected [f32] but got [i32]

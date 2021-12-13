@@ -49,7 +49,7 @@ out/test/spec/block.wast:489: assert_malformed passed:
   ...2) (result i32)))(func (i32.const 0) (block (type $sig) (param i32) (resul...
                                           ^
 out/test/spec/block.wast:497: assert_invalid passed:
-  out/test/spec/block/block.12.wasm:000001c: error: type mismatch in block, expected [] but got [i32]
+  out/test/spec/block/block.12.wasm:000001c: error: type mismatch at end of block, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
 out/test/spec/block.wast:505: assert_invalid passed:
   out/test/spec/block/block.13.wasm:000001b: error: type mismatch in implicit return, expected [i32] but got []
@@ -64,19 +64,19 @@ out/test/spec/block.wast:517: assert_invalid passed:
   out/test/spec/block/block.16.wasm:000001b: error: type mismatch in implicit return, expected [f64] but got []
   000001c: error: EndFunctionBody callback failed
 out/test/spec/block.wast:522: assert_invalid passed:
-  out/test/spec/block/block.17.wasm:000001c: error: type mismatch in block, expected [] but got [i32]
+  out/test/spec/block/block.17.wasm:000001c: error: type mismatch at end of block, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
 out/test/spec/block.wast:528: assert_invalid passed:
-  out/test/spec/block/block.18.wasm:000001c: error: type mismatch in block, expected [] but got [i64]
+  out/test/spec/block/block.18.wasm:000001c: error: type mismatch at end of block, expected [] but got [i64]
   000001c: error: OnEndExpr callback failed
 out/test/spec/block.wast:534: assert_invalid passed:
-  out/test/spec/block/block.19.wasm:000001f: error: type mismatch in block, expected [] but got [f32]
+  out/test/spec/block/block.19.wasm:000001f: error: type mismatch at end of block, expected [] but got [f32]
   000001f: error: OnEndExpr callback failed
 out/test/spec/block.wast:540: assert_invalid passed:
-  out/test/spec/block/block.20.wasm:0000023: error: type mismatch in block, expected [] but got [f64]
+  out/test/spec/block/block.20.wasm:0000023: error: type mismatch at end of block, expected [] but got [f64]
   0000023: error: OnEndExpr callback failed
 out/test/spec/block.wast:546: assert_invalid passed:
-  out/test/spec/block/block.21.wasm:000001e: error: type mismatch in block, expected [] but got [i32, i32]
+  out/test/spec/block/block.21.wasm:000001e: error: type mismatch at end of block, expected [] but got [i32, i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/block.wast:552: assert_invalid passed:
   out/test/spec/block/block.22.wasm:000001b: error: type mismatch in block, expected [i32] but got []
@@ -160,7 +160,7 @@ out/test/spec/block.wast:719: assert_invalid passed:
   out/test/spec/block/block.48.wasm:0000020: error: type mismatch in block, expected [i32, i32] but got [i32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/block.wast:725: assert_invalid passed:
-  out/test/spec/block/block.49.wasm:000001f: error: type mismatch in block, expected [] but got [i32]
+  out/test/spec/block/block.49.wasm:000001f: error: type mismatch at end of block, expected [] but got [i32]
   000001f: error: OnEndExpr callback failed
 out/test/spec/block.wast:732: assert_invalid passed:
   out/test/spec/block/block.50.wasm:000001f: error: type mismatch in implicit return, expected [i32] but got [i64]
@@ -337,19 +337,19 @@ out/test/spec/block.wast:1080: assert_invalid passed:
   out/test/spec/block/block.107.wasm:000001f: error: type mismatch in br, expected [i32, i32] but got [i32]
   000001f: error: OnBrExpr callback failed
 out/test/spec/block.wast:1087: assert_invalid passed:
-  out/test/spec/block/block.108.wasm:0000023: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/block/block.108.wasm:0000023: error: type mismatch at end of function, expected [] but got [i32]
   0000024: error: EndFunctionBody callback failed
 out/test/spec/block.wast:1093: assert_invalid passed:
-  out/test/spec/block/block.109.wasm:0000023: error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/block/block.109.wasm:0000023: error: type mismatch at end of function, expected [] but got [i64]
   0000024: error: EndFunctionBody callback failed
 out/test/spec/block.wast:1099: assert_invalid passed:
-  out/test/spec/block/block.110.wasm:0000026: error: type mismatch in function, expected [] but got [f32]
+  out/test/spec/block/block.110.wasm:0000026: error: type mismatch at end of function, expected [] but got [f32]
   0000027: error: EndFunctionBody callback failed
 out/test/spec/block.wast:1105: assert_invalid passed:
-  out/test/spec/block/block.111.wasm:000002a: error: type mismatch in function, expected [] but got [f64]
+  out/test/spec/block/block.111.wasm:000002a: error: type mismatch at end of function, expected [] but got [f64]
   000002b: error: EndFunctionBody callback failed
 out/test/spec/block.wast:1111: assert_invalid passed:
-  out/test/spec/block/block.112.wasm:000002a: error: type mismatch in function, expected [] but got [i32, i32]
+  out/test/spec/block/block.112.wasm:000002a: error: type mismatch at end of function, expected [] but got [i32, i32]
   000002b: error: EndFunctionBody callback failed
 out/test/spec/block.wast:1118: assert_invalid passed:
   out/test/spec/block/block.113.wasm:000001e: error: type mismatch in br, expected [i32] but got []

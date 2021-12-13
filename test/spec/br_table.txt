@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/br_table.wast
 (;; STDOUT ;;;
 out/test/spec/br_table.wast:1442: assert_invalid passed:
-  out/test/spec/br_table/br_table.1.wasm:0000022: error: type mismatch in block, expected [] but got [i32]
+  out/test/spec/br_table/br_table.1.wasm:0000022: error: type mismatch at end of block, expected [] but got [i32]
   0000022: error: OnEndExpr callback failed
 out/test/spec/br_table.wast:1449: assert_invalid passed:
   out/test/spec/br_table/br_table.2.wasm:000001d: error: type mismatch in br_table, expected [i32] but got []
@@ -35,7 +35,7 @@ out/test/spec/br_table.wast:1516: assert_invalid passed:
   out/test/spec/br_table/br_table.11.wasm:0000022: error: type mismatch in br_table, expected [i32] but got [... i64]
   0000022: error: OnBrTableExpr callback failed
 out/test/spec/br_table.wast:1525: assert_invalid passed:
-  out/test/spec/br_table/br_table.12.wasm:0000022: error: type mismatch in block, expected [] but got [i32]
+  out/test/spec/br_table/br_table.12.wasm:0000022: error: type mismatch at end of block, expected [] but got [i32]
   0000022: error: OnEndExpr callback failed
 out/test/spec/br_table.wast:1532: assert_invalid passed:
   out/test/spec/br_table/br_table.13.wasm:0000022: error: type mismatch in br_table, expected [i32] but got []

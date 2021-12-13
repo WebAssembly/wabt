@@ -20,16 +20,16 @@ out/test/spec/local_get.wast:173: assert_invalid passed:
   out/test/spec/local_get/local_get.6.wasm:000001d: error: type mismatch in f64.neg, expected [f64] but got [i64]
   000001d: error: OnUnaryExpr callback failed
 out/test/spec/local_get.wast:181: assert_invalid passed:
-  out/test/spec/local_get/local_get.7.wasm:000001b: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/local_get/local_get.7.wasm:000001b: error: type mismatch at end of function, expected [] but got [i32]
   000001c: error: EndFunctionBody callback failed
 out/test/spec/local_get.wast:185: assert_invalid passed:
-  out/test/spec/local_get/local_get.8.wasm:000001b: error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/local_get/local_get.8.wasm:000001b: error: type mismatch at end of function, expected [] but got [i64]
   000001c: error: EndFunctionBody callback failed
 out/test/spec/local_get.wast:189: assert_invalid passed:
-  out/test/spec/local_get/local_get.9.wasm:000001b: error: type mismatch in function, expected [] but got [f32]
+  out/test/spec/local_get/local_get.9.wasm:000001b: error: type mismatch at end of function, expected [] but got [f32]
   000001c: error: EndFunctionBody callback failed
 out/test/spec/local_get.wast:193: assert_invalid passed:
-  out/test/spec/local_get/local_get.10.wasm:000001b: error: type mismatch in function, expected [] but got [f64]
+  out/test/spec/local_get/local_get.10.wasm:000001b: error: type mismatch at end of function, expected [] but got [f64]
   000001c: error: EndFunctionBody callback failed
 out/test/spec/local_get.wast:201: assert_invalid passed:
   0000000: error: local variable out of range (max 2)

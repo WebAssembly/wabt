@@ -25,13 +25,13 @@ out/test/spec/exception-handling/try_catch.wast:232: assert_invalid passed:
   out/test/spec/exception-handling/try_catch/try_catch.7.wasm:000001d: error: type mismatch in try, expected [i32] but got [i64]
   000001d: error: OnEndExpr callback failed
 out/test/spec/exception-handling/try_catch.wast:234: assert_invalid passed:
-  out/test/spec/exception-handling/try_catch/try_catch.8.wasm:0000023: error: type mismatch in try catch, expected [] but got [i32]
+  out/test/spec/exception-handling/try_catch/try_catch.8.wasm:0000023: error: type mismatch at end of try catch, expected [] but got [i32]
   0000023: error: OnEndExpr callback failed
 out/test/spec/exception-handling/try_catch.wast:236: assert_invalid passed:
   out/test/spec/exception-handling/try_catch/try_catch.9.wasm:0000028: error: type mismatch in try catch, expected [i32] but got [i64]
   0000028: error: OnEndExpr callback failed
 out/test/spec/exception-handling/try_catch.wast:241: assert_invalid passed:
-  out/test/spec/exception-handling/try_catch/try_catch.10.wasm:000001d: error: type mismatch in try catch, expected [] but got [i32]
+  out/test/spec/exception-handling/try_catch/try_catch.10.wasm:000001d: error: type mismatch at end of try catch, expected [] but got [i32]
   000001d: error: OnEndExpr callback failed
 35/35 tests passed.
 ;;; STDOUT ;;)

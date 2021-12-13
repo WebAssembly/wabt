@@ -25,13 +25,13 @@ out/test/spec/multi-memory/memory_grow.wast:469: assert_invalid passed:
   out/test/spec/multi-memory/memory_grow/memory_grow.12.wasm:0000025: error: type mismatch in memory.grow, expected [i32] but got []
   0000025: error: OnMemoryGrowExpr callback failed
 out/test/spec/multi-memory/memory_grow.wast:480: assert_invalid passed:
-  out/test/spec/multi-memory/memory_grow/memory_grow.13.wasm:0000020: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/multi-memory/memory_grow/memory_grow.13.wasm:0000020: error: type mismatch at end of function, expected [] but got [i32]
   0000021: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/memory_grow.wast:489: assert_invalid passed:
   out/test/spec/multi-memory/memory_grow/memory_grow.14.wasm:0000024: error: type mismatch in memory.grow, expected [i32] but got [f32]
   0000024: error: OnMemoryGrowExpr callback failed
 out/test/spec/multi-memory/memory_grow.wast:499: assert_invalid passed:
-  out/test/spec/multi-memory/memory_grow/memory_grow.15.wasm:0000020: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/multi-memory/memory_grow/memory_grow.15.wasm:0000020: error: type mismatch at end of function, expected [] but got [i32]
   0000021: error: EndFunctionBody callback failed
 out/test/spec/multi-memory/memory_grow.wast:508: assert_invalid passed:
   out/test/spec/multi-memory/memory_grow/memory_grow.16.wasm:0000021: error: type mismatch in implicit return, expected [f32] but got [i32]

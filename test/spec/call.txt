@@ -15,10 +15,10 @@ out/test/spec/call.wast:403: assert_invalid passed:
   out/test/spec/call/call.4.wasm:000001f: error: type mismatch in call, expected [f64, i32] but got []
   000001f: error: OnCallExpr callback failed
 out/test/spec/call.wast:410: assert_invalid passed:
-  out/test/spec/call/call.5.wasm:000001c: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/call/call.5.wasm:000001c: error: type mismatch at end of function, expected [] but got [i32]
   000001d: error: EndFunctionBody callback failed
 out/test/spec/call.wast:417: assert_invalid passed:
-  out/test/spec/call/call.6.wasm:0000025: error: type mismatch in function, expected [] but got [f64, i32]
+  out/test/spec/call/call.6.wasm:0000025: error: type mismatch at end of function, expected [] but got [f64, i32]
   0000026: error: EndFunctionBody callback failed
 out/test/spec/call.wast:425: assert_invalid passed:
   out/test/spec/call/call.7.wasm:0000022: error: type mismatch in call, expected [i32, i32] but got [i32]

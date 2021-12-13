@@ -68,7 +68,7 @@ out/test/spec/if.wast:816: assert_malformed passed:
   ...))(func (i32.const 0) (i32.const 1)  (if (type $sig) (param i32) (result i...
                                           ^
 out/test/spec/if.wast:826: assert_invalid passed:
-  out/test/spec/if/if.12.wasm:000001e: error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/if/if.12.wasm:000001e: error: type mismatch at end of function, expected [] but got [i32]
   000001f: error: EndFunctionBody callback failed
 out/test/spec/if.wast:834: assert_invalid passed:
   out/test/spec/if/if.13.wasm:000001d: error: type mismatch in implicit return, expected [i32] but got []
@@ -95,112 +95,112 @@ out/test/spec/if.wast:863: assert_invalid passed:
   out/test/spec/if/if.20.wasm:000001d: error: type mismatch in implicit return, expected [f64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:868: assert_invalid passed:
-  out/test/spec/if/if.21.wasm:000001e: error: type mismatch in if true branch, expected [] but got [i32]
+  out/test/spec/if/if.21.wasm:000001e: error: type mismatch at end of `if true` branch, expected [] but got [i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/if.wast:874: assert_invalid passed:
-  out/test/spec/if/if.22.wasm:000001e: error: type mismatch in if true branch, expected [] but got [i32]
+  out/test/spec/if/if.22.wasm:000001e: error: type mismatch at end of `if true` branch, expected [] but got [i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/if.wast:880: assert_invalid passed:
-  out/test/spec/if/if.23.wasm:000001f: error: type mismatch in if false branch, expected [] but got [i32]
+  out/test/spec/if/if.23.wasm:000001f: error: type mismatch at end of `if false` branch, expected [] but got [i32]
   000001f: error: OnEndExpr callback failed
 out/test/spec/if.wast:886: assert_invalid passed:
-  out/test/spec/if/if.24.wasm:000001d: error: type mismatch in if true branch, expected [] but got [i32]
+  out/test/spec/if/if.24.wasm:000001d: error: type mismatch at end of `if true` branch, expected [] but got [i32]
   000001e: error: OnElseExpr callback failed
 out/test/spec/if.wast:893: assert_invalid passed:
-  out/test/spec/if/if.25.wasm:0000020: error: type mismatch in if true branch, expected [] but got [i32, i32]
+  out/test/spec/if/if.25.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32, i32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/if.wast:899: assert_invalid passed:
-  out/test/spec/if/if.26.wasm:0000020: error: type mismatch in if true branch, expected [] but got [i32, i32]
+  out/test/spec/if/if.26.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32, i32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/if.wast:905: assert_invalid passed:
-  out/test/spec/if/if.27.wasm:0000021: error: type mismatch in if false branch, expected [] but got [i32, i32]
+  out/test/spec/if/if.27.wasm:0000021: error: type mismatch at end of `if false` branch, expected [] but got [i32, i32]
   0000021: error: OnEndExpr callback failed
 out/test/spec/if.wast:911: assert_invalid passed:
-  out/test/spec/if/if.28.wasm:000001f: error: type mismatch in if true branch, expected [] but got [i32, i32]
+  out/test/spec/if/if.28.wasm:000001f: error: type mismatch at end of `if true` branch, expected [] but got [i32, i32]
   0000020: error: OnElseExpr callback failed
 out/test/spec/if.wast:918: assert_invalid passed:
-  out/test/spec/if/if.29.wasm:000001c: error: type mismatch in if true branch, expected [i32] but got []
+  out/test/spec/if/if.29.wasm:000001c: error: type mismatch in `if true` branch, expected [i32] but got []
   000001d: error: OnElseExpr callback failed
 out/test/spec/if.wast:924: assert_invalid passed:
-  out/test/spec/if/if.30.wasm:000001f: error: type mismatch in if false branch, expected [i32] but got []
+  out/test/spec/if/if.30.wasm:000001f: error: type mismatch in `if false` branch, expected [i32] but got []
   000001f: error: OnEndExpr callback failed
 out/test/spec/if.wast:930: assert_invalid passed:
-  out/test/spec/if/if.31.wasm:000001d: error: type mismatch in if true branch, expected [i32] but got []
+  out/test/spec/if/if.31.wasm:000001d: error: type mismatch in `if true` branch, expected [i32] but got []
   000001d: error: OnEndExpr callback failed
 out/test/spec/if.wast:937: assert_invalid passed:
-  out/test/spec/if/if.32.wasm:000001d: error: type mismatch in if true branch, expected [i32, i32] but got []
+  out/test/spec/if/if.32.wasm:000001d: error: type mismatch in `if true` branch, expected [i32, i32] but got []
   000001e: error: OnElseExpr callback failed
 out/test/spec/if.wast:943: assert_invalid passed:
-  out/test/spec/if/if.33.wasm:0000022: error: type mismatch in if false branch, expected [i32, i32] but got []
+  out/test/spec/if/if.33.wasm:0000022: error: type mismatch in `if false` branch, expected [i32, i32] but got []
   0000022: error: OnEndExpr callback failed
 out/test/spec/if.wast:949: assert_invalid passed:
-  out/test/spec/if/if.34.wasm:000001e: error: type mismatch in if true branch, expected [i32, i32] but got []
+  out/test/spec/if/if.34.wasm:000001e: error: type mismatch in `if true` branch, expected [i32, i32] but got []
   000001e: error: OnEndExpr callback failed
 out/test/spec/if.wast:956: assert_invalid passed:
-  out/test/spec/if/if.35.wasm:000001f: error: type mismatch in if false branch, expected [i32] but got []
+  out/test/spec/if/if.35.wasm:000001f: error: type mismatch in `if false` branch, expected [i32] but got []
   000001f: error: OnEndExpr callback failed
 out/test/spec/if.wast:962: assert_invalid passed:
-  out/test/spec/if/if.36.wasm:0000022: error: type mismatch in if false branch, expected [i32, i32] but got []
+  out/test/spec/if/if.36.wasm:0000022: error: type mismatch in `if false` branch, expected [i32, i32] but got []
   0000022: error: OnEndExpr callback failed
 out/test/spec/if.wast:969: assert_invalid passed:
-  out/test/spec/if/if.37.wasm:000001d: error: type mismatch in if true branch, expected [i32] but got []
+  out/test/spec/if/if.37.wasm:000001d: error: type mismatch in `if true` branch, expected [i32] but got []
   000001e: error: OnElseExpr callback failed
 out/test/spec/if.wast:975: assert_invalid passed:
-  out/test/spec/if/if.38.wasm:0000021: error: type mismatch in if false branch, expected [i32] but got []
+  out/test/spec/if/if.38.wasm:0000021: error: type mismatch in `if false` branch, expected [i32] but got []
   0000021: error: OnEndExpr callback failed
 out/test/spec/if.wast:981: assert_invalid passed:
-  out/test/spec/if/if.39.wasm:000001d: error: type mismatch in if true branch, expected [i32] but got []
+  out/test/spec/if/if.39.wasm:000001d: error: type mismatch in `if true` branch, expected [i32] but got []
   000001e: error: OnElseExpr callback failed
 out/test/spec/if.wast:988: assert_invalid passed:
-  out/test/spec/if/if.40.wasm:000001e: error: type mismatch in if true branch, expected [i32, i32] but got []
+  out/test/spec/if/if.40.wasm:000001e: error: type mismatch in `if true` branch, expected [i32, i32] but got []
   000001f: error: OnElseExpr callback failed
 out/test/spec/if.wast:994: assert_invalid passed:
-  out/test/spec/if/if.41.wasm:0000024: error: type mismatch in if false branch, expected [i32, i32] but got []
+  out/test/spec/if/if.41.wasm:0000024: error: type mismatch in `if false` branch, expected [i32, i32] but got []
   0000024: error: OnEndExpr callback failed
 out/test/spec/if.wast:1000: assert_invalid passed:
-  out/test/spec/if/if.42.wasm:000001e: error: type mismatch in if true branch, expected [i32, i32] but got []
+  out/test/spec/if/if.42.wasm:000001e: error: type mismatch in `if true` branch, expected [i32, i32] but got []
   000001f: error: OnElseExpr callback failed
 out/test/spec/if.wast:1007: assert_invalid passed:
-  out/test/spec/if/if.43.wasm:000001e: error: type mismatch in if true branch, expected [i32] but got [i64]
+  out/test/spec/if/if.43.wasm:000001e: error: type mismatch in `if true` branch, expected [i32] but got [i64]
   000001f: error: OnElseExpr callback failed
 out/test/spec/if.wast:1013: assert_invalid passed:
-  out/test/spec/if/if.44.wasm:0000022: error: type mismatch in if false branch, expected [i32] but got [i64]
+  out/test/spec/if/if.44.wasm:0000022: error: type mismatch in `if false` branch, expected [i32] but got [i64]
   0000022: error: OnEndExpr callback failed
 out/test/spec/if.wast:1019: assert_invalid passed:
-  out/test/spec/if/if.45.wasm:000001e: error: type mismatch in if true branch, expected [i32] but got [i64]
+  out/test/spec/if/if.45.wasm:000001e: error: type mismatch in `if true` branch, expected [i32] but got [i64]
   000001f: error: OnElseExpr callback failed
 out/test/spec/if.wast:1026: assert_invalid passed:
-  out/test/spec/if/if.46.wasm:000001f: error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  out/test/spec/if/if.46.wasm:000001f: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
   0000020: error: OnElseExpr callback failed
 out/test/spec/if.wast:1032: assert_invalid passed:
-  out/test/spec/if/if.47.wasm:0000025: error: type mismatch in if false branch, expected [i32, i32] but got [i32]
+  out/test/spec/if/if.47.wasm:0000025: error: type mismatch in `if false` branch, expected [i32, i32] but got [i32]
   0000025: error: OnEndExpr callback failed
 out/test/spec/if.wast:1038: assert_invalid passed:
-  out/test/spec/if/if.48.wasm:000001f: error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  out/test/spec/if/if.48.wasm:000001f: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
   0000020: error: OnElseExpr callback failed
 out/test/spec/if.wast:1045: assert_invalid passed:
-  out/test/spec/if/if.49.wasm:0000021: error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  out/test/spec/if/if.49.wasm:0000021: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
   0000022: error: OnElseExpr callback failed
 out/test/spec/if.wast:1052: assert_invalid passed:
-  out/test/spec/if/if.50.wasm:0000027: error: type mismatch in if false branch, expected [i32, i32] but got [i32]
+  out/test/spec/if/if.50.wasm:0000027: error: type mismatch in `if false` branch, expected [i32, i32] but got [i32]
   0000027: error: OnEndExpr callback failed
 out/test/spec/if.wast:1059: assert_invalid passed:
-  out/test/spec/if/if.51.wasm:0000021: error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  out/test/spec/if/if.51.wasm:0000021: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
   0000022: error: OnElseExpr callback failed
 out/test/spec/if.wast:1067: assert_invalid passed:
-  out/test/spec/if/if.52.wasm:0000020: error: type mismatch in if true branch, expected [] but got [i32]
+  out/test/spec/if/if.52.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32]
   0000021: error: OnElseExpr callback failed
 out/test/spec/if.wast:1073: assert_invalid passed:
-  out/test/spec/if/if.53.wasm:0000024: error: type mismatch in if false branch, expected [] but got [i32]
+  out/test/spec/if/if.53.wasm:0000024: error: type mismatch at end of `if false` branch, expected [] but got [i32]
   0000024: error: OnEndExpr callback failed
 out/test/spec/if.wast:1079: assert_invalid passed:
-  out/test/spec/if/if.54.wasm:0000020: error: type mismatch in if true branch, expected [] but got [i32]
+  out/test/spec/if/if.54.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32]
   0000021: error: OnElseExpr callback failed
 out/test/spec/if.wast:1086: assert_invalid passed:
-  out/test/spec/if/if.55.wasm:000001e: error: type mismatch in if true branch, expected [i32] but got [i64]
+  out/test/spec/if/if.55.wasm:000001e: error: type mismatch in `if true` branch, expected [i32] but got [i64]
   000001f: error: OnElseExpr callback failed
 out/test/spec/if.wast:1092: assert_invalid passed:
-  out/test/spec/if/if.56.wasm:0000023: error: type mismatch in if true branch, expected [] but got [i32]
+  out/test/spec/if/if.56.wasm:0000023: error: type mismatch at end of `if true` branch, expected [] but got [i32]
   0000024: error: OnElseExpr callback failed
 out/test/spec/if.wast:1099: assert_invalid passed:
   out/test/spec/if/if.57.wasm:0000024: error: type mismatch in implicit return, expected [i32] but got [i64]
@@ -263,7 +263,7 @@ out/test/spec/if.wast:1265: assert_invalid passed:
   out/test/spec/if/if.76.wasm:0000023: error: type mismatch in br, expected [i32, i32] but got [i64]
   0000023: error: OnBrExpr callback failed
 out/test/spec/if.wast:1275: assert_invalid passed:
-  out/test/spec/if/if.77.wasm:0000021: error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  out/test/spec/if/if.77.wasm:0000021: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
   0000022: error: OnElseExpr callback failed
 out/test/spec/if.wast:1286: assert_invalid passed:
   out/test/spec/if/if.78.wasm:0000019: error: type mismatch in if, expected [i32] but got []

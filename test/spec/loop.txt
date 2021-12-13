@@ -49,7 +49,7 @@ out/test/spec/loop.wast:593: assert_malformed passed:
   ...2) (result i32)))(func (i32.const 0) (loop (type $sig) (param i32) (result...
                                           ^
 out/test/spec/loop.wast:601: assert_invalid passed:
-  out/test/spec/loop/loop.12.wasm:000001c: error: type mismatch in loop, expected [] but got [i32]
+  out/test/spec/loop/loop.12.wasm:000001c: error: type mismatch at end of loop, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
 out/test/spec/loop.wast:609: assert_invalid passed:
   out/test/spec/loop/loop.13.wasm:000001b: error: type mismatch in implicit return, expected [i32] but got []
@@ -64,10 +64,10 @@ out/test/spec/loop.wast:621: assert_invalid passed:
   out/test/spec/loop/loop.16.wasm:000001b: error: type mismatch in implicit return, expected [f64] but got []
   000001c: error: EndFunctionBody callback failed
 out/test/spec/loop.wast:626: assert_invalid passed:
-  out/test/spec/loop/loop.17.wasm:000001c: error: type mismatch in loop, expected [] but got [i32]
+  out/test/spec/loop/loop.17.wasm:000001c: error: type mismatch at end of loop, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
 out/test/spec/loop.wast:632: assert_invalid passed:
-  out/test/spec/loop/loop.18.wasm:000001e: error: type mismatch in loop, expected [] but got [i32, i32]
+  out/test/spec/loop/loop.18.wasm:000001e: error: type mismatch at end of loop, expected [] but got [i32, i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/loop.wast:638: assert_invalid passed:
   out/test/spec/loop/loop.19.wasm:000001b: error: type mismatch in loop, expected [i32] but got []
@@ -91,7 +91,7 @@ out/test/spec/loop.wast:674: assert_invalid passed:
   out/test/spec/loop/loop.25.wasm:0000020: error: type mismatch in loop, expected [i32, i32] but got [i32]
   0000020: error: OnEndExpr callback failed
 out/test/spec/loop.wast:680: assert_invalid passed:
-  out/test/spec/loop/loop.26.wasm:000001f: error: type mismatch in loop, expected [] but got [i32]
+  out/test/spec/loop/loop.26.wasm:000001f: error: type mismatch at end of loop, expected [] but got [i32]
   000001f: error: OnEndExpr callback failed
 out/test/spec/loop.wast:686: assert_invalid passed:
   out/test/spec/loop/loop.27.wasm:000001f: error: type mismatch in implicit return, expected [i32] but got [i64]

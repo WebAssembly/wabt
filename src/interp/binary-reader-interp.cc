@@ -301,7 +301,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                     Index* out_keep_count);
   Result BeginInitExpr(Type type);
   Result EndInitExpr();
-  Result CheckEmptyInitExpr();
 
   void EmitBr(Index depth,
               Index drop_count,
@@ -641,15 +640,6 @@ Result BinaryReaderInterp::BeginInitExpr(Type type) {
   reading_init_expr_ = true;
   init_expr_.kind = InitExprKind::None;
   CHECK_RESULT(validator_.BeginInitExpr(GetLocation(), type));
-  return Result::Ok;
-}
-
-Result BinaryReaderInterp::CheckEmptyInitExpr() {
-  assert(reading_init_expr_);
-  if (init_expr_.kind != InitExprKind::None) {
-    PrintError("expected END opcode after initializer expression");
-    return Result::Error;
-  }
   return Result::Ok;
 }
 
@@ -1192,7 +1182,6 @@ Result BinaryReaderInterp::OnDropExpr() {
 Result BinaryReaderInterp::OnI32ConstExpr(uint32_t value) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::I32));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::I32;
     init_expr_.i32_ = value;
     return Result::Ok;
@@ -1204,7 +1193,6 @@ Result BinaryReaderInterp::OnI32ConstExpr(uint32_t value) {
 Result BinaryReaderInterp::OnI64ConstExpr(uint64_t value) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::I64));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::I64;
     init_expr_.i64_ = value;
     return Result::Ok;
@@ -1216,7 +1204,6 @@ Result BinaryReaderInterp::OnI64ConstExpr(uint64_t value) {
 Result BinaryReaderInterp::OnF32ConstExpr(uint32_t value_bits) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::F32));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::F32;
     init_expr_.f32_ = Bitcast<f32>(value_bits);
     return Result::Ok;
@@ -1228,7 +1215,6 @@ Result BinaryReaderInterp::OnF32ConstExpr(uint32_t value_bits) {
 Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::F64));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::F64;
     init_expr_.f64_ = Bitcast<f64>(value_bits);
     return Result::Ok;
@@ -1240,7 +1226,6 @@ Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
 Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::V128));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::V128;
     init_expr_.v128_ = Bitcast<v128>(value_bits);
     return Result::Ok;
@@ -1252,7 +1237,6 @@ Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
   CHECK_RESULT(validator_.OnGlobalGet(GetLocation(), Var(global_index)));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::GlobalGet;
     init_expr_.index_ = global_index;
     return Result::Ok;
@@ -1349,7 +1333,6 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
 Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   CHECK_RESULT(validator_.OnRefFunc(GetLocation(), Var(func_index)));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::RefFunc;
     init_expr_.index_ = func_index;
     return Result::Ok;
@@ -1361,7 +1344,6 @@ Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
 Result BinaryReaderInterp::OnRefNullExpr(Type type) {
   CHECK_RESULT(validator_.OnRefNull(GetLocation(), type));
   if (reading_init_expr_) {
-    CHECK_RESULT(CheckEmptyInitExpr());
     init_expr_.kind = InitExprKind::RefNull;
     init_expr_.type_ = type;
     return Result::Ok;
