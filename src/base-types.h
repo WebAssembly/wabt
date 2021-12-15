@@ -17,6 +17,9 @@
 #ifndef WABT_BASE_TYPES_H_
 #define WABT_BASE_TYPES_H_
 
+#include <string>
+#include <vector>
+
 namespace wabt {
 
 typedef uint32_t Index;    // An index into one of the many index spaces.
