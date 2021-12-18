@@ -419,7 +419,7 @@ struct Frame {
   void Mark(Store&);
 
   Ref func;
-  u32 values;  // Height of the value stack at this activation.
+  u32 values;      // Height of the value stack at this activation.
   u32 exceptions;  // Height of the exception stack at this activation.
   u32 offset;      // Istream offset; either the return PC, or the current PC.
 

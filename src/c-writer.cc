@@ -48,9 +48,7 @@ struct Label {
         type_stack_size(type_stack_size),
         used(used) {}
 
-  bool HasValue() const {
-    return !sig.empty();
-  }
+  bool HasValue() const { return !sig.empty(); }
 
   LabelType label_type;
   const std::string& name;
@@ -636,7 +634,8 @@ void CWriter::Write(const GotoLabel& goto_label) {
     Index offset = type_stack_.size() - label->type_stack_size - amount;
     if (offset != 0) {
       for (Index i = 0; i < amount; ++i) {
-        Write(StackVar(amount - i - 1 + offset, label->sig[i]), " = ", StackVar(amount - i - 1), "; ");
+        Write(StackVar(amount - i - 1 + offset, label->sig[i]), " = ",
+              StackVar(amount - i - 1), "; ");
       }
     }
   }
@@ -843,7 +842,6 @@ void CWriter::WriteMultivalueTypes() {
     Write("};", Newline(), "#endif  /* ", name, " */", Newline());
   }
 }
-
 
 void CWriter::WriteFuncTypes() {
   Write(Newline());

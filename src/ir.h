@@ -636,7 +636,7 @@ class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
 
 class CallRefExpr : public ExprMixin<ExprType::CallRef> {
  public:
-  explicit CallRefExpr(const Location &loc = Location())
+  explicit CallRefExpr(const Location& loc = Location())
       : ExprMixin<ExprType::CallRef>(loc) {}
 
   // This field is setup only during Validate phase,

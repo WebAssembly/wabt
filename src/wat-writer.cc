@@ -675,8 +675,7 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(
-    CallRefExpr* expr) {
+Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallRef_Opcode.GetName());
   return Result::Ok;
 }
