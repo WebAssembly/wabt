@@ -501,35 +501,41 @@ class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
   uint64_t val;
 };
 
-class SimdLoadLaneExpr : public OpcodeExpr<ExprType::SimdLoadLane> {
+class SimdLoadLaneExpr : public MemoryExpr<ExprType::SimdLoadLane> {
  public:
   SimdLoadLaneExpr(Opcode opcode,
+                   Var memidx,
                    Address align,
                    Address offset,
                    uint64_t val,
                    const Location& loc = Location())
-      : OpcodeExpr<ExprType::SimdLoadLane>(opcode, loc),
+      : MemoryExpr<ExprType::SimdLoadLane>(memidx, loc),
+        opcode(opcode),
         align(align),
         offset(offset),
         val(val) {}
 
+  Opcode opcode;
   Address align;
   Address offset;
   uint64_t val;
 };
 
-class SimdStoreLaneExpr : public OpcodeExpr<ExprType::SimdStoreLane> {
+class SimdStoreLaneExpr : public MemoryExpr<ExprType::SimdStoreLane> {
  public:
   SimdStoreLaneExpr(Opcode opcode,
+                    Var memidx,
                     Address align,
                     Address offset,
                     uint64_t val,
                     const Location& loc = Location())
-      : OpcodeExpr<ExprType::SimdStoreLane>(opcode, loc),
+      : MemoryExpr<ExprType::SimdStoreLane>(memidx, loc),
+        opcode(opcode),
         align(align),
         offset(offset),
         val(val) {}
 
+  Opcode opcode;
   Address align;
   Address offset;
   uint64_t val;

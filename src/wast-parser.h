@@ -82,7 +82,7 @@ class WastParser {
   TokenTypePair PeekPair();
 
   // Returns true if the next token's type is equal to the parameter.
-  bool PeekMatch(TokenType);
+  bool PeekMatch(TokenType, size_t n = 0);
 
   // Returns true if the next token's type is '(' and the following token is
   // equal to the parameter.
