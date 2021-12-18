@@ -137,7 +137,7 @@ table T_b:funcref(min: 0, max: 10);
 export table tab2:funcref(min: 0, max: 11);
 
 data d_HelloWorld(offset: 0) = "Hello, World!\0a\00";
-data d_abcdefghijklmnoqrstuvwxyzabc(offset: 100) = 
+data d_abcdefghijklmnoqrstuvwxyzabc(offset: 100) =
   "abcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstu"
   "vwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmno"
   "qrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghijklmnoqrstuvwxyzabcdefghij"

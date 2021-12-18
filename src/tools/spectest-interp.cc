@@ -43,7 +43,7 @@ using namespace wabt;
 using namespace wabt::interp;
 
 static int s_verbose;
-static const char* s_infile;
+static std::string s_infile;
 static Thread::Options s_thread_options;
 static Stream* s_trace_stream;
 static Features s_features;
@@ -88,7 +88,10 @@ static void ParseOptions(int argc, char** argv) {
                    []() { s_trace_stream = s_stdout_stream.get(); });
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
-                     [](const char* argument) { s_infile = argument; });
+                     [](const char* argument) {
+                       s_infile = argument;
+                       ConvertBackslashToSlash(&s_infile);
+                     });
   parser.Parse(argc, argv);
 }
 
@@ -308,6 +311,12 @@ typedef AssertModuleCommand<CommandType::AssertUnlinkable>
     AssertUnlinkableCommand;
 typedef AssertModuleCommand<CommandType::AssertUninstantiable>
     AssertUninstantiableCommand;
+
+class AssertExceptionCommand
+    : public CommandMixin<CommandType::AssertException> {
+ public:
+  Action action;
+};
 
 // An extremely simple JSON parser that only knows how to parse the expected
 // format from wat2wasm.
@@ -753,7 +762,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
     }
 
     default:
-      PrintError("unknown concrete type: \"%s\"", lane_type.GetName());
+      PrintError("unknown concrete type: \"%s\"", lane_type.GetName().c_str());
       return wabt::Result::Error;
   }
 
@@ -825,7 +834,7 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       break;
 
     default:
-      PrintError("unknown concrete type: \"%s\"", type.GetName());
+      PrintError("unknown concrete type: \"%s\"", type.GetName().c_str());
       return wabt::Result::Error;
   }
 
@@ -1103,6 +1112,19 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
+  } else if (Match("\"assert_exception\"")) {
+    if (!s_features.exceptions_enabled()) {
+      PrintError("invalid command: exceptions not allowed");
+      return wabt::Result::Error;
+    }
+    auto command = MakeUnique<AssertExceptionCommand>();
+    EXPECT(",");
+    CHECK_RESULT(ParseLine(&command->line));
+    EXPECT(",");
+    CHECK_RESULT(ParseAction(&command->action));
+    EXPECT(",");
+    CHECK_RESULT(ParseActionResult());
+    *out_command = std::move(command);
   } else {
     PrintError("unknown command type");
     return wabt::Result::Error;
@@ -1171,6 +1193,7 @@ class CommandRunner {
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
+  wabt::Result OnAssertExceptionCommand(const AssertExceptionCommand*);
 
   wabt::Result CheckAssertReturnResult(const AssertReturnCommand* command,
                                        int index,
@@ -1300,6 +1323,11 @@ wabt::Result CommandRunner::Run(const Script& script) {
         TallyCommand(OnAssertExhaustionCommand(
             cast<AssertExhaustionCommand>(command.get())));
         break;
+
+      case CommandType::AssertException:
+        TallyCommand(OnAssertExceptionCommand(
+            cast<AssertExceptionCommand>(command.get())));
+        break;
     }
   }
 
@@ -1386,8 +1414,9 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
   ModuleDesc module_desc;
-  if (Failed(ReadBinaryInterp(file_data.data(), file_data.size(), options,
-                              errors, &module_desc))) {
+  if (Failed(ReadBinaryInterp(module_filename, file_data.data(),
+                              file_data.size(), options, errors,
+                              &module_desc))) {
     return {};
   }
 
@@ -1633,10 +1662,12 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
           return TypedValueToString(ev.value);
 
         case ExpectedNan::Arithmetic:
-          return StringPrintf("%s:nan:arithmetic", ev.value.type.GetName());
+          return StringPrintf("%s:nan:arithmetic",
+                              ev.value.type.GetName().c_str());
 
         case ExpectedNan::Canonical:
-          return StringPrintf("%s:nan:canonical", ev.value.type.GetName());
+          return StringPrintf("%s:nan:canonical",
+                              ev.value.type.GetName().c_str());
       }
       break;
 
@@ -1809,6 +1840,19 @@ wabt::Result CommandRunner::OnAssertExhaustionCommand(
   PrintError(command->line, "assert_exhaustion passed: %s",
              result.trap->message().c_str());
 #endif
+  return wabt::Result::Ok;
+}
+
+wabt::Result CommandRunner::OnAssertExceptionCommand(
+    const AssertExceptionCommand* command) {
+  ActionResult result =
+      RunAction(command->line, &command->action, RunVerbosity::Quiet);
+  if (!result.trap || result.trap->message() != "uncaught exception") {
+    PrintError(command->line, "expected an exception to be thrown");
+    return wabt::Result::Error;
+  }
+  PrintError(command->line, "assert_exception passed");
+
   return wabt::Result::Ok;
 }
 

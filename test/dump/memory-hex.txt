@@ -15,6 +15,12 @@
 000000c: 01                                        ; limits: initial
 000000d: 01                                        ; limits: max
 0000009: 04                                        ; FIXUP section size
+; section "DataCount" (12)
+000000e: 0c                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; data count
+000000f: 01                                        ; FIXUP section size
+; truncate to 14 (0xe)
 ; section "Data" (11)
 000000e: 0b                                        ; section code
 000000f: 00                                        ; section size (guess)

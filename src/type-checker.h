@@ -58,6 +58,7 @@ class TypeChecker {
   bool IsUnreachable();
   Result GetLabel(Index depth, Label** out_label);
   Result GetRethrowLabel(Index depth, Label** out_label);
+  Result GetCatchCount(Index depth, Index* out_depth);
 
   Result BeginFunction(const TypeVector& sig);
   Result OnAtomicFence(uint32_t consistency_model);
@@ -77,6 +78,7 @@ class TypeChecker {
   Result OnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types);
+  Result OnIndexedFuncRef(Index* out_index);
   Result OnReturnCall(const TypeVector& param_types,
                       const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types,
@@ -111,7 +113,7 @@ class TypeChecker {
   Result OnTableGrow(Type elem_type);
   Result OnTableSize();
   Result OnTableFill(Type elem_type);
-  Result OnRefFuncExpr(Index func_index);
+  Result OnRefFuncExpr(Index func_type);
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
   Result OnRethrow(Index depth);
@@ -128,6 +130,9 @@ class TypeChecker {
   Result OnUnary(Opcode);
   Result OnUnreachable();
   Result EndFunction();
+
+  Result BeginInitExpr(Type type);
+  Result EndInitExpr();
 
   static Result CheckType(Type actual, Type expected);
 
@@ -181,11 +186,14 @@ class TypeChecker {
     // Minor optimization, check result before constructing the vector to pass
     // to the other overload of PrintStackIfFailed.
     if (Failed(result)) {
-      PrintStackIfFailed(result, desc, {args...});
+      PrintStackIfFailedV(result, desc, {args...}, /*is_end=*/false);
     }
   }
 
-  void PrintStackIfFailed(Result, const char* desc, const TypeVector&);
+  void PrintStackIfFailedV(Result,
+                           const char* desc,
+                           const TypeVector&,
+                           bool is_end);
 
   ErrorCallback error_callback_;
   TypeVector type_stack_;

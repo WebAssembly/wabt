@@ -1,0 +1,61 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v
+;;; ARGS1: --section-offsets
+(module
+  (func)
+  (func)
+  (func))
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
+; section "Function" (3)
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 03                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+0000012: 00                                        ; function 1 signature index
+0000013: 00                                        ; function 2 signature index
+000000f: 04                                        ; FIXUP section size
+; section "Code" (10)
+0000014: 0a                                        ; section code
+0000015: 00                                        ; section size (guess)
+0000016: 03                                        ; num functions
+; function body 0
+0000017: 00                                        ; func body size (guess)
+0000018: 00                                        ; local decl count
+0000019: 0b                                        ; end
+0000017: 02                                        ; FIXUP func body size
+; function body 1
+000001a: 00                                        ; func body size (guess)
+000001b: 00                                        ; local decl count
+000001c: 0b                                        ; end
+000001a: 02                                        ; FIXUP func body size
+; function body 2
+000001d: 00                                        ; func body size (guess)
+000001e: 00                                        ; local decl count
+000001f: 0b                                        ; end
+000001d: 02                                        ; FIXUP func body size
+0000015: 0a                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+section-offsets.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000002 func[0]:
+ 000003: 0b                         | end
+000005 func[1]:
+ 000006: 0b                         | end
+000008 func[2]:
+ 000009: 0b                         | end
+;;; STDOUT ;;)

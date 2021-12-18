@@ -30,157 +30,157 @@ out/test/spec/store.wast:103: assert_malformed passed:
   (memory 1)(func (param i32) (f64.store64 (local.get 0) (f64.const 0)))
                                ^^^^^^^^^^^
 out/test/spec/store.wast:112: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/store/store.8.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/store.wast:116: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/store/store.9.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/store.wast:120: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/store/store.10.wasm:0000028: error: type mismatch in implicit return, expected [f32] but got []
   0000029: error: EndFunctionBody callback failed
 out/test/spec/store.wast:124: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/store/store.11.wasm:000002c: error: type mismatch in implicit return, expected [f64] but got []
   000002d: error: EndFunctionBody callback failed
 out/test/spec/store.wast:128: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/store/store.12.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/store.wast:132: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/store/store.13.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/store.wast:136: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/store/store.14.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/store.wast:140: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/store/store.15.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/store.wast:144: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/store/store.16.wasm:0000025: error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 out/test/spec/store.wast:150: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.17.wasm:000001f: error: type mismatch in i32.store, expected [i32, i32] but got []
   000001f: error: OnStoreExpr callback failed
 out/test/spec/store.wast:159: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.18.wasm:0000021: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000021: error: OnStoreExpr callback failed
 out/test/spec/store.wast:168: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.19.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:178: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.20.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:188: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.21.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:198: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.22.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:208: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.23.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:218: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.24.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:228: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.25.wasm:0000028: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000028: error: OnStoreExpr callback failed
 out/test/spec/store.wast:238: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.26.wasm:0000028: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000028: error: OnStoreExpr callback failed
 out/test/spec/store.wast:248: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.27.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:258: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.28.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:268: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.29.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:278: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.30.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:288: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.31.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:298: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.32.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:308: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.33.wasm:000001f: error: type mismatch in i32.store, expected [i32, i32] but got []
   000001f: error: OnStoreExpr callback failed
 out/test/spec/store.wast:317: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.34.wasm:0000021: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000021: error: OnStoreExpr callback failed
 out/test/spec/store.wast:326: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.35.wasm:000001f: error: type mismatch in i32.store, expected [i32, i32] but got []
   000001f: error: OnStoreExpr callback failed
 out/test/spec/store.wast:335: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.36.wasm:0000021: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000021: error: OnStoreExpr callback failed
 out/test/spec/store.wast:344: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.37.wasm:0000025: error: type mismatch in i32.store, expected [i32, i32] but got []
   0000025: error: OnStoreExpr callback failed
 out/test/spec/store.wast:354: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.38.wasm:0000027: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   0000027: error: OnStoreExpr callback failed
 out/test/spec/store.wast:364: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got []
+  out/test/spec/store/store.39.wasm:000003c: error: type mismatch in i32.store, expected [i32, i32] but got []
   000003c: error: OnStoreExpr callback failed
 out/test/spec/store.wast:380: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32]
+  out/test/spec/store/store.40.wasm:000003e: error: type mismatch in i32.store, expected [i32, i32] but got [i32]
   000003e: error: OnStoreExpr callback failed
 out/test/spec/store.wast:399: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [f32, i32]
+  out/test/spec/store/store.41.wasm:0000026: error: type mismatch in i32.store, expected [i32, i32] but got [f32, i32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:400: assert_invalid passed:
-  error: type mismatch in i32.store8, expected [i32, i32] but got [f32, i32]
+  out/test/spec/store/store.42.wasm:0000026: error: type mismatch in i32.store8, expected [i32, i32] but got [f32, i32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:401: assert_invalid passed:
-  error: type mismatch in i32.store16, expected [i32, i32] but got [f32, i32]
+  out/test/spec/store/store.43.wasm:0000026: error: type mismatch in i32.store16, expected [i32, i32] but got [f32, i32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:402: assert_invalid passed:
-  error: type mismatch in i64.store, expected [i32, i64] but got [f32, i32]
+  out/test/spec/store/store.44.wasm:0000026: error: type mismatch in i64.store, expected [i32, i64] but got [f32, i32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:403: assert_invalid passed:
-  error: type mismatch in i64.store8, expected [i32, i64] but got [f32, i64]
+  out/test/spec/store/store.45.wasm:0000026: error: type mismatch in i64.store8, expected [i32, i64] but got [f32, i64]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:404: assert_invalid passed:
-  error: type mismatch in i64.store16, expected [i32, i64] but got [f32, i64]
+  out/test/spec/store/store.46.wasm:0000026: error: type mismatch in i64.store16, expected [i32, i64] but got [f32, i64]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:405: assert_invalid passed:
-  error: type mismatch in i64.store32, expected [i32, i64] but got [f32, i64]
+  out/test/spec/store/store.47.wasm:0000026: error: type mismatch in i64.store32, expected [i32, i64] but got [f32, i64]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:406: assert_invalid passed:
-  error: type mismatch in f32.store, expected [i32, f32] but got [f32, f32]
+  out/test/spec/store/store.48.wasm:0000029: error: type mismatch in f32.store, expected [i32, f32] but got [f32, f32]
   0000029: error: OnStoreExpr callback failed
 out/test/spec/store.wast:407: assert_invalid passed:
-  error: type mismatch in f64.store, expected [i32, f64] but got [f32, f64]
+  out/test/spec/store/store.49.wasm:000002d: error: type mismatch in f64.store, expected [i32, f64] but got [f32, f64]
   000002d: error: OnStoreExpr callback failed
 out/test/spec/store.wast:409: assert_invalid passed:
-  error: type mismatch in i32.store, expected [i32, i32] but got [i32, f32]
+  out/test/spec/store/store.50.wasm:0000026: error: type mismatch in i32.store, expected [i32, i32] but got [i32, f32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:410: assert_invalid passed:
-  error: type mismatch in i32.store8, expected [i32, i32] but got [i32, f32]
+  out/test/spec/store/store.51.wasm:0000026: error: type mismatch in i32.store8, expected [i32, i32] but got [i32, f32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:411: assert_invalid passed:
-  error: type mismatch in i32.store16, expected [i32, i32] but got [i32, f32]
+  out/test/spec/store/store.52.wasm:0000026: error: type mismatch in i32.store16, expected [i32, i32] but got [i32, f32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:412: assert_invalid passed:
-  error: type mismatch in i64.store, expected [i32, i64] but got [i32, f32]
+  out/test/spec/store/store.53.wasm:0000026: error: type mismatch in i64.store, expected [i32, i64] but got [i32, f32]
   0000026: error: OnStoreExpr callback failed
 out/test/spec/store.wast:413: assert_invalid passed:
-  error: type mismatch in i64.store8, expected [i32, i64] but got [i32, f64]
+  out/test/spec/store/store.54.wasm:000002a: error: type mismatch in i64.store8, expected [i32, i64] but got [i32, f64]
   000002a: error: OnStoreExpr callback failed
 out/test/spec/store.wast:414: assert_invalid passed:
-  error: type mismatch in i64.store16, expected [i32, i64] but got [i32, f64]
+  out/test/spec/store/store.55.wasm:000002a: error: type mismatch in i64.store16, expected [i32, i64] but got [i32, f64]
   000002a: error: OnStoreExpr callback failed
 out/test/spec/store.wast:415: assert_invalid passed:
-  error: type mismatch in i64.store32, expected [i32, i64] but got [i32, f64]
+  out/test/spec/store/store.56.wasm:000002a: error: type mismatch in i64.store32, expected [i32, i64] but got [i32, f64]
   000002a: error: OnStoreExpr callback failed
 out/test/spec/store.wast:416: assert_invalid passed:
-  error: type mismatch in f32.store, expected [i32, f32] but got [i32, i32]
+  out/test/spec/store/store.57.wasm:0000023: error: type mismatch in f32.store, expected [i32, f32] but got [i32, i32]
   0000023: error: OnStoreExpr callback failed
 out/test/spec/store.wast:417: assert_invalid passed:
-  error: type mismatch in f64.store, expected [i32, f64] but got [i32, i64]
+  out/test/spec/store/store.58.wasm:0000023: error: type mismatch in f64.store, expected [i32, f64] but got [i32, i64]
   0000023: error: OnStoreExpr callback failed
 67/67 tests passed.
 ;;; STDOUT ;;)

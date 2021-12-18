@@ -236,6 +236,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override {
     return Result::Ok;
   }
+  Result OnCallRefExpr() override { return Result::Ok; }
   Result OnCatchExpr(Index tag_index) override { return Result::Ok; }
   Result OnCatchAllExpr() override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
@@ -244,7 +245,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnDropExpr() override { return Result::Ok; }
   Result OnElseExpr() override { return Result::Ok; }
   Result OnEndExpr() override { return Result::Ok; }
-  Result OnEndFunc() override { return Result::Ok; }
   Result OnF32ConstExpr(uint32_t value_bits) override { return Result::Ok; }
   Result OnF64ConstExpr(uint64_t value_bits) override { return Result::Ok; }
   Result OnV128ConstExpr(v128 value_bits) override { return Result::Ok; }
@@ -254,6 +254,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnI64ConstExpr(uint64_t value) override { return Result::Ok; }
   Result OnIfExpr(Type sig_type) override { return Result::Ok; }
   Result OnLoadExpr(Opcode opcode,
+                    Index memidx,
                     Address alignment_log2,
                     Address offset) override {
     return Result::Ok;
@@ -262,12 +263,16 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnLocalSetExpr(Index local_index) override { return Result::Ok; }
   Result OnLocalTeeExpr(Index local_index) override { return Result::Ok; }
   Result OnLoopExpr(Type sig_type) override { return Result::Ok; }
-  Result OnMemoryCopyExpr() override { return Result::Ok; }
+  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override {
+    return Result::Ok;
+  }
   Result OnDataDropExpr(Index segment_index) override { return Result::Ok; }
-  Result OnMemoryFillExpr() override { return Result::Ok; }
-  Result OnMemoryGrowExpr() override { return Result::Ok; }
-  Result OnMemoryInitExpr(Index segment_index) override { return Result::Ok; }
-  Result OnMemorySizeExpr() override { return Result::Ok; }
+  Result OnMemoryFillExpr(Index memidx) override { return Result::Ok; }
+  Result OnMemoryGrowExpr(Index memidx) override { return Result::Ok; }
+  Result OnMemoryInitExpr(Index segment_index, Index memidx) override {
+    return Result::Ok;
+  }
+  Result OnMemorySizeExpr(Index memidx) override { return Result::Ok; }
   Result OnTableCopyExpr(Index dst_index, Index src_index) override {
     return Result::Ok;
   }
@@ -294,6 +299,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnStoreExpr(Opcode opcode,
+                     Index memidx,
                      Address alignment_log2,
                      Address offset) override {
     return Result::Ok;
@@ -464,16 +470,29 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnDylinkNeededCount(Index count) override { return Result::Ok; }
   Result OnDylinkNeeded(string_view so_name) override { return Result::Ok; }
+  Result OnDylinkImportCount(Index count) override { return Result::Ok; }
+  Result OnDylinkExportCount(Index count) override { return Result::Ok; }
+  Result OnDylinkImport(string_view module,
+                        string_view name,
+                        uint32_t flags) override {
+    return Result::Ok;
+  }
+  Result OnDylinkExport(string_view name, uint32_t flags) override {
+    return Result::Ok;
+  }
   Result EndDylinkSection() override { return Result::Ok; }
+
+  /* target_features section */
+  Result BeginTargetFeaturesSection(Offset size) override { return Result::Ok; }
+  Result OnFeatureCount(Index count) override { return Result::Ok; }
+  Result OnFeature(uint8_t prefix, string_view name) override {
+    return Result::Ok;
+  }
+  Result EndTargetFeaturesSection() override { return Result::Ok; }
 
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnSymbolCount(Index count) override { return Result::Ok; }
-  Result OnSymbol(Index sybmol_index,
-                  SymbolType type,
-                  uint32_t flags) override {
-    return Result::Ok;
-  }
   Result OnDataSymbol(Index index,
                       uint32_t flags,
                       string_view name,
@@ -530,33 +549,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result EndLinkingSection() override { return Result::Ok; }
-
-  /* InitExpr - used by elem, data and global sections; these functions are
-   * only called between calls to Begin*InitExpr and End*InitExpr */
-  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprV128ConstExpr(Index index, v128 value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override {
-    return Result::Ok;
-  }
-  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override {
-    return Result::Ok;
-  }
-  Result OnInitExprRefNull(Index index, Type type) override {
-    return Result::Ok;
-  }
-  Result OnInitExprRefFunc(Index index, Index func_index) override {
-    return Result::Ok;
-  }
 };
 
 }  // namespace wabt

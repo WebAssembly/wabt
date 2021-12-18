@@ -13,6 +13,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:000001c: error: type mismatch in function, expected [] but got [i32]
-out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:000001c: error: type mismatch in function, expected [] but got [i32]
+out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:000001c: error: type mismatch at end of function, expected [] but got [i32]
+out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:000001c: error: type mismatch at end of function, expected [] but got [i32]
 ;;; STDERR ;;)

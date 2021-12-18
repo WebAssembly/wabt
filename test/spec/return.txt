@@ -2,64 +2,64 @@
 ;;; STDIN_FILE: third_party/testsuite/return.wast
 (;; STDOUT ;;;
 out/test/spec/return.wast:311: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.1.wasm:0000019: error: type mismatch in return, expected [i32] but got []
   0000019: error: OnReturnExpr callback failed
 out/test/spec/return.wast:315: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.2.wasm:000001d: error: type mismatch in return, expected [i32] but got []
   000001d: error: OnReturnExpr callback failed
 out/test/spec/return.wast:324: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.3.wasm:000001d: error: type mismatch in return, expected [i32] but got []
   000001d: error: OnReturnExpr callback failed
 out/test/spec/return.wast:333: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.4.wasm:000001f: error: type mismatch in return, expected [i32] but got []
   000001f: error: OnReturnExpr callback failed
 out/test/spec/return.wast:342: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.5.wasm:0000022: error: type mismatch in return, expected [i32] but got []
   0000022: error: OnReturnExpr callback failed
 out/test/spec/return.wast:351: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.6.wasm:000001d: error: type mismatch in return, expected [i32] but got []
   000001d: error: OnReturnExpr callback failed
 out/test/spec/return.wast:360: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.7.wasm:000001d: error: type mismatch in return, expected [i32] but got []
   000001d: error: OnReturnExpr callback failed
 out/test/spec/return.wast:369: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.8.wasm:000001d: error: type mismatch in return, expected [i32] but got []
   000001d: error: OnReturnExpr callback failed
 out/test/spec/return.wast:378: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.9.wasm:0000019: error: type mismatch in return, expected [i32] but got []
   0000019: error: OnReturnExpr callback failed
 out/test/spec/return.wast:386: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.10.wasm:0000019: error: type mismatch in return, expected [i32] but got []
   0000019: error: OnReturnExpr callback failed
 out/test/spec/return.wast:394: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.11.wasm:000001f: error: type mismatch in return, expected [i32] but got []
   000001f: error: OnReturnExpr callback failed
 out/test/spec/return.wast:403: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.12.wasm:0000036: error: type mismatch in return, expected [i32] but got []
   0000036: error: OnReturnExpr callback failed
 out/test/spec/return.wast:418: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.13.wasm:000001b: error: type mismatch in return, expected [i32] but got []
   000001b: error: OnReturnExpr callback failed
 out/test/spec/return.wast:427: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.14.wasm:000001b: error: type mismatch in return, expected [i32] but got []
   000001b: error: OnReturnExpr callback failed
 out/test/spec/return.wast:436: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.15.wasm:0000021: error: type mismatch in return, expected [i32] but got []
   0000021: error: OnReturnExpr callback failed
 out/test/spec/return.wast:445: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.16.wasm:000001e: error: type mismatch in return, expected [i32] but got []
   000001e: error: OnReturnExpr callback failed
 out/test/spec/return.wast:454: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.17.wasm:000001e: error: type mismatch in return, expected [i32] but got []
   000001e: error: OnReturnExpr callback failed
 out/test/spec/return.wast:463: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
+  out/test/spec/return/return.18.wasm:000001e: error: type mismatch in return, expected [i32] but got []
   000001e: error: OnReturnExpr callback failed
 out/test/spec/return.wast:472: assert_invalid passed:
-  error: type mismatch in return, expected [f64] but got []
+  out/test/spec/return/return.19.wasm:000001a: error: type mismatch in return, expected [f64] but got []
   000001a: error: OnReturnExpr callback failed
 out/test/spec/return.wast:476: assert_invalid passed:
-  error: type mismatch in return, expected [f64] but got [i64]
+  out/test/spec/return/return.20.wasm:000001b: error: type mismatch in return, expected [f64] but got [i64]
   000001b: error: OnReturnExpr callback failed
 83/83 tests passed.
 ;;; STDOUT ;;)

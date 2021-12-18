@@ -186,115 +186,115 @@ out/test/spec/align.wast:299: assert_malformed passed:
   (module (memory 0) (func (f64.store align=7 (i32.const 0) (f32.const 0))))
                                       ^^^^^^^
 out/test/spec/align.wast:306: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.69.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:310: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.70.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:314: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.71.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:318: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.72.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:322: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.73.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:326: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.74.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:330: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.75.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:334: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.76.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:338: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.77.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:342: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.78.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:346: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.79.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:350: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/align/align.80.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:354: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.81.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:358: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/align/align.82.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:363: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.83.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:367: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.84.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:371: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.85.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:375: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.86.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:379: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.87.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:383: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.88.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:387: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.89.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:391: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.90.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:395: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.91.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:399: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.92.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:403: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.93.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:407: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/align/align.94.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:411: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.95.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:415: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/align/align.96.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/align.wast:420: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.97.wasm:0000023: error: alignment must not be larger than natural alignment (1)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/align.wast:424: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.98.wasm:0000023: error: alignment must not be larger than natural alignment (2)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/align.wast:428: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.99.wasm:0000023: error: alignment must not be larger than natural alignment (4)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/align.wast:432: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/align/align.100.wasm:0000023: error: alignment must not be larger than natural alignment (1)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/align.wast:436: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/align/align.101.wasm:0000023: error: alignment must not be larger than natural alignment (2)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/align.wast:440: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.102.wasm:0000023: error: alignment must not be larger than natural alignment (4)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/align.wast:444: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/align/align.103.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/align.wast:448: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/align/align.104.wasm:0000026: error: alignment must not be larger than natural alignment (4)
   0000026: error: OnStoreExpr callback failed
 out/test/spec/align.wast:452: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/align/align.105.wasm:000002a: error: alignment must not be larger than natural alignment (8)
   000002a: error: OnStoreExpr callback failed
 out/test/spec/align.wast:864: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
 131/131 tests passed.

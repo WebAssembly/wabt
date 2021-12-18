@@ -15,6 +15,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-error: Unexpected instruction after end of function
-000001a: error: OnOpcode callback failed
+out/test/regress/regress-28/regress-28.wasm:000001b: error: type mismatch at end of function, expected [] but got [any]
+000001c: error: EndFunctionBody callback failed
 ;;; STDERR ;;)

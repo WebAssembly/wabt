@@ -2,4 +2,5 @@
 ;;; ARGS: --enable-exceptions
 (module
   (tag (param i32 i32))
-  (export "my_tag" (tag 0)))
+  (export "my_tag" (tag 0))
+  (tag (export "my_tag_2") (param i32)))

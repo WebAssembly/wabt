@@ -51,7 +51,7 @@ section("linking") {
     str("global_sym")
 
     type[1]
-    flags[4]
+    flags[leb_i32(260)]
     str("data_sym")
     segment[1]
     offset[2]
@@ -107,7 +107,7 @@ Custom:
   - symbol table [count=4]
    - 0: F <func_sym> func=0 [ binding=weak vis=default ]
    - 1: G <global_sym> global=0 [ binding=local vis=default ]
-   - 2: D <data_sym> segment=1 offset=2 size=1 [ binding=global vis=hidden ]
+   - 2: D <data_sym> segment=1 offset=2 size=1 [ tls binding=global vis=hidden ]
    - 3: F <func_sym> func=0 [ undefined binding=global vis=default ]
   - comdat groups [count=2]
    - comdat1: [count=1]

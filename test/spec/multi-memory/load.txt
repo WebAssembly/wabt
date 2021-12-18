@@ -1,0 +1,196 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/load.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/load.wast:278: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.4.wat:1:43: error: unexpected token "i32.load32", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load32 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:285: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.5.wat:1:43: error: unexpected token "i32.load32_u", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load32_u (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:292: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.6.wat:1:43: error: unexpected token "i32.load32_s", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load32_s (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:299: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.7.wat:1:43: error: unexpected token "i32.load64", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:306: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.8.wat:1:43: error: unexpected token "i32.load64_u", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load64_u (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:313: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.9.wat:1:43: error: unexpected token "i32.load64_s", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load64_s (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:321: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.10.wat:1:43: error: unexpected token "i64.load64", expected an instr.
+  (memory 1)(func (param i32) (result i64) (i64.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:328: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.11.wat:1:43: error: unexpected token "i64.load64_u", expected an instr.
+  (memory 1)(func (param i32) (result i64) (i64.load64_u (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:335: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.12.wat:1:43: error: unexpected token "i64.load64_s", expected an instr.
+  (memory 1)(func (param i32) (result i64) (i64.load64_s (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:343: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.13.wat:1:43: error: unexpected token "f32.load32", expected an instr.
+  (memory 1)(func (param i32) (result f32) (f32.load32 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:350: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.14.wat:1:43: error: unexpected token "f32.load64", expected an instr.
+  (memory 1)(func (param i32) (result f32) (f32.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:358: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.15.wat:1:43: error: unexpected token "f64.load32", expected an instr.
+  (memory 1)(func (param i32) (result f64) (f64.load32 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:365: assert_malformed passed:
+  out/test/spec/multi-memory/load/load.16.wat:1:43: error: unexpected token "f64.load64", expected an instr.
+  (memory 1)(func (param i32) (result f64) (f64.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/multi-memory/load.wast:376: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.17.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:380: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.18.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:384: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.19.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:388: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.20.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:392: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.21.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:396: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.22.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:400: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.23.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:404: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.24.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:408: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.25.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:412: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.26.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:416: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.27.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:420: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.28.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:424: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.29.wasm:0000021: error: type mismatch at end of function, expected [] but got [f32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:428: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.30.wasm:0000021: error: type mismatch at end of function, expected [] but got [f64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/load.wast:435: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.31.wasm:0000025: error: type mismatch in i32.load, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:436: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.32.wasm:0000025: error: type mismatch in i32.load8_s, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:437: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.33.wasm:0000025: error: type mismatch in i32.load8_u, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:438: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.34.wasm:0000025: error: type mismatch in i32.load16_s, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:439: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.35.wasm:0000025: error: type mismatch in i32.load16_u, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:440: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.36.wasm:0000025: error: type mismatch in i64.load, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:441: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.37.wasm:0000025: error: type mismatch in i64.load8_s, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:442: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.38.wasm:0000025: error: type mismatch in i64.load8_u, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:443: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.39.wasm:0000025: error: type mismatch in i64.load16_s, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:444: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.40.wasm:0000025: error: type mismatch in i64.load16_u, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:445: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.41.wasm:0000025: error: type mismatch in i64.load32_s, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:446: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.42.wasm:0000025: error: type mismatch in i64.load32_u, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:447: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.43.wasm:0000025: error: type mismatch in f32.load, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:448: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.44.wasm:0000025: error: type mismatch in f64.load, expected [i32] but got [f32]
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:452: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.45.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:461: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.46.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:471: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.47.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:481: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.48.wasm:0000025: error: type mismatch in i32.load, expected [i32] but got []
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:491: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.49.wasm:0000028: error: type mismatch in i32.load, expected [i32] but got []
+  0000028: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:501: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.50.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:511: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.51.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:521: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.52.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
+  0000023: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:531: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.53.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:540: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.54.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:549: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.55.wasm:0000025: error: type mismatch in i32.load, expected [i32] but got []
+  0000025: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:559: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.56.wasm:000003c: error: type mismatch in i32.load, expected [i32] but got []
+  000003c: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:576: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.57.wasm:0000021: error: type mismatch in i32.load, expected [i32] but got []
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:586: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.58.wasm:0000021: error: type mismatch in i32.load, expected [i32] but got []
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:596: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.59.wasm:0000027: error: type mismatch in i32.load, expected [i32] but got []
+  0000027: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:606: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.60.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:615: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.61.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
+  000001f: error: OnLoadExpr callback failed
+out/test/spec/multi-memory/load.wast:624: assert_invalid passed:
+  out/test/spec/multi-memory/load/load.62.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
+  000001f: error: OnLoadExpr callback failed
+113/113 tests passed.
+;;; STDOUT ;;)

@@ -1,0 +1,11 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/table-sub.wast
+(;; STDOUT ;;;
+out/test/spec/table-sub.wast:2: assert_invalid passed:
+  out/test/spec/table-sub/table-sub.0.wasm:000002a: error: type mismatch at table.copy. got externref, expected funcref
+  000002a: error: OnTableCopyExpr callback failed
+out/test/spec/table-sub.wast:13: assert_invalid passed:
+  out/test/spec/table-sub/table-sub.1.wasm:000002d: error: type mismatch at table.init. got externref, expected funcref
+  000002d: error: OnTableInitExpr callback failed
+2/2 tests passed.
+;;; STDOUT ;;)

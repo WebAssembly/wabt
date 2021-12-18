@@ -1,0 +1,61 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/bulk.wast
+(;; STDOUT ;;;
+fill(i32:1, i32:255, i32:3) =>
+fill(i32:0, i32:48042, i32:2) =>
+fill(i32:0, i32:0, i32:65536) =>
+out/test/spec/bulk.wast:43: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+fill(i32:65536, i32:0, i32:0) =>
+out/test/spec/bulk.wast:52: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+copy(i32:10, i32:0, i32:4) =>
+copy(i32:8, i32:10, i32:4) =>
+copy(i32:10, i32:7, i32:6) =>
+copy(i32:65280, i32:0, i32:256) =>
+copy(i32:65024, i32:65280, i32:256) =>
+copy(i32:65536, i32:0, i32:0) =>
+copy(i32:0, i32:65536, i32:0) =>
+out/test/spec/bulk.wast:108: assert_trap passed: out of bounds memory access: memory.copy out of bound
+out/test/spec/bulk.wast:110: assert_trap passed: out of bounds memory access: memory.copy out of bound
+init(i32:0, i32:1, i32:2) =>
+init(i32:65532, i32:0, i32:4) =>
+out/test/spec/bulk.wast:138: assert_trap passed: out of bounds memory access: memory.init out of bounds
+init(i32:65536, i32:0, i32:0) =>
+init(i32:0, i32:4, i32:0) =>
+out/test/spec/bulk.wast:148: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/bulk.wast:150: assert_trap passed: out of bounds memory access: memory.init out of bounds
+init_passive(i32:1) =>
+drop_passive() =>
+drop_passive() =>
+out/test/spec/bulk.wast:172: assert_trap passed: out of bounds memory access: memory.init out of bounds
+init_passive(i32:0) =>
+drop_active() =>
+out/test/spec/bulk.wast:176: assert_trap passed: out of bounds memory access: memory.init out of bounds
+init_active(i32:0) =>
+out/test/spec/bulk.wast:219: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk.wast:221: assert_trap passed: uninitialized table element
+init(i32:0, i32:1, i32:2) =>
+out/test/spec/bulk.wast:227: assert_trap passed: uninitialized table element
+init(i32:1, i32:2, i32:2) =>
+init(i32:3, i32:0, i32:0) =>
+init(i32:0, i32:4, i32:0) =>
+out/test/spec/bulk.wast:237: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk.wast:239: assert_trap passed: out of bounds table access: table.init out of bounds
+init_passive(i32:1) =>
+drop_passive() =>
+drop_passive() =>
+out/test/spec/bulk.wast:265: assert_trap passed: out of bounds table access: table.init out of bounds
+init_passive(i32:0) =>
+drop_active() =>
+out/test/spec/bulk.wast:269: assert_trap passed: out of bounds table access: table.init out of bounds
+init_active(i32:0) =>
+copy(i32:3, i32:0, i32:3) =>
+copy(i32:0, i32:1, i32:3) =>
+copy(i32:2, i32:0, i32:3) =>
+copy(i32:6, i32:8, i32:2) =>
+copy(i32:8, i32:6, i32:2) =>
+copy(i32:10, i32:0, i32:0) =>
+copy(i32:0, i32:10, i32:0) =>
+out/test/spec/bulk.wast:348: assert_trap passed: out of bounds table access: table.copy out of bounds
+out/test/spec/bulk.wast:350: assert_trap passed: out of bounds table access: table.copy out of bounds
+104/104 tests passed.
+;;; STDOUT ;;)

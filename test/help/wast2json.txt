@@ -20,15 +20,17 @@ options:
       --disable-mutable-globals                Disable Import/export mutable globals
       --disable-saturating-float-to-int        Disable Saturating float-to-int operators
       --disable-sign-extension                 Disable Sign-extension operators
-      --enable-simd                            Enable SIMD support
+      --disable-simd                           Disable SIMD support
       --enable-threads                         Enable Threading support
+      --enable-function-references             Enable Typed function references
       --disable-multi-value                    Disable Multi-value
       --enable-tail-call                       Enable Tail-call support
-      --enable-bulk-memory                     Enable Bulk-memory operations
-      --enable-reference-types                 Enable Reference types (externref)
+      --disable-bulk-memory                    Disable Bulk-memory operations
+      --disable-reference-types                Disable Reference types (externref)
       --enable-annotations                     Enable Custom annotation syntax
       --enable-gc                              Enable Garbage collection
       --enable-memory64                        Enable 64-bit memory
+      --enable-multi-memory                    Enable Multi-memory
       --enable-all                             Enable all features
   -o, --output=FILE                            output JSON file
   -r, --relocatable                            Create a relocatable wasm binary (suitable for linking with e.g. lld)

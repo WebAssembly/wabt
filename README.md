@@ -50,14 +50,15 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 | [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [sign extension][] | `--disable-sign-extension` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [simd][] | `--enable-simd` | | ✓ | ✓ | ✓ | ✓ |
+| [simd][] | `--disable-simd` | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [threads][] | `--enable-threads` | | ✓ | ✓ | ✓ | ✓ |
 | [multi-value][] | `--disable-multi-value` | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [tail-call][] | `--enable-tail-call` | | ✓ | ✓ | ✓ | ✓ |
-| [bulk memory][] | `--enable-bulk-memory` | | ✓ | ✓ | ✓ | ✓ |
-| [reference types][] | `--enable-reference-types` | | ✓ | ✓ | ✓ | ✓ |
+| [bulk memory][] | `--disable-bulk-memory` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [reference types][] | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [annotations][] | `--enable-annotations` | | | ✓ | | |
 | [memory64][] | `--enable-memory64` | | | | | |
+| [multi-memory][] | `--enable-multi-memory` | | ✓ | ✓ | ✓ | ✓ |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
@@ -71,6 +72,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [reference types]: https://github.com/WebAssembly/reference-types
 [annotations]: https://github.com/WebAssembly/annotations
 [memory64]: https://github.com/WebAssembly/memory64
+[multi-memory]: https://github.com/WebAssembly/multi-memory
 
 ## Cloning
 

@@ -1,0 +1,11 @@
+;;; TOOL: wast2json
+;;; ERROR: 1
+(module
+  (func (export "foo") (param i32) (result i32) get_local 0)
+  )
+(assert_exception (invoke "foo" (f32.const 0)))
+(;; STDERR ;;;
+out/test/typecheck/bad-assertexception-type-mismatch.txt:6:44: error: type mismatch for argument 0 of invoke. got f32, expected i32
+(assert_exception (invoke "foo" (f32.const 0)))
+                                           ^
+;;; STDERR ;;)

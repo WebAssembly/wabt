@@ -1,0 +1,61 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+magic
+version
+section("dylink.0") {
+  section(DYLINK_MEM_INFO) {
+    mem_size[5]
+    mem_align[1]
+    table_size[3]
+    table_align[2]
+  }
+
+  section(DYLINK_NEEDED) {
+    needed_count[2]
+    str("libfoo.so")
+    str("libbar.so")
+  }
+
+  section(DYLINK_EXPORT_INFO) {
+    count[2]
+    str("foo")
+    flags[0]
+    str("foo2")
+    flags[0]
+  }
+
+  section(DYLINK_IMPORT_INFO) {
+    count[2]
+    str("env")
+    str("bar")
+    flags[0]
+    str("env")
+    str("baz")
+    flags[0]
+  }
+}
+(;; STDOUT ;;;
+
+dylink0-section.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "dylink.0"
+ - mem_size     : 5
+ - mem_p2align  : 1
+ - table_size   : 3
+ - table_p2align: 2
+ - needed_dynlibs[2]:
+  - libfoo.so
+  - libbar.so
+ - exports[2]:
+  - foo [ binding=global vis=default ]
+  - foo2 [ binding=global vis=default ]
+ - imports[2]:
+  - env.bar [ binding=global vis=default ]
+  - env.baz [ binding=global vis=default ]
+
+Code Disassembly:
+
+;;; STDOUT ;;)

@@ -18,6 +18,7 @@
 #define WABT_WAST_PARSER_H_
 
 #include <array>
+#include <unordered_map>
 
 #include "src/circular-array.h"
 #include "src/error.h"
@@ -91,6 +92,9 @@ class WastParser {
   // folded expressions, plain instructions and block instructions.
   bool PeekMatchExpr();
 
+  // Returns true if the next two tokens are form reference type - (ref $t)
+  bool PeekMatchRefType();
+
   // Returns true if the next token's type is equal to the parameter. If so,
   // then the token is consumed.
   bool Match(TokenType);
@@ -126,17 +130,20 @@ class WastParser {
   Result ParseTextList(std::vector<uint8_t>* out_data);
   bool ParseTextListOpt(std::vector<uint8_t>* out_data);
   Result ParseVarList(VarVector* out_var_list);
-  bool ParseElemExprOpt(ElemExpr* out_elem_expr);
-  bool ParseElemExprListOpt(ElemExprVector* out_list);
-  bool ParseElemExprVarListOpt(ElemExprVector* out_list);
-  Result ParseValueType(Type* out_type);
-  Result ParseValueTypeList(TypeVector* out_type_list);
+  bool ParseElemExprOpt(ExprList* out_elem_expr);
+  bool ParseElemExprListOpt(ExprListVector* out_list);
+  bool ParseElemExprVarListOpt(ExprListVector* out_list);
+  Result ParseValueType(Var* out_type);
+  Result ParseValueTypeList(
+      TypeVector* out_type_list,
+      std::unordered_map<uint32_t, std::string>* type_names);
   Result ParseRefKind(Type* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
   Result ParseQuotedText(std::string* text);
   bool ParseOffsetOpt(Address* offset);
   bool ParseAlignOpt(Address* align);
+  Result ParseMemidx(Location loc, Var* memidx);
   Result ParseLimitsIndex(Limits*);
   Result ParseLimits(Limits*);
   Result ParseNat(uint64_t*, bool is_64);
@@ -164,9 +171,13 @@ class WastParser {
   Result ParseBoundValueTypeList(TokenType,
                                  TypeVector*,
                                  BindingHash*,
+                                 std::unordered_map<uint32_t, std::string>*,
                                  Index binding_index_offset = 0);
-  Result ParseUnboundValueTypeList(TokenType, TypeVector*);
-  Result ParseResultList(TypeVector*);
+  Result ParseUnboundValueTypeList(TokenType,
+                                   TypeVector*,
+                                   std::unordered_map<uint32_t, std::string>*);
+  Result ParseResultList(TypeVector*,
+                         std::unordered_map<uint32_t, std::string>*);
   Result ParseInstrList(ExprList*);
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
@@ -193,11 +204,20 @@ class WastParser {
   template <typename T>
   Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
+  Result ParseMemoryInstrVar(Location, std::unique_ptr<Expr>*);
+  template <typename T>
   Result ParsePlainLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParseMemoryLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParseMemoryExpr(Location, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParseMemoryBinaryExpr(Location, std::unique_ptr<Expr>*);
   Result ParseSimdLane(Location, uint64_t*);
 
   Result ParseCommandList(Script*, CommandPtrVector*);
   Result ParseCommand(Script*, CommandPtr*);
+  Result ParseAssertExceptionCommand(CommandPtr*);
   Result ParseAssertExhaustionCommand(CommandPtr*);
   Result ParseAssertInvalidCommand(CommandPtr*);
   Result ParseAssertMalformedCommand(CommandPtr*);

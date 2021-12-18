@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --enable-bulk-memory
+;;; ARGS: --stdout
 (module
   (memory 0)
   (table 0 anyfunc)

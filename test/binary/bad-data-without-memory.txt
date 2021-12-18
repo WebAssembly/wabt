@@ -1,0 +1,14 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(DATA) {
+  count[1]
+  memory_index[0]
+  offset[i32.const 0 end]
+  data[str("")]
+}
+section(DATACOUNT) { count[1] }
+(;; STDERR ;;;
+000000c: error: no memory to copy data to
+000000c: error: no memory to copy data to
+;;; STDERR ;;)

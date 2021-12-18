@@ -64,6 +64,7 @@ BeginModule(version: 1)
     OnLocalDeclCount(0)
     OnI32ConstExpr(42 (0x2a))
     OnReturnExpr
+    OnEndExpr
     EndFunctionBody(0)
   EndCodeSection
 EndModule

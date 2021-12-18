@@ -86,6 +86,12 @@ void Istream::EmitDropKeep(u32 drop, u32 keep) {
   }
 }
 
+void Istream::EmitCatchDrop(u32 drop) {
+  if (drop > 0) {
+    Emit(Opcode::InterpCatchDrop, drop);
+  }
+}
+
 Istream::Offset Istream::EmitFixupU32() {
   auto result = end();
   EmitInternal(kInvalidOffset);
@@ -493,6 +499,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::DataDrop:
     case Opcode::ElemDrop:
     case Opcode::RefFunc:
+    case Opcode::Throw:
+    case Opcode::Rethrow:
       // Index immediate, 0 operands.
       instr.kind = InstrKind::Imm_Index_Op_0;
       instr.imm_u32 = ReadAt<u32>(offset);
@@ -685,6 +693,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::AtomicFence:
     case Opcode::I32Const:
     case Opcode::InterpAlloca:
+    case Opcode::InterpCatchDrop:
+    case Opcode::InterpAdjustFrameForReturnCall:
       // i32/f32 immediate, 0 operands.
       instr.kind = InstrKind::Imm_I32_Op_0;
       instr.imm_u32 = ReadAt<u32>(offset);
@@ -751,6 +761,7 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_v128 = ReadAt<v128>(offset);
       break;
 
+    case Opcode::CallRef:
     case Opcode::Block:
     case Opcode::Catch:
     case Opcode::CatchAll:
@@ -761,8 +772,6 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::InterpData:
     case Opcode::Invalid:
     case Opcode::Loop:
-    case Opcode::Rethrow:
-    case Opcode::Throw:
     case Opcode::Try:
     case Opcode::ReturnCall:
       // Not used.

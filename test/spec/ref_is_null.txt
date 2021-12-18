@@ -1,0 +1,12 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/ref_is_null.wast
+(;; STDOUT ;;;
+init(externref:1) =>
+deinit() =>
+out/test/spec/ref_is_null.wast:52: assert_invalid passed:
+  out/test/spec/ref_is_null/ref_is_null.1.wasm:000001b: error: type mismatch in ref.is_null, expected reference but got [i32]
+  000001b: error: OnRefIsNullExpr callback failed
+out/test/spec/ref_is_null.wast:56: assert_invalid passed:
+  0000018: error: OnRefIsNullExpr callback failed
+15/15 tests passed.
+;;; STDOUT ;;)

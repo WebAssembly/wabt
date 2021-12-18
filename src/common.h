@@ -32,8 +32,10 @@
 
 #include "config.h"
 
+#include "src/base-types.h"
 #include "src/make-unique.h"
 #include "src/result.h"
+#include "src/string-format.h"
 #include "src/string-view.h"
 #include "src/type.h"
 
@@ -51,30 +53,6 @@
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
 #define WABT_ALIGN_UP_TO_PAGE(x) \
   (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
-
-#define PRIstringview "%.*s"
-#define WABT_PRINTF_STRING_VIEW_ARG(x) \
-  static_cast<int>((x).length()), (x).data()
-
-#define PRItypecode "%s%#x"
-#define WABT_PRINTF_TYPE_CODE(x) \
-  (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int32_t>(x))
-
-#define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
-#define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \
-  va_list args;                                                            \
-  va_list args_copy;                                                       \
-  va_start(args, format);                                                  \
-  va_copy(args_copy, args);                                                \
-  char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];                    \
-  char* buffer = fixed_buf;                                                \
-  size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
-  va_end(args);                                                            \
-  if (len + 1 > sizeof(fixed_buf)) {                                       \
-    buffer = static_cast<char*>(alloca(len + 1));                          \
-    len = wabt_vsnprintf(buffer, len + 1, format, args_copy);              \
-  }                                                                        \
-  va_end(args_copy)
 
 #define WABT_ENUM_COUNT(name) \
   (static_cast<int>(name::Last) - static_cast<int>(name::First) + 1)
@@ -187,14 +165,6 @@ struct v128 {
 
 namespace wabt {
 
-typedef uint32_t Index;    // An index into one of the many index spaces.
-typedef uint64_t Address;  // An address or size in linear memory.
-typedef size_t Offset;     // An offset into a host's file or memory buffer.
-
-static const Address kInvalidAddress = ~0;
-static const Index kInvalidIndex = ~0;
-static const Offset kInvalidOffset = ~0;
-
 template <typename Dst, typename Src>
 Dst WABT_VECTORCALL Bitcast(Src&& value) {
   static_assert(sizeof(Src) == sizeof(Dst), "Bitcast sizes must match.");
@@ -221,22 +191,9 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
-inline std::string WABT_PRINTF_FORMAT(1, 2)
-    StringPrintf(const char* format, ...) {
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-  size_t len = wabt_vsnprintf(nullptr, 0, format, args) + 1;  // For \0.
-  std::vector<char> buffer(len);
-  va_end(args);
-  wabt_vsnprintf(buffer.data(), len, format, args_copy);
-  va_end(args_copy);
-  return std::string(buffer.data(), len - 1);
-}
-
 enum class LabelType {
   Func,
+  InitExpr,
   Block,
   Loop,
   If,
@@ -349,6 +306,13 @@ enum class LinkingEntryType {
   SymbolTable = 8,
 };
 
+enum class DylinkEntryType {
+  MemInfo = 1,
+  Needed = 2,
+  ExportInfo = 3,
+  ImportInfo = 4,
+};
+
 enum class SymbolType {
   Function = 0,
   Data = 1,
@@ -369,7 +333,8 @@ enum class ComdatType {
 #define WABT_SYMBOL_FLAG_EXPORTED 0x20
 #define WABT_SYMBOL_FLAG_EXPLICIT_NAME 0x40
 #define WABT_SYMBOL_FLAG_NO_STRIP 0x80
-#define WABT_SYMBOL_FLAG_MAX 0xff
+#define WABT_SYMBOL_FLAG_TLS 0x100
+#define WABT_SYMBOL_FLAG_MAX 0x1ff
 
 #define WABT_SEGMENT_FLAG_STRINGS 0x1
 #define WABT_SEGMENT_FLAG_TLS 0x2

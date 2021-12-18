@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --fold-exprs --enable-reference-types
+;;; ARGS: --stdout --fold-exprs
 
 (module
   (table $t 1 externref)

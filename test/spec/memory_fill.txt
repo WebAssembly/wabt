@@ -1,0 +1,208 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/memory_fill.wast
+(;; STDOUT ;;;
+test() =>
+out/test/spec/memory_fill.wast:44: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+out/test/spec/memory_fill.wast:62: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+test() =>
+test() =>
+out/test/spec/memory_fill.wast:118: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+test() =>
+test() =>
+out/test/spec/memory_fill.wast:175: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.8.wasm:000002c: error: memory variable out of range: 0 (max 0)
+  000002c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:181: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.9.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, f32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:188: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.10.wasm:0000032: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, i64]
+  0000032: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:195: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.11.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, f64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:202: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.12.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, i32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:209: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.13.wasm:0000038: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:216: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.14.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:223: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.15.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:230: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.16.wasm:0000032: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, i32]
+  0000032: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:237: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.17.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, f32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:244: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.18.wasm:0000032: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, i64]
+  0000032: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:251: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.19.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, f64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:258: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.20.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, i32]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:265: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.21.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, f32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:272: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.22.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, i64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:279: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.23.wasm:0000040: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, f64]
+  0000040: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:286: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.24.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, i32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:293: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.25.wasm:0000038: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:300: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.26.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:307: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.27.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:314: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.28.wasm:0000038: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, i32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:321: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.29.wasm:000003b: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, f32]
+  000003b: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:328: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.30.wasm:0000038: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, i64]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:335: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.31.wasm:000003f: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, f64]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:342: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.32.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, i32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:349: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.33.wasm:0000038: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:356: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.34.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:363: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.35.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:370: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.36.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, i32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:377: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.37.wasm:000003f: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, f32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:384: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.38.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, i64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:391: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.39.wasm:0000043: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, f64]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:398: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.40.wasm:0000032: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, i32]
+  0000032: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:405: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.41.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, f32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:412: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.42.wasm:0000032: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, i64]
+  0000032: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:419: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.43.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, f64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:426: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.44.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, i32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:433: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.45.wasm:0000038: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:440: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.46.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:447: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.47.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:454: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.48.wasm:0000032: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, i32]
+  0000032: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:461: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.49.wasm:0000035: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, f32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:468: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.50.wasm:0000032: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, i64]
+  0000032: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:475: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.51.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, f64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:482: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.52.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, i32]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:489: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.53.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, f32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:496: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.54.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, i64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:503: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.55.wasm:0000040: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, f64]
+  0000040: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:510: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.56.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, i32]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:517: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.57.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, f32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:524: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.58.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, i64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:531: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.59.wasm:0000040: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, f64]
+  0000040: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:538: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.60.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, i32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:545: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.61.wasm:000003f: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, f32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:552: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.62.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, i64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:559: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.63.wasm:0000043: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, f64]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:566: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.64.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, i32]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:573: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.65.wasm:000003c: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, f32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:580: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.66.wasm:0000039: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, i64]
+  0000039: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:587: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.67.wasm:0000040: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, f64]
+  0000040: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:594: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.68.wasm:0000040: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, i32]
+  0000040: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:601: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.69.wasm:0000043: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, f32]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:608: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.70.wasm:0000040: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, i64]
+  0000040: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:615: assert_invalid passed:
+  out/test/spec/memory_fill/memory_fill.71.wasm:0000047: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, f64]
+  0000047: error: OnMemoryFillExpr callback failed
+out/test/spec/memory_fill.wast:638: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+out/test/spec/memory_fill.wast:660: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+out/test/spec/memory_fill.wast:682: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+89/89 tests passed.
+;;; STDOUT ;;)

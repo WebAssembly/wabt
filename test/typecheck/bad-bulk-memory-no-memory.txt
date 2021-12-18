@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-bulk-memory
 ;;; ERROR: 1
 
 (module
@@ -10,16 +9,19 @@
   )
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-bulk-memory-no-memory.txt:7:41: error: memory variable out of range: 0 (max 0)
+out/test/typecheck/bad-bulk-memory-no-memory.txt:6:41: error: memory variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
                                         ^^^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-memory.txt:7:53: error: data_segment variable out of range: 0 (max 0)
+out/test/typecheck/bad-bulk-memory-no-memory.txt:6:53: error: data_segment variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
                                                     ^
-out/test/typecheck/bad-bulk-memory-no-memory.txt:8:41: error: memory variable out of range: 0 (max 0)
+out/test/typecheck/bad-bulk-memory-no-memory.txt:7:41: error: memory variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 memory.copy
                                         ^^^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-memory.txt:9:41: error: memory variable out of range: 0 (max 0)
+out/test/typecheck/bad-bulk-memory-no-memory.txt:7:41: error: memory variable out of range: 0 (max 0)
+    i32.const 0 i32.const 0 i32.const 0 memory.copy
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-no-memory.txt:8:41: error: memory variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 memory.fill
                                         ^^^^^^^^^^^
 ;;; STDERR ;;)

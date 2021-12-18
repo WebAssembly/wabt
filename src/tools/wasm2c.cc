@@ -24,6 +24,7 @@
 #include "src/binary-reader.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
+#include "src/filenames.h"
 #include "src/generate-names.h"
 #include "src/ir.h"
 #include "src/option-parser.h"
@@ -88,9 +89,11 @@ static void ParseOptions(int argc, char** argv) {
 #undef WABT_FEATURE
 
   if (any_non_default_feature) {
-    fprintf(stderr, "wasm2c currently support only default feature flags.\n");
+    fprintf(stderr,
+            "wasm2c currently only supports a fixed set of features.\n");
     exit(1);
   }
+  s_features.disable_bulk_memory();
 }
 
 // TODO(binji): copied from binary-writer-spec.cc, probably should share.
@@ -137,12 +140,13 @@ int ProgramMain(int argc, char** argv) {
 
       if (Succeeded(result)) {
         if (!s_outfile.empty()) {
-          std::string header_name =
+          std::string header_name_full =
               strip_extension(s_outfile).to_string() + ".h";
           FileStream c_stream(s_outfile.c_str());
-          FileStream h_stream(header_name);
-          result = WriteC(&c_stream, &h_stream, header_name.c_str(), &module,
-                          s_write_c_options);
+          FileStream h_stream(header_name_full);
+          string_view header_name = GetBasename(header_name_full);
+          result = WriteC(&c_stream, &h_stream, header_name.to_string().c_str(),
+                          &module, s_write_c_options);
         } else {
           FileStream stream(stdout);
           result =

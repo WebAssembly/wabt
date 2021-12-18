@@ -44,7 +44,7 @@
 000001e: 20                                        ; local.get
 000001f: 00                                        ; local index
 0000020: 40                                        ; memory.grow
-0000021: 00                                        ; memory.grow reserved
+0000021: 00                                        ; memory.grow memidx
 0000022: 1a                                        ; drop
 0000023: 0b                                        ; end
 000001c: 07                                        ; FIXUP func body size

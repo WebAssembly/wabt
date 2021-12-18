@@ -135,6 +135,7 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "assert_return",
       "assert_trap",
       "assert_exhaustion",
+      "assert_exception",
   };
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) == kCommandTypeCount);
 
@@ -159,7 +160,7 @@ void BinaryWriterSpec::WriteVar(const Var& var) {
 void BinaryWriterSpec::WriteTypeObject(Type type) {
   json_stream_->Writef("{");
   WriteKey("type");
-  WriteString(type.GetName());
+  WriteString(type.GetName().c_str());
   json_stream_->Writef("}");
 }
 
@@ -258,7 +259,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("v128");
       WriteSeparator();
       WriteKey("lane_type");
-      WriteString(const_.lane_type().GetName());
+      WriteString(const_.lane_type().GetName().c_str());
       WriteSeparator();
       WriteKey("value");
       json_stream_->Writef("[");
@@ -577,6 +578,17 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteKey("expected");
         WriteActionResultType(*assert_exhaustion_command->action);
+        break;
+      }
+
+      case CommandType::AssertException: {
+        auto* assert_exception_command = cast<AssertExceptionCommand>(command);
+        WriteLocation(assert_exception_command->action->loc);
+        WriteSeparator();
+        WriteAction(*assert_exception_command->action);
+        WriteSeparator();
+        WriteKey("expected");
+        WriteActionResultType(*assert_exception_command->action);
         break;
       }
     }

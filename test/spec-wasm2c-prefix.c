@@ -105,6 +105,30 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                         \
   } while (0)
 
+#define MULTI_T_UNPACK_(...) __VA_ARGS__
+#define MULTI_T_UNPACK(arg) MULTI_T_UNPACK_ arg
+#define MULTI_i32 "%u"
+#define MULTI_i64 "%" PRIu64
+#define MULTI_f32 "%.9g"
+#define MULTI_f64 "%.17g"
+#define ASSERT_RETURN_MULTI_T(type, fmt, f, compare, expected, found)    \
+  do {                                                                   \
+    g_tests_run++;                                                       \
+    if (wasm_rt_impl_try() != 0) {                                       \
+      error(__FILE__, __LINE__, #f " trapped.\n");                       \
+    } else {                                                             \
+      type actual = f;                                                   \
+      if (compare) {                                                     \
+        g_tests_passed++;                                                \
+      } else {                                                           \
+        error(__FILE__, __LINE__,                                        \
+              "in " #f ": expected " fmt ", got " fmt ".\n",             \
+              MULTI_T_UNPACK(expected), MULTI_T_UNPACK(found));          \
+      }                                                                  \
+    }                                                                    \
+  } while (0)
+
+
 #define ASSERT_RETURN_I32(f, expected) ASSERT_RETURN_T(u32, "u", f, expected)
 #define ASSERT_RETURN_I64(f, expected) ASSERT_RETURN_T(u64, PRIu64, f, expected)
 #define ASSERT_RETURN_F32(f, expected) ASSERT_RETURN_T(f32, ".9g", f, expected)
@@ -126,6 +150,9 @@ static bool is_equal_u32(u32 x, u32 y) {
 static bool is_equal_u64(u64 x, u64 y) {
   return x == y;
 }
+
+#define is_equal_i32 is_equal_u32
+#define is_equal_i64 is_equal_u64
 
 static bool is_equal_f32(f32 x, f32 y) {
   u32 ux, uy;

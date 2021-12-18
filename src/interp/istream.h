@@ -96,14 +96,15 @@ class Istream {
   using SerializedOpcode = u32;  // TODO: change to u16
   using Offset = u32;
   static const Offset kInvalidOffset = ~0;
-  // Each br_table entry is made up of two instructions:
+  // Each br_table entry is made up of three instructions:
   //
   //   interp_drop_keep $drop $keep
+  //   interp_catch_drop $catches
   //   br $label
   //
   // Each opcode is a SerializedOpcode, and each immediate is a u32.
   static const Offset kBrTableEntrySize =
-      sizeof(SerializedOpcode) * 2 + 3 * sizeof(u32);
+      sizeof(SerializedOpcode) * 3 + 4 * sizeof(u32);
 
   // Emit API.
   void Emit(u32);
@@ -115,6 +116,7 @@ class Istream {
   void Emit(Opcode::Enum, u32, u32);
   void Emit(Opcode::Enum, u32, u32, u8);
   void EmitDropKeep(u32 drop, u32 keep);
+  void EmitCatchDrop(u32 drop);
 
   Offset EmitFixupU32();
   void ResolveFixupU32(Offset);

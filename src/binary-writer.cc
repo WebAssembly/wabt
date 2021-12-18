@@ -56,7 +56,11 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type, const char* desc) {
-  WriteS32Leb128(stream, type, desc ? desc : type.GetName());
+  WriteS32Leb128(stream, type, desc ? desc : type.GetName().c_str());
+  if (type.IsReferenceWithIndex()) {
+    WriteS32Leb128(stream, type.GetReferenceIndex(),
+                   desc ? desc : type.GetName().c_str());
+  }
 }
 
 void WriteLimits(Stream* stream, const Limits* limits) {
@@ -389,6 +393,10 @@ class BinaryWriter {
   template <typename T>
   void WriteLoadStoreExpr(const Func* func, const Expr* expr, const char* desc);
   template <typename T>
+  void WriteMemoryLoadStoreExpr(const Func* func,
+                                const Expr* expr,
+                                const char* desc);
+  template <typename T>
   void WriteSimdLoadStoreLaneExpr(const Func* func,
                                   const Expr* expr,
                                   const char* desc);
@@ -665,6 +673,24 @@ void BinaryWriter::WriteLoadStoreExpr(const Func* func,
 }
 
 template <typename T>
+void BinaryWriter::WriteMemoryLoadStoreExpr(const Func* func,
+                                            const Expr* expr,
+                                            const char* desc) {
+  auto* typed_expr = cast<T>(expr);
+  WriteOpcode(stream_, typed_expr->opcode);
+  Address align = typed_expr->opcode.GetAlignment(typed_expr->align);
+  Index memidx = module_->GetMemoryIndex(typed_expr->memidx);
+  if (memidx != 0) {
+    stream_->WriteU8(log2_u32(align) | (1 << 6), "alignment");
+    WriteU32Leb128(stream_, typed_expr->offset, desc);
+    WriteU32Leb128(stream_, memidx, "memidx");
+  } else {
+    stream_->WriteU8(log2_u32(align), "alignment");
+    WriteU32Leb128(stream_, typed_expr->offset, desc);
+  }
+};
+
+template <typename T>
 void BinaryWriter::WriteSimdLoadStoreLaneExpr(const Func* func,
                                               const Expr* expr,
                                               const char* desc) {
@@ -758,6 +784,10 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteTableNumberWithReloc(table_index, "table index");
       break;
     }
+    case ExprType::CallRef:{
+      WriteOpcode(stream_, Opcode::CallRef);
+      break;
+    }
     case ExprType::ReturnCallIndirect: {
       Index sig_index =
           module_->GetFuncTypeIndex(cast<ReturnCallIndirectExpr>(expr)->decl);
@@ -832,7 +862,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     }
     case ExprType::Load:
-      WriteLoadStoreExpr<LoadExpr>(func, expr, "load offset");
+      WriteMemoryLoadStoreExpr<LoadExpr>(func, expr, "load offset");
       break;
     case ExprType::LocalGet: {
       Index index = GetLocalIndex(func, cast<LocalGetExpr>(expr)->var);
@@ -858,11 +888,16 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteExprList(func, cast<LoopExpr>(expr)->block.exprs);
       WriteOpcode(stream_, Opcode::End);
       break;
-    case ExprType::MemoryCopy:
+    case ExprType::MemoryCopy: {
+      Index srcmemidx =
+          module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->srcmemidx);
+      Index destmemidx =
+          module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->destmemidx);
       WriteOpcode(stream_, Opcode::MemoryCopy);
-      WriteU32Leb128(stream_, 0, "memory.copy reserved");
-      WriteU32Leb128(stream_, 0, "memory.copy reserved");
+      WriteU32Leb128(stream_, srcmemidx, "memory.copy srcmemidx");
+      WriteU32Leb128(stream_, destmemidx, "memory.copy destmemidx");
       break;
+    }
     case ExprType::DataDrop: {
       Index index = module_->GetDataSegmentIndex(cast<DataDropExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::DataDrop);
@@ -870,27 +905,38 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       has_data_segment_instruction_ = true;
       break;
     }
-    case ExprType::MemoryFill:
+    case ExprType::MemoryFill: {
+      Index memidx =
+          module_->GetMemoryIndex(cast<MemoryFillExpr>(expr)->memidx);
       WriteOpcode(stream_, Opcode::MemoryFill);
-      WriteU32Leb128(stream_, 0, "memory.fill reserved");
+      WriteU32Leb128(stream_, memidx, "memory.fill memidx");
       break;
-    case ExprType::MemoryGrow:
+    }
+    case ExprType::MemoryGrow: {
+      Index memidx =
+          module_->GetMemoryIndex(cast<MemoryGrowExpr>(expr)->memidx);
       WriteOpcode(stream_, Opcode::MemoryGrow);
-      WriteU32Leb128(stream_, 0, "memory.grow reserved");
+      WriteU32Leb128(stream_, memidx, "memory.grow memidx");
       break;
+    }
     case ExprType::MemoryInit: {
       Index index =
           module_->GetDataSegmentIndex(cast<MemoryInitExpr>(expr)->var);
+      Index memidx =
+          module_->GetMemoryIndex(cast<MemoryInitExpr>(expr)->memidx);
       WriteOpcode(stream_, Opcode::MemoryInit);
       WriteU32Leb128(stream_, index, "memory.init segment");
-      WriteU32Leb128(stream_, 0, "memory.init reserved");
+      WriteU32Leb128(stream_, memidx, "memory.init memidx");
       has_data_segment_instruction_ = true;
       break;
     }
-    case ExprType::MemorySize:
+    case ExprType::MemorySize: {
+      Index memidx =
+          module_->GetMemoryIndex(cast<MemorySizeExpr>(expr)->memidx);
       WriteOpcode(stream_, Opcode::MemorySize);
-      WriteU32Leb128(stream_, 0, "memory.size reserved");
+      WriteU32Leb128(stream_, memidx, "memory.size memidx");
       break;
+    }
     case ExprType::TableCopy: {
       auto* copy_expr = cast<TableCopyExpr>(expr);
       Index dst = module_->GetTableIndex(copy_expr->dst_table);
@@ -986,7 +1032,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     }
     case ExprType::Store:
-      WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
+      WriteMemoryLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);
@@ -1495,25 +1541,16 @@ Result BinaryWriter::WriteModule() {
       // preceeded by length
       WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elems");
       if (flags & SegUseElemExprs) {
-        for (const ElemExpr& elem_expr : segment->elem_exprs) {
-          switch (elem_expr.kind) {
-            case ElemExprKind::RefNull:
-              WriteOpcode(stream_, Opcode::RefNull);
-              WriteType(stream_, elem_expr.type, "elem expr ref.null type");
-              break;
-
-            case ElemExprKind::RefFunc:
-              WriteOpcode(stream_, Opcode::RefFunc);
-              WriteU32Leb128(stream_, module_->GetFuncIndex(elem_expr.var),
-                             "elem expr function index");
-              break;
-          }
-          WriteOpcode(stream_, Opcode::End);
+        for (const ExprList& elem_expr : segment->elem_exprs) {
+          WriteInitExpr(elem_expr);
         }
       } else {
-        for (const ElemExpr& elem_expr : segment->elem_exprs) {
-          assert(elem_expr.kind == ElemExprKind::RefFunc);
-          WriteU32Leb128(stream_, module_->GetFuncIndex(elem_expr.var),
+        for (const ExprList& elem_expr : segment->elem_exprs) {
+          assert(elem_expr.size() == 1);
+          const Expr* expr = &elem_expr.front();
+          assert(expr->type() == ExprType::RefFunc);
+          WriteU32Leb128(stream_,
+                         module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var),
                          "elem function index");
         }
       }
@@ -1521,7 +1558,8 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  if (options_.features.bulk_memory_enabled()) {
+  if (options_.features.bulk_memory_enabled() &&
+      module_->data_segments.size()) {
     // Keep track of the data count section offset so it can be removed if
     // it isn't needed.
     data_count_start_ = stream_->offset();
@@ -1563,7 +1601,7 @@ Result BinaryWriter::WriteModule() {
 
   // Remove the DataCount section if there are no instructions that require it.
   if (options_.features.bulk_memory_enabled() &&
-      !has_data_segment_instruction_) {
+      module_->data_segments.size() && !has_data_segment_instruction_) {
     Offset size = stream_->offset() - data_count_end_;
     if (size) {
       // If the DataCount section was followed by anything, assert that it's
@@ -1596,7 +1634,13 @@ Result BinaryWriter::WriteModule() {
       uint8_t flags = segment->GetFlags(module_);
       stream_->WriteU8(flags, "segment flags");
       if (!(flags & SegPassive)) {
-        assert(module_->GetMemoryIndex(segment->memory_var) == 0);
+        if (options_.features.multi_memory_enabled() &&
+            (flags & SegExplicitIndex)) {
+          WriteU32Leb128(stream_, module_->GetMemoryIndex(segment->memory_var),
+                         "memidx");
+        } else {
+          assert(module_->GetMemoryIndex(segment->memory_var) == 0);
+        }
         WriteInitExpr(segment->offset);
       }
       WriteU32Leb128(stream_, segment->data.size(), "data segment size");
@@ -1652,6 +1696,7 @@ Result BinaryWriter::WriteModule() {
                             NameSectionSubsection::ElemSegment);
     WriteNames<DataSegment>(module_->data_segments,
                             NameSectionSubsection::DataSegment);
+    WriteNames<Tag>(module_->tags, NameSectionSubsection::Tag);
 
     EndSection();
   }

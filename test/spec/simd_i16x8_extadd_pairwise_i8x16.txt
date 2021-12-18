@@ -1,0 +1,17 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_i16x8_extadd_pairwise_i8x16.wast
+(;; STDOUT ;;;
+out/test/spec/simd_i16x8_extadd_pairwise_i8x16.wast:47: assert_invalid passed:
+  out/test/spec/simd_i16x8_extadd_pairwise_i8x16/simd_i16x8_extadd_pairwise_i8x16.1.wasm:000001c: error: type mismatch in i16x8.extadd_pairwise_i8x16_s, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd_i16x8_extadd_pairwise_i8x16.wast:48: assert_invalid passed:
+  out/test/spec/simd_i16x8_extadd_pairwise_i8x16/simd_i16x8_extadd_pairwise_i8x16.2.wasm:000001c: error: type mismatch in i16x8.extadd_pairwise_i8x16_u, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd_i16x8_extadd_pairwise_i8x16.wast:53: assert_invalid passed:
+  out/test/spec/simd_i16x8_extadd_pairwise_i8x16/simd_i16x8_extadd_pairwise_i8x16.3.wasm:000001a: error: type mismatch in i16x8.extadd_pairwise_i8x16_s, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+out/test/spec/simd_i16x8_extadd_pairwise_i8x16.wast:61: assert_invalid passed:
+  out/test/spec/simd_i16x8_extadd_pairwise_i8x16/simd_i16x8_extadd_pairwise_i8x16.4.wasm:000001a: error: type mismatch in i16x8.extadd_pairwise_i8x16_u, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+20/20 tests passed.
+;;; STDOUT ;;)

@@ -8,7 +8,7 @@
       tee_local 0
     end))
 (;; STDERR ;;;
-out/test/regress/regress-10.txt:9:5: error: type mismatch in block, expected [] but got [i32]
+out/test/regress/regress-10.txt:9:5: error: type mismatch at end of block, expected [] but got [i32]
     end))
     ^^^
 ;;; STDERR ;;)
