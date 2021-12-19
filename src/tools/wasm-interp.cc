@@ -299,8 +299,6 @@ static Result ReadAndRunModule(const char* module_filename) {
     s_stderr_stream.get()->Writef("wasi support not compiled in\n");
     return Result::Error;
 #endif
-  } else {
-    BindImports(module, imports);
   }
   BindImports(module, imports);
 
