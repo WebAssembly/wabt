@@ -3,7 +3,7 @@
 (module
   (type $t (func))
   (type $t2 (func (param f32 f32) (result f32)))
-  (table 1 anyfunc)
+  (table 1 funcref)
 
   (func $f
     return_call $f)

@@ -12,10 +12,10 @@
   (global f32 (f32.const 3))
   (global f64 (f64.const 4))
 
-  (global i32 (get_global 0))
-  (global i64 (get_global 1))
-  (global f32 (get_global 2))
-  (global f64 (get_global 3))
+  (global i32 (global.get 0))
+  (global i64 (global.get 1))
+  (global f32 (global.get 2))
+  (global f64 (global.get 3))
 
   (func $foo)
   (global externref (ref.null extern))

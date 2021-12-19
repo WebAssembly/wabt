@@ -17,7 +17,7 @@
     f32.store)
 
   (func $fold-current-memory (result i32)
-    current_memory
+    memory.size
     i64.const 1
     i64.add
     drop
@@ -26,7 +26,7 @@
   (func $fold-grow-memory (result i32)
     i64.const 1
     i64.const 2
-    grow_memory
+    memory.grow
     i64.lt_s))
 (;; STDOUT ;;;
 (module

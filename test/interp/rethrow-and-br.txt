@@ -4,7 +4,7 @@
   (tag $e1)
   (tag $e2)
   (type $helper-type (func (result i32)))
-  (table anyfunc (elem $helper))
+  (table funcref (elem $helper))
   (func (export "rethrow-br") (result i32)
     (try (result i32)
       (do

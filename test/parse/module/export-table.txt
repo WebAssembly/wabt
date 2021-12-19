@@ -1,4 +1,4 @@
 ;;; TOOL: wat2wasm
 (module
-  (table 0 anyfunc)
+  (table 0 funcref)
   (export "my_table" (table 0)))

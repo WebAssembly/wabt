@@ -3,7 +3,7 @@
 (module
   (type $t (func (param i32) (result i32)))
   (func $f (type $t) (i32.const 0))
-  (table anyfunc (elem $f))
+  (table funcref (elem $f))
   (func
     f32.const 0
     i32.const 0

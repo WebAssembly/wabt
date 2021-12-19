@@ -4,7 +4,7 @@
   (func
     (local i32)
     i32.const 0
-    tee_local 0
+    local.tee 0
     drop))
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

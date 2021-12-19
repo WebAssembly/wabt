@@ -4,9 +4,9 @@
 ;; was any name at all.
 (module
   (func (param $p i32)
-    (get_local $n)))
+    (local.get $n)))
 (;; STDERR ;;;
 out/test/regress/regress-4.txt:7:16: error: undefined local variable "$n"
-    (get_local $n)))
+    (local.get $n)))
                ^^
 ;;; STDERR ;;)

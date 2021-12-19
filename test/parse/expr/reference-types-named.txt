@@ -8,7 +8,7 @@
   )
   (func (param externref)
     i32.const 0
-    get_local 0
+    local.get 0
     table.set $foo
   )
   (func (result i32)

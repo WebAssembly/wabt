@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 (module
   (func $bar (param f32) (result f32) 
-    get_local 0)
+    local.get 0)
   (export "bar" (func $bar)))
 
 ;; NOT ok to use more complex exprs

@@ -88,10 +88,10 @@ typedef enum {
   WASM_RT_F64,
 } wasm_rt_type_t;
 
-/** A function type for all `anyfunc` functions in a Table. All functions are
+/** A function type for all `funcref` functions in a Table. All functions are
  * stored in this canonical form, but must be cast to their proper signature to
  * call. */
-typedef void (*wasm_rt_anyfunc_t)(void);
+typedef void (*wasm_rt_funcref_t)(void);
 
 /** A single element of a Table. */
 typedef struct {
@@ -99,7 +99,7 @@ typedef struct {
   uint32_t func_type;
   /** The function. The embedder must know the actual C signature of the
    * function and cast to it before calling. */
-  wasm_rt_anyfunc_t func;
+  wasm_rt_funcref_t func;
 } wasm_rt_elem_t;
 
 /** A Memory object. */

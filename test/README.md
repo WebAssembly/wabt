@@ -204,7 +204,7 @@ $ cat > test/my-awesome-test.txt << HERE
 (module
   (export "add2" 0)
   (func (param i32) (result i32)
-    (i32.add (get_local 0) (i32.const 2))))
+    (i32.add (local.get 0) (i32.const 2))))
 (assert_return (invoke "add2" (i32.const 4)) (i32.const 6))
 (assert_return (invoke "add2" (i32.const -2)) (i32.const 0))
 HERE

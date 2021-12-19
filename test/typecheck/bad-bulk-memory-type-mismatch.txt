@@ -4,7 +4,7 @@
 (module
   (memory 1)
   (data "a")
-  (table 1 anyfunc)
+  (table 1 funcref)
   (elem funcref 0)
 
   (func

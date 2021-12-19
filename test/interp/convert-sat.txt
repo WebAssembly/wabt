@@ -1,43 +1,43 @@
 ;;; TOOL: run-interp
 (module
-  (func (export "i32.trunc_s:sat/f32") (result i32)
+  (func (export "i32.trunc_sat_f32_s") (result i32)
     f32.const -100.12345
-    i32.trunc_s:sat/f32)
+    i32.trunc_sat_f32_s)
 
-  (func (export "i32.trunc_u:sat/f32") (result i32)
+  (func (export "i32.trunc_sat_f32_u") (result i32)
     f32.const 3e9
-    i32.trunc_u:sat/f32)
+    i32.trunc_sat_f32_u)
 
-  (func (export "i32.trunc_s:sat/f64") (result i32)
+  (func (export "i32.trunc_sat_f64_s") (result i32)
     f64.const -100.12345
-    i32.trunc_s:sat/f64)
+    i32.trunc_sat_f64_s)
 
-  (func (export "i32.trunc_u:sat/f64") (result i32)
+  (func (export "i32.trunc_sat_f64_u") (result i32)
     f64.const 3e9
-    i32.trunc_u:sat/f64)
+    i32.trunc_sat_f64_u)
 
-  (func (export "i64.trunc_s:sat/f32") (result i64)
+  (func (export "i64.trunc_sat_f32_s") (result i64)
     f32.const -100.12345
-    i64.trunc_s:sat/f32)
+    i64.trunc_sat_f32_s)
 
-  (func (export "i64.trunc_u:sat/f32") (result i64)
+  (func (export "i64.trunc_sat_f32_u") (result i64)
     f32.const 3e9
-    i64.trunc_u:sat/f32)
+    i64.trunc_sat_f32_u)
 
-  (func (export "i64.trunc_s:sat/f64") (result i64)
+  (func (export "i64.trunc_sat_f64_s") (result i64)
     f64.const -100.12345
-    i64.trunc_s:sat/f64)
+    i64.trunc_sat_f64_s)
 
-  (func (export "i64.trunc_u:sat/f64") (result i64)
+  (func (export "i64.trunc_sat_f64_u") (result i64)
     f64.const 3e9
-    i64.trunc_u:sat/f64))
+    i64.trunc_sat_f64_u))
 (;; STDOUT ;;;
-i32.trunc_s:sat/f32() => i32:4294967196
-i32.trunc_u:sat/f32() => i32:3000000000
-i32.trunc_s:sat/f64() => i32:4294967196
-i32.trunc_u:sat/f64() => i32:3000000000
-i64.trunc_s:sat/f32() => i64:18446744073709551516
-i64.trunc_u:sat/f32() => i64:3000000000
-i64.trunc_s:sat/f64() => i64:18446744073709551516
-i64.trunc_u:sat/f64() => i64:3000000000
+i32.trunc_sat_f32_s() => i32:4294967196
+i32.trunc_sat_f32_u() => i32:3000000000
+i32.trunc_sat_f64_s() => i32:4294967196
+i32.trunc_sat_f64_u() => i32:3000000000
+i64.trunc_sat_f32_s() => i64:18446744073709551516
+i64.trunc_sat_f32_u() => i64:3000000000
+i64.trunc_sat_f64_s() => i64:18446744073709551516
+i64.trunc_sat_f64_u() => i64:3000000000
 ;;; STDOUT ;;)

@@ -40,7 +40,7 @@ section(CODE) {
   ;; Test name section.
   func {
     locals[decl_count[1] i32_count[1] i32]
-    get_local 0
+    local.get 0
   }
   ;; Test naming priorities
   ;; If there's a name section name, prefer that over sym/export.

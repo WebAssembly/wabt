@@ -316,8 +316,8 @@ struct AST {
         // Special optimisation: for constant instructions, we can mark these
         // as if they were variables, so they can be re-ordered for free with
         // the above code, without needing new variables!
-        // TODO: this would be nice to also do for get_local and maybe others,
-        // though that needs a way to ensure there's no set_local in between
+        // TODO: this would be nice to also do for local.get and maybe others,
+        // though that needs a way to ensure there's no local.set in between
         // when they get lifted, so complicates matters a bit.
         if (e.type() == ExprType::Const &&
             value_stack_in_variables == value_stack_depth - 1) {

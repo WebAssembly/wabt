@@ -255,7 +255,7 @@ enum class RelocType {
   MemoryAddressSLEB = 4,  // e.g. Memory address in i32.const
   MemoryAddressI32 = 5,   // e.g. Memory address in DATA
   TypeIndexLEB = 6,       // e.g. Immediate type in call_indirect
-  GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
+  GlobalIndexLEB = 7,     // e.g. Immediate of global.get inst
   FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
   SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
   TagIndexLEB = 10,       // Used in throw instructions

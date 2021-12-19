@@ -3,10 +3,10 @@
 (module
   (func
     f32.const 0
-    f32.reinterpret/i32
+    f32.reinterpret_i32
     drop))
 (;; STDERR ;;;
 out/test/typecheck/bad-cast-type-mismatch.txt:6:5: error: type mismatch in f32.reinterpret_i32, expected [i32] but got [f32]
-    f32.reinterpret/i32
+    f32.reinterpret_i32
     ^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

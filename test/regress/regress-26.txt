@@ -4,7 +4,7 @@ magic
 version
 section(TABLE) {
   count[1]
-  anyfunc
+  funcref
   has_max[0]
   initial[0]
 }

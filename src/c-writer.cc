@@ -1122,7 +1122,7 @@ void CWriter::WriteElemInitializers() {
 
       Write(ExternalRef(table->name), ".data[offset + ", i,
             "] = (wasm_rt_elem_t){func_types[", func_type_index,
-            "], (wasm_rt_anyfunc_t)", ExternalPtr(func->name), "};", Newline());
+            "], (wasm_rt_funcref_t)", ExternalPtr(func->name), "};", Newline());
       ++i;
     }
     ++elem_segment_index;

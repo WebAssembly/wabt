@@ -2,7 +2,7 @@
 ;;; ARGS: --disable-reference-types --disable-bulk-memory
 ;;; ERROR: 1
 (module
-  (table 1 anyfunc)
+  (table 1 funcref)
   (func)
   (elem 0))
 (;; STDERR ;;;

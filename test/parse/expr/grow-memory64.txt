@@ -4,5 +4,5 @@
   (memory i64 1)
   (func
     i64.const 100
-    grow_memory
+    memory.grow
     drop))

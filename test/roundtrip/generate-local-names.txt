@@ -4,22 +4,22 @@
   (func (param i32) (param f32)
     (local f64)
     (local i64)
-    get_local 0
+    local.get 0
     drop
-    get_local 1
+    local.get 1
     drop
-    get_local 2
+    local.get 2
     drop
-    get_local 3
+    local.get 3
     drop
     i32.const 1
-    set_local 0
+    local.set 0
     f32.const 1
-    set_local 1
+    local.set 1
     f64.const 1
-    set_local 2
+    local.set 2
     i64.const 1
-    set_local 3))
+    local.set 3))
 (;; STDOUT ;;;
 (module
   (type $t0 (func (param i32 f32)))

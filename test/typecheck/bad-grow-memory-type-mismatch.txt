@@ -4,10 +4,10 @@
   (memory 0)
   (func
     f32.const 100
-    grow_memory
+    memory.grow
     drop))
 (;; STDERR ;;;
 out/test/typecheck/bad-grow-memory-type-mismatch.txt:7:5: error: type mismatch in memory.grow, expected [i32] but got [f32]
-    grow_memory
+    memory.grow
     ^^^^^^^^^^^
 ;;; STDERR ;;)

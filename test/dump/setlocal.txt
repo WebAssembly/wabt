@@ -8,21 +8,21 @@
     ;; f64   6                       7
     (local f64 f32 i64 i32 i32 f32 f64 i64)
     f64.const 0
-    set_local 0
+    local.set 0
     f32.const 0
-    set_local 1
+    local.set 1
     i64.const 0
-    set_local 2
+    local.set 2
     i32.const 0
-    set_local 3
+    local.set 3
     i32.const 0
-    set_local 4
+    local.set 4
     f32.const 0
-    set_local 5
+    local.set 5
     f64.const 0
-    set_local 6
+    local.set 6
     i64.const 0
-    set_local 7))
+    local.set 7))
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION

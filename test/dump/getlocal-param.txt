@@ -3,17 +3,17 @@
 (module
   (func (param i32 f32)
     (local i64 f32 i32 f32)
-    get_local 0
+    local.get 0
     drop
-    get_local 1
+    local.get 1
     drop
-    get_local 2
+    local.get 2
     drop
-    get_local 3
+    local.get 3
     drop
-    get_local 4
+    local.get 4
     drop
-    get_local 5
+    local.get 5
     drop ))
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

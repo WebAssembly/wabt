@@ -4,8 +4,8 @@
   (import "a" "b" (func (param i32) (result i32)))
 
   (func (export "c") (param i64) (result i32)
-    get_local 0
-    i32.wrap/i64)
+    local.get 0
+    i32.wrap_i64)
 
   ;; Make sure that calls are folded properly when referencing generated names
   ;; (there was a bug here).
