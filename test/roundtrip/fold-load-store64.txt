@@ -16,14 +16,14 @@
     f32.const 2
     f32.store)
 
-  (func $fold-current-memory (result i32)
+  (func $fold-memory-size (result i32)
     memory.size
     i64.const 1
     i64.add
     drop
     i32.const 2)
 
-  (func $fold-grow-memory (result i32)
+  (func $fold-memory-grow (result i32)
     i64.const 1
     i64.const 2
     memory.grow

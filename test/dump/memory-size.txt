@@ -46,7 +46,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-current-memory.wasm:	file format wasm 0x1
+memory-size.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

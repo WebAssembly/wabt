@@ -88,7 +88,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-getlocal.wasm:	file format wasm 0x1
+localget.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

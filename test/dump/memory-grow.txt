@@ -52,7 +52,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-grow-memory.wasm:	file format wasm 0x1
+memory-grow.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

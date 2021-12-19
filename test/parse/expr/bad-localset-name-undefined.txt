@@ -4,7 +4,7 @@
           i32.const 0
           local.set $n))
 (;; STDERR ;;;
-out/test/parse/expr/bad-setlocal-name-undefined.txt:5:21: error: undefined local variable "$n"
+out/test/parse/expr/bad-localset-name-undefined.txt:5:21: error: undefined local variable "$n"
           local.set $n))
                     ^^
 ;;; STDERR ;;)

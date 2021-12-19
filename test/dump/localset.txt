@@ -100,7 +100,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-setlocal.wasm:	file format wasm 0x1
+localset.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

@@ -4,14 +4,14 @@
   (global (mut i32) (i32.const 1))
   (global (mut f32) (f32.const 1.5))
 
-  (func $fold-get-global (result i32)
+  (func $fold-global-get (result i32)
     global.get 1
     drop
     global.get 0
     global.get 0
     i32.mul)
 
-  (func $fold-set-global
+  (func $fold-global-set
     global.get 0
     i32.const 1
     i32.add

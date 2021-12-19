@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 (module (func local.get $n))
 (;; STDERR ;;;
-out/test/parse/expr/bad-getlocal-name-undefined.txt:3:25: error: undefined local variable "$n"
+out/test/parse/expr/bad-localget-name-undefined.txt:3:25: error: undefined local variable "$n"
 (module (func local.get $n))
                         ^^
 ;;; STDERR ;;)

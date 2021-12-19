@@ -44,7 +44,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-tee_local.wasm:	file format wasm 0x1
+local-tee.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

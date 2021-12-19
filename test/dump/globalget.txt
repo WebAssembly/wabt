@@ -48,7 +48,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-getglobal.wasm:	file format wasm 0x1
+globalget.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

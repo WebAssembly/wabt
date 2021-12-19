@@ -50,7 +50,7 @@
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-setglobal.wasm:	file format wasm 0x1
+globalset.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
