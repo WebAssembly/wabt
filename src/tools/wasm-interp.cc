@@ -302,7 +302,6 @@ static Result ReadAndRunModule(const char* module_filename) {
   } else {
     BindImports(module, imports);
   }
-  BindImports(module, imports);
 
   Instance::Ptr instance;
   CHECK_RESULT(InstantiateModule(imports, module, &instance));
