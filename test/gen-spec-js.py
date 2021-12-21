@@ -286,7 +286,7 @@ class ModuleExtender(object):
                 self._Constant(arg)
             self.lines.append('call %s' % export[1])
         elif action['type'] == 'get':
-            self.lines.append('get_global %s' % export[1])
+            self.lines.append('global.get %s' % export[1])
         else:
             raise Error('Unexpected action: %s' % action['type'])
 
@@ -294,8 +294,8 @@ class ModuleExtender(object):
         self.lines.extend({
             'i32': [],
             'i64': [],
-            'f32': ['i32.reinterpret/f32'],
-            'f64': ['i64.reinterpret/f64']
+            'f32': ['i32.reinterpret_f32'],
+            'f64': ['i64.reinterpret_f64']
         }[type_])
 
     def _Eq(self, type_):

@@ -4,7 +4,7 @@
   (import "foo" "bar" (func $import (result f32)))
   (func $direct (result i64) (i64.const 0))
   (type $indirect (func (result i64)))
-  (table anyfunc (elem $direct))
+  (table funcref (elem $direct))
 
   (func
     if

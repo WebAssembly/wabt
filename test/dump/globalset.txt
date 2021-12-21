@@ -1,0 +1,61 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v
+(module
+  (global (mut f32) (f32.const 1))
+  (func
+    f32.const 2
+    global.set 0))
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
+; section "Function" (3)
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
+; section "Global" (6)
+0000012: 06                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num globals
+0000015: 7d                                        ; f32
+0000016: 01                                        ; global mutability
+0000017: 43                                        ; f32.const
+0000018: 0000 803f                                 ; f32 literal
+000001c: 0b                                        ; end
+0000013: 09                                        ; FIXUP section size
+; section "Code" (10)
+000001d: 0a                                        ; section code
+000001e: 00                                        ; section size (guess)
+000001f: 01                                        ; num functions
+; function body 0
+0000020: 00                                        ; func body size (guess)
+0000021: 00                                        ; local decl count
+0000022: 43                                        ; f32.const
+0000023: 0000 0040                                 ; f32 literal
+0000027: 24                                        ; global.set
+0000028: 00                                        ; global index
+0000029: 0b                                        ; end
+0000020: 09                                        ; FIXUP func body size
+000001e: 0b                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+globalset.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000021 func[0]:
+ 000022: 43 00 00 00 40             | f32.const 0x1p+1
+ 000027: 24 00                      | global.set 0
+ 000029: 0b                         | end
+;;; STDOUT ;;)

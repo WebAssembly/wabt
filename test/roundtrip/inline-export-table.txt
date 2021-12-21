@@ -3,7 +3,7 @@
 (module
   (func $f1)
   (func $f2)
-  (table $foo anyfunc (elem $f1 $f2))
+  (table $foo funcref (elem $f1 $f2))
   (export "foo" (table $foo)))
 (;; STDOUT ;;;
 (module

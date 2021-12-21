@@ -1,7 +1,7 @@
 ;;; TOOL: wast2json
 ;;; ERROR: 1
 (module
-  (func (param i32) (result i32) get_local 0)
+  (func (param i32) (result i32) local.get 0)
   (export "foo" (func 0)))
 (assert_return (invoke "foo" (i32.const 0)) (f32.const 0))
 (;; STDERR ;;;

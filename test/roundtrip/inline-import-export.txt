@@ -3,7 +3,7 @@
 (module
   (import "mod" "f" (func $f (param i32)))
   (import "mod" "g" (global $g f32))
-  (import "mod" "t" (table $t 1 2 anyfunc))
+  (import "mod" "t" (table $t 1 2 funcref))
   (import "mod" "m" (memory $m 3))
 
   (export "F" (func $f))

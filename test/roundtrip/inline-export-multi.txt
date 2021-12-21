@@ -9,7 +9,7 @@
   (export "global0" (global $global))
   (export "global1" (global $global))
 
-  (table $table 1 1 anyfunc)
+  (table $table 1 1 funcref)
   (export "table0" (table $table))
   (export "table1" (table $table))
 

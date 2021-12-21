@@ -4,22 +4,22 @@
     (local i32 i32)
     ;; loop statements now require an explicit branch to the top
     loop $cont
-      get_local 1
-      get_local 0
+      local.get 1
+      local.get 0
       i32.add
-      set_local 1
-      get_local 0
+      local.set 1
+      local.get 0
       i32.const 1
       i32.add 
-      set_local 0
-      get_local 0
+      local.set 0
+      local.get 0
       i32.const 5
       i32.lt_s
       if
         br $cont
       end
     end
-    get_local 1))
+    local.get 1))
 (;; STDOUT ;;;
 loop() => i32:10
 ;;; STDOUT ;;)

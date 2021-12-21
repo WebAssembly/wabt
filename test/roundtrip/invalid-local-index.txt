@@ -2,7 +2,7 @@
 ;;; ARGS: --stdout --no-check
 (module
   (func
-    set_local 0))
+    local.set 0))
 (;; STDOUT ;;;
 (module
   (type (;0;) (func))

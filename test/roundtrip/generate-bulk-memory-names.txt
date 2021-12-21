@@ -9,7 +9,7 @@
     data.drop 0
   )
 
-  (table 1 anyfunc)
+  (table 1 funcref)
   (elem func 0)
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0

@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 
 (module
-  (table 1 anyfunc)
+  (table 1 funcref)
   (func return_call 0)
   (func i32.const 0 return_call_indirect)
 )

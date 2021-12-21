@@ -3,11 +3,11 @@
 (module
   (func (export "f32_nan") (result f32) f32.const nan)
   (func (export "f32_nan_with_tag") (result f32) f32.const nan:0x1234)
-  (func (export "f32_passthru") (param f32) (result f32) get_local 0)
+  (func (export "f32_passthru") (param f32) (result f32) local.get 0)
 
   (func (export "f64_nan") (result f64) f64.const nan)
   (func (export "f64_nan_with_tag") (result f64) f64.const nan:0x1234)
-  (func (export "f64_passthru") (param f64) (result f64) get_local 0))
+  (func (export "f64_passthru") (param f64) (result f64) local.get 0))
 
 (assert_return (invoke "f32_nan") (f32.const nan:canonical))
 (assert_return (invoke "f32_nan_with_tag") (f32.const nan:arithmetic))

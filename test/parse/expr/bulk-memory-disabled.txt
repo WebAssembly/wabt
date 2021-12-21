@@ -12,7 +12,7 @@
     i32.const 0 i32.const 0 i32.const 0 memory.fill
   )
 
-  (table 1 anyfunc)
+  (table 1 funcref)
   (elem $elem funcref 0)
   (elem funcref (ref.null func))
   (func

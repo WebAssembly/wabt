@@ -76,7 +76,7 @@ for (let i = 1; i <= 15; i++) {
   (memory (data "hi"))
   (type (func (param i32) (result i32)))
   (start 1)
-  (table 0 1 anyfunc)
+  (table 0 1 funcref)
   (func)
   (func (type 1)
     i32.const 42

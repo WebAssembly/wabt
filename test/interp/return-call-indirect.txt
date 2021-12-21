@@ -2,7 +2,7 @@
 ;;; ARGS*: --enable-tail-call
 (module
   (type $iii_i (func (param i32 i32 i32)(result i32)))
-  (table anyfunc (elem $facInd))
+  (table funcref (elem $facInd))
 
   (func (export "facInd10") (result i32)
     i32.const 10
@@ -14,22 +14,22 @@
 (;; Tail call version of factorial, using indirect call ;;)
 (;; fac(Ix,So) => Ix==0?So:fac(Ix-1,So*Ix) ;;)
   (func $facInd (type $iii_i)
-    get_local 0
+    local.get 0
     i32.const 0
     i32.gt_s
     if (result i32)
-      get_local 0
+      local.get 0
       i32.const 1
       i32.sub
-      get_local 1
-      get_local 0
+      local.get 1
+      local.get 0
       i32.mul
-      get_local 2
-      get_local 2
+      local.get 2
+      local.get 2
       return_call_indirect (type $iii_i)
       unreachable
     else
-      get_local 1
+      local.get 1
       return
     end)
 )

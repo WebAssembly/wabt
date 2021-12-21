@@ -3,12 +3,12 @@
 (module
   (import "m" "g" (global $g i32))
   (func)
-  (table 1 anyfunc)
+  (table 1 funcref)
   (memory 1)
 
-  (global i32 (get_global $g))
-  (elem (get_global $g) 0)
-  (data (get_global $g) "hi")
+  (global i32 (global.get $g))
+  (elem (global.get $g) 0)
+  (data (global.get $g) "hi")
 )
 (;; STDOUT ;;;
 (module

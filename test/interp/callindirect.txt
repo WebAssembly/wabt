@@ -7,26 +7,26 @@
      i32.const 1)
 
   (func $nullary (param i32) (result i32)
-    get_local 0
+    local.get 0
     call_indirect (type $v_i))
 
   (type $ii_i (func (param i32 i32) (result i32)))
   (func $add (type $ii_i)
-    get_local 0 
-    get_local 1
+    local.get 0 
+    local.get 1
     i32.add)
   (func $sub (type $ii_i)
-     get_local 0
-     get_local 1 
+     local.get 0
+     local.get 1 
      i32.sub)
 
   (func $binary (param i32 i32 i32) (result i32)
-    get_local 0
-    get_local 1
-    get_local 2
+    local.get 0
+    local.get 1
+    local.get 2
     call_indirect (type $ii_i))
 
-  (table anyfunc (elem $zero $one $add $sub))
+  (table funcref (elem $zero $one $add $sub))
 
   (func (export "test_zero") (result i32)
     i32.const 0

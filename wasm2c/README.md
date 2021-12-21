@@ -17,10 +17,10 @@ Let's look at a simple example of a factorial function.
 
 ```wasm
 (func (export "fac") (param $x i32) (result i32)
-  (if (result i32) (i32.eq (get_local $x) (i32.const 0))
+  (if (result i32) (i32.eq (local.get $x) (i32.const 0))
     (then (i32.const 1))
     (else
-      (i32.mul (get_local $x) (call 0 (i32.sub (get_local $x) (i32.const 1))))
+      (i32.mul (local.get $x) (call 0 (i32.sub (local.get $x) (i32.const 1))))
     )
   )
 )
@@ -237,12 +237,12 @@ typedef enum {
 } wasm_rt_type_t;
 ```
 
-Next is `wasm_rt_anyfunc_t`, the function signature for a generic function
+Next is `wasm_rt_funcref_t`, the function signature for a generic function
 callback. Since a WebAssembly table can contain functions of any given
 signature, it is necessary to convert them to a canonical form:
 
 ```c
-typedef void (*wasm_rt_anyfunc_t)(void);
+typedef void (*wasm_rt_funcref_t)(void);
 ```
 
 Next are the definitions for a table element. `func_type` is a function index
@@ -251,7 +251,7 @@ as returned by `wasm_rt_register_func_type` described below.
 ```c
 typedef struct {
   uint32_t func_type;
-  wasm_rt_anyfunc_t func;
+  wasm_rt_funcref_t func;
 } wasm_rt_elem_t;
 ```
 
@@ -391,14 +391,14 @@ that there is a 1-1 mapping in the output:
 
 ```wasm
 (func $fac (param $x i32) (result i32)
-  get_local $x
+  local.get $x
   i32.const 0
   i32.eq
   if (result i32)
     i32.const 1
   else
-    get_local $x
-    get_local $x
+    local.get $x
+    local.get $x
     i32.const 1
     i32.sub
     call 0
@@ -419,16 +419,16 @@ $ wat-desugar fac-flat.wat --fold -o fac-folded.wat
   (func (;0;) (param i32) (result i32)
     (if (result i32)  ;; label = @1
       (i32.eq
-        (get_local 0)
+        (local.get 0)
         (i32.const 0))
       (then
         (i32.const 1))
       (else
         (i32.mul
-          (get_local 0)
+          (local.get 0)
           (call 0
             (i32.sub
-              (get_local 0)
+              (local.get 0)
               (i32.const 1)))))))
   (export "fac" (func 0))
   (type (;0;) (func (param i32) (result i32))))

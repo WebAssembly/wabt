@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (func 
+          i32.const 0
+          local.set $n))
+(;; STDERR ;;;
+out/test/parse/expr/bad-localset-name-undefined.txt:5:21: error: undefined local variable "$n"
+          local.set $n))
+                    ^^
+;;; STDERR ;;)

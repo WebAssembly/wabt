@@ -2,7 +2,7 @@
 (module
   (func (param externref)
     i32.const 0
-    get_local 0
+    local.get 0
     table.set 0)
 
   (table 1 externref))

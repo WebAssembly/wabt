@@ -9,14 +9,14 @@
         br 1     ;; if branches introduce blocks
       end
       i32.const 1
-      set_local 0    ;; not executed
+      local.set 0    ;; not executed
     end
     i32.const 1  
-    set_local 1
-    get_local 0
+    local.set 1
+    local.get 0
     i32.const 0
     i32.eq
-    get_local 1
+    local.get 1
     i32.const 1
     i32.eq
     i32.add
@@ -32,21 +32,21 @@
           br 2
         end     ;; if branches introduce blocks
         i32.const 1
-        set_local 0    ;; not executed
+        local.set 0    ;; not executed
       end
       i32.const 1
-      set_local 1    ;; not executed
+      local.set 1    ;; not executed
     end
     i32.const 1
-    set_local 2
-    get_local 0
+    local.set 2
+    local.get 0
     i32.const 0
     i32.eq
-    get_local 1
+    local.get 1
     i32.const 0
     i32.eq
     i32.add
-    get_local 2
+    local.get 2
     i32.const 1
     i32.eq
     i32.add
@@ -72,28 +72,28 @@
     (local i32 i32)
     block $exit
       loop $cont
-        get_local 0
+        local.get 0
         i32.const 1
         i32.add
-        set_local 0
-        get_local 0
+        local.set 0
+        local.get 0
         i32.const 5
         i32.ge_s
         if
           br $exit
         end
-        get_local 0
+        local.get 0
         i32.const 4
         i32.eq 
         if 
           (br $cont)
         end
-        get_local 0
-        set_local 1
+        local.get 0
+        local.set 1
         br $cont
       end
     end
-    get_local 1
+    local.get 1
     return)
 )
 (;; STDOUT ;;;

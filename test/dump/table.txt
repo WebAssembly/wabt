@@ -7,7 +7,7 @@
   (func (param i32 i64))
   (func (result f64) 
     f64.const 0)
-  (table 6 6 anyfunc)
+  (table 6 6 funcref)
   (elem (i32.const 0) 1 1)
   (elem (i32.const 2) 0 0 1 2))
 (;; STDERR ;;;

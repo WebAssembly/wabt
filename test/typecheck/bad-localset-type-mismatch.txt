@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (func (local i32)
+    f32.const 0
+    local.set 0))
+(;; STDERR ;;;
+out/test/typecheck/bad-localset-type-mismatch.txt:6:5: error: type mismatch in local.set, expected [i32] but got [f32]
+    local.set 0))
+    ^^^^^^^^^
+;;; STDERR ;;)
