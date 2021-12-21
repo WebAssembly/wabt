@@ -53,8 +53,14 @@ struct Var {
   bool is_index() const { return type_ == VarType::Index; }
   bool is_name() const { return type_ == VarType::Name; }
 
-  Index index() const { assert(is_index()); return index_; }
-  const std::string& name() const { assert(is_name()); return name_; }
+  Index index() const {
+    assert(is_index());
+    return index_;
+  }
+  const std::string& name() const {
+    assert(is_name());
+    return name_;
+  }
 
   void set_index(Index);
   void set_name(std::string&&);
@@ -95,7 +101,10 @@ struct Const {
   }
 
   Type type() const { return type_; }
-  Type lane_type() const { assert(type_ == Type::V128); return lane_type_; }
+  Type lane_type() const {
+    assert(type_ == Type::V128);
+    return lane_type_;
+  }
 
   int lane_count() const {
     switch (lane_type()) {
@@ -117,7 +126,9 @@ struct Const {
   v128 vec128() const { return data_; }
 
   template <typename T>
-  T v128_lane(int lane) const { return data_.To<T>(lane); }
+  T v128_lane(int lane) const {
+    return data_.To<T>(lane);
+  }
 
   void set_u32(uint32_t x) { From(Type::I32, x); }
   void set_u64(uint64_t x) { From(Type::I64, x); }
@@ -132,11 +143,17 @@ struct Const {
   void set_v128_f64(int lane, uint64_t x) { set_v128_lane(lane, Type::F64, x); }
 
   // Only used for expectations. (e.g. wast assertions)
-  void set_f32(ExpectedNan nan) { set_f32(0); set_expected_nan(0, nan); }
-  void set_f64(ExpectedNan nan) { set_f64(0); set_expected_nan(0, nan); }
-  void set_funcref()            { From<uintptr_t>(Type::FuncRef, 0); }
+  void set_f32(ExpectedNan nan) {
+    set_f32(0);
+    set_expected_nan(0, nan);
+  }
+  void set_f64(ExpectedNan nan) {
+    set_f64(0);
+    set_expected_nan(0, nan);
+  }
+  void set_funcref() { From<uintptr_t>(Type::FuncRef, 0); }
   void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
-  void set_null(Type type)      { From<uintptr_t>(type, kRefNullBits); }
+  void set_null(Type type) { From<uintptr_t>(type, kRefNullBits); }
 
   bool is_expected_nan(int lane = 0) const {
     return expected_nan(lane) != ExpectedNan::None;
@@ -178,7 +195,7 @@ struct Const {
   }
 
   Type type_;
-  Type lane_type_;    // Only valid if type_ == Type::V128.
+  Type lane_type_;  // Only valid if type_ == Type::V128.
   v128 data_;
   ExpectedNan nan_[4];
 };
@@ -385,11 +402,7 @@ struct Catch {
 };
 typedef std::vector<Catch> CatchVector;
 
-enum class TryKind {
-  Plain,
-  Catch,
-  Delegate
-};
+enum class TryKind { Plain, Catch, Delegate };
 
 class Expr : public intrusive_list_base<Expr> {
  public:
@@ -614,7 +627,7 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
 
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
  public:
-  explicit ReturnCallIndirectExpr(const Location &loc = Location())
+  explicit ReturnCallIndirectExpr(const Location& loc = Location())
       : ExprMixin<ExprType::ReturnCallIndirect>(loc) {}
 
   FuncDeclaration decl;
@@ -623,7 +636,7 @@ class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
 
 class CallRefExpr : public ExprMixin<ExprType::CallRef> {
  public:
-  explicit CallRefExpr(const Location &loc = Location())
+  explicit CallRefExpr(const Location& loc = Location())
       : ExprMixin<ExprType::CallRef>(loc) {}
 
   // This field is setup only during Validate phase,

@@ -59,7 +59,6 @@ class InterpTest : public ::testing::Test {
   Instance::Ptr inst_;
 };
 
-
 TEST_F(InterpTest, Empty) {
   ASSERT_TRUE(mod_.empty());
   ReadModule({0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00});
@@ -308,18 +307,18 @@ TEST_F(InterpTest, HostFunc_PingPong) {
       0x0b, 0x01, 0x09, 0x00, 0x20, 0x00, 0x41, 0x01, 0x6a, 0x10, 0x00, 0x0b,
   });
 
-  auto host_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-      [&](Thread& thread, const Values& params, Values& results,
-          Trap::Ptr* out_trap) -> Result {
-        auto val = params[0].Get<u32>();
-        if (val < 10) {
-          return GetFuncExport(0)->Call(store_, {Value::Make(val * 2)}, results,
-                                        out_trap);
-        }
-        results[0] = Value::Make(val);
-        return Result::Ok;
-      });
+  auto host_func =
+      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+                    [&](Thread& thread, const Values& params, Values& results,
+                        Trap::Ptr* out_trap) -> Result {
+                      auto val = params[0].Get<u32>();
+                      if (val < 10) {
+                        return GetFuncExport(0)->Call(
+                            store_, {Value::Make(val * 2)}, results, out_trap);
+                      }
+                      results[0] = Value::Make(val);
+                      return Result::Ok;
+                    });
 
   Instantiate({host_func->self()});
 
@@ -328,7 +327,8 @@ TEST_F(InterpTest, HostFunc_PingPong) {
 
   Values results;
   Trap::Ptr trap;
-  Result result = GetFuncExport(0)->Call(store_, {Value::Make(1)}, results, &trap);
+  Result result =
+      GetFuncExport(0)->Call(store_, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());
@@ -368,7 +368,8 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
 
   Values results;
   Trap::Ptr trap;
-  Result result = GetFuncExport(0)->Call(*thread, {Value::Make(1)}, results, &trap);
+  Result result =
+      GetFuncExport(0)->Call(*thread, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());
@@ -551,9 +552,7 @@ TEST_F(InterpTest, Rot13) {
 
 class InterpGCTest : public InterpTest {
  public:
-  void SetUp() override {
-    before_new = store_.object_count();
-  }
+  void SetUp() override { before_new = store_.object_count(); }
 
   void TearDown() override {
     // Reset instance and module, in case they were allocated.

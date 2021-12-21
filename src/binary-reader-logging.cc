@@ -525,8 +525,7 @@ Result BinaryReaderLogging::OnDylinkImport(string_view module,
   return reader_->OnDylinkImport(module, name, flags);
 }
 
-Result BinaryReaderLogging::OnRelocCount(Index count,
-                                         Index section_index) {
+Result BinaryReaderLogging::OnRelocCount(Index count, Index section_index) {
   LOGF("OnRelocCount(count: %" PRIindex ", section: %" PRIindex ")\n", count,
        section_index);
   return reader_->OnRelocCount(count, section_index);
@@ -603,7 +602,7 @@ Result BinaryReaderLogging::OnTableSymbol(Index index,
                                           string_view name,
                                           Index table_index) {
   LOGF("OnTableSymbol(name: " PRIstringview " flags: 0x%x index: %" PRIindex
-           ")\n",
+       ")\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), flags, table_index);
   return reader_->OnTableSymbol(index, flags, name, table_index);
 }

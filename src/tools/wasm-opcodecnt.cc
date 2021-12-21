@@ -23,8 +23,8 @@
 #include <map>
 #include <vector>
 
-#include "src/binary-reader.h"
 #include "src/binary-reader-opcnt.h"
+#include "src/binary-reader.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
 
@@ -44,7 +44,7 @@ static std::unique_ptr<FileStream> s_log_stream;
 static Features s_features;
 
 static const char s_description[] =
-R"(  Read a file in the wasm binary format, and count opcode usage for
+    R"(  Read a file in the wasm binary format, and count opcode usage for
   instructions.
 
 examples:
@@ -85,9 +85,7 @@ struct SortByCountDescending {
 
 template <typename T>
 struct WithinCutoff {
-  bool operator()(const T& pair) const {
-    return pair.second >= s_cutoff;
-  }
+  bool operator()(const T& pair) const { return pair.second >= s_cutoff; }
 };
 
 static size_t SumCounts(const OpcodeInfoCounts& info_counts) {
@@ -102,7 +100,7 @@ void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
   typedef std::pair<Opcode, size_t> OpcodeCountPair;
 
   std::map<Opcode, size_t> counts;
-  for (auto& info_count_pair: info_counts) {
+  for (auto& info_count_pair : info_counts) {
     Opcode opcode = info_count_pair.first.opcode();
     size_t count = info_count_pair.second;
     counts[opcode] += count;
@@ -124,8 +122,7 @@ void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
   }
 }
 
-void WriteCountsWithImmediates(Stream& stream,
-                               const OpcodeInfoCounts& counts) {
+void WriteCountsWithImmediates(Stream& stream, const OpcodeInfoCounts& counts) {
   // Remove const from the key type so we can sort below.
   typedef std::pair<std::remove_const<OpcodeInfoCounts::key_type>::type,
                     OpcodeInfoCounts::mapped_type>

@@ -23,7 +23,8 @@
 
 namespace wabt {
 
-inline void RenameToIdentifier(std::string& name, Index i,
+inline void RenameToIdentifier(std::string& name,
+                               Index i,
                                BindingHash& bh,
                                const std::set<string_view>* filter) {
   // Filter out non-identifier characters, and try to reduce the size of
@@ -103,8 +104,9 @@ inline void RenameToIdentifier(std::string& name, Index i,
   bh.emplace(s, Binding(i));
 }
 
-template<typename T>
-void RenameToIdentifiers(std::vector<T*>& things, BindingHash& bh,
+template <typename T>
+void RenameToIdentifiers(std::vector<T*>& things,
+                         BindingHash& bh,
                          const std::set<string_view>* filter) {
   Index i = 0;
   for (auto thing : things) {

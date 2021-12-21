@@ -17,8 +17,8 @@
 #include <cassert>
 #include <cstdarg>
 #include <cstdint>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 
 #include "config.h"
@@ -49,7 +49,7 @@ static Features s_features;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  read a file in the wasm text format, check it for errors, and
+    R"(  read a file in the wasm text format, check it for errors, and
   convert it to the wasm binary format.
 
 examples:

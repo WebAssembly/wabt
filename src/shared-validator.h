@@ -155,8 +155,14 @@ class SharedValidator {
   Result OnReturn(const Location&);
   Result OnSelect(const Location&, Index result_count, Type* result_types);
   Result OnSimdLaneOp(const Location&, Opcode, uint64_t lane_idx);
-  Result OnSimdLoadLane(const Location&, Opcode, Address align, uint64_t lane_idx);
-  Result OnSimdStoreLane(const Location&, Opcode, Address align, uint64_t lane_idx);
+  Result OnSimdLoadLane(const Location&,
+                        Opcode,
+                        Address align,
+                        uint64_t lane_idx);
+  Result OnSimdStoreLane(const Location&,
+                         Opcode,
+                         Address align,
+                         uint64_t lane_idx);
   Result OnSimdShuffleOp(const Location&, Opcode, v128 lane_idx);
   Result OnStore(const Location&, Opcode, Var memidx, Address align);
   Result OnTableCopy(const Location&, Var dst_var, Var src_var);
@@ -268,7 +274,9 @@ class SharedValidator {
   Result CheckDataSegmentIndex(Var data_segment_var);
 
   Result CheckAlign(const Location&, Address align, Address natural_align);
-  Result CheckAtomicAlign(const Location&, Address align, Address natural_align);
+  Result CheckAtomicAlign(const Location&,
+                          Address align,
+                          Address natural_align);
 
   Result CheckBlockSignature(const Location&,
                              Opcode,

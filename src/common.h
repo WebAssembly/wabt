@@ -44,11 +44,12 @@
 
 #define WABT_USE(x) static_cast<void>(x)
 
-#define WABT_PAGE_SIZE 0x10000 /* 64k */
-#define WABT_MAX_PAGES32 0x10000 /* # of pages that fit in 32-bit address \
-                                    space */
-#define WABT_MAX_PAGES64 0x1000000000000 /* # of pages that fit in 64-bit \
-                                            address space */
+// 64k
+#define WABT_PAGE_SIZE 0x10000
+// # of pages that fit in 32-bit address space
+#define WABT_MAX_PAGES32 0x10000
+// # of pages that fit in 64-bit address space
+#define WABT_MAX_PAGES64 0x1000000000000
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
 #define WABT_ALIGN_UP_TO_PAGE(x) \
   (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
@@ -83,17 +84,27 @@
 
 namespace wabt {
 #if WABT_BIG_ENDIAN
-  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
-    memcpy(static_cast<char*>(dst) + (dsize) - (len) - (doff),
-      static_cast<const char*>(src) + (ssize) - (len) - (soff),
-      (len));
-  }
+inline void MemcpyEndianAware(void* dst,
+                              const void* src,
+                              size_t dsize,
+                              size_t ssize,
+                              size_t doff,
+                              size_t soff,
+                              size_t len) {
+  memcpy(static_cast<char*>(dst) + (dsize) - (len) - (doff),
+         static_cast<const char*>(src) + (ssize) - (len) - (soff), (len));
+}
 #else
-  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
-    memcpy(static_cast<char*>(dst) + (doff),
-      static_cast<const char*>(src) + (soff),
-      (len));
-  }
+inline void MemcpyEndianAware(void* dst,
+                              const void* src,
+                              size_t dsize,
+                              size_t ssize,
+                              size_t doff,
+                              size_t soff,
+                              size_t len) {
+  memcpy(static_cast<char*>(dst) + (doff),
+         static_cast<const char*>(src) + (soff), (len));
+}
 #endif
 }
 
@@ -136,7 +147,8 @@ struct v128 {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
-    wabt::MemcpyEndianAware(&result, v, sizeof(result), sizeof(v), 0, lane * sizeof(T), sizeof(result));
+    wabt::MemcpyEndianAware(&result, v, sizeof(result), sizeof(v), 0,
+                            lane * sizeof(T), sizeof(result));
     return result;
   }
 
@@ -144,7 +156,8 @@ struct v128 {
   void From(int lane, T data) {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
-    wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T), 0, sizeof(data));
+    wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T),
+                            0, sizeof(data));
   }
 
   uint8_t v[16];
@@ -385,8 +398,8 @@ extern const char* g_kind_name[];
 
 static WABT_INLINE const char* GetKindName(ExternalKind kind) {
   return static_cast<size_t>(kind) < kExternalKindCount
-    ? g_kind_name[static_cast<size_t>(kind)]
-    : "<error_kind>";
+             ? g_kind_name[static_cast<size_t>(kind)]
+             : "<error_kind>";
 }
 
 /* reloc */
@@ -395,8 +408,8 @@ extern const char* g_reloc_type_name[];
 
 static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
   return static_cast<size_t>(reloc) < kRelocTypeCount
-    ? g_reloc_type_name[static_cast<size_t>(reloc)]
-    : "<error_reloc_type>";
+             ? g_reloc_type_name[static_cast<size_t>(reloc)]
+             : "<error_reloc_type>";
 }
 
 /* symbol */
@@ -437,10 +450,10 @@ inline void ConvertBackslashToSlash(std::string* s) {
   ConvertBackslashToSlash(s->begin(), s->end());
 }
 
-inline void SwapBytesSized(void *addr, size_t size) {
+inline void SwapBytesSized(void* addr, size_t size) {
   auto bytes = static_cast<uint8_t*>(addr);
   for (size_t i = 0; i < size / 2; i++) {
-    std::swap(bytes[i], bytes[size-1-i]);
+    std::swap(bytes[i], bytes[size - 1 - i]);
   }
 }
 

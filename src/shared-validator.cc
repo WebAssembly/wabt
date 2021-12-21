@@ -1013,9 +1013,9 @@ Result SharedValidator::OnSimdLaneOp(const Location& loc,
 }
 
 Result SharedValidator::OnSimdLoadLane(const Location& loc,
-                                     Opcode opcode,
-                                     Address alignment,
-                                     uint64_t value) {
+                                       Opcode opcode,
+                                       Address alignment,
+                                       uint64_t value) {
   Result result = CheckInstr(opcode, loc);
   MemoryType mt;
   result |= CheckMemoryIndex(Var(0, loc), &mt);

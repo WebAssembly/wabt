@@ -110,25 +110,25 @@ class string_view {
   /*constexpr*/ size_type find(char c, size_type pos = 0) const noexcept;
   /*constexpr*/ size_type find(const char* s, size_type pos, size_type n) const;
   /*constexpr*/ size_type find(const char* s, size_type pos = 0) const;
-  /*constexpr*/ size_type rfind(string_view s, size_type pos = npos) const
-      noexcept;
+  /*constexpr*/ size_type rfind(string_view s,
+                                size_type pos = npos) const noexcept;
   /*constexpr*/ size_type rfind(char c, size_type pos = npos) const noexcept;
   /*constexpr*/ size_type rfind(const char* s,
                                 size_type pos,
                                 size_type n) const;
   /*constexpr*/ size_type rfind(const char* s, size_type pos = npos) const;
-  /*constexpr*/ size_type find_first_of(string_view s, size_type pos = 0) const
-      noexcept;
-  /*constexpr*/ size_type find_first_of(char c, size_type pos = 0) const
-      noexcept;
+  /*constexpr*/ size_type find_first_of(string_view s,
+                                        size_type pos = 0) const noexcept;
+  /*constexpr*/ size_type find_first_of(char c,
+                                        size_type pos = 0) const noexcept;
   /*constexpr*/ size_type find_first_of(const char* s,
                                         size_type pos,
                                         size_type n) const;
   /*constexpr*/ size_type find_first_of(const char* s, size_type pos = 0) const;
   /*constexpr*/ size_type find_last_of(string_view s,
                                        size_type pos = npos) const noexcept;
-  /*constexpr*/ size_type find_last_of(char c, size_type pos = npos) const
-      noexcept;
+  /*constexpr*/ size_type find_last_of(char c,
+                                       size_type pos = npos) const noexcept;
   /*constexpr*/ size_type find_last_of(const char* s,
                                        size_type pos,
                                        size_type n) const;
@@ -219,25 +219,28 @@ inline std::string operator+(string_view x, const char* y) {
 
 inline void cat_concatenate(std::string&) {}
 
-template<typename T, typename ...Ts>
+template <typename T, typename... Ts>
 void cat_concatenate(std::string& s, const T& t, const Ts&... args) {
-    s += t;
-    cat_concatenate(s, args...);
+  s += t;
+  cat_concatenate(s, args...);
 }
 
-inline size_t cat_compute_size() { return 0; }
+inline size_t cat_compute_size() {
+  return 0;
+}
 
-template<typename T, typename ...Ts>
+template <typename T, typename... Ts>
 size_t cat_compute_size(const T& t, const Ts&... args) {
-    return string_view(t).size() + cat_compute_size(args...);
+  return string_view(t).size() + cat_compute_size(args...);
 }
 
 // Is able to concatenate any combination of string/string_view/char*
-template<typename ...Ts> std::string cat(const Ts&... args) {
-    std::string s;
-    s.reserve(cat_compute_size(args...));
-    cat_concatenate(s, args...);
-    return s;
+template <typename... Ts>
+std::string cat(const Ts&... args) {
+  std::string s;
+  s.reserve(cat_compute_size(args...));
+  cat_concatenate(s, args...);
+  return s;
 }
 
 inline constexpr string_view::string_view() noexcept
@@ -252,8 +255,8 @@ inline string_view::string_view(const char* str)
 inline constexpr string_view::string_view(const char* str, size_type len)
     : data_(str), size_(len) {}
 
-inline constexpr string_view::const_iterator string_view::begin() const
-    noexcept {
+inline constexpr string_view::const_iterator string_view::begin()
+    const noexcept {
   return data_;
 }
 
@@ -261,18 +264,18 @@ inline constexpr string_view::const_iterator string_view::end() const noexcept {
   return data_ + size_;
 }
 
-inline constexpr string_view::const_iterator string_view::cbegin() const
-    noexcept {
+inline constexpr string_view::const_iterator string_view::cbegin()
+    const noexcept {
   return data_;
 }
 
-inline constexpr string_view::const_iterator string_view::cend() const
-    noexcept {
+inline constexpr string_view::const_iterator string_view::cend()
+    const noexcept {
   return data_ + size_;
 }
 
-inline string_view::const_reverse_iterator string_view::rbegin() const
-    noexcept {
+inline string_view::const_reverse_iterator string_view::rbegin()
+    const noexcept {
   return const_reverse_iterator(end());
 }
 
@@ -280,8 +283,8 @@ inline string_view::const_reverse_iterator string_view::rend() const noexcept {
   return const_reverse_iterator(begin());
 }
 
-inline string_view::const_reverse_iterator string_view::crbegin() const
-    noexcept {
+inline string_view::const_reverse_iterator string_view::crbegin()
+    const noexcept {
   return const_reverse_iterator(cend());
 }
 
@@ -326,8 +329,8 @@ constexpr inline string_view::const_pointer string_view::data() const noexcept {
 }
 
 inline std::ostream& operator<<(std::ostream& os, string_view sv) {
-    os.write(sv.data(), sv.size());
-    return os;
+  os.write(sv.data(), sv.size());
+  return os;
 }
 
 }  // namespace wabt

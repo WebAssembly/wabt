@@ -33,4 +33,4 @@ Result ValidateModule(const Module*, Errors*, const ValidateOptions&);
 
 }  // namespace wabt
 
-#endif // WABT_VALIDATOR_H_
+#endif  // WABT_VALIDATOR_H_

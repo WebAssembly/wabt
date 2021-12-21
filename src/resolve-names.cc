@@ -45,7 +45,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnDelegateExpr(TryExpr*) override;
-  Result OnReturnCallExpr(ReturnCallExpr *) override;
+  Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnGlobalGetExpr(GlobalGetExpr*) override;
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
@@ -117,9 +117,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
 };
 
 NameResolver::NameResolver(Script* script, Errors* errors)
-    : errors_(errors),
-      script_(script),
-      visitor_(this) {}
+    : errors_(errors), script_(script), visitor_(this) {}
 
 }  // end anonymous namespace
 

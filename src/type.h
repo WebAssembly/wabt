@@ -120,7 +120,7 @@ class Type {
   //   (type $T (func (result i32 i64)))
   //   ...
   //   (block (type $T) ...)
-  // 
+  //
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
   Index GetIndex() const {

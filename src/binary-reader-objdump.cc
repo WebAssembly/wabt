@@ -476,7 +476,9 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeIndexIndex(Index value, Index value2) override;
   Result OnOpcodeUint32(uint32_t value) override;
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
-  Result OnOpcodeUint32Uint32Uint32(uint32_t value, uint32_t value2, uint32_t value3) override;
+  Result OnOpcodeUint32Uint32Uint32(uint32_t value,
+                                    uint32_t value2,
+                                    uint32_t value3) override;
   Result OnOpcodeUint64(uint64_t value) override;
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
@@ -2077,8 +2079,8 @@ Result BinaryReaderObjdump::OnSegmentInfo(Index index,
                                           string_view name,
                                           Address alignment_log2,
                                           uint32_t flags) {
-  PrintDetails("   - %d: " PRIstringview " p2align=%" PRIaddress,
-               index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment_log2);
+  PrintDetails("   - %d: " PRIstringview " p2align=%" PRIaddress, index,
+               WABT_PRINTF_STRING_VIEW_ARG(name), alignment_log2);
   return PrintSegmentFlags(flags);
 }
 
@@ -2097,7 +2099,9 @@ Result BinaryReaderObjdump::OnComdatCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnComdatBegin(string_view name, uint32_t flags, Index count) {
+Result BinaryReaderObjdump::OnComdatBegin(string_view name,
+                                          uint32_t flags,
+                                          Index count) {
   PrintDetails("   - " PRIstringview ": [count=%d]\n",
                WABT_PRINTF_STRING_VIEW_ARG(name), count);
   return Result::Ok;

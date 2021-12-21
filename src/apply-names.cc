@@ -254,12 +254,12 @@ Result NameApplier::OnDataDropExpr(DataDropExpr* expr) {
   return Result::Ok;
 }
 
-Result NameApplier::OnMemoryInitExpr(MemoryInitExpr* expr)  {
+Result NameApplier::OnMemoryInitExpr(MemoryInitExpr* expr) {
   CHECK_RESULT(UseNameForDataSegmentVar(&expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnElemDropExpr(ElemDropExpr* expr)  {
+Result NameApplier::OnElemDropExpr(ElemDropExpr* expr) {
   CHECK_RESULT(UseNameForElemSegmentVar(&expr->var));
   return Result::Ok;
 }
@@ -270,33 +270,33 @@ Result NameApplier::OnTableCopyExpr(TableCopyExpr* expr) {
   return Result::Ok;
 }
 
-Result NameApplier::OnTableInitExpr(TableInitExpr* expr)  {
+Result NameApplier::OnTableInitExpr(TableInitExpr* expr) {
   CHECK_RESULT(UseNameForElemSegmentVar(&expr->segment_index));
   CHECK_RESULT(UseNameForTableVar(&expr->table_index));
   return Result::Ok;
 }
 
-Result NameApplier::OnTableGetExpr(TableGetExpr* expr)  {
+Result NameApplier::OnTableGetExpr(TableGetExpr* expr) {
   CHECK_RESULT(UseNameForTableVar(&expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnTableSetExpr(TableSetExpr* expr)  {
+Result NameApplier::OnTableSetExpr(TableSetExpr* expr) {
   CHECK_RESULT(UseNameForTableVar(&expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnTableGrowExpr(TableGrowExpr* expr)  {
+Result NameApplier::OnTableGrowExpr(TableGrowExpr* expr) {
   CHECK_RESULT(UseNameForTableVar(&expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnTableSizeExpr(TableSizeExpr* expr)  {
+Result NameApplier::OnTableSizeExpr(TableSizeExpr* expr) {
   CHECK_RESULT(UseNameForTableVar(&expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnTableFillExpr(TableFillExpr* expr)  {
+Result NameApplier::OnTableFillExpr(TableFillExpr* expr) {
   CHECK_RESULT(UseNameForTableVar(&expr->var));
   return Result::Ok;
 }

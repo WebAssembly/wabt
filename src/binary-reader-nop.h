@@ -58,9 +58,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                       TypeMut* fields) override {
     return Result::Ok;
   }
-  Result OnArrayType(Index index, TypeMut field) override {
-    return Result::Ok;
-  }
+  Result OnArrayType(Index index, TypeMut field) override { return Result::Ok; }
   Result EndTypeSection() override { return Result::Ok; }
 
   /* Import section */
@@ -221,9 +219,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnAtomicWaitExpr(Opcode, Address, Address) override {
     return Result::Ok;
   }
-  Result OnAtomicFenceExpr(uint32_t) override {
-    return Result::Ok;
-  }
+  Result OnAtomicFenceExpr(uint32_t) override { return Result::Ok; }
   Result OnAtomicNotifyExpr(Opcode, Address, Address) override {
     return Result::Ok;
   }
@@ -237,7 +233,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnCallExpr(Index func_index) override { return Result::Ok; }
-  Result OnCallIndirectExpr(Index sig_index, Index table_index) override { return Result::Ok; }
+  Result OnCallIndirectExpr(Index sig_index, Index table_index) override {
+    return Result::Ok;
+  }
   Result OnCallRefExpr() override { return Result::Ok; }
   Result OnCatchExpr(Index tag_index) override { return Result::Ok; }
   Result OnCatchAllExpr() override { return Result::Ok; }
@@ -293,7 +291,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnNopExpr() override { return Result::Ok; }
   Result OnRethrowExpr(Index depth) override { return Result::Ok; }
   Result OnReturnCallExpr(Index sig_index) override { return Result::Ok; }
-  Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override { return Result::Ok; }
+  Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override {
+    return Result::Ok;
+  }
   Result OnReturnExpr() override { return Result::Ok; }
   Result OnSelectExpr(Index result_count, Type* result_types) override {
     return Result::Ok;

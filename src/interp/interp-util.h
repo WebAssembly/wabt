@@ -47,4 +47,4 @@ void WriteCall(Stream* stream,
 }  // namespace interp
 }  // namespace wabt
 
-#endif // WABT_INTERP_UTIL_H_
+#endif  // WABT_INTERP_UTIL_H_

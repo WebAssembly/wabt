@@ -18,8 +18,8 @@
 #define WABT_INTERP_ISTREAM_H_
 
 #include <cstdint>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "src/common.h"
 #include "src/opcode.h"
@@ -43,32 +43,32 @@ using ValueType = wabt::Type;
 // simplify instruction decoding, disassembling, and tracing. There is an
 // example of an instruction that uses this encoding on the right.
 enum class InstrKind {
-  Imm_0_Op_0,             // Nop
-  Imm_0_Op_1,             // i32.eqz
-  Imm_0_Op_2,             // i32.add
-  Imm_0_Op_3,             // select
-  Imm_Jump_Op_0,          // br
-  Imm_Jump_Op_1,          // br_if
-  Imm_Index_Op_0,         // global.get
-  Imm_Index_Op_1,         // global.set
-  Imm_Index_Op_2,         // table.set
-  Imm_Index_Op_3,         // memory.fill
-  Imm_Index_Op_N,         // call
-  Imm_Index_Index_Op_3,   // memory.init
-  Imm_Index_Index_Op_N,   // call_indirect
-  Imm_Index_Offset_Op_1,  // i32.load
-  Imm_Index_Offset_Op_2,  // i32.store
-  Imm_Index_Offset_Op_3,  // i32.atomic.rmw.cmpxchg
-  Imm_Index_Offset_Lane_Op_2, // v128.load8_lane
-  Imm_I32_Op_0,           // i32.const
-  Imm_I64_Op_0,           // i64.const
-  Imm_F32_Op_0,           // f32.const
-  Imm_F64_Op_0,           // f64.const
-  Imm_I32_I32_Op_0,       // drop_keep
-  Imm_I8_Op_1,            // i32x4.extract_lane
-  Imm_I8_Op_2,            // i32x4.replace_lane
-  Imm_V128_Op_0,          // v128.const
-  Imm_V128_Op_2,          // i8x16.shuffle
+  Imm_0_Op_0,                  // Nop
+  Imm_0_Op_1,                  // i32.eqz
+  Imm_0_Op_2,                  // i32.add
+  Imm_0_Op_3,                  // select
+  Imm_Jump_Op_0,               // br
+  Imm_Jump_Op_1,               // br_if
+  Imm_Index_Op_0,              // global.get
+  Imm_Index_Op_1,              // global.set
+  Imm_Index_Op_2,              // table.set
+  Imm_Index_Op_3,              // memory.fill
+  Imm_Index_Op_N,              // call
+  Imm_Index_Index_Op_3,        // memory.init
+  Imm_Index_Index_Op_N,        // call_indirect
+  Imm_Index_Offset_Op_1,       // i32.load
+  Imm_Index_Offset_Op_2,       // i32.store
+  Imm_Index_Offset_Op_3,       // i32.atomic.rmw.cmpxchg
+  Imm_Index_Offset_Lane_Op_2,  // v128.load8_lane
+  Imm_I32_Op_0,                // i32.const
+  Imm_I64_Op_0,                // i64.const
+  Imm_F32_Op_0,                // f32.const
+  Imm_F64_Op_0,                // f64.const
+  Imm_I32_I32_Op_0,            // drop_keep
+  Imm_I8_Op_1,                 // i32x4.extract_lane
+  Imm_I8_Op_2,                 // i32x4.replace_lane
+  Imm_V128_Op_0,               // v128.const
+  Imm_V128_Op_2,               // i8x16.shuffle
 };
 
 struct Instr {
@@ -81,8 +81,13 @@ struct Instr {
     u64 imm_u64;
     f64 imm_f64;
     v128 imm_v128;
-    struct { u32 fst, snd; } imm_u32x2;
-    struct { u32 fst, snd; u8 idx; } imm_u32x2_u8;
+    struct {
+      u32 fst, snd;
+    } imm_u32x2;
+    struct {
+      u32 fst, snd;
+      u8 idx;
+    } imm_u32x2_u8;
   };
 };
 
@@ -142,7 +147,7 @@ class Istream {
 
   Offset Trace(Stream*, Offset, TraceSource*) const;
 
-private:
+ private:
   template <typename T>
   void WABT_VECTORCALL EmitAt(Offset, T val);
   template <typename T>

@@ -496,7 +496,7 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
         // local variables share the same index space, we need to increment the
         // local indexes bound to a given name by the number of parameters in
         // the function.
-        for (auto& pair: func->bindings) {
+        for (auto& pair : func->bindings) {
           pair.second.index += func->GetNumParams();
         }
       }
@@ -1966,8 +1966,8 @@ Result WastParser::ParseSimdLane(Location loc, uint64_t* lane_idx) {
 
   Literal literal = Consume().literal();
 
-  Result result = ParseInt64(literal.text.begin(), literal.text.end(),
-                             lane_idx, ParseIntType::UnsignedOnly);
+  Result result = ParseInt64(literal.text.begin(), literal.text.end(), lane_idx,
+                             ParseIntType::UnsignedOnly);
 
   if (Failed(result)) {
     Error(loc, "invalid literal \"" PRIstringview "\"",
@@ -2361,7 +2361,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         return Result::Error;
       }
 
-      out_expr->reset(new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
+      out_expr->reset(
+          new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
       break;
     }
 
@@ -2381,7 +2382,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         return Result::Error;
       }
 
-      out_expr->reset(new SimdStoreLaneExpr(token.opcode(), align, offset, lane_idx, loc));
+      out_expr->reset(
+          new SimdStoreLaneExpr(token.opcode(), align, offset, lane_idx, loc));
       break;
     }
 
@@ -2400,8 +2402,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         values.set_u8(lane, static_cast<uint8_t>(lane_idx));
       }
 
-      out_expr->reset(
-          new SimdShuffleOpExpr(token.opcode(), values, loc));
+      out_expr->reset(new SimdShuffleOpExpr(token.opcode(), values, loc));
       break;
     }
 
@@ -2429,13 +2430,11 @@ Result WastParser::ParseSimdV128Const(Const* const_,
     case TokenType::F32X4: { lane_count = 4; integer = false; break; }
     case TokenType::F64X2: { lane_count = 2; integer = false; break; }
     default: {
-      Error(
-        const_->loc,
-        "Unexpected type at start of simd constant. "
-        "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. "
-        "Found \"%s\".",
-        GetTokenTypeName(token_type)
-      );
+      Error(const_->loc,
+            "Unexpected type at start of simd constant. "
+            "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. "
+            "Found \"%s\".",
+            GetTokenTypeName(token_type));
       return Result::Error;
     }
   }
@@ -3255,7 +3254,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
                    &errors, &module);
       module.name = bsm->name;
       module.loc = bsm->loc;
-      for (const auto& error: errors) {
+      for (const auto& error : errors) {
         assert(error.error_level == ErrorLevel::Error);
         if (error.loc.offset == kInvalidOffset) {
           Error(bsm->loc, "error in binary module: %s", error.message.c_str());

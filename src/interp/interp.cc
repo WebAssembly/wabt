@@ -284,7 +284,7 @@ void Store::Mark(Ref ref) {
 }
 
 void Store::Mark(const RefVec& refs) {
-  for (auto&& ref: refs) {
+  for (auto&& ref : refs) {
     Mark(ref);
   }
 }
@@ -492,8 +492,7 @@ Result Table::Grow(Store& store, u32 count, Ref ref) {
 }
 
 Result Table::Fill(Store& store, u32 offset, Ref ref, u32 size) {
-  if (IsValidRange(offset, size) &&
-      store.HasValueType(ref, type_.element)) {
+  if (IsValidRange(offset, size) && store.HasValueType(ref, type_.element)) {
     std::fill(elements_.begin() + offset, elements_.begin() + offset + size,
               ref);
     return Result::Ok;
@@ -731,11 +730,11 @@ bool DataSegment::IsValidRange(u64 offset, u64 size) const {
 //// Module ////
 Module::Module(Store&, ModuleDesc desc)
     : Object(skind), desc_(std::move(desc)) {
-  for (auto&& import: desc_.imports) {
+  for (auto&& import : desc_.imports) {
     import_types_.emplace_back(import.type);
   }
 
-  for (auto&& export_: desc_.exports) {
+  for (auto&& export_ : desc_.exports) {
     export_types_.emplace_back(export_.type);
   }
 }
@@ -821,7 +820,7 @@ Instance::Ptr Instance::Instantiate(Store& store,
   }
 
   // Exports.
-  for (auto&& desc : mod->desc().exports){
+  for (auto&& desc : mod->desc().exports) {
     Ref ref;
     switch (desc.type.type->kind) {
       case ExternKind::Func:   ref = inst->funcs_[desc.index]; break;
@@ -895,12 +894,11 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
         if (Failed(result)) {
           *out_trap = Trap::New(
-              store,
-              StringPrintf("out of bounds memory access: data segment is "
-                           "out of bounds: [%" PRIu64 ", %" PRIu64
-                           ") >= max value %"
-                           PRIu64, offset, offset + segment.size(),
-                           memory->ByteSize()));
+              store, StringPrintf(
+                         "out of bounds memory access: data segment is "
+                         "out of bounds: [%" PRIu64 ", %" PRIu64
+                         ") >= max value %" PRIu64,
+                         offset, offset + segment.size(), memory->ByteSize()));
           return {};
         }
       } else if (desc.mode == SegmentMode::Declared) {
@@ -950,7 +948,7 @@ void Thread::Mark(Store& store) {
   for (auto&& frame : frames_) {
     frame.Mark(store);
   }
-  for (auto index: refs_) {
+  for (auto index : refs_) {
     store.Mark(values_[index].Get<Ref>());
   }
   store.Mark(exceptions_);
@@ -1048,7 +1046,7 @@ RunResult Thread::Run(Trap::Ptr* out_trap) {
 
 RunResult Thread::Run(int num_instructions, Trap::Ptr* out_trap) {
   DefinedFunc::Ptr func{store_, frames_.back().func};
-  for (;num_instructions > 0; --num_instructions) {
+  for (; num_instructions > 0; --num_instructions) {
     auto result = StepInternal(out_trap);
     if (result != RunResult::Ok) {
       return result;
@@ -2307,8 +2305,7 @@ RunResult Thread::DoSimdShuffle(Instr instr) {
   auto lhs = Pop<S>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    result[i] =
-        sel[i] < S::lanes ? lhs[sel[i]] : rhs[sel[i] - S::lanes];
+    result[i] = sel[i] < S::lanes ? lhs[sel[i]] : rhs[sel[i] - S::lanes];
   }
   Push(result);
   return RunResult::Ok;
@@ -2378,7 +2375,7 @@ RunResult Thread::DoSimdExtaddPairwise() {
   using U = typename S::LaneType;
   for (u8 i = 0; i < S::lanes; ++i) {
     u8 laneidx = i * 2;
-    result[i] = U(val[laneidx]) + U(val[laneidx+1]);
+    result[i] = U(val[laneidx]) + U(val[laneidx + 1]);
   }
   Push(result);
   return RunResult::Ok;
@@ -2393,7 +2390,7 @@ RunResult Thread::DoSimdDot() {
   for (u8 i = 0; i < S::lanes; ++i) {
     u8 laneidx = i * 2;
     SL lo = SL(lhs[laneidx]) * SL(rhs[laneidx]);
-    SL hi = SL(lhs[laneidx+1]) * SL(rhs[laneidx+1]);
+    SL hi = SL(lhs[laneidx + 1]) * SL(rhs[laneidx + 1]);
     result[i] = Add(lo, hi);
   }
   Push(result);
@@ -2565,8 +2562,8 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
     }
   }
   auto type = index > num_operands
-    ? Type(ValueType::Void)
-    : instr.op.GetParamType(num_operands - index + 1);
+                  ? Type(ValueType::Void)
+                  : instr.op.GetParamType(num_operands - index + 1);
   if (type == ValueType::Void) {
     // Void should never be displayed normally; we only expect to see it when
     // the stack may have different a different type. This is likely to occur

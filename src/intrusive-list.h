@@ -320,8 +320,8 @@ inline typename intrusive_list<T>::iterator intrusive_list<T>::end() noexcept {
 }
 
 template <typename T>
-inline typename intrusive_list<T>::const_iterator intrusive_list<T>::end() const
-    noexcept {
+inline typename intrusive_list<T>::const_iterator intrusive_list<T>::end()
+    const noexcept {
   return const_iterator(*this, nullptr);
 }
 
@@ -374,8 +374,8 @@ intrusive_list<T>::crend() const noexcept {
 }
 
 template <typename T>
-inline typename intrusive_list<T>::size_type intrusive_list<T>::size() const
-    noexcept {
+inline typename intrusive_list<T>::size_type intrusive_list<T>::size()
+    const noexcept {
   return size_;
 }
 

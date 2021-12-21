@@ -911,9 +911,9 @@ Result BinaryReaderInterp::OnSimdLoadLaneExpr(Opcode opcode,
 }
 
 Result BinaryReaderInterp::OnSimdStoreLaneExpr(Opcode opcode,
-                                              Address alignment_log2,
-                                              Address offset,
-                                              uint64_t value) {
+                                               Address alignment_log2,
+                                               Address offset,
+                                               uint64_t value) {
   CHECK_RESULT(validator_.OnSimdStoreLane(GetLocation(), opcode,
                                           GetAlignment(alignment_log2), value));
   istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));

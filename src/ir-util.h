@@ -39,7 +39,7 @@ struct Label {
 };
 
 struct ModuleContext {
-  ModuleContext(const Module &module) : module(module) {}
+  ModuleContext(const Module& module) : module(module) {}
 
   Index GetLabelStackSize() const { return label_stack_.size(); }
   const Label* GetLabel(const Var& var) const;
@@ -61,11 +61,12 @@ struct ModuleContext {
     Index nreturns;
     bool unreachable;
     Arities(Index na, Index nr, bool ur = false)
-      : nargs(na), nreturns(nr), unreachable(ur) {}
+        : nargs(na), nreturns(nr), unreachable(ur) {}
   };
   Arities GetExprArity(const Expr& expr) const;
 
-  const Module &module;
+  const Module& module;
+
  private:
   const Func* current_func_ = nullptr;
   std::vector<Label> label_stack_;

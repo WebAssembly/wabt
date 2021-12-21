@@ -45,7 +45,7 @@ static bool s_read_debug_names = true;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  Read a file in the WebAssembly binary format, and convert it to
+    R"(  Read a file in the WebAssembly binary format, and convert it to
   a C source file and header.
 
 examples:
@@ -164,4 +164,3 @@ int main(int argc, char** argv) {
   return ProgramMain(argc, argv);
   WABT_CATCH_BAD_ALLOC_AND_EXIT
 }
-
