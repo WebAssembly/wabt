@@ -17,6 +17,9 @@
 #ifndef WABT_STRING_FORMAT_H_
 #define WABT_STRING_FORMAT_H_
 
+#include <string>
+#include <vector>
+
 #include "config.h"
 
 #define PRIstringview "%.*s"
