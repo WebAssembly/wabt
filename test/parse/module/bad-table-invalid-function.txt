@@ -1,7 +1,7 @@
 ;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
-  (table 1 anyfunc)
+  (table 1 funcref)
   (func $f)
   (elem (i32.const 0) $f 1))
 (;; STDERR ;;;

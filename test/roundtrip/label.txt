@@ -4,7 +4,7 @@
   (func (param i32) (result f32)
     block (result f32)
       f32.const 1
-      get_local 0
+      local.get 0
       i32.eqz
       br_if 0
       drop

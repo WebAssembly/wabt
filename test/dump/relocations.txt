@@ -7,14 +7,14 @@
   (import "__extern" "bar" (func (param i32) (param i32) (result i32)))
   (global $g i32 (i32.const 0))
   (func $f (param i32) (result i32)
-    get_global 0
+    global.get 0
     call 2
     call 0
     i32.const 1234
     i32.const 0
     call_indirect (param i32) (param i32) (result i32))
   (export "f" (func $f))
-  (table anyfunc (elem 1)))
+  (table funcref (elem 1)))
 (;; STDOUT ;;;
 
 relocations.wasm:	file format wasm 0x1

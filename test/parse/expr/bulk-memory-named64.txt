@@ -10,7 +10,7 @@
     data.drop $data
   )
 
-  (table 1 anyfunc)
+  (table 1 funcref)
   (elem $elem funcref (ref.func 0) (ref.null func))
   (elem $elem2 func 0)
   (func

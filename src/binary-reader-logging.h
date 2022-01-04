@@ -185,18 +185,19 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
   Result OnLoadExpr(Opcode opcode,
+                    Index memidx,
                     Address alignment_log2,
                     Address offset) override;
   Result OnLocalGetExpr(Index local_index) override;
   Result OnLocalSetExpr(Index local_index) override;
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
-  Result OnMemoryCopyExpr() override;
+  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override;
   Result OnDataDropExpr(Index segment_index) override;
-  Result OnMemoryFillExpr() override;
-  Result OnMemoryGrowExpr() override;
-  Result OnMemoryInitExpr(Index segment_index) override;
-  Result OnMemorySizeExpr() override;
+  Result OnMemoryFillExpr(Index memidx) override;
+  Result OnMemoryGrowExpr(Index memidx) override;
+  Result OnMemoryInitExpr(Index segment_index, Index memidx) override;
+  Result OnMemorySizeExpr(Index memidx) override;
   Result OnTableCopyExpr(Index dst_index, Index src_index) override;
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
@@ -215,6 +216,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnReturnExpr() override;
   Result OnSelectExpr(Index result_count, Type* result_types) override;
   Result OnStoreExpr(Opcode opcode,
+                     Index memidx,
                      Address alignment_log2,
                      Address offset) override;
   Result OnThrowExpr(Index tag_index) override;
@@ -379,15 +381,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTagCount(Index count) override;
   Result OnTagType(Index index, Index sig_index) override;
   Result EndTagSection() override;
-
-  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
-  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index, Type type) override;
-  Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:
   void Indent();

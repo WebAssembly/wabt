@@ -21,7 +21,7 @@
 
     ;; saturating float-to-int
     f32.const 0
-    i32.trunc_s:sat/f32
+    i32.trunc_sat_f32_s
     drop
 
     ;; sign extention

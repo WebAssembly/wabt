@@ -25,9 +25,9 @@
 
   (func $fold-convert (result i64)
     f64.const 0
-    f32.demote/f64
-    i32.trunc_s/f32
-    i64.extend_s/i32)
+    f32.demote_f64
+    i32.trunc_f32_s
+    i64.extend_i32_s)
 
   (func $fold-select (result f32)
     f32.const 1

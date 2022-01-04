@@ -1,7 +1,7 @@
 ;;; TOOL: run-interp
 (module
   (func (param i32) (result i32)
-    get_local 0
+    local.get 0
     i32.const 0
     i32.eq
     if (result i32)

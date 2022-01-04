@@ -2,7 +2,7 @@
 ;;; ARGS: --stdout --enable-memory64
 (module
   (memory i64 0)
-  (table 0 anyfunc)
+  (table 0 funcref)
 
   (func
     i64.const 0

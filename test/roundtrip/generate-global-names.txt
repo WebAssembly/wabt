@@ -5,8 +5,8 @@
   (global (mut f32) (f32.const -1.5))
   (func (result i32)
     f32.const 3.0
-    set_global 1
-    get_global 0))
+    global.set 1
+    global.get 0))
 (;; STDOUT ;;;
 (module
   (type $t0 (func (result i32)))

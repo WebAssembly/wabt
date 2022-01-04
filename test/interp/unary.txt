@@ -1,12 +1,12 @@
 ;;; TOOL: run-interp
 (module
   (func $f32_is_nan (param f32) (result i32)
-    get_local 0
-    get_local 0
+    local.get 0
+    local.get 0
     f32.ne)
   (func $f64_is_nan (param f64) (result i32)
-    get_local 0
-    get_local 0
+    local.get 0
+    local.get 0
     f64.ne)
 
   ;; i32

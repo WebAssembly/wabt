@@ -251,18 +251,19 @@ class BinaryReaderDelegate {
   virtual Result OnI64ConstExpr(uint64_t value) = 0;
   virtual Result OnIfExpr(Type sig_type) = 0;
   virtual Result OnLoadExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset) = 0;
   virtual Result OnLocalGetExpr(Index local_index) = 0;
   virtual Result OnLocalSetExpr(Index local_index) = 0;
   virtual Result OnLocalTeeExpr(Index local_index) = 0;
   virtual Result OnLoopExpr(Type sig_type) = 0;
-  virtual Result OnMemoryCopyExpr() = 0;
+  virtual Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) = 0;
   virtual Result OnDataDropExpr(Index segment_index) = 0;
-  virtual Result OnMemoryFillExpr() = 0;
-  virtual Result OnMemoryGrowExpr() = 0;
-  virtual Result OnMemoryInitExpr(Index segment_index) = 0;
-  virtual Result OnMemorySizeExpr() = 0;
+  virtual Result OnMemoryFillExpr(Index memidx) = 0;
+  virtual Result OnMemoryGrowExpr(Index memidx) = 0;
+  virtual Result OnMemoryInitExpr(Index segment_index, Index memidx) = 0;
+  virtual Result OnMemorySizeExpr(Index memidx) = 0;
   virtual Result OnTableCopyExpr(Index dst_index, Index src_index) = 0;
   virtual Result OnElemDropExpr(Index segment_index) = 0;
   virtual Result OnTableInitExpr(Index segment_index, Index table_index) = 0;
@@ -271,7 +272,7 @@ class BinaryReaderDelegate {
   virtual Result OnTableGrowExpr(Index table_index) = 0;
   virtual Result OnTableSizeExpr(Index table_index) = 0;
   virtual Result OnTableFillExpr(Index table_index) = 0;
-  virtual Result OnRefFuncExpr(Index type_index) = 0;
+  virtual Result OnRefFuncExpr(Index func_index) = 0;
   virtual Result OnRefNullExpr(Type type) = 0;
   virtual Result OnRefIsNullExpr() = 0;
   virtual Result OnNopExpr() = 0;
@@ -282,6 +283,7 @@ class BinaryReaderDelegate {
                                           Index table_index) = 0;
   virtual Result OnSelectExpr(Index result_count, Type* result_types) = 0;
   virtual Result OnStoreExpr(Opcode opcode,
+                             Index memidx,
                              Address alignment_log2,
                              Address offset) = 0;
   virtual Result OnThrowExpr(Index tag_index) = 0;
@@ -380,8 +382,7 @@ class BinaryReaderDelegate {
 
   /* Reloc section */
   virtual Result BeginRelocSection(Offset size) = 0;
-  virtual Result OnRelocCount(Index count,
-                              Index section_index) = 0;
+  virtual Result OnRelocCount(Index count, Index section_index) = 0;
   virtual Result OnReloc(RelocType type,
                          Offset offset,
                          Index index,
@@ -457,17 +458,6 @@ class BinaryReaderDelegate {
   virtual Result OnTagCount(Index count) = 0;
   virtual Result OnTagType(Index index, Index sig_index) = 0;
   virtual Result EndTagSection() = 0;
-
-  /* InitExpr - used by elem, data and global sections; these functions are
-   * only called between calls to Begin*InitExpr and End*InitExpr */
-  virtual Result OnInitExprF32ConstExpr(Index index, uint32_t value) = 0;
-  virtual Result OnInitExprF64ConstExpr(Index index, uint64_t value) = 0;
-  virtual Result OnInitExprV128ConstExpr(Index index, v128 value) = 0;
-  virtual Result OnInitExprGlobalGetExpr(Index index, Index global_index) = 0;
-  virtual Result OnInitExprI32ConstExpr(Index index, uint32_t value) = 0;
-  virtual Result OnInitExprI64ConstExpr(Index index, uint64_t value) = 0;
-  virtual Result OnInitExprRefNull(Index index, Type type) = 0;
-  virtual Result OnInitExprRefFunc(Index index, Index func_index) = 0;
 
   const State* state = nullptr;
 };

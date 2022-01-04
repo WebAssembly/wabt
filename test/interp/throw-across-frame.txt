@@ -1,0 +1,52 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-exceptions
+(module
+  (tag $e1)
+  (tag $e2)
+  (tag $e3)
+  (func $thrower
+    (throw $e1))
+  (func $thrower2
+    (try
+      (do (throw $e1))
+      (catch $e2)))
+  (func (export "call-thrower") (result i32)
+    (try (result i32)
+      (do
+        (call $thrower)
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "call-thrower2") (result i32)
+    (try (result i32)
+      (do
+        (call $thrower2)
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func $helper (result i32)
+    (try (result i32)
+      (do
+        (call $thrower2)
+        (i32.const 0))
+      (catch $e3
+        (i32.const 1))))
+  (func (export "call-thrower3") (result i32)
+    (try (result i32)
+      (do
+        (call $helper))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "call-thrower4") (result i32)
+    (try (result i32)
+      (do
+        (call $helper))
+      (catch $e2
+        (i32.const 1))))
+  )
+(;; STDOUT ;;;
+call-thrower() => i32:1
+call-thrower2() => i32:1
+call-thrower3() => i32:1
+call-thrower4() => error: uncaught exception
+;;; STDOUT ;;)

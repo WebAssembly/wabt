@@ -43,7 +43,7 @@ static bool s_debug_parsing;
 static Features s_features;
 
 static const char s_description[] =
-R"(  read a file in the wasm s-expression format and format it.
+    R"(  read a file in the wasm s-expression format and format it.
 
 examples:
   # write output to stdout

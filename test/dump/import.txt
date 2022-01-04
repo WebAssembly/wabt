@@ -5,7 +5,7 @@
   (import "ignored" "test" (func (param i32 i64 f32 f64)))
   (import "ignored" "test2" (func (param i32) (result i32)))
   (import "ignored" "testmem" (memory 0))
-  (import "ignored" "testtable" (table 0 anyfunc))
+  (import "ignored" "testtable" (table 0 funcref))
   (import "ignored" "testtag" (tag (param i32)))
 )
 (;; STDERR ;;;

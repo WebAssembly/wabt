@@ -44,8 +44,8 @@
 ; func type 1
 0000010: 60                                        ; func
 0000011: 03                                        ; num params
-0000012: 6b                                        ; reference
-0000013: 00                                        ; reference
+0000012: 6b                                        ; (ref 0)
+0000013: 00                                        ; (ref 0)
 0000014: 7d                                        ; f32
 0000015: 7d                                        ; f32
 0000016: 01                                        ; num results
@@ -134,10 +134,12 @@
 0000052: 10                                        ; FIXUP func body size
 0000034: 2e                                        ; FIXUP section size
 ;;; STDERR ;;)
-
 (;; STDOUT ;;;
+
 typed_func_refs_params.wasm:	file format wasm 0x1
+
 Code Disassembly:
+
 000037 func[0]:
  000038: 20 02                      | local.get 2
  00003a: 20 01                      | local.get 1

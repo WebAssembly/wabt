@@ -52,9 +52,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
                     std::string* out_str);
 
   // Like GenerateName, but only generates a name if |out_str| is empty.
-  void MaybeGenerateName(const char* prefix,
-                         Index index,
-                         std::string* out_str);
+  void MaybeGenerateName(const char* prefix, Index index, std::string* out_str);
 
   // Generate a name via GenerateName and bind it to the given binding hash. If
   // the name already exists, the name will be disambiguated until it can be
@@ -108,8 +106,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   NameOpts opts_;
 };
 
-NameGenerator::NameGenerator(NameOpts opts)
-  : visitor_(this), opts_(opts) {}
+NameGenerator::NameGenerator(NameOpts opts) : visitor_(this), opts_(opts) {}
 
 // static
 bool NameGenerator::HasName(const std::string& str) {

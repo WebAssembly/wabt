@@ -48,9 +48,7 @@ struct Label {
         type_stack_size(type_stack_size),
         used(used) {}
 
-  bool HasValue() const {
-    return !sig.empty();
-  }
+  bool HasValue() const { return !sig.empty(); }
 
   LabelType label_type;
   const std::string& name;
@@ -636,7 +634,8 @@ void CWriter::Write(const GotoLabel& goto_label) {
     Index offset = type_stack_.size() - label->type_stack_size - amount;
     if (offset != 0) {
       for (Index i = 0; i < amount; ++i) {
-        Write(StackVar(amount - i - 1 + offset, label->sig[i]), " = ", StackVar(amount - i - 1), "; ");
+        Write(StackVar(amount - i - 1 + offset, label->sig[i]), " = ",
+              StackVar(amount - i - 1), "; ");
       }
     }
   }
@@ -844,7 +843,6 @@ void CWriter::WriteMultivalueTypes() {
   }
 }
 
-
 void CWriter::WriteFuncTypes() {
   Write(Newline());
   Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
@@ -1001,7 +999,6 @@ void CWriter::WriteMemories() {
 
   Write(Newline());
 
-  assert(module_->memories.size() <= 1);
   Index memory_index = 0;
   for (const Memory* memory : module_->memories) {
     bool is_import = memory_index < module_->num_memory_imports;
@@ -1069,11 +1066,15 @@ void CWriter::WriteDataInitializers() {
   }
 
   Write(Newline(), "static void init_memory(void) ", OpenBrace());
-  if (memory && module_->num_memory_imports == 0) {
-    uint32_t max =
-        memory->page_limits.has_max ? memory->page_limits.max : 65536;
-    Write("wasm_rt_allocate_memory(", ExternalPtr(memory->name), ", ",
-          memory->page_limits.initial, ", ", max, ");", Newline());
+  if (module_->memories.size() > module_->num_memory_imports) {
+    Index memory_idx = module_->num_memory_imports;
+    for (Index i = memory_idx; i < module_->memories.size(); i++) {
+      memory = module_->memories[i];
+      uint32_t max =
+          memory->page_limits.has_max ? memory->page_limits.max : 65536;
+      Write("wasm_rt_allocate_memory(", ExternalPtr(memory->name), ", ",
+            memory->page_limits.initial, ", ", max, ");", Newline());
+    }
   }
   data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {
@@ -1119,7 +1120,7 @@ void CWriter::WriteElemInitializers() {
 
       Write(ExternalRef(table->name), ".data[offset + ", i,
             "] = (wasm_rt_elem_t){func_types[", func_type_index,
-            "], (wasm_rt_anyfunc_t)", ExternalPtr(func->name), "};", Newline());
+            "], (wasm_rt_funcref_t)", ExternalPtr(func->name), "};", Newline());
       ++i;
     }
     ++elem_segment_index;
@@ -1613,8 +1614,8 @@ void CWriter::Write(const ExprList& exprs) {
         break;
 
       case ExprType::MemoryGrow: {
-        assert(module_->memories.size() == 1);
-        Memory* memory = module_->memories[0];
+        Memory* memory = module_->memories[module_->GetMemoryIndex(
+            cast<MemoryGrowExpr>(&expr)->memidx)];
 
         Write(StackVar(0), " = wasm_rt_grow_memory(", ExternalPtr(memory->name),
               ", ", StackVar(0), ");", Newline());
@@ -1622,8 +1623,8 @@ void CWriter::Write(const ExprList& exprs) {
       }
 
       case ExprType::MemorySize: {
-        assert(module_->memories.size() == 1);
-        Memory* memory = module_->memories[0];
+        Memory* memory = module_->memories[module_->GetMemoryIndex(
+            cast<MemorySizeExpr>(&expr)->memidx)];
 
         PushType(Type::I32);
         Write(StackVar(0), " = ", ExternalRef(memory->name), ".pages;",
@@ -2119,8 +2120,7 @@ void CWriter::Write(const LoadExpr& expr) {
       WABT_UNREACHABLE;
   }
 
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(", ExternalPtr(memory->name),
@@ -2149,8 +2149,7 @@ void CWriter::Write(const StoreExpr& expr) {
       WABT_UNREACHABLE;
   }
 
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
   Write(func, "(", ExternalPtr(memory->name), ", (u64)(", StackVar(1), ")");
   if (expr.offset != 0)

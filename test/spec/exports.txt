@@ -11,19 +11,19 @@ out/test/spec/exports.wast:47: assert_invalid passed:
   0000000: error: function variable out of range: 1 (max 1)
   000002e: error: OnExport callback failed
 out/test/spec/exports.wast:51: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.18.wasm:000001d: error: duplicate export "a"
   000001d: error: OnExport callback failed
 out/test/spec/exports.wast:55: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.19.wasm:000001e: error: duplicate export "a"
   000001e: error: OnExport callback failed
 out/test/spec/exports.wast:59: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.20.wasm:0000025: error: duplicate export "a"
   0000025: error: OnExport callback failed
 out/test/spec/exports.wast:63: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.21.wasm:0000023: error: duplicate export "a"
   0000023: error: OnExport callback failed
 out/test/spec/exports.wast:67: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.22.wasm:0000022: error: duplicate export "a"
   0000022: error: OnExport callback failed
 out/test/spec/exports.wast:96: assert_invalid passed:
   0000000: error: global variable out of range: 0 (max 0)
@@ -35,19 +35,19 @@ out/test/spec/exports.wast:104: assert_invalid passed:
   0000000: error: global variable out of range: 1 (max 1)
   0000029: error: OnExport callback failed
 out/test/spec/exports.wast:108: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.38.wasm:000001b: error: duplicate export "a"
   000001b: error: OnExport callback failed
 out/test/spec/exports.wast:112: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.39.wasm:0000020: error: duplicate export "a"
   0000020: error: OnExport callback failed
 out/test/spec/exports.wast:116: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.40.wasm:0000025: error: duplicate export "a"
   0000025: error: OnExport callback failed
 out/test/spec/exports.wast:120: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.41.wasm:0000021: error: duplicate export "a"
   0000021: error: OnExport callback failed
 out/test/spec/exports.wast:124: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.42.wasm:0000020: error: duplicate export "a"
   0000020: error: OnExport callback failed
 out/test/spec/exports.wast:151: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
@@ -59,19 +59,19 @@ out/test/spec/exports.wast:159: assert_invalid passed:
   0000000: error: table variable out of range: 1 (max 1)
   0000026: error: OnExport callback failed
 out/test/spec/exports.wast:163: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.61.wasm:0000019: error: duplicate export "a"
   0000019: error: OnExport callback failed
 out/test/spec/exports.wast:167: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.62.wasm:000001c: error: duplicate export "a"
   000001c: error: OnExport callback failed
 out/test/spec/exports.wast:171: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.63.wasm:0000023: error: duplicate export "a"
   0000023: error: OnExport callback failed
 out/test/spec/exports.wast:175: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.64.wasm:0000021: error: duplicate export "a"
   0000021: error: OnExport callback failed
 out/test/spec/exports.wast:179: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.65.wasm:000001e: error: duplicate export "a"
   000001e: error: OnExport callback failed
 out/test/spec/exports.wast:207: assert_invalid passed:
   0000000: error: memory variable out of range: 0 (max 0)
@@ -83,16 +83,16 @@ out/test/spec/exports.wast:215: assert_invalid passed:
   0000000: error: memory variable out of range: 1 (max 1)
   0000026: error: OnExport callback failed
 out/test/spec/exports.wast:219: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.83.wasm:0000018: error: duplicate export "a"
   0000018: error: OnExport callback failed
 out/test/spec/exports.wast:228: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.84.wasm:0000022: error: duplicate export "a"
   0000022: error: OnExport callback failed
 out/test/spec/exports.wast:232: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.85.wasm:0000020: error: duplicate export "a"
   0000020: error: OnExport callback failed
 out/test/spec/exports.wast:236: assert_invalid passed:
-  error: duplicate export "a"
+  out/test/spec/exports/exports.86.wasm:000001e: error: duplicate export "a"
   000001e: error: OnExport callback failed
 40/40 tests passed.
 ;;; STDOUT ;;)

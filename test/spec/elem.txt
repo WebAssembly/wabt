@@ -7,39 +7,46 @@ out/test/spec/elem.wast:336: assert_invalid passed:
   0000000: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/elem.wast:346: assert_invalid passed:
-  0000014: error: expected i32 init_expr
+  out/test/spec/elem/elem.34.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
+  0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:354: assert_invalid passed:
-  0000014: error: expected i32 init_expr
+  out/test/spec/elem/elem.35.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [funcref]
+  0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:362: assert_invalid passed:
-  error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+  out/test/spec/elem/elem.36.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
   0000013: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:370: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  out/test/spec/elem/elem.37.wasm:0000016: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000017: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:378: assert_invalid passed:
-  000002b: error: expected END opcode after initializer expression
+  out/test/spec/elem/elem.38.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:387: assert_invalid passed:
-  000002b: error: expected END opcode after initializer expression
+  out/test/spec/elem/elem.39.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:397: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  out/test/spec/elem/elem.40.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
+  0000015: error: OnUnaryExpr callback failed
 out/test/spec/elem.wast:405: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
+  out/test/spec/elem/elem.41.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000013: error: OnNopExpr callback failed
 out/test/spec/elem.wast:413: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
+  out/test/spec/elem/elem.42.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000013: error: OnNopExpr callback failed
 out/test/spec/elem.wast:421: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  out/test/spec/elem/elem.43.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000015: error: OnNopExpr callback failed
 out/test/spec/elem.wast:435: assert_invalid passed:
   0000000: error: global variable out of range: 0 (max 0)
-  error: initializer expression cannot reference a mutable global
-  0000015: error: EndElemSegmentInitExpr callback failed
+  0000014: error: OnGlobalGetExpr callback failed
 out/test/spec/elem.wast:443: assert_invalid passed:
   0000000: error: global variable out of range: 1 (max 1)
-  error: initializer expression cannot reference a mutable global
-  000002b: error: EndElemSegmentInitExpr callback failed
+  000002a: error: OnGlobalGetExpr callback failed
 out/test/spec/elem.wast:452: assert_invalid passed:
-  error: initializer expression cannot reference a mutable global
-  000002f: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/elem/elem.46.wasm:000002e: error: initializer expression cannot reference a mutable global
+  000002e: error: OnGlobalGetExpr callback failed
 out/test/spec/elem.wast:463: assert_invalid passed:
-  error: type mismatch at elem expression. got externref, expected funcref
+  out/test/spec/elem/elem.47.wasm:0000018: error: type mismatch at elem expression. got externref, expected funcref
   0000018: error: OnElemSegmentElemExpr_RefNull callback failed
 out/test/spec/elem.wast:471: assert_invalid passed:
   0000019: error: expected END opcode after element expression

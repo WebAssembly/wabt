@@ -1,0 +1,19 @@
+;;; TOOL: wat2wasm
+(module
+  (func (param i32) (param $n f32)
+    (local i32 i64)
+    (local $m f64)
+    i32.const 0
+    local.set 0
+    f32.const 0
+    local.set 1
+    f32.const 0
+    local.set $n ;; 1
+    i32.const 0
+    local.set 2
+    i64.const 0
+    local.set 3
+    f64.const 0
+    local.set $m ;; 4
+    f64.const 0
+    local.set 4))

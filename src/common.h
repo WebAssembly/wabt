@@ -32,8 +32,10 @@
 
 #include "config.h"
 
+#include "src/base-types.h"
 #include "src/make-unique.h"
 #include "src/result.h"
+#include "src/string-format.h"
 #include "src/string-view.h"
 #include "src/type.h"
 
@@ -42,38 +44,15 @@
 
 #define WABT_USE(x) static_cast<void>(x)
 
-#define WABT_PAGE_SIZE 0x10000 /* 64k */
-#define WABT_MAX_PAGES32 0x10000 /* # of pages that fit in 32-bit address \
-                                    space */
-#define WABT_MAX_PAGES64 0x1000000000000 /* # of pages that fit in 64-bit \
-                                            address space */
+// 64k
+#define WABT_PAGE_SIZE 0x10000
+// # of pages that fit in 32-bit address space
+#define WABT_MAX_PAGES32 0x10000
+// # of pages that fit in 64-bit address space
+#define WABT_MAX_PAGES64 0x1000000000000
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
 #define WABT_ALIGN_UP_TO_PAGE(x) \
   (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
-
-#define PRIstringview "%.*s"
-#define WABT_PRINTF_STRING_VIEW_ARG(x) \
-  static_cast<int>((x).length()), (x).data()
-
-#define PRItypecode "%s%#x"
-#define WABT_PRINTF_TYPE_CODE(x) \
-  (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int32_t>(x))
-
-#define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
-#define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \
-  va_list args;                                                            \
-  va_list args_copy;                                                       \
-  va_start(args, format);                                                  \
-  va_copy(args_copy, args);                                                \
-  char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];                    \
-  char* buffer = fixed_buf;                                                \
-  size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args); \
-  va_end(args);                                                            \
-  if (len + 1 > sizeof(fixed_buf)) {                                       \
-    buffer = static_cast<char*>(alloca(len + 1));                          \
-    len = wabt_vsnprintf(buffer, len + 1, format, args_copy);              \
-  }                                                                        \
-  va_end(args_copy)
 
 #define WABT_ENUM_COUNT(name) \
   (static_cast<int>(name::Last) - static_cast<int>(name::First) + 1)
@@ -105,17 +84,27 @@
 
 namespace wabt {
 #if WABT_BIG_ENDIAN
-  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
-    memcpy(static_cast<char*>(dst) + (dsize) - (len) - (doff),
-      static_cast<const char*>(src) + (ssize) - (len) - (soff),
-      (len));
-  }
+inline void MemcpyEndianAware(void* dst,
+                              const void* src,
+                              size_t dsize,
+                              size_t ssize,
+                              size_t doff,
+                              size_t soff,
+                              size_t len) {
+  memcpy(static_cast<char*>(dst) + (dsize) - (len) - (doff),
+         static_cast<const char*>(src) + (ssize) - (len) - (soff), (len));
+}
 #else
-  inline void MemcpyEndianAware(void *dst, const void *src, size_t dsize, size_t ssize, size_t doff, size_t soff, size_t len) {
-    memcpy(static_cast<char*>(dst) + (doff),
-      static_cast<const char*>(src) + (soff),
-      (len));
-  }
+inline void MemcpyEndianAware(void* dst,
+                              const void* src,
+                              size_t dsize,
+                              size_t ssize,
+                              size_t doff,
+                              size_t soff,
+                              size_t len) {
+  memcpy(static_cast<char*>(dst) + (doff),
+         static_cast<const char*>(src) + (soff), (len));
+}
 #endif
 }
 
@@ -158,7 +147,8 @@ struct v128 {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
     T result;
-    wabt::MemcpyEndianAware(&result, v, sizeof(result), sizeof(v), 0, lane * sizeof(T), sizeof(result));
+    wabt::MemcpyEndianAware(&result, v, sizeof(result), sizeof(v), 0,
+                            lane * sizeof(T), sizeof(result));
     return result;
   }
 
@@ -166,21 +156,14 @@ struct v128 {
   void From(int lane, T data) {
     static_assert(sizeof(T) <= sizeof(v), "Invalid cast!");
     assert((lane + 1) * sizeof(T) <= sizeof(v));
-    wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T), 0, sizeof(data));
+    wabt::MemcpyEndianAware(v, &data, sizeof(v), sizeof(data), lane * sizeof(T),
+                            0, sizeof(data));
   }
 
   uint8_t v[16];
 };
 
 namespace wabt {
-
-typedef uint32_t Index;    // An index into one of the many index spaces.
-typedef uint64_t Address;  // An address or size in linear memory.
-typedef size_t Offset;     // An offset into a host's file or memory buffer.
-
-static const Address kInvalidAddress = ~0;
-static const Index kInvalidIndex = ~0;
-static const Offset kInvalidOffset = ~0;
 
 template <typename Dst, typename Src>
 Dst WABT_VECTORCALL Bitcast(Src&& value) {
@@ -208,22 +191,9 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
-inline std::string WABT_PRINTF_FORMAT(1, 2)
-    StringPrintf(const char* format, ...) {
-  va_list args;
-  va_list args_copy;
-  va_start(args, format);
-  va_copy(args_copy, args);
-  size_t len = wabt_vsnprintf(nullptr, 0, format, args) + 1;  // For \0.
-  std::vector<char> buffer(len);
-  va_end(args);
-  wabt_vsnprintf(buffer.data(), len, format, args_copy);
-  va_end(args_copy);
-  return std::string(buffer.data(), len - 1);
-}
-
 enum class LabelType {
   Func,
+  InitExpr,
   Block,
   Loop,
   If,
@@ -298,7 +268,7 @@ enum class RelocType {
   MemoryAddressSLEB = 4,  // e.g. Memory address in i32.const
   MemoryAddressI32 = 5,   // e.g. Memory address in DATA
   TypeIndexLEB = 6,       // e.g. Immediate type in call_indirect
-  GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
+  GlobalIndexLEB = 7,     // e.g. Immediate of global.get inst
   FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
   SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
   TagIndexLEB = 10,       // Used in throw instructions
@@ -428,8 +398,8 @@ extern const char* g_kind_name[];
 
 static WABT_INLINE const char* GetKindName(ExternalKind kind) {
   return static_cast<size_t>(kind) < kExternalKindCount
-    ? g_kind_name[static_cast<size_t>(kind)]
-    : "<error_kind>";
+             ? g_kind_name[static_cast<size_t>(kind)]
+             : "<error_kind>";
 }
 
 /* reloc */
@@ -438,8 +408,8 @@ extern const char* g_reloc_type_name[];
 
 static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
   return static_cast<size_t>(reloc) < kRelocTypeCount
-    ? g_reloc_type_name[static_cast<size_t>(reloc)]
-    : "<error_reloc_type>";
+             ? g_reloc_type_name[static_cast<size_t>(reloc)]
+             : "<error_reloc_type>";
 }
 
 /* symbol */
@@ -480,10 +450,10 @@ inline void ConvertBackslashToSlash(std::string* s) {
   ConvertBackslashToSlash(s->begin(), s->end());
 }
 
-inline void SwapBytesSized(void *addr, size_t size) {
+inline void SwapBytesSized(void* addr, size_t size) {
   auto bytes = static_cast<uint8_t*>(addr);
   for (size_t i = 0; i < size / 2; i++) {
-    std::swap(bytes[i], bytes[size-1-i]);
+    std::swap(bytes[i], bytes[size - 1 - i]);
   }
 }
 

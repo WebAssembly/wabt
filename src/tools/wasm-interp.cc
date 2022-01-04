@@ -173,15 +173,14 @@ static void BindImports(const Module::Ptr& module, RefVec& imports) {
       auto import_name = StringPrintf("%s.%s", import.type.module.c_str(),
                                       import.type.name.c_str());
 
-      auto host_func =
-          HostFunc::New(s_store, func_type,
-                        [=](Thread& thread, const Values& params,
-                            Values& results, Trap::Ptr* trap) -> Result {
-                          printf("called host ");
-                          WriteCall(stream, import_name, func_type, params,
-                                    results, *trap);
-                          return Result::Ok;
-                        });
+      auto host_func = HostFunc::New(
+          s_store, func_type,
+          [=](Thread& thread, const Values& params, Values& results,
+              Trap::Ptr* trap) -> Result {
+            printf("called host ");
+            WriteCall(stream, import_name, func_type, params, results, *trap);
+            return Result::Ok;
+          });
       imports.push_back(host_func.ref());
       continue;
     }
@@ -205,8 +204,9 @@ static Result ReadModule(const char* module_filename,
   const bool kFailOnCustomSectionError = true;
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
-  CHECK_RESULT(ReadBinaryInterp(file_data.data(), file_data.size(), options,
-                                errors, &module_desc));
+  CHECK_RESULT(ReadBinaryInterp(module_filename, file_data.data(),
+                                file_data.size(), options, errors,
+                                &module_desc));
 
   if (s_verbose) {
     module_desc.istream.Disassemble(stream);
@@ -301,7 +301,6 @@ static Result ReadAndRunModule(const char* module_filename) {
   } else {
     BindImports(module, imports);
   }
-  BindImports(module, imports);
 
   Instance::Ptr instance;
   CHECK_RESULT(InstantiateModule(imports, module, &instance));

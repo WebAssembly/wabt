@@ -1,7 +1,7 @@
 ;;; TOOL: run-roundtrip
 ;;; ARGS: --stdout
 (module
-  (import "a" "b" (table 2 anyfunc)))
+  (import "a" "b" (table 2 funcref)))
 (;; STDOUT ;;;
 (module
   (import "a" "b" (table (;0;) 2 funcref)))

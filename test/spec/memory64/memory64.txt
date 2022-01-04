@@ -3,10 +3,10 @@
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/memory64.wast:8: assert_invalid passed:
-  error: only one memory block allowed
+  out/test/spec/memory64/memory64/memory64.4.wasm:000000f: error: only one memory block allowed
   000000f: error: OnMemory callback failed
 out/test/spec/memory64/memory64.wast:9: assert_invalid passed:
-  error: only one memory block allowed
+  out/test/spec/memory64/memory64/memory64.5.wasm:0000023: error: only one memory block allowed
   0000023: error: OnMemory callback failed
 out/test/spec/memory64/memory64.wast:18: assert_invalid passed:
   0000000: error: memory variable out of range: 0 (max 0)
@@ -26,14 +26,14 @@ out/test/spec/memory64/memory64.wast:31: assert_invalid passed:
 out/test/spec/memory64/memory64.wast:35: assert_invalid passed:
   000001d: error: load/store memory 0 out of range 0
 out/test/spec/memory64/memory64.wast:39: assert_invalid passed:
-  error: memory variable out of range: 0 (max 0)
+  0000000: error: memory variable out of range: 0 (max 0)
   0000019: error: OnMemorySizeExpr callback failed
 out/test/spec/memory64/memory64.wast:43: assert_invalid passed:
-  error: memory variable out of range: 0 (max 0)
-  error: type mismatch in memory.grow, expected [i32] but got [i64]
+  0000000: error: memory variable out of range: 0 (max 0)
+  out/test/spec/memory64/memory64/memory64.17.wasm:000001b: error: type mismatch in memory.grow, expected [i32] but got [i64]
   000001b: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory64/memory64.wast:49: assert_invalid passed:
-  error: max pages (0) must be >= initial pages (1)
+  out/test/spec/memory64/memory64/memory64.18.wasm:000000e: error: max pages (0) must be >= initial pages (1)
   000000e: error: OnMemory callback failed
 57/57 tests passed.
 ;;; STDOUT ;;)

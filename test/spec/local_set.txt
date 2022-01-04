@@ -2,85 +2,85 @@
 ;;; STDIN_FILE: third_party/testsuite/local_set.wast
 (;; STDOUT ;;;
 out/test/spec/local_set.wast:148: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.1.wasm:000001c: error: type mismatch in local.set, expected [i32] but got []
   000001c: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:152: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got [f32]
+  out/test/spec/local_set/local_set.2.wasm:0000020: error: type mismatch in local.set, expected [i32] but got [f32]
   0000020: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:156: assert_invalid passed:
-  error: type mismatch in local.set, expected [f32] but got [f64]
+  out/test/spec/local_set/local_set.3.wasm:0000024: error: type mismatch in local.set, expected [f32] but got [f64]
   0000024: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:160: assert_invalid passed:
-  error: type mismatch in local.set, expected [i64] but got [f64]
+  out/test/spec/local_set/local_set.4.wasm:0000026: error: type mismatch in local.set, expected [i64] but got [f64]
   0000026: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:169: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.5.wasm:000001b: error: type mismatch in local.set, expected [i32] but got []
   000001b: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:173: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got [f32]
+  out/test/spec/local_set/local_set.6.wasm:000001f: error: type mismatch in local.set, expected [i32] but got [f32]
   000001f: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:177: assert_invalid passed:
-  error: type mismatch in local.set, expected [f32] but got [f64]
+  out/test/spec/local_set/local_set.7.wasm:0000023: error: type mismatch in local.set, expected [f32] but got [f64]
   0000023: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:181: assert_invalid passed:
-  error: type mismatch in local.set, expected [i64] but got [f64]
+  out/test/spec/local_set/local_set.8.wasm:0000024: error: type mismatch in local.set, expected [i64] but got [f64]
   0000024: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:186: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.9.wasm:000001a: error: type mismatch in local.set, expected [i32] but got []
   000001a: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:194: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.10.wasm:000001e: error: type mismatch in local.set, expected [i32] but got []
   000001e: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:203: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.11.wasm:000001e: error: type mismatch in local.set, expected [i32] but got []
   000001e: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:212: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.12.wasm:0000020: error: type mismatch in local.set, expected [i32] but got []
   0000020: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:221: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.13.wasm:0000023: error: type mismatch in local.set, expected [i32] but got []
   0000023: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:230: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.14.wasm:000001e: error: type mismatch in local.set, expected [i32] but got []
   000001e: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:239: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.15.wasm:000001e: error: type mismatch in local.set, expected [i32] but got []
   000001e: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:248: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.16.wasm:000001e: error: type mismatch in local.set, expected [i32] but got []
   000001e: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:257: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.17.wasm:000001a: error: type mismatch in local.set, expected [i32] but got []
   000001a: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:265: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.18.wasm:000001a: error: type mismatch in local.set, expected [i32] but got []
   000001a: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:273: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.19.wasm:0000020: error: type mismatch in local.set, expected [i32] but got []
   0000020: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:282: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got []
+  out/test/spec/local_set/local_set.20.wasm:0000037: error: type mismatch in local.set, expected [i32] but got []
   0000037: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:301: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got [f32]
+  out/test/spec/local_set/local_set.21.wasm:0000021: error: type mismatch in local.set, expected [i32] but got [f32]
   0000021: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:305: assert_invalid passed:
-  error: type mismatch in local.set, expected [i32] but got [f32]
+  out/test/spec/local_set/local_set.22.wasm:0000022: error: type mismatch in local.set, expected [i32] but got [f32]
   0000022: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:309: assert_invalid passed:
-  error: type mismatch in local.set, expected [f64] but got [i64]
+  out/test/spec/local_set/local_set.23.wasm:0000020: error: type mismatch in local.set, expected [f64] but got [i64]
   0000020: error: OnLocalSetExpr callback failed
 out/test/spec/local_set.wast:317: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/local_set/local_set.24.wasm:000001d: error: type mismatch in implicit return, expected [i32] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:321: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/local_set/local_set.25.wasm:000001d: error: type mismatch in implicit return, expected [i64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:325: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/local_set/local_set.26.wasm:0000020: error: type mismatch in implicit return, expected [f32] but got []
   0000021: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:329: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/local_set/local_set.27.wasm:0000024: error: type mismatch in implicit return, expected [f64] but got []
   0000025: error: EndFunctionBody callback failed
 out/test/spec/local_set.wast:337: assert_invalid passed:
   0000000: error: local variable out of range (max 2)

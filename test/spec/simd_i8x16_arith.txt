@@ -1,0 +1,29 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_i8x16_arith.wast
+(;; STDOUT ;;;
+out/test/spec/simd_i8x16_arith.wast:354: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.1.wasm:000001c: error: type mismatch in i8x16.neg, expected [v128] but got [i32]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/simd_i8x16_arith.wast:355: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.2.wasm:0000021: error: type mismatch in i8x16.add, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd_i8x16_arith.wast:356: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.3.wasm:0000021: error: type mismatch in i8x16.sub, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnBinaryExpr callback failed
+out/test/spec/simd_i8x16_arith.wast:361: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.4.wasm:000001a: error: type mismatch in i8x16.neg, expected [v128] but got []
+  000001a: error: OnUnaryExpr callback failed
+out/test/spec/simd_i8x16_arith.wast:369: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.5.wasm:000002c: error: type mismatch in i8x16.add, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd_i8x16_arith.wast:377: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.6.wasm:000001a: error: type mismatch in i8x16.add, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/simd_i8x16_arith.wast:385: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.7.wasm:000002c: error: type mismatch in i8x16.sub, expected [v128, v128] but got [v128]
+  000002c: error: OnBinaryExpr callback failed
+out/test/spec/simd_i8x16_arith.wast:393: assert_invalid passed:
+  out/test/spec/simd_i8x16_arith/simd_i8x16_arith.8.wasm:000001a: error: type mismatch in i8x16.sub, expected [v128, v128] but got []
+  000001a: error: OnBinaryExpr callback failed
+129/129 tests passed.
+;;; STDOUT ;;)

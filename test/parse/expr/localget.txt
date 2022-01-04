@@ -1,0 +1,5 @@
+;;; TOOL: wat2wasm
+(module
+  (func (local i32)
+    local.get 0
+    drop))

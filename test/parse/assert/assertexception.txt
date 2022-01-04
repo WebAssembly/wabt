@@ -1,0 +1,8 @@
+;;; TOOL: wast2json
+;;; ARGS: --enable-exceptions
+(module
+  (tag $t)
+  (func $foo (throw $t))
+  (export "foo" (func $foo)))
+
+(assert_exception (invoke "foo"))

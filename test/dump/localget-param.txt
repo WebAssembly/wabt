@@ -1,0 +1,99 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v
+(module
+  (func (param i32 f32)
+    (local i64 f32 i32 f32)
+    local.get 0
+    drop
+    local.get 1
+    drop
+    local.get 2
+    drop
+    local.get 3
+    drop
+    local.get 4
+    drop
+    local.get 5
+    drop ))
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 02                                        ; num params
+000000d: 7f                                        ; i32
+000000e: 7d                                        ; f32
+000000f: 00                                        ; num results
+0000009: 06                                        ; FIXUP section size
+; section "Function" (3)
+0000010: 03                                        ; section code
+0000011: 00                                        ; section size (guess)
+0000012: 01                                        ; num functions
+0000013: 00                                        ; function 0 signature index
+0000011: 02                                        ; FIXUP section size
+; section "Code" (10)
+0000014: 0a                                        ; section code
+0000015: 00                                        ; section size (guess)
+0000016: 01                                        ; num functions
+; function body 0
+0000017: 00                                        ; func body size (guess)
+0000018: 04                                        ; local decl count
+0000019: 01                                        ; local type count
+000001a: 7e                                        ; i64
+000001b: 01                                        ; local type count
+000001c: 7d                                        ; f32
+000001d: 01                                        ; local type count
+000001e: 7f                                        ; i32
+000001f: 01                                        ; local type count
+0000020: 7d                                        ; f32
+0000021: 20                                        ; local.get
+0000022: 00                                        ; local index
+0000023: 1a                                        ; drop
+0000024: 20                                        ; local.get
+0000025: 01                                        ; local index
+0000026: 1a                                        ; drop
+0000027: 20                                        ; local.get
+0000028: 02                                        ; local index
+0000029: 1a                                        ; drop
+000002a: 20                                        ; local.get
+000002b: 03                                        ; local index
+000002c: 1a                                        ; drop
+000002d: 20                                        ; local.get
+000002e: 04                                        ; local index
+000002f: 1a                                        ; drop
+0000030: 20                                        ; local.get
+0000031: 05                                        ; local index
+0000032: 1a                                        ; drop
+0000033: 0b                                        ; end
+0000017: 1c                                        ; FIXUP func body size
+0000015: 1e                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+localget-param.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000018 func[0]:
+ 000019: 01 7e                      | local[0] type=i64
+ 00001b: 01 7d                      | local[1] type=f32
+ 00001d: 01 7f                      | local[2] type=i32
+ 00001f: 01 7d                      | local[3] type=f32
+ 000021: 20 00                      | local.get 0
+ 000023: 1a                         | drop
+ 000024: 20 01                      | local.get 1
+ 000026: 1a                         | drop
+ 000027: 20 02                      | local.get 2
+ 000029: 1a                         | drop
+ 00002a: 20 03                      | local.get 3
+ 00002c: 1a                         | drop
+ 00002d: 20 04                      | local.get 4
+ 00002f: 1a                         | drop
+ 000030: 20 05                      | local.get 5
+ 000032: 1a                         | drop
+ 000033: 0b                         | end
+;;; STDOUT ;;)

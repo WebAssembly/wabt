@@ -1,0 +1,55 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_f64x2_pmin_pmax.wast
+(;; STDOUT ;;;
+out/test/spec/simd_f64x2_pmin_pmax.wast:11629: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.1.wat:1:33: error: unexpected token "i8x16.pmin", expected an instr.
+  (memory 1) (func (result v128) (i8x16.pmin (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11630: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.2.wat:1:33: error: unexpected token "i8x16.pmax", expected an instr.
+  (memory 1) (func (result v128) (i8x16.pmax (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11631: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.3.wat:1:33: error: unexpected token "i16x8.pmin", expected an instr.
+  (memory 1) (func (result v128) (i16x8.pmin (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11632: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.4.wat:1:33: error: unexpected token "i16x8.pmax", expected an instr.
+  (memory 1) (func (result v128) (i16x8.pmax (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11633: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.5.wat:1:33: error: unexpected token "i32x4.pmin", expected an instr.
+  (memory 1) (func (result v128) (i32x4.pmin (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11634: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.6.wat:1:33: error: unexpected token "i32x4.pmax", expected an instr.
+  (memory 1) (func (result v128) (i32x4.pmax (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11635: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.7.wat:1:33: error: unexpected token "i64x2.pmin", expected an instr.
+  (memory 1) (func (result v128) (i64x2.pmin (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11636: assert_malformed passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.8.wat:1:33: error: unexpected token "i64x2.pmax", expected an instr.
+  (memory 1) (func (result v128) (i64x2.pmax (v128.const i32x4 0 0 0 0) (v128.c...
+                                  ^^^^^^^^^^
+out/test/spec/simd_f64x2_pmin_pmax.wast:11639: assert_invalid passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.9.wasm:0000022: error: type mismatch in f64x2.pmin, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd_f64x2_pmin_pmax.wast:11640: assert_invalid passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.10.wasm:0000022: error: type mismatch in f64x2.pmax, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd_f64x2_pmin_pmax.wast:11645: assert_invalid passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.11.wasm:000002d: error: type mismatch in f64x2.pmin, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd_f64x2_pmin_pmax.wast:11653: assert_invalid passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.12.wasm:000001b: error: type mismatch in f64x2.pmin, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/simd_f64x2_pmin_pmax.wast:11661: assert_invalid passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.13.wasm:000002d: error: type mismatch in f64x2.pmax, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd_f64x2_pmin_pmax.wast:11669: assert_invalid passed:
+  out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.14.wasm:000001b: error: type mismatch in f64x2.pmax, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+3886/3886 tests passed.
+;;; STDOUT ;;)

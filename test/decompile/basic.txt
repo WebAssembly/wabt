@@ -21,11 +21,11 @@
 
   (func $f (param i32 i32) (result i32) (local i64 f32 f64)
     i64.const 8
-    set_local 2
+    local.set 2
     f32.const 6.0
-    set_local 3
+    local.set 3
     f64.const 7.0
-    tee_local 4
+    local.tee 4
     f64.const 10.0
     f64.lt
     if
@@ -36,8 +36,8 @@
       i32.add
       i32.store offset=4
     end
-    get_local 0
-    get_global $g1
+    local.get 0
+    global.get $g1
     i32.add
     i32.const 9
     call $f
@@ -97,7 +97,7 @@
     drop
     i32.const 3
     end
-    set_local 0
+    local.set 0
     nop
     ref.null func
     ref.is_null
@@ -111,10 +111,10 @@
     ;; of first definition.
     loop
       i32.const 1
-      tee_local 0
+      local.tee 0
       br_if 0
     end
-    get_local 0
+    local.get 0
     drop
   )
   ;; LLD outputs a name section with de-mangled C++ function signatures as names,

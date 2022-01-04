@@ -1,7 +1,7 @@
 ;;; TOOL: run-roundtrip
 ;;; ARGS: --stdout --inline-import
 (module
-  (import "mod" "t1" (table 1 anyfunc))
+  (import "mod" "t1" (table 1 funcref))
 )
 (;; STDOUT ;;;
 (module

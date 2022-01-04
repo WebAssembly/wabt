@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (func (local $f f32) local.get f))
+(;; STDERR ;;;
+out/test/parse/expr/bad-localget-name.txt:3:40: error: unexpected token "f", expected a numeric index or a name (e.g. 12 or $foo).
+(module (func (local $f f32) local.get f))
+                                       ^
+;;; STDERR ;;)

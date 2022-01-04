@@ -1,11 +1,11 @@
 ;;; TOOL: wast2json
 ;;; ERROR: 1
 (module
-  (func (param i32) (result i32) get_local 0)
-  (export "foo" 0))
+  (func (param i32) (result i32) local.get 0)
+  (export "foo" (func 0)))
 (assert_return (invoke "foo" (f32.const 0)) (i32.const 0))
 (;; STDERR ;;;
-out/test/typecheck/bad-assertreturn-invoke-type-mismatch.txt:5:17: error: unexpected token 0, expected (.
-  (export "foo" 0))
-                ^
+out/test/typecheck/bad-assertreturn-invoke-type-mismatch.txt:6:41: error: type mismatch for argument 0 of invoke. got f32, expected i32
+(assert_return (invoke "foo" (f32.const 0)) (i32.const 0))
+                                        ^
 ;;; STDERR ;;)

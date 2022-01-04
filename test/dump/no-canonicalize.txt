@@ -4,20 +4,20 @@
   (import "stdio" "print" (func (param i32)))
   (memory 100)
   (export "f1" (func $f1))
-  (table anyfunc (elem $f2 $f3))
+  (table funcref (elem $f2 $f3))
   (type $t (func (param i32) (result i32)))
   (func $f1 (param i32 i32)
-    get_local 0
-    get_local 1
+    local.get 0
+    local.get 1
     call_indirect (type $t)
     drop)
   (func $f2 (param i32)
-    get_local 0
+    local.get 0
     i32.const 1
     i32.add
     drop)
   (func $f3 (param i32)
-    get_local 0
+    local.get 0
     i32.const 2
     i32.mul
     drop))

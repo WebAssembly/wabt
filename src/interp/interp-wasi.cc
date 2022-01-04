@@ -92,13 +92,13 @@ typedef struct __wasi_fdstat_t {
 static_assert(sizeof(__wasi_fdstat_t) == 24, "witx calculated size");
 static_assert(alignof(__wasi_fdstat_t) == 8, "witx calculated align");
 static_assert(offsetof(__wasi_fdstat_t, fs_filetype) == 0,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_fdstat_t, fs_flags) == 2,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_fdstat_t, fs_rights_base) == 8,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_fdstat_t, fs_rights_inheriting) == 16,
-               "witx calculated offset");
+              "witx calculated offset");
 
 struct __wasi_iovec_t {
   __wasi_ptr_t buf;
@@ -141,17 +141,17 @@ static_assert(alignof(__wasi_filestat_t) == 8, "witx calculated align");
 static_assert(offsetof(__wasi_filestat_t, dev) == 0, "witx calculated offset");
 static_assert(offsetof(__wasi_filestat_t, ino) == 8, "witx calculated offset");
 static_assert(offsetof(__wasi_filestat_t, filetype) == 16,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_filestat_t, nlink) == 24,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_filestat_t, size) == 32,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_filestat_t, atim) == 40,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_filestat_t, mtim) == 48,
-               "witx calculated offset");
+              "witx calculated offset");
 static_assert(offsetof(__wasi_filestat_t, ctim) == 56,
-               "witx calculated offset");
+              "witx calculated offset");
 
 #define __WASI_ERRNO_SUCCESS (UINT16_C(0))
 #define __WASI_ERRNO_NOENT (UINT16_C(44))
@@ -194,8 +194,8 @@ class WasiInstance {
      *                                      __wasi_timestamp_t *time)
      */
     __wasi_timestamp_t t;
-    results[0].Set<u32>(
-        uvwasi_clock_time_get(uvwasi, params[0].Get<u32>(), params[1].Get<u64>(), &t));
+    results[0].Set<u32>(uvwasi_clock_time_get(uvwasi, params[0].Get<u32>(),
+                                              params[1].Get<u64>(), &t));
     uint32_t time_ptr = params[2].Get<u32>();
     CHECK_RESULT(writeValue<__wasi_timestamp_t>(t, time_ptr, trap));
     return Result::Ok;
@@ -231,9 +231,9 @@ class WasiInstance {
       trace_stream->Writef("path_open : %s\n", path);
     }
     uvwasi_fd_t outfd;
-    results[0].Set<u32>(
-        uvwasi_path_open(uvwasi, dirfd, dirflags, path, path_len, oflags,
-                         fs_rights_base, fs_rights_inherting, fs_flags, &outfd));
+    results[0].Set<u32>(uvwasi_path_open(
+        uvwasi, dirfd, dirflags, path, path_len, oflags, fs_rights_base,
+        fs_rights_inherting, fs_flags, &outfd));
     if (trace_stream) {
       trace_stream->Writef("path_open -> %d\n", results[0].Get<u32>());
     }
@@ -268,8 +268,8 @@ class WasiInstance {
         filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
     uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
     if (trace_stream) {
-      trace_stream->Writef("path_filestat_get -> size=%" PRIu64 " %d\n", buf.st_size,
-                           results[0].Get<u32>());
+      trace_stream->Writef("path_filestat_get -> size=%" PRIu64 " %d\n",
+                           buf.st_size, results[0].Get<u32>());
     }
     return Result::Ok;
   }
@@ -395,8 +395,8 @@ class WasiInstance {
         filestat_ptr, sizeof(__wasi_filestat_t), &filestat, trap));
     uvwasi_serdes_write_filestat_t(filestat, 0, &buf);
     if (trace_stream) {
-      trace_stream->Writef("fd_filestat_get -> size=%" PRIu64 " %d\n", buf.st_size,
-                           results[0].Get<u32>());
+      trace_stream->Writef("fd_filestat_get -> size=%" PRIu64 " %d\n",
+                           buf.st_size, results[0].Get<u32>());
     }
     return Result::Ok;
   }
@@ -477,7 +477,8 @@ class WasiInstance {
           reinterpret_cast<const uint8_t**>(&iovs[i].buf), trap));
     }
     __wasi_ptr_t* out_addr;
-    CHECK_RESULT(getMemPtr<__wasi_ptr_t>(params[3].Get<u32>(), 1, &out_addr, trap));
+    CHECK_RESULT(
+        getMemPtr<__wasi_ptr_t>(params[3].Get<u32>(), 1, &out_addr, trap));
     results[0].Set<u32>(
         uvwasi_fd_write(uvwasi, fd, iovs.data(), iovs.size(), out_addr));
     return Result::Ok;
@@ -537,7 +538,8 @@ class WasiInstance {
     uvwasi_size_t environ_buf_size;
     uvwasi_environ_sizes_get(uvwasi, &environc, &environ_buf_size);
     CHECK_RESULT(writeValue<uint32_t>(environc, params[0].Get<u32>(), trap));
-    CHECK_RESULT(writeValue<uint32_t>(environ_buf_size, params[1].Get<u32>(), trap));
+    CHECK_RESULT(
+        writeValue<uint32_t>(environ_buf_size, params[1].Get<u32>(), trap));
     if (trace_stream) {
       trace_stream->Writef("environ_sizes_get -> %d %d\n", environc,
                            environ_buf_size);
@@ -573,7 +575,8 @@ class WasiInstance {
     uvwasi_size_t arg_buf_size;
     uvwasi_args_sizes_get(uvwasi, &argc, &arg_buf_size);
     CHECK_RESULT(writeValue<uint32_t>(argc, params[0].Get<u32>(), trap));
-    CHECK_RESULT(writeValue<uint32_t>(arg_buf_size, params[1].Get<u32>(), trap));
+    CHECK_RESULT(
+        writeValue<uint32_t>(arg_buf_size, params[1].Get<u32>(), trap));
     if (trace_stream) {
       trace_stream->Writef("args_sizes_get -> %d %d\n", argc, arg_buf_size);
     }

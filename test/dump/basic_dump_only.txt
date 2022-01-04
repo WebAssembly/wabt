@@ -8,8 +8,8 @@
     i32.const 1
     i32.add
     i32.store
-    get_local 0
-    get_local 1
+    local.get 0
+    local.get 1
     i32.add)
   (export "f" (func $f)))
 (;; STDOUT ;;;

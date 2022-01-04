@@ -18,6 +18,9 @@ out/test/typecheck/bad-bulk-memory-no-memory.txt:6:53: error: data_segment varia
 out/test/typecheck/bad-bulk-memory-no-memory.txt:7:41: error: memory variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 memory.copy
                                         ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-no-memory.txt:7:41: error: memory variable out of range: 0 (max 0)
+    i32.const 0 i32.const 0 i32.const 0 memory.copy
+                                        ^^^^^^^^^^^
 out/test/typecheck/bad-bulk-memory-no-memory.txt:8:41: error: memory variable out of range: 0 (max 0)
     i32.const 0 i32.const 0 i32.const 0 memory.fill
                                         ^^^^^^^^^^^

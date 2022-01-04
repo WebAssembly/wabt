@@ -143,6 +143,7 @@ class WastParser {
   Result ParseQuotedText(std::string* text);
   bool ParseOffsetOpt(Address* offset);
   bool ParseAlignOpt(Address* align);
+  Result ParseMemidx(Location loc, Var* memidx);
   Result ParseLimitsIndex(Limits*);
   Result ParseLimits(Limits*);
   Result ParseNat(uint64_t*, bool is_64);
@@ -203,11 +204,20 @@ class WastParser {
   template <typename T>
   Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
+  Result ParseMemoryInstrVar(Location, std::unique_ptr<Expr>*);
+  template <typename T>
   Result ParsePlainLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParseMemoryLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParseMemoryExpr(Location, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParseMemoryBinaryExpr(Location, std::unique_ptr<Expr>*);
   Result ParseSimdLane(Location, uint64_t*);
 
   Result ParseCommandList(Script*, CommandPtrVector*);
   Result ParseCommand(Script*, CommandPtr*);
+  Result ParseAssertExceptionCommand(CommandPtr*);
   Result ParseAssertExhaustionCommand(CommandPtr*);
   Result ParseAssertInvalidCommand(CommandPtr*);
   Result ParseAssertMalformedCommand(CommandPtr*);

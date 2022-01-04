@@ -1,0 +1,95 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_i8x16_cmp.wast
+(;; STDOUT ;;;
+out/test/spec/simd_i8x16_cmp.wast:1401: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.1.wasm:0000021: error: type mismatch in i8x16.eq, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1402: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.2.wasm:0000021: error: type mismatch in i8x16.ge_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1403: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.3.wasm:0000021: error: type mismatch in i8x16.ge_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1404: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.4.wasm:0000021: error: type mismatch in i8x16.gt_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1405: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.5.wasm:0000021: error: type mismatch in i8x16.gt_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1406: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.6.wasm:0000021: error: type mismatch in i8x16.le_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1407: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.7.wasm:0000021: error: type mismatch in i8x16.le_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1408: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.8.wasm:0000021: error: type mismatch in i8x16.lt_s, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1409: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.9.wasm:0000021: error: type mismatch in i8x16.lt_u, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1410: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.10.wasm:0000021: error: type mismatch in i8x16.ne, expected [v128, v128] but got [i32, f32]
+  0000021: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1689: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.12.wasm:000002c: error: type mismatch in i8x16.eq, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1697: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.13.wasm:000001a: error: type mismatch in i8x16.eq, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1705: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.14.wasm:000002c: error: type mismatch in i8x16.ne, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1713: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.15.wasm:000001a: error: type mismatch in i8x16.ne, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1721: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.16.wasm:000002c: error: type mismatch in i8x16.lt_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1729: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.17.wasm:000001a: error: type mismatch in i8x16.lt_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1737: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.18.wasm:000002c: error: type mismatch in i8x16.lt_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1745: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.19.wasm:000001a: error: type mismatch in i8x16.lt_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1753: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.20.wasm:000002c: error: type mismatch in i8x16.le_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1761: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.21.wasm:000001a: error: type mismatch in i8x16.le_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1769: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.22.wasm:000002c: error: type mismatch in i8x16.le_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1777: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.23.wasm:000001a: error: type mismatch in i8x16.le_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1785: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.24.wasm:000002c: error: type mismatch in i8x16.gt_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1793: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.25.wasm:000001a: error: type mismatch in i8x16.gt_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1801: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.26.wasm:000002c: error: type mismatch in i8x16.gt_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1809: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.27.wasm:000001a: error: type mismatch in i8x16.gt_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1817: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.28.wasm:000002c: error: type mismatch in i8x16.ge_s, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1825: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.29.wasm:000001a: error: type mismatch in i8x16.ge_s, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1833: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.30.wasm:000002c: error: type mismatch in i8x16.ge_u, expected [v128, v128] but got [v128]
+  000002c: error: OnCompareExpr callback failed
+out/test/spec/simd_i8x16_cmp.wast:1841: assert_invalid passed:
+  out/test/spec/simd_i8x16_cmp/simd_i8x16_cmp.31.wasm:000001a: error: type mismatch in i8x16.ge_u, expected [v128, v128] but got []
+  000001a: error: OnCompareExpr callback failed
+443/443 tests passed.
+;;; STDOUT ;;)

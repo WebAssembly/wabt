@@ -2,7 +2,7 @@
 (module
   (export "test" (func $test))
   (func $test (param i32) (result i32)
-    get_local 0
+    local.get 0
     i32.const 100
     i32.add))
 

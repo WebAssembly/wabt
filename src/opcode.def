@@ -231,6 +231,8 @@ WABT_OPCODE(___,  I32,  ___,  ___,  0,  0,    0xe1, InterpBrUnless, "br_unless",
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe2, InterpCallImport, "call_import", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe3, InterpData, "data", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe4, InterpDropKeep, "drop_keep", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe5, InterpCatchDrop, "catch_drop", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe6, InterpAdjustFrameForReturnCall, "adjust_frame_for_return_call", "")
 
 /* Saturating float-to-int opcodes (--enable-saturating-float-to-int) */
 WABT_OPCODE(I32,  F32,  ___,  ___,  0,  0xfc, 0x00, I32TruncSatF32S, "i32.trunc_sat_f32_s", "")

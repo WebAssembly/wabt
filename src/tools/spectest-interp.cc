@@ -43,7 +43,7 @@ using namespace wabt;
 using namespace wabt::interp;
 
 static int s_verbose;
-static const char* s_infile;
+static std::string s_infile;
 static Thread::Options s_thread_options;
 static Stream* s_trace_stream;
 static Features s_features;
@@ -88,7 +88,10 @@ static void ParseOptions(int argc, char** argv) {
                    []() { s_trace_stream = s_stdout_stream.get(); });
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
-                     [](const char* argument) { s_infile = argument; });
+                     [](const char* argument) {
+                       s_infile = argument;
+                       ConvertBackslashToSlash(&s_infile);
+                     });
   parser.Parse(argc, argv);
 }
 
@@ -161,7 +164,7 @@ class RegisterCommand : public CommandMixin<CommandType::Register> {
 
 struct ExpectedValue {
   TypedValue value;
-  Type lane_type;             // Only valid if value.type == Type::V128.
+  Type lane_type;  // Only valid if value.type == Type::V128.
   // Up to 4 NaN values used, depending on |value.type| and |lane_type|:
   //   | type  | lane_type | valid                 |
   //   | f32   |           | nan[0]                |
@@ -308,6 +311,12 @@ typedef AssertModuleCommand<CommandType::AssertUnlinkable>
     AssertUnlinkableCommand;
 typedef AssertModuleCommand<CommandType::AssertUninstantiable>
     AssertUninstantiableCommand;
+
+class AssertExceptionCommand
+    : public CommandMixin<CommandType::AssertException> {
+ public:
+  Action action;
+};
 
 // An extremely simple JSON parser that only knows how to parse the expected
 // format from wat2wasm.
@@ -753,7 +762,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
     }
 
     default:
-      PrintError("unknown concrete type: \"%s\"", lane_type.GetName());
+      PrintError("unknown concrete type: \"%s\"", lane_type.GetName().c_str());
       return wabt::Result::Error;
   }
 
@@ -825,7 +834,7 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       break;
 
     default:
-      PrintError("unknown concrete type: \"%s\"", type.GetName());
+      PrintError("unknown concrete type: \"%s\"", type.GetName().c_str());
       return wabt::Result::Error;
   }
 
@@ -889,7 +898,8 @@ wabt::Result JSONParser::ParseExpectedValues(
   return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseConstVector(ValueTypes* out_types, Values* out_values) {
+wabt::Result JSONParser::ParseConstVector(ValueTypes* out_types,
+                                          Values* out_values) {
   out_values->clear();
   EXPECT("[");
   bool first = true;
@@ -1102,6 +1112,19 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
+  } else if (Match("\"assert_exception\"")) {
+    if (!s_features.exceptions_enabled()) {
+      PrintError("invalid command: exceptions not allowed");
+      return wabt::Result::Error;
+    }
+    auto command = MakeUnique<AssertExceptionCommand>();
+    EXPECT(",");
+    CHECK_RESULT(ParseLine(&command->line));
+    EXPECT(",");
+    CHECK_RESULT(ParseAction(&command->action));
+    EXPECT(",");
+    CHECK_RESULT(ParseActionResult());
+    *out_command = std::move(command);
   } else {
     PrintError("unknown command type");
     return wabt::Result::Error;
@@ -1170,6 +1193,7 @@ class CommandRunner {
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
+  wabt::Result OnAssertExceptionCommand(const AssertExceptionCommand*);
 
   wabt::Result CheckAssertReturnResult(const AssertReturnCommand* command,
                                        int index,
@@ -1182,16 +1206,16 @@ class CommandRunner {
   wabt::Result ReadInvalidTextModule(string_view module_filename,
                                      const std::string& header);
   wabt::Result ReadInvalidModule(int line_number,
-                           string_view module_filename,
-                           ModuleType module_type,
-                           const char* desc);
+                                 string_view module_filename,
+                                 ModuleType module_type,
+                                 const char* desc);
   wabt::Result ReadUnlinkableModule(int line_number,
-                              string_view module_filename,
-                              ModuleType module_type,
-                              const char* desc);
+                                    string_view module_filename,
+                                    ModuleType module_type,
+                                    const char* desc);
 
   Store store_;
-  Registry registry_;  // Used when importing.
+  Registry registry_;   // Used when importing.
   Registry instances_;  // Used when referencing module by name in invoke.
   ExportMap last_instance_;
   int passed_ = 0;
@@ -1218,15 +1242,15 @@ CommandRunner::CommandRunner() : store_(s_features) {
 
   for (auto&& print : print_funcs) {
     auto import_name = StringPrintf("spectest.%s", print.name);
-    spectest[print.name] = HostFunc::New(
-        store_, print.type,
-        [=](Thread& inst, const Values& params, Values& results,
-            Trap::Ptr* trap) -> wabt::Result {
-          printf("called host ");
-          WriteCall(s_stdout_stream.get(), import_name, print.type, params,
-                    results, *trap);
-          return wabt::Result::Ok;
-        });
+    spectest[print.name] =
+        HostFunc::New(store_, print.type,
+                      [=](Thread& inst, const Values& params, Values& results,
+                          Trap::Ptr* trap) -> wabt::Result {
+                        printf("called host ");
+                        WriteCall(s_stdout_stream.get(), import_name,
+                                  print.type, params, results, *trap);
+                        return wabt::Result::Ok;
+                      });
   }
 
   spectest["table"] =
@@ -1234,14 +1258,18 @@ CommandRunner::CommandRunner() : store_(s_features) {
 
   spectest["memory"] = interp::Memory::New(store_, MemoryType{Limits{1, 2}});
 
-  spectest["global_i32"] = interp::Global::New(
-      store_, GlobalType{ValueType::I32, Mutability::Const}, Value::Make(u32{666}));
-  spectest["global_i64"] = interp::Global::New(
-      store_, GlobalType{ValueType::I64, Mutability::Const}, Value::Make(u64{666}));
-  spectest["global_f32"] = interp::Global::New(
-      store_, GlobalType{ValueType::F32, Mutability::Const}, Value::Make(f32{666}));
-  spectest["global_f64"] = interp::Global::New(
-      store_, GlobalType{ValueType::F64, Mutability::Const}, Value::Make(f64{666}));
+  spectest["global_i32"] =
+      interp::Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
+                          Value::Make(u32{666}));
+  spectest["global_i64"] =
+      interp::Global::New(store_, GlobalType{ValueType::I64, Mutability::Const},
+                          Value::Make(u64{666}));
+  spectest["global_f32"] =
+      interp::Global::New(store_, GlobalType{ValueType::F32, Mutability::Const},
+                          Value::Make(f32{666}));
+  spectest["global_f64"] =
+      interp::Global::New(store_, GlobalType{ValueType::F64, Mutability::Const},
+                          Value::Make(f64{666}));
 }
 
 wabt::Result CommandRunner::Run(const Script& script) {
@@ -1294,6 +1322,11 @@ wabt::Result CommandRunner::Run(const Script& script) {
       case CommandType::AssertExhaustion:
         TallyCommand(OnAssertExhaustionCommand(
             cast<AssertExhaustionCommand>(command.get())));
+        break;
+
+      case CommandType::AssertException:
+        TallyCommand(OnAssertExceptionCommand(
+            cast<AssertExceptionCommand>(command.get())));
         break;
     }
   }
@@ -1349,7 +1382,7 @@ ActionResult CommandRunner::RunAction(int line_number,
 }
 
 wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
-                                            const std::string& header) {
+                                                  const std::string& header) {
   std::vector<uint8_t> file_data;
   wabt::Result result = ReadFile(module_filename, &file_data);
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
@@ -1368,7 +1401,7 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
 }
 
 interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
-                                               Errors* errors) {
+                                              Errors* errors) {
   std::vector<uint8_t> file_data;
 
   if (Failed(ReadFile(module_filename, &file_data))) {
@@ -1381,8 +1414,9 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
   ModuleDesc module_desc;
-  if (Failed(ReadBinaryInterp(file_data.data(), file_data.size(), options,
-                              errors, &module_desc))) {
+  if (Failed(ReadBinaryInterp(module_filename, file_data.data(),
+                              file_data.size(), options, errors,
+                              &module_desc))) {
     return {};
   }
 
@@ -1394,9 +1428,9 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
 }
 
 wabt::Result CommandRunner::ReadInvalidModule(int line_number,
-                                        string_view module_filename,
-                                        ModuleType module_type,
-                                        const char* desc) {
+                                              string_view module_filename,
+                                              ModuleType module_type,
+                                              const char* desc) {
   std::string header = StringPrintf(
       "%s:%d: %s passed", source_filename_.c_str(), line_number, desc);
 
@@ -1498,7 +1532,7 @@ wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
 wabt::Result CommandRunner::OnAssertMalformedCommand(
     const AssertMalformedCommand* command) {
   wabt::Result result = ReadInvalidModule(command->line, command->filename,
-                                    command->type, "assert_malformed");
+                                          command->type, "assert_malformed");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be malformed: \"%s\"",
                command->filename.c_str());
@@ -1554,7 +1588,7 @@ wabt::Result CommandRunner::OnAssertUnlinkableCommand(
 wabt::Result CommandRunner::OnAssertInvalidCommand(
     const AssertInvalidCommand* command) {
   wabt::Result result = ReadInvalidModule(command->line, command->filename,
-                                    command->type, "assert_invalid");
+                                          command->type, "assert_invalid");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be invalid: \"%s\"",
                command->filename.c_str());
@@ -1628,10 +1662,12 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
           return TypedValueToString(ev.value);
 
         case ExpectedNan::Arithmetic:
-          return StringPrintf("%s:nan:arithmetic", ev.value.type.GetName());
+          return StringPrintf("%s:nan:arithmetic",
+                              ev.value.type.GetName().c_str());
 
         case ExpectedNan::Canonical:
-          return StringPrintf("%s:nan:canonical", ev.value.type.GetName());
+          return StringPrintf("%s:nan:canonical",
+                              ev.value.type.GetName().c_str());
       }
       break;
 
@@ -1804,6 +1840,19 @@ wabt::Result CommandRunner::OnAssertExhaustionCommand(
   PrintError(command->line, "assert_exhaustion passed: %s",
              result.trap->message().c_str());
 #endif
+  return wabt::Result::Ok;
+}
+
+wabt::Result CommandRunner::OnAssertExceptionCommand(
+    const AssertExceptionCommand* command) {
+  ActionResult result =
+      RunAction(command->line, &command->action, RunVerbosity::Quiet);
+  if (!result.trap || result.trap->message() != "uncaught exception") {
+    PrintError(command->line, "expected an exception to be thrown");
+    return wabt::Result::Error;
+  }
+  PrintError(command->line, "assert_exception passed");
+
   return wabt::Result::Ok;
 }
 

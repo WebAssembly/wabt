@@ -17,14 +17,14 @@
 #include <cassert>
 #include <cstdarg>
 #include <cstdint>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 
 #include "config.h"
 
-#include "src/binary-writer.h"
 #include "src/binary-writer-spec.h"
+#include "src/binary-writer.h"
 #include "src/common.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
@@ -49,7 +49,7 @@ static Features s_features;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  read a file in the wasm spec test format, check it for errors, and
+    R"(  read a file in the wasm spec test format, check it for errors, and
   convert it to a JSON file and associated wasm binary files.
 
 examples:

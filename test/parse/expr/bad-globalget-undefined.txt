@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (func
+    global.get 0
+    drop))
+(;; STDERR ;;;
+out/test/parse/expr/bad-globalget-undefined.txt:5:16: error: global variable out of range: 0 (max 0)
+    global.get 0
+               ^
+;;; STDERR ;;)

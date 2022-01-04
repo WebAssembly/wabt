@@ -100,8 +100,8 @@ int string_view::compare(size_type pos1,
   return substr(pos1, n1).compare(string_view(s, n2));
 }
 
-string_view::size_type string_view::find(string_view s, size_type pos) const
-    noexcept {
+string_view::size_type string_view::find(string_view s,
+                                         size_type pos) const noexcept {
   pos = std::min(pos, size_);
   const_iterator iter = std::search(begin() + pos, end(), s.begin(), s.end());
   return iter == end() ? npos : iter - begin();
@@ -121,16 +121,16 @@ string_view::size_type string_view::find(const char* s, size_type pos) const {
   return find(string_view(s), pos);
 }
 
-string_view::size_type string_view::rfind(string_view s, size_type pos) const
-    noexcept {
+string_view::size_type string_view::rfind(string_view s,
+                                          size_type pos) const noexcept {
   pos = std::min(std::min(pos, size_ - s.size_) + s.size_, size_);
   reverse_iterator iter = std::search(reverse_iterator(begin() + pos), rend(),
                                       s.rbegin(), s.rend());
   return iter == rend() ? npos : (rend() - iter - s.size_);
 }
 
-string_view::size_type string_view::rfind(char c, size_type pos) const
-    noexcept {
+string_view::size_type string_view::rfind(char c,
+                                          size_type pos) const noexcept {
   return rfind(string_view(&c, 1), pos);
 }
 
@@ -144,17 +144,16 @@ string_view::size_type string_view::rfind(const char* s, size_type pos) const {
   return rfind(string_view(s), pos);
 }
 
-string_view::size_type string_view::find_first_of(string_view s,
-                                                  size_type pos) const
-    noexcept {
+string_view::size_type string_view::find_first_of(string_view s, size_type pos)
+    const noexcept {
   pos = std::min(pos, size_);
   const_iterator iter =
       std::find_first_of(begin() + pos, end(), s.begin(), s.end());
   return iter == end() ? npos : iter - begin();
 }
 
-string_view::size_type string_view::find_first_of(char c, size_type pos) const
-    noexcept {
+string_view::size_type string_view::find_first_of(char c, size_type pos)
+    const noexcept {
   return find_first_of(string_view(&c, 1), pos);
 }
 
@@ -177,8 +176,8 @@ string_view::size_type string_view::find_last_of(string_view s,
   return iter == rend() ? npos : (rend() - iter - 1);
 }
 
-string_view::size_type string_view::find_last_of(char c, size_type pos) const
-    noexcept {
+string_view::size_type string_view::find_last_of(char c,
+                                                 size_type pos) const noexcept {
   return find_last_of(string_view(&c, 1), pos);
 }
 

@@ -44,7 +44,8 @@ class ElemSegment;
 class Module;
 class Instance;
 class Thread;
-template <typename T> class RefPtr;
+template <typename T>
+class RefPtr;
 
 using s8 = int8_t;
 using u8 = uint8_t;
@@ -63,8 +64,10 @@ using Buffer = std::vector<u8>;
 using ValueType = wabt::Type;
 using ValueTypes = std::vector<ValueType>;
 
-template <typename T> bool HasType(ValueType);
-template <typename T> void RequireType(ValueType);
+template <typename T>
+bool HasType(ValueType);
+template <typename T>
+void RequireType(ValueType);
 bool IsReference(ValueType);
 bool TypesMatch(ValueType expected, ValueType actual);
 
@@ -78,6 +81,7 @@ enum class ObjectKind {
   Null,
   Foreign,
   Trap,
+  Exception,
   DefinedFunc,
   HostFunc,
   Table,
@@ -90,7 +94,7 @@ enum class ObjectKind {
 };
 
 const char* GetName(Mutability);
-const char* GetName(ValueType);
+const std::string GetName(ValueType);
 const char* GetName(ExternKind);
 const char* GetName(ObjectKind);
 
@@ -141,13 +145,13 @@ struct Simd {
 
   inline T& operator[](u8 idx) {
 #if WABT_BIG_ENDIAN
-    idx = (~idx) & (L-1);
+    idx = (~idx) & (L - 1);
 #endif
     return v[idx];
   }
   inline T operator[](u8 idx) const {
 #if WABT_BIG_ENDIAN
-    idx = (~idx) & (L-1);
+    idx = (~idx) & (L - 1);
 #endif
     return v[idx];
   }
@@ -305,6 +309,32 @@ struct LocalDesc {
   u32 end;
 };
 
+// Metadata for representing exception handlers associated with a function's
+// code. This is needed to look up exceptions from call frames from interpreter
+// instructions.
+struct CatchDesc {
+  Index tag_index;
+  u32 offset;
+};
+
+// Handlers for a catch-less `try` or `try-catch` block are included in the
+// Catch kind. `try-delegate` instructions create a Delegate handler.
+enum class HandlerKind { Catch, Delegate };
+
+struct HandlerDesc {
+  HandlerKind kind;
+  u32 try_start_offset;
+  u32 try_end_offset;
+  std::vector<CatchDesc> catches;
+  union {
+    u32 catch_all_offset;
+    u32 delegate_handler_index;
+  };
+  // Local stack heights at the handler site that need to be restored.
+  u32 values;
+  u32 exceptions;
+};
+
 struct FuncDesc {
   // Includes params.
   ValueType GetLocalType(Index) const;
@@ -312,6 +342,7 @@ struct FuncDesc {
   FuncType type;
   std::vector<LocalDesc> locals;
   u32 code_offset;
+  std::vector<HandlerDesc> handlers;
 };
 
 struct TableDesc {
@@ -378,13 +409,19 @@ struct ModuleDesc {
 //// Runtime ////
 
 struct Frame {
-  explicit Frame(Ref func, u32 values, u32 offset, Instance*, Module*);
+  explicit Frame(Ref func,
+                 u32 values,
+                 u32 exceptions,
+                 u32 offset,
+                 Instance*,
+                 Module*);
 
   void Mark(Store&);
 
   Ref func;
-  u32 values;  // Height of the value stack at this activation.
-  u32 offset;  // Istream offset; either the return PC, or the current PC.
+  u32 values;      // Height of the value stack at this activation.
+  u32 exceptions;  // Height of the exception stack at this activation.
+  u32 offset;      // Istream offset; either the return PC, or the current PC.
 
   // Cached for convenience. Both are null if func is a HostFunc.
   Instance* inst;
@@ -405,8 +442,8 @@ class FreeList {
   const T& Get(Index) const;
   T& Get(Index);
 
-  Index size() const;  // 1 greater than the maximum index.
-  Index count() const; // The number of used elements.
+  Index size() const;   // 1 greater than the maximum index.
+  Index count() const;  // The number of used elements.
 
  private:
   // TODO: Optimize memory layout? We could probably store all of this
@@ -645,6 +682,27 @@ class Trap : public Object {
 
   std::string message_;
   std::vector<Frame> trace_;
+};
+
+class Exception : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Exception;
+  static const char* GetTypeName() { return "Exception"; }
+  using Ptr = RefPtr<Exception>;
+
+  static Exception::Ptr New(Store&, Ref tag, Values& args);
+
+  Ref tag() const;
+  Values& args();
+
+ private:
+  friend Store;
+  explicit Exception(Store&, Ref, Values&);
+  void Mark(Store&) override;
+
+  Ref tag_;
+  Values args_;
 };
 
 class Extern : public Object {
@@ -1025,6 +1083,7 @@ enum class RunResult {
   Ok,
   Return,
   Trap,
+  Exception,
 };
 
 // TODO: Kinda weird to have a thread as an object, but it makes reference
@@ -1183,11 +1242,17 @@ class Thread : public Object {
   template <typename T, typename V = T>
   RunResult DoAtomicRmwCmpxchg(Instr, Trap::Ptr* out_trap);
 
+  RunResult DoThrow(Exception::Ptr exn_ref);
+
   RunResult StepInternal(Trap::Ptr* out_trap);
 
   std::vector<Frame> frames_;
   std::vector<Value> values_;
   std::vector<u32> refs_;  // Index into values_.
+
+  // Exception handling requires tracking a separate stack of caught
+  // exceptions for catch blocks.
+  RefVec exceptions_;
 
   // Cached for convenience.
   Store& store_;

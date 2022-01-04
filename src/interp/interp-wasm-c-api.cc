@@ -48,7 +48,7 @@ static std::unique_ptr<FileStream> s_stdout_stream;
 static ValueType ToWabtValueType(wasm_valkind_t);
 static wasm_valkind_t FromWabtValueType(ValueType);
 
-static wasm_externkind_t FromWabtExternKind(ExternKind );
+static wasm_externkind_t FromWabtExternKind(ExternKind);
 
 static ValueTypes ToWabtValueTypes(const wasm_valtype_vec_t* types);
 static void FromWabtValueTypes(const ValueTypes&, wasm_valtype_vec_t* out);
@@ -81,17 +81,17 @@ struct wasm_valtype_t {
 struct wasm_externtype_t {
   static std::unique_ptr<wasm_externtype_t> New(std::unique_ptr<ExternType>);
 
-  std::unique_ptr<wasm_externtype_t> Clone() const {
-    return New(I->Clone());
-  }
+  std::unique_ptr<wasm_externtype_t> Clone() const { return New(I->Clone()); }
 
   virtual ~wasm_externtype_t() {}
 
   wasm_externtype_t(const wasm_externtype_t& other) = delete;
-  wasm_externtype_t& operator=(const wasm_externtype_t& other)  = delete;
+  wasm_externtype_t& operator=(const wasm_externtype_t& other) = delete;
 
   template <typename T>
-  T* As() const { return cast<T>(I.get()); }
+  T* As() const {
+    return cast<T>(I.get());
+  }
 
   std::unique_ptr<ExternType> I;
 
@@ -251,7 +251,9 @@ struct wasm_ref_t {
   wasm_ref_t(RefPtr<Object> ptr) : I(ptr) {}
 
   template <typename T>
-  T* As() const { return cast<T>(I.get()); }
+  T* As() const {
+    return cast<T>(I.get());
+  }
 
   RefPtr<Object> I;
 };
@@ -285,9 +287,7 @@ struct wasm_module_t : wasm_ref_t {
     return *this;
   }
 
-  ~wasm_module_t() {
-    wasm_byte_vec_delete(&binary);
-  }
+  ~wasm_module_t() { wasm_byte_vec_delete(&binary); }
   // TODO: This is used for wasm_module_serialize/wasm_module_deserialize.
   // Currently the standard wasm binary bytes are cached here, but it would be
   // better to have a serialization of ModuleDesc instead.
@@ -537,21 +537,21 @@ static void print_sig(const FuncType& sig) {
 #ifndef NDEBUG
   fprintf(stderr, "(");
   bool first = true;
-  for (auto Type : sig.params) {
+  for (auto type : sig.params) {
     if (!first) {
       fprintf(stderr, ", ");
     }
     first = false;
-    fprintf(stderr, "%s", Type.GetName());
+    fprintf(stderr, "%s", type.GetName().c_str());
   }
   fprintf(stderr, ") -> (");
   first = true;
-  for (auto Type : sig.results) {
+  for (auto type : sig.results) {
     if (!first) {
       fprintf(stderr, ", ");
     }
     first = false;
-    fprintf(stderr, "%s", Type.GetName());
+    fprintf(stderr, "%s", type.GetName().c_str());
   }
   fprintf(stderr, ")\n");
 #endif
@@ -632,8 +632,8 @@ own wasm_module_t* wasm_module_new(wasm_store_t* store,
                                    const wasm_byte_vec_t* binary) {
   Errors errors;
   ModuleDesc module_desc;
-  if (Failed(ReadBinaryInterp(binary->data, binary->size, GetOptions(), &errors,
-                              &module_desc))) {
+  if (Failed(ReadBinaryInterp("<internal>", binary->data, binary->size,
+                              GetOptions(), &errors, &module_desc))) {
     FormatErrorsToFile(errors, Location::Type::Binary);
     return nullptr;
   }

@@ -22,12 +22,13 @@
 #include <vector>
 
 #include "config.h"
+#include "src/base-types.h"
+#include "src/string-format.h"
 
 namespace wabt {
 
 class Type;
 
-using Index = uint32_t;
 using TypeVector = std::vector<Type>;
 
 class Type {
@@ -57,9 +58,10 @@ class Type {
   };
 
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code) : enum_(static_cast<Enum>(code)), index_(UINT32_MAX) {}
-  Type(Enum e) : enum_(e), index_(UINT32_MAX) {}
-  Type(Enum e, Index index) : enum_(e), index_(index) {
+  Type(int32_t code)
+      : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
+  Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
+  Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
     assert(e == Enum::Reference);
   }
   operator Enum() const { return enum_; }
@@ -76,7 +78,7 @@ class Type {
     return IsRef();
   }
 
-  const char* GetName() const {
+  std::string GetName() const {
     switch (enum_) {
       case Type::I32:       return "i32";
       case Type::I64:       return "i64";
@@ -90,11 +92,10 @@ class Type {
       case Type::Void:      return "void";
       case Type::Any:       return "any";
       case Type::ExternRef: return "externref";
-
-      // TODO(dbezhetskov): add index for reference type.
       case Type::Reference:
-        return "reference";
-      default:              return "<type_index>";
+        return StringPrintf("(ref %d)", type_index_);
+      default:
+        return StringPrintf("<type_index[%d]>", enum_);
     }
   }
 
@@ -119,7 +120,7 @@ class Type {
   //   (type $T (func (result i32 i64)))
   //   ...
   //   (block (type $T) ...)
-  // 
+  //
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
   Index GetIndex() const {
@@ -129,7 +130,7 @@ class Type {
 
   Index GetReferenceIndex() const {
     assert(enum_ == Enum::Reference);
-    return index_;
+    return type_index_;
   }
 
   TypeVector GetInlineVector() const {
@@ -155,7 +156,7 @@ class Type {
 
  private:
   Enum enum_;
-  Index index_;
+  Index type_index_;  // Only used for for Type::Reference
 };
 
 }  // namespace wabt

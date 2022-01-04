@@ -1,0 +1,13 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (memory 0)
+  (func
+    f32.const 100
+    memory.grow
+    drop))
+(;; STDERR ;;;
+out/test/typecheck/bad-memory-grow-type-mismatch.txt:7:5: error: type mismatch in memory.grow, expected [i32] but got [f32]
+    memory.grow
+    ^^^^^^^^^^^
+;;; STDERR ;;)
