@@ -210,6 +210,10 @@ class WastParser {
   template <typename T>
   Result ParseMemoryLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
   template <typename T>
+  Result ParseSIMDLoadStoreInstr(Location loc,
+                                 Token token,
+                                 std::unique_ptr<Expr>* out_expr);
+  template <typename T>
   Result ParseMemoryExpr(Location, std::unique_ptr<Expr>*);
   template <typename T>
   Result ParseMemoryBinaryExpr(Location, std::unique_ptr<Expr>*);
