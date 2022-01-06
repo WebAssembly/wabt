@@ -50,13 +50,18 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
+  Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
   Result OnDataDropExpr(DataDropExpr*) override;
+  Result OnMemoryFillExpr(MemoryFillExpr*) override;
+  Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
+  Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableCopyExpr(TableCopyExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
@@ -65,6 +70,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
+  Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
@@ -254,8 +260,30 @@ Result NameApplier::OnDataDropExpr(DataDropExpr* expr) {
   return Result::Ok;
 }
 
+Result NameApplier::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->srcmemidx));
+  CHECK_RESULT(UseNameForMemoryVar(&expr->destmemidx));
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemoryFillExpr(MemoryFillExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
 Result NameApplier::OnMemoryInitExpr(MemoryInitExpr* expr) {
   CHECK_RESULT(UseNameForDataSegmentVar(&expr->var));
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemorySizeExpr(MemorySizeExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
   return Result::Ok;
 }
 
@@ -298,6 +326,11 @@ Result NameApplier::OnTableSizeExpr(TableSizeExpr* expr) {
 
 Result NameApplier::OnTableFillExpr(TableFillExpr* expr) {
   CHECK_RESULT(UseNameForTableVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnStoreExpr(StoreExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
   return Result::Ok;
 }
 
@@ -409,6 +442,11 @@ Result NameApplier::EndIfExpr(IfExpr* expr) {
   return Result::Ok;
 }
 
+Result NameApplier::OnLoadExpr(LoadExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
 Result NameApplier::OnGlobalSetExpr(GlobalSetExpr* expr) {
   CHECK_RESULT(UseNameForGlobalVar(&expr->var));
   return Result::Ok;
@@ -451,8 +489,26 @@ Result NameApplier::VisitTag(Tag* tag) {
 }
 
 Result NameApplier::VisitExport(Index export_index, Export* export_) {
-  if (export_->kind == ExternalKind::Func) {
-    UseNameForFuncVar(&export_->var);
+  switch (export_->kind) {
+    case ExternalKind::Func:
+      UseNameForFuncVar(&export_->var);
+      break;
+
+    case ExternalKind::Table:
+      UseNameForTableVar(&export_->var);
+      break;
+
+    case ExternalKind::Memory:
+      UseNameForMemoryVar(&export_->var);
+      break;
+
+    case ExternalKind::Global:
+      UseNameForGlobalVar(&export_->var);
+      break;
+
+    case ExternalKind::Tag:
+      UseNameForTagVar(&export_->var);
+      break;
   }
   return Result::Ok;
 }
