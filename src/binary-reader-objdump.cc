@@ -1232,9 +1232,15 @@ Result BinaryReaderObjdump::EndModule() {
     return Result::Error;
   }
 
-  if (options_->relocs) {
+  if (options_->relocs && ShouldPrintDetails()) {
     if (next_data_reloc_ != objdump_state_->data_relocations.size()) {
-      err_stream_->Writef("Data reloctions outside of segments\n");
+      err_stream_->Writef("Data reloctions outside of segments!:\n");
+      for (size_t i = next_data_reloc_;
+           i < objdump_state_->data_relocations.size(); i++) {
+        const Reloc& reloc = objdump_state_->data_relocations[i];
+        PrintRelocation(reloc, reloc.offset);
+      }
+
       return Result::Error;
     }
   }
