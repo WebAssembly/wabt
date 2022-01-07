@@ -1940,6 +1940,28 @@ Result WastParser::ParseMemoryLoadStoreInstr(Location loc,
 }
 
 template <typename T>
+Result WastParser::ParseSIMDLoadStoreInstr(Location loc,
+                                           Token token,
+                                           std::unique_ptr<Expr>* out_expr) {
+  ErrorUnlessOpcodeEnabled(token);
+
+  Address offset;
+  Address align;
+  ParseOffsetOpt(&offset);
+  ParseAlignOpt(&align);
+
+  uint64_t lane_idx = 0;
+  Result result = ParseSimdLane(loc, &lane_idx);
+
+  if (Failed(result)) {
+    return Result::Error;
+  }
+
+  out_expr->reset(new T(token.opcode(), align, offset, lane_idx, loc));
+  return Result::Ok;
+}
+
+template <typename T>
 Result WastParser::ParseMemoryExpr(Location loc,
                                    std::unique_ptr<Expr>* out_expr) {
   Var memidx;
@@ -2346,44 +2368,14 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     }
 
     case TokenType::SimdLoadLane: {
-      Token token = Consume();
-      ErrorUnlessOpcodeEnabled(token);
-
-      Address offset;
-      Address align;
-      ParseOffsetOpt(&offset);
-      ParseAlignOpt(&align);
-
-      uint64_t lane_idx = 0;
-      Result result = ParseSimdLane(loc, &lane_idx);
-
-      if (Failed(result)) {
-        return Result::Error;
-      }
-
-      out_expr->reset(
-          new SimdLoadLaneExpr(token.opcode(), align, offset, lane_idx, loc));
+      CHECK_RESULT(
+          ParseSIMDLoadStoreInstr<SimdLoadLaneExpr>(loc, Consume(), out_expr));
       break;
     }
 
     case TokenType::SimdStoreLane: {
-      Token token = Consume();
-      ErrorUnlessOpcodeEnabled(token);
-
-      Address offset;
-      Address align;
-      ParseOffsetOpt(&offset);
-      ParseAlignOpt(&align);
-
-      uint64_t lane_idx = 0;
-      Result result = ParseSimdLane(loc, &lane_idx);
-
-      if (Failed(result)) {
-        return Result::Error;
-      }
-
-      out_expr->reset(
-          new SimdStoreLaneExpr(token.opcode(), align, offset, lane_idx, loc));
+      CHECK_RESULT(
+          ParseSIMDLoadStoreInstr<SimdStoreLaneExpr>(loc, Consume(), out_expr));
       break;
     }
 
