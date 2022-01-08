@@ -87,7 +87,7 @@
 0000040: 00                                        ; subsection size (guess)
 0000041: 03                                        ; num functions
 0000042: 00                                        ; function index
-0000043: 04                                        ; num locals
+0000043: 03                                        ; num locals
 0000044: 00                                        ; local index
 0000045: 04                                        ; string length
 0000046: 4631 5030                                F1P0  ; local name 0
@@ -97,28 +97,24 @@
 0000050: 02                                        ; local index
 0000051: 04                                        ; string length
 0000052: 4631 4c32                                F1L2  ; local name 2
-0000056: 03                                        ; local index
-0000057: 00                                        ; string length
-0000058: 01                                        ; function index
-0000059: 01                                        ; num locals
-000005a: 00                                        ; local index
-000005b: 04                                        ; string length
-000005c: 4632 5030                                F2P0  ; local name 0
-0000060: 02                                        ; function index
-0000061: 04                                        ; num locals
-0000062: 00                                        ; local index
-0000063: 04                                        ; string length
-0000064: 4633 5030                                F3P0  ; local name 0
-0000068: 01                                        ; local index
-0000069: 04                                        ; string length
-000006a: 4633 4c31                                F3L1  ; local name 1
-000006e: 02                                        ; local index
-000006f: 00                                        ; string length
-0000070: 03                                        ; local index
-0000071: 04                                        ; string length
-0000072: 4633 4c33                                F3L3  ; local name 3
-0000040: 35                                        ; FIXUP subsection size
-000002e: 47                                        ; FIXUP section size
+0000056: 01                                        ; function index
+0000057: 01                                        ; num locals
+0000058: 00                                        ; local index
+0000059: 04                                        ; string length
+000005a: 4632 5030                                F2P0  ; local name 0
+000005e: 02                                        ; function index
+000005f: 03                                        ; num locals
+0000060: 00                                        ; local index
+0000061: 04                                        ; string length
+0000062: 4633 5030                                F3P0  ; local name 0
+0000066: 01                                        ; local index
+0000067: 04                                        ; string length
+0000068: 4633 4c31                                F3L1  ; local name 1
+000006c: 03                                        ; local index
+000006d: 04                                        ; string length
+000006e: 4633 4c33                                F3L3  ; local name 3
+0000040: 31                                        ; FIXUP subsection size
+000002e: 43                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
