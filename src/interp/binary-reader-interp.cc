@@ -238,10 +238,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdLoadLaneExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset,
                             uint64_t value) override;
   Result OnSimdStoreLaneExpr(Opcode opcode,
+                             Index memidx,
                              Address alignment_log2,
                              Address offset,
                              uint64_t value) override;
@@ -901,22 +903,24 @@ uint32_t GetAlignment(Address alignment_log2) {
 }
 
 Result BinaryReaderInterp::OnSimdLoadLaneExpr(Opcode opcode,
+                                              Index memidx,
                                               Address alignment_log2,
                                               Address offset,
                                               uint64_t value) {
   CHECK_RESULT(validator_.OnSimdLoadLane(GetLocation(), opcode,
                                          GetAlignment(alignment_log2), value));
-  istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));
+  istream_.Emit(opcode, memidx, offset, static_cast<u8>(value));
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnSimdStoreLaneExpr(Opcode opcode,
+                                               Index memidx,
                                                Address alignment_log2,
                                                Address offset,
                                                uint64_t value) {
   CHECK_RESULT(validator_.OnSimdStoreLane(GetLocation(), opcode,
                                           GetAlignment(alignment_log2), value));
-  istream_.Emit(opcode, kMemoryIndex0, offset, static_cast<u8>(value));
+  istream_.Emit(opcode, memidx, offset, static_cast<u8>(value));
   return Result::Ok;
 }
 

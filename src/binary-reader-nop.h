@@ -315,12 +315,14 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnSimdLoadLaneExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset,
                             uint64_t value) override {
     return Result::Ok;
   }
   Result OnSimdStoreLaneExpr(Opcode opcode,
+                             Index memidx,
                              Address alignment_log2,
                              Address offset,
                              uint64_t value) override {

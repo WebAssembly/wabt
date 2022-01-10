@@ -717,12 +717,15 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
   }
 
 #define DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(name)                             \
-  Result BinaryReaderLogging::name(Opcode opcode, Address alignment_log2,    \
-                                   Address offset, uint64_t value) {         \
-    LOGF(#name "(opcode: \"%s\" (%u), align log2: %" PRIaddress              \
-               ", offset: %" PRIaddress ", lane: %" PRIu64 ")\n",            \
-         opcode.GetName(), opcode.GetCode(), alignment_log2, offset, value); \
-    return reader_->name(opcode, alignment_log2, offset, value);             \
+  Result BinaryReaderLogging::name(Opcode opcode, Index memidx,              \
+                                   Address alignment_log2, Address offset,   \
+                                   uint64_t value) {                         \
+    LOGF(#name "(opcode: \"%s\" (%u), memidx: %" PRIindex                    \
+               ", align log2: %" PRIaddress ", offset: %" PRIaddress         \
+               ", lane: %" PRIu64 ")\n",                                     \
+         opcode.GetName(), opcode.GetCode(), memidx, alignment_log2, offset, \
+         value);                                                             \
+    return reader_->name(opcode, memidx, alignment_log2, offset, value);     \
   }
 
 #define DEFINE0(name)                  \

@@ -1328,12 +1328,20 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::V128Load64Lane: {
         Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx = 0;
+        if (alignment_log2 >> 6) {
+          ERROR_IF(!options_.features.multi_memory_enabled(),
+                   "multi_memory not allowed");
+          CHECK_RESULT(ReadMemidx(&memidx, "store memidx"));
+          alignment_log2 = alignment_log2 & ((1 << 6) - 1);
+        }
         Address offset;
         CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
         uint8_t lane_val;
         CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
 
-        CALLBACK(OnSimdLoadLaneExpr, opcode, alignment_log2, offset, lane_val);
+        CALLBACK(OnSimdLoadLaneExpr, opcode, memidx, alignment_log2, offset,
+                 lane_val);
         CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, lane_val);
         break;
       }
@@ -1343,12 +1351,20 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::V128Store64Lane: {
         Address alignment_log2;
         CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx = 0;
+        if (alignment_log2 >> 6) {
+          ERROR_IF(!options_.features.multi_memory_enabled(),
+                   "multi_memory not allowed");
+          CHECK_RESULT(ReadMemidx(&memidx, "store memidx"));
+          alignment_log2 = alignment_log2 & ((1 << 6) - 1);
+        }
         Address offset;
         CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
         uint8_t lane_val;
         CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
 
-        CALLBACK(OnSimdStoreLaneExpr, opcode, alignment_log2, offset, lane_val);
+        CALLBACK(OnSimdStoreLaneExpr, opcode, memidx, alignment_log2, offset,
+                 lane_val);
         CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, lane_val);
         break;
       }
