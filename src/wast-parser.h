@@ -82,7 +82,7 @@ class WastParser {
   TokenTypePair PeekPair();
 
   // Returns true if the next token's type is equal to the parameter.
-  bool PeekMatch(TokenType);
+  bool PeekMatch(TokenType, size_t n = 0);
 
   // Returns true if the next token's type is '(' and the following token is
   // equal to the parameter.
@@ -209,6 +209,10 @@ class WastParser {
   Result ParsePlainLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
   template <typename T>
   Result ParseMemoryLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParseSIMDLoadStoreInstr(Location loc,
+                                 Token token,
+                                 std::unique_ptr<Expr>* out_expr);
   template <typename T>
   Result ParseMemoryExpr(Location, std::unique_ptr<Expr>*);
   template <typename T>

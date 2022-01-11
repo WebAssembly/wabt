@@ -52,8 +52,9 @@ Result SharedValidator::OnFuncType(const Location& loc,
                                    Index type_index) {
   Result result = Result::Ok;
   if (!options_.features.multi_value_enabled() && result_count > 1) {
-    result |=
-        PrintError(loc, "multiple result values not currently supported.");
+    result |= PrintError(loc,
+                         "multiple result values are not supported without "
+                         "multi-value enabled.");
   }
   func_types_.emplace(
       num_types_++,

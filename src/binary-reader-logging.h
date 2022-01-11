@@ -235,10 +235,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndCodeSection() override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdLoadLaneExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset,
                             uint64_t value) override;
   Result OnSimdStoreLaneExpr(Opcode opcode,
+                             Index memidx,
                              Address alignment_log2,
                              Address offset,
                              uint64_t value) override;

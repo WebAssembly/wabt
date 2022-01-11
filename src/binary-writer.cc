@@ -1673,17 +1673,25 @@ Result BinaryWriter::WriteModule() {
     for (size_t i = 0; i < module_->funcs.size(); ++i) {
       const Func* func = module_->funcs[i];
       Index num_params_and_locals = func->GetNumParamsAndLocals();
-
-      WriteU32Leb128(stream_, i, "function index");
-      WriteU32Leb128(stream_, num_params_and_locals, "num locals");
-
       MakeTypeBindingReverseMapping(num_params_and_locals, func->bindings,
                                     &index_to_name);
+      Index num_named = 0;
+      for (auto s : index_to_name) {
+        if (!s.empty()) {
+          num_named++;
+        }
+      }
+
+      WriteU32Leb128(stream_, i, "function index");
+      WriteU32Leb128(stream_, num_named, "num locals");
+
       for (size_t j = 0; j < num_params_and_locals; ++j) {
         const std::string& name = index_to_name[j];
-        wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
-        WriteU32Leb128(stream_, j, "local index");
-        WriteDebugName(stream_, name, desc);
+        if (!name.empty()) {
+          wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
+          WriteU32Leb128(stream_, j, "local index");
+          WriteDebugName(stream_, name, desc);
+        }
       }
     }
     EndSubsection();

@@ -203,10 +203,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdLoadLaneExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset,
                             uint64_t value) override;
   Result OnSimdStoreLaneExpr(Opcode opcode,
+                             Index memidx,
                              Address alignment_log2,
                              Address offset,
                              uint64_t value) override;
@@ -1099,19 +1101,21 @@ Result BinaryReaderIR::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
 }
 
 Result BinaryReaderIR::OnSimdLoadLaneExpr(Opcode opcode,
+                                          Index memidx,
                                           Address alignment_log2,
                                           Address offset,
                                           uint64_t value) {
-  return AppendExpr(
-      MakeUnique<SimdLoadLaneExpr>(opcode, 1 << alignment_log2, offset, value));
+  return AppendExpr(MakeUnique<SimdLoadLaneExpr>(
+      opcode, Var(memidx), 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
+                                           Index memidx,
                                            Address alignment_log2,
                                            Address offset,
                                            uint64_t value) {
-  return AppendExpr(MakeUnique<SimdStoreLaneExpr>(opcode, 1 << alignment_log2,
-                                                  offset, value));
+  return AppendExpr(MakeUnique<SimdStoreLaneExpr>(
+      opcode, Var(memidx), 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {

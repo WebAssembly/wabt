@@ -299,10 +299,12 @@ class BinaryReaderDelegate {
   virtual Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) = 0;
   virtual Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) = 0;
   virtual Result OnSimdLoadLaneExpr(Opcode opcode,
+                                    Index memidx,
                                     Address alignment_log2,
                                     Address offset,
                                     uint64_t value) = 0;
   virtual Result OnSimdStoreLaneExpr(Opcode opcode,
+                                     Index memidx,
                                      Address alignment_log2,
                                      Address offset,
                                      uint64_t value) = 0;
