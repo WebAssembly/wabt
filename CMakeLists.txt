@@ -256,6 +256,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 add_custom_target(everything)
 
 set(WABT_LIBRARY_SRC
+  ${WABT_BINARY_DIR}/config.h
+
   src/apply-names.h
   src/apply-names.cc
   src/binary.h
@@ -276,7 +278,7 @@ set(WABT_LIBRARY_SRC
   src/color.cc
   src/common.h
   src/common.cc
-  src/config.h
+  src/config.h.in
   src/config.cc
   src/decompiler.h
   src/decompiler-ast.h
