@@ -467,6 +467,10 @@ inline const Features& Store::features() const {
   return features_;
 }
 
+inline std::set<Thread*>& Store::threads() {
+  return threads_;
+}
+
 //// Object ////
 // static
 inline bool Object::classof(const Object* obj) {
@@ -938,16 +942,6 @@ inline std::vector<DataSegment>& Instance::datas() {
 }
 
 //// Thread ////
-// static
-inline bool Thread::classof(const Object* obj) {
-  return obj->kind() == skind;
-}
-
-// static
-inline Thread::Ptr Thread::New(Store& store, const Options& options) {
-  return store.Alloc<Thread>(store, options);
-}
-
 inline Store& Thread::store() {
   return store_;
 }

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -90,7 +91,6 @@ enum class ObjectKind {
   Tag,
   Module,
   Instance,
-  Thread,
 };
 
 const char* GetName(Mutability);
@@ -500,11 +500,15 @@ class Store {
   const Features& features() const;
   void setFeatures(const Features& features) { features_ = features; }
 
+  std::set<Thread*>& threads();
+
  private:
   template <typename T>
   friend class RefPtr;
 
   Features features_;
+  // This set contains the currently active Thread objects.
+  std::set<Thread*> threads_;
   ObjectList objects_;
   RootList roots_;
   std::vector<bool> marks_;
@@ -1086,15 +1090,8 @@ enum class RunResult {
   Exception,
 };
 
-// TODO: Kinda weird to have a thread as an object, but it makes reference
-// marking simpler.
-class Thread : public Object {
+class Thread {
  public:
-  static bool classof(const Object* obj);
-  static const ObjectKind skind = ObjectKind::Thread;
-  static const char* GetTypeName() { return "Thread"; }
-  using Ptr = RefPtr<Thread>;
-
   struct Options {
     static const u32 kDefaultValueStackSize = 64 * 1024 / sizeof(Value);
     static const u32 kDefaultCallStackSize = 64 * 1024 / sizeof(Frame);
@@ -1104,13 +1101,15 @@ class Thread : public Object {
     Stream* trace_stream = nullptr;
   };
 
-  static Thread::Ptr New(Store&, const Options&);
+  Thread(Store& store, Stream* trace_stream = nullptr);
+  ~Thread();
 
   RunResult Run(Trap::Ptr* out_trap);
   RunResult Run(int num_instructions, Trap::Ptr* out_trap);
   RunResult Step(Trap::Ptr* out_trap);
 
   Store& store();
+  void Mark();
 
   Instance* GetCallerInstance();
 
@@ -1119,9 +1118,6 @@ class Thread : public Object {
   friend DefinedFunc;
 
   struct TraceSource;
-
-  explicit Thread(Store&, const Options&);
-  void Mark(Store&) override;
 
   RunResult PushCall(Ref func, u32 offset, Trap::Ptr* out_trap);
   RunResult PushCall(const DefinedFunc&, Trap::Ptr* out_trap);
