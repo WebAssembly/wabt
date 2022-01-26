@@ -32,7 +32,6 @@ const char SECTION_NAME(top)[] =
 "typedef double f64;\n"
 "#endif\n"
 "\n"
-"extern void WASM_RT_ADD_PREFIX(init)(void);\n"
 ;
 
 const char SECTION_NAME(bottom)[] =
