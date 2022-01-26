@@ -299,12 +299,9 @@ static void init_func_types(void) {
   func_types[0] = wasm_rt_register_func_type(1, 1, WASM_RT_I32, WASM_RT_I32);
 }
 
-static u32 w2c_fac(u32);
+static u32 w2c_fac(Z_fac_module_instance_t *, u32);
 
-static void init_globals(void) {
-}
-
-static u32 w2c_fac(u32 w2c_p0) {
+static u32 w2c_fac(Z_fac_module_instance_t *module_instance, u32 w2c_p0) {
   FUNC_PROLOGUE;
   u32 w2c_i0, w2c_i1, w2c_i2;
   w2c_i0 = w2c_p0;
@@ -317,32 +314,37 @@ static u32 w2c_fac(u32 w2c_p0) {
     w2c_i1 = w2c_p0;
     w2c_i2 = 1u;
     w2c_i1 -= w2c_i2;
-    w2c_i1 = w2c_fac(w2c_i1);
+    w2c_i1 = w2c_fac(module_instance, w2c_i1);
     w2c_i0 *= w2c_i1;
   }
   FUNC_EPILOGUE;
   return w2c_i0;
 }
 
-static void init_memory(void) {
+static void init_globals(Z_fac_module_instance_t *module_instance) {
 }
 
-static void init_table(void) {
+
+static void init_memory(Z_fac_module_instance_t *module_instance) {
+  wasm_rt_allocate_memory(&module_instance->w2c_M0, 1, 65536);
+}
+
+static void init_table(Z_fac_module_instance_t *module_instance) {
   uint32_t offset;
 }
 
 /* export: 'fac' */
-u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(Z_fac_module_instance_t *, u32);
 
-static void init_exports(void) {
+static void init_exports(Z_fac_module_instance_t *module_instance) {
   /* export: 'fac' */
   WASM_RT_ADD_PREFIX(Z_facZ_ii) = (&w2c_fac);
 }
 
-void WASM_RT_ADD_PREFIX(init)(void) {
+void WASM_RT_ADD_PREFIX(init)(Z_fac_module_instance_t *module_instance) {
   init_func_types();
-  init_globals();
-  init_memory();
-  init_table();
-  init_exports();
+  init_globals(module_instance);
+  init_memory(module_instance);
+  init_table(module_instance);
+  init_exports(module_instance);
 }

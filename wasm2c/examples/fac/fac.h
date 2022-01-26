@@ -32,10 +32,15 @@ typedef float f32;
 typedef double f64;
 #endif
 
-extern void WASM_RT_ADD_PREFIX(init)(void);
+
+typedef struct {
+  wasm_rt_memory_t w2c_M0;
+} Z_fac_module_instance_t;
+
+extern void WASM_RT_ADD_PREFIX(init)(Z_fac_module_instance_t *);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(Z_fac_module_instance_t *, u32);
 #ifdef __cplusplus
 }
 #endif

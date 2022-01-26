@@ -1,3 +1,4 @@
+(memory $mem 1)
 (func (export "fac") (param i32) (result i32)
   (if (result i32) (i32.eq (local.get 0) (i32.const 0))
     (then (i32.const 1))

@@ -16,6 +16,7 @@ $ wasm2c test.wasm --no-debug-names -o test.c
 Let's look at a simple example of a factorial function.
 
 ```wasm
+(memory $mem 1)
 (func (export "fac") (param $x i32) (result i32)
   (if (result i32) (i32.eq (local.get $x) (i32.const 0))
     (then (i32.const 1))
@@ -53,6 +54,11 @@ initializes the module, and `Z_facZ_ii` is our exported `fac` function, but
 [name-mangled](https://en.wikipedia.org/wiki/Name_mangling) to include the
 function signature.
 
+In addition to parameters defined in `fac.wat`, `init` and `Z_facZ_ii` also
+takes in a pointer to `Z_fac_module_instance_t` (name-mangled `instance_module_instance`). 
+The structure is used to store the context information of the current intance
+and `main.c` is responsible for providing it.
+
 We can define `WASM_RT_MODULE_PREFIX` before including `fac.h` to generate
 these symbols with a prefix, in case we already have a symbol called `init` (or
 even `Z_facZ_ii`!) Note that you'll have to compile `fac.c` with this macro
@@ -69,7 +75,8 @@ too, for this to work.
 
 int main(int argc, char** argv) {
   /* Make sure there is at least one command-line argument. */
-  if (argc < 2) return 1;
+  if (argc < 2)
+    return 1;
 
   /* Convert the argument from a string to an int. We'll implicitly cast the int
   to a `u32`, which is what `fac` expects. */
@@ -78,12 +85,15 @@ int main(int argc, char** argv) {
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
+  /* Declare and initialize the structure for context info. */
+  Z_fac_module_instance_t module_instance;
+
   /* Initialize the fac module. Since we didn't define WASM_RT_MODULE_PREFIX,
   the initialization function is called `init`. */
-  init();
+  init(&module_instance);
 
   /* Call `fac`, using the mangled name. */
-  u32 result = Z_facZ_ii(x);
+  u32 result = Z_facZ_ii(&module_instance, x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
@@ -128,22 +138,42 @@ The generated header file looks something like this:
 extern "C" {
 #endif
 
-#ifndef WASM_RT_INCLUDED_
-#define WASM_RT_INCLUDED_
+#include <stdint.h>
 
-...
+#include "wasm-rt.h"
 
-#endif  /* WASM_RT_INCLUDED_ */
+#ifndef WASM_RT_MODULE_PREFIX
+#define WASM_RT_MODULE_PREFIX
+#endif
 
-extern void WASM_RT_ADD_PREFIX(init)(void);
+#define WASM_RT_PASTE_(x, y) x ## y
+#define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)
+#define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)
+
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef int16_t s16;
+typedef uint32_t u32;
+typedef int32_t s32;
+typedef uint64_t u64;
+typedef int64_t s64;
+typedef float f32;
+typedef double f64;
+
+typedef struct {
+  wasm_rt_memory_t w2c_M0;
+} Z_fac_module_instance_t;
+
+extern void WASM_RT_ADD_PREFIX(init)(Z_fac_module_instance_t *);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(Z_fac_module_instance_t *, u32);
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* FAC_H_GENERATED_ */
+#endif /* FAC_H_GENERATED_ */
 ```
 
 Let's look at each section. The outer `#ifndef` is standard C boilerplate for a
@@ -156,35 +186,19 @@ this header in C++.
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-...
+  ...
 
 #ifdef __cplusplus
 }
 #endif
-#endif  /* FAC_H_GENERATED_ */
+#endif /* FAC_H_GENERATED_ */
 ```
 
-This `WASM_RT_INCLUDED_` section contains a number of definitions required for
-all WebAssembly modules.
+`wasm-rt.h` contains a number of definitions required for
+all WebAssembly modules, which will be explained in the following section.
 
 ```c
-#ifndef WASM_RT_INCLUDED_
-#define WASM_RT_INCLUDED_
-
-...
-
-#endif  /* WASM_RT_INCLUDED_ */
-```
-
-First we can specify the maximum call depth before trapping (used only on
-platforms where we cannot use a signal handler to detect and recover
-from stack-size exhaustion). This defaults to 500:
-
-```c
-#ifndef WASM_RT_MAX_CALL_STACK_DEPTH
-#define WASM_RT_MAX_CALL_STACK_DEPTH 500
-#endif
+#include "wasm-rt.h"
 ```
 
 Next we can specify a module prefix. This is useful if you are using multiple
@@ -196,7 +210,7 @@ here, it's fine to use the default which is an empty prefix:
 #define WASM_RT_MODULE_PREFIX
 #endif
 
-#define WASM_RT_PASTE_(x, y) x ## y
+#define WASM_RT_PASTE_(x, y) x##y
 #define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)
 #define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)
 ```
@@ -216,7 +230,19 @@ typedef float f32;
 typedef double f64;
 ```
 
-Next is the `wasm_rt_trap_t` enum, which is used to give the reason a trap
+Next is the definition of `Z_fac_module_instance_t`, which contains the memory region
+in `fac.wat`.
+
+```c
+typedef struct {
+  wasm_rt_memory_t w2c_M0;
+} Z_fac_module_instance_t;
+```
+
+## Looking at the wasm-rt header, `wasm-rt.h`
+`wasm-rt.h` contains a number of definitions required for all WebAssembly modules.
+
+First is the `wasm_rt_trap_t` enum, which is used to give the reason a trap
 occurred.
 
 ```c
@@ -290,8 +316,7 @@ typedef struct {
 ```
 
 ## Symbols that must be defined by the embedder
-
-Next in `fac.h` are a collection of extern symbols that must be implemented by
+Next in `wasm-rt.h` are a collection of extern symbols that must be implemented by
 the embedder (i.e. you) before this C source can be used.
 
 A C implementation of these functions is defined in
@@ -303,7 +328,6 @@ extern uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ..
 extern void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages);
 extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 extern void wasm_rt_allocate_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
-extern uint32_t wasm_rt_call_stack_depth;
 ```
 
 `wasm_rt_trap` is a function that is called when the module traps. Some
@@ -331,9 +355,6 @@ memory instance, in pages.
 enough space for the given number of initial elements. The elements must be
 cleared to zero.
 
-`wasm_rt_call_stack_depth` is the current stack call depth. Since this is
-shared between modules, it must be defined only once, by the embedder.
-
 ## Exported symbols
 
 Finally, `fac.h` defines exported symbols provided by the module. In our
@@ -342,10 +363,10 @@ provided called `init`, which initializes the module and must be called before
 the module can be used:
 
 ```c
-extern void WASM_RT_ADD_PREFIX(init)(void);
+extern void WASM_RT_ADD_PREFIX(init)(Z_fac_module_instance_t *);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(Z_fac_module_instance_t *, u32);
 ```
 
 All exported names use `WASM_RT_ADD_PREFIX` (as described above) to allow the
@@ -367,12 +388,12 @@ the curious reader, but are out of scope for this document.
 Following those definitions are various initialization functions (`init`,
 `init_func_types`, `init_globals`, `init_memory`, `init_table`, and
 `init_exports`.) In our example, most of these functions are empty, since the
-module doesn't use any globals, memory or tables.
+module doesn't use any globals or tables.
 
 The most interesting part is the definition of the function `fac`:
 
 ```c
-static u32 fac(u32 p0) {
+static u32 fac(instance_stack_info *, instance_memories *, u32 p0) {
   FUNC_PROLOGUE;
   u32 i0, i1, i2;
   i0 = p0;
@@ -443,3 +464,95 @@ $ wat-desugar fac-flat.wat --fold -o fac-folded.wat
 
 The formatting is different and the variable and function names are gone, but
 the structure is the same.
+
+## Instantiate multiple instances of a module
+Since information about the execution context, such as memories, is encapsulated
+in `instance_module_instance`, and a pointer to the structures is being passed through 
+function calls, multiple instances of the same module can be instantiated 
+with different context. 
+
+We can take a look at another version of the `main` function for `rot13` example. By 
+declaring two sets of context information, two instances of `rot13` can be instantiated 
+in the same address space.
+
+```c
+#include "rot13.h"
+
+/* Define the imports as declared in rot13.h. */
+u32 (*Z_hostZ_fill_bufZ_iii)(Z_rot13_module_instance_t *, u32, u32);
+void (*Z_hostZ_buf_doneZ_vii)(Z_rot13_module_instance_t *, u32, u32);
+
+/* Define the implementations of the imports. */
+static u32 fill_buf(Z_rot13_module_instance_t * module_instance, u32 ptr, u32 size);
+static void buf_done(Z_rot13_module_instance_t * module_instance, u32 ptr, u32 size);
+
+/* The string that is currently being processed. This needs to be static
+ * because the buffer is filled in the callback. */
+static const char* s_input;
+
+int main(int argc, char** argv) {
+  /* Define two sets of context info */
+  Z_rot13_module_instance_t module_instance_one;
+  Z_rot13_module_instance_t module_instance_two;
+
+  /* Define the imported memories */
+  wasm_rt_memory_t s_memory_one;
+  wasm_rt_memory_t s_memory_two;
+  module_instance_one.Z_hostZ_mem = &s_memory_one;
+  module_instance_two.Z_hostZ_mem = &s_memory_two;
+
+  /* Initialize the rot13 module. Since we didn't define WASM_RT_MODULE_PREFIX,
+  the initialization function is called `init`. */
+  init(&module_instance_one);
+  init(&module_instance_two);
+
+  /* Allocate 1 page of wasm memory (64KiB). */
+  wasm_rt_allocate_memory(&s_memory_one, 1, 1);
+  wasm_rt_allocate_memory(&s_memory_two, 1, 1);
+
+  /* Provide the imports expected by the module: "host.mem", "host.fill_buf"
+   * and "host.buf_done". Their mangled names are `Z_hostZ_mem`,
+   * `Z_hostZ_fill_bufZ_iii` and `Z_hostZ_buf_doneZ_vii`. */
+  Z_hostZ_fill_bufZ_iii = &fill_buf;
+  Z_hostZ_buf_doneZ_vii = &buf_done;
+
+  /* Call `rot13` on first two argument, using the mangled name. */
+  assert(argc > 2);
+  s_input = argv[0];
+  Z_rot13Z_vv(&module_instance_one);
+  s_input = argv[1];
+  Z_rot13Z_vv(&module_instance_two);
+
+  return 0;
+}
+
+/* Fill the wasm buffer with the input to be rot13'd.
+ *
+ * params:
+ *   ptr: The wasm memory address of the buffer to fill data.
+ *   size: The size of the buffer in wasm memory.
+ * result:
+ *   The number of bytes filled into the buffer. (Must be <= size).
+ */
+u32 fill_buf(Z_rot13_module_instance_t *module_instance, u32 ptr, u32 size) {
+  for (size_t i = 0; i < size; ++i) {
+    if (s_input[i] == 0) {
+      return i;
+    }
+    module_instance->Z_hostZ_mem->data[ptr + i] = s_input[i];
+  }
+  return size;
+}
+
+/* Called when the wasm buffer has been rot13'd.
+ *
+ * params:
+ *   ptr: The wasm memory address of the buffer.
+ *   size: The size of the buffer in wasm memory.
+ */
+void buf_done(Z_rot13_module_instance_t *module_instance, u32 ptr, u32 size) {
+  /* The output buffer is not necessarily null-terminated, so use the %*.s
+   * printf format to limit the number of characters printed. */
+  printf("%s -> %.*s\n", s_input, (int)size, &module_instance->Z_hostZ_mem->data[ptr]);
+}
+```
