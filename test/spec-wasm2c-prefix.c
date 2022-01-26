@@ -213,59 +213,82 @@ static bool is_arithmetic_nan_f64(u64 x) {
   return (x & 0x7ff8000000000000) == 0x7ff8000000000000;
 }
 
+typedef struct Z_spectest_instance_t {
+  wasm_rt_table_t spectest_table;
+  wasm_rt_memory_t spectest_memory;
+  uint32_t spectest_global_i32;
+  uint64_t spectest_global_i64;
+  float spectest_global_f32;
+  double spectest_global_f64;
+} Z_spectest_instance_t;
+
+static Z_spectest_instance_t Z_spectest_instance;
 
 /*
  * spectest implementations
  */
-static void spectest_print(void) {
+void Z_spectestZ_print(Z_spectest_instance_t* instance) {
   printf("spectest.print()\n");
 }
 
-static void spectest_print_i32(uint32_t i) {
+void Z_spectestZ_print_i32(Z_spectest_instance_t* instance, uint32_t i) {
   printf("spectest.print_i32(%d)\n", i);
 }
 
-static void spectest_print_f32(float f) {
+void Z_spectestZ_print_f32(Z_spectest_instance_t* instance, float f) {
   printf("spectest.print_f32(%g)\n", f);
 }
 
-static void spectest_print_i32_f32(uint32_t i, float f) {
+void Z_spectestZ_print_i32_f32(Z_spectest_instance_t* instance,
+                               uint32_t i,
+                               float f) {
   printf("spectest.print_i32_f32(%d %g)\n", i, f);
 }
 
-static void spectest_print_f64(double d) {
+void Z_spectestZ_print_f64(Z_spectest_instance_t* instance, double d) {
   printf("spectest.print_f64(%g)\n", d);
 }
 
-static void spectest_print_f64_f64(double d1, double d2) {
+void Z_spectestZ_print_f64_f64(Z_spectest_instance_t* instance,
+                               double d1,
+                               double d2) {
   printf("spectest.print_f64_f64(%g %g)\n", d1, d2);
 }
 
-static wasm_rt_table_t spectest_table;
-static wasm_rt_memory_t spectest_memory;
-static uint32_t spectest_global_i32 = 666;
-static uint64_t spectest_global_i64 = 666l;
-
-void (*Z_spectestZ_print)(void) = &spectest_print;
-void (*Z_spectestZ_print_i32)(uint32_t) = &spectest_print_i32;
-void (*Z_spectestZ_print_f32)(float) = &spectest_print_f32;
-void (*Z_spectestZ_print_i32_f32)(uint32_t, float) = &spectest_print_i32_f32;
-void (*Z_spectestZ_print_f64)(double) = &spectest_print_f64;
-void (*Z_spectestZ_print_f64_f64)(double, double) = &spectest_print_f64_f64;
-wasm_rt_table_t* Z_spectestZ_table = &spectest_table;
-wasm_rt_memory_t* Z_spectestZ_memory = &spectest_memory;
-uint32_t* Z_spectestZ_global_i32 = &spectest_global_i32;
-uint64_t* Z_spectestZ_global_i64 = &spectest_global_i64;
-
-static void init_spectest_module(void) {
-  wasm_rt_allocate_memory(&spectest_memory, 1, 2);
-  wasm_rt_allocate_table(&spectest_table, 10, 20);
+wasm_rt_table_t* Z_spectestZ_table(Z_spectest_instance_t* instance) {
+  return &instance->spectest_table;
 }
 
+wasm_rt_memory_t* Z_spectestZ_memory(Z_spectest_instance_t* instance) {
+  return &instance->spectest_memory;
+}
+
+uint32_t* Z_spectestZ_global_i32(Z_spectest_instance_t* instance) {
+  return &instance->spectest_global_i32;
+}
+
+uint64_t* Z_spectestZ_global_i64(Z_spectest_instance_t* instance) {
+  return &instance->spectest_global_i64;
+}
+
+float* Z_spectestZ_global_f32(Z_spectest_instance_t* instance) {
+  return &instance->spectest_global_f32;
+}
+
+double* Z_spectestZ_global_f64(Z_spectest_instance_t* instance) {
+  return &instance->spectest_global_f64;
+}
+
+static void init_spectest_module(Z_spectest_instance_t* instance) {
+  instance->spectest_global_i32 = 666;
+  instance->spectest_global_i64 = 666l;
+  wasm_rt_allocate_memory(&instance->spectest_memory, 1, 2);
+  wasm_rt_allocate_table(&instance->spectest_table, 10, 20);
+}
 
 int main(int argc, char** argv) {
   wasm_rt_init();
-  init_spectest_module();
+  init_spectest_module(&Z_spectest_instance);
   run_spec_tests();
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
   wasm_rt_free();

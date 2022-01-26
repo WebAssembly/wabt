@@ -443,3 +443,5 @@ static float wasm_sqrtf(float x) {
   }
   return sqrtf(x);
 }
+
+static bool s_module_initialized = false;
