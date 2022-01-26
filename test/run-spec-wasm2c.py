@@ -106,6 +106,22 @@ def MangleName(s):
     return result
 
 
+def MangleCWriterName(wasm_filename):
+    result = 'Z_'
+
+    for char in wasm_filename:
+        if (char.isalnum() or char == '_'):
+            result += char
+        else:
+            result += 'Z'
+            result += format(ord(char), "02X")
+    return result
+
+
+def MangleStateInfoTypeName(wasm_filename):
+    return MangleCWriterName(wasm_filename[0:(len(wasm_filename) - 5)]) + "_module_instance_t"
+
+
 def IsModuleCommand(command):
     return (command['type'] == 'module' or
             command['type'] == 'assert_uninstantiable')
@@ -128,6 +144,7 @@ class CWriter(object):
         self._CacheModulePrefixes()
         self._WriteIncludes()
         self.out_file.write(self.prefix)
+        self._WriteModuleImports()
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
         for command in self.commands:
             self._WriteCommand(command)
@@ -140,6 +157,9 @@ class CWriter(object):
         if idx_or_name is not None:
             return self.module_prefix_map[idx_or_name]
         return self.module_prefix_map[self.module_idx - 1]
+
+    def GetStateInfoName(self, idx_or_name=None):
+        return self.GetModulePrefix() + '_module_instance'
 
     def _CacheModulePrefixes(self):
         idx = 0
@@ -166,6 +186,22 @@ class CWriter(object):
                     name_idx = idx - 1
 
                 self.module_prefix_map[name_idx] = name
+
+    def _WriteModuleImports(self):
+        idx = 0
+        for command in self.commands:
+            if IsModuleCommand(command):
+                name = os.path.basename(command['filename'])
+                module_instance_type = MangleStateInfoTypeName(name)
+                module_prefix = self.module_prefix_map[idx]
+
+                self.out_file.write("static void %s_spectest_print_i32(%s *module_instance, uint32_t i) { spectest_print_i32(i); }\n" % (module_prefix, module_instance_type))
+                self.out_file.write("void (*%sZ_spectestZ_print_i32Z_vi)(%s *, uint32_t) = & %s_spectest_print_i32;\n" % (module_prefix, module_instance_type, module_prefix))
+                self.out_file.write("static void %s_spectest_print(%s *module_instance) { spectest_print(); }\n" % (module_prefix, module_instance_type))
+                self.out_file.write("void (*%sZ_spectestZ_printZ_vv)(%s *) = & %s_spectest_print;\n" % (module_prefix, module_instance_type, module_prefix))
+                self.out_file.write("\n")
+
+                idx += 1
 
     def _MaybeWriteDummyModule(self):
         if len(self.GetModuleFilenames()) == 0:
@@ -208,11 +244,15 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%sinit();\n' % self.GetModulePrefix())
+        self.out_file.write('%s %s;\n' % (MangleStateInfoTypeName(command['filename']), self.GetStateInfoName()))
+        self.out_file.write('memset(&%s, 0, sizeof(%s));\n' % (self.GetStateInfoName(), MangleStateInfoTypeName(command['filename'])))
+        self.out_file.write('%sinit(&%s);\n' % (self.GetModulePrefix(), self.GetStateInfoName()))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('ASSERT_TRAP(%sinit());\n' % self.GetModulePrefix())
+        self.out_file.write('%s %s;\n' % (MangleStateInfoTypeName(command['filename']), self.GetStateInfoName()))
+        self.out_file.write('memset(&%s, 0, sizeof(%s));\n' % (self.GetStateInfoName(), MangleStateInfoTypeName(command['filename'])))
+        self.out_file.write('ASSERT_TRAP(%sinit(&%s));\n' % (self.GetModulePrefix(), self.GetStateInfoName()))
 
     def _WriteActionCommand(self, command):
         self.out_file.write('%s;\n' % self._Action(command))
@@ -330,7 +370,12 @@ class CWriter(object):
         field = (mangled_module_name + MangleName(action['field']) +
                  MangleName(self._ActionSig(action, expected)))
         if type_ == 'invoke':
-            return '%s(%s)' % (field, self._ConstantList(action.get('args', [])))
+            args = self._ConstantList(action.get('args', []))
+            if (len(args) == 0):
+                args = '&' + self.GetStateInfoName()
+            else:
+                args = '&' + self.GetStateInfoName() + ', ' + args
+            return '%s(%s)' % (field, args)
         elif type_ == 'get':
             return '*%s' % field
         else:
