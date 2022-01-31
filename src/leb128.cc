@@ -112,7 +112,7 @@ static void WriteS32Leb128(Stream* stream, int32_t value, const char* desc) {
   if (value < 0) {
     LEB128_LOOP_UNTIL(value == -1 && (byte & 0x40));
   } else {
-    LEB128_LOOP_UNTIL(value == 0 && !(byte & 0x40));
+    LEB128_LOOP_UNTIL(value == 0 && !(byte & 0x80));
   }
 
   stream->WriteData(data, length, desc);
@@ -124,7 +124,7 @@ static void WriteS64Leb128(Stream* stream, int64_t value, const char* desc) {
   if (value < 0) {
     LEB128_LOOP_UNTIL(value == -1 && (byte & 0x40));
   } else {
-    LEB128_LOOP_UNTIL(value == 0 && !(byte & 0x40));
+    LEB128_LOOP_UNTIL(value == 0 && !(byte & 0x80));
   }
 
   stream->WriteData(data, length, desc);
