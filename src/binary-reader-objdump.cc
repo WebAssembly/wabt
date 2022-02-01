@@ -240,6 +240,15 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
+  Result OnFuncType(Index index,
+                    Index param_count,
+                    Type* param_types,
+                    Index result_count,
+                    Type* result_types) override {
+    objdump_state_->function_param_counts[index] = param_count;
+    return Result::Ok;
+  }
+
   Result OnNameEntry(NameSectionSubsection type,
                      Index index,
                      string_view name) override {
@@ -548,7 +557,6 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDeclCount(Index count) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  local_index_ = 0;
   current_opcode_offset = state->offset;
   return Result::Ok;
 }
@@ -845,6 +853,7 @@ Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
 
   last_opcode_end = 0;
   in_function_body = true;
+  local_index_ = objdump_state_->function_param_counts[index];
   return Result::Ok;
 }
 

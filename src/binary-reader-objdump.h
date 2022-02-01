@@ -76,6 +76,7 @@ struct ObjdumpState {
   ObjdumpNames segment_names;
   ObjdumpNames table_names;
   std::vector<ObjdumpSymbol> symtab;
+  std::map<Index, Index> function_param_counts;
 };
 
 Result ReadBinaryObjdump(const uint8_t* data,
