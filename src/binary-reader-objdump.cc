@@ -54,6 +54,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
  protected:
   string_view GetFunctionName(Index index) const;
   string_view GetGlobalName(Index index) const;
+  string_view GetLocalName(Index function_index, Index local_index) const;
   string_view GetSectionName(Index index) const;
   string_view GetTagName(Index index) const;
   string_view GetSymbolName(Index index) const;
@@ -143,6 +144,11 @@ string_view BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
 
 string_view BinaryReaderObjdumpBase::GetGlobalName(Index index) const {
   return objdump_state_->global_names.Get(index);
+}
+
+string_view BinaryReaderObjdumpBase::GetLocalName(Index function_index,
+                                                  Index local_index) const {
+  return objdump_state_->local_names.Get(function_index, local_index);
 }
 
 string_view BinaryReaderObjdumpBase::GetSectionName(Index index) const {
@@ -275,6 +281,13 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
       default:
         break;
     }
+    return Result::Ok;
+  }
+
+  Result OnLocalName(Index function_index,
+                     Index local_index,
+                     string_view local_name) override {
+    SetLocalName(function_index, local_index, local_name);
     return Result::Ok;
   }
 
@@ -428,6 +441,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  protected:
   void SetFunctionName(Index index, string_view name);
   void SetGlobalName(Index index, string_view name);
+  void SetLocalName(Index function_index, Index local_index, string_view name);
   void SetTagName(Index index, string_view name);
   void SetTableName(Index index, string_view name);
   void SetSegmentName(Index index, string_view name);
@@ -440,6 +454,12 @@ void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
 
 void BinaryReaderObjdumpPrepass::SetGlobalName(Index index, string_view name) {
   objdump_state_->global_names.Set(index, name);
+}
+
+void BinaryReaderObjdumpPrepass::SetLocalName(Index function_index,
+                                              Index local_index,
+                                              string_view name) {
+  objdump_state_->local_names.Set(function_index, local_index, name);
 }
 
 void BinaryReaderObjdumpPrepass::SetTagName(Index index, string_view name) {
@@ -509,6 +529,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Offset last_opcode_end = 0;
   int indent_level = 0;
   Index next_reloc = 0;
+  Index current_function_index = 0;
   Index local_index_ = 0;
   bool in_function_body = false;
 };
@@ -694,6 +715,11 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
              !(name = GetGlobalName(value)).empty()) {
     LogOpcode("%d <" PRIstringview ">", value,
               WABT_PRINTF_STRING_VIEW_ARG(name));
+  } else if ((current_opcode == Opcode::LocalGet ||
+              current_opcode == Opcode::LocalSet) &&
+             !(name = GetLocalName(current_function_index, value)).empty()) {
+    LogOpcode("%d <" PRIstringview ">", value,
+              WABT_PRINTF_STRING_VIEW_ARG(name));
   } else {
     LogOpcode("%d", value);
   }
@@ -853,6 +879,7 @@ Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
 
   last_opcode_end = 0;
   in_function_body = true;
+  current_function_index = index;
   local_index_ = objdump_state_->function_param_counts[index];
   return Result::Ok;
 }
@@ -2168,6 +2195,21 @@ string_view ObjdumpNames::Get(Index index) const {
 
 void ObjdumpNames::Set(Index index, string_view name) {
   names[index] = name.to_string();
+}
+
+string_view ObjdumpLocalNames::Get(Index function_index,
+                                   Index local_index) const {
+  auto iter = names.find(std::pair<Index, Index>(function_index, local_index));
+  if (iter == names.end())
+    return string_view();
+  return iter->second;
+}
+
+void ObjdumpLocalNames::Set(Index function_index,
+                            Index local_index,
+                            string_view name) {
+  names[std::pair<Index, Index>(function_index, local_index)] =
+      name.to_string();
 }
 
 Result ReadBinaryObjdump(const uint8_t* data,
