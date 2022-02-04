@@ -346,7 +346,7 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
       0x0b, 0x01, 0x09, 0x00, 0x20, 0x00, 0x41, 0x01, 0x6a, 0x10, 0x00, 0x0b,
   });
 
-  auto thread = Thread::New(store_, {});
+  Thread thread(store_);
 
   auto host_func =
       HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
@@ -369,7 +369,7 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
   Values results;
   Trap::Ptr trap;
   Result result =
-      GetFuncExport(0)->Call(*thread, {Value::Make(1)}, results, &trap);
+      GetFuncExport(0)->Call(thread, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());

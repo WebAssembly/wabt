@@ -256,6 +256,10 @@ void Store::Collect() {
     }
   }
 
+  for (auto thread : threads_) {
+    thread->Mark();
+  }
+
   // TODO: better GC algo.
   // Loop through all newly marked objects and mark their referents.
   std::vector<bool> all_marked(object_count, false);
@@ -366,10 +370,8 @@ Result Func::Call(Store& store,
                   Values& results,
                   Trap::Ptr* out_trap,
                   Stream* trace_stream) {
-  Thread::Options options;
-  options.trace_stream = trace_stream;
-  Thread::Ptr thread = Thread::New(store, options);
-  return DoCall(*thread, params, results, out_trap);
+  Thread thread(store, trace_stream);
+  return DoCall(thread, params, results, out_trap);
 }
 
 Result Func::Call(Thread& thread,
@@ -934,24 +936,30 @@ void Instance::Mark(Store& store) {
 }
 
 //// Thread ////
-Thread::Thread(Store& store, const Options& options)
-    : Object(skind), store_(store) {
+Thread::Thread(Store& store, Stream* trace_stream)
+    : store_(store), trace_stream_(trace_stream) {
+  store.threads().insert(this);
+
+  Thread::Options options;
   frames_.reserve(options.call_stack_size);
   values_.reserve(options.value_stack_size);
-  trace_stream_ = options.trace_stream;
-  if (options.trace_stream) {
+  if (trace_stream) {
     trace_source_ = MakeUnique<TraceSource>(this);
   }
 }
 
-void Thread::Mark(Store& store) {
+Thread::~Thread() {
+  store_.threads().erase(this);
+}
+
+void Thread::Mark() {
   for (auto&& frame : frames_) {
-    frame.Mark(store);
+    frame.Mark(store_);
   }
   for (auto index : refs_) {
-    store.Mark(values_[index].Get<Ref>());
+    store_.Mark(values_[index].Get<Ref>());
   }
-  store.Mark(exceptions_);
+  store_.Mark(exceptions_);
 }
 
 void Thread::PushValues(const ValueTypes& types, const Values& values) {
