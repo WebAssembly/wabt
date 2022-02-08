@@ -399,7 +399,7 @@ def main(args):
         cc = utils.Executable(options.cc, *options.cflags)
         cc.verbose = options.print_cmd
 
-        with open(json_file_path) as json_file:
+        with open(json_file_path, encoding="utf-8") as json_file:
             spec_json = json.load(json_file)
 
         prefix = ''
