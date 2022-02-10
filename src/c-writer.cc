@@ -20,13 +20,14 @@
 #include <cinttypes>
 #include <map>
 #include <set>
+#include <string_view>
 
 #include "src/cast.h"
 #include "src/common.h"
 #include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
-#include "src/string-view.h"
+#include "src/string-util.h"
 
 #define INDENT_SIZE 2
 
@@ -162,20 +163,20 @@ class CWriter {
   static char MangleType(Type);
   static std::string MangleTypes(const TypeVector&);
   static std::string MangleMultivalueTypes(const TypeVector&);
-  static std::string MangleName(string_view);
-  static std::string MangleFuncName(string_view,
+  static std::string MangleName(std::string_view);
+  static std::string MangleFuncName(std::string_view,
                                     const TypeVector& param_types,
                                     const TypeVector& result_types);
-  static std::string MangleGlobalName(string_view, Type);
-  static std::string LegalizeName(string_view);
-  static std::string ExportName(string_view mangled_name);
-  std::string DefineName(SymbolSet*, string_view);
+  static std::string MangleGlobalName(std::string_view, Type);
+  static std::string LegalizeName(std::string_view);
+  static std::string ExportName(std::string_view mangled_name);
+  std::string DefineName(SymbolSet*, std::string_view);
   std::string DefineImportName(const std::string& name,
-                               string_view module_name,
-                               string_view mangled_field_name);
+                               std::string_view module_name,
+                               std::string_view mangled_field_name);
   std::string DefineGlobalScopeName(const std::string&);
   std::string DefineLocalScopeName(const std::string&);
-  std::string DefineStackVarName(Index, Type, string_view);
+  std::string DefineStackVarName(Index, Type, std::string_view);
 
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
@@ -203,7 +204,7 @@ class CWriter {
   void Write(OpenBrace);
   void Write(CloseBrace);
   void Write(Index);
-  void Write(string_view);
+  void Write(std::string_view);
   void Write(const LocalName&);
   void Write(const GlobalName&);
   void Write(const ExternalPtr&);
@@ -417,7 +418,7 @@ std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
 }
 
 // static
-std::string CWriter::MangleName(string_view name) {
+std::string CWriter::MangleName(std::string_view name) {
   const char kPrefix = 'Z';
   std::string result = "Z_";
 
@@ -436,7 +437,7 @@ std::string CWriter::MangleName(string_view name) {
 }
 
 // static
-std::string CWriter::MangleFuncName(string_view name,
+std::string CWriter::MangleFuncName(std::string_view name,
                                     const TypeVector& param_types,
                                     const TypeVector& result_types) {
   std::string sig = MangleTypes(result_types) + MangleTypes(param_types);
@@ -444,18 +445,18 @@ std::string CWriter::MangleFuncName(string_view name,
 }
 
 // static
-std::string CWriter::MangleGlobalName(string_view name, Type type) {
+std::string CWriter::MangleGlobalName(std::string_view name, Type type) {
   std::string sig(1, MangleType(type));
   return MangleName(name) + MangleName(sig);
 }
 
 // static
-std::string CWriter::ExportName(string_view mangled_name) {
-  return "WASM_RT_ADD_PREFIX(" + mangled_name.to_string() + ")";
+std::string CWriter::ExportName(std::string_view mangled_name) {
+  return "WASM_RT_ADD_PREFIX(" + std::string(mangled_name) + ")";
 }
 
 // static
-std::string CWriter::LegalizeName(string_view name) {
+std::string CWriter::LegalizeName(std::string_view name) {
   if (name.empty())
     return "_";
 
@@ -473,7 +474,7 @@ std::string CWriter::LegalizeName(string_view name) {
   return result;
 }
 
-std::string CWriter::DefineName(SymbolSet* set, string_view name) {
+std::string CWriter::DefineName(SymbolSet* set, std::string_view name) {
   std::string legal = LegalizeName(name);
   if (set->find(legal) != set->end()) {
     std::string base = legal + "_";
@@ -486,7 +487,7 @@ std::string CWriter::DefineName(SymbolSet* set, string_view name) {
   return legal;
 }
 
-string_view StripLeadingDollar(string_view name) {
+std::string_view StripLeadingDollar(std::string_view name) {
   if (!name.empty() && name[0] == '$') {
     name.remove_prefix(1);
   }
@@ -494,9 +495,9 @@ string_view StripLeadingDollar(string_view name) {
 }
 
 std::string CWriter::DefineImportName(const std::string& name,
-                                      string_view module,
-                                      string_view mangled_field_name) {
-  std::string mangled = MangleName(module) + mangled_field_name.to_string();
+                                      std::string_view module,
+                                      std::string_view mangled_field_name) {
+  std::string mangled = MangleName(module) + mangled_field_name;
   import_syms_.insert(name);
   global_syms_.insert(mangled);
   global_sym_map_.insert(SymbolMap::value_type(name, mangled));
@@ -517,7 +518,7 @@ std::string CWriter::DefineLocalScopeName(const std::string& name) {
 
 std::string CWriter::DefineStackVarName(Index index,
                                         Type type,
-                                        string_view name) {
+                                        std::string_view name) {
   std::string unique = DefineName(&local_syms_, name);
   StackTypePair stp = {index, type};
   stack_var_sym_map_.insert(StackVarSymbolMap::value_type(stp, unique));
@@ -581,7 +582,7 @@ void CWriter::Write(Index index) {
   Writef("%" PRIindex, index);
 }
 
-void CWriter::Write(string_view s) {
+void CWriter::Write(std::string_view s) {
   WriteData(s.data(), s.size());
 }
 

@@ -42,7 +42,7 @@ bool IsPowerOfTwo(uint32_t x) {
 }
 
 template <typename OutputIter>
-void RemoveEscapes(string_view text, OutputIter dest) {
+void RemoveEscapes(std::string_view text, OutputIter dest) {
   // Remove surrounding quotes; if any. This may be empty if the string was
   // invalid (e.g. if it contained a bad escape sequence).
   if (text.size() <= 2) {
@@ -98,11 +98,11 @@ void RemoveEscapes(string_view text, OutputIter dest) {
   }
 }
 
-typedef std::vector<string_view> TextVector;
+typedef std::vector<std::string_view> TextVector;
 
 template <typename OutputIter>
 void RemoveEscapes(const TextVector& texts, OutputIter out) {
-  for (string_view text : texts)
+  for (std::string_view text : texts)
     RemoveEscapes(text, out);
 }
 
@@ -706,7 +706,7 @@ bool WastParser::ParseBindVarOpt(std::string* name) {
     return false;
   }
   Token token = Consume();
-  *name = token.text().to_string();
+  *name = std::string(token.text());
   return true;
 }
 
@@ -714,9 +714,9 @@ Result WastParser::ParseVar(Var* out_var) {
   WABT_TRACE(ParseVar);
   if (PeekMatch(TokenType::Nat)) {
     Token token = Consume();
-    string_view sv = token.literal().text;
+    std::string_view sv = token.literal().text;
     uint64_t index = kInvalidIndex;
-    if (Failed(ParseUint64(sv.begin(), sv.end(), &index))) {
+    if (Failed(ParseUint64(sv, &index))) {
       // Print an error, but don't fail parsing.
       Error(token.loc, "invalid int \"" PRIstringview "\"",
             WABT_PRINTF_STRING_VIEW_ARG(sv));
@@ -986,9 +986,8 @@ bool WastParser::ParseOffsetOpt(Address* out_offset) {
   if (PeekMatch(TokenType::OffsetEqNat)) {
     Token token = Consume();
     uint64_t offset64;
-    string_view sv = token.text();
-    if (Failed(ParseInt64(sv.begin(), sv.end(), &offset64,
-                          ParseIntType::SignedAndUnsigned))) {
+    std::string_view sv = token.text();
+    if (Failed(ParseInt64(sv, &offset64, ParseIntType::SignedAndUnsigned))) {
       Error(token.loc, "invalid offset \"" PRIstringview "\"",
             WABT_PRINTF_STRING_VIEW_ARG(sv));
     }
@@ -1008,9 +1007,8 @@ bool WastParser::ParseAlignOpt(Address* out_align) {
   WABT_TRACE(ParseAlignOpt);
   if (PeekMatch(TokenType::AlignEqNat)) {
     Token token = Consume();
-    string_view sv = token.text();
-    if (Failed(ParseInt64(sv.begin(), sv.end(), out_align,
-                          ParseIntType::UnsignedOnly))) {
+    std::string_view sv = token.text();
+    if (Failed(ParseInt64(sv, out_align, ParseIntType::UnsignedOnly))) {
       Error(token.loc, "invalid alignment \"" PRIstringview "\"",
             WABT_PRINTF_STRING_VIEW_ARG(sv));
     }
@@ -1088,9 +1086,8 @@ Result WastParser::ParseNat(uint64_t* out_nat, bool is_64) {
   }
 
   Token token = Consume();
-  string_view sv = token.literal().text;
-  if (Failed(ParseUint64(sv.begin(), sv.end(), out_nat)) ||
-      (!is_64 && *out_nat > 0xffffffffu)) {
+  std::string_view sv = token.literal().text;
+  if (Failed(ParseUint64(sv, out_nat)) || (!is_64 && *out_nat > 0xffffffffu)) {
     Error(token.loc, "invalid int \"" PRIstringview "\"",
           WABT_PRINTF_STRING_VIEW_ARG(sv));
   }
@@ -2003,8 +2000,8 @@ Result WastParser::ParseSimdLane(Location loc, uint64_t* lane_idx) {
 
   Literal literal = Consume().literal();
 
-  Result result = ParseInt64(literal.text.begin(), literal.text.end(), lane_idx,
-                             ParseIntType::UnsignedOnly);
+  Result result =
+      ParseInt64(literal.text, lane_idx, ParseIntType::UnsignedOnly);
 
   if (Failed(result)) {
     Error(loc, "invalid literal \"" PRIstringview "\"",
@@ -2482,32 +2479,30 @@ Result WastParser::ParseSimdV128Const(Const* const_,
     // For each type, parse the next literal, bound check it, and write it to
     // the array of bytes:
     if (integer) {
-      string_view sv = Consume().literal().text;
-      const char* s = sv.begin();
-      const char* end = sv.end();
+      std::string_view sv = Consume().literal().text;
 
       switch (lane_count) {
         case 16: {
           uint8_t value = 0;
-          result = ParseInt8(s, end, &value, ParseIntType::SignedAndUnsigned);
+          result = ParseInt8(sv, &value, ParseIntType::SignedAndUnsigned);
           const_->set_v128_u8(lane, value);
           break;
         }
         case 8: {
           uint16_t value = 0;
-          result = ParseInt16(s, end, &value, ParseIntType::SignedAndUnsigned);
+          result = ParseInt16(sv, &value, ParseIntType::SignedAndUnsigned);
           const_->set_v128_u16(lane, value);
           break;
         }
         case 4: {
           uint32_t value = 0;
-          result = ParseInt32(s, end, &value, ParseIntType::SignedAndUnsigned);
+          result = ParseInt32(sv, &value, ParseIntType::SignedAndUnsigned);
           const_->set_v128_u32(lane, value);
           break;
         }
         case 2: {
           uint64_t value = 0;
-          result = ParseInt64(s, end, &value, ParseIntType::SignedAndUnsigned);
+          result = ParseInt64(sv, &value, ParseIntType::SignedAndUnsigned);
           const_->set_v128_u64(lane, value);
           break;
         }
@@ -2570,8 +2565,7 @@ Result WastParser::ParseF32(Const* const_, ConstType const_type) {
 
   auto literal = token.literal();
   uint32_t f32_bits;
-  Result result = ParseFloat(literal.type, literal.text.begin(),
-                             literal.text.end(), &f32_bits);
+  Result result = ParseFloat(literal.type, literal.text, &f32_bits);
   const_->set_f32(f32_bits);
   return result;
 }
@@ -2591,8 +2585,7 @@ Result WastParser::ParseF64(Const* const_, ConstType const_type) {
 
   auto literal = token.literal();
   uint64_t f64_bits;
-  Result result = ParseDouble(literal.type, literal.text.begin(),
-                              literal.text.end(), &f64_bits);
+  Result result = ParseDouble(literal.type, literal.text, &f64_bits);
   const_->set_f64(f64_bits);
   return result;
 }
@@ -2629,8 +2622,7 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
       }
       auto sv = token.literal().text;
       uint32_t u32;
-      result = ParseInt32(sv.begin(), sv.end(), &u32,
-                          ParseIntType::SignedAndUnsigned);
+      result = ParseInt32(sv, &u32, ParseIntType::SignedAndUnsigned);
       const_->set_u32(u32);
       break;
     }
@@ -2642,8 +2634,7 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
       }
       auto sv = token.literal().text;
       uint64_t u64;
-      result = ParseInt64(sv.begin(), sv.end(), &u64,
-                          ParseIntType::SignedAndUnsigned);
+      result = ParseInt64(sv, &u64, ParseIntType::SignedAndUnsigned);
       const_->set_u64(u64);
       break;
     }
@@ -2690,9 +2681,7 @@ Result WastParser::ParseExternref(Const* const_) {
   }
 
   Literal literal;
-  string_view sv;
-  const char* s;
-  const char* end;
+  std::string_view sv;
   const_->loc = GetLocation();
   TokenType token_type = Peek();
 
@@ -2701,8 +2690,6 @@ Result WastParser::ParseExternref(Const* const_) {
     case TokenType::Int: {
       literal = Consume().literal();
       sv = literal.text;
-      s = sv.begin();
-      end = sv.end();
       break;
     }
     default:
@@ -2710,7 +2697,7 @@ Result WastParser::ParseExternref(Const* const_) {
   }
 
   uint64_t ref_bits;
-  Result result = ParseInt64(s, end, &ref_bits, ParseIntType::UnsignedOnly);
+  Result result = ParseInt64(sv, &ref_bits, ParseIntType::UnsignedOnly);
 
   const_->set_externref(static_cast<uintptr_t>(ref_bits));
 
@@ -2846,7 +2833,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
 Result WastParser::ParseLabelOpt(std::string* out_label) {
   WABT_TRACE(ParseLabelOpt);
   if (PeekMatch(TokenType::Var)) {
-    *out_label = Consume().text().to_string();
+    *out_label = std::string(Consume().text());
   } else {
     out_label->clear();
   }

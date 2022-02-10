@@ -60,30 +60,30 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
-                      string_view module_name,
-                      string_view field_name,
+                      std::string_view module_name,
+                      std::string_view field_name,
                       Index func_index,
                       Index sig_index) override;
   Result OnImportTable(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
+                       std::string_view module_name,
+                       std::string_view field_name,
                        Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override;
   Result OnImportMemory(Index import_index,
-                        string_view module_name,
-                        string_view field_name,
+                        std::string_view module_name,
+                        std::string_view field_name,
                         Index memory_index,
                         const Limits* page_limits) override;
   Result OnImportGlobal(Index import_index,
-                        string_view module_name,
-                        string_view field_name,
+                        std::string_view module_name,
+                        std::string_view field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override;
   Result OnImportTag(Index import_index,
-                     string_view module_name,
-                     string_view field_name,
+                     std::string_view module_name,
+                     std::string_view field_name,
                      Index tag_index,
                      Index sig_index) override;
 
@@ -107,7 +107,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  string_view name) override;
+                  std::string_view name) override;
 
   Result OnStartFunction(Index func_index) override;
 
@@ -242,17 +242,17 @@ class BinaryReaderIR : public BinaryReaderNop {
                            const void* data,
                            Address size) override;
 
-  Result OnModuleName(string_view module_name) override;
+  Result OnModuleName(std::string_view module_name) override;
   Result OnFunctionNamesCount(Index num_functions) override;
   Result OnFunctionName(Index function_index,
-                        string_view function_name) override;
+                        std::string_view function_name) override;
   Result OnLocalNameLocalCount(Index function_index, Index num_locals) override;
   Result OnLocalName(Index function_index,
                      Index local_index,
-                     string_view local_name) override;
+                     std::string_view local_name) override;
   Result OnNameEntry(NameSectionSubsection type,
                      Index index,
-                     string_view name) override;
+                     std::string_view name) override;
 
   Result BeginTagSection(Offset size) override { return Result::Ok; }
   Result OnTagCount(Index count) override { return Result::Ok; }
@@ -261,28 +261,28 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnDataSymbol(Index index,
                       uint32_t flags,
-                      string_view name,
+                      std::string_view name,
                       Index segment,
                       uint32_t offset,
                       uint32_t size) override;
   Result OnFunctionSymbol(Index index,
                           uint32_t flags,
-                          string_view name,
+                          std::string_view name,
                           Index func_index) override;
   Result OnGlobalSymbol(Index index,
                         uint32_t flags,
-                        string_view name,
+                        std::string_view name,
                         Index global_index) override;
   Result OnSectionSymbol(Index index,
                          uint32_t flags,
                          Index section_index) override;
   Result OnTagSymbol(Index index,
                      uint32_t flags,
-                     string_view name,
+                     std::string_view name,
                      Index tag_index) override;
   Result OnTableSymbol(Index index,
                        uint32_t flags,
-                       string_view name,
+                       std::string_view name,
                        Index table_index) override;
 
  private:
@@ -301,13 +301,13 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result AppendCatch(Catch&& catch_);
   void SetFuncDeclaration(FuncDeclaration* decl, Var var);
   void SetBlockDeclaration(BlockDeclaration* decl, Type sig_type);
-  Result SetMemoryName(Index index, string_view name);
-  Result SetTableName(Index index, string_view name);
-  Result SetFunctionName(Index index, string_view name);
-  Result SetGlobalName(Index index, string_view name);
-  Result SetDataSegmentName(Index index, string_view name);
-  Result SetElemSegmentName(Index index, string_view name);
-  Result SetTagName(Index index, string_view name);
+  Result SetMemoryName(Index index, std::string_view name);
+  Result SetTableName(Index index, std::string_view name);
+  Result SetFunctionName(Index index, std::string_view name);
+  Result SetGlobalName(Index index, std::string_view name);
+  Result SetDataSegmentName(Index index, std::string_view name);
+  Result SetElemSegmentName(Index index, std::string_view name);
+  Result SetTagName(Index index, std::string_view name);
 
   std::string GetUniqueName(BindingHash* bindings,
                             const std::string& original_name);
@@ -474,13 +474,13 @@ Result BinaryReaderIR::OnImportCount(Index count) {
 }
 
 Result BinaryReaderIR::OnImportFunc(Index import_index,
-                                    string_view module_name,
-                                    string_view field_name,
+                                    std::string_view module_name,
+                                    std::string_view field_name,
                                     Index func_index,
                                     Index sig_index) {
   auto import = MakeUnique<FuncImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = module_name;
+  import->field_name = field_name;
   SetFuncDeclaration(&import->func.decl, Var(sig_index, GetLocation()));
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
@@ -488,14 +488,14 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportTable(Index import_index,
-                                     string_view module_name,
-                                     string_view field_name,
+                                     std::string_view module_name,
+                                     std::string_view field_name,
                                      Index table_index,
                                      Type elem_type,
                                      const Limits* elem_limits) {
   auto import = MakeUnique<TableImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = module_name;
+  import->field_name = field_name;
   import->table.elem_limits = *elem_limits;
   import->table.elem_type = elem_type;
   module_->AppendField(
@@ -504,13 +504,13 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportMemory(Index import_index,
-                                      string_view module_name,
-                                      string_view field_name,
+                                      std::string_view module_name,
+                                      std::string_view field_name,
                                       Index memory_index,
                                       const Limits* page_limits) {
   auto import = MakeUnique<MemoryImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = module_name;
+  import->field_name = field_name;
   import->memory.page_limits = *page_limits;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
@@ -518,14 +518,14 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportGlobal(Index import_index,
-                                      string_view module_name,
-                                      string_view field_name,
+                                      std::string_view module_name,
+                                      std::string_view field_name,
                                       Index global_index,
                                       Type type,
                                       bool mutable_) {
   auto import = MakeUnique<GlobalImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = module_name;
+  import->field_name = field_name;
   import->global.type = type;
   import->global.mutable_ = mutable_;
   module_->AppendField(
@@ -534,13 +534,13 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportTag(Index import_index,
-                                   string_view module_name,
-                                   string_view field_name,
+                                   std::string_view module_name,
+                                   std::string_view field_name,
                                    Index tag_index,
                                    Index sig_index) {
   auto import = MakeUnique<TagImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = module_name;
+  import->field_name = field_name;
   SetFuncDeclaration(&import->tag.decl, Var(sig_index, GetLocation()));
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
@@ -631,10 +631,10 @@ Result BinaryReaderIR::OnExportCount(Index count) {
 Result BinaryReaderIR::OnExport(Index index,
                                 ExternalKind kind,
                                 Index item_index,
-                                string_view name) {
+                                std::string_view name) {
   auto field = MakeUnique<ExportModuleField>(GetLocation());
   Export& export_ = field->export_;
-  export_.name = name.to_string();
+  export_.name = name;
   export_.var = Var(item_index, GetLocation());
   export_.kind = kind;
   module_->AppendField(std::move(field));
@@ -1271,11 +1271,11 @@ Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
   return Result::Ok;
 }
 
-static std::string MakeDollarName(string_view name) {
-  return std::string("$") + name.to_string();
+static std::string MakeDollarName(std::string_view name) {
+  return std::string("$") + std::string(name);
 }
 
-Result BinaryReaderIR::OnModuleName(string_view name) {
+Result BinaryReaderIR::OnModuleName(std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1284,7 +1284,7 @@ Result BinaryReaderIR::OnModuleName(string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::SetGlobalName(Index index, string_view name) {
+Result BinaryReaderIR::SetGlobalName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1300,7 +1300,7 @@ Result BinaryReaderIR::SetGlobalName(Index index, string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::SetFunctionName(Index index, string_view name) {
+Result BinaryReaderIR::SetFunctionName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1316,7 +1316,7 @@ Result BinaryReaderIR::SetFunctionName(Index index, string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::SetTableName(Index index, string_view name) {
+Result BinaryReaderIR::SetTableName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1332,7 +1332,7 @@ Result BinaryReaderIR::SetTableName(Index index, string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::SetDataSegmentName(Index index, string_view name) {
+Result BinaryReaderIR::SetDataSegmentName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1348,7 +1348,7 @@ Result BinaryReaderIR::SetDataSegmentName(Index index, string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::SetElemSegmentName(Index index, string_view name) {
+Result BinaryReaderIR::SetElemSegmentName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1364,7 +1364,7 @@ Result BinaryReaderIR::SetElemSegmentName(Index index, string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::SetMemoryName(Index index, string_view name) {
+Result BinaryReaderIR::SetMemoryName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1380,7 +1380,7 @@ Result BinaryReaderIR::SetMemoryName(Index index, string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::SetTagName(Index index, string_view name) {
+Result BinaryReaderIR::SetTagName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1396,13 +1396,13 @@ Result BinaryReaderIR::SetTagName(Index index, string_view name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
+Result BinaryReaderIR::OnFunctionName(Index index, std::string_view name) {
   return SetFunctionName(index, name);
 }
 
 Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
                                    Index index,
-                                   string_view name) {
+                                   std::string_view name) {
   switch (type) {
     // TODO(sbc): remove OnFunctionName in favor of just using
     // OnNameEntry so that this works
@@ -1449,7 +1449,7 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
 
 Result BinaryReaderIR::OnLocalName(Index func_index,
                                    Index local_index,
-                                   string_view name) {
+                                   std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1470,7 +1470,7 @@ Result BinaryReaderIR::OnTagType(Index index, Index sig_index) {
 
 Result BinaryReaderIR::OnDataSymbol(Index index,
                                     uint32_t flags,
-                                    string_view name,
+                                    std::string_view name,
                                     Index segment,
                                     uint32_t offset,
                                     uint32_t size) {
@@ -1500,7 +1500,7 @@ Result BinaryReaderIR::OnDataSymbol(Index index,
 
 Result BinaryReaderIR::OnFunctionSymbol(Index index,
                                         uint32_t flags,
-                                        string_view name,
+                                        std::string_view name,
                                         Index func_index) {
   if (name.empty()) {
     return Result::Ok;
@@ -1523,7 +1523,7 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index,
 
 Result BinaryReaderIR::OnGlobalSymbol(Index index,
                                       uint32_t flags,
-                                      string_view name,
+                                      std::string_view name,
                                       Index global_index) {
   return SetGlobalName(global_index, name);
 }
@@ -1536,7 +1536,7 @@ Result BinaryReaderIR::OnSectionSymbol(Index index,
 
 Result BinaryReaderIR::OnTagSymbol(Index index,
                                    uint32_t flags,
-                                   string_view name,
+                                   std::string_view name,
                                    Index tag_index) {
   if (name.empty()) {
     return Result::Ok;
@@ -1555,7 +1555,7 @@ Result BinaryReaderIR::OnTagSymbol(Index index,
 
 Result BinaryReaderIR::OnTableSymbol(Index index,
                                      uint32_t flags,
-                                     string_view name,
+                                     std::string_view name,
                                      Index table_index) {
   return SetTableName(index, name);
 }

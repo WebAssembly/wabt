@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <set>
+#include <string_view>
 #include <vector>
 
 #include "config.h"
@@ -31,7 +32,6 @@
 #include "src/ir.h"
 #include "src/leb128.h"
 #include "src/stream.h"
-#include "src/string-view.h"
 
 #define PRINT_HEADER_NO_INDEX -1
 #define MAX_U32_LEB128_BYTES 5
@@ -39,7 +39,7 @@
 namespace wabt {
 
 void WriteStr(Stream* stream,
-              string_view s,
+              std::string_view s,
               const char* desc,
               PrintChars print_chars) {
   WriteU32Leb128(stream, s.length(), "string length");
@@ -81,8 +81,8 @@ void WriteLimits(Stream* stream, const Limits* limits) {
   }
 }
 
-void WriteDebugName(Stream* stream, string_view name, const char* desc) {
-  string_view stripped_name = name;
+void WriteDebugName(Stream* stream, std::string_view name, const char* desc) {
+  std::string_view stripped_name = name;
   if (!stripped_name.empty()) {
     // Strip leading $ from name
     assert(stripped_name.front() == '$');
@@ -140,7 +140,7 @@ class Symbol {
 
  private:
   SymbolType type_;
-  string_view name_;
+  std::string_view name_;
   uint8_t flags_;
   union {
     Function function_;
@@ -152,21 +152,21 @@ class Symbol {
   };
 
  public:
-  Symbol(const string_view& name, uint8_t flags, const Function& f)
+  Symbol(const std::string_view& name, uint8_t flags, const Function& f)
       : type_(Function::type), name_(name), flags_(flags), function_(f) {}
-  Symbol(const string_view& name, uint8_t flags, const Data& d)
+  Symbol(const std::string_view& name, uint8_t flags, const Data& d)
       : type_(Data::type), name_(name), flags_(flags), data_(d) {}
-  Symbol(const string_view& name, uint8_t flags, const Global& g)
+  Symbol(const std::string_view& name, uint8_t flags, const Global& g)
       : type_(Global::type), name_(name), flags_(flags), global_(g) {}
-  Symbol(const string_view& name, uint8_t flags, const Section& s)
+  Symbol(const std::string_view& name, uint8_t flags, const Section& s)
       : type_(Section::type), name_(name), flags_(flags), section_(s) {}
-  Symbol(const string_view& name, uint8_t flags, const Tag& e)
+  Symbol(const std::string_view& name, uint8_t flags, const Tag& e)
       : type_(Tag::type), name_(name), flags_(flags), tag_(e) {}
-  Symbol(const string_view& name, uint8_t flags, const Table& t)
+  Symbol(const std::string_view& name, uint8_t flags, const Table& t)
       : type_(Table::type), name_(name), flags_(flags), table_(t) {}
 
   SymbolType type() const { return type_; }
-  const string_view& name() const { return name_; }
+  const std::string_view& name() const { return name_; }
   uint8_t flags() const { return flags_; }
 
   SymbolVisibility visibility() const {
@@ -225,9 +225,9 @@ class SymbolTable {
   std::vector<Index> tables_;
   std::vector<Index> globals_;
 
-  std::set<string_view> seen_names_;
+  std::set<std::string_view> seen_names_;
 
-  Result EnsureUnique(const string_view& name) {
+  Result EnsureUnique(const std::string_view& name) {
     if (seen_names_.count(name)) {
       fprintf(stderr,
               "error: duplicate symbol when writing relocatable "
@@ -241,7 +241,7 @@ class SymbolTable {
 
   template <typename T>
   Result AddSymbol(std::vector<Index>* map,
-                   string_view name,
+                   std::string_view name,
                    bool imported,
                    bool exported,
                    T&& sym) {
@@ -251,7 +251,7 @@ class SymbolTable {
       // Wabt currently has no way for a user to explicitly specify the name of
       // an import, so never set the EXPLICIT_NAME flag, and ignore any display
       // name fabricated by wabt.
-      name = string_view();
+      name = std::string_view();
     } else {
       if (name.empty()) {
         // Definitions without a name are local.

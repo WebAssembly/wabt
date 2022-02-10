@@ -18,10 +18,10 @@
 #define WABT_INTERP_UTIL_H_
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "src/interp/interp.h"
-#include "src/string-view.h"
 
 namespace wabt {
 
@@ -38,7 +38,7 @@ void WriteValues(Stream* stream, const ValueTypes&, const Values&);
 void WriteTrap(Stream* stream, const char* desc, const Trap::Ptr&);
 
 void WriteCall(Stream* stream,
-               string_view name,
+               std::string_view name,
                const FuncType& func_type,
                const Values& params,
                const Values& results,

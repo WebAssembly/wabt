@@ -22,6 +22,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -30,7 +31,6 @@
 #include "src/feature.h"
 #include "src/opcode.h"
 #include "src/result.h"
-#include "src/string-view.h"
 
 #include "src/interp/istream.h"
 

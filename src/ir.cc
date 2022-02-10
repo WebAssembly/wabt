@@ -107,7 +107,7 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
-const Export* Module::GetExport(string_view name) const {
+const Export* Module::GetExport(std::string_view name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size()) {
     return nullptr;
@@ -583,7 +583,7 @@ void MakeTypeBindingReverseMapping(
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 
-Var::Var(string_view name, const Location& loc)
+Var::Var(std::string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
 Var::Var(Var&& rhs) : Var(kInvalidIndex) {
@@ -630,8 +630,8 @@ void Var::set_name(std::string&& name) {
   Construct(name_, std::move(name));
 }
 
-void Var::set_name(string_view name) {
-  set_name(name.to_string());
+void Var::set_name(std::string_view name) {
+  set_name(std::string(name));
 }
 
 void Var::Destroy() {

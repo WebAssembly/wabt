@@ -293,8 +293,6 @@ set(WABT_LIBRARY_SRC
   src/filenames.cc
   src/generate-names.h
   src/generate-names.cc
-  src/hash-util.h
-  src/hash-util.cc
   src/ir.h
   src/ir.cc
   src/ir-util.h
@@ -319,8 +317,7 @@ set(WABT_LIBRARY_SRC
   src/shared-validator.cc
   src/stream.h
   src/stream.cc
-  src/string-view.h
-  src/string-view.cc
+  src/string-util.h
   src/token.h
   src/token.cc
   src/tracing.h
@@ -602,7 +599,6 @@ if (BUILD_TESTS)
     src/test-intrusive-list.cc
     src/test-literal.cc
     src/test-option-parser.cc
-    src/test-string-view.cc
     src/test-filenames.cc
     src/test-utf8.cc
     src/test-wast-parser.cc

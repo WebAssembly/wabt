@@ -28,29 +28,29 @@
 namespace wabt {
 
 struct FilenameMemoryStreamPair {
-  FilenameMemoryStreamPair(string_view filename,
+  FilenameMemoryStreamPair(std::string_view filename,
                            std::unique_ptr<MemoryStream> stream)
       : filename(filename), stream(std::move(stream)) {}
   std::string filename;
   std::unique_ptr<MemoryStream> stream;
 };
 
-typedef std::function<Stream*(string_view filename)>
+typedef std::function<Stream*(std::string_view filename)>
     WriteBinarySpecStreamFactory;
 
 Result WriteBinarySpecScript(Stream* json_stream,
                              WriteBinarySpecStreamFactory module_stream_factory,
                              Script*,
-                             string_view source_filename,
-                             string_view module_filename_noext,
+                             std::string_view source_filename,
+                             std::string_view module_filename_noext,
                              const WriteBinaryOptions&);
 
 // Convenience function for producing MemoryStream outputs all modules.
 Result WriteBinarySpecScript(
     Stream* json_stream,
     Script*,
-    string_view source_filename,
-    string_view module_filename_noext,
+    std::string_view source_filename,
+    std::string_view module_filename_noext,
     const WriteBinaryOptions&,
     std::vector<FilenameMemoryStreamPair>* out_module_streams,
     Stream* log_stream = nullptr);

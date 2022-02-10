@@ -83,7 +83,7 @@ class SharedValidator {
   Result OnExport(const Location&,
                   ExternalKind,
                   Var item_var,
-                  string_view name);
+                  std::string_view name);
 
   Result OnStart(const Location&, Var func_var);
 

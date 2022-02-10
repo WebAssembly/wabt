@@ -18,12 +18,12 @@
 
 #include <cassert>
 #include <cstdio>
+#include <string_view>
 #include <vector>
 
 #include "src/cast.h"
 #include "src/expr-visitor.h"
 #include "src/ir.h"
-#include "src/string-view.h"
 
 namespace wabt {
 
@@ -75,8 +75,8 @@ class NameApplier : public ExprVisitor::DelegateNop {
  private:
   void PushLabel(const std::string& label);
   void PopLabel();
-  string_view FindLabelByVar(Var* var);
-  void UseNameForVar(string_view name, Var* var);
+  std::string_view FindLabelByVar(Var* var);
+  void UseNameForVar(std::string_view name, Var* var);
   Result UseNameForFuncTypeVar(Var* var);
   Result UseNameForFuncVar(Var* var);
   Result UseNameForGlobalVar(Var* var);
@@ -111,7 +111,7 @@ void NameApplier::PopLabel() {
   labels_.pop_back();
 }
 
-string_view NameApplier::FindLabelByVar(Var* var) {
+std::string_view NameApplier::FindLabelByVar(Var* var) {
   if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
       const std::string& label = labels_[i];
@@ -119,16 +119,16 @@ string_view NameApplier::FindLabelByVar(Var* var) {
         return label;
       }
     }
-    return string_view();
+    return std::string_view();
   } else {
     if (var->index() >= labels_.size()) {
-      return string_view();
+      return std::string_view();
     }
     return labels_[labels_.size() - 1 - var->index()];
   }
 }
 
-void NameApplier::UseNameForVar(string_view name, Var* var) {
+void NameApplier::UseNameForVar(std::string_view name, Var* var) {
   if (var->is_name()) {
     assert(name == var->name());
     return;
@@ -302,24 +302,24 @@ Result NameApplier::OnTableFillExpr(TableFillExpr* expr) {
 }
 
 Result NameApplier::OnBrExpr(BrExpr* expr) {
-  string_view label = FindLabelByVar(&expr->var);
+  std::string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
 Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
-  string_view label = FindLabelByVar(&expr->var);
+  std::string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
 Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
   for (Var& target : expr->targets) {
-    string_view label = FindLabelByVar(&target);
+    std::string_view label = FindLabelByVar(&target);
     UseNameForVar(label, &target);
   }
 
-  string_view label = FindLabelByVar(&expr->default_target);
+  std::string_view label = FindLabelByVar(&expr->default_target);
   UseNameForVar(label, &expr->default_target);
   return Result::Ok;
 }
@@ -342,7 +342,7 @@ Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
 }
 
 Result NameApplier::OnDelegateExpr(TryExpr* expr) {
-  string_view label = FindLabelByVar(&expr->delegate_target);
+  std::string_view label = FindLabelByVar(&expr->delegate_target);
   UseNameForVar(label, &expr->delegate_target);
   return Result::Ok;
 }
@@ -353,7 +353,7 @@ Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
 }
 
 Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
-  string_view label = FindLabelByVar(&expr->var);
+  std::string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }

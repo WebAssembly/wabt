@@ -97,9 +97,9 @@ static void ParseOptions(int argc, char** argv) {
 }
 
 // TODO(binji): copied from binary-writer-spec.cc, probably should share.
-static string_view strip_extension(string_view s) {
-  string_view ext = s.substr(s.find_last_of('.'));
-  string_view result = s;
+static std::string_view strip_extension(std::string_view s) {
+  std::string_view ext = s.substr(s.find_last_of('.'));
+  std::string_view result = s;
 
   if (ext == ".c")
     result.remove_suffix(ext.length());
@@ -141,12 +141,13 @@ int ProgramMain(int argc, char** argv) {
       if (Succeeded(result)) {
         if (!s_outfile.empty()) {
           std::string header_name_full =
-              strip_extension(s_outfile).to_string() + ".h";
+              std::string(strip_extension(s_outfile)) + ".h";
           FileStream c_stream(s_outfile.c_str());
           FileStream h_stream(header_name_full);
-          string_view header_name = GetBasename(header_name_full);
-          result = WriteC(&c_stream, &h_stream, header_name.to_string().c_str(),
-                          &module, s_write_c_options);
+          std::string_view header_name = GetBasename(header_name_full);
+          result =
+              WriteC(&c_stream, &h_stream, std::string(header_name).c_str(),
+                     &module, s_write_c_options);
         } else {
           FileStream stream(stdout);
           result =
