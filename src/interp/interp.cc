@@ -845,6 +845,10 @@ Instance::Ptr Instance::Instantiate(Store& store,
   }
 
   // Initialization.
+  // The MVP requires that all segments are bounds-checked before being copied
+  // into the table or memory. The bulk memory proposal changes this behavior;
+  // instead, each segment is copied in order. If any segment fails, then no
+  // further segments are copied. Any data that was written persists.
   enum Pass { Check, Init };
   int pass = store.features().bulk_memory_enabled() ? Init : Check;
   for (; pass <= Init; ++pass) {
@@ -860,7 +864,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
                                                                : Result::Error;
         } else {
           result = table->Init(store, offset, segment, 0, segment.size());
-          segment.Drop();
+          if (Succeeded(result)) {
+            segment.Drop();
+          }
         }
 
         if (Failed(result)) {
@@ -891,7 +897,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
                        : Result::Error;
         } else {
           result = memory->Init(offset, segment, 0, segment.size());
-          segment.Drop();
+          if (Succeeded(result)) {
+            segment.Drop();
+          }
         }
 
         if (Failed(result)) {

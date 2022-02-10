@@ -1,5 +1,4 @@
 ;;; TOOL: run-gen-wasm-interp
-;;; ARGS1: --disable-bulk-memory
 ;;; ERROR: 1
 magic
 version
