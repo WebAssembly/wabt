@@ -496,8 +496,8 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
         // local variables share the same index space, we need to increment the
         // local indexes bound to a given name by the number of parameters in
         // the function.
-        for (auto& pair : func->bindings) {
-          pair.second.index += func->GetNumParams();
+        for (auto& [name, binding] : func->bindings) {
+          binding.index += func->GetNumParams();
         }
       }
 

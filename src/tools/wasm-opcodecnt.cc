@@ -90,8 +90,8 @@ struct WithinCutoff {
 
 static size_t SumCounts(const OpcodeInfoCounts& info_counts) {
   size_t sum = 0;
-  for (auto& pair : info_counts) {
-    sum += pair.second;
+  for (auto& [info, count] : info_counts) {
+    sum += count;
   }
   return sum;
 }
@@ -100,9 +100,8 @@ void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
   typedef std::pair<Opcode, size_t> OpcodeCountPair;
 
   std::map<Opcode, size_t> counts;
-  for (auto& info_count_pair : info_counts) {
-    Opcode opcode = info_count_pair.first.opcode();
-    size_t count = info_count_pair.second;
+  for (auto& [info, count] : info_counts) {
+    Opcode opcode = info.opcode();
     counts[opcode] += count;
   }
 
@@ -115,9 +114,7 @@ void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
   std::stable_sort(sorted.begin(), sorted.end(),
                    SortByCountDescending<OpcodeCountPair>());
 
-  for (auto& pair : sorted) {
-    Opcode opcode = pair.first;
-    size_t count = pair.second;
+  for (auto& [opcode, count] : sorted) {
     stream.Writef("%s%s%" PRIzd "\n", opcode.GetName(), s_separator, count);
   }
 }
@@ -137,9 +134,7 @@ void WriteCountsWithImmediates(Stream& stream, const OpcodeInfoCounts& counts) {
   std::stable_sort(sorted.begin(), sorted.end(),
                    SortByCountDescending<OpcodeInfoCountPair>());
 
-  for (auto& pair : sorted) {
-    auto&& info = pair.first;
-    size_t count = pair.second;
+  for (auto& [info, count] : sorted) {
     info.Write(stream);
     stream.Writef("%s%" PRIzd "\n", s_separator, count);
   }
