@@ -21,6 +21,7 @@
 #include <cinttypes>
 #include <cstdio>
 #include <cstring>
+#include <variant>
 #include <vector>
 
 #if HAVE_STRCASECMP
@@ -35,6 +36,13 @@
 namespace wabt {
 
 namespace {
+
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 class BinaryReaderObjdumpBase : public BinaryReaderNop {
  public:
@@ -956,34 +964,36 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Type sig_type) {
   return Result::Ok;
 }
 
-enum class InitExprType {
-  I32,
-  F32,
-  I64,
-  F64,
-  V128,
-  Global,
-  FuncRef,
-  // TODO: There isn't a nullref anymore, this just represents ref.null of some
-  // type T.
-  NullRef,
+struct ImmI32 {
+  uint32_t value;
+};
+
+struct ImmI64 {
+  uint64_t value;
+};
+
+struct ImmF32 {
+  uint32_t value;
+};
+
+struct ImmF64 {
+  uint64_t value;
+};
+
+struct ImmV128 {
+  v128 value;
+};
+
+struct ImmIndex {
+  Index value;
 };
 
 struct InitInst {
   Opcode opcode;
-  union {
-    Index index;
-    uint32_t i32;
-    uint32_t f32;
-    uint64_t i64;
-    uint64_t f64;
-    v128 v128_v;
-    Type type;
-  } imm;
+  std::variant<ImmI32, ImmI64, ImmF32, ImmF64, ImmV128, ImmIndex> imm;
 };
 
 struct InitExpr {
-  InitExprType type;
   std::vector<InitInst> insts;
 };
 
@@ -1705,26 +1715,29 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       PrintDetails("%s", inst.opcode.GetName());
       switch (inst.opcode) {
         case Opcode::I32Const:
-          PrintDetails(" %d", inst.imm.i32);
+          PrintDetails(" %d", std::get<ImmI32>(inst.imm).value);
           break;
         case Opcode::I64Const:
-          PrintDetails(" %" PRId64, inst.imm.i64);
+          PrintDetails(" %" PRId64, std::get<ImmI64>(inst.imm).value);
           break;
         case Opcode::F32Const: {
           char buffer[WABT_MAX_FLOAT_HEX];
-          WriteFloatHex(buffer, sizeof(buffer), inst.imm.f32);
+          WriteFloatHex(buffer, sizeof(buffer),
+                        std::get<ImmF32>(inst.imm).value);
           PrintDetails(" %s\n", buffer);
           break;
         }
         case Opcode::F64Const: {
           char buffer[WABT_MAX_DOUBLE_HEX];
-          WriteDoubleHex(buffer, sizeof(buffer), inst.imm.f64);
+          WriteDoubleHex(buffer, sizeof(buffer),
+                         std::get<ImmF64>(inst.imm).value);
           PrintDetails(" %s\n", buffer);
           break;
         }
         case Opcode::GlobalGet: {
-          PrintDetails(" %" PRIindex, inst.imm.index);
-          std::string_view name = GetGlobalName(inst.imm.index);
+          auto index = std::get<ImmIndex>(inst.imm).value;
+          PrintDetails(" %" PRIindex, index);
+          std::string_view name = GetGlobalName(index);
           if (!name.empty()) {
             PrintDetails(" <" PRIstringview ">",
                          WABT_PRINTF_STRING_VIEW_ARG(name));
@@ -1739,69 +1752,48 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
     return;
   }
 
-  switch (expr.type) {
-    case InitExprType::I32:
-      PrintDetails(" - init i32=%d\n", expr.insts[0].imm.i32);
-      break;
-    case InitExprType::I64:
-      PrintDetails(" - init i64=%" PRId64 "\n", expr.insts[0].imm.i64);
-      break;
-    case InitExprType::F64: {
-      char buffer[WABT_MAX_DOUBLE_HEX];
-      WriteDoubleHex(buffer, sizeof(buffer), expr.insts[0].imm.f64);
-      PrintDetails(" - init f64=%s\n", buffer);
-      break;
-    }
-    case InitExprType::F32: {
-      char buffer[WABT_MAX_FLOAT_HEX];
-      WriteFloatHex(buffer, sizeof(buffer), expr.insts[0].imm.f32);
-      PrintDetails(" - init f32=%s\n", buffer);
-      break;
-    }
-    case InitExprType::V128: {
-      PrintDetails(
-          " - init v128=0x%08x 0x%08x 0x%08x 0x%08x \n",
-          expr.insts[0].imm.v128_v.u32(0), expr.insts[0].imm.v128_v.u32(1),
-          expr.insts[0].imm.v128_v.u32(2), expr.insts[0].imm.v128_v.u32(3));
-      break;
-    }
-    case InitExprType::Global: {
-      PrintDetails(" - init global=%" PRIindex, expr.insts[0].imm.index);
-      std::string_view name = GetGlobalName(expr.insts[0].imm.index);
-      if (!name.empty()) {
-        PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
-      }
-      PrintDetails("\n");
-      break;
-    }
-    case InitExprType::FuncRef: {
-      PrintDetails(" - init ref.func:%" PRIindex, expr.insts[0].imm.index);
-      std::string_view name = GetFunctionName(expr.insts[0].imm.index);
-      if (!name.empty()) {
-        PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
-      }
-      PrintDetails("\n");
-      break;
-    }
-    case InitExprType::NullRef:
-      PrintDetails(" - init null\n");
-      break;
-      break;
-  }
+  std::visit(
+      overloaded{
+          [this](ImmI32 arg) { PrintDetails(" - init i32=%d\n", arg.value); },
+          [this](ImmI64 arg) {
+            PrintDetails(" - init i64=%" PRId64 "\n", arg.value);
+          },
+          [this](ImmF32 arg) {
+            char buffer[WABT_MAX_FLOAT_HEX];
+            WriteFloatHex(buffer, sizeof(buffer), arg.value);
+            PrintDetails(" - init f32=%s\n", buffer);
+          },
+          [this](ImmF64 arg) {
+            char buffer[WABT_MAX_DOUBLE_HEX];
+            WriteDoubleHex(buffer, sizeof(buffer), arg.value);
+            PrintDetails(" - init f64=%s\n", buffer);
+          },
+          [this](ImmV128 arg) {
+            PrintDetails(" - init v128=0x%08x 0x%08x 0x%08x 0x%08x \n",
+                         arg.value.u32(0), arg.value.u32(1), arg.value.u32(2),
+                         arg.value.u32(3));
+          },
+          [this](ImmIndex arg) {
+            PrintDetails(" - init global=%" PRIindex, arg.value);
+            std::string_view name = GetGlobalName(arg.value);
+            if (!name.empty()) {
+              PrintDetails(" <" PRIstringview ">",
+                           WABT_PRINTF_STRING_VIEW_ARG(name));
+            }
+            PrintDetails("\n");
+          },
+      },
+      expr.insts[0].imm);
 }
 
 static void InitExprToConstOffset(const InitExpr& expr, uint64_t* out_offset) {
   if (expr.insts.size() == 1) {
-    switch (expr.type) {
-      case InitExprType::I32:
-        *out_offset = expr.insts[0].imm.i32;
-        break;
-      case InitExprType::I64:
-        *out_offset = expr.insts[0].imm.i64;
-        break;
-      default:
-        break;
-    }
+    std::visit(overloaded{
+                   [out_offset](ImmI32 arg) { *out_offset = arg.value; },
+                   [out_offset](ImmI64 arg) { *out_offset = arg.value; },
+                   [](auto& arg) {},
+               },
+               expr.insts[0].imm);
   }
 }
 
@@ -1823,32 +1815,28 @@ Result BinaryReaderObjdump::EndInitExpr() {
 
 Result BinaryReaderObjdump::OnI32ConstExpr(uint32_t value) {
   if (ReadingInitExpr()) {
-    current_init_expr_.type = InitExprType::I32;
-    current_init_expr_.insts.back().imm.i32 = value;
+    current_init_expr_.insts.back().imm = ImmI32{value};
   }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnI64ConstExpr(uint64_t value) {
   if (ReadingInitExpr()) {
-    current_init_expr_.type = InitExprType::I64;
-    current_init_expr_.insts.back().imm.i64 = value;
+    current_init_expr_.insts.back().imm = ImmI64{value};
   }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnF32ConstExpr(uint32_t value) {
   if (ReadingInitExpr()) {
-    current_init_expr_.type = InitExprType::F32;
-    current_init_expr_.insts.back().imm.f32 = value;
+    current_init_expr_.insts.back().imm = ImmF32{value};
   }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnF64ConstExpr(uint64_t value) {
   if (ReadingInitExpr()) {
-    current_init_expr_.type = InitExprType::F64;
-    current_init_expr_.insts.back().imm.f64 = value;
+    current_init_expr_.insts.back().imm = ImmF64{value};
   }
   return Result::Ok;
 }
@@ -1865,8 +1853,7 @@ Result BinaryReaderObjdump::OnOpcode(Opcode opcode) {
 
 Result BinaryReaderObjdump::OnGlobalGetExpr(Index global_index) {
   if (ReadingInitExpr()) {
-    current_init_expr_.type = InitExprType::Global;
-    current_init_expr_.insts.back().imm.index = global_index;
+    current_init_expr_.insts.back().imm = ImmIndex{global_index};
   }
   return Result::Ok;
 }
