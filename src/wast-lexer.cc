@@ -34,7 +34,8 @@ namespace {
 
 }  // namespace
 
-WastLexer::WastLexer(std::unique_ptr<LexerSource> source, string_view filename)
+WastLexer::WastLexer(std::unique_ptr<LexerSource> source,
+                     std::string_view filename)
     : source_(std::move(source)),
       filename_(filename),
       line_(1),
@@ -45,9 +46,10 @@ WastLexer::WastLexer(std::unique_ptr<LexerSource> source, string_view filename)
       cursor_(buffer_) {}
 
 // static
-std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(string_view filename,
-                                                        const void* data,
-                                                        size_t size) {
+std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(
+    std::string_view filename,
+    const void* data,
+    size_t size) {
   return MakeUnique<WastLexer>(MakeUnique<LexerSource>(data, size), filename);
 }
 
@@ -181,8 +183,9 @@ Location WastLexer::GetLocation() {
   return Location(filename_, line_, column(token_start_), column(cursor_));
 }
 
-string_view WastLexer::GetText(size_t offset) {
-  return string_view(token_start_ + offset, (cursor_ - token_start_) - offset);
+std::string_view WastLexer::GetText(size_t offset) {
+  return std::string_view(token_start_ + offset,
+                          (cursor_ - token_start_) - offset);
 }
 
 Token WastLexer::BareToken(TokenType token_type) {
@@ -213,7 +216,7 @@ bool WastLexer::MatchChar(char c) {
   return false;
 }
 
-bool WastLexer::MatchString(string_view s) {
+bool WastLexer::MatchString(std::string_view s) {
   const char* saved_cursor = cursor_;
   for (char c : s) {
     if (ReadChar() != c) {
@@ -510,7 +513,8 @@ Token WastLexer::GetNanToken() {
   return GetKeywordToken();
 }
 
-Token WastLexer::GetNameEqNumToken(string_view name, TokenType token_type) {
+Token WastLexer::GetNameEqNumToken(std::string_view name,
+                                   TokenType token_type) {
   if (MatchString(name)) {
     if (MatchString("0x")) {
       if (ReadHexNum() && NoTrailingReservedChars()) {

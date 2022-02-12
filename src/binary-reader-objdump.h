@@ -58,15 +58,15 @@ struct ObjdumpSymbol {
 };
 
 struct ObjdumpNames {
-  string_view Get(Index index) const;
-  void Set(Index index, string_view name);
+  std::string_view Get(Index index) const;
+  void Set(Index index, std::string_view name);
 
   std::map<Index, std::string> names;
 };
 
 struct ObjdumpLocalNames {
-  string_view Get(Index function_index, Index local_index) const;
-  void Set(Index function_index, Index local_index, string_view name);
+  std::string_view Get(Index function_index, Index local_index) const;
+  void Set(Index function_index, Index local_index, std::string_view name);
 
   std::map<std::pair<Index, Index>, std::string> names;
 };

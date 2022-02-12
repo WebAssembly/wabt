@@ -33,11 +33,12 @@ enum ParseIntTypeCombo {
   Both,
 };
 
-template <typename T, typename F>
-void AssertIntEquals(T expected,
-                     const char* s,
-                     F&& parse_int,
-                     ParseIntTypeCombo parse_type = Both) {
+template <typename T>
+void AssertIntEquals(
+    T expected,
+    const char* s,
+    Result (*parse_int)(const char*, const char*, T*, ParseIntType),
+    ParseIntTypeCombo parse_type = Both) {
   const char* const end = s + strlen(s);
   T actual;
   if (parse_type == UnsignedOnly || parse_type == Both) {

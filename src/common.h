@@ -27,6 +27,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -36,7 +37,6 @@
 #include "src/make-unique.h"
 #include "src/result.h"
 #include "src/string-format.h"
-#include "src/string-view.h"
 #include "src/type.h"
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
@@ -213,14 +213,17 @@ struct Location {
   };
 
   Location() : line(0), first_column(0), last_column(0) {}
-  Location(string_view filename, int line, int first_column, int last_column)
+  Location(std::string_view filename,
+           int line,
+           int first_column,
+           int last_column)
       : filename(filename),
         line(line),
         first_column(first_column),
         last_column(last_column) {}
   explicit Location(size_t offset) : offset(offset) {}
 
-  string_view filename;
+  std::string_view filename;
   union {
     // For text files.
     struct {
@@ -388,7 +391,7 @@ struct Limits {
 
 enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFFFFFFFFFF };
 
-Result ReadFile(string_view filename, std::vector<uint8_t>* out_data);
+Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data);
 
 void InitStdio();
 

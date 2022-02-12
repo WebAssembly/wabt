@@ -33,7 +33,7 @@ std::string FormatError(const Error& error,
 
   const Location& loc = error.loc;
   if (!loc.filename.empty()) {
-    result += loc.filename.to_string();
+    result += loc.filename;
     result += ":";
   }
 

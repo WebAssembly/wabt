@@ -69,7 +69,7 @@ class BinaryReaderStrip : public BinaryReaderNop {
     return Result::Ok;
   }
 
-  Result WriteToFile(string_view filename) {
+  Result WriteToFile(std::string_view filename) {
     return stream_.WriteToFile(filename);
   }
 

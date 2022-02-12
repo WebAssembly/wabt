@@ -199,9 +199,9 @@ Result SharedValidator::OnTag(const Location& loc, Var sig_var) {
 Result SharedValidator::OnExport(const Location& loc,
                                  ExternalKind kind,
                                  Var item_var,
-                                 string_view name) {
+                                 std::string_view name) {
   Result result = Result::Ok;
-  auto name_str = name.to_string();
+  auto name_str = std::string(name);
   if (export_names_.find(name_str) != export_names_.end()) {
     result |= PrintError(loc, "duplicate export \"" PRIstringview "\"",
                          WABT_PRINTF_STRING_VIEW_ARG(name));

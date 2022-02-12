@@ -89,7 +89,7 @@ static void ParseOptions(int argc, char* argv[]) {
   parser.Parse(argc, argv);
 }
 
-static std::string DefaultOuputName(string_view input_name) {
+static std::string DefaultOuputName(std::string_view input_name) {
   // Strip existing extension and add .json
   std::string result(StripExtension(GetBasename(input_name)));
   result += ".json";
@@ -128,7 +128,7 @@ int ProgramMain(int argc, char** argv) {
     std::vector<FilenameMemoryStreamPair> module_streams;
     MemoryStream json_stream;
 
-    std::string output_basename = StripExtension(s_outfile).to_string();
+    std::string output_basename(StripExtension(s_outfile));
     s_write_binary_options.features = s_features;
     result = WriteBinarySpecScript(&json_stream, script.get(), s_infile,
                                    output_basename, s_write_binary_options,

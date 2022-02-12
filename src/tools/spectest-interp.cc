@@ -35,6 +35,7 @@
 #include "src/literal.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
+#include "src/string-util.h"
 #include "src/validator.h"
 #include "src/wast-lexer.h"
 #include "src/wast-parser.h"
@@ -324,7 +325,7 @@ class JSONParser {
  public:
   JSONParser() {}
 
-  wabt::Result ReadFile(string_view spec_json_filename);
+  wabt::Result ReadFile(std::string_view spec_json_filename);
   wabt::Result ParseScript(Script* out_script);
 
  private:
@@ -349,25 +350,25 @@ class JSONParser {
   wabt::Result ParseTypeObject(Type* out_type);
   wabt::Result ParseTypeVector(TypeVector* out_types);
   wabt::Result ParseConst(TypedValue* out_value);
-  wabt::Result ParseI32Value(uint32_t* out_value, string_view value_str);
-  wabt::Result ParseI64Value(uint64_t* out_value, string_view value_str);
+  wabt::Result ParseI32Value(uint32_t* out_value, std::string_view value_str);
+  wabt::Result ParseI64Value(uint64_t* out_value, std::string_view value_str);
   wabt::Result ParseF32Value(uint32_t* out_value,
                              ExpectedNan* out_nan,
-                             string_view value_str,
+                             std::string_view value_str,
                              AllowExpected);
   wabt::Result ParseF64Value(uint64_t* out_value,
                              ExpectedNan* out_nan,
-                             string_view value_str,
+                             std::string_view value_str,
                              AllowExpected);
   wabt::Result ParseLaneConstValue(Type lane_type,
                                    int lane,
                                    ExpectedValue* out_value,
-                                   string_view value_str,
+                                   std::string_view value_str,
                                    AllowExpected);
   wabt::Result ParseConstValue(Type type,
                                Value* out_value,
                                ExpectedNan* out_nan,
-                               string_view value_str,
+                               std::string_view value_str,
                                AllowExpected);
   wabt::Result ParseConstVector(ValueTypes* out_types, Values* out_values);
   wabt::Result ParseExpectedValue(ExpectedValue* out_value, AllowExpected);
@@ -376,7 +377,7 @@ class JSONParser {
   wabt::Result ParseActionResult();
   wabt::Result ParseModuleType(ModuleType* out_type);
 
-  std::string CreateModulePath(string_view filename);
+  std::string CreateModulePath(std::string_view filename);
   wabt::Result ParseFilename(std::string* out_filename);
   wabt::Result ParseCommand(CommandPtr* out_command);
 
@@ -393,7 +394,7 @@ class JSONParser {
 #define PARSE_KEY_STRING_VALUE(key, value) \
   CHECK_RESULT(ParseKeyStringValue(key, value))
 
-wabt::Result JSONParser::ReadFile(string_view spec_json_filename) {
+wabt::Result JSONParser::ReadFile(std::string_view spec_json_filename) {
   loc_.filename = spec_json_filename;
   loc_.line = 1;
   loc_.first_column = 1;
@@ -403,7 +404,7 @@ wabt::Result JSONParser::ReadFile(string_view spec_json_filename) {
 
 void JSONParser::PrintError(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  fprintf(stderr, "%s:%d:%d: %s\n", loc_.filename.to_string().c_str(),
+  fprintf(stderr, "%s:%d:%d: %s\n", std::string(loc_.filename).c_str(),
           loc_.line, loc_.first_column, buffer);
 }
 
@@ -638,9 +639,8 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
 }
 
 wabt::Result JSONParser::ParseI32Value(uint32_t* out_value,
-                                       string_view value_str) {
-  if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
-                        ParseIntType::UnsignedOnly))) {
+                                       std::string_view value_str) {
+  if (Failed(ParseInt32(value_str, out_value, ParseIntType::UnsignedOnly))) {
     PrintError("invalid i32 literal");
     return wabt::Result::Error;
   }
@@ -648,9 +648,8 @@ wabt::Result JSONParser::ParseI32Value(uint32_t* out_value,
 }
 
 wabt::Result JSONParser::ParseI64Value(uint64_t* out_value,
-                                       string_view value_str) {
-  if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
-                        ParseIntType::UnsignedOnly))) {
+                                       std::string_view value_str) {
+  if (Failed(ParseInt64(value_str, out_value, ParseIntType::UnsignedOnly))) {
     PrintError("invalid i64 literal");
     return wabt::Result::Error;
   }
@@ -659,7 +658,7 @@ wabt::Result JSONParser::ParseI64Value(uint64_t* out_value,
 
 wabt::Result JSONParser::ParseF32Value(uint32_t* out_value,
                                        ExpectedNan* out_nan,
-                                       string_view value_str,
+                                       std::string_view value_str,
                                        AllowExpected allow_expected) {
   if (allow_expected == AllowExpected::Yes) {
     *out_value = 0;
@@ -673,8 +672,7 @@ wabt::Result JSONParser::ParseF32Value(uint32_t* out_value,
   }
 
   *out_nan = ExpectedNan::None;
-  if (Failed(ParseInt32(value_str.begin(), value_str.end(), out_value,
-                        ParseIntType::UnsignedOnly))) {
+  if (Failed(ParseInt32(value_str, out_value, ParseIntType::UnsignedOnly))) {
     PrintError("invalid f32 literal");
     return wabt::Result::Error;
   }
@@ -683,7 +681,7 @@ wabt::Result JSONParser::ParseF32Value(uint32_t* out_value,
 
 wabt::Result JSONParser::ParseF64Value(uint64_t* out_value,
                                        ExpectedNan* out_nan,
-                                       string_view value_str,
+                                       std::string_view value_str,
                                        AllowExpected allow_expected) {
   if (allow_expected == AllowExpected::Yes) {
     *out_value = 0;
@@ -697,8 +695,7 @@ wabt::Result JSONParser::ParseF64Value(uint64_t* out_value,
   }
 
   *out_nan = ExpectedNan::None;
-  if (Failed(ParseInt64(value_str.begin(), value_str.end(), out_value,
-                        ParseIntType::UnsignedOnly))) {
+  if (Failed(ParseInt64(value_str, out_value, ParseIntType::UnsignedOnly))) {
     PrintError("invalid f64 literal");
     return wabt::Result::Error;
   }
@@ -708,7 +705,7 @@ wabt::Result JSONParser::ParseF64Value(uint64_t* out_value,
 wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
                                              int lane,
                                              ExpectedValue* out_value,
-                                             string_view value_str,
+                                             std::string_view value_str,
                                              AllowExpected allow_expected) {
   v128 v = out_value->value.value.Get<v128>();
 
@@ -773,7 +770,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
 wabt::Result JSONParser::ParseConstValue(Type type,
                                          Value* out_value,
                                          ExpectedNan* out_nan,
-                                         string_view value_str,
+                                         std::string_view value_str,
                                          AllowExpected allow_expected) {
   *out_nan = ExpectedNan::None;
 
@@ -966,7 +963,7 @@ wabt::Result JSONParser::ParseModuleType(ModuleType* out_type) {
   }
 }
 
-static string_view GetDirname(string_view path) {
+static std::string_view GetDirname(std::string_view path) {
   // Strip everything after and including the last slash (or backslash), e.g.:
   //
   // s = "foo/bar/baz", => "foo/bar"
@@ -975,27 +972,25 @@ static string_view GetDirname(string_view path) {
   // s = "some\windows\directory", => "some\windows"
   size_t last_slash = path.find_last_of('/');
   size_t last_backslash = path.find_last_of('\\');
-  if (last_slash == string_view::npos) {
+  if (last_slash == std::string_view::npos) {
     last_slash = 0;
   }
-  if (last_backslash == string_view::npos) {
+  if (last_backslash == std::string_view::npos) {
     last_backslash = 0;
   }
 
   return path.substr(0, std::max(last_slash, last_backslash));
 }
 
-std::string JSONParser::CreateModulePath(string_view filename) {
-  string_view spec_json_filename = loc_.filename;
-  string_view dirname = GetDirname(spec_json_filename);
+std::string JSONParser::CreateModulePath(std::string_view filename) {
+  std::string_view spec_json_filename = loc_.filename;
+  std::string_view dirname = GetDirname(spec_json_filename);
   std::string path;
 
   if (dirname.size() == 0) {
-    path = filename.to_string();
+    path = std::string(filename);
   } else {
-    path = dirname.to_string();
-    path += '/';
-    path += filename.to_string();
+    path = dirname + "/" + filename;
   }
 
   ConvertBackslashToSlash(&path);
@@ -1177,7 +1172,8 @@ class CommandRunner {
                          const Action* action,
                          RunVerbosity verbose);
 
-  interp::Module::Ptr ReadModule(string_view module_filename, Errors* errors);
+  interp::Module::Ptr ReadModule(std::string_view module_filename,
+                                 Errors* errors);
   Extern::Ptr GetImport(const std::string&, const std::string&);
   void PopulateImports(const interp::Module::Ptr&, RefVec*);
   void PopulateExports(const Instance::Ptr&, ExportMap*);
@@ -1203,14 +1199,14 @@ class CommandRunner {
 
   void TallyCommand(wabt::Result);
 
-  wabt::Result ReadInvalidTextModule(string_view module_filename,
+  wabt::Result ReadInvalidTextModule(std::string_view module_filename,
                                      const std::string& header);
   wabt::Result ReadInvalidModule(int line_number,
-                                 string_view module_filename,
+                                 std::string_view module_filename,
                                  ModuleType module_type,
                                  const char* desc);
   wabt::Result ReadUnlinkableModule(int line_number,
-                                    string_view module_filename,
+                                    std::string_view module_filename,
                                     ModuleType module_type,
                                     const char* desc);
 
@@ -1381,8 +1377,9 @@ ActionResult CommandRunner::RunAction(int line_number,
   return result;
 }
 
-wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
-                                                  const std::string& header) {
+wabt::Result CommandRunner::ReadInvalidTextModule(
+    std::string_view module_filename,
+    const std::string& header) {
   std::vector<uint8_t> file_data;
   wabt::Result result = ReadFile(module_filename, &file_data);
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
@@ -1400,7 +1397,7 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
   return result;
 }
 
-interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
+interp::Module::Ptr CommandRunner::ReadModule(std::string_view module_filename,
                                               Errors* errors) {
   std::vector<uint8_t> file_data;
 
@@ -1428,7 +1425,7 @@ interp::Module::Ptr CommandRunner::ReadModule(string_view module_filename,
 }
 
 wabt::Result CommandRunner::ReadInvalidModule(int line_number,
-                                              string_view module_filename,
+                                              std::string_view module_filename,
                                               ModuleType module_type,
                                               const char* desc) {
   std::string header = StringPrintf(
@@ -1863,7 +1860,7 @@ void CommandRunner::TallyCommand(wabt::Result result) {
   total_++;
 }
 
-static int ReadAndRunSpecJSON(string_view spec_json_filename) {
+static int ReadAndRunSpecJSON(std::string_view spec_json_filename) {
   JSONParser parser;
   if (parser.ReadFile(spec_json_filename) == wabt::Result::Error) {
     return 1;

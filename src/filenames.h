@@ -29,7 +29,7 @@ extern const char* kWatExtension;
 // "foo.txt", => ".txt"
 // "foo" => ""
 // "/foo/bar/foo.wasm" => ".wasm"
-string_view GetExtension(string_view filename);
+std::string_view GetExtension(std::string_view filename);
 
 // Strip extension, e.g.:
 //
@@ -37,14 +37,14 @@ string_view GetExtension(string_view filename);
 // "foo.bar" => "foo"
 // "/path/to/foo.bar" => "/path/to/foo"
 // "\\path\\to\\foo.bar" => "\\path\\to\\foo"
-string_view StripExtension(string_view s);
+std::string_view StripExtension(std::string_view s);
 
 // Strip everything up to and including the last slash, e.g.:
 //
 // "/foo/bar/baz", => "baz"
 // "/usr/local/include/stdio.h", => "stdio.h"
 // "foo.bar", => "foo.bar"
-string_view GetBasename(string_view filename);
+std::string_view GetBasename(std::string_view filename);
 
 }  // namespace wabt
 

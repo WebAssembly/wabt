@@ -103,7 +103,7 @@ class BinaryReader {
   Result ReadRefType(Type* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadExternalKind(ExternalKind* out_value,
                           const char* desc) WABT_WARN_UNUSED;
-  Result ReadStr(string_view* out_str, const char* desc) WABT_WARN_UNUSED;
+  Result ReadStr(std::string_view* out_str, const char* desc) WABT_WARN_UNUSED;
   Result ReadBytes(const void** out_data,
                    Address* out_data_size,
                    const char* desc) WABT_WARN_UNUSED;
@@ -356,14 +356,14 @@ Result BinaryReader::ReadExternalKind(ExternalKind* out_value,
   return Result::Ok;
 }
 
-Result BinaryReader::ReadStr(string_view* out_str, const char* desc) {
+Result BinaryReader::ReadStr(std::string_view* out_str, const char* desc) {
   uint32_t str_len = 0;
   CHECK_RESULT(ReadU32Leb128(&str_len, "string length"));
 
   ERROR_UNLESS(state_.offset + str_len <= read_end_,
                "unable to read string: %s", desc);
 
-  *out_str = string_view(
+  *out_str = std::string_view(
       reinterpret_cast<const char*>(state_.data) + state_.offset, str_len);
   state_.offset += str_len;
 
@@ -1815,7 +1815,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
       case NameSectionSubsection::Module:
         CALLBACK(OnModuleNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "module name"));
           CALLBACK(OnModuleName, name);
         }
@@ -1830,7 +1830,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
 
           for (Index j = 0; j < num_names; ++j) {
             Index function_index;
-            string_view function_name;
+            std::string_view function_name;
 
             CHECK_RESULT(ReadIndex(&function_index, "function index"));
             ERROR_UNLESS(function_index != last_function_index,
@@ -1869,7 +1869,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
             Index last_local_index = kInvalidIndex;
             for (Index k = 0; k < num_locals; ++k) {
               Index local_index;
-              string_view local_name;
+              std::string_view local_name;
 
               CHECK_RESULT(ReadIndex(&local_index, "named index"));
               ERROR_UNLESS(local_index != last_local_index,
@@ -1902,7 +1902,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
           CALLBACK(OnNameCount, num_names);
           for (Index j = 0; j < num_names; ++j) {
             Index index;
-            string_view name;
+            std::string_view name;
 
             CHECK_RESULT(ReadIndex(&index, "index"));
             CHECK_RESULT(ReadStr(&name, "name"));
@@ -2012,7 +2012,7 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
         CALLBACK(OnDylinkNeededCount, count);
         while (count--) {
-          string_view so_name;
+          std::string_view so_name;
           CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
           CALLBACK(OnDylinkNeeded, so_name);
         }
@@ -2022,8 +2022,8 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
         CALLBACK(OnDylinkImportCount, count);
         for (Index i = 0; i < count; ++i) {
           uint32_t flags = 0;
-          string_view module;
-          string_view field;
+          std::string_view module;
+          std::string_view field;
           CHECK_RESULT(ReadStr(&module, "module"));
           CHECK_RESULT(ReadStr(&field, "field"));
           CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
@@ -2035,7 +2035,7 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
         CALLBACK(OnDylinkExportCount, count);
         for (Index i = 0; i < count; ++i) {
           uint32_t flags = 0;
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "name"));
           CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
           CALLBACK(OnDylinkExport, name, flags);
@@ -2072,7 +2072,7 @@ Result BinaryReader::ReadDylinkSection(Offset section_size) {
   CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
   CALLBACK(OnDylinkNeededCount, count);
   while (count--) {
-    string_view so_name;
+    std::string_view so_name;
     CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
     CALLBACK(OnDylinkNeeded, so_name);
   }
@@ -2088,7 +2088,7 @@ Result BinaryReader::ReadTargetFeaturesSections(Offset section_size) {
   CALLBACK(OnFeatureCount, count);
   while (count--) {
     uint8_t prefix;
-    string_view name;
+    std::string_view name;
     CHECK_RESULT(ReadU8(&prefix, "prefix"));
     CHECK_RESULT(ReadStr(&name, "feature name"));
     CALLBACK(OnFeature, prefix, name);
@@ -2119,7 +2119,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
         CALLBACK(OnSymbolCount, count);
         for (Index i = 0; i < count; ++i) {
-          string_view name;
+          std::string_view name;
           uint32_t flags = 0;
           uint32_t kind = 0;
           CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
@@ -2179,7 +2179,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "info count"));
         CALLBACK(OnSegmentInfoCount, count);
         for (Index i = 0; i < count; i++) {
-          string_view name;
+          std::string_view name;
           Address alignment_log2;
           uint32_t flags;
           CHECK_RESULT(ReadStr(&name, "segment name"));
@@ -2205,7 +2205,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         while (count--) {
           uint32_t flags;
           uint32_t entry_count;
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "comdat name"));
           CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
           CHECK_RESULT(ReadU32Leb128(&entry_count, "entry count"));
@@ -2260,7 +2260,7 @@ Result BinaryReader::ReadTagSection(Offset section_size) {
 
 Result BinaryReader::ReadCustomSection(Index section_index,
                                        Offset section_size) {
-  string_view section_name;
+  std::string_view section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
   CALLBACK(BeginCustomSection, section_index, section_size, section_name);
   ValueRestoreGuard<bool, &BinaryReader::reading_custom_section_> guard(this);
@@ -2384,9 +2384,9 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_imports, "import count"));
   CALLBACK(OnImportCount, num_imports);
   for (Index i = 0; i < num_imports; ++i) {
-    string_view module_name;
+    std::string_view module_name;
     CHECK_RESULT(ReadStr(&module_name, "import module name"));
-    string_view field_name;
+    std::string_view field_name;
     CHECK_RESULT(ReadStr(&field_name, "import field name"));
 
     uint8_t kind;
@@ -2525,7 +2525,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_exports, "export count"));
   CALLBACK(OnExportCount, num_exports);
   for (Index i = 0; i < num_exports; ++i) {
-    string_view name;
+    std::string_view name;
     CHECK_RESULT(ReadStr(&name, "export item name"));
 
     ExternalKind kind;

@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <cinttypes>
+#include <string_view>
 
 #include "config.h"
 
@@ -28,7 +29,6 @@
 #include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
-#include "src/string-view.h"
 
 namespace wabt {
 
@@ -38,8 +38,8 @@ class BinaryWriterSpec {
  public:
   BinaryWriterSpec(Stream* json_stream,
                    WriteBinarySpecStreamFactory module_stream_factory,
-                   string_view source_filename,
-                   string_view module_filename_noext,
+                   std::string_view source_filename,
+                   std::string_view module_filename_noext,
                    const WriteBinaryOptions& options);
 
   Result WriteScript(const Script& script);
@@ -49,7 +49,7 @@ class BinaryWriterSpec {
   void WriteString(const char* s);
   void WriteKey(const char* key);
   void WriteSeparator();
-  void WriteEscapedString(string_view);
+  void WriteEscapedString(std::string_view);
   void WriteCommandType(const Command& command);
   void WriteLocation(const Location& loc);
   void WriteVar(const Var& var);
@@ -61,10 +61,10 @@ class BinaryWriterSpec {
   void WriteConstVector(const ConstVector& consts);
   void WriteAction(const Action& action);
   void WriteActionResultType(const Action& action);
-  void WriteModule(string_view filename, const Module& module);
-  void WriteScriptModule(string_view filename,
+  void WriteModule(std::string_view filename, const Module& module);
+  void WriteScriptModule(std::string_view filename,
                          const ScriptModule& script_module);
-  void WriteInvalidModule(const ScriptModule& module, string_view text);
+  void WriteInvalidModule(const ScriptModule& module, std::string_view text);
   void WriteCommands();
 
   const Script* script_ = nullptr;
@@ -80,8 +80,8 @@ class BinaryWriterSpec {
 BinaryWriterSpec::BinaryWriterSpec(
     Stream* json_stream,
     WriteBinarySpecStreamFactory module_stream_factory,
-    string_view source_filename,
-    string_view module_filename_noext,
+    std::string_view source_filename,
+    std::string_view module_filename_noext,
     const WriteBinaryOptions& options)
     : json_stream_(json_stream),
       module_stream_factory_(module_stream_factory),
@@ -110,7 +110,7 @@ void BinaryWriterSpec::WriteSeparator() {
   json_stream_->Writef(", ");
 }
 
-void BinaryWriterSpec::WriteEscapedString(string_view s) {
+void BinaryWriterSpec::WriteEscapedString(std::string_view s) {
   json_stream_->WriteChar('"');
   for (size_t i = 0; i < s.length(); ++i) {
     uint8_t c = s[i];
@@ -381,12 +381,13 @@ void BinaryWriterSpec::WriteActionResultType(const Action& action) {
   json_stream_->Writef("]");
 }
 
-void BinaryWriterSpec::WriteModule(string_view filename, const Module& module) {
+void BinaryWriterSpec::WriteModule(std::string_view filename,
+                                   const Module& module) {
   result_ |=
       WriteBinaryModule(module_stream_factory_(filename), &module, options_);
 }
 
-void BinaryWriterSpec::WriteScriptModule(string_view filename,
+void BinaryWriterSpec::WriteScriptModule(std::string_view filename,
                                          const ScriptModule& script_module) {
   switch (script_module.type()) {
     case ScriptModuleType::Text:
@@ -406,7 +407,7 @@ void BinaryWriterSpec::WriteScriptModule(string_view filename,
 }
 
 void BinaryWriterSpec::WriteInvalidModule(const ScriptModule& module,
-                                          string_view text) {
+                                          std::string_view text) {
   const char* extension = "";
   const char* module_type = "";
   switch (module.type()) {
@@ -609,8 +610,8 @@ Result BinaryWriterSpec::WriteScript(const Script& script) {
 Result WriteBinarySpecScript(Stream* json_stream,
                              WriteBinarySpecStreamFactory module_stream_factory,
                              Script* script,
-                             string_view source_filename,
-                             string_view module_filename_noext,
+                             std::string_view source_filename,
+                             std::string_view module_filename_noext,
                              const WriteBinaryOptions& options) {
   BinaryWriterSpec binary_writer_spec(json_stream, module_stream_factory,
                                       source_filename, module_filename_noext,
@@ -621,13 +622,13 @@ Result WriteBinarySpecScript(Stream* json_stream,
 Result WriteBinarySpecScript(
     Stream* json_stream,
     Script* script,
-    string_view source_filename,
-    string_view module_filename_noext,
+    std::string_view source_filename,
+    std::string_view module_filename_noext,
     const WriteBinaryOptions& options,
     std::vector<FilenameMemoryStreamPair>* out_module_streams,
     Stream* log_stream) {
   WriteBinarySpecStreamFactory module_stream_factory =
-      [&](string_view filename) {
+      [&](std::string_view filename) {
         out_module_streams->emplace_back(filename,
                                          MakeUnique<MemoryStream>(log_stream));
         return out_module_streams->back().stream.get();
