@@ -506,12 +506,20 @@ class Store {
   template <typename T>
   friend class RefPtr;
 
+  struct GCContext {
+    int call_depth = 0;
+    std::vector<bool> marks;
+    std::vector<size_t> untraced_objects;
+  };
+
+  static const int max_call_depth = 10;
+
   Features features_;
+  GCContext gc_context_;
   // This set contains the currently active Thread objects.
   std::set<Thread*> threads_;
   ObjectList objects_;
   RootList roots_;
-  std::vector<bool> marks_;
 };
 
 template <typename T>

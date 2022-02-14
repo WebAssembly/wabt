@@ -687,6 +687,35 @@ TEST_F(InterpGCTest, Collect_InstanceExport) {
   EXPECT_EQ(after_new, store_.object_count());
 }
 
+TEST_F(InterpGCTest, Collect_DeepRecursion) {
+  const size_t table_count = 65;
+
+  TableType tt = TableType{ValueType::ExternRef, Limits{1}};
+
+  // Create a chain of tables, where each contains
+  // a single reference to the next table.
+
+  Table::Ptr prev_table = Table::New(store_, tt);
+
+  for (size_t i = 1; i < table_count; i++) {
+    Table::Ptr new_table = Table::New(store_, tt);
+
+    new_table->Set(store_, 0, prev_table->self());
+
+    prev_table.reset();
+    prev_table = std::move(new_table);
+  }
+
+  store_.Collect();
+  EXPECT_EQ(table_count + 1, store_.object_count());
+
+  // Remove the last root, now all should be removed.
+  prev_table.reset();
+
+  store_.Collect();
+  EXPECT_EQ(1u, store_.object_count());
+}
+
 // TODO: Test for Thread keeping references alive as locals/params/stack values.
 // This requires better tracking of references than currently exists in the
 // interpreter. (see TODOs in Select/LocalGet/GlobalGet)
