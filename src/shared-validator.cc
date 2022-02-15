@@ -519,11 +519,21 @@ Result SharedValidator::CheckAtomicAlign(const Location& loc,
   return Result::Ok;
 }
 
-static bool ValidInitOpcode(Opcode opcode) {
-  return opcode == Opcode::GlobalGet || opcode == Opcode::I32Const ||
-         opcode == Opcode::I64Const || opcode == Opcode::F32Const ||
-         opcode == Opcode::F64Const || opcode == Opcode::RefFunc ||
-         opcode == Opcode::RefNull;
+bool SharedValidator::ValidInitOpcode(Opcode opcode) const {
+  if (opcode == Opcode::GlobalGet || opcode == Opcode::I32Const ||
+      opcode == Opcode::I64Const || opcode == Opcode::F32Const ||
+      opcode == Opcode::F64Const || opcode == Opcode::RefFunc ||
+      opcode == Opcode::RefNull) {
+    return true;
+  }
+  if (options_.features.extended_const_enabled()) {
+    if (opcode == Opcode::I32Mul || opcode == Opcode::I64Mul ||
+        opcode == Opcode::I32Sub || opcode == Opcode::I64Sub ||
+        opcode == Opcode::I32Add || opcode == Opcode::I64Add) {
+      return true;
+    }
+  }
+  return false;
 }
 
 Result SharedValidator::CheckInstr(Opcode opcode, const Location& loc) {

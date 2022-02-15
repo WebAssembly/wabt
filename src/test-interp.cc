@@ -680,11 +680,13 @@ TEST_F(InterpGCTest, Collect_InstanceExport) {
   });
   Instantiate();
   auto after_new = store_.object_count();
-  EXPECT_EQ(before_new + 6, after_new);  // module, instance, f, t, m, g
+  EXPECT_EQ(before_new + 7,
+            after_new);  // module, instance, f, t, m, g, g-init-func
 
-  // Instance keeps all exports alive.
+  // Instance keeps all exports alive, except the init func which can be
+  // collected once its has been run
   store_.Collect();
-  EXPECT_EQ(after_new, store_.object_count());
+  EXPECT_EQ(after_new - 1, store_.object_count());
 }
 
 // TODO: Test for Thread keeping references alive as locals/params/stack values.

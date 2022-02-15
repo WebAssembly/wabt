@@ -38,6 +38,7 @@ options:
       --enable-gc                              Enable Garbage collection
       --enable-memory64                        Enable 64-bit memory
       --enable-multi-memory                    Enable Multi-memory
+      --enable-extended-const                  Enable Extended constant expressions
       --enable-all                             Enable all features
       --generate-names                         Give auto-generated names to non-named functions, types, etc.
 ;;; STDOUT ;;)

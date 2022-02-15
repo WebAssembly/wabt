@@ -98,31 +98,6 @@ const std::string GetName(ValueType);
 const char* GetName(ExternKind);
 const char* GetName(ObjectKind);
 
-enum class InitExprKind {
-  None,
-  I32,
-  I64,
-  F32,
-  F64,
-  V128,
-  GlobalGet,
-  RefNull,
-  RefFunc
-};
-
-struct InitExpr {
-  InitExprKind kind;
-  union {
-    u32 i32_;
-    u64 i64_;
-    f32 f32_;
-    f64 f64_;
-    v128 v128_;
-    Index index_;
-    Type type_;
-  };
-};
-
 struct Ref {
   static const Ref Null;
 
@@ -341,7 +316,7 @@ struct FuncDesc {
 
   FuncType type;
   std::vector<LocalDesc> locals;
-  u32 code_offset;
+  u32 code_offset;  // Istream offset.
   std::vector<HandlerDesc> handlers;
 };
 
@@ -355,7 +330,7 @@ struct MemoryDesc {
 
 struct GlobalDesc {
   GlobalType type;
-  InitExpr init;
+  FuncDesc init_func;
 };
 
 struct TagDesc {
@@ -375,7 +350,7 @@ struct DataDesc {
   Buffer data;
   SegmentMode mode;
   Index memory_index;
-  InitExpr offset;
+  FuncDesc init_func;
 };
 
 struct ElemExpr {
@@ -388,7 +363,7 @@ struct ElemDesc {
   ValueType type;
   SegmentMode mode;
   Index table_index;
-  InitExpr offset;
+  FuncDesc init_func;
 };
 
 struct ModuleDesc {
@@ -1069,7 +1044,10 @@ class Instance : public Object {
   explicit Instance(Store&, Ref module);
   void Mark(Store&) override;
 
-  Value ResolveInitExpr(Store&, InitExpr);
+  Result CallInitFunc(Store&,
+                      const Ref func_ref,
+                      Value* result,
+                      Trap::Ptr* out_trap);
 
   Ref module_;
   RefVec imports_;
