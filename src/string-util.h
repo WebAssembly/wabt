@@ -17,6 +17,7 @@
 #ifndef WABT_STRING_UTIL_H_
 #define WABT_STRING_UTIL_H_
 
+#include <string>
 #include <string_view>
 
 namespace wabt {
