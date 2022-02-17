@@ -355,6 +355,12 @@ enum class SymbolBinding {
 };
 
 /* matches binary format, do not change */
+enum class BranchHintKind : uint32_t {
+  LikelyNotTaken = 0,
+  LikelyTaken = 1,
+};
+
+/* matches binary format, do not change */
 enum class ExternalKind {
   Func = 0,
   Table = 1,

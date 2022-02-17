@@ -140,6 +140,8 @@ class BinaryReader {
   Result ReadDylink0Section(Offset section_size) WABT_WARN_UNUSED;
   Result ReadTargetFeaturesSections(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadCodeMetadataSection(std::string_view name,
+                                   Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
@@ -2258,6 +2260,57 @@ Result BinaryReader::ReadTagSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
+                                               Offset section_size) {
+  CALLBACK(BeginCodeMetadataSection, name, section_size);
+
+  Index num_funcions;
+  CHECK_RESULT(ReadCount(&num_funcions, "function count"));
+  CALLBACK(OnCodeMetadataFuncCount, num_funcions);
+
+  Index last_function_index = kInvalidIndex;
+  for (Index i = 0; i < num_funcions; ++i) {
+    Index function_index;
+    CHECK_RESULT(ReadCount(&function_index, "function index"));
+    ERROR_UNLESS(function_index >= num_func_imports_,
+                 "function import can't have metadata (got %" PRIindex ")",
+                 function_index);
+    ERROR_UNLESS(function_index < NumTotalFuncs(),
+                 "invalid function index: %" PRIindex, function_index);
+    ERROR_UNLESS(function_index != last_function_index,
+                 "duplicate function index: %" PRIindex, function_index);
+    ERROR_UNLESS(last_function_index == kInvalidIndex ||
+                     function_index > last_function_index,
+                 "function index out of order: %" PRIindex, function_index);
+    last_function_index = function_index;
+
+    Index num_metadata;
+    CHECK_RESULT(ReadCount(&num_metadata, "metadata instances count"));
+
+    CALLBACK(OnCodeMetadataCount, function_index, num_metadata);
+
+    Offset last_code_offset = kInvalidOffset;
+    for (Index j = 0; j < num_metadata; ++j) {
+      Offset code_offset;
+      CHECK_RESULT(ReadOffset(&code_offset, "code offset"));
+      ERROR_UNLESS(code_offset != last_code_offset,
+                   "duplicate code offset: %" PRIzx, code_offset);
+      ERROR_UNLESS(
+          last_code_offset == kInvalidOffset || code_offset > last_code_offset,
+          "code offset out of order: %" PRIzx, code_offset);
+      last_code_offset = code_offset;
+
+      Address data_size;
+      const void* data;
+      CHECK_RESULT(ReadBytes(&data, &data_size, "instance data"));
+      CALLBACK(OnCodeMetadata, code_offset, data, data_size);
+    }
+  }
+
+  CALLBACK(EndCodeMetadataSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadCustomSection(Index section_index,
                                        Offset section_size) {
   std::string_view section_name;
@@ -2280,6 +2333,12 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadTargetFeaturesSections(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
+  } else if (options_.features.code_metadata_enabled() &&
+             section_name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0) {
+    std::string_view metadata_name = section_name;
+    metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) -
+                                  1);
+    CHECK_RESULT(ReadCodeMetadataSection(metadata_name, section_size));
   } else {
     // This is an unknown custom section, skip it.
     state_.offset = read_end_;
