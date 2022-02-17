@@ -529,9 +529,10 @@ std::string CWriter::DefineImportName(const std::string& name,
   return "(*" + mangled + ")";
 }
 
-std::string CWriter::DefineImportInstanceName(const std::string& name,
-                                              std::string_view module,
-                                              std::string_view mangled_field_name) {
+std::string CWriter::DefineImportInstanceName(
+    const std::string& name,
+    std::string_view module,
+    std::string_view mangled_field_name) {
   std::string mangled = MangleName(module) + mangled_field_name;
   import_syms_.insert(name);
   global_syms_.insert(mangled);

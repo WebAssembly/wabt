@@ -138,10 +138,10 @@ class CWriter(object):
         self.module_idx = 0
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
-
-    def Write(self):
         self._MaybeWriteDummyModule()
         self._CacheModulePrefixes()
+
+    def Write(self):
         self._WriteIncludes()
         self.out_file.write(self.prefix)
         self._WriteModuleImports()
@@ -187,19 +187,50 @@ class CWriter(object):
 
                 self.module_prefix_map[name_idx] = name
 
+    def _GenerateModuleImports(self, command):
+        name = os.path.basename(command['filename'])
+        wasm_filename = os.path.join(self.out_dir, name)
+        header_filename = wasm_filename[0:(len(wasm_filename) - 5)] + ".h"
+        with open(header_filename) as f:
+            headerfile = f.readlines()
+            for line in headerfile:
+                if "Z_spectestZ_global_i32Z_i" in line:
+                    self.out_file.write("%s.Z_spectestZ_global_i32Z_i = &spectest_global_i32\n;" % self.GetStateInfoName())
+                if "Z_spectestZ_global_i64Z_i" in line:
+                    self.out_file.write("%s.Z_spectestZ_global_i64Z_i = &spectest_global_i64\n;" % self.GetStateInfoName())
+                if "Z_spectestZ_table" in line:
+                    self.out_file.write("%s.Z_spectestZ_table = &spectest_table;\n" % self.GetStateInfoName())
+                if "Z_spectestZ_memory" in line:
+                    self.out_file.write("%s.Z_spectestZ_memory = &spectest_memory;\n" % self.GetStateInfoName())
+                elif "wasm_rt_memory_t (*" in line and "extern" not in line:
+                    import_name = line[len("  wasm_rt_memory_t (*"):len(line) - 3]
+                    self.out_file.write("%s.%s = %s;\n" % (self.GetStateInfoName(), import_name, import_name))
+
     def _WriteModuleImports(self):
         idx = 0
         for command in self.commands:
             if IsModuleCommand(command):
                 name = os.path.basename(command['filename'])
+                wasm_filename = os.path.join(self.out_dir, name)
                 module_instance_type = MangleStateInfoTypeName(name)
                 module_prefix = self.module_prefix_map[idx]
+                header_filename = wasm_filename[0:(len(wasm_filename) - 5)] + ".h"
 
-                self.out_file.write("static void %s_spectest_print_i32(%s *module_instance, uint32_t i) { spectest_print_i32(i); }\n" % (module_prefix, module_instance_type))
-                self.out_file.write("void (*%sZ_spectestZ_print_i32Z_vi)(%s *, uint32_t) = & %s_spectest_print_i32;\n" % (module_prefix, module_instance_type, module_prefix))
-                self.out_file.write("static void %s_spectest_print(%s *module_instance) { spectest_print(); }\n" % (module_prefix, module_instance_type))
-                self.out_file.write("void (*%sZ_spectestZ_printZ_vv)(%s *) = & %s_spectest_print;\n" % (module_prefix, module_instance_type, module_prefix))
-                self.out_file.write("\n")
+                with open(header_filename) as f:
+                    headerfile = f.readlines()
+                    import_print_i32 = False
+                    import_print = False
+                    for line in headerfile:
+                        if "Z_spectestZ_print_i32Z_vi" in line:
+                            import_print_i32 = True
+                        if "Z_spectestZ_printZ_vv" in line:
+                            import_print = True
+                    if import_print_i32:
+                        self.out_file.write("static void %s_spectest_print_i32(%s *module_instance, uint32_t i) { spectest_print_i32(i); }\n" % (module_prefix, module_instance_type))
+                        self.out_file.write("void (*%sZ_spectestZ_print_i32Z_vi)(%s *, uint32_t) = & %s_spectest_print_i32;\n" % (module_prefix, module_instance_type, module_prefix))
+                    if import_print:
+                        self.out_file.write("static void %s_spectest_print(%s *module_instance) { spectest_print(); }\n" % (module_prefix, module_instance_type))
+                        self.out_file.write("void (*%sZ_spectestZ_printZ_vv)(%s *) = & %s_spectest_print;\n" % (module_prefix, module_instance_type, module_prefix))
 
                 idx += 1
 
@@ -246,6 +277,7 @@ class CWriter(object):
         self.module_idx += 1
         self.out_file.write('%s %s;\n' % (MangleStateInfoTypeName(command['filename']), self.GetStateInfoName()))
         self.out_file.write('memset(&%s, 0, sizeof(%s));\n' % (self.GetStateInfoName(), MangleStateInfoTypeName(command['filename'])))
+        self._GenerateModuleImports(command)
         self.out_file.write('%sinit(&%s);\n' % (self.GetModulePrefix(), self.GetStateInfoName()))
 
     def _WriteAssertUninstantiableCommand(self, command):
@@ -499,11 +531,6 @@ def main(args):
 
         output = io.StringIO()
         cwriter = CWriter(spec_json, prefix, output, out_dir)
-        cwriter.Write()
-
-        main_filename = utils.ChangeExt(json_file_path, '-main.c')
-        with open(main_filename, 'w') as out_main_file:
-            out_main_file.write(output.getvalue())
 
         o_filenames = []
         includes = '-I%s' % options.wasmrt_dir
@@ -515,6 +542,12 @@ def main(args):
             if options.compile:
                 defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
+
+        cwriter.Write()
+
+        main_filename = utils.ChangeExt(json_file_path, '-main.c')
+        with open(main_filename, 'w') as out_main_file:
+            out_main_file.write(output.getvalue())
 
         if options.compile:
             # Compile wasm-rt-impl.
