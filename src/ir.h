@@ -320,6 +320,7 @@ enum class ExprType {
   Call,
   CallIndirect,
   CallRef,
+  CodeMetadata,
   Compare,
   Const,
   Convert,
@@ -631,6 +632,19 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
   Var table;
 };
 
+class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
+ public:
+  explicit CodeMetadataExpr(std::string_view name,
+                              std::vector<uint8_t> data,
+                              const Location& loc = Location())
+      : ExprMixin<ExprType::CodeMetadata>(loc),
+        name(std::move(name)),
+        data(std::move(data)) {}
+
+  std::string_view name;
+  std::vector<uint8_t> data;
+};
+
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
  public:
   explicit ReturnCallIndirectExpr(const Location& loc = Location())
@@ -846,6 +860,7 @@ struct Func {
   LocalTypes local_types;
   BindingHash bindings;
   ExprList exprs;
+  Location loc;
 };
 
 struct Global {

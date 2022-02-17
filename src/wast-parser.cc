@@ -194,6 +194,10 @@ bool IsInstr(TokenTypePair pair) {
   return IsPlainOrBlockInstr(pair[0]) || IsExpr(pair);
 }
 
+bool IsLparAnn(TokenTypePair pair) {
+  return pair[0] == TokenType::LparAnn;
+}
+
 bool IsCatch(TokenType token_type) {
   return token_type == TokenType::Catch || token_type == TokenType::CatchAll;
 }
@@ -551,10 +555,16 @@ TokenType WastParser::Peek(size_t n) {
     if (cur.token_type() != TokenType::LparAnn) {
       tokens_.push_back(cur);
     } else {
-      // Custom annotation. For now, discard until matching Rpar.
+      // Custom annotation. For now, discard until matching Rpar, unless it is
+      // a code metadata annotation. In that case, we know how to parse it.
       if (!options_->features.annotations_enabled()) {
         Error(cur.loc, "annotations not enabled: %s", cur.to_string().c_str());
         tokens_.push_back(Token(cur.loc, TokenType::Invalid));
+        continue;
+      }
+      if (options_->features.code_metadata_enabled() &&
+          cur.text().find("metadata.code.") == 0) {
+        tokens_.push_back(cur);
         continue;
       }
       int indent = 1;
@@ -1826,11 +1836,22 @@ Result WastParser::ParseResultList(
 Result WastParser::ParseInstrList(ExprList* exprs) {
   WABT_TRACE(ParseInstrList);
   ExprList new_exprs;
-  while (IsInstr(PeekPair())) {
-    if (Succeeded(ParseInstr(&new_exprs))) {
-      exprs->splice(exprs->end(), new_exprs);
+  while (true) {
+    auto pair = PeekPair();
+    if (IsInstr(pair)) {
+      if (Succeeded(ParseInstr(&new_exprs))) {
+        exprs->splice(exprs->end(), new_exprs);
+      } else {
+        CHECK_RESULT(Synchronize(IsInstr));
+      }
+    } else if (IsLparAnn(pair)) {
+      if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
+        exprs->splice(exprs->end(), new_exprs);
+      } else {
+        CHECK_RESULT(Synchronize(IsLparAnn));
+      }
     } else {
-      CHECK_RESULT(Synchronize(IsInstr));
+      break;
     }
   }
   return Result::Ok;
@@ -1864,6 +1885,21 @@ Result WastParser::ParseInstr(ExprList* exprs) {
     assert(!"ParseInstr should only be called when IsInstr() is true");
     return Result::Error;
   }
+}
+
+Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
+  WABT_TRACE(ParseCodeMetadataAnnotation);
+  Token tk = Consume();
+  std::string_view name = tk.text();
+  name.remove_prefix(sizeof("metadata.code.") - 1);
+  std::string data_text;
+  CHECK_RESULT(ParseQuotedText(&data_text));
+  std::vector<uint8_t> data(data_text.begin(), data_text.end());
+  exprs->push_back(MakeUnique<CodeMetadataExpr>(name, std::move(data)));
+  TokenType rpar = Peek();
+  assert(rpar == TokenType::Rpar);
+  Consume();
+  return Result::Ok;
 }
 
 template <typename T>
