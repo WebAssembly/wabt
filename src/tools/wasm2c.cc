@@ -70,6 +70,14 @@ static void ParseOptions(int argc, char** argv) {
         s_outfile = argument;
         ConvertBackslashToSlash(&s_outfile);
       });
+  parser.AddOption(
+      'n', "modname", "MODNAME",
+      "Unique name for the module being generated. Each wasm sandboxed module in a single application should have a unique name."
+      "By default the module name is empty and need not be set if an application is only using one Wasm module or is using Wasm modules in shared libraries."
+      "However, if an application wants to statically link more than one Wasm module, it should assign each module a unique name.",
+      [](const char* argument) {
+        s_write_c_options.mod_name = argument;
+      });
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
