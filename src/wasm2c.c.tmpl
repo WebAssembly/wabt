@@ -22,11 +22,13 @@
        || TRAP(CALL_INDIRECT)                        \
        , ((t)table.data[x].func)(__VA_ARGS__))
 
+#define RANGE_CHECK(mem, a, t) \
+  if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
+
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define MEMCHECK(mem, a, t)
 #else
-#define MEMCHECK(mem, a, t)  \
-  if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
+#define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, t)
 #endif
 
 #if WABT_BIG_ENDIAN
@@ -40,7 +42,10 @@ static inline void load_data(void *dest, const void *src, size_t n) {
     dest_chars[n - i - 1] = cursor;
   }
 }
-#define LOAD_DATA(m, o, i, s) load_data(&(m.data[m.size - o - s]), i, s)
+#define LOAD_DATA(m, o, i, s) do {              \
+    RANGE_CHECK((&m), m.size - o - s, char[s]); \
+    load_data(&(m.data[m.size - o - s]), i, s); \
+  } while (0)
 #define DEFINE_LOAD(name, t1, t2, t3)                                                 \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                            \
     MEMCHECK(mem, addr, t1);                                                          \
@@ -59,7 +64,10 @@ static inline void load_data(void *dest, const void *src, size_t n) {
 static inline void load_data(void *dest, const void *src, size_t n) {
   memcpy(dest, src, n);
 }
-#define LOAD_DATA(m, o, i, s) load_data(&(m.data[o]), i, s)
+#define LOAD_DATA(m, o, i, s) do { \
+    RANGE_CHECK((&m), o, char[s]); \
+    load_data(&(m.data[o]), i, s); \
+  } while (0)
 #define DEFINE_LOAD(name, t1, t2, t3)                        \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
     MEMCHECK(mem, addr, t1);                                 \
