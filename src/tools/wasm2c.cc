@@ -56,6 +56,13 @@ examples:
   $ wasm2c test.wasm --no-debug-names -o test.c
 )";
 
+static const std::string supported_features[] = {"multi-memory"};
+
+static bool IsFeatureSupported(const std::string& feature) {
+  return std::find(std::begin(supported_features), std::end(supported_features),
+                   feature) != std::end(supported_features);
+};
+
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm2c", s_description);
 
@@ -80,15 +87,15 @@ static void ParseOptions(int argc, char** argv) {
                      });
   parser.Parse(argc, argv);
 
-  // TODO(binji): currently wasm2c doesn't support any non-default feature
-  // flags.
-  bool any_non_default_feature = false;
-#define WABT_FEATURE(variable, flag, default_, help) \
-  any_non_default_feature |= (s_features.variable##_enabled() != default_);
+  bool any_non_supported_feature = false;
+#define WABT_FEATURE(variable, flag, default_, help)   \
+  any_non_supported_feature |=                         \
+      (s_features.variable##_enabled() != default_) && \
+      !IsFeatureSupported(flag);
 #include "src/feature.def"
 #undef WABT_FEATURE
 
-  if (any_non_default_feature) {
+  if (any_non_supported_feature) {
     fprintf(stderr,
             "wasm2c currently only supports a fixed set of features.\n");
     exit(1);

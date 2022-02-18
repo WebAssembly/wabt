@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_size.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+40/40 tests passed.
+;;; STDOUT ;;)
