@@ -246,8 +246,11 @@ void Store::DeleteRoot(RootList::Index index) {
 
 void Store::Collect() {
   size_t object_count = objects_.size();
-  marks_.resize(object_count);
-  std::fill(marks_.begin(), marks_.end(), false);
+
+  assert(gc_context_.call_depth == 0);
+
+  gc_context_.marks.resize(object_count);
+  std::fill(gc_context_.marks.begin(), gc_context_.marks.end(), false);
 
   // First mark all roots.
   for (RootList::Index i = 0; i < roots_.size(); ++i) {
@@ -260,31 +263,44 @@ void Store::Collect() {
     thread->Mark();
   }
 
-  // TODO: better GC algo.
-  // Loop through all newly marked objects and mark their referents.
-  std::vector<bool> all_marked(object_count, false);
-  bool new_marked;
-  do {
-    new_marked = false;
-    for (size_t i = 0; i < object_count; ++i) {
-      if (!all_marked[i] && marks_[i]) {
-        all_marked[i] = true;
-        objects_.Get(i)->Mark(*this);
-        new_marked = true;
-      }
-    }
-  } while (new_marked);
+  // This vector is often empty since the default maximum
+  // recursion is usually enough to mark all objects.
+  while (WABT_UNLIKELY(!gc_context_.untraced_objects.empty())) {
+    size_t index = gc_context_.untraced_objects.back();
+
+    assert(gc_context_.marks[index]);
+    assert(gc_context_.call_depth == 0);
+
+    gc_context_.untraced_objects.pop_back();
+    objects_.Get(index)->Mark(*this);
+  }
+
+  assert(gc_context_.call_depth == 0);
 
   // Delete all unmarked objects.
   for (size_t i = 0; i < object_count; ++i) {
-    if (objects_.IsUsed(i) && !all_marked[i]) {
+    if (objects_.IsUsed(i) && !gc_context_.marks[i]) {
       objects_.Delete(i);
     }
   }
 }
 
 void Store::Mark(Ref ref) {
-  marks_[ref.index] = true;
+  size_t index = ref.index;
+
+  if (gc_context_.marks[index])
+    return;
+
+  gc_context_.marks[index] = true;
+
+  if (WABT_UNLIKELY(gc_context_.call_depth >= max_call_depth)) {
+    gc_context_.untraced_objects.push_back(index);
+    return;
+  }
+
+  gc_context_.call_depth++;
+  objects_.Get(index)->Mark(*this);
+  gc_context_.call_depth--;
 }
 
 void Store::Mark(const RefVec& refs) {
