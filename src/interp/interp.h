@@ -435,18 +435,42 @@ class FreeList {
   //                 1 when the payload is the index of the next free object
   //   n: the payload
   //
-  // When T is a Ref (see Store::RootList below), we'd need to store the
-  // "is_free" bit in most-significant bit instead.
-  //
   std::vector<T> list_;
   std::vector<size_t> free_;
   std::vector<bool> is_free_;
 };
 
+// TODO: After the rework of FreeList (see TODO above),
+// this class could be merged with it.
+class FreeRefList {
+ public:
+  using Index = size_t;
+
+  Index New(Ref);
+  void Delete(Index);
+
+  bool IsUsed(Index) const;
+
+  const Ref& Get(Index) const;
+  Ref& Get(Index);
+
+  Index size() const;  // 1 greater than the maximum index.
+
+ private:
+  // The value of freeBit is 0x80..0, and this bit is set
+  // for currently unused (free) items of list_ vector.
+  static const Index freeBit = (SIZE_MAX >> 1) + 1;
+
+  std::vector<Ref> list_;
+  // If free_head_ is zero, there is no free slots in list_,
+  // otherwise free_head_ - 1 represents the first free slot.
+  Index free_head_ = 0;
+};
+
 class Store {
  public:
   using ObjectList = FreeList<std::unique_ptr<Object>>;
-  using RootList = FreeList<Ref>;
+  using RootList = FreeRefList;
 
   explicit Store(const Features& = Features{});
 
