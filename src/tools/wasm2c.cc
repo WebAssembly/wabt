@@ -56,7 +56,7 @@ examples:
   $ wasm2c test.wasm --no-debug-names -o test.c
 )";
 
-static const std::string supported_features[] = {"multi-memory"};
+static const std::string supported_features[] = {"multi-memory", "multi-value", "sign-extend", "saturating-float-to-int"};
 
 static bool IsFeatureSupported(const std::string& feature) {
   return std::find(std::begin(supported_features), std::end(supported_features),
