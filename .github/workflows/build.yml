@@ -23,6 +23,8 @@ jobs:
         sudo apt-get install clang-format
     - run: flake8
     - run: ./scripts/clang-format-diff.sh
+      env:
+        GITHUB_EVENT_BEFORE: ${{ github.event.before }}
   build:
     name: build
     runs-on: ${{ matrix.os }}
