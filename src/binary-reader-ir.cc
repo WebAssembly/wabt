@@ -324,13 +324,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                          uint32_t flags,
                          Index section_index) override;
   /* Code Metadata sections */
-  Result BeginCodeMetadataSection(std::string_view name,
-                                    Offset size) override;
+  Result BeginCodeMetadataSection(std::string_view name, Offset size) override;
   Result OnCodeMetadataFuncCount(Index count) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
-  Result OnCodeMetadata(Offset offset,
-                          const void* data,
-                          Address size) override;
+  Result OnCodeMetadata(Offset offset, const void* data, Address size) override;
   Result EndCodeMetadataSection() override;
 
   Result OnTagSymbol(Index index,
@@ -1518,7 +1515,7 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
 }
 
 Result BinaryReaderIR::BeginCodeMetadataSection(std::string_view name,
-                                                  Offset size) {
+                                                Offset size) {
   current_metadata_name_ = name;
   return Result::Ok;
 }
@@ -1527,19 +1524,18 @@ Result BinaryReaderIR::OnCodeMetadataFuncCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnCodeMetadataCount(Index function_index,
-                                             Index count) {
+Result BinaryReaderIR::OnCodeMetadataCount(Index function_index, Index count) {
   code_metadata_queue_.push_func(module_->funcs[function_index]);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnCodeMetadata(Offset offset,
-                                        const void* data,
-                                        Address size) {
+                                      const void* data,
+                                      Address size) {
   std::vector<uint8_t> data_(static_cast<const uint8_t*>(data),
                              static_cast<const uint8_t*>(data) + size);
-  auto meta = MakeUnique<CodeMetadataExpr>(current_metadata_name_,
-                                            std::move(data_));
+  auto meta =
+      MakeUnique<CodeMetadataExpr>(current_metadata_name_, std::move(data_));
   meta->loc.offset = offset;
   code_metadata_queue_.push_metadata(std::move(meta));
   return Result::Ok;

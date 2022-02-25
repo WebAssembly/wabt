@@ -387,13 +387,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndTagSection() override;
 
   /* Code Metadata sections */
-  Result BeginCodeMetadataSection(std::string_view name,
-                                    Offset size) override;
+  Result BeginCodeMetadataSection(std::string_view name, Offset size) override;
   Result OnCodeMetadataFuncCount(Index count) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
-  Result OnCodeMetadata(Offset offset,
-                          const void* data,
-                          Address size) override;
+  Result OnCodeMetadata(Offset offset, const void* data, Address size) override;
   Result EndCodeMetadataSection() override;
 
  private:

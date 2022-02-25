@@ -1141,8 +1141,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnGlobalGetExpr(Index global_index) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
   Result OnCodeMetadata(Offset code_offset,
-                          const void* data,
-                          Address size) override;
+                        const void* data,
+                        Address size) override;
 
  private:
   Result InitExprToConstOffset(const InitExpr& expr, uint64_t* out_offset);
@@ -2197,7 +2197,7 @@ Result BinaryReaderObjdump::OnTagType(Index index, Index sig_index) {
 }
 
 Result BinaryReaderObjdump::OnCodeMetadataCount(Index function_index,
-                                                  Index count) {
+                                                Index count) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
@@ -2210,8 +2210,8 @@ Result BinaryReaderObjdump::OnCodeMetadataCount(Index function_index,
   return Result::Ok;
 }
 Result BinaryReaderObjdump::OnCodeMetadata(Offset code_offset,
-                                             const void* data,
-                                             Address size) {
+                                           const void* data,
+                                           Address size) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }

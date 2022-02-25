@@ -639,15 +639,15 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
 }
 
 Result BinaryReaderLogging::BeginCodeMetadataSection(std::string_view name,
-                                                       Offset size) {
+                                                     Offset size) {
   LOGF("BeginCodeMetadataSection('" PRIstringview "', size:%" PRIzd ")\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), size);
   Indent();
   return reader_->BeginCodeMetadataSection(name, size);
 }
 Result BinaryReaderLogging::OnCodeMetadata(Offset code_offset,
-                                             const void* data,
-                                             Address size) {
+                                           const void* data,
+                                           Address size) {
   std::string_view content(static_cast<const char*>(data), size);
   LOGF("OnCodeMetadata(offset: %" PRIzd ", data: \"" PRIstringview "\")\n",
        code_offset, WABT_PRINTF_STRING_VIEW_ARG(content));

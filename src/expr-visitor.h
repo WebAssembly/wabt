@@ -150,9 +150,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnCallExpr(CallExpr*) override { return Result::Ok; }
   Result OnCallIndirectExpr(CallIndirectExpr*) override { return Result::Ok; }
   Result OnCallRefExpr(CallRefExpr*) override { return Result::Ok; }
-  Result OnCodeMetadataExpr(CodeMetadataExpr*) override {
-    return Result::Ok;
-  }
+  Result OnCodeMetadataExpr(CodeMetadataExpr*) override { return Result::Ok; }
   Result OnCompareExpr(CompareExpr*) override { return Result::Ok; }
   Result OnConstExpr(ConstExpr*) override { return Result::Ok; }
   Result OnConvertExpr(ConvertExpr*) override { return Result::Ok; }

@@ -463,8 +463,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result EndTagSection() override { return Result::Ok; }
 
   /* Code Metadata sections */
-  Result BeginCodeMetadataSection(std::string_view name,
-                                    Offset size) override {
+  Result BeginCodeMetadataSection(std::string_view name, Offset size) override {
     return Result::Ok;
   }
   Result OnCodeMetadataFuncCount(Index count) override { return Result::Ok; }
@@ -472,8 +471,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnCodeMetadata(Offset offset,
-                          const void* data,
-                          Address size) override {
+                        const void* data,
+                        Address size) override {
     return Result::Ok;
   }
   Result EndCodeMetadataSection() override { return Result::Ok; }

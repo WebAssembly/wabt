@@ -141,7 +141,7 @@ class BinaryReader {
   Result ReadTargetFeaturesSections(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCodeMetadataSection(std::string_view name,
-                                   Offset section_size) WABT_WARN_UNUSED;
+                                 Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
@@ -2261,7 +2261,7 @@ Result BinaryReader::ReadTagSection(Offset section_size) {
 }
 
 Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
-                                               Offset section_size) {
+                                             Offset section_size) {
   CALLBACK(BeginCodeMetadataSection, name, section_size);
 
   Index num_funcions;
@@ -2336,8 +2336,7 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   } else if (options_.features.code_metadata_enabled() &&
              section_name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0) {
     std::string_view metadata_name = section_name;
-    metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) -
-                                  1);
+    metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) - 1);
     CHECK_RESULT(ReadCodeMetadataSection(metadata_name, section_size));
   } else {
     // This is an unknown custom section, skip it.

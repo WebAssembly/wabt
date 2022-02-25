@@ -635,8 +635,8 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
 class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
  public:
   explicit CodeMetadataExpr(std::string_view name,
-                              std::vector<uint8_t> data,
-                              const Location& loc = Location())
+                            std::vector<uint8_t> data,
+                            const Location& loc = Location())
       : ExprMixin<ExprType::CodeMetadata>(loc),
         name(std::move(name)),
         data(std::move(data)) {}

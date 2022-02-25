@@ -220,8 +220,7 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       break;
 
     case ExprType::CodeMetadata:
-      CHECK_RESULT(
-          delegate_->OnCodeMetadataExpr(cast<CodeMetadataExpr>(expr)));
+      CHECK_RESULT(delegate_->OnCodeMetadataExpr(cast<CodeMetadataExpr>(expr)));
       break;
 
     case ExprType::Compare:
