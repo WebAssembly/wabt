@@ -329,7 +329,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnCodeMetadataFuncCount(Index count) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
   Result OnCodeMetadata(Offset offset, const void* data, Address size) override;
-  Result EndCodeMetadataSection() override;
 
   Result OnTagSymbol(Index index,
                      uint32_t flags,
@@ -1539,10 +1538,6 @@ Result BinaryReaderIR::OnCodeMetadata(Offset offset,
       MakeUnique<CodeMetadataExpr>(current_metadata_name_, std::move(data_));
   meta->loc.offset = offset;
   code_metadata_queue_.push_metadata(std::move(meta));
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::EndCodeMetadataSection() {
   return Result::Ok;
 }
 
