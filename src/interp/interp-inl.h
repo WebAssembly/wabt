@@ -139,33 +139,83 @@ inline Frame::Frame(Ref func,
       mod(mod) {}
 
 //// FreeList ////
+template <>
+inline bool FreeList<Ref>::IsUsed(Index index) const {
+  return (list_[index].index & refFreeBit) == 0;
+}
+
+template <>
+inline FreeList<Ref>::~FreeList<Ref>() {}
+
+template <>
+template <typename... Args>
+auto FreeList<Ref>::New(Args&&... args) -> Index {
+  if (free_head_ == 0) {
+    list_.push_back(Ref(std::forward<Args>(args)...));
+    return list_.size() - 1;
+  }
+
+  Index index = free_head_ - 1;
+
+  assert(!IsUsed(index));
+  assert(free_items_ > 0);
+
+  free_head_ = list_[index].index & (refFreeBit - 1);
+  list_[index] = Ref(std::forward<Args>(args)...);
+  free_items_--;
+  return index;
+}
+
+template <>
+inline void FreeList<Ref>::Delete(Index index) {
+  assert(IsUsed(index));
+
+  list_[index].index = free_head_ | refFreeBit;
+  free_head_ = index + 1;
+  free_items_++;
+}
+
 template <typename T>
 bool FreeList<T>::IsUsed(Index index) const {
-  return index < list_.size() && !is_free_[index];
+  return (reinterpret_cast<uintptr_t>(list_[index]) & ptrFreeBit) == 0;
+}
+
+template <typename T>
+FreeList<T>::~FreeList<T>() {
+  for (auto object : list_) {
+    if ((reinterpret_cast<uintptr_t>(object) & ptrFreeBit) == 0) {
+      delete object;
+    }
+  }
 }
 
 template <typename T>
 template <typename... Args>
 auto FreeList<T>::New(Args&&... args) -> Index {
-  if (!free_.empty()) {
-    Index index = free_.back();
-    assert(is_free_[index]);
-    free_.pop_back();
-    is_free_[index] = false;
-    list_[index] = T(std::forward<Args>(args)...);
-    return index;
+  if (free_head_ == 0) {
+    list_.push_back(T(std::forward<Args>(args)...));
+    return list_.size() - 1;
   }
-  assert(list_.size() == is_free_.size());
-  is_free_.push_back(false);
-  list_.emplace_back(std::forward<Args>(args)...);
-  return list_.size() - 1;
+
+  Index index = free_head_ - 1;
+
+  assert(!IsUsed(index));
+  assert(free_items_ > 0);
+
+  free_head_ = reinterpret_cast<uintptr_t>(list_[index]) >> ptrFreeShift;
+  list_[index] = T(std::forward<Args>(args)...);
+  free_items_--;
+  return index;
 }
 
 template <typename T>
 void FreeList<T>::Delete(Index index) {
-  list_[index] = T();
-  is_free_[index] = true;
-  free_.push_back(index);
+  assert(IsUsed(index));
+
+  delete list_[index];
+  list_[index] = reinterpret_cast<T>((free_head_ << ptrFreeShift) | ptrFreeBit);
+  free_head_ = index + 1;
+  free_items_++;
 }
 
 template <typename T>
@@ -187,45 +237,7 @@ auto FreeList<T>::size() const -> Index {
 
 template <typename T>
 auto FreeList<T>::count() const -> Index {
-  return list_.size() - free_.size();
-}
-
-//// FreeRefList ////
-inline FreeRefList::Index FreeRefList::New(Ref ref) {
-  if (free_head_ == 0) {
-    list_.push_back(ref);
-    return list_.size() - 1;
-  }
-
-  Index index = free_head_ - 1;
-  assert(!IsUsed(index));
-  free_head_ = list_[index].index & (freeBit - 1);
-  list_[index] = ref;
-  return index;
-}
-
-inline void FreeRefList::Delete(Index index) {
-  assert(IsUsed(index));
-  list_[index].index = free_head_ | freeBit;
-  free_head_ = index + 1;
-}
-
-inline bool FreeRefList::IsUsed(Index index) const {
-  return (list_[index].index & freeBit) == 0;
-}
-
-inline const Ref& FreeRefList::Get(Index index) const {
-  assert(IsUsed(index));
-  return list_[index];
-}
-
-inline Ref& FreeRefList::Get(Index index) {
-  assert(IsUsed(index));
-  return list_[index];
-}
-
-inline FreeRefList::Index FreeRefList::size() const {
-  return list_.size();
+  return list_.size() - free_items_;
 }
 
 //// RefPtr ////
@@ -248,7 +260,7 @@ RefPtr<T>::RefPtr(Store& store, Ref ref) {
   }
 #endif
   root_index_ = store.NewRoot(ref);
-  obj_ = static_cast<T*>(store.objects_.Get(ref.index).get());
+  obj_ = static_cast<T*>(store.objects_.Get(ref.index));
   store_ = &store;
 }
 
@@ -472,7 +484,7 @@ inline bool Store::IsValid(Ref ref) const {
 
 template <typename T>
 bool Store::Is(Ref ref) const {
-  return objects_.IsUsed(ref.index) && isa<T>(objects_.Get(ref.index).get());
+  return objects_.IsUsed(ref.index) && isa<T>(objects_.Get(ref.index));
 }
 
 template <typename T>

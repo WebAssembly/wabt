@@ -408,6 +408,8 @@ class FreeList {
  public:
   using Index = size_t;
 
+  ~FreeList();
+
   template <typename... Args>
   Index New(Args&&...);
   void Delete(Index);
@@ -421,56 +423,28 @@ class FreeList {
   Index count() const;  // The number of used elements.
 
  private:
-  // TODO: Optimize memory layout? We could probably store all of this
-  // information in one uintptr_t.
-  //
-  // For example, when T is a pointer to an Object (e.g. Store::ObjectList), we
-  // can assume alignment to 4 bytes at least. Given a 32-bit pointer, we can
-  // expect the following layout:
-  //
-  //   nnnnnnnn nnnnnnnn nnnnnnnn nnnnnnn0 f
-  //
-  // where:
-  //   f: "is_free": 0 when the payload is of type T
-  //                 1 when the payload is the index of the next free object
-  //   n: the payload
-  //
+  // As for Refs, the free bit is 0x80..0. This bit is never
+  // set for valid Refs, since it would mean more objects
+  // are allocated than the total amount of memory.
+  static const Index refFreeBit = (SIZE_MAX >> 1) + 1;
+
+  // As for Objects, the free bit is 0x1. This bit is never
+  // set for valid Objects, since pointers are aligned to at
+  // least four bytes.
+  static const Index ptrFreeBit = 1;
+  static const int ptrFreeShift = 1;
+
   std::vector<T> list_;
-  std::vector<size_t> free_;
-  std::vector<bool> is_free_;
-};
-
-// TODO: After the rework of FreeList (see TODO above),
-// this class could be merged with it.
-class FreeRefList {
- public:
-  using Index = size_t;
-
-  Index New(Ref);
-  void Delete(Index);
-
-  bool IsUsed(Index) const;
-
-  const Ref& Get(Index) const;
-  Ref& Get(Index);
-
-  Index size() const;  // 1 greater than the maximum index.
-
- private:
-  // The value of freeBit is 0x80..0, and this bit is set
-  // for currently unused (free) items of list_ vector.
-  static const Index freeBit = (SIZE_MAX >> 1) + 1;
-
-  std::vector<Ref> list_;
   // If free_head_ is zero, there is no free slots in list_,
   // otherwise free_head_ - 1 represents the first free slot.
   Index free_head_ = 0;
+  Index free_items_ = 0;
 };
 
 class Store {
  public:
-  using ObjectList = FreeList<std::unique_ptr<Object>>;
-  using RootList = FreeRefList;
+  using ObjectList = FreeList<Object*>;
+  using RootList = FreeList<Ref>;
 
   explicit Store(const Features& = Features{});
 
