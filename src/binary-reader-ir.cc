@@ -63,8 +63,9 @@ class CodeMetadataExprQueue {
 
   std::unique_ptr<CodeMetadataExpr> pop_match(Func* f, Offset offset) {
     std::unique_ptr<CodeMetadataExpr> ret;
-    if (entries.empty())
+    if (entries.empty()) {
       return ret;
+    }
 
     auto& current_entry = entries.front();
 
