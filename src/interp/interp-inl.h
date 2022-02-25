@@ -190,6 +190,44 @@ auto FreeList<T>::count() const -> Index {
   return list_.size() - free_.size();
 }
 
+//// FreeRefList ////
+inline FreeRefList::Index FreeRefList::New(Ref ref) {
+  if (free_head_ == 0) {
+    list_.push_back(ref);
+    return list_.size() - 1;
+  }
+
+  Index index = free_head_ - 1;
+  assert(!IsUsed(index));
+  free_head_ = list_[index].index & (freeBit - 1);
+  list_[index] = ref;
+  return index;
+}
+
+inline void FreeRefList::Delete(Index index) {
+  assert(IsUsed(index));
+  list_[index].index = free_head_ | freeBit;
+  free_head_ = index + 1;
+}
+
+inline bool FreeRefList::IsUsed(Index index) const {
+  return (list_[index].index & freeBit) == 0;
+}
+
+inline const Ref& FreeRefList::Get(Index index) const {
+  assert(IsUsed(index));
+  return list_[index];
+}
+
+inline Ref& FreeRefList::Get(Index index) {
+  assert(IsUsed(index));
+  return list_[index];
+}
+
+inline FreeRefList::Index FreeRefList::size() const {
+  return list_.size();
+}
+
 //// RefPtr ////
 template <typename T>
 RefPtr<T>::RefPtr() : obj_(nullptr), store_(nullptr), root_index_(0) {}
