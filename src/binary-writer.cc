@@ -29,6 +29,7 @@
 
 #include "src/binary.h"
 #include "src/cast.h"
+#include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/leb128.h"
 #include "src/stream.h"
@@ -355,6 +356,23 @@ class SymbolTable {
   }
 };
 
+struct CodeMetadata {
+  Offset offset;
+  std::vector<uint8_t> data;
+  CodeMetadata(Offset offset, std::vector<uint8_t> data)
+      : offset(offset), data(std::move(data)) {}
+};
+struct FuncCodeMetadata {
+  Index func_idx;
+  std::vector<CodeMetadata> entries;
+  FuncCodeMetadata(Index func_idx) : func_idx(func_idx) {}
+};
+struct CodeMetadataSection {
+  std::vector<FuncCodeMetadata> entries;
+};
+typedef std::unordered_map<std::string_view, CodeMetadataSection>
+    CodeMetadataSections;
+
 class BinaryWriter {
   WABT_DISALLOW_COPY_AND_ASSIGN(BinaryWriter);
 
@@ -413,6 +431,7 @@ class BinaryWriter {
   void WriteLinkingSection();
   template <typename T>
   void WriteNames(const std::vector<T*>& elems, NameSectionSubsection type);
+  void WriteCodeMetadataSections();
 
   Stream* stream_;
   const WriteBinaryOptions& options_;
@@ -438,6 +457,10 @@ class BinaryWriter {
   size_t data_count_start_ = 0;
   size_t data_count_end_ = 0;
   bool has_data_segment_instruction_ = false;
+
+  CodeMetadataSections code_metadata_sections_;
+  Offset cur_func_start_offset_;
+  Index cur_func_index_;
 };
 
 static uint8_t log2_u32(uint32_t x) {
@@ -1105,6 +1128,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
       break;
+    case ExprType::CodeMetadata: {
+      auto* meta_expr = cast<CodeMetadataExpr>(expr);
+      auto& s = code_metadata_sections_[meta_expr->name];
+      if (s.entries.empty() || s.entries.back().func_idx != cur_func_index_) {
+        s.entries.emplace_back(cur_func_index_);
+      }
+      auto& a = s.entries.back();
+      Offset code_offset = stream_->offset() - cur_func_start_offset_;
+      a.entries.emplace_back(code_offset, meta_expr->data);
+      break;
+    }
   }
 }
 
@@ -1575,13 +1609,15 @@ Result BinaryWriter::WriteModule() {
     WriteU32Leb128(stream_, num_funcs, "num functions");
 
     for (size_t i = 0; i < num_funcs; ++i) {
+      cur_func_index_ = i + module_->num_func_imports;
       WriteHeader("function body", i);
-      const Func* func = module_->funcs[i + module_->num_func_imports];
+      const Func* func = module_->funcs[cur_func_index_];
 
       /* TODO(binji): better guess of the size of the function body section */
       const Offset leb_size_guess = 1;
       Offset body_size_offset =
           WriteU32Leb128Space(leb_size_guess, "func body size (guess)");
+      cur_func_start_offset_ = stream_->offset();
       WriteFunc(func);
       auto func_start_offset = body_size_offset - last_section_payload_offset_;
       auto func_end_offset = stream_->offset() - last_section_payload_offset_;
@@ -1610,6 +1646,7 @@ Result BinaryWriter::WriteModule() {
       assert(data_count_end_ == code_start_);
       assert(last_section_type_ == BinarySection::Code);
       stream_->MoveData(data_count_start_, data_count_end_, size);
+      code_start_ = data_count_start_;
     }
     stream_->Truncate(data_count_start_ + size);
 
@@ -1624,6 +1661,8 @@ Result BinaryWriter::WriteModule() {
       }
     }
   }
+
+  WriteCodeMetadataSections();
 
   if (module_->data_segments.size()) {
     BeginKnownSection(BinarySection::Data);
@@ -1717,6 +1756,53 @@ Result BinaryWriter::WriteModule() {
   }
 
   return stream_->result();
+}
+
+void BinaryWriter::WriteCodeMetadataSections() {
+  if (code_metadata_sections_.empty())
+    return;
+
+  section_count_ -= 1;
+  // We have to increment the code section's index; adjust anything
+  // that might have captured it.
+  for (RelocSection& section : reloc_sections_) {
+    if (section.section_index == section_count_) {
+      assert(last_section_type_ == BinarySection::Code);
+      section.section_index += code_metadata_sections_.size();
+    }
+  }
+
+  MemoryStream tmp_stream;
+  Stream* main_stream = stream_;
+  stream_ = &tmp_stream;
+  for (auto& s : code_metadata_sections_) {
+    std::string name = "metadata.code.";
+    name.append(s.first);
+    auto& section = s.second;
+    BeginCustomSection(name.c_str());
+    WriteU32Leb128(stream_, section.entries.size(), "function count");
+    for (auto& f : section.entries) {
+      WriteU32Leb128WithReloc(f.func_idx, "function index",
+                              RelocType::FuncIndexLEB);
+      WriteU32Leb128(stream_, f.entries.size(), "instances count");
+      for (auto& a : f.entries) {
+        WriteU32Leb128(stream_, a.offset, "code offset");
+        WriteU32Leb128(stream_, a.data.size(), "data length");
+        stream_->WriteData(a.data.data(), a.data.size(), "data",
+                           PrintChars::Yes);
+      }
+    }
+    EndSection();
+  }
+  stream_ = main_stream;
+  auto buf = tmp_stream.ReleaseOutputBuffer();
+  stream_->MoveData(code_start_ + buf->data.size(), code_start_,
+                    stream_->offset() - code_start_);
+  stream_->WriteDataAt(code_start_, buf->data.data(), buf->data.size());
+  stream_->AddOffset(buf->data.size());
+  code_start_ += buf->data.size();
+  section_count_ += 1;
+  last_section_type_ = BinarySection::Code;
 }
 
 }  // end anonymous namespace

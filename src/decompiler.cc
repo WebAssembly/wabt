@@ -604,6 +604,12 @@ struct Decompiler {
         ts += "](";
         return WrapChild(args[0], ts, ")", Precedence::Atomic);
       }
+      case ExprType::CodeMetadata: {
+        auto cme = cast<CodeMetadataExpr>(n.e);
+        std::string c = "// @metadata.code." + cme->name + " ";
+        c += BinaryToString(cme->data);
+        return Value{{std::move(c)}, Precedence::None};
+      }
       default: {
         // Everything that looks like a function call.
         std::string name;

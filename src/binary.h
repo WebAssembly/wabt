@@ -34,6 +34,7 @@
 #define WABT_BINARY_SECTION_TARGET_FEATURES "target_features"
 #define WABT_BINARY_SECTION_DYLINK "dylink"
 #define WABT_BINARY_SECTION_DYLINK0 "dylink.0"
+#define WABT_BINARY_SECTION_CODE_METADATA "metadata.code."
 
 #define WABT_FOREACH_BINARY_SECTION(V) \
   V(Custom, custom, 0)                 \

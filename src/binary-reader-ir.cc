@@ -21,6 +21,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <vector>
 
 #include "src/binary-reader-nop.h"
@@ -42,6 +43,52 @@ struct LabelNode {
 
 LabelNode::LabelNode(LabelType label_type, ExprList* exprs, Expr* context)
     : label_type(label_type), exprs(exprs), context(context) {}
+
+class CodeMetadataExprQueue {
+ private:
+  struct Entry {
+    Func* func;
+    std::deque<std::unique_ptr<CodeMetadataExpr>> func_queue;
+    Entry(Func* f) : func(f) {}
+  };
+  std::deque<Entry> entries;
+
+ public:
+  CodeMetadataExprQueue() {}
+  void push_func(Func* f) { entries.emplace_back(f); }
+  void push_metadata(std::unique_ptr<CodeMetadataExpr> meta) {
+    assert(!entries.empty());
+    entries.back().func_queue.push_back(std::move(meta));
+  }
+
+  std::unique_ptr<CodeMetadataExpr> pop_match(Func* f, Offset offset) {
+    std::unique_ptr<CodeMetadataExpr> ret;
+    if (entries.empty()) {
+      return ret;
+    }
+
+    auto& current_entry = entries.front();
+
+    if (current_entry.func != f)
+      return ret;
+    if (current_entry.func_queue.empty()) {
+      entries.pop_front();
+      return ret;
+    }
+
+    auto& current_metadata = current_entry.func_queue.front();
+    if (current_metadata->loc.offset + current_entry.func->loc.offset !=
+        offset) {
+      return ret;
+    }
+
+    current_metadata->loc = Location(offset);
+    ret = std::move(current_metadata);
+    current_entry.func_queue.pop_front();
+
+    return ret;
+  }
+};
 
 class BinaryReaderIR : public BinaryReaderNop {
  public:
@@ -115,6 +162,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
+  Result OnOpcode(Opcode opcode) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Address alignment_log2,
                           Address offset) override;
@@ -276,6 +324,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnSectionSymbol(Index index,
                          uint32_t flags,
                          Index section_index) override;
+  /* Code Metadata sections */
+  Result BeginCodeMetadataSection(std::string_view name, Offset size) override;
+  Result OnCodeMetadataFuncCount(Index count) override;
+  Result OnCodeMetadataCount(Index function_index, Index count) override;
+  Result OnCodeMetadata(Offset offset, const void* data, Address size) override;
+
   Result OnTagSymbol(Index index,
                      uint32_t flags,
                      std::string_view name,
@@ -318,6 +372,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   Func* current_func_ = nullptr;
   std::vector<LabelNode> label_stack_;
   const char* filename_;
+
+  CodeMetadataExprQueue code_metadata_queue_;
+  std::string_view current_metadata_name_;
 };
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
@@ -660,12 +717,22 @@ Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
 
 Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
   current_func_ = module_->funcs[index];
+  current_func_->loc = GetLocation();
   PushLabel(LabelType::Func, &current_func_->exprs);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   current_func_->local_types.AppendDecl(type, count);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnOpcode(Opcode opcode) {
+  std::unique_ptr<CodeMetadataExpr> metadata =
+      code_metadata_queue_.pop_match(current_func_, GetLocation().offset - 1);
+  if (metadata) {
+    return AppendExpr(std::move(metadata));
+  }
   return Result::Ok;
 }
 
@@ -1444,6 +1511,33 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
                count, num_params_and_locals);
     return Result::Error;
   }
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginCodeMetadataSection(std::string_view name,
+                                                Offset size) {
+  current_metadata_name_ = name;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCodeMetadataFuncCount(Index count) {
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCodeMetadataCount(Index function_index, Index count) {
+  code_metadata_queue_.push_func(module_->funcs[function_index]);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCodeMetadata(Offset offset,
+                                      const void* data,
+                                      Address size) {
+  std::vector<uint8_t> data_(static_cast<const uint8_t*>(data),
+                             static_cast<const uint8_t*>(data) + size);
+  auto meta =
+      MakeUnique<CodeMetadataExpr>(current_metadata_name_, std::move(data_));
+  meta->loc.offset = offset;
+  code_metadata_queue_.push_metadata(std::move(meta));
   return Result::Ok;
 }
 

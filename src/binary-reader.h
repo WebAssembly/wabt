@@ -461,6 +461,16 @@ class BinaryReaderDelegate {
   virtual Result OnTagType(Index index, Index sig_index) = 0;
   virtual Result EndTagSection() = 0;
 
+  /* Code Metadata sections */
+  virtual Result BeginCodeMetadataSection(std::string_view name,
+                                          Offset size) = 0;
+  virtual Result OnCodeMetadataFuncCount(Index count) = 0;
+  virtual Result OnCodeMetadataCount(Index function_index, Index count) = 0;
+  virtual Result OnCodeMetadata(Offset offset,
+                                const void* data,
+                                Address size) = 0;
+  virtual Result EndCodeMetadataSection() = 0;
+
   const State* state = nullptr;
 };
 

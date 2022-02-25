@@ -1498,6 +1498,9 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
+      case ExprType::CodeMetadata:
+        break;
+
       case ExprType::Compare:
         Write(*cast<CompareExpr>(&expr));
         break;

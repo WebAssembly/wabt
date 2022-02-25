@@ -1139,6 +1139,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnF32ConstExpr(uint32_t value) override;
   Result OnF64ConstExpr(uint64_t value) override;
   Result OnGlobalGetExpr(Index global_index) override;
+  Result OnCodeMetadataCount(Index function_index, Index count) override;
+  Result OnCodeMetadata(Offset code_offset,
+                        const void* data,
+                        Address size) override;
 
  private:
   Result InitExprToConstOffset(const InitExpr& expr, uint64_t* out_offset);
@@ -2189,6 +2193,31 @@ Result BinaryReaderObjdump::OnTagType(Index index, Index sig_index) {
     return Result::Ok;
   }
   printf(" - tag[%" PRIindex "] sig=%" PRIindex "\n", index, sig_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnCodeMetadataCount(Index function_index,
+                                                Index count) {
+  if (!ShouldPrintDetails()) {
+    return Result::Ok;
+  }
+  printf("   - func[%" PRIindex "]", function_index);
+  auto name = GetFunctionName(function_index);
+  if (!name.empty()) {
+    printf(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+  }
+  printf(":\n");
+  return Result::Ok;
+}
+Result BinaryReaderObjdump::OnCodeMetadata(Offset code_offset,
+                                           const void* data,
+                                           Address size) {
+  if (!ShouldPrintDetails()) {
+    return Result::Ok;
+  }
+  printf("    - meta[%" PRIzx "]:\n", code_offset);
+
+  out_stream_->WriteMemoryDump(data, size, 0, PrintChars::Yes, "     - ");
   return Result::Ok;
 }
 

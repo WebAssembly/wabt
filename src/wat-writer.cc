@@ -557,6 +557,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnCallRefExpr(CallRefExpr*) override;
+  Result OnCodeMetadataExpr(CodeMetadataExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -677,6 +678,16 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallRef_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnCodeMetadataExpr(
+    CodeMetadataExpr* expr) {
+  writer_->WriteOpen("@metadata.code.", NextChar::None);
+  writer_->WriteDataWithNextChar(expr->name.data(), expr->name.size());
+  writer_->WritePutc(' ');
+  writer_->WriteQuotedData(expr->data.data(), expr->data.size());
+  writer_->WriteCloseSpace();
   return Result::Ok;
 }
 
