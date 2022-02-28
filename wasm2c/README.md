@@ -374,7 +374,44 @@ symbols to placed in a namespace as decided by the embedder. All symbols are
 also mangled so they include the types of the function signature.
 
 In our example, `Z_facZ_ii` is the mangling for a function named `fac` that
-takes one `i32` parameter and returns one `i32` result.
+takes one `i32` parameter and returns one `i32` result. `Z_facZ_ii` is initialized
+in `fac.c` as:
+
+```c
+/* export: 'fac' */
+u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(Z_fac_module_instance_t *, u32) = (&w2c_fac);
+```
+
+## Handling other kinds of imports and exports of modules
+Exported functions are handled through pointers to the function being exported. If
+a module is trying to import some function, `wasm2c` declares a function pointer in
+the output header file, and the host function is responsible for initializing the 
+pointer before executing the program.
+
+Exports of other kinds (globals, memories, tables) are handled differently, since
+they are part of `module_instance_t`, and each instance should be able to have its
+own exports. For these cases, `wasm2c` provides a function that takes in a module
+instance as argument, and returns the corresponding exports. For example, if `fac`
+exports its memory as such:
+
+```wasm
+(export "mem" (memory $mem))
+```
+
+and then `wasm2c` declares the following function in the header:
+
+```c
+/* export: 'mem' */
+extern wasm_rt_memory_t* WASM_RT_ADD_PREFIX(Z_mem)(Z_fac_module_instance_t *);
+```
+
+which is defined as:
+```c
+/* export: 'mem' */
+wasm_rt_memory_t* WASM_RT_ADD_PREFIX(Z_mem)(Z_fac_module_instance_t *module_instance) {
+  return &module_instance->w2c_M0;
+}
+```
 
 ## A quick look at `fac.c`
 
@@ -386,9 +423,9 @@ various WebAssembly instructions. Their implementations may be interesting to
 the curious reader, but are out of scope for this document.
 
 Following those definitions are various initialization functions (`init`,
-`init_func_types`, `init_globals`, `init_memory`, `init_table`, and
-`init_exports`.) In our example, most of these functions are empty, since the
-module doesn't use any globals or tables.
+`init_func_types`, `init_globals`, `init_memory`, and `init_table`.) In our 
+example, most of these functions are empty, since the module doesn't use any 
+globals or tables.
 
 The most interesting part is the definition of the function `fac`:
 

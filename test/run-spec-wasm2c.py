@@ -193,7 +193,8 @@ class CWriter(object):
         header_filename = wasm_filename[0:(len(wasm_filename) - 5)] + ".h"
         with open(header_filename) as f:
             headerfile = f.readlines()
-            for line in headerfile:
+            for i in range(0, len(headerfile)):
+                line = headerfile[i]
                 if "Z_spectestZ_global_i32Z_i" in line:
                     self.out_file.write("%s.Z_spectestZ_global_i32Z_i = &spectest_global_i32\n;" % self.GetStateInfoName())
                 if "Z_spectestZ_global_i64Z_i" in line:
@@ -202,9 +203,15 @@ class CWriter(object):
                     self.out_file.write("%s.Z_spectestZ_table = &spectest_table;\n" % self.GetStateInfoName())
                 if "Z_spectestZ_memory" in line:
                     self.out_file.write("%s.Z_spectestZ_memory = &spectest_memory;\n" % self.GetStateInfoName())
-                elif "wasm_rt_memory_t (*" in line and "extern" not in line:
-                    import_name = line[len("  wasm_rt_memory_t (*"):len(line) - 3]
-                    self.out_file.write("%s.%s = %s;\n" % (self.GetStateInfoName(), import_name, import_name))
+                if "import: " in line and "spectest" not in line:
+                    next_line = headerfile[i + 1]
+                    if "extern" not in next_line:
+                        line_split = line.split()
+                        import_module_name = MangleName(line_split[2][1:-1])
+                        import_field_name = MangleName(line_split[3][1:-1])
+                        import_name = import_module_name + import_field_name
+#                        import_func_name = import_module_name + "get" + import_field_name
+                        self.out_file.write("%s.%s = %s(&%s);\n" % (self.GetStateInfoName(), import_name, import_name, import_module_name + "_module_instance"))
 
     def _WriteModuleImports(self):
         idx = 0
