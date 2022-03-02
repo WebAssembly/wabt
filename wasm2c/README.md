@@ -90,11 +90,12 @@ int main(int argc, char** argv) {
 ```
 
 To compile the executable, we need to use `main.c` and the generated `fac.c`.
-We'll also include `wasm-rt-impl.c` which has implementations of the various
-`wasm_rt_*` functions used by `fac.c` and `fac.h`.
+We'll also include `wasm-rt-impl.c`, `wasm-rt-os-unix.c` and `wasm-rt-os-win.c`
+which include some OS specific initialization which has implementations of the
+various `wasm_rt_*` functions used by `fac.c` and `fac.h`.
 
 ```sh
-$ cc -o fac main.c fac.c wasm-rt-impl.c
+$ cc -o fac main.c fac.c wasm-rt-impl.c wasm-rt-os-unix.c wasm-rt-os-win.c
 ```
 
 Now let's test it out!

@@ -15,8 +15,10 @@
  */
 
 #include "wasm-rt-impl.h"
+#include "wasm-rt-os.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -108,7 +110,10 @@ static void signal_handler(int sig, siginfo_t* si, void* unused) {
 }
 #endif
 
-void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
+// Heap aligned to 4GB
+#define WASM_HEAP_ALIGNMENT 0x100000000ull
+
+bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   uint32_t byte_length = initial_pages * PAGE_SIZE;
@@ -130,12 +135,17 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 
   /* Reserve 8GiB. */
   void* addr =
-      mmap(NULL, 0x200000000ul, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      os_mmap_aligned(NULL, 0x200000000ul, MMAP_PROT_NONE, MMAP_MAP_NONE,
+                      WASM_HEAP_ALIGNMENT, /*alignment_offset=*/0);
+
   if (addr == (void*)-1) {
-    perror("mmap failed");
+    os_print_last_error("os_mmap failed.");
     abort();
   }
-  mprotect(addr, byte_length, PROT_READ | PROT_WRITE);
+  int ret = os_mmap_commit(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
+  if (ret != 0) {
+    return false;
+  }
   memory->data = addr;
 #else
   memory->data = calloc(byte_length, 1);
@@ -143,6 +153,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
+  return true;
 }
 
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
@@ -159,7 +170,11 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t delta_size = delta * PAGE_SIZE;
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   uint8_t* new_data = memory->data;
-  mprotect(new_data + old_size, delta_size, PROT_READ | PROT_WRITE);
+  int ret = os_mmap_commit(new_data + old_size, delta_size,
+                           MMAP_PROT_READ | MMAP_PROT_WRITE);
+  if (ret != 0) {
+    return (uint32_t)-1;
+  }
 #else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
@@ -177,6 +192,86 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   memory->size = new_size;
   memory->data = new_data;
   return old_pages;
+}
+
+#ifdef _WIN32
+static float quiet_nanf(float x) {
+  uint32_t tmp;
+  memcpy(&tmp, &x, 4);
+  tmp |= 0x7fc00000lu;
+  memcpy(&x, &tmp, 4);
+  return x;
+}
+
+static double quiet_nan(double x) {
+  uint64_t tmp;
+  memcpy(&tmp, &x, 8);
+  tmp |= 0x7ff8000000000000llu;
+  memcpy(&x, &tmp, 8);
+  return x;
+}
+#endif
+
+double wasm_rt_trunc(double x) {
+#ifdef _WIN32
+  if (isnan(x))
+    return quiet_nan(x);
+#endif
+  return trunc(x);
+}
+
+float wasm_rt_truncf(float x) {
+#ifdef _WIN32
+  if (isnan(x))
+    return quiet_nanf(x);
+#endif
+  return truncf(x);
+}
+
+float wasm_rt_nearbyintf(float x) {
+#ifdef _WIN32
+  if (isnan(x))
+    return quiet_nanf(x);
+#endif
+  return nearbyintf(x);
+}
+
+double wasm_rt_nearbyint(double x) {
+#ifdef _WIN32
+  if (isnan(x))
+    return quiet_nan(x);
+#endif
+  return nearbyint(x);
+}
+
+float wasm_rt_fabsf(float x) {
+#ifdef _WIN32
+  if (isnan(x)) {
+    uint32_t tmp;
+    memcpy(&tmp, &x, 4);
+    if (tmp & (1 << 31)) {
+      tmp = tmp & ~(1 << 31);
+      memcpy(&x, &tmp, 4);
+    }
+    return x;
+  }
+#endif
+  return fabsf(x);
+}
+
+double wasm_rt_fabs(double x) {
+#ifdef _WIN32
+  if (isnan(x)) {
+    uint64_t tmp;
+    memcpy(&tmp, &x, 8);
+    if (tmp & (1ll << 63)) {
+      tmp = tmp & ~(1ll << 63);
+      memcpy(&x, &tmp, 8);
+    }
+    return x;
+  }
+#endif
+  return fabs(x);
 }
 
 void wasm_rt_allocate_table(wasm_rt_table_t* table,
