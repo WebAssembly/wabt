@@ -845,10 +845,15 @@ void CWriter::WriteMultivalueTypes() {
 }
 
 void CWriter::WriteFuncTypes() {
-  Write(Newline());
-  Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
-  Write(Newline(), Newline());
+  if (module_->types.size()) {
+    Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
+    Write(Newline());
+  }
   Write("static void init_func_types(void) {", Newline());
+  if (!module_->types.size()) {
+    Write("}", Newline());
+    return;
+  }
   Index func_type_index = 0;
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
@@ -1017,8 +1022,15 @@ void CWriter::WriteMemory(const std::string& name) {
 }
 
 void CWriter::WriteTables() {
-  if (module_->tables.size() == module_->num_table_imports)
+  if (module_->tables.size() == module_->num_table_imports) {
     return;
+  }
+
+  if (!module_->types.size()) {
+    // If no types are defined then there is no way to use the table
+    // for anything.
+    return;
+  }
 
   Write(Newline());
 
@@ -1048,17 +1060,22 @@ void CWriter::WriteDataInitializers() {
       Write(Newline());
     } else {
       for (const DataSegment* data_segment : module_->data_segments) {
-        Write(Newline(), "static const u8 data_segment_data_",
-              data_segment_index, "[] = ", OpenBrace());
-        size_t i = 0;
-        for (uint8_t x : data_segment->data) {
-          Writef("0x%02x, ", x);
-          if ((++i % 12) == 0)
+        if (!data_segment->data.size()) {
+          Write(Newline(), "static const u8* data_segment_data_",
+                data_segment_index, " = NULL;", Newline());
+        } else {
+          Write(Newline(), "static const u8 data_segment_data_",
+                data_segment_index, "[] = ", OpenBrace());
+          size_t i = 0;
+          for (uint8_t x : data_segment->data) {
+            Writef("0x%02x, ", x);
+            if ((++i % 12) == 0)
+              Write(Newline());
+          }
+          if (i > 0)
             Write(Newline());
+          Write(CloseBrace(), ";", Newline());
         }
-        if (i > 0)
-          Write(Newline());
-        Write(CloseBrace(), ";", Newline());
         ++data_segment_index;
       }
     }
@@ -1082,7 +1099,8 @@ void CWriter::WriteDataInitializers() {
     Write("LOAD_DATA(", ExternalRef(memory->name), ", ");
     WriteInitExpr(data_segment->offset);
     Write(", data_segment_data_", data_segment_index, ", ",
-          data_segment->data.size(), ");", Newline());
+          data_segment->data.size());
+    Write(");", Newline());
     ++data_segment_index;
   }
 
@@ -1090,9 +1108,18 @@ void CWriter::WriteDataInitializers() {
 }
 
 void CWriter::WriteElemInitializers() {
+  Write(Newline(), "static void init_table(void) ", OpenBrace());
+
+  if (!module_->types.size()) {
+    // If there are no types there cannot be any table entries either.
+    for (const ElemSegment* elem_segment : module_->elem_segments) {
+      assert(elem_segment->elem_exprs.size() == 0);
+    }
+    Write(CloseBrace(), Newline());
+    return;
+  }
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
-  Write(Newline(), "static void init_table(void) ", OpenBrace());
   Write("uint32_t offset;", Newline());
   if (table && module_->num_table_imports == 0) {
     uint32_t max =

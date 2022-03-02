@@ -62,4 +62,4 @@ extern uint32_t g_saved_call_stack_depth;
 }
 #endif
 
-#endif // WASM_RT_IMPL_H_
+#endif /* WASM_RT_IMPL_H_ */
