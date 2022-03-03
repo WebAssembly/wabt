@@ -833,14 +833,14 @@ void CWriter::WriteMultivalueTypes() {
     // incidentally they also mean we don't have to bother with deduplication
     Write("#ifndef ", name, Newline());
     Write("#define ", name, " ", name, Newline());
-    Write("struct ", name, " {", Newline());
+    Write("struct ", name, " ", OpenBrace());
     for (Index i = 0; i < num_results; ++i) {
       Type type = func_type->GetResultType(i);
-      Write("  ", type);
+      Write(type);
       Writef(" %c%d;", MangleType(type), i);
       Write(Newline());
     }
-    Write("};", Newline(), "#endif  /* ", name, " */", Newline());
+    Write(CloseBrace(), ";", Newline(), "#endif  /* ", name, " */", Newline());
   }
 }
 
@@ -849,9 +849,9 @@ void CWriter::WriteFuncTypes() {
     Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
     Write(Newline());
   }
-  Write("static void init_func_types(void) {", Newline());
+  Write("static void init_func_types(void) ", OpenBrace());
   if (!module_->types.size()) {
-    Write("}", Newline());
+    Write(CloseBrace(), Newline());
     return;
   }
   Index func_type_index = 0;
@@ -859,7 +859,7 @@ void CWriter::WriteFuncTypes() {
     FuncType* func_type = cast<FuncType>(type);
     Index num_params = func_type->GetNumParams();
     Index num_results = func_type->GetNumResults();
-    Write("  func_types[", func_type_index, "] = wasm_rt_register_func_type(",
+    Write("func_types[", func_type_index, "] = wasm_rt_register_func_type(",
           num_params, ", ", num_results);
     for (Index i = 0; i < num_params; ++i) {
       Write(", ", TypeEnum(func_type->GetParamType(i)));
@@ -872,7 +872,7 @@ void CWriter::WriteFuncTypes() {
     Write(");", Newline());
     ++func_type_index;
   }
-  Write("}", Newline());
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteImports() {
