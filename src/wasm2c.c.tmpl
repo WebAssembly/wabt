@@ -84,29 +84,29 @@ static inline void load_data(void *dest, const void *src, size_t n) {
   }
 #endif
 
-DEFINE_LOAD(i32_load, u32, u32, u32);
-DEFINE_LOAD(i64_load, u64, u64, u64);
-DEFINE_LOAD(f32_load, f32, f32, f32);
-DEFINE_LOAD(f64_load, f64, f64, f64);
-DEFINE_LOAD(i32_load8_s, s8, s32, u32);
-DEFINE_LOAD(i64_load8_s, s8, s64, u64);
-DEFINE_LOAD(i32_load8_u, u8, u32, u32);
-DEFINE_LOAD(i64_load8_u, u8, u64, u64);
-DEFINE_LOAD(i32_load16_s, s16, s32, u32);
-DEFINE_LOAD(i64_load16_s, s16, s64, u64);
-DEFINE_LOAD(i32_load16_u, u16, u32, u32);
-DEFINE_LOAD(i64_load16_u, u16, u64, u64);
-DEFINE_LOAD(i64_load32_s, s32, s64, u64);
-DEFINE_LOAD(i64_load32_u, u32, u64, u64);
-DEFINE_STORE(i32_store, u32, u32);
-DEFINE_STORE(i64_store, u64, u64);
-DEFINE_STORE(f32_store, f32, f32);
-DEFINE_STORE(f64_store, f64, f64);
-DEFINE_STORE(i32_store8, u8, u32);
-DEFINE_STORE(i32_store16, u16, u32);
-DEFINE_STORE(i64_store8, u8, u64);
-DEFINE_STORE(i64_store16, u16, u64);
-DEFINE_STORE(i64_store32, u32, u64);
+DEFINE_LOAD(i32_load, u32, u32, u32)
+DEFINE_LOAD(i64_load, u64, u64, u64)
+DEFINE_LOAD(f32_load, f32, f32, f32)
+DEFINE_LOAD(f64_load, f64, f64, f64)
+DEFINE_LOAD(i32_load8_s, s8, s32, u32)
+DEFINE_LOAD(i64_load8_s, s8, s64, u64)
+DEFINE_LOAD(i32_load8_u, u8, u32, u32)
+DEFINE_LOAD(i64_load8_u, u8, u64, u64)
+DEFINE_LOAD(i32_load16_s, s16, s32, u32)
+DEFINE_LOAD(i64_load16_s, s16, s64, u64)
+DEFINE_LOAD(i32_load16_u, u16, u32, u32)
+DEFINE_LOAD(i64_load16_u, u16, u64, u64)
+DEFINE_LOAD(i64_load32_s, s32, s64, u64)
+DEFINE_LOAD(i64_load32_u, u32, u64, u64)
+DEFINE_STORE(i32_store, u32, u32)
+DEFINE_STORE(i64_store, u64, u64)
+DEFINE_STORE(f32_store, f32, f32)
+DEFINE_STORE(f64_store, f64, f64)
+DEFINE_STORE(i32_store8, u8, u32)
+DEFINE_STORE(i32_store16, u16, u32)
+DEFINE_STORE(i64_store8, u8, u64)
+DEFINE_STORE(i64_store16, u16, u64)
+DEFINE_STORE(i64_store32, u32, u64)
 
 #define I32_CLZ(x) ((x) ? __builtin_clz(x) : 32)
 #define I64_CLZ(x) ((x) ? __builtin_clzll(x) : 64)

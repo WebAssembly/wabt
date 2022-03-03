@@ -335,7 +335,11 @@ class CWriter(object):
 
 def Compile(cc, c_filename, out_dir, *args):
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, '.o'), out_dir)
-    cc.RunWithArgs('-c', c_filename, '-o', o_filename, *args)
+    cc.RunWithArgs('-c', c_filename, '-o', o_filename,
+                   '-Wall', '-Werror', '-Wno-unused',
+                   '-Wno-tautological-constant-out-of-range-compare',
+                   '-std=c99', '-D_DEFAULT_SOURCE',
+                   *args)
     return o_filename
 
 
@@ -401,7 +405,8 @@ def main(args):
         wasm2c.AppendOptionalArgs({
             '--enable-multi-memory': options.enable_multi_memory})
 
-        cc = utils.Executable(options.cc, *options.cflags)
+        cc = utils.Executable(options.cc, *options.cflags, forward_stderr=True,
+                              forward_stdout=True)
         cc.verbose = options.print_cmd
 
         with open(json_file_path) as json_file:
@@ -436,7 +441,7 @@ def main(args):
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
 
         if options.compile:
-            o_filenames.append(Compile(cc, main_filename, out_dir, includes, defines))
+            o_filenames.append(Compile(cc, main_filename, out_dir, includes))
             main_exe = utils.ChangeExt(json_file_path, '')
             Link(cc, o_filenames, main_exe, '-lm')
 
