@@ -20,7 +20,7 @@ out/test/spec/simd_store.wast:132: assert_invalid passed:
   out/test/spec/simd_store/simd_store.6.wasm:0000024: error: type mismatch in v128.store, expected [i32, v128] but got []
   0000024: error: OnStoreExpr callback failed
 out/test/spec/simd_store.wast:136: assert_invalid passed:
-  out/test/spec/simd_store/simd_store.7.wasm:0000035: error: type mismatch in implicit return, expected [v128] but got []
+  out/test/spec/simd_store/simd_store.7.wasm:0000036: error: type mismatch in implicit return, expected [v128] but got []
   0000036: error: EndFunctionBody callback failed
 out/test/spec/simd_store.wast:144: assert_invalid passed:
   out/test/spec/simd_store/simd_store.8.wasm:0000032: error: type mismatch in v128.store, expected [i32, v128] but got [v128]

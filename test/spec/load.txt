@@ -54,46 +54,46 @@ out/test/spec/load.wast:301: assert_malformed passed:
   (memory 1)(func (param i32) (result f64) (f64.load64 (local.get 0)))
                                             ^^^^^^^^^^
 out/test/spec/load.wast:312: assert_invalid passed:
-  out/test/spec/load/load.14.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/load/load.14.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:316: assert_invalid passed:
-  out/test/spec/load/load.15.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/load/load.15.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:320: assert_invalid passed:
-  out/test/spec/load/load.16.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/load/load.16.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:324: assert_invalid passed:
-  out/test/spec/load/load.17.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/load/load.17.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:328: assert_invalid passed:
-  out/test/spec/load/load.18.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/load/load.18.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:332: assert_invalid passed:
-  out/test/spec/load/load.19.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  out/test/spec/load/load.19.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:336: assert_invalid passed:
-  out/test/spec/load/load.20.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  out/test/spec/load/load.20.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:340: assert_invalid passed:
-  out/test/spec/load/load.21.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  out/test/spec/load/load.21.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:344: assert_invalid passed:
-  out/test/spec/load/load.22.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  out/test/spec/load/load.22.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:348: assert_invalid passed:
-  out/test/spec/load/load.23.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  out/test/spec/load/load.23.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:352: assert_invalid passed:
-  out/test/spec/load/load.24.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  out/test/spec/load/load.24.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:356: assert_invalid passed:
-  out/test/spec/load/load.25.wasm:0000021: error: type mismatch at end of function, expected [] but got [i64]
+  out/test/spec/load/load.25.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:360: assert_invalid passed:
-  out/test/spec/load/load.26.wasm:0000021: error: type mismatch at end of function, expected [] but got [f32]
+  out/test/spec/load/load.26.wasm:0000022: error: type mismatch at end of function, expected [] but got [f32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:364: assert_invalid passed:
-  out/test/spec/load/load.27.wasm:0000021: error: type mismatch at end of function, expected [] but got [f64]
+  out/test/spec/load/load.27.wasm:0000022: error: type mismatch at end of function, expected [] but got [f64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:371: assert_invalid passed:
   out/test/spec/load/load.28.wasm:0000025: error: type mismatch in i32.load, expected [i32] but got [f32]

@@ -2,10 +2,10 @@
 ;;; STDIN_FILE: third_party/testsuite/table_size.wast
 (;; STDOUT ;;;
 out/test/spec/table_size.wast:70: assert_invalid passed:
-  out/test/spec/table_size/table_size.1.wasm:0000020: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/table_size/table_size.1.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
   0000021: error: EndFunctionBody callback failed
 out/test/spec/table_size.wast:79: assert_invalid passed:
-  out/test/spec/table_size/table_size.2.wasm:0000021: error: type mismatch in implicit return, expected [f32] but got [i32]
+  out/test/spec/table_size/table_size.2.wasm:0000022: error: type mismatch in implicit return, expected [f32] but got [i32]
   0000022: error: EndFunctionBody callback failed
 38/38 tests passed.
 ;;; STDOUT ;;)

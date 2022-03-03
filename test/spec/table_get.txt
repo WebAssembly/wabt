@@ -13,13 +13,13 @@ out/test/spec/table_get.wast:51: assert_invalid passed:
   out/test/spec/table_get/table_get.2.wasm:0000025: error: type mismatch in table.get, expected [i32] but got [f32]
   0000025: error: OnTableGetExpr callback failed
 out/test/spec/table_get.wast:61: assert_invalid passed:
-  out/test/spec/table_get/table_get.3.wasm:0000021: error: type mismatch at end of function, expected [] but got [externref]
+  out/test/spec/table_get/table_get.3.wasm:0000022: error: type mismatch at end of function, expected [] but got [externref]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/table_get.wast:70: assert_invalid passed:
-  out/test/spec/table_get/table_get.4.wasm:0000022: error: type mismatch in implicit return, expected [funcref] but got [externref]
+  out/test/spec/table_get/table_get.4.wasm:0000023: error: type mismatch in implicit return, expected [funcref] but got [externref]
   0000023: error: EndFunctionBody callback failed
 out/test/spec/table_get.wast:80: assert_invalid passed:
-  out/test/spec/table_get/table_get.5.wasm:0000025: error: type mismatch in implicit return, expected [funcref] but got [externref]
+  out/test/spec/table_get/table_get.5.wasm:0000026: error: type mismatch in implicit return, expected [funcref] but got [externref]
   0000026: error: EndFunctionBody callback failed
 15/15 tests passed.
 ;;; STDOUT ;;)

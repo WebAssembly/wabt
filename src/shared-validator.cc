@@ -461,6 +461,7 @@ Result SharedValidator::BeginFunctionBody(const Location& loc,
 }
 
 Result SharedValidator::EndFunctionBody(const Location& loc) {
+  expr_loc_ = loc;
   return typechecker_.EndFunction();
 }
 

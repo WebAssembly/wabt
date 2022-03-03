@@ -100,10 +100,10 @@ out/test/spec/call_indirect.wast:824: assert_invalid passed:
   out/test/spec/call_indirect/call_indirect.17.wasm:0000027: error: type mismatch in call_indirect, expected [f64, i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:832: assert_invalid passed:
-  out/test/spec/call_indirect/call_indirect.18.wasm:0000024: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/call_indirect/call_indirect.18.wasm:0000025: error: type mismatch at end of function, expected [] but got [i32]
   0000025: error: EndFunctionBody callback failed
 out/test/spec/call_indirect.wast:840: assert_invalid passed:
-  out/test/spec/call_indirect/call_indirect.19.wasm:000002d: error: type mismatch at end of function, expected [] but got [f64, i32]
+  out/test/spec/call_indirect/call_indirect.19.wasm:000002e: error: type mismatch at end of function, expected [] but got [f64, i32]
   000002e: error: EndFunctionBody callback failed
 out/test/spec/call_indirect.wast:851: assert_invalid passed:
   out/test/spec/call_indirect/call_indirect.20.wasm:0000027: error: type mismatch in call_indirect, expected [i32] but got []

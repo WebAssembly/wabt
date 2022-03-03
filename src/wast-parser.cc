@@ -1361,6 +1361,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
   } else {
     auto field = MakeUnique<FuncModuleField>(loc, name);
     Func& func = field->func;
+    func.loc = GetLocation();
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
     TypeVector local_types;
