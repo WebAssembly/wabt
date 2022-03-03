@@ -217,7 +217,7 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
     return true;
   }
 
-  Object* obj = objects_.Get(ref.index).get();
+  Object* obj = objects_.Get(ref.index);
   switch (type) {
     case ValueType::FuncRef:
       return obj->kind() == ObjectKind::DefinedFunc ||
