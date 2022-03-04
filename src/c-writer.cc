@@ -278,6 +278,8 @@ class CWriter {
   void WriteTables();
   void WriteTable(const std::string&);
   void WriteTablePtr(const std::string&);
+  void WriteDataInstances();
+  void WriteElemInstances();
   void WriteGlobalInitializers();
   void WriteDataInitializers();
   void WriteElemInitializers();
@@ -996,6 +998,7 @@ void CWriter::WriteFuncTypes() {
     Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
     Write(Newline());
   }
+  Write(Newline());
   Write("static void init_func_types(void) ", OpenBrace());
   if (!module_->types.size()) {
     Write(CloseBrace(), Newline());
@@ -1285,6 +1288,8 @@ void CWriter::WriteModuleInstance() {
   WriteGlobals();
   WriteMemories();
   WriteTables();
+  WriteDataInstances();
+  WriteElemInstances();
 
   // C forbids an empty struct
   if (module_->globals.empty() && module_->memories.empty() &&
@@ -1385,21 +1390,35 @@ void CWriter::WriteGlobalInitializers() {
   Write(CloseBrace(), Newline());
 }
 
-void CWriter::WriteDataInitializers() {
-  const Memory* memory = nullptr;
-  Index data_segment_index = 0;
+static inline bool is_droppable(const DataSegment* data_segment) {
+  return (data_segment->kind == SegmentKind::Passive) &&
+         (!data_segment->data.empty());
+}
 
+static inline bool is_droppable(const ElemSegment* elem_segment) {
+  return (elem_segment->kind == SegmentKind::Passive) &&
+         (!elem_segment->elem_exprs.empty());
+}
+
+void CWriter::WriteDataInstances() {
+  for (const DataSegment* data_segment : module_->data_segments) {
+    DefineGlobalScopeName(data_segment->name);
+    if (is_droppable(data_segment)) {
+      Write("bool ", "data_segment_dropped_", GetGlobalName(data_segment->name),
+            " : 1;", Newline());
+    }
+  }
+}
+
+void CWriter::WriteDataInitializers() {
   if (!module_->memories.empty()) {
     if (module_->data_segments.empty()) {
       Write(Newline());
     } else {
       for (const DataSegment* data_segment : module_->data_segments) {
-        if (!data_segment->data.size()) {
-          Write(Newline(), "static const u8* data_segment_data_",
-                data_segment_index, " = NULL;", Newline());
-        } else {
+        if (data_segment->data.size()) {
           Write(Newline(), "static const u8 data_segment_data_",
-                data_segment_index, "[] = ", OpenBrace());
+                GetGlobalName(data_segment->name), "[] = ", OpenBrace());
           size_t i = 0;
           for (uint8_t x : data_segment->data) {
             Writef("0x%02x, ", x);
@@ -1410,11 +1429,8 @@ void CWriter::WriteDataInitializers() {
             Write(Newline());
           Write(CloseBrace(), ";", Newline());
         }
-        ++data_segment_index;
       }
     }
-
-    memory = module_->memories[0];
   }
 
   Write("static void init_memory(", ModuleInstanceTypeName(), "* instance) ",
@@ -1422,83 +1438,139 @@ void CWriter::WriteDataInitializers() {
   if (module_->memories.size() > module_->num_memory_imports) {
     Index memory_idx = module_->num_memory_imports;
     for (Index i = memory_idx; i < module_->memories.size(); i++) {
-      memory = module_->memories[i];
+      const Memory* memory = module_->memories[i];
       uint32_t max =
           memory->page_limits.has_max ? memory->page_limits.max : 65536;
       Write("wasm_rt_allocate_memory(", ExternalInstancePtr(memory->name), ", ",
             memory->page_limits.initial, ", ", max, ");", Newline());
     }
   }
-  data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {
-    Write("LOAD_DATA(", ExternalInstanceRef(memory->name), ", ");
-    WriteInitExpr(data_segment->offset);
-    Write(", data_segment_data_", data_segment_index, ", ",
-          data_segment->data.size());
-    Write(");", Newline());
-    ++data_segment_index;
+    if (data_segment->kind == SegmentKind::Active) {
+      const Memory* memory =
+          module_->memories[module_->GetMemoryIndex(data_segment->memory_var)];
+      Write("LOAD_DATA(", ExternalInstanceRef(memory->name), ", ");
+      WriteInitExpr(data_segment->offset);
+      if (data_segment->data.empty()) {
+        Write(", NULL, 0");
+      } else {
+        Write(", data_segment_data_", GetGlobalName(data_segment->name), ", ",
+              data_segment->data.size());
+      }
+      Write(");", Newline());
+    }
+  }
+
+  Write(CloseBrace(), Newline());
+
+  Write(Newline(), "static void init_data_instances(", ModuleInstanceTypeName(),
+        " *instance) ", OpenBrace());
+
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (is_droppable(data_segment)) {
+      Write("instance->data_segment_dropped_",
+            GetGlobalName(data_segment->name), " = false;", Newline());
+    }
   }
 
   Write(CloseBrace(), Newline());
 }
 
+void CWriter::WriteElemInstances() {
+  for (const ElemSegment* elem_segment : module_->elem_segments) {
+    DefineGlobalScopeName(elem_segment->name);
+    if (is_droppable(elem_segment)) {
+      Write("bool ", "elem_segment_dropped_", GetGlobalName(elem_segment->name),
+            " : 1;", Newline());
+    }
+  }
+}
+
 void CWriter::WriteElemInitializers() {
+  for (const ElemSegment* elem_segment : module_->elem_segments) {
+    if (elem_segment->elem_exprs.empty()) {
+      continue;
+    }
+
+    Write(Newline(),
+          "static const wasm_elem_segment_expr_t elem_segment_exprs_",
+          GetGlobalName(elem_segment->name), "[] = ", OpenBrace());
+
+    for (const ExprList& elem_expr : elem_segment->elem_exprs) {
+      assert(elem_expr.size() == 1);
+      const Expr& expr = elem_expr.front();
+      switch (expr.type()) {
+        case ExprType::RefFunc: {
+          const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
+          const Index func_type_index =
+              module_->GetFuncTypeIndex(func->decl.type_var);
+          Write("{", func_type_index, ", ");
+          Write("(wasm_rt_funcref_t)", ExternalPtr(func->name), ", ");
+          const bool is_import = import_module_sym_map_.count(func->name) != 0;
+          if (is_import) {
+            Write("offsetof(", ModuleInstanceTypeName(), ", ",
+                  MangleModuleInstanceName(import_module_sym_map_[func->name]),
+                  ")");
+          } else {
+            Write("0");
+          }
+          Write("}, ", Newline());
+        } break;
+        case ExprType::RefNull:
+          Write("{0, NULL, 0}, ", Newline());
+          break;
+        default:
+          WABT_UNREACHABLE;
+      }
+    }
+    Write(CloseBrace(), ";", Newline());
+  }
+
   Write(Newline(), "static void init_table(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
 
-  if (!module_->types.size()) {
-    // If there are no types there cannot be any table entries either.
-    for (const ElemSegment* elem_segment : module_->elem_segments) {
-      assert(elem_segment->elem_exprs.size() == 0);
-    }
-    Write(CloseBrace(), Newline());
-    return;
-  }
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
-  Write("uint32_t offset;", Newline());
   if (table && module_->num_table_imports == 0) {
     uint32_t max =
         table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
     Write("wasm_rt_allocate_table(", ExternalInstancePtr(table->name), ", ",
           table->elem_limits.initial, ", ", max, ");", Newline());
   }
-  Index elem_segment_index = 0;
   for (const ElemSegment* elem_segment : module_->elem_segments) {
-    if (elem_segment->kind == SegmentKind::Passive) {
+    if (elem_segment->kind != SegmentKind::Active) {
       continue;
     }
-    Write("offset = ");
-    WriteInitExpr(elem_segment->offset);
-    Write(";", Newline());
 
-    size_t i = 0;
-    for (const ExprList& elem_expr : elem_segment->elem_exprs) {
-      // We don't support the bulk-memory proposal here, so we know that we
-      // don't have any passive segments (where ref.null can be used).
-      assert(elem_expr.size() == 1);
-      const Expr* expr = &elem_expr.front();
-      assert(expr->type() == ExprType::RefFunc);
-      const Func* func = module_->GetFunc(cast<RefFuncExpr>(expr)->var);
-      Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
-
-      bool is_import = import_module_sym_map_.count(func->name) != 0;
-      if (is_import) {
-        Write(ExternalInstanceRef(table->name), ".data[offset + ", i,
-              "] = (wasm_rt_elem_t){func_types[", func_type_index,
-              "], (wasm_rt_funcref_t)", ExternalPtr(func->name),
-              ", (void*)(instance->",
-              MangleModuleInstanceName(import_module_sym_map_[func->name]),
-              ")};", Newline());
-      } else {
-        Write(ExternalInstanceRef(table->name), ".data[offset + ", i,
-              "] = (wasm_rt_elem_t){func_types[", func_type_index,
-              "], (wasm_rt_funcref_t)", ExternalPtr(func->name),
-              ", (void*)instance};", Newline());
-      }
-      ++i;
+    Write("table_init(", ExternalInstancePtr(table->name), ", ");
+    if (elem_segment->elem_exprs.empty()) {
+      Write("NULL, 0, ");
+    } else {
+      Write("elem_segment_exprs_", GetGlobalName(elem_segment->name), ", ",
+            elem_segment->elem_exprs.size(), ", ");
     }
-    ++elem_segment_index;
+    WriteInitExpr(elem_segment->offset);
+    if (elem_segment->elem_exprs.empty()) {
+      // It's mandatory to handle the case of a zero-length elem segment
+      // (even in a module with no types). This must trap if the offset
+      // is out of bounds.
+      Write(", 0, 0, instance, NULL);", Newline());
+    } else {
+      Write(", 0, ", elem_segment->elem_exprs.size(),
+            ", instance, func_types);", Newline());
+    }
+  }
+
+  Write(CloseBrace(), Newline());
+
+  Write(Newline(), "static void init_elem_instances(", ModuleInstanceTypeName(),
+        " *instance) ", OpenBrace());
+
+  for (const ElemSegment* elem_segment : module_->elem_segments) {
+    if (is_droppable(elem_segment)) {
+      Write("instance->elem_segment_dropped_",
+            GetGlobalName(elem_segment->name), " = false;", Newline());
+    }
   }
 
   Write(CloseBrace(), Newline());
@@ -1652,6 +1724,8 @@ void CWriter::WriteInit() {
   Write("init_globals(instance);", Newline());
   Write("init_memory(instance);", Newline());
   Write("init_table(instance);", Newline());
+  Write("init_data_instances(instance);", Newline());
+  Write("init_elem_instances(instance);", Newline());
   for (Var* var : module_->starts) {
     Write(ExternalRef(module_->GetFunc(*var)->name));
     bool is_import =
@@ -1715,8 +1789,7 @@ void CWriter::WriteFree() {
   Write(Newline(), "void " + module_prefix_ + "_free(",
         ModuleInstanceTypeName(), "* instance) ", OpenBrace());
 
-  if (module_->types.size()) {
-    // If there are no types there cannot be any table entries either.
+  {
     assert(module_->tables.size() <= 1);
     Index table_index = 0;
     for (const Table* table : module_->tables) {
@@ -2340,13 +2413,104 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::MemoryCopy:
-      case ExprType::DataDrop:
-      case ExprType::MemoryInit:
-      case ExprType::MemoryFill:
-      case ExprType::TableCopy:
-      case ExprType::ElemDrop:
-      case ExprType::TableInit:
+      case ExprType::MemoryFill: {
+        const auto inst = cast<MemoryFillExpr>(&expr);
+        Memory* memory =
+            module_->memories[module_->GetMemoryIndex(inst->memidx)];
+        Write("memory_fill(", ExternalInstancePtr(memory->name), ", ",
+              StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");",
+              Newline());
+        DropTypes(3);
+      } break;
+
+      case ExprType::MemoryCopy: {
+        const auto inst = cast<MemoryCopyExpr>(&expr);
+        Memory* dest_memory =
+            module_->memories[module_->GetMemoryIndex(inst->destmemidx)];
+        const Memory* src_memory = module_->GetMemory(inst->srcmemidx);
+        Write("memory_copy(", ExternalInstancePtr(dest_memory->name), ", ",
+              ExternalInstancePtr(src_memory->name), ", ", StackVar(2), ", ",
+              StackVar(1), ", ", StackVar(0), ");", Newline());
+        DropTypes(3);
+      } break;
+
+      case ExprType::MemoryInit: {
+        const auto inst = cast<MemoryInitExpr>(&expr);
+        Memory* dest_memory =
+            module_->memories[module_->GetMemoryIndex(inst->memidx)];
+        const DataSegment* src_data = module_->GetDataSegment(inst->var);
+        Write("memory_init(", ExternalInstancePtr(dest_memory->name), ", ");
+        if (src_data->data.empty()) {
+          Write("NULL, 0");
+        } else {
+          Write("data_segment_data_", GetGlobalName(src_data->name), ", ");
+          if (is_droppable(src_data)) {
+            Write("(", "instance->data_segment_dropped_",
+                  GetGlobalName(src_data->name),
+                  " ? 0 : ", src_data->data.size(), ")");
+          } else {
+            Write("0");
+          }
+        }
+
+        Write(", ", StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");",
+              Newline());
+        DropTypes(3);
+      } break;
+
+      case ExprType::TableInit: {
+        const auto inst = cast<TableInitExpr>(&expr);
+        Table* dest_table =
+            module_->tables[module_->GetTableIndex(inst->table_index)];
+        const ElemSegment* src_segment =
+            module_->GetElemSegment(inst->segment_index);
+        Write("table_init(", ExternalInstancePtr(dest_table->name), ", ");
+        if (src_segment->elem_exprs.empty()) {
+          Write("NULL, 0");
+        } else {
+          Write("elem_segment_exprs_", GetGlobalName(src_segment->name), ", ");
+          if (is_droppable(src_segment)) {
+            Write("(instance->elem_segment_dropped_",
+                  GetGlobalName(src_segment->name),
+                  " ? 0 : ", src_segment->elem_exprs.size(), ")");
+          } else {
+            Write("0");
+          }
+        }
+
+        Write(", ", StackVar(2), ", ", StackVar(1), ", ", StackVar(0));
+        Write(", instance, func_types);", Newline());
+        DropTypes(3);
+      } break;
+
+      case ExprType::DataDrop: {
+        const auto inst = cast<DataDropExpr>(&expr);
+        const DataSegment* data = module_->GetDataSegment(inst->var);
+        if (is_droppable(data)) {
+          Write("instance->data_segment_dropped_", GetGlobalName(data->name),
+                " = true;", Newline());
+        }
+      } break;
+
+      case ExprType::ElemDrop: {
+        const auto inst = cast<ElemDropExpr>(&expr);
+        const ElemSegment* seg = module_->GetElemSegment(inst->var);
+        if (is_droppable(seg)) {
+          Write("instance->elem_segment_dropped_", GetGlobalName(seg->name),
+                " = true;", Newline());
+        }
+      } break;
+
+      case ExprType::TableCopy: {
+        const auto inst = cast<TableCopyExpr>(&expr);
+        Table* dest_table =
+            module_->tables[module_->GetTableIndex(inst->dst_table)];
+        const Table* src_table = module_->GetTable(inst->src_table);
+        Write("table_copy(", ExternalInstancePtr(dest_table->name), ", ",
+              ExternalInstancePtr(src_table->name), ", ", StackVar(2), ", ",
+              StackVar(1), ", ", StackVar(0), ");", Newline());
+      } break;
+
       case ExprType::TableGet:
       case ExprType::TableSet:
       case ExprType::TableGrow:
@@ -3180,10 +3344,10 @@ void CWriter::WriteCSource() {
   WriteTagTypes();
   WriteTags();
   WriteFuncDeclarations();
-  WriteFuncs();
   WriteGlobalInitializers();
   WriteDataInitializers();
   WriteElemInitializers();
+  WriteFuncs();
   WriteExports(WriteExportsKind::Definitions);
   WriteInitInstanceImport();
   WriteInit();
