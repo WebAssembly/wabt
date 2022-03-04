@@ -186,3 +186,25 @@ void wasm_rt_allocate_table(wasm_rt_table_t* table,
   table->max_size = max_elements;
   table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
 }
+
+const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
+  switch (trap) {
+    case WASM_RT_TRAP_NONE:
+      return "No error";
+    case WASM_RT_TRAP_OOB:
+      return "Out-of-bounds access in linear memory";
+    case WASM_RT_TRAP_INT_OVERFLOW:
+      return "Integer overflow on divide or truncation";
+    case WASM_RT_TRAP_DIV_BY_ZERO:
+      return "Integer divide by zero";
+    case WASM_RT_TRAP_INVALID_CONVERSION:
+      return "Conversion from NaN to integer";
+    case WASM_RT_TRAP_UNREACHABLE:
+      return "Unreachable instruction executed";
+    case WASM_RT_TRAP_CALL_INDIRECT:
+      return "Invalid call_indirect";
+    case WASM_RT_TRAP_EXHAUSTION:
+      return "Call stack exhausted";
+  }
+  return "invalid trap code";
+}

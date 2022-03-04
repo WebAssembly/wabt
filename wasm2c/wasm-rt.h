@@ -130,6 +130,11 @@ typedef struct {
  *  This is typically called by the generated code, and not the embedder. */
 extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
 
+/**
+ * Return a human readable error string based on a trap type.
+ */
+const char* wasm_rt_strerror(wasm_rt_trap_t trap);
+
 /** Register a function type with the given signature. The returned function
  * index is guaranteed to be the same for all calls with the same signature.
  * The following varargs must all be of type `wasm_rt_type_t`, first the
