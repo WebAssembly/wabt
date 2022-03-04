@@ -1898,6 +1898,7 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   std::vector<uint8_t> data(data_text.begin(), data_text.end());
   exprs->push_back(MakeUnique<CodeMetadataExpr>(name, std::move(data)));
   TokenType rpar = Peek();
+  WABT_USE(rpar);
   assert(rpar == TokenType::Rpar);
   Consume();
   return Result::Ok;
