@@ -409,7 +409,7 @@ def main(args):
                               forward_stdout=True)
         cc.verbose = options.print_cmd
 
-        with open(json_file_path) as json_file:
+        with open(json_file_path, encoding='utf-8') as json_file:
             spec_json = json.load(json_file)
 
         prefix = ''
@@ -428,10 +428,6 @@ def main(args):
         o_filenames = []
         includes = '-I%s' % options.wasmrt_dir
 
-        # Compile wasm-rt-impl.
-        wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
-        o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
-
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
             c_filename = utils.ChangeExt(wasm_filename, '.c')
@@ -441,12 +437,18 @@ def main(args):
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
 
         if options.compile:
+            # Compile wasm-rt-impl.
+            wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
+            o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
+
+            # Compile and link -main test run entry point
             o_filenames.append(Compile(cc, main_filename, out_dir, includes))
             main_exe = utils.ChangeExt(json_file_path, '')
             Link(cc, o_filenames, main_exe, '-lm')
 
-        if options.compile and options.run:
-            utils.Executable(main_exe, forward_stdout=True).RunWithArgs()
+            # Run the resulting binary
+            if options.run:
+                utils.Executable(main_exe, forward_stdout=True).RunWithArgs()
 
     return 0
 
