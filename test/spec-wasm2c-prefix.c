@@ -57,22 +57,26 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                            \
   } while (0)
 
-#define ASSERT_RETURN(f)                           \
-  do {                                             \
-    g_tests_run++;                                 \
-    if (wasm_rt_impl_try() != 0) {                 \
-      error(__FILE__, __LINE__, #f " trapped.\n"); \
-    } else {                                       \
-      f;                                           \
-      g_tests_passed++;                            \
-    }                                              \
+#define ASSERT_RETURN(f)                               \
+  do {                                                 \
+    g_tests_run++;                                     \
+    int trap_code = wasm_rt_impl_try();                \
+    if (trap_code) {                                   \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n", \
+            wasm_rt_strerror(trap_code));              \
+    } else {                                           \
+      f;                                               \
+      g_tests_passed++;                                \
+    }                                                  \
   } while (0)
 
 #define ASSERT_RETURN_T(type, fmt, f, expected)                          \
   do {                                                                   \
     g_tests_run++;                                                       \
-    if (wasm_rt_impl_try() != 0) {                                       \
-      error(__FILE__, __LINE__, #f " trapped.\n");                       \
+    int trap_code = wasm_rt_impl_try();                                  \
+    if (trap_code) {                                                     \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                   \
+            wasm_rt_strerror(trap_code));                                \
     } else {                                                             \
       type actual = f;                                                   \
       if (is_equal_##type(actual, expected)) {                           \
