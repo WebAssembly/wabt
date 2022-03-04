@@ -101,7 +101,6 @@ static void ParseOptions(int argc, char** argv) {
             "wasm2c currently only supports a fixed set of features.\n");
     exit(1);
   }
-  s_features.disable_bulk_memory();
 }
 
 // TODO(binji): copied from binary-writer-spec.cc, probably should share.

@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 %%declarations
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
@@ -295,3 +296,78 @@ DEFINE_REINTERPRET(i32_reinterpret_f32, f32, u32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, u64, f64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
 
+static inline void memory_fill(wasm_rt_memory_t* mem, u32 d, u32 val, u32 n) {
+  RANGE_CHECK(mem, d, n);
+  memset(mem->data + d, val, n);
+}
+
+static inline void memory_copy(wasm_rt_memory_t* dest,
+                               const wasm_rt_memory_t* src,
+                               u32 dest_addr,
+                               u32 src_addr,
+                               u32 n) {
+  RANGE_CHECK(dest, dest_addr, n);
+  RANGE_CHECK(src, src_addr, n);
+  memmove(dest->data + dest_addr, src->data + src_addr, n);
+}
+
+static inline void memory_init(wasm_rt_memory_t* dest,
+                               const u8* src,
+                               u32 src_size,
+                               u32 dest_addr,
+                               u32 src_addr,
+                               u32 n) {
+  if (UNLIKELY(src_addr + (uint64_t)n > src_size)) TRAP(OOB);
+  LOAD_DATA((*dest), dest_addr, src + src_addr, n);
+}
+
+typedef struct {
+  uint32_t func_type_index;
+  wasm_rt_funcref_t func;
+  size_t module_offset;
+} wasm_elem_segment_expr_t;
+
+static inline void table_init(wasm_rt_table_t* dest,
+                              const wasm_elem_segment_expr_t* src,
+                              u32 src_size,
+                              u32 dest_addr,
+                              u32 src_addr,
+                              u32 n,
+                              void* module_instance,
+                              const u32* func_types) {
+  if (UNLIKELY(src_addr + (uint64_t)n > src_size)) TRAP(OOB);
+  if (UNLIKELY(dest_addr + (uint64_t)n > dest->size)) TRAP(OOB);
+  for (u32 i = 0; i < n; i++) {
+    const wasm_elem_segment_expr_t* src_expr = &src[src_addr + i];
+    dest->data[dest_addr + i] =
+        (wasm_rt_elem_t){func_types[src_expr->func_type_index], src_expr->func,
+                         (char*)module_instance + src_expr->module_offset};
+  }
+}
+
+static inline void table_copy(wasm_rt_table_t* dest,
+                              const wasm_rt_table_t* src,
+                              u32 dest_addr,
+                              u32 src_addr,
+                              u32 n) {
+  if (UNLIKELY(dest_addr + (uint64_t)n > dest->size)) TRAP(OOB);
+  if (UNLIKELY(src_addr + (uint64_t)n > src->size)) TRAP(OOB);
+
+  if (n == 0) {
+    return;
+  }
+
+  if (dest->data + dest_addr == src->data + src_addr) {
+    return;
+  }
+
+  if (dest->data + dest_addr < src->data + src_addr) {
+    for (u32 i = 0; i < n; i++) {
+      dest->data[dest_addr + i] = src->data[src_addr + i];
+    }
+  } else {
+    for (u32 i = n; i > 0; i--) {
+      dest->data[dest_addr + i - 1] = src->data[src_addr + i - 1];
+    }
+  }
+}
