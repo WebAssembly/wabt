@@ -92,14 +92,18 @@ def MangleTypes(types):
 
 
 def MangleName(s):
-    def Mangle(match):
-        s = match.group(0)
-        return b'Z%02X' % s[0]
+    s = 'w2c_' + s
+    s = re.sub('[^a-zA-Z0-9]+', '_', s)
+    return s
 
-    # NOTE(binji): Z is not allowed.
-    pattern = b'([^_a-zA-Y0-9])'
-    result = 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
-    return result
+    # def Mangle(match):
+    #     s = match.group(0)
+    #     return b'Z%02X' % s[0]
+
+    # # NOTE(binji): Z is not allowed.
+    # pattern = b'([^_a-zA-Y0-9])'
+    # result = 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
+    # return result
 
 
 def IsModuleCommand(command):
@@ -144,7 +148,6 @@ class CWriter(object):
                 name = os.path.basename(command['filename'])
                 name = os.path.splitext(name)[0]
                 name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
-                name = MangleName(name)
 
                 self.module_prefix_map[idx] = name
 
@@ -178,6 +181,7 @@ class CWriter(object):
 
     def _WriteIncludes(self):
         idx = 0
+        self.out_file.write('#undef WASM_RT_MODULE_PREFIX\n\n')
         for filename in self.GetModuleFilenames():
             header = os.path.splitext(filename)[0] + '.h'
             self.out_file.write(
@@ -204,7 +208,10 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%sinit();\n' % self.GetModulePrefix())
+        prefix = self.GetModulePrefix()
+        self.out_file.write('g_curr_sbx_details = %sget_wasm2c_sandbox_info();\n' % prefix)
+        self.out_file.write('g_curr_sbx_details.wasm_rt_sys_init();\n')
+        self.out_file.write('g_curr_sbx = (wasm2c_sandbox_t*) g_curr_sbx_details.create_wasm2c_sandbox(0 /* no max page limit */);\n')
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
@@ -293,6 +300,9 @@ class CWriter(object):
     def _ConstantList(self, consts):
         return ', '.join(self._Constant(const) for const in consts)
 
+    def _ConstantPrefixList(self, prefix, consts):
+        return ', '.join(prefix + [ self._Constant(const) for const in consts ])
+
     def _Found(self, num, type_):
         return "actual.%s%s" % (MangleType(type_), num)
 
@@ -323,10 +333,12 @@ class CWriter(object):
         expected = command['expected']
         type_ = action['type']
         mangled_module_name = self.GetModulePrefix(action.get('module'))
-        field = (mangled_module_name + MangleName(action['field']) +
-                 MangleName(self._ActionSig(action, expected)))
+        field = (mangled_module_name + MangleName(action['field'])
+        #  + MangleName(self._ActionSig(action, expected))
+          )
         if type_ == 'invoke':
-            return '%s(%s)' % (field, self._ConstantList(action.get('args', [])))
+            inst_arg = ["g_curr_sbx"]
+            return '%s(%s)' % (field, self._ConstantPrefixList(inst_arg, action.get('args', [])))
         elif type_ == 'get':
             return '*%s' % field
         else:
@@ -335,12 +347,12 @@ class CWriter(object):
 
 def Compile(cc, c_filename, out_dir, *args):
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, '.o'), out_dir)
-    cc.RunWithArgs('-c', c_filename, '-o', o_filename, *args)
+    cc.RunWithArgs('-c', c_filename, '-g', '-o', o_filename, *args)
     return o_filename
 
 
 def Link(cc, o_filenames, main_exe, *args):
-    args = ['-o', main_exe] + o_filenames + list(args)
+    args = ['-g', '-o', main_exe] + o_filenames + list(args)
     cc.RunWithArgs(*args)
 
 
@@ -418,20 +430,21 @@ def main(args):
         o_filenames = []
         includes = '-I%s' % options.wasmrt_dir
 
-        # Compile wasm-rt-impl.
-        wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
-        o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
+        # Compile wasm-rt-unified.
+        define_trap = '-DWASM_RT_CUSTOM_TRAP_HANDLER=w2c_trap_handler'
+        wasm_rt_unified_c = os.path.join(options.wasmrt_dir, 'wasm-rt-unified.c')
+        o_filenames.append(Compile(cc, wasm_rt_unified_c, out_dir, includes, define_trap))
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
             c_filename = utils.ChangeExt(wasm_filename, '.c')
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename)
             if options.compile:
-                defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
-                o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
+                define_mod_name = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
+                o_filenames.append(Compile(cc, c_filename, out_dir, includes, define_mod_name, define_trap))
 
         if options.compile:
-            o_filenames.append(Compile(cc, main_filename, out_dir, includes, defines))
+            o_filenames.append(Compile(cc, main_filename, out_dir, includes, define_trap))
             main_exe = utils.ChangeExt(json_file_path, '')
             Link(cc, o_filenames, main_exe, '-lm')
 

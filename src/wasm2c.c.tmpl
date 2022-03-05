@@ -441,7 +441,12 @@ static void destroy_wasm2c_sandbox(void* aSbx) {
   free(sbx);
 }
 
-FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() {
+static void reset_wasm2c_stack_depth(void* aSbx) {
+  wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) aSbx;
+  sbx->wasm_rt_call_stack_depth = 0;
+}
+
+FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_RT_ADD_PREFIX(get_wasm2c_sandbox_info)() {
   wasm2c_sandbox_funcs_t ret;
   ret.wasm_rt_sys_init = &wasm_rt_sys_init;
   ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;
@@ -450,5 +455,6 @@ FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)
   ret.lookup_wasm2c_func_index = &lookup_wasm2c_func_index;
   ret.add_wasm2c_callback = &add_wasm2c_callback;
   ret.remove_wasm2c_callback = &remove_wasm2c_callback;
+  ret.reset_wasm2c_stack_depth = &reset_wasm2c_stack_depth;
   return ret;
 }

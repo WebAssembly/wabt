@@ -520,7 +520,7 @@ static void destroy_wasm2c_sandbox(void* aSbx) {
   free(sbx);
 }
 
-FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() {
+FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_RT_ADD_PREFIX(get_wasm2c_sandbox_info)() {
   wasm2c_sandbox_funcs_t ret;
   ret.wasm_rt_sys_init = &wasm_rt_sys_init;
   ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;

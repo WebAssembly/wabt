@@ -16,8 +16,6 @@ extern "C" {
 #define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)
 #define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)
 
-#define WASM_CURR_ADD_PREFIX(x) WASM_RT_PASTE(WASM_CURR_MODULE_PREFIX, x)
-
 /* TODO(binji): only use stdint.h types in header */
 typedef uint8_t u8;
 typedef int8_t s8;
@@ -40,7 +38,7 @@ typedef double f64;
 # define FUNC_EXPORT
 #endif
 
-FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)();
+FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_RT_ADD_PREFIX(get_wasm2c_sandbox_info)();
 
 struct wasm2c_sandbox_t;
 typedef struct wasm2c_sandbox_t wasm2c_sandbox_t;

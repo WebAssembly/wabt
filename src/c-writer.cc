@@ -172,7 +172,7 @@ class CWriter {
   std::string DefineImportName(const std::string& name,
                                std::string_view module_name,
                                std::string_view mangled_field_name);
-  std::string DefineGlobalScopeName(const std::string&);
+  std::string DefineGlobalScopeName(const std::string&, bool prefix = false);
   std::string DefineLocalScopeName(const std::string&);
   std::string DefineStackVarName(Index, Type, std::string_view);
 
@@ -449,20 +449,21 @@ std::string CWriter::MangleGlobalName(std::string_view name, Type type) {
 }
 
 // static
-std::string CWriter::LegalizeName(std::string_view name) {
-  if (name.empty())
+std::string CWriter::LegalizeName(std::string_view original) {
+  if (original.empty())
     return "_";
 
   std::string result;
-  result = isalpha(name[0]) ? name[0] : '_';
-  for (size_t i = 1; i < name.size(); ++i)
-    result += isalnum(name[i]) ? name[i] : '_';
 
   // In addition to containing valid characters for C, we must also avoid
   // colliding with things C cares about, such as reserved words (e.g. "void")
   // or a function name like main() (which a compiler will  complain about if we
   // define it with another type). To avoid such problems, prefix.
-  result = "w2c_" + result;
+  std::string name = "w2c_" + original;
+
+  result = isalpha(name[0]) ? name[0] : '_';
+  for (size_t i = 1; i < name.size(); ++i)
+    result += isalnum(name[i]) ? name[i] : '_';
 
   return result;
 }
@@ -497,8 +498,11 @@ std::string CWriter::DefineImportName(const std::string& name,
   return mangled;
 }
 
-std::string CWriter::DefineGlobalScopeName(const std::string& name) {
+std::string CWriter::DefineGlobalScopeName(const std::string& name, bool prefix) {
   std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
+  if(prefix) {
+    unique = "WASM_RT_ADD_PREFIX(" + unique + ")";
+  }
   global_sym_map_.insert(SymbolMap::value_type(name, unique));
   return unique;
 }
@@ -969,7 +973,7 @@ void CWriter::WriteFuncDeclarations(bool for_header) {
   for (const Func* func : module_->funcs) {
     std::string global_func_name;
     if (for_header) {
-      global_func_name = DefineGlobalScopeName(func->name);
+      global_func_name = DefineGlobalScopeName(func->name, true /* prefix */);
     } else {
       global_func_name = GetGlobalName(func->name);
     }
@@ -2553,7 +2557,6 @@ void CWriter::WriteCHeader() {
   std::string guard = GenerateHeaderGuard();
   Write("#ifndef ", guard, Newline());
   Write("#define ", guard, Newline(), Newline());
-  Write("#define WASM_CURR_MODULE_PREFIX ", options_.mod_name, Newline());
   Write(s_header_top);
   WriteMultivalueTypes();
   WriteImports();
