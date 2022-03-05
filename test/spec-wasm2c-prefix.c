@@ -2,6 +2,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <math.h>
+#include <setjmp.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -9,10 +10,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 1
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#include <signal.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
+
 #include "wasm-rt.h"
 
 int g_tests_run;
 int g_tests_passed;
+wasm2c_sandbox_funcs_t g_curr_sbx_details;
+wasm2c_sandbox_t* g_curr_sbx = 0;
 
 static void run_spec_tests(void);
 
@@ -24,10 +34,23 @@ static void error(const char* file, int line, const char* format, ...) {
   va_end(args);
 }
 
+jmp_buf g_jmp_buf;
+
+void w2c_trap_handler(uint32_t code, const char* msg) {
+  g_curr_sbx_details.reset_wasm2c_stack_depth(g_curr_sbx);
+  siglongjmp(g_jmp_buf, code);
+}
+
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+static void signal_handler(int sig, siginfo_t* si, void* unused) {
+  wasm_rt_trap(WASM_RT_TRAP_OOB);
+}
+#endif
+
 #define ASSERT_TRAP(f)                                         \
   do {                                                         \
     g_tests_run++;                                             \
-    if (wasm_rt_impl_try() != 0) {                             \
+    if (sigsetjmp(g_jmp_buf, 1) != 0) {                             \
       g_tests_passed++;                                        \
     } else {                                                   \
       (void)(f);                                               \
@@ -38,7 +61,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_EXHAUSTION(f)                                     \
   do {                                                           \
     g_tests_run++;                                               \
-    wasm_rt_trap_t code = wasm_rt_impl_try();                    \
+    wasm_rt_trap_t code = sigsetjmp(g_jmp_buf, 1);                    \
     switch (code) {                                              \
       case WASM_RT_TRAP_NONE:                                    \
         (void)(f);                                               \
@@ -59,7 +82,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN(f)                           \
   do {                                             \
     g_tests_run++;                                 \
-    if (wasm_rt_impl_try() != 0) {                 \
+    if (sigsetjmp(g_jmp_buf, 1) != 0) {                 \
       error(__FILE__, __LINE__, #f " trapped.\n"); \
     } else {                                       \
       f;                                           \
@@ -70,7 +93,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_T(type, fmt, f, expected)                          \
   do {                                                                   \
     g_tests_run++;                                                       \
-    if (wasm_rt_impl_try() != 0) {                                       \
+    if (sigsetjmp(g_jmp_buf, 1) != 0) {                                       \
       error(__FILE__, __LINE__, #f " trapped.\n");                       \
     } else {                                                             \
       type actual = f;                                                   \
@@ -87,7 +110,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_NAN_T(type, itype, fmt, f, kind)                        \
   do {                                                                        \
     g_tests_run++;                                                            \
-    if (wasm_rt_impl_try() != 0) {                                            \
+    if (sigsetjmp(g_jmp_buf, 1) != 0) {                                            \
       error(__FILE__, __LINE__, #f " trapped.\n");                            \
     } else {                                                                  \
       type actual = f;                                                        \
@@ -113,7 +136,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_MULTI_T(type, fmt, f, compare, expected, found)    \
   do {                                                                   \
     g_tests_run++;                                                       \
-    if (wasm_rt_impl_try() != 0) {                                       \
+    if (sigsetjmp(g_jmp_buf, 1) != 0) {                                       \
       error(__FILE__, __LINE__, #f " trapped.\n");                       \
     } else {                                                             \
       type actual = f;                                                   \
@@ -248,9 +271,26 @@ static void init_spectest_module(void) {
   wasm_rt_allocate_table(&spectest_table, 10, 20);
 }
 
+static void install_signal_handler() {
+  #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  struct sigaction sa;
+  sa.sa_flags = SA_SIGINFO;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_sigaction = signal_handler;
+
+  /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 ||
+      sigaction(SIGBUS, &sa, NULL) != 0) {
+    perror("sigaction failed");
+    abort();
+  }
+  #endif
+}
+
 
 int main(int argc, char** argv) {
   init_spectest_module();
+  install_signal_handler();
   run_spec_tests();
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
   return g_tests_passed != g_tests_run;

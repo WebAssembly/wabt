@@ -28,7 +28,7 @@
 
 #ifdef WASM_RT_CUSTOM_TRAP_HANDLER
 // forward declare the signature of any custom trap handler
-void WASM_RT_CUSTOM_TRAP_HANDLER(const char*);
+void WASM_RT_CUSTOM_TRAP_HANDLER(uint32_t, const char*);
 #endif
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
@@ -93,7 +93,7 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
     }
   };
 #ifdef WASM_RT_CUSTOM_TRAP_HANDLER
-  WASM_RT_CUSTOM_TRAP_HANDLER(error_message);
+  WASM_RT_CUSTOM_TRAP_HANDLER((uint32_t) code, error_message);
 #else
   fprintf(stderr, "Error: %s\n", error_message);
   abort();
