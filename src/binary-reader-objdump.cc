@@ -1576,7 +1576,7 @@ Result BinaryReaderObjdump::OnExport(Index index,
 
 Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index,
                                                           Type type) {
-  PrintDetails("  - elem[%" PRIzd "] = ref.null %s\n",
+  PrintDetails("  - elem[%" PRIu64 "] = ref.null %s\n",
                elem_offset_ + elem_index_, type.GetName().c_str());
   elem_index_++;
   return Result::Ok;
@@ -1584,7 +1584,7 @@ Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index,
 
 Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                                           Index func_index) {
-  PrintDetails("  - elem[%" PRIzd "] = func[%" PRIindex "]",
+  PrintDetails("  - elem[%" PRIu64 "] = func[%" PRIindex "]",
                elem_offset_ + elem_index_, func_index);
   auto name = GetFunctionName(func_index);
   if (!name.empty()) {

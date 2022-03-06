@@ -121,6 +121,10 @@ configure_file(
 include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
 
 if (COMPILER_IS_MSVC)
+  if (WERROR)
+    add_definitions(-WX)
+  endif ()
+
   # disable warning C4018: signed/unsigned mismatch
   # disable warning C4056, C4756: overflow in floating-point constant arithmetic
   #   seems to not like float compare w/ HUGE_VALF; bug?
@@ -138,6 +142,10 @@ if (COMPILER_IS_MSVC)
   add_definitions("/MP")
 
 else ()
+  if (WERROR)
+    add_definitions(-Werror)
+  endif ()
+
   # disable -Wunused-parameter: this is really common when implementing
   #   interfaces, etc.
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
@@ -374,14 +382,8 @@ if (BUILD_LIBWASM)
   target_link_libraries(wasm wabt)
   target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
   if (COMPILER_IS_MSVC)
-    if (WERROR)
-      target_compile_options(wasm PRIVATE -WX)
-    endif ()
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__declspec(dllexport)")
   else ()
-    if (WERROR)
-      target_compile_options(wasm PRIVATE -Werror)
-    endif ()
     target_compile_options(wasm PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-old-style-cast>)
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__attribute__((visibility(\"default\")))")
   endif ()
@@ -643,9 +645,12 @@ if (BUILD_TESTS)
   function(c_api_example NAME)
     set(EXENAME wasm-c-api-${NAME})
     add_executable(${EXENAME} third_party/wasm-c-api/example/${NAME}.c)
-    if (NOT COMPILER_IS_MSVC)
+    if (COMPILER_IS_MSVC)
+      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-wd4311")
+    else ()
       set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-pointer-to-int-cast")
     endif ()
+
     target_link_libraries(${EXENAME} wasm Threads::Threads)
     add_custom_target(${EXENAME}-copy-to-bin ALL
       COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
