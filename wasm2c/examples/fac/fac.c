@@ -332,14 +332,14 @@ static void init_table(void) {
 }
 
 /* export: 'fac' */
-u32 (*WASM_RT_ADD_PREFIX(Z_fac))(u32);
+u32 (*Z_facZ_fac)(u32);
 
 static void init_exports(void) {
   /* export: 'fac' */
-  WASM_RT_ADD_PREFIX(Z_fac) = (&w2c_fac);
+  Z_facZ_fac = (&w2c_fac);
 }
 
-void WASM_RT_ADD_PREFIX(init)(void) {
+void Z_fac_init(void) {
   init_func_types();
   init_globals();
   init_memory();

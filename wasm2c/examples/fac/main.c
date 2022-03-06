@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Uncomment this to define fac_init and fac_Z_fac instead. */
-/* #define WASM_RT_MODULE_PREFIX fac_ */
-
 #include "fac.h"
 
 int main(int argc, char** argv) {
@@ -17,12 +14,11 @@ int main(int argc, char** argv) {
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
-  /* Initialize the fac module. Since we didn't define WASM_RT_MODULE_PREFIX,
-  the initialization function is called `init`. */
-  init();
+  /* Initialize the fac module. */
+  Z_fac_init();
 
   /* Call `fac`, using the mangled name. */
-  u32 result = Z_fac(x);
+  u32 result = Z_facZ_fac(x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);

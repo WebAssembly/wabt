@@ -139,9 +139,8 @@ int ProgramMain(int argc, char** argv) {
     }
 
     if (Succeeded(result)) {
-      for (auto iter = module_streams.begin(); iter != module_streams.end();
-           ++iter) {
-        result = iter->stream->WriteToFile(iter->filename);
+      for (const auto& pair : module_streams) {
+        result = pair.stream->WriteToFile(pair.filename);
         if (!Succeeded(result)) {
           break;
         }
