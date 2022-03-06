@@ -461,9 +461,9 @@ std::string CWriter::LegalizeName(std::string_view name) {
     return "_";
 
   std::string result;
-  result = isalpha((unsigned char)name[0]) ? name[0] : '_';
+  result = isalpha(static_cast<unsigned char>(name[0])) ? name[0] : '_';
   for (size_t i = 1; i < name.size(); ++i)
-    result += isalnum((unsigned char)name[i]) ? name[i] : '_';
+    result += isalnum(static_cast<unsigned char>(name[i])) ? name[i] : '_';
 
   // In addition to containing valid characters for C, we must also avoid
   // colliding with things C cares about, such as reserved words (e.g. "void")
