@@ -297,7 +297,7 @@ TEST(ParseInt32, Both) {
 
 TEST(ParseInt32, SignedAndUnsigned) {
   AssertInt32Equals(2147483648, "-2147483648", SignedAndUnsigned);
-  AssertInt32Equals(-0x80000000u, "-0x80000000", SignedAndUnsigned);
+  AssertInt32Equals(-0x80000000ll, "-0x80000000", SignedAndUnsigned);
   AssertInt32Equals(4294967295u, "-1", SignedAndUnsigned);
   AssertInt32Equals(-1, "-0x1", SignedAndUnsigned);
   AssertInt32Equals(1, "+1", SignedAndUnsigned);
@@ -348,9 +348,9 @@ TEST(ParseInt64, SignedAndUnsigned) {
   AssertInt64Equals(18446744073709551615ull, "-1", SignedAndUnsigned);
   AssertInt64Equals(-1, "-0x1", SignedAndUnsigned);
   AssertInt64Equals(1, "+1", SignedAndUnsigned);
-  AssertInt64Equals(-0x0bcdefabcdefabcdull, "-0x0BCDEFABCDEFABCD",
+  AssertInt64Equals(-0x0bcdefabcdefabcdll, "-0x0BCDEFABCDEFABCD",
                     SignedAndUnsigned);
-  AssertInt64Equals(0xabcdefabcdefabcdull, "+0xabcdefabcdefabcd",
+  AssertInt64Equals(0xabcdefabcdefabcdll, "+0xabcdefabcdefabcd",
                     SignedAndUnsigned);
 }
 
