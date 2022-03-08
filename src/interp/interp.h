@@ -91,7 +91,12 @@ enum class ObjectKind {
   Tag,
   Module,
   Instance,
+
+  First = Null,
+  Last = Instance,
 };
+
+static const int kCommandTypeCount = WABT_ENUM_COUNT(ObjectKind);
 
 const char* GetName(Mutability);
 const std::string GetName(ValueType);

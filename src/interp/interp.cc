@@ -41,9 +41,12 @@ const char* GetName(ExternKind kind) {
 
 const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
-      "Null",   "Foreign", "Trap", "DefinedFunc", "HostFunc", "Table",
-      "Memory", "Global",  "Tag",  "Module",      "Instance", "Thread",
+      "Null",  "Foreign", "Trap",   "Exception", "DefinedFunc", "HostFunc",
+      "Table", "Memory",  "Global", "Tag",       "Module",      "Instance",
   };
+
+  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(kNames) == kCommandTypeCount);
+
   return kNames[int(kind)];
 }
 
