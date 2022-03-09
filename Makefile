@@ -146,6 +146,7 @@ src/prebuilt/lexer-keywords.cc: src/lexer-keywords.txt
 
 .PHONY: update-wasm2c
 update-wasm2c: src/prebuilt/wasm2c.include.c src/prebuilt/wasm2c.include.h
+	make -C wasm2c/examples/fac
 
 src/prebuilt/wasm2c.include.c: src/wasm2c.c.tmpl
 	src/wasm2c_tmpl.py -o $@ $<
