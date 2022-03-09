@@ -22,6 +22,7 @@ import os
 import re
 import struct
 import sys
+import shlex
 
 import find_exe
 import utils
@@ -405,6 +406,7 @@ def main(args):
         wasm2c.AppendOptionalArgs({
             '--enable-multi-memory': options.enable_multi_memory})
 
+        options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
         cc = utils.Executable(options.cc, *options.cflags, forward_stderr=True,
                               forward_stdout=True)
         cc.verbose = options.print_cmd
