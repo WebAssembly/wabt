@@ -1026,12 +1026,6 @@ void CWriter::WriteTables() {
     return;
   }
 
-  if (!module_->types.size()) {
-    // If no types are defined then there is no way to use the table
-    // for anything.
-    return;
-  }
-
   Write(Newline());
 
   assert(module_->tables.size() <= 1);

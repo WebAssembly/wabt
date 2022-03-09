@@ -383,6 +383,8 @@ def main(args):
                         action='store_true')
     parser.add_argument('file', help='wast file.')
     parser.add_argument('--enable-multi-memory', action='store_true')
+    parser.add_argument('--disable-bulk-memory', action='store_true')
+    parser.add_argument('--disable-reference-types', action='store_true')
     options = parser.parse_args(args)
 
     with utils.TempDirectory(options.out_dir, 'run-spec-wasm2c-') as out_dir:
@@ -393,7 +395,9 @@ def main(args):
         wast2json.verbose = options.print_cmd
         wast2json.AppendOptionalArgs({
             '-v': options.verbose,
-            '--enable-multi-memory': options.enable_multi_memory})
+            '--enable-multi-memory': options.enable_multi_memory,
+            '--disable-bulk-memory': options.disable_bulk_memory,
+            '--disable-reference-types': options.disable_reference_types})
 
         json_file_path = utils.ChangeDir(
             utils.ChangeExt(options.file, '.json'), out_dir)
