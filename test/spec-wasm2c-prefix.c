@@ -235,6 +235,12 @@ static wasm_rt_memory_t spectest_memory;
 static uint32_t spectest_global_i32 = 666;
 static uint64_t spectest_global_i64 = 666l;
 
+typedef struct Z_spectest_module_instance_t {
+  uint32_t wasm_rt_call_stack_depth;
+} Z_spectest_module_instance_t;
+
+static Z_spectest_module_instance_t spectest_module_instance;
+
 void (*Z_spectestZ_printZ_vv)(void) = &spectest_print;
 void (*Z_spectestZ_print_i32Z_vi)(uint32_t) = &spectest_print_i32;
 void (*Z_spectestZ_print_f32Z_vf)(float) = &spectest_print_f32;

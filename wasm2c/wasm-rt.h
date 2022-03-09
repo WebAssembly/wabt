@@ -140,6 +140,9 @@ typedef struct {
   /** The function. The embedder must know the actual C signature of the
    * function and cast to it before calling. */
   wasm_rt_funcref_t func;
+  /** The module instance. The pointer to the module instance that should
+   * be passed into the function. */
+  void* module_instance;
 } wasm_rt_elem_t;
 
 /** A Memory object. */
