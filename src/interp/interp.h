@@ -453,6 +453,10 @@ class Store {
 
   explicit Store(const Features& = Features{});
 
+  Store(const Store&) = delete;
+  Store& operator=(const Store&) = delete;
+  Store& operator=(const Store&&) = delete;
+
   bool IsValid(Ref) const;
   bool HasValueType(Ref, ValueType) const;
   template <typename T>
