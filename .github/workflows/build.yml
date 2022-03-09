@@ -84,6 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
+      WASM2C_CFLAGS: "-fsanitize=address"
     steps:
     - uses: actions/setup-python@v1
       with:
@@ -102,6 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
+      WASM2C_CFLAGS: "-fsanitize=undefined"
     steps:
     - uses: actions/setup-python@v1
       with:
