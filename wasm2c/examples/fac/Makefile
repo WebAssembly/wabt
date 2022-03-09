@@ -6,7 +6,7 @@ all: fac
 clean:
 	rm -rf fac fac.wasm fac.c *.o
 
-fac: main.o fac.o ../../wasm-rt-impl.o ../../wasm-rt-os-unix.o -lm
+fac: main.o fac.o ../../wasm-rt-impl.o -lm
 
 fac.wasm: fac.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm $< -o $@

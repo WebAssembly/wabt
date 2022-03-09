@@ -15,7 +15,6 @@
 #
 
 cmake_minimum_required(VERSION 3.0.0)
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
 project(WABT LANGUAGES C CXX VERSION 1.0.27)
 include(GNUInstallDirs)
 
@@ -362,19 +361,11 @@ set(WABT_LIBRARY_SRC
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 
-add_library(wasm-rt-impl SHARED STATIC
-  wasm2c/wasm-rt-impl.c
-  wasm2c/wasm-rt-os-unix.c
-  wasm2c/wasm-rt-os-win.c)
-set_property(TARGET wasm-rt-impl PROPERTY POSITION_INDEPENDENT_CODE ON)
-install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES wasm2c/wasm-rt.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-add_custom_target(wasm-rt-impl-copy-to-bin ALL
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:wasm-rt-impl> ${WABT_SOURCE_DIR}/bin
-  DEPENDS wasm-rt-impl
-)
+IF (NOT WIN32)
+  add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
+  install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif ()
 
 if (BUILD_FUZZ_TOOLS)
   set(FUZZ_FLAGS "-fsanitize=fuzzer,address")

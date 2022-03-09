@@ -471,14 +471,18 @@ def main(args):
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
 
         if options.compile:
+            # Compile wasm-rt-impl.
+            wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
+            o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
+
             # Compile and link -main test run entry point
             o_filenames.append(Compile(cc, main_filename, out_dir, includes))
             if IS_WINDOWS:
                 exe_ext = '.exe'
-                libs = ['/libpath:' + options.bindir, 'wasm-rt-impl.lib']
+                libs = []
             else:
                 exe_ext = ''
-                libs = ['-L' + options.bindir, '-lwasm-rt-impl', '-lm']
+                libs = ['-lm']
             main_exe = utils.ChangeExt(json_file_path, exe_ext)
             Link(cc, o_filenames, main_exe, *libs)
 

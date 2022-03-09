@@ -1,4 +1,5 @@
-*.o
+wasm-rt-impl.o
+examples/**/*.o
 examples/fac/fac
 examples/rot13/rot13
 examples/rot13/rot13.c
