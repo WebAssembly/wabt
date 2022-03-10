@@ -136,7 +136,6 @@ static void os_print_last_error(const char* msg) {
         NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPSTR)&messageBuffer, 0, NULL);
     (void)size;
-    // Copy the error message into a std::string.
     printf("%s. %s\n", msg, messageBuffer);
     LocalFree(messageBuffer);
   } else {
@@ -289,10 +288,8 @@ float wasm_rt_fabsf(float x) {
   if (isnan(x)) {
     uint32_t tmp;
     memcpy(&tmp, &x, 4);
-    if (tmp & (1 << 31)) {
-      tmp = tmp & ~(1 << 31);
-      memcpy(&x, &tmp, 4);
-    }
+    tmp = tmp & ~(1 << 31);
+    memcpy(&x, &tmp, 4);
     return x;
   }
   return fabsf(x);
@@ -302,10 +299,8 @@ double wasm_rt_fabs(double x) {
   if (isnan(x)) {
     uint64_t tmp;
     memcpy(&tmp, &x, 8);
-    if (tmp & (1ll << 63)) {
-      tmp = tmp & ~(1ll << 63);
-      memcpy(&x, &tmp, 8);
-    }
+    tmp = tmp & ~(1ll << 63);
+    memcpy(&x, &tmp, 8);
     return x;
   }
   return fabs(x);
