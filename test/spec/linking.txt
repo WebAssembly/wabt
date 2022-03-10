@@ -9,40 +9,39 @@ out/test/spec/linking.wast:87: assert_unlinkable passed:
   error: mutability mismatch in imported global, expected mutable but got immutable.
 out/test/spec/linking.wast:91: assert_unlinkable passed:
   error: mutability mismatch in imported global, expected immutable but got mutable.
-out/test/spec/linking.wast:136: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:137: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:139: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:141: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:142: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:144: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:146: assert_trap passed: undefined table index
-out/test/spec/linking.wast:147: assert_trap passed: undefined table index
-out/test/spec/linking.wast:148: assert_trap passed: undefined table index
-out/test/spec/linking.wast:149: assert_trap passed: undefined table index
-out/test/spec/linking.wast:152: assert_trap passed: indirect call signature mismatch
-out/test/spec/linking.wast:184: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:185: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:187: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:188: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:190: assert_trap passed: undefined table index
-out/test/spec/linking.wast:207: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/linking.wast:216: assert_unlinkable passed:
-  error: invalid import "Mt.mem"
+out/test/spec/linking.wast:113: assert_unlinkable passed:
+  error: type mismatch in imported global, expected funcref but got externref.
+out/test/spec/linking.wast:117: assert_unlinkable passed:
+  error: type mismatch in imported global, expected externref but got funcref.
+out/test/spec/linking.wast:123: assert_unlinkable passed:
+  error: type mismatch in imported global, expected externref but got funcref.
+out/test/spec/linking.wast:127: assert_unlinkable passed:
+  error: type mismatch in imported global, expected funcref but got externref.
+out/test/spec/linking.wast:173: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:174: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:176: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:178: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:179: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:181: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:183: assert_trap passed: undefined table index
+out/test/spec/linking.wast:184: assert_trap passed: undefined table index
+out/test/spec/linking.wast:185: assert_trap passed: undefined table index
+out/test/spec/linking.wast:186: assert_trap passed: undefined table index
+out/test/spec/linking.wast:189: assert_trap passed: indirect call signature mismatch
+out/test/spec/linking.wast:221: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:222: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:224: assert_trap passed: uninitialized table element
 out/test/spec/linking.wast:225: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:228: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [12, 13) >= max value 10
-out/test/spec/linking.wast:236: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:239: assert_unlinkable passed:
-  error: out of bounds memory access: data segment is out of bounds: [65536, 65537) >= max value 65536
-out/test/spec/linking.wast:248: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:299: assert_unlinkable passed:
-  error: out of bounds memory access: data segment is out of bounds: [65536, 65537) >= max value 65536
-out/test/spec/linking.wast:324: assert_unlinkable passed:
+out/test/spec/linking.wast:227: assert_trap passed: undefined table index
+out/test/spec/linking.wast:253: assert_unlinkable passed:
+  error: invalid import "Mt.mem"
+out/test/spec/linking.wast:262: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:276: assert_trap passed: uninitialized table element
+out/test/spec/linking.wast:303: assert_unlinkable passed:
+  error: type mismatch in imported table, expected externref but got funcref.
+out/test/spec/linking.wast:307: assert_unlinkable passed:
+  error: type mismatch in imported table, expected funcref but got externref.
+out/test/spec/linking.wast:385: assert_unlinkable passed:
   error: invalid import "Mm.tab"
-out/test/spec/linking.wast:335: assert_unlinkable passed:
-  error: out of bounds memory access: data segment is out of bounds: [327680, 327681) >= max value 327680
-out/test/spec/linking.wast:345: assert_unlinkable passed:
-  error: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
-94/94 tests passed.
+102/102 tests passed.
 ;;; STDOUT ;;)

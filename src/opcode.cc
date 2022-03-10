@@ -33,7 +33,7 @@ Opcode::Info Opcode::infos_[] = {
 };
 
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                                     \
+                    text, decomp)                                             \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
 #include "src/opcode.def"
 #undef WABT_OPCODE

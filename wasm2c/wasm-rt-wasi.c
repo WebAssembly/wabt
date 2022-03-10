@@ -4,8 +4,6 @@
 //    sandboxed components and cannot use global variables.
 //                             Instead they operate on the sbx context specified
 //                             as the first parameter to the API
-//    - compatibility --- APIs like setjmp/longjmp are implemented in a very
-//    limited way upstream. Expanding this.
 //    - security --- APIs like args_get, sys_open, fd_write, sys_read seemed to
 //    have security bugs upstream.
 //                   Additionally, we don't want to allow any file system
@@ -44,7 +42,6 @@ typedef double f64;
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,7 +65,6 @@ typedef SSIZE_T ssize_t;
 #include <io.h>
 #endif
 
-#include "wasm-rt-impl.h"
 #include "wasm-rt.h"
 
 #if defined(__GNUC__)

@@ -1,11 +1,11 @@
 ;;; TOOL: run-gen-wasm-bad
-;;; ARGS1: --enable-tail-call
-;;; ARGS2: --enable-tail-call
+;;; ARGS1: --disable-reference-types --enable-tail-call
+;;; ARGS2: --disable-reference-types --enable-tail-call
 magic
 version
 section(TYPE) { count[1] function params[0] results[0]}
 section(FUNCTION) { count[1] type[0] }
-section(TABLE) { count[1] anyfunc flags[0] init[0] }
+section(TABLE) { count[1] funcref flags[0] init[0] }
 section(CODE) {
   count[1]
   func {

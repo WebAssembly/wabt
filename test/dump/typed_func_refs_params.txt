@@ -1,0 +1,167 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-function-references
+
+(module
+  (type $f32-f32 (func (param f32) (result f32)))
+
+  (func $deriv (param $f (ref $f32-f32)) (param $x f32) (param $delta f32) (result f32)
+    (f32.div
+      (f32.sub (call_ref (f32.add (local.get $delta) (local.get $x)) (local.get $f))
+               (call_ref (local.get $x) (local.get $f))
+      )
+      (local.get $delta)
+    )
+  )
+
+  (func $square (param $x f32) (result f32)
+    (f32.mul (local.get $x)
+             (local.get $x))
+  )
+
+  (func (export "main") (result f32)
+    (call $deriv (ref.func $square)
+                 (f32.const 1.0)
+                 (f32.const 0.01)
+    )
+  )
+
+  (elem declare funcref (ref.func $square))
+)
+
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 03                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 01                                        ; num params
+000000d: 7d                                        ; f32
+000000e: 01                                        ; num results
+000000f: 7d                                        ; f32
+; func type 1
+0000010: 60                                        ; func
+0000011: 03                                        ; num params
+0000012: 6b                                        ; (ref 0)
+0000013: 00                                        ; (ref 0)
+0000014: 7d                                        ; f32
+0000015: 7d                                        ; f32
+0000016: 01                                        ; num results
+0000017: 7d                                        ; f32
+; func type 2
+0000018: 60                                        ; func
+0000019: 00                                        ; num params
+000001a: 01                                        ; num results
+000001b: 7d                                        ; f32
+0000009: 12                                        ; FIXUP section size
+; section "Function" (3)
+000001c: 03                                        ; section code
+000001d: 00                                        ; section size (guess)
+000001e: 03                                        ; num functions
+000001f: 01                                        ; function 0 signature index
+0000020: 00                                        ; function 1 signature index
+0000021: 02                                        ; function 2 signature index
+000001d: 04                                        ; FIXUP section size
+; section "Export" (7)
+0000022: 07                                        ; section code
+0000023: 00                                        ; section size (guess)
+0000024: 01                                        ; num exports
+0000025: 04                                        ; string length
+0000026: 6d61 696e                                main  ; export name
+000002a: 00                                        ; export kind
+000002b: 02                                        ; export func index
+0000023: 08                                        ; FIXUP section size
+; section "Elem" (9)
+000002c: 09                                        ; section code
+000002d: 00                                        ; section size (guess)
+000002e: 01                                        ; num elem segments
+; elem segment header 0
+000002f: 03                                        ; segment flags
+0000030: 00                                        ; elem list type
+0000031: 01                                        ; num elems
+0000032: 01                                        ; elem function index
+000002d: 05                                        ; FIXUP section size
+; section "Code" (10)
+0000033: 0a                                        ; section code
+0000034: 00                                        ; section size (guess)
+0000035: 03                                        ; num functions
+; function body 0
+0000036: 00                                        ; func body size (guess)
+0000037: 00                                        ; local decl count
+0000038: 20                                        ; local.get
+0000039: 02                                        ; local index
+000003a: 20                                        ; local.get
+000003b: 01                                        ; local index
+000003c: 92                                        ; f32.add
+000003d: 20                                        ; local.get
+000003e: 00                                        ; local index
+000003f: 14                                        ; call_ref
+0000040: 20                                        ; local.get
+0000041: 01                                        ; local index
+0000042: 20                                        ; local.get
+0000043: 00                                        ; local index
+0000044: 14                                        ; call_ref
+0000045: 93                                        ; f32.sub
+0000046: 20                                        ; local.get
+0000047: 02                                        ; local index
+0000048: 95                                        ; f32.div
+0000049: 0b                                        ; end
+0000036: 13                                        ; FIXUP func body size
+; function body 1
+000004a: 00                                        ; func body size (guess)
+000004b: 00                                        ; local decl count
+000004c: 20                                        ; local.get
+000004d: 00                                        ; local index
+000004e: 20                                        ; local.get
+000004f: 00                                        ; local index
+0000050: 94                                        ; f32.mul
+0000051: 0b                                        ; end
+000004a: 07                                        ; FIXUP func body size
+; function body 2
+0000052: 00                                        ; func body size (guess)
+0000053: 00                                        ; local decl count
+0000054: d2                                        ; ref.func
+0000055: 01                                        ; function index
+0000056: 43                                        ; f32.const
+0000057: 0000 803f                                 ; f32 literal
+000005b: 43                                        ; f32.const
+000005c: 0ad7 233c                                 ; f32 literal
+0000060: 10                                        ; call
+0000061: 00                                        ; function index
+0000062: 0b                                        ; end
+0000052: 10                                        ; FIXUP func body size
+0000034: 2e                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+typed_func_refs_params.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000037 func[0]:
+ 000038: 20 02                      | local.get 2
+ 00003a: 20 01                      | local.get 1
+ 00003c: 92                         | f32.add
+ 00003d: 20 00                      | local.get 0
+ 00003f: 14                         | call_ref
+ 000040: 20 01                      | local.get 1
+ 000042: 20 00                      | local.get 0
+ 000044: 14                         | call_ref
+ 000045: 93                         | f32.sub
+ 000046: 20 02                      | local.get 2
+ 000048: 95                         | f32.div
+ 000049: 0b                         | end
+00004b func[1]:
+ 00004c: 20 00                      | local.get 0
+ 00004e: 20 00                      | local.get 0
+ 000050: 94                         | f32.mul
+ 000051: 0b                         | end
+000053 func[2] <main>:
+ 000054: d2 01                      | ref.func 1
+ 000056: 43 00 00 80 3f             | f32.const 0x1p+0
+ 00005b: 43 0a d7 23 3c             | f32.const 0x1.47ae14p-7
+ 000060: 10 00                      | call 0
+ 000062: 0b                         | end
+;;; STDOUT ;;)

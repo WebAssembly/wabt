@@ -17,7 +17,6 @@
 #ifndef WASM_RT_H_
 #define WASM_RT_H_
 
-#include <setjmp.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -30,18 +29,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-/** Maximum stack depth before trapping. This can be configured by defining
- * this symbol before including wasm-rt when building the generated c files,
- * for example:
- *
- * ```
- *   cc -c -DWASM_RT_MAX_CALL_STACK_DEPTH=100 my_module.c -o my_module.o
- * ```
- * */
-#ifndef WASM_RT_MAX_CALL_STACK_DEPTH
-#define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
 /** Check if we should use guard page model.
@@ -102,10 +89,10 @@ typedef enum {
   WASM_RT_F64,
 } wasm_rt_type_t;
 
-/** A function type for all `anyfunc` functions in a Table. All functions are
+/** A function type for all `funcref` functions in a Table. All functions are
  * stored in this canonical form, but must be cast to their proper signature to
  * call. */
-typedef void (*wasm_rt_anyfunc_t)(void);
+typedef void (*wasm_rt_funcref_t)(void);
 
 /**
  * The class of the indirect function being invoked
@@ -122,7 +109,7 @@ typedef struct {
   uint32_t func_type;
   /** The function. The embedder must know the actual C signature of the
    * function and cast to it before calling. */
-  wasm_rt_anyfunc_t func;
+  wasm_rt_funcref_t func;
 } wasm_rt_elem_t;
 
 typedef uint8_t wasm2c_shadow_memory_cell_t;
@@ -178,15 +165,11 @@ typedef struct wasm_func_type_t {
   uint32_t result_count;
 } wasm_func_type_t;
 
-#define WASM2C_WASI_MAX_SETJMP_STACK 32
 #define WASM2C_WASI_MAX_FDS 32
 typedef struct wasm_sandbox_wasi_data {
   wasm_rt_memory_t* heap_memory;
 
   uint32_t tempRet0;
-
-  uint32_t next_setjmp_index;
-  jmp_buf setjmp_stack[WASM2C_WASI_MAX_SETJMP_STACK];
 
   uint32_t main_argc;
   char** main_argv;
@@ -325,10 +308,6 @@ extern void wasm_rt_sys_init();
 extern void wasm_rt_init_wasi(wasm_sandbox_wasi_data*);
 
 extern void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data*);
-
-// Helper function that host can use to ensure wasm2c code is loaded correctly
-// when using dynamic libraries
-extern void wasm2c_ensure_linked();
 
 // Runtime functions for shadow memory
 

@@ -1,0 +1,43 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-exceptions
+(module
+  (tag $e1)
+  (tag $e2)
+  (func (export "rethrow-uncaught")
+    (try
+      (do
+        (throw $e1))
+      (catch $e1
+        (rethrow 0))))
+  (func (export "rethrow-1") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do
+            (throw $e1))
+          (catch $e1
+            (rethrow 0)))
+        (i32.const 0))
+      (catch_all
+        (i32.const 1))))
+  (func (export "rethrow-2") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do
+            (throw $e1))
+          (catch $e1
+            (try
+              (do
+                (throw $e2))
+              (catch $e2
+                (rethrow 1)))))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  )
+(;; STDOUT ;;;
+rethrow-uncaught() => error: uncaught exception
+rethrow-1() => i32:1
+rethrow-2() => i32:1
+;;; STDOUT ;;)

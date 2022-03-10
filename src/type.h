@@ -22,12 +22,13 @@
 #include <vector>
 
 #include "config.h"
+#include "src/base-types.h"
+#include "src/string-format.h"
 
 namespace wabt {
 
 class Type;
 
-using Index = uint32_t;
 using TypeVector = std::vector<Type>;
 
 class Type {
@@ -43,33 +44,41 @@ class Type {
     I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
+    Reference = -0x15,  // 0x6b
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
     Void = -0x40,       // 0x40
     ___ = Void,         // Convenient for the opcode table in opcode.h
 
-    Any = 0,          // Not actually specified, but useful for type-checking
+    Any = 0,   // Not actually specified, but useful for type-checking
     I8U = 4,   // Not actually specified, but used internally with load/store
     I16U = 6,  // Not actually specified, but used internally with load/store
     I32U = 7,  // Not actually specified, but used internally with load/store
   };
 
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code) : enum_(static_cast<Enum>(code)) {}
-  Type(Enum e) : enum_(e) {}
+  Type(int32_t code)
+      : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
+  Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
+  Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
+    assert(e == Enum::Reference);
+  }
   operator Enum() const { return enum_; }
 
   bool IsRef() const {
-    return enum_ == Type::ExternRef || enum_ == Type::FuncRef;
+    return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
+           enum_ == Type::Reference;
   }
+
+  bool IsReferenceWithIndex() const { return enum_ == Type::Reference; }
 
   bool IsNullableRef() const {
     // Currently all reftypes are nullable
     return IsRef();
   }
 
-  const char* GetName() const {
+  std::string GetName() const {
     switch (enum_) {
       case Type::I32:       return "i32";
       case Type::I64:       return "i64";
@@ -83,7 +92,10 @@ class Type {
       case Type::Void:      return "void";
       case Type::Any:       return "any";
       case Type::ExternRef: return "externref";
-      default:              return "<type_index>";
+      case Type::Reference:
+        return StringPrintf("(ref %d)", type_index_);
+      default:
+        return StringPrintf("<type_index[%d]>", enum_);
     }
   }
 
@@ -108,12 +120,17 @@ class Type {
   //   (type $T (func (result i32 i64)))
   //   ...
   //   (block (type $T) ...)
-  // 
+  //
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
   Index GetIndex() const {
     assert(IsIndex());
     return static_cast<Index>(enum_);
+  }
+
+  Index GetReferenceIndex() const {
+    assert(enum_ == Enum::Reference);
+    return type_index_;
   }
 
   TypeVector GetInlineVector() const {
@@ -129,6 +146,7 @@ class Type {
       case Type::V128:
       case Type::FuncRef:
       case Type::ExternRef:
+      case Type::Reference:
         return TypeVector(this, this + 1);
 
       default:
@@ -138,6 +156,7 @@ class Type {
 
  private:
   Enum enum_;
+  Index type_index_;  // Only used for for Type::Reference
 };
 
 }  // namespace wabt

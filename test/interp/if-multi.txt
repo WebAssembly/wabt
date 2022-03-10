@@ -8,7 +8,7 @@
     else
       unreachable
     end
-    i32.trunc_s/f32
+    i32.trunc_f32_s
     i32.add)
 
   (func (export "if-param") (result f32)

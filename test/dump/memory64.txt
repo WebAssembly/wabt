@@ -1,0 +1,27 @@
+;;; TOOL: run-objdump
+;;; ARGS: -h -x
+
+(module
+  (memory i64 1)
+  (data (i64.const 1) "a")
+)
+(;; STDOUT ;;;
+
+memory64.wasm:	file format wasm 0x1
+
+Sections:
+
+   Memory start=0x0000000a end=0x0000000d (size=0x00000003) count: 1
+     Data start=0x0000000f end=0x00000016 (size=0x00000007) count: 1
+
+Section Details:
+
+Memory[1]:
+ - memory[0] pages: initial=1 i64
+Data[1]:
+ - segment[0] memory=0 size=1 - init i64=1
+  - 0000001: 61                                       a
+
+Code Disassembly:
+
+;;; STDOUT ;;)

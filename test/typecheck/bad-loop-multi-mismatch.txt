@@ -42,7 +42,7 @@
 out/test/typecheck/bad-loop-multi-mismatch.txt:8:5: error: type mismatch in loop, expected [i32, i32] but got [i32]
     end
     ^^^
-out/test/typecheck/bad-loop-multi-mismatch.txt:17:5: error: type mismatch in loop, expected [] but got [i32]
+out/test/typecheck/bad-loop-multi-mismatch.txt:17:5: error: type mismatch at end of loop, expected [] but got [i32]
     end
     ^^^
 out/test/typecheck/bad-loop-multi-mismatch.txt:25:5: error: type mismatch in loop, expected [f32, i32] but got [i32, i32]

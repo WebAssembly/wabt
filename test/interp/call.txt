@@ -8,15 +8,15 @@
     call $helper)
 
   (func $helper (param i32 i64 f32 f64) (result i32)
-    get_local 1
-    i32.wrap/i64
-    get_local 0
+    local.get 1
+    i32.wrap_i64
+    local.get 0
     i32.add
-    get_local 2
-    i32.trunc_s/f32
+    local.get 2
+    i32.trunc_f32_s
     i32.add
-    get_local 3
-    i32.trunc_s/f64
+    local.get 3
+    i32.trunc_f64_s
     i32.add
     return)
 
@@ -26,12 +26,12 @@
 
 
   (func $fac (param i32) (result i32)
-    get_local 0
+    local.get 0
     i32.const 0
     i32.gt_s 
     if (result i32)
-      get_local 0
-      get_local 0
+      local.get 0
+      local.get 0
       i32.const 1
       i32.sub
       call $fac

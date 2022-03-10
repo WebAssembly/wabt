@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "src/common.h"
-#include "src/opcode-code-table.h"
 #include "src/leb128.h"
+#include "src/opcode-code-table.h"
 
 namespace wabt {
 
@@ -175,7 +175,6 @@ inline Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
 
   return Opcode(EncodeInvalidOpcode(prefix_code));
 }
-
 
 }  // namespace wabt
 

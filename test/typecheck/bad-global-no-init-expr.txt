@@ -4,10 +4,10 @@
   (global i32)
   (global (mut f32)))
 (;; STDERR ;;;
-out/test/typecheck/bad-global-no-init-expr.txt:4:4: error: invalid global initializer expression, must be a constant expression
+out/test/typecheck/bad-global-no-init-expr.txt:4:4: error: type mismatch in initializer expression, expected [i32] but got []
   (global i32)
    ^^^^^^
-out/test/typecheck/bad-global-no-init-expr.txt:5:4: error: invalid global initializer expression, must be a constant expression
+out/test/typecheck/bad-global-no-init-expr.txt:5:4: error: type mismatch in initializer expression, expected [f32] but got []
   (global (mut f32)))
    ^^^^^^
 ;;; STDERR ;;)

@@ -1,0 +1,41 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs
+(module
+  (global (mut i32) (i32.const 1))
+  (global (mut f32) (f32.const 1.5))
+
+  (func $fold-global-get (result i32)
+    global.get 1
+    drop
+    global.get 0
+    global.get 0
+    i32.mul)
+
+  (func $fold-global-set
+    global.get 0
+    i32.const 1
+    i32.add
+    global.set 0
+    f32.const 2
+    global.set 1)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func))
+  (func (;0;) (type 0) (result i32)
+    (drop
+      (global.get 1))
+    (i32.mul
+      (global.get 0)
+      (global.get 0)))
+  (func (;1;) (type 1)
+    (global.set 0
+      (i32.add
+        (global.get 0)
+        (i32.const 1)))
+    (global.set 1
+      (f32.const 0x1p+1 (;=2;))))
+  (global (;0;) (mut i32) (i32.const 1))
+  (global (;1;) (mut f32) (f32.const 0x1.8p+0 (;=1.5;))))
+;;; STDOUT ;;)

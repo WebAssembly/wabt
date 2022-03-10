@@ -20,13 +20,14 @@
 #include <cinttypes>
 #include <map>
 #include <set>
+#include <string_view>
 
 #include "src/cast.h"
 #include "src/common.h"
 #include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
-#include "src/string-view.h"
+#include "src/string-util.h"
 
 #define INDENT_SIZE 2
 
@@ -48,9 +49,7 @@ struct Label {
         type_stack_size(type_stack_size),
         used(used) {}
 
-  bool HasValue() const {
-    return !sig.empty();
-  }
+  bool HasValue() const { return !sig.empty(); }
 
   LabelType label_type;
   const std::string& name;
@@ -163,19 +162,19 @@ class CWriter {
   static char MangleType(Type);
   static std::string MangleTypes(const TypeVector&);
   static std::string MangleMultivalueTypes(const TypeVector&);
-  static std::string MangleName(string_view);
-  static std::string MangleFuncName(string_view,
+  static std::string MangleName(std::string_view);
+  static std::string MangleFuncName(std::string_view,
                                     const TypeVector& param_types,
                                     const TypeVector& result_types);
-  static std::string MangleGlobalName(string_view, Type);
-  static std::string LegalizeName(string_view);
-  std::string DefineName(SymbolSet*, string_view);
+  static std::string MangleGlobalName(std::string_view, Type);
+  static std::string LegalizeName(std::string_view);
+  std::string DefineName(SymbolSet*, std::string_view);
   std::string DefineImportName(const std::string& name,
-                               string_view module_name,
-                               string_view mangled_field_name);
+                               std::string_view module_name,
+                               std::string_view mangled_field_name);
   std::string DefineGlobalScopeName(const std::string&);
   std::string DefineLocalScopeName(const std::string&);
-  std::string DefineStackVarName(Index, Type, string_view);
+  std::string DefineStackVarName(Index, Type, std::string_view);
 
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
@@ -197,7 +196,7 @@ class CWriter {
   void Write(OpenBrace);
   void Write(CloseBrace);
   void Write(Index);
-  void Write(string_view);
+  void Write(std::string_view);
   void Write(const LocalName&);
   void Write(const GlobalName&);
   void Write(const ExternalPtr&);
@@ -417,7 +416,7 @@ std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
 }
 
 // static
-std::string CWriter::MangleName(string_view name) {
+std::string CWriter::MangleName(std::string_view name) {
   const char kPrefix = 'Z';
   std::string result = "Z_";
 
@@ -436,7 +435,7 @@ std::string CWriter::MangleName(string_view name) {
 }
 
 // static
-std::string CWriter::MangleFuncName(string_view name,
+std::string CWriter::MangleFuncName(std::string_view name,
                                     const TypeVector& param_types,
                                     const TypeVector& result_types) {
   std::string sig = MangleTypes(result_types) + MangleTypes(param_types);
@@ -444,13 +443,13 @@ std::string CWriter::MangleFuncName(string_view name,
 }
 
 // static
-std::string CWriter::MangleGlobalName(string_view name, Type type) {
+std::string CWriter::MangleGlobalName(std::string_view name, Type type) {
   std::string sig(1, MangleType(type));
   return MangleName(name) + MangleName(sig);
 }
 
 // static
-std::string CWriter::LegalizeName(string_view name) {
+std::string CWriter::LegalizeName(std::string_view name) {
   if (name.empty())
     return "_";
 
@@ -468,7 +467,7 @@ std::string CWriter::LegalizeName(string_view name) {
   return result;
 }
 
-std::string CWriter::DefineName(SymbolSet* set, string_view name) {
+std::string CWriter::DefineName(SymbolSet* set, std::string_view name) {
   std::string legal = LegalizeName(name);
   if (set->find(legal) != set->end()) {
     std::string base = legal + "_";
@@ -481,7 +480,7 @@ std::string CWriter::DefineName(SymbolSet* set, string_view name) {
   return legal;
 }
 
-string_view StripLeadingDollar(string_view name) {
+std::string_view StripLeadingDollar(std::string_view name) {
   if (!name.empty() && name[0] == '$') {
     name.remove_prefix(1);
   }
@@ -489,9 +488,9 @@ string_view StripLeadingDollar(string_view name) {
 }
 
 std::string CWriter::DefineImportName(const std::string& name,
-                                      string_view module,
-                                      string_view mangled_field_name) {
-  std::string mangled = MangleName(module) + mangled_field_name.to_string();
+                                      std::string_view module,
+                                      std::string_view mangled_field_name) {
+  std::string mangled = MangleName(module) + mangled_field_name;
   import_syms_.insert(name);
   global_syms_.insert(mangled);
   global_sym_map_.insert(SymbolMap::value_type(name, mangled));
@@ -512,7 +511,7 @@ std::string CWriter::DefineLocalScopeName(const std::string& name) {
 
 std::string CWriter::DefineStackVarName(Index index,
                                         Type type,
-                                        string_view name) {
+                                        std::string_view name) {
   std::string unique = DefineName(&local_syms_, name);
   StackTypePair stp = {index, type};
   stack_var_sym_map_.insert(StackVarSymbolMap::value_type(stp, unique));
@@ -576,7 +575,7 @@ void CWriter::Write(Index index) {
   Writef("%" PRIindex, index);
 }
 
-void CWriter::Write(string_view s) {
+void CWriter::Write(std::string_view s) {
   WriteData(s.data(), s.size());
 }
 
@@ -624,7 +623,8 @@ void CWriter::Write(const GotoLabel& goto_label) {
     Index offset = type_stack_.size() - label->type_stack_size - amount;
     if (offset != 0) {
       for (Index i = 0; i < amount; ++i) {
-        Write(StackVar(amount - i - 1 + offset, label->sig[i]), " = ", StackVar(amount - i - 1), "; ");
+        Write(StackVar(amount - i - 1 + offset, label->sig[i]), " = ",
+              StackVar(amount - i - 1), "; ");
       }
     }
   }
@@ -837,6 +837,7 @@ void CWriter::WriteSandboxStruct() {
   Indent(2);
 
   Write("wasm_sandbox_wasi_data wasi_data;", Newline());
+  Write("u32 wasm_rt_call_stack_depth;", Newline());
 
   WriteMemories();
   WriteTables();
@@ -1116,8 +1117,8 @@ void CWriter::WriteGlobalInitializers() {
 
   Write(Newline(), "static void init_globals(wasm2c_sandbox_t* const sbx) ", OpenBrace());
 
+  Index global_index = 0;
   {
-    Index global_index = 0;
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
@@ -1130,11 +1131,12 @@ void CWriter::WriteGlobalInitializers() {
     }
   }
 
+  if (global_index != 0)
   {
-    Index global_index = 0;
+    Index global_index2 = 0;
     std::string memory_name = GetMainMemoryName();
     for (const Global* global : module_->globals) {
-      bool is_import = global_index < module_->num_global_imports;
+      bool is_import = global_index2 < module_->num_global_imports;
       if (!is_import) {
         std::string global_name = GetGlobalName(global->name);
         std::string global_name_expr = "sbx->" + global_name;
@@ -1144,7 +1146,7 @@ void CWriter::WriteGlobalInitializers() {
         }
       }
 
-      ++global_index;
+      ++global_index2;
     }
   }
 
@@ -1159,7 +1161,8 @@ void CWriter::WriteMemories() {
   if (module_->memories.size() == module_->num_memory_imports)
     return;
 
-  assert(module_->memories.size() <= 1);
+  Write(Newline());
+
   Index memory_index = 0;
   for (const Memory* memory : module_->memories) {
     bool is_import = memory_index < module_->num_memory_imports;
@@ -1264,12 +1267,16 @@ void CWriter::WriteDataInitializers() {
   }
 
   Write(Newline(), "static bool init_memory(wasm2c_sandbox_t* const sbx, uint32_t max_wasm_pages_from_rt) ", OpenBrace());
-  if (memory && module_->num_memory_imports == 0) {
-    Write("const uint32_t max_pages_specified_in_module = ", memory->page_limits.has_max ? memory->page_limits.max : 0, ";", Newline());
-    Write("const uint32_t max_pages = max_wasm_pages_from_rt == 0? max_pages_specified_in_module : max_wasm_pages_from_rt;", Newline());
-    Write("const bool success = wasm_rt_allocate_memory(&(sbx->", ExternalRef(memory->name), "), ",
-          memory->page_limits.initial, ", max_pages);", Newline());
-    Write("if (!success) { return false; }", Newline(), Newline());
+  if (module_->memories.size() > module_->num_memory_imports) {
+    Index memory_idx = module_->num_memory_imports;
+    for (Index i = memory_idx; i < module_->memories.size(); i++) {
+      memory = module_->memories[i];
+      Write("const uint32_t max_pages_specified_in_module = ", memory->page_limits.has_max ? memory->page_limits.max : 0, ";", Newline());
+      Write("const uint32_t max_pages = max_wasm_pages_from_rt == 0? max_pages_specified_in_module : max_wasm_pages_from_rt;", Newline());
+      Write("const bool success = wasm_rt_allocate_memory(&(sbx->", ExternalRef(memory->name), "), ",
+            memory->page_limits.initial, ", max_pages);", Newline());
+      Write("if (!success) { return false; }", Newline(), Newline());
+    }
   }
   data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {
@@ -1280,12 +1287,18 @@ void CWriter::WriteDataInitializers() {
     ++data_segment_index;
   }
 
-  Write("sbx->wasi_data.heap_memory = &(sbx->", ExternalRef(memory->name), ");", Newline());
+  if (memory) {
+    Write("sbx->wasi_data.heap_memory = &(sbx->", ExternalRef(memory->name), ");", Newline());
+  } else {
+    Write("sbx->wasi_data.heap_memory = 0;", Newline());
+  }
   Write("return true;", Newline());
   Write(CloseBrace(), Newline());
 
   Write(Newline(), "static void cleanup_memory(wasm2c_sandbox_t* const sbx) ", OpenBrace());
-  Write("wasm_rt_deallocate_memory(&(sbx->", ExternalRef(memory->name), "));", Newline());
+  if (memory) {
+    Write("wasm_rt_deallocate_memory(&(sbx->", ExternalRef(memory->name), "));", Newline());
+  }
   Write(CloseBrace(), Newline());
 }
 
@@ -1303,21 +1316,26 @@ void CWriter::WriteElemInitializers() {
   Index elem_segment_index = 0;
   size_t first_unused_elem = 0;
   for (const ElemSegment* elem_segment : module_->elem_segments) {
+    if (elem_segment->kind == SegmentKind::Passive) {
+      continue;
+    }
     Write("offset = ");
     WriteInitExpr(elem_segment->offset);
     Write(";", Newline());
 
     size_t i = 0;
-    for (const ElemExpr& elem_expr : elem_segment->elem_exprs) {
+    for (const ExprList& elem_expr : elem_segment->elem_exprs) {
       // We don't support the bulk-memory proposal here, so we know that we
       // don't have any passive segments (where ref.null can be used).
-      assert(elem_expr.kind == ElemExprKind::RefFunc);
-      const Func* func = module_->GetFunc(elem_expr.var);
+      assert(elem_expr.size() == 1);
+      const Expr* expr = &elem_expr.front();
+      assert(expr->type() == ExprType::RefFunc);
+      const Func* func = module_->GetFunc(cast<RefFuncExpr>(expr)->var);
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
 
       Write("sbx->",ExternalRef(table->name), ".data[offset + ", i,
-            "] = (wasm_rt_elem_t){ WASM_RT_INTERNAL_FUNCTION, sbx->func_types[", func_type_index,
-            "], (wasm_rt_anyfunc_t)", ExternalPtr(func->name), " };", Newline());
+            "] = (wasm_rt_elem_t){WASM_RT_INTERNAL_FUNCTION, sbx->func_types[", func_type_index,
+            "], (wasm_rt_funcref_t)", ExternalPtr(func->name), " };", Newline());
       if (i >= first_unused_elem) {
         first_unused_elem = i+1;
       }
@@ -1325,7 +1343,9 @@ void CWriter::WriteElemInitializers() {
     }
     ++elem_segment_index;
   }
-  Write("sbx->", ExternalRef(table->name), "_current_index = offset + ", std::to_string(first_unused_elem), ";", Newline());
+  if (table){
+    Write("sbx->", ExternalRef(table->name), "_current_index = offset + ", std::to_string(first_unused_elem), ";", Newline());
+  }
   Write(CloseBrace(), Newline());
 
   Write(Newline(), "static void cleanup_table(wasm2c_sandbox_t* const sbx) ", OpenBrace());
@@ -1351,8 +1371,12 @@ void CWriter::WriteCallbackAddRemove() {
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
   Write(Newline(), "static wasm_rt_table_t* get_wasm2c_callback_table(void* sbx_ptr)", OpenBrace());
-  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
-  Write("return &(sbx->", ExternalRef(table->name), ");", Newline());
+  if (table) {
+    Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
+    Write("return &(sbx->", ExternalRef(table->name), ");", Newline());
+  } else {
+    Write("return 0;", Newline());
+  }
   Write(CloseBrace(), Newline());
 }
 
@@ -1394,7 +1418,7 @@ void CWriter::Write(const Func& func) {
   Write(GetFuncStaticOrExport(out_func_name), ResultType(func.decl.sig.result_types), " ",
         out_func_name + func_name_suffix, "(");
   WriteParamsAndLocals();
-  Write("FUNC_PROLOGUE;", Newline());
+  Write("FUNC_PROLOGUE(sbx);", Newline());
 
   stream_ = &func_stream_;
   stream_->ClearOffset();
@@ -1407,7 +1431,7 @@ void CWriter::Write(const Func& func) {
   PopLabel();
   ResetTypeStack(0);
   PushTypes(func.decl.sig.result_types);
-  Write("FUNC_EPILOGUE;", Newline());
+  Write("FUNC_EPILOGUE(sbx);", Newline());
 
   // Return the top of the stack implicitly.
   Index num_results = func.GetNumResults();
@@ -1434,8 +1458,8 @@ void CWriter::Write(const Func& func) {
 
   Write(CloseBrace());
 
-  std::string memory_name = GetMainMemoryName();
   if (out_func_name == "w2c_dlmalloc") {
+    std::string memory_name = GetMainMemoryName();
     Write(Newline(), Newline());
     Write(GetFuncStaticOrExport(out_func_name), "u32 w2c_dlmalloc(wasm2c_sandbox_t* const sbx, u32 ptr_size) ", OpenBrace());
     Write("u32 ret = w2c_dlmalloc_wrapped(sbx, ptr_size);", Newline());
@@ -1444,6 +1468,7 @@ void CWriter::Write(const Func& func) {
     Write("return ret;", Newline());
     Write(CloseBrace());
   } else if (out_func_name == "w2c_dlfree") {
+    std::string memory_name = GetMainMemoryName();
     Write(Newline(), Newline());
     Write(GetFuncStaticOrExport(out_func_name), "void w2c_dlfree(wasm2c_sandbox_t* const sbx, u32 ptr) ", OpenBrace());
     Write("WASM2C_SHADOW_MEMORY_DLFREE(&(sbx->", memory_name, "), ptr);", Newline());
@@ -1511,9 +1536,8 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
 void CWriter::WriteStackVarDeclarations() {
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
     size_t count = 0;
-    for (const auto& pair : stack_var_sym_map_) {
-      Type stp_type = pair.first.second;
-      const std::string& name = pair.second;
+    for (const auto& [pair, name] : stack_var_sym_map_) {
+      Type stp_type = pair.second;
 
       if (stp_type == type) {
         if (count == 0) {
@@ -1636,7 +1660,7 @@ void CWriter::Write(const ExprList& exprs) {
 
         if (num_results > 0) {
           assert(num_results == 1);
-          Write("CALL_INDIRECT_RES(");
+          Write("CALL_INDIRECT_RESULT(");
           if (num_results > 1) {
             Write("tmp, ");
           } else {
@@ -1786,8 +1810,8 @@ void CWriter::Write(const ExprList& exprs) {
         break;
 
       case ExprType::MemoryGrow: {
-        assert(module_->memories.size() == 1);
-        Memory* memory = module_->memories[0];
+        Memory* memory = module_->memories[module_->GetMemoryIndex(
+            cast<MemoryGrowExpr>(&expr)->memidx)];
 
         Write(StackVar(0), " = wasm_rt_grow_memory((&sbx->", ExternalRef(memory->name),
               "), ", StackVar(0), ");", Newline());
@@ -1795,8 +1819,8 @@ void CWriter::Write(const ExprList& exprs) {
       }
 
       case ExprType::MemorySize: {
-        assert(module_->memories.size() == 1);
-        Memory* memory = module_->memories[0];
+        Memory* memory = module_->memories[module_->GetMemoryIndex(
+            cast<MemorySizeExpr>(&expr)->memidx)];
 
         PushType(Type::I32);
         Write(StackVar(0), " = sbx->", ExternalRef(memory->name), ".pages;",
@@ -2292,8 +2316,7 @@ void CWriter::Write(const LoadExpr& expr) {
       WABT_UNREACHABLE;
   }
 
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(&(sbx->", ExternalRef(memory->name),
@@ -2323,8 +2346,7 @@ void CWriter::Write(const StoreExpr& expr) {
       WABT_UNREACHABLE;
   }
 
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
   Write(func, "(&(sbx->", ExternalRef(memory->name), "), (u64)(", StackVar(1), ")");
   if (expr.offset != 0)

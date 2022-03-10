@@ -18,16 +18,16 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "src/binary-reader-objdump.h"
+#include "src/binary-reader.h"
 #include "src/common.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
-#include "src/binary-reader.h"
-#include "src/binary-reader-objdump.h"
 
 using namespace wabt;
 
 static const char s_description[] =
-R"(  Print information about the contents of wasm binaries.
+    R"(  Print information about the contents of wasm binaries.
 
 examples:
   $ wasm-objdump test.wasm
@@ -133,7 +133,7 @@ int ProgramMain(int argc, char** argv) {
     return 1;
   }
 
-  for (const char* filename: s_infiles) {
+  for (const char* filename : s_infiles) {
     if (Failed(dump_file(filename))) {
       return 1;
     }

@@ -1,5 +1,6 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-bulk-memory --enable-memory64
+;;; ARGS: --enable-memory64
+
 
 (module
   (memory i64 1)
@@ -9,7 +10,7 @@
     data.drop $data
   )
 
-  (table 1 anyfunc)
+  (table 1 funcref)
   (elem $elem funcref (ref.func 0) (ref.null func))
   (elem $elem2 func 0)
   (func

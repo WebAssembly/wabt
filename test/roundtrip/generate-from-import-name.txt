@@ -3,7 +3,7 @@
 
 (module
   (func (import "m1" "my_func"))
-  (table (import "m2" "my_table") 1 anyfunc)
+  (table (import "m2" "my_table") 1 funcref)
   (memory (import "m3" "my_memory") 1)
   (global (import "m4" "my_global") i32)
 

@@ -58,10 +58,17 @@ struct ObjdumpSymbol {
 };
 
 struct ObjdumpNames {
-  string_view Get(Index index) const;
-  void Set(Index index, string_view name);
+  std::string_view Get(Index index) const;
+  void Set(Index index, std::string_view name);
 
   std::map<Index, std::string> names;
+};
+
+struct ObjdumpLocalNames {
+  std::string_view Get(Index function_index, Index local_index) const;
+  void Set(Index function_index, Index local_index, std::string_view name);
+
+  std::map<std::pair<Index, Index>, std::string> names;
 };
 
 // read_binary_objdump uses this state to store information from previous runs
@@ -75,7 +82,9 @@ struct ObjdumpState {
   ObjdumpNames tag_names;
   ObjdumpNames segment_names;
   ObjdumpNames table_names;
+  ObjdumpLocalNames local_names;
   std::vector<ObjdumpSymbol> symtab;
+  std::map<Index, Index> function_param_counts;
 };
 
 Result ReadBinaryObjdump(const uint8_t* data,

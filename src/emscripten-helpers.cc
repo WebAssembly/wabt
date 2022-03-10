@@ -178,9 +178,8 @@ WabtWriteScriptResult* wabt_write_binary_spec_script(
   std::vector<wabt::FilenameMemoryStreamPair> module_streams;
   wabt::MemoryStream json_stream(log_stream_p);
 
-  std::string module_filename_noext =
-      wabt::StripExtension(out_filename ? out_filename : source_filename)
-          .to_string();
+  std::string module_filename_noext(
+      wabt::StripExtension(out_filename ? out_filename : source_filename));
 
   WabtWriteScriptResult* result = new WabtWriteScriptResult();
   result->result = WriteBinarySpecScript(&json_stream, script, source_filename,

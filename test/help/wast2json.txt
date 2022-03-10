@@ -25,11 +25,13 @@ options:
       --enable-function-references             Enable Typed function references
       --disable-multi-value                    Disable Multi-value
       --enable-tail-call                       Enable Tail-call support
-      --enable-bulk-memory                     Enable Bulk-memory operations
-      --enable-reference-types                 Enable Reference types (externref)
+      --disable-bulk-memory                    Disable Bulk-memory operations
+      --disable-reference-types                Disable Reference types (externref)
       --enable-annotations                     Enable Custom annotation syntax
       --enable-gc                              Enable Garbage collection
       --enable-memory64                        Enable 64-bit memory
+      --enable-multi-memory                    Enable Multi-memory
+      --enable-extended-const                  Enable Extended constant expressions
       --enable-all                             Enable all features
   -o, --output=FILE                            output JSON file
   -r, --relocatable                            Create a relocatable wasm binary (suitable for linking with e.g. lld)

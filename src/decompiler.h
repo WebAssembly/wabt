@@ -24,8 +24,7 @@ namespace wabt {
 struct Module;
 class Stream;
 
-struct DecompileOptions {
-};
+struct DecompileOptions {};
 
 void RenameAll(Module&);
 

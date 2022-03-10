@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "wasm-rt.h"
-#include "wasm-rt-impl.h"
 
 int g_tests_run;
 int g_tests_passed;

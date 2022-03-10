@@ -1,0 +1,20 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/unreached-valid.wast
+(;; STDERR ;;;
+out/test/spec/unreached-valid.wast:54:10: error: br_table labels have inconsistent types: expected [f32], got [f64]
+        (br_table 0 1 1 (i32.const 1))
+         ^^^^^^^^
+out/test/spec/unreached-valid.wast:54:10: error: br_table labels have inconsistent types: expected [f32], got [f64]
+        (br_table 0 1 1 (i32.const 1))
+         ^^^^^^^^
+out/test/spec/unreached-valid/unreached-valid.1.wasm:0000034: error: br_table labels have inconsistent types: expected [f32], got [f64]
+0000034: error: OnBrTableExpr callback failed
+;;; STDERR ;;)
+(;; STDOUT ;;;
+out/test/spec/unreached-valid.wast:42: assert_trap passed: unreachable executed
+out/test/spec/unreached-valid.wast:43: assert_trap passed: unreachable executed
+out/test/spec/unreached-valid.wast:44: assert_trap passed: unreachable executed
+out/test/spec/unreached-valid.wast:45: assert_trap passed: unreachable executed
+out/test/spec/unreached-valid.wast:49: error reading module: "out/test/spec/unreached-valid/unreached-valid.1.wasm"
+4/4 tests passed.
+;;; STDOUT ;;)

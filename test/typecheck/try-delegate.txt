@@ -1,0 +1,38 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (tag $e)
+  (func
+    try $l
+      try
+      delegate $l
+    catch $e
+    end)
+
+  (func
+    try $l
+      try
+        try
+        delegate $l
+      catch $e
+      end
+    catch $e
+    end)
+
+  (func
+    block $l
+      try
+      delegate $l
+    end)
+
+  (func
+    try $l
+    catch_all
+      try
+      delegate $l
+    end)
+
+  (func
+    try
+    delegate 0)
+  )

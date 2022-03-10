@@ -4,7 +4,7 @@
 (module
   (import "host" "print" (func $imported (param i32) (result i32)))
   (type $i_i (func (param i32)(result i32)))
-  (table anyfunc (elem $imported))
+  (table funcref (elem $imported))
 
   (func (export "f") (result i32)
     i32.const 42

@@ -19,8 +19,8 @@
 
 #include "src/cast.h"
 #include "src/generate-names.h"
-#include "src/ir.h"
 #include "src/ir-util.h"
+#include "src/ir.h"
 
 #include <map>
 
@@ -45,15 +45,16 @@ struct Node {
   std::vector<Node> children;
   // Node specific annotations.
   union {
-    struct { Index var_start, var_count; };  // FlushedVar/FlushToVars
+    struct {
+      Index var_start, var_count;  // FlushedVar/FlushToVars
+    };
     const Var* var;  // Decl/DeclInit.
-    LabelType lt;  // br/br_if target.
+    LabelType lt;    // br/br_if target.
   } u;
 
-  Node() : ntype(NodeType::Uninitialized), etype(ExprType::Nop), e(nullptr) {
-  }
+  Node() : ntype(NodeType::Uninitialized), etype(ExprType::Nop), e(nullptr) {}
   Node(NodeType ntype, ExprType etype, const Expr* e, const Var* v)
-    : ntype(ntype), etype(etype), e(e) {
+      : ntype(ntype), etype(etype), e(e) {
     u.var = v;
   }
 
@@ -76,24 +77,26 @@ struct Node {
 };
 
 struct AST {
-  AST(ModuleContext& mc, const Func *f) : mc(mc), f(f) {
+  AST(ModuleContext& mc, const Func* f) : mc(mc), f(f) {
     if (f) {
       mc.BeginFunc(*f);
       for (Index i = 0; i < f->GetNumParams(); i++) {
         auto name = "$" + IndexToAlphaName(i);
-        vars_defined.insert({ name, { 0, false }});
+        vars_defined.insert({name, {0, false}});
       }
     }
   }
 
   ~AST() {
-    if (f) mc.EndFunc();
+    if (f) {
+      mc.EndFunc();
+    }
   }
 
   // Create a new node, take nargs existing nodes on the exp stack as children.
   Node& InsertNode(NodeType ntype, ExprType etype, const Expr* e, Index nargs) {
     assert(exp_stack.size() >= nargs);
-    Node n { ntype, etype, e, nullptr };
+    Node n{ntype, etype, e, nullptr};
     n.children.reserve(nargs);
     std::move(exp_stack.end() - nargs, exp_stack.end(),
               std::back_inserter(n.children));
@@ -102,7 +105,8 @@ struct AST {
     return exp_stack.back();
   }
 
-  template<ExprType T> void PreDecl(const VarExpr<T>& ve) {
+  template <ExprType T>
+  void PreDecl(const VarExpr<T>& ve) {
     // FIXME: this is slow, and would be better to avoid in callers.
     // See https://github.com/WebAssembly/wabt/issues/1565
     // And https://github.com/WebAssembly/wabt/issues/1665
@@ -114,9 +118,10 @@ struct AST {
     predecls.emplace_back(NodeType::Decl, ExprType::Nop, nullptr, &ve.var);
   }
 
-  template<ExprType T> void Get(const VarExpr<T>& ve, bool local) {
+  template <ExprType T>
+  void Get(const VarExpr<T>& ve, bool local) {
     if (local) {
-      auto ret = vars_defined.insert({ ve.var.name(), { cur_block_id, false }});
+      auto ret = vars_defined.insert({ve.var.name(), {cur_block_id, false}});
       if (ret.second) {
         // Use before def, may happen since locals are guaranteed 0.
         PreDecl(ve);
@@ -130,10 +135,11 @@ struct AST {
     InsertNode(NodeType::Expr, T, &ve, 0);
   }
 
-  template<ExprType T> void Set(const VarExpr<T>& ve, bool local) {
+  template <ExprType T>
+  void Set(const VarExpr<T>& ve, bool local) {
     // Seen this var before?
     if (local &&
-        vars_defined.insert({ ve.var.name(), { cur_block_id, false }}).second) {
+        vars_defined.insert({ve.var.name(), {cur_block_id, false}}).second) {
       if (value_stack_depth == 1) {
         // Top level, declare it here.
         InsertNode(NodeType::DeclInit, ExprType::Nop, nullptr, 1).u.var =
@@ -147,9 +153,11 @@ struct AST {
     InsertNode(NodeType::Expr, T, &ve, 1);
   }
 
-  template<ExprType T> void Block(const BlockExprBase<T>& be, LabelType label) {
+  template <ExprType T>
+  void Block(const BlockExprBase<T>& be, LabelType label) {
     mc.BeginBlock(label, be.block);
-    Construct(be.block.exprs, be.block.decl.GetNumResults(), be.block.decl.GetNumParams(), false);
+    Construct(be.block.exprs, be.block.decl.GetNumResults(),
+              be.block.decl.GetNumParams(), false);
     mc.EndBlock();
     InsertNode(NodeType::Expr, T, &be, 1);
   }
@@ -177,7 +185,7 @@ struct AST {
         auto& lt = *cast<LocalTeeExpr>(&e);
         Set(lt, true);
         if (value_stack_depth == 1) {  // Tee is the only thing on there.
-          Get(lt, true);  // Now Set + Get instead.
+          Get(lt, true);               // Now Set + Get instead.
         } else {
           // Things are above us on the stack so the Tee can't be eliminated.
           // The Set makes this work as a Tee when consumed by a parent.
@@ -188,13 +196,16 @@ struct AST {
         auto ife = cast<IfExpr>(&e);
         value_stack_depth--;  // Condition.
         mc.BeginBlock(LabelType::Block, ife->true_);
-        Construct(ife->true_.exprs, ife->true_.decl.GetNumResults(), ife->true_.decl.GetNumParams(), false);
+        Construct(ife->true_.exprs, ife->true_.decl.GetNumResults(),
+                  ife->true_.decl.GetNumParams(), false);
         if (!ife->false_.empty()) {
-          Construct(ife->false_, ife->true_.decl.GetNumResults(), ife->true_.decl.GetNumParams(), false);
+          Construct(ife->false_, ife->true_.decl.GetNumResults(),
+                    ife->true_.decl.GetNumParams(), false);
         }
         mc.EndBlock();
         value_stack_depth++;  // Put Condition back.
-        InsertNode(NodeType::Expr, ExprType::If, &e, ife->false_.empty() ? 2 : 3);
+        InsertNode(NodeType::Expr, ExprType::If, &e,
+                   ife->false_.empty() ? 2 : 3);
         return;
       }
       case ExprType::Block: {
@@ -222,7 +233,10 @@ struct AST {
     }
   }
 
-  void Construct(const ExprList& es, Index nresults, Index nparams, bool is_function_body) {
+  void Construct(const ExprList& es,
+                 Index nresults,
+                 Index nparams,
+                 bool is_function_body) {
     block_stack.push_back(cur_block_id);
     cur_block_id = blocks_closed.size();
     blocks_closed.push_back(false);
@@ -234,8 +248,8 @@ struct AST {
       Construct(e);
       auto arity = mc.GetExprArity(e);
       value_stack_depth -= arity.nargs;
-      value_stack_in_variables = std::min(value_stack_in_variables,
-                                          value_stack_depth);
+      value_stack_in_variables =
+          std::min(value_stack_in_variables, value_stack_depth);
       unreachable = unreachable || arity.unreachable;
       assert(unreachable || value_stack_depth >= value_stack_depth_start);
       value_stack_depth += arity.nreturns;
@@ -256,21 +270,20 @@ struct AST {
         auto num_vars = value_stack_in_variables - value_stack_depth_start;
         auto num_vals = value_stack_depth - value_stack_in_variables;
         auto GenFlushVars = [&](int nargs) {
-          auto& ftv = InsertNode(NodeType::FlushToVars, ExprType::Nop, nullptr,
-                                 nargs);
+          auto& ftv =
+              InsertNode(NodeType::FlushToVars, ExprType::Nop, nullptr, nargs);
           ftv.u.var_start = flushed_vars;
           ftv.u.var_count = num_vals;
         };
         auto MoveStatementsBelowVars = [&](size_t amount) {
           std::rotate(exp_stack.end() - num_vars - amount,
-                      exp_stack.end() - amount,
-                      exp_stack.end());
+                      exp_stack.end() - amount, exp_stack.end());
         };
         auto GenFlushedVars = [&]() {
           // Re-generate these values as vars.
           for (int i = 0; i < num_vals; i++) {
-            auto& fv = InsertNode(NodeType::FlushedVar, ExprType::Nop, nullptr,
-                                  0);
+            auto& fv =
+                InsertNode(NodeType::FlushedVar, ExprType::Nop, nullptr, 0);
             fv.u.var_start = flushed_vars++;
             fv.u.var_count = 1;
           }
@@ -316,8 +329,8 @@ struct AST {
         // Special optimisation: for constant instructions, we can mark these
         // as if they were variables, so they can be re-ordered for free with
         // the above code, without needing new variables!
-        // TODO: this would be nice to also do for get_local and maybe others,
-        // though that needs a way to ensure there's no set_local in between
+        // TODO: this would be nice to also do for local.get and maybe others,
+        // though that needs a way to ensure there's no local.set in between
         // when they get lifted, so complicates matters a bit.
         if (e.type() == ExprType::Const &&
             value_stack_in_variables == value_stack_depth - 1) {
@@ -325,9 +338,8 @@ struct AST {
         }
       }
     }
-    assert(unreachable ||
-           value_stack_depth - value_stack_depth_start ==
-           static_cast<int>(nresults));
+    assert(unreachable || value_stack_depth - value_stack_depth_start ==
+                              static_cast<int>(nresults));
     // Undo any changes to value_stack_depth, since parent takes care of arity
     // changes.
     value_stack_depth = value_stack_depth_start;
@@ -371,9 +383,12 @@ struct AST {
   ModuleContext& mc;
   std::vector<Node> exp_stack;
   std::vector<Node> predecls;
-  const Func *f;
+  const Func* f;
   int value_stack_depth = 0;
-  struct Variable { size_t block_id; bool defined; };
+  struct Variable {
+    size_t block_id;
+    bool defined;
+  };
   std::map<std::string, Variable> vars_defined;
   Index flushed_vars = 0;
   size_t cur_block_id = 0;

@@ -30,8 +30,8 @@
 #include "src/cast.h"
 #include "src/common.h"
 #include "src/expr-visitor.h"
-#include "src/ir.h"
 #include "src/ir-util.h"
+#include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
 
@@ -91,8 +91,9 @@ struct ExprTree {
 
 class WatWriter : ModuleContext {
  public:
-  WatWriter(Stream* stream, const WriteWatOptions& options,
-            const Module &module)
+  WatWriter(Stream* stream,
+            const WriteWatOptions& options,
+            const Module& module)
       : ModuleContext(module), options_(options), stream_(stream) {}
 
   Result WriteModule();
@@ -116,12 +117,16 @@ class WatWriter : ModuleContext {
   void WriteCloseNewline();
   void WriteCloseSpace();
   void WriteString(const std::string& str, NextChar next_char);
-  void WriteName(string_view str, NextChar next_char);
-  void WriteNameOrIndex(string_view str, Index index, NextChar next_char);
+  void WriteName(std::string_view str, NextChar next_char);
+  void WriteNameOrIndex(std::string_view str, Index index, NextChar next_char);
   void WriteQuotedData(const void* data, size_t length);
-  void WriteQuotedString(string_view str, NextChar next_char);
+  void WriteQuotedString(std::string_view str, NextChar next_char);
   void WriteVar(const Var& var, NextChar next_char);
   void WriteVarUnlessZero(const Var& var, NextChar next_char);
+  void WriteMemoryVarUnlessZero(const Var& memidx, NextChar next_char);
+  void WriteTwoMemoryVarsUnlessBothZero(const Var& srcmemidx,
+                                        const Var& destmemidx,
+                                        NextChar next_char);
   void WriteBrVar(const Var& var, NextChar next_char);
   void WriteRefKind(Type type, NextChar next_char);
   void WriteType(Type type, NextChar next_char);
@@ -135,6 +140,8 @@ class WatWriter : ModuleContext {
   void WriteExpr(const Expr* expr);
   template <typename T>
   void WriteLoadStoreExpr(const Expr* expr);
+  template <typename T>
+  void WriteMemoryLoadStoreExpr(const Expr* expr);
   void WriteExprList(const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
   template <typename T>
@@ -304,7 +311,7 @@ void WatWriter::WriteString(const std::string& str, NextChar next_char) {
   WritePuts(str.c_str(), next_char);
 }
 
-void WatWriter::WriteName(string_view str, NextChar next_char) {
+void WatWriter::WriteName(std::string_view str, NextChar next_char) {
   // Debug names must begin with a $ for for wast file to be valid
   assert(!str.empty() && str.front() == '$');
   bool has_invalid_chars = std::any_of(
@@ -322,7 +329,7 @@ void WatWriter::WriteName(string_view str, NextChar next_char) {
   next_char_ = next_char;
 }
 
-void WatWriter::WriteNameOrIndex(string_view str,
+void WatWriter::WriteNameOrIndex(std::string_view str,
                                  Index index,
                                  NextChar next_char) {
   if (!str.empty()) {
@@ -351,7 +358,7 @@ void WatWriter::WriteQuotedData(const void* data, size_t length) {
   next_char_ = NextChar::Space;
 }
 
-void WatWriter::WriteQuotedString(string_view str, NextChar next_char) {
+void WatWriter::WriteQuotedString(std::string_view str, NextChar next_char) {
   WriteQuotedData(str.data(), str.length());
   next_char_ = next_char;
 }
@@ -375,6 +382,27 @@ void WatWriter::WriteVarUnlessZero(const Var& var, NextChar next_char) {
   }
 }
 
+void WatWriter::WriteMemoryVarUnlessZero(const Var& memidx,
+                                         NextChar next_char) {
+  if (module.GetMemoryIndex(memidx) != 0) {
+    WriteVar(memidx, next_char);
+  } else {
+    next_char_ = next_char;
+  }
+}
+
+void WatWriter::WriteTwoMemoryVarsUnlessBothZero(const Var& srcmemidx,
+                                                 const Var& destmemidx,
+                                                 NextChar next_char) {
+  if (module.GetMemoryIndex(srcmemidx) != 0 ||
+      module.GetMemoryIndex(destmemidx) != 0) {
+    WriteVar(srcmemidx, NextChar::Space);
+    WriteVar(destmemidx, next_char);
+  } else {
+    next_char_ = next_char;
+  }
+}
+
 void WatWriter::WriteBrVar(const Var& var, NextChar next_char) {
   if (var.is_index()) {
     if (var.index() < GetLabelStackSize()) {
@@ -394,9 +422,7 @@ void WatWriter::WriteRefKind(Type type, NextChar next_char) {
 }
 
 void WatWriter::WriteType(Type type, NextChar next_char) {
-  const char* type_name = type.GetName();
-  assert(type_name);
-  WritePuts(type_name, next_char);
+  WritePuts(type.GetName().c_str(), next_char);
 }
 
 void WatWriter::WriteTypes(const TypeVector& types, const char* name) {
@@ -495,6 +521,20 @@ template <typename T>
 void WatWriter::WriteLoadStoreExpr(const Expr* expr) {
   auto typed_expr = cast<T>(expr);
   WritePutsSpace(typed_expr->opcode.GetName());
+  if (typed_expr->offset) {
+    Writef("offset=%" PRIaddress, typed_expr->offset);
+  }
+  if (!typed_expr->opcode.IsNaturallyAligned(typed_expr->align)) {
+    Writef("align=%" PRIaddress, typed_expr->align);
+  }
+  WriteNewline(NO_FORCE_NEWLINE);
+}
+
+template <typename T>
+void WatWriter::WriteMemoryLoadStoreExpr(const Expr* expr) {
+  auto typed_expr = cast<T>(expr);
+  WritePutsSpace(typed_expr->opcode.GetName());
+  WriteMemoryVarUnlessZero(typed_expr->memidx, NextChar::Space);
   if (typed_expr->offset) {
     Writef("offset=%" PRIaddress, typed_expr->offset);
   }
@@ -635,8 +675,7 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(
-    CallRefExpr* expr) {
+Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallRef_Opcode.GetName());
   return Result::Ok;
 }
@@ -695,7 +734,7 @@ Result WatWriter::ExprVisitorDelegate::EndIfExpr(IfExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnLoadExpr(LoadExpr* expr) {
-  writer_->WriteLoadStoreExpr<LoadExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<LoadExpr>(expr);
   return Result::Ok;
 }
 
@@ -729,7 +768,10 @@ Result WatWriter::ExprVisitorDelegate::EndLoopExpr(LoopExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
-  writer_->WritePutsNewline(Opcode::MemoryCopy_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::MemoryCopy_Opcode.GetName());
+  writer_->WriteTwoMemoryVarsUnlessBothZero(expr->srcmemidx, expr->destmemidx,
+                                            NextChar::Space);
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
 
@@ -740,23 +782,31 @@ Result WatWriter::ExprVisitorDelegate::OnDataDropExpr(DataDropExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryFillExpr(MemoryFillExpr* expr) {
-  writer_->WritePutsNewline(Opcode::MemoryFill_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::MemoryFill_Opcode.GetName());
+  writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
-  writer_->WritePutsNewline(Opcode::MemoryGrow_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::MemoryGrow_Opcode.GetName());
+  writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnMemorySizeExpr(MemorySizeExpr* expr) {
-  writer_->WritePutsNewline(Opcode::MemorySize_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::MemorySize_Opcode.GetName());
+  writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::MemoryInit_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Newline);
+  writer_->WriteVar(expr->var, NextChar::Space);
+  writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
+  writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
 
@@ -865,7 +915,7 @@ Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnStoreExpr(StoreExpr* expr) {
-  writer_->WriteLoadStoreExpr<StoreExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<StoreExpr>(expr);
   return Result::Ok;
 }
 
@@ -886,8 +936,8 @@ Result WatWriter::ExprVisitorDelegate::BeginTryExpr(TryExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnCatchExpr(
-    TryExpr* expr, Catch* catch_) {
+Result WatWriter::ExprVisitorDelegate::OnCatchExpr(TryExpr* expr,
+                                                   Catch* catch_) {
   writer_->Dedent();
   if (catch_->IsCatchAll()) {
     writer_->WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
@@ -977,7 +1027,8 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
+Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(
+    SimdLoadLaneExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
   if (expr->offset) {
     writer_->Writef("offset=%" PRIaddress, expr->offset);
@@ -1396,20 +1447,13 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     WritePuts("func", NextChar::Space);
   }
 
-  for (const ElemExpr& expr : segment.elem_exprs) {
+  for (const ExprList& expr : segment.elem_exprs) {
     if (flags & SegUseElemExprs) {
-      if (expr.kind == ElemExprKind::RefNull) {
-        WriteOpenSpace("ref.null");
-        WriteRefKind(expr.type, NextChar::Space);
-        WriteCloseSpace();
-      } else {
-        WriteOpenSpace("ref.func");
-        WriteVar(expr.var, NextChar::Space);
-        WriteCloseSpace();
-      }
+      WriteInitExpr(expr);
     } else {
-      assert(expr.kind == ElemExprKind::RefFunc);
-      WriteVar(expr.var, NextChar::Space);
+      assert(expr.size() == 1);
+      assert(expr.front().type() == ExprType::RefFunc);
+      WriteVar(cast<const RefFuncExpr>(&expr.front())->var, NextChar::Space);
     }
   }
   WriteCloseNewline();
@@ -1430,6 +1474,7 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
   WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
   if (segment.kind != SegmentKind::Passive) {
+    WriteMemoryVarUnlessZero(segment.memory_var, NextChar::Space);
     WriteInitExpr(segment.offset);
   }
   WriteQuotedData(segment.data.data(), segment.data.size());

@@ -12,8 +12,8 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-error: accessing stack depth: 1 >= max: 1
-0000019: error: OnEndExpr callback failed
-error: accessing stack depth: 1 >= max: 1
-0000019: error: OnEndExpr callback failed
+error: popping empty label stack
+000001a: error: OnEndExpr callback failed
+error: popping empty label stack
+000001a: error: OnEndExpr callback failed
 ;;; STDERR ;;)

@@ -442,11 +442,6 @@ void wasm_rt_expand_table(wasm_rt_table_t* table) {
   table->size = new_size;
 }
 
-void wasm2c_ensure_linked() {
-  // We use this to ensure the dynamic library with the wasi symbols is loaded
-  // for the host application
-}
-
 #undef WASM_PAGE_SIZE
 #undef WASM_HEAP_GUARD_PAGE_SIZE
 #undef WASM_HEAP_ALIGNMENT

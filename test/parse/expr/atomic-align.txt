@@ -3,9 +3,9 @@
 (module
   (memory 1 1 shared)
   (func
-    i32.const 0 i32.const 0 atomic.notify align=4 drop
-    i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait align=4 drop
-    i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait align=8 drop
+    i32.const 0 i32.const 0 memory.atomic.notify align=4 drop
+    i32.const 0 i32.const 0 i64.const 0 memory.atomic.wait32 align=4 drop
+    i32.const 0 i64.const 0 i64.const 0 memory.atomic.wait64 align=8 drop
 
     i32.const 0 i32.atomic.load align=4 drop
     i32.const 0 i64.atomic.load align=8 drop

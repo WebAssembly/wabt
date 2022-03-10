@@ -81,7 +81,8 @@ def F64ToC(f64_bits):
 
 
 def MangleType(t):
-    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd'}[t]
+    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd',
+            'externref': 'e', 'funcref': 'f'}[t]
 
 
 def MangleTypes(types):
@@ -237,6 +238,8 @@ class CWriter(object):
                     'f32': 'ASSERT_RETURN_F32',
                     'i64': 'ASSERT_RETURN_I64',
                     'f64': 'ASSERT_RETURN_F64',
+                    'externref': 'ASSERT_RETURN_EXTERNREF',
+                    'funcref': 'ASSERT_RETURN_FUNCREF',
                 }
 
                 assert_macro = assert_map[type_]
@@ -280,6 +283,10 @@ class CWriter(object):
             return F32ToC(int(value))
         elif type_ == 'f64':
             return F64ToC(int(value))
+        elif type_ == 'externref':
+            return 'externref(%s)' % value
+        elif type_ == 'funcref':
+            return 'funcref(%s)' % value
         else:
             assert False
 
@@ -327,15 +334,14 @@ class CWriter(object):
 
 
 def Compile(cc, c_filename, out_dir, *args):
-    out_dir = os.path.abspath(out_dir)
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, '.o'), out_dir)
-    cc.RunWithArgs('-c', '-o', o_filename, c_filename, *args, cwd=out_dir)
+    cc.RunWithArgs('-c', c_filename, '-o', o_filename, *args)
     return o_filename
 
 
-def Link(cc, o_filenames, main_exe, out_dir, *args):
+def Link(cc, o_filenames, main_exe, *args):
     args = ['-o', main_exe] + o_filenames + list(args)
-    cc.RunWithArgs(*args, cwd=out_dir)
+    cc.RunWithArgs(*args)
 
 
 def main(args):
@@ -378,6 +384,7 @@ def main(args):
         wast2json = utils.Executable(
             find_exe.GetWast2JsonExecutable(options.bindir),
             error_cmdline=options.error_cmdline)
+        wast2json.verbose = options.print_cmd
         wast2json.AppendOptionalArgs({'-v': options.verbose})
 
         json_file_path = utils.ChangeDir(
@@ -387,8 +394,10 @@ def main(args):
         wasm2c = utils.Executable(
             find_exe.GetWasm2CExecutable(options.bindir),
             error_cmdline=options.error_cmdline)
+        wasm2c.verbose = options.print_cmd
 
         cc = utils.Executable(options.cc, *options.cflags)
+        cc.verbose = options.print_cmd
 
         with open(json_file_path) as json_file:
             spec_json = json.load(json_file)
@@ -414,21 +423,20 @@ def main(args):
         o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
+            wasm_filename = os.path.join(out_dir, wasm_filename)
             c_filename = utils.ChangeExt(wasm_filename, '.c')
-            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, cwd=out_dir)
+            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename)
             if options.compile:
                 defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
 
         if options.compile:
-            main_c = os.path.basename(main_filename)
-            o_filenames.append(Compile(cc, main_c, out_dir, includes, defines))
-            main_exe = os.path.basename(utils.ChangeExt(json_file_path, ''))
-            Link(cc, o_filenames, main_exe, out_dir, '-lm')
+            o_filenames.append(Compile(cc, main_filename, out_dir, includes, defines))
+            main_exe = utils.ChangeExt(json_file_path, '')
+            Link(cc, o_filenames, main_exe, '-lm')
 
         if options.compile and options.run:
-            utils.Executable(os.path.join(out_dir, main_exe),
-                             forward_stdout=True).RunWithArgs()
+            utils.Executable(main_exe, forward_stdout=True).RunWithArgs()
 
     return 0
 

@@ -25,68 +25,68 @@
 namespace {
 
 const char* ExprTypeName[] = {
-  "AtomicFence",
-  "AtomicLoad",
-  "AtomicRmw",
-  "AtomicRmwCmpxchg",
-  "AtomicStore",
-  "AtomicNotify",
-  "AtomicWait",
-  "Binary",
-  "Block",
-  "Br",
-  "BrIf",
-  "BrTable",
-  "Call",
-  "CallIndirect",
-  "CallRef",
-  "Compare",
-  "Const",
-  "Convert",
-  "Drop",
-  "GlobalGet",
-  "GlobalSet",
-  "If",
-  "Load",
-  "LocalGet",
-  "LocalSet",
-  "LocalTee",
-  "Loop",
-  "MemoryCopy",
-  "DataDrop",
-  "MemoryFill",
-  "MemoryGrow",
-  "MemoryInit",
-  "MemorySize",
-  "Nop",
-  "RefIsNull",
-  "RefFunc",
-  "RefNull",
-  "Rethrow",
-  "Return",
-  "ReturnCall",
-  "ReturnCallIndirect",
-  "Select",
-  "SimdLaneOp",
-  "SimdLoadLane",
-  "SimdStoreLane",
-  "SimdShuffleOp",
-  "LoadSplat",
-  "LoadZero",
-  "Store",
-  "TableCopy",
-  "ElemDrop",
-  "TableInit",
-  "TableGet",
-  "TableGrow",
-  "TableSize",
-  "TableSet",
-  "TableFill",
-  "Ternary",
-  "Throw",
-  "Try",
-  "Unary",
-  "Unreachable",
+    "AtomicFence",
+    "AtomicLoad",
+    "AtomicRmw",
+    "AtomicRmwCmpxchg",
+    "AtomicStore",
+    "AtomicNotify",
+    "AtomicWait",
+    "Binary",
+    "Block",
+    "Br",
+    "BrIf",
+    "BrTable",
+    "Call",
+    "CallIndirect",
+    "CallRef",
+    "Compare",
+    "Const",
+    "Convert",
+    "Drop",
+    "GlobalGet",
+    "GlobalSet",
+    "If",
+    "Load",
+    "LocalGet",
+    "LocalSet",
+    "LocalTee",
+    "Loop",
+    "MemoryCopy",
+    "DataDrop",
+    "MemoryFill",
+    "MemoryGrow",
+    "MemoryInit",
+    "MemorySize",
+    "Nop",
+    "RefIsNull",
+    "RefFunc",
+    "RefNull",
+    "Rethrow",
+    "Return",
+    "ReturnCall",
+    "ReturnCallIndirect",
+    "Select",
+    "SimdLaneOp",
+    "SimdLoadLane",
+    "SimdStoreLane",
+    "SimdShuffleOp",
+    "LoadSplat",
+    "LoadZero",
+    "Store",
+    "TableCopy",
+    "ElemDrop",
+    "TableInit",
+    "TableGet",
+    "TableGrow",
+    "TableSize",
+    "TableSet",
+    "TableFill",
+    "Ternary",
+    "Throw",
+    "Try",
+    "Unary",
+    "Unreachable",
 };
 
 }  // end of anonymous namespace
@@ -107,7 +107,7 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
-const Export* Module::GetExport(string_view name) const {
+const Export* Module::GetExport(std::string_view name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size()) {
     return nullptr;
@@ -197,7 +197,7 @@ Index LocalTypes::size() const {
 
 Type LocalTypes::operator[](Index i) const {
   Index count = 0;
-  for (auto decl: decls_) {
+  for (auto decl : decls_) {
     if (i < count + decl.second) {
       return decl.first;
     }
@@ -574,17 +574,16 @@ void MakeTypeBindingReverseMapping(
     std::vector<std::string>* out_reverse_mapping) {
   out_reverse_mapping->clear();
   out_reverse_mapping->resize(num_types);
-  for (const auto& pair : bindings) {
-    assert(static_cast<size_t>(pair.second.index) <
-           out_reverse_mapping->size());
-    (*out_reverse_mapping)[pair.second.index] = pair.first;
+  for (const auto& [name, binding] : bindings) {
+    assert(static_cast<size_t>(binding.index) < out_reverse_mapping->size());
+    (*out_reverse_mapping)[binding.index] = name;
   }
 }
 
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 
-Var::Var(string_view name, const Location& loc)
+Var::Var(std::string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
 Var::Var(Var&& rhs) : Var(kInvalidIndex) {
@@ -631,8 +630,8 @@ void Var::set_name(std::string&& name) {
   Construct(name_, std::move(name));
 }
 
-void Var::set_name(string_view name) {
-  set_name(name.to_string());
+void Var::set_name(std::string_view name) {
+  set_name(std::string(name));
 }
 
 void Var::Destroy() {
@@ -664,11 +663,12 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
       break;
   }
 
-  all_ref_func = all_ref_func &&
-                 std::all_of(elem_exprs.begin(), elem_exprs.end(),
-                             [](const ElemExpr& elem_expr) {
-                               return elem_expr.kind == ElemExprKind::RefFunc;
-                             });
+  all_ref_func =
+      all_ref_func &&
+      std::all_of(elem_exprs.begin(), elem_exprs.end(),
+                  [](const ExprList& elem_expr) {
+                    return elem_expr.front().type() == ExprType::RefFunc;
+                  });
   if (!all_ref_func) {
     flags |= SegUseElemExprs;
   }
@@ -690,6 +690,5 @@ uint8_t DataSegment::GetFlags(const Module* module) const {
 
   return flags;
 }
-
 
 }  // namespace wabt

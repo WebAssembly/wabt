@@ -119,7 +119,6 @@ TEST(OptionParser, FlagCombinedAfterShortParam) {
   EXPECT_EQ(error, "prog: unexpected argument 'stuff'" ERROR_ENDING);
 }
 
-
 TEST(OptionParser, OneArgument) {
   std::string argument;
   OptionParser parser("prog", "desc");

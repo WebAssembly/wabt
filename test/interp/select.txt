@@ -3,22 +3,22 @@
   (func $i32 (param i32) (result i32)
     i32.const 1
     i32.const 2
-    get_local 0
+    local.get 0
     select)
   (func $i64 (param i32) (result i64)
     i64.const 1
     i64.const 2
-    get_local 0
+    local.get 0
     select)
   (func $f32 (param i32) (result f32)
     f32.const 1
     f32.const 2
-    get_local 0
+    local.get 0
     select)
   (func $f64 (param i32) (result f64)
     f64.const 1
     f64.const 2
-    get_local 0
+    local.get 0
     select)
 
   (func (export "test_i32_l") (result i32)

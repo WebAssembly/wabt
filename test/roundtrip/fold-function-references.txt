@@ -1,0 +1,97 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-function-references
+(module
+  (type $f32-f32 (func (param f32) (result f32)))
+
+  (func $deriv (param $f (ref $f32-f32)) (param $x f32) (param $delta f32) (result f32)
+    (f32.div
+      (f32.sub (call_ref (f32.add (local.get $delta) (local.get $x)) (local.get $f))
+               (call_ref (local.get $x) (local.get $f))
+      )
+      (local.get $delta)
+    )
+  )
+
+  (func $choice (param $f (ref $f32-f32))
+                (param $g (ref $f32-f32))
+                (param $cond i32)
+                (result (ref $f32-f32))
+    (if (result (ref $f32-f32))
+      (i32.eq
+        (local.get $cond)
+        (i32.const 1)
+      )
+      (then
+        (local.get $f)
+      )
+      (else
+        (local.get $g)
+      )
+    )
+  )
+
+  (func $square (param $x f32) (result f32)
+    (f32.mul (local.get $x)
+             (local.get $x))
+  )
+
+  (func $double (param $x f32) (result f32)
+    (f32.add (local.get $x)
+             (local.get $x))
+  )
+
+  (func (export "main") (result f32)
+    (call $deriv (call $choice (ref.func $square) (ref.func $double) (i32.const 1))
+                 (f32.const 1.0)
+                 (f32.const 0.01)
+    )
+  )
+
+  (elem declare funcref (ref.func $square) (ref.func $double))
+)
+
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param f32) (result f32)))
+  (type (;1;) (func (param (ref 0) f32 f32) (result f32)))
+  (type (;2;) (func (param (ref 0) (ref 0) i32) (result (ref 0))))
+  (type (;3;) (func (result f32)))
+  (func (;0;) (type 1) (param (ref 0) f32 f32) (result f32)
+    (f32.div
+      (f32.sub
+        (f32.add
+          (local.get 2)
+          (local.get 1))
+        (call_ref (local.get 0)
+          (call_ref)
+          (local.get 1)
+          (local.get 0)))
+      (local.get 2)))
+  (func (;1;) (type 2) (param (ref 0) (ref 0) i32) (result (ref 0))
+    (if (result (ref 0))  ;; label = @1
+      (i32.eq
+        (local.get 2)
+        (i32.const 1))
+      (then
+        (local.get 0))
+      (else
+        (local.get 1))))
+  (func (;2;) (type 0) (param f32) (result f32)
+    (f32.mul
+      (local.get 0)
+      (local.get 0)))
+  (func (;3;) (type 0) (param f32) (result f32)
+    (f32.add
+      (local.get 0)
+      (local.get 0)))
+  (func (;4;) (type 3) (result f32)
+    (call 0
+      (call 1
+        (ref.func 2)
+        (ref.func 3)
+        (i32.const 1))
+      (f32.const 0x1p+0 (;=1;))
+      (f32.const 0x1.47ae14p-7 (;=0.01;))))
+  (export "main" (func 4))
+  (elem (;0;) declare func 2 3))
+;;; STDOUT ;;)

@@ -7,7 +7,7 @@
 (module
   (type (func (param i32) (result f32)))
   (import "foo" "bar" (func $import (result i32)))
-  (table anyfunc (elem 0))
+  (table funcref (elem 0))
   (func $func0 (type 0) f32.const 1)
   (func (param i32) (param $param1 i64)
     (local f32)
@@ -21,10 +21,10 @@
     i32.const 1
     call_indirect (type 0)
     drop
-    get_local 1
+    local.get 1
     drop
     f32.const 0
-    set_local 2)
+    local.set 2)
   (export "baz" (func 0))
   (export "quux" (func 1)))
 

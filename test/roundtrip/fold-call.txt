@@ -27,7 +27,7 @@
     call $if_f
     call $ffff_v)
 
-  (table anyfunc (elem $i_i $if_f))
+  (table funcref (elem $i_i $if_f))
   (func $fold-call-indirect (result i32)
     i32.const 1
     i32.const 2

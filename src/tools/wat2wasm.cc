@@ -17,8 +17,8 @@
 #include <cassert>
 #include <cstdarg>
 #include <cstdint>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 
 #include "config.h"
@@ -49,7 +49,7 @@ static Features s_features;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  read a file in the wasm text format, check it for errors, and
+    R"(  read a file in the wasm text format, check it for errors, and
   convert it to the wasm binary format.
 
 examples:
@@ -98,7 +98,7 @@ static void ParseOptions(int argc, char* argv[]) {
   parser.Parse(argc, argv);
 }
 
-static void WriteBufferToFile(string_view filename,
+static void WriteBufferToFile(std::string_view filename,
                               const OutputBuffer& buffer) {
   if (s_dump_module) {
     std::unique_ptr<FileStream> stream = FileStream::CreateStdout();
@@ -113,7 +113,7 @@ static void WriteBufferToFile(string_view filename,
   buffer.WriteToFile(filename);
 }
 
-static std::string DefaultOuputName(string_view input_name) {
+static std::string DefaultOuputName(std::string_view input_name) {
   // Strip existing extension and add .wasm
   std::string result(StripExtension(GetBasename(input_name)));
   result += kWasmExtension;

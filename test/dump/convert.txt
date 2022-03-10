@@ -3,33 +3,33 @@
 (module
   (func
     i32.const 0
-    f64.convert_u/i32
-    i32.trunc_u/f64
-    f64.convert_s/i32
-    i32.trunc_s/f64
-    f32.convert_u/i32
-    i32.trunc_u/f32
-    f32.convert_s/i32
-    i32.trunc_s/f32
-    i64.extend_u/i32
-    i32.wrap/i64
+    f64.convert_i32_u
+    i32.trunc_f64_u
+    f64.convert_i32_s
+    i32.trunc_f64_s
+    f32.convert_i32_u
+    i32.trunc_f32_u
+    f32.convert_i32_s
+    i32.trunc_f32_s
+    i64.extend_i32_u
+    i32.wrap_i64
     drop
      
     i32.const 0
-    i64.extend_s/i32
-    f64.convert_u/i64
-    i64.trunc_u/f64
-    f64.convert_s/i64
-    i64.trunc_s/f64
-    f32.convert_u/i64
-    i64.trunc_u/f32
-    f32.convert_s/i64
-    i64.trunc_s/f32
+    i64.extend_i32_s
+    f64.convert_i64_u
+    i64.trunc_f64_u
+    f64.convert_i64_s
+    i64.trunc_f64_s
+    f32.convert_i64_u
+    i64.trunc_f32_u
+    f32.convert_i64_s
+    i64.trunc_f32_s
     drop
 
     f32.const 0
-    f64.promote/f32
-    f32.demote/f64
+    f64.promote_f32
+    f32.demote_f64
     drop))
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

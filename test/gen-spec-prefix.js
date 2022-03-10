@@ -5,7 +5,7 @@
 let spectest = {
   print: print || ((...xs) => console.log(...xs)),
   global: 666,
-  table: new WebAssembly.Table({initial: 10, maximum: 20, element: 'anyfunc'}),
+  table: new WebAssembly.Table({initial: 10, maximum: 20, element: 'funcref'}),
   memory: new WebAssembly.Memory({initial: 1, maximum: 2}),};
 
 let registry = {spectest};

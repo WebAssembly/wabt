@@ -42,7 +42,7 @@
 out/test/typecheck/bad-block-multi-mismatch.txt:8:5: error: type mismatch in block, expected [i32, i32] but got [i32]
     end
     ^^^
-out/test/typecheck/bad-block-multi-mismatch.txt:17:5: error: type mismatch in block, expected [] but got [i32]
+out/test/typecheck/bad-block-multi-mismatch.txt:17:5: error: type mismatch at end of block, expected [] but got [i32]
     end
     ^^^
 out/test/typecheck/bad-block-multi-mismatch.txt:25:5: error: type mismatch in block, expected [f32, i32] but got [i32, i32]

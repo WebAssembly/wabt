@@ -9,7 +9,7 @@
     end
   ))
 (;; STDERR ;;;
-out/test/typecheck/bad-empty-catch.txt:9:5: error: type mismatch in try catch, expected [] but got [i32]
+out/test/typecheck/bad-empty-catch.txt:9:5: error: type mismatch at end of try catch, expected [] but got [i32]
     end
     ^^^
 ;;; STDERR ;;)

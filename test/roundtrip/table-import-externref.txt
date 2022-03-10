@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --enable-reference-types
+;;; ARGS: --stdout
 (module
   (table (import "m" "func") 1 funcref)
   (table (import "m" "extern") 1 externref)

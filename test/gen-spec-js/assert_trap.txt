@@ -3,8 +3,8 @@
 (module
   (func (export "unreachable") unreachable)
   (func (export "i32.trunc_s") (param f32) (result i32)
-    get_local 0
-    i32.trunc_s/f32))
+    local.get 0
+    i32.trunc_f32_s))
 
 (assert_trap (invoke "unreachable") "unreachable")
 ;; Rewritten to avoid passing nan as a parameter.

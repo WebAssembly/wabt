@@ -5,11 +5,11 @@
     (local i32 i32)
     i32.const 1
     i32.const 2
-    get_local 0
-    get_local 0
-    get_local 0
-    get_local 1
-    get_local 1
+    local.get 0
+    local.get 0
+    local.get 0
+    local.get 1
+    local.get 1
     br 0)
 
   (func
@@ -20,24 +20,24 @@
     f32.add
     br 0))
 (;; STDOUT ;;;
-Total opcodes: 16
+Total opcodes: 18
 
 Opcode counts:
 local.get: 5
-i32.const: 3
-end: 2
+i32.const: 4
+end: 3
 br: 2
 f32.const: 2
 i32.load: 1
 f32.add: 1
 
 Opcode counts with immediates:
+end: 3
 local.get 0: 3
-end: 2
 br 0: 2
 local.get 1: 2
+i32.const 0 (0x0): 2
 i32.load 2, 0: 1
-i32.const 0 (0x0): 1
 i32.const 1 (0x1): 1
 i32.const 2 (0x2): 1
 f32.const 2 (0x1p+1): 1

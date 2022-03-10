@@ -15,8 +15,10 @@
 #
 
 cmake_minimum_required(VERSION 3.0.0)
-project(WABT VERSION 1.0.24)
+project(WABT LANGUAGES C CXX VERSION 1.0.27)
 include(GNUInstallDirs)
+
+set(CXX_STANDARD 17)
 
 if (POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
@@ -125,6 +127,7 @@ if (COMPILER_IS_MSVC)
   # disable warnings C4267 and C4244: conversion/truncation from larger to smaller type.
   # disable warning C4800: implicit conversion from larger int to bool
   add_definitions(-W3 -wd4018 -wd4056 -wd4756 -wd4267 -wd4244 -wd4800 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+  add_definitions(/std:c++${CXX_STANDARD})
 
   if (NOT WITH_EXCEPTIONS)
     # disable exception use in C++ library
@@ -143,7 +146,7 @@ else ()
   )
 
   set(CMAKE_CXX_EXTENSIONS OFF)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wold-style-cast")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CXX_STANDARD} -Wold-style-cast")
 
   if (NOT WITH_EXCEPTIONS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
@@ -290,8 +293,6 @@ set(WABT_LIBRARY_SRC
   src/filenames.cc
   src/generate-names.h
   src/generate-names.cc
-  src/hash-util.h
-  src/hash-util.cc
   src/ir.h
   src/ir.cc
   src/ir-util.h
@@ -316,8 +317,7 @@ set(WABT_LIBRARY_SRC
   src/shared-validator.cc
   src/stream.h
   src/stream.cc
-  src/string-view.h
-  src/string-view.cc
+  src/string-util.h
   src/token.h
   src/token.cc
   src/tracing.h
@@ -353,7 +353,7 @@ add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 
 add_library(wasm-rt-impl STATIC SHARED wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-os-unix.c wasm2c/wasm-rt-os-win.c wasm2c/wasm-rt-wasi.c)
 install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES wasm2c/wasm-rt.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if (BUILD_FUZZ_TOOLS)
   set(FUZZ_FLAGS "-fsanitize=fuzzer,address")
@@ -413,7 +413,7 @@ function(wabt_executable)
   add_executable(${EXE_NAME} ${EXE_SOURCES})
   add_dependencies(everything ${EXE_NAME})
   target_link_libraries(${EXE_NAME} ${EXE_LIBS})
-  set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD 11)
+  set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD ${CXX_STANDARD})
   set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
   if (EMSCRIPTEN)
@@ -610,7 +610,6 @@ if (BUILD_TESTS)
     src/test-intrusive-list.cc
     src/test-literal.cc
     src/test-option-parser.cc
-    src/test-string-view.cc
     src/test-filenames.cc
     src/test-utf8.cc
     src/test-wast-parser.cc

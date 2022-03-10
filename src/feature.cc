@@ -48,8 +48,8 @@ void Features::UpdateDependencies() {
   }
 
   // Reference types requires bulk memory.
-  if (reference_types_enabled_) {
-    bulk_memory_enabled_ = true;
+  if (!bulk_memory_enabled_) {
+    reference_types_enabled_ = false;
   }
 }
 

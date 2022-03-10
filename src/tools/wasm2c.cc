@@ -20,10 +20,11 @@
 #include <cstdlib>
 
 #include "src/apply-names.h"
-#include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
+#include "src/binary-reader.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
+#include "src/filenames.h"
 #include "src/generate-names.h"
 #include "src/ir.h"
 #include "src/option-parser.h"
@@ -44,7 +45,7 @@ static bool s_read_debug_names = true;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  Read a file in the WebAssembly binary format, and convert it to
+    R"(  Read a file in the WebAssembly binary format, and convert it to
   a C source file and header.
 
 examples:
@@ -71,7 +72,9 @@ static void ParseOptions(int argc, char** argv) {
       });
   parser.AddOption(
       'n', "modname", "MODNAME",
-      "Unique name for the module being generated. Each wasm sandboxed module in a single application should have a unique name.",
+      "Unique name for the module being generated. Each wasm sandboxed module in a single application should have a unique name."
+      "By default the module name is empty and need not be set if an application is only using one Wasm module or is using Wasm modules in shared libraries."
+      "However, if an application wants to statically link more than one Wasm module, it should assign each module a unique name.",
       [](const char* argument) {
         s_write_c_options.mod_name = argument;
       });
@@ -94,15 +97,17 @@ static void ParseOptions(int argc, char** argv) {
 #undef WABT_FEATURE
 
   if (any_non_default_feature) {
-    fprintf(stderr, "wasm2c currently support only default feature flags.\n");
+    fprintf(stderr,
+            "wasm2c currently only supports a fixed set of features.\n");
     exit(1);
   }
+  s_features.disable_bulk_memory();
 }
 
 // TODO(binji): copied from binary-writer-spec.cc, probably should share.
-static string_view strip_extension(string_view s) {
-  string_view ext = s.substr(s.find_last_of('.'));
-  string_view result = s;
+static std::string_view strip_extension(std::string_view s) {
+  std::string_view ext = s.substr(s.find_last_of('.'));
+  std::string_view result = s;
 
   if (ext == ".c")
     result.remove_suffix(ext.length());
@@ -143,12 +148,14 @@ int ProgramMain(int argc, char** argv) {
 
       if (Succeeded(result)) {
         if (!s_outfile.empty()) {
-          std::string header_name =
-              strip_extension(s_outfile).to_string() + ".h";
+          std::string header_name_full =
+              std::string(strip_extension(s_outfile)) + ".h";
           FileStream c_stream(s_outfile.c_str());
-          FileStream h_stream(header_name);
-          result = WriteC(&c_stream, &h_stream, header_name.c_str(), &module,
-                          s_write_c_options);
+          FileStream h_stream(header_name_full);
+          std::string_view header_name = GetBasename(header_name_full);
+          result =
+              WriteC(&c_stream, &h_stream, std::string(header_name).c_str(),
+                     &module, s_write_c_options);
         } else {
           FileStream stream(stdout);
           result =
@@ -166,4 +173,3 @@ int main(int argc, char** argv) {
   return ProgramMain(argc, argv);
   WABT_CATCH_BAD_ALLOC_AND_EXIT
 }
-

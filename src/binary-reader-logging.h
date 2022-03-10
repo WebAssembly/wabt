@@ -39,7 +39,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginCustomSection(Index section_index,
                             Offset size,
-                            string_view section_name) override;
+                            std::string_view section_name) override;
   Result EndCustomSection() override;
 
   Result BeginTypeSection(Offset size) override;
@@ -57,33 +57,33 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnImportCount(Index count) override;
   Result OnImport(Index index,
                   ExternalKind kind,
-                  string_view module_name,
-                  string_view field_name) override;
+                  std::string_view module_name,
+                  std::string_view field_name) override;
   Result OnImportFunc(Index import_index,
-                      string_view module_name,
-                      string_view field_name,
+                      std::string_view module_name,
+                      std::string_view field_name,
                       Index func_index,
                       Index sig_index) override;
   Result OnImportTable(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
+                       std::string_view module_name,
+                       std::string_view field_name,
                        Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override;
   Result OnImportMemory(Index import_index,
-                        string_view module_name,
-                        string_view field_name,
+                        std::string_view module_name,
+                        std::string_view field_name,
                         Index memory_index,
                         const Limits* page_limits) override;
   Result OnImportGlobal(Index import_index,
-                        string_view module_name,
-                        string_view field_name,
+                        std::string_view module_name,
+                        std::string_view field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override;
   Result OnImportTag(Index import_index,
-                     string_view module_name,
-                     string_view field_name,
+                     std::string_view module_name,
+                     std::string_view field_name,
                      Index tag_index,
                      Index sig_index) override;
   Result EndImportSection() override;
@@ -118,7 +118,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  string_view name) override;
+                  std::string_view name) override;
   Result EndExportSection() override;
 
   Result BeginStartSection(Offset size) override;
@@ -176,7 +176,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnDropExpr() override;
   Result OnElseExpr() override;
   Result OnEndExpr() override;
-  Result OnEndFunc() override;
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
   Result OnV128ConstExpr(v128 value_bits) override;
@@ -186,18 +185,19 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
   Result OnLoadExpr(Opcode opcode,
+                    Index memidx,
                     Address alignment_log2,
                     Address offset) override;
   Result OnLocalGetExpr(Index local_index) override;
   Result OnLocalSetExpr(Index local_index) override;
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
-  Result OnMemoryCopyExpr() override;
+  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override;
   Result OnDataDropExpr(Index segment_index) override;
-  Result OnMemoryFillExpr() override;
-  Result OnMemoryGrowExpr() override;
-  Result OnMemoryInitExpr(Index segment_index) override;
-  Result OnMemorySizeExpr() override;
+  Result OnMemoryFillExpr(Index memidx) override;
+  Result OnMemoryGrowExpr(Index memidx) override;
+  Result OnMemoryInitExpr(Index segment_index, Index memidx) override;
+  Result OnMemorySizeExpr(Index memidx) override;
   Result OnTableCopyExpr(Index dst_index, Index src_index) override;
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
@@ -216,6 +216,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnReturnExpr() override;
   Result OnSelectExpr(Index result_count, Type* result_types) override;
   Result OnStoreExpr(Opcode opcode,
+                     Index memidx,
                      Address alignment_log2,
                      Address offset) override;
   Result OnThrowExpr(Index tag_index) override;
@@ -234,10 +235,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndCodeSection() override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdLoadLaneExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset,
                             uint64_t value) override;
   Result OnSimdStoreLaneExpr(Opcode opcode,
+                             Index memidx,
                              Address alignment_log2,
                              Address offset,
                              uint64_t value) override;
@@ -285,13 +288,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnModuleNameSubsection(Index index,
                                 uint32_t name_type,
                                 Offset subsection_size) override;
-  Result OnModuleName(string_view name) override;
+  Result OnModuleName(std::string_view name) override;
   Result OnFunctionNameSubsection(Index index,
                                   uint32_t name_type,
                                   Offset subsection_size) override;
   Result OnFunctionNamesCount(Index num_functions) override;
   Result OnFunctionName(Index function_index,
-                        string_view function_name) override;
+                        std::string_view function_name) override;
   Result OnLocalNameSubsection(Index index,
                                uint32_t name_type,
                                Offset subsection_size) override;
@@ -299,13 +302,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnLocalNameLocalCount(Index function_index, Index num_locals) override;
   Result OnLocalName(Index function_index,
                      Index local_index,
-                     string_view local_name) override;
+                     std::string_view local_name) override;
   Result OnNameSubsection(Index index,
                           NameSectionSubsection subsection_type,
                           Offset subsection_size) override;
   Result OnNameEntry(NameSectionSubsection type,
                      Index index,
-                     string_view name) override;
+                     std::string_view name) override;
   Result OnNameCount(Index num_names) override;
   Result EndNamesSection() override;
 
@@ -323,45 +326,58 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                       uint32_t table_size,
                       uint32_t table_align) override;
   Result OnDylinkNeededCount(Index count) override;
-  Result OnDylinkNeeded(string_view needed) override;
+  Result OnDylinkNeeded(std::string_view needed) override;
+  Result OnDylinkImportCount(Index count) override;
+  Result OnDylinkExportCount(Index count) override;
+  Result OnDylinkImport(std::string_view module,
+                        std::string_view name,
+                        uint32_t flags) override;
+  Result OnDylinkExport(std::string_view name, uint32_t flags) override;
   Result EndDylinkSection() override;
+
+  Result BeginTargetFeaturesSection(Offset size) override;
+  Result OnFeatureCount(Index count) override;
+  Result OnFeature(uint8_t prefix, std::string_view name) override;
+  Result EndTargetFeaturesSection() override;
 
   Result BeginLinkingSection(Offset size) override;
   Result OnSymbolCount(Index count) override;
   Result OnDataSymbol(Index index,
                       uint32_t flags,
-                      string_view name,
+                      std::string_view name,
                       Index segment,
                       uint32_t offset,
                       uint32_t size) override;
   Result OnFunctionSymbol(Index index,
                           uint32_t flags,
-                          string_view name,
+                          std::string_view name,
                           Index func_index) override;
   Result OnGlobalSymbol(Index index,
                         uint32_t flags,
-                        string_view name,
+                        std::string_view name,
                         Index global_index) override;
   Result OnSectionSymbol(Index index,
                          uint32_t flags,
                          Index section_index) override;
   Result OnTagSymbol(Index index,
                      uint32_t flags,
-                     string_view name,
+                     std::string_view name,
                      Index tag_index) override;
   Result OnTableSymbol(Index index,
                        uint32_t flags,
-                       string_view name,
+                       std::string_view name,
                        Index tag_index) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
-                       string_view name,
+                       std::string_view name,
                        Address alignment,
                        uint32_t flags) override;
   Result OnInitFunctionCount(Index count) override;
   Result OnInitFunction(uint32_t priority, Index function_index) override;
   Result OnComdatCount(Index count) override;
-  Result OnComdatBegin(string_view name, uint32_t flags, Index count) override;
+  Result OnComdatBegin(std::string_view name,
+                       uint32_t flags,
+                       Index count) override;
   Result OnComdatEntry(ComdatType kind, Index index) override;
   Result EndLinkingSection() override;
 
@@ -369,15 +385,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTagCount(Index count) override;
   Result OnTagType(Index index, Index sig_index) override;
   Result EndTagSection() override;
-
-  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
-  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
-  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
-  Result OnInitExprRefNull(Index index, Type type) override;
-  Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:
   void Indent();

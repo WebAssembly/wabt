@@ -2,7 +2,7 @@
 ;;; ARGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
 (module
   (import "spectest" "print" (func (param i32)))
-  (func (export "print_i32") (param i32) get_local 0 call 0)
+  (func (export "print_i32") (param i32) local.get 0 call 0)
 
   (global (export "global") i32 (i32.const 14)))
 

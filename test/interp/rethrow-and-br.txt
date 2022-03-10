@@ -1,0 +1,126 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-exceptions --enable-tail-call
+(module
+  (tag $e1)
+  (tag $e2)
+  (type $helper-type (func (result i32)))
+  (table funcref (elem $helper))
+  (func (export "rethrow-br") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (catch $e1
+            (try $l
+              (do (throw $e2))
+              (catch $e2
+                ;; exception stack has two entries
+                ;; br should reset to height of one
+                (br $l)))
+            ;; exception stack has one entry
+            (rethrow 0)))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "rethrow-br-if") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (catch $e1
+            (try $l
+              (do (throw $e2))
+              (catch $e2
+                (i32.const 1)
+                (br_if $l)))
+            (rethrow 0)))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "rethrow-br-table") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (catch $e1
+            (try $l
+              (do (throw $e2))
+              (catch $e2
+                (i32.const 1)
+                (br_table 1 $l 1)))
+            (rethrow 0)))
+        (i32.const 0))
+      (catch $e1
+        (i32.const 1))))
+  (func $helper (result i32)
+    (try (result i32)
+      (do (throw $e1))
+      (catch $e1
+        (i32.const 1))))
+  (func (export "rethrow-return-call") (result i32)
+    (try (result i32)
+      (do (throw $e1))
+      (catch $e1
+        (try $l
+          (do (throw $e2))
+          (catch $e2
+            (return_call $helper)))
+        (i32.const 0))))
+  (func (export "rethrow-return-call-indirect") (result i32)
+    (try (result i32)
+      (do (throw $e1))
+      (catch $e1
+        (try $l
+          (do (throw $e2))
+          (catch $e2
+            (i32.const 0)
+            (return_call_indirect (type $helper-type))))
+        (i32.const 0))))
+  (func $helper-2
+    (try
+      (do (throw $e2))
+      (catch $e2
+        return)))
+  (func (export "rethrow-return") (result i32)
+    (try (result i32)
+      (do
+        (try (result i32)
+          (do (throw $e1))
+          (catch $e1
+            (call $helper-2)
+            (rethrow 0))))
+      (catch $e1
+        (i32.const 1))
+      (catch $e2
+        (i32.const 0))))
+  ;; test rethrow stack interaction with throw, as if it were a br
+  (func (export "rethrow-throw") (result i32)
+    (try (result i32)
+      (do
+        (try
+          (do (throw $e1))
+          (catch $e1
+            (try
+              (do
+                (try
+                  (do (throw $e2))
+                  (catch $e2
+                    ;; exception stack has $e1, $e2
+                    ;; should get unwound on throw to $e1
+                    (throw $e2))))
+              (catch $e2
+                ;; should reference $e1
+                (rethrow 1)))))
+        (i32.const 0))
+      (catch $e1 (i32.const 1))
+      (catch_all (i32.const 0))))
+  )
+(;; STDOUT ;;;
+rethrow-br() => i32:1
+rethrow-br-if() => i32:1
+rethrow-br-table() => i32:1
+rethrow-return-call() => i32:1
+rethrow-return-call-indirect() => i32:1
+rethrow-return() => i32:1
+rethrow-throw() => i32:1
+;;; STDOUT ;;)

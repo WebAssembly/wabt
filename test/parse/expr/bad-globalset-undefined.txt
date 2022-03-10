@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (func 
+          i32.const 1
+          global.set 0))
+(;; STDERR ;;;
+out/test/parse/expr/bad-globalset-undefined.txt:5:22: error: global variable out of range: 0 (max 0)
+          global.set 0))
+                     ^
+;;; STDERR ;;)

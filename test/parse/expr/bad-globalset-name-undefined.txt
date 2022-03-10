@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (func
+          i32.const 1 
+          global.set $f))
+(;; STDERR ;;;
+out/test/parse/expr/bad-globalset-name-undefined.txt:5:22: error: undefined global variable "$f"
+          global.set $f))
+                     ^^
+;;; STDERR ;;)

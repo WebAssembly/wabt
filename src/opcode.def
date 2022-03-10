@@ -231,6 +231,8 @@ WABT_OPCODE(___,  I32,  ___,  ___,  0,  0,    0xe1, InterpBrUnless, "br_unless",
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe2, InterpCallImport, "call_import", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe3, InterpData, "data", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe4, InterpDropKeep, "drop_keep", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe5, InterpCatchDrop, "catch_drop", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe6, InterpAdjustFrameForReturnCall, "adjust_frame_for_return_call", "")
 
 /* Saturating float-to-int opcodes (--enable-saturating-float-to-int) */
 WABT_OPCODE(I32,  F32,  ___,  ___,  0,  0xfc, 0x00, I32TruncSatF32S, "i32.trunc_sat_f32_s", "")
@@ -242,7 +244,7 @@ WABT_OPCODE(I64,  F32,  ___,  ___,  0,  0xfc, 0x05, I64TruncSatF32U, "i64.trunc_
 WABT_OPCODE(I64,  F64,  ___,  ___,  0,  0xfc, 0x06, I64TruncSatF64S, "i64.trunc_sat_f64_s", "")
 WABT_OPCODE(I64,  F64,  ___,  ___,  0,  0xfc, 0x07, I64TruncSatF64U, "i64.trunc_sat_f64_u", "")
 
-/* Bulk-memory (--enable-bulk-memory) */
+/* Bulk-memory */
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x08, MemoryInit, "memory.init", "")
 WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x09, DataDrop, "data.drop", "")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0a, MemoryCopy,"memory.copy", "")
@@ -251,7 +253,7 @@ WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0c, TableInit, "table.init", "")
 WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x0d, ElemDrop, "elem.drop", "")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0e, TableCopy, "table.copy", "")
 
-/* Reference types (--enable-reference-types) */
+/* Reference types */
 WABT_OPCODE(___,  I32,  ___,  ___,  0,  0,    0x25, TableGet, "table.get", "")
 WABT_OPCODE(___,  I32,  ___,  ___,  0,  0,    0x26, TableSet, "table.set", "")
 WABT_OPCODE(___,  ___,  I32,  ___,  0,  0xfc, 0x0f, TableGrow, "table.grow", "")

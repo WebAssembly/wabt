@@ -5,7 +5,7 @@
   (func
     call 0)
   (func (; not exported ;))
-  (table anyfunc (elem 0 1 0))
+  (table funcref (elem 0 1 0))
   (export "zero" (func 0))
   (export "one" (func 1)))
 (;; STDOUT ;;;

@@ -1,0 +1,1763 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_const.wast
+(;; STDOUT ;;;
+out/test/spec/simd_const.wast:130: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.113.wat:1:25: error: invalid literal "0x100"
+  (func (v128.const i8x16 0x100 0x100 0x100 0x100 0x100 0x100 0x100 0x100 0x100...
+                          ^^^^^
+out/test/spec/simd_const.wast:134: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.114.wat:1:25: error: invalid literal "-0x81"
+  (func (v128.const i8x16 -0x81 -0x81 -0x81 -0x81 -0x81 -0x81 -0x81 -0x81 -0x81...
+                          ^^^^^
+out/test/spec/simd_const.wast:138: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.115.wat:1:25: error: invalid literal "256"
+  (func (v128.const i8x16 256 256 256 256 256 256 256 256 256 256 256 256 256 2...
+                          ^^^
+out/test/spec/simd_const.wast:142: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.116.wat:1:25: error: invalid literal "-129"
+  (func (v128.const i8x16 -129 -129 -129 -129 -129 -129 -129 -129 -129 -129 -12...
+                          ^^^^
+out/test/spec/simd_const.wast:146: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.117.wat:1:25: error: invalid literal "0x10000"
+  (func (v128.const i16x8 0x10000 0x10000 0x10000 0x10000 0x10000 0x10000 0x100...
+                          ^^^^^^^
+out/test/spec/simd_const.wast:150: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.118.wat:1:25: error: invalid literal "-0x8001"
+  (func (v128.const i16x8 -0x8001 -0x8001 -0x8001 -0x8001 -0x8001 -0x8001 -0x80...
+                          ^^^^^^^
+out/test/spec/simd_const.wast:154: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.119.wat:1:25: error: invalid literal "65536"
+  (func (v128.const i16x8 65536 65536 65536 65536 65536 65536 65536 65536) drop)
+                          ^^^^^
+out/test/spec/simd_const.wast:158: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.120.wat:1:25: error: invalid literal "-32769"
+  (func (v128.const i16x8 -32769 -32769 -32769 -32769 -32769 -32769 -32769 -327...
+                          ^^^^^^
+out/test/spec/simd_const.wast:162: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.121.wat:1:26: error: invalid literal "0x100000000"
+  (func (v128.const i32x4  0x100000000  0x100000000  0x100000000  0x100000000) ...
+                           ^^^^^^^^^^^
+out/test/spec/simd_const.wast:166: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.122.wat:1:25: error: invalid literal "-0x80000001"
+  (func (v128.const i32x4 -0x80000001 -0x80000001 -0x80000001 -0x80000001) drop)
+                          ^^^^^^^^^^^
+out/test/spec/simd_const.wast:170: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.123.wat:1:26: error: invalid literal "4294967296"
+  (func (v128.const i32x4  4294967296  4294967296  4294967296  4294967296) drop)
+                           ^^^^^^^^^^
+out/test/spec/simd_const.wast:174: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.124.wat:1:25: error: invalid literal "-2147483649"
+  (func (v128.const i32x4 -2147483649 -2147483649 -2147483649 -2147483649) drop)
+                          ^^^^^^^^^^^
+out/test/spec/simd_const.wast:178: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.125.wat:1:26: error: invalid literal "0x1p128"
+  (func (v128.const f32x4  0x1p128  0x1p128  0x1p128  0x1p128) drop)
+                           ^^^^^^^
+out/test/spec/simd_const.wast:182: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.126.wat:1:25: error: invalid literal "-0x1p128"
+  (func (v128.const f32x4 -0x1p128 -0x1p128 -0x1p128 -0x1p128) drop)
+                          ^^^^^^^^
+out/test/spec/simd_const.wast:186: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.127.wat:1:26: error: invalid literal "1e39"
+  (func (v128.const f32x4  1e39  1e39  1e39  1e39) drop)
+                           ^^^^
+out/test/spec/simd_const.wast:190: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.128.wat:1:25: error: invalid literal "-1e39"
+  (func (v128.const f32x4 -1e39 -1e39 -1e39 -1e39) drop)
+                          ^^^^^
+out/test/spec/simd_const.wast:194: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.129.wat:1:26: error: invalid literal "340282356779733661637539395458142568448"
+  ...v128.const f32x4  340282356779733661637539395458142568448 3402823567797336...
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:199: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.130.wat:1:25: error: invalid literal "-340282356779733661637539395458142568448"
+  ...v128.const f32x4 -340282356779733661637539395458142568448 -340282356779733...
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:205: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.131.wat:1:25: error: invalid literal "nan:0x80_0000"
+  (func (v128.const f32x4 nan:0x80_0000 nan:0x80_0000 nan:0x80_0000 nan:0x80_00...
+                          ^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:210: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.132.wat:1:26: error: invalid literal "269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
+  (func (v128.const f64x2  2696539702293473562217911355975565351971058512887674...
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:215: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.133.wat:1:25: error: invalid literal "-269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
+  (func (v128.const f64x2 -2696539702293473562217911355975565351971058512887674...
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:221: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.134.wat:1:25: error: invalid literal "nan:0x10_0000_0000_0000"
+  (func (v128.const f64x2 nan:0x10_0000_0000_0000 nan:0x10_0000_0000_0000) drop)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:227: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.135.wat:1:18: error: Unexpected type at start of simd constant. Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. Found ")".
+  (func (v128.const) drop)
+                   ^
+out/test/spec/simd_const.wast:232: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.136.wat:1:19: error: Unexpected type at start of simd constant. Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. Found "NAT".
+  (func (v128.const 0 0 0 0) drop)
+                    ^
+out/test/spec/simd_const.wast:236: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.137.wat:1:24: error: unexpected token ")", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i8x16) drop)
+                         ^
+out/test/spec/simd_const.wast:240: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.138.wat:1:25: error: unexpected token "0x", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:28: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:31: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:34: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                   ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:37: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                      ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:40: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                         ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:43: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                            ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:46: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                               ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:49: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                  ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:52: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                     ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:55: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                        ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:58: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                           ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:61: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                              ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:64: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                                 ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:67: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                                    ^^
+  out/test/spec/simd_const/simd_const.138.wat:1:70: error: unexpected token 0x.
+  (func (v128.const i8x16 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                                                       ^^
+out/test/spec/simd_const.wast:244: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.139.wat:1:25: error: unexpected token "1x", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:28: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:31: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:34: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                   ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:37: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                      ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:40: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                         ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:43: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                            ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:46: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                               ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:49: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                  ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:52: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                     ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:55: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                        ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:58: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                           ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:61: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                              ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:64: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                                 ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:67: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                                    ^^
+  out/test/spec/simd_const/simd_const.139.wat:1:70: error: unexpected token 1x.
+  (func (v128.const i8x16 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                                                       ^^
+out/test/spec/simd_const.wast:248: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.140.wat:1:25: error: unexpected token "0xg", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0...
+                          ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:29: error: unexpected token 0xg.
+  (func (v128.const i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0...
+                              ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:33: error: unexpected token 0xg.
+  (func (v128.const i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0...
+                                  ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:37: error: unexpected token 0xg.
+  (func (v128.const i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0...
+                                      ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:41: error: unexpected token 0xg.
+  ...c (v128.const i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0x...
+                                         ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:45: error: unexpected token 0xg.
+  ...128.const i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0x...
+                                         ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:49: error: unexpected token 0xg.
+  ...const i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0x...
+                                         ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:53: error: unexpected token 0xg.
+  ...t i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) d...
+                                         ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:57: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                            ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:61: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:65: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                    ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:69: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                        ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:73: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                            ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:77: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                                ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:81: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                                    ^^^
+  out/test/spec/simd_const/simd_const.140.wat:1:85: error: unexpected token 0xg.
+  ... i8x16 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                                        ^^^
+out/test/spec/simd_const.wast:253: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.141.wat:1:24: error: unexpected token ")", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i16x8) drop)
+                         ^
+out/test/spec/simd_const.wast:257: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.142.wat:1:25: error: unexpected token "0x", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.142.wat:1:28: error: unexpected token 0x.
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.142.wat:1:31: error: unexpected token 0x.
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.142.wat:1:34: error: unexpected token 0x.
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                   ^^
+  out/test/spec/simd_const/simd_const.142.wat:1:37: error: unexpected token 0x.
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                      ^^
+  out/test/spec/simd_const/simd_const.142.wat:1:40: error: unexpected token 0x.
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                         ^^
+  out/test/spec/simd_const/simd_const.142.wat:1:43: error: unexpected token 0x.
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                            ^^
+  out/test/spec/simd_const/simd_const.142.wat:1:46: error: unexpected token 0x.
+  (func (v128.const i16x8 0x 0x 0x 0x 0x 0x 0x 0x) drop)
+                                               ^^
+out/test/spec/simd_const.wast:261: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.143.wat:1:25: error: unexpected token "1x", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.143.wat:1:28: error: unexpected token 1x.
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.143.wat:1:31: error: unexpected token 1x.
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.143.wat:1:34: error: unexpected token 1x.
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                   ^^
+  out/test/spec/simd_const/simd_const.143.wat:1:37: error: unexpected token 1x.
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                      ^^
+  out/test/spec/simd_const/simd_const.143.wat:1:40: error: unexpected token 1x.
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                         ^^
+  out/test/spec/simd_const/simd_const.143.wat:1:43: error: unexpected token 1x.
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                            ^^
+  out/test/spec/simd_const/simd_const.143.wat:1:46: error: unexpected token 1x.
+  (func (v128.const i16x8 1x 1x 1x 1x 1x 1x 1x 1x) drop)
+                                               ^^
+out/test/spec/simd_const.wast:265: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.144.wat:1:25: error: unexpected token "0xg", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.144.wat:1:29: error: unexpected token 0xg.
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                              ^^^
+  out/test/spec/simd_const/simd_const.144.wat:1:33: error: unexpected token 0xg.
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                  ^^^
+  out/test/spec/simd_const/simd_const.144.wat:1:37: error: unexpected token 0xg.
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                      ^^^
+  out/test/spec/simd_const/simd_const.144.wat:1:41: error: unexpected token 0xg.
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                          ^^^
+  out/test/spec/simd_const/simd_const.144.wat:1:45: error: unexpected token 0xg.
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                              ^^^
+  out/test/spec/simd_const/simd_const.144.wat:1:49: error: unexpected token 0xg.
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                  ^^^
+  out/test/spec/simd_const/simd_const.144.wat:1:53: error: unexpected token 0xg.
+  (func (v128.const i16x8 0xg 0xg 0xg 0xg 0xg 0xg 0xg 0xg) drop)
+                                                      ^^^
+out/test/spec/simd_const.wast:270: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.145.wat:1:24: error: unexpected token ")", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i32x4) drop)
+                         ^
+out/test/spec/simd_const.wast:274: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.146.wat:1:25: error: unexpected token "0x", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i32x4 0x 0x 0x 0x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.146.wat:1:28: error: unexpected token 0x.
+  (func (v128.const i32x4 0x 0x 0x 0x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.146.wat:1:31: error: unexpected token 0x.
+  (func (v128.const i32x4 0x 0x 0x 0x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.146.wat:1:34: error: unexpected token 0x.
+  (func (v128.const i32x4 0x 0x 0x 0x) drop)
+                                   ^^
+out/test/spec/simd_const.wast:278: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.147.wat:1:25: error: unexpected token "1x", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i32x4 1x 1x 1x 1x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.147.wat:1:28: error: unexpected token 1x.
+  (func (v128.const i32x4 1x 1x 1x 1x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.147.wat:1:31: error: unexpected token 1x.
+  (func (v128.const i32x4 1x 1x 1x 1x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.147.wat:1:34: error: unexpected token 1x.
+  (func (v128.const i32x4 1x 1x 1x 1x) drop)
+                                   ^^
+out/test/spec/simd_const.wast:282: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.148.wat:1:25: error: unexpected token "0xg", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i32x4 0xg 0xg 0xg 0xg) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.148.wat:1:29: error: unexpected token 0xg.
+  (func (v128.const i32x4 0xg 0xg 0xg 0xg) drop)
+                              ^^^
+  out/test/spec/simd_const/simd_const.148.wat:1:33: error: unexpected token 0xg.
+  (func (v128.const i32x4 0xg 0xg 0xg 0xg) drop)
+                                  ^^^
+  out/test/spec/simd_const/simd_const.148.wat:1:37: error: unexpected token 0xg.
+  (func (v128.const i32x4 0xg 0xg 0xg 0xg) drop)
+                                      ^^^
+out/test/spec/simd_const.wast:287: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.149.wat:1:24: error: unexpected token ")", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i64x2) drop)
+                         ^
+out/test/spec/simd_const.wast:291: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.150.wat:1:25: error: unexpected token "0x", expected a Nat or Integer literal (e.g. 123).
+  (func (v128.const i64x2 0x 0x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.150.wat:1:28: error: unexpected token 0x.
+  (func (v128.const i64x2 0x 0x) drop)
+                             ^^
+out/test/spec/simd_const.wast:295: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.151.wat:1:25: error: unexpected token "1x", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 1x 1x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.151.wat:1:28: error: unexpected token 1x.
+  (func (v128.const f64x2 1x 1x) drop)
+                             ^^
+out/test/spec/simd_const.wast:299: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.152.wat:1:25: error: unexpected token "0xg", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0xg 0xg) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.152.wat:1:29: error: unexpected token 0xg.
+  (func (v128.const f64x2 0xg 0xg) drop)
+                              ^^^
+out/test/spec/simd_const.wast:304: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.153.wat:1:24: error: unexpected token ")", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4) drop)
+                         ^
+out/test/spec/simd_const.wast:308: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.154.wat:1:25: error: unexpected token ".0", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 .0 .0 .0 .0) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.154.wat:1:28: error: unexpected token .0.
+  (func (v128.const f32x4 .0 .0 .0 .0) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.154.wat:1:31: error: unexpected token .0.
+  (func (v128.const f32x4 .0 .0 .0 .0) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.154.wat:1:34: error: unexpected token .0.
+  (func (v128.const f32x4 .0 .0 .0 .0) drop)
+                                   ^^
+out/test/spec/simd_const.wast:312: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.155.wat:1:25: error: unexpected token ".0e0", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 .0e0 .0e0 .0e0 .0e0) drop)
+                          ^^^^
+  out/test/spec/simd_const/simd_const.155.wat:1:30: error: unexpected token .0e0.
+  (func (v128.const f32x4 .0e0 .0e0 .0e0 .0e0) drop)
+                               ^^^^
+  out/test/spec/simd_const/simd_const.155.wat:1:35: error: unexpected token .0e0.
+  (func (v128.const f32x4 .0e0 .0e0 .0e0 .0e0) drop)
+                                    ^^^^
+  out/test/spec/simd_const/simd_const.155.wat:1:40: error: unexpected token .0e0.
+  (func (v128.const f32x4 .0e0 .0e0 .0e0 .0e0) drop)
+                                         ^^^^
+out/test/spec/simd_const.wast:316: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.156.wat:1:25: error: unexpected token "0e", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0e 0e 0e 0e) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.156.wat:1:28: error: unexpected token 0e.
+  (func (v128.const f32x4 0e 0e 0e 0e) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.156.wat:1:31: error: unexpected token 0e.
+  (func (v128.const f32x4 0e 0e 0e 0e) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.156.wat:1:34: error: unexpected token 0e.
+  (func (v128.const f32x4 0e 0e 0e 0e) drop)
+                                   ^^
+out/test/spec/simd_const.wast:320: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.157.wat:1:25: error: unexpected token "0e+", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0e+ 0e+ 0e+ 0e+) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.157.wat:1:29: error: unexpected token 0e+.
+  (func (v128.const f32x4 0e+ 0e+ 0e+ 0e+) drop)
+                              ^^^
+  out/test/spec/simd_const/simd_const.157.wat:1:33: error: unexpected token 0e+.
+  (func (v128.const f32x4 0e+ 0e+ 0e+ 0e+) drop)
+                                  ^^^
+  out/test/spec/simd_const/simd_const.157.wat:1:37: error: unexpected token 0e+.
+  (func (v128.const f32x4 0e+ 0e+ 0e+ 0e+) drop)
+                                      ^^^
+out/test/spec/simd_const.wast:324: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.158.wat:1:25: error: unexpected token "0.0e", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0.0e 0.0e 0.0e 0.0e) drop)
+                          ^^^^
+  out/test/spec/simd_const/simd_const.158.wat:1:30: error: unexpected token 0.0e.
+  (func (v128.const f32x4 0.0e 0.0e 0.0e 0.0e) drop)
+                               ^^^^
+  out/test/spec/simd_const/simd_const.158.wat:1:35: error: unexpected token 0.0e.
+  (func (v128.const f32x4 0.0e 0.0e 0.0e 0.0e) drop)
+                                    ^^^^
+  out/test/spec/simd_const/simd_const.158.wat:1:40: error: unexpected token 0.0e.
+  (func (v128.const f32x4 0.0e 0.0e 0.0e 0.0e) drop)
+                                         ^^^^
+out/test/spec/simd_const.wast:328: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.159.wat:1:25: error: unexpected token "0.0e-", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0.0e- 0.0e- 0.0e- 0.0e-) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.159.wat:1:31: error: unexpected token 0.0e-.
+  (func (v128.const f32x4 0.0e- 0.0e- 0.0e- 0.0e-) drop)
+                                ^^^^^
+  out/test/spec/simd_const/simd_const.159.wat:1:37: error: unexpected token 0.0e-.
+  (func (v128.const f32x4 0.0e- 0.0e- 0.0e- 0.0e-) drop)
+                                      ^^^^^
+  out/test/spec/simd_const/simd_const.159.wat:1:43: error: unexpected token 0.0e-.
+  (func (v128.const f32x4 0.0e- 0.0e- 0.0e- 0.0e-) drop)
+                                            ^^^^^
+out/test/spec/simd_const.wast:332: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.160.wat:1:25: error: unexpected token "0x", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x 0x 0x 0x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.160.wat:1:28: error: unexpected token 0x.
+  (func (v128.const f32x4 0x 0x 0x 0x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.160.wat:1:31: error: unexpected token 0x.
+  (func (v128.const f32x4 0x 0x 0x 0x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.160.wat:1:34: error: unexpected token 0x.
+  (func (v128.const f32x4 0x 0x 0x 0x) drop)
+                                   ^^
+out/test/spec/simd_const.wast:336: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.161.wat:1:25: error: unexpected token "1x", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 1x 1x 1x 1x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.161.wat:1:28: error: unexpected token 1x.
+  (func (v128.const f32x4 1x 1x 1x 1x) drop)
+                             ^^
+  out/test/spec/simd_const/simd_const.161.wat:1:31: error: unexpected token 1x.
+  (func (v128.const f32x4 1x 1x 1x 1x) drop)
+                                ^^
+  out/test/spec/simd_const/simd_const.161.wat:1:34: error: unexpected token 1x.
+  (func (v128.const f32x4 1x 1x 1x 1x) drop)
+                                   ^^
+out/test/spec/simd_const.wast:340: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.162.wat:1:25: error: unexpected token "0xg", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0xg 0xg 0xg 0xg) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.162.wat:1:29: error: unexpected token 0xg.
+  (func (v128.const f32x4 0xg 0xg 0xg 0xg) drop)
+                              ^^^
+  out/test/spec/simd_const/simd_const.162.wat:1:33: error: unexpected token 0xg.
+  (func (v128.const f32x4 0xg 0xg 0xg 0xg) drop)
+                                  ^^^
+  out/test/spec/simd_const/simd_const.162.wat:1:37: error: unexpected token 0xg.
+  (func (v128.const f32x4 0xg 0xg 0xg 0xg) drop)
+                                      ^^^
+out/test/spec/simd_const.wast:344: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.163.wat:1:25: error: unexpected token "0x.", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x. 0x. 0x. 0x.) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.163.wat:1:29: error: unexpected token 0x..
+  (func (v128.const f32x4 0x. 0x. 0x. 0x.) drop)
+                              ^^^
+  out/test/spec/simd_const/simd_const.163.wat:1:33: error: unexpected token 0x..
+  (func (v128.const f32x4 0x. 0x. 0x. 0x.) drop)
+                                  ^^^
+  out/test/spec/simd_const/simd_const.163.wat:1:37: error: unexpected token 0x..
+  (func (v128.const f32x4 0x. 0x. 0x. 0x.) drop)
+                                      ^^^
+out/test/spec/simd_const.wast:348: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.164.wat:1:25: error: unexpected token "0x0.g", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0.g 0x0.g 0x0.g 0x0.g) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.164.wat:1:31: error: unexpected token 0x0.g.
+  (func (v128.const f32x4 0x0.g 0x0.g 0x0.g 0x0.g) drop)
+                                ^^^^^
+  out/test/spec/simd_const/simd_const.164.wat:1:37: error: unexpected token 0x0.g.
+  (func (v128.const f32x4 0x0.g 0x0.g 0x0.g 0x0.g) drop)
+                                      ^^^^^
+  out/test/spec/simd_const/simd_const.164.wat:1:43: error: unexpected token 0x0.g.
+  (func (v128.const f32x4 0x0.g 0x0.g 0x0.g 0x0.g) drop)
+                                            ^^^^^
+out/test/spec/simd_const.wast:352: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.165.wat:1:25: error: unexpected token "0x0p", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0p 0x0p 0x0p 0x0p) drop)
+                          ^^^^
+  out/test/spec/simd_const/simd_const.165.wat:1:30: error: unexpected token 0x0p.
+  (func (v128.const f32x4 0x0p 0x0p 0x0p 0x0p) drop)
+                               ^^^^
+  out/test/spec/simd_const/simd_const.165.wat:1:35: error: unexpected token 0x0p.
+  (func (v128.const f32x4 0x0p 0x0p 0x0p 0x0p) drop)
+                                    ^^^^
+  out/test/spec/simd_const/simd_const.165.wat:1:40: error: unexpected token 0x0p.
+  (func (v128.const f32x4 0x0p 0x0p 0x0p 0x0p) drop)
+                                         ^^^^
+out/test/spec/simd_const.wast:356: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.166.wat:1:25: error: unexpected token "0x0p+", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0p+ 0x0p+ 0x0p+ 0x0p+) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.166.wat:1:31: error: unexpected token 0x0p+.
+  (func (v128.const f32x4 0x0p+ 0x0p+ 0x0p+ 0x0p+) drop)
+                                ^^^^^
+  out/test/spec/simd_const/simd_const.166.wat:1:37: error: unexpected token 0x0p+.
+  (func (v128.const f32x4 0x0p+ 0x0p+ 0x0p+ 0x0p+) drop)
+                                      ^^^^^
+  out/test/spec/simd_const/simd_const.166.wat:1:43: error: unexpected token 0x0p+.
+  (func (v128.const f32x4 0x0p+ 0x0p+ 0x0p+ 0x0p+) drop)
+                                            ^^^^^
+out/test/spec/simd_const.wast:360: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.167.wat:1:25: error: unexpected token "0x0p-", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0p- 0x0p- 0x0p- 0x0p-) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.167.wat:1:31: error: unexpected token 0x0p-.
+  (func (v128.const f32x4 0x0p- 0x0p- 0x0p- 0x0p-) drop)
+                                ^^^^^
+  out/test/spec/simd_const/simd_const.167.wat:1:37: error: unexpected token 0x0p-.
+  (func (v128.const f32x4 0x0p- 0x0p- 0x0p- 0x0p-) drop)
+                                      ^^^^^
+  out/test/spec/simd_const/simd_const.167.wat:1:43: error: unexpected token 0x0p-.
+  (func (v128.const f32x4 0x0p- 0x0p- 0x0p- 0x0p-) drop)
+                                            ^^^^^
+out/test/spec/simd_const.wast:364: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.168.wat:1:25: error: unexpected token "0x0.0p", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0.0p 0x0.0p 0x0.0p 0x0.0p) drop)
+                          ^^^^^^
+  out/test/spec/simd_const/simd_const.168.wat:1:32: error: unexpected token 0x0.0p.
+  (func (v128.const f32x4 0x0.0p 0x0.0p 0x0.0p 0x0.0p) drop)
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.168.wat:1:39: error: unexpected token 0x0.0p.
+  (func (v128.const f32x4 0x0.0p 0x0.0p 0x0.0p 0x0.0p) drop)
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.168.wat:1:46: error: unexpected token 0x0.0p.
+  (func (v128.const f32x4 0x0.0p 0x0.0p 0x0.0p 0x0.0p) drop)
+                                               ^^^^^^
+out/test/spec/simd_const.wast:368: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.169.wat:1:25: error: unexpected token "0x0.0p+", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0.0p+ 0x0.0p+ 0x0.0p+ 0x0.0p+) drop)
+                          ^^^^^^^
+  out/test/spec/simd_const/simd_const.169.wat:1:33: error: unexpected token 0x0.0p+.
+  (func (v128.const f32x4 0x0.0p+ 0x0.0p+ 0x0.0p+ 0x0.0p+) drop)
+                                  ^^^^^^^
+  out/test/spec/simd_const/simd_const.169.wat:1:41: error: unexpected token 0x0.0p+.
+  (func (v128.const f32x4 0x0.0p+ 0x0.0p+ 0x0.0p+ 0x0.0p+) drop)
+                                          ^^^^^^^
+  out/test/spec/simd_const/simd_const.169.wat:1:49: error: unexpected token 0x0.0p+.
+  (func (v128.const f32x4 0x0.0p+ 0x0.0p+ 0x0.0p+ 0x0.0p+) drop)
+                                                  ^^^^^^^
+out/test/spec/simd_const.wast:372: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.170.wat:1:25: error: unexpected token "0x0.0p-", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0.0p- 0x0.0p- 0x0.0p- 0x0.0p-) drop)
+                          ^^^^^^^
+  out/test/spec/simd_const/simd_const.170.wat:1:33: error: unexpected token 0x0.0p-.
+  (func (v128.const f32x4 0x0.0p- 0x0.0p- 0x0.0p- 0x0.0p-) drop)
+                                  ^^^^^^^
+  out/test/spec/simd_const/simd_const.170.wat:1:41: error: unexpected token 0x0.0p-.
+  (func (v128.const f32x4 0x0.0p- 0x0.0p- 0x0.0p- 0x0.0p-) drop)
+                                          ^^^^^^^
+  out/test/spec/simd_const/simd_const.170.wat:1:49: error: unexpected token 0x0.0p-.
+  (func (v128.const f32x4 0x0.0p- 0x0.0p- 0x0.0p- 0x0.0p-) drop)
+                                                  ^^^^^^^
+out/test/spec/simd_const.wast:376: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.171.wat:1:25: error: unexpected token "0x0pA", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 0x0pA 0x0pA 0x0pA 0x0pA) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.171.wat:1:31: error: unexpected token 0x0pA.
+  (func (v128.const f32x4 0x0pA 0x0pA 0x0pA 0x0pA) drop)
+                                ^^^^^
+  out/test/spec/simd_const/simd_const.171.wat:1:37: error: unexpected token 0x0pA.
+  (func (v128.const f32x4 0x0pA 0x0pA 0x0pA 0x0pA) drop)
+                                      ^^^^^
+  out/test/spec/simd_const/simd_const.171.wat:1:43: error: unexpected token 0x0pA.
+  (func (v128.const f32x4 0x0pA 0x0pA 0x0pA 0x0pA) drop)
+                                            ^^^^^
+out/test/spec/simd_const.wast:380: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.172.wat:1:25: error: unexpected token "nan:1", expected a Float literal (e.g. 42.0).
+  (func (v128.const f32x4 nan:1 nan:1 nan:1 nan:1) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.172.wat:1:31: error: unexpected token nan:1.
+  (func (v128.const f32x4 nan:1 nan:1 nan:1 nan:1) drop)
+                                ^^^^^
+  out/test/spec/simd_const/simd_const.172.wat:1:37: error: unexpected token nan:1.
+  (func (v128.const f32x4 nan:1 nan:1 nan:1 nan:1) drop)
+                                      ^^^^^
+  out/test/spec/simd_const/simd_const.172.wat:1:43: error: unexpected token nan:1.
+  (func (v128.const f32x4 nan:1 nan:1 nan:1 nan:1) drop)
+                                            ^^^^^
+out/test/spec/simd_const.wast:384: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.173.wat:1:25: error: invalid literal "nan:0x0"
+  (func (v128.const f32x4 nan:0x0 nan:0x0 nan:0x0 nan:0x0) drop)
+                          ^^^^^^^
+out/test/spec/simd_const.wast:389: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.174.wat:1:24: error: unexpected token ")", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2) drop)
+                         ^
+out/test/spec/simd_const.wast:393: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.175.wat:1:25: error: unexpected token ".0", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 .0 .0) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.175.wat:1:28: error: unexpected token .0.
+  (func (v128.const f64x2 .0 .0) drop)
+                             ^^
+out/test/spec/simd_const.wast:397: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.176.wat:1:25: error: unexpected token ".0e0", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 .0e0 .0e0) drop)
+                          ^^^^
+  out/test/spec/simd_const/simd_const.176.wat:1:30: error: unexpected token .0e0.
+  (func (v128.const f64x2 .0e0 .0e0) drop)
+                               ^^^^
+out/test/spec/simd_const.wast:401: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.177.wat:1:25: error: unexpected token "0e", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0e 0e) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.177.wat:1:28: error: unexpected token 0e.
+  (func (v128.const f64x2 0e 0e) drop)
+                             ^^
+out/test/spec/simd_const.wast:405: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.178.wat:1:25: error: unexpected token "0e+", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0e+ 0e+) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.178.wat:1:29: error: unexpected token 0e+.
+  (func (v128.const f64x2 0e+ 0e+) drop)
+                              ^^^
+out/test/spec/simd_const.wast:409: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.179.wat:1:25: error: unexpected token "0.0e+", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0.0e+ 0.0e+) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.179.wat:1:31: error: unexpected token 0.0e+.
+  (func (v128.const f64x2 0.0e+ 0.0e+) drop)
+                                ^^^^^
+out/test/spec/simd_const.wast:413: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.180.wat:1:25: error: unexpected token "0.0e-", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0.0e- 0.0e-) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.180.wat:1:31: error: unexpected token 0.0e-.
+  (func (v128.const f64x2 0.0e- 0.0e-) drop)
+                                ^^^^^
+out/test/spec/simd_const.wast:417: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.181.wat:1:25: error: unexpected token "0x", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x 0x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.181.wat:1:28: error: unexpected token 0x.
+  (func (v128.const f64x2 0x 0x) drop)
+                             ^^
+out/test/spec/simd_const.wast:421: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.182.wat:1:25: error: unexpected token "1x", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 1x 1x) drop)
+                          ^^
+  out/test/spec/simd_const/simd_const.182.wat:1:28: error: unexpected token 1x.
+  (func (v128.const f64x2 1x 1x) drop)
+                             ^^
+out/test/spec/simd_const.wast:425: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.183.wat:1:25: error: unexpected token "0xg", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0xg 0xg) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.183.wat:1:29: error: unexpected token 0xg.
+  (func (v128.const f64x2 0xg 0xg) drop)
+                              ^^^
+out/test/spec/simd_const.wast:429: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.184.wat:1:25: error: unexpected token "0x.", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x. 0x.) drop)
+                          ^^^
+  out/test/spec/simd_const/simd_const.184.wat:1:29: error: unexpected token 0x..
+  (func (v128.const f64x2 0x. 0x.) drop)
+                              ^^^
+out/test/spec/simd_const.wast:433: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.185.wat:1:25: error: unexpected token "0x0.g", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0.g 0x0.g) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.185.wat:1:31: error: unexpected token 0x0.g.
+  (func (v128.const f64x2 0x0.g 0x0.g) drop)
+                                ^^^^^
+out/test/spec/simd_const.wast:437: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.186.wat:1:25: error: unexpected token "0x0p", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0p 0x0p) drop)
+                          ^^^^
+  out/test/spec/simd_const/simd_const.186.wat:1:30: error: unexpected token 0x0p.
+  (func (v128.const f64x2 0x0p 0x0p) drop)
+                               ^^^^
+out/test/spec/simd_const.wast:441: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.187.wat:1:25: error: unexpected token "0x0p+", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0p+ 0x0p+) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.187.wat:1:31: error: unexpected token 0x0p+.
+  (func (v128.const f64x2 0x0p+ 0x0p+) drop)
+                                ^^^^^
+out/test/spec/simd_const.wast:445: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.188.wat:1:25: error: unexpected token "0x0p-", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0p- 0x0p-) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.188.wat:1:31: error: unexpected token 0x0p-.
+  (func (v128.const f64x2 0x0p- 0x0p-) drop)
+                                ^^^^^
+out/test/spec/simd_const.wast:449: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.189.wat:1:25: error: unexpected token "0x0.0p", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0.0p 0x0.0p) drop)
+                          ^^^^^^
+  out/test/spec/simd_const/simd_const.189.wat:1:32: error: unexpected token 0x0.0p.
+  (func (v128.const f64x2 0x0.0p 0x0.0p) drop)
+                                 ^^^^^^
+out/test/spec/simd_const.wast:453: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.190.wat:1:25: error: unexpected token "0x0.0p+", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0.0p+ 0x0.0p+) drop)
+                          ^^^^^^^
+  out/test/spec/simd_const/simd_const.190.wat:1:33: error: unexpected token 0x0.0p+.
+  (func (v128.const f64x2 0x0.0p+ 0x0.0p+) drop)
+                                  ^^^^^^^
+out/test/spec/simd_const.wast:457: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.191.wat:1:25: error: unexpected token "0x0.0p-", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0.0p- 0x0.0p-) drop)
+                          ^^^^^^^
+  out/test/spec/simd_const/simd_const.191.wat:1:33: error: unexpected token 0x0.0p-.
+  (func (v128.const f64x2 0x0.0p- 0x0.0p-) drop)
+                                  ^^^^^^^
+out/test/spec/simd_const.wast:461: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.192.wat:1:25: error: unexpected token "0x0pA", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 0x0pA 0x0pA) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.192.wat:1:31: error: unexpected token 0x0pA.
+  (func (v128.const f64x2 0x0pA 0x0pA) drop)
+                                ^^^^^
+out/test/spec/simd_const.wast:465: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.193.wat:1:25: error: unexpected token "nan:1", expected a Float literal (e.g. 42.0).
+  (func (v128.const f64x2 nan:1 nan:1) drop)
+                          ^^^^^
+  out/test/spec/simd_const/simd_const.193.wat:1:31: error: unexpected token nan:1.
+  (func (v128.const f64x2 nan:1 nan:1) drop)
+                                ^^^^^
+out/test/spec/simd_const.wast:469: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.194.wat:1:25: error: invalid literal "nan:0x0"
+  (func (v128.const f64x2 nan:0x0 nan:0x0) drop)
+                          ^^^^^^^
+out/test/spec/simd_const.wast:476: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.195.wat:1:25: error: invalid literal "0x10000000000000000"
+  (func (v128.const i32x4 0x10000000000000000 0x10000000000000000) drop)
+                          ^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:482: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.196.wat:1:41: error: unexpected token 0x1, expected ).
+  (func (v128.const i32x4 0x1 0x1 0x1 0x1 0x1) drop)
+                                          ^^^
+out/test/spec/simd_const.wast:1131: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.389.wat:1:32: error: unexpected token "_100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 _100 _100 _100 _100))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.389.wat:1:37: error: unexpected token _100.
+  (global v128 (v128.const i32x4 _100 _100 _100 _100))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.389.wat:1:42: error: unexpected token _100.
+  (global v128 (v128.const i32x4 _100 _100 _100 _100))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.389.wat:1:47: error: unexpected token _100.
+  (global v128 (v128.const i32x4 _100 _100 _100 _100))
+                                                ^^^^
+out/test/spec/simd_const.wast:1135: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.390.wat:1:32: error: unexpected token "+_100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 +_100 +_100 +_100 +_100))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.390.wat:1:38: error: unexpected token +_100.
+  (global v128 (v128.const i32x4 +_100 +_100 +_100 +_100))
+                                       ^^^^^
+  out/test/spec/simd_const/simd_const.390.wat:1:44: error: unexpected token +_100.
+  (global v128 (v128.const i32x4 +_100 +_100 +_100 +_100))
+                                             ^^^^^
+  out/test/spec/simd_const/simd_const.390.wat:1:50: error: unexpected token +_100.
+  (global v128 (v128.const i32x4 +_100 +_100 +_100 +_100))
+                                                   ^^^^^
+out/test/spec/simd_const.wast:1139: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.391.wat:1:32: error: unexpected token "-_100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 -_100 -_100 -_100 -_100))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.391.wat:1:38: error: unexpected token -_100.
+  (global v128 (v128.const i32x4 -_100 -_100 -_100 -_100))
+                                       ^^^^^
+  out/test/spec/simd_const/simd_const.391.wat:1:44: error: unexpected token -_100.
+  (global v128 (v128.const i32x4 -_100 -_100 -_100 -_100))
+                                             ^^^^^
+  out/test/spec/simd_const/simd_const.391.wat:1:50: error: unexpected token -_100.
+  (global v128 (v128.const i32x4 -_100 -_100 -_100 -_100))
+                                                   ^^^^^
+out/test/spec/simd_const.wast:1143: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.392.wat:1:32: error: unexpected token "99_", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 99_ 99_ 99_ 99_))
+                                 ^^^
+  out/test/spec/simd_const/simd_const.392.wat:1:36: error: unexpected token 99_.
+  (global v128 (v128.const i32x4 99_ 99_ 99_ 99_))
+                                     ^^^
+  out/test/spec/simd_const/simd_const.392.wat:1:40: error: unexpected token 99_.
+  (global v128 (v128.const i32x4 99_ 99_ 99_ 99_))
+                                         ^^^
+  out/test/spec/simd_const/simd_const.392.wat:1:44: error: unexpected token 99_.
+  (global v128 (v128.const i32x4 99_ 99_ 99_ 99_))
+                                             ^^^
+out/test/spec/simd_const.wast:1147: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.393.wat:1:32: error: unexpected token "1__000", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 1__000 1__000 1__000 1__000))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.393.wat:1:39: error: unexpected token 1__000.
+  (global v128 (v128.const i32x4 1__000 1__000 1__000 1__000))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.393.wat:1:46: error: unexpected token 1__000.
+  (global v128 (v128.const i32x4 1__000 1__000 1__000 1__000))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.393.wat:1:53: error: unexpected token 1__000.
+  (global v128 (v128.const i32x4 1__000 1__000 1__000 1__000))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1151: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.394.wat:1:32: error: unexpected token "_0x100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 _0x100 _0x100 _0x100 _0x100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.394.wat:1:39: error: unexpected token _0x100.
+  (global v128 (v128.const i32x4 _0x100 _0x100 _0x100 _0x100))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.394.wat:1:46: error: unexpected token _0x100.
+  (global v128 (v128.const i32x4 _0x100 _0x100 _0x100 _0x100))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.394.wat:1:53: error: unexpected token _0x100.
+  (global v128 (v128.const i32x4 _0x100 _0x100 _0x100 _0x100))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1155: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.395.wat:1:32: error: unexpected token "0_x100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 0_x100 0_x100 0_x100 0_x100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.395.wat:1:39: error: unexpected token 0_x100.
+  (global v128 (v128.const i32x4 0_x100 0_x100 0_x100 0_x100))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.395.wat:1:46: error: unexpected token 0_x100.
+  (global v128 (v128.const i32x4 0_x100 0_x100 0_x100 0_x100))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.395.wat:1:53: error: unexpected token 0_x100.
+  (global v128 (v128.const i32x4 0_x100 0_x100 0_x100 0_x100))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1159: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.396.wat:1:32: error: unexpected token "0x_100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 0x_100 0x_100 0x_100 0x_100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.396.wat:1:39: error: unexpected token 0x_100.
+  (global v128 (v128.const i32x4 0x_100 0x_100 0x_100 0x_100))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.396.wat:1:46: error: unexpected token 0x_100.
+  (global v128 (v128.const i32x4 0x_100 0x_100 0x_100 0x_100))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.396.wat:1:53: error: unexpected token 0x_100.
+  (global v128 (v128.const i32x4 0x_100 0x_100 0x_100 0x_100))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1163: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.397.wat:1:32: error: unexpected token "0x00_", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.397.wat:1:38: error: unexpected token 0x00_.
+  (global v128 (v128.const i32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                       ^^^^^
+  out/test/spec/simd_const/simd_const.397.wat:1:44: error: unexpected token 0x00_.
+  (global v128 (v128.const i32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                             ^^^^^
+  out/test/spec/simd_const/simd_const.397.wat:1:50: error: unexpected token 0x00_.
+  (global v128 (v128.const i32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                                   ^^^^^
+out/test/spec/simd_const.wast:1167: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.398.wat:1:32: error: unexpected token "0xff__ffff", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                 ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.398.wat:1:43: error: unexpected token 0xff__ffff.
+  (global v128 (v128.const i32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                            ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.398.wat:1:54: error: unexpected token 0xff__ffff.
+  (global v128 (v128.const i32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                                       ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.398.wat:1:65: error: unexpected token 0xff__ffff.
+  (global v128 (v128.const i32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                                                  ^^^^^^^^^^
+out/test/spec/simd_const.wast:1172: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.399.wat:1:32: error: unexpected token "_100_100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 _100_100 _100_100))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.399.wat:1:41: error: unexpected token _100_100.
+  (global v128 (v128.const i64x2 _100_100 _100_100))
+                                          ^^^^^^^^
+out/test/spec/simd_const.wast:1176: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.400.wat:1:32: error: unexpected token "+_100_100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 +_100_100 +_100_100))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.400.wat:1:42: error: unexpected token +_100_100.
+  (global v128 (v128.const i64x2 +_100_100 +_100_100))
+                                           ^^^^^^^^^
+out/test/spec/simd_const.wast:1180: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.401.wat:1:32: error: unexpected token "-_100_100", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 -_100_100 -_100_100))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.401.wat:1:42: error: unexpected token -_100_100.
+  (global v128 (v128.const i64x2 -_100_100 -_100_100))
+                                           ^^^^^^^^^
+out/test/spec/simd_const.wast:1184: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.402.wat:1:32: error: unexpected token "99_99_", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 99_99_ 99_99_))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.402.wat:1:39: error: unexpected token 99_99_.
+  (global v128 (v128.const i64x2 99_99_ 99_99_))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1188: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.403.wat:1:32: error: unexpected token "1__000_000", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 1__000_000 1__000_000))
+                                 ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.403.wat:1:43: error: unexpected token 1__000_000.
+  (global v128 (v128.const i64x2 1__000_000 1__000_000))
+                                            ^^^^^^^^^^
+out/test/spec/simd_const.wast:1192: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.404.wat:1:32: error: unexpected token "_0x100000", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 _0x100000 _0x100000))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.404.wat:1:42: error: unexpected token _0x100000.
+  (global v128 (v128.const i64x2 _0x100000 _0x100000))
+                                           ^^^^^^^^^
+out/test/spec/simd_const.wast:1196: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.405.wat:1:32: error: unexpected token "0_x100000", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 0_x100000 0_x100000))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.405.wat:1:42: error: unexpected token 0_x100000.
+  (global v128 (v128.const i64x2 0_x100000 0_x100000))
+                                           ^^^^^^^^^
+out/test/spec/simd_const.wast:1200: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.406.wat:1:32: error: unexpected token "0x_100000", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 0x_100000 0x_100000))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.406.wat:1:42: error: unexpected token 0x_100000.
+  (global v128 (v128.const i64x2 0x_100000 0x_100000))
+                                           ^^^^^^^^^
+out/test/spec/simd_const.wast:1204: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.407.wat:1:32: error: unexpected token "0x00_", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 0x00_ 0x00_))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.407.wat:1:38: error: unexpected token 0x00_.
+  (global v128 (v128.const i64x2 0x00_ 0x00_))
+                                       ^^^^^
+out/test/spec/simd_const.wast:1208: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.408.wat:1:32: error: unexpected token "0xff__ffff_ffff_ffff", expected a Nat or Integer literal (e.g. 123).
+  (global v128 (v128.const i64x2 0xff__ffff_ffff_ffff 0xff__ffff_ffff_ffff))
+                                 ^^^^^^^^^^^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.408.wat:1:53: error: unexpected token 0xff__ffff_ffff_ffff.
+  (global v128 (v128.const i64x2 0xff__ffff_ffff_ffff 0xff__ffff_ffff_ffff))
+                                                      ^^^^^^^^^^^^^^^^^^^^
+out/test/spec/simd_const.wast:1259: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.410.wat:1:32: error: unexpected token "_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 _100 _100 _100 _100))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.410.wat:1:37: error: unexpected token _100.
+  (global v128 (v128.const f32x4 _100 _100 _100 _100))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.410.wat:1:42: error: unexpected token _100.
+  (global v128 (v128.const f32x4 _100 _100 _100 _100))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.410.wat:1:47: error: unexpected token _100.
+  (global v128 (v128.const f32x4 _100 _100 _100 _100))
+                                                ^^^^
+out/test/spec/simd_const.wast:1263: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.411.wat:1:32: error: unexpected token "+_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 +_100 +_100 +_100 +_100))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.411.wat:1:38: error: unexpected token +_100.
+  (global v128 (v128.const f32x4 +_100 +_100 +_100 +_100))
+                                       ^^^^^
+  out/test/spec/simd_const/simd_const.411.wat:1:44: error: unexpected token +_100.
+  (global v128 (v128.const f32x4 +_100 +_100 +_100 +_100))
+                                             ^^^^^
+  out/test/spec/simd_const/simd_const.411.wat:1:50: error: unexpected token +_100.
+  (global v128 (v128.const f32x4 +_100 +_100 +_100 +_100))
+                                                   ^^^^^
+out/test/spec/simd_const.wast:1267: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.412.wat:1:32: error: unexpected token "-_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 -_100 -_100 -_100 -_100))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.412.wat:1:38: error: unexpected token -_100.
+  (global v128 (v128.const f32x4 -_100 -_100 -_100 -_100))
+                                       ^^^^^
+  out/test/spec/simd_const/simd_const.412.wat:1:44: error: unexpected token -_100.
+  (global v128 (v128.const f32x4 -_100 -_100 -_100 -_100))
+                                             ^^^^^
+  out/test/spec/simd_const/simd_const.412.wat:1:50: error: unexpected token -_100.
+  (global v128 (v128.const f32x4 -_100 -_100 -_100 -_100))
+                                                   ^^^^^
+out/test/spec/simd_const.wast:1271: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.413.wat:1:32: error: unexpected token "99_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 99_ 99_ 99_ 99_))
+                                 ^^^
+  out/test/spec/simd_const/simd_const.413.wat:1:36: error: unexpected token 99_.
+  (global v128 (v128.const f32x4 99_ 99_ 99_ 99_))
+                                     ^^^
+  out/test/spec/simd_const/simd_const.413.wat:1:40: error: unexpected token 99_.
+  (global v128 (v128.const f32x4 99_ 99_ 99_ 99_))
+                                         ^^^
+  out/test/spec/simd_const/simd_const.413.wat:1:44: error: unexpected token 99_.
+  (global v128 (v128.const f32x4 99_ 99_ 99_ 99_))
+                                             ^^^
+out/test/spec/simd_const.wast:1275: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.414.wat:1:32: error: unexpected token "1__000", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1__000 1__000 1__000 1__000))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.414.wat:1:39: error: unexpected token 1__000.
+  (global v128 (v128.const f32x4 1__000 1__000 1__000 1__000))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.414.wat:1:46: error: unexpected token 1__000.
+  (global v128 (v128.const f32x4 1__000 1__000 1__000 1__000))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.414.wat:1:53: error: unexpected token 1__000.
+  (global v128 (v128.const f32x4 1__000 1__000 1__000 1__000))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1279: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.415.wat:1:32: error: unexpected token "_1.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 _1.0 _1.0 _1.0 _1.0))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.415.wat:1:37: error: unexpected token _1.0.
+  (global v128 (v128.const f32x4 _1.0 _1.0 _1.0 _1.0))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.415.wat:1:42: error: unexpected token _1.0.
+  (global v128 (v128.const f32x4 _1.0 _1.0 _1.0 _1.0))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.415.wat:1:47: error: unexpected token _1.0.
+  (global v128 (v128.const f32x4 _1.0 _1.0 _1.0 _1.0))
+                                                ^^^^
+out/test/spec/simd_const.wast:1283: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.416.wat:1:32: error: unexpected token "1.0_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1.0_ 1.0_ 1.0_ 1.0_))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.416.wat:1:37: error: unexpected token 1.0_.
+  (global v128 (v128.const f32x4 1.0_ 1.0_ 1.0_ 1.0_))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.416.wat:1:42: error: unexpected token 1.0_.
+  (global v128 (v128.const f32x4 1.0_ 1.0_ 1.0_ 1.0_))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.416.wat:1:47: error: unexpected token 1.0_.
+  (global v128 (v128.const f32x4 1.0_ 1.0_ 1.0_ 1.0_))
+                                                ^^^^
+out/test/spec/simd_const.wast:1287: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.417.wat:1:32: error: unexpected token "1_.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1_.0 1_.0 1_.0 1_.0))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.417.wat:1:37: error: unexpected token 1_.0.
+  (global v128 (v128.const f32x4 1_.0 1_.0 1_.0 1_.0))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.417.wat:1:42: error: unexpected token 1_.0.
+  (global v128 (v128.const f32x4 1_.0 1_.0 1_.0 1_.0))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.417.wat:1:47: error: unexpected token 1_.0.
+  (global v128 (v128.const f32x4 1_.0 1_.0 1_.0 1_.0))
+                                                ^^^^
+out/test/spec/simd_const.wast:1291: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.418.wat:1:32: error: unexpected token "1._0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1._0 1._0 1._0 1._0))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.418.wat:1:37: error: unexpected token 1._0.
+  (global v128 (v128.const f32x4 1._0 1._0 1._0 1._0))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.418.wat:1:42: error: unexpected token 1._0.
+  (global v128 (v128.const f32x4 1._0 1._0 1._0 1._0))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.418.wat:1:47: error: unexpected token 1._0.
+  (global v128 (v128.const f32x4 1._0 1._0 1._0 1._0))
+                                                ^^^^
+out/test/spec/simd_const.wast:1295: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.419.wat:1:32: error: unexpected token "_1e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 _1e1 _1e1 _1e1 _1e1))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.419.wat:1:37: error: unexpected token _1e1.
+  (global v128 (v128.const f32x4 _1e1 _1e1 _1e1 _1e1))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.419.wat:1:42: error: unexpected token _1e1.
+  (global v128 (v128.const f32x4 _1e1 _1e1 _1e1 _1e1))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.419.wat:1:47: error: unexpected token _1e1.
+  (global v128 (v128.const f32x4 _1e1 _1e1 _1e1 _1e1))
+                                                ^^^^
+out/test/spec/simd_const.wast:1299: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.420.wat:1:32: error: unexpected token "1e1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1e1_ 1e1_ 1e1_ 1e1_))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.420.wat:1:37: error: unexpected token 1e1_.
+  (global v128 (v128.const f32x4 1e1_ 1e1_ 1e1_ 1e1_))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.420.wat:1:42: error: unexpected token 1e1_.
+  (global v128 (v128.const f32x4 1e1_ 1e1_ 1e1_ 1e1_))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.420.wat:1:47: error: unexpected token 1e1_.
+  (global v128 (v128.const f32x4 1e1_ 1e1_ 1e1_ 1e1_))
+                                                ^^^^
+out/test/spec/simd_const.wast:1303: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.421.wat:1:32: error: unexpected token "1_e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1_e1 1_e1 1_e1 1_e1))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.421.wat:1:37: error: unexpected token 1_e1.
+  (global v128 (v128.const f32x4 1_e1 1_e1 1_e1 1_e1))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.421.wat:1:42: error: unexpected token 1_e1.
+  (global v128 (v128.const f32x4 1_e1 1_e1 1_e1 1_e1))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.421.wat:1:47: error: unexpected token 1_e1.
+  (global v128 (v128.const f32x4 1_e1 1_e1 1_e1 1_e1))
+                                                ^^^^
+out/test/spec/simd_const.wast:1307: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.422.wat:1:32: error: unexpected token "1e_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1e_1 1e_1 1e_1 1e_1))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.422.wat:1:37: error: unexpected token 1e_1.
+  (global v128 (v128.const f32x4 1e_1 1e_1 1e_1 1e_1))
+                                      ^^^^
+  out/test/spec/simd_const/simd_const.422.wat:1:42: error: unexpected token 1e_1.
+  (global v128 (v128.const f32x4 1e_1 1e_1 1e_1 1e_1))
+                                           ^^^^
+  out/test/spec/simd_const/simd_const.422.wat:1:47: error: unexpected token 1e_1.
+  (global v128 (v128.const f32x4 1e_1 1e_1 1e_1 1e_1))
+                                                ^^^^
+out/test/spec/simd_const.wast:1311: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.423.wat:1:32: error: unexpected token "_1.0e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 _1.0e1 _1.0e1 _1.0e1 _1.0e1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.423.wat:1:39: error: unexpected token _1.0e1.
+  (global v128 (v128.const f32x4 _1.0e1 _1.0e1 _1.0e1 _1.0e1))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.423.wat:1:46: error: unexpected token _1.0e1.
+  (global v128 (v128.const f32x4 _1.0e1 _1.0e1 _1.0e1 _1.0e1))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.423.wat:1:53: error: unexpected token _1.0e1.
+  (global v128 (v128.const f32x4 _1.0e1 _1.0e1 _1.0e1 _1.0e1))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1315: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.424.wat:1:32: error: unexpected token "1.0e1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1.0e1_ 1.0e1_ 1.0e1_ 1.0e1_))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.424.wat:1:39: error: unexpected token 1.0e1_.
+  (global v128 (v128.const f32x4 1.0e1_ 1.0e1_ 1.0e1_ 1.0e1_))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.424.wat:1:46: error: unexpected token 1.0e1_.
+  (global v128 (v128.const f32x4 1.0e1_ 1.0e1_ 1.0e1_ 1.0e1_))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.424.wat:1:53: error: unexpected token 1.0e1_.
+  (global v128 (v128.const f32x4 1.0e1_ 1.0e1_ 1.0e1_ 1.0e1_))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1319: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.425.wat:1:32: error: unexpected token "1.0_e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1.0_e1 1.0_e1 1.0_e1 1.0_e1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.425.wat:1:39: error: unexpected token 1.0_e1.
+  (global v128 (v128.const f32x4 1.0_e1 1.0_e1 1.0_e1 1.0_e1))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.425.wat:1:46: error: unexpected token 1.0_e1.
+  (global v128 (v128.const f32x4 1.0_e1 1.0_e1 1.0_e1 1.0_e1))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.425.wat:1:53: error: unexpected token 1.0_e1.
+  (global v128 (v128.const f32x4 1.0_e1 1.0_e1 1.0_e1 1.0_e1))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1323: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.426.wat:1:32: error: unexpected token "1.0e_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1.0e_1 1.0e_1 1.0e_1 1.0e_1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.426.wat:1:39: error: unexpected token 1.0e_1.
+  (global v128 (v128.const f32x4 1.0e_1 1.0e_1 1.0e_1 1.0e_1))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.426.wat:1:46: error: unexpected token 1.0e_1.
+  (global v128 (v128.const f32x4 1.0e_1 1.0e_1 1.0e_1 1.0e_1))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.426.wat:1:53: error: unexpected token 1.0e_1.
+  (global v128 (v128.const f32x4 1.0e_1 1.0e_1 1.0e_1 1.0e_1))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1327: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.427.wat:1:32: error: unexpected token "1.0e+_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1.0e+_1 1.0e+_1 1.0e+_1 1.0e+_1))
+                                 ^^^^^^^
+  out/test/spec/simd_const/simd_const.427.wat:1:40: error: unexpected token 1.0e+_1.
+  (global v128 (v128.const f32x4 1.0e+_1 1.0e+_1 1.0e+_1 1.0e+_1))
+                                         ^^^^^^^
+  out/test/spec/simd_const/simd_const.427.wat:1:48: error: unexpected token 1.0e+_1.
+  (global v128 (v128.const f32x4 1.0e+_1 1.0e+_1 1.0e+_1 1.0e+_1))
+                                                 ^^^^^^^
+  out/test/spec/simd_const/simd_const.427.wat:1:56: error: unexpected token 1.0e+_1.
+  (global v128 (v128.const f32x4 1.0e+_1 1.0e+_1 1.0e+_1 1.0e+_1))
+                                                         ^^^^^^^
+out/test/spec/simd_const.wast:1331: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.428.wat:1:32: error: unexpected token "1.0e_+1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 1.0e_+1 1.0e_+1 1.0e_+1 1.0e_+1))
+                                 ^^^^^^^
+  out/test/spec/simd_const/simd_const.428.wat:1:40: error: unexpected token 1.0e_+1.
+  (global v128 (v128.const f32x4 1.0e_+1 1.0e_+1 1.0e_+1 1.0e_+1))
+                                         ^^^^^^^
+  out/test/spec/simd_const/simd_const.428.wat:1:48: error: unexpected token 1.0e_+1.
+  (global v128 (v128.const f32x4 1.0e_+1 1.0e_+1 1.0e_+1 1.0e_+1))
+                                                 ^^^^^^^
+  out/test/spec/simd_const/simd_const.428.wat:1:56: error: unexpected token 1.0e_+1.
+  (global v128 (v128.const f32x4 1.0e_+1 1.0e_+1 1.0e_+1 1.0e_+1))
+                                                         ^^^^^^^
+out/test/spec/simd_const.wast:1335: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.429.wat:1:32: error: unexpected token "_0x100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 _0x100 _0x100 _0x100 _0x100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.429.wat:1:39: error: unexpected token _0x100.
+  (global v128 (v128.const f32x4 _0x100 _0x100 _0x100 _0x100))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.429.wat:1:46: error: unexpected token _0x100.
+  (global v128 (v128.const f32x4 _0x100 _0x100 _0x100 _0x100))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.429.wat:1:53: error: unexpected token _0x100.
+  (global v128 (v128.const f32x4 _0x100 _0x100 _0x100 _0x100))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1339: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.430.wat:1:32: error: unexpected token "0_x100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0_x100 0_x100 0_x100 0_x100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.430.wat:1:39: error: unexpected token 0_x100.
+  (global v128 (v128.const f32x4 0_x100 0_x100 0_x100 0_x100))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.430.wat:1:46: error: unexpected token 0_x100.
+  (global v128 (v128.const f32x4 0_x100 0_x100 0_x100 0_x100))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.430.wat:1:53: error: unexpected token 0_x100.
+  (global v128 (v128.const f32x4 0_x100 0_x100 0_x100 0_x100))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1343: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.431.wat:1:32: error: unexpected token "0x_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x_100 0x_100 0x_100 0x_100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.431.wat:1:39: error: unexpected token 0x_100.
+  (global v128 (v128.const f32x4 0x_100 0x_100 0x_100 0x_100))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.431.wat:1:46: error: unexpected token 0x_100.
+  (global v128 (v128.const f32x4 0x_100 0x_100 0x_100 0x_100))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.431.wat:1:53: error: unexpected token 0x_100.
+  (global v128 (v128.const f32x4 0x_100 0x_100 0x_100 0x_100))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1347: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.432.wat:1:32: error: unexpected token "0x00_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.432.wat:1:38: error: unexpected token 0x00_.
+  (global v128 (v128.const f32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                       ^^^^^
+  out/test/spec/simd_const/simd_const.432.wat:1:44: error: unexpected token 0x00_.
+  (global v128 (v128.const f32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                             ^^^^^
+  out/test/spec/simd_const/simd_const.432.wat:1:50: error: unexpected token 0x00_.
+  (global v128 (v128.const f32x4 0x00_ 0x00_ 0x00_ 0x00_))
+                                                   ^^^^^
+out/test/spec/simd_const.wast:1351: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.433.wat:1:32: error: unexpected token "0xff__ffff", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                 ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.433.wat:1:43: error: unexpected token 0xff__ffff.
+  (global v128 (v128.const f32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                            ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.433.wat:1:54: error: unexpected token 0xff__ffff.
+  (global v128 (v128.const f32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                                       ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.433.wat:1:65: error: unexpected token 0xff__ffff.
+  (global v128 (v128.const f32x4 0xff__ffff 0xff__ffff 0xff__ffff 0xff__ffff))
+                                                                  ^^^^^^^^^^
+out/test/spec/simd_const.wast:1355: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.434.wat:1:32: error: unexpected token "0x_1.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x_1.0 0x_1.0 0x_1.0 0x_1.0))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.434.wat:1:39: error: unexpected token 0x_1.0.
+  (global v128 (v128.const f32x4 0x_1.0 0x_1.0 0x_1.0 0x_1.0))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.434.wat:1:46: error: unexpected token 0x_1.0.
+  (global v128 (v128.const f32x4 0x_1.0 0x_1.0 0x_1.0 0x_1.0))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.434.wat:1:53: error: unexpected token 0x_1.0.
+  (global v128 (v128.const f32x4 0x_1.0 0x_1.0 0x_1.0 0x_1.0))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1359: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.435.wat:1:32: error: unexpected token "0x1.0_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1.0_ 0x1.0_ 0x1.0_ 0x1.0_))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.435.wat:1:39: error: unexpected token 0x1.0_.
+  (global v128 (v128.const f32x4 0x1.0_ 0x1.0_ 0x1.0_ 0x1.0_))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.435.wat:1:46: error: unexpected token 0x1.0_.
+  (global v128 (v128.const f32x4 0x1.0_ 0x1.0_ 0x1.0_ 0x1.0_))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.435.wat:1:53: error: unexpected token 0x1.0_.
+  (global v128 (v128.const f32x4 0x1.0_ 0x1.0_ 0x1.0_ 0x1.0_))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1363: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.436.wat:1:32: error: unexpected token "0x1_.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1_.0 0x1_.0 0x1_.0 0x1_.0))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.436.wat:1:39: error: unexpected token 0x1_.0.
+  (global v128 (v128.const f32x4 0x1_.0 0x1_.0 0x1_.0 0x1_.0))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.436.wat:1:46: error: unexpected token 0x1_.0.
+  (global v128 (v128.const f32x4 0x1_.0 0x1_.0 0x1_.0 0x1_.0))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.436.wat:1:53: error: unexpected token 0x1_.0.
+  (global v128 (v128.const f32x4 0x1_.0 0x1_.0 0x1_.0 0x1_.0))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1367: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.437.wat:1:32: error: unexpected token "0x1._0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1._0 0x1._0 0x1._0 0x1._0))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.437.wat:1:39: error: unexpected token 0x1._0.
+  (global v128 (v128.const f32x4 0x1._0 0x1._0 0x1._0 0x1._0))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.437.wat:1:46: error: unexpected token 0x1._0.
+  (global v128 (v128.const f32x4 0x1._0 0x1._0 0x1._0 0x1._0))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.437.wat:1:53: error: unexpected token 0x1._0.
+  (global v128 (v128.const f32x4 0x1._0 0x1._0 0x1._0 0x1._0))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1371: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.438.wat:1:32: error: unexpected token "0x_1p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x_1p1 0x_1p1 0x_1p1 0x_1p1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.438.wat:1:39: error: unexpected token 0x_1p1.
+  (global v128 (v128.const f32x4 0x_1p1 0x_1p1 0x_1p1 0x_1p1))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.438.wat:1:46: error: unexpected token 0x_1p1.
+  (global v128 (v128.const f32x4 0x_1p1 0x_1p1 0x_1p1 0x_1p1))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.438.wat:1:53: error: unexpected token 0x_1p1.
+  (global v128 (v128.const f32x4 0x_1p1 0x_1p1 0x_1p1 0x_1p1))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1375: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.439.wat:1:32: error: unexpected token "0x1p1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1p1_ 0x1p1_ 0x1p1_ 0x1p1_))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.439.wat:1:39: error: unexpected token 0x1p1_.
+  (global v128 (v128.const f32x4 0x1p1_ 0x1p1_ 0x1p1_ 0x1p1_))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.439.wat:1:46: error: unexpected token 0x1p1_.
+  (global v128 (v128.const f32x4 0x1p1_ 0x1p1_ 0x1p1_ 0x1p1_))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.439.wat:1:53: error: unexpected token 0x1p1_.
+  (global v128 (v128.const f32x4 0x1p1_ 0x1p1_ 0x1p1_ 0x1p1_))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1379: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.440.wat:1:32: error: unexpected token "0x1_p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1_p1 0x1_p1 0x1_p1 0x1_p1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.440.wat:1:39: error: unexpected token 0x1_p1.
+  (global v128 (v128.const f32x4 0x1_p1 0x1_p1 0x1_p1 0x1_p1))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.440.wat:1:46: error: unexpected token 0x1_p1.
+  (global v128 (v128.const f32x4 0x1_p1 0x1_p1 0x1_p1 0x1_p1))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.440.wat:1:53: error: unexpected token 0x1_p1.
+  (global v128 (v128.const f32x4 0x1_p1 0x1_p1 0x1_p1 0x1_p1))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1383: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.441.wat:1:32: error: unexpected token "0x1p_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1p_1 0x1p_1 0x1p_1 0x1p_1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.441.wat:1:39: error: unexpected token 0x1p_1.
+  (global v128 (v128.const f32x4 0x1p_1 0x1p_1 0x1p_1 0x1p_1))
+                                        ^^^^^^
+  out/test/spec/simd_const/simd_const.441.wat:1:46: error: unexpected token 0x1p_1.
+  (global v128 (v128.const f32x4 0x1p_1 0x1p_1 0x1p_1 0x1p_1))
+                                               ^^^^^^
+  out/test/spec/simd_const/simd_const.441.wat:1:53: error: unexpected token 0x1p_1.
+  (global v128 (v128.const f32x4 0x1p_1 0x1p_1 0x1p_1 0x1p_1))
+                                                      ^^^^^^
+out/test/spec/simd_const.wast:1387: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.442.wat:1:32: error: unexpected token "0x_1.0p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x_1.0p1 0x_1.0p1 0x_1.0p1 0x_1.0p1))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.442.wat:1:41: error: unexpected token 0x_1.0p1.
+  (global v128 (v128.const f32x4 0x_1.0p1 0x_1.0p1 0x_1.0p1 0x_1.0p1))
+                                          ^^^^^^^^
+  out/test/spec/simd_const/simd_const.442.wat:1:50: error: unexpected token 0x_1.0p1.
+  (global v128 (v128.const f32x4 0x_1.0p1 0x_1.0p1 0x_1.0p1 0x_1.0p1))
+                                                   ^^^^^^^^
+  out/test/spec/simd_const/simd_const.442.wat:1:59: error: unexpected token 0x_1.0p1.
+  (global v128 (v128.const f32x4 0x_1.0p1 0x_1.0p1 0x_1.0p1 0x_1.0p1))
+                                                            ^^^^^^^^
+out/test/spec/simd_const.wast:1391: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.443.wat:1:32: error: unexpected token "0x1.0p1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1.0p1_ 0x1.0p1_ 0x1.0p1_ 0x1.0p1_))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.443.wat:1:41: error: unexpected token 0x1.0p1_.
+  (global v128 (v128.const f32x4 0x1.0p1_ 0x1.0p1_ 0x1.0p1_ 0x1.0p1_))
+                                          ^^^^^^^^
+  out/test/spec/simd_const/simd_const.443.wat:1:50: error: unexpected token 0x1.0p1_.
+  (global v128 (v128.const f32x4 0x1.0p1_ 0x1.0p1_ 0x1.0p1_ 0x1.0p1_))
+                                                   ^^^^^^^^
+  out/test/spec/simd_const/simd_const.443.wat:1:59: error: unexpected token 0x1.0p1_.
+  (global v128 (v128.const f32x4 0x1.0p1_ 0x1.0p1_ 0x1.0p1_ 0x1.0p1_))
+                                                            ^^^^^^^^
+out/test/spec/simd_const.wast:1395: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.444.wat:1:32: error: unexpected token "0x1.0_p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1.0_p1 0x1.0_p1 0x1.0_p1 0x1.0_p1))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.444.wat:1:41: error: unexpected token 0x1.0_p1.
+  (global v128 (v128.const f32x4 0x1.0_p1 0x1.0_p1 0x1.0_p1 0x1.0_p1))
+                                          ^^^^^^^^
+  out/test/spec/simd_const/simd_const.444.wat:1:50: error: unexpected token 0x1.0_p1.
+  (global v128 (v128.const f32x4 0x1.0_p1 0x1.0_p1 0x1.0_p1 0x1.0_p1))
+                                                   ^^^^^^^^
+  out/test/spec/simd_const/simd_const.444.wat:1:59: error: unexpected token 0x1.0_p1.
+  (global v128 (v128.const f32x4 0x1.0_p1 0x1.0_p1 0x1.0_p1 0x1.0_p1))
+                                                            ^^^^^^^^
+out/test/spec/simd_const.wast:1399: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.445.wat:1:32: error: unexpected token "0x1.0p_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1.0p_1 0x1.0p_1 0x1.0p_1 0x1.0p_1))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.445.wat:1:41: error: unexpected token 0x1.0p_1.
+  (global v128 (v128.const f32x4 0x1.0p_1 0x1.0p_1 0x1.0p_1 0x1.0p_1))
+                                          ^^^^^^^^
+  out/test/spec/simd_const/simd_const.445.wat:1:50: error: unexpected token 0x1.0p_1.
+  (global v128 (v128.const f32x4 0x1.0p_1 0x1.0p_1 0x1.0p_1 0x1.0p_1))
+                                                   ^^^^^^^^
+  out/test/spec/simd_const/simd_const.445.wat:1:59: error: unexpected token 0x1.0p_1.
+  (global v128 (v128.const f32x4 0x1.0p_1 0x1.0p_1 0x1.0p_1 0x1.0p_1))
+                                                            ^^^^^^^^
+out/test/spec/simd_const.wast:1403: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.446.wat:1:32: error: unexpected token "0x1.0p+_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.446.wat:1:42: error: unexpected token 0x1.0p+_1.
+  (global v128 (v128.const f32x4 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1))
+                                           ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.446.wat:1:52: error: unexpected token 0x1.0p+_1.
+  (global v128 (v128.const f32x4 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1))
+                                                     ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.446.wat:1:62: error: unexpected token 0x1.0p+_1.
+  (global v128 (v128.const f32x4 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1 0x1.0p+_1))
+                                                               ^^^^^^^^^
+out/test/spec/simd_const.wast:1407: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.447.wat:1:32: error: unexpected token "0x1.0p_+1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f32x4 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.447.wat:1:42: error: unexpected token 0x1.0p_+1.
+  (global v128 (v128.const f32x4 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1))
+                                           ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.447.wat:1:52: error: unexpected token 0x1.0p_+1.
+  (global v128 (v128.const f32x4 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1))
+                                                     ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.447.wat:1:62: error: unexpected token 0x1.0p_+1.
+  (global v128 (v128.const f32x4 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1 0x1.0p_+1))
+                                                               ^^^^^^^^^
+out/test/spec/simd_const.wast:1412: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.448.wat:1:32: error: unexpected token "_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 _100 _100))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.448.wat:1:37: error: unexpected token _100.
+  (global v128 (v128.const f64x2 _100 _100))
+                                      ^^^^
+out/test/spec/simd_const.wast:1416: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.449.wat:1:32: error: unexpected token "+_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 +_100 +_100))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.449.wat:1:38: error: unexpected token +_100.
+  (global v128 (v128.const f64x2 +_100 +_100))
+                                       ^^^^^
+out/test/spec/simd_const.wast:1420: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.450.wat:1:32: error: unexpected token "-_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 -_100 -_100))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.450.wat:1:38: error: unexpected token -_100.
+  (global v128 (v128.const f64x2 -_100 -_100))
+                                       ^^^^^
+out/test/spec/simd_const.wast:1424: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.451.wat:1:32: error: unexpected token "99_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 99_ 99_))
+                                 ^^^
+  out/test/spec/simd_const/simd_const.451.wat:1:36: error: unexpected token 99_.
+  (global v128 (v128.const f64x2 99_ 99_))
+                                     ^^^
+out/test/spec/simd_const.wast:1428: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.452.wat:1:32: error: unexpected token "1__000", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1__000 1__000))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.452.wat:1:39: error: unexpected token 1__000.
+  (global v128 (v128.const f64x2 1__000 1__000))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1432: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.453.wat:1:32: error: unexpected token "_1.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 _1.0 _1.0))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.453.wat:1:37: error: unexpected token _1.0.
+  (global v128 (v128.const f64x2 _1.0 _1.0))
+                                      ^^^^
+out/test/spec/simd_const.wast:1436: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.454.wat:1:32: error: unexpected token "1.0_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1.0_ 1.0_))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.454.wat:1:37: error: unexpected token 1.0_.
+  (global v128 (v128.const f64x2 1.0_ 1.0_))
+                                      ^^^^
+out/test/spec/simd_const.wast:1440: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.455.wat:1:32: error: unexpected token "1_.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1_.0 1_.0))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.455.wat:1:37: error: unexpected token 1_.0.
+  (global v128 (v128.const f64x2 1_.0 1_.0))
+                                      ^^^^
+out/test/spec/simd_const.wast:1444: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.456.wat:1:32: error: unexpected token "1._0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1._0 1._0))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.456.wat:1:37: error: unexpected token 1._0.
+  (global v128 (v128.const f64x2 1._0 1._0))
+                                      ^^^^
+out/test/spec/simd_const.wast:1448: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.457.wat:1:32: error: unexpected token "_1e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 _1e1 _1e1))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.457.wat:1:37: error: unexpected token _1e1.
+  (global v128 (v128.const f64x2 _1e1 _1e1))
+                                      ^^^^
+out/test/spec/simd_const.wast:1452: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.458.wat:1:32: error: unexpected token "1e1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1e1_ 1e1_))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.458.wat:1:37: error: unexpected token 1e1_.
+  (global v128 (v128.const f64x2 1e1_ 1e1_))
+                                      ^^^^
+out/test/spec/simd_const.wast:1456: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.459.wat:1:32: error: unexpected token "1_e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1_e1 1_e1))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.459.wat:1:37: error: unexpected token 1_e1.
+  (global v128 (v128.const f64x2 1_e1 1_e1))
+                                      ^^^^
+out/test/spec/simd_const.wast:1460: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.460.wat:1:32: error: unexpected token "1e_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1e_1 1e_1))
+                                 ^^^^
+  out/test/spec/simd_const/simd_const.460.wat:1:37: error: unexpected token 1e_1.
+  (global v128 (v128.const f64x2 1e_1 1e_1))
+                                      ^^^^
+out/test/spec/simd_const.wast:1464: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.461.wat:1:32: error: unexpected token "_1.0e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 _1.0e1 _1.0e1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.461.wat:1:39: error: unexpected token _1.0e1.
+  (global v128 (v128.const f64x2 _1.0e1 _1.0e1))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1468: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.462.wat:1:32: error: unexpected token "1.0e1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1.0e1_ 1.0e1_))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.462.wat:1:39: error: unexpected token 1.0e1_.
+  (global v128 (v128.const f64x2 1.0e1_ 1.0e1_))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1472: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.463.wat:1:32: error: unexpected token "1.0_e1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1.0_e1 1.0_e1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.463.wat:1:39: error: unexpected token 1.0_e1.
+  (global v128 (v128.const f64x2 1.0_e1 1.0_e1))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1476: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.464.wat:1:32: error: unexpected token "1.0e_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1.0e_1 1.0e_1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.464.wat:1:39: error: unexpected token 1.0e_1.
+  (global v128 (v128.const f64x2 1.0e_1 1.0e_1))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1480: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.465.wat:1:32: error: unexpected token "1.0e+_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1.0e+_1 1.0e+_1))
+                                 ^^^^^^^
+  out/test/spec/simd_const/simd_const.465.wat:1:40: error: unexpected token 1.0e+_1.
+  (global v128 (v128.const f64x2 1.0e+_1 1.0e+_1))
+                                         ^^^^^^^
+out/test/spec/simd_const.wast:1484: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.466.wat:1:32: error: unexpected token "1.0e_+1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 1.0e_+1 1.0e_+1))
+                                 ^^^^^^^
+  out/test/spec/simd_const/simd_const.466.wat:1:40: error: unexpected token 1.0e_+1.
+  (global v128 (v128.const f64x2 1.0e_+1 1.0e_+1))
+                                         ^^^^^^^
+out/test/spec/simd_const.wast:1488: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.467.wat:1:32: error: unexpected token "_0x100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 _0x100 _0x100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.467.wat:1:39: error: unexpected token _0x100.
+  (global v128 (v128.const f64x2 _0x100 _0x100))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1492: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.468.wat:1:32: error: unexpected token "0_x100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0_x100 0_x100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.468.wat:1:39: error: unexpected token 0_x100.
+  (global v128 (v128.const f64x2 0_x100 0_x100))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1496: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.469.wat:1:32: error: unexpected token "0x_100", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x_100 0x_100))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.469.wat:1:39: error: unexpected token 0x_100.
+  (global v128 (v128.const f64x2 0x_100 0x_100))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1500: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.470.wat:1:32: error: unexpected token "0x00_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x00_ 0x00_))
+                                 ^^^^^
+  out/test/spec/simd_const/simd_const.470.wat:1:38: error: unexpected token 0x00_.
+  (global v128 (v128.const f64x2 0x00_ 0x00_))
+                                       ^^^^^
+out/test/spec/simd_const.wast:1504: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.471.wat:1:32: error: unexpected token "0xff__ffff", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0xff__ffff 0xff__ffff))
+                                 ^^^^^^^^^^
+  out/test/spec/simd_const/simd_const.471.wat:1:43: error: unexpected token 0xff__ffff.
+  (global v128 (v128.const f64x2 0xff__ffff 0xff__ffff))
+                                            ^^^^^^^^^^
+out/test/spec/simd_const.wast:1508: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.472.wat:1:32: error: unexpected token "0x_1.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x_1.0 0x_1.0))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.472.wat:1:39: error: unexpected token 0x_1.0.
+  (global v128 (v128.const f64x2 0x_1.0 0x_1.0))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1512: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.473.wat:1:32: error: unexpected token "0x1.0_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1.0_ 0x1.0_))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.473.wat:1:39: error: unexpected token 0x1.0_.
+  (global v128 (v128.const f64x2 0x1.0_ 0x1.0_))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1516: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.474.wat:1:32: error: unexpected token "0x1_.0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1_.0 0x1_.0))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.474.wat:1:39: error: unexpected token 0x1_.0.
+  (global v128 (v128.const f64x2 0x1_.0 0x1_.0))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1520: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.475.wat:1:32: error: unexpected token "0x1._0", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1._0 0x1._0))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.475.wat:1:39: error: unexpected token 0x1._0.
+  (global v128 (v128.const f64x2 0x1._0 0x1._0))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1524: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.476.wat:1:32: error: unexpected token "0x_1p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x_1p1 0x_1p1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.476.wat:1:39: error: unexpected token 0x_1p1.
+  (global v128 (v128.const f64x2 0x_1p1 0x_1p1))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1528: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.477.wat:1:32: error: unexpected token "0x1p1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1p1_ 0x1p1_))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.477.wat:1:39: error: unexpected token 0x1p1_.
+  (global v128 (v128.const f64x2 0x1p1_ 0x1p1_))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1532: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.478.wat:1:32: error: unexpected token "0x1_p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1_p1 0x1_p1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.478.wat:1:39: error: unexpected token 0x1_p1.
+  (global v128 (v128.const f64x2 0x1_p1 0x1_p1))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1536: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.479.wat:1:32: error: unexpected token "0x1p_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1p_1 0x1p_1))
+                                 ^^^^^^
+  out/test/spec/simd_const/simd_const.479.wat:1:39: error: unexpected token 0x1p_1.
+  (global v128 (v128.const f64x2 0x1p_1 0x1p_1))
+                                        ^^^^^^
+out/test/spec/simd_const.wast:1540: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.480.wat:1:32: error: unexpected token "0x_1.0p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x_1.0p1 0x_1.0p1))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.480.wat:1:41: error: unexpected token 0x_1.0p1.
+  (global v128 (v128.const f64x2 0x_1.0p1 0x_1.0p1))
+                                          ^^^^^^^^
+out/test/spec/simd_const.wast:1544: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.481.wat:1:32: error: unexpected token "0x1.0p1_", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1.0p1_ 0x1.0p1_))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.481.wat:1:41: error: unexpected token 0x1.0p1_.
+  (global v128 (v128.const f64x2 0x1.0p1_ 0x1.0p1_))
+                                          ^^^^^^^^
+out/test/spec/simd_const.wast:1548: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.482.wat:1:32: error: unexpected token "0x1.0_p1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1.0_p1 0x1.0_p1))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.482.wat:1:41: error: unexpected token 0x1.0_p1.
+  (global v128 (v128.const f64x2 0x1.0_p1 0x1.0_p1))
+                                          ^^^^^^^^
+out/test/spec/simd_const.wast:1552: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.483.wat:1:32: error: unexpected token "0x1.0p_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1.0p_1 0x1.0p_1))
+                                 ^^^^^^^^
+  out/test/spec/simd_const/simd_const.483.wat:1:41: error: unexpected token 0x1.0p_1.
+  (global v128 (v128.const f64x2 0x1.0p_1 0x1.0p_1))
+                                          ^^^^^^^^
+out/test/spec/simd_const.wast:1556: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.484.wat:1:32: error: unexpected token "0x1.0p+_1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1.0p+_1 0x1.0p+_1))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.484.wat:1:42: error: unexpected token 0x1.0p+_1.
+  (global v128 (v128.const f64x2 0x1.0p+_1 0x1.0p+_1))
+                                           ^^^^^^^^^
+out/test/spec/simd_const.wast:1560: assert_malformed passed:
+  out/test/spec/simd_const/simd_const.485.wat:1:32: error: unexpected token "0x1.0p_+1", expected a Float literal (e.g. 42.0).
+  (global v128 (v128.const f64x2 0x1.0p_+1 0x1.0p_+1))
+                                 ^^^^^^^^^
+  out/test/spec/simd_const/simd_const.485.wat:1:42: error: unexpected token 0x1.0p_+1.
+  (global v128 (v128.const f64x2 0x1.0p_+1 0x1.0p_+1))
+                                           ^^^^^^^^^
+445/445 tests passed.
+;;; STDOUT ;;)

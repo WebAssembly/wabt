@@ -1,0 +1,12 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_size.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/memory_size.wast:95: assert_invalid passed:
+  out/test/spec/multi-memory/memory_size/memory_size.6.wasm:000001e: error: type mismatch at end of function, expected [] but got [i32]
+  000001f: error: EndFunctionBody callback failed
+out/test/spec/multi-memory/memory_size.wast:104: assert_invalid passed:
+  out/test/spec/multi-memory/memory_size/memory_size.7.wasm:000001f: error: type mismatch in implicit return, expected [f32] but got [i32]
+  0000020: error: EndFunctionBody callback failed
+42/42 tests passed.
+;;; STDOUT ;;)

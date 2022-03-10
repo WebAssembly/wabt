@@ -3,16 +3,16 @@
   (func $f (param i32) (result i32)
     (local i32)
     loop $cont
-      get_local 1
+      local.get 1
       i32.const 1
       i32.add
-      set_local 1
-      get_local 1
-      get_local 0
+      local.set 1
+      local.get 1
+      local.get 0
       i32.lt_s
       br_if $cont
     end
-    get_local 1
+    local.get 1
     return)
 
   (func (export "test1") (result i32)

@@ -75,6 +75,51 @@ Result ParseDouble(LiteralType literal_type,
                    const char* end,
                    uint64_t* out_bits);
 
+// Same as above but taking a string_view
+inline Result ParseInt8(std::string_view v,
+                        uint8_t* out,
+                        ParseIntType parse_type) {
+  return ParseInt8(v.data(), v.data() + v.size(), out, parse_type);
+}
+
+inline Result ParseInt16(std::string_view v,
+                         uint16_t* out,
+                         ParseIntType parse_type) {
+  return ParseInt16(v.data(), v.data() + v.size(), out, parse_type);
+}
+
+inline Result ParseInt32(std::string_view v,
+                         uint32_t* out,
+                         ParseIntType parse_type) {
+  return ParseInt32(v.data(), v.data() + v.size(), out, parse_type);
+}
+
+inline Result ParseInt64(std::string_view v,
+                         uint64_t* out,
+                         ParseIntType parse_type) {
+  return ParseInt64(v.data(), v.data() + v.size(), out, parse_type);
+}
+
+inline Result ParseUint64(std::string_view v, uint64_t* out) {
+  return ParseUint64(v.data(), v.data() + v.size(), out);
+}
+
+inline Result ParseUint128(std::string_view v, v128* out) {
+  return ParseUint128(v.data(), v.data() + v.size(), out);
+}
+
+inline Result ParseFloat(LiteralType literal_type,
+                         std::string_view v,
+                         uint32_t* out_bits) {
+  return ParseFloat(literal_type, v.data(), v.data() + v.size(), out_bits);
+}
+
+inline Result ParseDouble(LiteralType literal_type,
+                          std::string_view v,
+                          uint64_t* out_bits) {
+  return ParseDouble(literal_type, v.data(), v.data() + v.size(), out_bits);
+}
+
 void WriteFloatHex(char* buffer, size_t size, uint32_t bits);
 void WriteDoubleHex(char* buffer, size_t size, uint64_t bits);
 void WriteUint128(char* buffer, size_t size, v128 bits);
