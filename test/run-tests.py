@@ -160,10 +160,6 @@ TOOLS = {
     ]
 }
 
-# TODO(binji): Add Windows support for compiling using run-spec-wasm2c.py
-if IS_WINDOWS:
-    TOOLS['run-spec-wasm2c'].append(('SKIP', ''))
-
 ROUNDTRIP_TOOLS = ('wat2wasm',)
 
 

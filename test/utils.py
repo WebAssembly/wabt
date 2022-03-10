@@ -19,6 +19,7 @@ import contextlib
 import os
 import json
 import shutil
+import shlex
 import signal
 import subprocess
 import sys
@@ -52,12 +53,12 @@ class Executable(object):
 
     def _RunWithArgsInternal(self, *args, **kwargs):
         cmd = [self.exe] + self.before_args + list(args) + self.after_args
-        cmd_str = ' '.join(cmd)
+        cmd_str = shlex.join(cmd)
         if self.verbose:
             print(cmd_str)
 
         if self.error_cmdline:
-            err_cmd_str = cmd_str.replace('.exe', '')
+            err_cmd_str = cmd_str
         else:
             err_cmd_str = self.basename
 
@@ -76,7 +77,7 @@ class Executable(object):
                 error = Error('Signal raised running "%s": %s\n%s' % (err_cmd_str,
                               signame, stderr))
             elif process.returncode > 0:
-                error = Error('Error running "%s" (%d):\n%s' % (err_cmd_str, process.returncode, stderr))
+                error = Error('Error running "%s" (%d):\n%s\n%s' % (err_cmd_str, process.returncode, stdout, stderr))
         except OSError as e:
             error = Error('Error running "%s": %s' % (err_cmd_str, str(e)))
         return stdout, stderr, error

@@ -17,10 +17,30 @@
 #ifndef WASM_RT_H_
 #define WASM_RT_H_
 
+#include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef __has_builtin
+#define __has_builtin(x) 0  // Compatibility with non-clang compilers.
+#endif
+
+#if __has_builtin(__builtin_expect)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define LIKELY(x) __builtin_expect(!!(x), 1)
+#else
+#define UNLIKELY(x) (x)
+#define LIKELY(x) (x)
+#endif
+
+#if __has_builtin(__builtin_memcpy)
+#define wasm_rt_memcpy __builtin_memcpy
+#else
+#define wasm_rt_memcpy memcpy
 #endif
 
 /** Maximum stack depth before trapping. This can be configured by defining
@@ -66,6 +86,12 @@ extern "C" {
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
 
+#endif
+
+#if defined(_MSC_VER)
+#define WASM_RT_NO_RETURN __declspec(noreturn)
+#else
+#define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
@@ -128,7 +154,7 @@ typedef struct {
  *  The result of `wasm_rt_try` will be the provided trap reason.
  *
  *  This is typically called by the generated code, and not the embedder. */
-extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
+WASM_RT_NO_RETURN void wasm_rt_trap(wasm_rt_trap_t);
 
 /**
  * Return a human readable error string based on a trap type.
@@ -198,6 +224,22 @@ extern void wasm_rt_allocate_table(wasm_rt_table_t*,
 
 /** Current call stack depth. */
 extern uint32_t wasm_rt_call_stack_depth;
+
+#ifdef _WIN32
+float wasm_rt_truncf(float x);
+double wasm_rt_trunc(double x);
+float wasm_rt_nearbyintf(float x);
+double wasm_rt_nearbyint(double x);
+float wasm_rt_fabsf(float x);
+double wasm_rt_fabs(double x);
+#else
+#define wasm_rt_truncf(x) truncf(x)
+#define wasm_rt_trunc(x) trunc(x)
+#define wasm_rt_nearbyintf(x) nearbyintf(x)
+#define wasm_rt_nearbyint(x) nearbyint(x)
+#define wasm_rt_fabsf(x) fabsf(x)
+#define wasm_rt_fabs(x) fabs(x)
+#endif
 
 #ifdef __cplusplus
 }

@@ -19,6 +19,7 @@ import argparse
 import io
 import json
 import os
+import platform
 import re
 import struct
 import sys
@@ -30,6 +31,8 @@ from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 WASM2C_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'wasm2c')
+IS_WINDOWS = sys.platform == 'win32'
+IS_MACOS = platform.mac_ver()[0] != ''
 
 
 def ReinterpretF32(f32_bits):
@@ -78,7 +81,7 @@ def F64ToC(f64_bits):
     elif f64_bits == F64_SIGN_BIT:
         return '-0.0'
     else:
-        return '%.17g' % ReinterpretF64(f64_bits)
+        return '%#.17gL' % ReinterpretF64(f64_bits)
 
 
 def MangleType(t):
@@ -335,21 +338,45 @@ class CWriter(object):
 
 
 def Compile(cc, c_filename, out_dir, *args):
-    o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, '.o'), out_dir)
-    cc.RunWithArgs('-c', c_filename, '-o', o_filename,
-                   '-Wall', '-Werror', '-Wno-unused',
-                   '-Wno-tautological-constant-out-of-range-compare',
-                   '-std=c99', '-D_DEFAULT_SOURCE',
-                   *args)
+    if IS_WINDOWS:
+        ext = '.obj'
+    else:
+        ext = '.o'
+    o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, ext), out_dir)
+    args = list(args)
+    if IS_WINDOWS:
+        args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
+    else:
+        args += ['-c', c_filename, '-o', o_filename,
+                 '-Wall', '-Werror', '-Wno-unused',
+                 '-Wno-tautological-constant-out-of-range-compare',
+                 '-std=c99', '-D_DEFAULT_SOURCE']
+    # Use RunWithArgsForStdout and discard stdout because cl.exe
+    # unconditionally prints the name of input files on stdout
+    # and we don't want that to be part of our stdout.
+    cc.RunWithArgsForStdout(*args)
     return o_filename
 
 
-def Link(cc, o_filenames, main_exe, *args):
-    args = ['-o', main_exe] + o_filenames + list(args)
-    cc.RunWithArgs(*args)
+def Link(cc, o_filenames, main_exe, *extra_args):
+    args = o_filenames
+    if IS_WINDOWS:
+        # Windows default to 1Mb of stack but `spec/skip-stack-guard-page.wast`
+        # uses more than this.  Set to 8Mb for parity with linux.
+        args += ['/nologo', '/MDd', '/link', '/stack:8388608', '/out:' + main_exe]
+    else:
+        args += ['-o', main_exe]
+    args += list(extra_args)
+    # Use RunWithArgsForStdout and discard stdout because cl.exe
+    # unconditionally prints the name of input files on stdout
+    # and we don't want that to be part of our stdout.
+    cc.RunWithArgsForStdout(*args)
 
 
 def main(args):
+    default_compiler = 'cc'
+    if IS_WINDOWS:
+        default_compiler = 'cl.exe'
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--out-dir', metavar='PATH',
                         help='output directory for files.')
@@ -361,7 +388,8 @@ def main(args):
     parser.add_argument('--wasmrt-dir', metavar='PATH',
                         help='directory with wasm-rt files', default=WASM2C_DIR)
     parser.add_argument('--cc', metavar='PATH',
-                        help='the path to the C compiler', default='cc')
+                        help='the path to the C compiler',
+                        default=default_compiler)
     parser.add_argument('--cflags', metavar='FLAGS',
                         help='additional flags for C compiler.',
                         action='append', default=[])
@@ -412,7 +440,7 @@ def main(args):
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
         cc = utils.Executable(options.cc, *options.cflags, forward_stderr=True,
-                              forward_stdout=True)
+                              forward_stdout=False)
         cc.verbose = options.print_cmd
 
         with open(json_file_path, encoding='utf-8') as json_file:
@@ -449,8 +477,14 @@ def main(args):
 
             # Compile and link -main test run entry point
             o_filenames.append(Compile(cc, main_filename, out_dir, includes))
-            main_exe = utils.ChangeExt(json_file_path, '')
-            Link(cc, o_filenames, main_exe, '-lm')
+            if IS_WINDOWS:
+                exe_ext = '.exe'
+                libs = []
+            else:
+                exe_ext = ''
+                libs = ['-lm']
+            main_exe = utils.ChangeExt(json_file_path, exe_ext)
+            Link(cc, o_filenames, main_exe, *libs)
 
             # Run the resulting binary
             if options.run:

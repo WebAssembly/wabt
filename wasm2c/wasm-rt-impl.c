@@ -17,6 +17,7 @@
 #include "wasm-rt-impl.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,8 +27,13 @@
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
 #include <signal.h>
-#include <sys/mman.h>
 #include <unistd.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/mman.h>
 #endif
 
 #define PAGE_SIZE 65536
@@ -108,6 +114,53 @@ static void signal_handler(int sig, siginfo_t* si, void* unused) {
 }
 #endif
 
+#ifdef _WIN32
+static void* os_mmap(size_t size) {
+  return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_NOACCESS);
+}
+
+static int os_mprotect(void* addr, size_t size) {
+  DWORD old;
+  BOOL succeeded = VirtualProtect((LPVOID)addr, size, PAGE_READWRITE, &old);
+  return succeeded ? 0 : -1;
+}
+
+static void os_print_last_error(const char* msg) {
+  DWORD errorMessageID = GetLastError();
+  if (errorMessageID != 0) {
+    LPSTR messageBuffer = 0;
+    // The api creates the buffer that holds the message
+    size_t size = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR)&messageBuffer, 0, NULL);
+    (void)size;
+    printf("%s. %s\n", msg, messageBuffer);
+    LocalFree(messageBuffer);
+  } else {
+    printf("%s. No error code.\n", msg);
+  }
+}
+#else
+static void* os_mmap(size_t size) {
+  int map_prot = PROT_NONE;
+  int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
+  uint8_t* addr = mmap(NULL, size, map_prot, map_flags, -1, 0);
+  if (addr == MAP_FAILED)
+    return NULL;
+  return addr;
+}
+
+static int os_mprotect(void* addr, size_t size) {
+  return mprotect(addr, size, PROT_READ | PROT_WRITE);
+}
+
+static void os_print_last_error(const char* msg) {
+  perror(msg);
+}
+#endif
+
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
@@ -129,13 +182,17 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   }
 
   /* Reserve 8GiB. */
-  void* addr =
-      mmap(NULL, 0x200000000ul, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void* addr = os_mmap(0x200000000ul);
+
   if (addr == (void*)-1) {
-    perror("mmap failed");
+    os_print_last_error("os_mmap failed.");
     abort();
   }
-  mprotect(addr, byte_length, PROT_READ | PROT_WRITE);
+  int ret = os_mprotect(addr, byte_length);
+  if (ret != 0) {
+    os_print_last_error("os_mprotect failed.");
+    abort();
+  }
   memory->data = addr;
 #else
   memory->data = calloc(byte_length, 1);
@@ -159,7 +216,10 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t delta_size = delta * PAGE_SIZE;
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   uint8_t* new_data = memory->data;
-  mprotect(new_data + old_size, delta_size, PROT_READ | PROT_WRITE);
+  int ret = os_mprotect(new_data + old_size, delta_size);
+  if (ret != 0) {
+    return (uint32_t)-1;
+  }
 #else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
@@ -178,6 +238,74 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   memory->data = new_data;
   return old_pages;
 }
+
+#ifdef _WIN32
+static float quiet_nanf(float x) {
+  uint32_t tmp;
+  memcpy(&tmp, &x, 4);
+  tmp |= 0x7fc00000lu;
+  memcpy(&x, &tmp, 4);
+  return x;
+}
+
+static double quiet_nan(double x) {
+  uint64_t tmp;
+  memcpy(&tmp, &x, 8);
+  tmp |= 0x7ff8000000000000llu;
+  memcpy(&x, &tmp, 8);
+  return x;
+}
+
+double wasm_rt_trunc(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return trunc(x);
+}
+
+float wasm_rt_truncf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return truncf(x);
+}
+
+float wasm_rt_nearbyintf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return nearbyintf(x);
+}
+
+double wasm_rt_nearbyint(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return nearbyint(x);
+}
+
+float wasm_rt_fabsf(float x) {
+  if (isnan(x)) {
+    uint32_t tmp;
+    memcpy(&tmp, &x, 4);
+    tmp = tmp & ~(1 << 31);
+    memcpy(&x, &tmp, 4);
+    return x;
+  }
+  return fabsf(x);
+}
+
+double wasm_rt_fabs(double x) {
+  if (isnan(x)) {
+    uint64_t tmp;
+    memcpy(&tmp, &x, 8);
+    tmp = tmp & ~(1ll << 63);
+    memcpy(&x, &tmp, 8);
+    return x;
+  }
+  return fabs(x);
+}
+#endif
 
 void wasm_rt_allocate_table(wasm_rt_table_t* table,
                             uint32_t elements,
