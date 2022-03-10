@@ -495,6 +495,7 @@ class Store {
   };
 
   static const int max_call_depth = 10;
+  static const Object null_object_;
 
   Features features_;
   GCContext gc_context_;

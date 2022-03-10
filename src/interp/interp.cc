@@ -202,8 +202,11 @@ ValueType FuncDesc::GetLocalType(Index index) const {
 }
 
 //// Store ////
+// static
+const Object Store::null_object_(ObjectKind::Null);
+
 Store::Store(const Features& features) : features_(features) {
-  Ref ref{objects_.New(new Object(ObjectKind::Null))};
+  Ref ref{objects_.New(&null_object_)};
   assert(ref == Ref::Null);
   roots_.New(ref);
 }

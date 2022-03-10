@@ -183,7 +183,8 @@ bool FreeList<T>::IsUsed(Index index) const {
 template <typename T>
 FreeList<T>::~FreeList<T>() {
   for (auto object : list_) {
-    if ((reinterpret_cast<uintptr_t>(object) & ptrFreeBit) == 0) {
+    if ((reinterpret_cast<uintptr_t>(object) & ptrFreeBit) == 0 &&
+        object->kind() != ObjectKind::Null) {
       delete object;
     }
   }
@@ -211,6 +212,7 @@ auto FreeList<T>::New(Args&&... args) -> Index {
 template <typename T>
 void FreeList<T>::Delete(Index index) {
   assert(IsUsed(index));
+  assert(list_[index]->kind() != ObjectKind::Null);
 
   delete list_[index];
   list_[index] = reinterpret_cast<T>((free_head_ << ptrFreeShift) | ptrFreeBit);
