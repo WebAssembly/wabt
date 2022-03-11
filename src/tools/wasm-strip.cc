@@ -25,6 +25,7 @@
 using namespace wabt;
 
 static std::string s_filename;
+static std::string s_outfile;
 
 static const char s_description[] =
     R"(  Remove sections of a WebAssembly binary file.
@@ -42,6 +43,8 @@ static void ParseOptions(int argc, char** argv) {
                        s_filename = argument;
                        ConvertBackslashToSlash(&s_filename);
                      });
+  parser.AddOption('o', "output", "FILE", "output wasm binary file",
+                   [](const char* argument) { s_outfile = argument; });
   parser.Parse(argc, argv);
 }
 
@@ -86,25 +89,30 @@ int ProgramMain(int argc, char** argv) {
 
   std::vector<uint8_t> file_data;
   result = ReadFile(s_filename.c_str(), &file_data);
-  if (Succeeded(result)) {
-    Errors errors;
-    Features features;
-    features.EnableAll();
-    const bool kReadDebugNames = false;
-    const bool kStopOnFirstError = true;
-    const bool kFailOnCustomSectionError = false;
-    ReadBinaryOptions options(features, nullptr, kReadDebugNames,
-                              kStopOnFirstError, kFailOnCustomSectionError);
-
-    BinaryReaderStrip reader(&errors);
-    result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
-    FormatErrorsToFile(errors, Location::Type::Binary);
-
-    if (Succeeded(result)) {
-      result = reader.WriteToFile(s_filename);
-    }
+  if (Failed(result)) {
+    return Result::Error;
   }
-  return result != Result::Ok;
+
+  Errors errors;
+  Features features;
+  features.EnableAll();
+  const bool kReadDebugNames = false;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = false;
+  ReadBinaryOptions options(features, nullptr, kReadDebugNames,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+
+  BinaryReaderStrip reader(&errors);
+  result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
+  FormatErrorsToFile(errors, Location::Type::Binary);
+  if (Failed(result)) {
+    return Result::Error;
+  }
+
+  if (s_outfile.empty()) {
+    s_outfile = s_filename;
+  }
+  return reader.WriteToFile(s_outfile);
 }
 
 int main(int argc, char** argv) {
