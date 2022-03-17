@@ -156,7 +156,7 @@ Code Disassembly:
 000076 func[1] <f1>:
  000077: 20 00                      | local.get 0
  000079: 20 01                      | local.get 1
- 00007b: 11 00 00                   | call_indirect 0 0
+ 00007b: 11 00 00                   | call_indirect 0 (type 0)
  00007e: 1a                         | drop
  00007f: 0b                         | end
 000085 func[2]:

@@ -76,6 +76,7 @@ struct ObjdumpLocalNames {
 struct ObjdumpState {
   std::vector<Reloc> code_relocations;
   std::vector<Reloc> data_relocations;
+  ObjdumpNames type_names;
   ObjdumpNames function_names;
   ObjdumpNames global_names;
   ObjdumpNames section_names;

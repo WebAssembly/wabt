@@ -54,6 +54,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   Result OnRelocCount(Index count, Index section_index) override;
 
  protected:
+  std::string_view GetTypeName(Index index) const;
   std::string_view GetFunctionName(Index index) const;
   std::string_view GetGlobalName(Index index) const;
   std::string_view GetLocalName(Index function_index, Index local_index) const;
@@ -139,6 +140,10 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
   }
 
   return Result::Ok;
+}
+
+std::string_view BinaryReaderObjdumpBase::GetTypeName(Index index) const {
+  return objdump_state_->type_names.Get(index);
 }
 
 std::string_view BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
@@ -276,6 +281,9 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
         SetFunctionName(index, name);
         break;
       */
+      case NameSectionSubsection::Type:
+        SetTypeName(index, name);
+        break;
       case NameSectionSubsection::Global:
         SetGlobalName(index, name);
         break;
@@ -445,6 +453,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
   }
 
  protected:
+  void SetTypeName(Index index, std::string_view name);
   void SetFunctionName(Index index, std::string_view name);
   void SetGlobalName(Index index, std::string_view name);
   void SetLocalName(Index function_index,
@@ -454,6 +463,11 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
   void SetTableName(Index index, std::string_view name);
   void SetSegmentName(Index index, std::string_view name);
 };
+
+void BinaryReaderObjdumpPrepass::SetTypeName(Index index,
+                                             std::string_view name) {
+  objdump_state_->type_names.Set(index, name);
+}
 
 void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
                                                  std::string_view name) {
@@ -517,6 +531,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeIndexIndex(Index value, Index value2) override;
   Result OnOpcodeUint32(uint32_t value) override;
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
+  Result OnCallIndirectExpr(uint32_t sig_indix, uint32_t table_index) override;
   Result OnOpcodeUint32Uint32Uint32(uint32_t value,
                                     uint32_t value2,
                                     uint32_t value3) override;
@@ -543,6 +558,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Index current_function_index = 0;
   Index local_index_ = 0;
   bool in_function_body = false;
+  bool skip_next_opcode_ = false;
 };
 
 std::string BinaryReaderObjdumpDisassemble::BlockSigToString(Type type) const {
@@ -630,6 +646,10 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const char* fmt, ...) {
   // so this should never be called for instructions outside of function bodies
   // (i.e. init expresions).
   assert(in_function_body);
+  if (skip_next_opcode_) {
+    skip_next_opcode_ = false;
+    return;
+  }
   const Offset immediate_len = state->offset - current_opcode_offset;
   const Offset opcode_size = current_opcode.GetLength();
   const Offset total_size = opcode_size + immediate_len;
@@ -773,6 +793,28 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
   } else {
     LogOpcode("%u %u", value, value2);
   }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnCallIndirectExpr(
+    uint32_t sig_index,
+    uint32_t table_index) {
+  std::string_view table_name = GetTableName(table_index);
+  std::string_view type_name = GetTypeName(sig_index);
+  if (!type_name.empty() && !table_name.empty()) {
+    LogOpcode("%u <" PRIstringview "> (type %u <" PRIstringview ">)",
+              table_index, WABT_PRINTF_STRING_VIEW_ARG(table_name), sig_index,
+              WABT_PRINTF_STRING_VIEW_ARG(type_name));
+  } else if (!table_name.empty()) {
+    LogOpcode("%u <" PRIstringview "> (type %u)", table_index,
+              WABT_PRINTF_STRING_VIEW_ARG(table_name), sig_index);
+  } else if (!type_name.empty()) {
+    LogOpcode("%u (type %u <" PRIstringview ">)", table_index, sig_index,
+              WABT_PRINTF_STRING_VIEW_ARG(type_name));
+  } else {
+    LogOpcode("%u (type %u)", table_index, sig_index);
+  }
+  skip_next_opcode_ = true;
   return Result::Ok;
 }
 
