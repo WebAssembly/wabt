@@ -118,10 +118,6 @@ def MangleCWriterName(wasm_filename):
     return result
 
 
-def MangleStateInfoTypeName(stripped_filename):
-    return MangleCWriterName(stripped_filename) + "_module_instance_t"
-
-
 def IsModuleCommand(command):
     return (command['type'] == 'module' or
             command['type'] == 'assert_uninstantiable')
@@ -159,7 +155,7 @@ class CWriter(object):
             return self.module_prefix_map[idx_or_name]
         return self.module_prefix_map[self.module_idx - 1]
 
-    def GetStateInfoName(self, idx_or_name=None):
+    def GetModuleInstanceName(self, idx_or_name=None):
         return self.GetModulePrefix() + '_module_instance'
 
     def _CacheModulePrefixes(self):
@@ -169,8 +165,8 @@ class CWriter(object):
                 name = os.path.basename(command['filename'])
                 name = os.path.splitext(name)[0]
                 name = MangleName(name)
-
                 self.module_prefix_map[idx] = name
+
                 c_filename = command['filename']
                 c_filename = utils.ChangeExt(c_filename, '.c')
                 self.idx_to_c_name[idx] = c_filename
@@ -192,81 +188,50 @@ class CWriter(object):
                 c_filename = command['as'] + '.c'
                 self.idx_to_c_name[name_idx] = c_filename
 
-    def _GenerateModuleImports(self, command):
+    def _WriteModuleInstanceImports(self, command, uninstantiable):
         c_filename = os.path.join(self.out_dir, self.idx_to_c_name[self.module_idx - 1])
         header_filename = utils.ChangeExt(c_filename, '.h')
-        with open(header_filename) as f:
+        with open(header_filename, encoding='utf-8') as f:
             headerfile = f.readlines()
+            imported_modules = set()
             for i in range(0, len(headerfile)):
                 line = headerfile[i]
-                if "Z_spectest_Z_global_i32" in line:
-                    self.out_file.write("%s.Z_spectest_Z_global_i32 = &spectest_global_i32;\n" % self.GetStateInfoName())
-                if "Z_spectest_Z_global_i64" in line:
-                    self.out_file.write("%s.Z_spectest_Z_global_i64 = &spectest_global_i64;\n" % self.GetStateInfoName())
-                if "Z_spectest_Z_table" in line:
-                    self.out_file.write("%s.Z_spectest_Z_table = &spectest_table;\n" % self.GetStateInfoName())
-                if "Z_spectest_Z_memory" in line:
-                    self.out_file.write("%s.Z_spectest_Z_memory = &spectest_memory;\n" % self.GetStateInfoName())
-                if "import: " in line and "spectest" not in line:
-                    next_line = headerfile[i + 1]
-                    if "extern" not in next_line:
-                        line_split = line.split()
-                        import_module_name = MangleName(line_split[2][1:-1])
-                        import_name = next_line.split()[-1][2:-2]
-                        self.out_file.write("%s.%s = %s(&%s);\n" % (self.GetStateInfoName(), import_name, import_name, import_module_name + "_module_instance"))
-                    else:
-                        line_split = line.split()
-                        import_module_name = MangleName(line_split[2][1:-1])
-                        self.out_file.write("%s.%s = &%s;\n" % (self.GetStateInfoName(), import_module_name + "_module_instance", import_module_name + "_module_instance"))
+                if "import: " in line:
+                    line_split = line.split()
+                    import_module_name = MangleName(line_split[2][1:-1])
+                    imported_modules.add(import_module_name)
+
+            if (uninstantiable):
+                self.out_file.write("ASSERT_TRAP(")
+
+            if (len(imported_modules) > 0):
+                self.out_file.write("%s_init(&%s_module_instance" % (self.GetModulePrefix(), self.GetModulePrefix()))
+                for imported_module in sorted(imported_modules):
+                    self.out_file.write(", &%s_module_instance" % imported_module)
+                self.out_file.write(")")
+            else:
+                self.out_file.write("%s_init(&%s_module_instance)" % (self.GetModulePrefix(), self.GetModulePrefix()))
+
+            if (uninstantiable):
+                self.out_file.write(")")
+            self.out_file.write(";\n")
 
     def _WriteModuleImports(self):
         for idx, c_filename in self.idx_to_c_name.items():
-            module_instance_type = "Z_spectest_module_instance_t"
-            module_prefix = self.module_prefix_map[idx]
             header_filename = utils.ChangeExt(os.path.join(self.out_dir, c_filename), '.h')
 
-            with open(header_filename) as f:
+            with open(header_filename, encoding='utf-8') as f:
                 headerfile = f.readlines()
-                import_print = False
-                import_print_i32 = False
-                import_print_f32 = False
-                import_print_i32_f32 = False
-                import_print_f64 = False
-                import_print_f64_f64 = False
                 imported_functions = {}
                 for i in range(0, len(headerfile)):
                     line = headerfile[i]
-                    if "\'spectest\' \'print\'" in line:
-                        import_print = True
-                    if "\'spectest\' \'print_i32\'" in line:
-                        import_print_i32 = True
-                    if "\'spectest\' \'print_f32\'" in line:
-                        import_print_f32 = True
-                    if "\'spectest\' \'print_i32_f32\'" in line:
-                        import_print_i32_f32 = True
-                    if "\'spectest\' \'print_f64\'" in line:
-                        import_print_f64 = True
-                    if "\'spectest\' \'print_f64_f64\'" in line:
-                        import_print_f64_f64 = True
-                    if "import: " in line and "spectest" not in line:
+                    if "import: " in line:
                         next_line = headerfile[i + 1]
                         if "extern" in next_line:
                             line_split = line.split()
                             import_module_name = MangleName(line_split[2][1:-1])
                             import_field_name = MangleName(line_split[3][1:-1])
                             imported_functions[import_module_name + "_" + import_field_name] = next_line[7:-2]
-                if import_print:
-                    self.out_file.write("void %s_Z_spectest_Z_print(%s * module_instance) { spectest_print(); }\n" % (module_prefix, module_instance_type))
-                if import_print_i32:
-                    self.out_file.write("void %s_Z_spectest_Z_print_i32(%s * module_instance, uint32_t i) { spectest_print_i32(i); }\n" % (module_prefix, module_instance_type))
-                if import_print_f32:
-                    self.out_file.write("void %s_Z_spectest_Z_print_f32(%s * module_instance, float f) { spectest_print_f32(f); }\n" % (module_prefix, module_instance_type))
-                if import_print_i32_f32:
-                    self.out_file.write("void %s_Z_spectest_Z_print_i32_f32(%s * module_instance, uint32_t i, float f) { spectest_print_i32_f32(i, f); }\n" % (module_prefix, module_instance_type))
-                if import_print_f64:
-                    self.out_file.write("void %s_Z_spectest_Z_print_f64(%s * module_instance, double d) { spectest_print_f64(d); }\n" % (module_prefix, module_instance_type))
-                if import_print_f64_f64:
-                    self.out_file.write("void %s_Z_spectest_Z_print_f64_f64(%s * module_instance, double d1, double d2) { spectest_print_f64_f64(d1, d2); }\n" % (module_prefix, module_instance_type))
                 for imported_function, internal_name in imported_functions.items():
                     internal_name_split = internal_name[:-1].split(',')
                     if (len(internal_name_split) == 1):
@@ -318,17 +283,15 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%s %s;\n' % (MangleStateInfoTypeName(self.idx_to_c_name[self.module_idx - 1][:-2]), self.GetStateInfoName()))
-        self._GenerateModuleImports(command)
         self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
-        self.out_file.write('%s_init(&%s);\n' % (self.GetModulePrefix(), self.GetStateInfoName()))
+        self.out_file.write('%s_module_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
+        self._WriteModuleInstanceImports(command, False)
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%s %s;\n' % (MangleStateInfoTypeName(self.idx_to_c_name[self.module_idx - 1][:-2]), self.GetStateInfoName()))
-        self._GenerateModuleImports(command)
         self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
-        self.out_file.write('ASSERT_TRAP(%s_init(&%s));\n' % (self.GetModulePrefix(), self.GetStateInfoName()))
+        self.out_file.write('%s_module_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
+        self._WriteModuleInstanceImports(command, True)
 
     def _WriteActionCommand(self, command):
         self.out_file.write('%s;\n' % self._Action(command))
