@@ -49,6 +49,7 @@ struct ReadBinaryOptions {
   bool read_debug_names = false;
   bool stop_on_first_error = true;
   bool fail_on_custom_section_error = true;
+  bool skip_function_bodies = false;
 };
 
 // TODO: Move somewhere else?

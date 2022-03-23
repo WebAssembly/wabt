@@ -2354,6 +2354,7 @@ Result ReadBinaryObjdump(const uint8_t* data,
 
   switch (options->mode) {
     case ObjdumpMode::Prepass: {
+      read_options.skip_function_bodies = true;
       BinaryReaderObjdumpPrepass reader(data, size, options, state);
       return ReadBinary(data, size, &reader, read_options);
     }
@@ -2362,6 +2363,7 @@ Result ReadBinaryObjdump(const uint8_t* data,
       return ReadBinary(data, size, &reader, read_options);
     }
     default: {
+      read_options.skip_function_bodies = true;
       BinaryReaderObjdump reader(data, size, options, state);
       return ReadBinary(data, size, &reader, read_options);
     }

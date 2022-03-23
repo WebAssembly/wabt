@@ -2717,7 +2717,11 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
       CALLBACK(OnLocalDecl, k, num_local_types, local_type);
     }
 
-    CHECK_RESULT(ReadFunctionBody(end_offset));
+    if (options_.skip_function_bodies) {
+      state_.offset = end_offset;
+    } else {
+      CHECK_RESULT(ReadFunctionBody(end_offset));
+    }
 
     CALLBACK(EndFunctionBody, func_index);
   }
