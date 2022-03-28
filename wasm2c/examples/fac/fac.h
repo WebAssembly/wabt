@@ -9,14 +9,6 @@ extern "C" {
 
 #include "wasm-rt.h"
 
-#ifndef WASM_RT_MODULE_PREFIX
-#define WASM_RT_MODULE_PREFIX
-#endif
-
-#define WASM_RT_PASTE_(x, y) x ## y
-#define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)
-#define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)
-
 /* TODO(binji): only use stdint.h types in header */
 #ifndef WASM_RT_CORE_TYPES_DEFINED
 #define WASM_RT_CORE_TYPES_DEFINED
@@ -32,15 +24,16 @@ typedef float f32;
 typedef double f64;
 #endif
 
-
-typedef struct {
+typedef struct Z_fac_module_instance_t {
   wasm_rt_memory_t w2c_M0;
 } Z_fac_module_instance_t;
 
-extern void WASM_RT_ADD_PREFIX(init)(Z_fac_module_instance_t *);
+extern void Z_fac_init_module();
+extern void Z_fac_init(Z_fac_module_instance_t*);
+extern void Z_fac_free(Z_fac_module_instance_t*);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(Z_fac_module_instance_t *, u32);
+extern u32 Z_fac_Z_fac(Z_fac_module_instance_t*, u32);
 #ifdef __cplusplus
 }
 #endif
