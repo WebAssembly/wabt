@@ -126,6 +126,11 @@ static void* os_mmap(size_t size) {
   return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_NOACCESS);
 }
 
+static int os_munmap(void* addr, size_t size) {
+  BOOL succeeded = VirtualFree(addr, size, MEM_RELEASE);
+  return succeeded ? 0 : -1;
+}
+
 static int os_mprotect(void* addr, size_t size) {
   DWORD old;
   BOOL succeeded = VirtualProtect((LPVOID)addr, size, PAGE_READWRITE, &old);
@@ -157,6 +162,10 @@ static void* os_mmap(size_t size) {
   if (addr == MAP_FAILED)
     return NULL;
   return addr;
+}
+
+static int os_munmap(void* addr, size_t size) {
+  return munmap(addr, size);
 }
 
 static int os_mprotect(void* addr, size_t size) {
@@ -273,6 +282,14 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   return old_pages;
 }
 
+void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  os_munmap(memory->data, memory->size);  // ignore error?
+#else
+  free(memory->data);
+#endif
+}
+
 #ifdef _WIN32
 static float quiet_nanf(float x) {
   uint32_t tmp;
@@ -347,6 +364,10 @@ void wasm_rt_allocate_table(wasm_rt_table_t* table,
   table->size = elements;
   table->max_size = max_elements;
   table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
+}
+
+void wasm_rt_free_table(wasm_rt_table_t* table) {
+  free(table->data);
 }
 
 const char* wasm_rt_strerror(wasm_rt_trap_t trap) {

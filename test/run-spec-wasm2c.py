@@ -145,6 +145,7 @@ class CWriter(object):
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
         for command in self.commands:
             self._WriteCommand(command)
+        self._WriteModuleCleanUps()
         self.out_file.write("\n}\n")
 
     def GetModuleFilenames(self):
@@ -244,6 +245,11 @@ class CWriter(object):
                         for i in range(0, len(internal_name_split) - 1):
                             self.out_file.write("i%d, " % i)
                         self.out_file.write("i%d); }\n" % (len(internal_name_split) - 1))
+
+    def _WriteModuleCleanUps(self):
+        for idx, c_filename in self.idx_to_c_name.items():
+            module_prefix = self.module_prefix_map[idx]
+            self.out_file.write("%s_free(&%s_module_instance);\n" % (module_prefix, module_prefix))
 
     def _MaybeWriteDummyModule(self):
         if len(self.GetModuleFilenames()) == 0:
