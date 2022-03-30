@@ -122,6 +122,7 @@ class CWriter(object):
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
         self.unmangled_names = {}
+        self.idx_to_module_name = {}
         self._MaybeWriteDummyModule()
         self._CacheModulePrefixes()
 
@@ -162,6 +163,7 @@ class CWriter(object):
 
                 if 'name' in command:
                     self.module_name_to_idx[command['name']] = idx
+                    self.idx_to_module_name[idx] = command['name']
                     self.module_prefix_map[command['name']] = name
 
                 idx += 1
@@ -173,6 +175,8 @@ class CWriter(object):
                 else:
                     name_idx = idx - 1
 
+                if name_idx in self.idx_to_module_name:
+                    self.module_prefix_map[self.idx_to_module_name[name_idx]] = name
                 self.module_prefix_map[name_idx] = name
                 self.unmangled_names[name_idx] = command['as']
 
