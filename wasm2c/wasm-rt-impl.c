@@ -358,17 +358,43 @@ double wasm_rt_fabs(double x) {
 }
 #endif
 
-void wasm_rt_allocate_table(wasm_rt_table_t* table,
-                            uint32_t elements,
-                            uint32_t max_elements) {
-  table->size = elements;
-  table->max_size = max_elements;
-  table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
-}
+#define DEFINE_TABLE_OPS(type)                                          \
+  void wasm_rt_allocate_##type##_table(wasm_rt_##type##_table_t* table, \
+                                       uint32_t elements,               \
+                                       uint32_t max_elements) {         \
+    table->size = elements;                                             \
+    table->max_size = max_elements;                                     \
+    table->data = calloc(table->size, sizeof(wasm_rt_##type##_t));      \
+  }                                                                     \
+  void wasm_rt_free_##type##_table(wasm_rt_##type##_table_t* table) {   \
+    free(table->data);                                                  \
+  }                                                                     \
+  uint32_t wasm_rt_grow_##type##_table(wasm_rt_##type##_table_t* table, \
+                                       uint32_t delta,                  \
+                                       wasm_rt_##type##_t init) {       \
+    uint32_t old_elems = table->size;                                   \
+    uint64_t new_elems = (uint64_t)table->size + delta;                 \
+    if (new_elems == 0) {                                               \
+      return 0;                                                         \
+    }                                                                   \
+    if ((new_elems < old_elems) || (new_elems > table->max_size)) {     \
+      return (uint32_t)-1;                                              \
+    }                                                                   \
+    void* new_data =                                                    \
+        realloc(table->data, new_elems * sizeof(wasm_rt_##type##_t));   \
+    if (!new_data) {                                                    \
+      return (uint32_t)-1;                                              \
+    }                                                                   \
+    table->data = new_data;                                             \
+    table->size = new_elems;                                            \
+    for (uint32_t i = old_elems; i < new_elems; i++) {                  \
+      table->data[i] = init;                                            \
+    }                                                                   \
+    return old_elems;                                                   \
+  }
 
-void wasm_rt_free_table(wasm_rt_table_t* table) {
-  free(table->data);
-}
+DEFINE_TABLE_OPS(funcref)
+DEFINE_TABLE_OPS(externref)
 
 const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
   switch (trap) {
