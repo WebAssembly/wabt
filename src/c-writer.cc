@@ -1476,6 +1476,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
 void CWriter::WriteInit() {
   Write(Newline(), "void " + MangleName(module_name_) + "_init_module()",
         OpenBrace());
+  Write("wasm_rt_init();", Newline());
   Write("init_func_types();", Newline());
   Write(CloseBrace(), Newline());
 
