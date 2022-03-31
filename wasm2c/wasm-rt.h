@@ -43,18 +43,6 @@ extern "C" {
 #define wasm_rt_memcpy memcpy
 #endif
 
-/** Maximum stack depth before trapping. This can be configured by defining
- * this symbol before including wasm-rt when building the generated c files,
- * for example:
- *
- * ```
- *   cc -c -DWASM_RT_MAX_CALL_STACK_DEPTH=100 my_module.c -o my_module.o
- * ```
- * */
-#ifndef WASM_RT_MAX_CALL_STACK_DEPTH
-#define WASM_RT_MAX_CALL_STACK_DEPTH 500
-#endif
-
 /** Enable memory checking via a signal handler via the following definition:
  *
  * #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
@@ -85,6 +73,22 @@ extern "C" {
 
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
+
+/** When the signal handler is not used, stack depth is limited explicitly.
+ * The maximum stack depth before trapping can be configured by defining
+ * this symbol before including wasm-rt when building the generated c files,
+ * for example:
+ *
+ * ```
+ *   cc -c -DWASM_RT_MAX_CALL_STACK_DEPTH=100 my_module.c -o my_module.o
+ * ```
+ * */
+#ifndef WASM_RT_MAX_CALL_STACK_DEPTH
+#define WASM_RT_MAX_CALL_STACK_DEPTH 500
+#endif
+
+/** Current call stack depth. */
+extern uint32_t wasm_rt_call_stack_depth;
 
 #endif
 
@@ -231,9 +235,6 @@ extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
-
-/** Current call stack depth. */
-extern uint32_t wasm_rt_call_stack_depth;
 
 #ifdef _WIN32
 float wasm_rt_truncf(float x);
