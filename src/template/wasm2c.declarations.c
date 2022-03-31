@@ -472,42 +472,80 @@ static inline void memory_init(wasm_rt_memory_t* dest,
 
 typedef struct {
   uint32_t func_type_index;
-  wasm_rt_funcref_t func;
+  wasm_rt_function_ptr_t func;
   size_t module_offset;
 } wasm_elem_segment_expr_t;
 
-static inline void table_init(wasm_rt_table_t* dest,
-                              const wasm_elem_segment_expr_t* src,
-                              u32 src_size,
-                              u32 dest_addr,
-                              u32 src_addr,
-                              u32 n,
-                              void* module_instance,
-                              const u32* func_types) {
+static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
+                                      const wasm_elem_segment_expr_t* src,
+                                      u32 src_size,
+                                      u32 dest_addr,
+                                      u32 src_addr,
+                                      u32 n,
+                                      void* module_instance,
+                                      const u32* func_types) {
   if (UNLIKELY(src_addr + (uint64_t)n > src_size))
     TRAP(OOB);
   if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
     TRAP(OOB);
   for (u32 i = 0; i < n; i++) {
     const wasm_elem_segment_expr_t* src_expr = &src[src_addr + i];
-    dest->data[dest_addr + i] =
-        (wasm_rt_elem_t){func_types[src_expr->func_type_index], src_expr->func,
-                         (char*)module_instance + src_expr->module_offset};
+    dest->data[dest_addr + i] = (wasm_rt_funcref_t){
+        func_types[src_expr->func_type_index], src_expr->func,
+        (char*)module_instance + src_expr->module_offset};
   }
 }
 
-static inline void table_copy(wasm_rt_table_t* dest,
-                              const wasm_rt_table_t* src,
-                              u32 dest_addr,
-                              u32 src_addr,
-                              u32 n) {
-  if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
-    TRAP(OOB);
-  if (UNLIKELY(src_addr + (uint64_t)n > src->size))
-    TRAP(OOB);
+#define DEFINE_TABLE_COPY(type)                                              \
+  static inline void type##_table_copy(wasm_rt_##type##_table_t* dest,       \
+                                       const wasm_rt_##type##_table_t* src,  \
+                                       u32 dest_addr, u32 src_addr, u32 n) { \
+    if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))                      \
+      TRAP(OOB);                                                             \
+    if (UNLIKELY(src_addr + (uint64_t)n > src->size))                        \
+      TRAP(OOB);                                                             \
+                                                                             \
+    memmove(dest->data + dest_addr, src->data + src_addr,                    \
+            n * sizeof(wasm_rt_##type##_t));                                 \
+  }
 
-  memmove(dest->data + dest_addr, src->data + src_addr,
-          n * sizeof(wasm_rt_elem_t));
-}
+DEFINE_TABLE_COPY(funcref)
+DEFINE_TABLE_COPY(externref)
+
+#define DEFINE_TABLE_GET(type)                        \
+  static inline wasm_rt_##type##_t type##_table_get(  \
+      const wasm_rt_##type##_table_t* table, u32 i) { \
+    if (UNLIKELY(i >= table->size))                   \
+      TRAP(OOB);                                      \
+    return table->data[i];                            \
+  }
+
+DEFINE_TABLE_GET(funcref)
+DEFINE_TABLE_GET(externref)
+
+#define DEFINE_TABLE_SET(type)                                               \
+  static inline void type##_table_set(const wasm_rt_##type##_table_t* table, \
+                                      u32 i, const wasm_rt_##type##_t val) { \
+    if (UNLIKELY(i >= table->size))                                          \
+      TRAP(OOB);                                                             \
+    table->data[i] = val;                                                    \
+  }
+
+DEFINE_TABLE_SET(funcref)
+DEFINE_TABLE_SET(externref)
+
+#define DEFINE_TABLE_FILL(type)                                               \
+  static inline void type##_table_fill(const wasm_rt_##type##_table_t* table, \
+                                       u32 d, const wasm_rt_##type##_t val,   \
+                                       u32 n) {                               \
+    if (UNLIKELY((uint64_t)d + n > table->size))                              \
+      TRAP(OOB);                                                              \
+    for (uint32_t i = d; i < d + n; i++) {                                    \
+      table->data[i] = val;                                                   \
+    }                                                                         \
+  }
+
+DEFINE_TABLE_FILL(funcref)
+DEFINE_TABLE_FILL(externref)
 
 static bool s_module_initialized = false;

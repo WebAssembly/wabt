@@ -287,8 +287,10 @@ uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
 void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages);
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 void wasm_rt_free_memory(wasm_rt_memory_t*);
-void wasm_rt_allocate_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
-void wasm_rt_free_table(wasm_rt_table_t*);
+void wasm_rt_allocate_funcref_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
+void wasm_rt_allocate_externref_table(wasm_rt_externref_table_t*, uint32_t elements, uint32_t max_elements);
+void wasm_rt_free_funcref_table(wasm_rt_table_t*);
+void wasm_rt_free_externref_table(wasm_rt_table_t*);
 uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
 ```
 
@@ -320,11 +322,12 @@ memory instance, in pages.
 
 `wasm_rt_free_memory` frees the memory instance.
 
-`wasm_rt_allocate_table` initializes a table instance, and allocates at least
-enough space for the given number of initial elements. The elements must be
-cleared to zero.
+`wasm_rt_allocate_funcref_table` and the similar `..._externref_table`
+initialize a table instance of the given type, and allocate at least
+enough space for the given number of initial elements. The elements
+must be cleared to zero.
 
-`wasm_rt_free_table` frees the table instance.
+`wasm_rt_free_funcref_table` and `..._externref_table` free the table instance.
 
 `wasm_rt_call_stack_depth` is the current stack call depth. Since this is
 shared between modules, it must be defined only once, by the embedder.
