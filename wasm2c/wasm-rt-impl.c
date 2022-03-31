@@ -45,11 +45,12 @@ typedef struct FuncType {
   uint32_t result_count;
 } FuncType;
 
-uint32_t wasm_rt_call_stack_depth;
-uint32_t g_saved_call_stack_depth;
-
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 bool g_signal_handler_installed = false;
+char g_alt_stack[SIGSTKSZ];
+#else
+uint32_t wasm_rt_call_stack_depth;
+uint32_t g_saved_call_stack_depth;
 #endif
 
 jmp_buf g_jmp_buf;
@@ -58,7 +59,9 @@ uint32_t g_func_type_count;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
+#if !WASM_RT_MEMCHECK_SIGNAL_HANDLER
   wasm_rt_call_stack_depth = g_saved_call_stack_depth;
+#endif
   WASM_RT_LONGJMP(g_jmp_buf, code);
 }
 
@@ -110,7 +113,11 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
 static void signal_handler(int sig, siginfo_t* si, void* unused) {
-  wasm_rt_trap(WASM_RT_TRAP_OOB);
+  if (si->si_code == SEGV_ACCERR) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
 }
 #endif
 
@@ -168,8 +175,19 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
+
+    /* Use alt stack to handle SIGSEGV from stack overflow */
+    stack_t ss;
+    ss.ss_sp = g_alt_stack;
+    ss.ss_flags = 0;
+    ss.ss_size = sizeof(g_alt_stack);
+    if (sigaltstack(&ss, NULL) != 0) {
+      perror("sigaltstack failed");
+      abort();
+    }
+
     struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = signal_handler;
 
