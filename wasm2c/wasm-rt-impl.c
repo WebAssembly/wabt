@@ -338,7 +338,13 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
     case WASM_RT_TRAP_NONE:
       return "No error";
     case WASM_RT_TRAP_OOB:
+#if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
+      return "Out-of-bounds access in linear memory or call stack exhausted";
+#else
       return "Out-of-bounds access in linear memory";
+    case WASM_RT_TRAP_EXHAUSTION:
+      return "Call stack exhausted";
+#endif
     case WASM_RT_TRAP_INT_OVERFLOW:
       return "Integer overflow on divide or truncation";
     case WASM_RT_TRAP_DIV_BY_ZERO:
@@ -349,8 +355,6 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "Unreachable instruction executed";
     case WASM_RT_TRAP_CALL_INDIRECT:
       return "Invalid call_indirect";
-    case WASM_RT_TRAP_EXHAUSTION:
-      return "Call stack exhausted";
   }
   return "invalid trap code";
 }

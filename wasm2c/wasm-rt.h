@@ -94,6 +94,12 @@ extern "C" {
 #define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
+#if defined(__APPLE__) && WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 1
+#else
+#define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 0
+#endif
+
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
 typedef enum {
   WASM_RT_TRAP_NONE,         /** No error. */
@@ -103,7 +109,11 @@ typedef enum {
   WASM_RT_TRAP_INVALID_CONVERSION, /** Conversion from NaN to integer. */
   WASM_RT_TRAP_UNREACHABLE,        /** Unreachable instruction executed. */
   WASM_RT_TRAP_CALL_INDIRECT,      /** Invalid call_indirect, for any reason. */
-  WASM_RT_TRAP_EXHAUSTION,         /** Call stack exhausted. */
+#if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
+  WASM_RT_TRAP_EXHAUSTION = WASM_RT_TRAP_OOB,
+#else
+  WASM_RT_TRAP_EXHAUSTION, /** Call stack exhausted. */
+#endif
 } wasm_rt_trap_t;
 
 /** Value types. Used to define function signatures. */
