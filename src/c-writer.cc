@@ -1035,8 +1035,9 @@ void CWriter::WriteInstanceImports() {
   }
   Write(Newline());
 
-  // Add ptrs to module instances that a func is imported from to
-  // modname_import_t
+  // Add pointers to module instances that any func is imported from,
+  // so that imported functions can be given their own module instances
+  // when invoked
   Write("typedef struct ", MangleModuleInstanceTypeName(module_name_), " ",
         OpenBrace());
   for (auto import_module : import_func_module_set_) {
@@ -1142,6 +1143,13 @@ void CWriter::WriteModuleInstance() {
   WriteGlobals();
   WriteMemories();
   WriteTables();
+
+  // C forbids an empty struct
+  if (module_->imports.empty() && module_->globals.empty() &&
+      module_->memories.empty() && module_->tables.empty()) {
+    Write("char dummy_member;", Newline());
+  }
+
   Write(CloseBrace(), " ", MangleModuleInstanceTypeName(module_name_), ";",
         Newline());
   Write(Newline());
