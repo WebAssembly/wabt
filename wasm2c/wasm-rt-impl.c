@@ -47,7 +47,7 @@ typedef struct FuncType {
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 bool g_signal_handler_installed = false;
-char g_alt_stack[SIGSTKSZ];
+char* g_alt_stack;
 #else
 uint32_t wasm_rt_call_stack_depth;
 uint32_t g_saved_call_stack_depth;
@@ -168,19 +168,22 @@ static void os_print_last_error(const char* msg) {
 }
 #endif
 
-void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
-                             uint32_t initial_pages,
-                             uint32_t max_pages) {
-  uint32_t byte_length = initial_pages * PAGE_SIZE;
+void wasm_rt_init() {
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
 
     /* Use alt stack to handle SIGSEGV from stack overflow */
+    g_alt_stack = malloc(SIGSTKSZ);
+    if (g_alt_stack == NULL) {
+      perror("malloc failed");
+      abort();
+    }
+
     stack_t ss;
     ss.ss_sp = g_alt_stack;
     ss.ss_flags = 0;
-    ss.ss_size = sizeof(g_alt_stack);
+    ss.ss_size = SIGSTKSZ;
     if (sigaltstack(&ss, NULL) != 0) {
       perror("sigaltstack failed");
       abort();
@@ -198,7 +201,20 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
       abort();
     }
   }
+#endif
+}
 
+void wasm_rt_free() {
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  free(g_alt_stack);
+#endif
+}
+
+void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
+                             uint32_t initial_pages,
+                             uint32_t max_pages) {
+  uint32_t byte_length = initial_pages * PAGE_SIZE;
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   /* Reserve 8GiB. */
   void* addr = os_mmap(0x200000000ul);
 

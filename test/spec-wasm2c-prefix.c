@@ -255,8 +255,10 @@ static void init_spectest_module(void) {
 
 
 int main(int argc, char** argv) {
+  wasm_rt_init();
   init_spectest_module();
   run_spec_tests();
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
+  wasm_rt_free();
   return g_tests_passed != g_tests_run;
 }

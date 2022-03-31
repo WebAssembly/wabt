@@ -164,6 +164,12 @@ typedef struct {
   uint32_t size;
 } wasm_rt_table_t;
 
+/** Initialize the runtime. */
+void wasm_rt_init();
+
+/** Free the runtime's state. */
+void wasm_rt_free();
+
 /** Stop execution immediately and jump back to the call to `wasm_rt_try`.
  *  The result of `wasm_rt_try` will be the provided trap reason.
  *
