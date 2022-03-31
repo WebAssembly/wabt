@@ -977,7 +977,7 @@ bool WastParser::ParseRefTypeOpt(Type* out_type) {
   return true;
 }
 
-Result WastParser::ParseQuotedText(std::string* text) {
+Result WastParser::ParseQuotedText(std::string* text, bool check_utf8) {
   WABT_TRACE(ParseQuotedText);
   if (!PeekMatch(TokenType::Text)) {
     return ErrorExpected({"a quoted string"}, "\"foo\"");
@@ -985,7 +985,7 @@ Result WastParser::ParseQuotedText(std::string* text) {
 
   Token token = Consume();
   RemoveEscapes(token.text(), std::back_inserter(*text));
-  if (!IsValidUtf8(text->data(), text->length())) {
+  if (check_utf8 && !IsValidUtf8(text->data(), text->length())) {
     Error(token.loc, "quoted string has an invalid utf-8 encoding");
   }
   return Result::Ok;
@@ -1894,7 +1894,7 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   std::string_view name = tk.text();
   name.remove_prefix(sizeof("metadata.code.") - 1);
   std::string data_text;
-  CHECK_RESULT(ParseQuotedText(&data_text));
+  CHECK_RESULT(ParseQuotedText(&data_text, false));
   std::vector<uint8_t> data(data_text.begin(), data_text.end());
   exprs->push_back(MakeUnique<CodeMetadataExpr>(name, std::move(data)));
   TokenType rpar = Peek();
