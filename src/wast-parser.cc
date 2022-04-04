@@ -853,7 +853,7 @@ bool WastParser::ParseElemExprVarListOpt(ExprListVector* out_list) {
   return !out_list->empty();
 }
 
-Result WastParser::ParseValueType(Var* out_type) {
+Result WastParser::ParseValueType(Type* out_type, Var* out_var) {
   WABT_TRACE(ParseValueType);
 
   const bool is_ref_type = PeekMatchRefType();
@@ -866,8 +866,17 @@ Result WastParser::ParseValueType(Var* out_type) {
   if (is_ref_type) {
     EXPECT(Lpar);
     EXPECT(Ref);
-    CHECK_RESULT(ParseVar(out_type));
+    Var name;
+    CHECK_RESULT(ParseVar(&name));
+    if (out_var) {
+      *out_var = name;
+    }
     EXPECT(Rpar);
+    if (name.is_index()) {
+      *out_type = Type(Type::Reference, name.index());
+    } else {
+      *out_type = Type(Type::Reference, kInvalidIndex);
+    }
     return Result::Ok;
   }
 
@@ -892,7 +901,7 @@ Result WastParser::ParseValueType(Var* out_type) {
     return Result::Error;
   }
 
-  *out_type = Var(type);
+  *out_type = type;
   return Result::Ok;
 }
 
@@ -905,17 +914,15 @@ Result WastParser::ParseValueTypeList(
       break;
     }
 
-    Var type;
-    CHECK_RESULT(ParseValueType(&type));
+    Var index;
+    Type type;
+    CHECK_RESULT(ParseValueType(&type, &index));
 
-    if (type.is_index()) {
-      out_type_list->push_back(Type(type.index()));
-    } else {
-      assert(type.is_name());
+    if (index.is_name()) {
       assert(options_->features.function_references_enabled());
-      type_names->emplace(out_type_list->size(), type.name());
-      out_type_list->push_back(Type(Type::Reference, kInvalidIndex));
+      type_names->emplace(out_type_list->size(), index.name());
     }
+    out_type_list->push_back(type);
   }
 
   return Result::Ok;
@@ -1427,15 +1434,11 @@ Result WastParser::ParseField(Field* field) {
     // TODO: Share with ParseGlobalType?
     if (MatchLpar(TokenType::Mut)) {
       field->mutable_ = true;
-      Var type;
-      CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.index());
+      CHECK_RESULT(ParseValueType(&field->type));
       EXPECT(Rpar);
     } else {
       field->mutable_ = false;
-      Var type;
-      CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.index());
+      CHECK_RESULT(ParseValueType(&field->type));
     }
     return Result::Ok;
   };
@@ -1793,20 +1796,18 @@ Result WastParser::ParseBoundValueTypeList(
   while (MatchLpar(token)) {
     if (PeekMatch(TokenType::Var)) {
       std::string name;
-      Var type;
+      Var index;
+      Type type;
       Location loc = GetLocation();
       ParseBindVarOpt(&name);
-      CHECK_RESULT(ParseValueType(&type));
+      CHECK_RESULT(ParseValueType(&type, &index));
       bindings->emplace(name,
                         Binding(loc, binding_index_offset + types->size()));
-      if (type.is_index()) {
-        types->push_back(Type(type.index()));
-      } else {
-        assert(type.is_name());
+      if (index.is_name()) {
         assert(options_->features.function_references_enabled());
-        type_names->emplace(binding_index_offset + types->size(), type.name());
-        types->push_back(Type(Type::Reference, kInvalidIndex));
+        type_names->emplace(binding_index_offset + types->size(), index.name());
       }
+      types->push_back(type);
     } else {
       CHECK_RESULT(ParseValueTypeList(types, type_names));
     }
@@ -3116,15 +3117,11 @@ Result WastParser::ParseGlobalType(Global* global) {
   WABT_TRACE(ParseGlobalType);
   if (MatchLpar(TokenType::Mut)) {
     global->mutable_ = true;
-    Var type;
-    CHECK_RESULT(ParseValueType(&type));
-    global->type = Type(type.index());
+    CHECK_RESULT(ParseValueType(&global->type));
     CHECK_RESULT(ErrorIfLpar({"i32", "i64", "f32", "f64"}));
     EXPECT(Rpar);
   } else {
-    Var type;
-    CHECK_RESULT(ParseValueType(&type));
-    global->type = Type(type.index());
+    CHECK_RESULT(ParseValueType(&global->type));
   }
 
   return Result::Ok;

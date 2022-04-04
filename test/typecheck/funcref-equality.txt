@@ -1,0 +1,24 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+(module
+  (type $f32-f32-1 (func (param f32) (result f32)))
+  (type $f32-f32-2 (func (param f32) (result f32)))
+
+  (func $foo (param $f (ref $f32-f32-1)) (result f32)
+    (call_ref (f32.const 42.0) (local.get $f))
+  )
+
+  (func $bar (type $f32-f32-2)
+    (f32.const 1.0)
+  )
+
+  (func (export "main") (result f32)
+    ;; $f32-f32-1 and $f32-f32-2 should be equal
+    (call $foo (ref.func $bar))
+  )
+
+  (elem declare funcref (ref.func $bar))
+)
+
+(;; STDERR ;;;
+;;; STDERR ;;)
