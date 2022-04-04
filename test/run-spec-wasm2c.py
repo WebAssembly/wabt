@@ -350,6 +350,7 @@ def Compile(cc, c_filename, out_dir, *args):
         args += ['-c', c_filename, '-o', o_filename,
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-tautological-constant-out-of-range-compare',
+                 '-Wno-infinite-recursion', '-Wbidi-chars=none',
                  '-std=c99', '-D_DEFAULT_SOURCE']
     # Use RunWithArgsForStdout and discard stdout because cl.exe
     # unconditionally prints the name of input files on stdout
