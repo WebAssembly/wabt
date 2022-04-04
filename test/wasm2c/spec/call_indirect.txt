@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/call_indirect.wast
+(;; STDOUT ;;;
+134/134 tests passed.
+;;; STDOUT ;;)
