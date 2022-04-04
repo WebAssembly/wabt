@@ -402,9 +402,10 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "No error";
     case WASM_RT_TRAP_OOB:
 #if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
-      return "Out-of-bounds access in linear memory or call stack exhausted";
+      return "Out-of-bounds access in linear memory or a table, or call stack "
+             "exhausted";
 #else
-      return "Out-of-bounds access in linear memory";
+      return "Out-of-bounds access in linear memory or a table";
     case WASM_RT_TRAP_EXHAUSTION:
       return "Call stack exhausted";
 #endif

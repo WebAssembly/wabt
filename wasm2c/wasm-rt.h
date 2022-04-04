@@ -107,7 +107,7 @@ extern uint32_t wasm_rt_call_stack_depth;
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
 typedef enum {
   WASM_RT_TRAP_NONE,         /** No error. */
-  WASM_RT_TRAP_OOB,          /** Out-of-bounds access in linear memory. */
+  WASM_RT_TRAP_OOB,          /** Out-of-bounds access in linear memory or a table. */
   WASM_RT_TRAP_INT_OVERFLOW, /** Integer overflow on divide or truncation. */
   WASM_RT_TRAP_DIV_BY_ZERO,  /** Integer divide by zero. */
   WASM_RT_TRAP_INVALID_CONVERSION, /** Conversion from NaN to integer. */
