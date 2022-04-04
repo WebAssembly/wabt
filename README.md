@@ -308,7 +308,7 @@ $ make clang-debug-ubsan
 ```
 
 There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
-(MSAN), Leak Sanitizer (LSAN) and Undefine Behavior Sanitizer (UBSAN). You can
+(MSAN), Leak Sanitizer (LSAN) and Undefined Behavior Sanitizer (UBSAN). You can
 read about the behaviors of the sanitizers in the link above, but essentially
 the Address Sanitizer finds invalid memory accesses (use after free, access
 out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory,
