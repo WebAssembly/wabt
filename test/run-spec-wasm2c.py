@@ -513,6 +513,7 @@ def main(args):
     parser.add_argument('--enable-multi-memory', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
+    parser.add_argument('--unsafe-ignore-validation-failure', action='store_true')
     options = parser.parse_args(args)
 
     with utils.TempDirectory(options.out_dir, 'run-spec-wasm2c-') as out_dir:
@@ -537,6 +538,8 @@ def main(args):
         wasm2c.verbose = options.print_cmd
         wasm2c.AppendOptionalArgs({
             '--enable-multi-memory': options.enable_multi_memory})
+        wasm2c.AppendOptionalArgs({
+            '--unsafe-ignore-validation-failure': options.unsafe_ignore_validation_failure})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
         cc = utils.Executable(options.cc, *options.cflags, forward_stderr=True,

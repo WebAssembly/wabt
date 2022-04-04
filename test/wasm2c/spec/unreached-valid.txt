@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/unreached-valid.wast
+;;; ARGS*: --unsafe-ignore-validation-failure
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)

@@ -42,6 +42,7 @@ static std::string s_outfile;
 static Features s_features;
 static WriteCOptions s_write_c_options;
 static bool s_read_debug_names = true;
+static bool s_ignore_validation_failure = false;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
@@ -81,6 +82,9 @@ static void ParseOptions(int argc, char** argv) {
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
+  parser.AddOption("unsafe-ignore-validation-failure",
+                   "Continue if module fails to validate",
+                   []() { s_ignore_validation_failure = true; });
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) {
                        s_infile = argument;
@@ -138,14 +142,14 @@ int ProgramMain(int argc, char** argv) {
         result |= GenerateNames(&module);
       }
 
-      if (Succeeded(result)) {
+      if (Succeeded(result) || s_ignore_validation_failure) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */
         Result dummy_result = ApplyNames(&module);
         WABT_USE(dummy_result);
       }
 
-      if (Succeeded(result)) {
+      if (Succeeded(result) || s_ignore_validation_failure) {
         if (!s_outfile.empty()) {
           std::string header_name_full =
               std::string(strip_extension(s_outfile)) + ".h";
