@@ -168,7 +168,7 @@ static void os_print_last_error(const char* msg) {
 }
 #endif
 
-void wasm_rt_init() {
+void wasm_rt_init(void) {
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
@@ -204,7 +204,7 @@ void wasm_rt_init() {
 #endif
 }
 
-void wasm_rt_free() {
+void wasm_rt_free(void) {
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   free(g_alt_stack);
 #endif
