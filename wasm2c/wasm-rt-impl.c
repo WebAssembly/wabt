@@ -45,11 +45,12 @@ typedef struct FuncType {
   uint32_t result_count;
 } FuncType;
 
-uint32_t wasm_rt_call_stack_depth;
-uint32_t g_saved_call_stack_depth;
-
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 bool g_signal_handler_installed = false;
+char* g_alt_stack;
+#else
+uint32_t wasm_rt_call_stack_depth;
+uint32_t g_saved_call_stack_depth;
 #endif
 
 jmp_buf g_jmp_buf;
@@ -58,7 +59,9 @@ uint32_t g_func_type_count;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
+#if !WASM_RT_MEMCHECK_SIGNAL_HANDLER
   wasm_rt_call_stack_depth = g_saved_call_stack_depth;
+#endif
   WASM_RT_LONGJMP(g_jmp_buf, code);
 }
 
@@ -110,7 +113,11 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
 static void signal_handler(int sig, siginfo_t* si, void* unused) {
-  wasm_rt_trap(WASM_RT_TRAP_OOB);
+  if (si->si_code == SEGV_ACCERR) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
 }
 #endif
 
@@ -161,15 +168,29 @@ static void os_print_last_error(const char* msg) {
 }
 #endif
 
-void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
-                             uint32_t initial_pages,
-                             uint32_t max_pages) {
-  uint32_t byte_length = initial_pages * PAGE_SIZE;
+void wasm_rt_init(void) {
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
+
+    /* Use alt stack to handle SIGSEGV from stack overflow */
+    g_alt_stack = malloc(SIGSTKSZ);
+    if (g_alt_stack == NULL) {
+      perror("malloc failed");
+      abort();
+    }
+
+    stack_t ss;
+    ss.ss_sp = g_alt_stack;
+    ss.ss_flags = 0;
+    ss.ss_size = SIGSTKSZ;
+    if (sigaltstack(&ss, NULL) != 0) {
+      perror("sigaltstack failed");
+      abort();
+    }
+
     struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = signal_handler;
 
@@ -180,7 +201,20 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
       abort();
     }
   }
+#endif
+}
 
+void wasm_rt_free(void) {
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  free(g_alt_stack);
+#endif
+}
+
+void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
+                             uint32_t initial_pages,
+                             uint32_t max_pages) {
+  uint32_t byte_length = initial_pages * PAGE_SIZE;
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   /* Reserve 8GiB. */
   void* addr = os_mmap(0x200000000ul);
 
@@ -320,7 +354,13 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
     case WASM_RT_TRAP_NONE:
       return "No error";
     case WASM_RT_TRAP_OOB:
+#if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
+      return "Out-of-bounds access in linear memory or call stack exhausted";
+#else
       return "Out-of-bounds access in linear memory";
+    case WASM_RT_TRAP_EXHAUSTION:
+      return "Call stack exhausted";
+#endif
     case WASM_RT_TRAP_INT_OVERFLOW:
       return "Integer overflow on divide or truncation";
     case WASM_RT_TRAP_DIV_BY_ZERO:
@@ -331,8 +371,6 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "Unreachable instruction executed";
     case WASM_RT_TRAP_CALL_INDIRECT:
       return "Invalid call_indirect";
-    case WASM_RT_TRAP_EXHAUSTION:
-      return "Call stack exhausted";
   }
   return "invalid trap code";
 }

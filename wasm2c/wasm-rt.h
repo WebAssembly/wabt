@@ -43,18 +43,6 @@ extern "C" {
 #define wasm_rt_memcpy memcpy
 #endif
 
-/** Maximum stack depth before trapping. This can be configured by defining
- * this symbol before including wasm-rt when building the generated c files,
- * for example:
- *
- * ```
- *   cc -c -DWASM_RT_MAX_CALL_STACK_DEPTH=100 my_module.c -o my_module.o
- * ```
- * */
-#ifndef WASM_RT_MAX_CALL_STACK_DEPTH
-#define WASM_RT_MAX_CALL_STACK_DEPTH 500
-#endif
-
 /** Enable memory checking via a signal handler via the following definition:
  *
  * #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
@@ -86,12 +74,34 @@ extern "C" {
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
 
+/** When the signal handler is not used, stack depth is limited explicitly.
+ * The maximum stack depth before trapping can be configured by defining
+ * this symbol before including wasm-rt when building the generated c files,
+ * for example:
+ *
+ * ```
+ *   cc -c -DWASM_RT_MAX_CALL_STACK_DEPTH=100 my_module.c -o my_module.o
+ * ```
+ * */
+#ifndef WASM_RT_MAX_CALL_STACK_DEPTH
+#define WASM_RT_MAX_CALL_STACK_DEPTH 500
+#endif
+
+/** Current call stack depth. */
+extern uint32_t wasm_rt_call_stack_depth;
+
 #endif
 
 #if defined(_MSC_VER)
 #define WASM_RT_NO_RETURN __declspec(noreturn)
 #else
 #define WASM_RT_NO_RETURN __attribute__((noreturn))
+#endif
+
+#if defined(__APPLE__) && WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 1
+#else
+#define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 0
 #endif
 
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
@@ -103,7 +113,11 @@ typedef enum {
   WASM_RT_TRAP_INVALID_CONVERSION, /** Conversion from NaN to integer. */
   WASM_RT_TRAP_UNREACHABLE,        /** Unreachable instruction executed. */
   WASM_RT_TRAP_CALL_INDIRECT,      /** Invalid call_indirect, for any reason. */
-  WASM_RT_TRAP_EXHAUSTION,         /** Call stack exhausted. */
+#if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
+  WASM_RT_TRAP_EXHAUSTION = WASM_RT_TRAP_OOB,
+#else
+  WASM_RT_TRAP_EXHAUSTION, /** Call stack exhausted. */
+#endif
 } wasm_rt_trap_t;
 
 /** Value types. Used to define function signatures. */
@@ -149,6 +163,12 @@ typedef struct {
   /** The current element count of the table. */
   uint32_t size;
 } wasm_rt_table_t;
+
+/** Initialize the runtime. */
+void wasm_rt_init(void);
+
+/** Free the runtime's state. */
+void wasm_rt_free(void);
 
 /** Stop execution immediately and jump back to the call to `wasm_rt_try`.
  *  The result of `wasm_rt_try` will be the provided trap reason.
@@ -221,9 +241,6 @@ extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
-
-/** Current call stack depth. */
-extern uint32_t wasm_rt_call_stack_depth;
 
 #ifdef _WIN32
 float wasm_rt_truncf(float x);

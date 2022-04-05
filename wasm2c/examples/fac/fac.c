@@ -6,11 +6,17 @@
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#define FUNC_PROLOGUE
+
+#define FUNC_EPILOGUE
+#else
 #define FUNC_PROLOGUE                                            \
   if (++wasm_rt_call_stack_depth > WASM_RT_MAX_CALL_STACK_DEPTH) \
     TRAP(EXHAUSTION)
 
 #define FUNC_EPILOGUE --wasm_rt_call_stack_depth
+#endif
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
@@ -113,20 +119,21 @@ DEFINE_STORE(i64_store32, u32, u64)
 
 #include <intrin.h>
 
-// Adapted from https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
+// Adapted from
+// https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
 
 static inline int I64_CLZ(unsigned long long v) {
   unsigned long r = 0;
 #if defined(_M_AMD64) || defined(_M_ARM)
-    if (_BitScanReverse64(&r, v)) {
-      return 63 - r;
-    }
+  if (_BitScanReverse64(&r, v)) {
+    return 63 - r;
+  }
 #else
-    if (_BitScanReverse(&r, (unsigned long) (v >> 32))) {
-      return 31 - r;
-    } else if (_BitScanReverse(&r, (unsigned long) v)) {
-      return 63 - r;
-    }
+  if (_BitScanReverse(&r, (unsigned long) (v >> 32))) {
+    return 31 - r;
+  } else if (_BitScanReverse(&r, (unsigned long) v)) {
+    return 63 - r;
+  }
 #endif
   return 64;
 }
@@ -145,15 +152,15 @@ static inline int I64_CTZ(unsigned long long v) {
   }
   unsigned long r = 0;
 #if defined(_M_AMD64) || defined(_M_ARM)
-    _BitScanForward64(&r, v);
-    return (int) r;
+  _BitScanForward64(&r, v);
+  return (int) r;
 #else
-    if (_BitScanForward(&r, (unsigned int) (v))) {
-      return (int) (r);
-    }
+  if (_BitScanForward(&r, (unsigned int) (v))) {
+    return (int) (r);
+  }
 
-    _BitScanForward(&r, (unsigned int) (v >> 32));
-    return (int) (r + 32);
+  _BitScanForward(&r, (unsigned int) (v >> 32));
+  return (int) (r + 32);
 #endif
 }
 

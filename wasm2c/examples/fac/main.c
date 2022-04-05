@@ -14,6 +14,9 @@ int main(int argc, char** argv) {
   to a `u32`, which is what `fac` expects. */
   u32 x = atoi(argv[1]);
 
+  /* Initialize the Wasm runtime. */
+  wasm_rt_init();
+
   /* Initialize the fac module. Since we didn't define WASM_RT_MODULE_PREFIX,
   the initialization function is called `init`. */
   init();
@@ -23,6 +26,9 @@ int main(int argc, char** argv) {
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
+
+  /* Free the Wasm runtime state. */
+  wasm_rt_free();
 
   return 0;
 }

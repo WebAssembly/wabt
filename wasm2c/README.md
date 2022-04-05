@@ -75,6 +75,9 @@ int main(int argc, char** argv) {
   to a `u32`, which is what `fac` expects. */
   u32 x = atoi(argv[1]);
 
+  /* Initialize the Wasm runtime. */
+  wasm_rt_init();
+
   /* Initialize the fac module. Since we didn't define WASM_RT_MODULE_PREFIX,
   the initialization function is called `init`. */
   init();
@@ -84,6 +87,9 @@ int main(int argc, char** argv) {
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
+
+  /* Free the Wasm runtime state. */
+  wasm_rt_free();
 
   return 0;
 }
@@ -171,8 +177,9 @@ all WebAssembly modules.
 #endif  /* WASM_RT_INCLUDED_ */
 ```
 
-First we can specify the maximum call depth before trapping. This defaults to
-500:
+First we can specify the maximum call depth before trapping (used only on
+platforms where we cannot use a signal handler to detect and recover
+from stack-size exhaustion). This defaults to 500:
 
 ```c
 #ifndef WASM_RT_MAX_CALL_STACK_DEPTH

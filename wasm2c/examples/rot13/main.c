@@ -37,6 +37,9 @@ static void buf_done(u32 ptr, u32 size);
 static const char* s_input;
 
 int main(int argc, char** argv) {
+  /* Initialize the Wasm runtime. */
+  wasm_rt_init();
+
   /* Initialize the rot13 module. Since we didn't define WASM_RT_MODULE_PREFIX,
   the initialization function is called `init`. */
   init();
@@ -59,6 +62,10 @@ int main(int argc, char** argv) {
     s_input = argv[0];
     Z_rot13Z_vv();
   }
+
+  /* Free the Wasm runtime state. */
+  wasm_rt_free();
+
   return 0;
 }
 
