@@ -25,10 +25,10 @@ typedef double f64;
 #endif
 
 typedef struct Z_fac_module_instance_t {
-  wasm_rt_memory_t w2c_M0;
+  char dummy_member;
 } Z_fac_module_instance_t;
 
-extern void Z_fac_init_module();
+extern void Z_fac_init_module(void);
 extern void Z_fac_init(Z_fac_module_instance_t*);
 extern void Z_fac_free(Z_fac_module_instance_t*);
 

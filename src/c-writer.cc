@@ -1,5 +1,5 @@
 /*
- / Copyright 2017 WebAssembly Community Group participants
+ * Copyright 2017 WebAssembly Community Group participants
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,7 +135,12 @@ class CWriter {
         c_stream_(c_stream),
         h_stream_(h_stream),
         header_name_(header_name),
-        module_name_(header_name_.substr(0, header_name_.size() - 2)) {}
+        module_name_(header_name_) {
+    if ((module_name_.size() > 2) &&
+        (module_name_.substr(module_name_.size() - 2) == ".h")) {
+      module_name_.erase(module_name_.size() - 2);
+    }
+  }
 
   Result WriteModule(const Module&);
 
@@ -237,7 +242,7 @@ class CWriter {
   void WriteMultivalueTypes();
   void WriteFuncTypes();
   void ComputeUniqueImports();
-  void WriteInstanceImports();
+  void BeginInstance();
   void WriteImports();
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&);
@@ -473,8 +478,7 @@ std::string CWriter::MangleModuleInstanceTypeName(
 // static
 std::string CWriter::ExternalName(std::string_view module_name,
                                   std::string_view name) {
-  return MangleName(std::string(module_name)) + "_" +
-         MangleName(std::string(name));
+  return MangleName(module_name) + "_" + MangleName(name);
 }
 
 // static
@@ -834,7 +838,7 @@ void CWriter::Write(const Const& const_) {
 }
 
 void CWriter::WriteInitDecl() {
-  Write("extern void " + MangleName(module_name_) + "_init_module();",
+  Write("extern void " + MangleName(module_name_) + "_init_module(void);",
         Newline());
   Write("extern void " + MangleName(module_name_) + "_init(",
         MangleModuleInstanceTypeName(module_name_), "*");
@@ -946,7 +950,16 @@ void CWriter::WriteFuncTypes() {
 void CWriter::ComputeUniqueImports() {
   std::map<std::pair<std::string, std::string>, const Import*> import_map;
   for (const Import* import : module_->imports) {
-    import_map.try_emplace({import->module_name, import->field_name}, import);
+    auto key = make_pair(import->module_name, import->field_name);
+    auto insertion_result = import_map.emplace(key, import);
+    if (!insertion_result.second) {
+      if (insertion_result.first->second->kind() != import->kind()) {
+        UNIMPLEMENTED("contradictory import declaration");
+      } else {
+        fprintf(stderr, "warning: duplicate import declaration \"%s\" \"%s\"\n",
+                import->module_name.c_str(), import->field_name.c_str());
+      }
+    }
     import_module_set_.insert(import->module_name);
     if (import->kind() == ExternalKind::Func) {
       import_func_module_set_.insert(import->module_name);
@@ -958,7 +971,7 @@ void CWriter::ComputeUniqueImports() {
   }
 }
 
-void CWriter::WriteInstanceImports() {
+void CWriter::BeginInstance() {
   if (module_->imports.empty()) {
     Write("typedef struct ", MangleModuleInstanceTypeName(module_name_), " ",
           OpenBrace());
@@ -1122,6 +1135,7 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
   Write(ResultType(decl.sig.result_types), " ", name, "(");
   Write(MangleModuleInstanceTypeName(module_name_), "*");
   WriteParamTypes(decl);
+  Write(")");
 }
 
 void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
@@ -1130,16 +1144,18 @@ void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
   Write(ResultType(decl.sig.result_types), " ", name, "(");
   Write("struct ", MangleModuleInstanceTypeName(module_name), "*");
   WriteParamTypes(decl);
+  Write(")");
 }
 
 void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
                                                const std::string& name) {
   Write(ResultType(decl.sig.result_types), " ", name, "(void*");
   WriteParamTypes(decl);
+  Write(")");
 }
 
 void CWriter::WriteModuleInstance() {
-  WriteInstanceImports();
+  BeginInstance();
   WriteGlobals();
   WriteMemories();
   WriteTables();
@@ -1474,7 +1490,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "void " + MangleName(module_name_) + "_init_module()",
+  Write(Newline(), "void " + MangleName(module_name_) + "_init_module(void)",
         OpenBrace());
   Write("wasm_rt_init();", Newline());
   Write("init_func_types();", Newline());
@@ -1701,7 +1717,6 @@ void CWriter::WriteParamTypes(const FuncDeclaration& decl) {
       Write(decl.GetParamType(i));
     }
   }
-  Write(")");
 }
 
 void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {

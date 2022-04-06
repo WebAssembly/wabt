@@ -28,7 +28,7 @@
        , ((t)table.data[x].func)(__VA_ARGS__))
 
 #define RANGE_CHECK(mem, offset, len) \
-  if (UNLIKELY(offset + (uint64_t)len > mem->size)) TRAP(OOB)
+  if (UNLIKELY(offset + (u64)len > mem->size)) TRAP(OOB)
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define MEMCHECK(mem, a, t)

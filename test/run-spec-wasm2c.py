@@ -193,10 +193,8 @@ class CWriter(object):
         c_filename = os.path.join(self.out_dir, self.idx_to_c_name[self.module_idx - 1])
         header_filename = utils.ChangeExt(c_filename, '.h')
         with open(header_filename, encoding='utf-8') as f:
-            headerfile = f.readlines()
             imported_modules = set()
-            for i in range(0, len(headerfile)):
-                line = headerfile[i]
+            for line in f:
                 if "import: " in line:
                     line_split = line.split()
                     import_module_name = MangleName(line_split[2][1:-1])
@@ -205,7 +203,7 @@ class CWriter(object):
             if (uninstantiable):
                 self.out_file.write("ASSERT_TRAP(")
 
-            if (len(imported_modules) > 0):
+            if len(imported_modules) > 0:
                 self.out_file.write("%s_init(&%s_module_instance" % (self.GetModulePrefix(), self.GetModulePrefix()))
                 for imported_module in sorted(imported_modules):
                     self.out_file.write(", &%s_module_instance" % imported_module)
@@ -222,16 +220,19 @@ class CWriter(object):
             header_filename = utils.ChangeExt(os.path.join(self.out_dir, c_filename), '.h')
 
             with open(header_filename, encoding='utf-8') as f:
+                # read the whole file at once, because we want to
+                # look ahead to detect a function import (via "extern")
                 headerfile = f.readlines()
                 imported_functions = {}
                 for i in range(0, len(headerfile)):
                     line = headerfile[i]
                     if "import: " in line:
                         next_line = headerfile[i + 1]
-                        if "extern" in next_line:
+                        if next_line.startswith("extern "):
                             line_split = line.split()
                             import_module_name = MangleName(line_split[2][1:-1])
                             import_field_name = MangleName(line_split[3][1:-1])
+                            # extract function declaration between "extern" and final semicolon
                             imported_functions[import_module_name + "_" + import_field_name] = next_line[7:-2]
                 for imported_function, internal_name in imported_functions.items():
                     internal_name_split = internal_name[:-1].split(',')
@@ -414,7 +415,7 @@ class CWriter(object):
         field = mangled_module_name + "_" + MangleName(action['field'])
         if type_ == 'invoke':
             args = self._ConstantList(action.get('args', []))
-            if (len(args) == 0):
+            if len(args) == 0:
                 args = '&' + mangled_module_name + "_module_instance"
             else:
                 args = '&' + mangled_module_name + "_module_instance" + ', ' + args

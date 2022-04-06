@@ -28,7 +28,7 @@
        , ((t)table.data[x].func)(__VA_ARGS__))
 
 #define RANGE_CHECK(mem, offset, len) \
-  if (UNLIKELY(offset + (uint64_t)len > mem->size)) TRAP(OOB)
+  if (UNLIKELY(offset + (u64)len > mem->size)) TRAP(OOB)
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define MEMCHECK(mem, a, t)
@@ -324,9 +324,7 @@ static u32 w2c_fac(Z_fac_module_instance_t* module_instance, u32 w2c_p0) {
 
 static void init_globals(Z_fac_module_instance_t* module_instance) {
 }
-
 static void init_memory(Z_fac_module_instance_t* module_instance) {
-  wasm_rt_allocate_memory(&module_instance->w2c_M0, 1, 65536);
 }
 
 static void init_table(Z_fac_module_instance_t* module_instance) {
@@ -338,7 +336,8 @@ u32 Z_fac_Z_fac(Z_fac_module_instance_t* module_instance, u32 w2c_p0) {
   return w2c_fac(module_instance, w2c_p0);
 }
 
-void Z_fac_init_module(){
+void Z_fac_init_module(void){
+  wasm_rt_init();
   init_func_types();
 }
 
@@ -349,5 +348,4 @@ void Z_fac_init(Z_fac_module_instance_t* module_instance) {
 }
 
 void Z_fac_free(Z_fac_module_instance_t* module_instance) {
-  wasm_rt_free_memory(&module_instance->w2c_M0);
 }

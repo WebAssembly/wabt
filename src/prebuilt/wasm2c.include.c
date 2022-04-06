@@ -31,7 +31,7 @@ const char SECTION_NAME(declarations)[] =
 "       , ((t)table.data[x].func)(__VA_ARGS__))\n"
 "\n"
 "#define RANGE_CHECK(mem, offset, len) \\\n"
-"  if (UNLIKELY(offset + (uint64_t)len > mem->size)) TRAP(OOB)\n"
+"  if (UNLIKELY(offset + (u64)len > mem->size)) TRAP(OOB)\n"
 "\n"
 "#if WASM_RT_MEMCHECK_SIGNAL_HANDLER\n"
 "#define MEMCHECK(mem, a, t)\n"
