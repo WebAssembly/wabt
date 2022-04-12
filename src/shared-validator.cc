@@ -211,6 +211,7 @@ Result SharedValidator::OnExport(const Location& loc,
   switch (kind) {
     case ExternalKind::Func:
       result |= CheckFuncIndex(item_var);
+      declared_funcs_.insert(item_var.index());
       break;
 
     case ExternalKind::Table:
@@ -951,7 +952,13 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
   if (Succeeded(result)) {
-    check_declared_funcs_.push_back(func_var);
+    // Reference declarations aren't needed for uses in global sections, and
+    // the use in a global itself counts as a declaration.
+    if (!in_init_expr_) {
+      check_declared_funcs_.push_back(func_var);
+    } else {
+      declared_funcs_.insert(func_var.index());
+    }
     Index func_type = GetFunctionTypeIndex(func_var.index());
     result |= typechecker_.OnRefFuncExpr(func_type);
   }
