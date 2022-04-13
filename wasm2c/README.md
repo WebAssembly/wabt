@@ -48,21 +48,21 @@ files.
 To actually use our fac module, we'll use create a new file, `main.c`, that
 include `fac.h`, initializes the module, and calls `fac`.
 
-`wasm2c` generates a few symbols for us, `init` and `Z_facZ_ii`. `init`
-initializes the module, and `Z_facZ_ii` is our exported `fac` function, but
+`wasm2c` generates a few symbols for us, `init` and `Z_fac`. `init`
+initializes the module, and `Z_fac` is our exported `fac` function, but
 [name-mangled](https://en.wikipedia.org/wiki/Name_mangling) to include the
 function signature.
 
 We can define `WASM_RT_MODULE_PREFIX` before including `fac.h` to generate
 these symbols with a prefix, in case we already have a symbol called `init` (or
-even `Z_facZ_ii`!) Note that you'll have to compile `fac.c` with this macro
+even `Z_fac`!) Note that you'll have to compile `fac.c` with this macro
 too, for this to work.
 
 ```c
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Uncomment this to define fac_init and fac_Z_facZ_ii instead. */
+/* Uncomment this to define fac_init and fac_Z_fac instead. */
 /* #define WASM_RT_MODULE_PREFIX fac_ */
 
 #include "fac.h"
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
   init();
 
   /* Call `fac`, using the mangled name. */
-  u32 result = Z_facZ_ii(x);
+  u32 result = Z_fac(x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
@@ -138,7 +138,7 @@ extern "C" {
 extern void WASM_RT_ADD_PREFIX(init)(void);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*WASM_RT_ADD_PREFIX(Z_fac))(u32);
 #ifdef __cplusplus
 }
 #endif
@@ -345,15 +345,14 @@ the module can be used:
 extern void WASM_RT_ADD_PREFIX(init)(void);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*WASM_RT_ADD_PREFIX(Z_fac))(u32);
 ```
 
 All exported names use `WASM_RT_ADD_PREFIX` (as described above) to allow the
 symbols to placed in a namespace as decided by the embedder. All symbols are
 also mangled so they include the types of the function signature.
 
-In our example, `Z_facZ_ii` is the mangling for a function named `fac` that
-takes one `i32` parameter and returns one `i32` result.
+In our example, `Z_fac` is the mangling for a function named `fac`.
 
 ## A quick look at `fac.c`
 

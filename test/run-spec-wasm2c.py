@@ -311,24 +311,11 @@ class CWriter(object):
     def _CompareList(self, consts):
         return ' && '.join(self._Compare(num, const) for num, const in enumerate(consts))
 
-    def _ActionSig(self, action, expected):
-        type_ = action['type']
-        result_types = [result['type'] for result in expected]
-        arg_types = [arg['type'] for arg in action.get('args', [])]
-        if type_ == 'invoke':
-            return MangleTypes(result_types) + MangleTypes(arg_types)
-        elif type_ == 'get':
-            return MangleType(result_types[0])
-        else:
-            raise Error('Unexpected action type: %s' % type_)
-
     def _Action(self, command):
         action = command['action']
-        expected = command['expected']
         type_ = action['type']
         mangled_module_name = self.GetModulePrefix(action.get('module'))
-        field = (mangled_module_name + MangleName(action['field']) +
-                 MangleName(self._ActionSig(action, expected)))
+        field = mangled_module_name + MangleName(action['field'])
         if type_ == 'invoke':
             return '%s(%s)' % (field, self._ConstantList(action.get('args', [])))
         elif type_ == 'get':

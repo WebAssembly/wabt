@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Uncomment this to define fac_init and fac_Z_facZ_ii instead. */
+/* Uncomment this to define fac_init and fac_Z_fac instead. */
 /* #define WASM_RT_MODULE_PREFIX fac_ */
 
 #include "fac.h"
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   init();
 
   /* Call `fac`, using the mangled name. */
-  u32 result = Z_facZ_ii(x);
+  u32 result = Z_fac(x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
