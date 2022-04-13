@@ -491,7 +491,7 @@ Result TypeChecker::OnBrTableTarget(Index depth) {
   if (br_table_sig_ == nullptr) {
     br_table_sig_ = &label_sig;
   } else {
-    if (*br_table_sig_ != label_sig) {
+    if (br_table_sig_->size() != label_sig.size()) {
       result |= Result::Error;
       PrintError("br_table labels have inconsistent types: expected %s, got %s",
                  TypesToString(*br_table_sig_).c_str(),
