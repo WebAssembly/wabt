@@ -91,5 +91,5 @@ out/test/spec/simd_load_extend.wast:306: assert_malformed passed:
   out/test/spec/simd_load_extend/simd_load_extend.18.wat:1:56: error: unexpected token ), expected EOF.
   (memory 1) (func (drop (i64x2.load64x1_u (i32.const 0))))
                                                          ^
-102/102 tests passed.
+104/104 tests passed.
 ;;; STDOUT ;;)

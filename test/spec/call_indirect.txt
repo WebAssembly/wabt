@@ -150,5 +150,5 @@ out/test/spec/call_indirect.wast:1004: assert_invalid passed:
 out/test/spec/call_indirect.wast:1015: assert_invalid passed:
   0000000: error: function variable out of range: 0 (max 0)
   0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
-167/167 tests passed.
+169/169 tests passed.
 ;;; STDOUT ;;)

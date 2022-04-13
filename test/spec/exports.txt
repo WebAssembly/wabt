@@ -94,5 +94,5 @@ out/test/spec/exports.wast:232: assert_invalid passed:
 out/test/spec/exports.wast:236: assert_invalid passed:
   out/test/spec/exports/exports.86.wasm:000001e: error: duplicate export "a"
   000001e: error: OnExport callback failed
-40/40 tests passed.
+96/96 tests passed.
 ;;; STDOUT ;;)

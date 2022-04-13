@@ -10,5 +10,5 @@ out/test/spec/simd_i32x4_dot_i16x8.wast:95: assert_invalid passed:
 out/test/spec/simd_i32x4_dot_i16x8.wast:103: assert_invalid passed:
   out/test/spec/simd_i32x4_dot_i16x8/simd_i32x4_dot_i16x8.3.wasm:000001b: error: type mismatch in i32x4.dot_i16x8_s, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
-29/29 tests passed.
+30/30 tests passed.
 ;;; STDOUT ;;)

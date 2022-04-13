@@ -8,5 +8,5 @@ out/test/spec/ref_is_null.wast:52: assert_invalid passed:
   000001b: error: OnRefIsNullExpr callback failed
 out/test/spec/ref_is_null.wast:56: assert_invalid passed:
   0000018: error: OnRefIsNullExpr callback failed
-15/15 tests passed.
+16/16 tests passed.
 ;;; STDOUT ;;)

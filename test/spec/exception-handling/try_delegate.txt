@@ -26,5 +26,5 @@ out/test/spec/exception-handling/try_delegate.wast:159: assert_malformed passed:
 out/test/spec/exception-handling/try_delegate.wast:164: assert_invalid passed:
   out/test/spec/exception-handling/try_delegate/try_delegate.5.wasm:000001b: error: invalid depth: 2 (max 1)
   000001b: error: OnDelegateExpr callback failed
-20/20 tests passed.
+21/21 tests passed.
 ;;; STDOUT ;;)

@@ -37,5 +37,5 @@ out/test/spec/simd_i16x8_extmul_i8x16.wast:389: assert_invalid passed:
 out/test/spec/simd_i16x8_extmul_i8x16.wast:397: assert_invalid passed:
   out/test/spec/simd_i16x8_extmul_i8x16/simd_i16x8_extmul_i8x16.12.wasm:000001b: error: type mismatch in i16x8.extmul_high_i8x16_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
-116/116 tests passed.
+117/117 tests passed.
 ;;; STDOUT ;;)

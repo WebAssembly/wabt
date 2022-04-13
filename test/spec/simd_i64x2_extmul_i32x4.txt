@@ -37,5 +37,5 @@ out/test/spec/simd_i64x2_extmul_i32x4.wast:389: assert_invalid passed:
 out/test/spec/simd_i64x2_extmul_i32x4.wast:397: assert_invalid passed:
   out/test/spec/simd_i64x2_extmul_i32x4/simd_i64x2_extmul_i32x4.12.wasm:000001b: error: type mismatch in i64x2.extmul_high_i32x4_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
-116/116 tests passed.
+117/117 tests passed.
 ;;; STDOUT ;;)

@@ -9,5 +9,5 @@ out/test/spec/type.wast:48: assert_malformed passed:
   out/test/spec/type/type.2.wat:1:21: error: unexpected token $x, expected ).
   (type (func (result $x i32)))
                       ^^
-2/2 tests passed.
+3/3 tests passed.
 ;;; STDOUT ;;)

@@ -85,5 +85,5 @@ out/test/spec/simd_load_splat.wast:247: assert_invalid passed:
 out/test/spec/simd_load_splat.wast:255: assert_invalid passed:
   out/test/spec/simd_load_splat/simd_load_splat.13.wasm:0000021: error: type mismatch in v128.load64_splat, expected [i32] but got []
   0000021: error: OnLoadSplatExpr callback failed
-124/124 tests passed.
+126/126 tests passed.
 ;;; STDOUT ;;)

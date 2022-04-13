@@ -31,5 +31,5 @@ out/test/spec/table_fill.wast:135: assert_invalid passed:
 out/test/spec/table_fill.wast:146: assert_invalid passed:
   out/test/spec/table_fill/table_fill.9.wasm:0000028: error: type mismatch in implicit return, expected [i32] but got []
   0000028: error: EndFunctionBody callback failed
-44/44 tests passed.
+45/45 tests passed.
 ;;; STDOUT ;;)

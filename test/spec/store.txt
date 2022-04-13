@@ -182,5 +182,5 @@ out/test/spec/store.wast:416: assert_invalid passed:
 out/test/spec/store.wast:417: assert_invalid passed:
   out/test/spec/store/store.58.wasm:0000023: error: type mismatch in f64.store, expected [i32, f64] but got [i32, i64]
   0000023: error: OnStoreExpr callback failed
-67/67 tests passed.
+68/68 tests passed.
 ;;; STDOUT ;;)

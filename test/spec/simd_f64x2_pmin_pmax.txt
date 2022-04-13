@@ -51,5 +51,5 @@ out/test/spec/simd_f64x2_pmin_pmax.wast:11661: assert_invalid passed:
 out/test/spec/simd_f64x2_pmin_pmax.wast:11669: assert_invalid passed:
   out/test/spec/simd_f64x2_pmin_pmax/simd_f64x2_pmin_pmax.14.wasm:000001b: error: type mismatch in f64x2.pmax, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
-3886/3886 tests passed.
+3887/3887 tests passed.
 ;;; STDOUT ;;)

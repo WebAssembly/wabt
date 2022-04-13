@@ -9,5 +9,5 @@ out/test/spec/unwind.wast:245: assert_trap passed: unreachable executed
 out/test/spec/unwind.wast:251: assert_trap passed: unreachable executed
 out/test/spec/unwind.wast:257: assert_trap passed: unreachable executed
 out/test/spec/unwind.wast:263: assert_trap passed: unreachable executed
-49/49 tests passed.
+50/50 tests passed.
 ;;; STDOUT ;;)

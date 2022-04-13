@@ -400,5 +400,5 @@ out/test/spec/if.wast:1548: assert_malformed passed:
   out/test/spec/if/if.115.wat:1:37: error: mismatching label "$a" != "$l"
   (func i32.const 0 if $a else $l end $l)
                                       ^^
-238/238 tests passed.
+239/239 tests passed.
 ;;; STDOUT ;;)

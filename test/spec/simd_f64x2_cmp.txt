@@ -79,5 +79,5 @@ out/test/spec/simd_f64x2_cmp.wast:8052: assert_invalid passed:
 out/test/spec/simd_f64x2_cmp.wast:8060: assert_invalid passed:
   out/test/spec/simd_f64x2_cmp/simd_f64x2_cmp.24.wasm:000001a: error: type mismatch in f64x2.ge, expected [v128, v128] but got []
   000001a: error: OnCompareExpr callback failed
-2683/2683 tests passed.
+2685/2685 tests passed.
 ;;; STDOUT ;;)

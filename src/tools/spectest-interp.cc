@@ -1274,7 +1274,7 @@ wabt::Result CommandRunner::Run(const Script& script) {
   for (const CommandPtr& command : script.commands) {
     switch (command->type) {
       case CommandType::Module:
-        OnModuleCommand(cast<ModuleCommand>(command.get()));
+        TallyCommand(OnModuleCommand(cast<ModuleCommand>(command.get())));
         break;
 
       case CommandType::Action:
@@ -1282,7 +1282,10 @@ wabt::Result CommandRunner::Run(const Script& script) {
         break;
 
       case CommandType::Register:
-        OnRegisterCommand(cast<RegisterCommand>(command.get()));
+        if (Failed(OnRegisterCommand(cast<RegisterCommand>(command.get())))) {
+          PrintError(command->line, "invalid register command");
+          return wabt::Result::Error;
+        }
         break;
 
       case CommandType::AssertMalformed:

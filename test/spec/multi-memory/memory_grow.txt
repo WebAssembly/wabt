@@ -36,5 +36,5 @@ out/test/spec/multi-memory/memory_grow.wast:499: assert_invalid passed:
 out/test/spec/multi-memory/memory_grow.wast:508: assert_invalid passed:
   out/test/spec/multi-memory/memory_grow/memory_grow.16.wasm:0000022: error: type mismatch in implicit return, expected [f32] but got [i32]
   0000022: error: EndFunctionBody callback failed
-140/140 tests passed.
+148/148 tests passed.
 ;;; STDOUT ;;)

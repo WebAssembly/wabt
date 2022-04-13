@@ -35,5 +35,5 @@ out/test/spec/memory64/memory64.wast:43: assert_invalid passed:
 out/test/spec/memory64/memory64.wast:49: assert_invalid passed:
   out/test/spec/memory64/memory64/memory64.18.wasm:000000e: error: max pages (0) must be >= initial pages (1)
   000000e: error: OnMemory callback failed
-57/57 tests passed.
+65/65 tests passed.
 ;;; STDOUT ;;)

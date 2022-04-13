@@ -30,5 +30,5 @@ out/test/spec/func_ptrs.wast:80: assert_trap passed: undefined table index
 out/test/spec/func_ptrs.wast:89: assert_trap passed: undefined table index
 out/test/spec/func_ptrs.wast:90: assert_trap passed: undefined table index
 out/test/spec/func_ptrs.wast:91: assert_trap passed: undefined table index
-33/33 tests passed.
+36/36 tests passed.
 ;;; STDOUT ;;)

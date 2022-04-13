@@ -82,5 +82,5 @@ out/test/spec/simd_i8x16_arith2.wast:477: assert_invalid passed:
 out/test/spec/simd_i8x16_arith2.wast:485: assert_invalid passed:
   out/test/spec/simd_i8x16_arith2/simd_i8x16_arith2.25.wasm:000001a: error: type mismatch in i8x16.popcnt, expected [v128] but got []
   000001a: error: OnUnaryExpr callback failed
-209/209 tests passed.
+211/211 tests passed.
 ;;; STDOUT ;;)

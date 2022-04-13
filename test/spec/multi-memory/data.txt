@@ -59,5 +59,5 @@ out/test/spec/multi-memory/data.wast:475: assert_invalid passed:
 out/test/spec/multi-memory/data.wast:484: assert_invalid passed:
   out/test/spec/multi-memory/data/data.57.wasm:000002d: error: initializer expression cannot reference a mutable global
   000002d: error: OnGlobalGetExpr callback failed
-33/33 tests passed.
+58/58 tests passed.
 ;;; STDOUT ;;)

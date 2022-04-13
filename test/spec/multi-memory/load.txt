@@ -192,5 +192,5 @@ out/test/spec/multi-memory/load.wast:615: assert_invalid passed:
 out/test/spec/multi-memory/load.wast:624: assert_invalid passed:
   out/test/spec/multi-memory/load/load.62.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
-113/113 tests passed.
+117/117 tests passed.
 ;;; STDOUT ;;)

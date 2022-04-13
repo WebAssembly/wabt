@@ -60,5 +60,5 @@ out/test/spec/simd_i16x8_arith2.wast:423: assert_invalid passed:
 out/test/spec/simd_i16x8_arith2.wast:431: assert_invalid passed:
   out/test/spec/simd_i16x8_arith2/simd_i16x8_arith2.19.wasm:000001b: error: type mismatch in i16x8.abs, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
-170/170 tests passed.
+172/172 tests passed.
 ;;; STDOUT ;;)

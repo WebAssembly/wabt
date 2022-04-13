@@ -529,5 +529,5 @@ out/test/spec/block.wast:1489: assert_malformed passed:
   out/test/spec/block/block.170.wat:1:20: error: mismatching label "$a" != "$l"
   (func block $a end $l)
                      ^^
-222/222 tests passed.
+223/223 tests passed.
 ;;; STDOUT ;;)

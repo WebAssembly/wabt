@@ -17,5 +17,5 @@ out/test/spec/custom.wast:115: assert_malformed passed:
   000000a: error: invalid section size: extends past end
 out/test/spec/custom.wast:123: assert_malformed passed:
   0000013: error: data segment count does not equal count in DataCount section
-8/8 tests passed.
+11/11 tests passed.
 ;;; STDOUT ;;)

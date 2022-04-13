@@ -18,5 +18,5 @@ out/test/spec/exception-handling/rethrow.wast:94: assert_invalid passed:
 out/test/spec/exception-handling/rethrow.wast:95: assert_invalid passed:
   out/test/spec/exception-handling/rethrow/rethrow.3.wasm:000001b: error: rethrow not in try catch block
   000001b: error: OnRethrowExpr callback failed
-15/15 tests passed.
+16/16 tests passed.
 ;;; STDOUT ;;)

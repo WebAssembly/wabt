@@ -30,5 +30,5 @@ out/test/spec/table_set.wast:101: assert_invalid passed:
 out/test/spec/table_set.wast:112: assert_invalid passed:
   out/test/spec/table_set/table_set.7.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
   0000025: error: EndFunctionBody callback failed
-25/25 tests passed.
+26/26 tests passed.
 ;;; STDOUT ;;)
