@@ -136,5 +136,5 @@ out/test/spec/global.wast:621: assert_malformed passed:
   out/test/spec/global/global.49.wat:1:34: error: redefinition of global "$foo"
   (import "" "" (global $foo i32))(import "" "" (global $foo i32))
                                    ^^^^^^
-103/103 tests passed.
+108/108 tests passed.
 ;;; STDOUT ;;)

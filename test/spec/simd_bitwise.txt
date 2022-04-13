@@ -85,5 +85,5 @@ out/test/spec/simd_bitwise.wast:798: assert_invalid passed:
 out/test/spec/simd_bitwise.wast:806: assert_invalid passed:
   out/test/spec/simd_bitwise/simd_bitwise.29.wasm:000001a: error: type mismatch in v128.bitselect, expected [v128, v128, v128] but got []
   000001a: error: OnTernaryExpr callback failed
-167/167 tests passed.
+169/169 tests passed.
 ;;; STDOUT ;;)

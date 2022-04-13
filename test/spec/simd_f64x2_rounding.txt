@@ -89,5 +89,5 @@ out/test/spec/simd_f64x2_rounding.wast:409: assert_invalid passed:
 out/test/spec/simd_f64x2_rounding.wast:417: assert_invalid passed:
   out/test/spec/simd_f64x2_rounding/simd_f64x2_rounding.24.wasm:000001b: error: type mismatch in f64x2.nearest, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
-200/200 tests passed.
+201/201 tests passed.
 ;;; STDOUT ;;)

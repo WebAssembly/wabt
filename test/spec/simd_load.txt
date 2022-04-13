@@ -37,5 +37,5 @@ out/test/spec/simd_load.wast:182: assert_invalid passed:
 out/test/spec/simd_load.wast:186: assert_invalid passed:
   out/test/spec/simd_load/simd_load.21.wasm:0000020: error: type mismatch in v128.load, expected [i32] but got []
   0000020: error: OnLoadExpr callback failed
-25/25 tests passed.
+39/39 tests passed.
 ;;; STDOUT ;;)

@@ -1274,10 +1274,7 @@ wabt::Result CommandRunner::Run(const Script& script) {
   for (const CommandPtr& command : script.commands) {
     switch (command->type) {
       case CommandType::Module:
-        if (Failed(OnModuleCommand(cast<ModuleCommand>(command.get())))) {
-          PrintError(command->line, "invalid module");
-          return wabt::Result::Error;
-        }
+        TallyCommand(OnModuleCommand(cast<ModuleCommand>(command.get())));
         break;
 
       case CommandType::Action:

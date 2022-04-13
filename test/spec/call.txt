@@ -56,5 +56,5 @@ out/test/spec/call.wast:512: assert_invalid passed:
 out/test/spec/call.wast:516: assert_invalid passed:
   0000000: error: function variable out of range: 1012321300 (max 1)
   000001d: error: OnCallExpr callback failed
-90/90 tests passed.
+91/91 tests passed.
 ;;; STDOUT ;;)

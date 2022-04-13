@@ -137,5 +137,5 @@ out/test/spec/extended-const/global.wast:633: assert_malformed passed:
   out/test/spec/extended-const/global/global.49.wat:1:34: error: redefinition of global "$foo"
   (import "" "" (global $foo i32))(import "" "" (global $foo i32))
                                    ^^^^^^
-107/107 tests passed.
+112/112 tests passed.
 ;;; STDOUT ;;)

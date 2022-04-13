@@ -262,5 +262,5 @@ out/test/spec/multi-memory/binary.wast:1581: assert_malformed passed:
   0000025: error: OnBlockExpr callback failed
 out/test/spec/multi-memory/binary.wast:1616: assert_malformed passed:
   0000017: error: multiple Start sections
-129/129 tests passed.
+162/162 tests passed.
 ;;; STDOUT ;;)

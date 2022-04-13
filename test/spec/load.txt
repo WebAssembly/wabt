@@ -191,5 +191,5 @@ out/test/spec/load.wast:551: assert_invalid passed:
 out/test/spec/load.wast:560: assert_invalid passed:
   out/test/spec/load/load.59.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
-96/96 tests passed.
+97/97 tests passed.
 ;;; STDOUT ;;)

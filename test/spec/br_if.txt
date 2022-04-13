@@ -90,5 +90,5 @@ out/test/spec/br_if.wast:658: assert_invalid passed:
 out/test/spec/br_if.wast:662: assert_invalid passed:
   out/test/spec/br_if/br_if.29.wasm:000001f: error: invalid depth: 268435457 (max 0)
   000001f: error: OnBrIfExpr callback failed
-117/117 tests passed.
+118/118 tests passed.
 ;;; STDOUT ;;)

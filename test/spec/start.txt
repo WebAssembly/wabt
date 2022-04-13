@@ -21,5 +21,5 @@ out/test/spec/start.wast:103: assert_malformed passed:
   out/test/spec/start/start.9.wat:1:69: error: multiple start sections
   (module (func $a (unreachable)) (func $b (unreachable)) (start $a) (start $b))
                                                                       ^^^^^
-15/15 tests passed.
+20/20 tests passed.
 ;;; STDOUT ;;)

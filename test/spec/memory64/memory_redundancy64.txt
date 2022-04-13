@@ -5,5 +5,5 @@
 zero_everything() =>
 zero_everything() =>
 zero_everything() =>
-7/7 tests passed.
+8/8 tests passed.
 ;;; STDOUT ;;)

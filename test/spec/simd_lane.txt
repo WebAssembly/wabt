@@ -917,5 +917,5 @@ out/test/spec/simd_lane.wast:1259: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.200.wat:1:61: error: unexpected token ")", expected a natural number in range [0, 32).
   (func $i8x16.shuffle-arg-empty (result v128)  (i8x16.shuffle))
                                                               ^
-463/463 tests passed.
+475/475 tests passed.
 ;;; STDOUT ;;)

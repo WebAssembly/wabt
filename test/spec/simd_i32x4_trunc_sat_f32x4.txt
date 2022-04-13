@@ -13,5 +13,5 @@ out/test/spec/simd_i32x4_trunc_sat_f32x4.wast:224: assert_invalid passed:
 out/test/spec/simd_i32x4_trunc_sat_f32x4.wast:232: assert_invalid passed:
   out/test/spec/simd_i32x4_trunc_sat_f32x4/simd_i32x4_trunc_sat_f32x4.4.wasm:000001b: error: type mismatch in i32x4.trunc_sat_f32x4_u, expected [v128] but got []
   000001b: error: OnConvertExpr callback failed
-106/106 tests passed.
+107/107 tests passed.
 ;;; STDOUT ;;)

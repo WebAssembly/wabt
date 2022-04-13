@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/forward.wast
 (;; STDOUT ;;;
-4/4 tests passed.
+5/5 tests passed.
 ;;; STDOUT ;;)

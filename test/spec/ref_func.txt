@@ -1,7 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/ref_func.wast
-(;; STDERR ;;;
-;;; STDERR ;;)
 (;; STDOUT ;;;
 set-g() =>
 set-f() =>
@@ -14,5 +12,5 @@ out/test/spec/ref_func.wast:109: assert_invalid passed:
 out/test/spec/ref_func.wast:113: assert_invalid passed:
   0000000: error: function 0 is not declared in any elem sections
   000001e: error: EndModule callback failed
-13/13 tests passed.
+16/16 tests passed.
 ;;; STDOUT ;;)

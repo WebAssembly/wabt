@@ -192,5 +192,5 @@ out/test/spec/memory64/load64.wast:551: assert_invalid passed:
 out/test/spec/memory64/load64.wast:560: assert_invalid passed:
   out/test/spec/memory64/load64/load64.59.wasm:000001f: error: type mismatch in i32.load, expected [i64] but got []
   000001f: error: OnLoadExpr callback failed
-96/96 tests passed.
+97/97 tests passed.
 ;;; STDOUT ;;)

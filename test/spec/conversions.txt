@@ -143,5 +143,5 @@ out/test/spec/conversions.wast:701: assert_invalid passed:
 out/test/spec/conversions.wast:702: assert_invalid passed:
   out/test/spec/conversions/conversions.25.wasm:000001b: error: type mismatch in f64.reinterpret_i64, expected [i64] but got [i32]
   000001b: error: OnConvertExpr callback failed
-618/618 tests passed.
+619/619 tests passed.
 ;;; STDOUT ;;)

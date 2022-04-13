@@ -10,5 +10,5 @@ out/test/spec/simd_store64_lane.wast:121: assert_invalid passed:
 out/test/spec/simd_store64_lane.wast:128: assert_invalid passed:
   out/test/spec/simd_store64_lane/simd_store64_lane.3.wasm:0000027: error: alignment must not be larger than natural alignment (8)
   0000027: error: OnSimdStoreLaneExpr callback failed
-15/15 tests passed.
+16/16 tests passed.
 ;;; STDOUT ;;)
