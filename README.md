@@ -74,6 +74,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [annotations]: https://github.com/WebAssembly/annotations
 [memory64]: https://github.com/WebAssembly/memory64
 [multi-memory]: https://github.com/WebAssembly/multi-memory
+[extended-const]: https://github.com/WebAssembly/extended-const
 
 ## Cloning
 
