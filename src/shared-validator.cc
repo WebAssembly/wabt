@@ -952,12 +952,12 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
   if (Succeeded(result)) {
-    // Reference declarations aren't needed for uses in global sections, and
-    // the use in a global itself counts as a declaration.
-    if (!in_init_expr_) {
-      check_declared_funcs_.push_back(func_var);
-    } else {
+    // References in initializer expressions are considered declarations, as
+    // opposed to references in function bodies that are considered usages.
+    if (in_init_expr_) {
       declared_funcs_.insert(func_var.index());
+    } else {
+      check_declared_funcs_.push_back(func_var);
     }
     Index func_type = GetFunctionTypeIndex(func_var.index());
     result |= typechecker_.OnRefFuncExpr(func_type);
