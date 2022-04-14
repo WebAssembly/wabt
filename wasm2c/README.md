@@ -45,25 +45,20 @@ files.
 
 ## Using the generated module
 
-To actually use our fac module, we'll use create a new file, `main.c`, that
+To actually use our `fac` module, we'll use create a new file, `main.c`, that
 include `fac.h`, initializes the module, and calls `fac`.
 
-`wasm2c` generates a few symbols for us, `init` and `Z_fac`. `init`
-initializes the module, and `Z_fac` is our exported `fac` function, but
-[name-mangled](https://en.wikipedia.org/wiki/Name_mangling) to include the
-function signature.
+`wasm2c` generates a few C symbols based on the `fac.wasm` module.  `Z_fac_init`
+and `Z_fac_Z_fac`.  The former initializes the module, and the later is our
+exported `fac` function.
 
-We can define `WASM_RT_MODULE_PREFIX` before including `fac.h` to generate
-these symbols with a prefix, in case we already have a symbol called `init` (or
-even `Z_fac`!) Note that you'll have to compile `fac.c` with this macro
-too, for this to work.
+All the exported symbols shared a common prefix (`Z_fac`) which, by default, is
+based on the name section in the module or the name of input file.  This prefix
+can be overridden using the `-n/--module-name` command line flag.
 
 ```c
 #include <stdio.h>
 #include <stdlib.h>
-
-/* Uncomment this to define fac_init and fac_Z_fac instead. */
-/* #define WASM_RT_MODULE_PREFIX fac_ */
 
 #include "fac.h"
 
@@ -78,12 +73,11 @@ int main(int argc, char** argv) {
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
-  /* Initialize the fac module. Since we didn't define WASM_RT_MODULE_PREFIX,
-  the initialization function is called `init`. */
-  init();
+  /* Initialize the fac module. */
+  Z_fac_init();
 
   /* Call `fac`, using the mangled name. */
-  u32 result = Z_fac(x);
+  u32 result = Z_fac_Z_fac(x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
@@ -135,10 +129,10 @@ extern "C" {
 
 #endif  /* WASM_RT_INCLUDED_ */
 
-extern void WASM_RT_ADD_PREFIX(init)(void);
+extern void Z_fac_init(void);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_fac))(u32);
+extern u32 (*Z_fac_Z_fac))(u32);
 #ifdef __cplusplus
 }
 #endif
@@ -185,20 +179,6 @@ from stack-size exhaustion). This defaults to 500:
 #ifndef WASM_RT_MAX_CALL_STACK_DEPTH
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
-```
-
-Next we can specify a module prefix. This is useful if you are using multiple
-modules that may use the same name as an export. Since we only have one module
-here, it's fine to use the default which is an empty prefix:
-
-```c
-#ifndef WASM_RT_MODULE_PREFIX
-#define WASM_RT_MODULE_PREFIX
-#endif
-
-#define WASM_RT_PASTE_(x, y) x ## y
-#define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)
-#define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)
 ```
 
 Next are some convenient typedefs for integers and floats of fixed sizes:
@@ -342,17 +322,16 @@ provided called `init`, which initializes the module and must be called before
 the module can be used:
 
 ```c
-extern void WASM_RT_ADD_PREFIX(init)(void);
+extern void Z_fax_init(void);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_fac))(u32);
+extern u32 (*Z_facZ_fac)(u32);
 ```
 
-All exported names use `WASM_RT_ADD_PREFIX` (as described above) to allow the
-symbols to placed in a namespace as decided by the embedder. All symbols are
-also mangled so they include the types of the function signature.
+All exported names use the mangled module name as a prefix (as described above)
+to avoid collisions with other C symbols or symbols from other modules.
 
-In our example, `Z_fac` is the mangling for a function named `fac`.
+In our example, `Z_facZ_fac` is the mangling of the function named `fac`.
 
 ## A quick look at `fac.c`
 

@@ -17,9 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Uncomment this to define rot13_init rot13_Z_rot13 instead. */
-/* #define WASM_RT_MODULE_PREFIX rot13_ */
-
 #include "rot13.h"
 
 /* Define the imports as declared in rot13.h. */
@@ -40,9 +37,8 @@ int main(int argc, char** argv) {
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
-  /* Initialize the rot13 module. Since we didn't define WASM_RT_MODULE_PREFIX,
-  the initialization function is called `init`. */
-  init();
+  /* Initialize the rot13 module. */
+  Z_rot13_init();
 
   /* Allocate 1 page of wasm memory (64KiB). */
   wasm_rt_allocate_memory(&s_memory, 1, 1);
@@ -60,7 +56,7 @@ int main(int argc, char** argv) {
     argc--; argv++;
 
     s_input = argv[0];
-    Z_rot13();
+    Z_rot13Z_rot13();
   }
 
   /* Free the Wasm runtime state. */

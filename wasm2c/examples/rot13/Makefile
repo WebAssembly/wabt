@@ -3,6 +3,8 @@ CFLAGS=-I../..
 
 all: rot13
 
+rot13: main.o rot13.o ../../wasm-rt-impl.o
+
 clean:
 	rm -rf rot13 rot13.wasm rot13.c *.o
 
