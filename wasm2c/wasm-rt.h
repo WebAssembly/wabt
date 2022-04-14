@@ -230,6 +230,11 @@ extern void wasm_rt_allocate_memory(wasm_rt_memory_t*,
  *  ``` */
 extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 
+/**
+ * Free a Memory object.
+ */
+extern void wasm_rt_free_memory(wasm_rt_memory_t*);
+
 /** Initialize a Table object with an element count of `elements` and a maximum
  * page size of `max_elements`.
  *
@@ -241,6 +246,11 @@ extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
+
+/**
+ * Free a Table object.
+ */
+extern void wasm_rt_free_table(wasm_rt_table_t*);
 
 #ifdef _WIN32
 float wasm_rt_truncf(float x);

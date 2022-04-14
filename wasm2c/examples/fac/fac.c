@@ -346,3 +346,6 @@ void Z_fac_init(void) {
   init_table();
   init_exports();
 }
+
+void Z_fac_free(void) {
+}

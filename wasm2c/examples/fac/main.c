@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
   /* Make sure there is at least one command-line argument. */
   if (argc < 2) return 1;
 
-  /* Convert the argument from a string to an int. We'll implictly cast the int
+  /* Convert the argument from a string to an int. We'll implicitly cast the int
   to a `u32`, which is what `fac` expects. */
   u32 x = atoi(argv[1]);
 
@@ -22,6 +22,9 @@ int main(int argc, char** argv) {
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
+
+  /* Free the fac module. */
+  Z_fac_free();
 
   /* Free the Wasm runtime state. */
   wasm_rt_free();
