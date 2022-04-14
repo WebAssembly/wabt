@@ -131,6 +131,7 @@ class CWriter(object):
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
         for command in self.commands:
             self._WriteCommand(command)
+        self._WriteModuleCleanUps()
         self.out_file.write("\n}\n")
 
     def GetModuleFilenames(self):
@@ -211,6 +212,10 @@ class CWriter(object):
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
         self.out_file.write('%s_init();\n' % self.GetModulePrefix())
+
+    def _WriteModuleCleanUps(self):
+        for idx in range(1, self.module_idx):
+            self.out_file.write("%s_free();\n" % self.GetModulePrefix(idx))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1

@@ -235,6 +235,7 @@ class CWriter {
   void WriteInitExports();
   void WriteExports(WriteExportsKind);
   void WriteInit();
+  void WriteFree();
   void WriteFuncs();
   void Write(const Func&);
   void WriteParamsAndLocals();
@@ -1206,6 +1207,37 @@ void CWriter::WriteInit() {
   for (Var* var : module_->starts) {
     Write(ExternalRef(module_->GetFunc(*var)->name), "();", Newline());
   }
+  Write(CloseBrace(), Newline());
+}
+
+void CWriter::WriteFree() {
+  Write(Newline(), "void " + module_prefix_ + "_free(void) ", OpenBrace());
+
+  if (module_->types.size()) {
+    // If there are no types there cannot be any table entries either.
+    assert(module_->tables.size() <= 1);
+    Index table_index = 0;
+    for (const Table* table : module_->tables) {
+      bool is_import = table_index < module_->num_table_imports;
+      if (!is_import) {
+        Write("wasm_rt_free_table(", ExternalPtr(table->name), ");", Newline());
+      }
+      ++table_index;
+    }
+  }
+
+  {
+    Index memory_index = 0;
+    for (const Memory* memory : module_->memories) {
+      bool is_import = memory_index < module_->num_memory_imports;
+      if (!is_import) {
+        Write("wasm_rt_free_memory(", ExternalPtr(memory->name), ");",
+              Newline());
+      }
+      ++memory_index;
+    }
+  }
+
   Write(CloseBrace(), Newline());
 }
 
@@ -2348,6 +2380,7 @@ void CWriter::WriteCHeader() {
   WriteMultivalueTypes();
   WriteImports();
   Write("extern void ", module_prefix_, "_init(void);", Newline());
+  Write("extern void ", module_prefix_, "_free(void);", Newline());
   WriteExports(WriteExportsKind::Declarations);
   Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
@@ -2367,6 +2400,7 @@ void CWriter::WriteCSource() {
   WriteExports(WriteExportsKind::Definitions);
   WriteInitExports();
   WriteInit();
+  WriteFree();
 }
 
 Result CWriter::WriteModule(const Module& module) {
