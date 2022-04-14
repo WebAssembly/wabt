@@ -35,7 +35,7 @@ typedef double f64;
 extern void WASM_RT_ADD_PREFIX(init)(void);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*WASM_RT_ADD_PREFIX(Z_fac))(u32);
 #ifdef __cplusplus
 }
 #endif

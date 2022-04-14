@@ -332,11 +332,11 @@ static void init_table(void) {
 }
 
 /* export: 'fac' */
-u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+u32 (*WASM_RT_ADD_PREFIX(Z_fac))(u32);
 
 static void init_exports(void) {
   /* export: 'fac' */
-  WASM_RT_ADD_PREFIX(Z_facZ_ii) = (&w2c_fac);
+  WASM_RT_ADD_PREFIX(Z_fac) = (&w2c_fac);
 }
 
 void WASM_RT_ADD_PREFIX(init)(void) {

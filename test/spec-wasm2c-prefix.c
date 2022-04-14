@@ -235,18 +235,16 @@ static wasm_rt_memory_t spectest_memory;
 static uint32_t spectest_global_i32 = 666;
 static uint64_t spectest_global_i64 = 666l;
 
-void (*Z_spectestZ_printZ_vv)(void) = &spectest_print;
-void (*Z_spectestZ_print_i32Z_vi)(uint32_t) = &spectest_print_i32;
-void (*Z_spectestZ_print_f32Z_vf)(float) = &spectest_print_f32;
-void (*Z_spectestZ_print_i32_f32Z_vif)(uint32_t,
-                                       float) = &spectest_print_i32_f32;
-void (*Z_spectestZ_print_f64Z_vd)(double) = &spectest_print_f64;
-void (*Z_spectestZ_print_f64_f64Z_vdd)(double,
-                                       double) = &spectest_print_f64_f64;
+void (*Z_spectestZ_print)(void) = &spectest_print;
+void (*Z_spectestZ_print_i32)(uint32_t) = &spectest_print_i32;
+void (*Z_spectestZ_print_f32)(float) = &spectest_print_f32;
+void (*Z_spectestZ_print_i32_f32)(uint32_t, float) = &spectest_print_i32_f32;
+void (*Z_spectestZ_print_f64)(double) = &spectest_print_f64;
+void (*Z_spectestZ_print_f64_f64)(double, double) = &spectest_print_f64_f64;
 wasm_rt_table_t* Z_spectestZ_table = &spectest_table;
 wasm_rt_memory_t* Z_spectestZ_memory = &spectest_memory;
-uint32_t* Z_spectestZ_global_i32Z_i = &spectest_global_i32;
-uint64_t* Z_spectestZ_global_i64Z_j = &spectest_global_i64;
+uint32_t* Z_spectestZ_global_i32 = &spectest_global_i32;
+uint64_t* Z_spectestZ_global_i64 = &spectest_global_i64;
 
 static void init_spectest_module(void) {
   wasm_rt_allocate_memory(&spectest_memory, 1, 2);

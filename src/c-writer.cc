@@ -161,13 +161,8 @@ class CWriter {
   static std::string Deref(const std::string&);
 
   static char MangleType(Type);
-  static std::string MangleTypes(const TypeVector&);
   static std::string MangleMultivalueTypes(const TypeVector&);
   static std::string MangleName(std::string_view);
-  static std::string MangleFuncName(std::string_view,
-                                    const TypeVector& param_types,
-                                    const TypeVector& result_types);
-  static std::string MangleGlobalName(std::string_view, Type);
   static std::string LegalizeName(std::string_view);
   static std::string ExportName(std::string_view mangled_name);
   std::string DefineName(SymbolSet*, std::string_view);
@@ -396,18 +391,6 @@ char CWriter::MangleType(Type type) {
 }
 
 // static
-std::string CWriter::MangleTypes(const TypeVector& types) {
-  if (types.empty())
-    return std::string("v");
-
-  std::string result;
-  for (auto type : types) {
-    result += MangleType(type);
-  }
-  return result;
-}
-
-// static
 std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
   assert(types.size() >= 2);
   std::string result = "wasm_multi_";
@@ -434,20 +417,6 @@ std::string CWriter::MangleName(std::string_view name) {
   }
 
   return result;
-}
-
-// static
-std::string CWriter::MangleFuncName(std::string_view name,
-                                    const TypeVector& param_types,
-                                    const TypeVector& result_types) {
-  std::string sig = MangleTypes(result_types) + MangleTypes(param_types);
-  return MangleName(name) + MangleName(sig);
-}
-
-// static
-std::string CWriter::MangleGlobalName(std::string_view name, Type type) {
-  std::string sig(1, MangleType(type));
-  return MangleName(name) + MangleName(sig);
 }
 
 // static
@@ -889,22 +858,17 @@ void CWriter::WriteImports() {
     switch (import->kind()) {
       case ExternalKind::Func: {
         const Func& func = cast<FuncImport>(import)->func;
-        WriteFuncDeclaration(
-            func.decl,
-            DefineImportName(
-                func.name, import->module_name,
-                MangleFuncName(import->field_name, func.decl.sig.param_types,
-                               func.decl.sig.result_types)));
+        WriteFuncDeclaration(func.decl,
+                             DefineImportName(func.name, import->module_name,
+                                              MangleName(import->field_name)));
         Write(";");
         break;
       }
 
       case ExternalKind::Global: {
         const Global& global = cast<GlobalImport>(import)->global;
-        WriteGlobal(global,
-                    DefineImportName(
-                        global.name, import->module_name,
-                        MangleGlobalName(import->field_name, global.type)));
+        WriteGlobal(global, DefineImportName(global.name, import->module_name,
+                                             MangleName(import->field_name)));
         Write(";");
         break;
       }
@@ -1177,9 +1141,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
     switch (export_->kind) {
       case ExternalKind::Func: {
         const Func* func = module_->GetFunc(export_->var);
-        mangled_name =
-            ExportName(MangleFuncName(export_->name, func->decl.sig.param_types,
-                                      func->decl.sig.result_types));
+        mangled_name = ExportName(MangleName(export_->name));
         internal_name = func->name;
         if (kind != WriteExportsKind::Initializers) {
           WriteFuncDeclaration(func->decl, Deref(mangled_name));
@@ -1190,8 +1152,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
 
       case ExternalKind::Global: {
         const Global* global = module_->GetGlobal(export_->var);
-        mangled_name =
-            ExportName(MangleGlobalName(export_->name, global->type));
+        mangled_name = ExportName(MangleName(export_->name));
         internal_name = global->name;
         if (kind != WriteExportsKind::Initializers) {
           WriteGlobal(*global, Deref(mangled_name));
