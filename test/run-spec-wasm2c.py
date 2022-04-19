@@ -214,7 +214,7 @@ class CWriter(object):
         self.out_file.write('%s_init();\n' % self.GetModulePrefix())
 
     def _WriteModuleCleanUps(self):
-        for idx in range(1, self.module_idx):
+        for idx in range(self.module_idx):
             self.out_file.write("%s_free();\n" % self.GetModulePrefix(idx))
 
     def _WriteAssertUninstantiableCommand(self, command):
