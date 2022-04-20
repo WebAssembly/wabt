@@ -43,23 +43,24 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 * text: Whether wabt can read/write the text format
 * validate: Whether wabt can validate the syntax
 * interpret: Whether wabt can execute these operations in `wasm-interp` or `spectest-interp`
+* wasm2c: Whether wasm2c supports these operations
 
-| Proposal | flag | default | binary | text | validate | interpret |
-| - | - | - | - | - | - | - |
-| [exception handling][] | `--enable-exceptions` | | ✓ | ✓ | ✓ | ✓ |
-| [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [sign extension][] | `--disable-sign-extension` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [simd][] | `--disable-simd` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [threads][] | `--enable-threads` | | ✓ | ✓ | ✓ | ✓ |
-| [multi-value][] | `--disable-multi-value` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [tail-call][] | `--enable-tail-call` | | ✓ | ✓ | ✓ | ✓ |
-| [bulk memory][] | `--disable-bulk-memory` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [reference types][] | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [annotations][] | `--enable-annotations` | | | ✓ | | |
-| [memory64][] | `--enable-memory64` | | | | | |
-| [multi-memory][] | `--enable-multi-memory` | | ✓ | ✓ | ✓ | ✓ |
-| [extended-const][] | `--enable-extended-const` | | | | | |
+| Proposal | flag | default | binary | text | validate | interpret | wasm2c |
+| - | - | - | - | - | - | - | - |
+| [exception handling][] | `--enable-exceptions` | | ✓ | ✓ | ✓ | ✓ | |
+| [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [sign extension][] | `--disable-sign-extension` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [simd][] | `--disable-simd` | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| [threads][] | `--enable-threads` | | ✓ | ✓ | ✓ | ✓ | |
+| [multi-value][] | `--disable-multi-value` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [tail-call][] | `--enable-tail-call` | | ✓ | ✓ | ✓ | ✓ | |
+| [bulk memory][] | `--disable-bulk-memory` | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| [reference types][] | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| [annotations][] | `--enable-annotations` | | | ✓ | | | |
+| [memory64][] | `--enable-memory64` | | | | | | |
+| [multi-memory][] | `--enable-multi-memory` | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [extended-const][] | `--enable-extended-const` | | | | | | |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
