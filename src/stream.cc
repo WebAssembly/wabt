@@ -157,6 +157,18 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
   return Result::Ok;
 }
 
+Result OutputBuffer::WriteToStdout() const {
+  if (data.empty()) {
+    return Result::Ok;
+  }
+  ssize_t bytes = fwrite(data.data(), 1, data.size(), stdout);
+  if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
+    ERROR("failed to write %" PRIzd " bytes to stdout\n", data.size());
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
 MemoryStream::MemoryStream(Stream* log_stream)
     : Stream(log_stream), buf_(new OutputBuffer()) {}
 
