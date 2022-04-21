@@ -66,12 +66,16 @@ namespace {
 
 class BinaryReader {
  public:
+  struct ReadModuleOptions {
+    bool stop_on_first_error;
+  };
+
   BinaryReader(const void* data,
                size_t size,
                BinaryReaderDelegate* delegate,
                const ReadBinaryOptions& options);
 
-  Result ReadModule();
+  Result ReadModule(const ReadModuleOptions& options);
 
  private:
   template <typename T, T BinaryReader::*member>
@@ -82,6 +86,10 @@ class BinaryReader {
 
     BinaryReader* this_;
     T previous_value_;
+  };
+
+  struct ReadSectionsOptions {
+    bool stop_on_first_error;
   };
 
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
@@ -157,7 +165,7 @@ class BinaryReader {
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataCountSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadTagSection(Offset section_size) WABT_WARN_UNUSED;
-  Result ReadSections() WABT_WARN_UNUSED;
+  Result ReadSections(const ReadSectionsOptions& options) WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
   size_t read_end_ = 0;  // Either the section end or data_size.
@@ -2775,7 +2783,7 @@ Result BinaryReader::ReadDataCountSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadSections() {
+Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
   Result result = Result::Ok;
   Index section_index = 0;
   bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
@@ -2789,7 +2797,17 @@ Result BinaryReader::ReadSections() {
     read_end_ = state_.offset + section_size;
     if (section_code >= kBinarySectionCount) {
       PrintError("invalid section code: %u", section_code);
-      return Result::Error;
+      if (options.stop_on_first_error) {
+        return Result::Error;
+      }
+      // If we don't have to stop on first error, continue reading
+      // sections, because although we could not understand the
+      // current section, we can continue and correctly parse
+      // subsequent sections, so we can give back as much information
+      // as we can understand.
+      result = Result::Error;
+      state_.offset = read_end_;
+      continue;
     }
 
     BinarySection section = static_cast<BinarySection>(section_code);
@@ -2914,7 +2932,7 @@ Result BinaryReader::ReadSections() {
   return result;
 }
 
-Result BinaryReader::ReadModule() {
+Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   uint32_t magic = 0;
   CHECK_RESULT(ReadU32(&magic, "magic"));
   ERROR_UNLESS(magic == WABT_BINARY_MAGIC, "bad magic value");
@@ -2925,7 +2943,7 @@ Result BinaryReader::ReadModule() {
                WABT_BINARY_VERSION);
 
   CALLBACK(BeginModule, version);
-  CHECK_RESULT(ReadSections());
+  CHECK_RESULT(ReadSections(ReadSectionsOptions{options.stop_on_first_error}));
   // This is checked in ReadCodeSection, but it must be checked at the end too,
   // in case the code section was omitted.
   ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
@@ -2942,7 +2960,8 @@ Result ReadBinary(const void* data,
                   BinaryReaderDelegate* delegate,
                   const ReadBinaryOptions& options) {
   BinaryReader reader(data, size, delegate, options);
-  return reader.ReadModule();
+  return reader.ReadModule(
+      BinaryReader::ReadModuleOptions{options.stop_on_first_error});
 }
 
 }  // namespace wabt
