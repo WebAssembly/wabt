@@ -354,6 +354,39 @@ Token WastLexer::GetStringToken(WastParser* parser) {
             }
             break;
 
+          case 'u': {
+            token_start_ = cursor_ - 2;
+            if (ReadChar() != '{') {
+              goto error;
+            }
+
+            // Value must be a valid unicode scalar value.
+            uint32_t digit;
+            uint32_t scalar_value = 0;
+
+            while (IsHexDigit(PeekChar())) {
+              ParseHexdigit(*cursor_++, &digit);
+
+              scalar_value = (scalar_value << 4) | digit;
+              // Maximum value of a unicode code point.
+              if (scalar_value >= 0x110000) {
+                goto error;
+              }
+            }
+
+            if (PeekChar() != '}') {
+              goto error;
+            }
+
+            // Scalars between 0xd800 and 0xdfff are not allowed.
+            if ((scalar_value >= 0xd800 && scalar_value < 0xe000) ||
+                token_start_ == cursor_ - 3) {
+              ReadChar();
+              goto error;
+            }
+            break;
+          }
+
           default:
             token_start_ = cursor_ - 2;
             goto error;

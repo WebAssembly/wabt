@@ -1,0 +1,14 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (func) (export "foo\u{}bar" (func 0)))
+(;; STDERR ;;;
+out/test/parse/bad-string-unicode-escape-short.txt:3:28: error: bad escape "\u{}"
+(module (func) (export "foo\u{}bar" (func 0)))
+                           ^^^^
+out/test/parse/bad-string-unicode-escape-short.txt:3:24: error: unexpected token "Invalid", expected a quoted string (e.g. "foo").
+(module (func) (export "foo\u{}bar" (func 0)))
+                       ^^^^^^^^^^^^
+out/test/parse/bad-string-unicode-escape-short.txt:3:43: error: unexpected token 0, expected ).
+(module (func) (export "foo\u{}bar" (func 0)))
+                                          ^
+;;; STDERR ;;)
