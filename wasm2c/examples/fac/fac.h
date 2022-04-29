@@ -25,8 +25,8 @@ typedef double f64;
 extern "C" {
 #endif
 
-extern void Z_fac_init(void);
-extern void Z_fac_free(void);
+void Z_fac_init(void);
+void Z_fac_free(void);
 
 /* export: 'fac' */
 extern u32 (*Z_facZ_fac)(u32);

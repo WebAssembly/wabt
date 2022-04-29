@@ -137,8 +137,8 @@ The generated header file looks something like this:
 extern "C" {
 #endif
 
-extern void Z_fac_init(void);
-extern void Z_fac_free(void);
+void Z_fac_init(void);
+void Z_fac_free(void);
 
 /* export: 'fac' */
 extern u32 (*Z_facZ_fac)(u32);
@@ -241,15 +241,15 @@ A C implementation of these functions is defined in
 ```c
 void wasm_rt_init(void);
 void wasm_rt_free(void);
-extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
+void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
-extern uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
-extern void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages);
-extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
-extern void wasm_rt_free_memory(wasm_rt_memory_t*);
-extern void wasm_rt_allocate_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
-extern void wasm_rt_free_table(wasm_rt_table_t*);
-extern uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
+uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
+void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages);
+uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
+void wasm_rt_free_memory(wasm_rt_memory_t*);
+void wasm_rt_allocate_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
+void wasm_rt_free_table(wasm_rt_table_t*);
+uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
 ```
 
 `wasm_rt_trap` is a function that is called when the module traps. Some
@@ -295,8 +295,8 @@ must be called before the module can be used, and `free`, which frees
 the module's state (its memory and table instances).
 
 ```c
-extern void Z_fac_init(void);
-extern void Z_fac_free(void);
+void Z_fac_init(void);
+void Z_fac_free(void);
 
 /* export: 'fac' */
 extern u32 (*Z_facZ_fac)(u32);
