@@ -199,9 +199,7 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap);
  *    wasm_rt_register_func_type(2, 1, WASM_RT_I32, WASM_RT_F32, WASM_RT_I64);
  *    => returns 1
  *  ``` */
-extern uint32_t wasm_rt_register_func_type(uint32_t params,
-                                           uint32_t results,
-                                           ...);
+uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
 
 /** Initialize a Memory object with an initial page size of `initial_pages` and
  * a maximum page size of `max_pages`.
@@ -211,9 +209,9 @@ extern uint32_t wasm_rt_register_func_type(uint32_t params,
  *    // 1 initial page (65536 bytes), and a maximum of 2 pages.
  *    wasm_rt_allocate_memory(&my_memory, 1, 2);
  *  ``` */
-extern void wasm_rt_allocate_memory(wasm_rt_memory_t*,
-                                    uint32_t initial_pages,
-                                    uint32_t max_pages);
+void wasm_rt_allocate_memory(wasm_rt_memory_t*,
+                             uint32_t initial_pages,
+                             uint32_t max_pages);
 
 /** Grow a Memory object by `pages`, and return the previous page count. If
  * this new page count is greater than the maximum page count, the grow fails
@@ -228,12 +226,12 @@ extern void wasm_rt_allocate_memory(wasm_rt_memory_t*,
  *      // Failed to grow memory.
  *    }
  *  ``` */
-extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
+uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 
 /**
  * Free a Memory object.
  */
-extern void wasm_rt_free_memory(wasm_rt_memory_t*);
+void wasm_rt_free_memory(wasm_rt_memory_t*);
 
 /** Initialize a Table object with an element count of `elements` and a maximum
  * page size of `max_elements`.
@@ -243,14 +241,14 @@ extern void wasm_rt_free_memory(wasm_rt_memory_t*);
  *    // 5 elemnets and a maximum of 10 elements.
  *    wasm_rt_allocate_table(&my_table, 5, 10);
  *  ``` */
-extern void wasm_rt_allocate_table(wasm_rt_table_t*,
-                                   uint32_t elements,
-                                   uint32_t max_elements);
+void wasm_rt_allocate_table(wasm_rt_table_t*,
+                            uint32_t elements,
+                            uint32_t max_elements);
 
 /**
  * Free a Table object.
  */
-extern void wasm_rt_free_table(wasm_rt_table_t*);
+void wasm_rt_free_table(wasm_rt_table_t*);
 
 #ifdef _WIN32
 float wasm_rt_truncf(float x);

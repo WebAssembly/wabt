@@ -2379,8 +2379,8 @@ void CWriter::WriteCHeader() {
   Write(s_header_top);
   WriteMultivalueTypes();
   WriteImports();
-  Write("extern void ", module_prefix_, "_init(void);", Newline());
-  Write("extern void ", module_prefix_, "_free(void);", Newline());
+  Write("void ", module_prefix_, "_init(void);", Newline());
+  Write("void ", module_prefix_, "_free(void);", Newline());
   WriteExports(WriteExportsKind::Declarations);
   Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
