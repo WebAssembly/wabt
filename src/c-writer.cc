@@ -471,6 +471,18 @@ std::string CWriter::DefineImportName(const std::string& name,
                                       std::string_view module,
                                       std::string_view mangled_field_name) {
   std::string mangled = MangleName(module) + mangled_field_name;
+  // Handle duplicate imports (i.e. the same thing being imported
+  // mulitple times).  In this case we include multple entries in
+  // the import struct, and use an integer suffix to distingish
+  // them by name
+  if (global_syms_.count(mangled)) {
+    std::string mangled_base = mangled;
+    int counter = 1;
+    while (global_syms_.count(mangled)) {
+      mangled = mangled_base + "_" + std::to_string(counter);
+      counter++;
+    }
+  }
   import_syms_.insert(name);
   global_syms_.insert(mangled);
   global_sym_map_.insert(SymbolMap::value_type(name, mangled));
@@ -578,7 +590,9 @@ void CWriter::Write(const GlobalName& name) {
 void CWriter::Write(const ExternalPtr& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (is_import) {
-    Write(GetGlobalName(name.name));
+    std::string full_name("g_imports.");
+    full_name += GetGlobalName(name.name);
+    Write(full_name);
   } else {
     Write(AddressOf(GetGlobalName(name.name)));
   }
@@ -587,7 +601,9 @@ void CWriter::Write(const ExternalPtr& name) {
 void CWriter::Write(const ExternalRef& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (is_import) {
-    Write(Deref(GetGlobalName(name.name)));
+    std::string full_name("g_imports.");
+    full_name += GetGlobalName(name.name);
+    Write(Deref(full_name));
   } else {
     Write(GetGlobalName(name.name));
   }
@@ -792,6 +808,9 @@ void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
   Write(s_source_declarations);
+  if (!module_->imports.empty()) {
+    Write("static ", module_prefix_, "_imports_t g_imports;", Newline(), Newline());
+  }
 }
 
 void CWriter::WriteMultivalueTypes() {
@@ -852,13 +871,11 @@ void CWriter::WriteImports() {
   if (module_->imports.empty())
     return;
 
-  Write(Newline());
-
+  Write("typedef struct ", module_prefix_, "_imports_t {", Newline());
   // TODO(binji): Write imports ordered by type.
   for (const Import* import : module_->imports) {
-    Write("/* import: '", import->module_name, "' '", import->field_name,
-          "' */", Newline());
-    Write("extern ");
+    Write("  /* import: '", import->module_name, "' '", import->field_name,
+          "' */", Newline(), "  ");
     switch (import->kind()) {
       case ExternalKind::Func: {
         const Func& func = cast<FuncImport>(import)->func;
@@ -897,6 +914,8 @@ void CWriter::WriteImports() {
 
     Write(Newline());
   }
+  Write("} ", module_prefix_, "_imports_t;", Newline());
+  Write(Newline());
 }
 
 void CWriter::WriteFuncDeclarations() {
@@ -1198,7 +1217,12 @@ void CWriter::WriteExports(WriteExportsKind kind) {
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "void ", module_prefix_, "_init(void) ", OpenBrace());
+  if (module_->imports.empty()) {
+    Write(Newline(), "void ", module_prefix_, "_init(void) ", OpenBrace());
+  } else {
+    Write(Newline(), "void ", module_prefix_, "_init(", module_prefix_, "_imports_t* imports) ", OpenBrace());
+    Write("g_imports = *imports;", Newline());
+  }
   Write("init_func_types();", Newline());
   Write("init_globals();", Newline());
   Write("init_memory();", Newline());
@@ -1448,6 +1472,7 @@ void CWriter::Write(const ExprList& exprs) {
         } else if (num_results == 1) {
           Write(StackVar(num_params - 1, func.GetResultType(0)), " = ");
         }
+
 
         Write(GlobalVar(var), "(");
         for (Index i = 0; i < num_params; ++i) {
@@ -2379,7 +2404,11 @@ void CWriter::WriteCHeader() {
   Write(s_header_top);
   WriteMultivalueTypes();
   WriteImports();
-  Write("void ", module_prefix_, "_init(void);", Newline());
+  if (module_->imports.empty()) {
+    Write("void ", module_prefix_, "_init();", Newline());
+  } else {
+    Write("void ", module_prefix_, "_init(", module_prefix_, "_imports_t* imports);", Newline());
+  }
   Write("void ", module_prefix_, "_free(void);", Newline());
   WriteExports(WriteExportsKind::Declarations);
   Write(s_header_bottom);
