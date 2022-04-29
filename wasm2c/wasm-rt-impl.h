@@ -38,7 +38,8 @@ extern jmp_buf g_jmp_buf;
 extern uint32_t g_saved_call_stack_depth;
 #endif
 
-/** Convenience macro to use before calling a wasm function. On first execution
+/**
+ * Convenience macro to use before calling a wasm function. On first execution
  * it will return `WASM_RT_TRAP_NONE` (i.e. 0). If the function traps, it will
  * jump back and return the trap that occurred.
  *
