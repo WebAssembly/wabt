@@ -58,7 +58,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 | [bulk memory][] | `--disable-bulk-memory` | ✓ | ✓ | ✓ | ✓ | ✓ | |
 | [reference types][] | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ | |
 | [annotations][] | `--enable-annotations` | | | ✓ | | | |
-| [memory64][] | `--enable-memory64` | | | | | | |
+| [memory64][] | `--enable-memory64` | | ✓ | ✓ | ✓ | ✓ | |
 | [multi-memory][] | `--enable-multi-memory` | | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [extended-const][] | `--enable-extended-const` | | | | | | |
 
