@@ -60,7 +60,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 | [annotations][]       | `--enable-annotations`      |   |   | ✓ |   |   |   |
 | [memory64][]          | `--enable-memory64`         |   | ✓ | ✓ | ✓ | ✓ |   |
 | [multi-memory][]      | `--enable-multi-memory`     |   | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [extended-const][]    | `--enable-extended-const`   |   |   |   |   |   |   |
+| [extended-const][]    | `--enable-extended-const`   |   | ✓ | ✓ | ✓ | ✓ |   |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
