@@ -37,6 +37,7 @@
 #endif
 
 #define PAGE_SIZE 65536
+#define MAX_EXCEPTION_SIZE PAGE_SIZE
 
 typedef struct FuncType {
   wasm_rt_type_t* params;
@@ -57,6 +58,14 @@ static FuncType* g_func_types;
 static uint32_t g_func_type_count;
 
 jmp_buf wasm_rt_jmp_buf;
+
+uint32_t g_tag_count;
+
+uint32_t g_active_exception_tag;
+void* g_active_exception;
+uint32_t g_active_exception_size;
+
+jmp_buf* g_unwind_target;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
@@ -110,6 +119,48 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
   g_func_types = realloc(g_func_types, g_func_type_count * sizeof(FuncType));
   g_func_types[idx] = func_type;
   return idx + 1;
+}
+
+uint32_t wasm_rt_register_tag(uint32_t size) {
+  if (size > MAX_EXCEPTION_SIZE) {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+  return g_tag_count++;
+}
+
+void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values) {
+  assert(size <= MAX_EXCEPTION_SIZE);
+
+  g_active_exception_tag = tag;
+  g_active_exception_size = size;
+
+  if (size) {
+    memcpy(g_active_exception, values, size);
+  }
+}
+
+WASM_RT_NO_RETURN void wasm_rt_throw(void) {
+  WASM_RT_LONGJMP(*g_unwind_target, WASM_RT_TRAP_UNCAUGHT_EXCEPTION);
+}
+
+jmp_buf* wasm_rt_get_unwind_target(void) {
+  return g_unwind_target;
+}
+
+void wasm_rt_set_unwind_target(jmp_buf* target) {
+  g_unwind_target = target;
+}
+
+uint32_t wasm_rt_exception_tag(void) {
+  return g_active_exception_tag;
+}
+
+uint32_t wasm_rt_exception_size(void) {
+  return g_active_exception_size;
+}
+
+void* wasm_rt_exception(void) {
+  return g_active_exception;
 }
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
@@ -179,6 +230,12 @@ static void os_print_last_error(const char* msg) {
 #endif
 
 void wasm_rt_init(void) {
+  g_active_exception = malloc(MAX_EXCEPTION_SIZE);
+  if (g_active_exception == NULL) {
+    perror("malloc failed");
+    abort();
+  }
+
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
@@ -325,6 +382,8 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "Unreachable instruction executed";
     case WASM_RT_TRAP_CALL_INDIRECT:
       return "Invalid call_indirect";
+    case WASM_RT_TRAP_UNCAUGHT_EXCEPTION:
+      return "Uncaught exception";
   }
   return "invalid trap code";
 }

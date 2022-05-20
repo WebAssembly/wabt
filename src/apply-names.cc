@@ -375,6 +375,7 @@ Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
 }
 
 Result NameApplier::OnDelegateExpr(TryExpr* expr) {
+  PopLabel();
   std::string_view label = FindLabelByVar(&expr->delegate_target);
   UseNameForVar(label, &expr->delegate_target);
   return Result::Ok;

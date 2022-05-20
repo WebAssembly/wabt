@@ -122,7 +122,7 @@ DEFINE_STORE(i64_store32, u32, u64)
 
 #if defined(_MSC_VER)
 
-#include <intrin.h>
+#define alloca _alloca
 
 // Adapted from
 // https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h

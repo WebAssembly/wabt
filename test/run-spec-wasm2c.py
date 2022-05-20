@@ -200,6 +200,7 @@ class CWriter(object):
             'action': self._WriteActionCommand,
             'assert_return': self._WriteAssertReturnCommand,
             'assert_trap': self._WriteAssertActionCommand,
+            'assert_exception': self._WriteAssertActionCommand,
             'assert_exhaustion': self._WriteAssertActionCommand,
         }
 
@@ -276,6 +277,7 @@ class CWriter(object):
             'assert_exhaustion': 'ASSERT_EXHAUSTION',
             'assert_return': 'ASSERT_RETURN',
             'assert_trap': 'ASSERT_TRAP',
+            'assert_exception': 'ASSERT_EXCEPTION',
         }
 
         assert_macro = assert_map[command['type']]
