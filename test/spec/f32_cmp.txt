@@ -20,5 +20,5 @@ out/test/spec/f32_cmp.wast:2421: assert_invalid passed:
 out/test/spec/f32_cmp.wast:2422: assert_invalid passed:
   out/test/spec/f32_cmp/f32_cmp.6.wasm:0000024: error: type mismatch in f32.ne, expected [f32, f32] but got [i64, f64]
   0000024: error: OnCompareExpr callback failed
-2406/2406 tests passed.
+2407/2407 tests passed.
 ;;; STDOUT ;;)

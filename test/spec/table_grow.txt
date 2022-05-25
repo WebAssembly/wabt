@@ -28,5 +28,5 @@ out/test/spec/table_grow.wast:157: assert_invalid passed:
 out/test/spec/table_grow.wast:166: assert_invalid passed:
   out/test/spec/table_grow/table_grow.11.wasm:0000026: error: type mismatch in implicit return, expected [f32] but got [i32]
   0000026: error: EndFunctionBody callback failed
-45/45 tests passed.
+50/50 tests passed.
 ;;; STDOUT ;;)

@@ -7,5 +7,5 @@ out/test/spec/memory_size.wast:69: assert_invalid passed:
 out/test/spec/memory_size.wast:78: assert_invalid passed:
   out/test/spec/memory_size/memory_size.5.wasm:0000020: error: type mismatch in implicit return, expected [f32] but got [i32]
   0000020: error: EndFunctionBody callback failed
-38/38 tests passed.
+42/42 tests passed.
 ;;; STDOUT ;;)

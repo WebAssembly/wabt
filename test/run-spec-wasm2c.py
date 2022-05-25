@@ -102,8 +102,7 @@ def MangleName(s):
 
     # NOTE(binji): Z is not allowed.
     pattern = b'([^_a-zA-Y0-9])'
-    result = 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
-    return result
+    return 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
 
 
 def IsModuleCommand(command):
@@ -122,6 +121,7 @@ class CWriter(object):
         self.module_idx = 0
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
+        self.unmangled_names = {}
 
     def Write(self):
         self._MaybeWriteDummyModule()
@@ -131,23 +131,28 @@ class CWriter(object):
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
         for command in self.commands:
             self._WriteCommand(command)
+        self._WriteModuleCleanUps()
         self.out_file.write("\n}\n")
 
     def GetModuleFilenames(self):
         return [c['filename'] for c in self.commands if IsModuleCommand(c)]
 
     def GetModulePrefix(self, idx_or_name=None):
-        if idx_or_name is not None:
-            return self.module_prefix_map[idx_or_name]
-        return self.module_prefix_map[self.module_idx - 1]
+        if idx_or_name is None:
+            idx_or_name = self.module_idx - 1
+        return self.module_prefix_map[idx_or_name]
+
+    def GetModulePrefixUnmangled(self, idx):
+        return self.unmangled_names[idx]
 
     def _CacheModulePrefixes(self):
         idx = 0
         for command in self.commands:
             if IsModuleCommand(command):
                 name = os.path.basename(command['filename'])
-                name = os.path.splitext(name)[0]
                 name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+                name = os.path.splitext(name)[0]
+                self.unmangled_names[idx] = name
                 name = MangleName(name)
 
                 self.module_prefix_map[idx] = name
@@ -166,6 +171,7 @@ class CWriter(object):
                     name_idx = idx - 1
 
                 self.module_prefix_map[name_idx] = name
+                self.unmangled_names[name_idx] = command['as']
 
     def _MaybeWriteDummyModule(self):
         if len(self.GetModuleFilenames()) == 0:
@@ -184,10 +190,7 @@ class CWriter(object):
         idx = 0
         for filename in self.GetModuleFilenames():
             header = os.path.splitext(filename)[0] + '.h'
-            self.out_file.write(
-                '#define WASM_RT_MODULE_PREFIX %s\n' % self.GetModulePrefix(idx))
             self.out_file.write("#include \"%s\"\n" % header)
-            self.out_file.write('#undef WASM_RT_MODULE_PREFIX\n\n')
             idx += 1
 
     def _WriteCommand(self, command):
@@ -208,11 +211,15 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%sinit();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_init();\n' % self.GetModulePrefix())
+
+    def _WriteModuleCleanUps(self):
+        for idx in range(self.module_idx):
+            self.out_file.write("%s_free();\n" % self.GetModulePrefix(idx))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('ASSERT_TRAP(%sinit());\n' % self.GetModulePrefix())
+        self.out_file.write('ASSERT_TRAP(%s_init());\n' % self.GetModulePrefix())
 
     def _WriteActionCommand(self, command):
         self.out_file.write('%s;\n' % self._Action(command))
@@ -311,24 +318,11 @@ class CWriter(object):
     def _CompareList(self, consts):
         return ' && '.join(self._Compare(num, const) for num, const in enumerate(consts))
 
-    def _ActionSig(self, action, expected):
-        type_ = action['type']
-        result_types = [result['type'] for result in expected]
-        arg_types = [arg['type'] for arg in action.get('args', [])]
-        if type_ == 'invoke':
-            return MangleTypes(result_types) + MangleTypes(arg_types)
-        elif type_ == 'get':
-            return MangleType(result_types[0])
-        else:
-            raise Error('Unexpected action type: %s' % type_)
-
     def _Action(self, command):
         action = command['action']
-        expected = command['expected']
         type_ = action['type']
         mangled_module_name = self.GetModulePrefix(action.get('module'))
-        field = (mangled_module_name + MangleName(action['field']) +
-                 MangleName(self._ActionSig(action, expected)))
+        field = mangled_module_name + MangleName(action['field'])
         if type_ == 'invoke':
             return '%s(%s)' % (field, self._ConstantList(action.get('args', [])))
         elif type_ == 'get':
@@ -466,10 +460,10 @@ def main(args):
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
             c_filename = utils.ChangeExt(wasm_filename, '.c')
-            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename)
+            args = ['-n', cwriter.GetModulePrefixUnmangled(i)]
+            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, *args)
             if options.compile:
-                defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
-                o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
+                o_filenames.append(Compile(cc, c_filename, out_dir, includes))
 
         if options.compile:
             # Compile wasm-rt-impl.

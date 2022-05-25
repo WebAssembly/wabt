@@ -78,5 +78,5 @@ out/test/spec/memory.wast:239: assert_malformed passed:
   out/test/spec/memory/memory.33.wat:1:32: error: redefinition of memory "$foo"
   (import "" "" (memory $foo 1))(import "" "" (memory $foo 1))
                                  ^^^^^^
-69/69 tests passed.
+79/79 tests passed.
 ;;; STDOUT ;;)

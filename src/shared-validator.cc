@@ -211,6 +211,7 @@ Result SharedValidator::OnExport(const Location& loc,
   switch (kind) {
     case ExternalKind::Func:
       result |= CheckFuncIndex(item_var);
+      declared_funcs_.insert(item_var.index());
       break;
 
     case ExternalKind::Table:
@@ -951,7 +952,13 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
   if (Succeeded(result)) {
-    check_declared_funcs_.push_back(func_var);
+    // References in initializer expressions are considered declarations, as
+    // opposed to references in function bodies that are considered usages.
+    if (in_init_expr_) {
+      declared_funcs_.insert(func_var.index());
+    } else {
+      check_declared_funcs_.push_back(func_var);
+    }
     Index func_type = GetFunctionTypeIndex(func_var.index());
     result |= typechecker_.OnRefFuncExpr(func_type);
   }

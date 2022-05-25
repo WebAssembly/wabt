@@ -16,5 +16,5 @@ out/test/spec/exception-handling/throw.wast:48: assert_invalid passed:
 out/test/spec/exception-handling/throw.wast:50: assert_invalid passed:
   out/test/spec/exception-handling/throw/throw.3.wasm:0000024: error: type mismatch in throw, expected [i32] but got [i64]
   0000024: error: OnThrowExpr callback failed
-10/10 tests passed.
+11/11 tests passed.
 ;;; STDOUT ;;)

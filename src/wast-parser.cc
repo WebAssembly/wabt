@@ -76,6 +76,50 @@ void RemoveEscapes(std::string_view text, OutputIter dest) {
         case '\"':
           *dest++ = '\"';
           break;
+        case 'u': {
+          // The string should be validated already,
+          // so this must be a valid unicode escape sequence.
+          uint32_t digit;
+          uint32_t scalar_value = 0;
+
+          // Skip u and { characters.
+          src += 2;
+
+          do {
+            if (Succeeded(ParseHexdigit(src[0], &digit))) {
+              scalar_value = (scalar_value << 4) | digit;
+            } else {
+              assert(0);
+            }
+            src++;
+          } while (src[0] != '}');
+
+          // Maximum value of a unicode scalar value
+          assert(scalar_value < 0x110000);
+
+          // Encode the unicode scalar value as UTF8 sequence
+          if (scalar_value < 0x80) {
+            *dest++ = static_cast<uint8_t>(scalar_value);
+          } else {
+            if (scalar_value < 0x800) {
+              *dest++ = static_cast<uint8_t>(0xc0 | (scalar_value >> 6));
+            } else {
+              if (scalar_value < 0x10000) {
+                *dest++ = static_cast<uint8_t>(0xe0 | (scalar_value >> 12));
+              } else {
+                *dest++ = static_cast<uint8_t>(0xf0 | (scalar_value >> 18));
+                *dest++ =
+                    static_cast<uint8_t>(0x80 | ((scalar_value >> 12) & 0x3f));
+              }
+
+              *dest++ =
+                  static_cast<uint8_t>(0x80 | ((scalar_value >> 6) & 0x3f));
+            }
+
+            *dest++ = static_cast<uint8_t>(0x80 | (scalar_value & 0x3f));
+          }
+          break;
+        }
         default: {
           // The string should be validated already, so we know this is a hex
           // sequence.

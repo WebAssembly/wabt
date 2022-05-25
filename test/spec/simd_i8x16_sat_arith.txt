@@ -85,5 +85,5 @@ out/test/spec/simd_i8x16_sat_arith.wast:655: assert_invalid passed:
 out/test/spec/simd_i8x16_sat_arith.wast:663: assert_invalid passed:
   out/test/spec/simd_i8x16_sat_arith/simd_i8x16_sat_arith.24.wasm:000001a: error: type mismatch in i8x16.sub_sat_u, expected [v128, v128] but got []
   000001a: error: OnBinaryExpr callback failed
-212/212 tests passed.
+214/214 tests passed.
 ;;; STDOUT ;;)

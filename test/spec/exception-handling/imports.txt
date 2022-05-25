@@ -251,5 +251,5 @@ out/test/spec/exception-handling/imports.wast:699: assert_malformed passed:
               ^^^^^^
 out/test/spec/exception-handling/imports.wast:709: assert_unlinkable passed:
   error: invalid import "not wasm.overloaded"
-131/131 tests passed.
+185/185 tests passed.
 ;;; STDOUT ;;)

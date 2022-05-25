@@ -53,5 +53,5 @@ out/test/spec/simd_boolean.wast:1044: assert_invalid passed:
 out/test/spec/simd_boolean.wast:1052: assert_invalid passed:
   out/test/spec/simd_boolean/simd_boolean.17.wasm:000001b: error: type mismatch in i32x4.all_true, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
-275/275 tests passed.
+277/277 tests passed.
 ;;; STDOUT ;;)

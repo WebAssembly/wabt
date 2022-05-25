@@ -59,5 +59,5 @@ out/test/spec/simd_load_zero.wast:124: assert_malformed passed:
   out/test/spec/simd_load_zero/simd_load_zero.10.wat:1:56: error: unexpected token ), expected EOF.
   (memory 1) (func (drop (i64x2.load64x1_u (i32.const 0))))
                                                          ^
-37/37 tests passed.
+39/39 tests passed.
 ;;; STDOUT ;;)

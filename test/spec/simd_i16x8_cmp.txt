@@ -91,5 +91,5 @@ out/test/spec/simd_i16x8_cmp.wast:1887: assert_invalid passed:
 out/test/spec/simd_i16x8_cmp.wast:1895: assert_invalid passed:
   out/test/spec/simd_i16x8_cmp/simd_i16x8_cmp.31.wasm:000001a: error: type mismatch in i16x8.ge_u, expected [v128, v128] but got []
   000001a: error: OnCompareExpr callback failed
-463/463 tests passed.
+465/465 tests passed.
 ;;; STDOUT ;;)

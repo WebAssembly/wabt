@@ -57,5 +57,5 @@ copy(i32:10, i32:0, i32:0) =>
 copy(i32:0, i32:10, i32:0) =>
 out/test/spec/bulk.wast:348: assert_trap passed: out of bounds table access: table.copy out of bounds
 out/test/spec/bulk.wast:350: assert_trap passed: out of bounds table access: table.copy out of bounds
-104/104 tests passed.
+117/117 tests passed.
 ;;; STDOUT ;;)

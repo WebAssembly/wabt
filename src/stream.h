@@ -159,6 +159,7 @@ class Stream {
 
 struct OutputBuffer {
   Result WriteToFile(std::string_view filename) const;
+  Result WriteToStdout() const;
 
   void clear() { data.clear(); }
   size_t size() const { return data.size(); }

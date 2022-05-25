@@ -49,5 +49,5 @@ out/test/spec/local_get.wast:219: assert_invalid passed:
 out/test/spec/local_get.wast:223: assert_invalid passed:
   0000000: error: local variable out of range (max 3)
   0000021: error: OnLocalGetExpr callback failed
-35/35 tests passed.
+36/36 tests passed.
 ;;; STDOUT ;;)

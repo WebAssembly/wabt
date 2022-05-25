@@ -43,5 +43,5 @@ out/test/spec/f32.wast:2541: assert_malformed passed:
   out/test/spec/f32/f32.13.wat:1:31: error: invalid literal "nan:canonical"
   (func (result f32) (f32.const nan:canonical))
                                 ^^^^^^^^^^^^^
-2513/2513 tests passed.
+2514/2514 tests passed.
 ;;; STDOUT ;;)

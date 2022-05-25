@@ -100,5 +100,5 @@ out/test/spec/local_set.wast:355: assert_invalid passed:
 out/test/spec/local_set.wast:359: assert_invalid passed:
   0000000: error: local variable out of range (max 3)
   0000023: error: OnLocalSetExpr callback failed
-52/52 tests passed.
+53/53 tests passed.
 ;;; STDOUT ;;)

@@ -7,5 +7,5 @@ out/test/spec/simd_i64x2_arith2.wast:59: assert_invalid passed:
 out/test/spec/simd_i64x2_arith2.wast:64: assert_invalid passed:
   out/test/spec/simd_i64x2_arith2/simd_i64x2_arith2.2.wasm:000001b: error: type mismatch in i64x2.abs, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
-23/23 tests passed.
+25/25 tests passed.
 ;;; STDOUT ;;)

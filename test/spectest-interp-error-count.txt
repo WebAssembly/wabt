@@ -11,5 +11,5 @@
 out/test/spectest-interp-error-count.txt:7: mismatch in result 0 of assert_return: expected i32:1, got i32:0
 out/test/spectest-interp-error-count.txt:8: mismatch in result 0 of assert_return: expected i32:2, got i32:0
 out/test/spectest-interp-error-count.txt:9: mismatch in result 0 of assert_return: expected i32:3, got i32:0
-1/4 tests passed.
+2/5 tests passed.
 ;;; STDOUT ;;)
