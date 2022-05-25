@@ -71,5 +71,5 @@ out/test/spec/simd_splat.wast:416: assert_invalid passed:
 out/test/spec/simd_splat.wast:424: assert_invalid passed:
   out/test/spec/simd_splat/simd_splat.26.wasm:000001a: error: type mismatch in f64x2.splat, expected [f64] but got []
   000001a: error: OnUnaryExpr callback failed
-181/181 tests passed.
+185/185 tests passed.
 ;;; STDOUT ;;)

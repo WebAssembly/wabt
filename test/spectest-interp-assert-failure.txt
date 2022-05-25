@@ -16,5 +16,5 @@
 (;; STDOUT ;;;
 out/test/spectest-interp-assert-failure.txt:10: mismatch in result 0 of assert_return: expected f32:nan:canonical, got f32:0.100000
 out/test/spectest-interp-assert-failure.txt:11: mismatch in result 0 of assert_return: expected f64:nan:arithmetic, got f64:0.200000
-4/6 tests passed.
+5/7 tests passed.
 ;;; STDOUT ;;)

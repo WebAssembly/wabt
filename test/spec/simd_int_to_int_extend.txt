@@ -73,5 +73,5 @@ out/test/spec/simd_int_to_int_extend.wast:584: assert_invalid passed:
 out/test/spec/simd_int_to_int_extend.wast:592: assert_invalid passed:
   out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.24.wasm:000001b: error: type mismatch in i64x2.extend_low_i32x4_u, expected [v128] but got []
   000001b: error: OnUnaryExpr callback failed
-252/252 tests passed.
+253/253 tests passed.
 ;;; STDOUT ;;)

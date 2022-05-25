@@ -74,11 +74,9 @@ struct FixupMap {
 class BinaryReaderInterp : public BinaryReaderNop {
  public:
   BinaryReaderInterp(ModuleDesc* module,
-                     string_view filename,
+                     std::string_view filename,
                      Errors* errors,
                      const Features& features);
-
-  ValueType GetType(InitExpr);
 
   // Implement BinaryReader.
   bool OnError(const Error&) override;
@@ -93,30 +91,30 @@ class BinaryReaderInterp : public BinaryReaderNop {
                     Type* result_types) override;
 
   Result OnImportFunc(Index import_index,
-                      string_view module_name,
-                      string_view field_name,
+                      std::string_view module_name,
+                      std::string_view field_name,
                       Index func_index,
                       Index sig_index) override;
   Result OnImportTable(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
+                       std::string_view module_name,
+                       std::string_view field_name,
                        Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override;
   Result OnImportMemory(Index import_index,
-                        string_view module_name,
-                        string_view field_name,
+                        std::string_view module_name,
+                        std::string_view field_name,
                         Index memory_index,
                         const Limits* page_limits) override;
   Result OnImportGlobal(Index import_index,
-                        string_view module_name,
-                        string_view field_name,
+                        std::string_view module_name,
+                        std::string_view field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override;
   Result OnImportTag(Index import_index,
-                     string_view module_name,
-                     string_view field_name,
+                     std::string_view module_name,
+                     std::string_view field_name,
                      Index tag_index,
                      Index sig_index) override;
 
@@ -142,7 +140,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  string_view name) override;
+                  std::string_view name) override;
 
   Result OnStartFunction(Index func_index) override;
 
@@ -301,7 +299,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                     Index keep_extra,
                                     Index* out_drop_count,
                                     Index* out_keep_count);
-  Result BeginInitExpr(Type type);
+  Result BeginInitExpr(Type type, FuncDesc* init_func);
   Result EndInitExpr();
 
   void EmitBr(Index depth,
@@ -326,8 +324,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   FixupMap depth_fixups_;
   FixupMap func_fixups_;
 
-  bool reading_init_expr_ = false;
-  InitExpr init_expr_;
   u32 local_decl_count_;
   u32 local_count_;
 
@@ -338,7 +334,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   std::vector<TagType> tag_types_;        // Includes imported and defined.
 
   static const Index kMemoryIndex0 = 0;
-  string_view filename_;
+  std::string_view filename_;
 };
 
 Location BinaryReaderInterp::GetLocation() const {
@@ -368,7 +364,7 @@ void FixupMap::Resolve(Istream& istream, Index index) {
 }
 
 BinaryReaderInterp::BinaryReaderInterp(ModuleDesc* module,
-                                       string_view filename,
+                                       std::string_view filename,
                                        Errors* errors,
                                        const Features& features)
     : errors_(errors),
@@ -503,69 +499,69 @@ Result BinaryReaderInterp::OnFuncType(Index index,
 }
 
 Result BinaryReaderInterp::OnImportFunc(Index import_index,
-                                        string_view module_name,
-                                        string_view field_name,
+                                        std::string_view module_name,
+                                        std::string_view field_name,
                                         Index func_index,
                                         Index sig_index) {
   CHECK_RESULT(validator_.OnFunction(GetLocation(), Var(sig_index)));
   FuncType& func_type = module_.func_types[sig_index];
   module_.imports.push_back(ImportDesc{ImportType(
-      module_name.to_string(), field_name.to_string(), func_type.Clone())});
+      std::string(module_name), std::string(field_name), func_type.Clone())});
   func_types_.push_back(func_type);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnImportTable(Index import_index,
-                                         string_view module_name,
-                                         string_view field_name,
+                                         std::string_view module_name,
+                                         std::string_view field_name,
                                          Index table_index,
                                          Type elem_type,
                                          const Limits* elem_limits) {
   CHECK_RESULT(validator_.OnTable(GetLocation(), elem_type, *elem_limits));
   TableType table_type{elem_type, *elem_limits};
   module_.imports.push_back(ImportDesc{ImportType(
-      module_name.to_string(), field_name.to_string(), table_type.Clone())});
+      std::string(module_name), std::string(field_name), table_type.Clone())});
   table_types_.push_back(table_type);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnImportMemory(Index import_index,
-                                          string_view module_name,
-                                          string_view field_name,
+                                          std::string_view module_name,
+                                          std::string_view field_name,
                                           Index memory_index,
                                           const Limits* page_limits) {
   CHECK_RESULT(validator_.OnMemory(GetLocation(), *page_limits));
   MemoryType memory_type{*page_limits};
   module_.imports.push_back(ImportDesc{ImportType(
-      module_name.to_string(), field_name.to_string(), memory_type.Clone())});
+      std::string(module_name), std::string(field_name), memory_type.Clone())});
   memory_types_.push_back(memory_type);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnImportGlobal(Index import_index,
-                                          string_view module_name,
-                                          string_view field_name,
+                                          std::string_view module_name,
+                                          std::string_view field_name,
                                           Index global_index,
                                           Type type,
                                           bool mutable_) {
   CHECK_RESULT(validator_.OnGlobalImport(GetLocation(), type, mutable_));
   GlobalType global_type{type, ToMutability(mutable_)};
   module_.imports.push_back(ImportDesc{ImportType(
-      module_name.to_string(), field_name.to_string(), global_type.Clone())});
+      std::string(module_name), std::string(field_name), global_type.Clone())});
   global_types_.push_back(global_type);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnImportTag(Index import_index,
-                                       string_view module_name,
-                                       string_view field_name,
+                                       std::string_view module_name,
+                                       std::string_view field_name,
                                        Index tag_index,
                                        Index sig_index) {
   CHECK_RESULT(validator_.OnTag(GetLocation(), Var(sig_index)));
   FuncType& func_type = module_.func_types[sig_index];
   TagType tag_type{TagAttr::Exception, func_type.params};
   module_.imports.push_back(ImportDesc{ImportType(
-      module_name.to_string(), field_name.to_string(), tag_type.Clone())});
+      std::string(module_name), std::string(field_name), tag_type.Clone())});
   tag_types_.push_back(tag_type);
   return Result::Ok;
 }
@@ -619,37 +615,37 @@ Result BinaryReaderInterp::OnGlobalCount(Index count) {
 Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
   CHECK_RESULT(validator_.OnGlobal(GetLocation(), type, mutable_));
   GlobalType global_type{type, ToMutability(mutable_)};
-  module_.globals.push_back(GlobalDesc{global_type, InitExpr{}});
+  FuncDesc init_func{FuncType{{}, {type}}, {}, Istream::kInvalidOffset, {}};
+  module_.globals.push_back(GlobalDesc{global_type, init_func});
   global_types_.push_back(global_type);
-  init_expr_.kind = InitExprKind::None;
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::BeginGlobalInitExpr(Index index) {
-  GlobalType type = global_types_[index];
-  return BeginInitExpr(type.type);
+  GlobalDesc& global = module_.globals.back();
+  return BeginInitExpr(global.type.type, &global.init_func);
 }
 
 Result BinaryReaderInterp::EndInitExpr() {
-  assert(reading_init_expr_);
-  reading_init_expr_ = false;
+  FixupTopLabel();
   CHECK_RESULT(validator_.EndInitExpr());
+  istream_.Emit(Opcode::Return);
+  PopLabel();
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::BeginInitExpr(Type type) {
-  assert(!reading_init_expr_);
-  reading_init_expr_ = true;
-  init_expr_.kind = InitExprKind::None;
+Result BinaryReaderInterp::BeginInitExpr(Type type, FuncDesc* func) {
+  label_stack_.clear();
+  func_ = func;
+  func_->code_offset = istream_.end();
   CHECK_RESULT(validator_.BeginInitExpr(GetLocation(), type));
+  // Push implicit init func label (equivalent to return).
+  PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
-  CHECK_RESULT(EndInitExpr());
-  GlobalDesc& global = module_.globals.back();
-  global.init = init_expr_;
-  return Result::Ok;
+  return EndInitExpr();
 }
 
 Result BinaryReaderInterp::OnTagCount(Index count) {
@@ -669,7 +665,7 @@ Result BinaryReaderInterp::OnTagType(Index index, Index sig_index) {
 Result BinaryReaderInterp::OnExport(Index index,
                                     ExternalKind kind,
                                     Index item_index,
-                                    string_view name) {
+                                    std::string_view name) {
   CHECK_RESULT(validator_.OnExport(GetLocation(), kind, Var(item_index), name));
 
   std::unique_ptr<ExternType> type;
@@ -681,7 +677,7 @@ Result BinaryReaderInterp::OnExport(Index index,
     case ExternalKind::Tag:    type = tag_types_[item_index].Clone(); break;
   }
   module_.exports.push_back(
-      ExportDesc{ExportType(name.to_string(), std::move(type)), item_index});
+      ExportDesc{ExportType(std::string(name), std::move(type)), item_index});
   return Result::Ok;
 }
 
@@ -702,24 +698,20 @@ Result BinaryReaderInterp::BeginElemSegment(Index index,
   auto mode = ToSegmentMode(flags);
   CHECK_RESULT(validator_.OnElemSegment(GetLocation(), Var(table_index), mode));
 
-  ElemDesc desc;
-  desc.type = ValueType::Void;  // Initialized later in OnElemSegmentElemType.
-  desc.mode = mode;
-  desc.table_index = table_index;
+  FuncDesc init_func{
+      FuncType{{}, {ValueType::I32}}, {}, Istream::kInvalidOffset, {}};
+  ElemDesc desc{{}, ValueType::Void, mode, table_index, init_func};
   module_.elems.push_back(desc);
-  init_expr_.kind = InitExprKind::None;
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::BeginElemSegmentInitExpr(Index index) {
-  return BeginInitExpr(Type::I32);
+  ElemDesc& elem = module_.elems.back();
+  return BeginInitExpr(Type::I32, &elem.init_func);
 }
 
 Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
-  CHECK_RESULT(EndInitExpr());
-  ElemDesc& elem = module_.elems.back();
-  elem.offset = init_expr_;
-  return Result::Ok;
+  return EndInitExpr();
 }
 
 Result BinaryReaderInterp::OnElemSegmentElemType(Index index, Type elem_type) {
@@ -761,14 +753,12 @@ Result BinaryReaderInterp::OnDataCount(Index count) {
 
 Result BinaryReaderInterp::BeginDataSegmentInitExpr(Index index) {
   MemoryType t = memory_types_[0];
-  return BeginInitExpr(t.limits.is_64 ? Type::I64 : Type::I32);
+  DataDesc& data = module_.datas.back();
+  return BeginInitExpr(t.limits.is_64 ? Type::I64 : Type::I32, &data.init_func);
 }
 
 Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
-  CHECK_RESULT(EndInitExpr());
-  DataDesc& data = module_.datas.back();
-  data.offset = init_expr_;
-  return Result::Ok;
+  return EndInitExpr();
 }
 
 Result BinaryReaderInterp::BeginDataSegment(Index index,
@@ -778,11 +768,10 @@ Result BinaryReaderInterp::BeginDataSegment(Index index,
   CHECK_RESULT(
       validator_.OnDataSegment(GetLocation(), Var(memory_index), mode));
 
-  DataDesc desc;
-  desc.mode = mode;
-  desc.memory_index = memory_index;
+  FuncDesc init_func{
+      FuncType{{}, {ValueType::I32}}, {}, Istream::kInvalidOffset, {}};
+  DataDesc desc{{}, mode, memory_index, init_func};
   module_.datas.push_back(desc);
-  init_expr_.kind = InitExprKind::None;
   return Result::Ok;
 }
 
@@ -873,7 +862,7 @@ Index BinaryReaderInterp::num_func_imports() const {
 }
 
 Result BinaryReaderInterp::OnOpcode(Opcode opcode) {
-  if ((func_ == nullptr || label_stack_.empty()) && !reading_init_expr_) {
+  if (func_ == nullptr || label_stack_.empty()) {
     PrintError("Unexpected instruction after end of function");
     return Result::Error;
   }
@@ -1021,7 +1010,7 @@ Result BinaryReaderInterp::OnElseExpr() {
 }
 
 Result BinaryReaderInterp::OnEndExpr() {
-  if (reading_init_expr_ || label_stack_.size() == 1) {
+  if (label_stack_.size() == 1) {
     return Result::Ok;
   }
   SharedValidator::Label* label;
@@ -1188,66 +1177,36 @@ Result BinaryReaderInterp::OnDropExpr() {
 
 Result BinaryReaderInterp::OnI32ConstExpr(uint32_t value) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::I32));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::I32;
-    init_expr_.i32_ = value;
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::I32Const, value);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnI64ConstExpr(uint64_t value) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::I64));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::I64;
-    init_expr_.i64_ = value;
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::I64Const, value);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnF32ConstExpr(uint32_t value_bits) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::F32));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::F32;
-    init_expr_.f32_ = Bitcast<f32>(value_bits);
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::F32Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::F64));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::F64;
-    init_expr_.f64_ = Bitcast<f64>(value_bits);
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::F64Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::V128));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::V128;
-    init_expr_.v128_ = Bitcast<v128>(value_bits);
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::V128Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
   CHECK_RESULT(validator_.OnGlobalGet(GetLocation(), Var(global_index)));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::GlobalGet;
-    init_expr_.index_ = global_index;
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::GlobalGet, global_index);
   return Result::Ok;
 }
@@ -1339,22 +1298,12 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
 
 Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   CHECK_RESULT(validator_.OnRefFunc(GetLocation(), Var(func_index)));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::RefFunc;
-    init_expr_.index_ = func_index;
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::RefFunc, func_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnRefNullExpr(Type type) {
   CHECK_RESULT(validator_.OnRefNull(GetLocation(), type));
-  if (reading_init_expr_) {
-    init_expr_.kind = InitExprKind::RefNull;
-    init_expr_.type_ = type;
-    return Result::Ok;
-  }
   istream_.Emit(Opcode::RefNull);
   return Result::Ok;
 }
@@ -1585,7 +1534,7 @@ Result BinaryReaderInterp::OnDelegateExpr(Index depth) {
 
 }  // namespace
 
-Result ReadBinaryInterp(string_view filename,
+Result ReadBinaryInterp(std::string_view filename,
                         const void* data,
                         size_t size,
                         const ReadBinaryOptions& options,

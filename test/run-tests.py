@@ -23,7 +23,6 @@ import os
 import re
 import shlex
 import shutil
-import struct
 import subprocess
 import sys
 import threading
@@ -39,6 +38,10 @@ OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
 DEFAULT_TIMEOUT = 120    # seconds
 SLOW_TIMEOUT_MULTIPLIER = 3
 
+if sys.byteorder == 'big':
+    wasm2c_args = ['--cflags=-DWABT_BIG_ENDIAN']
+else:
+    wasm2c_args = []
 
 # default configurations for tests
 TOOLS = {
@@ -146,10 +149,9 @@ TOOLS = {
             '%(in_file)s',
             '--bindir=%(bindir)s',
             '--no-error-cmdline',
-            '--cflags=-DWABT_BIG_ENDIAN=' + '01'[struct.pack('<h', *struct.unpack('=h', b'\x00\x01'))[0]],
             '-o',
             '%(out_dir)s',
-        ]),
+        ] + wasm2c_args),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-wasm-decompile': [
@@ -157,10 +159,6 @@ TOOLS = {
         ('RUN', '%(wasm-decompile)s --enable-all %(temp_file)s.wasm'),
     ]
 }
-
-# TODO(binji): Add Windows support for compiling using run-spec-wasm2c.py
-if IS_WINDOWS:
-    TOOLS['run-spec-wasm2c'].append(('SKIP', ''))
 
 ROUNDTRIP_TOOLS = ('wat2wasm',)
 

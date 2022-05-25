@@ -79,10 +79,10 @@ localget-param.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000018 func[0]:
- 000019: 01 7e                      | local[0] type=i64
- 00001b: 01 7d                      | local[1] type=f32
- 00001d: 01 7f                      | local[2] type=i32
- 00001f: 01 7d                      | local[3] type=f32
+ 000019: 01 7e                      | local[2] type=i64
+ 00001b: 01 7d                      | local[3] type=f32
+ 00001d: 01 7f                      | local[4] type=i32
+ 00001f: 01 7d                      | local[5] type=f32
  000021: 20 00                      | local.get 0
  000023: 1a                         | drop
  000024: 20 01                      | local.get 1

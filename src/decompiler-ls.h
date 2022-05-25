@@ -18,6 +18,7 @@
 #define WABT_DECOMPILER_LS_H_
 
 #include "src/decompiler-ast.h"
+#include "src/string-util.h"
 
 #include <map>
 
@@ -51,7 +52,7 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
   // from context, if not, we should probably represent that as a cast around
   // the access, since it should not be part of the field type.
   if (operand_type == Type::I32 || operand_type == Type::I64) {
-    auto name = string_view(opc.GetName());
+    auto name = std::string_view(opc.GetName());
     // FIXME: change into a new column in opcode.def instead?
     auto is_unsigned = name.substr(name.size() - 2) == "_u";
     switch (opc.GetMemorySize()) {

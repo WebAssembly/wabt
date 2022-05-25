@@ -1233,5 +1233,5 @@ out/test/spec/table_copy.wast:3079: assert_trap passed: uninitialized table elem
 out/test/spec/table_copy.wast:3080: assert_trap passed: uninitialized table element
 out/test/spec/table_copy.wast:3081: assert_trap passed: uninitialized table element
 out/test/spec/table_copy.wast:3082: assert_trap passed: uninitialized table element
-1675/1675 tests passed.
+1727/1727 tests passed.
 ;;; STDOUT ;;)

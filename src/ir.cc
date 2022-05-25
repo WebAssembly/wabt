@@ -40,6 +40,7 @@ const char* ExprTypeName[] = {
     "Call",
     "CallIndirect",
     "CallRef",
+    "CodeMetadata",
     "Compare",
     "Const",
     "Convert",
@@ -107,7 +108,7 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
-const Export* Module::GetExport(string_view name) const {
+const Export* Module::GetExport(std::string_view name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size()) {
     return nullptr;
@@ -574,17 +575,16 @@ void MakeTypeBindingReverseMapping(
     std::vector<std::string>* out_reverse_mapping) {
   out_reverse_mapping->clear();
   out_reverse_mapping->resize(num_types);
-  for (const auto& pair : bindings) {
-    assert(static_cast<size_t>(pair.second.index) <
-           out_reverse_mapping->size());
-    (*out_reverse_mapping)[pair.second.index] = pair.first;
+  for (const auto& [name, binding] : bindings) {
+    assert(static_cast<size_t>(binding.index) < out_reverse_mapping->size());
+    (*out_reverse_mapping)[binding.index] = name;
   }
 }
 
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 
-Var::Var(string_view name, const Location& loc)
+Var::Var(std::string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
 Var::Var(Var&& rhs) : Var(kInvalidIndex) {
@@ -631,8 +631,8 @@ void Var::set_name(std::string&& name) {
   Construct(name_, std::move(name));
 }
 
-void Var::set_name(string_view name) {
-  set_name(name.to_string());
+void Var::set_name(std::string_view name) {
+  set_name(std::string(name));
 }
 
 void Var::Destroy() {

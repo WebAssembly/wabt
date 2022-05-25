@@ -82,7 +82,7 @@ Code Disassembly:
            000070: R_WASM_FUNCTION_INDEX_LEB 0 <__extern.foo>
  000075: 41 d2 09                   | i32.const 1234
  000078: 41 00                      | i32.const 0
- 00007a: 11 82 80 80 80 00 80 80 80 | call_indirect 2 0
+ 00007a: 11 82 80 80 80 00 80 80 80 | call_indirect 0 (type 2)
  000083: 80 00                      | 
            00007b: R_WASM_TYPE_INDEX_LEB 2
  000085: 0b                         | end

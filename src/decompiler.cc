@@ -97,19 +97,19 @@ struct Decompiler {
     return s;
   }
 
-  void IndentValue(Value& val, size_t amount, string_view first_indent) {
+  void IndentValue(Value& val, size_t amount, std::string_view first_indent) {
     auto indent = Indent(amount);
     for (auto& stat : val.v) {
       auto is = (&stat != &val.v[0] || first_indent.empty())
-                    ? string_view(indent)
+                    ? std::string_view(indent)
                     : first_indent;
       stat.insert(0, is.data(), is.size());
     }
   }
 
   Value WrapChild(Value& child,
-                  string_view prefix,
-                  string_view postfix,
+                  std::string_view prefix,
+                  std::string_view postfix,
                   Precedence precedence) {
     auto width = prefix.size() + postfix.size() + child.width();
     auto& v = child.v;
@@ -144,7 +144,7 @@ struct Decompiler {
   }
 
   Value WrapBinary(std::vector<Value>& args,
-                   string_view infix,
+                   std::string_view infix,
                    bool indent_right,
                    Precedence precedence) {
     assert(args.size() == 2);
@@ -169,8 +169,8 @@ struct Decompiler {
   }
 
   Value WrapNAry(std::vector<Value>& args,
-                 string_view prefix,
-                 string_view postfix,
+                 std::string_view prefix,
+                 std::string_view postfix,
                  Precedence precedence) {
     size_t total_width = 0;
     size_t max_width = 0;
@@ -200,7 +200,7 @@ struct Decompiler {
       size_t i = 0;
       for (auto& child : args) {
         IndentValue(child, ident_with_name ? prefix.size() : indent_amount,
-                    !i && ident_with_name ? prefix : string_view{});
+                    !i && ident_with_name ? prefix : std::string_view{});
         if (i < args.size() - 1) {
           child.v.back() += ",";
         }
@@ -215,7 +215,7 @@ struct Decompiler {
     }
   }
 
-  string_view VarName(string_view name) {
+  std::string_view VarName(std::string_view name) {
     assert(!name.empty());
     return name[0] == '$' ? name.substr(1) : name;
   }
@@ -512,7 +512,7 @@ struct Decompiler {
         }
         multiline = multiline || width > target_exp_width;
         if (multiline) {
-          auto if_start = string_view("if (");
+          auto if_start = std::string_view("if (");
           IndentValue(ifs, if_start.size(), if_start);
           ifs.v.back() += ") {";
           IndentValue(thenp, indent_amount, {});
@@ -604,6 +604,12 @@ struct Decompiler {
         ts += "](";
         return WrapChild(args[0], ts, ")", Precedence::Atomic);
       }
+      case ExprType::CodeMetadata: {
+        auto cme = cast<CodeMetadataExpr>(n.e);
+        std::string c = "// @metadata.code." + cme->name + " ";
+        c += BinaryToString(cme->data);
+        return Value{{std::move(c)}, Precedence::None};
+      }
       default: {
         // Everything that looks like a function call.
         std::string name;
@@ -663,7 +669,7 @@ struct Decompiler {
   bool CheckImportExport(std::string& s,
                          ExternalKind kind,
                          Index index,
-                         string_view name) {
+                         std::string_view name) {
     // Figure out if this thing is imported, exported, or neither.
     auto is_import = mc.module.IsImport(kind, Var(index));
     // TODO: is this the best way to check for export?

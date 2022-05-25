@@ -34,5 +34,5 @@ out/test/spec/simd_i64x2_arith.wast:594: assert_invalid passed:
 out/test/spec/simd_i64x2_arith.wast:602: assert_invalid passed:
   out/test/spec/simd_i64x2_arith/simd_i64x2_arith.11.wasm:000001b: error: type mismatch in i64x2.mul, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
-198/198 tests passed.
+200/200 tests passed.
 ;;; STDOUT ;;)

@@ -175,5 +175,5 @@ out/test/spec/simd_conversions.wast:885: assert_invalid passed:
 out/test/spec/simd_conversions.wast:893: assert_invalid passed:
   out/test/spec/simd_conversions/simd_conversions.49.wasm:000001b: error: type mismatch in i16x8.narrow_i32x4_u, expected [v128, v128] but got []
   000001b: error: OnBinaryExpr callback failed
-280/280 tests passed.
+282/282 tests passed.
 ;;; STDOUT ;;)

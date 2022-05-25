@@ -18,12 +18,12 @@
 
 #include <cassert>
 #include <cstdio>
+#include <string_view>
 #include <vector>
 
 #include "src/cast.h"
 #include "src/expr-visitor.h"
 #include "src/ir.h"
-#include "src/string-view.h"
 
 namespace wabt {
 
@@ -50,13 +50,18 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
+  Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
   Result OnDataDropExpr(DataDropExpr*) override;
+  Result OnMemoryFillExpr(MemoryFillExpr*) override;
+  Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
+  Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableCopyExpr(TableCopyExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
@@ -65,6 +70,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
+  Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
@@ -75,8 +81,8 @@ class NameApplier : public ExprVisitor::DelegateNop {
  private:
   void PushLabel(const std::string& label);
   void PopLabel();
-  string_view FindLabelByVar(Var* var);
-  void UseNameForVar(string_view name, Var* var);
+  std::string_view FindLabelByVar(Var* var);
+  void UseNameForVar(std::string_view name, Var* var);
   Result UseNameForFuncTypeVar(Var* var);
   Result UseNameForFuncVar(Var* var);
   Result UseNameForGlobalVar(Var* var);
@@ -111,7 +117,7 @@ void NameApplier::PopLabel() {
   labels_.pop_back();
 }
 
-string_view NameApplier::FindLabelByVar(Var* var) {
+std::string_view NameApplier::FindLabelByVar(Var* var) {
   if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
       const std::string& label = labels_[i];
@@ -119,16 +125,16 @@ string_view NameApplier::FindLabelByVar(Var* var) {
         return label;
       }
     }
-    return string_view();
+    return std::string_view();
   } else {
     if (var->index() >= labels_.size()) {
-      return string_view();
+      return std::string_view();
     }
     return labels_[labels_.size() - 1 - var->index()];
   }
 }
 
-void NameApplier::UseNameForVar(string_view name, Var* var) {
+void NameApplier::UseNameForVar(std::string_view name, Var* var) {
   if (var->is_name()) {
     assert(name == var->name());
     return;
@@ -254,8 +260,30 @@ Result NameApplier::OnDataDropExpr(DataDropExpr* expr) {
   return Result::Ok;
 }
 
+Result NameApplier::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->srcmemidx));
+  CHECK_RESULT(UseNameForMemoryVar(&expr->destmemidx));
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemoryFillExpr(MemoryFillExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
 Result NameApplier::OnMemoryInitExpr(MemoryInitExpr* expr) {
   CHECK_RESULT(UseNameForDataSegmentVar(&expr->var));
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemorySizeExpr(MemorySizeExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
   return Result::Ok;
 }
 
@@ -301,25 +329,30 @@ Result NameApplier::OnTableFillExpr(TableFillExpr* expr) {
   return Result::Ok;
 }
 
+Result NameApplier::OnStoreExpr(StoreExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
 Result NameApplier::OnBrExpr(BrExpr* expr) {
-  string_view label = FindLabelByVar(&expr->var);
+  std::string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
 Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
-  string_view label = FindLabelByVar(&expr->var);
+  std::string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
 Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
   for (Var& target : expr->targets) {
-    string_view label = FindLabelByVar(&target);
+    std::string_view label = FindLabelByVar(&target);
     UseNameForVar(label, &target);
   }
 
-  string_view label = FindLabelByVar(&expr->default_target);
+  std::string_view label = FindLabelByVar(&expr->default_target);
   UseNameForVar(label, &expr->default_target);
   return Result::Ok;
 }
@@ -342,7 +375,7 @@ Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
 }
 
 Result NameApplier::OnDelegateExpr(TryExpr* expr) {
-  string_view label = FindLabelByVar(&expr->delegate_target);
+  std::string_view label = FindLabelByVar(&expr->delegate_target);
   UseNameForVar(label, &expr->delegate_target);
   return Result::Ok;
 }
@@ -353,7 +386,7 @@ Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
 }
 
 Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
-  string_view label = FindLabelByVar(&expr->var);
+  std::string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
@@ -409,6 +442,11 @@ Result NameApplier::EndIfExpr(IfExpr* expr) {
   return Result::Ok;
 }
 
+Result NameApplier::OnLoadExpr(LoadExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
 Result NameApplier::OnGlobalSetExpr(GlobalSetExpr* expr) {
   CHECK_RESULT(UseNameForGlobalVar(&expr->var));
   return Result::Ok;
@@ -451,8 +489,26 @@ Result NameApplier::VisitTag(Tag* tag) {
 }
 
 Result NameApplier::VisitExport(Index export_index, Export* export_) {
-  if (export_->kind == ExternalKind::Func) {
-    UseNameForFuncVar(&export_->var);
+  switch (export_->kind) {
+    case ExternalKind::Func:
+      UseNameForFuncVar(&export_->var);
+      break;
+
+    case ExternalKind::Table:
+      UseNameForTableVar(&export_->var);
+      break;
+
+    case ExternalKind::Memory:
+      UseNameForMemoryVar(&export_->var);
+      break;
+
+    case ExternalKind::Global:
+      UseNameForGlobalVar(&export_->var);
+      break;
+
+    case ExternalKind::Tag:
+      UseNameForTagVar(&export_->var);
+      break;
   }
   return Result::Ok;
 }

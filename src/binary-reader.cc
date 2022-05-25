@@ -66,12 +66,16 @@ namespace {
 
 class BinaryReader {
  public:
+  struct ReadModuleOptions {
+    bool stop_on_first_error;
+  };
+
   BinaryReader(const void* data,
                size_t size,
                BinaryReaderDelegate* delegate,
                const ReadBinaryOptions& options);
 
-  Result ReadModule();
+  Result ReadModule(const ReadModuleOptions& options);
 
  private:
   template <typename T, T BinaryReader::*member>
@@ -82,6 +86,10 @@ class BinaryReader {
 
     BinaryReader* this_;
     T previous_value_;
+  };
+
+  struct ReadSectionsOptions {
+    bool stop_on_first_error;
   };
 
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
@@ -103,7 +111,7 @@ class BinaryReader {
   Result ReadRefType(Type* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadExternalKind(ExternalKind* out_value,
                           const char* desc) WABT_WARN_UNUSED;
-  Result ReadStr(string_view* out_str, const char* desc) WABT_WARN_UNUSED;
+  Result ReadStr(std::string_view* out_str, const char* desc) WABT_WARN_UNUSED;
   Result ReadBytes(const void** out_data,
                    Address* out_data_size,
                    const char* desc) WABT_WARN_UNUSED;
@@ -140,6 +148,8 @@ class BinaryReader {
   Result ReadDylink0Section(Offset section_size) WABT_WARN_UNUSED;
   Result ReadTargetFeaturesSections(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadCodeMetadataSection(std::string_view name,
+                                 Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
@@ -155,7 +165,7 @@ class BinaryReader {
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataCountSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadTagSection(Offset section_size) WABT_WARN_UNUSED;
-  Result ReadSections() WABT_WARN_UNUSED;
+  Result ReadSections(const ReadSectionsOptions& options) WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
   size_t read_end_ = 0;  // Either the section end or data_size.
@@ -356,14 +366,14 @@ Result BinaryReader::ReadExternalKind(ExternalKind* out_value,
   return Result::Ok;
 }
 
-Result BinaryReader::ReadStr(string_view* out_str, const char* desc) {
+Result BinaryReader::ReadStr(std::string_view* out_str, const char* desc) {
   uint32_t str_len = 0;
   CHECK_RESULT(ReadU32Leb128(&str_len, "string length"));
 
   ERROR_UNLESS(state_.offset + str_len <= read_end_,
                "unable to read string: %s", desc);
 
-  *out_str = string_view(
+  *out_str = std::string_view(
       reinterpret_cast<const char*>(state_.data) + state_.offset, str_len);
   state_.offset += str_len;
 
@@ -1815,7 +1825,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
       case NameSectionSubsection::Module:
         CALLBACK(OnModuleNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "module name"));
           CALLBACK(OnModuleName, name);
         }
@@ -1830,7 +1840,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
 
           for (Index j = 0; j < num_names; ++j) {
             Index function_index;
-            string_view function_name;
+            std::string_view function_name;
 
             CHECK_RESULT(ReadIndex(&function_index, "function index"));
             ERROR_UNLESS(function_index != last_function_index,
@@ -1869,7 +1879,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
             Index last_local_index = kInvalidIndex;
             for (Index k = 0; k < num_locals; ++k) {
               Index local_index;
-              string_view local_name;
+              std::string_view local_name;
 
               CHECK_RESULT(ReadIndex(&local_index, "named index"));
               ERROR_UNLESS(local_index != last_local_index,
@@ -1902,7 +1912,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
           CALLBACK(OnNameCount, num_names);
           for (Index j = 0; j < num_names; ++j) {
             Index index;
-            string_view name;
+            std::string_view name;
 
             CHECK_RESULT(ReadIndex(&index, "index"));
             CHECK_RESULT(ReadStr(&name, "name"));
@@ -2012,7 +2022,7 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
         CALLBACK(OnDylinkNeededCount, count);
         while (count--) {
-          string_view so_name;
+          std::string_view so_name;
           CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
           CALLBACK(OnDylinkNeeded, so_name);
         }
@@ -2022,8 +2032,8 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
         CALLBACK(OnDylinkImportCount, count);
         for (Index i = 0; i < count; ++i) {
           uint32_t flags = 0;
-          string_view module;
-          string_view field;
+          std::string_view module;
+          std::string_view field;
           CHECK_RESULT(ReadStr(&module, "module"));
           CHECK_RESULT(ReadStr(&field, "field"));
           CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
@@ -2035,7 +2045,7 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
         CALLBACK(OnDylinkExportCount, count);
         for (Index i = 0; i < count; ++i) {
           uint32_t flags = 0;
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "name"));
           CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
           CALLBACK(OnDylinkExport, name, flags);
@@ -2072,7 +2082,7 @@ Result BinaryReader::ReadDylinkSection(Offset section_size) {
   CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
   CALLBACK(OnDylinkNeededCount, count);
   while (count--) {
-    string_view so_name;
+    std::string_view so_name;
     CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
     CALLBACK(OnDylinkNeeded, so_name);
   }
@@ -2088,7 +2098,7 @@ Result BinaryReader::ReadTargetFeaturesSections(Offset section_size) {
   CALLBACK(OnFeatureCount, count);
   while (count--) {
     uint8_t prefix;
-    string_view name;
+    std::string_view name;
     CHECK_RESULT(ReadU8(&prefix, "prefix"));
     CHECK_RESULT(ReadStr(&name, "feature name"));
     CALLBACK(OnFeature, prefix, name);
@@ -2119,7 +2129,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
         CALLBACK(OnSymbolCount, count);
         for (Index i = 0; i < count; ++i) {
-          string_view name;
+          std::string_view name;
           uint32_t flags = 0;
           uint32_t kind = 0;
           CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
@@ -2179,7 +2189,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "info count"));
         CALLBACK(OnSegmentInfoCount, count);
         for (Index i = 0; i < count; i++) {
-          string_view name;
+          std::string_view name;
           Address alignment_log2;
           uint32_t flags;
           CHECK_RESULT(ReadStr(&name, "segment name"));
@@ -2205,7 +2215,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         while (count--) {
           uint32_t flags;
           uint32_t entry_count;
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "comdat name"));
           CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
           CHECK_RESULT(ReadU32Leb128(&entry_count, "entry count"));
@@ -2258,9 +2268,60 @@ Result BinaryReader::ReadTagSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
+                                             Offset section_size) {
+  CALLBACK(BeginCodeMetadataSection, name, section_size);
+
+  Index num_funcions;
+  CHECK_RESULT(ReadCount(&num_funcions, "function count"));
+  CALLBACK(OnCodeMetadataFuncCount, num_funcions);
+
+  Index last_function_index = kInvalidIndex;
+  for (Index i = 0; i < num_funcions; ++i) {
+    Index function_index;
+    CHECK_RESULT(ReadCount(&function_index, "function index"));
+    ERROR_UNLESS(function_index >= num_func_imports_,
+                 "function import can't have metadata (got %" PRIindex ")",
+                 function_index);
+    ERROR_UNLESS(function_index < NumTotalFuncs(),
+                 "invalid function index: %" PRIindex, function_index);
+    ERROR_UNLESS(function_index != last_function_index,
+                 "duplicate function index: %" PRIindex, function_index);
+    ERROR_UNLESS(last_function_index == kInvalidIndex ||
+                     function_index > last_function_index,
+                 "function index out of order: %" PRIindex, function_index);
+    last_function_index = function_index;
+
+    Index num_metadata;
+    CHECK_RESULT(ReadCount(&num_metadata, "metadata instances count"));
+
+    CALLBACK(OnCodeMetadataCount, function_index, num_metadata);
+
+    Offset last_code_offset = kInvalidOffset;
+    for (Index j = 0; j < num_metadata; ++j) {
+      Offset code_offset;
+      CHECK_RESULT(ReadOffset(&code_offset, "code offset"));
+      ERROR_UNLESS(code_offset != last_code_offset,
+                   "duplicate code offset: %" PRIzx, code_offset);
+      ERROR_UNLESS(
+          last_code_offset == kInvalidOffset || code_offset > last_code_offset,
+          "code offset out of order: %" PRIzx, code_offset);
+      last_code_offset = code_offset;
+
+      Address data_size;
+      const void* data;
+      CHECK_RESULT(ReadBytes(&data, &data_size, "instance data"));
+      CALLBACK(OnCodeMetadata, code_offset, data, data_size);
+    }
+  }
+
+  CALLBACK(EndCodeMetadataSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadCustomSection(Index section_index,
                                        Offset section_size) {
-  string_view section_name;
+  std::string_view section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
   CALLBACK(BeginCustomSection, section_index, section_size, section_name);
   ValueRestoreGuard<bool, &BinaryReader::reading_custom_section_> guard(this);
@@ -2280,6 +2341,11 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadTargetFeaturesSections(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
+  } else if (options_.features.code_metadata_enabled() &&
+             section_name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0) {
+    std::string_view metadata_name = section_name;
+    metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) - 1);
+    CHECK_RESULT(ReadCodeMetadataSection(metadata_name, section_size));
   } else {
     // This is an unknown custom section, skip it.
     state_.offset = read_end_;
@@ -2384,9 +2450,9 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_imports, "import count"));
   CALLBACK(OnImportCount, num_imports);
   for (Index i = 0; i < num_imports; ++i) {
-    string_view module_name;
+    std::string_view module_name;
     CHECK_RESULT(ReadStr(&module_name, "import module name"));
-    string_view field_name;
+    std::string_view field_name;
     CHECK_RESULT(ReadStr(&field_name, "import field name"));
 
     uint8_t kind;
@@ -2525,7 +2591,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_exports, "export count"));
   CALLBACK(OnExportCount, num_exports);
   for (Index i = 0; i < num_exports; ++i) {
-    string_view name;
+    std::string_view name;
     CHECK_RESULT(ReadStr(&name, "export item name"));
 
     ExternalKind kind;
@@ -2659,7 +2725,11 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
       CALLBACK(OnLocalDecl, k, num_local_types, local_type);
     }
 
-    CHECK_RESULT(ReadFunctionBody(end_offset));
+    if (options_.skip_function_bodies) {
+      state_.offset = end_offset;
+    } else {
+      CHECK_RESULT(ReadFunctionBody(end_offset));
+    }
 
     CALLBACK(EndFunctionBody, func_index);
   }
@@ -2713,7 +2783,7 @@ Result BinaryReader::ReadDataCountSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadSections() {
+Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
   Result result = Result::Ok;
   Index section_index = 0;
   bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
@@ -2727,7 +2797,17 @@ Result BinaryReader::ReadSections() {
     read_end_ = state_.offset + section_size;
     if (section_code >= kBinarySectionCount) {
       PrintError("invalid section code: %u", section_code);
-      return Result::Error;
+      if (options.stop_on_first_error) {
+        return Result::Error;
+      }
+      // If we don't have to stop on first error, continue reading
+      // sections, because although we could not understand the
+      // current section, we can continue and correctly parse
+      // subsequent sections, so we can give back as much information
+      // as we can understand.
+      result = Result::Error;
+      state_.offset = read_end_;
+      continue;
     }
 
     BinarySection section = static_cast<BinarySection>(section_code);
@@ -2852,7 +2932,7 @@ Result BinaryReader::ReadSections() {
   return result;
 }
 
-Result BinaryReader::ReadModule() {
+Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   uint32_t magic = 0;
   CHECK_RESULT(ReadU32(&magic, "magic"));
   ERROR_UNLESS(magic == WABT_BINARY_MAGIC, "bad magic value");
@@ -2863,7 +2943,7 @@ Result BinaryReader::ReadModule() {
                WABT_BINARY_VERSION);
 
   CALLBACK(BeginModule, version);
-  CHECK_RESULT(ReadSections());
+  CHECK_RESULT(ReadSections(ReadSectionsOptions{options.stop_on_first_error}));
   // This is checked in ReadCodeSection, but it must be checked at the end too,
   // in case the code section was omitted.
   ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
@@ -2880,7 +2960,8 @@ Result ReadBinary(const void* data,
                   BinaryReaderDelegate* delegate,
                   const ReadBinaryOptions& options) {
   BinaryReader reader(data, size, delegate, options);
-  return reader.ReadModule();
+  return reader.ReadModule(
+      BinaryReader::ReadModuleOptions{options.stop_on_first_error});
 }
 
 }  // namespace wabt

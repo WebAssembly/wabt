@@ -31,9 +31,11 @@ options:
       --disable-bulk-memory                    Disable Bulk-memory operations
       --disable-reference-types                Disable Reference types (externref)
       --enable-annotations                     Enable Custom annotation syntax
+      --enable-code-metadata                   Enable Code metadata
       --enable-gc                              Enable Garbage collection
       --enable-memory64                        Enable 64-bit memory
       --enable-multi-memory                    Enable Multi-memory
+      --enable-extended-const                  Enable Extended constant expressions
       --enable-all                             Enable all features
       --inline-exports                         Write all exports inline
       --inline-imports                         Write all imports inline

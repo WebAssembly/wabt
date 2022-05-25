@@ -1,0 +1,33 @@
+;;; RUN: %(gen_wasm_py)s %(in_file)s -o %(temp_file)s.wasm
+;;; RUN: %(wasm-strip)s %(temp_file)s.wasm -o %(temp_file)s_stripped.wasm
+;;; RUN: %(wasm-objdump)s -h %(temp_file)s_stripped.wasm
+magic
+version
+section("one") { "Lorem ipsum dolor sit amet," }
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section("two") { "consectetur adipiscing elit," }
+section(FUNCTION) { count[1] type[0] }
+section("three") { "sed do eiusmod tempor incididunt" }
+section(EXPORT) { count[1] str("main") func_kind func[0] }
+section("four") { "ut labore et dolore magna aliqua." }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.const
+    leb_i32(-420)
+    return
+  }
+}
+section("five") { "Ut enim ad minim veniam," }
+(;; STDOUT ;;;
+
+out_file_stripped.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
+   Export start=0x00000015 end=0x0000001d (size=0x00000008) count: 1
+     Code start=0x0000001f end=0x00000027 (size=0x00000008) count: 1
+;;; STDOUT ;;)

@@ -94,6 +94,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnCallRefExpr(CallRefExpr*) override;
+  Result OnCodeMetadataExpr(CodeMetadataExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -284,6 +285,10 @@ Result Validator::OnCallRefExpr(CallRefExpr* expr) {
   }
 
   return Result::Error;
+}
+
+Result Validator::OnCodeMetadataExpr(CodeMetadataExpr* expr) {
+  return Result::Ok;
 }
 
 Result Validator::OnCompareExpr(CompareExpr* expr) {
@@ -811,16 +816,18 @@ Result Validator::CheckModule() {
   Index func_index = module->num_func_imports;
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<FuncModuleField>(&field)) {
-      result_ |= validator_.BeginFunctionBody(field.loc, func_index++);
+      const Location& body_start = f->func.loc;
+      const Location& body_end =
+          f->func.exprs.empty() ? body_start : f->func.exprs.back().loc;
+      result_ |= validator_.BeginFunctionBody(body_start, func_index++);
 
       for (auto&& decl : f->func.local_types.decls()) {
-        // TODO: Better location?
-        result_ |= validator_.OnLocalDecl(field.loc, decl.second, decl.first);
+        result_ |= validator_.OnLocalDecl(body_start, decl.second, decl.first);
       }
 
       ExprVisitor visitor(this);
       result_ |= visitor.VisitExprList(const_cast<ExprList&>(f->func.exprs));
-      result_ |= validator_.EndFunctionBody(field.loc);
+      result_ |= validator_.EndFunctionBody(body_end);
     }
   }
 

@@ -35,11 +35,13 @@ options:
       --disable-bulk-memory                    Disable Bulk-memory operations
       --disable-reference-types                Disable Reference types (externref)
       --enable-annotations                     Enable Custom annotation syntax
+      --enable-code-metadata                   Enable Code metadata
       --enable-gc                              Enable Garbage collection
       --enable-memory64                        Enable 64-bit memory
       --enable-multi-memory                    Enable Multi-memory
+      --enable-extended-const                  Enable Extended constant expressions
       --enable-all                             Enable all features
-  -o, --output=FILE                            output wasm binary file
+  -o, --output=FILE                            Output wasm binary file. Use "-" to write to stdout.
   -r, --relocatable                            Create a relocatable wasm binary (suitable for linking with e.g. lld)
       --no-canonicalize-leb128s                Write all LEB128 sizes as 5-bytes instead of their minimal size
       --debug-names                            Write debug names to the generated binary file

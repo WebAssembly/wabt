@@ -230,5 +230,5 @@ out/test/spec/multi-memory/imports.wast:654: assert_malformed passed:
               ^^^^^^
 out/test/spec/multi-memory/imports.wast:664: assert_unlinkable passed:
   error: invalid import "not wasm.overloaded"
-122/122 tests passed.
+176/176 tests passed.
 ;;; STDOUT ;;)

@@ -2,16 +2,16 @@
 ;;; STDIN_FILE: third_party/testsuite/nop.wast
 (;; STDOUT ;;;
 out/test/spec/nop.wast:412: assert_invalid passed:
-  out/test/spec/nop/nop.1.wasm:0000019: error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/nop/nop.1.wasm:000001a: error: type mismatch in implicit return, expected [i32] but got []
   000001a: error: EndFunctionBody callback failed
 out/test/spec/nop.wast:416: assert_invalid passed:
-  out/test/spec/nop/nop.2.wasm:0000019: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/nop/nop.2.wasm:000001a: error: type mismatch in implicit return, expected [i64] but got []
   000001a: error: EndFunctionBody callback failed
 out/test/spec/nop.wast:420: assert_invalid passed:
-  out/test/spec/nop/nop.3.wasm:0000019: error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/nop/nop.3.wasm:000001a: error: type mismatch in implicit return, expected [f32] but got []
   000001a: error: EndFunctionBody callback failed
 out/test/spec/nop.wast:424: assert_invalid passed:
-  out/test/spec/nop/nop.4.wasm:0000019: error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/nop/nop.4.wasm:000001a: error: type mismatch in implicit return, expected [f64] but got []
   000001a: error: EndFunctionBody callback failed
-87/87 tests passed.
+88/88 tests passed.
 ;;; STDOUT ;;)

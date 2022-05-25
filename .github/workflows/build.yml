@@ -5,7 +5,7 @@ on:
     tags:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
@@ -23,6 +23,8 @@ jobs:
         sudo apt-get install clang-format
     - run: flake8
     - run: ./scripts/clang-format-diff.sh
+      env:
+        GITHUB_EVENT_BEFORE: ${{ github.event.before }}
   build:
     name: build
     runs-on: ${{ matrix.os }}
@@ -48,11 +50,11 @@ jobs:
     - name: mkdir
       run: mkdir -p out
     - name: cmake
-      run: cmake .. -G Ninja -DWERROR=ON
+      run: cmake .. -G Ninja -DWERROR=ON -Werror=dev
       working-directory: out
       if: matrix.os != 'windows-latest'
     - name: cmake (windows)
-      run: cmake .. -DWERROR=ON
+      run: cmake .. -DWERROR=ON -Werror=dev
       working-directory: out
       if: matrix.os == 'windows-latest'
     - name: build
@@ -82,6 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
+      WASM2C_CFLAGS: "-fsanitize=address"
     steps:
     - uses: actions/setup-python@v1
       with:
@@ -100,6 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
+      WASM2C_CFLAGS: "-fsanitize=undefined"
     steps:
     - uses: actions/setup-python@v1
       with:

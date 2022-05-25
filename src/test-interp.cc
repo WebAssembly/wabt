@@ -346,7 +346,7 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
       0x0b, 0x01, 0x09, 0x00, 0x20, 0x00, 0x41, 0x01, 0x6a, 0x10, 0x00, 0x0b,
   });
 
-  auto thread = Thread::New(store_, {});
+  Thread thread(store_);
 
   auto host_func =
       HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
@@ -369,7 +369,7 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
   Values results;
   Trap::Ptr trap;
   Result result =
-      GetFuncExport(0)->Call(*thread, {Value::Make(1)}, results, &trap);
+      GetFuncExport(0)->Call(thread, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());
@@ -680,11 +680,42 @@ TEST_F(InterpGCTest, Collect_InstanceExport) {
   });
   Instantiate();
   auto after_new = store_.object_count();
-  EXPECT_EQ(before_new + 6, after_new);  // module, instance, f, t, m, g
+  EXPECT_EQ(before_new + 7,
+            after_new);  // module, instance, f, t, m, g, g-init-func
 
-  // Instance keeps all exports alive.
+  // Instance keeps all exports alive, except the init func which can be
+  // collected once its has been run
   store_.Collect();
-  EXPECT_EQ(after_new, store_.object_count());
+  EXPECT_EQ(after_new - 1, store_.object_count());
+}
+
+TEST_F(InterpGCTest, Collect_DeepRecursion) {
+  const size_t table_count = 65;
+
+  TableType tt = TableType{ValueType::ExternRef, Limits{1}};
+
+  // Create a chain of tables, where each contains
+  // a single reference to the next table.
+
+  Table::Ptr prev_table = Table::New(store_, tt);
+
+  for (size_t i = 1; i < table_count; i++) {
+    Table::Ptr new_table = Table::New(store_, tt);
+
+    new_table->Set(store_, 0, prev_table->self());
+
+    prev_table.reset();
+    prev_table = std::move(new_table);
+  }
+
+  store_.Collect();
+  EXPECT_EQ(table_count + 1, store_.object_count());
+
+  // Remove the last root, now all should be removed.
+  prev_table.reset();
+
+  store_.Collect();
+  EXPECT_EQ(1u, store_.object_count());
 }
 
 // TODO: Test for Thread keeping references alive as locals/params/stack values.

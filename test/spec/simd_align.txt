@@ -209,5 +209,5 @@ out/test/spec/simd_align.wast:303: assert_malformed passed:
   out/test/spec/simd_align/simd_align.89.wat:1:51: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load64_splat align=7 (i32.const 0)))
                                                     ^^^^^^^
-54/54 tests passed.
+100/100 tests passed.
 ;;; STDOUT ;;)

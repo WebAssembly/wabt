@@ -20,7 +20,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -29,7 +31,6 @@
 #include "src/feature.h"
 #include "src/opcode.h"
 #include "src/result.h"
-#include "src/string-view.h"
 
 #include "src/interp/istream.h"
 
@@ -90,38 +91,17 @@ enum class ObjectKind {
   Tag,
   Module,
   Instance,
-  Thread,
+
+  First = Null,
+  Last = Instance,
 };
+
+static const int kCommandTypeCount = WABT_ENUM_COUNT(ObjectKind);
 
 const char* GetName(Mutability);
 const std::string GetName(ValueType);
 const char* GetName(ExternKind);
 const char* GetName(ObjectKind);
-
-enum class InitExprKind {
-  None,
-  I32,
-  I64,
-  F32,
-  F64,
-  V128,
-  GlobalGet,
-  RefNull,
-  RefFunc
-};
-
-struct InitExpr {
-  InitExprKind kind;
-  union {
-    u32 i32_;
-    u64 i64_;
-    f32 f32_;
-    f64 f64_;
-    v128 v128_;
-    Index index_;
-    Type type_;
-  };
-};
 
 struct Ref {
   static const Ref Null;
@@ -341,7 +321,7 @@ struct FuncDesc {
 
   FuncType type;
   std::vector<LocalDesc> locals;
-  u32 code_offset;
+  u32 code_offset;  // Istream offset.
   std::vector<HandlerDesc> handlers;
 };
 
@@ -355,7 +335,7 @@ struct MemoryDesc {
 
 struct GlobalDesc {
   GlobalType type;
-  InitExpr init;
+  FuncDesc init_func;
 };
 
 struct TagDesc {
@@ -375,7 +355,7 @@ struct DataDesc {
   Buffer data;
   SegmentMode mode;
   Index memory_index;
-  InitExpr offset;
+  FuncDesc init_func;
 };
 
 struct ElemExpr {
@@ -388,7 +368,7 @@ struct ElemDesc {
   ValueType type;
   SegmentMode mode;
   Index table_index;
-  InitExpr offset;
+  FuncDesc init_func;
 };
 
 struct ModuleDesc {
@@ -433,6 +413,8 @@ class FreeList {
  public:
   using Index = size_t;
 
+  ~FreeList();
+
   template <typename... Args>
   Index New(Args&&...);
   void Delete(Index);
@@ -446,34 +428,34 @@ class FreeList {
   Index count() const;  // The number of used elements.
 
  private:
-  // TODO: Optimize memory layout? We could probably store all of this
-  // information in one uintptr_t.
-  //
-  // For example, when T is a pointer to an Object (e.g. Store::ObjectList), we
-  // can assume alignment to 4 bytes at least. Given a 32-bit pointer, we can
-  // expect the following layout:
-  //
-  //   nnnnnnnn nnnnnnnn nnnnnnnn nnnnnnn0 f
-  //
-  // where:
-  //   f: "is_free": 0 when the payload is of type T
-  //                 1 when the payload is the index of the next free object
-  //   n: the payload
-  //
-  // When T is a Ref (see Store::RootList below), we'd need to store the
-  // "is_free" bit in most-significant bit instead.
-  //
+  // As for Refs, the free bit is 0x80..0. This bit is never
+  // set for valid Refs, since it would mean more objects
+  // are allocated than the total amount of memory.
+  static const Index refFreeBit = (SIZE_MAX >> 1) + 1;
+
+  // As for Objects, the free bit is 0x1. This bit is never
+  // set for valid Objects, since pointers are aligned to at
+  // least four bytes.
+  static const Index ptrFreeBit = 1;
+  static const int ptrFreeShift = 1;
+
   std::vector<T> list_;
-  std::vector<size_t> free_;
-  std::vector<bool> is_free_;
+  // If free_head_ is zero, there is no free slots in list_,
+  // otherwise free_head_ - 1 represents the first free slot.
+  Index free_head_ = 0;
+  Index free_items_ = 0;
 };
 
 class Store {
  public:
-  using ObjectList = FreeList<std::unique_ptr<Object>>;
+  using ObjectList = FreeList<Object*>;
   using RootList = FreeList<Ref>;
 
   explicit Store(const Features& = Features{});
+
+  Store(const Store&) = delete;
+  Store& operator=(const Store&) = delete;
+  Store& operator=(const Store&&) = delete;
 
   bool IsValid(Ref) const;
   bool HasValueType(Ref, ValueType) const;
@@ -500,14 +482,26 @@ class Store {
   const Features& features() const;
   void setFeatures(const Features& features) { features_ = features; }
 
+  std::set<Thread*>& threads();
+
  private:
   template <typename T>
   friend class RefPtr;
 
+  struct GCContext {
+    int call_depth = 0;
+    std::vector<bool> marks;
+    std::vector<size_t> untraced_objects;
+  };
+
+  static const int max_call_depth = 10;
+
   Features features_;
+  GCContext gc_context_;
+  // This set contains the currently active Thread objects.
+  std::set<Thread*> threads_;
   ObjectList objects_;
   RootList roots_;
-  std::vector<bool> marks_;
 };
 
 template <typename T>
@@ -1065,7 +1059,10 @@ class Instance : public Object {
   explicit Instance(Store&, Ref module);
   void Mark(Store&) override;
 
-  Value ResolveInitExpr(Store&, InitExpr);
+  Result CallInitFunc(Store&,
+                      const Ref func_ref,
+                      Value* result,
+                      Trap::Ptr* out_trap);
 
   Ref module_;
   RefVec imports_;
@@ -1086,15 +1083,8 @@ enum class RunResult {
   Exception,
 };
 
-// TODO: Kinda weird to have a thread as an object, but it makes reference
-// marking simpler.
-class Thread : public Object {
+class Thread {
  public:
-  static bool classof(const Object* obj);
-  static const ObjectKind skind = ObjectKind::Thread;
-  static const char* GetTypeName() { return "Thread"; }
-  using Ptr = RefPtr<Thread>;
-
   struct Options {
     static const u32 kDefaultValueStackSize = 64 * 1024 / sizeof(Value);
     static const u32 kDefaultCallStackSize = 64 * 1024 / sizeof(Frame);
@@ -1104,13 +1094,15 @@ class Thread : public Object {
     Stream* trace_stream = nullptr;
   };
 
-  static Thread::Ptr New(Store&, const Options&);
+  Thread(Store& store, Stream* trace_stream = nullptr);
+  ~Thread();
 
   RunResult Run(Trap::Ptr* out_trap);
   RunResult Run(int num_instructions, Trap::Ptr* out_trap);
   RunResult Step(Trap::Ptr* out_trap);
 
   Store& store();
+  void Mark();
 
   Instance* GetCallerInstance();
 
@@ -1119,9 +1111,6 @@ class Thread : public Object {
   friend DefinedFunc;
 
   struct TraceSource;
-
-  explicit Thread(Store&, const Options&);
-  void Mark(Store&) override;
 
   RunResult PushCall(Ref func, u32 offset, Trap::Ptr* out_trap);
   RunResult PushCall(const DefinedFunc&, Trap::Ptr* out_trap);

@@ -801,5 +801,5 @@ out/test/spec/table_init.wast:2117: assert_trap passed: uninitialized table elem
 out/test/spec/table_init.wast:2118: assert_trap passed: uninitialized table element
 out/test/spec/table_init.wast:2119: assert_trap passed: uninitialized table element
 out/test/spec/table_init.wast:2120: assert_trap passed: uninitialized table element
-744/744 tests passed.
+779/779 tests passed.
 ;;; STDOUT ;;)

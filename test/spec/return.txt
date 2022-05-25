@@ -61,5 +61,5 @@ out/test/spec/return.wast:472: assert_invalid passed:
 out/test/spec/return.wast:476: assert_invalid passed:
   out/test/spec/return/return.20.wasm:000001b: error: type mismatch in return, expected [f64] but got [i64]
   000001b: error: OnReturnExpr callback failed
-83/83 tests passed.
+84/84 tests passed.
 ;;; STDOUT ;;)

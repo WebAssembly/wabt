@@ -223,5 +223,5 @@ out/test/spec/memory_init.wast:879: assert_trap passed: out of bounds memory acc
 out/test/spec/memory_init.wast:902: assert_trap passed: out of bounds memory access: memory.init out of bounds
 out/test/spec/memory_init.wast:925: assert_trap passed: out of bounds memory access: memory.init out of bounds
 out/test/spec/memory_init.wast:948: assert_trap passed: out of bounds memory access: memory.init out of bounds
-216/216 tests passed.
+240/240 tests passed.
 ;;; STDOUT ;;)

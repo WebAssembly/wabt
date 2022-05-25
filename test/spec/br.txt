@@ -61,5 +61,5 @@ out/test/spec/br.wast:651: assert_invalid passed:
 out/test/spec/br.wast:655: assert_invalid passed:
   out/test/spec/br/br.20.wasm:0000016: error: invalid depth: 268435457 (max 0)
   000001d: error: OnBrExpr callback failed
-96/96 tests passed.
+97/97 tests passed.
 ;;; STDOUT ;;)

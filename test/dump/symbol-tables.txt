@@ -67,7 +67,7 @@ Code Disassembly:
  000050: 0b                         | end
 000052 func[3] <b>:
  000053: 41 00                      | i32.const 0
- 000055: 11 80 80 80 80 00 80 80 80 | call_indirect 0 0
+ 000055: 11 80 80 80 80 00 80 80 80 | call_indirect 0 <env.timport> (type 0)
  00005e: 80 00                      | 
            000056: R_WASM_TYPE_INDEX_LEB 0
  000060: 10 80 80 80 80 00          | call 0 <env.b>

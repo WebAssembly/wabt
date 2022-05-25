@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/local_tee.wast
 (;; STDOUT ;;;
 out/test/spec/local_tee.wast:371: assert_invalid passed:
-  out/test/spec/local_tee/local_tee.1.wasm:000001e: error: type mismatch in implicit return, expected [i64] but got [i32]
+  out/test/spec/local_tee/local_tee.1.wasm:000001f: error: type mismatch in implicit return, expected [i64] but got [i32]
   000001f: error: EndFunctionBody callback failed
 out/test/spec/local_tee.wast:375: assert_invalid passed:
   out/test/spec/local_tee/local_tee.2.wasm:0000021: error: type mismatch in i32.eqz, expected [i32] but got [f32]
@@ -23,7 +23,7 @@ out/test/spec/local_tee.wast:396: assert_invalid passed:
   out/test/spec/local_tee/local_tee.7.wasm:0000026: error: type mismatch in local.tee, expected [i64] but got [f64]
   0000026: error: OnLocalTeeExpr callback failed
 out/test/spec/local_tee.wast:404: assert_invalid passed:
-  out/test/spec/local_tee/local_tee.8.wasm:000001b: error: type mismatch in implicit return, expected [i64] but got [i32]
+  out/test/spec/local_tee/local_tee.8.wasm:000001c: error: type mismatch in implicit return, expected [i64] but got [i32]
   000001c: error: EndFunctionBody callback failed
 out/test/spec/local_tee.wast:408: assert_invalid passed:
   out/test/spec/local_tee/local_tee.9.wasm:000001b: error: type mismatch in i32.eqz, expected [i32] but got [f32]
@@ -124,5 +124,5 @@ out/test/spec/local_tee.wast:633: assert_invalid passed:
 out/test/spec/local_tee.wast:637: assert_invalid passed:
   0000000: error: local variable out of range (max 3)
   0000023: error: OnLocalTeeExpr callback failed
-96/96 tests passed.
+97/97 tests passed.
 ;;; STDOUT ;;)

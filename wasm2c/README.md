@@ -45,25 +45,20 @@ files.
 
 ## Using the generated module
 
-To actually use our fac module, we'll use create a new file, `main.c`, that
+To actually use our `fac` module, we'll use create a new file, `main.c`, that
 include `fac.h`, initializes the module, and calls `fac`.
 
-`wasm2c` generates a few symbols for us, `init` and `Z_facZ_ii`. `init`
-initializes the module, and `Z_facZ_ii` is our exported `fac` function, but
-[name-mangled](https://en.wikipedia.org/wiki/Name_mangling) to include the
-function signature.
+`wasm2c` generates a few C symbols based on the `fac.wasm` module.  `Z_fac_init`
+and `Z_fac_Z_fac`.  The former initializes the module, and the later is our
+exported `fac` function.
 
-We can define `WASM_RT_MODULE_PREFIX` before including `fac.h` to generate
-these symbols with a prefix, in case we already have a symbol called `init` (or
-even `Z_facZ_ii`!) Note that you'll have to compile `fac.c` with this macro
-too, for this to work.
+All the exported symbols shared a common prefix (`Z_fac`) which, by default, is
+based on the name section in the module or the name of input file.  This prefix
+can be overridden using the `-n/--module-name` command line flag.
 
 ```c
 #include <stdio.h>
 #include <stdlib.h>
-
-/* Uncomment this to define fac_init and fac_Z_facZ_ii instead. */
-/* #define WASM_RT_MODULE_PREFIX fac_ */
 
 #include "fac.h"
 
@@ -75,15 +70,23 @@ int main(int argc, char** argv) {
   to a `u32`, which is what `fac` expects. */
   u32 x = atoi(argv[1]);
 
-  /* Initialize the fac module. Since we didn't define WASM_RT_MODULE_PREFIX,
-  the initialization function is called `init`. */
-  init();
+  /* Initialize the Wasm runtime. */
+  wasm_rt_init();
+
+  /* Initialize the fac module. */
+  Z_fac_init();
 
   /* Call `fac`, using the mangled name. */
-  u32 result = Z_facZ_ii(x);
+  u32 result = Z_facZ_fac(x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
+
+  /* Free the fac module. */
+  Z_fac_free();
+
+  /* Free the Wasm runtime state. */
+  wasm_rt_free();
 
   return 0;
 }
@@ -118,21 +121,28 @@ The generated header file looks something like this:
 ```c
 #ifndef FAC_H_GENERATED_
 #define FAC_H_GENERATED_
+
+...
+
+#include "wasm-rt.h"
+
+...
+
+#ifndef WASM_RT_CORE_TYPES_DEFINED
+#define WASM_RT_CORE_TYPES_DEFINED
+...
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef WASM_RT_INCLUDED_
-#define WASM_RT_INCLUDED_
-
-...
-
-#endif  /* WASM_RT_INCLUDED_ */
-
-extern void WASM_RT_ADD_PREFIX(init)(void);
+void Z_fac_init(void);
+void Z_fac_free(void);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*Z_facZ_fac)(u32);
+
 #ifdef __cplusplus
 }
 #endif
@@ -140,76 +150,14 @@ extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
 #endif  /* FAC_H_GENERATED_ */
 ```
 
-Let's look at each section. The outer `#ifndef` is standard C boilerplate for a
-header. The `extern "C"` part makes sure to not mangle the symbols if using
-this header in C++.
+Let's look at each section. The outer `#ifndef` is standard C
+boilerplate for a header. This `WASM_RT_CORE_TYPES_DEFINED` section
+contains a number of definitions required for all WebAssembly
+modules. The `extern "C"` part makes sure to not mangle the symbols if
+using this header in C++.
 
-```c
-#ifndef FAC_H_GENERATED_
-#define FAC_H_GENERATED_
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-...
-
-#ifdef __cplusplus
-}
-#endif
-#endif  /* FAC_H_GENERATED_ */
-```
-
-This `WASM_RT_INCLUDED_` section contains a number of definitions required for
-all WebAssembly modules.
-
-```c
-#ifndef WASM_RT_INCLUDED_
-#define WASM_RT_INCLUDED_
-
-...
-
-#endif  /* WASM_RT_INCLUDED_ */
-```
-
-First we can specify the maximum call depth before trapping. This defaults to
-500:
-
-```c
-#ifndef WASM_RT_MAX_CALL_STACK_DEPTH
-#define WASM_RT_MAX_CALL_STACK_DEPTH 500
-#endif
-```
-
-Next we can specify a module prefix. This is useful if you are using multiple
-modules that may use the same name as an export. Since we only have one module
-here, it's fine to use the default which is an empty prefix:
-
-```c
-#ifndef WASM_RT_MODULE_PREFIX
-#define WASM_RT_MODULE_PREFIX
-#endif
-
-#define WASM_RT_PASTE_(x, y) x ## y
-#define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)
-#define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)
-```
-
-Next are some convenient typedefs for integers and floats of fixed sizes:
-
-```c
-typedef uint8_t u8;
-typedef int8_t s8;
-typedef uint16_t u16;
-typedef int16_t s16;
-typedef uint32_t u32;
-typedef int32_t s32;
-typedef uint64_t u64;
-typedef int64_t s64;
-typedef float f32;
-typedef double f64;
-```
-
-Next is the `wasm_rt_trap_t` enum, which is used to give the reason a trap
+The included `wasm-rt.h` file also includes a number of relevant definitions.
+First is the `wasm_rt_trap_t` enum, which is used to give the reason a trap
 occurred.
 
 ```c
@@ -284,19 +232,24 @@ typedef struct {
 
 ## Symbols that must be defined by the embedder
 
-Next in `fac.h` are a collection of extern symbols that must be implemented by
+Next in `wasm-rt.h` are a collection of extern symbols that must be implemented by
 the embedder (i.e. you) before this C source can be used.
 
 A C implementation of these functions is defined in
 [`wasm-rt-impl.h`](wasm-rt-impl.h) and [`wasm-rt-impl.c`](wasm-rt-impl.c).
 
 ```c
-extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
-extern uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
-extern void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages);
-extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
-extern void wasm_rt_allocate_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
-extern uint32_t wasm_rt_call_stack_depth;
+void wasm_rt_init(void);
+void wasm_rt_free(void);
+void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
+const char* wasm_rt_strerror(wasm_rt_trap_t trap);
+uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
+void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages);
+uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
+void wasm_rt_free_memory(wasm_rt_memory_t*);
+void wasm_rt_allocate_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
+void wasm_rt_free_table(wasm_rt_table_t*);
+uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
 ```
 
 `wasm_rt_trap` is a function that is called when the module traps. Some
@@ -320,33 +273,39 @@ greater than the maximum page count, the function must fail by returning
 `0xffffffff`. If the function succeeds, it must return the previous size of the
 memory instance, in pages.
 
+`wasm_rt_free_memory` frees the memory instance.
+
 `wasm_rt_allocate_table` initializes a table instance, and allocates at least
 enough space for the given number of initial elements. The elements must be
 cleared to zero.
 
+`wasm_rt_free_table` frees the table instance.
+
 `wasm_rt_call_stack_depth` is the current stack call depth. Since this is
 shared between modules, it must be defined only once, by the embedder.
+It is only used on platforms that don't use the signal handler to detect
+exhaustion.
 
 ## Exported symbols
 
 Finally, `fac.h` defines exported symbols provided by the module. In our
-example, the only function we exported was `fac`. An additional function is
-provided called `init`, which initializes the module and must be called before
-the module can be used:
+example, the only function we exported was `fac`. Two additional
+functions are provided called `init`, which initializes the module and
+must be called before the module can be used, and `free`, which frees
+the module's state (its memory and table instances).
 
 ```c
-extern void WASM_RT_ADD_PREFIX(init)(void);
+void Z_fac_init(void);
+void Z_fac_free(void);
 
 /* export: 'fac' */
-extern u32 (*WASM_RT_ADD_PREFIX(Z_facZ_ii))(u32);
+extern u32 (*Z_facZ_fac)(u32);
 ```
 
-All exported names use `WASM_RT_ADD_PREFIX` (as described above) to allow the
-symbols to placed in a namespace as decided by the embedder. All symbols are
-also mangled so they include the types of the function signature.
+All exported names use the mangled module name as a prefix (as described above)
+to avoid collisions with other C symbols or symbols from other modules.
 
-In our example, `Z_facZ_ii` is the mangling for a function named `fac` that
-takes one `i32` parameter and returns one `i32` result.
+In our example, `Z_facZ_fac` is the mangling of the function named `fac`.
 
 ## A quick look at `fac.c`
 
@@ -357,7 +316,7 @@ The first few hundred lines define macros that are used to implement the
 various WebAssembly instructions. Their implementations may be interesting to
 the curious reader, but are out of scope for this document.
 
-Following those definitions are various initialization functions (`init`,
+Following those definitions are various initialization functions (`init`, `free`,
 `init_func_types`, `init_globals`, `init_memory`, `init_table`, and
 `init_exports`.) In our example, most of these functions are empty, since the
 module doesn't use any globals, memory or tables.
@@ -365,24 +324,24 @@ module doesn't use any globals, memory or tables.
 The most interesting part is the definition of the function `fac`:
 
 ```c
-static u32 fac(u32 p0) {
+static u32 w2c_fac(u32 w2c_p0) {
   FUNC_PROLOGUE;
-  u32 i0, i1, i2;
-  i0 = p0;
-  i1 = 0u;
-  i0 = i0 == i1;
-  if (i0) {
-    i0 = 1u;
+  u32 w2c_i0, w2c_i1, w2c_i2;
+  w2c_i0 = w2c_p0;
+  w2c_i1 = 0u;
+  w2c_i0 = w2c_i0 == w2c_i1;
+  if (w2c_i0) {
+    w2c_i0 = 1u;
   } else {
-    i0 = p0;
-    i1 = p0;
-    i2 = 1u;
-    i1 -= i2;
-    i1 = fac(i1);
-    i0 *= i1;
+    w2c_i0 = w2c_p0;
+    w2c_i1 = w2c_p0;
+    w2c_i2 = 1u;
+    w2c_i1 -= w2c_i2;
+    w2c_i1 = w2c_fac(w2c_i1);
+    w2c_i0 *= w2c_i1;
   }
   FUNC_EPILOGUE;
-  return i0;
+  return w2c_i0;
 }
 ```
 

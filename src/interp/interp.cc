@@ -41,9 +41,12 @@ const char* GetName(ExternKind kind) {
 
 const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
-      "Null",   "Foreign", "Trap", "DefinedFunc", "HostFunc", "Table",
-      "Memory", "Global",  "Tag",  "Module",      "Instance", "Thread",
+      "Null",  "Foreign", "Trap",   "Exception", "DefinedFunc", "HostFunc",
+      "Table", "Memory",  "Global", "Tag",       "Module",      "Instance",
   };
+
+  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(kNames) == kCommandTypeCount);
+
   return kNames[int(kind)];
 }
 
@@ -217,7 +220,7 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
     return true;
   }
 
-  Object* obj = objects_.Get(ref.index).get();
+  Object* obj = objects_.Get(ref.index);
   switch (type) {
     case ValueType::FuncRef:
       return obj->kind() == ObjectKind::DefinedFunc ||
@@ -246,8 +249,11 @@ void Store::DeleteRoot(RootList::Index index) {
 
 void Store::Collect() {
   size_t object_count = objects_.size();
-  marks_.resize(object_count);
-  std::fill(marks_.begin(), marks_.end(), false);
+
+  assert(gc_context_.call_depth == 0);
+
+  gc_context_.marks.resize(object_count);
+  std::fill(gc_context_.marks.begin(), gc_context_.marks.end(), false);
 
   // First mark all roots.
   for (RootList::Index i = 0; i < roots_.size(); ++i) {
@@ -256,31 +262,48 @@ void Store::Collect() {
     }
   }
 
-  // TODO: better GC algo.
-  // Loop through all newly marked objects and mark their referents.
-  std::vector<bool> all_marked(object_count, false);
-  bool new_marked;
-  do {
-    new_marked = false;
-    for (size_t i = 0; i < object_count; ++i) {
-      if (!all_marked[i] && marks_[i]) {
-        all_marked[i] = true;
-        objects_.Get(i)->Mark(*this);
-        new_marked = true;
-      }
-    }
-  } while (new_marked);
+  for (auto thread : threads_) {
+    thread->Mark();
+  }
+
+  // This vector is often empty since the default maximum
+  // recursion is usually enough to mark all objects.
+  while (WABT_UNLIKELY(!gc_context_.untraced_objects.empty())) {
+    size_t index = gc_context_.untraced_objects.back();
+
+    assert(gc_context_.marks[index]);
+    assert(gc_context_.call_depth == 0);
+
+    gc_context_.untraced_objects.pop_back();
+    objects_.Get(index)->Mark(*this);
+  }
+
+  assert(gc_context_.call_depth == 0);
 
   // Delete all unmarked objects.
   for (size_t i = 0; i < object_count; ++i) {
-    if (objects_.IsUsed(i) && !all_marked[i]) {
+    if (objects_.IsUsed(i) && !gc_context_.marks[i]) {
       objects_.Delete(i);
     }
   }
 }
 
 void Store::Mark(Ref ref) {
-  marks_[ref.index] = true;
+  size_t index = ref.index;
+
+  if (gc_context_.marks[index])
+    return;
+
+  gc_context_.marks[index] = true;
+
+  if (WABT_UNLIKELY(gc_context_.call_depth >= max_call_depth)) {
+    gc_context_.untraced_objects.push_back(index);
+    return;
+  }
+
+  gc_context_.call_depth++;
+  objects_.Get(index)->Mark(*this);
+  gc_context_.call_depth--;
 }
 
 void Store::Mark(const RefVec& refs) {
@@ -366,10 +389,8 @@ Result Func::Call(Store& store,
                   Values& results,
                   Trap::Ptr* out_trap,
                   Stream* trace_stream) {
-  Thread::Options options;
-  options.trace_stream = trace_stream;
-  Thread::Ptr thread = Thread::New(store, options);
-  return DoCall(*thread, params, results, out_trap);
+  Thread thread(store, trace_stream);
+  return DoCall(thread, params, results, out_trap);
 }
 
 Result Func::Call(Thread& thread,
@@ -630,31 +651,18 @@ Result Memory::Copy(Memory& dst,
   return Result::Error;
 }
 
-Value Instance::ResolveInitExpr(Store& store, InitExpr init) {
-  Value result;
-  switch (init.kind) {
-    case InitExprKind::I32:      result.Set(init.i32_); break;
-    case InitExprKind::I64:      result.Set(init.i64_); break;
-    case InitExprKind::F32:      result.Set(init.f32_); break;
-    case InitExprKind::F64:      result.Set(init.f64_); break;
-    case InitExprKind::V128:     result.Set(init.v128_); break;
-    case InitExprKind::GlobalGet: {
-      Global::Ptr global{store, globals_[init.index_]};
-      result = global->Get();
-      break;
-    }
-    case InitExprKind::RefFunc: {
-      result.Set(funcs_[init.index_]);
-      break;
-    }
-    case InitExprKind::RefNull:
-      result.Set(Ref::Null);
-      break;
-
-    case InitExprKind::None:
-      WABT_UNREACHABLE;
+Result Instance::CallInitFunc(Store& store,
+                              const Ref func_ref,
+                              Value* result,
+                              Trap::Ptr* out_trap) {
+  Values results;
+  Func::Ptr func{store, func_ref};
+  if (Failed(func->Call(store, {}, results, out_trap))) {
+    return Result::Error;
   }
-  return result;
+  assert(results.size() == 1);
+  *result = results[0];
+  return Result::Ok;
 }
 
 //// Global ////
@@ -809,9 +817,12 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
   // Globals.
   for (auto&& desc : mod->desc().globals) {
-    inst->globals_.push_back(
-        Global::New(store, desc.type, inst->ResolveInitExpr(store, desc.init))
-            .ref());
+    Value value;
+    Ref func_ref = DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+    if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
+      return {};
+    }
+    inst->globals_.push_back(Global::New(store, desc.type, value).ref());
   }
 
   // Tags.
@@ -843,6 +854,10 @@ Instance::Ptr Instance::Instantiate(Store& store,
   }
 
   // Initialization.
+  // The MVP requires that all segments are bounds-checked before being copied
+  // into the table or memory. The bulk memory proposal changes this behavior;
+  // instead, each segment is copied in order. If any segment fails, then no
+  // further segments are copied. Any data that was written persists.
   enum Pass { Check, Init };
   int pass = store.features().bulk_memory_enabled() ? Init : Check;
   for (; pass <= Init; ++pass) {
@@ -852,13 +867,21 @@ Instance::Ptr Instance::Instantiate(Store& store,
       if (desc.mode == SegmentMode::Active) {
         Result result;
         Table::Ptr table{store, inst->tables_[desc.table_index]};
-        u32 offset = inst->ResolveInitExpr(store, desc.offset).Get<u32>();
+        Value value;
+        Ref func_ref =
+            DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+        if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
+          return {};
+        }
+        u32 offset = value.Get<u32>();
         if (pass == Check) {
           result = table->IsValidRange(offset, segment.size()) ? Result::Ok
                                                                : Result::Error;
         } else {
           result = table->Init(store, offset, segment, 0, segment.size());
-          segment.Drop();
+          if (Succeeded(result)) {
+            segment.Drop();
+          }
         }
 
         if (Failed(result)) {
@@ -880,7 +903,12 @@ Instance::Ptr Instance::Instantiate(Store& store,
       if (desc.mode == SegmentMode::Active) {
         Result result;
         Memory::Ptr memory{store, inst->memories_[desc.memory_index]};
-        Value offset_op = inst->ResolveInitExpr(store, desc.offset);
+        Value offset_op;
+        Ref func_ref =
+            DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+        if (Failed(inst->CallInitFunc(store, func_ref, &offset_op, out_trap))) {
+          return {};
+        }
         u64 offset = memory->type().limits.is_64 ? offset_op.Get<u64>()
                                                  : offset_op.Get<u32>();
         if (pass == Check) {
@@ -889,7 +917,9 @@ Instance::Ptr Instance::Instantiate(Store& store,
                        : Result::Error;
         } else {
           result = memory->Init(offset, segment, 0, segment.size());
-          segment.Drop();
+          if (Succeeded(result)) {
+            segment.Drop();
+          }
         }
 
         if (Failed(result)) {
@@ -934,24 +964,30 @@ void Instance::Mark(Store& store) {
 }
 
 //// Thread ////
-Thread::Thread(Store& store, const Options& options)
-    : Object(skind), store_(store) {
+Thread::Thread(Store& store, Stream* trace_stream)
+    : store_(store), trace_stream_(trace_stream) {
+  store.threads().insert(this);
+
+  Thread::Options options;
   frames_.reserve(options.call_stack_size);
   values_.reserve(options.value_stack_size);
-  trace_stream_ = options.trace_stream;
-  if (options.trace_stream) {
+  if (trace_stream) {
     trace_source_ = MakeUnique<TraceSource>(this);
   }
 }
 
-void Thread::Mark(Store& store) {
+Thread::~Thread() {
+  store_.threads().erase(this);
+}
+
+void Thread::Mark() {
   for (auto&& frame : frames_) {
-    frame.Mark(store);
+    frame.Mark(store_);
   }
   for (auto index : refs_) {
-    store.Mark(values_[index].Get<Ref>());
+    store_.Mark(values_[index].Get<Ref>());
   }
-  store.Mark(exceptions_);
+  store_.Mark(exceptions_);
 }
 
 void Thread::PushValues(const ValueTypes& types, const Values& values) {

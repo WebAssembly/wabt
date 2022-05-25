@@ -227,5 +227,5 @@ out/test/spec/memory_copy.wast:4885: assert_trap passed: out of bounds memory ac
 test() =>
 out/test/spec/memory_copy.wast:4897: assert_trap passed: out of bounds memory access: memory.copy out of bound
 test() =>
-4417/4417 tests passed.
+4450/4450 tests passed.
 ;;; STDOUT ;;)

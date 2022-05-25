@@ -204,5 +204,5 @@ out/test/spec/memory_fill.wast:615: assert_invalid passed:
 out/test/spec/memory_fill.wast:638: assert_trap passed: out of bounds memory access: memory.fill out of bounds
 out/test/spec/memory_fill.wast:660: assert_trap passed: out of bounds memory access: memory.fill out of bounds
 out/test/spec/memory_fill.wast:682: assert_trap passed: out of bounds memory access: memory.fill out of bounds
-89/89 tests passed.
+100/100 tests passed.
 ;;; STDOUT ;;)

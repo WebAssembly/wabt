@@ -10,5 +10,5 @@ out/test/spec/f64_bitwise.wast:375: assert_invalid passed:
 out/test/spec/f64_bitwise.wast:376: assert_invalid passed:
   out/test/spec/f64_bitwise/f64_bitwise.3.wasm:000001b: error: type mismatch in f64.neg, expected [f64] but got [i64]
   000001b: error: OnUnaryExpr callback failed
-363/363 tests passed.
+364/364 tests passed.
 ;;; STDOUT ;;)

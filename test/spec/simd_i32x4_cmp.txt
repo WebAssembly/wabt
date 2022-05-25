@@ -131,5 +131,5 @@ out/test/spec/simd_i32x4_cmp.wast:1919: assert_malformed passed:
   out/test/spec/simd_i32x4_cmp/simd_i32x4_cmp.41.wat:1:65: error: unexpected token "i4x32.ge_u", expected an instr.
   ...28) (param $y v128) (result v128) (i4x32.ge_u (local.get $x) (local.get $y)))
                                         ^^^^^^^^^^
-473/473 tests passed.
+475/475 tests passed.
 ;;; STDOUT ;;)

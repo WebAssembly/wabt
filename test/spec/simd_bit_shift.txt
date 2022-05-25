@@ -133,5 +133,5 @@ out/test/spec/simd_bit_shift.wast:1090: assert_invalid passed:
 out/test/spec/simd_bit_shift.wast:1098: assert_invalid passed:
   out/test/spec/simd_bit_shift/simd_bit_shift.40.wasm:000001b: error: type mismatch in i64x2.shr_s, expected [v128, i32] but got []
   000001b: error: OnBinaryExpr callback failed
-250/250 tests passed.
+252/252 tests passed.
 ;;; STDOUT ;;)

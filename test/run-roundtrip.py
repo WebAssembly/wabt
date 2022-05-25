@@ -123,6 +123,9 @@ def main(args):
     parser.add_argument('--enable-tail-call', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--enable-memory64', action='store_true')
+    parser.add_argument('--enable-multi-memory', action='store_true')
+    parser.add_argument('--enable-annotations', action='store_true')
+    parser.add_argument('--enable-code-metadata', action='store_true')
     parser.add_argument('--inline-exports', action='store_true')
     parser.add_argument('--inline-imports', action='store_true')
     parser.add_argument('--reloc', action='store_true')
@@ -144,6 +147,9 @@ def main(args):
         '--enable-tail-call': options.enable_tail_call,
         '--disable-reference-types': options.disable_reference_types,
         '--enable-memory64': options.enable_memory64,
+        '--enable-multi-memory': options.enable_multi_memory,
+        '--enable-annotations': options.enable_annotations,
+        '--enable-code-metadata': options.enable_code_metadata,
         '--reloc': options.reloc,
         '--no-check': options.no_check,
     })
@@ -163,6 +169,9 @@ def main(args):
         '--disable-reference-types': options.disable_reference_types,
         '--enable-threads': options.enable_threads,
         '--enable-memory64': options.enable_memory64,
+        '--enable-multi-memory': options.enable_multi_memory,
+        '--enable-annotations': options.enable_annotations,
+        '--enable-code-metadata': options.enable_code_metadata,
         '--inline-exports': options.inline_exports,
         '--inline-imports': options.inline_imports,
         '--no-debug-names': not options.debug_names,

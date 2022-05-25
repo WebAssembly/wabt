@@ -1,0 +1,43 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-annotations --enable-code-metadata
+;;; ARGS1: --headers --details
+(module
+  (func $f (param i32) (result i32)
+    i32.const 1234
+    local.get 0
+    (@metadata.code.test "aa\01a") i32.add
+    return))
+(;; STDOUT ;;;
+
+code-metadata.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x00000010 (size=0x00000006) count: 1
+ Function start=0x00000012 end=0x00000014 (size=0x00000002) count: 1
+   Custom start=0x00000016 end=0x00000032 (size=0x0000001c) "metadata.code.test"
+     Code start=0x00000034 end=0x0000003f (size=0x0000000b) count: 1
+
+Section Details:
+
+Type[1]:
+ - type[0] (i32) -> i32
+Function[1]:
+ - func[0] sig=0
+Custom:
+ - name: "metadata.code.test"
+   - func[0]:
+    - meta[6]:
+     - 0000000: 6161 0161                                aa.a
+Code[1]:
+ - func[0] size=9
+
+Code Disassembly:
+
+000036 func[0]:
+ 000037: 41 d2 09                   | i32.const 1234
+ 00003a: 20 00                      | local.get 0
+ 00003c: 6a                         | i32.add
+ 00003d: 0f                         | return
+ 00003e: 0b                         | end
+;;; STDOUT ;;)

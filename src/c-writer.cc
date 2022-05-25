@@ -20,13 +20,14 @@
 #include <cinttypes>
 #include <map>
 #include <set>
+#include <string_view>
 
 #include "src/cast.h"
 #include "src/common.h"
 #include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
-#include "src/string-view.h"
+#include "src/string-util.h"
 
 #define INDENT_SIZE 2
 
@@ -126,7 +127,9 @@ class CWriter {
       : options_(options),
         c_stream_(c_stream),
         h_stream_(h_stream),
-        header_name_(header_name) {}
+        header_name_(header_name) {
+    module_prefix_ = MangleName(options_.module_name);
+  }
 
   Result WriteModule(const Module&);
 
@@ -160,22 +163,17 @@ class CWriter {
   static std::string Deref(const std::string&);
 
   static char MangleType(Type);
-  static std::string MangleTypes(const TypeVector&);
   static std::string MangleMultivalueTypes(const TypeVector&);
-  static std::string MangleName(string_view);
-  static std::string MangleFuncName(string_view,
-                                    const TypeVector& param_types,
-                                    const TypeVector& result_types);
-  static std::string MangleGlobalName(string_view, Type);
-  static std::string LegalizeName(string_view);
-  static std::string ExportName(string_view mangled_name);
-  std::string DefineName(SymbolSet*, string_view);
+  static std::string MangleName(std::string_view);
+  static std::string LegalizeName(std::string_view);
+  std::string ExportName(std::string_view mangled_name);
+  std::string DefineName(SymbolSet*, std::string_view);
   std::string DefineImportName(const std::string& name,
-                               string_view module_name,
-                               string_view mangled_field_name);
+                               std::string_view module_name,
+                               std::string_view mangled_field_name);
   std::string DefineGlobalScopeName(const std::string&);
   std::string DefineLocalScopeName(const std::string&);
-  std::string DefineStackVarName(Index, Type, string_view);
+  std::string DefineStackVarName(Index, Type, std::string_view);
 
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
@@ -203,7 +201,7 @@ class CWriter {
   void Write(OpenBrace);
   void Write(CloseBrace);
   void Write(Index);
-  void Write(string_view);
+  void Write(std::string_view);
   void Write(const LocalName&);
   void Write(const GlobalName&);
   void Write(const ExternalPtr&);
@@ -237,6 +235,7 @@ class CWriter {
   void WriteInitExports();
   void WriteExports(WriteExportsKind);
   void WriteInit();
+  void WriteFree();
   void WriteFuncs();
   void Write(const Func&);
   void WriteParamsAndLocals();
@@ -290,6 +289,7 @@ class CWriter {
   SymbolSet import_syms_;
   TypeVector type_stack_;
   std::vector<Label> label_stack_;
+  std::string module_prefix_;
 };
 
 static const char kImplicitFuncLabel[] = "$Bfunc";
@@ -395,18 +395,6 @@ char CWriter::MangleType(Type type) {
 }
 
 // static
-std::string CWriter::MangleTypes(const TypeVector& types) {
-  if (types.empty())
-    return std::string("v");
-
-  std::string result;
-  for (auto type : types) {
-    result += MangleType(type);
-  }
-  return result;
-}
-
-// static
 std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
   assert(types.size() >= 2);
   std::string result = "wasm_multi_";
@@ -417,12 +405,12 @@ std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
 }
 
 // static
-std::string CWriter::MangleName(string_view name) {
+std::string CWriter::MangleName(std::string_view name) {
   const char kPrefix = 'Z';
   std::string result = "Z_";
 
   if (!name.empty()) {
-    for (char c : name) {
+    for (unsigned char c : name) {
       if ((isalnum(c) && c != kPrefix) || c == '_') {
         result += c;
       } else {
@@ -436,33 +424,19 @@ std::string CWriter::MangleName(string_view name) {
 }
 
 // static
-std::string CWriter::MangleFuncName(string_view name,
-                                    const TypeVector& param_types,
-                                    const TypeVector& result_types) {
-  std::string sig = MangleTypes(result_types) + MangleTypes(param_types);
-  return MangleName(name) + MangleName(sig);
+std::string CWriter::ExportName(std::string_view mangled_name) {
+  return module_prefix_ + std::string(mangled_name);
 }
 
 // static
-std::string CWriter::MangleGlobalName(string_view name, Type type) {
-  std::string sig(1, MangleType(type));
-  return MangleName(name) + MangleName(sig);
-}
-
-// static
-std::string CWriter::ExportName(string_view mangled_name) {
-  return "WASM_RT_ADD_PREFIX(" + mangled_name.to_string() + ")";
-}
-
-// static
-std::string CWriter::LegalizeName(string_view name) {
+std::string CWriter::LegalizeName(std::string_view name) {
   if (name.empty())
     return "_";
 
   std::string result;
-  result = isalpha(name[0]) ? name[0] : '_';
+  result = isalpha(static_cast<unsigned char>(name[0])) ? name[0] : '_';
   for (size_t i = 1; i < name.size(); ++i)
-    result += isalnum(name[i]) ? name[i] : '_';
+    result += isalnum(static_cast<unsigned char>(name[i])) ? name[i] : '_';
 
   // In addition to containing valid characters for C, we must also avoid
   // colliding with things C cares about, such as reserved words (e.g. "void")
@@ -473,7 +447,7 @@ std::string CWriter::LegalizeName(string_view name) {
   return result;
 }
 
-std::string CWriter::DefineName(SymbolSet* set, string_view name) {
+std::string CWriter::DefineName(SymbolSet* set, std::string_view name) {
   std::string legal = LegalizeName(name);
   if (set->find(legal) != set->end()) {
     std::string base = legal + "_";
@@ -486,7 +460,7 @@ std::string CWriter::DefineName(SymbolSet* set, string_view name) {
   return legal;
 }
 
-string_view StripLeadingDollar(string_view name) {
+std::string_view StripLeadingDollar(std::string_view name) {
   if (!name.empty() && name[0] == '$') {
     name.remove_prefix(1);
   }
@@ -494,9 +468,9 @@ string_view StripLeadingDollar(string_view name) {
 }
 
 std::string CWriter::DefineImportName(const std::string& name,
-                                      string_view module,
-                                      string_view mangled_field_name) {
-  std::string mangled = MangleName(module) + mangled_field_name.to_string();
+                                      std::string_view module,
+                                      std::string_view mangled_field_name) {
+  std::string mangled = MangleName(module) + mangled_field_name;
   import_syms_.insert(name);
   global_syms_.insert(mangled);
   global_sym_map_.insert(SymbolMap::value_type(name, mangled));
@@ -517,7 +491,7 @@ std::string CWriter::DefineLocalScopeName(const std::string& name) {
 
 std::string CWriter::DefineStackVarName(Index index,
                                         Type type,
-                                        string_view name) {
+                                        std::string_view name) {
   std::string unique = DefineName(&local_syms_, name);
   StackTypePair stp = {index, type};
   stack_var_sym_map_.insert(StackVarSymbolMap::value_type(stp, unique));
@@ -581,7 +555,7 @@ void CWriter::Write(Index index) {
   Writef("%" PRIindex, index);
 }
 
-void CWriter::Write(string_view s) {
+void CWriter::Write(std::string_view s) {
   WriteData(s.data(), s.size());
 }
 
@@ -832,28 +806,33 @@ void CWriter::WriteMultivalueTypes() {
     // incidentally they also mean we don't have to bother with deduplication
     Write("#ifndef ", name, Newline());
     Write("#define ", name, " ", name, Newline());
-    Write("struct ", name, " {", Newline());
+    Write("struct ", name, " ", OpenBrace());
     for (Index i = 0; i < num_results; ++i) {
       Type type = func_type->GetResultType(i);
-      Write("  ", type);
+      Write(type);
       Writef(" %c%d;", MangleType(type), i);
       Write(Newline());
     }
-    Write("};", Newline(), "#endif  /* ", name, " */", Newline());
+    Write(CloseBrace(), ";", Newline(), "#endif  /* ", name, " */", Newline());
   }
 }
 
 void CWriter::WriteFuncTypes() {
-  Write(Newline());
-  Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
-  Write(Newline(), Newline());
-  Write("static void init_func_types(void) {", Newline());
+  if (module_->types.size()) {
+    Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
+    Write(Newline());
+  }
+  Write("static void init_func_types(void) ", OpenBrace());
+  if (!module_->types.size()) {
+    Write(CloseBrace(), Newline());
+    return;
+  }
   Index func_type_index = 0;
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
     Index num_params = func_type->GetNumParams();
     Index num_results = func_type->GetNumResults();
-    Write("  func_types[", func_type_index, "] = wasm_rt_register_func_type(",
+    Write("func_types[", func_type_index, "] = wasm_rt_register_func_type(",
           num_params, ", ", num_results);
     for (Index i = 0; i < num_params; ++i) {
       Write(", ", TypeEnum(func_type->GetParamType(i)));
@@ -866,7 +845,7 @@ void CWriter::WriteFuncTypes() {
     Write(");", Newline());
     ++func_type_index;
   }
-  Write("}", Newline());
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteImports() {
@@ -883,22 +862,17 @@ void CWriter::WriteImports() {
     switch (import->kind()) {
       case ExternalKind::Func: {
         const Func& func = cast<FuncImport>(import)->func;
-        WriteFuncDeclaration(
-            func.decl,
-            DefineImportName(
-                func.name, import->module_name,
-                MangleFuncName(import->field_name, func.decl.sig.param_types,
-                               func.decl.sig.result_types)));
+        WriteFuncDeclaration(func.decl,
+                             DefineImportName(func.name, import->module_name,
+                                              MangleName(import->field_name)));
         Write(";");
         break;
       }
 
       case ExternalKind::Global: {
         const Global& global = cast<GlobalImport>(import)->global;
-        WriteGlobal(global,
-                    DefineImportName(
-                        global.name, import->module_name,
-                        MangleGlobalName(import->field_name, global.type)));
+        WriteGlobal(global, DefineImportName(global.name, import->module_name,
+                                             MangleName(import->field_name)));
         Write(";");
         break;
       }
@@ -1016,8 +990,9 @@ void CWriter::WriteMemory(const std::string& name) {
 }
 
 void CWriter::WriteTables() {
-  if (module_->tables.size() == module_->num_table_imports)
+  if (module_->tables.size() == module_->num_table_imports) {
     return;
+  }
 
   Write(Newline());
 
@@ -1047,17 +1022,22 @@ void CWriter::WriteDataInitializers() {
       Write(Newline());
     } else {
       for (const DataSegment* data_segment : module_->data_segments) {
-        Write(Newline(), "static const u8 data_segment_data_",
-              data_segment_index, "[] = ", OpenBrace());
-        size_t i = 0;
-        for (uint8_t x : data_segment->data) {
-          Writef("0x%02x, ", x);
-          if ((++i % 12) == 0)
+        if (!data_segment->data.size()) {
+          Write(Newline(), "static const u8* data_segment_data_",
+                data_segment_index, " = NULL;", Newline());
+        } else {
+          Write(Newline(), "static const u8 data_segment_data_",
+                data_segment_index, "[] = ", OpenBrace());
+          size_t i = 0;
+          for (uint8_t x : data_segment->data) {
+            Writef("0x%02x, ", x);
+            if ((++i % 12) == 0)
+              Write(Newline());
+          }
+          if (i > 0)
             Write(Newline());
+          Write(CloseBrace(), ";", Newline());
         }
-        if (i > 0)
-          Write(Newline());
-        Write(CloseBrace(), ";", Newline());
         ++data_segment_index;
       }
     }
@@ -1081,7 +1061,8 @@ void CWriter::WriteDataInitializers() {
     Write("LOAD_DATA(", ExternalRef(memory->name), ", ");
     WriteInitExpr(data_segment->offset);
     Write(", data_segment_data_", data_segment_index, ", ",
-          data_segment->data.size(), ");", Newline());
+          data_segment->data.size());
+    Write(");", Newline());
     ++data_segment_index;
   }
 
@@ -1089,9 +1070,18 @@ void CWriter::WriteDataInitializers() {
 }
 
 void CWriter::WriteElemInitializers() {
+  Write(Newline(), "static void init_table(void) ", OpenBrace());
+
+  if (!module_->types.size()) {
+    // If there are no types there cannot be any table entries either.
+    for (const ElemSegment* elem_segment : module_->elem_segments) {
+      assert(elem_segment->elem_exprs.size() == 0);
+    }
+    Write(CloseBrace(), Newline());
+    return;
+  }
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
-  Write(Newline(), "static void init_table(void) ", OpenBrace());
   Write("uint32_t offset;", Newline());
   if (table && module_->num_table_imports == 0) {
     uint32_t max =
@@ -1155,9 +1145,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
     switch (export_->kind) {
       case ExternalKind::Func: {
         const Func* func = module_->GetFunc(export_->var);
-        mangled_name =
-            ExportName(MangleFuncName(export_->name, func->decl.sig.param_types,
-                                      func->decl.sig.result_types));
+        mangled_name = ExportName(MangleName(export_->name));
         internal_name = func->name;
         if (kind != WriteExportsKind::Initializers) {
           WriteFuncDeclaration(func->decl, Deref(mangled_name));
@@ -1168,8 +1156,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
 
       case ExternalKind::Global: {
         const Global* global = module_->GetGlobal(export_->var);
-        mangled_name =
-            ExportName(MangleGlobalName(export_->name, global->type));
+        mangled_name = ExportName(MangleName(export_->name));
         internal_name = global->name;
         if (kind != WriteExportsKind::Initializers) {
           WriteGlobal(*global, Deref(mangled_name));
@@ -1211,7 +1198,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "void WASM_RT_ADD_PREFIX(init)(void) ", OpenBrace());
+  Write(Newline(), "void ", module_prefix_, "_init(void) ", OpenBrace());
   Write("init_func_types();", Newline());
   Write("init_globals();", Newline());
   Write("init_memory();", Newline());
@@ -1220,6 +1207,37 @@ void CWriter::WriteInit() {
   for (Var* var : module_->starts) {
     Write(ExternalRef(module_->GetFunc(*var)->name), "();", Newline());
   }
+  Write(CloseBrace(), Newline());
+}
+
+void CWriter::WriteFree() {
+  Write(Newline(), "void " + module_prefix_ + "_free(void) ", OpenBrace());
+
+  if (module_->types.size()) {
+    // If there are no types there cannot be any table entries either.
+    assert(module_->tables.size() <= 1);
+    Index table_index = 0;
+    for (const Table* table : module_->tables) {
+      bool is_import = table_index < module_->num_table_imports;
+      if (!is_import) {
+        Write("wasm_rt_free_table(", ExternalPtr(table->name), ");", Newline());
+      }
+      ++table_index;
+    }
+  }
+
+  {
+    Index memory_index = 0;
+    for (const Memory* memory : module_->memories) {
+      bool is_import = memory_index < module_->num_memory_imports;
+      if (!is_import) {
+        Write("wasm_rt_free_memory(", ExternalPtr(memory->name), ");",
+              Newline());
+      }
+      ++memory_index;
+    }
+  }
+
   Write(CloseBrace(), Newline());
 }
 
@@ -1346,9 +1364,8 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
 void CWriter::WriteStackVarDeclarations() {
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
     size_t count = 0;
-    for (const auto& pair : stack_var_sym_map_) {
-      Type stp_type = pair.first.second;
-      const std::string& name = pair.second;
+    for (const auto& [pair, name] : stack_var_sym_map_) {
+      Type stp_type = pair.second;
 
       if (stp_type == type) {
         if (count == 0) {
@@ -1497,6 +1514,9 @@ void CWriter::Write(const ExprList& exprs) {
         }
         break;
       }
+
+      case ExprType::CodeMetadata:
+        break;
 
       case ExprType::Compare:
         Write(*cast<CompareExpr>(&expr));
@@ -2190,11 +2210,11 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "fabsf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_fabsf");
       break;
 
     case Opcode::F64Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "fabs");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_fabs");
       break;
 
     case Opcode::F32Sqrt:
@@ -2222,19 +2242,19 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "truncf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_truncf");
       break;
 
     case Opcode::F64Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "trunc");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_trunc");
       break;
 
     case Opcode::F32Nearest:
-      WriteSimpleUnaryExpr(expr.opcode, "nearbyintf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_nearbyintf");
       break;
 
     case Opcode::F64Nearest:
-      WriteSimpleUnaryExpr(expr.opcode, "nearbyint");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_nearbyint");
       break;
 
     case Opcode::I32Extend8S:
@@ -2352,11 +2372,15 @@ void CWriter::Write(const LoadZeroExpr& expr) {
 void CWriter::WriteCHeader() {
   stream_ = h_stream_;
   std::string guard = GenerateHeaderGuard();
+  Write("/* Automatically generated by wasm2c */", Newline());
   Write("#ifndef ", guard, Newline());
   Write("#define ", guard, Newline());
+  Write(Newline());
   Write(s_header_top);
   WriteMultivalueTypes();
   WriteImports();
+  Write("void ", module_prefix_, "_init(void);", Newline());
+  Write("void ", module_prefix_, "_free(void);", Newline());
   WriteExports(WriteExportsKind::Declarations);
   Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
@@ -2376,6 +2400,7 @@ void CWriter::WriteCSource() {
   WriteExports(WriteExportsKind::Definitions);
   WriteInitExports();
   WriteInit();
+  WriteFree();
 }
 
 Result CWriter::WriteModule(const Module& module) {

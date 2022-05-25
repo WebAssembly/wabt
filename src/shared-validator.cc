@@ -199,9 +199,9 @@ Result SharedValidator::OnTag(const Location& loc, Var sig_var) {
 Result SharedValidator::OnExport(const Location& loc,
                                  ExternalKind kind,
                                  Var item_var,
-                                 string_view name) {
+                                 std::string_view name) {
   Result result = Result::Ok;
-  auto name_str = name.to_string();
+  auto name_str = std::string(name);
   if (export_names_.find(name_str) != export_names_.end()) {
     result |= PrintError(loc, "duplicate export \"" PRIstringview "\"",
                          WABT_PRINTF_STRING_VIEW_ARG(name));
@@ -211,6 +211,7 @@ Result SharedValidator::OnExport(const Location& loc,
   switch (kind) {
     case ExternalKind::Func:
       result |= CheckFuncIndex(item_var);
+      declared_funcs_.insert(item_var.index());
       break;
 
     case ExternalKind::Table:
@@ -461,6 +462,7 @@ Result SharedValidator::BeginFunctionBody(const Location& loc,
 }
 
 Result SharedValidator::EndFunctionBody(const Location& loc) {
+  expr_loc_ = loc;
   return typechecker_.EndFunction();
 }
 
@@ -519,11 +521,21 @@ Result SharedValidator::CheckAtomicAlign(const Location& loc,
   return Result::Ok;
 }
 
-static bool ValidInitOpcode(Opcode opcode) {
-  return opcode == Opcode::GlobalGet || opcode == Opcode::I32Const ||
-         opcode == Opcode::I64Const || opcode == Opcode::F32Const ||
-         opcode == Opcode::F64Const || opcode == Opcode::RefFunc ||
-         opcode == Opcode::RefNull;
+bool SharedValidator::ValidInitOpcode(Opcode opcode) const {
+  if (opcode == Opcode::GlobalGet || opcode == Opcode::I32Const ||
+      opcode == Opcode::I64Const || opcode == Opcode::F32Const ||
+      opcode == Opcode::F64Const || opcode == Opcode::RefFunc ||
+      opcode == Opcode::RefNull) {
+    return true;
+  }
+  if (options_.features.extended_const_enabled()) {
+    if (opcode == Opcode::I32Mul || opcode == Opcode::I64Mul ||
+        opcode == Opcode::I32Sub || opcode == Opcode::I64Sub ||
+        opcode == Opcode::I32Add || opcode == Opcode::I64Add) {
+      return true;
+    }
+  }
+  return false;
 }
 
 Result SharedValidator::CheckInstr(Opcode opcode, const Location& loc) {
@@ -940,7 +952,13 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
   if (Succeeded(result)) {
-    check_declared_funcs_.push_back(func_var);
+    // References in initializer expressions are considered declarations, as
+    // opposed to references in function bodies that are considered usages.
+    if (in_init_expr_) {
+      declared_funcs_.insert(func_var.index());
+    } else {
+      check_declared_funcs_.push_back(func_var);
+    }
     Index func_type = GetFunctionTypeIndex(func_var.index());
     result |= typechecker_.OnRefFuncExpr(func_type);
   }

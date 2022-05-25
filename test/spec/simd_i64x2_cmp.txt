@@ -31,5 +31,5 @@ out/test/spec/simd_i64x2_cmp.wast:406: assert_invalid passed:
 out/test/spec/simd_i64x2_cmp.wast:414: assert_invalid passed:
   out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.10.wasm:000001b: error: type mismatch in i64x2.ne, expected [v128, v128] but got []
   000001b: error: OnCompareExpr callback failed
-112/112 tests passed.
+113/113 tests passed.
 ;;; STDOUT ;;)

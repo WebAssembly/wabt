@@ -63,5 +63,5 @@ out/test/spec/elem.wast:504: assert_invalid passed:
   0000017: error: expected ref.null or ref.func in passive element segment
   0000018: error: expected END opcode after element expression
 out/test/spec/elem.wast:561: assert_trap passed: uninitialized table element
-47/47 tests passed.
+73/73 tests passed.
 ;;; STDOUT ;;)

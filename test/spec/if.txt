@@ -68,31 +68,31 @@ out/test/spec/if.wast:816: assert_malformed passed:
   ...))(func (i32.const 0) (i32.const 1)  (if (type $sig) (param i32) (result i...
                                           ^
 out/test/spec/if.wast:826: assert_invalid passed:
-  out/test/spec/if/if.12.wasm:000001e: error: type mismatch at end of function, expected [] but got [i32]
+  out/test/spec/if/if.12.wasm:000001f: error: type mismatch at end of function, expected [] but got [i32]
   000001f: error: EndFunctionBody callback failed
 out/test/spec/if.wast:834: assert_invalid passed:
-  out/test/spec/if/if.13.wasm:000001d: error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/if/if.13.wasm:000001e: error: type mismatch in implicit return, expected [i32] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:838: assert_invalid passed:
-  out/test/spec/if/if.14.wasm:000001d: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/if/if.14.wasm:000001e: error: type mismatch in implicit return, expected [i64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:842: assert_invalid passed:
-  out/test/spec/if/if.15.wasm:000001d: error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/if/if.15.wasm:000001e: error: type mismatch in implicit return, expected [f32] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:846: assert_invalid passed:
-  out/test/spec/if/if.16.wasm:000001d: error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/if/if.16.wasm:000001e: error: type mismatch in implicit return, expected [f64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:851: assert_invalid passed:
-  out/test/spec/if/if.17.wasm:000001d: error: type mismatch in implicit return, expected [i32] but got []
+  out/test/spec/if/if.17.wasm:000001e: error: type mismatch in implicit return, expected [i32] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:855: assert_invalid passed:
-  out/test/spec/if/if.18.wasm:000001d: error: type mismatch in implicit return, expected [i64] but got []
+  out/test/spec/if/if.18.wasm:000001e: error: type mismatch in implicit return, expected [i64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:859: assert_invalid passed:
-  out/test/spec/if/if.19.wasm:000001d: error: type mismatch in implicit return, expected [f32] but got []
+  out/test/spec/if/if.19.wasm:000001e: error: type mismatch in implicit return, expected [f32] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:863: assert_invalid passed:
-  out/test/spec/if/if.20.wasm:000001d: error: type mismatch in implicit return, expected [f64] but got []
+  out/test/spec/if/if.20.wasm:000001e: error: type mismatch in implicit return, expected [f64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:868: assert_invalid passed:
   out/test/spec/if/if.21.wasm:000001e: error: type mismatch at end of `if true` branch, expected [] but got [i32]
@@ -203,13 +203,13 @@ out/test/spec/if.wast:1092: assert_invalid passed:
   out/test/spec/if/if.56.wasm:0000023: error: type mismatch at end of `if true` branch, expected [] but got [i32]
   0000024: error: OnElseExpr callback failed
 out/test/spec/if.wast:1099: assert_invalid passed:
-  out/test/spec/if/if.57.wasm:0000024: error: type mismatch in implicit return, expected [i32] but got [i64]
+  out/test/spec/if/if.57.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got [i64]
   0000025: error: EndFunctionBody callback failed
 out/test/spec/if.wast:1109: assert_invalid passed:
-  out/test/spec/if/if.58.wasm:0000024: error: type mismatch in implicit return, expected [i32] but got [i64]
+  out/test/spec/if/if.58.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got [i64]
   0000025: error: EndFunctionBody callback failed
 out/test/spec/if.wast:1119: assert_invalid passed:
-  out/test/spec/if/if.59.wasm:0000026: error: type mismatch in implicit return, expected [i32] but got [i64]
+  out/test/spec/if/if.59.wasm:0000027: error: type mismatch in implicit return, expected [i32] but got [i64]
   0000027: error: EndFunctionBody callback failed
 out/test/spec/if.wast:1130: assert_invalid passed:
   out/test/spec/if/if.60.wasm:000001e: error: type mismatch in br, expected [i32] but got []
@@ -400,5 +400,5 @@ out/test/spec/if.wast:1548: assert_malformed passed:
   out/test/spec/if/if.115.wat:1:37: error: mismatching label "$a" != "$l"
   (func i32.const 0 if $a else $l end $l)
                                       ^^
-238/238 tests passed.
+239/239 tests passed.
 ;;; STDOUT ;;)

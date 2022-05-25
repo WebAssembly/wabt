@@ -266,7 +266,7 @@ out/test/spec/exception-handling/binary.wast:1608: assert_malformed passed:
 out/test/spec/exception-handling/binary.wast:1642: assert_malformed passed:
   0000021: error: unable to read u32 leb128: elem segment flags
 out/test/spec/exception-handling/binary.wast:1658: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: elem segment flags
+  0000024: error: unable to read u32 leb128: elem count
 out/test/spec/exception-handling/binary.wast:1675: assert_malformed passed:
   0000021: error: unfinished section (expected end: 0x27)
 out/test/spec/exception-handling/binary.wast:1701: assert_malformed passed:
@@ -282,5 +282,5 @@ out/test/spec/exception-handling/binary.wast:1772: assert_malformed passed:
   0000025: error: OnBlockExpr callback failed
 out/test/spec/exception-handling/binary.wast:1807: assert_malformed passed:
   0000017: error: multiple Start sections
-139/139 tests passed.
+172/172 tests passed.
 ;;; STDOUT ;;)

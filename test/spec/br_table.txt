@@ -73,5 +73,5 @@ out/test/spec/br_table.wast:1630: assert_invalid passed:
 out/test/spec/br_table.wast:1636: assert_invalid passed:
   out/test/spec/br_table/br_table.24.wasm:0000024: error: invalid depth: 268435457 (max 1)
   0000024: error: OnBrTableExpr callback failed
-173/173 tests passed.
+174/174 tests passed.
 ;;; STDOUT ;;)

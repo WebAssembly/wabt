@@ -61,19 +61,19 @@ std::pair<const T*, size_t> OpcodeInfo::GetDataArray() const {
 
 template <typename T>
 const T* OpcodeInfo::GetData(size_t expected_size) const {
-  auto pair = GetDataArray<T>();
-  assert(pair.second == expected_size);
-  return pair.first;
+  auto [data, size] = GetDataArray<T>();
+  assert(size == expected_size);
+  return data;
 }
 
 template <typename T, typename F>
 void OpcodeInfo::WriteArray(Stream& stream, F&& write_func) {
-  auto pair = GetDataArray<T>();
-  for (size_t i = 0; i < pair.second; ++i) {
+  auto [data, size] = GetDataArray<T>();
+  for (size_t i = 0; i < size; ++i) {
     // Write an initial space (to separate from the opcode name) first, then
     // comma-separate.
     stream.Writef("%s", i == 0 ? " " : ", ");
-    write_func(pair.first[i]);
+    write_func(data[i]);
   }
 }
 

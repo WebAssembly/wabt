@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -29,7 +30,6 @@
 #include "src/common.h"
 #include "src/intrusive-list.h"
 #include "src/opcode.h"
-#include "src/string-view.h"
 
 namespace wabt {
 
@@ -42,7 +42,7 @@ enum class VarType {
 
 struct Var {
   explicit Var(Index index = kInvalidIndex, const Location& loc = Location());
-  explicit Var(string_view name, const Location& loc = Location());
+  explicit Var(std::string_view name, const Location& loc = Location());
   Var(Var&&);
   Var(const Var&);
   Var& operator=(const Var&);
@@ -64,7 +64,7 @@ struct Var {
 
   void set_index(Index);
   void set_name(std::string&&);
-  void set_name(string_view);
+  void set_name(std::string_view);
 
   Location loc;
 
@@ -239,9 +239,9 @@ class TypeEntry {
 
  protected:
   explicit TypeEntry(TypeEntryKind kind,
-                     string_view name = string_view(),
+                     std::string_view name = std::string_view(),
                      const Location& loc = Location())
-      : loc(loc), name(name.to_string()), kind_(kind) {}
+      : loc(loc), name(name), kind_(kind) {}
 
   TypeEntryKind kind_;
 };
@@ -252,7 +252,7 @@ class FuncType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Func;
   }
 
-  explicit FuncType(string_view name = string_view())
+  explicit FuncType(std::string_view name = std::string_view())
       : TypeEntry(TypeEntryKind::Func, name) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
@@ -275,7 +275,7 @@ class StructType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Struct;
   }
 
-  explicit StructType(string_view name = string_view())
+  explicit StructType(std::string_view name = std::string_view())
       : TypeEntry(TypeEntryKind::Struct) {}
 
   std::vector<Field> fields;
@@ -287,7 +287,7 @@ class ArrayType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Array;
   }
 
-  explicit ArrayType(string_view name = string_view())
+  explicit ArrayType(std::string_view name = std::string_view())
       : TypeEntry(TypeEntryKind::Array) {}
 
   Field field;
@@ -320,6 +320,7 @@ enum class ExprType {
   Call,
   CallIndirect,
   CallRef,
+  CodeMetadata,
   Compare,
   Const,
   Convert,
@@ -631,6 +632,19 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
   Var table;
 };
 
+class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
+ public:
+  explicit CodeMetadataExpr(std::string_view name,
+                            std::vector<uint8_t> data,
+                            const Location& loc = Location())
+      : ExprMixin<ExprType::CodeMetadata>(loc),
+        name(std::move(name)),
+        data(std::move(data)) {}
+
+  std::string_view name;
+  std::vector<uint8_t> data;
+};
+
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
  public:
   explicit ReturnCallIndirectExpr(const Location& loc = Location())
@@ -759,7 +773,7 @@ class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
 };
 
 struct Tag {
-  explicit Tag(string_view name) : name(name.to_string()) {}
+  explicit Tag(std::string_view name) : name(name) {}
 
   std::string name;
   FuncDeclaration decl;
@@ -827,7 +841,7 @@ inline bool operator!=(const LocalTypes::const_iterator& lhs,
 }
 
 struct Func {
-  explicit Func(string_view name) : name(name.to_string()) {}
+  explicit Func(std::string_view name) : name(name) {}
 
   Type GetParamType(Index index) const { return decl.GetParamType(index); }
   Type GetResultType(Index index) const { return decl.GetResultType(index); }
@@ -846,10 +860,11 @@ struct Func {
   LocalTypes local_types;
   BindingHash bindings;
   ExprList exprs;
+  Location loc;
 };
 
 struct Global {
-  explicit Global(string_view name) : name(name.to_string()) {}
+  explicit Global(std::string_view name) : name(name) {}
 
   std::string name;
   Type type = Type::Void;
@@ -858,8 +873,8 @@ struct Global {
 };
 
 struct Table {
-  explicit Table(string_view name)
-      : name(name.to_string()), elem_type(Type::FuncRef) {}
+  explicit Table(std::string_view name)
+      : name(name), elem_type(Type::FuncRef) {}
 
   std::string name;
   Limits elem_limits;
@@ -869,7 +884,7 @@ struct Table {
 typedef std::vector<ExprList> ExprListVector;
 
 struct ElemSegment {
-  explicit ElemSegment(string_view name) : name(name.to_string()) {}
+  explicit ElemSegment(std::string_view name) : name(name) {}
   uint8_t GetFlags(const Module*) const;
 
   SegmentKind kind = SegmentKind::Active;
@@ -881,14 +896,14 @@ struct ElemSegment {
 };
 
 struct Memory {
-  explicit Memory(string_view name) : name(name.to_string()) {}
+  explicit Memory(std::string_view name) : name(name) {}
 
   std::string name;
   Limits page_limits;
 };
 
 struct DataSegment {
-  explicit DataSegment(string_view name) : name(name.to_string()) {}
+  explicit DataSegment(std::string_view name) : name(name) {}
   uint8_t GetFlags(const Module*) const;
 
   SegmentKind kind = SegmentKind::Active;
@@ -927,7 +942,7 @@ class ImportMixin : public Import {
 
 class FuncImport : public ImportMixin<ExternalKind::Func> {
  public:
-  explicit FuncImport(string_view name = string_view())
+  explicit FuncImport(std::string_view name = std::string_view())
       : ImportMixin<ExternalKind::Func>(), func(name) {}
 
   Func func;
@@ -935,7 +950,7 @@ class FuncImport : public ImportMixin<ExternalKind::Func> {
 
 class TableImport : public ImportMixin<ExternalKind::Table> {
  public:
-  explicit TableImport(string_view name = string_view())
+  explicit TableImport(std::string_view name = std::string_view())
       : ImportMixin<ExternalKind::Table>(), table(name) {}
 
   Table table;
@@ -943,7 +958,7 @@ class TableImport : public ImportMixin<ExternalKind::Table> {
 
 class MemoryImport : public ImportMixin<ExternalKind::Memory> {
  public:
-  explicit MemoryImport(string_view name = string_view())
+  explicit MemoryImport(std::string_view name = std::string_view())
       : ImportMixin<ExternalKind::Memory>(), memory(name) {}
 
   Memory memory;
@@ -951,7 +966,7 @@ class MemoryImport : public ImportMixin<ExternalKind::Memory> {
 
 class GlobalImport : public ImportMixin<ExternalKind::Global> {
  public:
-  explicit GlobalImport(string_view name = string_view())
+  explicit GlobalImport(std::string_view name = std::string_view())
       : ImportMixin<ExternalKind::Global>(), global(name) {}
 
   Global global;
@@ -959,7 +974,7 @@ class GlobalImport : public ImportMixin<ExternalKind::Global> {
 
 class TagImport : public ImportMixin<ExternalKind::Tag> {
  public:
-  explicit TagImport(string_view name = string_view())
+  explicit TagImport(std::string_view name = std::string_view())
       : ImportMixin<ExternalKind::Tag>(), tag(name) {}
 
   Tag tag;
@@ -1017,7 +1032,7 @@ class ModuleFieldMixin : public ModuleField {
 class FuncModuleField : public ModuleFieldMixin<ModuleFieldType::Func> {
  public:
   explicit FuncModuleField(const Location& loc = Location(),
-                           string_view name = string_view())
+                           std::string_view name = std::string_view())
       : ModuleFieldMixin<ModuleFieldType::Func>(loc), func(name) {}
 
   Func func;
@@ -1026,7 +1041,7 @@ class FuncModuleField : public ModuleFieldMixin<ModuleFieldType::Func> {
 class GlobalModuleField : public ModuleFieldMixin<ModuleFieldType::Global> {
  public:
   explicit GlobalModuleField(const Location& loc = Location(),
-                             string_view name = string_view())
+                             std::string_view name = std::string_view())
       : ModuleFieldMixin<ModuleFieldType::Global>(loc), global(name) {}
 
   Global global;
@@ -1063,7 +1078,7 @@ class TypeModuleField : public ModuleFieldMixin<ModuleFieldType::Type> {
 class TableModuleField : public ModuleFieldMixin<ModuleFieldType::Table> {
  public:
   explicit TableModuleField(const Location& loc = Location(),
-                            string_view name = string_view())
+                            std::string_view name = std::string_view())
       : ModuleFieldMixin<ModuleFieldType::Table>(loc), table(name) {}
 
   Table table;
@@ -1073,7 +1088,7 @@ class ElemSegmentModuleField
     : public ModuleFieldMixin<ModuleFieldType::ElemSegment> {
  public:
   explicit ElemSegmentModuleField(const Location& loc = Location(),
-                                  string_view name = string_view())
+                                  std::string_view name = std::string_view())
       : ModuleFieldMixin<ModuleFieldType::ElemSegment>(loc),
         elem_segment(name) {}
 
@@ -1083,7 +1098,7 @@ class ElemSegmentModuleField
 class MemoryModuleField : public ModuleFieldMixin<ModuleFieldType::Memory> {
  public:
   explicit MemoryModuleField(const Location& loc = Location(),
-                             string_view name = string_view())
+                             std::string_view name = std::string_view())
       : ModuleFieldMixin<ModuleFieldType::Memory>(loc), memory(name) {}
 
   Memory memory;
@@ -1093,7 +1108,7 @@ class DataSegmentModuleField
     : public ModuleFieldMixin<ModuleFieldType::DataSegment> {
  public:
   explicit DataSegmentModuleField(const Location& loc = Location(),
-                                  string_view name = string_view())
+                                  std::string_view name = std::string_view())
       : ModuleFieldMixin<ModuleFieldType::DataSegment>(loc),
         data_segment(name) {}
 
@@ -1103,7 +1118,7 @@ class DataSegmentModuleField
 class TagModuleField : public ModuleFieldMixin<ModuleFieldType::Tag> {
  public:
   explicit TagModuleField(const Location& loc = Location(),
-                          string_view name = string_view())
+                          std::string_view name = std::string_view())
       : ModuleFieldMixin<ModuleFieldType::Tag>(loc), tag(name) {}
 
   Tag tag;
@@ -1135,7 +1150,7 @@ struct Module {
   Index GetGlobalIndex(const Var&) const;
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
-  const Export* GetExport(string_view) const;
+  const Export* GetExport(std::string_view) const;
   Tag* GetTag(const Var&) const;
   Index GetTagIndex(const Var&) const;
   const DataSegment* GetDataSegment(const Var&) const;
@@ -1356,7 +1371,7 @@ typedef ActionCommandBase<CommandType::Action> ActionCommand;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
-  RegisterCommand(string_view module_name, const Var& var)
+  RegisterCommand(std::string_view module_name, const Var& var)
       : module_name(module_name), var(var) {}
 
   std::string module_name;
