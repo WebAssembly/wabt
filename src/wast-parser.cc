@@ -904,7 +904,8 @@ Result WastParser::ParseValueType(Var* out_type) {
   const bool is_value_type = PeekMatch(TokenType::ValueType);
 
   if (!is_value_type && !is_ref_type) {
-    return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "externref"});
+    return ErrorExpected(
+        {"i32", "i64", "f32", "f64", "v128", "externref", "funcref"});
   }
 
   if (is_ref_type) {
