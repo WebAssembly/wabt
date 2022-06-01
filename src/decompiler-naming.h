@@ -85,6 +85,9 @@ inline void RenameToIdentifier(std::string& name,
   if (s.size() > max_identifier_length) {
     s.resize(max_identifier_length);
   }
+  // https://github.com/WebAssembly/wabt/issues/1924
+  if (s.empty())
+    s = "__empty";
   // Remove original binding first, such that it doesn't match with our
   // new name.
   bh.erase(name);
