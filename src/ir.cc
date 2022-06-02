@@ -565,8 +565,13 @@ const Module* Script::GetModule(const Var& var) const {
   if (index >= commands.size()) {
     return nullptr;
   }
-  auto* command = cast<ModuleCommand>(commands[index].get());
-  return &command->module;
+  auto* command = commands[index].get();
+  if (isa<ModuleCommand>(command)) {
+    return &cast<ModuleCommand>(command)->module;
+  } else if (isa<ScriptModuleCommand>(command)) {
+    return &cast<ScriptModuleCommand>(command)->module;
+  }
+  return nullptr;
 }
 
 void MakeTypeBindingReverseMapping(

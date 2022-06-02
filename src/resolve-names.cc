@@ -577,6 +577,10 @@ void NameResolver::VisitCommand(Command* command) {
       VisitModule(&cast<ModuleCommand>(command)->module);
       break;
 
+    case CommandType::ScriptModule:
+      VisitModule(&cast<ScriptModuleCommand>(command)->module);
+      break;
+
     case CommandType::Action:
     case CommandType::AssertReturn:
     case CommandType::AssertTrap:

@@ -958,6 +958,13 @@ void ScriptValidator::CheckCommand(const Command* command) {
       break;
     }
 
+    case CommandType::ScriptModule: {
+      Validator module_validator(
+          errors_, &cast<ScriptModuleCommand>(command)->module, options_);
+      module_validator.CheckModule();
+      break;
+    }
+
     case CommandType::Action:
       // Ignore result type.
       CheckAction(cast<ActionCommand>(command)->action.get());

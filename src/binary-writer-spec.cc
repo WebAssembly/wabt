@@ -126,6 +126,7 @@ void BinaryWriterSpec::WriteEscapedString(std::string_view s) {
 void BinaryWriterSpec::WriteCommandType(const Command& command) {
   static const char* s_command_names[] = {
       "module",
+      "module",
       "action",
       "register",
       "assert_malformed",
@@ -472,6 +473,25 @@ void BinaryWriterSpec::WriteCommands() {
         WriteKey("filename");
         WriteEscapedString(GetBasename(filename));
         WriteModule(filename, module);
+        num_modules_++;
+        last_module_index = i;
+        break;
+      }
+
+      case CommandType::ScriptModule: {
+        auto* script_module_command = cast<ScriptModuleCommand>(command);
+        const auto& module = script_module_command->module;
+        std::string filename = GetModuleFilename(kWasmExtension);
+        WriteLocation(module.loc);
+        WriteSeparator();
+        if (!module.name.empty()) {
+          WriteKey("name");
+          WriteEscapedString(module.name);
+          WriteSeparator();
+        }
+        WriteKey("filename");
+        WriteEscapedString(GetBasename(filename));
+        WriteScriptModule(filename, *script_module_command->script_module);
         num_modules_++;
         last_module_index = i;
         break;

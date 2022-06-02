@@ -3309,15 +3309,20 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   std::unique_ptr<ScriptModule> script_module;
   CHECK_RESULT(ParseScriptModule(&script_module));
 
-  auto command = MakeUnique<ModuleCommand>();
-  Module& module = command->module;
+  Module* module = nullptr;
 
   switch (script_module->type()) {
-    case ScriptModuleType::Text:
-      module = std::move(cast<TextScriptModule>(script_module.get())->module);
+    case ScriptModuleType::Text: {
+      auto command = MakeUnique<ModuleCommand>();
+      module = &command->module;
+      *module = std::move(cast<TextScriptModule>(script_module.get())->module);
+      *out_command = std::move(command);
       break;
+    }
 
     case ScriptModuleType::Binary: {
+      auto command = MakeUnique<ScriptModuleCommand>();
+      module = &command->module;
       auto* bsm = cast<BinaryScriptModule>(script_module.get());
       ReadBinaryOptions options;
 #if WABT_TRACING
@@ -3328,9 +3333,9 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       Errors errors;
       const char* filename = "<text>";
       ReadBinaryIr(filename, bsm->data.data(), bsm->data.size(), options,
-                   &errors, &module);
-      module.name = bsm->name;
-      module.loc = bsm->loc;
+                   &errors, module);
+      module->name = bsm->name;
+      module->loc = bsm->loc;
       for (const auto& error : errors) {
         assert(error.error_level == ErrorLevel::Error);
         if (error.loc.offset == kInvalidOffset) {
@@ -3340,6 +3345,9 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
                 error.loc.offset, error.message.c_str());
         }
       }
+
+      command->script_module = std::move(script_module);
+      *out_command = std::move(command);
       break;
     }
 
@@ -3351,15 +3359,14 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   if (script) {
     Index command_index = script->commands.size();
 
-    if (!module.name.empty()) {
-      script->module_bindings.emplace(module.name,
-                                      Binding(module.loc, command_index));
+    if (!module->name.empty()) {
+      script->module_bindings.emplace(module->name,
+                                      Binding(module->loc, command_index));
     }
 
     last_module_index_ = command_index;
   }
 
-  *out_command = std::move(command);
   return Result::Ok;
 }
 
