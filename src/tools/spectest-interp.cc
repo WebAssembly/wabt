@@ -1274,6 +1274,7 @@ wabt::Result CommandRunner::Run(const Script& script) {
   for (const CommandPtr& command : script.commands) {
     switch (command->type) {
       case CommandType::Module:
+      case CommandType::ScriptModule:
         TallyCommand(OnModuleCommand(cast<ModuleCommand>(command.get())));
         break;
 

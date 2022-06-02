@@ -1159,8 +1159,14 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
     // modules.
     CommandPtr command;
     CHECK_RESULT(ParseModuleCommand(nullptr, &command));
-    auto module_command = cast<ModuleCommand>(std::move(command));
-    *module = std::move(module_command->module);
+    if (isa<ModuleCommand>(command.get())) {
+      auto module_command = cast<ModuleCommand>(std::move(command));
+      *module = std::move(module_command->module);
+    } else {
+      assert(isa<ScriptModuleCommand>(command.get()));
+      auto module_command = cast<ScriptModuleCommand>(std::move(command));
+      *module = std::move(module_command->module);
+    }
   } else if (IsModuleField(PeekPair())) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     CHECK_RESULT(ParseModuleFieldList(module.get()));
