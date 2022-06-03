@@ -1321,6 +1321,7 @@ class InvokeAction : public ActionMixin<ActionType::Invoke> {
 
 enum class CommandType {
   Module,
+  ScriptModule,
   Action,
   Register,
   AssertMalformed,
@@ -1359,6 +1360,15 @@ class CommandMixin : public Command {
 class ModuleCommand : public CommandMixin<CommandType::Module> {
  public:
   Module module;
+};
+
+class ScriptModuleCommand : public CommandMixin<CommandType::ScriptModule> {
+ public:
+  // Both the module and the script_module need to be stored since the module
+  // has the parsed information about the module, but the script_module has the
+  // original contents (binary or quoted).
+  Module module;
+  std::unique_ptr<ScriptModule> script_module;
 };
 
 template <CommandType TypeEnum>
