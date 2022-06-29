@@ -1,5 +1,4 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS*: --disable-optimization
 ;;; STDIN_FILE: third_party/testsuite/skip-stack-guard-page.wast
 (;; STDOUT ;;;
 10/10 tests passed.
