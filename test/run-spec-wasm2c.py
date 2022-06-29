@@ -345,6 +345,7 @@ def Compile(cc, c_filename, out_dir, optimize, *args):
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-tautological-constant-out-of-range-compare',
                  '-Wno-infinite-recursion',
+                 '-fno-optimize-sibling-calls',
                  '-std=c99', '-D_DEFAULT_SOURCE']
         if optimize:
             args += ['-O2']
