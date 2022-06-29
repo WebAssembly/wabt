@@ -1,5 +1,6 @@
 ;;; SLOW:
 ;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --disable-optimization
 ;;; STDIN_FILE: third_party/testsuite/f64.wast
 (;; STDOUT ;;;
 2500/2500 tests passed.

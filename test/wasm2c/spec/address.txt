@@ -1,4 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --disable-optimization
 ;;; STDIN_FILE: third_party/testsuite/address.wast
 (;; STDOUT ;;;
 255/255 tests passed.

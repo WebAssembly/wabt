@@ -1,4 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --disable-optimization
 ;;; STDIN_FILE: third_party/testsuite/call.wast
 (;; STDOUT ;;;
 72/72 tests passed.

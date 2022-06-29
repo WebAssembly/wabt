@@ -1,4 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --disable-optimization
 ;;; STDIN_FILE: third_party/testsuite/traps.wast
 (;; STDOUT ;;;
 32/32 tests passed.

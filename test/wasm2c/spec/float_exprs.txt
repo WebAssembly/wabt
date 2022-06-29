@@ -1,5 +1,6 @@
 ;;; SLOW:
 ;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --disable-optimization
 ;;; STDIN_FILE: third_party/testsuite/float_exprs.wast
 (;; STDOUT ;;;
 794/794 tests passed.
