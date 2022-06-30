@@ -2225,19 +2225,19 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "ceilf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_ceilf");
       break;
 
     case Opcode::F64Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "ceil");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_ceil");
       break;
 
     case Opcode::F32Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "floorf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_floorf");
       break;
 
     case Opcode::F64Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "floor");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_floor");
       break;
 
     case Opcode::F32Trunc:

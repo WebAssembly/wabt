@@ -290,7 +290,6 @@ void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
 #endif
 }
 
-#ifdef _WIN32
 static float quiet_nanf(float x) {
   uint32_t tmp;
   memcpy(&tmp, &x, 4);
@@ -305,6 +304,34 @@ static double quiet_nan(double x) {
   tmp |= 0x7ff8000000000000llu;
   memcpy(&x, &tmp, 8);
   return x;
+}
+
+double wasm_rt_floor(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return floor(x);
+}
+
+float wasm_rt_floorf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return floorf(x);
+}
+
+double wasm_rt_ceil(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return ceil(x);
+}
+
+float wasm_rt_ceilf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return ceilf(x);
 }
 
 double wasm_rt_trunc(double x) {
@@ -356,7 +383,6 @@ double wasm_rt_fabs(double x) {
   }
   return fabs(x);
 }
-#endif
 
 void wasm_rt_allocate_table(wasm_rt_table_t* table,
                             uint32_t elements,

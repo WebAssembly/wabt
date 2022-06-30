@@ -264,21 +264,16 @@ void wasm_rt_allocate_table(wasm_rt_table_t*,
  */
 void wasm_rt_free_table(wasm_rt_table_t*);
 
-#ifdef _WIN32
 float wasm_rt_truncf(float x);
 double wasm_rt_trunc(double x);
 float wasm_rt_nearbyintf(float x);
 double wasm_rt_nearbyint(double x);
 float wasm_rt_fabsf(float x);
 double wasm_rt_fabs(double x);
-#else
-#define wasm_rt_truncf(x) truncf(x)
-#define wasm_rt_trunc(x) trunc(x)
-#define wasm_rt_nearbyintf(x) nearbyintf(x)
-#define wasm_rt_nearbyint(x) nearbyint(x)
-#define wasm_rt_fabsf(x) fabsf(x)
-#define wasm_rt_fabs(x) fabs(x)
-#endif
+float wasm_rt_floorf(float x);
+double wasm_rt_floor(double x);
+float wasm_rt_ceilf(float x);
+double wasm_rt_ceil(double x);
 
 #ifdef __cplusplus
 }
