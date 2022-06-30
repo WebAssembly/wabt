@@ -321,3 +321,97 @@ DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
 DEFINE_REINTERPRET(i32_reinterpret_f32, f32, u32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, u64, f64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
+
+static float quiet_nanf(float x) {
+  uint32_t tmp;
+  memcpy(&tmp, &x, 4);
+  tmp |= 0x7fc00000lu;
+  memcpy(&x, &tmp, 4);
+  return x;
+}
+
+static double quiet_nan(double x) {
+  uint64_t tmp;
+  memcpy(&tmp, &x, 8);
+  tmp |= 0x7ff8000000000000llu;
+  memcpy(&x, &tmp, 8);
+  return x;
+}
+
+static double wasm_floor(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return floor(x);
+}
+
+static float wasm_floorf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return floorf(x);
+}
+
+static double wasm_ceil(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return ceil(x);
+}
+
+static float wasm_ceilf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return ceilf(x);
+}
+
+static double wasm_trunc(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return trunc(x);
+}
+
+static float wasm_truncf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return truncf(x);
+}
+
+static float wasm_nearbyintf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return nearbyintf(x);
+}
+
+static double wasm_nearbyint(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return nearbyint(x);
+}
+
+static float wasm_fabsf(float x) {
+  if (isnan(x)) {
+    uint32_t tmp;
+    memcpy(&tmp, &x, 4);
+    tmp = tmp & ~(1 << 31);
+    memcpy(&x, &tmp, 4);
+    return x;
+  }
+  return fabsf(x);
+}
+
+static double wasm_fabs(double x) {
+  if (isnan(x)) {
+    uint64_t tmp;
+    memcpy(&tmp, &x, 8);
+    tmp = tmp & ~(1ll << 63);
+    memcpy(&x, &tmp, 8);
+    return x;
+  }
+  return fabs(x);
+}

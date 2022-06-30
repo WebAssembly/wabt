@@ -2209,11 +2209,11 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_fabsf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_fabsf");
       break;
 
     case Opcode::F64Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_fabs");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_fabs");
       break;
 
     case Opcode::F32Sqrt:
@@ -2225,35 +2225,35 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_ceilf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_ceilf");
       break;
 
     case Opcode::F64Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_ceil");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_ceil");
       break;
 
     case Opcode::F32Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_floorf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_floorf");
       break;
 
     case Opcode::F64Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_floor");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_floor");
       break;
 
     case Opcode::F32Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_truncf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_truncf");
       break;
 
     case Opcode::F64Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_trunc");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_trunc");
       break;
 
     case Opcode::F32Nearest:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_nearbyintf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_nearbyintf");
       break;
 
     case Opcode::F64Nearest:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_nearbyint");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_nearbyint");
       break;
 
     case Opcode::I32Extend8S:
