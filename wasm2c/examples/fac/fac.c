@@ -420,6 +420,20 @@ static double wasm_fabs(double x) {
   }
   return fabs(x);
 }
+
+static double wasm_sqrt(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return sqrt(x);
+}
+
+static float wasm_sqrtf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return sqrtf(x);
+}
 static u32 func_types[1];
 static void init_func_types(void) {
   func_types[0] = wasm_rt_register_func_type(1, 1, WASM_RT_I32, WASM_RT_I32);

@@ -2217,11 +2217,11 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Sqrt:
-      WriteSimpleUnaryExpr(expr.opcode, "sqrtf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_sqrtf");
       break;
 
     case Opcode::F64Sqrt:
-      WriteSimpleUnaryExpr(expr.opcode, "sqrt");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_sqrt");
       break;
 
     case Opcode::F32Ceil:

@@ -415,3 +415,17 @@ static double wasm_fabs(double x) {
   }
   return fabs(x);
 }
+
+static double wasm_sqrt(double x) {
+  if (isnan(x)) {
+    return quiet_nan(x);
+  }
+  return sqrt(x);
+}
+
+static float wasm_sqrtf(float x) {
+  if (isnan(x)) {
+    return quiet_nanf(x);
+  }
+  return sqrtf(x);
+}
