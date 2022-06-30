@@ -2067,8 +2067,11 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::F32ConvertI32U:
-    case Opcode::F32DemoteF64:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)");
+      break;
+
+    case Opcode::F32DemoteF64:
+      WriteSimpleUnaryExpr(expr.opcode, "(f32)wasm_quiet");
       break;
 
     case Opcode::F32ConvertI64U:
@@ -2086,8 +2089,11 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::F64ConvertI32U:
-    case Opcode::F64PromoteF32:
       WriteSimpleUnaryExpr(expr.opcode, "(f64)");
+      break;
+
+    case Opcode::F64PromoteF32:
+      WriteSimpleUnaryExpr(expr.opcode, "(f64)wasm_quietf");
       break;
 
     case Opcode::F64ConvertI64U:
