@@ -344,77 +344,77 @@ static double quiet_nan(double x) {
 }
 
 static double wasm_quiet(double x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
   return x;
 }
 
 static float wasm_quietf(float x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
   return x;
 }
 
 static double wasm_floor(double x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
   return floor(x);
 }
 
 static float wasm_floorf(float x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
   return floorf(x);
 }
 
 static double wasm_ceil(double x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
   return ceil(x);
 }
 
 static float wasm_ceilf(float x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
   return ceilf(x);
 }
 
 static double wasm_trunc(double x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
   return trunc(x);
 }
 
 static float wasm_truncf(float x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
   return truncf(x);
 }
 
 static float wasm_nearbyintf(float x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
   return nearbyintf(x);
 }
 
 static double wasm_nearbyint(double x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
   return nearbyint(x);
 }
 
 static float wasm_fabsf(float x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     uint32_t tmp;
     memcpy(&tmp, &x, 4);
     tmp = tmp & ~(1 << 31);
@@ -425,7 +425,7 @@ static float wasm_fabsf(float x) {
 }
 
 static double wasm_fabs(double x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     uint64_t tmp;
     memcpy(&tmp, &x, 8);
     tmp = tmp & ~(1ll << 63);
@@ -436,14 +436,14 @@ static double wasm_fabs(double x) {
 }
 
 static double wasm_sqrt(double x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
   return sqrt(x);
 }
 
 static float wasm_sqrtf(float x) {
-  if (isnan(x)) {
+  if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
   return sqrtf(x);
