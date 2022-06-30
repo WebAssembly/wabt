@@ -331,7 +331,7 @@ class CWriter(object):
             raise Error('Unexpected action type: %s' % type_)
 
 
-def Compile(cc, c_filename, out_dir, optimize, *args):
+def Compile(cc, c_filename, out_dir, *args):
     if IS_WINDOWS:
         ext = '.obj'
     else:
@@ -341,7 +341,7 @@ def Compile(cc, c_filename, out_dir, optimize, *args):
     if IS_WINDOWS:
         args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
-        args += ['-c', c_filename, '-o', o_filename,
+        args += ['-c', c_filename, '-o', o_filename, '-O2',
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
@@ -349,8 +349,6 @@ def Compile(cc, c_filename, out_dir, optimize, *args):
                  '-fno-optimize-sibling-calls',
                  '-frounding-math', '-fsignaling-nans',
                  '-std=c99', '-D_DEFAULT_SOURCE']
-        if optimize:
-            args += ['-O2']
     # Use RunWithArgsForStdout and discard stdout because cl.exe
     # unconditionally prints the name of input files on stdout
     # and we don't want that to be part of our stdout.
@@ -413,8 +411,6 @@ def main(args):
     parser.add_argument('--enable-multi-memory', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
-    parser.add_argument('--disable-optimization', dest='optimize',
-                        action='store_false')
     options = parser.parse_args(args)
 
     with utils.TempDirectory(options.out_dir, 'run-spec-wasm2c-') as out_dir:
@@ -470,15 +466,15 @@ def main(args):
             args = ['-n', cwriter.GetModulePrefixUnmangled(i)]
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, *args)
             if options.compile:
-                o_filenames.append(Compile(cc, c_filename, out_dir, options.optimize, includes))
+                o_filenames.append(Compile(cc, c_filename, out_dir, includes))
 
         if options.compile:
             # Compile wasm-rt-impl.
             wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
-            o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, options.optimize, includes))
+            o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
 
             # Compile and link -main test run entry point
-            o_filenames.append(Compile(cc, main_filename, out_dir, options.optimize, includes))
+            o_filenames.append(Compile(cc, main_filename, out_dir, includes))
             if IS_WINDOWS:
                 exe_ext = '.exe'
                 libs = []
