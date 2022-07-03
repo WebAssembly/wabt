@@ -341,6 +341,10 @@ def Compile(cc, c_filename, out_dir, *args):
     if IS_WINDOWS:
         args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
+        # See "Compiling the wasm2c output" section of wasm2c/README.md
+        # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
+        # and '-frounding-math' to maintain conformance with the spec tests
+        # (GCC also requires '-fsignaling-nans')
         args += ['-c', c_filename, '-o', o_filename, '-O2',
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-ignored-optimization-argument',
