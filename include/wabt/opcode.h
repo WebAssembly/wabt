@@ -107,12 +107,11 @@ struct Opcode {
   };
 
   static uint32_t PrefixCode(uint8_t prefix, uint32_t code) {
-    // For now, 8 bits is enough for all codes.
-    if (code >= 0x100) {
-      // Clamp to 0xff, since we know that it is an invalid code.
-      code = 0xff;
+    if (code >= (1 << MAX_OPCODE_BITS)) {
+      // Clamp to (2^bits - 1), since we know that it is an invalid code.
+      code = (1 << MAX_OPCODE_BITS) - 1;
     }
-    return (prefix << 8) | code;
+    return (prefix << MAX_OPCODE_BITS) | code;
   }
 
   // The Opcode struct only stores an enumeration (Opcode::Enum) of all valid
@@ -137,7 +136,7 @@ struct Opcode {
                                   uint8_t* out_prefix,
                                   uint32_t* out_code) {
     uint32_t prefix_code = ~static_cast<uint32_t>(e) + 1;
-    *out_prefix = prefix_code >> 8;
+    *out_prefix = prefix_code >> MAX_OPCODE_BITS;
     *out_code = prefix_code & 0xff;
   }
 

@@ -501,6 +501,28 @@ WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xfd, I32X4TruncSatF64X2UZero, "i3
 WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xfe, F64X2ConvertLowI32X4S, "f64x2.convert_low_i32x4_s", "")
 WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xff, F64X2ConvertLowI32X4U, "f64x2.convert_low_i32x4_u", "")
 
+/* Relaxed-SIMD opcodes */
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x100, I8X16RelaxedSwizzle, "i8x16.relaxed_swizzle", "")
+WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0x101, I32X4RelaxedTruncF32X4S, "i32x4.relaxed_trunc_f32x4_s", "")
+WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0x102, I32X4RelaxedTruncF32X4U, "i32x4.relaxed_trunc_f32x4_u", "")
+WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0x103, I32X4RelaxedTruncF64X2SZero, "i32x4.relaxed_trunc_f64x2_s_zero", "")
+WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0x104, I32X4RelaxedTruncF64X2UZero, "i32x4.relaxed_trunc_f64x2_u_zero", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x105, F32X4RelaxedMadd, "f32x4.relaxed_madd", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x106, F32X4RelaxedNmadd, "f32x4.relaxed_nmadd", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x107, F64X2RelaxedMadd, "f64x2.relaxed_madd", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x108, F64X2RelaxedNmadd, "f64x2.relaxed_nmadd", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x109, I8X16RelaxedLaneSelect, "i8x16.relaxed_laneselect", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x10a, I16X8RelaxedLaneSelect, "i16x8.relaxed_laneselect", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x10b, I32X4RelaxedLaneSelect, "i32x4.relaxed_laneselect", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x10c, I64X2RelaxedLaneSelect, "i64x2.relaxed_laneselect", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x10d, F32X4RelaxedMin, "f32x4.relaxed_min", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x10e, F32X4RelaxedMax, "f32x4.relaxed_max", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x10f, F64X2RelaxedMin, "f64x2.relaxed_min", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x110, F64X2RelaxedMax, "f64x2.relaxed_max", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x111, I16X8RelaxedQ15mulrS, "i16x8.relaxed_q15mulr_s", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x112, I16X8DotI8X16I7X16S, "i16x8.dot_i8x16_i7x16_s", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x113, I32X4DotI8X16I7X16AddS, "i32x4.dot_i8x16_i7x16_add_s", "")
+
 /* Thread opcodes (--enable-threads) */
 WABT_OPCODE(I32,  I32,  I32,  ___,  4,  0xfe, 0x00, MemoryAtomicNotify, "memory.atomic.notify", "")
 WABT_OPCODE(I32,  I32,  I32,  I64,  4,  0xfe, 0x01, MemoryAtomicWait32, "memory.atomic.wait32", "")

@@ -42,6 +42,7 @@ declare, TokenType::Declare
 delegate, TokenType::Delegate
 do, TokenType::Do
 drop, TokenType::Drop, Opcode::Drop
+either, TokenType::Either
 elem.drop, TokenType::ElemDrop, Opcode::ElemDrop
 elem, TokenType::Elem
 else, TokenType::Else, Opcode::Else
@@ -101,6 +102,10 @@ f32x4.neg, TokenType::Unary, Opcode::F32X4Neg
 f32x4.ne, TokenType::Compare, Opcode::F32X4Ne
 f32x4.pmax, TokenType::Binary, Opcode::F32X4PMax
 f32x4.pmin, TokenType::Binary, Opcode::F32X4PMin
+f32x4.relaxed_madd, TokenType::Ternary, Opcode::F32X4RelaxedMadd
+f32x4.relaxed_max, TokenType::Binary, Opcode::F32X4RelaxedMax
+f32x4.relaxed_min, TokenType::Binary, Opcode::F32X4RelaxedMin
+f32x4.relaxed_nmadd, TokenType::Ternary, Opcode::F32X4RelaxedNmadd
 f32x4.replace_lane, TokenType::SimdLaneOp, Opcode::F32X4ReplaceLane
 f32x4.splat, TokenType::Unary, Opcode::F32X4Splat
 f32x4.sqrt, TokenType::Unary, Opcode::F32X4Sqrt
@@ -157,6 +162,10 @@ f64x2.neg, TokenType::Unary, Opcode::F64X2Neg
 f64x2.ne, TokenType::Compare, Opcode::F64X2Ne
 f64x2.pmax, TokenType::Binary, Opcode::F64X2PMax
 f64x2.pmin, TokenType::Binary, Opcode::F64X2PMin
+f64x2.relaxed_madd, TokenType::Ternary, Opcode::F64X2RelaxedMadd
+f64x2.relaxed_max, TokenType::Binary, Opcode::F64X2RelaxedMax
+f64x2.relaxed_min, TokenType::Binary, Opcode::F64X2RelaxedMin
+f64x2.relaxed_nmadd, TokenType::Ternary, Opcode::F64X2RelaxedNmadd
 f64x2.replace_lane, TokenType::SimdLaneOp, Opcode::F64X2ReplaceLane
 f64x2.splat, TokenType::Unary, Opcode::F64X2Splat
 f64x2.sqrt, TokenType::Unary, Opcode::F64X2Sqrt
@@ -180,6 +189,7 @@ i16x8.add, TokenType::Binary, Opcode::I16X8Add
 i16x8.all_true, TokenType::Unary, Opcode::I16X8AllTrue
 i16x8.avgr_u, TokenType::Binary, Opcode::I16X8AvgrU
 i16x8.bitmask, TokenType::Unary, Opcode::I16X8Bitmask
+i16x8.dot_i8x16_i7x16_s, TokenType::Binary, Opcode::I16X8DotI8X16I7X16S
 i16x8.eq, TokenType::Compare, Opcode::I16X8Eq
 i16x8.extract_lane_s, TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneS
 i16x8.extract_lane_u, TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneU
@@ -203,6 +213,8 @@ i16x8.narrow_i32x4_u, TokenType::Binary, Opcode::I16X8NarrowI32X4U
 i16x8.neg, TokenType::Unary, Opcode::I16X8Neg
 i16x8.q15mulr_sat_s, TokenType::Binary, Opcode::I16X8Q15mulrSatS
 i16x8.ne, TokenType::Compare, Opcode::I16X8Ne
+i16x8.relaxed_laneselect, TokenType::Ternary, Opcode::I16X8RelaxedLaneSelect
+i16x8.relaxed_q15mulr_s, TokenType::Binary, Opcode::I16X8RelaxedQ15mulrS
 i16x8.replace_lane, TokenType::SimdLaneOp, Opcode::I16X8ReplaceLane
 i16x8.shl, TokenType::Binary, Opcode::I16X8Shl
 i16x8.shr_s, TokenType::Binary, Opcode::I16X8ShrS
@@ -303,6 +315,7 @@ i32x4.abs, TokenType::Unary, Opcode::I32X4Abs
 i32x4.add, TokenType::Binary, Opcode::I32X4Add
 i32x4.all_true, TokenType::Unary, Opcode::I32X4AllTrue
 i32x4.bitmask, TokenType::Unary, Opcode::I32X4Bitmask
+i32x4.dot_i8x16_i7x16_add_s, TokenType::Ternary, Opcode::I32X4DotI8X16I7X16AddS
 i32x4.eq, TokenType::Compare, Opcode::I32X4Eq
 i32x4.extract_lane, TokenType::SimdLaneOp, Opcode::I32X4ExtractLane
 i32x4.ge_s, TokenType::Compare, Opcode::I32X4GeS
@@ -311,6 +324,10 @@ i32x4.gt_s, TokenType::Compare, Opcode::I32X4GtS
 i32x4.gt_u, TokenType::Compare, Opcode::I32X4GtU
 i32x4.le_s, TokenType::Compare, Opcode::I32X4LeS
 i32x4.le_u, TokenType::Compare, Opcode::I32X4LeU
+i32x4.relaxed_trunc_f32x4_s, TokenType::Unary, Opcode::I32X4RelaxedTruncF32X4S
+i32x4.relaxed_trunc_f32x4_u, TokenType::Unary, Opcode::I32X4RelaxedTruncF32X4U
+i32x4.relaxed_trunc_f64x2_s_zero, TokenType::Unary, Opcode::I32X4RelaxedTruncF64X2SZero
+i32x4.relaxed_trunc_f64x2_u_zero, TokenType::Unary, Opcode::I32X4RelaxedTruncF64X2UZero
 v128.load16x4_s, TokenType::Load, Opcode::V128Load16X4S
 v128.load16x4_u, TokenType::Load, Opcode::V128Load16X4U
 i32x4.lt_s, TokenType::Compare, Opcode::I32X4LtS
@@ -323,6 +340,7 @@ i32x4.dot_i16x8_s, TokenType::Binary, Opcode::I32X4DotI16X8S
 i32x4.mul, TokenType::Binary, Opcode::I32X4Mul
 i32x4.neg, TokenType::Unary, Opcode::I32X4Neg
 i32x4.ne, TokenType::Compare, Opcode::I32X4Ne
+i32x4.relaxed_laneselect, TokenType::Ternary, Opcode::I32X4RelaxedLaneSelect
 i32x4.replace_lane, TokenType::SimdLaneOp, Opcode::I32X4ReplaceLane
 i32x4.shl, TokenType::Binary, Opcode::I32X4Shl
 i32x4.shr_s, TokenType::Binary, Opcode::I32X4ShrS
@@ -455,6 +473,7 @@ i64x2.extend_low_i32x4_s, TokenType::Unary, Opcode::I64X2ExtendLowI32X4S
 i64x2.extend_high_i32x4_s, TokenType::Unary, Opcode::I64X2ExtendHighI32X4S
 i64x2.extend_low_i32x4_u, TokenType::Unary, Opcode::I64X2ExtendLowI32X4U
 i64x2.extend_high_i32x4_u, TokenType::Unary, Opcode::I64X2ExtendHighI32X4U
+i64x2.relaxed_laneselect, TokenType::Ternary, Opcode::I64X2RelaxedLaneSelect
 i64x2.replace_lane, TokenType::SimdLaneOp, Opcode::I64X2ReplaceLane
 i64x2.shl, TokenType::Binary, Opcode::I64X2Shl
 i64x2.shr_s, TokenType::Binary, Opcode::I64X2ShrS
@@ -494,6 +513,8 @@ i8x16.narrow_i16x8_u, TokenType::Binary, Opcode::I8X16NarrowI16X8U
 i8x16.neg, TokenType::Unary, Opcode::I8X16Neg
 i8x16.popcnt, TokenType::Unary, Opcode::I8X16Popcnt
 i8x16.ne, TokenType::Compare, Opcode::I8X16Ne
+i8x16.relaxed_swizzle, TokenType::Binary, Opcode::I8X16RelaxedSwizzle
+i8x16.relaxed_laneselect, TokenType::Ternary, Opcode::I8X16RelaxedLaneSelect
 i8x16.replace_lane, TokenType::SimdLaneOp, Opcode::I8X16ReplaceLane
 i8x16.shl, TokenType::Binary, Opcode::I8X16Shl
 i8x16.shr_s, TokenType::Binary, Opcode::I8X16ShrS

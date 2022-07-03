@@ -33,6 +33,7 @@ options:
       --enable-memory64                        Enable 64-bit memory
       --enable-multi-memory                    Enable Multi-memory
       --enable-extended-const                  Enable Extended constant expressions
+      --enable-relaxed-simd                    Enable Relaxed SIMD
       --enable-all                             Enable all features
   -o, --output=FILE                            output JSON file
   -r, --relocatable                            Create a relocatable wasm binary (suitable for linking with e.g. lld)

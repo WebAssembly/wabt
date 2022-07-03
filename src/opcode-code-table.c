@@ -35,7 +35,7 @@ WABT_STATIC_ASSERT(Invalid <= WABT_OPCODE_CODE_TABLE_SIZE);
 uint32_t WabtOpcodeCodeTable[WABT_OPCODE_CODE_TABLE_SIZE] = {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text, decomp)                                             \
-  [(prefix << 8) + code] = Name,
+  [(prefix << MAX_OPCODE_BITS) + code] = Name,
 #include "wabt/opcode.def"
 #undef WABT_OPCODE
 };

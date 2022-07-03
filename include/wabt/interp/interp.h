@@ -1217,6 +1217,12 @@ class Thread {
   template <typename S, typename T>
   RunResult DoSimdDot();
   template <typename S, typename T>
+  RunResult DoSimdDotAdd();
+  template <typename S>
+  RunResult DoSimdRelaxedMadd();
+  template <typename S>
+  RunResult DoSimdRelaxedNmadd();
+  template <typename S, typename T>
   RunResult DoSimdLoadExtend(Instr, Trap::Ptr* out_trap);
   template <typename S, typename T>
   RunResult DoSimdExtaddPairwise();

@@ -1156,6 +1156,13 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::I64X2ExtmulHighI32X4U:
       case Opcode::I16X8Q15mulrSatS:
       case Opcode::I32X4DotI16X8S:
+      case Opcode::I8X16RelaxedSwizzle:
+      case Opcode::F32X4RelaxedMin:
+      case Opcode::F32X4RelaxedMax:
+      case Opcode::F64X2RelaxedMin:
+      case Opcode::F64X2RelaxedMax:
+      case Opcode::I16X8RelaxedQ15mulrS:
+      case Opcode::I16X8DotI8X16I7X16S:
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1319,11 +1326,24 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::I16X8ExtaddPairwiseI8X16U:
       case Opcode::I32X4ExtaddPairwiseI16X8S:
       case Opcode::I32X4ExtaddPairwiseI16X8U:
+      case Opcode::I32X4RelaxedTruncF32X4S:
+      case Opcode::I32X4RelaxedTruncF32X4U:
+      case Opcode::I32X4RelaxedTruncF64X2SZero:
+      case Opcode::I32X4RelaxedTruncF64X2UZero:
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::V128BitSelect:
+      case Opcode::F32X4RelaxedMadd:
+      case Opcode::F32X4RelaxedNmadd:
+      case Opcode::F64X2RelaxedMadd:
+      case Opcode::F64X2RelaxedNmadd:
+      case Opcode::I8X16RelaxedLaneSelect:
+      case Opcode::I16X8RelaxedLaneSelect:
+      case Opcode::I32X4RelaxedLaneSelect:
+      case Opcode::I64X2RelaxedLaneSelect:
+      case Opcode::I32X4DotI8X16I7X16AddS:
         CALLBACK(OnTernaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;

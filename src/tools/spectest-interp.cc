@@ -280,6 +280,7 @@ class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
  public:
   Action action;
   std::vector<ExpectedValue> expected;
+  bool expect_either;
 };
 
 template <CommandType TypeEnum>
@@ -1078,7 +1079,12 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
-    EXPECT_KEY("expected");
+    if (Match("\"either\"")) {
+      EXPECT(":");
+      command->expect_either = true;
+    } else {
+      EXPECT_KEY("expected");
+    }
     CHECK_RESULT(ParseExpectedValues(&command->expected));
     *out_command = std::move(command);
   } else if (Match("\"assert_trap\"")) {
@@ -1746,11 +1752,14 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
 
         if (Failed(CheckAssertReturnResult(command, index, lane_expected,
                                            lane_actual, false))) {
-          PrintError(command->line,
-                     "mismatch in lane %u of result %u of assert_return: "
-                     "expected %s, got %s",
-                     lane, index, ExpectedValueToString(lane_expected).c_str(),
-                     TypedValueToString(lane_actual).c_str());
+          if (print_error) {
+            PrintError(command->line,
+                       "mismatch in lane %u of result %u of assert_return: "
+                       "expected %s, got %s",
+                       lane, index,
+                       ExpectedValueToString(lane_expected).c_str(),
+                       TypedValueToString(lane_actual).c_str());
+          }
           ok = false;
         }
       }
@@ -1791,23 +1800,46 @@ wabt::Result CommandRunner::OnAssertReturnCommand(
     return wabt::Result::Error;
   }
 
-  if (action_result.values.size() != command->expected.size()) {
+  if (command->expect_either) {
+    if (action_result.values.size() != 1) {
+      PrintError(command->line,
+                 "\"either\" requires single result but got %" PRIzd,
+                 action_result.values.size());
+      return wabt::Result::Error;
+    }
+
+    TypedValue actual{action_result.types[0], action_result.values[0]};
+    for (size_t i = 0; i < command->expected.size(); ++i) {
+      const ExpectedValue& expected = command->expected[i];
+      if (Succeeded(
+              CheckAssertReturnResult(command, i, expected, actual, false))) {
+        return wabt::Result::Ok;
+      }
+    }
     PrintError(command->line,
-               "result length mismatch in assert_return: expected %" PRIzd
-               ", got %" PRIzd,
-               command->expected.size(), action_result.values.size());
+               "mismatch in result of assert_return: expected %s (%" PRIzd
+               " alternatives), got %s",
+               ExpectedValueToString(command->expected[0]).c_str(),
+               command->expected.size(), TypedValueToString(actual).c_str());
     return wabt::Result::Error;
+  } else {
+    if (action_result.values.size() != command->expected.size()) {
+      PrintError(command->line,
+                 "result length mismatch in assert_return: expected %" PRIzd
+                 ", got %" PRIzd,
+                 command->expected.size(), action_result.values.size());
+      return wabt::Result::Error;
+    }
+
+    wabt::Result result = wabt::Result::Ok;
+    for (size_t i = 0; i < action_result.values.size(); ++i) {
+      const ExpectedValue& expected = command->expected[i];
+      TypedValue actual{action_result.types[i], action_result.values[i]};
+
+      result |= CheckAssertReturnResult(command, i, expected, actual, true);
+    }
+    return result;
   }
-
-  wabt::Result result = wabt::Result::Ok;
-  for (size_t i = 0; i < action_result.values.size(); ++i) {
-    const ExpectedValue& expected = command->expected[i];
-    TypedValue actual{action_result.types[i], action_result.values[i]};
-
-    result |= CheckAssertReturnResult(command, i, expected, actual, true);
-  }
-
-  return result;
 }
 
 wabt::Result CommandRunner::OnAssertTrapCommand(

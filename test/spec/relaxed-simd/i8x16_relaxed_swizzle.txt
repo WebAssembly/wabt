@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/relaxed-simd/i8x16_relaxed_swizzle.wast
+;;; ARGS*: --enable-relaxed-simd
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)

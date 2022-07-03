@@ -94,6 +94,7 @@ def main(args):
         'exception-handling': '--enable-exceptions',
         'extended-const': '--enable-extended-const',
         'tail-call': '--enable-tail-call',
+        'relaxed-simd': '--enable-relaxed-simd',
     }
 
     unimplemented = set([
