@@ -22,7 +22,6 @@ const char SECTION_NAME(top)[] =
 "#ifdef __cplusplus\n"
 "extern \"C\" {\n"
 "#endif\n"
-"\n"
 ;
 
 const char SECTION_NAME(bottom)[] =

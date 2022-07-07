@@ -792,6 +792,7 @@ void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
   Write(s_source_declarations);
+  Write(Newline());
 }
 
 void CWriter::WriteMultivalueTypes() {
@@ -2377,6 +2378,7 @@ void CWriter::WriteCHeader() {
   Write("#define ", guard, Newline());
   Write(Newline());
   Write(s_header_top);
+  Write(Newline());
   WriteMultivalueTypes();
   WriteImports();
   Write("void ", module_prefix_, "_init(void);", Newline());
