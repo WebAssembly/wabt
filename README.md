@@ -200,7 +200,7 @@ run `make update-gperf` to update the prebuilt C++ sources in `src/prebuilt/`.
 Some examples:
 
 ```sh
-# parse and typecheck test.wat
+# parse test.wat and write to .wasm binary file with the same name
 $ bin/wat2wasm test.wat
 
 # parse test.wat and write to binary file test.wasm
