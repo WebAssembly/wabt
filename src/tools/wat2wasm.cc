@@ -53,7 +53,7 @@ static const char s_description[] =
   convert it to the wasm binary format.
 
 examples:
-  # parse and typecheck test.wat
+  # parse test.wat and write to .wasm binary file with the same name
   $ wat2wasm test.wat
 
   # parse test.wat and write to binary file test.wasm
