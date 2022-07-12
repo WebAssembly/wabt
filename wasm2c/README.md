@@ -92,6 +92,8 @@ int main(int argc, char** argv) {
 }
 ```
 
+## Compiling the wasm2c output
+
 To compile the executable, we need to use `main.c` and the generated `fac.c`.
 We'll also include `wasm-rt-impl.c` which has implementations of the various
 `wasm_rt_*` functions used by `fac.c` and `fac.h`.
@@ -99,6 +101,17 @@ We'll also include `wasm-rt-impl.c` which has implementations of the various
 ```sh
 $ cc -o fac main.c fac.c wasm-rt-impl.c
 ```
+
+A note on compiling with optimization: wasm2c relies on certain
+behavior from the C compiler to maintain conformance with the
+WebAssembly specification, especially with regards to requirements to
+convert "signaling" to "quiet" floating-point NaN values and for
+infinite recursion to produce a trap. When compiling with optimization
+(e.g. `-O2` or `-O3`), it's necessary to disable some optimizations to
+preserve conformance. With GCC 11, adding the command-line arguments
+`-fno-optimize-sibling-calls -frounding-math -fsignaling-nans` appears
+to be sufficient. With clang 14, just `-fno-optimize-sibling-calls
+-frounding-math` appears to be sufficient.
 
 Now let's test it out!
 
