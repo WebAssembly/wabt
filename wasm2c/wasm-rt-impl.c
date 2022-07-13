@@ -59,13 +59,11 @@ static uint32_t g_func_type_count;
 
 jmp_buf wasm_rt_jmp_buf;
 
-uint32_t g_tag_count;
+static uint32_t g_active_exception_tag;
+static void* g_active_exception;
+static uint32_t g_active_exception_size;
 
-uint32_t g_active_exception_tag;
-void* g_active_exception;
-uint32_t g_active_exception_size;
-
-jmp_buf* g_unwind_target;
+static jmp_buf* g_unwind_target;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
@@ -122,10 +120,12 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
 }
 
 uint32_t wasm_rt_register_tag(uint32_t size) {
+  static uint32_t s_tag_count = 0;
+
   if (size > MAX_EXCEPTION_SIZE) {
     wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
   }
-  return g_tag_count++;
+  return s_tag_count++;
 }
 
 void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values) {
