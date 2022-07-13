@@ -214,7 +214,7 @@ Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
 }
 
 Result NameGenerator::BeginTryExpr(TryExpr* expr) {
-  MaybeGenerateName("R", label_count_++, &expr->block.label);
+  MaybeGenerateName("T", label_count_++, &expr->block.label);
   return Result::Ok;
 }
 
