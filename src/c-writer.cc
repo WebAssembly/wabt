@@ -1738,11 +1738,9 @@ void CWriter::Write(const ExprList& exprs) {
         Write(*cast<BinaryExpr>(&expr));
         break;
 
-      case ExprType::Block: {
-        const Block& block = cast<BlockExpr>(&expr)->block;
-        Write(block);
+      case ExprType::Block:
+        Write(cast<BlockExpr>(&expr)->block);
         break;
-      }
 
       case ExprType::Br:
         Write(GotoLabel(cast<BrExpr>(&expr)->var), Newline());
