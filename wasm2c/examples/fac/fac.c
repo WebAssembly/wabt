@@ -459,6 +459,8 @@ static u32 func_types[1];
 static void init_func_types(void) {
   func_types[0] = wasm_rt_register_func_type(1, 1, WASM_RT_I32, WASM_RT_I32);
 }
+static void init_tags(void) {
+}
 
 static u32 w2c_fac(u32);
 
@@ -502,6 +504,7 @@ static void init_exports(void) {
 
 void Z_fac_init(void) {
   init_func_types();
+  init_tags();
   init_globals();
   init_memory();
   init_table();

@@ -923,6 +923,7 @@ void CWriter::WriteFuncTypes() {
 
 void CWriter::WriteTags() {
   if (module_->tags.empty()) {
+    Write("static void init_tags(void) ", OpenBrace(), CloseBrace(), Newline());
     return;
   }
 
@@ -930,10 +931,6 @@ void CWriter::WriteTags() {
   Write(Newline(), Newline());
 
   Write("static void init_tags(void) ", OpenBrace());
-  if (!module_->tags.size()) {
-    Write(CloseBrace(), Newline());
-    return;
-  }
 
   Index tag_index = 0;
   for (const Import* import : module_->imports) {
@@ -1343,9 +1340,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
 void CWriter::WriteInit() {
   Write(Newline(), "void ", module_prefix_, "_init(void) ", OpenBrace());
   Write("init_func_types();", Newline());
-  if (!module_->tags.empty()) {
-    Write("init_tags();", Newline());
-  }
+  Write("init_tags();", Newline());
   Write("init_globals();", Newline());
   Write("init_memory();", Newline());
   Write("init_table();", Newline());
