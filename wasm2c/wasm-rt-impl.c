@@ -60,7 +60,7 @@ static uint32_t g_func_type_count;
 jmp_buf wasm_rt_jmp_buf;
 
 static uint32_t g_active_exception_tag;
-static void* g_active_exception;
+static uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
 static uint32_t g_active_exception_size;
 
 static jmp_buf* g_unwind_target;
@@ -230,12 +230,6 @@ static void os_print_last_error(const char* msg) {
 #endif
 
 void wasm_rt_init(void) {
-  g_active_exception = malloc(MAX_EXCEPTION_SIZE);
-  if (g_active_exception == NULL) {
-    perror("malloc failed");
-    abort();
-  }
-
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
