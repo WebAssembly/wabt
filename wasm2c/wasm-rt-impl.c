@@ -46,23 +46,24 @@ typedef struct FuncType {
 } FuncType;
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-bool g_signal_handler_installed = false;
-char* g_alt_stack;
+static bool g_signal_handler_installed = false;
+static char* g_alt_stack;
 #else
 uint32_t wasm_rt_call_stack_depth;
-uint32_t g_saved_call_stack_depth;
+uint32_t wasm_rt_saved_call_stack_depth;
 #endif
 
-jmp_buf g_jmp_buf;
-FuncType* g_func_types;
-uint32_t g_func_type_count;
+static FuncType* g_func_types;
+static uint32_t g_func_type_count;
+
+jmp_buf wasm_rt_jmp_buf;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
 #if !WASM_RT_MEMCHECK_SIGNAL_HANDLER
-  wasm_rt_call_stack_depth = g_saved_call_stack_depth;
+  wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
 #endif
-  WASM_RT_LONGJMP(g_jmp_buf, code);
+  WASM_RT_LONGJMP(wasm_rt_jmp_buf, code);
 }
 
 static bool func_types_are_equal(FuncType* a, FuncType* b) {
