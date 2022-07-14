@@ -25,6 +25,17 @@ static void error(const char* file, int line, const char* format, ...) {
   va_end(args);
 }
 
+#define ASSERT_EXCEPTION(f)                                               \
+  do {                                                                    \
+    g_tests_run++;                                                        \
+    if (wasm_rt_impl_try() == WASM_RT_TRAP_UNCAUGHT_EXCEPTION) {          \
+      g_tests_passed++;                                                   \
+    } else {                                                              \
+      (void)(f);                                                          \
+      error(__FILE__, __LINE__, "expected " #f " to throw exception.\n"); \
+    }                                                                     \
+  } while (0)
+
 #define ASSERT_TRAP(f)                                         \
   do {                                                         \
     g_tests_run++;                                             \

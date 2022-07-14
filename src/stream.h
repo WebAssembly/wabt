@@ -170,6 +170,7 @@ struct OutputBuffer {
 class MemoryStream : public Stream {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(MemoryStream);
+  MemoryStream(MemoryStream&&) = default;
   explicit MemoryStream(Stream* log_stream = nullptr);
   explicit MemoryStream(std::unique_ptr<OutputBuffer>&&,
                         Stream* log_stream = nullptr);

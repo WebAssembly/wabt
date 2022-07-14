@@ -47,7 +47,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 
 | Proposal   | flag | default | binary | text | validate | interpret | wasm2c |
 | --------------------- | --------------------------- | - | - | - | - | - | - |
-| [exception handling][]| `--enable-exceptions`       |   | ✓ | ✓ | ✓ | ✓ |   |
+| [exception handling][]| `--enable-exceptions`       |   | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [mutable globals][]   | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [sign extension][]    | `--disable-sign-extension`  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

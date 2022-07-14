@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/try_catch.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+27/27 tests passed.
+;;; STDOUT ;;)

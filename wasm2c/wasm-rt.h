@@ -17,6 +17,7 @@
 #ifndef WASM_RT_H_
 #define WASM_RT_H_
 
+#include <setjmp.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -115,6 +116,7 @@ typedef enum {
   WASM_RT_TRAP_INVALID_CONVERSION, /** Conversion from NaN to integer. */
   WASM_RT_TRAP_UNREACHABLE,        /** Unreachable instruction executed. */
   WASM_RT_TRAP_CALL_INDIRECT,      /** Invalid call_indirect, for any reason. */
+  WASM_RT_TRAP_UNCAUGHT_EXCEPTION, /* Exception thrown and not caught */
 #if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
   WASM_RT_TRAP_EXHAUSTION = WASM_RT_TRAP_OOB,
 #else
@@ -175,8 +177,8 @@ void wasm_rt_init(void);
 void wasm_rt_free(void);
 
 /**
- * Stop execution immediately and jump back to the call to `wasm_rt_try`.
- * The result of `wasm_rt_try` will be the provided trap reason.
+ * Stop execution immediately and jump back to the call to `wasm_rt_impl_try`.
+ * The result of `wasm_rt_impl_try` will be the provided trap reason.
  *
  * This is typically called by the generated code, and not the embedder.
  */
@@ -208,6 +210,54 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap);
  *  ```
  */
 uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
+
+/**
+ * Register a tag with the given size. Returns the tag.
+ */
+uint32_t wasm_rt_register_tag(uint32_t size);
+
+/**
+ * Set the active exception to given tag, size, and contents.
+ */
+void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values);
+
+/**
+ * Throw the active exception.
+ */
+WASM_RT_NO_RETURN void wasm_rt_throw(void);
+
+/**
+ * Get the current unwind target if an exception is thrown.
+ */
+jmp_buf* wasm_rt_get_unwind_target(void);
+
+/**
+ * Set the unwind target if an exception is thrown.
+ */
+void wasm_rt_set_unwind_target(jmp_buf* target);
+
+/**
+ * Tag of the active exception.
+ */
+uint32_t wasm_rt_exception_tag(void);
+
+/**
+ * Size of the active exception.
+ */
+uint32_t wasm_rt_exception_size(void);
+
+/**
+ * Contents of the active exception.
+ */
+void* wasm_rt_exception(void);
+
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#define WASM_RT_SETJMP(buf) sigsetjmp(buf, 1)
+#else
+#define WASM_RT_SETJMP(buf) setjmp(buf)
+#endif
+
+#define wasm_rt_try(target) WASM_RT_SETJMP(target)
 
 /**
  * Initialize a Memory object with an initial page size of `initial_pages` and
