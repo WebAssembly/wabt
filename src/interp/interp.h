@@ -1098,8 +1098,6 @@ class Thread {
   ~Thread();
 
   RunResult Run(Trap::Ptr* out_trap);
-  RunResult Run(int num_instructions, Trap::Ptr* out_trap);
-  RunResult Step(Trap::Ptr* out_trap);
 
   Store& store();
   void Mark();
@@ -1232,8 +1230,6 @@ class Thread {
   RunResult DoAtomicRmwCmpxchg(Instr, Trap::Ptr* out_trap);
 
   RunResult DoThrow(Exception::Ptr exn_ref);
-
-  RunResult StepInternal(Trap::Ptr* out_trap);
 
   std::vector<Frame> frames_;
   std::vector<Value> values_;
