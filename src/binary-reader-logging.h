@@ -25,7 +25,7 @@ class Stream;
 
 class BinaryReaderLogging : public BinaryReaderDelegate {
  public:
-  BinaryReaderLogging(Stream*, BinaryReaderDelegate* forward);
+  BinaryReaderLogging(Stream*, BinaryReaderDelegate* forward, Offset*);
 
   bool OnError(const Error&) override;
   void OnSetState(const State* s) override;
@@ -396,6 +396,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
  private:
   void Indent();
   void Dedent();
+  void WriteOffset();
   void WriteIndent();
   void LogType(Type type);
   void LogTypes(Index type_count, Type* types);
@@ -404,6 +405,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Stream* stream_;
   BinaryReaderDelegate* reader_;
+  Offset* offset_;
   int indent_;
 };
 

@@ -28,6 +28,7 @@ namespace wabt {
 
 #define LOGF(...)               \
   do {                          \
+    WriteOffset();              \
     WriteIndent();              \
     LOGF_NOINDENT(__VA_ARGS__); \
   } while (0)
@@ -49,8 +50,9 @@ void SPrintLimits(char* dst, size_t size, const Limits* limits) {
 }  // end anonymous namespace
 
 BinaryReaderLogging::BinaryReaderLogging(Stream* stream,
-                                         BinaryReaderDelegate* forward)
-    : stream_(stream), reader_(forward), indent_(0) {}
+                                         BinaryReaderDelegate* forward,
+                                         Offset* offset)
+    : stream_(stream), reader_(forward), offset_(offset), indent_(0) {}
 
 void BinaryReaderLogging::Indent() {
   indent_ += INDENT_SIZE;
@@ -59,6 +61,17 @@ void BinaryReaderLogging::Indent() {
 void BinaryReaderLogging::Dedent() {
   indent_ -= INDENT_SIZE;
   assert(indent_ >= 0);
+}
+
+void BinaryReaderLogging::WriteOffset() {
+  char dst[100];
+  int result;
+  if (offset_) {
+    result = wabt_snprintf(dst, sizeof(dst), "0x%lx", *offset_);
+    WABT_USE(result);
+    assert(static_cast<size_t>(result) < sizeof(dst));
+    stream_->WriteData(dst, static_cast<size_t>(result));
+  }
 }
 
 void BinaryReaderLogging::WriteIndent() {
