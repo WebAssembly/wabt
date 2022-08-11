@@ -1,4 +1,6 @@
 [![Github CI Status](https://github.com/WebAssembly/wabt/workflows/CI/badge.svg)](https://github.com/WebAssembly/wabt)
+[![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev/images/gh-badge-level3.svg)
+
 
 # WABT: The WebAssembly Binary Toolkit
 

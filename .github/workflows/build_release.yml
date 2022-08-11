@@ -11,6 +11,10 @@ permissions:
 
 jobs:
   build:
+    outputs:
+      digests-linux: ${{ steps.hash-linux.outputs.digests }}
+      digests-macos: ${{ steps.hash-macos.outputs.digests }}
+      digests-windows: ${{ steps.hash-windows.outputs.digests }}
     name: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -72,6 +76,24 @@ jobs:
         echo "::set-output name=tarball::$TARBALL"
         echo "::set-output name=shasum::$SHASUM"
 
+    - name: Generate SLSA subjects - Macos
+      id: hash-macos
+      if: matrix.os == 'macos-12'
+      run: echo "::set-output name=digests::$(shasum -a 256 ${{ steps.archive.outputs.tarball }} | base64)"
+
+    - name: Generate SLSA subjects - Linux
+      id: hash-linux
+      if: matrix.os == 'ubuntu-latest'
+      run: echo "::set-output name=digests::$(sha256sum ${{ steps.archive.outputs.tarball }} | base64 -w0)"
+
+    - name: Generate SLSA subjects - Windows
+      id: hash-windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        $hashes = Get-FileHash -Algorithm SHA256 ${{ steps.archive.outputs.tarball }} | ForEach-Object {Write-Output "$($_.Hash) $($_.Path)"}
+        $base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($hashes))
+        echo "::set-output name=digests::$base64"
+
     - name: upload tarball
       uses: svenstaro/upload-release-action@v2
       with:
@@ -87,3 +109,33 @@ jobs:
         file: ./${{ steps.archive.outputs.shasum }}
         asset_name: ${{ steps.archive.outputs.shasum }}
         tag: ${{ github.ref }}
+
+  build-info:
+    needs: [build]
+    outputs:
+      digests: ${{ steps.hash.outputs.digests }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge results
+        id: hash
+        env:
+          LINUX_DIGESTS: "${{ needs.build.outputs.digests-linux }}"
+          MACOS_DIGESTS: "${{ needs.build.outputs.digests-macos }}"
+          WINDOWS_DIGESTS: "${{ needs.build.outputs.digests-windows }}"
+        run: |
+          set -euo pipefail
+          echo "$LINUX_DIGESTS" | base64 -d > checksums.txt
+          echo "$MACOS_DIGESTS" | base64 -d >> checksums.txt
+          echo "$WINDOWS_DIGESTS" | base64 -d >> checksums.txt
+          echo "::set-output name=digests::$(cat checksums.txt | base64 -w0)"
+  
+  provenance:
+    needs: [build, build-info]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build-info.outputs.digests }}"
+      upload-assets: true # Optional: Upload to a new release
