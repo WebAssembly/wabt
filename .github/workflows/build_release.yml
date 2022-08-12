@@ -12,11 +12,11 @@ permissions:
 jobs:
   build:
     outputs:
-      digests-linux: ${{ steps.linux.outputs.digests }}
+      digest-linux: ${{ steps.linux.outputs.digests }}
       artifact-name-linux: ${{ steps.linux.outputs.artifact-name }}
-      digests-macos: ${{ steps.macos.outputs.digests }}
+      digest-macos: ${{ steps.macos.outputs.digests }}
       artifact-name-macos: ${{ steps.linux.outputs.digests }}
-      digests-windows: ${{ steps.windows.outputs.digests }}
+      digest-windows: ${{ steps.windows.outputs.digests }}
       artifact-name-windows: ${{ steps.windows.outputs.artifact-name }}
     name: build
     runs-on: ${{ matrix.os }}
@@ -124,7 +124,7 @@ jobs:
       contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
-      base64-subjects: "${{ needs.build.outputs.digests-linux }}"
+      base64-subjects: "${{ needs.build.outputs.digest-linux }}"
       attestation-name: "${{ needs.build.outputs.artifact-name-linux }}"
       upload-assets: true # Optional: Upload to a new release
 
@@ -136,7 +136,7 @@ jobs:
       contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
-      base64-subjects: "${{ needs.build.outputs.digests-macos }}"
+      base64-subjects: "${{ needs.build.outputs.digest-macos }}"
       attestation-name: "${{ needs.build.outputs.artifact-name-macos }}"
       upload-assets: true # Optional: Upload to a new release
 
@@ -148,6 +148,6 @@ jobs:
       contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
-      base64-subjects: "${{ needs.build.outputs.digests-windows }}"
+      base64-subjects: "${{ needs.build.outputs.digest-windows }}"
       attestation-name: "${{ needs.build.outputs.artifact-name-windows }}"
       upload-assets: true # Optional: Upload to a new release
