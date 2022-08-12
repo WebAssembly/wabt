@@ -1,7 +1,6 @@
 [![Github CI Status](https://github.com/WebAssembly/wabt/workflows/CI/badge.svg)](https://github.com/WebAssembly/wabt)
 [![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev/images/gh-badge-level3.svg)
 
-
 # WABT: The WebAssembly Binary Toolkit
 
 WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
@@ -90,6 +89,17 @@ $ git submodule update --init
 ```
 
 This will fetch the testsuite and gtest repos, which are needed for some tests.
+
+## Downloading from GitHub releases
+
+You can download the binaries from the [lates GitHub releases](https://github.com/WebAssembly/wabt/releases/latest).
+We generate [SLSA3 signatures](slsa.dev) using the OpenSSF's [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release process. To verify a release binary:
+1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
+2. Download the signature file `attestation.intoto.jsonl` from the [GitHub releases page](https://github.com/WebAssembly/wabt/releases/latest).
+3. Run the verifier:
+```shell
+slsa-verifier -artifact-path <tarball> -provenance attestation.intoto.jsonl -source github.com/WebAssembly/wabt -tag <the-tag>
+```
 
 ## Building using CMake directly (Linux and macOS)
 

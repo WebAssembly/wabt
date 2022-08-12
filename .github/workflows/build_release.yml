@@ -89,10 +89,7 @@ jobs:
     - name: Generate SLSA subjects - Windows
       id: hash-windows
       if: matrix.os == 'windows-latest'
-      run: |
-        $hashes = Get-FileHash -Algorithm SHA256 ${{ steps.archive.outputs.tarball }} | ForEach-Object {Write-Output "$($_.Hash) $($_.Path)"}
-        $base64 = [System.Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($hashes))
-        echo "::set-output name=digests::$base64"
+      run: echo "::set-output name=digests::$(sha256sum ${{ steps.archive.outputs.tarball }} | base64 -w0)"
 
     - name: upload tarball
       uses: svenstaro/upload-release-action@v2
