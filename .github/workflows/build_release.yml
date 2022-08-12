@@ -12,9 +12,12 @@ permissions:
 jobs:
   build:
     outputs:
-      digests-linux: ${{ steps.hash-linux.outputs.digests }}
-      digests-macos: ${{ steps.hash-macos.outputs.digests }}
-      digests-windows: ${{ steps.hash-windows.outputs.digests }}
+      digests-linux: ${{ steps.linux.outputs.digests }}
+      artifact-name-linux: ${{ steps.linux.outputs.artifact-name }}
+      digests-macos: ${{ steps.macos.outputs.digests }}
+      artifact-name-macos: ${{ steps.linux.outputs.digests }}
+      digests-windows: ${{ steps.windows.outputs.digests }}
+      artifact-name-windows: ${{ steps.windows.outputs.artifact-name }}
     name: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -77,19 +80,25 @@ jobs:
         echo "::set-output name=shasum::$SHASUM"
 
     - name: Generate SLSA subjects - Macos
-      id: hash-macos
+      id: macos
       if: matrix.os == 'macos-12'
-      run: echo "::set-output name=digests::$(shasum -a 256 ${{ steps.archive.outputs.tarball }} | base64)"
+      run: |
+        echo "::set-output name=digests::$(shasum -a 256 ${{ steps.archive.outputs.tarball }} | base64)"
+        echo "::set-output name=artifact-name::${{ steps.archive.outputs.tarball }}"
 
     - name: Generate SLSA subjects - Linux
-      id: hash-linux
+      id: linux
       if: matrix.os == 'ubuntu-latest'
-      run: echo "::set-output name=digests::$(sha256sum ${{ steps.archive.outputs.tarball }} | base64 -w0)"
+      run: |
+        echo "::set-output name=digests::$(sha256sum ${{ steps.archive.outputs.tarball }} | base64 -w0)"
+        echo "::set-output name=artifact-name::${{ steps.archive.outputs.tarball }}"
 
     - name: Generate SLSA subjects - Windows
-      id: hash-windows
+      id: windows
       if: matrix.os == 'windows-latest'
-      run: echo "::set-output name=digests::$(sha256sum ${{ steps.archive.outputs.tarball }} | base64 -w0)"
+      run: |
+        echo "::set-output name=digests::$(sha256sum ${{ steps.archive.outputs.tarball }} | base64 -w0)"
+        echo "::set-output name=artifact-name::${{ steps.archive.outputs.tarball }}"
 
     - name: upload tarball
       uses: svenstaro/upload-release-action@v2
@@ -107,32 +116,38 @@ jobs:
         asset_name: ${{ steps.archive.outputs.shasum }}
         tag: ${{ github.ref }}
 
-  build-info:
+  provenance-linux:
     needs: [build]
-    outputs:
-      digests: ${{ steps.hash.outputs.digests }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Merge results
-        id: hash
-        env:
-          LINUX_DIGESTS: "${{ needs.build.outputs.digests-linux }}"
-          MACOS_DIGESTS: "${{ needs.build.outputs.digests-macos }}"
-          WINDOWS_DIGESTS: "${{ needs.build.outputs.digests-windows }}"
-        run: |
-          set -euo pipefail
-          echo "$LINUX_DIGESTS" | base64 -d > checksums.txt
-          echo "$MACOS_DIGESTS" | base64 -d >> checksums.txt
-          echo "$WINDOWS_DIGESTS" | base64 -d >> checksums.txt
-          echo "::set-output name=digests::$(cat checksums.txt | base64 -w0)"
-  
-  provenance:
-    needs: [build, build-info]
     permissions:
       actions: read   # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
-      base64-subjects: "${{ needs.build-info.outputs.digests }}"
+      base64-subjects: "${{ needs.build.outputs.digests-linux }}"
+      attestation-name: "${{ needs.build.outputs.artifact-name-linux }}"
+      upload-assets: true # Optional: Upload to a new release
+
+  provenance-macos:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.digests-macos }}"
+      attestation-name: "${{ needs.build.outputs.artifact-name-macos }}"
+      upload-assets: true # Optional: Upload to a new release
+
+  provenance-windows:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.digests-windows }}"
+      attestation-name: "${{ needs.build.outputs.artifact-name-windows }}"
       upload-assets: true # Optional: Upload to a new release
