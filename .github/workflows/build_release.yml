@@ -125,7 +125,7 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
       base64-subjects: "${{ needs.build.outputs.digest-linux }}"
-      attestation-name: "${{ needs.build.outputs.artifact-name-linux }}"
+      attestation-name: "${{ needs.build.outputs.artifact-name-linux }}.intoto.jsonl"
       upload-assets: true # Optional: Upload to a new release
 
   provenance-macos:
@@ -137,7 +137,7 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
       base64-subjects: "${{ needs.build.outputs.digest-macos }}"
-      attestation-name: "${{ needs.build.outputs.artifact-name-macos }}"
+      attestation-name: "${{ needs.build.outputs.artifact-name-macos }}.intoto.jsonl"
       upload-assets: true # Optional: Upload to a new release
 
   provenance-windows:
@@ -149,5 +149,5 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
     with:
       base64-subjects: "${{ needs.build.outputs.digest-windows }}"
-      attestation-name: "${{ needs.build.outputs.artifact-name-windows }}"
+      attestation-name: "${{ needs.build.outputs.artifact-name-windows }}.intoto.jsonl"
       upload-assets: true # Optional: Upload to a new release
