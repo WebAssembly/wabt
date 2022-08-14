@@ -182,6 +182,7 @@ typedef enum {
   WASM_RT_TRAP_INVALID_CONVERSION,
   WASM_RT_TRAP_UNREACHABLE,
   WASM_RT_TRAP_CALL_INDIRECT,
+  WASM_RT_TRAP_UNCAUGHT_EXCEPTION,
   WASM_RT_TRAP_EXHAUSTION,
 } wasm_rt_trap_t;
 ```
@@ -298,6 +299,48 @@ cleared to zero.
 shared between modules, it must be defined only once, by the embedder.
 It is only used on platforms that don't use the signal handler to detect
 exhaustion.
+
+### Runtime support for exception handling
+
+Several additional symbols must be defined if wasm2c is being run with
+support for exceptions (`--enable-exceptions`):
+
+```c
+uint32_t wasm_rt_register_tag(uint32_t size);
+void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values);
+WASM_RT_NO_RETURN void wasm_rt_throw(void);
+WASM_RT_UNWIND_TARGET
+WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void);
+void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target);
+uint32_t wasm_rt_exception_tag(void);
+uint32_t wasm_rt_exception_size(void);
+void* wasm_rt_exception(void);
+wasm_rt_try(target)
+```
+
+A C implementation of these functions is also available in
+[`wasm-rt-impl.h`](wasm-rt-impl.h) and [`wasm-rt-impl.c`](wasm-rt-impl.c).
+
+`wasm_rt_register_tag` registers an exception type (a tag) with a given size.
+
+`wasm_rt_load_exception` sets the active exception to a given tag, size, and contents.
+
+`wasm_rt_throw` throws the active exception.
+
+`WASM_RT_UNWIND_TARGET` is the type of an unwind target if an
+exception is thrown and caught.
+
+`wasm_rt_get_unwind_target` gets the current unwind target if an exception is thrown.
+
+`wasm_rt_set_unwind_target` sets the unwind target if an exception is thrown.
+
+Three functions provide access to the active exception:
+`wasm_rt_exception_tag`, `wasm_rt_exception_size`, and
+`wasm_rt_exception` return its tag, size, and contents, respectively.
+
+`wasm_rt_try(target)` is a macro that captures the current calling
+environment as an unwind target and stores it into `target`, which
+must be of type `WASM_RT_UNWIND_TARGET`.
 
 ## Exported symbols
 
