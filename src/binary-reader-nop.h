@@ -190,6 +190,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                                     uint32_t value3) override {
     return Result::Ok;
   }
+  Result OnOpcodeUint32Uint32Uint32Uint32(uint32_t value,
+                                          uint32_t value2,
+                                          uint32_t value3,
+                                          uint32_t value4) override {
+    return Result::Ok;
+  }
   Result OnOpcodeUint64(uint64_t value) override { return Result::Ok; }
   Result OnOpcodeF32(uint32_t value) override { return Result::Ok; }
   Result OnOpcodeF64(uint64_t value) override { return Result::Ok; }
@@ -197,30 +203,34 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
   Result OnOpcodeType(Type type) override { return Result::Ok; }
   Result OnAtomicLoadExpr(Opcode opcode,
+                          Index memidx,
                           Address alignment_log2,
                           Address offset) override {
     return Result::Ok;
   }
   Result OnAtomicStoreExpr(Opcode opcode,
+                           Index memidx,
                            Address alignment_log2,
                            Address offset) override {
     return Result::Ok;
   }
   Result OnAtomicRmwExpr(Opcode opcode,
+                         Index memidx,
                          Address alignment_log2,
                          Address offset) override {
     return Result::Ok;
   }
   Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                Index memidx,
                                 Address alignment_log2,
                                 Address offset) override {
     return Result::Ok;
   }
-  Result OnAtomicWaitExpr(Opcode, Address, Address) override {
+  Result OnAtomicWaitExpr(Opcode, Index, Address, Address) override {
     return Result::Ok;
   }
   Result OnAtomicFenceExpr(uint32_t) override { return Result::Ok; }
-  Result OnAtomicNotifyExpr(Opcode, Address, Address) override {
+  Result OnAtomicNotifyExpr(Opcode, Index, Address, Address) override {
     return Result::Ok;
   }
   Result OnBinaryExpr(Opcode opcode) override { return Result::Ok; }
@@ -332,11 +342,13 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnLoadSplatExpr(Opcode opcode,
+                         Index memidx,
                          Address alignment_log2,
                          Address offset) override {
     return Result::Ok;
   }
   Result OnLoadZeroExpr(Opcode opcode,
+                        Index memidx,
                         Address alignment_log2,
                         Address offset) override {
     return Result::Ok;
