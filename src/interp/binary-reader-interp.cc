@@ -935,66 +935,66 @@ Result BinaryReaderInterp::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
 
 Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,
                                            Index memidx,
-                                           Address alignment_log2,
+                                           Address align_log2,
                                            Address offset) {
   CHECK_RESULT(validator_.OnLoadSplat(GetLocation(), opcode,
                                       Var(memidx, GetLocation()),
-                                      GetAlignment(alignment_log2)));
+                                      GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnLoadZeroExpr(Opcode opcode,
                                           Index memidx,
-                                          Address alignment_log2,
+                                          Address align_log2,
                                           Address offset) {
   CHECK_RESULT(validator_.OnLoadZero(GetLocation(), opcode,
                                      Var(memidx, GetLocation()),
-                                     GetAlignment(alignment_log2)));
+                                     GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
                                             Index memidx,
-                                            Address alignment_log2,
+                                            Address align_log2,
                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicLoad(GetLocation(), opcode,
                                        Var(memidx, GetLocation()),
-                                       GetAlignment(alignment_log2)));
+                                       GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnAtomicStoreExpr(Opcode opcode,
                                              Index memidx,
-                                             Address alignment_log2,
+                                             Address align_log2,
                                              Address offset) {
   CHECK_RESULT(validator_.OnAtomicStore(GetLocation(), opcode,
                                         Var(memidx, GetLocation()),
-                                        GetAlignment(alignment_log2)));
+                                        GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnAtomicRmwExpr(Opcode opcode,
                                            Index memidx,
-                                           Address alignment_log2,
+                                           Address align_log2,
                                            Address offset) {
   CHECK_RESULT(validator_.OnAtomicRmw(GetLocation(), opcode,
                                       Var(memidx, GetLocation()),
-                                      GetAlignment(alignment_log2)));
+                                      GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnAtomicRmwCmpxchgExpr(Opcode opcode,
                                                   Index memidx,
-                                                  Address alignment_log2,
+                                                  Address align_log2,
                                                   Address offset) {
   CHECK_RESULT(validator_.OnAtomicRmwCmpxchg(GetLocation(), opcode,
                                              Var(memidx, GetLocation()),
-                                             GetAlignment(alignment_log2)));
+                                             GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -1390,11 +1390,11 @@ Result BinaryReaderInterp::OnUnreachableExpr() {
 
 Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
                                             Index memidx,
-                                            Address alignment_log2,
+                                            Address align_log2,
                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicWait(GetLocation(), opcode,
                                        Var(memidx, GetLocation()),
-                                       GetAlignment(alignment_log2)));
+                                       GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -1407,11 +1407,11 @@ Result BinaryReaderInterp::OnAtomicFenceExpr(uint32_t consistency_model) {
 
 Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
                                               Index memidx,
-                                              Address alignment_log2,
+                                              Address align_log2,
                                               Address offset) {
   CHECK_RESULT(validator_.OnAtomicNotify(GetLocation(), opcode,
                                          Var(memidx, GetLocation()),
-                                         GetAlignment(alignment_log2)));
+                                         GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
