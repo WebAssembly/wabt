@@ -31,5 +31,5 @@ out/test/spec/simd_store.wast:152: assert_invalid passed:
 out/test/spec/simd_store.wast:160: assert_invalid passed:
   out/test/spec/simd_store/simd_store.10.wasm:0000020: error: type mismatch in v128.store, expected [i32, v128] but got []
   0000020: error: OnStoreExpr callback failed
-26/26 tests passed.
+28/28 tests passed.
 ;;; STDOUT ;;)

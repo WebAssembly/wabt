@@ -125,11 +125,8 @@ void OpcodeInfo::Write(Stream& stream) {
     }
 
     case Kind::Uint32Uint32:
-      WriteArray<uint32_t>(
-          stream, [&stream](uint32_t value) { stream.Writef("%u", value); });
-      break;
-
     case Kind::Uint32Uint32Uint32:
+    case Kind::Uint32Uint32Uint32Uint32:
       WriteArray<uint32_t>(
           stream, [&stream](uint32_t value) { stream.Writef("%u", value); });
       break;

@@ -7,7 +7,7 @@ usage: wat2wasm [options] filename
   convert it to the wasm binary format.
 
 examples:
-  # parse and typecheck test.wat
+  # parse test.wat and write to .wasm binary file with the same name
   $ wat2wasm test.wat
 
   # parse test.wat and write to binary file test.wasm
@@ -41,7 +41,7 @@ options:
       --enable-multi-memory                    Enable Multi-memory
       --enable-extended-const                  Enable Extended constant expressions
       --enable-all                             Enable all features
-  -o, --output=FILE                            output wasm binary file
+  -o, --output=FILE                            Output wasm binary file. Use "-" to write to stdout.
   -r, --relocatable                            Create a relocatable wasm binary (suitable for linking with e.g. lld)
       --no-canonicalize-leb128s                Write all LEB128 sizes as 5-bytes instead of their minimal size
       --debug-names                            Write debug names to the generated binary file

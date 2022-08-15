@@ -145,5 +145,5 @@ out/test/spec/loop.wast:783: assert_malformed passed:
   out/test/spec/loop/loop.42.wat:1:19: error: mismatching label "$a" != "$l"
   (func loop $a end $l)
                     ^^
-119/119 tests passed.
+120/120 tests passed.
 ;;; STDOUT ;;)

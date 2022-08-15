@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/try_delegate.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+15/15 tests passed.
+;;; STDOUT ;;)

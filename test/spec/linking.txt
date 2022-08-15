@@ -43,5 +43,5 @@ out/test/spec/linking.wast:307: assert_unlinkable passed:
   error: type mismatch in imported table, expected funcref but got externref.
 out/test/spec/linking.wast:385: assert_unlinkable passed:
   error: invalid import "Mm.tab"
-102/102 tests passed.
+123/123 tests passed.
 ;;; STDOUT ;;)

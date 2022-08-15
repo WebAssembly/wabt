@@ -13,5 +13,5 @@ out/test/spec/nop.wast:420: assert_invalid passed:
 out/test/spec/nop.wast:424: assert_invalid passed:
   out/test/spec/nop/nop.4.wasm:000001a: error: type mismatch in implicit return, expected [f64] but got []
   000001a: error: EndFunctionBody callback failed
-87/87 tests passed.
+88/88 tests passed.
 ;;; STDOUT ;;)

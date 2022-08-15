@@ -159,6 +159,7 @@ class Stream {
 
 struct OutputBuffer {
   Result WriteToFile(std::string_view filename) const;
+  Result WriteToStdout() const;
 
   void clear() { data.clear(); }
   size_t size() const { return data.size(); }
@@ -169,6 +170,7 @@ struct OutputBuffer {
 class MemoryStream : public Stream {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(MemoryStream);
+  MemoryStream(MemoryStream&&) = default;
   explicit MemoryStream(Stream* log_stream = nullptr);
   explicit MemoryStream(std::unique_ptr<OutputBuffer>&&,
                         Stream* log_stream = nullptr);

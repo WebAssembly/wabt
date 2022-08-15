@@ -54,5 +54,5 @@ out/test/spec/address.wast:606: assert_trap passed: out of bounds memory access:
 out/test/spec/address.wast:607: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
 out/test/spec/address.wast:609: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
 out/test/spec/address.wast:610: assert_trap passed: out of bounds memory access: access at 4294967296+8 >= max value 65536
-256/256 tests passed.
+260/260 tests passed.
 ;;; STDOUT ;;)

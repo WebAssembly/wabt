@@ -37,6 +37,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 
   // Implementation of ExprVisitor::DelegateNop.
   Result BeginBlockExpr(BlockExpr* expr) override;
+  Result BeginTryExpr(TryExpr* expr) override;
   Result BeginLoopExpr(LoopExpr* expr) override;
   Result BeginIfExpr(IfExpr* expr) override;
 
@@ -209,6 +210,11 @@ void NameGenerator::GenerateAndBindLocalNames(Func* func) {
 
 Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
   MaybeGenerateName("B", label_count_++, &expr->block.label);
+  return Result::Ok;
+}
+
+Result NameGenerator::BeginTryExpr(TryExpr* expr) {
+  MaybeGenerateName("T", label_count_++, &expr->block.label);
   return Result::Ok;
 }
 

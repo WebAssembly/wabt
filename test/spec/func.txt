@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/func.wast
 (;; STDOUT ;;;
 out/test/spec/func.wast:436: assert_invalid passed:
-  0000000: error: function type variable out of range: 2 (max 2)
+  out/test/spec/func/func.2.wasm:000001a: error: function type variable out of range: 2 (max 2)
   000001a: error: OnFunction callback failed
 out/test/spec/func.wast:448: assert_malformed passed:
   out/test/spec/func/func.3.wat:1:123: error: invalid func type index 2
@@ -243,5 +243,5 @@ out/test/spec/func.wast:960: assert_malformed passed:
   out/test/spec/func/func.75.wat:1:31: error: redefinition of local "$foo"
   (func (local $foo i32) (local $foo i32))
                                 ^^^^
-168/168 tests passed.
+172/172 tests passed.
 ;;; STDOUT ;;)

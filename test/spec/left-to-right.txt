@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/left-to-right.wast
 (;; STDOUT ;;;
-95/95 tests passed.
+96/96 tests passed.
 ;;; STDOUT ;;)

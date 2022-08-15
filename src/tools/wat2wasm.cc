@@ -53,7 +53,7 @@ static const char s_description[] =
   convert it to the wasm binary format.
 
 examples:
-  # parse and typecheck test.wat
+  # parse test.wat and write to .wasm binary file with the same name
   $ wat2wasm test.wat
 
   # parse test.wat and write to binary file test.wasm
@@ -77,7 +77,8 @@ static void ParseOptions(int argc, char* argv[]) {
                    "Print a hexdump of the module to stdout",
                    []() { s_dump_module = true; });
   s_features.AddOptions(&parser);
-  parser.AddOption('o', "output", "FILE", "output wasm binary file",
+  parser.AddOption('o', "output", "FILE",
+                   "Output wasm binary file. Use \"-\" to write to stdout.",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption(
       'r', "relocatable",
@@ -110,7 +111,11 @@ static void WriteBufferToFile(std::string_view filename,
     }
   }
 
-  buffer.WriteToFile(filename);
+  if (filename == "-") {
+    buffer.WriteToStdout();
+  } else {
+    buffer.WriteToFile(filename);
+  }
 }
 
 static std::string DefaultOuputName(std::string_view input_name) {

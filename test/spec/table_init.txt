@@ -108,18 +108,18 @@ out/test/spec/table_init.wast:375: assert_trap passed: uninitialized table eleme
 out/test/spec/table_init.wast:376: assert_trap passed: uninitialized table element
 out/test/spec/table_init.wast:377: assert_trap passed: uninitialized table element
 out/test/spec/table_init.wast:379: assert_invalid passed:
-  0000000: error: elem_segment variable out of range: 0 (max 0)
+  out/test/spec/table_init/table_init.7.wasm:0000024: error: elem_segment variable out of range: 0 (max 0)
   0000024: error: OnElemDropExpr callback failed
 out/test/spec/table_init.wast:385: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
-  0000000: error: elem_segment variable out of range: 0 (max 0)
+  out/test/spec/table_init/table_init.8.wasm:000002b: error: table variable out of range: 0 (max 0)
+  out/test/spec/table_init/table_init.8.wasm:000002b: error: elem_segment variable out of range: 0 (max 0)
   000002b: error: OnTableInitExpr callback failed
 out/test/spec/table_init.wast:391: assert_invalid passed:
-  0000000: error: elem_segment variable out of range: 4 (max 1)
+  out/test/spec/table_init/table_init.9.wasm:0000035: error: elem_segment variable out of range: 4 (max 1)
   0000035: error: OnElemDropExpr callback failed
 out/test/spec/table_init.wast:399: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
-  0000000: error: elem_segment variable out of range: 4 (max 1)
+  out/test/spec/table_init/table_init.10.wasm:000003c: error: table variable out of range: 0 (max 0)
+  out/test/spec/table_init/table_init.10.wasm:000003c: error: elem_segment variable out of range: 4 (max 1)
   000003c: error: OnTableInitExpr callback failed
 test() =>
 out/test/spec/table_init.wast:453: assert_trap passed: out of bounds table access: table.init out of bounds
@@ -801,5 +801,5 @@ out/test/spec/table_init.wast:2117: assert_trap passed: uninitialized table elem
 out/test/spec/table_init.wast:2118: assert_trap passed: uninitialized table element
 out/test/spec/table_init.wast:2119: assert_trap passed: uninitialized table element
 out/test/spec/table_init.wast:2120: assert_trap passed: uninitialized table element
-744/744 tests passed.
+779/779 tests passed.
 ;;; STDOUT ;;)

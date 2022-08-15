@@ -17,8 +17,6 @@
 #ifndef WASM_RT_IMPL_H_
 #define WASM_RT_IMPL_H_
 
-#include <setjmp.h>
-
 #include "wasm-rt.h"
 
 #ifdef __cplusplus
@@ -26,20 +24,18 @@ extern "C" {
 #endif
 
 /** A setjmp buffer used for handling traps. */
-extern jmp_buf g_jmp_buf;
-
-/** Saved call stack depth that will be restored in case a trap occurs. */
-extern uint32_t g_saved_call_stack_depth;
+extern jmp_buf wasm_rt_jmp_buf;
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
-#define WASM_RT_SETJMP(buf) sigsetjmp(buf, 1)
 #define WASM_RT_LONGJMP(buf, val) siglongjmp(buf, val)
 #else
-#define WASM_RT_SETJMP(buf) setjmp(buf)
 #define WASM_RT_LONGJMP(buf, val) longjmp(buf, val)
+/** Saved call stack depth that will be restored in case a trap occurs. */
+extern uint32_t wasm_rt_saved_call_stack_depth;
 #endif
 
-/** Convenience macro to use before calling a wasm function. On first execution
+/**
+ * Convenience macro to use before calling a wasm function. On first execution
  * it will return `WASM_RT_TRAP_NONE` (i.e. 0). If the function traps, it will
  * jump back and return the trap that occurred.
  *
@@ -54,9 +50,15 @@ extern uint32_t g_saved_call_stack_depth;
  *   my_wasm_func();
  * ```
  */
-#define wasm_rt_impl_try()                              \
-  (g_saved_call_stack_depth = wasm_rt_call_stack_depth, \
-   WASM_RT_SETJMP(g_jmp_buf))
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#define wasm_rt_impl_try() \
+  (wasm_rt_set_unwind_target(&wasm_rt_jmp_buf), WASM_RT_SETJMP(wasm_rt_jmp_buf))
+#else
+#define wasm_rt_impl_try()                                    \
+  (wasm_rt_saved_call_stack_depth = wasm_rt_call_stack_depth, \
+   wasm_rt_set_unwind_target(&wasm_rt_jmp_buf),               \
+   WASM_RT_SETJMP(wasm_rt_jmp_buf))
+#endif
 
 #ifdef __cplusplus
 }

@@ -305,5 +305,5 @@ out/test/spec/float_literals.wast:505: assert_malformed passed:
   out/test/spec/float_literals/float_literals.77.wat:1:24: error: unexpected token "0x1.0p_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p_+1))
                          ^^^^^^^^^
-159/159 tests passed.
+161/161 tests passed.
 ;;; STDOUT ;;)

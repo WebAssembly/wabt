@@ -87,5 +87,5 @@ out/test/spec/select.wast:504: assert_invalid passed:
 out/test/spec/select.wast:511: assert_invalid passed:
   out/test/spec/select/select.28.wasm:0000020: error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
-146/146 tests passed.
+147/147 tests passed.
 ;;; STDOUT ;;)

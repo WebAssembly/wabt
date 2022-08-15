@@ -4,7 +4,7 @@
 out/test/spec/elem.wast:321: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/elem.wast:331: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/elem.wast:336: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
+  out/test/spec/elem/elem.33.wasm:0000016: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/elem.wast:346: assert_invalid passed:
   out/test/spec/elem/elem.34.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
@@ -37,10 +37,10 @@ out/test/spec/elem.wast:421: assert_invalid passed:
   out/test/spec/elem/elem.43.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: nop
   0000015: error: OnNopExpr callback failed
 out/test/spec/elem.wast:435: assert_invalid passed:
-  0000000: error: global variable out of range: 0 (max 0)
+  out/test/spec/elem/elem.44.wasm:0000014: error: global variable out of range: 0 (max 0)
   0000014: error: OnGlobalGetExpr callback failed
 out/test/spec/elem.wast:443: assert_invalid passed:
-  0000000: error: global variable out of range: 1 (max 1)
+  out/test/spec/elem/elem.45.wasm:000002a: error: global variable out of range: 1 (max 1)
   000002a: error: OnGlobalGetExpr callback failed
 out/test/spec/elem.wast:452: assert_invalid passed:
   out/test/spec/elem/elem.46.wasm:000002e: error: initializer expression cannot reference a mutable global
@@ -63,5 +63,5 @@ out/test/spec/elem.wast:504: assert_invalid passed:
   0000017: error: expected ref.null or ref.func in passive element segment
   0000018: error: expected END opcode after element expression
 out/test/spec/elem.wast:561: assert_trap passed: uninitialized table element
-47/47 tests passed.
+73/73 tests passed.
 ;;; STDOUT ;;)

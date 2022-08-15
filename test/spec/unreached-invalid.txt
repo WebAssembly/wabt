@@ -2,13 +2,13 @@
 ;;; STDIN_FILE: third_party/testsuite/unreached-invalid.wast
 (;; STDOUT ;;;
 out/test/spec/unreached-invalid.wast:4: assert_invalid passed:
-  0000000: error: local variable out of range (max 0)
+  out/test/spec/unreached-invalid/unreached-invalid.0.wasm:000001a: error: local variable out of range (max 0)
   000001a: error: OnLocalGetExpr callback failed
 out/test/spec/unreached-invalid.wast:8: assert_invalid passed:
-  0000000: error: global variable out of range: 0 (max 0)
+  out/test/spec/unreached-invalid/unreached-invalid.1.wasm:000001a: error: global variable out of range: 0 (max 0)
   000001a: error: OnGlobalGetExpr callback failed
 out/test/spec/unreached-invalid.wast:12: assert_invalid passed:
-  0000000: error: function variable out of range: 1 (max 1)
+  out/test/spec/unreached-invalid/unreached-invalid.2.wasm:000001a: error: function variable out of range: 1 (max 1)
   000001a: error: OnCallExpr callback failed
 out/test/spec/unreached-invalid.wast:16: assert_invalid passed:
   out/test/spec/unreached-invalid/unreached-invalid.3.wasm:0000018: error: invalid depth: 1 (max 0)

@@ -33,5 +33,5 @@ out/test/spec/traps.wast:88: assert_trap passed: out of bounds memory access: ac
 out/test/spec/traps.wast:89: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
 out/test/spec/traps.wast:90: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
 out/test/spec/traps.wast:91: assert_trap passed: out of bounds memory access: access at 65536+8 >= max value 65536
-32/32 tests passed.
+36/36 tests passed.
 ;;; STDOUT ;;)

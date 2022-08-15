@@ -179,5 +179,5 @@ out/test/spec/memory64/binary.wast:945: assert_malformed passed:
   0000025: error: OnBlockExpr callback failed
 out/test/spec/memory64/binary.wast:980: assert_malformed passed:
   0000017: error: multiple Start sections
-88/88 tests passed.
+105/105 tests passed.
 ;;; STDOUT ;;)

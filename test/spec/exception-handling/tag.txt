@@ -5,5 +5,5 @@
 out/test/spec/exception-handling/tag.wast:19: assert_invalid passed:
   out/test/spec/exception-handling/tag/tag.2.wasm:0000014: error: Tag signature must have 0 results.
   0000014: error: OnTagType callback failed
-1/1 tests passed.
+3/3 tests passed.
 ;;; STDOUT ;;)

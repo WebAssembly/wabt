@@ -144,15 +144,9 @@ update-gperf: src/prebuilt/lexer-keywords.cc
 src/prebuilt/lexer-keywords.cc: src/lexer-keywords.txt
 	gperf -m 50 -L C++ -N InWordSet -E -t -c --output-file=$@ $<
 
-.PHONY: update-wasm2c
-update-wasm2c: src/prebuilt/wasm2c.include.c src/prebuilt/wasm2c.include.h
+.PHONY: update-wasm2c-fac
+update-wasm2c-fac:
 	make -C wasm2c/examples/fac
-
-src/prebuilt/wasm2c.include.c: src/wasm2c.c.tmpl
-	src/wasm2c_tmpl.py -o $@ $<
-
-src/prebuilt/wasm2c.include.h: src/wasm2c.h.tmpl
-	src/wasm2c_tmpl.py -o $@ $<
 
 .PHONY: demo
 demo: emscripten-release

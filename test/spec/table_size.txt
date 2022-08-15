@@ -7,5 +7,5 @@ out/test/spec/table_size.wast:70: assert_invalid passed:
 out/test/spec/table_size.wast:79: assert_invalid passed:
   out/test/spec/table_size/table_size.2.wasm:0000022: error: type mismatch in implicit return, expected [f32] but got [i32]
   0000022: error: EndFunctionBody callback failed
-38/38 tests passed.
+39/39 tests passed.
 ;;; STDOUT ;;)

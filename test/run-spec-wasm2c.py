@@ -102,8 +102,7 @@ def MangleName(s):
 
     # NOTE(binji): Z is not allowed.
     pattern = b'([^_a-zA-Y0-9])'
-    result = 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
-    return result
+    return 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
 
 
 def IsModuleCommand(command):
@@ -122,6 +121,7 @@ class CWriter(object):
         self.module_idx = 0
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
+        self.unmangled_names = {}
 
     def Write(self):
         self._MaybeWriteDummyModule()
@@ -131,23 +131,28 @@ class CWriter(object):
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
         for command in self.commands:
             self._WriteCommand(command)
+        self._WriteModuleCleanUps()
         self.out_file.write("\n}\n")
 
     def GetModuleFilenames(self):
         return [c['filename'] for c in self.commands if IsModuleCommand(c)]
 
     def GetModulePrefix(self, idx_or_name=None):
-        if idx_or_name is not None:
-            return self.module_prefix_map[idx_or_name]
-        return self.module_prefix_map[self.module_idx - 1]
+        if idx_or_name is None:
+            idx_or_name = self.module_idx - 1
+        return self.module_prefix_map[idx_or_name]
+
+    def GetModulePrefixUnmangled(self, idx):
+        return self.unmangled_names[idx]
 
     def _CacheModulePrefixes(self):
         idx = 0
         for command in self.commands:
             if IsModuleCommand(command):
                 name = os.path.basename(command['filename'])
-                name = os.path.splitext(name)[0]
                 name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+                name = os.path.splitext(name)[0]
+                self.unmangled_names[idx] = name
                 name = MangleName(name)
 
                 self.module_prefix_map[idx] = name
@@ -166,6 +171,7 @@ class CWriter(object):
                     name_idx = idx - 1
 
                 self.module_prefix_map[name_idx] = name
+                self.unmangled_names[name_idx] = command['as']
 
     def _MaybeWriteDummyModule(self):
         if len(self.GetModuleFilenames()) == 0:
@@ -184,10 +190,7 @@ class CWriter(object):
         idx = 0
         for filename in self.GetModuleFilenames():
             header = os.path.splitext(filename)[0] + '.h'
-            self.out_file.write(
-                '#define WASM_RT_MODULE_PREFIX %s\n' % self.GetModulePrefix(idx))
             self.out_file.write("#include \"%s\"\n" % header)
-            self.out_file.write('#undef WASM_RT_MODULE_PREFIX\n\n')
             idx += 1
 
     def _WriteCommand(self, command):
@@ -197,6 +200,7 @@ class CWriter(object):
             'action': self._WriteActionCommand,
             'assert_return': self._WriteAssertReturnCommand,
             'assert_trap': self._WriteAssertActionCommand,
+            'assert_exception': self._WriteAssertActionCommand,
             'assert_exhaustion': self._WriteAssertActionCommand,
         }
 
@@ -208,11 +212,15 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%sinit();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_init();\n' % self.GetModulePrefix())
+
+    def _WriteModuleCleanUps(self):
+        for idx in range(self.module_idx):
+            self.out_file.write("%s_free();\n" % self.GetModulePrefix(idx))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('ASSERT_TRAP(%sinit());\n' % self.GetModulePrefix())
+        self.out_file.write('ASSERT_TRAP(%s_init());\n' % self.GetModulePrefix())
 
     def _WriteActionCommand(self, command):
         self.out_file.write('%s;\n' % self._Action(command))
@@ -269,6 +277,7 @@ class CWriter(object):
             'assert_exhaustion': 'ASSERT_EXHAUSTION',
             'assert_return': 'ASSERT_RETURN',
             'assert_trap': 'ASSERT_TRAP',
+            'assert_exception': 'ASSERT_EXCEPTION',
         }
 
         assert_macro = assert_map[command['type']]
@@ -311,24 +320,11 @@ class CWriter(object):
     def _CompareList(self, consts):
         return ' && '.join(self._Compare(num, const) for num, const in enumerate(consts))
 
-    def _ActionSig(self, action, expected):
-        type_ = action['type']
-        result_types = [result['type'] for result in expected]
-        arg_types = [arg['type'] for arg in action.get('args', [])]
-        if type_ == 'invoke':
-            return MangleTypes(result_types) + MangleTypes(arg_types)
-        elif type_ == 'get':
-            return MangleType(result_types[0])
-        else:
-            raise Error('Unexpected action type: %s' % type_)
-
     def _Action(self, command):
         action = command['action']
-        expected = command['expected']
         type_ = action['type']
         mangled_module_name = self.GetModulePrefix(action.get('module'))
-        field = (mangled_module_name + MangleName(action['field']) +
-                 MangleName(self._ActionSig(action, expected)))
+        field = mangled_module_name + MangleName(action['field'])
         if type_ == 'invoke':
             return '%s(%s)' % (field, self._ConstantList(action.get('args', [])))
         elif type_ == 'get':
@@ -347,9 +343,17 @@ def Compile(cc, c_filename, out_dir, *args):
     if IS_WINDOWS:
         args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
-        args += ['-c', c_filename, '-o', o_filename,
+        # See "Compiling the wasm2c output" section of wasm2c/README.md
+        # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
+        # and '-frounding-math' to maintain conformance with the spec tests
+        # (GCC also requires '-fsignaling-nans')
+        args += ['-c', c_filename, '-o', o_filename, '-O2',
                  '-Wall', '-Werror', '-Wno-unused',
+                 '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
+                 '-Wno-infinite-recursion',
+                 '-fno-optimize-sibling-calls',
+                 '-frounding-math', '-fsignaling-nans',
                  '-std=c99', '-D_DEFAULT_SOURCE']
     # Use RunWithArgsForStdout and discard stdout because cl.exe
     # unconditionally prints the name of input files on stdout
@@ -410,6 +414,7 @@ def main(args):
                         help='print the commands that are run.',
                         action='store_true')
     parser.add_argument('file', help='wast file.')
+    parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-multi-memory', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
@@ -423,6 +428,7 @@ def main(args):
         wast2json.verbose = options.print_cmd
         wast2json.AppendOptionalArgs({
             '-v': options.verbose,
+            '--enable-exceptions': options.enable_exceptions,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types})
@@ -436,6 +442,7 @@ def main(args):
             error_cmdline=options.error_cmdline)
         wasm2c.verbose = options.print_cmd
         wasm2c.AppendOptionalArgs({
+            '--enable-exceptions': options.enable_exceptions,
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
@@ -465,10 +472,10 @@ def main(args):
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
             c_filename = utils.ChangeExt(wasm_filename, '.c')
-            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename)
+            args = ['-n', cwriter.GetModulePrefixUnmangled(i)]
+            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, *args)
             if options.compile:
-                defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
-                o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
+                o_filenames.append(Compile(cc, c_filename, out_dir, includes))
 
         if options.compile:
             # Compile wasm-rt-impl.

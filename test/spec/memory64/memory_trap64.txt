@@ -168,5 +168,5 @@ out/test/spec/memory64/memory_trap64.wast:262: assert_trap passed: out of bounds
 out/test/spec/memory64/memory_trap64.wast:263: assert_trap passed: out of bounds memory access: access at 18446744073709551614+4 >= max value 65536
 out/test/spec/memory64/memory_trap64.wast:264: assert_trap passed: out of bounds memory access: access at 18446744073709551613+4 >= max value 65536
 out/test/spec/memory64/memory_trap64.wast:265: assert_trap passed: out of bounds memory access: access at 18446744073709551612+4 >= max value 65536
-170/170 tests passed.
+172/172 tests passed.
 ;;; STDOUT ;;)

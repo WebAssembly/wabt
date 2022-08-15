@@ -305,5 +305,5 @@ out/test/spec/const.wast:432: assert_malformed passed:
   out/test/spec/const/const.177.wat:1:18: error: invalid literal "nan:0x10_0000_0000_0000"
   (func (f64.const nan:0x10_0000_0000_0000) drop)
                    ^^^^^^^^^^^^^^^^^^^^^^^
-376/376 tests passed.
+778/778 tests passed.
 ;;; STDOUT ;;)

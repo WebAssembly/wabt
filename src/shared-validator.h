@@ -104,12 +104,12 @@ class SharedValidator {
   Result OnLocalDecl(const Location&, Index count, Type type);
 
   Result OnAtomicFence(const Location&, uint32_t consistency_model);
-  Result OnAtomicLoad(const Location&, Opcode, Address align);
-  Result OnAtomicNotify(const Location&, Opcode, Address align);
-  Result OnAtomicRmwCmpxchg(const Location&, Opcode, Address align);
-  Result OnAtomicRmw(const Location&, Opcode, Address align);
-  Result OnAtomicStore(const Location&, Opcode, Address align);
-  Result OnAtomicWait(const Location&, Opcode, Address align);
+  Result OnAtomicLoad(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicNotify(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicRmwCmpxchg(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicRmw(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicStore(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicWait(const Location&, Opcode, Var memidx, Address align);
   Result OnBinary(const Location&, Opcode);
   Result OnBlock(const Location&, Type sig_type);
   Result OnBr(const Location&, Var depth);
@@ -134,8 +134,8 @@ class SharedValidator {
   Result OnGlobalSet(const Location&, Var);
   Result OnIf(const Location&, Type sig_type);
   Result OnLoad(const Location&, Opcode, Var memidx, Address align);
-  Result OnLoadSplat(const Location&, Opcode, Address align);
-  Result OnLoadZero(const Location&, Opcode, Address align);
+  Result OnLoadSplat(const Location&, Opcode, Var memidx, Address align);
+  Result OnLoadZero(const Location&, Opcode, Var memidx, Address align);
   Result OnLocalGet(const Location&, Var);
   Result OnLocalSet(const Location&, Var);
   Result OnLocalTee(const Location&, Var);
@@ -157,10 +157,12 @@ class SharedValidator {
   Result OnSimdLaneOp(const Location&, Opcode, uint64_t lane_idx);
   Result OnSimdLoadLane(const Location&,
                         Opcode,
+                        Var memidx,
                         Address align,
                         uint64_t lane_idx);
   Result OnSimdStoreLane(const Location&,
                          Opcode,
+                         Var memidx,
                          Address align,
                          uint64_t lane_idx);
   Result OnSimdShuffleOp(const Location&, Opcode, v128 lane_idx);

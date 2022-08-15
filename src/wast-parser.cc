@@ -76,6 +76,50 @@ void RemoveEscapes(std::string_view text, OutputIter dest) {
         case '\"':
           *dest++ = '\"';
           break;
+        case 'u': {
+          // The string should be validated already,
+          // so this must be a valid unicode escape sequence.
+          uint32_t digit;
+          uint32_t scalar_value = 0;
+
+          // Skip u and { characters.
+          src += 2;
+
+          do {
+            if (Succeeded(ParseHexdigit(src[0], &digit))) {
+              scalar_value = (scalar_value << 4) | digit;
+            } else {
+              assert(0);
+            }
+            src++;
+          } while (src[0] != '}');
+
+          // Maximum value of a unicode scalar value
+          assert(scalar_value < 0x110000);
+
+          // Encode the unicode scalar value as UTF8 sequence
+          if (scalar_value < 0x80) {
+            *dest++ = static_cast<uint8_t>(scalar_value);
+          } else {
+            if (scalar_value < 0x800) {
+              *dest++ = static_cast<uint8_t>(0xc0 | (scalar_value >> 6));
+            } else {
+              if (scalar_value < 0x10000) {
+                *dest++ = static_cast<uint8_t>(0xe0 | (scalar_value >> 12));
+              } else {
+                *dest++ = static_cast<uint8_t>(0xf0 | (scalar_value >> 18));
+                *dest++ =
+                    static_cast<uint8_t>(0x80 | ((scalar_value >> 12) & 0x3f));
+              }
+
+              *dest++ =
+                  static_cast<uint8_t>(0x80 | ((scalar_value >> 6) & 0x3f));
+            }
+
+            *dest++ = static_cast<uint8_t>(0x80 | (scalar_value & 0x3f));
+          }
+          break;
+        }
         default: {
           // The string should be validated already, so we know this is a hex
           // sequence.
@@ -860,7 +904,8 @@ Result WastParser::ParseValueType(Type* out_type, Var* out_var) {
   const bool is_value_type = PeekMatch(TokenType::ValueType);
 
   if (!is_value_type && !is_ref_type) {
-    return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "externref"});
+    return ErrorExpected(
+        {"i32", "i64", "f32", "f64", "v128", "externref", "funcref"});
   }
 
   if (is_ref_type) {
@@ -1121,8 +1166,14 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
     // modules.
     CommandPtr command;
     CHECK_RESULT(ParseModuleCommand(nullptr, &command));
-    auto module_command = cast<ModuleCommand>(std::move(command));
-    *module = std::move(module_command->module);
+    if (isa<ModuleCommand>(command.get())) {
+      auto module_command = cast<ModuleCommand>(std::move(command));
+      *module = std::move(module_command->module);
+    } else {
+      assert(isa<ScriptModuleCommand>(command.get()));
+      auto module_command = cast<ScriptModuleCommand>(std::move(command));
+      *module = std::move(module_command->module);
+    }
   } else if (IsModuleField(PeekPair())) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     CHECK_RESULT(ParseModuleFieldList(module.get()));
@@ -1606,7 +1657,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
     if (MatchLpar(TokenType::Data)) {
       auto data_segment_field = MakeUnique<DataSegmentModuleField>(loc);
       DataSegment& data_segment = data_segment_field->data_segment;
-      data_segment.memory_var = Var(module->memories.size());
+      data_segment.memory_var = Var(module->memories.size(), GetLocation());
       data_segment.offset.push_back(MakeUnique<ConstExpr>(
           field->memory.page_limits.is_64 ? Const::I64(0) : Const::I32(0)));
       data_segment.offset.back().loc = loc;
@@ -1678,7 +1729,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
 
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
-    elem_segment.table_var = Var(module->tables.size());
+    elem_segment.table_var = Var(module->tables.size(), GetLocation());
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     elem_segment.elem_type = elem_type;
@@ -1943,22 +1994,9 @@ Result WastParser::ParseMemoryInstrVar(Location loc,
 }
 
 template <typename T>
-Result WastParser::ParsePlainLoadStoreInstr(Location loc,
-                                            Token token,
-                                            std::unique_ptr<Expr>* out_expr) {
-  Opcode opcode = token.opcode();
-  Address offset;
-  Address align;
-  ParseOffsetOpt(&offset);
-  ParseAlignOpt(&align);
-  out_expr->reset(new T(opcode, align, offset, loc));
-  return Result::Ok;
-}
-
-template <typename T>
-Result WastParser::ParseMemoryLoadStoreInstr(Location loc,
-                                             Token token,
-                                             std::unique_ptr<Expr>* out_expr) {
+Result WastParser::ParseLoadStoreInstr(Location loc,
+                                       Token token,
+                                       std::unique_ptr<Expr>* out_expr) {
   Opcode opcode = token.opcode();
   Var memidx;
   Address offset;
@@ -2177,13 +2215,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
 
     case TokenType::Load:
-      CHECK_RESULT(
-          ParseMemoryLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Store:
-      CHECK_RESULT(
-          ParseMemoryLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Const: {
@@ -2343,8 +2379,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::AtomicNotify: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
       break;
     }
 
@@ -2359,32 +2394,28 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::AtomicWait: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicWaitExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicWaitExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicLoad: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicLoadExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicLoadExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicStore: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicStoreExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicStoreExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicRmw: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicRmwExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicRmwExpr>(loc, token, out_expr));
       break;
     }
 
@@ -2392,7 +2423,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
       CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
+          ParseLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
       break;
     }
 
@@ -3261,15 +3292,20 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   std::unique_ptr<ScriptModule> script_module;
   CHECK_RESULT(ParseScriptModule(&script_module));
 
-  auto command = MakeUnique<ModuleCommand>();
-  Module& module = command->module;
+  Module* module = nullptr;
 
   switch (script_module->type()) {
-    case ScriptModuleType::Text:
-      module = std::move(cast<TextScriptModule>(script_module.get())->module);
+    case ScriptModuleType::Text: {
+      auto command = MakeUnique<ModuleCommand>();
+      module = &command->module;
+      *module = std::move(cast<TextScriptModule>(script_module.get())->module);
+      *out_command = std::move(command);
       break;
+    }
 
     case ScriptModuleType::Binary: {
+      auto command = MakeUnique<ScriptModuleCommand>();
+      module = &command->module;
       auto* bsm = cast<BinaryScriptModule>(script_module.get());
       ReadBinaryOptions options;
 #if WABT_TRACING
@@ -3280,9 +3316,9 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       Errors errors;
       const char* filename = "<text>";
       ReadBinaryIr(filename, bsm->data.data(), bsm->data.size(), options,
-                   &errors, &module);
-      module.name = bsm->name;
-      module.loc = bsm->loc;
+                   &errors, module);
+      module->name = bsm->name;
+      module->loc = bsm->loc;
       for (const auto& error : errors) {
         assert(error.error_level == ErrorLevel::Error);
         if (error.loc.offset == kInvalidOffset) {
@@ -3292,6 +3328,9 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
                 error.loc.offset, error.message.c_str());
         }
       }
+
+      command->script_module = std::move(script_module);
+      *out_command = std::move(command);
       break;
     }
 
@@ -3303,15 +3342,14 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   if (script) {
     Index command_index = script->commands.size();
 
-    if (!module.name.empty()) {
-      script->module_bindings.emplace(module.name,
-                                      Binding(module.loc, command_index));
+    if (!module->name.empty()) {
+      script->module_bindings.emplace(module->name,
+                                      Binding(module->loc, command_index));
     }
 
     last_module_index_ = command_index;
   }
 
-  *out_command = std::move(command);
   return Result::Ok;
 }
 

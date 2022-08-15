@@ -43,23 +43,24 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 * text: Whether wabt can read/write the text format
 * validate: Whether wabt can validate the syntax
 * interpret: Whether wabt can execute these operations in `wasm-interp` or `spectest-interp`
+* wasm2c: Whether wasm2c supports these operations
 
-| Proposal | flag | default | binary | text | validate | interpret |
-| - | - | - | - | - | - | - |
-| [exception handling][] | `--enable-exceptions` | | ✓ | ✓ | ✓ | ✓ |
-| [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [sign extension][] | `--disable-sign-extension` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [simd][] | `--disable-simd` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [threads][] | `--enable-threads` | | ✓ | ✓ | ✓ | ✓ |
-| [multi-value][] | `--disable-multi-value` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [tail-call][] | `--enable-tail-call` | | ✓ | ✓ | ✓ | ✓ |
-| [bulk memory][] | `--disable-bulk-memory` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [reference types][] | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [annotations][] | `--enable-annotations` | | | ✓ | | |
-| [memory64][] | `--enable-memory64` | | | | | |
-| [multi-memory][] | `--enable-multi-memory` | | ✓ | ✓ | ✓ | ✓ |
-| [extended-const][] | `--enable-extended-const` | | | | | |
+| Proposal   | flag | default | binary | text | validate | interpret | wasm2c |
+| --------------------- | --------------------------- | - | - | - | - | - | - |
+| [exception handling][]| `--enable-exceptions`       |   | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [mutable globals][]   | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [sign extension][]    | `--disable-sign-extension`  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [simd][]              | `--disable-simd`            | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+| [threads][]           | `--enable-threads`          |   | ✓ | ✓ | ✓ | ✓ |   |
+| [multi-value][]       | `--disable-multi-value`     | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [tail-call][]         | `--enable-tail-call`        |   | ✓ | ✓ | ✓ | ✓ |   |
+| [bulk memory][]       | `--disable-bulk-memory`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+| [reference types][]   | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+| [annotations][]       | `--enable-annotations`      |   |   | ✓ |   |   |   |
+| [memory64][]          | `--enable-memory64`         |   | ✓ | ✓ | ✓ | ✓ |   |
+| [multi-memory][]      | `--enable-multi-memory`     |   | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [extended-const][]    | `--enable-extended-const`   |   | ✓ | ✓ | ✓ | ✓ |   |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
@@ -74,6 +75,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [annotations]: https://github.com/WebAssembly/annotations
 [memory64]: https://github.com/WebAssembly/memory64
 [multi-memory]: https://github.com/WebAssembly/multi-memory
+[extended-const]: https://github.com/WebAssembly/extended-const
 
 ## Cloning
 
@@ -198,7 +200,7 @@ run `make update-gperf` to update the prebuilt C++ sources in `src/prebuilt/`.
 Some examples:
 
 ```sh
-# parse and typecheck test.wat
+# parse test.wat and write to .wasm binary file with the same name
 $ bin/wat2wasm test.wat
 
 # parse test.wat and write to binary file test.wasm
@@ -308,7 +310,7 @@ $ make clang-debug-ubsan
 ```
 
 There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
-(MSAN), Leak Sanitizer (LSAN) and Undefine Behavior Sanitizer (UBSAN). You can
+(MSAN), Leak Sanitizer (LSAN) and Undefined Behavior Sanitizer (UBSAN). You can
 read about the behaviors of the sanitizers in the link above, but essentially
 the Address Sanitizer finds invalid memory accesses (use after free, access
 out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory,

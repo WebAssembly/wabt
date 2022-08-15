@@ -57,7 +57,8 @@ examples:
 )";
 
 static const std::string supported_features[] = {
-    "multi-memory", "multi-value", "sign-extend", "saturating-float-to-int"};
+    "multi-memory", "multi-value", "sign-extend", "saturating-float-to-int",
+    "exceptions"};
 
 static bool IsFeatureSupported(const std::string& feature) {
   return std::find(std::begin(supported_features), std::end(supported_features),
@@ -78,6 +79,13 @@ static void ParseOptions(int argc, char** argv) {
         s_outfile = argument;
         ConvertBackslashToSlash(&s_outfile);
       });
+  parser.AddOption(
+      'n', "module-name", "MODNAME",
+      "Unique name for the module being generated. This name is prefixed to\n"
+      "each of the generaed C symbols. By default, the module name from the\n"
+      "names section is used. If that is not present the name of the input\n"
+      "file is used as the default.\n",
+      [](const char* argument) { s_write_c_options.module_name = argument; });
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
@@ -98,7 +106,7 @@ static void ParseOptions(int argc, char** argv) {
 
   if (any_non_supported_feature) {
     fprintf(stderr,
-            "wasm2c currently only supports a fixed set of features.\n");
+            "wasm2c currently only supports a limited set of features.\n");
     exit(1);
   }
   s_features.disable_bulk_memory();
@@ -153,6 +161,15 @@ int ProgramMain(int argc, char** argv) {
           FileStream c_stream(s_outfile.c_str());
           FileStream h_stream(header_name_full);
           std::string_view header_name = GetBasename(header_name_full);
+          if (s_write_c_options.module_name.empty()) {
+            s_write_c_options.module_name = module.name;
+            if (s_write_c_options.module_name.empty()) {
+              // In the absence of module name in the names section use the
+              // filename.
+              s_write_c_options.module_name =
+                  StripExtension(GetBasename(s_infile));
+            }
+          }
           result =
               WriteC(&c_stream, &h_stream, std::string(header_name).c_str(),
                      &module, s_write_c_options);

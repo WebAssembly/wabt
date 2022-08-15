@@ -77,6 +77,8 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
+  Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
+  Result OnSimdStoreLaneExpr(SimdStoreLaneExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -470,6 +472,16 @@ Result NameResolver::OnRethrowExpr(RethrowExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
   if (func->decl.has_func_type) {
@@ -575,6 +587,10 @@ void NameResolver::VisitCommand(Command* command) {
   switch (command->type) {
     case CommandType::Module:
       VisitModule(&cast<ModuleCommand>(command)->module);
+      break;
+
+    case CommandType::ScriptModule:
+      VisitModule(&cast<ScriptModuleCommand>(command)->module);
       break;
 
     case CommandType::Action:

@@ -115,5 +115,5 @@ out/test/spec/binary-leb128.wast:956: assert_malformed passed:
   000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/binary-leb128.wast:988: assert_malformed passed:
   0000019: error: unable to read u32 leb128: opcode
-57/57 tests passed.
+83/83 tests passed.
 ;;; STDOUT ;;)
