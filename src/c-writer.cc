@@ -922,32 +922,37 @@ void CWriter::WriteFuncTypes() {
 }
 
 void CWriter::WriteTags() {
-  for (auto it = module_->tags.cbegin() + module_->num_tag_imports;
-       it != module_->tags.cend(); ++it) {
-    const Tag* tag = *it;
-    Write("static u32 ", DefineGlobalScopeName(tag->name), ";", Newline());
+  Index tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      Write("static u32 ", DefineGlobalScopeName(tag->name), ";", Newline());
+    }
+    tag_index++;
   }
 
   Write(Newline());
 
   Write("static void init_tags(void) ", OpenBrace());
 
-  for (auto it = module_->tags.cbegin() + module_->num_tag_imports;
-       it != module_->tags.cend(); ++it) {
-    const Tag* tag = *it;
-    const FuncDeclaration& tag_type = tag->decl;
-    Index num_params = tag_type.GetNumParams();
-    Write(GlobalName(tag->name), " = wasm_rt_register_tag(");
+  tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      const FuncDeclaration& tag_type = tag->decl;
+      Index num_params = tag_type.GetNumParams();
+      Write(GlobalName(tag->name), " = wasm_rt_register_tag(");
+      if (num_params == 0) {
+        Write("0");
+      } else if (num_params == 1) {
+        Write("sizeof(", tag_type.GetParamType(0), ")");
+      } else {
+        Write("sizeof(struct ", MangleTagTypes(tag_type.sig.param_types), ")");
+      }
 
-    if (num_params == 0) {
-      Write("0");
-    } else if (num_params == 1) {
-      Write("sizeof(", tag_type.GetParamType(0), ")");
-    } else {
-      Write("sizeof(struct ", MangleTagTypes(tag_type.sig.param_types), ")");
+      Write(");", Newline());
     }
-
-    Write(");", Newline());
+    tag_index++;
   }
   Write(CloseBrace(), Newline());
 }
