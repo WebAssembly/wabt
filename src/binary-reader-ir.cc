@@ -810,7 +810,7 @@ Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
   expr->default_target = Var(default_target_depth, GetLocation());
   expr->targets.resize(num_targets);
   for (Index i = 0; i < num_targets; ++i) {
-    expr->targets[i] = Var(target_depths[i]);
+    expr->targets[i] = Var(target_depths[i], GetLocation());
   }
   return AppendExpr(std::move(expr));
 }

@@ -671,7 +671,7 @@ struct Decompiler {
                          Index index,
                          std::string_view name) {
     // Figure out if this thing is imported, exported, or neither.
-    auto is_import = mc.module.IsImport(kind, Var(index));
+    auto is_import = mc.module.IsImport(kind, Var(index, Location()));
     // TODO: is this the best way to check for export?
     // FIXME: this doesn't work for functions that get renamed in some way,
     // as the export has the original name..

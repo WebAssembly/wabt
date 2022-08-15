@@ -280,7 +280,7 @@ Result Validator::OnCallRefExpr(CallRefExpr* expr) {
   Index function_type_index;
   result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
   if (Succeeded(result_)) {
-    expr->function_type_index = Var{function_type_index};
+    expr->function_type_index = Var{function_type_index, expr->loc};
     return Result::Ok;
   }
 

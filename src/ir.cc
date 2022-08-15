@@ -586,17 +586,19 @@ void MakeTypeBindingReverseMapping(
   }
 }
 
+Var::Var() : Var(kInvalidIndex, Location()) {}
+
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 
 Var::Var(std::string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
-Var::Var(Var&& rhs) : Var(kInvalidIndex) {
+Var::Var(Var&& rhs) : Var() {
   *this = std::move(rhs);
 }
 
-Var::Var(const Var& rhs) : Var(kInvalidIndex) {
+Var::Var(const Var& rhs) : Var() {
   *this = rhs;
 }
 
