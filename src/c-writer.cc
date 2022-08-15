@@ -1553,9 +1553,9 @@ void CWriter::Write(const Block& block) {
 size_t CWriter::BeginTry(const TryExpr& tryexpr) {
   Write(OpenBrace()); /* beginning of try-catch */
   const std::string tlabel = DefineLocalScopeName(tryexpr.block.label);
-  Write("jmp_buf *", tlabel, "_outer_target = wasm_rt_get_unwind_target();",
-        Newline());
-  Write("jmp_buf ", tlabel, "_unwind_target;", Newline());
+  Write("WASM_RT_UNWIND_TARGET *", tlabel,
+        "_outer_target = wasm_rt_get_unwind_target();", Newline());
+  Write("WASM_RT_UNWIND_TARGET ", tlabel, "_unwind_target;", Newline());
   Write("if (!wasm_rt_try(", tlabel, "_unwind_target)) ");
   Write(OpenBrace()); /* beginning of try block */
   DropTypes(tryexpr.block.decl.GetNumParams());

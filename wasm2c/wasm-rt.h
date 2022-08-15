@@ -227,14 +227,19 @@ void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values);
 WASM_RT_NO_RETURN void wasm_rt_throw(void);
 
 /**
+ * The type of an unwind target if an exception is thrown and caught.
+ */
+#define WASM_RT_UNWIND_TARGET jmp_buf
+
+/**
  * Get the current unwind target if an exception is thrown.
  */
-jmp_buf* wasm_rt_get_unwind_target(void);
+WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void);
 
 /**
  * Set the unwind target if an exception is thrown.
  */
-void wasm_rt_set_unwind_target(jmp_buf* target);
+void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target);
 
 /**
  * Tag of the active exception.
