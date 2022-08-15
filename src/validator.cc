@@ -537,7 +537,7 @@ Result Validator::OnRethrowExpr(RethrowExpr* expr) {
 }
 
 Result Validator::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
-  result_ |= validator_.OnAtomicWait(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicWait(expr->loc, expr->opcode, expr->memidx,
                                      expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
@@ -548,32 +548,33 @@ Result Validator::OnAtomicFenceExpr(AtomicFenceExpr* expr) {
 }
 
 Result Validator::OnAtomicNotifyExpr(AtomicNotifyExpr* expr) {
-  result_ |= validator_.OnAtomicNotify(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicNotify(expr->loc, expr->opcode, expr->memidx,
                                        expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicLoadExpr(AtomicLoadExpr* expr) {
-  result_ |= validator_.OnAtomicLoad(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicLoad(expr->loc, expr->opcode, expr->memidx,
                                      expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicStoreExpr(AtomicStoreExpr* expr) {
-  result_ |= validator_.OnAtomicStore(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicStore(expr->loc, expr->opcode, expr->memidx,
                                       expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicRmwExpr(AtomicRmwExpr* expr) {
-  result_ |= validator_.OnAtomicRmw(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicRmw(expr->loc, expr->opcode, expr->memidx,
                                     expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr* expr) {
-  result_ |= validator_.OnAtomicRmwCmpxchg(
-      expr->loc, expr->opcode, expr->opcode.GetAlignment(expr->align));
+  result_ |=
+      validator_.OnAtomicRmwCmpxchg(expr->loc, expr->opcode, expr->memidx,
+                                    expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
@@ -588,14 +589,14 @@ Result Validator::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 }
 
 Result Validator::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
-  result_ |= validator_.OnSimdLoadLane(expr->loc, expr->opcode,
+  result_ |= validator_.OnSimdLoadLane(expr->loc, expr->opcode, expr->memidx,
                                        expr->opcode.GetAlignment(expr->align),
                                        expr->val);
   return Result::Ok;
 }
 
 Result Validator::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
-  result_ |= validator_.OnSimdStoreLane(expr->loc, expr->opcode,
+  result_ |= validator_.OnSimdStoreLane(expr->loc, expr->opcode, expr->memidx,
                                         expr->opcode.GetAlignment(expr->align),
                                         expr->val);
   return Result::Ok;
@@ -607,13 +608,13 @@ Result Validator::OnSimdShuffleOpExpr(SimdShuffleOpExpr* expr) {
 }
 
 Result Validator::OnLoadSplatExpr(LoadSplatExpr* expr) {
-  result_ |= validator_.OnLoadSplat(expr->loc, expr->opcode,
+  result_ |= validator_.OnLoadSplat(expr->loc, expr->opcode, expr->memidx,
                                     expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnLoadZeroExpr(LoadZeroExpr* expr) {
-  result_ |= validator_.OnLoadZero(expr->loc, expr->opcode,
+  result_ |= validator_.OnLoadZero(expr->loc, expr->opcode, expr->memidx,
                                    expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }

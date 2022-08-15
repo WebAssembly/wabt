@@ -200,6 +200,10 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeUint32Uint32Uint32(uint32_t value,
                                             uint32_t value2,
                                             uint32_t value3) = 0;
+  virtual Result OnOpcodeUint32Uint32Uint32Uint32(uint32_t value,
+                                                  uint32_t value2,
+                                                  uint32_t value3,
+                                                  uint32_t value4) = 0;
   virtual Result OnOpcodeUint64(uint64_t value) = 0;
   virtual Result OnOpcodeF32(uint32_t value) = 0;
   virtual Result OnOpcodeF64(uint64_t value) = 0;
@@ -207,22 +211,28 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
   virtual Result OnOpcodeType(Type type) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
+                                  Index memidx,
                                   Address alignment_log2,
                                   Address offset) = 0;
   virtual Result OnAtomicStoreExpr(Opcode opcode,
+                                   Index memidx,
                                    Address alignment_log2,
                                    Address offset) = 0;
   virtual Result OnAtomicRmwExpr(Opcode opcode,
+                                 Index memidx,
                                  Address alignment_log2,
                                  Address offset) = 0;
   virtual Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                        Index memidx,
                                         Address alignment_log2,
                                         Address offset) = 0;
   virtual Result OnAtomicWaitExpr(Opcode opcode,
+                                  Index memidx,
                                   Address alignment_log2,
                                   Address offset) = 0;
   virtual Result OnAtomicFenceExpr(uint32_t consistency_model) = 0;
   virtual Result OnAtomicNotifyExpr(Opcode opcode,
+                                    Index memidx,
                                     Address alignment_log2,
                                     Address offset) = 0;
   virtual Result OnBinaryExpr(Opcode opcode) = 0;
@@ -311,9 +321,11 @@ class BinaryReaderDelegate {
                                      uint64_t value) = 0;
 
   virtual Result OnLoadSplatExpr(Opcode opcode,
+                                 Index memidx,
                                  Address alignment_log2,
                                  Address offset) = 0;
   virtual Result OnLoadZeroExpr(Opcode opcode,
+                                Index memidx,
                                 Address alignment_log2,
                                 Address offset) = 0;
 

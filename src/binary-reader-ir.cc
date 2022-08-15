@@ -164,22 +164,28 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnOpcode(Opcode opcode) override;
   Result OnAtomicLoadExpr(Opcode opcode,
+                          Index memidx,
                           Address alignment_log2,
                           Address offset) override;
   Result OnAtomicStoreExpr(Opcode opcode,
+                           Index memidx,
                            Address alignment_log2,
                            Address offset) override;
   Result OnAtomicRmwExpr(Opcode opcode,
+                         Index memidx,
                          Address alignment_log2,
                          Address offset) override;
   Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                Index memidx,
                                 Address alignment_log2,
                                 Address offset) override;
   Result OnAtomicWaitExpr(Opcode opcode,
+                          Index memidx,
                           Address alignment_log2,
                           Address offset) override;
   Result OnAtomicFenceExpr(uint32_t consistency_model) override;
   Result OnAtomicNotifyExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset) override;
   Result OnBinaryExpr(Opcode opcode) override;
@@ -262,9 +268,11 @@ class BinaryReaderIR : public BinaryReaderNop {
                              uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
   Result OnLoadSplatExpr(Opcode opcode,
+                         Index memidx,
                          Address alignment_log2,
                          Address offset) override;
   Result OnLoadZeroExpr(Opcode opcode,
+                        Index memidx,
                         Address alignment_log2,
                         Address offset) override;
 
@@ -737,38 +745,43 @@ Result BinaryReaderIR::OnOpcode(Opcode opcode) {
 }
 
 Result BinaryReaderIR::OnAtomicLoadExpr(Opcode opcode,
+                                        Index memidx,
                                         Address alignment_log2,
                                         Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicLoadExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicLoadExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicStoreExpr(Opcode opcode,
+                                         Index memidx,
                                          Address alignment_log2,
                                          Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicStoreExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicStoreExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicRmwExpr(Opcode opcode,
+                                       Index memidx,
                                        Address alignment_log2,
                                        Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicRmwExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicRmwExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                              Index memidx,
                                               Address alignment_log2,
                                               Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicRmwCmpxchgExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicRmwCmpxchgExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicWaitExpr(Opcode opcode,
+                                        Index memidx,
                                         Address alignment_log2,
                                         Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicWaitExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicWaitExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicFenceExpr(uint32_t consistency_model) {
@@ -776,10 +789,11 @@ Result BinaryReaderIR::OnAtomicFenceExpr(uint32_t consistency_model) {
 }
 
 Result BinaryReaderIR::OnAtomicNotifyExpr(Opcode opcode,
+                                          Index memidx,
                                           Address alignment_log2,
                                           Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicNotifyExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicNotifyExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnBinaryExpr(Opcode opcode) {
@@ -1193,17 +1207,19 @@ Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
 }
 
 Result BinaryReaderIR::OnLoadSplatExpr(Opcode opcode,
+                                       Index memidx,
                                        Address alignment_log2,
                                        Address offset) {
-  return AppendExpr(
-      MakeUnique<LoadSplatExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<LoadSplatExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnLoadZeroExpr(Opcode opcode,
+                                      Index memidx,
                                       Address alignment_log2,
                                       Address offset) {
-  return AppendExpr(
-      MakeUnique<LoadZeroExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<LoadZeroExpr>(opcode, Var(memidx, GetLocation()),
+                                             1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnElemSegmentCount(Index count) {

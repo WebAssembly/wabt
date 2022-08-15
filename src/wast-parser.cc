@@ -1993,22 +1993,9 @@ Result WastParser::ParseMemoryInstrVar(Location loc,
 }
 
 template <typename T>
-Result WastParser::ParsePlainLoadStoreInstr(Location loc,
-                                            Token token,
-                                            std::unique_ptr<Expr>* out_expr) {
-  Opcode opcode = token.opcode();
-  Address offset;
-  Address align;
-  ParseOffsetOpt(&offset);
-  ParseAlignOpt(&align);
-  out_expr->reset(new T(opcode, align, offset, loc));
-  return Result::Ok;
-}
-
-template <typename T>
-Result WastParser::ParseMemoryLoadStoreInstr(Location loc,
-                                             Token token,
-                                             std::unique_ptr<Expr>* out_expr) {
+Result WastParser::ParseLoadStoreInstr(Location loc,
+                                       Token token,
+                                       std::unique_ptr<Expr>* out_expr) {
   Opcode opcode = token.opcode();
   Var memidx;
   Address offset;
@@ -2227,13 +2214,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
 
     case TokenType::Load:
-      CHECK_RESULT(
-          ParseMemoryLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Store:
-      CHECK_RESULT(
-          ParseMemoryLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Const: {
@@ -2393,8 +2378,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::AtomicNotify: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
       break;
     }
 
@@ -2409,32 +2393,28 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::AtomicWait: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicWaitExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicWaitExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicLoad: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicLoadExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicLoadExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicStore: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicStoreExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicStoreExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicRmw: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicRmwExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicRmwExpr>(loc, token, out_expr));
       break;
     }
 
@@ -2442,7 +2422,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
       CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
+          ParseLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
       break;
     }
 

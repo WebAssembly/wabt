@@ -411,10 +411,6 @@ class BinaryWriter {
   template <typename T>
   void WriteLoadStoreExpr(const Func* func, const Expr* expr, const char* desc);
   template <typename T>
-  void WriteMemoryLoadStoreExpr(const Func* func,
-                                const Expr* expr,
-                                const char* desc);
-  template <typename T>
   void WriteSimdLoadStoreLaneExpr(const Func* func,
                                   const Expr* expr,
                                   const char* desc);
@@ -691,37 +687,22 @@ void BinaryWriter::WriteLoadStoreExpr(const Func* func,
   auto* typed_expr = cast<T>(expr);
   WriteOpcode(stream_, typed_expr->opcode);
   Address align = typed_expr->opcode.GetAlignment(typed_expr->align);
-  stream_->WriteU8(log2_u32(align), "alignment");
-  WriteU32Leb128(stream_, typed_expr->offset, desc);
-}
-
-template <typename T>
-void BinaryWriter::WriteMemoryLoadStoreExpr(const Func* func,
-                                            const Expr* expr,
-                                            const char* desc) {
-  auto* typed_expr = cast<T>(expr);
-  WriteOpcode(stream_, typed_expr->opcode);
-  Address align = typed_expr->opcode.GetAlignment(typed_expr->align);
   Index memidx = module_->GetMemoryIndex(typed_expr->memidx);
   if (memidx != 0) {
     stream_->WriteU8(log2_u32(align) | (1 << 6), "alignment");
-    WriteU32Leb128(stream_, typed_expr->offset, desc);
     WriteU32Leb128(stream_, memidx, "memidx");
   } else {
     stream_->WriteU8(log2_u32(align), "alignment");
-    WriteU32Leb128(stream_, typed_expr->offset, desc);
   }
-};
+  WriteU32Leb128(stream_, typed_expr->offset, desc);
+}
 
 template <typename T>
 void BinaryWriter::WriteSimdLoadStoreLaneExpr(const Func* func,
                                               const Expr* expr,
                                               const char* desc) {
+  WriteLoadStoreExpr<T>(func, expr, desc);
   auto* typed_expr = cast<T>(expr);
-  WriteOpcode(stream_, typed_expr->opcode);
-  Address align = typed_expr->opcode.GetAlignment(typed_expr->align);
-  stream_->WriteU8(log2_u32(align), "alignment");
-  WriteU32Leb128(stream_, typed_expr->offset, desc);
   stream_->WriteU8(static_cast<uint8_t>(typed_expr->val), "Simd Lane literal");
 }
 
@@ -885,7 +866,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     }
     case ExprType::Load:
-      WriteMemoryLoadStoreExpr<LoadExpr>(func, expr, "load offset");
+      WriteLoadStoreExpr<LoadExpr>(func, expr, "load offset");
       break;
     case ExprType::LocalGet: {
       Index index = GetLocalIndex(func, cast<LocalGetExpr>(expr)->var);
@@ -1055,7 +1036,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     }
     case ExprType::Store:
-      WriteMemoryLoadStoreExpr<StoreExpr>(func, expr, "store offset");
+      WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);

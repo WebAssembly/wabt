@@ -715,16 +715,7 @@ Result BinaryReaderLogging::OnCodeMetadata(Offset code_offset,
     return reader_->name(opcode);                                      \
   }
 
-#define DEFINE_LOAD_STORE_OPCODE(name)                                    \
-  Result BinaryReaderLogging::name(Opcode opcode, Address alignment_log2, \
-                                   Address offset) {                      \
-    LOGF(#name "(opcode: \"%s\" (%u), align log2: %" PRIaddress           \
-               ", offset: %" PRIaddress ")\n",                            \
-         opcode.GetName(), opcode.GetCode(), alignment_log2, offset);     \
-    return reader_->name(opcode, alignment_log2, offset);                 \
-  }
-
-#define DEFINE_MEMORY_LOAD_STORE_OPCODE(name)                                 \
+#define DEFINE_LOAD_STORE_OPCODE(name)                                        \
   Result BinaryReaderLogging::name(Opcode opcode, Index memidx,               \
                                    Address alignment_log2, Address offset) {  \
     LOGF(#name "(opcode: \"%s\" (%u), memidx: %" PRIindex                     \
@@ -816,7 +807,7 @@ DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
 DEFINE_INDEX_DESC(OnGlobalGetExpr, "index")
 DEFINE_INDEX_DESC(OnGlobalSetExpr, "index")
-DEFINE_MEMORY_LOAD_STORE_OPCODE(OnLoadExpr);
+DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
 DEFINE_INDEX_DESC(OnLocalGetExpr, "index")
 DEFINE_INDEX_DESC(OnLocalSetExpr, "index")
 DEFINE_INDEX_DESC(OnLocalTeeExpr, "index")
@@ -845,7 +836,7 @@ DEFINE_INDEX_INDEX(OnReturnCallIndirectExpr, "sig_index", "table_index")
 DEFINE0(OnReturnExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadSplatExpr);
 DEFINE_LOAD_STORE_OPCODE(OnLoadZeroExpr);
-DEFINE_MEMORY_LOAD_STORE_OPCODE(OnStoreExpr);
+DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
 DEFINE_INDEX_DESC(OnThrowExpr, "tag_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE_OPCODE(OnUnaryExpr)
@@ -943,6 +934,14 @@ Result BinaryReaderLogging::OnOpcodeUint32Uint32Uint32(uint32_t value,
                                                        uint32_t value2,
                                                        uint32_t value3) {
   return reader_->OnOpcodeUint32Uint32Uint32(value, value2, value3);
+}
+
+Result BinaryReaderLogging::OnOpcodeUint32Uint32Uint32Uint32(uint32_t value,
+                                                             uint32_t value2,
+                                                             uint32_t value3,
+                                                             uint32_t value4) {
+  return reader_->OnOpcodeUint32Uint32Uint32Uint32(value, value2, value3,
+                                                   value4);
 }
 
 Result BinaryReaderLogging::OnOpcodeUint64(uint64_t value) {

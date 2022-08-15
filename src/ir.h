@@ -717,30 +717,13 @@ class ConstExpr : public ExprMixin<ExprType::Const> {
 
 // TODO(binji): Rename this, it is used for more than loads/stores now.
 template <ExprType TypeEnum>
-class LoadStoreExpr : public ExprMixin<TypeEnum> {
+class LoadStoreExpr : public MemoryExpr<TypeEnum> {
  public:
   LoadStoreExpr(Opcode opcode,
+                Var memidx,
                 Address align,
                 Address offset,
                 const Location& loc = Location())
-      : ExprMixin<TypeEnum>(loc),
-        opcode(opcode),
-        align(align),
-        offset(offset) {}
-
-  Opcode opcode;
-  Address align;
-  Address offset;
-};
-
-template <ExprType TypeEnum>
-class MemoryLoadStoreExpr : public MemoryExpr<TypeEnum> {
- public:
-  MemoryLoadStoreExpr(Opcode opcode,
-                      Var memidx,
-                      Address align,
-                      Address offset,
-                      const Location& loc = Location())
       : MemoryExpr<TypeEnum>(memidx, loc),
         opcode(opcode),
         align(align),
@@ -751,8 +734,8 @@ class MemoryLoadStoreExpr : public MemoryExpr<TypeEnum> {
   Address offset;
 };
 
-typedef MemoryLoadStoreExpr<ExprType::Load> LoadExpr;
-typedef MemoryLoadStoreExpr<ExprType::Store> StoreExpr;
+typedef LoadStoreExpr<ExprType::Load> LoadExpr;
+typedef LoadStoreExpr<ExprType::Store> StoreExpr;
 
 typedef LoadStoreExpr<ExprType::AtomicLoad> AtomicLoadExpr;
 typedef LoadStoreExpr<ExprType::AtomicStore> AtomicStoreExpr;

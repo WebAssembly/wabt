@@ -1041,6 +1041,7 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(
     SimdLoadLaneExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
+  writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
   if (expr->offset) {
     writer_->Writef("offset=%" PRIaddress, expr->offset);
   }
@@ -1055,6 +1056,7 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLoadLaneExpr(
 Result WatWriter::ExprVisitorDelegate::OnSimdStoreLaneExpr(
     SimdStoreLaneExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
+  writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
   if (expr->offset) {
     writer_->Writef("offset=%" PRIaddress, expr->offset);
   }
