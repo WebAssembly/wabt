@@ -8,7 +8,7 @@ out/test/spec/exception-handling/throw.wast:41: assert_exception passed
 out/test/spec/exception-handling/throw.wast:42: assert_exception passed
 out/test/spec/exception-handling/throw.wast:43: assert_exception passed
 out/test/spec/exception-handling/throw.wast:47: assert_invalid passed:
-  0000000: error: tag variable out of range: 0 (max 0)
+  out/test/spec/exception-handling/throw/throw.1.wasm:0000019: error: tag variable out of range: 0 (max 0)
   0000019: error: OnThrowExpr callback failed
 out/test/spec/exception-handling/throw.wast:48: assert_invalid passed:
   out/test/spec/exception-handling/throw/throw.2.wasm:0000022: error: type mismatch in throw, expected [i32] but got []

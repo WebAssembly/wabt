@@ -107,22 +107,22 @@ out/test/spec/local_tee.wast:607: assert_invalid passed:
   out/test/spec/local_tee/local_tee.35.wasm:0000020: error: type mismatch in local.tee, expected [f64] but got [i64]
   0000020: error: OnLocalTeeExpr callback failed
 out/test/spec/local_tee.wast:615: assert_invalid passed:
-  0000000: error: local variable out of range (max 2)
+  out/test/spec/local_tee/local_tee.36.wasm:000001f: error: local variable out of range (max 2)
   000001f: error: OnLocalTeeExpr callback failed
 out/test/spec/local_tee.wast:619: assert_invalid passed:
-  0000000: error: local variable out of range (max 2)
+  out/test/spec/local_tee/local_tee.37.wasm:0000022: error: local variable out of range (max 2)
   0000022: error: OnLocalTeeExpr callback failed
 out/test/spec/local_tee.wast:624: assert_invalid passed:
-  0000000: error: local variable out of range (max 2)
+  out/test/spec/local_tee/local_tee.38.wasm:000001d: error: local variable out of range (max 2)
   000001d: error: OnLocalTeeExpr callback failed
 out/test/spec/local_tee.wast:628: assert_invalid passed:
-  0000000: error: local variable out of range (max 2)
+  out/test/spec/local_tee/local_tee.39.wasm:0000021: error: local variable out of range (max 2)
   0000021: error: OnLocalTeeExpr callback failed
 out/test/spec/local_tee.wast:633: assert_invalid passed:
-  0000000: error: local variable out of range (max 3)
+  out/test/spec/local_tee/local_tee.40.wasm:0000020: error: local variable out of range (max 3)
   0000020: error: OnLocalTeeExpr callback failed
 out/test/spec/local_tee.wast:637: assert_invalid passed:
-  0000000: error: local variable out of range (max 3)
+  out/test/spec/local_tee/local_tee.41.wasm:0000023: error: local variable out of range (max 3)
   0000023: error: OnLocalTeeExpr callback failed
 97/97 tests passed.
 ;;; STDOUT ;;)
