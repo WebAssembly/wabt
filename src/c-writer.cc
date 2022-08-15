@@ -922,44 +922,37 @@ void CWriter::WriteFuncTypes() {
 }
 
 void CWriter::WriteTags() {
-  if (module_->tags.empty()) {
-    Write("static void init_tags(void) ", OpenBrace(), CloseBrace(), Newline());
-    return;
+  Index tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      Write("static u32 ", DefineGlobalScopeName(tag->name), ";", Newline());
+    }
+    tag_index++;
   }
 
-  Writef("static u32 tag[%" PRIzd "];", module_->tags.size());
-  Write(Newline(), Newline());
+  Write(Newline());
 
   Write("static void init_tags(void) ", OpenBrace());
 
-  Index tag_index = 0;
-  for (const Import* import : module_->imports) {
-    if (import->kind() != ExternalKind::Tag) {
-      continue;
+  tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      const FuncDeclaration& tag_type = tag->decl;
+      Index num_params = tag_type.GetNumParams();
+      Write(GlobalName(tag->name), " = wasm_rt_register_tag(");
+      if (num_params == 0) {
+        Write("0");
+      } else if (num_params == 1) {
+        Write("sizeof(", tag_type.GetParamType(0), ")");
+      } else {
+        Write("sizeof(struct ", MangleTagTypes(tag_type.sig.param_types), ")");
+      }
+
+      Write(");", Newline());
     }
-
-    Write("tag[", tag_index, "] = *", MangleName(import->module_name),
-          MangleName(import->field_name), ";", Newline());
-    ++tag_index;
-  }
-
-  for (auto it = module_->tags.cbegin() + tag_index; it != module_->tags.cend();
-       ++it) {
-    const Tag* tag = *it;
-    const FuncDeclaration& tag_type = tag->decl;
-    Index num_params = tag_type.GetNumParams();
-    Write("tag[", tag_index, "] = wasm_rt_register_tag(");
-
-    if (num_params == 0) {
-      Write("0");
-    } else if (num_params == 1) {
-      Write("sizeof(", tag_type.GetParamType(0), ")");
-    } else {
-      Write("sizeof(struct ", MangleTagTypes(tag_type.sig.param_types), ")");
-    }
-
-    Write(");", Newline());
-    ++tag_index;
+    tag_index++;
   }
   Write(CloseBrace(), Newline());
 }
@@ -1009,7 +1002,7 @@ void CWriter::WriteImports() {
 
       case ExternalKind::Tag: {
         const Tag& tag = cast<TagImport>(import)->tag;
-        Write("u32 ",
+        Write("const u32 ",
               DefineImportName(tag.name, import->module_name,
                                MangleName(import->field_name)),
               ";");
@@ -1315,7 +1308,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = tag->name;
         if (kind != WriteExportsKind::Initializers) {
-          Write("u32 *", mangled_name, ";");
+          Write("const u32 *", mangled_name, ";");
         }
         break;
       }
@@ -1325,12 +1318,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
     }
 
     if (kind == WriteExportsKind::Initializers) {
-      if (export_->kind == ExternalKind::Tag) {
-        Write(mangled_name, " = &tag[", module_->GetTagIndex(export_->var),
-              "];");
-      } else {
-        Write(mangled_name, " = ", ExternalPtr(internal_name), ";");
-      }
+      Write(mangled_name, " = ", ExternalPtr(internal_name), ";");
     }
 
     Write(Newline());
@@ -1636,8 +1624,8 @@ void CWriter::Write(const Catch& c) {
     return;
   }
 
-  Write("if (wasm_rt_exception_tag() == tag[", module_->GetTagIndex(c.var),
-        "]) ", OpenBrace());
+  Write("if (wasm_rt_exception_tag() == ",
+        ExternalRef(module_->GetTag(c.var)->name), ") ", OpenBrace());
 
   const Tag* tag = module_->GetTag(c.var);
   const FuncDeclaration& tag_type = tag->decl;
@@ -2051,14 +2039,13 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Throw: {
         const Var& var = cast<ThrowExpr>(&expr)->var;
         const Tag* tag = module_->GetTag(var);
-        const Index tag_index = module_->GetTagIndex(var);
 
         Index num_params = tag->decl.GetNumParams();
         if (num_params == 0) {
-          Write("wasm_rt_load_exception(tag[", tag_index, "], 0, NULL);",
-                Newline());
+          Write("wasm_rt_load_exception(", ExternalRef(tag->name),
+                ", 0, NULL);", Newline());
         } else if (num_params == 1) {
-          Write("wasm_rt_load_exception(tag[", tag_index, "], sizeof(",
+          Write("wasm_rt_load_exception(", ExternalRef(tag->name), ", sizeof(",
                 tag->decl.GetParamType(0), "), &", StackVar(0), ");",
                 Newline());
         } else {
@@ -2069,8 +2056,8 @@ void CWriter::Write(const ExprList& exprs) {
             Write(StackVar(i), ", ");
           }
           Write("};", Newline());
-          Write("wasm_rt_load_exception(tag[", tag_index,
-                "], sizeof(tmp), &tmp);", Newline());
+          Write("wasm_rt_load_exception(", ExternalRef(tag->name),
+                ", sizeof(tmp), &tmp);", Newline());
           Write(CloseBrace(), Newline());
         }
 
