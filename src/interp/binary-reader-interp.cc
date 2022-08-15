@@ -503,7 +503,8 @@ Result BinaryReaderInterp::OnImportFunc(Index import_index,
                                         std::string_view field_name,
                                         Index func_index,
                                         Index sig_index) {
-  CHECK_RESULT(validator_.OnFunction(GetLocation(), Var(sig_index)));
+  CHECK_RESULT(
+      validator_.OnFunction(GetLocation(), Var(sig_index, GetLocation())));
   FuncType& func_type = module_.func_types[sig_index];
   module_.imports.push_back(ImportDesc{ImportType(
       std::string(module_name), std::string(field_name), func_type.Clone())});
@@ -557,7 +558,7 @@ Result BinaryReaderInterp::OnImportTag(Index import_index,
                                        std::string_view field_name,
                                        Index tag_index,
                                        Index sig_index) {
-  CHECK_RESULT(validator_.OnTag(GetLocation(), Var(sig_index)));
+  CHECK_RESULT(validator_.OnTag(GetLocation(), Var(sig_index, GetLocation())));
   FuncType& func_type = module_.func_types[sig_index];
   TagType tag_type{TagAttr::Exception, func_type.params};
   module_.imports.push_back(ImportDesc{ImportType(
@@ -572,7 +573,8 @@ Result BinaryReaderInterp::OnFunctionCount(Index count) {
 }
 
 Result BinaryReaderInterp::OnFunction(Index index, Index sig_index) {
-  CHECK_RESULT(validator_.OnFunction(GetLocation(), Var(sig_index)));
+  CHECK_RESULT(
+      validator_.OnFunction(GetLocation(), Var(sig_index, GetLocation())));
   FuncType& func_type = module_.func_types[sig_index];
   module_.funcs.push_back(FuncDesc{func_type, {}, Istream::kInvalidOffset, {}});
   func_types_.push_back(func_type);
@@ -654,7 +656,7 @@ Result BinaryReaderInterp::OnTagCount(Index count) {
 }
 
 Result BinaryReaderInterp::OnTagType(Index index, Index sig_index) {
-  CHECK_RESULT(validator_.OnTag(GetLocation(), Var(sig_index)));
+  CHECK_RESULT(validator_.OnTag(GetLocation(), Var(sig_index, GetLocation())));
   FuncType& func_type = module_.func_types[sig_index];
   TagType tag_type{TagAttr::Exception, func_type.params};
   module_.tags.push_back(TagDesc{tag_type});
@@ -666,7 +668,8 @@ Result BinaryReaderInterp::OnExport(Index index,
                                     ExternalKind kind,
                                     Index item_index,
                                     std::string_view name) {
-  CHECK_RESULT(validator_.OnExport(GetLocation(), kind, Var(item_index), name));
+  CHECK_RESULT(validator_.OnExport(GetLocation(), kind,
+                                   Var(item_index, GetLocation()), name));
 
   std::unique_ptr<ExternType> type;
   switch (kind) {
@@ -682,7 +685,8 @@ Result BinaryReaderInterp::OnExport(Index index,
 }
 
 Result BinaryReaderInterp::OnStartFunction(Index func_index) {
-  CHECK_RESULT(validator_.OnStart(GetLocation(), Var(func_index)));
+  CHECK_RESULT(
+      validator_.OnStart(GetLocation(), Var(func_index, GetLocation())));
   module_.starts.push_back(StartDesc{func_index});
   return Result::Ok;
 }
@@ -696,7 +700,8 @@ Result BinaryReaderInterp::BeginElemSegment(Index index,
                                             Index table_index,
                                             uint8_t flags) {
   auto mode = ToSegmentMode(flags);
-  CHECK_RESULT(validator_.OnElemSegment(GetLocation(), Var(table_index), mode));
+  CHECK_RESULT(validator_.OnElemSegment(GetLocation(),
+                                        Var(table_index, GetLocation()), mode));
 
   FuncDesc init_func{
       FuncType{{}, {ValueType::I32}}, {}, Istream::kInvalidOffset, {}};
@@ -738,8 +743,8 @@ Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(Index segment_index,
 
 Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                                          Index func_index) {
-  CHECK_RESULT(
-      validator_.OnElemSegmentElemExpr_RefFunc(GetLocation(), Var(func_index)));
+  CHECK_RESULT(validator_.OnElemSegmentElemExpr_RefFunc(
+      GetLocation(), Var(func_index, GetLocation())));
   ElemDesc& elem = module_.elems.back();
   elem.elements.push_back(ElemExpr{ElemKind::RefFunc, func_index});
   return Result::Ok;
@@ -765,8 +770,8 @@ Result BinaryReaderInterp::BeginDataSegment(Index index,
                                             Index memory_index,
                                             uint8_t flags) {
   auto mode = ToSegmentMode(flags);
-  CHECK_RESULT(
-      validator_.OnDataSegment(GetLocation(), Var(memory_index), mode));
+  CHECK_RESULT(validator_.OnDataSegment(
+      GetLocation(), Var(memory_index, GetLocation()), mode));
 
   FuncDesc init_func{
       FuncType{{}, {ValueType::I32}}, {}, Istream::kInvalidOffset, {}};
@@ -1038,14 +1043,14 @@ Result BinaryReaderInterp::OnBrExpr(Index depth) {
   Index drop_count, keep_count, catch_drop_count;
   CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
   CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
-  CHECK_RESULT(validator_.OnBr(GetLocation(), Var(depth)));
+  CHECK_RESULT(validator_.OnBr(GetLocation(), Var(depth, GetLocation())));
   EmitBr(depth, drop_count, keep_count, catch_drop_count);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnBrIfExpr(Index depth) {
   Index drop_count, keep_count, catch_drop_count;
-  CHECK_RESULT(validator_.OnBrIf(GetLocation(), Var(depth)));
+  CHECK_RESULT(validator_.OnBrIf(GetLocation(), Var(depth, GetLocation())));
   CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
   CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
   // Flip the br_if so if <cond> is true it can drop values from the stack.
@@ -1065,7 +1070,8 @@ Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
 
   for (Index i = 0; i < num_targets; ++i) {
     Index depth = target_depths[i];
-    CHECK_RESULT(validator_.OnBrTableTarget(GetLocation(), Var(depth)));
+    CHECK_RESULT(
+        validator_.OnBrTableTarget(GetLocation(), Var(depth, GetLocation())));
     CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
     CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
     // Emit DropKeep directly (instead of using EmitDropKeep) so the
@@ -1074,8 +1080,8 @@ Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
     istream_.Emit(Opcode::InterpCatchDrop, catch_drop_count);
     EmitBr(depth, 0, 0, 0);
   }
-  CHECK_RESULT(
-      validator_.OnBrTableTarget(GetLocation(), Var(default_target_depth)));
+  CHECK_RESULT(validator_.OnBrTableTarget(
+      GetLocation(), Var(default_target_depth, GetLocation())));
   CHECK_RESULT(
       GetBrDropKeepCount(default_target_depth, &drop_count, &keep_count));
   CHECK_RESULT(
@@ -1090,7 +1096,8 @@ Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
 }
 
 Result BinaryReaderInterp::OnCallExpr(Index func_index) {
-  CHECK_RESULT(validator_.OnCall(GetLocation(), Var(func_index)));
+  CHECK_RESULT(
+      validator_.OnCall(GetLocation(), Var(func_index, GetLocation())));
 
   if (func_index >= num_func_imports()) {
     istream_.Emit(Opcode::Call, func_index);
@@ -1103,8 +1110,9 @@ Result BinaryReaderInterp::OnCallExpr(Index func_index) {
 
 Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
                                               Index table_index) {
-  CHECK_RESULT(validator_.OnCallIndirect(GetLocation(), Var(sig_index),
-                                         Var(table_index)));
+  CHECK_RESULT(validator_.OnCallIndirect(GetLocation(),
+                                         Var(sig_index, GetLocation()),
+                                         Var(table_index, GetLocation())));
   istream_.Emit(Opcode::CallIndirect, table_index, sig_index);
   return Result::Ok;
 }
@@ -1119,7 +1127,8 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
       validator_.GetCatchCount(label_stack_.size() - 1, &catch_drop_count));
   // The validator must be run after we get the drop/keep counts, since it
   // will change the type stack.
-  CHECK_RESULT(validator_.OnReturnCall(GetLocation(), Var(func_index)));
+  CHECK_RESULT(
+      validator_.OnReturnCall(GetLocation(), Var(func_index, GetLocation())));
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.EmitCatchDrop(catch_drop_count);
 
@@ -1149,8 +1158,9 @@ Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
       validator_.GetCatchCount(label_stack_.size() - 1, &catch_drop_count));
   // The validator must be run after we get the drop/keep counts, since it
   // changes the type stack.
-  CHECK_RESULT(validator_.OnReturnCallIndirect(GetLocation(), Var(sig_index),
-                                               Var(table_index)));
+  CHECK_RESULT(validator_.OnReturnCallIndirect(
+      GetLocation(), Var(sig_index, GetLocation()),
+      Var(table_index, GetLocation())));
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.EmitCatchDrop(catch_drop_count);
   istream_.Emit(Opcode::ReturnCallIndirect, table_index, sig_index);
@@ -1206,13 +1216,15 @@ Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
 }
 
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
-  CHECK_RESULT(validator_.OnGlobalGet(GetLocation(), Var(global_index)));
+  CHECK_RESULT(
+      validator_.OnGlobalGet(GetLocation(), Var(global_index, GetLocation())));
   istream_.Emit(Opcode::GlobalGet, global_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnGlobalSetExpr(Index global_index) {
-  CHECK_RESULT(validator_.OnGlobalSet(GetLocation(), Var(global_index)));
+  CHECK_RESULT(
+      validator_.OnGlobalSet(GetLocation(), Var(global_index, GetLocation())));
   istream_.Emit(Opcode::GlobalSet, global_index);
   return Result::Ok;
 }
@@ -1227,7 +1239,8 @@ Result BinaryReaderInterp::OnLocalGetExpr(Index local_index) {
   // will update the type stack size. We need the index to be relative to the
   // old stack size.
   Index translated_local_index = TranslateLocalIndex(local_index);
-  CHECK_RESULT(validator_.OnLocalGet(GetLocation(), Var(local_index)));
+  CHECK_RESULT(
+      validator_.OnLocalGet(GetLocation(), Var(local_index, GetLocation())));
   istream_.Emit(Opcode::LocalGet, translated_local_index);
   return Result::Ok;
 }
@@ -1235,13 +1248,15 @@ Result BinaryReaderInterp::OnLocalGetExpr(Index local_index) {
 Result BinaryReaderInterp::OnLocalSetExpr(Index local_index) {
   // See comment in OnLocalGetExpr above.
   Index translated_local_index = TranslateLocalIndex(local_index);
-  CHECK_RESULT(validator_.OnLocalSet(GetLocation(), Var(local_index)));
+  CHECK_RESULT(
+      validator_.OnLocalSet(GetLocation(), Var(local_index, GetLocation())));
   istream_.Emit(Opcode::LocalSet, translated_local_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
-  CHECK_RESULT(validator_.OnLocalTee(GetLocation(), Var(local_index)));
+  CHECK_RESULT(
+      validator_.OnLocalTee(GetLocation(), Var(local_index, GetLocation())));
   istream_.Emit(Opcode::LocalTee, TranslateLocalIndex(local_index));
   return Result::Ok;
 }
@@ -1250,7 +1265,8 @@ Result BinaryReaderInterp::OnLoadExpr(Opcode opcode,
                                       Index memidx,
                                       Address align_log2,
                                       Address offset) {
-  CHECK_RESULT(validator_.OnLoad(GetLocation(), opcode, Var(memidx),
+  CHECK_RESULT(validator_.OnLoad(GetLocation(), opcode,
+                                 Var(memidx, GetLocation()),
                                  GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
@@ -1260,44 +1276,51 @@ Result BinaryReaderInterp::OnStoreExpr(Opcode opcode,
                                        Index memidx,
                                        Address align_log2,
                                        Address offset) {
-  CHECK_RESULT(validator_.OnStore(GetLocation(), opcode, Var(memidx),
+  CHECK_RESULT(validator_.OnStore(GetLocation(), opcode,
+                                  Var(memidx, GetLocation()),
                                   GetAlignment(align_log2)));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnMemoryGrowExpr(Index memidx) {
-  CHECK_RESULT(validator_.OnMemoryGrow(GetLocation(), Var(memidx)));
+  CHECK_RESULT(
+      validator_.OnMemoryGrow(GetLocation(), Var(memidx, GetLocation())));
   istream_.Emit(Opcode::MemoryGrow, memidx);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnMemorySizeExpr(Index memidx) {
-  CHECK_RESULT(validator_.OnMemorySize(GetLocation(), Var(memidx)));
+  CHECK_RESULT(
+      validator_.OnMemorySize(GetLocation(), Var(memidx, GetLocation())));
   istream_.Emit(Opcode::MemorySize, memidx);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTableGrowExpr(Index table_index) {
-  CHECK_RESULT(validator_.OnTableGrow(GetLocation(), Var(table_index)));
+  CHECK_RESULT(
+      validator_.OnTableGrow(GetLocation(), Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableGrow, table_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTableSizeExpr(Index table_index) {
-  CHECK_RESULT(validator_.OnTableSize(GetLocation(), Var(table_index)));
+  CHECK_RESULT(
+      validator_.OnTableSize(GetLocation(), Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableSize, table_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
-  CHECK_RESULT(validator_.OnTableFill(GetLocation(), Var(table_index)));
+  CHECK_RESULT(
+      validator_.OnTableFill(GetLocation(), Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableFill, table_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
-  CHECK_RESULT(validator_.OnRefFunc(GetLocation(), Var(func_index)));
+  CHECK_RESULT(
+      validator_.OnRefFunc(GetLocation(), Var(func_index, GetLocation())));
   istream_.Emit(Opcode::RefFunc, func_index);
   return Result::Ok;
 }
@@ -1369,73 +1392,83 @@ Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
 }
 
 Result BinaryReaderInterp::OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) {
-  CHECK_RESULT(
-      validator_.OnMemoryCopy(GetLocation(), Var(srcmemidx), Var(destmemidx)));
+  CHECK_RESULT(validator_.OnMemoryCopy(GetLocation(),
+                                       Var(srcmemidx, GetLocation()),
+                                       Var(destmemidx, GetLocation())));
   istream_.Emit(Opcode::MemoryCopy, srcmemidx, destmemidx);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnDataDropExpr(Index segment_index) {
-  CHECK_RESULT(validator_.OnDataDrop(GetLocation(), Var(segment_index)));
+  CHECK_RESULT(
+      validator_.OnDataDrop(GetLocation(), Var(segment_index, GetLocation())));
   istream_.Emit(Opcode::DataDrop, segment_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnMemoryFillExpr(Index memidx) {
-  CHECK_RESULT(validator_.OnMemoryFill(GetLocation(), Var(memidx)));
+  CHECK_RESULT(
+      validator_.OnMemoryFill(GetLocation(), Var(memidx, GetLocation())));
   istream_.Emit(Opcode::MemoryFill, memidx);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index, Index memidx) {
-  CHECK_RESULT(
-      validator_.OnMemoryInit(GetLocation(), Var(segment_index), Var(memidx)));
+  CHECK_RESULT(validator_.OnMemoryInit(GetLocation(),
+                                       Var(segment_index, GetLocation()),
+                                       Var(memidx, GetLocation())));
   istream_.Emit(Opcode::MemoryInit, memidx, segment_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTableGetExpr(Index table_index) {
-  CHECK_RESULT(validator_.OnTableGet(GetLocation(), Var(table_index)));
+  CHECK_RESULT(
+      validator_.OnTableGet(GetLocation(), Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableGet, table_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTableSetExpr(Index table_index) {
-  CHECK_RESULT(validator_.OnTableSet(GetLocation(), Var(table_index)));
+  CHECK_RESULT(
+      validator_.OnTableSet(GetLocation(), Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableSet, table_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTableCopyExpr(Index dst_index, Index src_index) {
-  CHECK_RESULT(
-      validator_.OnTableCopy(GetLocation(), Var(dst_index), Var(src_index)));
+  CHECK_RESULT(validator_.OnTableCopy(GetLocation(),
+                                      Var(dst_index, GetLocation()),
+                                      Var(src_index, GetLocation())));
   istream_.Emit(Opcode::TableCopy, dst_index, src_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnElemDropExpr(Index segment_index) {
-  CHECK_RESULT(validator_.OnElemDrop(GetLocation(), Var(segment_index)));
+  CHECK_RESULT(
+      validator_.OnElemDrop(GetLocation(), Var(segment_index, GetLocation())));
   istream_.Emit(Opcode::ElemDrop, segment_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
                                            Index table_index) {
-  CHECK_RESULT(validator_.OnTableInit(GetLocation(), Var(segment_index),
-                                      Var(table_index)));
+  CHECK_RESULT(validator_.OnTableInit(GetLocation(),
+                                      Var(segment_index, GetLocation()),
+                                      Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableInit, table_index, segment_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnThrowExpr(Index tag_index) {
-  CHECK_RESULT(validator_.OnThrow(GetLocation(), Var(tag_index)));
+  CHECK_RESULT(
+      validator_.OnThrow(GetLocation(), Var(tag_index, GetLocation())));
   istream_.Emit(Opcode::Throw, tag_index);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnRethrowExpr(Index depth) {
   Index catch_depth;
-  CHECK_RESULT(validator_.OnRethrow(GetLocation(), Var(depth)));
+  CHECK_RESULT(validator_.OnRethrow(GetLocation(), Var(depth, GetLocation())));
   CHECK_RESULT(validator_.GetCatchCount(depth, &catch_depth));
   // The rethrow opcode takes an index into the exception stack rather than
   // the number of catch nestings, so we subtract one here.
@@ -1463,7 +1496,8 @@ Result BinaryReaderInterp::OnTryExpr(Type sig_type) {
 }
 
 Result BinaryReaderInterp::OnCatchExpr(Index tag_index) {
-  CHECK_RESULT(validator_.OnCatch(GetLocation(), Var(tag_index), false));
+  CHECK_RESULT(
+      validator_.OnCatch(GetLocation(), Var(tag_index, GetLocation()), false));
   Label* label = TopLabel();
   HandlerDesc& desc = func_->handlers[label->handler_desc_index];
   desc.kind = HandlerKind::Catch;
@@ -1513,7 +1547,7 @@ Result BinaryReaderInterp::OnCatchAllExpr() {
 }
 
 Result BinaryReaderInterp::OnDelegateExpr(Index depth) {
-  CHECK_RESULT(validator_.OnDelegate(GetLocation(), Var(depth)));
+  CHECK_RESULT(validator_.OnDelegate(GetLocation(), Var(depth, GetLocation())));
   Label* label = TopLabel();
   assert(label->kind == LabelKind::Try);
   HandlerDesc& desc = func_->handlers[label->handler_desc_index];
