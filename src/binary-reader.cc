@@ -119,9 +119,18 @@ class BinaryReader {
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
   Result ReadAlignment(Address* align_log2, const char* desc) WABT_WARN_UNUSED;
   Result ReadMemidx(Index* memidx, const char* desc) WABT_WARN_UNUSED;
-  Result ReadAlignMem(Address* align_log2,
-                      Index* memidx,
-                      const char* desc) WABT_WARN_UNUSED;
+  Result ReadMemLocation(Address* alignment_log2,
+                         Index* memidx,
+                         Address* offset,
+                         const char* desc_align,
+                         const char* desc_memidx,
+                         const char* desc_offset,
+                         uint8_t* lane_val = nullptr) WABT_WARN_UNUSED;
+  Result CallbackMemLocation(const Address* alignment_log2,
+                             const Index* memidx,
+                             const Address* offset,
+                             const uint8_t* lane_val = nullptr)
+      WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadField(TypeMut* out_value) WABT_WARN_UNUSED;
 
@@ -170,14 +179,6 @@ class BinaryReader {
   Result ReadTagSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadSections(const ReadSectionsOptions& options) WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
-
-  Result CallbackAlignMemOffset(Index memidx,
-                                Address alignment_log2,
-                                Address offset);
-  Result CallbackAlignMemOffsetLane(Index memidx,
-                                    Address alignment_log2,
-                                    Address offset,
-                                    uint8_t lane_val);
 
   size_t read_end_ = 0;  // Either the section end or data_size.
   BinaryReaderDelegate::State state_;
@@ -441,16 +442,47 @@ Result BinaryReader::ReadMemidx(Index* memidx, const char* desc) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadAlignMem(Address* alignment_log2,
-                                  Index* memidx,
-                                  const char* desc) {
-  CHECK_RESULT(ReadAlignment(alignment_log2, desc));
+Result BinaryReader::ReadMemLocation(Address* alignment_log2,
+                                     Index* memidx,
+                                     Address* offset,
+                                     const char* desc_align,
+                                     const char* desc_memidx,
+                                     const char* desc_offset,
+                                     uint8_t* lane_val) {
+  CHECK_RESULT(ReadAlignment(alignment_log2, desc_align));
   *memidx = 0;
   if (*alignment_log2 >> 6) {
     ERROR_IF(!options_.features.multi_memory_enabled(),
              "multi_memory not allowed");
     *alignment_log2 = *alignment_log2 & ((1 << 6) - 1);
-    CHECK_RESULT(ReadMemidx(memidx, desc));
+    CHECK_RESULT(ReadMemidx(memidx, desc_memidx));
+  }
+  CHECK_RESULT(ReadAddress(offset, 0, desc_offset));
+
+  if (lane_val) {
+    CHECK_RESULT(ReadU8(lane_val, "Lane idx"));
+  }
+
+  return Result::Ok;
+}
+
+Result BinaryReader::CallbackMemLocation(const Address* alignment_log2,
+                                         const Index* memidx,
+                                         const Address* offset,
+                                         const uint8_t* lane_val) {
+  if (lane_val) {
+    if (*memidx) {
+      CALLBACK(OnOpcodeUint32Uint32Uint32Uint32, *alignment_log2, *memidx,
+               *offset, *lane_val);
+    } else {
+      CALLBACK(OnOpcodeUint32Uint32Uint32, *alignment_log2, *offset, *lane_val);
+    }
+  } else {
+    if (*memidx) {
+      CALLBACK(OnOpcodeUint32Uint32Uint32, *alignment_log2, *memidx, *offset);
+    } else {
+      CALLBACK(OnOpcodeUint32Uint32, *alignment_log2, *offset);
+    }
   }
 
   return Result::Ok;
@@ -938,12 +970,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::V128Load32X2U: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
         CALLBACK(OnLoadExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -959,11 +991,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::V128Store: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "store alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "store offset"));
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "store alignment", "store memidx",
+                                     "store offset"));
         CALLBACK(OnStoreExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1330,12 +1363,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::V128Load64Splat: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
         CALLBACK(OnLoadSplatExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
       case Opcode::V128Load8Lane:
@@ -1344,16 +1377,15 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::V128Load64Lane: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
         uint8_t lane_val;
-        CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset", &lane_val));
         CALLBACK(OnSimdLoadLaneExpr, opcode, memidx, alignment_log2, offset,
                  lane_val);
-        CHECK_RESULT(CallbackAlignMemOffsetLane(memidx, alignment_log2, offset,
-                                                lane_val));
+        CHECK_RESULT(
+            CallbackMemLocation(&alignment_log2, &memidx, &offset, &lane_val));
         break;
       }
       case Opcode::V128Store8Lane:
@@ -1362,28 +1394,27 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::V128Store64Lane: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "store alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
         uint8_t lane_val;
-        CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "store alignment", "store memidx",
+                                     "store offset", &lane_val));
         CALLBACK(OnSimdStoreLaneExpr, opcode, memidx, alignment_log2, offset,
                  lane_val);
-        CHECK_RESULT(CallbackAlignMemOffsetLane(memidx, alignment_log2, offset,
-                                                lane_val));
+        CHECK_RESULT(
+            CallbackMemLocation(&alignment_log2, &memidx, &offset, &lane_val));
         break;
       }
       case Opcode::V128Load32Zero:
       case Opcode::V128Load64Zero: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
         CALLBACK(OnLoadZeroExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
       case Opcode::I32TruncF32S:
@@ -1499,13 +1530,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::MemoryAtomicNotify: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(
-            ReadAlignMem(&alignment_log2, &memidx, "notify alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "notify offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "notify alignment", "notify memidx",
+                                     "notify offset"));
         CALLBACK(OnAtomicNotifyExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1513,12 +1543,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::MemoryAtomicWait64: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "wait alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "wait offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "wait alignment", "wait memidx",
+                                     "wait offset"));
         CALLBACK(OnAtomicWaitExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1541,12 +1571,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::I64AtomicLoad: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "load alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
         CALLBACK(OnAtomicLoadExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1559,12 +1589,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::I64AtomicStore: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(ReadAlignMem(&alignment_log2, &memidx, "store alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "store offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "store alignment", "store memidx",
+                                     "store offset"));
         CALLBACK(OnAtomicStoreExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1612,13 +1642,12 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::I64AtomicRmw32XchgU: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(
-            ReadAlignMem(&alignment_log2, &memidx, "memory alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "memory offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "memory alignment", "memory memidx",
+                                     "memory offset"));
         CALLBACK(OnAtomicRmwExpr, opcode, memidx, alignment_log2, offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1631,14 +1660,13 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::I64AtomicRmw32CmpxchgU: {
         Address alignment_log2;
         Index memidx;
-        CHECK_RESULT(
-            ReadAlignMem(&alignment_log2, &memidx, "memory alignment"));
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "memory offset"));
-
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "memory alignment", "memory memidx",
+                                     "memory offset"));
         CALLBACK(OnAtomicRmwCmpxchgExpr, opcode, memidx, alignment_log2,
                  offset);
-        CHECK_RESULT(CallbackAlignMemOffset(memidx, alignment_log2, offset));
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -2937,30 +2965,6 @@ Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
   }
 
   return result;
-}
-
-Result BinaryReader::CallbackAlignMemOffset(Index memidx,
-                                            Address alignment_log2,
-                                            Address offset) {
-  if (memidx) {
-    CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, memidx, offset);
-  } else {
-    CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
-  }
-  return Result::Ok;
-}
-
-Result BinaryReader::CallbackAlignMemOffsetLane(Index memidx,
-                                                Address alignment_log2,
-                                                Address offset,
-                                                uint8_t lane_val) {
-  if (memidx) {
-    CALLBACK(OnOpcodeUint32Uint32Uint32Uint32, alignment_log2, memidx, offset,
-             lane_val);
-  } else {
-    CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, lane_val);
-  }
-  return Result::Ok;
 }
 
 Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
