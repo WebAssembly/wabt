@@ -41,8 +41,9 @@ enum class VarType {
 };
 
 struct Var {
-  explicit Var(Index index = kInvalidIndex, const Location& loc = Location());
-  explicit Var(std::string_view name, const Location& loc = Location());
+  explicit Var();
+  explicit Var(Index index, const Location& loc);
+  explicit Var(std::string_view name, const Location& loc);
   Var(Var&&);
   Var(const Var&);
   Var& operator=(const Var&);

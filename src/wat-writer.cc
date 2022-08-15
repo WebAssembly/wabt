@@ -1329,7 +1329,7 @@ void WatWriter::WriteBeginFunc(const Func& func) {
     WriteCloseSpace();
   }
 
-  if (module.IsImport(ExternalKind::Func, Var(func_index_))) {
+  if (module.IsImport(ExternalKind::Func, Var(func_index_, Location()))) {
     // Imported functions can be written a few ways:
     //
     //   1. (import "module" "field" (func (type 0)))

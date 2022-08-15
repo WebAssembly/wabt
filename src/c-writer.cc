@@ -670,7 +670,7 @@ void CWriter::Write(const GotoLabel& goto_label) {
     // We've generated names for all labels, so we should only be using an
     // index when branching to the implicit function label, which can't be
     // named.
-    Write("goto ", Var(kImplicitFuncLabel), ";");
+    Write("goto ", Var(kImplicitFuncLabel, {}), ";");
   }
 }
 
@@ -1979,7 +1979,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Return:
         // Goto the function label instead; this way we can do shared function
         // cleanup code in one place.
-        Write(GotoLabel(Var(label_stack_.size() - 1)), Newline());
+        Write(GotoLabel(Var(label_stack_.size() - 1, {})), Newline());
         // Stop processing this ExprList, since the following are unreachable.
         return;
 

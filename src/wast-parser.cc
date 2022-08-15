@@ -937,7 +937,7 @@ Result WastParser::ParseValueType(Var* out_type) {
     return Result::Error;
   }
 
-  *out_type = Var(type);
+  *out_type = Var(type, GetLocation());
   return Result::Ok;
 }
 
@@ -1654,7 +1654,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
     if (MatchLpar(TokenType::Data)) {
       auto data_segment_field = MakeUnique<DataSegmentModuleField>(loc);
       DataSegment& data_segment = data_segment_field->data_segment;
-      data_segment.memory_var = Var(module->memories.size());
+      data_segment.memory_var = Var(module->memories.size(), GetLocation());
       data_segment.offset.push_back(MakeUnique<ConstExpr>(
           field->memory.page_limits.is_64 ? Const::I64(0) : Const::I32(0)));
       data_segment.offset.back().loc = loc;
@@ -1726,7 +1726,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
 
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
-    elem_segment.table_var = Var(module->tables.size());
+    elem_segment.table_var = Var(module->tables.size(), GetLocation());
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     elem_segment.elem_type = elem_type;

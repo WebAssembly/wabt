@@ -8,7 +8,7 @@ test() =>
 out/test/spec/memory_init.wast:190: assert_invalid passed:
   0000023: error: data.drop requires data count section
 out/test/spec/memory_init.wast:196: assert_invalid passed:
-  0000000: error: data_segment variable out of range: 4 (max 1)
+  out/test/spec/memory_init/memory_init.5.wasm:000002c: error: data_segment variable out of range: 4 (max 1)
   000002c: error: OnDataDropExpr callback failed
 test() =>
 out/test/spec/memory_init.wast:217: assert_trap passed: out of bounds memory access: memory.init out of bounds
@@ -16,7 +16,7 @@ out/test/spec/memory_init.wast:224: assert_trap passed: out of bounds memory acc
 out/test/spec/memory_init.wast:227: assert_invalid passed:
   000002a: error: memory.init requires data count section
 out/test/spec/memory_init.wast:233: assert_invalid passed:
-  0000000: error: data_segment variable out of range: 1 (max 1)
+  out/test/spec/memory_init/memory_init.10.wasm:0000034: error: data_segment variable out of range: 1 (max 1)
   0000034: error: OnMemoryInitExpr callback failed
 test() =>
 out/test/spec/memory_init.wast:253: assert_trap passed: out of bounds memory access: memory.init out of bounds

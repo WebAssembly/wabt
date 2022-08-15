@@ -3,13 +3,13 @@
 ;;; ARGS*: --enable-exceptions
 (;; STDOUT ;;;
 out/test/spec/exception-handling/exports.wast:39: assert_invalid passed:
-  0000000: error: function variable out of range: 0 (max 0)
+  out/test/spec/exception-handling/exports/exports.15.wasm:000000f: error: function variable out of range: 0 (max 0)
   000000f: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:43: assert_invalid passed:
-  0000000: error: function variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.16.wasm:0000019: error: function variable out of range: 1 (max 1)
   0000019: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:47: assert_invalid passed:
-  0000000: error: function variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.17.wasm:000002e: error: function variable out of range: 1 (max 1)
   000002e: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:51: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.18.wasm:000001d: error: duplicate export "a"
@@ -30,13 +30,13 @@ out/test/spec/exception-handling/exports.wast:71: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.23.wasm:0000022: error: duplicate export "t0"
   0000022: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:100: assert_invalid passed:
-  0000000: error: global variable out of range: 0 (max 0)
+  out/test/spec/exception-handling/exports/exports.36.wasm:000000f: error: global variable out of range: 0 (max 0)
   000000f: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:104: assert_invalid passed:
-  0000000: error: global variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.37.wasm:0000017: error: global variable out of range: 1 (max 1)
   0000017: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:108: assert_invalid passed:
-  0000000: error: global variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.38.wasm:0000029: error: global variable out of range: 1 (max 1)
   0000029: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:112: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.39.wasm:000001b: error: duplicate export "a"
@@ -54,13 +54,13 @@ out/test/spec/exception-handling/exports.wast:128: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.43.wasm:0000020: error: duplicate export "a"
   0000020: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:155: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
+  out/test/spec/exception-handling/exports/exports.59.wasm:000000f: error: table variable out of range: 0 (max 0)
   000000f: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:159: assert_invalid passed:
-  0000000: error: table variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.60.wasm:0000015: error: table variable out of range: 1 (max 1)
   0000015: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:163: assert_invalid passed:
-  0000000: error: table variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.61.wasm:0000026: error: table variable out of range: 1 (max 1)
   0000026: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:167: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.62.wasm:0000019: error: duplicate export "a"
@@ -78,13 +78,13 @@ out/test/spec/exception-handling/exports.wast:183: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.66.wasm:000001e: error: duplicate export "a"
   000001e: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:211: assert_invalid passed:
-  0000000: error: memory variable out of range: 0 (max 0)
+  out/test/spec/exception-handling/exports/exports.81.wasm:000000f: error: memory variable out of range: 0 (max 0)
   000000f: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:215: assert_invalid passed:
-  0000000: error: memory variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.82.wasm:0000014: error: memory variable out of range: 1 (max 1)
   0000014: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:219: assert_invalid passed:
-  0000000: error: memory variable out of range: 1 (max 1)
+  out/test/spec/exception-handling/exports/exports.83.wasm:0000026: error: memory variable out of range: 1 (max 1)
   0000026: error: OnExport callback failed
 out/test/spec/exception-handling/exports.wast:223: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.84.wasm:0000018: error: duplicate export "a"

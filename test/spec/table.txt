@@ -2,10 +2,10 @@
 ;;; STDIN_FILE: third_party/testsuite/table.wast
 (;; STDOUT ;;;
 out/test/spec/table.wast:14: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
+  out/test/spec/table/table.9.wasm:000000c: error: table variable out of range: 0 (max 0)
   000000c: error: BeginElemSegment callback failed
 out/test/spec/table.wast:15: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
+  out/test/spec/table/table.10.wasm:0000016: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/table.wast:19: assert_invalid passed:
   out/test/spec/table/table.11.wasm:000000f: error: max elems (0) must be >= initial elems (1)
