@@ -19,6 +19,15 @@
     i32.const 0 local.get 0 v128.store
     v128.const i32x4 0 0 0 0 drop
 
+    i32.const 0 local.get 0 v128.load8_lane 0 drop
+    i32.const 0 local.get 0 v128.load16_lane 0 drop
+    i32.const 0 local.get 0 v128.load32_lane 0 drop
+    i32.const 0 local.get 0 v128.load64_lane 0 drop
+    i32.const 0 local.get 0 v128.store8_lane 0
+    i32.const 0 local.get 0 v128.store16_lane 0
+    i32.const 0 local.get 0 v128.store32_lane 0
+    i32.const 0 local.get 0 v128.store64_lane 0
+
     local.get 0 local.get 0 i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 drop
     local.get 0 local.get 0 i8x16.swizzle drop
 
@@ -234,6 +243,34 @@
       (local.get 0))
     (drop
       (v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000))
+    (drop
+      (v128.load8_lane 0
+        (i32.const 0)
+        (local.get 0)))
+    (drop
+      (v128.load16_lane 0
+        (i32.const 0)
+        (local.get 0)))
+    (drop
+      (v128.load32_lane 0
+        (i32.const 0)
+        (local.get 0)))
+    (drop
+      (v128.load64_lane 0
+        (i32.const 0)
+        (local.get 0)))
+    (v128.store8_lane 0
+      (i32.const 0)
+      (local.get 0))
+    (v128.store16_lane 0
+      (i32.const 0)
+      (local.get 0))
+    (v128.store32_lane 0
+      (i32.const 0)
+      (local.get 0))
+    (v128.store64_lane 0
+      (i32.const 0)
+      (local.get 0))
     (drop
       (i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         (local.get 0)
