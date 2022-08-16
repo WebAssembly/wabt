@@ -7,7 +7,7 @@ section(CODE) {
   count[1]
   func {
     locals[decl_count[1] i32_count[1] i32]
-    get_local 0
+    local.get 0
   }
 }
 section("name") {

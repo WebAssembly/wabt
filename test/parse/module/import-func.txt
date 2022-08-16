@@ -1,5 +1,7 @@
 ;;; TOOL: wat2wasm
 (module
+  (type $add_type (func (param i32 i32) (result i32)))
+
   ;; unnamed
   (import "foo" "bar" (func (param i32) (result i64)))
 
@@ -8,4 +10,11 @@
   (import "math" "add" (func $add_i32 (param i32 i32) (result i32)))
   (import "test" "f32" (func $f32 (param f32) (result f32)))
   (import "test" "f64" (func $f64 (param f64) (result f64)))
-  (import "test" "i64" (func $i64 (param i64) (result i64))))
+  (import "test" "i64" (func $i64 (param i64) (result i64)))
+
+  ;; named type
+  (import "math" "add" (func $add_i32_2 (type $add_type)))
+
+  ;; named type, with repetition of type inline
+  (import "math" "add" (func $add_i32_3 (type $add_type) (param i32 i32) (result i32)))
+)

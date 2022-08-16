@@ -187,116 +187,116 @@ out/test/spec/memory64/align64.wast:299: assert_malformed passed:
   (module (memory i64 0) (func (f64.store align=7 (i64.const 0) (f32.const 0))))
                                           ^^^^^^^
 out/test/spec/memory64/align64.wast:306: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.69.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:310: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.70.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:314: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.71.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:318: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.72.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:322: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.73.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:326: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.74.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:330: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.75.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:334: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.76.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:338: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.77.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:342: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.78.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:346: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.79.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:350: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/memory64/align64/align64.80.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:354: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.81.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:358: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/memory64/align64/align64.82.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:363: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.83.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:367: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.84.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:371: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.85.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:375: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.86.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:379: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.87.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:383: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.88.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:387: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.89.wasm:0000021: error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:391: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.90.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:395: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.91.wasm:0000021: error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:399: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.92.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:403: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.93.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:407: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/memory64/align64/align64.94.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:411: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.95.wasm:0000021: error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:415: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/memory64/align64/align64.96.wasm:0000021: error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
 out/test/spec/memory64/align64.wast:420: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.97.wasm:0000023: error: alignment must not be larger than natural alignment (1)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:424: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.98.wasm:0000023: error: alignment must not be larger than natural alignment (2)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:428: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.99.wasm:0000023: error: alignment must not be larger than natural alignment (4)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:432: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (1)
+  out/test/spec/memory64/align64/align64.100.wasm:0000023: error: alignment must not be larger than natural alignment (1)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:436: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (2)
+  out/test/spec/memory64/align64/align64.101.wasm:0000023: error: alignment must not be larger than natural alignment (2)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:440: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.102.wasm:0000023: error: alignment must not be larger than natural alignment (4)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:444: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/memory64/align64/align64.103.wasm:0000023: error: alignment must not be larger than natural alignment (8)
   0000023: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:448: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (4)
+  out/test/spec/memory64/align64/align64.104.wasm:0000026: error: alignment must not be larger than natural alignment (4)
   0000026: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:452: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
+  out/test/spec/memory64/align64/align64.105.wasm:000002a: error: alignment must not be larger than natural alignment (8)
   000002a: error: OnStoreExpr callback failed
 out/test/spec/memory64/align64.wast:864: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
-131/131 tests passed.
+156/156 tests passed.
 ;;; STDOUT ;;)

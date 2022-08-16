@@ -12,91 +12,91 @@ out/test/spec/i64.wast:104: assert_trap passed: integer divide by zero
 out/test/spec/i64.wast:124: assert_trap passed: integer divide by zero
 out/test/spec/i64.wast:125: assert_trap passed: integer divide by zero
 out/test/spec/i64.wast:457: assert_invalid passed:
-  error: type mismatch in i64.add, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.1.wasm:0000020: error: type mismatch in i64.add, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:458: assert_invalid passed:
-  error: type mismatch in i64.and, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.2.wasm:0000020: error: type mismatch in i64.and, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:459: assert_invalid passed:
-  error: type mismatch in i64.div_s, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.3.wasm:0000020: error: type mismatch in i64.div_s, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:460: assert_invalid passed:
-  error: type mismatch in i64.div_u, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.4.wasm:0000020: error: type mismatch in i64.div_u, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:461: assert_invalid passed:
-  error: type mismatch in i64.mul, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.5.wasm:0000020: error: type mismatch in i64.mul, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:462: assert_invalid passed:
-  error: type mismatch in i64.or, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.6.wasm:0000020: error: type mismatch in i64.or, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:463: assert_invalid passed:
-  error: type mismatch in i64.rem_s, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.7.wasm:0000020: error: type mismatch in i64.rem_s, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:464: assert_invalid passed:
-  error: type mismatch in i64.rem_u, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.8.wasm:0000020: error: type mismatch in i64.rem_u, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:465: assert_invalid passed:
-  error: type mismatch in i64.rotl, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.9.wasm:0000020: error: type mismatch in i64.rotl, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:466: assert_invalid passed:
-  error: type mismatch in i64.rotr, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.10.wasm:0000020: error: type mismatch in i64.rotr, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:467: assert_invalid passed:
-  error: type mismatch in i64.shl, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.11.wasm:0000020: error: type mismatch in i64.shl, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:468: assert_invalid passed:
-  error: type mismatch in i64.shr_s, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.12.wasm:0000020: error: type mismatch in i64.shr_s, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:469: assert_invalid passed:
-  error: type mismatch in i64.shr_u, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.13.wasm:0000020: error: type mismatch in i64.shr_u, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:470: assert_invalid passed:
-  error: type mismatch in i64.sub, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.14.wasm:0000020: error: type mismatch in i64.sub, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:471: assert_invalid passed:
-  error: type mismatch in i64.xor, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.15.wasm:0000020: error: type mismatch in i64.xor, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i64.wast:472: assert_invalid passed:
-  error: type mismatch in i64.eqz, expected [i64] but got [i32]
+  out/test/spec/i64/i64.16.wasm:000001b: error: type mismatch in i64.eqz, expected [i64] but got [i32]
   000001b: error: OnConvertExpr callback failed
 out/test/spec/i64.wast:473: assert_invalid passed:
-  error: type mismatch in i64.clz, expected [i64] but got [i32]
+  out/test/spec/i64/i64.17.wasm:000001b: error: type mismatch in i64.clz, expected [i64] but got [i32]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/i64.wast:474: assert_invalid passed:
-  error: type mismatch in i64.ctz, expected [i64] but got [i32]
+  out/test/spec/i64/i64.18.wasm:000001b: error: type mismatch in i64.ctz, expected [i64] but got [i32]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/i64.wast:475: assert_invalid passed:
-  error: type mismatch in i64.popcnt, expected [i64] but got [i32]
+  out/test/spec/i64/i64.19.wasm:000001b: error: type mismatch in i64.popcnt, expected [i64] but got [i32]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/i64.wast:476: assert_invalid passed:
-  error: type mismatch in i64.eq, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.20.wasm:0000020: error: type mismatch in i64.eq, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:477: assert_invalid passed:
-  error: type mismatch in i64.ge_s, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.21.wasm:0000020: error: type mismatch in i64.ge_s, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:478: assert_invalid passed:
-  error: type mismatch in i64.ge_u, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.22.wasm:0000020: error: type mismatch in i64.ge_u, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:479: assert_invalid passed:
-  error: type mismatch in i64.gt_s, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.23.wasm:0000020: error: type mismatch in i64.gt_s, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:480: assert_invalid passed:
-  error: type mismatch in i64.gt_u, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.24.wasm:0000020: error: type mismatch in i64.gt_u, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:481: assert_invalid passed:
-  error: type mismatch in i64.le_s, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.25.wasm:0000020: error: type mismatch in i64.le_s, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:482: assert_invalid passed:
-  error: type mismatch in i64.le_u, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.26.wasm:0000020: error: type mismatch in i64.le_u, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:483: assert_invalid passed:
-  error: type mismatch in i64.lt_s, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.27.wasm:0000020: error: type mismatch in i64.lt_s, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:484: assert_invalid passed:
-  error: type mismatch in i64.lt_u, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.28.wasm:0000020: error: type mismatch in i64.lt_u, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i64.wast:485: assert_invalid passed:
-  error: type mismatch in i64.ne, expected [i64, i64] but got [i32, f32]
+  out/test/spec/i64/i64.29.wasm:0000020: error: type mismatch in i64.ne, expected [i64, i64] but got [i32, f32]
   0000020: error: OnCompareExpr callback failed
-413/413 tests passed.
+416/416 tests passed.
 ;;; STDOUT ;;)

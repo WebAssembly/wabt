@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (func
+    local.get 0
+    drop))
+(;; STDERR ;;;
+out/test/parse/expr/bad-localget-undefined.txt:5:15: error: local variable out of range (max 0)
+    local.get 0
+              ^
+;;; STDERR ;;)

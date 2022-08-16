@@ -43,21 +43,24 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 * text: Whether wabt can read/write the text format
 * validate: Whether wabt can validate the syntax
 * interpret: Whether wabt can execute these operations in `wasm-interp` or `spectest-interp`
+* wasm2c: Whether wasm2c supports these operations
 
-| Proposal | flag | default | binary | text | validate | interpret |
-| - | - | - | - | - | - | - |
-| [exception handling][] | `--enable-exceptions` | | ✓ | ✓ | ✓ | ✓ |
-| [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [sign extension][] | `--disable-sign-extension` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [simd][] | `--enable-simd` | | ✓ | ✓ | ✓ | ✓ |
-| [threads][] | `--enable-threads` | | ✓ | ✓ | ✓ | ✓ |
-| [multi-value][] | `--disable-multi-value` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [tail-call][] | `--enable-tail-call` | | ✓ | ✓ | ✓ | ✓ |
-| [bulk memory][] | `--enable-bulk-memory` | | ✓ | ✓ | ✓ | ✓ |
-| [reference types][] | `--enable-reference-types` | | ✓ | ✓ | ✓ | ✓ |
-| [annotations][] | `--enable-annotations` | | | ✓ | | |
-| [memory64][] | `--enable-memory64` | | | | | |
+| Proposal   | flag | default | binary | text | validate | interpret | wasm2c |
+| --------------------- | --------------------------- | - | - | - | - | - | - |
+| [exception handling][]| `--enable-exceptions`       |   | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [mutable globals][]   | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [sign extension][]    | `--disable-sign-extension`  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [simd][]              | `--disable-simd`            | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+| [threads][]           | `--enable-threads`          |   | ✓ | ✓ | ✓ | ✓ |   |
+| [multi-value][]       | `--disable-multi-value`     | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [tail-call][]         | `--enable-tail-call`        |   | ✓ | ✓ | ✓ | ✓ |   |
+| [bulk memory][]       | `--disable-bulk-memory`     | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+| [reference types][]   | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ |   |
+| [annotations][]       | `--enable-annotations`      |   |   | ✓ |   |   |   |
+| [memory64][]          | `--enable-memory64`         |   | ✓ | ✓ | ✓ | ✓ |   |
+| [multi-memory][]      | `--enable-multi-memory`     |   | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [extended-const][]    | `--enable-extended-const`   |   | ✓ | ✓ | ✓ | ✓ |   |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
@@ -71,6 +74,8 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [reference types]: https://github.com/WebAssembly/reference-types
 [annotations]: https://github.com/WebAssembly/annotations
 [memory64]: https://github.com/WebAssembly/memory64
+[multi-memory]: https://github.com/WebAssembly/multi-memory
+[extended-const]: https://github.com/WebAssembly/extended-const
 
 ## Cloning
 
@@ -79,6 +84,7 @@ Clone as normal, but don't forget to get the submodules as well:
 ```console
 $ git clone --recursive https://github.com/WebAssembly/wabt
 $ cd wabt
+$ git submodule update --init
 ```
 
 This will fetch the testsuite and gtest repos, which are needed for some tests.
@@ -94,21 +100,24 @@ $ cmake ..
 $ cmake --build .
 ```
 
-This will produce build files using CMake's default build generator. Read the CMake
-documentation for more information.
+This will produce build files using CMake's default build generator. Read the
+CMake documentation for more information.
 
-**NOTE**: You must create a separate directory for the build artifacts (e.g. `build` above).
-Running `cmake` from the repo root directory will not work since the build produces an
-executable called `wasm2c` which conflicts with the `wasm2c` directory.
+**NOTE**: You must create a separate directory for the build artifacts (e.g.
+`build` above).  Running `cmake` from the repo root directory will not work
+since the build produces an executable called `wasm2c` which conflicts with the
+`wasm2c` directory.
 
 ## Building using the top-level `Makefile` (Linux and macOS)
 
-**NOTE**: Under the hood, this uses `make` to run CMake, which then calls `make` again.
-On some systems (typically macOS), this doesn't build properly. If you see these errors,
-you can build using CMake directly as described above.
+**NOTE**: Under the hood, this uses `make` to run CMake, which then calls
+`ninja` to perform that actual build.  On some systems (typically macOS), this
+doesn't build properly. If you see these errors, you can build using CMake
+directly as described above.
 
-You'll need [CMake](https://cmake.org). If you just run `make`, it will run CMake for you,
-and put the result in `bin/clang/Debug/` by default:
+You'll need [CMake](https://cmake.org) and [Ninja](https://ninja-build.org). If
+you just run `make`, it will run CMake for you, and put the result in
+`out/clang/Debug/` by default:
 
 > Note: If you are on macOS, you will need to use CMake version 3.2 or higher
 
@@ -191,7 +200,7 @@ run `make update-gperf` to update the prebuilt C++ sources in `src/prebuilt/`.
 Some examples:
 
 ```sh
-# parse and typecheck test.wat
+# parse test.wat and write to .wasm binary file with the same name
 $ bin/wat2wasm test.wat
 
 # parse test.wat and write to binary file test.wasm
@@ -301,7 +310,7 @@ $ make clang-debug-ubsan
 ```
 
 There are configurations for the Address Sanitizer (ASAN), Memory Sanitizer
-(MSAN), Leak Sanitizer (LSAN) and Undefine Behavior Sanitizer (UBSAN). You can
+(MSAN), Leak Sanitizer (LSAN) and Undefined Behavior Sanitizer (UBSAN). You can
 read about the behaviors of the sanitizers in the link above, but essentially
 the Address Sanitizer finds invalid memory accesses (use after free, access
 out-of-bounds, etc.), Memory Sanitizer finds uses of uninitialized memory,

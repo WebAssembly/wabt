@@ -23,7 +23,6 @@ import os
 import re
 import shlex
 import shutil
-import struct
 import subprocess
 import sys
 import threading
@@ -39,6 +38,10 @@ OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
 DEFAULT_TIMEOUT = 120    # seconds
 SLOW_TIMEOUT_MULTIPLIER = 3
 
+if sys.byteorder == 'big':
+    wasm2c_args = ['--cflags=-DWABT_BIG_ENDIAN']
+else:
+    wasm2c_args = []
 
 # default configurations for tests
 TOOLS = {
@@ -146,10 +149,9 @@ TOOLS = {
             '%(in_file)s',
             '--bindir=%(bindir)s',
             '--no-error-cmdline',
-            '--cflags=-DWABT_BIG_ENDIAN=' + '01'[struct.pack('<h', *struct.unpack('=h', b'\x00\x01'))[0]],
             '-o',
             '%(out_dir)s',
-        ]),
+        ] + wasm2c_args),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-wasm-decompile': [
@@ -157,10 +159,6 @@ TOOLS = {
         ('RUN', '%(wasm-decompile)s --enable-all %(temp_file)s.wasm'),
     ]
 }
-
-# TODO(binji): Add Windows support for compiling using run-spec-wasm2c.py
-if IS_WINDOWS:
-    TOOLS['run-spec-wasm2c'].append(('SKIP', ''))
 
 ROUNDTRIP_TOOLS = ('wat2wasm',)
 
@@ -707,6 +705,16 @@ def GetAllTestInfo(test_names, status):
     return infos
 
 
+def CanonicalizePath(path):
+    """In order to get identical test results we canonicalize path
+    names that we pass into test code.  We use posix path separators
+    because they work sufficiently well on all platforms (including
+    windows)."""
+    # For some reason this doesn't work on winows:
+    # return str(pathlib.PurePosixPath(path))
+    return path.replace(os.path.sep, '/')
+
+
 def RunTest(info, options, variables, verbose_level=0):
     timeout = options.timeout
     if info.slow:
@@ -719,9 +727,8 @@ def RunTest(info, options, variables, verbose_level=0):
     env = dict(os.environ)
     env.update(info.env)
     gen_input_path = info.CreateInputFile()
-    rel_gen_input_path = (
-        os.path.relpath(gen_input_path, cwd).replace(os.path.sep, '/'))
-    variables['in_file'] = rel_gen_input_path
+    rel_gen_input_path = os.path.relpath(gen_input_path, cwd)
+    variables['in_file'] = CanonicalizePath(rel_gen_input_path)
 
     # Each test runs with a unique output directory which is removed before
     # we run the test.
@@ -729,13 +736,13 @@ def RunTest(info, options, variables, verbose_level=0):
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
-    variables['out_dir'] = out_dir
+    variables['out_dir'] = CanonicalizePath(out_dir)
 
     # Temporary files typically are placed in `out_dir` and use the same test's
     # basename. This name does include an extension.
     input_basename = os.path.basename(rel_gen_input_path)
-    variables['temp_file'] = os.path.join(out_dir,
-                                          os.path.splitext(input_basename)[0])
+    temp_file = os.path.join(out_dir, os.path.splitext(input_basename)[0])
+    variables['temp_file'] = CanonicalizePath(temp_file)
 
     test_result = TestResult()
 

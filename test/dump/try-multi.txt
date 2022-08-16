@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (event $e1 (param i32))
+  (tag $e1 (param i32))
   (func
     try (result i32 i32)
       i32.const 1
@@ -50,60 +50,53 @@
 000001a: 01                                        ; function 0 signature index
 000001b: 01                                        ; function 1 signature index
 0000018: 03                                        ; FIXUP section size
-; section "Event" (13)
+; section "Tag" (13)
 000001c: 0d                                        ; section code
 000001d: 00                                        ; section size (guess)
-000001e: 01                                        ; event count
-; event 0
-000001f: 00                                        ; event attribute
-0000020: 00                                        ; event signature index
+000001e: 01                                        ; tag count
+; tag 0
+000001f: 00                                        ; tag attribute
+0000020: 00                                        ; tag signature index
 000001d: 03                                        ; FIXUP section size
-; section "DataCount" (12)
-0000021: 0c                                        ; section code
-0000022: 00                                        ; section size (guess)
-0000023: 00                                        ; data count
-0000022: 01                                        ; FIXUP section size
 ; section "Code" (10)
-0000024: 0a                                        ; section code
-0000025: 00                                        ; section size (guess)
-0000026: 02                                        ; num functions
+0000021: 0a                                        ; section code
+0000022: 00                                        ; section size (guess)
+0000023: 02                                        ; num functions
 ; function body 0
-0000027: 00                                        ; func body size (guess)
-0000028: 00                                        ; local decl count
-0000029: 06                                        ; try
-000002a: 02                                        ; block type function index
-000002b: 41                                        ; i32.const
-000002c: 01                                        ; i32 literal
-000002d: 41                                        ; i32.const
-000002e: 02                                        ; i32 literal
-000002f: 07                                        ; catch
-0000030: 00                                        ; catch event
-0000031: 1a                                        ; drop
-0000032: 41                                        ; i32.const
-0000033: 03                                        ; i32 literal
-0000034: 41                                        ; i32.const
-0000035: 04                                        ; i32 literal
-0000036: 0b                                        ; end
-0000037: 0f                                        ; return
-0000038: 0b                                        ; end
-0000027: 11                                        ; FIXUP func body size
+0000024: 00                                        ; func body size (guess)
+0000025: 00                                        ; local decl count
+0000026: 06                                        ; try
+0000027: 02                                        ; block type function index
+0000028: 41                                        ; i32.const
+0000029: 01                                        ; i32 literal
+000002a: 41                                        ; i32.const
+000002b: 02                                        ; i32 literal
+000002c: 07                                        ; catch
+000002d: 00                                        ; catch tag
+000002e: 1a                                        ; drop
+000002f: 41                                        ; i32.const
+0000030: 03                                        ; i32 literal
+0000031: 41                                        ; i32.const
+0000032: 04                                        ; i32 literal
+0000033: 0b                                        ; end
+0000034: 0f                                        ; return
+0000035: 0b                                        ; end
+0000024: 11                                        ; FIXUP func body size
 ; function body 1
-0000039: 00                                        ; func body size (guess)
-000003a: 00                                        ; local decl count
-000003b: 41                                        ; i32.const
-000003c: 00                                        ; i32 literal
-000003d: 06                                        ; try
-000003e: 00                                        ; block type function index
+0000036: 00                                        ; func body size (guess)
+0000037: 00                                        ; local decl count
+0000038: 41                                        ; i32.const
+0000039: 00                                        ; i32 literal
+000003a: 06                                        ; try
+000003b: 00                                        ; block type function index
+000003c: 1a                                        ; drop
+000003d: 07                                        ; catch
+000003e: 00                                        ; catch tag
 000003f: 1a                                        ; drop
-0000040: 07                                        ; catch
-0000041: 00                                        ; catch event
-0000042: 1a                                        ; drop
-0000043: 0b                                        ; end
-0000044: 0b                                        ; end
-0000039: 0b                                        ; FIXUP func body size
-0000025: 1f                                        ; FIXUP section size
-; move data: [24, 45) -> [21, 42)
-; truncate to 66 (0x42)
+0000040: 0b                                        ; end
+0000041: 0b                                        ; end
+0000036: 0b                                        ; FIXUP func body size
+0000022: 1f                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 

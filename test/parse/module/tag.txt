@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (type $t (func (param f64)))
+  (tag)
+  (tag $e1 (param i32))
+  (tag $e2 (param f32 f32 f32))
+  (tag $e3 (type $t)))

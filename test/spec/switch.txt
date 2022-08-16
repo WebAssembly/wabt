@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDOUT ;;;
 out/test/spec/switch.wast:150: assert_invalid passed:
-  error: invalid depth: 3 (max 0)
+  out/test/spec/switch/switch.1.wasm:000001c: error: invalid depth: 3 (max 0)
   000001c: error: OnBrTableExpr callback failed
-27/27 tests passed.
+28/28 tests passed.
 ;;; STDOUT ;;)

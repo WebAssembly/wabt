@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS*: --enable-simd
 ;;; ERROR: 1
 (module
   (func (result i32) v128.const i32x4 0 0 0 0 i8x16.extract_lane_s 16)
@@ -20,7 +19,7 @@
   (func (result i32) v128.const i32x4 0 0 0 0 i8x16.extract_lane_s 0x100000000)
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-simd-lane.txt:20:47: error: lane index "0x100000000" out-of-range [0, 32)
+out/test/typecheck/bad-simd-lane.txt:19:47: error: lane index "0x100000000" out-of-range [0, 32)
   (func (result i32) v128.const i32x4 0 0 0 0 i8x16.extract_lane_s 0x100000000)
                                               ^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

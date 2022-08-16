@@ -1,0 +1,197 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --debug-names --enable-extended-const
+;;; ARGS1: -x
+(type $type1 (func (param i32)))
+(global $g_import (import "foo" "bar") i32)
+(table 1 funcref)
+(memory 1 1)
+(data (i32.add (global.get $g_import) (i32.const 42)) "hello")
+(elem (i32.mul (i32.const 4) (global.get $g_import)) func 0)
+(global (mut i32) (i32.sub (i32.const 44) (i32.const 3)))
+(global i32 (i32.const 45))
+(func)
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 02                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 01                                        ; num params
+000000d: 7f                                        ; i32
+000000e: 00                                        ; num results
+; func type 1
+000000f: 60                                        ; func
+0000010: 00                                        ; num params
+0000011: 00                                        ; num results
+0000009: 08                                        ; FIXUP section size
+; section "Import" (2)
+0000012: 02                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num imports
+; import header 0
+0000015: 03                                        ; string length
+0000016: 666f 6f                                  foo  ; import module name
+0000019: 03                                        ; string length
+000001a: 6261 72                                  bar  ; import field name
+000001d: 03                                        ; import kind
+000001e: 7f                                        ; i32
+000001f: 00                                        ; global mutability
+0000013: 0c                                        ; FIXUP section size
+; section "Function" (3)
+0000020: 03                                        ; section code
+0000021: 00                                        ; section size (guess)
+0000022: 01                                        ; num functions
+0000023: 01                                        ; function 0 signature index
+0000021: 02                                        ; FIXUP section size
+; section "Table" (4)
+0000024: 04                                        ; section code
+0000025: 00                                        ; section size (guess)
+0000026: 01                                        ; num tables
+; table 0
+0000027: 70                                        ; funcref
+0000028: 00                                        ; limits: flags
+0000029: 01                                        ; limits: initial
+0000025: 04                                        ; FIXUP section size
+; section "Memory" (5)
+000002a: 05                                        ; section code
+000002b: 00                                        ; section size (guess)
+000002c: 01                                        ; num memories
+; memory 0
+000002d: 01                                        ; limits: flags
+000002e: 01                                        ; limits: initial
+000002f: 01                                        ; limits: max
+000002b: 04                                        ; FIXUP section size
+; section "Global" (6)
+0000030: 06                                        ; section code
+0000031: 00                                        ; section size (guess)
+0000032: 02                                        ; num globals
+0000033: 7f                                        ; i32
+0000034: 01                                        ; global mutability
+0000035: 41                                        ; i32.const
+0000036: 2c                                        ; i32 literal
+0000037: 41                                        ; i32.const
+0000038: 03                                        ; i32 literal
+0000039: 6b                                        ; i32.sub
+000003a: 0b                                        ; end
+000003b: 7f                                        ; i32
+000003c: 00                                        ; global mutability
+000003d: 41                                        ; i32.const
+000003e: 2d                                        ; i32 literal
+000003f: 0b                                        ; end
+0000031: 0e                                        ; FIXUP section size
+; section "Elem" (9)
+0000040: 09                                        ; section code
+0000041: 00                                        ; section size (guess)
+0000042: 01                                        ; num elem segments
+; elem segment header 0
+0000043: 00                                        ; segment flags
+0000044: 41                                        ; i32.const
+0000045: 04                                        ; i32 literal
+0000046: 23                                        ; global.get
+0000047: 00                                        ; global index
+0000048: 6c                                        ; i32.mul
+0000049: 0b                                        ; end
+000004a: 01                                        ; num elems
+000004b: 00                                        ; elem function index
+0000041: 0a                                        ; FIXUP section size
+; section "DataCount" (12)
+000004c: 0c                                        ; section code
+000004d: 00                                        ; section size (guess)
+000004e: 01                                        ; data count
+000004d: 01                                        ; FIXUP section size
+; section "Code" (10)
+000004f: 0a                                        ; section code
+0000050: 00                                        ; section size (guess)
+0000051: 01                                        ; num functions
+; function body 0
+0000052: 00                                        ; func body size (guess)
+0000053: 00                                        ; local decl count
+0000054: 0b                                        ; end
+0000052: 02                                        ; FIXUP func body size
+0000050: 04                                        ; FIXUP section size
+; move data: [4f, 55) -> [4c, 52)
+; truncate to 82 (0x52)
+; section "Data" (11)
+0000052: 0b                                        ; section code
+0000053: 00                                        ; section size (guess)
+0000054: 01                                        ; num data segments
+; data segment header 0
+0000055: 00                                        ; segment flags
+0000056: 23                                        ; global.get
+0000057: 00                                        ; global index
+0000058: 41                                        ; i32.const
+0000059: 2a                                        ; i32 literal
+000005a: 6a                                        ; i32.add
+000005b: 0b                                        ; end
+000005c: 05                                        ; data segment size
+; data segment data 0
+000005d: 6865 6c6c 6f                              ; data segment data
+0000053: 0e                                        ; FIXUP section size
+; section "name"
+0000062: 00                                        ; section code
+0000063: 00                                        ; section size (guess)
+0000064: 04                                        ; string length
+0000065: 6e61 6d65                                name  ; custom section name
+0000069: 02                                        ; local name type
+000006a: 00                                        ; subsection size (guess)
+000006b: 01                                        ; num functions
+000006c: 00                                        ; function index
+000006d: 00                                        ; num locals
+000006a: 03                                        ; FIXUP subsection size
+000006e: 04                                        ; name subsection type
+000006f: 00                                        ; subsection size (guess)
+0000070: 01                                        ; num names
+0000071: 00                                        ; elem index
+0000072: 05                                        ; string length
+0000073: 7479 7065 31                             type1  ; elem name 0
+000006f: 08                                        ; FIXUP subsection size
+0000078: 07                                        ; name subsection type
+0000079: 00                                        ; subsection size (guess)
+000007a: 01                                        ; num names
+000007b: 00                                        ; elem index
+000007c: 08                                        ; string length
+000007d: 675f 696d 706f 7274                      g_import  ; elem name 0
+0000079: 0b                                        ; FIXUP subsection size
+0000063: 21                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+extended-const.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[2]:
+ - type[0] (i32) -> nil
+ - type[1] () -> nil
+Import[1]:
+ - global[0] i32 mutable=0 <- foo.bar
+Function[1]:
+ - func[0] sig=1
+Table[1]:
+ - table[0] type=funcref initial=1
+Memory[1]:
+ - memory[0] pages: initial=1 max=1
+Global[2]:
+ - global[1] i32 mutable=1 - init (i32.const 44, i32.const 3, i32.sub)
+ - global[2] i32 mutable=0 - init i32=45
+Elem[1]:
+ - segment[0] flags=0 table=0 count=1 - init (i32.const 4, global.get 0 <g_import>, i32.mul)
+  - elem[0] = func[0]
+Code[1]:
+ - func[0] size=2
+Data[1]:
+ - segment[0] memory=0 size=5 - init (global.get 0 <g_import>, i32.const 42, i32.add)
+  - 0000000: 6865 6c6c 6f                             hello
+Custom:
+ - name: "name"
+ - type[0] <type1>
+ - global[0] <g_import>
+
+Code Disassembly:
+
+000050 func[0]:
+ 000051: 0b                         | end
+;;; STDOUT ;;)

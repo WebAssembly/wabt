@@ -1,0 +1,17 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_i32x4_trunc_sat_f64x2.wast
+(;; STDOUT ;;;
+out/test/spec/simd_i32x4_trunc_sat_f64x2.wast:218: assert_invalid passed:
+  out/test/spec/simd_i32x4_trunc_sat_f64x2/simd_i32x4_trunc_sat_f64x2.1.wasm:000001d: error: type mismatch in i32x4.trunc_sat_f64x2_s_zero, expected [v128] but got [i32]
+  000001d: error: OnConvertExpr callback failed
+out/test/spec/simd_i32x4_trunc_sat_f64x2.wast:219: assert_invalid passed:
+  out/test/spec/simd_i32x4_trunc_sat_f64x2/simd_i32x4_trunc_sat_f64x2.2.wasm:000001d: error: type mismatch in i32x4.trunc_sat_f64x2_u_zero, expected [v128] but got [i32]
+  000001d: error: OnConvertExpr callback failed
+out/test/spec/simd_i32x4_trunc_sat_f64x2.wast:224: assert_invalid passed:
+  out/test/spec/simd_i32x4_trunc_sat_f64x2/simd_i32x4_trunc_sat_f64x2.3.wasm:000001b: error: type mismatch in i32x4.trunc_sat_f64x2_s_zero, expected [v128] but got []
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/simd_i32x4_trunc_sat_f64x2.wast:232: assert_invalid passed:
+  out/test/spec/simd_i32x4_trunc_sat_f64x2/simd_i32x4_trunc_sat_f64x2.4.wasm:000001b: error: type mismatch in i32x4.trunc_sat_f64x2_u_zero, expected [v128] but got []
+  000001b: error: OnConvertExpr callback failed
+107/107 tests passed.
+;;; STDOUT ;;)

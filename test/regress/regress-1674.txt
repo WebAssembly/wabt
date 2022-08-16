@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+(module
+  (memory 1)
+  (func
+      i32.const 0
+      v128.const i32x4 0 0 0 0
+      v128.load32_lane align=1 0
+      drop
+  )
+)

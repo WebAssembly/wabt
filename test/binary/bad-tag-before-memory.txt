@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-exceptions
+;;; ARGS2: --enable-exceptions
+magic
+version
+section(TAG) { count[0] }
+section(MEMORY) { count[0] }
+(;; STDERR ;;;
+000000d: error: section Memory out of order
+000000d: error: section Memory out of order
+;;; STDERR ;;)

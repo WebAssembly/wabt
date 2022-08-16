@@ -4,31 +4,31 @@
   (func $fac-stack-raw (param $n i64) (result i64)
     (local $i i64)
     (local $res i64)
-    get_local $n
-    set_local $i
+    local.get $n
+    local.set $i
     i64.const 1
-    set_local $res
+    local.set $res
     block $done
       loop $loop
-        get_local $i
+        local.get $i
         i64.const 0
         i64.eq
         if $body
           br $done
         else $body
-          get_local $i
-          get_local $res
+          local.get $i
+          local.get $res
           i64.mul
-          set_local $res
-          get_local $i
+          local.set $res
+          local.get $i
           i64.const 1
           i64.sub
-          set_local $i
+          local.set $i
         end $body
         br $loop
       end $loop
     end $done
-    get_local $res))
+    local.get $res))
 (;; STDOUT ;;;
 (module
   (type $t0 (func (param i64) (result i64)))

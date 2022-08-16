@@ -1,0 +1,14 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_load16_lane.wast
+(;; STDOUT ;;;
+out/test/spec/simd_load16_lane.wast:195: assert_invalid passed:
+  out/test/spec/simd_load16_lane/simd_load16_lane.1.wasm:0000027: error: type mismatch in v128.load16_lane, expected [i32, v128] but got [v128, i32]
+  0000027: error: OnSimdLoadLaneExpr callback failed
+out/test/spec/simd_load16_lane.wast:201: assert_invalid passed:
+  out/test/spec/simd_load16_lane/simd_load16_lane.2.wasm:0000027: error: lane index must be less than 8 (got 8)
+  0000027: error: OnSimdLoadLaneExpr callback failed
+out/test/spec/simd_load16_lane.wast:208: assert_invalid passed:
+  out/test/spec/simd_load16_lane/simd_load16_lane.3.wasm:0000027: error: alignment must not be larger than natural alignment (2)
+  0000027: error: OnSimdLoadLaneExpr callback failed
+36/36 tests passed.
+;;; STDOUT ;;)

@@ -30,7 +30,7 @@ Import/export mutable globals
 Saturating float-to-int operators
 .It Fl Fl enable-sign-extension
 Sign-extension operators
-.It Fl Fl enable-simd
+.It Fl Fl disable-simd
 SIMD support
 .It Fl Fl enable-threads
 Threading support
@@ -46,11 +46,11 @@ Write debug names to the generated binary file
 Don't check for invalid modules
 .El
 .Sh EXAMPLES
-Parse and typecheck test.wat
+Parse test.wat and write to .wasm binary file with the same name
 .Pp
 .Dl $ wat2wasm test.wat
 .Pp
-parse test.wat and write to binary file test.wasm
+Parse test.wat and write to binary file test.wasm
 .Pp
 .Dl $ wat2wasm test.wat -o test.wasm
 .Pp

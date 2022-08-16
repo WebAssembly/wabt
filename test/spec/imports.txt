@@ -11,236 +11,232 @@ called host spectest.print_f64_f64(f64:25.000000, f64:53.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
-out/test/spec/imports.wast:92: assert_invalid passed:
-  0000000: error: function type variable out of range: 1 (max 1)
+out/test/spec/imports.wast:93: assert_invalid passed:
+  out/test/spec/imports/imports.2.wasm:000001e: error: function type variable out of range: 1 (max 1)
   000001e: error: OnImportFunc callback failed
-out/test/spec/imports.wast:108: assert_unlinkable passed:
-  error: invalid import "test.unknown"
-out/test/spec/imports.wast:112: assert_unlinkable passed:
-  error: invalid import "spectest.unknown"
-out/test/spec/imports.wast:117: assert_unlinkable passed:
-  error: import signature mismatch
-out/test/spec/imports.wast:121: assert_unlinkable passed:
-  error: import signature mismatch
-out/test/spec/imports.wast:125: assert_unlinkable passed:
-  error: import signature mismatch
+called host spectest.print_i32(i32:13) =>
 out/test/spec/imports.wast:129: assert_unlinkable passed:
-  error: import signature mismatch
+  error: invalid import "test.unknown"
 out/test/spec/imports.wast:133: assert_unlinkable passed:
+  error: invalid import "spectest.unknown"
+out/test/spec/imports.wast:138: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:137: assert_unlinkable passed:
+out/test/spec/imports.wast:142: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:141: assert_unlinkable passed:
+out/test/spec/imports.wast:146: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:145: assert_unlinkable passed:
+out/test/spec/imports.wast:150: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:149: assert_unlinkable passed:
+out/test/spec/imports.wast:154: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:153: assert_unlinkable passed:
+out/test/spec/imports.wast:158: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:157: assert_unlinkable passed:
+out/test/spec/imports.wast:162: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:161: assert_unlinkable passed:
+out/test/spec/imports.wast:166: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:165: assert_unlinkable passed:
+out/test/spec/imports.wast:170: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:169: assert_unlinkable passed:
+out/test/spec/imports.wast:174: assert_unlinkable passed:
   error: import signature mismatch
-out/test/spec/imports.wast:173: assert_unlinkable passed:
-  error: import signature mismatch
-out/test/spec/imports.wast:177: assert_unlinkable passed:
+out/test/spec/imports.wast:178: assert_unlinkable passed:
   error: import signature mismatch
 out/test/spec/imports.wast:182: assert_unlinkable passed:
-  error: expected import "test.global-i32" to have kind func, not global
+  error: import signature mismatch
 out/test/spec/imports.wast:186: assert_unlinkable passed:
-  error: expected import "test.table-10-inf" to have kind func, not table
+  error: import signature mismatch
 out/test/spec/imports.wast:190: assert_unlinkable passed:
-  error: expected import "test.memory-2-inf" to have kind func, not memory
+  error: import signature mismatch
 out/test/spec/imports.wast:194: assert_unlinkable passed:
-  error: expected import "spectest.global_i32" to have kind func, not global
+  error: import signature mismatch
 out/test/spec/imports.wast:198: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/imports.wast:203: assert_unlinkable passed:
+  error: expected import "test.global-i32" to have kind func, not global
+out/test/spec/imports.wast:207: assert_unlinkable passed:
+  error: expected import "test.table-10-inf" to have kind func, not table
+out/test/spec/imports.wast:211: assert_unlinkable passed:
+  error: expected import "test.memory-2-inf" to have kind func, not memory
+out/test/spec/imports.wast:215: assert_unlinkable passed:
+  error: expected import "spectest.global_i32" to have kind func, not global
+out/test/spec/imports.wast:219: assert_unlinkable passed:
   error: expected import "spectest.table" to have kind func, not table
-out/test/spec/imports.wast:202: assert_unlinkable passed:
+out/test/spec/imports.wast:223: assert_unlinkable passed:
   error: expected import "spectest.memory" to have kind func, not memory
-out/test/spec/imports.wast:237: assert_unlinkable passed:
-  error: invalid import "test.unknown"
-out/test/spec/imports.wast:241: assert_unlinkable passed:
-  error: invalid import "spectest.unknown"
-out/test/spec/imports.wast:246: assert_unlinkable passed:
-  error: type mismatch in imported global, expected i64 but got i32.
-out/test/spec/imports.wast:250: assert_unlinkable passed:
-  error: type mismatch in imported global, expected f32 but got i32.
-out/test/spec/imports.wast:254: assert_unlinkable passed:
-  error: type mismatch in imported global, expected f64 but got i32.
 out/test/spec/imports.wast:258: assert_unlinkable passed:
-  error: mutability mismatch in imported global, expected immutable but got mutable.
+  error: invalid import "test.unknown"
 out/test/spec/imports.wast:262: assert_unlinkable passed:
-  error: type mismatch in imported global, expected i32 but got f32.
-out/test/spec/imports.wast:266: assert_unlinkable passed:
-  error: type mismatch in imported global, expected i64 but got f32.
-out/test/spec/imports.wast:270: assert_unlinkable passed:
-  error: type mismatch in imported global, expected f64 but got f32.
-out/test/spec/imports.wast:274: assert_unlinkable passed:
+  error: invalid import "spectest.unknown"
+out/test/spec/imports.wast:267: assert_unlinkable passed:
+  error: type mismatch in imported global, expected i64 but got i32.
+out/test/spec/imports.wast:271: assert_unlinkable passed:
+  error: type mismatch in imported global, expected f32 but got i32.
+out/test/spec/imports.wast:275: assert_unlinkable passed:
+  error: type mismatch in imported global, expected f64 but got i32.
+out/test/spec/imports.wast:279: assert_unlinkable passed:
   error: mutability mismatch in imported global, expected immutable but got mutable.
-out/test/spec/imports.wast:278: assert_unlinkable passed:
-  error: type mismatch in imported global, expected i32 but got i64.
-out/test/spec/imports.wast:282: assert_unlinkable passed:
-  error: type mismatch in imported global, expected f32 but got i64.
-out/test/spec/imports.wast:286: assert_unlinkable passed:
-  error: type mismatch in imported global, expected f64 but got i64.
-out/test/spec/imports.wast:290: assert_unlinkable passed:
-  error: mutability mismatch in imported global, expected mutable but got immutable.
+out/test/spec/imports.wast:283: assert_unlinkable passed:
+  error: type mismatch in imported global, expected i32 but got f32.
+out/test/spec/imports.wast:287: assert_unlinkable passed:
+  error: type mismatch in imported global, expected i64 but got f32.
+out/test/spec/imports.wast:291: assert_unlinkable passed:
+  error: type mismatch in imported global, expected f64 but got f32.
 out/test/spec/imports.wast:295: assert_unlinkable passed:
-  error: expected import "test.func" to have kind global, not func
+  error: mutability mismatch in imported global, expected immutable but got mutable.
 out/test/spec/imports.wast:299: assert_unlinkable passed:
-  error: expected import "test.table-10-inf" to have kind global, not table
+  error: type mismatch in imported global, expected i32 but got i64.
 out/test/spec/imports.wast:303: assert_unlinkable passed:
-  error: expected import "test.memory-2-inf" to have kind global, not memory
+  error: type mismatch in imported global, expected f32 but got i64.
 out/test/spec/imports.wast:307: assert_unlinkable passed:
-  error: expected import "spectest.print_i32" to have kind global, not func
+  error: type mismatch in imported global, expected f64 but got i64.
 out/test/spec/imports.wast:311: assert_unlinkable passed:
+  error: mutability mismatch in imported global, expected mutable but got immutable.
+out/test/spec/imports.wast:316: assert_unlinkable passed:
+  error: expected import "test.func" to have kind global, not func
+out/test/spec/imports.wast:320: assert_unlinkable passed:
+  error: expected import "test.table-10-inf" to have kind global, not table
+out/test/spec/imports.wast:324: assert_unlinkable passed:
+  error: expected import "test.memory-2-inf" to have kind global, not memory
+out/test/spec/imports.wast:328: assert_unlinkable passed:
+  error: expected import "spectest.print_i32" to have kind global, not func
+out/test/spec/imports.wast:332: assert_unlinkable passed:
   error: expected import "spectest.table" to have kind global, not table
-out/test/spec/imports.wast:315: assert_unlinkable passed:
+out/test/spec/imports.wast:336: assert_unlinkable passed:
   error: expected import "spectest.memory" to have kind global, not memory
-out/test/spec/imports.wast:334: assert_trap passed: uninitialized table element
-out/test/spec/imports.wast:337: assert_trap passed: uninitialized table element
-out/test/spec/imports.wast:338: assert_trap passed: undefined table index
-out/test/spec/imports.wast:353: assert_trap passed: uninitialized table element
-out/test/spec/imports.wast:356: assert_trap passed: uninitialized table element
-out/test/spec/imports.wast:357: assert_trap passed: undefined table index
-out/test/spec/imports.wast:361: assert_invalid passed:
-  error: only one table allowed
-  0000017: error: OnImportTable callback failed
-out/test/spec/imports.wast:365: assert_invalid passed:
-  error: only one table allowed
-  0000017: error: OnTable callback failed
-out/test/spec/imports.wast:369: assert_invalid passed:
-  error: only one table allowed
-  0000011: error: OnTable callback failed
-out/test/spec/imports.wast:386: assert_unlinkable passed:
+out/test/spec/imports.wast:355: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:358: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:359: assert_trap passed: undefined table index
+out/test/spec/imports.wast:374: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:377: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:378: assert_trap passed: undefined table index
+out/test/spec/imports.wast:410: assert_unlinkable passed:
   error: invalid import "test.unknown"
-out/test/spec/imports.wast:390: assert_unlinkable passed:
+out/test/spec/imports.wast:414: assert_unlinkable passed:
   error: invalid import "spectest.unknown"
-out/test/spec/imports.wast:395: assert_unlinkable passed:
+out/test/spec/imports.wast:419: assert_unlinkable passed:
   error: actual size (10) smaller than declared (12)
-out/test/spec/imports.wast:399: assert_unlinkable passed:
+out/test/spec/imports.wast:423: assert_unlinkable passed:
   error: max size (unspecified) larger than declared (20)
-out/test/spec/imports.wast:403: assert_unlinkable passed:
+out/test/spec/imports.wast:427: assert_unlinkable passed:
   error: actual size (10) smaller than declared (12)
-out/test/spec/imports.wast:407: assert_unlinkable passed:
+out/test/spec/imports.wast:431: assert_unlinkable passed:
+  error: max size (20) larger than declared (18)
+out/test/spec/imports.wast:435: assert_unlinkable passed:
+  error: actual size (10) smaller than declared (12)
+out/test/spec/imports.wast:439: assert_unlinkable passed:
   error: max size (20) larger than declared (15)
-out/test/spec/imports.wast:412: assert_unlinkable passed:
+out/test/spec/imports.wast:444: assert_unlinkable passed:
   error: expected import "test.func" to have kind table, not func
-out/test/spec/imports.wast:416: assert_unlinkable passed:
+out/test/spec/imports.wast:448: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind table, not global
-out/test/spec/imports.wast:420: assert_unlinkable passed:
+out/test/spec/imports.wast:452: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind table, not memory
-out/test/spec/imports.wast:424: assert_unlinkable passed:
+out/test/spec/imports.wast:456: assert_unlinkable passed:
   error: expected import "spectest.print_i32" to have kind table, not func
-out/test/spec/imports.wast:442: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
-out/test/spec/imports.wast:453: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
-out/test/spec/imports.wast:456: assert_invalid passed:
-  error: only one memory block allowed
+out/test/spec/imports.wast:474: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
+out/test/spec/imports.wast:485: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
+out/test/spec/imports.wast:488: assert_invalid passed:
+  out/test/spec/imports/imports.97.wasm:0000015: error: only one memory block allowed
   0000015: error: OnImportMemory callback failed
-out/test/spec/imports.wast:460: assert_invalid passed:
-  error: only one memory block allowed
+out/test/spec/imports.wast:492: assert_invalid passed:
+  out/test/spec/imports/imports.98.wasm:0000015: error: only one memory block allowed
   0000015: error: OnMemory callback failed
-out/test/spec/imports.wast:464: assert_invalid passed:
-  error: only one memory block allowed
+out/test/spec/imports.wast:496: assert_invalid passed:
+  out/test/spec/imports/imports.99.wasm:000000f: error: only one memory block allowed
   000000f: error: OnMemory callback failed
-out/test/spec/imports.wast:479: assert_unlinkable passed:
+out/test/spec/imports.wast:511: assert_unlinkable passed:
   error: invalid import "test.unknown"
-out/test/spec/imports.wast:483: assert_unlinkable passed:
+out/test/spec/imports.wast:515: assert_unlinkable passed:
   error: invalid import "spectest.unknown"
-out/test/spec/imports.wast:488: assert_unlinkable passed:
+out/test/spec/imports.wast:520: assert_unlinkable passed:
   error: actual size (2) smaller than declared (3)
-out/test/spec/imports.wast:492: assert_unlinkable passed:
+out/test/spec/imports.wast:524: assert_unlinkable passed:
   error: max size (unspecified) larger than declared (3)
-out/test/spec/imports.wast:496: assert_unlinkable passed:
+out/test/spec/imports.wast:528: assert_unlinkable passed:
   error: actual size (1) smaller than declared (2)
-out/test/spec/imports.wast:500: assert_unlinkable passed:
+out/test/spec/imports.wast:532: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
-out/test/spec/imports.wast:505: assert_unlinkable passed:
+out/test/spec/imports.wast:537: assert_unlinkable passed:
   error: expected import "test.func-i32" to have kind memory, not func
-out/test/spec/imports.wast:509: assert_unlinkable passed:
+out/test/spec/imports.wast:541: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind memory, not global
-out/test/spec/imports.wast:513: assert_unlinkable passed:
+out/test/spec/imports.wast:545: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind memory, not table
-out/test/spec/imports.wast:517: assert_unlinkable passed:
+out/test/spec/imports.wast:549: assert_unlinkable passed:
   error: expected import "spectest.print_i32" to have kind memory, not func
-out/test/spec/imports.wast:521: assert_unlinkable passed:
+out/test/spec/imports.wast:553: assert_unlinkable passed:
   error: expected import "spectest.global_i32" to have kind memory, not global
-out/test/spec/imports.wast:525: assert_unlinkable passed:
+out/test/spec/imports.wast:557: assert_unlinkable passed:
   error: expected import "spectest.table" to have kind memory, not table
-out/test/spec/imports.wast:530: assert_unlinkable passed:
+out/test/spec/imports.wast:562: assert_unlinkable passed:
   error: actual size (1) smaller than declared (2)
-out/test/spec/imports.wast:534: assert_unlinkable passed:
+out/test/spec/imports.wast:566: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
-out/test/spec/imports.wast:552: assert_malformed passed:
-  out/test/spec/imports/imports.113.wat:1:9: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:604: assert_malformed passed:
+  out/test/spec/imports/imports.127.wat:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (func))
           ^^^^^^
-out/test/spec/imports.wast:556: assert_malformed passed:
-  out/test/spec/imports/imports.114.wat:1:9: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:608: assert_malformed passed:
+  out/test/spec/imports/imports.128.wat:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (global i64))
           ^^^^^^
-out/test/spec/imports.wast:560: assert_malformed passed:
-  out/test/spec/imports/imports.115.wat:1:9: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:612: assert_malformed passed:
+  out/test/spec/imports/imports.129.wat:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (table 0 funcref))
           ^^^^^^
-out/test/spec/imports.wast:564: assert_malformed passed:
-  out/test/spec/imports/imports.116.wat:1:9: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:616: assert_malformed passed:
+  out/test/spec/imports/imports.130.wat:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (memory 0))
           ^^^^^^
-out/test/spec/imports.wast:569: assert_malformed passed:
-  out/test/spec/imports/imports.117.wat:1:29: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:621: assert_malformed passed:
+  out/test/spec/imports/imports.131.wat:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (func))
                               ^^^^^^
-out/test/spec/imports.wast:573: assert_malformed passed:
-  out/test/spec/imports/imports.118.wat:1:29: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:625: assert_malformed passed:
+  out/test/spec/imports/imports.132.wat:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (global f32))
                               ^^^^^^
-out/test/spec/imports.wast:577: assert_malformed passed:
-  out/test/spec/imports/imports.119.wat:1:29: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:629: assert_malformed passed:
+  out/test/spec/imports/imports.133.wat:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (table 0 funcref))
                               ^^^^^^
-out/test/spec/imports.wast:581: assert_malformed passed:
-  out/test/spec/imports/imports.120.wat:1:29: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:633: assert_malformed passed:
+  out/test/spec/imports/imports.134.wat:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (memory 0))
                               ^^^^^^
-out/test/spec/imports.wast:586: assert_malformed passed:
-  out/test/spec/imports/imports.121.wat:1:20: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:638: assert_malformed passed:
+  out/test/spec/imports/imports.135.wat:1:20: error: imports must occur before all non-import definitions
   (table 0 funcref) (import "" "" (func))
                      ^^^^^^
-out/test/spec/imports.wast:590: assert_malformed passed:
-  out/test/spec/imports/imports.122.wat:1:20: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:642: assert_malformed passed:
+  out/test/spec/imports/imports.136.wat:1:20: error: imports must occur before all non-import definitions
   (table 0 funcref) (import "" "" (global i32))
                      ^^^^^^
-out/test/spec/imports.wast:594: assert_malformed passed:
-  out/test/spec/imports/imports.123.wat:1:20: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:646: assert_malformed passed:
+  out/test/spec/imports/imports.137.wat:1:20: error: imports must occur before all non-import definitions
   (table 0 funcref) (import "" "" (table 0 funcref))
                      ^^^^^^
-out/test/spec/imports.wast:598: assert_malformed passed:
-  out/test/spec/imports/imports.124.wat:1:20: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:650: assert_malformed passed:
+  out/test/spec/imports/imports.138.wat:1:20: error: imports must occur before all non-import definitions
   (table 0 funcref) (import "" "" (memory 0))
                      ^^^^^^
-out/test/spec/imports.wast:603: assert_malformed passed:
-  out/test/spec/imports/imports.125.wat:1:13: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:655: assert_malformed passed:
+  out/test/spec/imports/imports.139.wat:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (func))
               ^^^^^^
-out/test/spec/imports.wast:607: assert_malformed passed:
-  out/test/spec/imports/imports.126.wat:1:13: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:659: assert_malformed passed:
+  out/test/spec/imports/imports.140.wat:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (global i32))
               ^^^^^^
-out/test/spec/imports.wast:611: assert_malformed passed:
-  out/test/spec/imports/imports.127.wat:1:13: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:663: assert_malformed passed:
+  out/test/spec/imports/imports.141.wat:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (table 1 3 funcref))
               ^^^^^^
-out/test/spec/imports.wast:615: assert_malformed passed:
-  out/test/spec/imports/imports.128.wat:1:13: error: imports must occur before all non-import definitions
+out/test/spec/imports.wast:667: assert_malformed passed:
+  out/test/spec/imports/imports.142.wat:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (memory 1 2))
               ^^^^^^
-out/test/spec/imports.wast:625: assert_unlinkable passed:
+out/test/spec/imports.wast:677: assert_unlinkable passed:
   error: invalid import "not wasm.overloaded"
-121/121 tests passed.
+179/179 tests passed.
 ;;; STDOUT ;;)

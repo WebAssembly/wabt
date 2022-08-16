@@ -16,8 +16,8 @@
 
 #include "gtest/gtest.h"
 
-#include "src/binary-reader.h"
 #include "src/binary-reader-nop.h"
+#include "src/binary-reader.h"
 #include "src/leb128.h"
 #include "src/opcode.h"
 

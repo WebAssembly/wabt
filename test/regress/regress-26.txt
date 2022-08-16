@@ -4,7 +4,7 @@ magic
 version
 section(TABLE) {
   count[1]
-  anyfunc
+  funcref
   has_max[0]
   initial[0]
 }
@@ -14,6 +14,6 @@ section(ELEM) {
   addr[end]
 }
 (;; STDERR ;;;
-error: invalid elem segment offset, must be a constant expression; either i32.const or global.get.
+out/test/regress/regress-26/regress-26.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
 0000013: error: EndElemSegmentInitExpr callback failed
 ;;; STDERR ;;)

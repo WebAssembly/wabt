@@ -7,14 +7,14 @@
   (import "__extern" "bar" (func (param i32) (param i32) (result i32)))
   (global $g i32 (i32.const 0))
   (func $f (param i32) (result i32)
-    get_global 0
+    global.get 0
     call 2
     call 0
     i32.const 1234
     i32.const 0
     call_indirect (param i32) (param i32) (result i32))
   (export "f" (func $f))
-  (table anyfunc (elem 1)))
+  (table funcref (elem 1)))
 (;; STDOUT ;;;
 
 relocations-all-features.wasm:	file format wasm 0x1
@@ -57,11 +57,11 @@ Code[1]:
 Custom:
  - name: "linking"
   - symbol table [count=5]
-   - 0: F <__extern.foo> func=0 undefined binding=global vis=default
-   - 1: F <__extern.bar> func=1 undefined binding=global vis=default
-   - 2: F <f> func=2 exported no_strip binding=global vis=hidden
-   - 3: T <> table=0 binding=local vis=hidden
-   - 4: G <g> global=0 binding=global vis=default
+   - 0: F <__extern.foo> func=0 [ undefined binding=global vis=default ]
+   - 1: F <__extern.bar> func=1 [ undefined binding=global vis=default ]
+   - 2: F <f> func=2 [ exported no_strip binding=global vis=hidden ]
+   - 3: T <> table=0 [ binding=local vis=hidden ]
+   - 4: G <g> global=0 [ binding=global vis=default ]
 Custom:
  - name: "reloc.Code"
   - relocations for section: 7 (Code) [5]
@@ -82,7 +82,7 @@ Code Disassembly:
            000070: R_WASM_FUNCTION_INDEX_LEB 0 <__extern.foo>
  000075: 41 d2 09                   | i32.const 1234
  000078: 41 00                      | i32.const 0
- 00007a: 11 82 80 80 80 00 80 80 80 | call_indirect 2 0
+ 00007a: 11 82 80 80 80 00 80 80 80 | call_indirect 0 (type 2)
  000083: 80 00                      | 
            00007b: R_WASM_TYPE_INDEX_LEB 2
  000085: 0b                         | end

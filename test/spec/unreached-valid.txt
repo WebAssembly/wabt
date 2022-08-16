@@ -1,0 +1,9 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/unreached-valid.wast
+(;; STDOUT ;;;
+out/test/spec/unreached-valid.wast:42: assert_trap passed: unreachable executed
+out/test/spec/unreached-valid.wast:43: assert_trap passed: unreachable executed
+out/test/spec/unreached-valid.wast:44: assert_trap passed: unreachable executed
+out/test/spec/unreached-valid.wast:45: assert_trap passed: unreachable executed
+6/6 tests passed.
+;;; STDOUT ;;)

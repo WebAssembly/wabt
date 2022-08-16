@@ -4,9 +4,9 @@
 (module
   (global $g i32 (i32.const 0))
   (func $previous_func
-    (drop (get_global 0)))
+    (drop (global.get 0)))
   (func $long_func
-    (drop (get_global 0))
+    (drop (global.get 0))
     (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
     (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))
     (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0)) (drop (i32.const 0))

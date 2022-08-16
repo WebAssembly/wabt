@@ -40,7 +40,7 @@ section(CODE) {
   ;; Test name section.
   func {
     locals[decl_count[1] i32_count[1] i32]
-    get_local 0
+    local.get 0
   }
   ;; Test naming priorities
   ;; If there's a name section name, prefer that over sym/export.
@@ -107,8 +107,8 @@ section("linking") {
   (export "F1_EXPORT" (func $F1_NS))
   (export "F2_EXPORT" (func $F2_SYM))
   (export "F3_EXPORT" (func $F3_EXPORT))
-  (export "G0_EXPORT" (global 0))
-  (export "G1_EXPORT" (global 1))
+  (export "G0_EXPORT" (global $G0_SYM))
+  (export "G1_EXPORT" (global $G1_EXPORT))
   (data $D0_SYM (i32.const 0) "foo")
   (data $D1_SYM (i32.const 10) "bar"))
 ;;; STDOUT ;;)

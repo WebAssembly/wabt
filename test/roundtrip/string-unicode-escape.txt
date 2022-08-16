@@ -1,0 +1,17 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout
+(module
+  (func)
+  (func)
+
+  (export "a:\u{0} b:\u{00001} c:\u{7f} d:\u{80} e:\u{7ff} f:\u{800} g:\u{ffff} h:\u{10000} i:\u{10ffff}" (func 0))
+  (export "\u{48}\u{65}\u{6c}\u{6c}\u{6f}" (func 1))
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0))
+  (func (;1;) (type 0))
+  (export "a:\00 b:\01 c:\7f d:\c2\80 e:\df\bf f:\e0\a0\80 g:\ef\bf\bf h:\f0\90\80\80 i:\f4\8f\bf\bf" (func 0))
+  (export "Hello" (func 1)))
+;;; STDOUT ;;)

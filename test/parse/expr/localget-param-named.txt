@@ -1,0 +1,5 @@
+;;; TOOL: wat2wasm
+(module
+  (func (param $n i32)
+    local.get $n
+    drop))

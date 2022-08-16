@@ -5,6 +5,12 @@
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "DataCount" (12)
+0000008: 0c                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; data count
+0000009: 01                                        ; FIXUP section size
+; truncate to 8 (0x8)
 ; section "Data" (11)
 0000008: 0b                                        ; section code
 0000009: 00                                        ; section size (guess)

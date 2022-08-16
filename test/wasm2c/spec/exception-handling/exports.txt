@@ -1,0 +1,13 @@
+;;; TOOL: run-spec-wasm2c
+(module)
+(;; STDOUT ;;;
+0/0 tests passed.
+;;; STDOUT ;;)
+
+;; To be replaced with below after reference types land
+;; ;;; TOOL: run-spec-wasm2c
+;; ;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/exports.wast
+;; ;;; ARGS*: --enable-exceptions
+;; (;; STDOUT ;;;
+;; 9/9 tests passed.
+;; ;;; STDOUT ;;)

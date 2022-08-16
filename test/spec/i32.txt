@@ -12,253 +12,253 @@ out/test/spec/i32.wast:103: assert_trap passed: integer divide by zero
 out/test/spec/i32.wast:123: assert_trap passed: integer divide by zero
 out/test/spec/i32.wast:124: assert_trap passed: integer divide by zero
 out/test/spec/i32.wast:444: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.1.wasm:0000018: error: type mismatch in i32.eqz, expected [i32] but got []
   0000018: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:452: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.2.wasm:000001c: error: type mismatch in i32.eqz, expected [i32] but got []
   000001c: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:461: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.3.wasm:000001c: error: type mismatch in i32.eqz, expected [i32] but got []
   000001c: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:470: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.4.wasm:000001e: error: type mismatch in i32.eqz, expected [i32] but got []
   000001e: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:479: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.5.wasm:0000021: error: type mismatch in i32.eqz, expected [i32] but got []
   0000021: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:488: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.6.wasm:000001c: error: type mismatch in i32.eqz, expected [i32] but got []
   000001c: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:497: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.7.wasm:000001c: error: type mismatch in i32.eqz, expected [i32] but got []
   000001c: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:506: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.8.wasm:000001c: error: type mismatch in i32.eqz, expected [i32] but got []
   000001c: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:515: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.9.wasm:0000018: error: type mismatch in i32.eqz, expected [i32] but got []
   0000018: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:523: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.10.wasm:0000018: error: type mismatch in i32.eqz, expected [i32] but got []
   0000018: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:531: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.11.wasm:000001e: error: type mismatch in i32.eqz, expected [i32] but got []
   000001e: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:540: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.12.wasm:0000035: error: type mismatch in i32.eqz, expected [i32] but got []
   0000035: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:556: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.13.wasm:000001a: error: type mismatch in i32.eqz, expected [i32] but got []
   000001a: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:565: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.14.wasm:000001a: error: type mismatch in i32.eqz, expected [i32] but got []
   000001a: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:574: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.15.wasm:0000020: error: type mismatch in i32.eqz, expected [i32] but got []
   0000020: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:583: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.16.wasm:000001d: error: type mismatch in i32.eqz, expected [i32] but got []
   000001d: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:592: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.17.wasm:000001d: error: type mismatch in i32.eqz, expected [i32] but got []
   000001d: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:601: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/i32/i32.18.wasm:000001d: error: type mismatch in i32.eqz, expected [i32] but got []
   000001d: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:611: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.19.wasm:0000018: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000018: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:619: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.20.wasm:000001a: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:627: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.21.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:636: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.22.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:645: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.23.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:654: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.24.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:663: assert_invalid passed:
-  error: type mismatch in drop, expected [any] but got []
+  out/test/spec/i32/i32.25.wasm:0000021: error: type mismatch in drop, expected [any] but got []
   0000021: error: OnDropExpr callback failed
 out/test/spec/i32.wast:672: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.26.wasm:0000020: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:681: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.27.wasm:0000023: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000023: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:691: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.28.wasm:0000021: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000021: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:701: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.29.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:710: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.30.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:719: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.31.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:728: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.32.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:737: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.33.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:746: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.34.wasm:000001e: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001e: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:755: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.35.wasm:0000018: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000018: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:763: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.36.wasm:000001a: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:771: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.37.wasm:0000018: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000018: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:779: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.38.wasm:000001a: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:787: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.39.wasm:000001f: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001f: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:796: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.40.wasm:0000021: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   0000021: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:805: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.41.wasm:0000035: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000035: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:821: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.42.wasm:0000037: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   0000037: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:837: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.43.wasm:000001a: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:846: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.44.wasm:000001c: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001c: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:855: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.45.wasm:000001a: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001a: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:864: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.46.wasm:000001c: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001c: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:873: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.47.wasm:0000020: error: type mismatch in i32.add, expected [i32, i32] but got []
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:882: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.48.wasm:0000022: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   0000022: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:891: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.49.wasm:000001d: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001d: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:900: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.50.wasm:000001f: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001f: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:909: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.51.wasm:000001d: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001d: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:918: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.52.wasm:000001f: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001f: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:927: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got []
+  out/test/spec/i32/i32.53.wasm:000001d: error: type mismatch in i32.add, expected [i32, i32] but got []
   000001d: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:936: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  out/test/spec/i32/i32.54.wasm:000001f: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
   000001f: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:948: assert_invalid passed:
-  error: type mismatch in i32.add, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.55.wasm:0000020: error: type mismatch in i32.add, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:949: assert_invalid passed:
-  error: type mismatch in i32.and, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.56.wasm:0000020: error: type mismatch in i32.and, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:950: assert_invalid passed:
-  error: type mismatch in i32.div_s, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.57.wasm:0000020: error: type mismatch in i32.div_s, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:951: assert_invalid passed:
-  error: type mismatch in i32.div_u, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.58.wasm:0000020: error: type mismatch in i32.div_u, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:952: assert_invalid passed:
-  error: type mismatch in i32.mul, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.59.wasm:0000020: error: type mismatch in i32.mul, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:953: assert_invalid passed:
-  error: type mismatch in i32.or, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.60.wasm:0000020: error: type mismatch in i32.or, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:954: assert_invalid passed:
-  error: type mismatch in i32.rem_s, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.61.wasm:0000020: error: type mismatch in i32.rem_s, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:955: assert_invalid passed:
-  error: type mismatch in i32.rem_u, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.62.wasm:0000020: error: type mismatch in i32.rem_u, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:956: assert_invalid passed:
-  error: type mismatch in i32.rotl, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.63.wasm:0000020: error: type mismatch in i32.rotl, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:957: assert_invalid passed:
-  error: type mismatch in i32.rotr, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.64.wasm:0000020: error: type mismatch in i32.rotr, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:958: assert_invalid passed:
-  error: type mismatch in i32.shl, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.65.wasm:0000020: error: type mismatch in i32.shl, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:959: assert_invalid passed:
-  error: type mismatch in i32.shr_s, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.66.wasm:0000020: error: type mismatch in i32.shr_s, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:960: assert_invalid passed:
-  error: type mismatch in i32.shr_u, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.67.wasm:0000020: error: type mismatch in i32.shr_u, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:961: assert_invalid passed:
-  error: type mismatch in i32.sub, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.68.wasm:0000020: error: type mismatch in i32.sub, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:962: assert_invalid passed:
-  error: type mismatch in i32.xor, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.69.wasm:0000020: error: type mismatch in i32.xor, expected [i32, i32] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/i32.wast:963: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got [i64]
+  out/test/spec/i32/i32.70.wasm:000001b: error: type mismatch in i32.eqz, expected [i32] but got [i64]
   000001b: error: OnConvertExpr callback failed
 out/test/spec/i32.wast:964: assert_invalid passed:
-  error: type mismatch in i32.clz, expected [i32] but got [i64]
+  out/test/spec/i32/i32.71.wasm:000001b: error: type mismatch in i32.clz, expected [i32] but got [i64]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/i32.wast:965: assert_invalid passed:
-  error: type mismatch in i32.ctz, expected [i32] but got [i64]
+  out/test/spec/i32/i32.72.wasm:000001b: error: type mismatch in i32.ctz, expected [i32] but got [i64]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/i32.wast:966: assert_invalid passed:
-  error: type mismatch in i32.popcnt, expected [i32] but got [i64]
+  out/test/spec/i32/i32.73.wasm:000001b: error: type mismatch in i32.popcnt, expected [i32] but got [i64]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/i32.wast:967: assert_invalid passed:
-  error: type mismatch in i32.eq, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.74.wasm:0000020: error: type mismatch in i32.eq, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:968: assert_invalid passed:
-  error: type mismatch in i32.ge_s, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.75.wasm:0000020: error: type mismatch in i32.ge_s, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:969: assert_invalid passed:
-  error: type mismatch in i32.ge_u, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.76.wasm:0000020: error: type mismatch in i32.ge_u, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:970: assert_invalid passed:
-  error: type mismatch in i32.gt_s, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.77.wasm:0000020: error: type mismatch in i32.gt_s, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:971: assert_invalid passed:
-  error: type mismatch in i32.gt_u, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.78.wasm:0000020: error: type mismatch in i32.gt_u, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:972: assert_invalid passed:
-  error: type mismatch in i32.le_s, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.79.wasm:0000020: error: type mismatch in i32.le_s, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:973: assert_invalid passed:
-  error: type mismatch in i32.le_u, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.80.wasm:0000020: error: type mismatch in i32.le_u, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:974: assert_invalid passed:
-  error: type mismatch in i32.lt_s, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.81.wasm:0000020: error: type mismatch in i32.lt_s, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:975: assert_invalid passed:
-  error: type mismatch in i32.lt_u, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.82.wasm:0000020: error: type mismatch in i32.lt_u, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
 out/test/spec/i32.wast:976: assert_invalid passed:
-  error: type mismatch in i32.ne, expected [i32, i32] but got [i64, f32]
+  out/test/spec/i32/i32.83.wasm:0000020: error: type mismatch in i32.ne, expected [i32, i32] but got [i64, f32]
   0000020: error: OnCompareExpr callback failed
-457/457 tests passed.
+460/460 tests passed.
 ;;; STDOUT ;;)

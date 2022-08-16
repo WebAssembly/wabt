@@ -38,11 +38,11 @@ Code[3]:
 Custom:
  - name: "linking"
   - symbol table [count=5]
-   - 0: F <env.b> func=0 undefined binding=global vis=default
-   - 1: F <a> func=1 exported no_strip binding=global vis=hidden
-   - 2: F <> func=2 binding=local vis=hidden
-   - 3: F <b> func=3 binding=global vis=default
-   - 4: T <t> table=0 binding=global vis=default
+   - 0: F <env.b> func=0 [ undefined binding=global vis=default ]
+   - 1: F <a> func=1 [ exported no_strip binding=global vis=hidden ]
+   - 2: F <> func=2 [ binding=local vis=hidden ]
+   - 3: F <b> func=3 [ binding=global vis=default ]
+   - 4: T <t> table=0 [ binding=global vis=default ]
 Custom:
  - name: "reloc.Code"
   - relocations for section: 5 (Code) [5]
@@ -64,7 +64,7 @@ Code Disassembly:
  000040: 0b                         | end
 000042 func[3] <b>:
  000043: 41 00                      | i32.const 0
- 000045: 11 80 80 80 80 00 80 80 80 | call_indirect 0 0
+ 000045: 11 80 80 80 80 00 80 80 80 | call_indirect 0 <t> (type 0)
  00004e: 80 00                      | 
            000046: R_WASM_TYPE_INDEX_LEB 0
  000050: 10 80 80 80 80 00          | call 0 <env.b>

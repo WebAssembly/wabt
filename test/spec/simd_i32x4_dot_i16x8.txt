@@ -1,0 +1,14 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_i32x4_dot_i16x8.wast
+(;; STDOUT ;;;
+out/test/spec/simd_i32x4_dot_i16x8.wast:90: assert_invalid passed:
+  out/test/spec/simd_i32x4_dot_i16x8/simd_i32x4_dot_i16x8.1.wasm:0000022: error: type mismatch in i32x4.dot_i16x8_s, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnBinaryExpr callback failed
+out/test/spec/simd_i32x4_dot_i16x8.wast:95: assert_invalid passed:
+  out/test/spec/simd_i32x4_dot_i16x8/simd_i32x4_dot_i16x8.2.wasm:000002d: error: type mismatch in i32x4.dot_i16x8_s, expected [v128, v128] but got [v128]
+  000002d: error: OnBinaryExpr callback failed
+out/test/spec/simd_i32x4_dot_i16x8.wast:103: assert_invalid passed:
+  out/test/spec/simd_i32x4_dot_i16x8/simd_i32x4_dot_i16x8.3.wasm:000001b: error: type mismatch in i32x4.dot_i16x8_s, expected [v128, v128] but got []
+  000001b: error: OnBinaryExpr callback failed
+30/30 tests passed.
+;;; STDOUT ;;)

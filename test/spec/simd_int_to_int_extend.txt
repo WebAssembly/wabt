@@ -1,0 +1,77 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_int_to_int_extend.wast
+(;; STDOUT ;;;
+out/test/spec/simd_int_to_int_extend.wast:488: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.1.wasm:000001d: error: type mismatch in i16x8.extend_high_i8x16_s, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:489: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.2.wasm:000001d: error: type mismatch in i16x8.extend_high_i8x16_u, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:490: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.3.wasm:000001d: error: type mismatch in i16x8.extend_low_i8x16_s, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:491: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.4.wasm:000001d: error: type mismatch in i16x8.extend_low_i8x16_u, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:492: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.5.wasm:000001d: error: type mismatch in i32x4.extend_high_i16x8_s, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:493: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.6.wasm:000001d: error: type mismatch in i32x4.extend_high_i16x8_u, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:494: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.7.wasm:000001d: error: type mismatch in i32x4.extend_low_i16x8_s, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:495: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.8.wasm:000001d: error: type mismatch in i32x4.extend_low_i16x8_u, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:496: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.9.wasm:000001d: error: type mismatch in i64x2.extend_high_i32x4_s, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:497: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.10.wasm:000001d: error: type mismatch in i64x2.extend_high_i32x4_u, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:498: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.11.wasm:000001d: error: type mismatch in i64x2.extend_low_i32x4_s, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:499: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.12.wasm:000001d: error: type mismatch in i64x2.extend_low_i32x4_u, expected [v128] but got [i32]
+  000001d: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:504: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.13.wasm:000001b: error: type mismatch in i16x8.extend_high_i8x16_s, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:512: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.14.wasm:000001b: error: type mismatch in i16x8.extend_high_i8x16_u, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:520: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.15.wasm:000001b: error: type mismatch in i16x8.extend_low_i8x16_s, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:528: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.16.wasm:000001b: error: type mismatch in i16x8.extend_low_i8x16_u, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:536: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.17.wasm:000001b: error: type mismatch in i32x4.extend_high_i16x8_s, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:544: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.18.wasm:000001b: error: type mismatch in i32x4.extend_high_i16x8_u, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:552: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.19.wasm:000001b: error: type mismatch in i32x4.extend_low_i16x8_s, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:560: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.20.wasm:000001b: error: type mismatch in i32x4.extend_low_i16x8_u, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:568: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.21.wasm:000001b: error: type mismatch in i64x2.extend_high_i32x4_s, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:576: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.22.wasm:000001b: error: type mismatch in i64x2.extend_high_i32x4_u, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:584: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.23.wasm:000001b: error: type mismatch in i64x2.extend_low_i32x4_s, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/simd_int_to_int_extend.wast:592: assert_invalid passed:
+  out/test/spec/simd_int_to_int_extend/simd_int_to_int_extend.24.wasm:000001b: error: type mismatch in i64x2.extend_low_i32x4_u, expected [v128] but got []
+  000001b: error: OnUnaryExpr callback failed
+253/253 tests passed.
+;;; STDOUT ;;)

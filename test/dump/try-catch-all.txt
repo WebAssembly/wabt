@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (event $e (param i32))
+  (tag $e (param i32))
   (func
     try $try1 (result i32)
       nop
@@ -33,41 +33,34 @@
 0000014: 01                                        ; num functions
 0000015: 01                                        ; function 0 signature index
 0000013: 02                                        ; FIXUP section size
-; section "Event" (13)
+; section "Tag" (13)
 0000016: 0d                                        ; section code
 0000017: 00                                        ; section size (guess)
-0000018: 01                                        ; event count
-; event 0
-0000019: 00                                        ; event attribute
-000001a: 00                                        ; event signature index
+0000018: 01                                        ; tag count
+; tag 0
+0000019: 00                                        ; tag attribute
+000001a: 00                                        ; tag signature index
 0000017: 03                                        ; FIXUP section size
-; section "DataCount" (12)
-000001b: 0c                                        ; section code
-000001c: 00                                        ; section size (guess)
-000001d: 00                                        ; data count
-000001c: 01                                        ; FIXUP section size
 ; section "Code" (10)
-000001e: 0a                                        ; section code
-000001f: 00                                        ; section size (guess)
-0000020: 01                                        ; num functions
+000001b: 0a                                        ; section code
+000001c: 00                                        ; section size (guess)
+000001d: 01                                        ; num functions
 ; function body 0
-0000021: 00                                        ; func body size (guess)
-0000022: 00                                        ; local decl count
-0000023: 06                                        ; try
-0000024: 7f                                        ; i32
-0000025: 01                                        ; nop
+000001e: 00                                        ; func body size (guess)
+000001f: 00                                        ; local decl count
+0000020: 06                                        ; try
+0000021: 7f                                        ; i32
+0000022: 01                                        ; nop
+0000023: 41                                        ; i32.const
+0000024: 07                                        ; i32 literal
+0000025: 19                                        ; catch_all
 0000026: 41                                        ; i32.const
-0000027: 07                                        ; i32 literal
-0000028: 19                                        ; catch_all
-0000029: 41                                        ; i32.const
-000002a: 08                                        ; i32 literal
-000002b: 0b                                        ; end
-000002c: 1a                                        ; drop
-000002d: 0b                                        ; end
-0000021: 0c                                        ; FIXUP func body size
-000001f: 0e                                        ; FIXUP section size
-; move data: [1e, 2e) -> [1b, 2b)
-; truncate to 43 (0x2b)
+0000027: 08                                        ; i32 literal
+0000028: 0b                                        ; end
+0000029: 1a                                        ; drop
+000002a: 0b                                        ; end
+000001e: 0c                                        ; FIXUP func body size
+000001c: 0e                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 

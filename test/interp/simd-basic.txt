@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-simd
 (module
   (func (export "v128_const_i8x16") (result v128)
     v128.const i8x16 1 0 0 0 2 0 0 0 3 0 0 0 4 0 0 0

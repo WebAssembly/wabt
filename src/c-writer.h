@@ -24,7 +24,9 @@ namespace wabt {
 struct Module;
 class Stream;
 
-struct WriteCOptions {};
+struct WriteCOptions {
+  std::string_view module_name;
+};
 
 Result WriteC(Stream* c_stream,
               Stream* h_stream,

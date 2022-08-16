@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-simd
 ;;; ERROR: 1
 (module
   (func
@@ -10,7 +9,7 @@
     ))
 
 (;; STDERR ;;;
-out/test/parse/expr/bad-simd-shuffle-lane-index-overflow2.txt:8:5: error: lane index must be less than 32 (got 33)
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow2.txt:7:5: error: lane index must be less than 32 (got 33)
     i8x16.shuffle 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 33
     ^^^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -68,7 +68,7 @@ inline MemoryType::MemoryType(Limits limits)
     : ExternType(ExternKind::Memory), limits(limits) {
   // Always set max.
   if (!limits.has_max) {
-    this->limits.max = WABT_MAX_PAGES;
+    this->limits.max = limits.is_64 ? WABT_MAX_PAGES64 : WABT_MAX_PAGES32;
   }
 }
 
@@ -81,14 +81,14 @@ inline bool GlobalType::classof(const ExternType* type) {
 inline GlobalType::GlobalType(ValueType type, Mutability mut)
     : ExternType(ExternKind::Global), type(type), mut(mut) {}
 
-//// EventType ////
+//// TagType ////
 // static
-inline bool EventType::classof(const ExternType* type) {
+inline bool TagType::classof(const ExternType* type) {
   return type->kind == skind;
 }
 
-inline EventType::EventType(EventAttr attr, const ValueTypes& signature)
-    : ExternType(ExternKind::Event), attr(attr), signature(signature) {}
+inline TagType::TagType(TagAttr attr, const ValueTypes& signature)
+    : ExternType(ExternKind::Tag), attr(attr), signature(signature) {}
 
 //// ImportType ////
 inline ImportType::ImportType(std::string module,
@@ -127,39 +127,95 @@ inline ExportType& ExportType::operator=(const ExportType& other) {
 //// Frame ////
 inline Frame::Frame(Ref func,
                     u32 values,
+                    u32 exceptions,
                     u32 offset,
                     Instance* inst,
                     Module* mod)
-    : func(func), values(values), offset(offset), inst(inst), mod(mod) {}
+    : func(func),
+      values(values),
+      exceptions(exceptions),
+      offset(offset),
+      inst(inst),
+      mod(mod) {}
 
 //// FreeList ////
+template <>
+inline bool FreeList<Ref>::IsUsed(Index index) const {
+  return (list_[index].index & refFreeBit) == 0;
+}
+
+template <>
+inline FreeList<Ref>::~FreeList<Ref>() {}
+
+template <>
+template <typename... Args>
+auto FreeList<Ref>::New(Args&&... args) -> Index {
+  if (free_head_ == 0) {
+    list_.push_back(Ref(std::forward<Args>(args)...));
+    return list_.size() - 1;
+  }
+
+  Index index = free_head_ - 1;
+
+  assert(!IsUsed(index));
+  assert(free_items_ > 0);
+
+  free_head_ = list_[index].index & (refFreeBit - 1);
+  list_[index] = Ref(std::forward<Args>(args)...);
+  free_items_--;
+  return index;
+}
+
+template <>
+inline void FreeList<Ref>::Delete(Index index) {
+  assert(IsUsed(index));
+
+  list_[index].index = free_head_ | refFreeBit;
+  free_head_ = index + 1;
+  free_items_++;
+}
+
 template <typename T>
 bool FreeList<T>::IsUsed(Index index) const {
-  return index < list_.size() && !is_free_[index];
+  return (reinterpret_cast<uintptr_t>(list_[index]) & ptrFreeBit) == 0;
+}
+
+template <typename T>
+FreeList<T>::~FreeList<T>() {
+  for (auto object : list_) {
+    if ((reinterpret_cast<uintptr_t>(object) & ptrFreeBit) == 0) {
+      delete object;
+    }
+  }
 }
 
 template <typename T>
 template <typename... Args>
 auto FreeList<T>::New(Args&&... args) -> Index {
-  if (!free_.empty()) {
-    Index index = free_.back();
-    assert(is_free_[index]);
-    free_.pop_back();
-    is_free_[index] = false;
-    list_[index] = T(std::forward<Args>(args)...);
-    return index;
+  if (free_head_ == 0) {
+    list_.push_back(T(std::forward<Args>(args)...));
+    return list_.size() - 1;
   }
-  assert(list_.size() == is_free_.size());
-  is_free_.push_back(false);
-  list_.emplace_back(std::forward<Args>(args)...);
-  return list_.size() - 1;
+
+  Index index = free_head_ - 1;
+
+  assert(!IsUsed(index));
+  assert(free_items_ > 0);
+
+  free_head_ = reinterpret_cast<uintptr_t>(list_[index]) >> ptrFreeShift;
+  list_[index] = T(std::forward<Args>(args)...);
+  free_items_--;
+  return index;
 }
 
 template <typename T>
 void FreeList<T>::Delete(Index index) {
-  list_[index] = T();
-  is_free_[index] = true;
-  free_.push_back(index);
+  assert(IsUsed(index));
+
+  delete list_[index];
+  list_[index] = reinterpret_cast<T>((free_head_ << ptrFreeShift) | ptrFreeBit);
+  free_head_ = index + 1;
+  free_items_++;
 }
 
 template <typename T>
@@ -181,7 +237,7 @@ auto FreeList<T>::size() const -> Index {
 
 template <typename T>
 auto FreeList<T>::count() const -> Index {
-  return list_.size() - free_.size();
+  return list_.size() - free_items_;
 }
 
 //// RefPtr ////
@@ -204,7 +260,7 @@ RefPtr<T>::RefPtr(Store& store, Ref ref) {
   }
 #endif
   root_index_ = store.NewRoot(ref);
-  obj_ = static_cast<T*>(store.objects_.Get(ref.index).get());
+  obj_ = static_cast<T*>(store.objects_.Get(ref.index));
   store_ = &store;
 }
 
@@ -255,7 +311,7 @@ RefPtr<T>::RefPtr(const RefPtr<U>& other)
 
 template <typename T>
 template <typename U>
-RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other){
+RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other) {
   obj_ = other.obj_;
   store_ = other.store_;
   root_index_ = store_ ? store_->CopyRoot(other.root_index_) : 0;
@@ -360,7 +416,8 @@ template <> inline bool HasType<f32>(ValueType type) { return type == ValueType:
 template <> inline bool HasType<f64>(ValueType type) { return type == ValueType::F64; }
 template <> inline bool HasType<Ref>(ValueType type) { return IsReference(type); }
 
-template <typename T> void RequireType(ValueType type) {
+template <typename T>
+void RequireType(ValueType type) {
   assert(HasType<T>(type));
 }
 
@@ -427,7 +484,7 @@ inline bool Store::IsValid(Ref ref) const {
 
 template <typename T>
 bool Store::Is(Ref ref) const {
-  return objects_.IsUsed(ref.index) && isa<T>(objects_.Get(ref.index).get());
+  return objects_.IsUsed(ref.index) && isa<T>(objects_.Get(ref.index));
 }
 
 template <typename T>
@@ -458,6 +515,10 @@ inline Store::ObjectList::Index Store::object_count() const {
 
 inline const Features& Store::features() const {
   return features_;
+}
+
+inline std::set<Thread*>& Store::threads() {
+  return threads_;
 }
 
 //// Object ////
@@ -524,6 +585,25 @@ inline std::string Trap::message() const {
   return message_;
 }
 
+//// Exception ////
+// static
+inline bool Exception::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+// static
+inline Exception::Ptr Exception::New(Store& store, Ref tag, Values& args) {
+  return store.Alloc<Exception>(store, tag, args);
+}
+
+inline Ref Exception::tag() const {
+  return tag_;
+}
+
+inline Values& Exception::args() {
+  return args_;
+}
+
 //// Extern ////
 // static
 inline bool Extern::classof(const Object* obj) {
@@ -533,7 +613,7 @@ inline bool Extern::classof(const Object* obj) {
     case ObjectKind::Table:
     case ObjectKind::Memory:
     case ObjectKind::Global:
-    case ObjectKind::Event:
+    case ObjectKind::Tag:
       return true;
     default:
       return false;
@@ -634,10 +714,8 @@ inline Memory::Ptr Memory::New(interp::Store& store, MemoryType type) {
 
 inline bool Memory::IsValidAccess(u64 offset, u64 addend, u64 size) const {
   // FIXME: make this faster.
-  return offset <= data_.size() &&
-         addend <= data_.size() &&
-         size <= data_.size() &&
-         offset + addend + size <= data_.size();
+  return offset <= data_.size() && addend <= data_.size() &&
+         size <= data_.size() && offset + addend + size <= data_.size();
 }
 
 inline bool Memory::IsValidAtomicAccess(u64 offset,
@@ -652,7 +730,8 @@ Result Memory::Load(u64 offset, u64 addend, T* out) const {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0,
+                          offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -660,7 +739,8 @@ template <typename T>
 T WABT_VECTORCALL Memory::UnsafeLoad(u64 offset, u64 addend) const {
   assert(IsValidAccess(offset, addend, sizeof(T)));
   T val;
-  wabt::MemcpyEndianAware(&val, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(&val, data_.data(), sizeof(T), data_.size(), 0,
+                          offset + addend, sizeof(T));
   return val;
 }
 
@@ -669,7 +749,8 @@ Result WABT_VECTORCALL Memory::Store(u64 offset, u64 addend, T val) {
   if (!IsValidAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
+  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T),
+                          offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 
@@ -678,7 +759,8 @@ Result Memory::AtomicLoad(u64 offset, u64 addend, T* out) const {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0, offset + addend, sizeof(T));
+  wabt::MemcpyEndianAware(out, data_.data(), sizeof(T), data_.size(), 0,
+                          offset + addend, sizeof(T));
   return Result::Ok;
 }
 
@@ -687,7 +769,8 @@ Result Memory::AtomicStore(u64 offset, u64 addend, T val) {
   if (!IsValidAtomicAccess(offset, addend, sizeof(T))) {
     return Result::Error;
   }
-  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T), offset + addend, 0, sizeof(T));
+  wabt::MemcpyEndianAware(data_.data(), &val, data_.size(), sizeof(T),
+                          offset + addend, 0, sizeof(T));
   return Result::Ok;
 }
 
@@ -782,22 +865,22 @@ inline const GlobalType& Global::type() const {
   return type_;
 }
 
-//// Event ////
+//// Tag ////
 // static
-inline bool Event::classof(const Object* obj) {
+inline bool Tag::classof(const Object* obj) {
   return obj->kind() == skind;
 }
 
 // static
-inline Event::Ptr Event::New(Store& store, EventType type) {
-  return store.Alloc<Event>(store, type);
+inline Tag::Ptr Tag::New(Store& store, TagType type) {
+  return store.Alloc<Tag>(store, type);
 }
 
-inline const ExternType& Event::extern_type() {
+inline const ExternType& Tag::extern_type() {
   return type_;
 }
 
-inline const EventType& Event::type() const {
+inline const TagType& Tag::type() const {
   return type_;
 }
 
@@ -884,8 +967,8 @@ inline const RefVec& Instance::globals() const {
   return globals_;
 }
 
-inline const RefVec& Instance::events() const {
-  return events_;
+inline const RefVec& Instance::tags() const {
+  return tags_;
 }
 
 inline const RefVec& Instance::exports() const {
@@ -909,16 +992,6 @@ inline std::vector<DataSegment>& Instance::datas() {
 }
 
 //// Thread ////
-// static
-inline bool Thread::classof(const Object* obj) {
-  return obj->kind() == skind;
-}
-
-// static
-inline Thread::Ptr Thread::New(Store& store, const Options& options) {
-  return store.Alloc<Thread>(store, options);
-}
-
 inline Store& Thread::store() {
   return store_;
 }

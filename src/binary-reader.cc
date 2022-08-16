@@ -66,12 +66,16 @@ namespace {
 
 class BinaryReader {
  public:
+  struct ReadModuleOptions {
+    bool stop_on_first_error;
+  };
+
   BinaryReader(const void* data,
                size_t size,
                BinaryReaderDelegate* delegate,
                const ReadBinaryOptions& options);
 
-  Result ReadModule();
+  Result ReadModule(const ReadModuleOptions& options);
 
  private:
   template <typename T, T BinaryReader::*member>
@@ -82,6 +86,10 @@ class BinaryReader {
 
     BinaryReader* this_;
     T previous_value_;
+  };
+
+  struct ReadSectionsOptions {
+    bool stop_on_first_error;
   };
 
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
@@ -103,13 +111,26 @@ class BinaryReader {
   Result ReadRefType(Type* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadExternalKind(ExternalKind* out_value,
                           const char* desc) WABT_WARN_UNUSED;
-  Result ReadStr(string_view* out_str, const char* desc) WABT_WARN_UNUSED;
+  Result ReadStr(std::string_view* out_str, const char* desc) WABT_WARN_UNUSED;
   Result ReadBytes(const void** out_data,
                    Address* out_data_size,
                    const char* desc) WABT_WARN_UNUSED;
   Result ReadIndex(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
   Result ReadAlignment(Address* align_log2, const char* desc) WABT_WARN_UNUSED;
+  Result ReadMemidx(Index* memidx, const char* desc) WABT_WARN_UNUSED;
+  Result ReadMemLocation(Address* alignment_log2,
+                         Index* memidx,
+                         Address* offset,
+                         const char* desc_align,
+                         const char* desc_memidx,
+                         const char* desc_offset,
+                         uint8_t* lane_val = nullptr) WABT_WARN_UNUSED;
+  Result CallbackMemLocation(const Address* alignment_log2,
+                             const Index* memidx,
+                             const Address* offset,
+                             const uint8_t* lane_val = nullptr)
+      WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadField(TypeMut* out_value) WABT_WARN_UNUSED;
 
@@ -118,21 +139,29 @@ class BinaryReader {
 
   Index NumTotalFuncs();
 
-  Result ReadI32InitExpr(Index index) WABT_WARN_UNUSED;
-  Result ReadInitExpr(Index index, bool require_i32 = false) WABT_WARN_UNUSED;
+  Result ReadInitExpr(Index index) WABT_WARN_UNUSED;
   Result ReadTable(Type* out_elem_type,
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
-  Result ReadEventType(Index* out_sig_index) WABT_WARN_UNUSED;
+  Result ReadTagType(Index* out_sig_index) WABT_WARN_UNUSED;
   Result ReadAddress(Address* out_value,
                      Index memory,
                      const char* desc) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
+  // ReadInstructions either until and END instruction, or until
+  // the given end_offset.
+  Result ReadInstructions(bool stop_on_end,
+                          Offset end_offset,
+                          Opcode* final_opcode) WABT_WARN_UNUSED;
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadDylink0Section(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadTargetFeaturesSections(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadCodeMetadataSection(std::string_view name,
+                                 Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
@@ -147,8 +176,8 @@ class BinaryReader {
   Result ReadCodeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataCountSection(Offset section_size) WABT_WARN_UNUSED;
-  Result ReadEventSection(Offset section_size) WABT_WARN_UNUSED;
-  Result ReadSections() WABT_WARN_UNUSED;
+  Result ReadTagSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadSections(const ReadSectionsOptions& options) WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
   size_t read_end_ = 0;  // Either the section end or data_size.
@@ -167,7 +196,7 @@ class BinaryReader {
   Index num_table_imports_ = 0;
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
-  Index num_event_imports_ = 0;
+  Index num_tag_imports_ = 0;
   Index num_function_signatures_ = 0;
   Index num_function_bodies_ = 0;
   Index data_count_ = kInvalidIndex;
@@ -321,7 +350,13 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   uint32_t type = 0;
   CHECK_RESULT(ReadS32Leb128(&type, desc));
-  *out_value = static_cast<Type>(type);
+  if (static_cast<Type::Enum>(type) == Type::Reference) {
+    uint32_t heap_type = 0;
+    CHECK_RESULT(ReadS32Leb128(&heap_type, desc));
+    *out_value = Type(Type::Reference, heap_type);
+  } else {
+    *out_value = static_cast<Type>(type);
+  }
   return Result::Ok;
 }
 
@@ -343,14 +378,14 @@ Result BinaryReader::ReadExternalKind(ExternalKind* out_value,
   return Result::Ok;
 }
 
-Result BinaryReader::ReadStr(string_view* out_str, const char* desc) {
+Result BinaryReader::ReadStr(std::string_view* out_str, const char* desc) {
   uint32_t str_len = 0;
   CHECK_RESULT(ReadU32Leb128(&str_len, "string length"));
 
   ERROR_UNLESS(state_.offset + str_len <= read_end_,
                "unable to read string: %s", desc);
 
-  *out_str = string_view(
+  *out_str = std::string_view(
       reinterpret_cast<const char*>(state_.data) + state_.offset, str_len);
   state_.offset += str_len;
 
@@ -391,11 +426,65 @@ Result BinaryReader::ReadOffset(Offset* offset, const char* desc) {
 Result BinaryReader::ReadAlignment(Address* alignment_log2, const char* desc) {
   uint32_t value;
   CHECK_RESULT(ReadU32Leb128(&value, desc));
-  if (value >= 32) {
+  if (value >= 128 ||
+      (value >= 32 && !options_.features.multi_memory_enabled())) {
     PrintError("invalid %s: %u", desc, value);
     return Result::Error;
   }
   *alignment_log2 = value;
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadMemidx(Index* memidx, const char* desc) {
+  CHECK_RESULT(ReadIndex(memidx, desc));
+  ERROR_UNLESS(*memidx < memories.size(), "memory index %u out of range",
+               *memidx);
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadMemLocation(Address* alignment_log2,
+                                     Index* memidx,
+                                     Address* offset,
+                                     const char* desc_align,
+                                     const char* desc_memidx,
+                                     const char* desc_offset,
+                                     uint8_t* lane_val) {
+  CHECK_RESULT(ReadAlignment(alignment_log2, desc_align));
+  *memidx = 0;
+  if (*alignment_log2 >> 6) {
+    ERROR_IF(!options_.features.multi_memory_enabled(),
+             "multi_memory not allowed");
+    *alignment_log2 = *alignment_log2 & ((1 << 6) - 1);
+    CHECK_RESULT(ReadMemidx(memidx, desc_memidx));
+  }
+  CHECK_RESULT(ReadAddress(offset, 0, desc_offset));
+
+  if (lane_val) {
+    CHECK_RESULT(ReadU8(lane_val, "Lane idx"));
+  }
+
+  return Result::Ok;
+}
+
+Result BinaryReader::CallbackMemLocation(const Address* alignment_log2,
+                                         const Index* memidx,
+                                         const Address* offset,
+                                         const uint8_t* lane_val) {
+  if (lane_val) {
+    if (*memidx) {
+      CALLBACK(OnOpcodeUint32Uint32Uint32Uint32, *alignment_log2, *memidx,
+               *offset, *lane_val);
+    } else {
+      CALLBACK(OnOpcodeUint32Uint32Uint32, *alignment_log2, *offset, *lane_val);
+    }
+  } else {
+    if (*memidx) {
+      CALLBACK(OnOpcodeUint32Uint32Uint32, *alignment_log2, *memidx, *offset);
+    } else {
+      CALLBACK(OnOpcodeUint32Uint32, *alignment_log2, *offset);
+    }
+  }
+
   return Result::Ok;
 }
 
@@ -447,6 +536,9 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::ExternRef:
       return options_.features.reference_types_enabled();
 
+    case Type::Reference:
+      return options_.features.function_references_enabled();
+
     default:
       return false;
   }
@@ -468,90 +560,9 @@ Index BinaryReader::NumTotalFuncs() {
   return num_func_imports_ + num_function_signatures_;
 }
 
-Result BinaryReader::ReadI32InitExpr(Index index) {
-  return ReadInitExpr(index, true);
-}
-
-Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
-  Opcode opcode;
-  CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
-  ERROR_UNLESS_OPCODE_ENABLED(opcode);
-
-  switch (opcode) {
-    case Opcode::I32Const: {
-      uint32_t value = 0;
-      CHECK_RESULT(ReadS32Leb128(&value, "init_expr i32.const value"));
-      CALLBACK(OnInitExprI32ConstExpr, index, value);
-      break;
-    }
-
-    case Opcode::I64Const: {
-      uint64_t value = 0;
-      CHECK_RESULT(ReadS64Leb128(&value, "init_expr i64.const value"));
-      CALLBACK(OnInitExprI64ConstExpr, index, value);
-      break;
-    }
-
-    case Opcode::F32Const: {
-      uint32_t value_bits = 0;
-      CHECK_RESULT(ReadF32(&value_bits, "init_expr f32.const value"));
-      CALLBACK(OnInitExprF32ConstExpr, index, value_bits);
-      break;
-    }
-
-    case Opcode::F64Const: {
-      uint64_t value_bits = 0;
-      CHECK_RESULT(ReadF64(&value_bits, "init_expr f64.const value"));
-      CALLBACK(OnInitExprF64ConstExpr, index, value_bits);
-      break;
-    }
-
-    case Opcode::V128Const: {
-      v128 value_bits;
-      ZeroMemory(value_bits);
-      CHECK_RESULT(ReadV128(&value_bits, "init_expr v128.const value"));
-      CALLBACK(OnInitExprV128ConstExpr, index, value_bits);
-      break;
-    }
-
-    case Opcode::GlobalGet: {
-      Index global_index;
-      CHECK_RESULT(ReadIndex(&global_index, "init_expr global.get index"));
-      CALLBACK(OnInitExprGlobalGetExpr, index, global_index);
-      break;
-    }
-
-    case Opcode::RefNull: {
-      Type type;
-      CHECK_RESULT(ReadRefType(&type, "ref.null type"));
-      CALLBACK(OnInitExprRefNull, index, type);
-      break;
-    }
-
-    case Opcode::RefFunc: {
-      Index func_index;
-      CHECK_RESULT(ReadIndex(&func_index, "init_expr ref.func index"));
-      CALLBACK(OnInitExprRefFunc, index, func_index);
-      break;
-    }
-
-    case Opcode::End:
-      return Result::Ok;
-
-    default:
-      return ReportUnexpectedOpcode(opcode, "in initializer expression");
-  }
-
-  if (require_i32 && opcode != Opcode::I32Const &&
-      opcode != Opcode::GlobalGet) {
-    PrintError("expected i32 init_expr");
-    return Result::Error;
-  }
-
-  CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
-  ERROR_UNLESS(opcode == Opcode::End,
-               "expected END opcode after initializer expression");
-  return Result::Ok;
+Result BinaryReader::ReadInitExpr(Index index) {
+  // Read instructions until END opcode is reached.
+  return ReadInstructions(/*stop_on_end=*/true, read_end_, NULL);
 }
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
@@ -581,8 +592,8 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
 
 Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   uint8_t flags;
-  uint32_t initial;
-  uint32_t max = 0;
+  uint64_t initial;
+  uint64_t max = 0;
   CHECK_RESULT(ReadU8(&flags, "memory flags"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
@@ -593,9 +604,20 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
            "memory may not be shared: threads not allowed");
   ERROR_IF(is_64 && !options_.features.memory64_enabled(),
            "memory64 not allowed");
-  CHECK_RESULT(ReadU32Leb128(&initial, "memory initial page count"));
-  if (has_max) {
-    CHECK_RESULT(ReadU32Leb128(&max, "memory max page count"));
+  if (is_64) {
+    CHECK_RESULT(ReadU64Leb128(&initial, "memory initial page count"));
+    if (has_max) {
+      CHECK_RESULT(ReadU64Leb128(&max, "memory max page count"));
+    }
+  } else {
+    uint32_t initial32;
+    CHECK_RESULT(ReadU32Leb128(&initial32, "memory initial page count"));
+    initial = initial32;
+    if (has_max) {
+      uint32_t max32;
+      CHECK_RESULT(ReadU32Leb128(&max32, "memory max page count"));
+      max = max32;
+    }
   }
 
   out_page_limits->has_max = has_max;
@@ -641,12 +663,27 @@ Result BinaryReader::ReadAddress(Address* out_value,
 }
 
 Result BinaryReader::ReadFunctionBody(Offset end_offset) {
-  bool seen_end_opcode = false;
+  Opcode final_opcode(Opcode::Invalid);
+  CHECK_RESULT(
+      ReadInstructions(/*stop_on_end=*/false, end_offset, &final_opcode));
+  ERROR_UNLESS(state_.offset == end_offset,
+               "function body longer than given size");
+  ERROR_UNLESS(final_opcode == Opcode::End,
+               "function body must end with END opcode");
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadInstructions(bool stop_on_end,
+                                      Offset end_offset,
+                                      Opcode* final_opcode) {
   while (state_.offset < end_offset) {
     Opcode opcode;
     CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
     CALLBACK(OnOpcode, opcode);
     ERROR_UNLESS_OPCODE_ENABLED(opcode);
+    if (final_opcode) {
+      *final_opcode = opcode;
+    }
 
     switch (opcode) {
       case Opcode::Unreachable:
@@ -704,9 +741,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
           result_types_[i] = result_type;
         }
 
-        Type* result_types = num_results ? result_types_.data() : nullptr;
-        CALLBACK(OnSelectExpr, num_results, result_types);
-        CALLBACK0(OnOpcodeBare);
+        if (num_results) {
+          CALLBACK(OnSelectExpr, num_results, result_types_.data());
+          CALLBACK(OnOpcodeType, result_types_[0]);
+        } else {
+          CALLBACK(OnSelectExpr, 0, NULL);
+          CALLBACK0(OnOpcodeBare);
+        }
         break;
       }
 
@@ -769,11 +810,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::End:
-        if (state_.offset == end_offset) {
-          seen_end_opcode = true;
-          CALLBACK0(OnEndFunc);
-        } else {
-          CALLBACK0(OnEndExpr);
+        CALLBACK0(OnEndExpr);
+        if (stop_on_end) {
+          return Result::Ok;
         }
         break;
 
@@ -930,11 +969,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::V128Load32X2S:
       case Opcode::V128Load32X2U: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-        CALLBACK(OnLoadExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
+        CALLBACK(OnLoadExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -949,30 +990,41 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64Store:
       case Opcode::V128Store: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "store alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "store offset"));
-
-        CALLBACK(OnStoreExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "store alignment", "store memidx",
+                                     "store offset"));
+        CALLBACK(OnStoreExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
       case Opcode::MemorySize: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "memory.size reserved"));
-        ERROR_UNLESS(reserved == 0, "memory.size reserved value must be 0");
-        CALLBACK0(OnMemorySizeExpr);
-        CALLBACK(OnOpcodeUint32, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "memory.size reserved"));
+          ERROR_UNLESS(reserved == 0, "memory.size reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.size memidx"));
+        }
+        CALLBACK(OnMemorySizeExpr, memidx);
+        CALLBACK(OnOpcodeUint32, memidx);
         break;
       }
 
       case Opcode::MemoryGrow: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "memory.grow reserved"));
-        ERROR_UNLESS(reserved == 0, "memory.grow reserved value must be 0");
-        CALLBACK0(OnMemoryGrowExpr);
-        CALLBACK(OnOpcodeUint32, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "memory.grow reserved"));
+          ERROR_UNLESS(reserved == 0, "memory.grow reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.grow memidx"));
+        }
+        CALLBACK(OnMemoryGrowExpr, memidx);
+        CALLBACK(OnOpcodeUint32, memidx);
         break;
       }
 
@@ -1310,12 +1362,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::V128Load32Splat:
       case Opcode::V128Load64Splat: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
-        CALLBACK(OnLoadSplatExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
+        CALLBACK(OnLoadSplatExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
       case Opcode::V128Load8Lane:
@@ -1323,14 +1376,16 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::V128Load32Lane:
       case Opcode::V128Load64Lane: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
         uint8_t lane_val;
-        CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
-
-        CALLBACK(OnSimdLoadLaneExpr, opcode, alignment_log2, offset, lane_val);
-        CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, lane_val);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset", &lane_val));
+        CALLBACK(OnSimdLoadLaneExpr, opcode, memidx, alignment_log2, offset,
+                 lane_val);
+        CHECK_RESULT(
+            CallbackMemLocation(&alignment_log2, &memidx, &offset, &lane_val));
         break;
       }
       case Opcode::V128Store8Lane:
@@ -1338,25 +1393,28 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::V128Store32Lane:
       case Opcode::V128Store64Lane: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
         uint8_t lane_val;
-        CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
-
-        CALLBACK(OnSimdStoreLaneExpr, opcode, alignment_log2, offset, lane_val);
-        CALLBACK(OnOpcodeUint32Uint32Uint32, alignment_log2, offset, lane_val);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "store alignment", "store memidx",
+                                     "store offset", &lane_val));
+        CALLBACK(OnSimdStoreLaneExpr, opcode, memidx, alignment_log2, offset,
+                 lane_val);
+        CHECK_RESULT(
+            CallbackMemLocation(&alignment_log2, &memidx, &offset, &lane_val));
         break;
       }
       case Opcode::V128Load32Zero:
       case Opcode::V128Load64Zero: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
-        CALLBACK(OnLoadZeroExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
+        CALLBACK(OnLoadZeroExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
       case Opcode::I32TruncF32S:
@@ -1412,7 +1470,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::Catch: {
         Index index;
-        CHECK_RESULT(ReadIndex(&index, "event index"));
+        CHECK_RESULT(ReadIndex(&index, "tag index"));
         CALLBACK(OnCatchExpr, index);
         CALLBACK(OnOpcodeIndex, index);
         break;
@@ -1421,12 +1479,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::CatchAll: {
         CALLBACK(OnCatchAllExpr);
         CALLBACK(OnOpcodeBare);
-        break;
-      }
-
-      case Opcode::Unwind: {
-        CALLBACK0(OnUnwindExpr);
-        CALLBACK0(OnOpcodeBare);
         break;
       }
 
@@ -1448,7 +1500,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::Throw: {
         Index index;
-        CHECK_RESULT(ReadIndex(&index, "event index"));
+        CHECK_RESULT(ReadIndex(&index, "tag index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
         break;
@@ -1477,24 +1529,26 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::MemoryAtomicNotify: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
-        CALLBACK(OnAtomicNotifyExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "notify alignment", "notify memidx",
+                                     "notify offset"));
+        CALLBACK(OnAtomicNotifyExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
       case Opcode::MemoryAtomicWait32:
       case Opcode::MemoryAtomicWait64: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
-        CALLBACK(OnAtomicWaitExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "wait alignment", "wait memidx",
+                                     "wait offset"));
+        CALLBACK(OnAtomicWaitExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1516,12 +1570,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32AtomicLoad:
       case Opcode::I64AtomicLoad: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "load alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "load offset"));
-
-        CALLBACK(OnAtomicLoadExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "load alignment", "load memidx",
+                                     "load offset"));
+        CALLBACK(OnAtomicLoadExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1533,12 +1588,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32AtomicStore:
       case Opcode::I64AtomicStore: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "store alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "store offset"));
-
-        CALLBACK(OnAtomicStoreExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "store alignment", "store memidx",
+                                     "store offset"));
+        CALLBACK(OnAtomicStoreExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1585,12 +1641,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw16XchgU:
       case Opcode::I64AtomicRmw32XchgU: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "memory alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "memory offset"));
-
-        CALLBACK(OnAtomicRmwExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "memory alignment", "memory memidx",
+                                     "memory offset"));
+        CALLBACK(OnAtomicRmwExpr, opcode, memidx, alignment_log2, offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1602,12 +1659,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw16CmpxchgU:
       case Opcode::I64AtomicRmw32CmpxchgU: {
         Address alignment_log2;
-        CHECK_RESULT(ReadAlignment(&alignment_log2, "memory alignment"));
+        Index memidx;
         Address offset;
-        CHECK_RESULT(ReadAddress(&offset, 0, "memory offset"));
-
-        CALLBACK(OnAtomicRmwCmpxchgExpr, opcode, alignment_log2, offset);
-        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        CHECK_RESULT(ReadMemLocation(&alignment_log2, &memidx, &offset,
+                                     "memory alignment", "memory memidx",
+                                     "memory offset"));
+        CALLBACK(OnAtomicRmwCmpxchgExpr, opcode, memidx, alignment_log2,
+                 offset);
+        CHECK_RESULT(CallbackMemLocation(&alignment_log2, &memidx, &offset));
         break;
       }
 
@@ -1626,11 +1685,16 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         ERROR_IF(data_count_ == kInvalidIndex,
                  "memory.init requires data count section");
         CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnMemoryInitExpr, segment);
-        CALLBACK(OnOpcodeUint32Uint32, segment, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+          ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.init memidx"));
+        }
+        CALLBACK(OnMemoryInitExpr, segment, memidx);
+        CALLBACK(OnOpcodeUint32Uint32, segment, memidx);
         break;
       }
 
@@ -1651,21 +1715,34 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::MemoryFill: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnMemoryFillExpr);
-        CALLBACK(OnOpcodeUint32, reserved);
+        Index memidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "memory.fill reserved"));
+          ERROR_UNLESS(reserved == 0, "memory.fill reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&memidx, "memory.fill memidx"));
+        }
+        CALLBACK(OnMemoryFillExpr, memidx);
+        CALLBACK(OnOpcodeUint32, memidx);
         break;
       }
+
       case Opcode::MemoryCopy: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnMemoryCopyExpr);
-        CALLBACK(OnOpcodeUint32Uint32, reserved, reserved);
+        Index srcmemidx = 0;
+        Index destmemidx = 0;
+        if (!options_.features.multi_memory_enabled()) {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+          ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+          CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+          ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        } else {
+          CHECK_RESULT(ReadMemidx(&srcmemidx, "memory.copy srcmemidx"));
+          CHECK_RESULT(ReadMemidx(&destmemidx, "memory.copy destmemindex"));
+        }
+        CALLBACK(OnMemoryCopyExpr, srcmemidx, destmemidx);
+        CALLBACK(OnOpcodeUint32Uint32, srcmemidx, destmemidx);
         break;
       }
 
@@ -1740,13 +1817,15 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK(OnOpcodeBare);
         break;
 
+      case Opcode::CallRef:
+        CALLBACK(OnCallRefExpr);
+        CALLBACK(OnOpcodeBare);
+        break;
+
       default:
         return ReportUnexpectedOpcode(opcode);
     }
   }
-  ERROR_UNLESS(state_.offset == end_offset,
-               "function body longer than given size");
-  ERROR_UNLESS(seen_end_opcode, "function body must end with END opcode");
   return Result::Ok;
 }
 
@@ -1781,7 +1860,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
       case NameSectionSubsection::Module:
         CALLBACK(OnModuleNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "module name"));
           CALLBACK(OnModuleName, name);
         }
@@ -1796,7 +1875,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
 
           for (Index j = 0; j < num_names; ++j) {
             Index function_index;
-            string_view function_name;
+            std::string_view function_name;
 
             CHECK_RESULT(ReadIndex(&function_index, "function index"));
             ERROR_UNLESS(function_index != last_function_index,
@@ -1835,7 +1914,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
             Index last_local_index = kInvalidIndex;
             for (Index k = 0; k < num_locals; ++k) {
               Index local_index;
-              string_view local_name;
+              std::string_view local_name;
 
               CHECK_RESULT(ReadIndex(&local_index, "named index"));
               ERROR_UNLESS(local_index != last_local_index,
@@ -1861,13 +1940,14 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
       case NameSectionSubsection::Global:
       case NameSectionSubsection::ElemSegment:
       case NameSectionSubsection::DataSegment:
+      case NameSectionSubsection::Tag:
         if (subsection_size) {
           Index num_names;
           CHECK_RESULT(ReadCount(&num_names, "name count"));
           CALLBACK(OnNameCount, num_names);
           for (Index j = 0; j < num_names; ++j) {
             Index index;
-            string_view name;
+            std::string_view name;
 
             CHECK_RESULT(ReadIndex(&index, "index"));
             CHECK_RESULT(ReadStr(&name, "name"));
@@ -1929,7 +2009,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::TypeIndexLEB:
       case RelocType::GlobalIndexLEB:
       case RelocType::GlobalIndexI32:
-      case RelocType::EventIndexLEB:
+      case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
       case RelocType::TableNumberLEB:
         break;
@@ -1941,6 +2021,82 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
     CALLBACK(OnReloc, type, offset, index, addend);
   }
   CALLBACK0(EndRelocSection);
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadDylink0Section(Offset section_size) {
+  CALLBACK(BeginDylinkSection, section_size);
+
+  while (state_.offset < read_end_) {
+    uint32_t dylink_type;
+    Offset subsection_size;
+    CHECK_RESULT(ReadU32Leb128(&dylink_type, "type"));
+    CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
+    size_t subsection_end = state_.offset + subsection_size;
+    ERROR_UNLESS(subsection_end <= read_end_,
+                 "invalid sub-section size: extends past end");
+    ReadEndRestoreGuard guard(this);
+    read_end_ = subsection_end;
+
+    uint32_t count;
+    switch (static_cast<DylinkEntryType>(dylink_type)) {
+      case DylinkEntryType::MemInfo: {
+        uint32_t mem_size;
+        uint32_t mem_align;
+        uint32_t table_size;
+        uint32_t table_align;
+
+        CHECK_RESULT(ReadU32Leb128(&mem_size, "mem_size"));
+        CHECK_RESULT(ReadU32Leb128(&mem_align, "mem_align"));
+        CHECK_RESULT(ReadU32Leb128(&table_size, "table_size"));
+        CHECK_RESULT(ReadU32Leb128(&table_align, "table_align"));
+        CALLBACK(OnDylinkInfo, mem_size, mem_align, table_size, table_align);
+        break;
+      }
+      case DylinkEntryType::Needed:
+        CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
+        CALLBACK(OnDylinkNeededCount, count);
+        while (count--) {
+          std::string_view so_name;
+          CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
+          CALLBACK(OnDylinkNeeded, so_name);
+        }
+        break;
+      case DylinkEntryType::ImportInfo:
+        CHECK_RESULT(ReadU32Leb128(&count, "count"));
+        CALLBACK(OnDylinkImportCount, count);
+        for (Index i = 0; i < count; ++i) {
+          uint32_t flags = 0;
+          std::string_view module;
+          std::string_view field;
+          CHECK_RESULT(ReadStr(&module, "module"));
+          CHECK_RESULT(ReadStr(&field, "field"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
+          CALLBACK(OnDylinkImport, module, field, flags);
+        }
+        break;
+      case DylinkEntryType::ExportInfo:
+        CHECK_RESULT(ReadU32Leb128(&count, "count"));
+        CALLBACK(OnDylinkExportCount, count);
+        for (Index i = 0; i < count; ++i) {
+          uint32_t flags = 0;
+          std::string_view name;
+          CHECK_RESULT(ReadStr(&name, "name"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
+          CALLBACK(OnDylinkExport, name, flags);
+        }
+        break;
+      default:
+        // Unknown subsection, skip it.
+        state_.offset = subsection_end;
+        break;
+    }
+    ERROR_UNLESS(state_.offset == subsection_end,
+                 "unfinished sub-section (expected end: 0x%" PRIzx ")",
+                 subsection_end);
+  }
+
+  CALLBACK0(EndDylinkSection);
   return Result::Ok;
 }
 
@@ -1961,12 +2117,28 @@ Result BinaryReader::ReadDylinkSection(Offset section_size) {
   CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
   CALLBACK(OnDylinkNeededCount, count);
   while (count--) {
-    string_view so_name;
+    std::string_view so_name;
     CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
     CALLBACK(OnDylinkNeeded, so_name);
   }
 
   CALLBACK0(EndDylinkSection);
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadTargetFeaturesSections(Offset section_size) {
+  CALLBACK(BeginTargetFeaturesSection, section_size);
+  uint32_t count;
+  CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
+  CALLBACK(OnFeatureCount, count);
+  while (count--) {
+    uint8_t prefix;
+    std::string_view name;
+    CHECK_RESULT(ReadU8(&prefix, "prefix"));
+    CHECK_RESULT(ReadStr(&name, "feature name"));
+    CALLBACK(OnFeature, prefix, name);
+  }
+  CALLBACK0(EndTargetFeaturesSection);
   return Result::Ok;
 }
 
@@ -1992,17 +2164,16 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
         CALLBACK(OnSymbolCount, count);
         for (Index i = 0; i < count; ++i) {
-          string_view name;
+          std::string_view name;
           uint32_t flags = 0;
           uint32_t kind = 0;
           CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
           CHECK_RESULT(ReadU32Leb128(&flags, "sym flags"));
           SymbolType sym_type = static_cast<SymbolType>(kind);
-          CALLBACK(OnSymbol, i, sym_type, flags);
           switch (sym_type) {
             case SymbolType::Function:
             case SymbolType::Global:
-            case SymbolType::Event:
+            case SymbolType::Tag:
             case SymbolType::Table: {
               uint32_t index = 0;
               CHECK_RESULT(ReadU32Leb128(&index, "index"));
@@ -2016,8 +2187,8 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                 case SymbolType::Global:
                   CALLBACK(OnGlobalSymbol, i, flags, name, index);
                   break;
-                case SymbolType::Event:
-                  CALLBACK(OnEventSymbol, i, flags, name, index);
+                case SymbolType::Tag:
+                  CALLBACK(OnTagSymbol, i, flags, name, index);
                   break;
                 case SymbolType::Table:
                   CALLBACK(OnTableSymbol, i, flags, name, index);
@@ -2053,7 +2224,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&count, "info count"));
         CALLBACK(OnSegmentInfoCount, count);
         for (Index i = 0; i < count; i++) {
-          string_view name;
+          std::string_view name;
           Address alignment_log2;
           uint32_t flags;
           CHECK_RESULT(ReadStr(&name, "segment name"));
@@ -2079,7 +2250,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         while (count--) {
           uint32_t flags;
           uint32_t entry_count;
-          string_view name;
+          std::string_view name;
           CHECK_RESULT(ReadStr(&name, "comdat name"));
           CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
           CHECK_RESULT(ReadU32Leb128(&entry_count, "entry count"));
@@ -2107,34 +2278,85 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadEventType(Index* out_sig_index) {
-  uint32_t attribute;
-  CHECK_RESULT(ReadU32Leb128(&attribute, "event attribute"));
-  ERROR_UNLESS(attribute == 0, "event attribute must be 0");
-  CHECK_RESULT(ReadIndex(out_sig_index, "event signature index"));
+Result BinaryReader::ReadTagType(Index* out_sig_index) {
+  uint8_t attribute;
+  CHECK_RESULT(ReadU8(&attribute, "tag attribute"));
+  ERROR_UNLESS(attribute == 0, "tag attribute must be 0");
+  CHECK_RESULT(ReadIndex(out_sig_index, "tag signature index"));
   return Result::Ok;
 }
 
-Result BinaryReader::ReadEventSection(Offset section_size) {
-  CALLBACK(BeginEventSection, section_size);
-  Index num_events;
-  CHECK_RESULT(ReadCount(&num_events, "event count"));
-  CALLBACK(OnEventCount, num_events);
+Result BinaryReader::ReadTagSection(Offset section_size) {
+  CALLBACK(BeginTagSection, section_size);
+  Index num_tags;
+  CHECK_RESULT(ReadCount(&num_tags, "tag count"));
+  CALLBACK(OnTagCount, num_tags);
 
-  for (Index i = 0; i < num_events; ++i) {
-    Index event_index = num_event_imports_ + i;
+  for (Index i = 0; i < num_tags; ++i) {
+    Index tag_index = num_tag_imports_ + i;
     Index sig_index;
-    CHECK_RESULT(ReadEventType(&sig_index));
-    CALLBACK(OnEventType, event_index, sig_index);
+    CHECK_RESULT(ReadTagType(&sig_index));
+    CALLBACK(OnTagType, tag_index, sig_index);
   }
 
-  CALLBACK(EndEventSection);
+  CALLBACK(EndTagSection);
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
+                                             Offset section_size) {
+  CALLBACK(BeginCodeMetadataSection, name, section_size);
+
+  Index num_funcions;
+  CHECK_RESULT(ReadCount(&num_funcions, "function count"));
+  CALLBACK(OnCodeMetadataFuncCount, num_funcions);
+
+  Index last_function_index = kInvalidIndex;
+  for (Index i = 0; i < num_funcions; ++i) {
+    Index function_index;
+    CHECK_RESULT(ReadCount(&function_index, "function index"));
+    ERROR_UNLESS(function_index >= num_func_imports_,
+                 "function import can't have metadata (got %" PRIindex ")",
+                 function_index);
+    ERROR_UNLESS(function_index < NumTotalFuncs(),
+                 "invalid function index: %" PRIindex, function_index);
+    ERROR_UNLESS(function_index != last_function_index,
+                 "duplicate function index: %" PRIindex, function_index);
+    ERROR_UNLESS(last_function_index == kInvalidIndex ||
+                     function_index > last_function_index,
+                 "function index out of order: %" PRIindex, function_index);
+    last_function_index = function_index;
+
+    Index num_metadata;
+    CHECK_RESULT(ReadCount(&num_metadata, "metadata instances count"));
+
+    CALLBACK(OnCodeMetadataCount, function_index, num_metadata);
+
+    Offset last_code_offset = kInvalidOffset;
+    for (Index j = 0; j < num_metadata; ++j) {
+      Offset code_offset;
+      CHECK_RESULT(ReadOffset(&code_offset, "code offset"));
+      ERROR_UNLESS(code_offset != last_code_offset,
+                   "duplicate code offset: %" PRIzx, code_offset);
+      ERROR_UNLESS(
+          last_code_offset == kInvalidOffset || code_offset > last_code_offset,
+          "code offset out of order: %" PRIzx, code_offset);
+      last_code_offset = code_offset;
+
+      Address data_size;
+      const void* data;
+      CHECK_RESULT(ReadBytes(&data, &data_size, "instance data"));
+      CALLBACK(OnCodeMetadata, code_offset, data, data_size);
+    }
+  }
+
+  CALLBACK(EndCodeMetadataSection);
   return Result::Ok;
 }
 
 Result BinaryReader::ReadCustomSection(Index section_index,
                                        Offset section_size) {
-  string_view section_name;
+  std::string_view section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
   CALLBACK(BeginCustomSection, section_index, section_size, section_name);
   ValueRestoreGuard<bool, &BinaryReader::reading_custom_section_> guard(this);
@@ -2143,13 +2365,22 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
     did_read_names_section_ = true;
+  } else if (section_name == WABT_BINARY_SECTION_DYLINK0) {
+    CHECK_RESULT(ReadDylink0Section(section_size));
   } else if (section_name == WABT_BINARY_SECTION_DYLINK) {
     CHECK_RESULT(ReadDylinkSection(section_size));
   } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
     // Reloc sections always begin with "reloc."
     CHECK_RESULT(ReadRelocSection(section_size));
+  } else if (section_name == WABT_BINARY_SECTION_TARGET_FEATURES) {
+    CHECK_RESULT(ReadTargetFeaturesSections(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
+  } else if (options_.features.code_metadata_enabled() &&
+             section_name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0) {
+    std::string_view metadata_name = section_name;
+    metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) - 1);
+    CHECK_RESULT(ReadCodeMetadataSection(metadata_name, section_size));
   } else {
     // This is an unknown custom section, skip it.
     state_.offset = read_end_;
@@ -2171,8 +2402,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
     } else {
       uint8_t type;
       CHECK_RESULT(ReadU8(&type, "type form"));
-      ERROR_UNLESS(type == 0x60, "unexpected type form (got " PRItypecode ")",
-                   WABT_PRINTF_TYPE_CODE(type));
+      ERROR_UNLESS(type == 0x60, "unexpected type form (got %#x)", type);
       form = Type::Func;
     }
 
@@ -2255,9 +2485,9 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_imports, "import count"));
   CALLBACK(OnImportCount, num_imports);
   for (Index i = 0; i < num_imports; ++i) {
-    string_view module_name;
+    std::string_view module_name;
     CHECK_RESULT(ReadStr(&module_name, "import module name"));
-    string_view field_name;
+    std::string_view field_name;
     CHECK_RESULT(ReadStr(&field_name, "import field name"));
 
     uint8_t kind;
@@ -2303,14 +2533,14 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         break;
       }
 
-      case ExternalKind::Event: {
+      case ExternalKind::Tag: {
         ERROR_UNLESS(options_.features.exceptions_enabled(),
-                     "invalid import event kind: exceptions not allowed");
+                     "invalid import tag kind: exceptions not allowed");
         Index sig_index;
-        CHECK_RESULT(ReadEventType(&sig_index));
-        CALLBACK(OnImportEvent, i, module_name, field_name, num_event_imports_,
+        CHECK_RESULT(ReadTagType(&sig_index));
+        CALLBACK(OnImportTag, i, module_name, field_name, num_tag_imports_,
                  sig_index);
-        num_event_imports_++;
+        num_tag_imports_++;
         break;
       }
 
@@ -2396,7 +2626,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_exports, "export count"));
   CALLBACK(OnExportCount, num_exports);
   for (Index i = 0; i < num_exports; ++i) {
-    string_view name;
+    std::string_view name;
     CHECK_RESULT(ReadStr(&name, "export item name"));
 
     ExternalKind kind;
@@ -2404,9 +2634,9 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
 
     Index item_index;
     CHECK_RESULT(ReadIndex(&item_index, "export item index"));
-    if (kind == ExternalKind::Event) {
+    if (kind == ExternalKind::Tag) {
       ERROR_UNLESS(options_.features.exceptions_enabled(),
-                   "invalid export event kind: exceptions not allowed");
+                   "invalid export tag kind: exceptions not allowed");
     }
 
     CALLBACK(OnExport, i, static_cast<ExternalKind>(kind), item_index, name);
@@ -2443,7 +2673,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
 
     if (!(flags & SegPassive)) {
       CALLBACK(BeginElemSegmentInitExpr, i);
-      CHECK_RESULT(ReadI32InitExpr(i));
+      CHECK_RESULT(ReadInitExpr(i));
       CALLBACK(EndElemSegmentInitExpr, i);
     }
 
@@ -2456,7 +2686,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
-                     elem_type.GetName());
+                     elem_type.GetName().c_str());
         elem_type = Type::FuncRef;
       }
     }
@@ -2530,7 +2760,11 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
       CALLBACK(OnLocalDecl, k, num_local_types, local_type);
     }
 
-    CHECK_RESULT(ReadFunctionBody(end_offset));
+    if (options_.skip_function_bodies) {
+      state_.offset = end_offset;
+    } else {
+      CHECK_RESULT(ReadFunctionBody(end_offset));
+    }
 
     CALLBACK(EndFunctionBody, func_index);
   }
@@ -2558,8 +2792,9 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     }
     CALLBACK(BeginDataSegment, i, memory_index, flags);
     if (!(flags & SegPassive)) {
+      ERROR_UNLESS(memories.size() > 0, "no memory to copy data to");
       CALLBACK(BeginDataSegmentInitExpr, i);
-      CHECK_RESULT(ReadI32InitExpr(i));
+      CHECK_RESULT(ReadInitExpr(i));
       CALLBACK(EndDataSegmentInitExpr, i);
     }
 
@@ -2583,7 +2818,7 @@ Result BinaryReader::ReadDataCountSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadSections() {
+Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
   Result result = Result::Ok;
   Index section_index = 0;
   bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
@@ -2597,7 +2832,17 @@ Result BinaryReader::ReadSections() {
     read_end_ = state_.offset + section_size;
     if (section_code >= kBinarySectionCount) {
       PrintError("invalid section code: %u", section_code);
-      return Result::Error;
+      if (options.stop_on_first_error) {
+        return Result::Error;
+      }
+      // If we don't have to stop on first error, continue reading
+      // sections, because although we could not understand the
+      // current section, we can continue and correctly parse
+      // subsequent sections, so we can give back as much information
+      // as we can understand.
+      result = Result::Error;
+      state_.offset = read_end_;
+      continue;
     }
 
     BinarySection section = static_cast<BinarySection>(section_code);
@@ -2679,11 +2924,11 @@ Result BinaryReader::ReadSections() {
         section_result = ReadDataSection(section_size);
         result |= section_result;
         break;
-      case BinarySection::Event:
+      case BinarySection::Tag:
         ERROR_UNLESS(options_.features.exceptions_enabled(),
                      "invalid section code: %u",
                      static_cast<unsigned int>(section));
-        section_result = ReadEventSection(section_size);
+        section_result = ReadTagSection(section_size);
         result |= section_result;
         break;
       case BinarySection::DataCount:
@@ -2722,7 +2967,7 @@ Result BinaryReader::ReadSections() {
   return result;
 }
 
-Result BinaryReader::ReadModule() {
+Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   uint32_t magic = 0;
   CHECK_RESULT(ReadU32(&magic, "magic"));
   ERROR_UNLESS(magic == WABT_BINARY_MAGIC, "bad magic value");
@@ -2733,7 +2978,7 @@ Result BinaryReader::ReadModule() {
                WABT_BINARY_VERSION);
 
   CALLBACK(BeginModule, version);
-  CHECK_RESULT(ReadSections());
+  CHECK_RESULT(ReadSections(ReadSectionsOptions{options.stop_on_first_error}));
   // This is checked in ReadCodeSection, but it must be checked at the end too,
   // in case the code section was omitted.
   ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
@@ -2750,7 +2995,8 @@ Result ReadBinary(const void* data,
                   BinaryReaderDelegate* delegate,
                   const ReadBinaryOptions& options) {
   BinaryReader reader(data, size, delegate, options);
-  return reader.ReadModule();
+  return reader.ReadModule(
+      BinaryReader::ReadModuleOptions{options.stop_on_first_error});
 }
 
 }  // namespace wabt

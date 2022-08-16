@@ -2,7 +2,7 @@
 ;;; ARGS: --enable-tail-call
 ;;; ERROR: 1
 (module
-  (table 1 anyfunc)
+  (table 1 funcref)
 
   (type $v_v (func))
   (type $l_l (func (param i64) (result i64)))

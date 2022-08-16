@@ -45,19 +45,24 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnDelegateExpr(TryExpr*) override;
-  Result OnReturnCallExpr(ReturnCallExpr *) override;
+  Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnGlobalGetExpr(GlobalGetExpr*) override;
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
+  Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
   Result OnDataDropExpr(DataDropExpr*) override;
+  Result OnMemoryFillExpr(MemoryFillExpr*) override;
+  Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
+  Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableCopyExpr(TableCopyExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
@@ -67,10 +72,13 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
+  Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
+  Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
+  Result OnSimdStoreLaneExpr(SimdStoreLaneExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -87,7 +95,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveFuncTypeVar(Var* var);
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
-  void ResolveEventVar(Var* var);
+  void ResolveTagVar(Var* var);
   void ResolveDataSegmentVar(Var* var);
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
@@ -95,7 +103,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
-  void VisitEvent(Event* event);
+  void VisitTag(Tag* tag);
   void VisitElemSegment(ElemSegment* segment);
   void VisitDataSegment(DataSegment* segment);
   void VisitScriptModule(ScriptModule* script_module);
@@ -111,9 +119,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
 };
 
 NameResolver::NameResolver(Script* script, Errors* errors)
-    : errors_(errors),
-      script_(script),
-      visitor_(this) {}
+    : errors_(errors), script_(script), visitor_(this) {}
 
 }  // end anonymous namespace
 
@@ -200,8 +206,8 @@ void NameResolver::ResolveMemoryVar(Var* var) {
   ResolveVar(&current_module_->memory_bindings, var, "memory");
 }
 
-void NameResolver::ResolveEventVar(Var* var) {
-  ResolveVar(&current_module_->event_bindings, var, "event");
+void NameResolver::ResolveTagVar(Var* var) {
+  ResolveVar(&current_module_->tag_bindings, var, "tag");
 }
 
 void NameResolver::ResolveDataSegmentVar(Var* var) {
@@ -321,6 +327,11 @@ Result NameResolver::EndIfExpr(IfExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnLoadExpr(LoadExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
 Result NameResolver::OnLocalGetExpr(LocalGetExpr* expr) {
   ResolveLocalVar(&expr->var);
   return Result::Ok;
@@ -336,13 +347,35 @@ Result NameResolver::OnLocalTeeExpr(LocalTeeExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
+  ResolveMemoryVar(&expr->srcmemidx);
+  ResolveMemoryVar(&expr->destmemidx);
+  return Result::Ok;
+}
+
 Result NameResolver::OnDataDropExpr(DataDropExpr* expr) {
   ResolveDataSegmentVar(&expr->var);
   return Result::Ok;
 }
 
+Result NameResolver::OnMemoryFillExpr(MemoryFillExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
 Result NameResolver::OnMemoryInitExpr(MemoryInitExpr* expr) {
   ResolveDataSegmentVar(&expr->var);
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnMemorySizeExpr(MemorySizeExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
 }
 
@@ -393,6 +426,11 @@ Result NameResolver::OnRefFuncExpr(RefFuncExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnStoreExpr(StoreExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
 Result NameResolver::BeginTryExpr(TryExpr* expr) {
   PushLabel(expr->block.label);
   ResolveBlockDeclarationVar(&expr->block.decl);
@@ -406,18 +444,24 @@ Result NameResolver::EndTryExpr(TryExpr*) {
 
 Result NameResolver::OnCatchExpr(TryExpr*, Catch* catch_) {
   if (!catch_->IsCatchAll()) {
-    ResolveEventVar(&catch_->var);
+    ResolveTagVar(&catch_->var);
   }
   return Result::Ok;
 }
 
 Result NameResolver::OnDelegateExpr(TryExpr* expr) {
+  // Pop the label here as a try-delegate has no `end` instruction.
+  PopLabel();
+
+  // We resolve *after* popping the label in order to ensure that the
+  // delegate label starts counting after the current try-delegate.
   ResolveLabelVar(&expr->delegate_target);
+
   return Result::Ok;
 }
 
 Result NameResolver::OnThrowExpr(ThrowExpr* expr) {
-  ResolveEventVar(&expr->var);
+  ResolveTagVar(&expr->var);
   return Result::Ok;
 }
 
@@ -425,6 +469,16 @@ Result NameResolver::OnRethrowExpr(RethrowExpr* expr) {
   // Note: the variable refers to corresponding (enclosing) catch, using the try
   // block label for context.
   ResolveLabelVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
 }
 
@@ -463,8 +517,8 @@ void NameResolver::VisitExport(Export* export_) {
       ResolveGlobalVar(&export_->var);
       break;
 
-    case ExternalKind::Event:
-      ResolveEventVar(&export_->var);
+    case ExternalKind::Tag:
+      ResolveTagVar(&export_->var);
       break;
   }
 }
@@ -473,18 +527,19 @@ void NameResolver::VisitGlobal(Global* global) {
   visitor_.VisitExprList(global->init_expr);
 }
 
-void NameResolver::VisitEvent(Event* event) {
-  if (event->decl.has_func_type) {
-    ResolveFuncTypeVar(&event->decl.type_var);
+void NameResolver::VisitTag(Tag* tag) {
+  if (tag->decl.has_func_type) {
+    ResolveFuncTypeVar(&tag->decl.type_var);
   }
 }
 
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
-  for (ElemExpr& elem_expr : segment->elem_exprs) {
-    if (elem_expr.kind == ElemExprKind::RefFunc) {
-      ResolveFuncVar(&elem_expr.var);
+  for (ExprList& elem_expr : segment->elem_exprs) {
+    if (elem_expr.size() == 1 &&
+        elem_expr.front().type() == ExprType::RefFunc) {
+      ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
     }
   }
 }
@@ -502,7 +557,7 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->type_bindings, "type");
   CheckDuplicateBindings(&module->table_bindings, "table");
   CheckDuplicateBindings(&module->memory_bindings, "memory");
-  CheckDuplicateBindings(&module->event_bindings, "event");
+  CheckDuplicateBindings(&module->tag_bindings, "tag");
 
   for (Func* func : module->funcs)
     VisitFunc(func);
@@ -510,8 +565,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitExport(export_);
   for (Global* global : module->globals)
     VisitGlobal(global);
-  for (Event* event : module->events)
-    VisitEvent(event);
+  for (Tag* tag : module->tags)
+    VisitTag(tag);
   for (ElemSegment* elem_segment : module->elem_segments)
     VisitElemSegment(elem_segment);
   for (DataSegment* data_segment : module->data_segments)
@@ -534,10 +589,15 @@ void NameResolver::VisitCommand(Command* command) {
       VisitModule(&cast<ModuleCommand>(command)->module);
       break;
 
+    case CommandType::ScriptModule:
+      VisitModule(&cast<ScriptModuleCommand>(command)->module);
+      break;
+
     case CommandType::Action:
     case CommandType::AssertReturn:
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:
+    case CommandType::AssertException:
     case CommandType::Register:
       /* Don't resolve a module_var, since it doesn't really behave like other
        * vars. You can't reference a module by index. */

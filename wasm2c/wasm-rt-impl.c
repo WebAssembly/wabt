@@ -17,6 +17,7 @@
 #include "wasm-rt-impl.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,11 +27,17 @@
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
 #include <signal.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
+
 #define PAGE_SIZE 65536
+#define MAX_EXCEPTION_SIZE PAGE_SIZE
 
 typedef struct FuncType {
   wasm_rt_type_t* params;
@@ -39,21 +46,31 @@ typedef struct FuncType {
   uint32_t result_count;
 } FuncType;
 
-uint32_t wasm_rt_call_stack_depth;
-uint32_t g_saved_call_stack_depth;
-
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-bool g_signal_handler_installed = false;
+static bool g_signal_handler_installed = false;
+static char* g_alt_stack;
+#else
+uint32_t wasm_rt_call_stack_depth;
+uint32_t wasm_rt_saved_call_stack_depth;
 #endif
 
-jmp_buf g_jmp_buf;
-FuncType* g_func_types;
-uint32_t g_func_type_count;
+static FuncType* g_func_types;
+static uint32_t g_func_type_count;
+
+jmp_buf wasm_rt_jmp_buf;
+
+static uint32_t g_active_exception_tag;
+static uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
+static uint32_t g_active_exception_size;
+
+static jmp_buf* g_unwind_target;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
-  wasm_rt_call_stack_depth = g_saved_call_stack_depth;
-  WASM_RT_LONGJMP(g_jmp_buf, code);
+#if !WASM_RT_MEMCHECK_SIGNAL_HANDLER
+  wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
+#endif
+  WASM_RT_LONGJMP(wasm_rt_jmp_buf, code);
 }
 
 static bool func_types_are_equal(FuncType* a, FuncType* b) {
@@ -102,21 +119,139 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
   return idx + 1;
 }
 
+uint32_t wasm_rt_register_tag(uint32_t size) {
+  static uint32_t s_tag_count = 0;
+
+  if (size > MAX_EXCEPTION_SIZE) {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+  return s_tag_count++;
+}
+
+void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values) {
+  assert(size <= MAX_EXCEPTION_SIZE);
+
+  g_active_exception_tag = tag;
+  g_active_exception_size = size;
+
+  if (size) {
+    memcpy(g_active_exception, values, size);
+  }
+}
+
+WASM_RT_NO_RETURN void wasm_rt_throw(void) {
+  WASM_RT_LONGJMP(*g_unwind_target, WASM_RT_TRAP_UNCAUGHT_EXCEPTION);
+}
+
+jmp_buf* wasm_rt_get_unwind_target(void) {
+  return g_unwind_target;
+}
+
+void wasm_rt_set_unwind_target(jmp_buf* target) {
+  g_unwind_target = target;
+}
+
+uint32_t wasm_rt_exception_tag(void) {
+  return g_active_exception_tag;
+}
+
+uint32_t wasm_rt_exception_size(void) {
+  return g_active_exception_size;
+}
+
+void* wasm_rt_exception(void) {
+  return g_active_exception;
+}
+
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
 static void signal_handler(int sig, siginfo_t* si, void* unused) {
-  wasm_rt_trap(WASM_RT_TRAP_OOB);
+  if (si->si_code == SEGV_ACCERR) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
 }
 #endif
 
-void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
-                             uint32_t initial_pages,
-                             uint32_t max_pages) {
-  uint32_t byte_length = initial_pages * PAGE_SIZE;
+#ifdef _WIN32
+static void* os_mmap(size_t size) {
+  return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_NOACCESS);
+}
+
+static int os_munmap(void* addr, size_t size) {
+  BOOL succeeded = VirtualFree(addr, size, MEM_RELEASE);
+  return succeeded ? 0 : -1;
+}
+
+static int os_mprotect(void* addr, size_t size) {
+  DWORD old;
+  BOOL succeeded = VirtualProtect((LPVOID)addr, size, PAGE_READWRITE, &old);
+  return succeeded ? 0 : -1;
+}
+
+static void os_print_last_error(const char* msg) {
+  DWORD errorMessageID = GetLastError();
+  if (errorMessageID != 0) {
+    LPSTR messageBuffer = 0;
+    // The api creates the buffer that holds the message
+    size_t size = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR)&messageBuffer, 0, NULL);
+    (void)size;
+    printf("%s. %s\n", msg, messageBuffer);
+    LocalFree(messageBuffer);
+  } else {
+    printf("%s. No error code.\n", msg);
+  }
+}
+#else
+static void* os_mmap(size_t size) {
+  int map_prot = PROT_NONE;
+  int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
+  uint8_t* addr = mmap(NULL, size, map_prot, map_flags, -1, 0);
+  if (addr == MAP_FAILED)
+    return NULL;
+  return addr;
+}
+
+static int os_munmap(void* addr, size_t size) {
+  return munmap(addr, size);
+}
+
+static int os_mprotect(void* addr, size_t size) {
+  return mprotect(addr, size, PROT_READ | PROT_WRITE);
+}
+
+static void os_print_last_error(const char* msg) {
+  perror(msg);
+}
+#endif
+
+void wasm_rt_init(void) {
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
+
+    /* Use alt stack to handle SIGSEGV from stack overflow */
+    g_alt_stack = malloc(SIGSTKSZ);
+    if (g_alt_stack == NULL) {
+      perror("malloc failed");
+      abort();
+    }
+
+    stack_t ss;
+    ss.ss_sp = g_alt_stack;
+    ss.ss_flags = 0;
+    ss.ss_size = SIGSTKSZ;
+    if (sigaltstack(&ss, NULL) != 0) {
+      perror("sigaltstack failed");
+      abort();
+    }
+
     struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = signal_handler;
 
@@ -127,15 +262,32 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
       abort();
     }
   }
+#endif
+}
 
+void wasm_rt_free(void) {
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  free(g_alt_stack);
+#endif
+}
+
+void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
+                             uint32_t initial_pages,
+                             uint32_t max_pages) {
+  uint32_t byte_length = initial_pages * PAGE_SIZE;
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   /* Reserve 8GiB. */
-  void* addr =
-      mmap(NULL, 0x200000000ul, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void* addr = os_mmap(0x200000000ul);
+
   if (addr == (void*)-1) {
-    perror("mmap failed");
+    os_print_last_error("os_mmap failed.");
     abort();
   }
-  mprotect(addr, byte_length, PROT_READ | PROT_WRITE);
+  int ret = os_mprotect(addr, byte_length);
+  if (ret != 0) {
+    os_print_last_error("os_mprotect failed.");
+    abort();
+  }
   memory->data = addr;
 #else
   memory->data = calloc(byte_length, 1);
@@ -159,7 +311,10 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t delta_size = delta * PAGE_SIZE;
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   uint8_t* new_data = memory->data;
-  mprotect(new_data + old_size, delta_size, PROT_READ | PROT_WRITE);
+  int ret = os_mprotect(new_data + old_size, delta_size);
+  if (ret != 0) {
+    return (uint32_t)-1;
+  }
 #else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
@@ -179,10 +334,50 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   return old_pages;
 }
 
+void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  os_munmap(memory->data, memory->size);  // ignore error?
+#else
+  free(memory->data);
+#endif
+}
+
 void wasm_rt_allocate_table(wasm_rt_table_t* table,
                             uint32_t elements,
                             uint32_t max_elements) {
   table->size = elements;
   table->max_size = max_elements;
   table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
+}
+
+void wasm_rt_free_table(wasm_rt_table_t* table) {
+  free(table->data);
+}
+
+const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
+  switch (trap) {
+    case WASM_RT_TRAP_NONE:
+      return "No error";
+    case WASM_RT_TRAP_OOB:
+#if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
+      return "Out-of-bounds access in linear memory or call stack exhausted";
+#else
+      return "Out-of-bounds access in linear memory";
+    case WASM_RT_TRAP_EXHAUSTION:
+      return "Call stack exhausted";
+#endif
+    case WASM_RT_TRAP_INT_OVERFLOW:
+      return "Integer overflow on divide or truncation";
+    case WASM_RT_TRAP_DIV_BY_ZERO:
+      return "Integer divide by zero";
+    case WASM_RT_TRAP_INVALID_CONVERSION:
+      return "Conversion from NaN to integer";
+    case WASM_RT_TRAP_UNREACHABLE:
+      return "Unreachable instruction executed";
+    case WASM_RT_TRAP_CALL_INDIRECT:
+      return "Invalid call_indirect";
+    case WASM_RT_TRAP_UNCAUGHT_EXCEPTION:
+      return "Uncaught exception";
+  }
+  return "invalid trap code";
 }

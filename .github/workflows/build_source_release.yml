@@ -6,6 +6,9 @@ on:
     types:
       - created
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: build
@@ -35,21 +38,17 @@ jobs:
         echo "::set-output name=shasum::$SHASUM"
 
     - name: upload tarball
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: svenstaro/upload-release-action@v2
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./${{ steps.archive.outputs.tarball }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./${{ steps.archive.outputs.tarball }}
         asset_name: ${{ steps.archive.outputs.tarball }}
-        asset_content_type: application/gzip
+        tag: ${{ github.ref }}
 
     - name: upload shasum
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: svenstaro/upload-release-action@v2
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./${{ steps.archive.outputs.shasum }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./${{ steps.archive.outputs.shasum }}
         asset_name: ${{ steps.archive.outputs.shasum }}
-        asset_content_type: text/plain
+        tag: ${{ github.ref }}

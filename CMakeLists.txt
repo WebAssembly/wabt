@@ -14,9 +14,12 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.0.0)
-project(WABT VERSION 1.0.21)
+cmake_minimum_required(VERSION 3.1.0)
+project(WABT LANGUAGES C CXX VERSION 1.0.29)
 include(GNUInstallDirs)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
@@ -119,6 +122,10 @@ configure_file(
 include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
 
 if (COMPILER_IS_MSVC)
+  if (WERROR)
+    add_definitions(-WX)
+  endif ()
+
   # disable warning C4018: signed/unsigned mismatch
   # disable warning C4056, C4756: overflow in floating-point constant arithmetic
   #   seems to not like float compare w/ HUGE_VALF; bug?
@@ -135,6 +142,10 @@ if (COMPILER_IS_MSVC)
   add_definitions("/MP")
 
 else ()
+  if (WERROR)
+    add_definitions(-Werror)
+  endif ()
+
   # disable -Wunused-parameter: this is really common when implementing
   #   interfaces, etc.
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
@@ -143,7 +154,7 @@ else ()
   )
 
   set(CMAKE_CXX_EXTENSIONS OFF)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wold-style-cast")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast")
 
   if (NOT WITH_EXCEPTIONS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
@@ -253,6 +264,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 add_custom_target(everything)
 
 set(WABT_LIBRARY_SRC
+  ${WABT_BINARY_DIR}/config.h
+
   src/apply-names.h
   src/apply-names.cc
   src/binary.h
@@ -273,7 +286,7 @@ set(WABT_LIBRARY_SRC
   src/color.cc
   src/common.h
   src/common.cc
-  src/config.h
+  src/config.h.in
   src/config.cc
   src/decompiler.h
   src/decompiler-ast.h
@@ -290,8 +303,6 @@ set(WABT_LIBRARY_SRC
   src/filenames.cc
   src/generate-names.h
   src/generate-names.cc
-  src/hash-util.h
-  src/hash-util.cc
   src/ir.h
   src/ir.cc
   src/ir-util.h
@@ -316,8 +327,7 @@ set(WABT_LIBRARY_SRC
   src/shared-validator.cc
   src/stream.h
   src/stream.cc
-  src/string-view.h
-  src/string-view.cc
+  src/string-util.h
   src/token.h
   src/token.cc
   src/tracing.h
@@ -372,14 +382,8 @@ if (BUILD_LIBWASM)
   target_link_libraries(wasm wabt)
   target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
   if (COMPILER_IS_MSVC)
-    if (WERROR)
-      target_compile_options(wasm PRIVATE -WX)
-    endif ()
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__declspec(dllexport)")
   else ()
-    if (WERROR)
-      target_compile_options(wasm PRIVATE -Werror)
-    endif ()
     target_compile_options(wasm PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-old-style-cast>)
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__attribute__((visibility(\"default\")))")
   endif ()
@@ -415,8 +419,6 @@ function(wabt_executable)
   add_executable(${EXE_NAME} ${EXE_SOURCES})
   add_dependencies(everything ${EXE_NAME})
   target_link_libraries(${EXE_NAME} ${EXE_LIBS})
-  set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD 11)
-  set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
   if (EMSCRIPTEN)
     # build to JS for now, as node.js doesn't have code caching for wasm yet,
@@ -466,9 +468,29 @@ if (BUILD_TOOLS)
   )
 
   # wasm2c
+  set(TEMPLATE_CMAKE ${WABT_SOURCE_DIR}/scripts/gen-wasm2c-templates.cmake)
+
+  # wasm2c generated code templates
+  add_custom_command(
+    OUTPUT wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc
+
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_top.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.top.h" -D symbol="s_header_top" -P ${TEMPLATE_CMAKE}
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_bottom.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h" -D symbol="s_header_bottom" -P ${TEMPLATE_CMAKE}
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_includes.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c" -D symbol="s_source_includes" -P ${TEMPLATE_CMAKE}
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c" -D symbol="s_source_declarations" -P ${TEMPLATE_CMAKE}
+
+    DEPENDS ${WABT_SOURCE_DIR}/src/template/wasm2c.top.h
+    ${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h
+    ${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c
+    ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c
+    )
+
+  add_library(cwriter-template wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
+
   wabt_executable(
     NAME wasm2c
     SOURCES src/tools/wasm2c.cc src/c-writer.cc
+    LIBS cwriter-template
     INSTALL
   )
 
@@ -599,7 +621,6 @@ if (BUILD_TESTS)
     src/test-intrusive-list.cc
     src/test-literal.cc
     src/test-option-parser.cc
-    src/test-string-view.cc
     src/test-filenames.cc
     src/test-utf8.cc
     src/test-wast-parser.cc
@@ -642,9 +663,12 @@ if (BUILD_TESTS)
   function(c_api_example NAME)
     set(EXENAME wasm-c-api-${NAME})
     add_executable(${EXENAME} third_party/wasm-c-api/example/${NAME}.c)
-    if (NOT COMPILER_IS_MSVC)
+    if (COMPILER_IS_MSVC)
+      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-wd4311")
+    else ()
       set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-pointer-to-int-cast")
     endif ()
+
     target_link_libraries(${EXENAME} wasm Threads::Threads)
     add_custom_target(${EXENAME}-copy-to-bin ALL
       COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin

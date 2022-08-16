@@ -23,9 +23,10 @@
 
 namespace wabt {
 
-inline void RenameToIdentifier(std::string& name, Index i,
+inline void RenameToIdentifier(std::string& name,
+                               Index i,
                                BindingHash& bh,
-                               const std::set<string_view>* filter) {
+                               const std::set<std::string_view>* filter) {
   // Filter out non-identifier characters, and try to reduce the size of
   // gigantic C++ signature names.
   std::string s;
@@ -66,7 +67,8 @@ inline void RenameToIdentifier(std::string& name, Index i,
         word_end--;
       }
       assert(word_end > word_start);
-      auto word = string_view(s.c_str() + word_start, word_end - word_start);
+      auto word =
+          std::string_view(s.c_str() + word_start, word_end - word_start);
       if (filter->find(word) != filter->end()) {
         s.resize(word_start);
       }
@@ -103,9 +105,10 @@ inline void RenameToIdentifier(std::string& name, Index i,
   bh.emplace(s, Binding(i));
 }
 
-template<typename T>
-void RenameToIdentifiers(std::vector<T*>& things, BindingHash& bh,
-                         const std::set<string_view>* filter) {
+template <typename T>
+void RenameToIdentifiers(std::vector<T*>& things,
+                         BindingHash& bh,
+                         const std::set<std::string_view>* filter) {
   Index i = 0;
   for (auto thing : things) {
     RenameToIdentifier(thing->name, i++, bh, filter);
@@ -172,29 +175,17 @@ void RenameAll(Module& module) {
   // We also filter common C++ keywords/STL idents that make for huge
   // identifiers.
   // FIXME: this can obviously give bad results if the input is not C++..
-  std::set<string_view> filter = {
-    { "const" },
-    { "std" },
-    { "allocator" },
-    { "char" },
-    { "basic" },
-    { "traits" },
-    { "wchar" },
-    { "t" },
-    { "void" },
-    { "int" },
-    { "unsigned" },
-    { "2" },
-    { "cxxabiv1" },
-    { "short" },
-    { "4096ul" },
+  std::set<std::string_view> filter = {
+      {"const"},    {"std"},   {"allocator"}, {"char"},  {"basic"},
+      {"traits"},   {"wchar"}, {"t"},         {"void"},  {"int"},
+      {"unsigned"}, {"2"},     {"cxxabiv1"},  {"short"}, {"4096ul"},
   };
   RenameToIdentifiers(module.funcs, module.func_bindings, &filter);
   // Also do this for some other kinds of names, but without the keyword
   // substitution.
   RenameToIdentifiers(module.globals, module.global_bindings, nullptr);
   RenameToIdentifiers(module.tables, module.table_bindings, nullptr);
-  RenameToIdentifiers(module.events, module.event_bindings, nullptr);
+  RenameToIdentifiers(module.tags, module.tag_bindings, nullptr);
   RenameToIdentifiers(module.exports, module.export_bindings, nullptr);
   RenameToIdentifiers(module.types, module.type_bindings, nullptr);
   RenameToIdentifiers(module.memories, module.memory_bindings, nullptr);

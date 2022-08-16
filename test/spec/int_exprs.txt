@@ -15,5 +15,5 @@ out/test/spec/int_exprs.wast:198: assert_trap passed: integer divide by zero
 out/test/spec/int_exprs.wast:199: assert_trap passed: integer divide by zero
 out/test/spec/int_exprs.wast:349: assert_trap passed: integer overflow
 out/test/spec/int_exprs.wast:350: assert_trap passed: integer overflow
-89/89 tests passed.
+108/108 tests passed.
 ;;; STDOUT ;;)

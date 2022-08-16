@@ -1,0 +1,227 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/memory_init.wast
+(;; STDOUT ;;;
+test() =>
+test() =>
+test() =>
+test() =>
+out/test/spec/memory_init.wast:190: assert_invalid passed:
+  0000023: error: data.drop requires data count section
+out/test/spec/memory_init.wast:196: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.5.wasm:000002c: error: data_segment variable out of range: 4 (max 1)
+  000002c: error: OnDataDropExpr callback failed
+test() =>
+out/test/spec/memory_init.wast:217: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:224: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:227: assert_invalid passed:
+  000002a: error: memory.init requires data count section
+out/test/spec/memory_init.wast:233: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.10.wasm:0000034: error: data_segment variable out of range: 1 (max 1)
+  0000034: error: OnMemoryInitExpr callback failed
+test() =>
+out/test/spec/memory_init.wast:253: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:260: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:267: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:274: assert_trap passed: out of bounds memory access: memory.init out of bounds
+test() =>
+out/test/spec/memory_init.wast:288: assert_trap passed: out of bounds memory access: memory.init out of bounds
+test() =>
+test() =>
+out/test/spec/memory_init.wast:309: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:312: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.21.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i32, f32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:320: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.22.wasm:0000033: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i32, i64]
+  0000033: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:328: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.23.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i32, f64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:336: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.24.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f32, i32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:344: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.25.wasm:0000039: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f32, f32]
+  0000039: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:352: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.26.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f32, i64]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:360: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.27.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f32, f64]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:368: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.28.wasm:0000033: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i64, i32]
+  0000033: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:376: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.29.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i64, f32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:384: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.30.wasm:0000033: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i64, i64]
+  0000033: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:392: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.31.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i64, f64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:400: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.32.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f64, i32]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:408: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.33.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f64, f32]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:416: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.34.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f64, i64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:424: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.35.wasm:0000041: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f64, f64]
+  0000041: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:432: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.36.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i32, i32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:440: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.37.wasm:0000039: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i32, f32]
+  0000039: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:448: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.38.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i32, i64]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:456: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.39.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i32, f64]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:464: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.40.wasm:0000039: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f32, i32]
+  0000039: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:472: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.41.wasm:000003c: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f32, f32]
+  000003c: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:480: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.42.wasm:0000039: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f32, i64]
+  0000039: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:488: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.43.wasm:0000040: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f32, f64]
+  0000040: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:496: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.44.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i64, i32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:504: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.45.wasm:0000039: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i64, f32]
+  0000039: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:512: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.46.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i64, i64]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:520: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.47.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i64, f64]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:528: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.48.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f64, i32]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:536: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.49.wasm:0000040: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f64, f32]
+  0000040: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:544: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.50.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f64, i64]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:552: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.51.wasm:0000044: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, f64, f64]
+  0000044: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:560: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.52.wasm:0000033: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i32, i32]
+  0000033: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:568: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.53.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i32, f32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:576: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.54.wasm:0000033: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i32, i64]
+  0000033: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:584: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.55.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i32, f64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:592: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.56.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f32, i32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:600: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.57.wasm:0000039: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f32, f32]
+  0000039: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:608: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.58.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f32, i64]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:616: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.59.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f32, f64]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:624: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.60.wasm:0000033: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i64, i32]
+  0000033: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:632: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.61.wasm:0000036: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i64, f32]
+  0000036: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:640: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.62.wasm:0000033: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i64, i64]
+  0000033: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:648: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.63.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, i64, f64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:656: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.64.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f64, i32]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:664: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.65.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f64, f32]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:672: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.66.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f64, i64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:680: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.67.wasm:0000041: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i64, f64, f64]
+  0000041: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:688: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.68.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i32, i32]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:696: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.69.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i32, f32]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:704: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.70.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i32, i64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:712: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.71.wasm:0000041: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i32, f64]
+  0000041: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:720: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.72.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f32, i32]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:728: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.73.wasm:0000040: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f32, f32]
+  0000040: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:736: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.74.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f32, i64]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:744: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.75.wasm:0000044: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f32, f64]
+  0000044: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:752: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.76.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i64, i32]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:760: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.77.wasm:000003d: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i64, f32]
+  000003d: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:768: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.78.wasm:000003a: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i64, i64]
+  000003a: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:776: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.79.wasm:0000041: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, i64, f64]
+  0000041: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:784: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.80.wasm:0000041: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f64, i32]
+  0000041: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:792: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.81.wasm:0000044: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f64, f32]
+  0000044: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:800: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.82.wasm:0000041: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f64, i64]
+  0000041: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:808: assert_invalid passed:
+  out/test/spec/memory_init/memory_init.83.wasm:0000048: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f64, f64]
+  0000048: error: OnMemoryInitExpr callback failed
+out/test/spec/memory_init.wast:833: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:856: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:879: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:902: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:925: assert_trap passed: out of bounds memory access: memory.init out of bounds
+out/test/spec/memory_init.wast:948: assert_trap passed: out of bounds memory access: memory.init out of bounds
+240/240 tests passed.
+;;; STDOUT ;;)

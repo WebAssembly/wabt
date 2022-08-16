@@ -19,6 +19,7 @@ import contextlib
 import os
 import json
 import shutil
+import shlex
 import signal
 import subprocess
 import sys
@@ -43,8 +44,6 @@ class Executable(object):
         self.basename = kwargs.get('basename',
                                    os.path.basename(exe)).replace('.exe', '')
         self.error_cmdline = kwargs.get('error_cmdline', True)
-        self.clean_stdout = kwargs.get('clean_stdout')
-        self.clean_stderr = kwargs.get('clean_stderr')
         self.stdout_handle = self._ForwardHandle(kwargs.get('forward_stdout'))
         self.stderr_handle = self._ForwardHandle(kwargs.get('forward_stderr'))
         self.verbose = False
@@ -54,12 +53,12 @@ class Executable(object):
 
     def _RunWithArgsInternal(self, *args, **kwargs):
         cmd = [self.exe] + self.before_args + list(args) + self.after_args
-        cmd_str = ' '.join(cmd)
+        cmd_str = shlex.join(cmd)
         if self.verbose:
             print(cmd_str)
 
         if self.error_cmdline:
-            err_cmd_str = cmd_str.replace('.exe', '')
+            err_cmd_str = cmd_str
         else:
             err_cmd_str = self.basename
 
@@ -67,24 +66,18 @@ class Executable(object):
         stderr = ''
         error = None
         try:
-            process = subprocess.Popen(cmd, stdout=self.stdout_handle,
-                                       stderr=self.stderr_handle, **kwargs)
-            stdout, stderr = process.communicate()
-            if stdout:
-                stdout = stdout.decode('utf-8', 'ignore')
-            if stderr:
-                stderr = stderr.decode('utf-8', 'ignore')
-            if self.clean_stdout:
-                stdout = self.clean_stdout(stdout)
-            if self.clean_stderr:
-                stderr = self.clean_stderr(stderr)
+            process = subprocess.run(cmd, check=False, text=True,
+                                     stdout=self.stdout_handle,
+                                     stderr=self.stderr_handle, **kwargs)
+            stdout = process.stdout
+            stderr = process.stderr
             if process.returncode < 0:
                 # Terminated by signal
                 signame = SIGNAMES.get(-process.returncode, '<unknown>')
                 error = Error('Signal raised running "%s": %s\n%s' % (err_cmd_str,
                               signame, stderr))
             elif process.returncode > 0:
-                error = Error('Error running "%s":\n%s' % (err_cmd_str, stderr))
+                error = Error('Error running "%s" (%d):\n%s\n%s' % (err_cmd_str, process.returncode, stdout, stderr))
         except OSError as e:
             error = Error('Error running "%s": %s' % (err_cmd_str, str(e)))
         return stdout, stderr, error

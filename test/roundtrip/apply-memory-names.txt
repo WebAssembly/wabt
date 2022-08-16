@@ -1,0 +1,25 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --generate-names --enable-multi-memory
+(module
+  (memory 1)
+  (memory 1)
+  
+  (func
+    
+   i32.const 0
+   i32.const 0
+   i32.const 0
+   memory.copy (memory 0) (memory 1)
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0)
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.copy $M0 $M1)
+  (memory $M0 1)
+  (memory $M1 1))
+;;; STDOUT ;;)

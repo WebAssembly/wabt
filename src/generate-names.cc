@@ -37,6 +37,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 
   // Implementation of ExprVisitor::DelegateNop.
   Result BeginBlockExpr(BlockExpr* expr) override;
+  Result BeginTryExpr(TryExpr* expr) override;
   Result BeginLoopExpr(LoopExpr* expr) override;
   Result BeginIfExpr(IfExpr* expr) override;
 
@@ -52,9 +53,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
                     std::string* out_str);
 
   // Like GenerateName, but only generates a name if |out_str| is empty.
-  void MaybeGenerateName(const char* prefix,
-                         Index index,
-                         std::string* out_str);
+  void MaybeGenerateName(const char* prefix, Index index, std::string* out_str);
 
   // Generate a name via GenerateName and bind it to the given binding hash. If
   // the name already exists, the name will be disambiguated until it can be
@@ -89,7 +88,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Result VisitType(Index func_type_index, TypeEntry* type);
   Result VisitTable(Index table_index, Table* table);
   Result VisitMemory(Index memory_index, Memory* memory);
-  Result VisitEvent(Index event_index, Event* event);
+  Result VisitTag(Index tag_index, Tag* tag);
   Result VisitDataSegment(Index data_segment_index, DataSegment* data_segment);
   Result VisitElemSegment(Index elem_segment_index, ElemSegment* elem_segment);
   Result VisitImport(Import* import);
@@ -103,13 +102,12 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Index num_table_imports_ = 0;
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
-  Index num_event_imports_ = 0;
+  Index num_tag_imports_ = 0;
 
   NameOpts opts_;
 };
 
-NameGenerator::NameGenerator(NameOpts opts)
-  : visitor_(this), opts_(opts) {}
+NameGenerator::NameGenerator(NameOpts opts) : visitor_(this), opts_(opts) {}
 
 // static
 bool NameGenerator::HasName(const std::string& str) {
@@ -215,6 +213,11 @@ Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
   return Result::Ok;
 }
 
+Result NameGenerator::BeginTryExpr(TryExpr* expr) {
+  MaybeGenerateName("T", label_count_++, &expr->block.label);
+  return Result::Ok;
+}
+
 Result NameGenerator::BeginLoopExpr(LoopExpr* expr) {
   MaybeGenerateName("L", label_count_++, &expr->block.label);
   return Result::Ok;
@@ -259,9 +262,8 @@ Result NameGenerator::VisitMemory(Index memory_index, Memory* memory) {
   return Result::Ok;
 }
 
-Result NameGenerator::VisitEvent(Index event_index, Event* event) {
-  MaybeGenerateAndBindName(&module_->event_bindings, "e", event_index,
-                           &event->name);
+Result NameGenerator::VisitTag(Index tag_index, Tag* tag) {
+  MaybeGenerateAndBindName(&module_->tag_bindings, "e", tag_index, &tag->name);
   return Result::Ok;
 }
 
@@ -317,11 +319,11 @@ Result NameGenerator::VisitImport(Import* import) {
       }
       break;
 
-    case ExternalKind::Event:
-      if (auto* event_import = cast<EventImport>(import)) {
-        bindings = &module_->event_bindings;
-        name = &event_import->event.name;
-        index = num_event_imports_++;
+    case ExternalKind::Tag:
+      if (auto* tag_import = cast<TagImport>(import)) {
+        bindings = &module_->tag_bindings;
+        name = &tag_import->tag.name;
+        index = num_tag_imports_++;
       }
       break;
   }
@@ -373,11 +375,11 @@ Result NameGenerator::VisitExport(Export* export_) {
       }
       break;
 
-    case ExternalKind::Event:
-      if (Event* event = module_->GetEvent(export_->var)) {
-        index = module_->GetEventIndex(export_->var);
-        bindings = &module_->event_bindings;
-        name = &event->name;
+    case ExternalKind::Tag:
+      if (Tag* tag = module_->GetTag(export_->var)) {
+        index = module_->GetTagIndex(export_->var);
+        bindings = &module_->tag_bindings;
+        name = &tag->name;
       }
       break;
   }
@@ -414,7 +416,7 @@ Result NameGenerator::VisitModule(Module* module) {
   VisitAll(module->funcs, &NameGenerator::VisitFunc);
   VisitAll(module->tables, &NameGenerator::VisitTable);
   VisitAll(module->memories, &NameGenerator::VisitMemory);
-  VisitAll(module->events, &NameGenerator::VisitEvent);
+  VisitAll(module->tags, &NameGenerator::VisitTag);
   VisitAll(module->data_segments, &NameGenerator::VisitDataSegment);
   VisitAll(module->elem_segments, &NameGenerator::VisitElemSegment);
   module_ = nullptr;

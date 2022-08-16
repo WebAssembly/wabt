@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(func f32.const nan:arithmetic)
+(;; STDERR ;;;
+out/test/parse/expr/bad-const-f32-nan-arith.txt:3:17: error: invalid literal "nan:arithmetic"
+(func f32.const nan:arithmetic)
+                ^^^^^^^^^^^^^^
+;;; STDERR ;;)

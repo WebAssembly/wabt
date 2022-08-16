@@ -31,7 +31,10 @@
 #define WABT_BINARY_SECTION_NAME "name"
 #define WABT_BINARY_SECTION_RELOC "reloc"
 #define WABT_BINARY_SECTION_LINKING "linking"
+#define WABT_BINARY_SECTION_TARGET_FEATURES "target_features"
 #define WABT_BINARY_SECTION_DYLINK "dylink"
+#define WABT_BINARY_SECTION_DYLINK0 "dylink.0"
+#define WABT_BINARY_SECTION_CODE_METADATA "metadata.code."
 
 #define WABT_FOREACH_BINARY_SECTION(V) \
   V(Custom, custom, 0)                 \
@@ -40,7 +43,7 @@
   V(Function, function, 3)             \
   V(Table, table, 4)                   \
   V(Memory, memory, 5)                 \
-  V(Event, event, 13)                  \
+  V(Tag, tag, 13)                      \
   V(Global, global, 6)                 \
   V(Export, export, 7)                 \
   V(Start, start, 8)                   \
@@ -59,7 +62,7 @@ enum class BinarySection {
   Invalid = ~0,
 
   First = Custom,
-  Last = Event,
+  Last = Tag,
 };
 /* clang-format on */
 static const int kBinarySectionCount = WABT_ENUM_COUNT(BinarySection);
@@ -73,6 +76,8 @@ enum class BinarySectionOrder {
 BinarySectionOrder GetSectionOrder(BinarySection);
 const char* GetSectionName(BinarySection);
 
+// See
+// https://github.com/WebAssembly/extended-name-section/blob/main/proposals/extended-name-section/Overview.md
 enum class NameSectionSubsection {
   Module = 0,
   Function = 1,
@@ -84,7 +89,15 @@ enum class NameSectionSubsection {
   Global = 7,
   ElemSegment = 8,
   DataSegment = 9,
-  Last = DataSegment,
+  // tag names are yet part of the extended-name-section proposal (because it
+  // only deals with naming things that are in the spec already).  However, we
+  // include names for Tags in wabt using this enum value on the basis that tags
+  // can only exist when exceptions are enabled and that engines should ignore
+  // unknown name types.
+  Tag = 10,
+
+  First = Module,
+  Last = Tag,
 };
 const char* GetNameSectionSubsectionName(NameSectionSubsection subsec);
 

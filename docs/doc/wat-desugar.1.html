@@ -7,6 +7,12 @@
     td.head-rtitle, td.foot-os { text-align: right; }
     td.head-vol { text-align: center; }
     div.Pp { margin: 1ex 0ex; }
+    div.Nd, div.Bf, div.Op { display: inline; }
+    span.Pa, span.Ad { font-style: italic; }
+    span.Ms { font-weight: bold; }
+    dl.Bl-diag > dt { font-weight: bold; }
+    code.Nm, code.Fl, code.Cm, code.Ic, code.In, code.Fd, code.Fn,
+    code.Cd { font-weight: bold; font-family: inherit; }
   </style>
   <title>WABT(1)</title>
 </head>
@@ -19,88 +25,95 @@
   </tr>
 </table>
 <div class="manual-text">
-<h1 class="Sh" title="Sh" id="NAME"><a class="selflink" href="#NAME">NAME</a></h1>
-<b class="Nm" title="Nm">wat-desugar</b> &#x2014;
-  <span class="Nd" title="Nd">parse .wat text form and print canonical flat
-  format</span>
-<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="selflink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<code class="Nm">wat-desugar</code> &#x2014;
+<div class="Nd">parse .wat text form and print canonical flat format</div>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
 <table class="Nm">
   <tr>
-    <td><b class="Nm" title="Nm">wat-desugar</b></td>
-    <td>[<span class="Op">options</span>]
-      <var class="Ar" title="Ar">file</var></td>
+    <td><code class="Nm">wat-desugar</code></td>
+    <td>[options] <var class="Ar">file</var></td>
   </tr>
 </table>
-<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="selflink" href="#DESCRIPTION">DESCRIPTION</a></h1>
-<b class="Nm" title="Nm">wat-desugar</b> parses .wat text form as supported by
-  the spec interpreter (s-expressions, flat syntax, or mixed) and prints
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<code class="Nm">wat-desugar</code> parses .wat text form as supported by the
+  spec interpreter (s-expressions, flat syntax, or mixed) and prints
   &quot;canonical&quot; flat format.
-<div class="Pp"></div>
-The options are as follows:
+<p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-help</b></dt>
-  <dd class="It-tag">Print a help message</dd>
-  <dt class="It-tag"><a class="selflink" href="#o"><b class="Fl" title="Fl" id="o">-o</b></a>,
-    <b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-output=FILE</b></dt>
-  <dd class="It-tag">Output file for the formatted file</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-debug-parser</b></dt>
-  <dd class="It-tag">Turn on debugging the parser of wat files</dd>
-  <dt class="It-tag"><a class="selflink" href="#f"><b class="Fl" title="Fl" id="f">-f</b></a>,
-    <b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-fold-exprs</b></dt>
-  <dd class="It-tag">Write folded expressions where possible</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-exceptions</b></dt>
-  <dd class="It-tag">Experimental exception handling</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-disable-mutable-globals</b></dt>
-  <dd class="It-tag">Import/export mutable globals</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-saturating-float-to-int</b></dt>
-  <dd class="It-tag">Saturating float-to-int operators</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-sign-extension</b></dt>
-  <dd class="It-tag">Sign-extension operators</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-simd</b></dt>
-  <dd class="It-tag">SIMD support</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-enable-threads</b></dt>
-  <dd class="It-tag">Threading support</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-inline-exports</b></dt>
-  <dd class="It-tag">Write all exports inline</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-inline-imports</b></dt>
-  <dd class="It-tag">Write all imports inline</dd>
-  <dt class="It-tag"><b class="Fl" title="Fl">-</b><b class="Fl" title="Fl">-generate-names</b></dt>
-  <dd class="It-tag">Give auto-generated names to non-named functions, types,
-      etc.</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-help</code></dt>
+  <dd>Print a help message</dd>
+  <dt><a class="permalink" href="#o"><code class="Fl" id="o">-o</code></a>,
+    <code class="Fl">-</code><code class="Fl">-output=FILE</code></dt>
+  <dd>Output file for the formatted file</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-debug-parser</code></dt>
+  <dd>Turn on debugging the parser of wat files</dd>
+  <dt><a class="permalink" href="#f"><code class="Fl" id="f">-f</code></a>,
+    <code class="Fl">-</code><code class="Fl">-fold-exprs</code></dt>
+  <dd>Write folded expressions where possible</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-exceptions</code></dt>
+  <dd>Experimental exception handling</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-disable-mutable-globals</code></dt>
+  <dd>Import/export mutable globals</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-saturating-float-to-int</code></dt>
+  <dd>Saturating float-to-int operators</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-sign-extension</code></dt>
+  <dd>Sign-extension operators</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-disable-simd</code></dt>
+  <dd>SIMD support</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-enable-threads</code></dt>
+  <dd>Threading support</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-inline-exports</code></dt>
+  <dd>Write all exports inline</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-inline-imports</code></dt>
+  <dd>Write all imports inline</dd>
+  <dt><code class="Fl">-</code><code class="Fl">-generate-names</code></dt>
+  <dd>Give auto-generated names to non-named functions, types, etc.</dd>
 </dl>
-<h1 class="Sh" title="Sh" id="EXAMPLES"><a class="selflink" href="#EXAMPLES">EXAMPLES</a></h1>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
 Write output to stdout
-<div class="Pp"></div>
-<div class="D1"><code class="Li">$ wat-desugar test.wat</code></div>
-<div class="Pp"></div>
-Write output to test2.wat
-<div class="Pp"></div>
-<div class="D1"><code class="Li">$ wat-desugar test.wat -o
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wat-desugar test.wat</code></div>
+<p class="Pp">Write output to test2.wat</p>
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wat-desugar test.wat -o
   test2.wat</code></div>
-<div class="Pp"></div>
-Generate names for indexed variables
-<div class="Pp"></div>
-<div class="D1"><code class="Li">$ wat-desugar --generate-names
+<p class="Pp">Generate names for indexed variables</p>
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wat-desugar --generate-names
   test.wat</code></div>
-<h1 class="Sh" title="Sh" id="SEE_ALSO"><a class="selflink" href="#SEE_ALSO">SEE
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
   ALSO</a></h1>
-<a class="Xr" title="Xr" href="wasm-interp.1.html">wasm-interp(1)</a>,
-  <a class="Xr" title="Xr" href="wasm-objdump.1.html">wasm-objdump(1)</a>,
-  <a class="Xr" title="Xr" href="wasm-opcodecnt.1.html">wasm-opcodecnt(1)</a>,
-  <a class="Xr" title="Xr" href="wasm-strip.1.html">wasm-strip(1)</a>,
-  <a class="Xr" title="Xr" href="wasm-validate.1.html">wasm-validate(1)</a>,
-  <a class="Xr" title="Xr" href="wasm2c.1.html">wasm2c(1)</a>,
-  <a class="Xr" title="Xr" href="wasm2wat.1.html">wasm2wat(1)</a>,
-  <a class="Xr" title="Xr" href="wast2json.1.html">wast2json(1)</a>,
-  <a class="Xr" title="Xr" href="wat2wasm.1,.html">wat2wasm(1,)</a>
-  <a class="Xr" title="Xr" href="spectest-interp.1.html">spectest-interp(1)</a>
-<h1 class="Sh" title="Sh" id="BUGS"><a class="selflink" href="#BUGS">BUGS</a></h1>
+<a class="Xr" href="wasm-interp.1.html">wasm-interp(1)</a>,
+  <a class="Xr" href="wasm-objdump.1.html">wasm-objdump(1)</a>,
+  <a class="Xr" href="wasm-opcodecnt.1.html">wasm-opcodecnt(1)</a>,
+  <a class="Xr" href="wasm-strip.1.html">wasm-strip(1)</a>,
+  <a class="Xr" href="wasm-validate.1.html">wasm-validate(1)</a>,
+  <a class="Xr" href="wasm2c.1.html">wasm2c(1)</a>,
+  <a class="Xr" href="wasm2wat.1.html">wasm2wat(1)</a>,
+  <a class="Xr" href="wast2json.1.html">wast2json(1)</a>,
+  <a class="Xr" href="wat2wasm.1,.html">wat2wasm(1,)</a>
+  <a class="Xr" href="spectest-interp.1.html">spectest-interp(1)</a>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="BUGS"><a class="permalink" href="#BUGS">BUGS</a></h1>
 If you find a bug, please report it at
-<div>&#x00A0;</div>
-<a class="Lk" title="Lk" href="https://github.com/WebAssembly/wabt/issues">https://github.com/WebAssembly/wabt/issues</a>.</div>
+<br/>
+<a class="Lk" href="https://github.com/WebAssembly/wabt/issues">https://github.com/WebAssembly/wabt/issues</a>.
+</section>
+</div>
 <table class="foot">
   <tr>
-    <td class="foot-date">December 17, 2018</td>
+    <td class="foot-date">October 7, 2021</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>

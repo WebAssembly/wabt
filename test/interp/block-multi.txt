@@ -23,7 +23,7 @@
   (func (export "block-param") (result f32)
     i32.const 2
     block (param i32) (result f32)
-      f32.convert_s/i32
+      f32.convert_i32_s
     end
   )
 )

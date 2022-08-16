@@ -1,0 +1,30 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-exceptions
+;;; ARGS2: --enable-exceptions
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(TAG) {
+  count[1]
+  attr[0]
+  sig[0]
+}
+
+section("linking") {
+  metadata_version[2]
+
+  section(LINKING_SYMBOL_TABLE) {
+    num_symbols[1]
+
+    type[4]
+    flags[1]
+    index[1]
+    str("tag OOB")
+  }
+}
+(;; STDERR ;;;
+error: invalid tag index: 1
+000002c: error: OnTagSymbol callback failed
+error: invalid tag index: 1
+000002c: error: OnTagSymbol callback failed
+;;; STDERR ;;)

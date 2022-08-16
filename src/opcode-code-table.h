@@ -17,8 +17,8 @@
 #ifndef WABT_OPCODE_CODE_TABLE_H_
 #define WABT_OPCODE_CODE_TABLE_H_
 
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -55,6 +55,7 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::ExternRef:
       return StringPrintf("externref:%" PRIzd, tv.value.Get<Ref>().index);
 
+    case Type::Reference:
     case Type::Func:
     case Type::Struct:
     case Type::Array:
@@ -91,7 +92,7 @@ void WriteTrap(Stream* stream, const char* desc, const Trap::Ptr& trap) {
 }
 
 void WriteCall(Stream* stream,
-               string_view name,
+               std::string_view name,
                const FuncType& func_type,
                const Values& params,
                const Values& results,

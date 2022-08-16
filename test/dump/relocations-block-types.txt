@@ -30,7 +30,7 @@ Code[1]:
 Custom:
  - name: "linking"
   - symbol table [count=1]
-   - 0: F <multivalue_block> func=0 exported no_strip binding=global vis=hidden
+   - 0: F <multivalue_block> func=0 [ exported no_strip binding=global vis=hidden ]
 Custom:
  - name: "reloc.Code"
   - relocations for section: 3 (Code) [1]

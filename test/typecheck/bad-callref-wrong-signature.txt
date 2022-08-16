@@ -1,0 +1,27 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(module
+  (type $f32-f32 (func (param f32) (result f32)))
+
+  (func $foo (param $f (ref $f32-f32)) (result f32)
+    (f32.const 1.0)
+  )
+
+  (func $mul (param $x f32) (param $y f32) (result f32)
+    (f32.mul (local.get $x)
+             (local.get $y))
+  )
+
+  (func (export "main") (result f32)
+    (call $foo (ref.func $mul))
+  )
+
+  (elem declare funcref (ref.func $mul))
+)
+
+(;; STDERR ;;;
+out/test/typecheck/bad-callref-wrong-signature.txt:17:6: error: type mismatch in call, expected [(ref 0)] but got [(ref 2)]
+    (call $foo (ref.func $mul))
+     ^^^^
+;;; STDERR ;;)

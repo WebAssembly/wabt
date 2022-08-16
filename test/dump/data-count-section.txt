@@ -1,5 +1,4 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-bulk-memory
 ;;; ARGS1: -hx
 (module
   (memory 1)

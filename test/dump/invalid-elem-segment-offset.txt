@@ -1,7 +1,7 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: -v --no-check
 (module
-  (table 1 anyfunc)
+  (table 1 funcref)
   (func)
   (elem (i32.eqz (i32.const 1)) 0))
 (;; STDERR ;;;

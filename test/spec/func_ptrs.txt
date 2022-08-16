@@ -4,22 +4,25 @@
 called host spectest.print_i32(i32:83) =>
 four(i32:83) =>
 out/test/spec/func_ptrs.wast:32: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
+  out/test/spec/func_ptrs/func_ptrs.1.wasm:000000c: error: table variable out of range: 0 (max 0)
   000000c: error: BeginElemSegment callback failed
 out/test/spec/func_ptrs.wast:33: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
+  out/test/spec/func_ptrs/func_ptrs.2.wasm:0000016: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
 out/test/spec/func_ptrs.wast:36: assert_invalid passed:
-  0000014: error: expected i32 init_expr
+  out/test/spec/func_ptrs/func_ptrs.3.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
+  0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/func_ptrs.wast:40: assert_invalid passed:
-  0000015: error: expected END opcode after initializer expression
+  out/test/spec/func_ptrs/func_ptrs.4.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
+  0000015: error: OnUnaryExpr callback failed
 out/test/spec/func_ptrs.wast:44: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 0x1
+  out/test/spec/func_ptrs/func_ptrs.5.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000013: error: OnNopExpr callback failed
 out/test/spec/func_ptrs.wast:48: assert_invalid passed:
-  0000000: error: function type variable out of range: 42 (max 0)
+  out/test/spec/func_ptrs/func_ptrs.6.wasm:000000c: error: function type variable out of range: 42 (max 0)
   000000c: error: OnFunction callback failed
 out/test/spec/func_ptrs.wast:49: assert_invalid passed:
-  0000000: error: function type variable out of range: 43 (max 0)
+  out/test/spec/func_ptrs/func_ptrs.7.wasm:0000020: error: function type variable out of range: 43 (max 0)
   0000020: error: OnImportFunc callback failed
 out/test/spec/func_ptrs.wast:78: assert_trap passed: undefined table index
 out/test/spec/func_ptrs.wast:79: assert_trap passed: undefined table index
@@ -27,5 +30,5 @@ out/test/spec/func_ptrs.wast:80: assert_trap passed: undefined table index
 out/test/spec/func_ptrs.wast:89: assert_trap passed: undefined table index
 out/test/spec/func_ptrs.wast:90: assert_trap passed: undefined table index
 out/test/spec/func_ptrs.wast:91: assert_trap passed: undefined table index
-33/33 tests passed.
+36/36 tests passed.
 ;;; STDOUT ;;)

@@ -42,7 +42,7 @@ NAMED_VALUES = {
     'f32': 0x7d,    # -3
     'f64': 0x7c,    # -4
     'v128': 0x7b,    # -5
-    'anyfunc': 0x70,    # -0x10
+    'funcref': 0x70,    # -0x10
     'function': 0x60,    # -0x20
     'struct': 0x5f,    # -0x21
     'array': 0x5e,    # -0x22
@@ -64,7 +64,7 @@ NAMED_VALUES = {
     'CODE': 10,
     'DATA': 11,
     'DATACOUNT': 12,
-    'EVENT': 13,
+    'TAG': 13,
 
     # name subsection codes
     'NAME_MODULE': 0,
@@ -76,6 +76,12 @@ NAMED_VALUES = {
     'LINKING_INIT_FUNCTIONS': 6,
     'LINKING_COMDAT_INFO': 7,
     'LINKING_SYMBOL_TABLE': 8,
+
+    # dylink.0 subsection codes
+    'DYLINK_MEM_INFO': 1,
+    'DYLINK_NEEDED': 2,
+    'DYLINK_EXPORT_INFO': 3,
+    'DYLINK_IMPORT_INFO': 4,
 
     # external kinds
     'func_kind': 0,
@@ -99,11 +105,11 @@ NAMED_VALUES = {
     "return_call_indirect": 0x13,
     "drop": 0x1a,
     "select": 0x1b,
-    "get_local": 0x20,
-    "set_local": 0x21,
-    "tee_local": 0x22,
-    "get_global": 0x23,
-    "set_global": 0x24,
+    "local.get": 0x20,
+    "local.set": 0x21,
+    "local.tee": 0x22,
+    "global.get": 0x23,
+    "global.set": 0x24,
     "i32.load": 0x28,
     "i64.load": 0x29,
     "f32.load": 0x2a,
@@ -231,31 +237,31 @@ NAMED_VALUES = {
     "f64.div": 0xa4,
     "f64.min": 0xa5,
     "f64.max": 0xa6,
-    "i32.wrap/i64": 0xa7,
-    "i32.trunc_s/f32": 0xa8,
-    "i32.trunc_u/f32": 0xa9,
-    "i32.trunc_s/f64": 0xaa,
-    "i32.trunc_u/f64": 0xab,
-    "i64.extend_s/i32": 0xac,
-    "i64.extend_u/i32": 0xad,
-    "i64.trunc_s/f32": 0xae,
-    "i64.trunc_u/f32": 0xaf,
-    "i64.trunc_s/f64": 0xb0,
-    "i64.trunc_u/f64": 0xb1,
-    "f32.convert_s/i32": 0xb2,
-    "f32.convert_u/i32": 0xb3,
-    "f32.convert_s/i64": 0xb4,
-    "f32.convert_u/i64": 0xb5,
-    "f32.demote/f64": 0xb6,
-    "f64.convert_s/i32": 0xb7,
-    "f64.convert_u/i32": 0xb8,
-    "f64.convert_s/i64": 0xb9,
-    "f64.convert_u/i64": 0xba,
-    "f64.promote/f32": 0xbb,
-    "i32.reinterpret/f32": 0xbc,
-    "i64.reinterpret/f64": 0xbd,
-    "f32.reinterpret/i32": 0xbe,
-    "f64.reinterpret/i64": 0xbf,
+    "i32.wrap_i64": 0xa7,
+    "i32.trunc_f32_s": 0xa8,
+    "i32.trunc_f32_u": 0xa9,
+    "i32.trunc_f64_s": 0xaa,
+    "i32.trunc_f64_u": 0xab,
+    "i64.extend_i32_s": 0xac,
+    "i64.extend_i32_u": 0xad,
+    "i64.trunc_f32_s": 0xae,
+    "i64.trunc_f32_u": 0xaf,
+    "i64.trunc_f64_s": 0xb0,
+    "i64.trunc_f64_u": 0xb1,
+    "f32.convert_i32_s": 0xb2,
+    "f32.convert_i32_u": 0xb3,
+    "f32.convert_i64_s": 0xb4,
+    "f32.convert_i64_u": 0xb5,
+    "f32.demote_f64": 0xb6,
+    "f64.convert_i32_s": 0xb7,
+    "f64.convert_i32_u": 0xb8,
+    "f64.convert_i64_s": 0xb9,
+    "f64.convert_i64_u": 0xba,
+    "f64.promote_f32": 0xbb,
+    "i32.reinterpret_f32": 0xbc,
+    "i64.reinterpret_f64": 0xbd,
+    "f32.reinterpret_i32": 0xbe,
+    "f64.reinterpret_i64": 0xbf,
 
     # bulk memory
     "memory.init": (0xfc, 0x08),

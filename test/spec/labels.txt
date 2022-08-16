@@ -2,13 +2,13 @@
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
 out/test/spec/labels.wast:318: assert_invalid passed:
-  error: type mismatch in f32.neg, expected [f32] but got []
+  out/test/spec/labels/labels.1.wasm:000001e: error: type mismatch in f32.neg, expected [f32] but got []
   000001e: error: OnUnaryExpr callback failed
 out/test/spec/labels.wast:322: assert_invalid passed:
-  error: type mismatch in block, expected [] but got [f32]
+  out/test/spec/labels/labels.2.wasm:0000023: error: type mismatch at end of block, expected [] but got [f32]
   0000023: error: OnEndExpr callback failed
 out/test/spec/labels.wast:326: assert_invalid passed:
-  error: type mismatch in block, expected [] but got [f32]
+  out/test/spec/labels/labels.3.wasm:0000023: error: type mismatch at end of block, expected [] but got [f32]
   0000023: error: OnEndExpr callback failed
-28/28 tests passed.
+29/29 tests passed.
 ;;; STDOUT ;;)

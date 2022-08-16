@@ -17,13 +17,14 @@
 #include "src/common.h"
 
 #include <cassert>
+#include <cerrno>
 #include <climits>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #if COMPILER_IS_MSVC
 #include <fcntl.h>
@@ -39,7 +40,7 @@ namespace wabt {
 Reloc::Reloc(RelocType type, Offset offset, Index index, int32_t addend)
     : type(type), offset(offset), index(index), addend(addend) {}
 
-const char* g_kind_name[] = {"func", "table", "memory", "global", "event"};
+const char* g_kind_name[] = {"func", "table", "memory", "global", "tag"};
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_kind_name) == kExternalKindCount);
 
 const char* g_reloc_type_name[] = {
@@ -48,7 +49,7 @@ const char* g_reloc_type_name[] = {
     "R_WASM_MEMORY_ADDR_SLEB",     "R_WASM_MEMORY_ADDR_I32",
     "R_WASM_TYPE_INDEX_LEB",       "R_WASM_GLOBAL_INDEX_LEB",
     "R_WASM_FUNCTION_OFFSET_I32",  "R_WASM_SECTION_OFFSET_I32",
-    "R_WASM_EVENT_INDEX_LEB",      "R_WASM_MEMORY_ADDR_REL_SLEB",
+    "R_WASM_TAG_INDEX_LEB",        "R_WASM_MEMORY_ADDR_REL_SLEB",
     "R_WASM_TABLE_INDEX_REL_SLEB", "R_WASM_GLOBAL_INDEX_I32",
     "R_WASM_MEMORY_ADDR_LEB64",    "R_WASM_MEMORY_ADDR_SLEB64",
     "R_WASM_MEMORY_ADDR_I64",      "R_WASM_MEMORY_ADDR_REL_SLEB64",
@@ -76,8 +77,8 @@ static Result ReadStdin(std::vector<uint8_t>* out_data) {
   }
 }
 
-Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
-  std::string filename_str = filename.to_string();
+Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
+  std::string filename_str(filename);
   const char* filename_cstr = filename_str.c_str();
 
   if (filename == "-") {

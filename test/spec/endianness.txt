@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/endianness.wast
 (;; STDOUT ;;;
-68/68 tests passed.
+69/69 tests passed.
 ;;; STDOUT ;;)

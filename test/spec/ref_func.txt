@@ -1,0 +1,16 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/ref_func.wast
+(;; STDOUT ;;;
+set-g() =>
+set-f() =>
+out/test/spec/ref_func.wast:69: assert_invalid passed:
+  out/test/spec/ref_func/ref_func.2.wasm:0000026: error: function variable out of range: 7 (max 2)
+  0000026: error: OnRefFuncExpr callback failed
+out/test/spec/ref_func.wast:109: assert_invalid passed:
+  out/test/spec/ref_func/ref_func.4.wasm:0000019: error: function 0 is not declared in any elem sections
+  000001b: error: EndModule callback failed
+out/test/spec/ref_func.wast:113: assert_invalid passed:
+  out/test/spec/ref_func/ref_func.5.wasm:000001c: error: function 0 is not declared in any elem sections
+  000001e: error: EndModule callback failed
+16/16 tests passed.
+;;; STDOUT ;;)

@@ -3,37 +3,45 @@
 ;;; STDIN_FILE: third_party/testsuite/f64.wast
 (;; STDOUT ;;;
 out/test/spec/f64.wast:2523: assert_invalid passed:
-  error: type mismatch in f64.add, expected [f64, f64] but got [i64, f32]
+  out/test/spec/f64/f64.1.wasm:0000020: error: type mismatch in f64.add, expected [f64, f64] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/f64.wast:2524: assert_invalid passed:
-  error: type mismatch in f64.div, expected [f64, f64] but got [i64, f32]
+  out/test/spec/f64/f64.2.wasm:0000020: error: type mismatch in f64.div, expected [f64, f64] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/f64.wast:2525: assert_invalid passed:
-  error: type mismatch in f64.max, expected [f64, f64] but got [i64, f32]
+  out/test/spec/f64/f64.3.wasm:0000020: error: type mismatch in f64.max, expected [f64, f64] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/f64.wast:2526: assert_invalid passed:
-  error: type mismatch in f64.min, expected [f64, f64] but got [i64, f32]
+  out/test/spec/f64/f64.4.wasm:0000020: error: type mismatch in f64.min, expected [f64, f64] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/f64.wast:2527: assert_invalid passed:
-  error: type mismatch in f64.mul, expected [f64, f64] but got [i64, f32]
+  out/test/spec/f64/f64.5.wasm:0000020: error: type mismatch in f64.mul, expected [f64, f64] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/f64.wast:2528: assert_invalid passed:
-  error: type mismatch in f64.sub, expected [f64, f64] but got [i64, f32]
+  out/test/spec/f64/f64.6.wasm:0000020: error: type mismatch in f64.sub, expected [f64, f64] but got [i64, f32]
   0000020: error: OnBinaryExpr callback failed
 out/test/spec/f64.wast:2529: assert_invalid passed:
-  error: type mismatch in f64.ceil, expected [f64] but got [i64]
+  out/test/spec/f64/f64.7.wasm:000001b: error: type mismatch in f64.ceil, expected [f64] but got [i64]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/f64.wast:2530: assert_invalid passed:
-  error: type mismatch in f64.floor, expected [f64] but got [i64]
+  out/test/spec/f64/f64.8.wasm:000001b: error: type mismatch in f64.floor, expected [f64] but got [i64]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/f64.wast:2531: assert_invalid passed:
-  error: type mismatch in f64.nearest, expected [f64] but got [i64]
+  out/test/spec/f64/f64.9.wasm:000001b: error: type mismatch in f64.nearest, expected [f64] but got [i64]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/f64.wast:2532: assert_invalid passed:
-  error: type mismatch in f64.sqrt, expected [f64] but got [i64]
+  out/test/spec/f64/f64.10.wasm:000001b: error: type mismatch in f64.sqrt, expected [f64] but got [i64]
   000001b: error: OnUnaryExpr callback failed
 out/test/spec/f64.wast:2533: assert_invalid passed:
-  error: type mismatch in f64.trunc, expected [f64] but got [i64]
+  out/test/spec/f64/f64.11.wasm:000001b: error: type mismatch in f64.trunc, expected [f64] but got [i64]
   000001b: error: OnUnaryExpr callback failed
-2511/2511 tests passed.
+out/test/spec/f64.wast:2537: assert_malformed passed:
+  out/test/spec/f64/f64.12.wat:1:31: error: invalid literal "nan:arithmetic"
+  (func (result f64) (f64.const nan:arithmetic))
+                                ^^^^^^^^^^^^^^
+out/test/spec/f64.wast:2541: assert_malformed passed:
+  out/test/spec/f64/f64.13.wat:1:31: error: invalid literal "nan:canonical"
+  (func (result f64) (f64.const nan:canonical))
+                                ^^^^^^^^^^^^^
+2514/2514 tests passed.
 ;;; STDOUT ;;)

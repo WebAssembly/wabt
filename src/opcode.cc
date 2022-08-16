@@ -33,7 +33,7 @@ Opcode::Info Opcode::infos_[] = {
 };
 
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                                     \
+                    text, decomp)                                             \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
 #include "src/opcode.def"
 #undef WABT_OPCODE
@@ -65,7 +65,6 @@ bool Opcode::IsEnabled(const Features& features) const {
   switch (enum_) {
     case Opcode::Try:
     case Opcode::Catch:
-    case Opcode::Unwind:
     case Opcode::Delegate:
     case Opcode::Throw:
     case Opcode::Rethrow:
@@ -335,6 +334,9 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::RefNull:
     case Opcode::RefIsNull:
       return features.reference_types_enabled();
+
+    case Opcode::CallRef:
+      return features.function_references_enabled();
 
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:

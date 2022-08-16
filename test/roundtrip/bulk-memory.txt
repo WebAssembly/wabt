@@ -1,8 +1,8 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --enable-bulk-memory
+;;; ARGS: --stdout
 (module
   (memory 0)
-  (table 0 anyfunc)
+  (table 0 funcref)
 
   (func
     i32.const 0

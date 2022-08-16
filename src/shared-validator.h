@@ -51,6 +51,9 @@ class SharedValidator {
   Result GetLabel(Index depth, Label** out_label) {
     return typechecker_.GetLabel(depth, out_label);
   }
+  Result GetCatchCount(Index depth, Index* out_count) {
+    return typechecker_.GetCatchCount(depth, out_count);
+  }
 
   Result WABT_PRINTF_FORMAT(3, 4)
       PrintError(const Location& loc, const char* fmt, ...);
@@ -65,7 +68,8 @@ class SharedValidator {
                     Index param_count,
                     const Type* param_types,
                     Index result_count,
-                    const Type* result_types);
+                    const Type* result_types,
+                    Index type_index);
   Result OnStructType(const Location&, Index field_count, TypeMut* fields);
   Result OnArrayType(const Location&, TypeMut field);
 
@@ -74,47 +78,38 @@ class SharedValidator {
   Result OnMemory(const Location&, const Limits&);
   Result OnGlobalImport(const Location&, Type type, bool mutable_);
   Result OnGlobal(const Location&, Type type, bool mutable_);
-  Result OnGlobalInitExpr_Const(const Location&, Type);
-  Result OnGlobalInitExpr_GlobalGet(const Location&, Var global_var);
-  Result OnGlobalInitExpr_RefNull(const Location&, Type type);
-  Result OnGlobalInitExpr_RefFunc(const Location&, Var func_var);
-  Result OnGlobalInitExpr_Other(const Location&);
-  Result OnEvent(const Location&, Var sig_var);
+  Result OnTag(const Location&, Var sig_var);
 
   Result OnExport(const Location&,
                   ExternalKind,
                   Var item_var,
-                  string_view name);
+                  std::string_view name);
 
   Result OnStart(const Location&, Var func_var);
 
   Result OnElemSegment(const Location&, Var table_var, SegmentKind);
   void OnElemSegmentElemType(Type elem_type);
-  Result OnElemSegmentInitExpr_Const(const Location&, Type);
-  Result OnElemSegmentInitExpr_GlobalGet(const Location&, Var global_var);
-  Result OnElemSegmentInitExpr_Other(const Location&);
   Result OnElemSegmentElemExpr_RefNull(const Location&, Type type);
   Result OnElemSegmentElemExpr_RefFunc(const Location&, Var func_var);
   Result OnElemSegmentElemExpr_Other(const Location&);
 
   void OnDataCount(Index count);
-
   Result OnDataSegment(const Location&, Var memory_var, SegmentKind);
-  Result OnDataSegmentInitExpr_Const(const Location&, Type);
-  Result OnDataSegmentInitExpr_GlobalGet(const Location&, Var global_var);
-  Result OnDataSegmentInitExpr_Other(const Location&);
+
+  Result BeginInitExpr(const Location&, Type type);
+  Result EndInitExpr();
 
   Result BeginFunctionBody(const Location&, Index func_index);
   Result EndFunctionBody(const Location&);
   Result OnLocalDecl(const Location&, Index count, Type type);
 
   Result OnAtomicFence(const Location&, uint32_t consistency_model);
-  Result OnAtomicLoad(const Location&, Opcode, Address align);
-  Result OnAtomicNotify(const Location&, Opcode, Address align);
-  Result OnAtomicRmwCmpxchg(const Location&, Opcode, Address align);
-  Result OnAtomicRmw(const Location&, Opcode, Address align);
-  Result OnAtomicStore(const Location&, Opcode, Address align);
-  Result OnAtomicWait(const Location&, Opcode, Address align);
+  Result OnAtomicLoad(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicNotify(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicRmwCmpxchg(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicRmw(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicStore(const Location&, Opcode, Var memidx, Address align);
+  Result OnAtomicWait(const Location&, Opcode, Var memidx, Address align);
   Result OnBinary(const Location&, Opcode);
   Result OnBlock(const Location&, Type sig_type);
   Result OnBr(const Location&, Var depth);
@@ -124,7 +119,8 @@ class SharedValidator {
   Result EndBrTable(const Location&);
   Result OnCall(const Location&, Var func_var);
   Result OnCallIndirect(const Location&, Var sig_var, Var table_var);
-  Result OnCatch(const Location&, Var event_var, bool is_catch_all);
+  Result OnCallRef(const Location&, Index* function_type_index);
+  Result OnCatch(const Location&, Var tag_var, bool is_catch_all);
   Result OnCompare(const Location&, Opcode);
   Result OnConst(const Location&, Type);
   Result OnConvert(const Location&, Opcode);
@@ -137,18 +133,18 @@ class SharedValidator {
   Result OnGlobalGet(const Location&, Var);
   Result OnGlobalSet(const Location&, Var);
   Result OnIf(const Location&, Type sig_type);
-  Result OnLoad(const Location&, Opcode, Address align);
-  Result OnLoadSplat(const Location&, Opcode, Address align);
-  Result OnLoadZero(const Location&, Opcode, Address align);
+  Result OnLoad(const Location&, Opcode, Var memidx, Address align);
+  Result OnLoadSplat(const Location&, Opcode, Var memidx, Address align);
+  Result OnLoadZero(const Location&, Opcode, Var memidx, Address align);
   Result OnLocalGet(const Location&, Var);
   Result OnLocalSet(const Location&, Var);
   Result OnLocalTee(const Location&, Var);
   Result OnLoop(const Location&, Type sig_type);
-  Result OnMemoryCopy(const Location&);
-  Result OnMemoryFill(const Location&);
-  Result OnMemoryGrow(const Location&);
-  Result OnMemoryInit(const Location&, Var segment_var);
-  Result OnMemorySize(const Location&);
+  Result OnMemoryCopy(const Location&, Var srcmemidx, Var destmemidx);
+  Result OnMemoryFill(const Location&, Var memidx);
+  Result OnMemoryGrow(const Location&, Var memidx);
+  Result OnMemoryInit(const Location&, Var segment_var, Var memidx);
+  Result OnMemorySize(const Location&, Var memidx);
   Result OnNop(const Location&);
   Result OnRefFunc(const Location&, Var func_var);
   Result OnRefIsNull(const Location&);
@@ -159,10 +155,18 @@ class SharedValidator {
   Result OnReturn(const Location&);
   Result OnSelect(const Location&, Index result_count, Type* result_types);
   Result OnSimdLaneOp(const Location&, Opcode, uint64_t lane_idx);
-  Result OnSimdLoadLane(const Location&, Opcode, Address align, uint64_t lane_idx);
-  Result OnSimdStoreLane(const Location&, Opcode, Address align, uint64_t lane_idx);
+  Result OnSimdLoadLane(const Location&,
+                        Opcode,
+                        Var memidx,
+                        Address align,
+                        uint64_t lane_idx);
+  Result OnSimdStoreLane(const Location&,
+                         Opcode,
+                         Var memidx,
+                         Address align,
+                         uint64_t lane_idx);
   Result OnSimdShuffleOp(const Location&, Opcode, v128 lane_idx);
-  Result OnStore(const Location&, Opcode, Address align);
+  Result OnStore(const Location&, Opcode, Var memidx, Address align);
   Result OnTableCopy(const Location&, Var dst_var, Var src_var);
   Result OnTableFill(const Location&, Var table_var);
   Result OnTableGet(const Location&, Var table_var);
@@ -171,20 +175,22 @@ class SharedValidator {
   Result OnTableSet(const Location&, Var table_var);
   Result OnTableSize(const Location&, Var table_var);
   Result OnTernary(const Location&, Opcode);
-  Result OnThrow(const Location&, Var event_var);
+  Result OnThrow(const Location&, Var tag_var);
   Result OnTry(const Location&, Type sig_type);
   Result OnUnary(const Location&, Opcode);
   Result OnUnreachable(const Location&);
-  Result OnUnwind(const Location&);
 
  private:
   struct FuncType {
     FuncType() = default;
-    FuncType(const TypeVector& params, const TypeVector& results)
-        : params(params), results(results) {}
+    FuncType(const TypeVector& params,
+             const TypeVector& results,
+             Index type_index)
+        : params(params), results(results), type_index(type_index) {}
 
     TypeVector params;
     TypeVector results;
+    Index type_index;
   };
 
   struct StructType {
@@ -224,7 +230,7 @@ class SharedValidator {
     bool mutable_ = true;
   };
 
-  struct EventType {
+  struct TagType {
     TypeVector params;
   };
 
@@ -240,6 +246,8 @@ class SharedValidator {
     Index end;
   };
 
+  bool ValidInitOpcode(Opcode opcode) const;
+  Result CheckInstr(Opcode opcode, const Location& loc);
   Result CheckType(const Location&,
                    Type actual,
                    Type expected,
@@ -264,12 +272,14 @@ class SharedValidator {
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);
   Result CheckGlobalIndex(Var global_var, GlobalType* out = nullptr);
-  Result CheckEventIndex(Var event_var, EventType* out = nullptr);
+  Result CheckTagIndex(Var tag_var, TagType* out = nullptr);
   Result CheckElemSegmentIndex(Var elem_segment_var, ElemType* out = nullptr);
   Result CheckDataSegmentIndex(Var data_segment_var);
 
   Result CheckAlign(const Location&, Address align, Address natural_align);
-  Result CheckAtomicAlign(const Location&, Address align, Address natural_align);
+  Result CheckAtomicAlign(const Location&,
+                          Address align,
+                          Address natural_align);
 
   Result CheckBlockSignature(const Location&,
                              Opcode,
@@ -277,13 +287,16 @@ class SharedValidator {
                              TypeVector* out_param_types,
                              TypeVector* out_result_types);
 
+  Index GetFunctionTypeIndex(Index func_index) const;
+
   TypeVector ToTypeVector(Index count, const Type* types);
 
   ValidateOptions options_;
   Errors* errors_;
   TypeChecker typechecker_;  // TODO: Move into SharedValidator.
   // Cached for access by OnTypecheckerError.
-  const Location* expr_loc_ = nullptr;
+  Location expr_loc_ = Location(kInvalidOffset);
+  bool in_init_expr_ = false;
 
   Index num_types_ = 0;
   std::map<Index, FuncType> func_types_;
@@ -294,7 +307,7 @@ class SharedValidator {
   std::vector<TableType> tables_;     // Includes imported and defined.
   std::vector<MemoryType> memories_;  // Includes imported and defined.
   std::vector<GlobalType> globals_;   // Includes imported and defined.
-  std::vector<EventType> events_;     // Includes imported and defined.
+  std::vector<TagType> tags_;         // Includes imported and defined.
   std::vector<ElemType> elems_;
   Index starts_ = 0;
   Index num_imported_globals_ = 0;
@@ -306,7 +319,7 @@ class SharedValidator {
 
   std::set<std::string> export_names_;  // Used to check for duplicates.
   std::set<Index> declared_funcs_;      // TODO: optimize?
-  std::vector<Var> init_expr_funcs_;
+  std::vector<Var> check_declared_funcs_;
 };
 
 }  // namespace wabt

@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-simd
 (module
   (memory 1)
   (data (i32.const 0) "\ff\ff\ff\ff")

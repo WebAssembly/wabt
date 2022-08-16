@@ -3,58 +3,58 @@
 (;; STDOUT ;;;
 out/test/spec/call.wast:354: assert_trap passed: undefined table index
 out/test/spec/call.wast:381: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got []
+  out/test/spec/call/call.1.wasm:000001b: error: type mismatch in i32.eqz, expected [i32] but got []
   000001b: error: OnConvertExpr callback failed
 out/test/spec/call.wast:388: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected [i32] but got [i64]
+  out/test/spec/call/call.2.wasm:000001f: error: type mismatch in i32.eqz, expected [i32] but got [i64]
   000001f: error: OnConvertExpr callback failed
 out/test/spec/call.wast:396: assert_invalid passed:
-  error: type mismatch in call, expected [i32] but got []
+  out/test/spec/call/call.3.wasm:000001e: error: type mismatch in call, expected [i32] but got []
   000001e: error: OnCallExpr callback failed
 out/test/spec/call.wast:403: assert_invalid passed:
-  error: type mismatch in call, expected [f64, i32] but got []
+  out/test/spec/call/call.4.wasm:000001f: error: type mismatch in call, expected [f64, i32] but got []
   000001f: error: OnCallExpr callback failed
 out/test/spec/call.wast:410: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/call/call.5.wasm:000001d: error: type mismatch at end of function, expected [] but got [i32]
   000001d: error: EndFunctionBody callback failed
 out/test/spec/call.wast:417: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [f64, i32]
+  out/test/spec/call/call.6.wasm:0000026: error: type mismatch at end of function, expected [] but got [f64, i32]
   0000026: error: EndFunctionBody callback failed
 out/test/spec/call.wast:425: assert_invalid passed:
-  error: type mismatch in call, expected [i32, i32] but got [i32]
+  out/test/spec/call/call.7.wasm:0000022: error: type mismatch in call, expected [i32, i32] but got [i32]
   0000022: error: OnCallExpr callback failed
 out/test/spec/call.wast:432: assert_invalid passed:
-  error: type mismatch in call, expected [i32, i32] but got [i32]
+  out/test/spec/call/call.8.wasm:0000022: error: type mismatch in call, expected [i32, i32] but got [i32]
   0000022: error: OnCallExpr callback failed
 out/test/spec/call.wast:439: assert_invalid passed:
-  error: type mismatch in call, expected [i32, f64] but got [f64, i32]
+  out/test/spec/call/call.9.wasm:000002a: error: type mismatch in call, expected [i32, f64] but got [f64, i32]
   000002a: error: OnCallExpr callback failed
 out/test/spec/call.wast:446: assert_invalid passed:
-  error: type mismatch in call, expected [f64, i32] but got [i32, f64]
+  out/test/spec/call/call.10.wasm:000002a: error: type mismatch in call, expected [f64, i32] but got [i32, f64]
   000002a: error: OnCallExpr callback failed
 out/test/spec/call.wast:454: assert_invalid passed:
-  error: type mismatch in call, expected [i32] but got []
+  out/test/spec/call/call.11.wasm:0000020: error: type mismatch in call, expected [i32] but got []
   0000020: error: OnCallExpr callback failed
 out/test/spec/call.wast:463: assert_invalid passed:
-  error: type mismatch in call, expected [i32, i32] but got [i32]
+  out/test/spec/call/call.12.wasm:0000023: error: type mismatch in call, expected [i32, i32] but got [i32]
   0000023: error: OnCallExpr callback failed
 out/test/spec/call.wast:472: assert_invalid passed:
-  error: type mismatch in call, expected [i32] but got []
+  out/test/spec/call/call.13.wasm:0000020: error: type mismatch in call, expected [i32] but got []
   0000020: error: OnCallExpr callback failed
 out/test/spec/call.wast:481: assert_invalid passed:
-  error: type mismatch in call, expected [i32, i32] but got [i32]
+  out/test/spec/call/call.14.wasm:0000023: error: type mismatch in call, expected [i32, i32] but got [i32]
   0000023: error: OnCallExpr callback failed
 out/test/spec/call.wast:490: assert_invalid passed:
-  error: type mismatch in call, expected [i32] but got []
+  out/test/spec/call/call.15.wasm:0000022: error: type mismatch in call, expected [i32] but got []
   0000022: error: OnCallExpr callback failed
 out/test/spec/call.wast:499: assert_invalid passed:
-  error: type mismatch in call, expected [i32, i32] but got [i32]
+  out/test/spec/call/call.16.wasm:0000025: error: type mismatch in call, expected [i32, i32] but got [i32]
   0000025: error: OnCallExpr callback failed
 out/test/spec/call.wast:512: assert_invalid passed:
-  0000000: error: function variable out of range: 1 (max 1)
+  out/test/spec/call/call.17.wasm:0000019: error: function variable out of range: 1 (max 1)
   0000019: error: OnCallExpr callback failed
 out/test/spec/call.wast:516: assert_invalid passed:
-  0000000: error: function variable out of range: 1012321300 (max 1)
+  out/test/spec/call/call.18.wasm:000001d: error: function variable out of range: 1012321300 (max 1)
   000001d: error: OnCallExpr callback failed
-90/90 tests passed.
+91/91 tests passed.
 ;;; STDOUT ;;)

@@ -3,5 +3,5 @@
 (;; STDOUT ;;;
 called host spectest.print_i32(i32:42) =>
 called host spectest.print_i32(i32:123) =>
-482/482 tests passed.
+486/486 tests passed.
 ;;; STDOUT ;;)

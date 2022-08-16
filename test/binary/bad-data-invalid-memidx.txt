@@ -1,4 +1,6 @@
 ;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --disable-bulk-memory
+;;; ARGS2: --disable-bulk-memory
 magic
 version
 section(MEMORY) {

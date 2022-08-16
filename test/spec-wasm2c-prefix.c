@@ -12,8 +12,8 @@
 #include "wasm-rt.h"
 #include "wasm-rt-impl.h"
 
-int g_tests_run;
-int g_tests_passed;
+static int g_tests_run;
+static int g_tests_passed;
 
 static void run_spec_tests(void);
 
@@ -24,6 +24,17 @@ static void error(const char* file, int line, const char* format, ...) {
   vfprintf(stderr, format, args);
   va_end(args);
 }
+
+#define ASSERT_EXCEPTION(f)                                               \
+  do {                                                                    \
+    g_tests_run++;                                                        \
+    if (wasm_rt_impl_try() == WASM_RT_TRAP_UNCAUGHT_EXCEPTION) {          \
+      g_tests_passed++;                                                   \
+    } else {                                                              \
+      (void)(f);                                                          \
+      error(__FILE__, __LINE__, "expected " #f " to throw exception.\n"); \
+    }                                                                     \
+  } while (0)
 
 #define ASSERT_TRAP(f)                                         \
   do {                                                         \
@@ -57,22 +68,26 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                            \
   } while (0)
 
-#define ASSERT_RETURN(f)                           \
-  do {                                             \
-    g_tests_run++;                                 \
-    if (wasm_rt_impl_try() != 0) {                 \
-      error(__FILE__, __LINE__, #f " trapped.\n"); \
-    } else {                                       \
-      f;                                           \
-      g_tests_passed++;                            \
-    }                                              \
+#define ASSERT_RETURN(f)                               \
+  do {                                                 \
+    g_tests_run++;                                     \
+    int trap_code = wasm_rt_impl_try();                \
+    if (trap_code) {                                   \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n", \
+            wasm_rt_strerror(trap_code));              \
+    } else {                                           \
+      f;                                               \
+      g_tests_passed++;                                \
+    }                                                  \
   } while (0)
 
 #define ASSERT_RETURN_T(type, fmt, f, expected)                          \
   do {                                                                   \
     g_tests_run++;                                                       \
-    if (wasm_rt_impl_try() != 0) {                                       \
-      error(__FILE__, __LINE__, #f " trapped.\n");                       \
+    int trap_code = wasm_rt_impl_try();                                  \
+    if (trap_code) {                                                     \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                   \
+            wasm_rt_strerror(trap_code));                                \
     } else {                                                             \
       type actual = f;                                                   \
       if (is_equal_##type(actual, expected)) {                           \
@@ -105,6 +120,30 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                         \
   } while (0)
 
+#define MULTI_T_UNPACK_(...) __VA_ARGS__
+#define MULTI_T_UNPACK(arg) MULTI_T_UNPACK_ arg
+#define MULTI_i32 "%u"
+#define MULTI_i64 "%" PRIu64
+#define MULTI_f32 "%.9g"
+#define MULTI_f64 "%.17g"
+#define ASSERT_RETURN_MULTI_T(type, fmt, f, compare, expected, found)    \
+  do {                                                                   \
+    g_tests_run++;                                                       \
+    if (wasm_rt_impl_try() != 0) {                                       \
+      error(__FILE__, __LINE__, #f " trapped.\n");                       \
+    } else {                                                             \
+      type actual = f;                                                   \
+      if (compare) {                                                     \
+        g_tests_passed++;                                                \
+      } else {                                                           \
+        error(__FILE__, __LINE__,                                        \
+              "in " #f ": expected " fmt ", got " fmt ".\n",             \
+              MULTI_T_UNPACK(expected), MULTI_T_UNPACK(found));          \
+      }                                                                  \
+    }                                                                    \
+  } while (0)
+
+
 #define ASSERT_RETURN_I32(f, expected) ASSERT_RETURN_T(u32, "u", f, expected)
 #define ASSERT_RETURN_I64(f, expected) ASSERT_RETURN_T(u64, PRIu64, f, expected)
 #define ASSERT_RETURN_F32(f, expected) ASSERT_RETURN_T(f32, ".9g", f, expected)
@@ -126,6 +165,9 @@ static bool is_equal_u32(u32 x, u32 y) {
 static bool is_equal_u64(u64 x, u64 y) {
   return x == y;
 }
+
+#define is_equal_i32 is_equal_u32
+#define is_equal_i64 is_equal_u64
 
 static bool is_equal_f32(f32 x, f32 y) {
   u32 ux, uy;
@@ -204,18 +246,16 @@ static wasm_rt_memory_t spectest_memory;
 static uint32_t spectest_global_i32 = 666;
 static uint64_t spectest_global_i64 = 666l;
 
-void (*Z_spectestZ_printZ_vv)(void) = &spectest_print;
-void (*Z_spectestZ_print_i32Z_vi)(uint32_t) = &spectest_print_i32;
-void (*Z_spectestZ_print_f32Z_vf)(float) = &spectest_print_f32;
-void (*Z_spectestZ_print_i32_f32Z_vif)(uint32_t,
-                                       float) = &spectest_print_i32_f32;
-void (*Z_spectestZ_print_f64Z_vd)(double) = &spectest_print_f64;
-void (*Z_spectestZ_print_f64_f64Z_vdd)(double,
-                                       double) = &spectest_print_f64_f64;
+void (*Z_spectestZ_print)(void) = &spectest_print;
+void (*Z_spectestZ_print_i32)(uint32_t) = &spectest_print_i32;
+void (*Z_spectestZ_print_f32)(float) = &spectest_print_f32;
+void (*Z_spectestZ_print_i32_f32)(uint32_t, float) = &spectest_print_i32_f32;
+void (*Z_spectestZ_print_f64)(double) = &spectest_print_f64;
+void (*Z_spectestZ_print_f64_f64)(double, double) = &spectest_print_f64_f64;
 wasm_rt_table_t* Z_spectestZ_table = &spectest_table;
 wasm_rt_memory_t* Z_spectestZ_memory = &spectest_memory;
-uint32_t* Z_spectestZ_global_i32Z_i = &spectest_global_i32;
-uint64_t* Z_spectestZ_global_i64Z_j = &spectest_global_i64;
+uint32_t* Z_spectestZ_global_i32 = &spectest_global_i32;
+uint64_t* Z_spectestZ_global_i64 = &spectest_global_i64;
 
 static void init_spectest_module(void) {
   wasm_rt_allocate_memory(&spectest_memory, 1, 2);
@@ -224,8 +264,10 @@ static void init_spectest_module(void) {
 
 
 int main(int argc, char** argv) {
+  wasm_rt_init();
   init_spectest_module();
   run_spec_tests();
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
+  wasm_rt_free();
   return g_tests_passed != g_tests_run;
 }

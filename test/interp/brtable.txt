@@ -5,7 +5,7 @@
       block $2
         block $1
           block $0
-            get_local 0
+            local.get 0
             br_table $0 $1 $2 $default
           end
           ;; 0

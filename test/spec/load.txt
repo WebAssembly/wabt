@@ -54,142 +54,142 @@ out/test/spec/load.wast:301: assert_malformed passed:
   (memory 1)(func (param i32) (result f64) (f64.load64 (local.get 0)))
                                             ^^^^^^^^^^
 out/test/spec/load.wast:312: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/load/load.14.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:316: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/load/load.15.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:320: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/load/load.16.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:324: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/load/load.17.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:328: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i32]
+  out/test/spec/load/load.18.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:332: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/load/load.19.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:336: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/load/load.20.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:340: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/load/load.21.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:344: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/load/load.22.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:348: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/load/load.23.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:352: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/load/load.24.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:356: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [i64]
+  out/test/spec/load/load.25.wasm:0000022: error: type mismatch at end of function, expected [] but got [i64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:360: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [f32]
+  out/test/spec/load/load.26.wasm:0000022: error: type mismatch at end of function, expected [] but got [f32]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:364: assert_invalid passed:
-  error: type mismatch in function, expected [] but got [f64]
+  out/test/spec/load/load.27.wasm:0000022: error: type mismatch at end of function, expected [] but got [f64]
   0000022: error: EndFunctionBody callback failed
 out/test/spec/load.wast:371: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got [f32]
+  out/test/spec/load/load.28.wasm:0000025: error: type mismatch in i32.load, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:372: assert_invalid passed:
-  error: type mismatch in i32.load8_s, expected [i32] but got [f32]
+  out/test/spec/load/load.29.wasm:0000025: error: type mismatch in i32.load8_s, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:373: assert_invalid passed:
-  error: type mismatch in i32.load8_u, expected [i32] but got [f32]
+  out/test/spec/load/load.30.wasm:0000025: error: type mismatch in i32.load8_u, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:374: assert_invalid passed:
-  error: type mismatch in i32.load16_s, expected [i32] but got [f32]
+  out/test/spec/load/load.31.wasm:0000025: error: type mismatch in i32.load16_s, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:375: assert_invalid passed:
-  error: type mismatch in i32.load16_u, expected [i32] but got [f32]
+  out/test/spec/load/load.32.wasm:0000025: error: type mismatch in i32.load16_u, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:376: assert_invalid passed:
-  error: type mismatch in i64.load, expected [i32] but got [f32]
+  out/test/spec/load/load.33.wasm:0000025: error: type mismatch in i64.load, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:377: assert_invalid passed:
-  error: type mismatch in i64.load8_s, expected [i32] but got [f32]
+  out/test/spec/load/load.34.wasm:0000025: error: type mismatch in i64.load8_s, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:378: assert_invalid passed:
-  error: type mismatch in i64.load8_u, expected [i32] but got [f32]
+  out/test/spec/load/load.35.wasm:0000025: error: type mismatch in i64.load8_u, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:379: assert_invalid passed:
-  error: type mismatch in i64.load16_s, expected [i32] but got [f32]
+  out/test/spec/load/load.36.wasm:0000025: error: type mismatch in i64.load16_s, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:380: assert_invalid passed:
-  error: type mismatch in i64.load16_u, expected [i32] but got [f32]
+  out/test/spec/load/load.37.wasm:0000025: error: type mismatch in i64.load16_u, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:381: assert_invalid passed:
-  error: type mismatch in i64.load32_s, expected [i32] but got [f32]
+  out/test/spec/load/load.38.wasm:0000025: error: type mismatch in i64.load32_s, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:382: assert_invalid passed:
-  error: type mismatch in i64.load32_u, expected [i32] but got [f32]
+  out/test/spec/load/load.39.wasm:0000025: error: type mismatch in i64.load32_u, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:383: assert_invalid passed:
-  error: type mismatch in f32.load, expected [i32] but got [f32]
+  out/test/spec/load/load.40.wasm:0000025: error: type mismatch in f32.load, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:384: assert_invalid passed:
-  error: type mismatch in f64.load, expected [i32] but got [f32]
+  out/test/spec/load/load.41.wasm:0000025: error: type mismatch in f64.load, expected [i32] but got [f32]
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:388: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.42.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
 out/test/spec/load.wast:397: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.43.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
   0000023: error: OnLoadExpr callback failed
 out/test/spec/load.wast:407: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.44.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
   0000023: error: OnLoadExpr callback failed
 out/test/spec/load.wast:417: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.45.wasm:0000025: error: type mismatch in i32.load, expected [i32] but got []
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:427: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.46.wasm:0000028: error: type mismatch in i32.load, expected [i32] but got []
   0000028: error: OnLoadExpr callback failed
 out/test/spec/load.wast:437: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.47.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
   0000023: error: OnLoadExpr callback failed
 out/test/spec/load.wast:447: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.48.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
   0000023: error: OnLoadExpr callback failed
 out/test/spec/load.wast:457: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.49.wasm:0000023: error: type mismatch in i32.load, expected [i32] but got []
   0000023: error: OnLoadExpr callback failed
 out/test/spec/load.wast:467: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.50.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
 out/test/spec/load.wast:476: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.51.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
 out/test/spec/load.wast:485: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.52.wasm:0000025: error: type mismatch in i32.load, expected [i32] but got []
   0000025: error: OnLoadExpr callback failed
 out/test/spec/load.wast:495: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.53.wasm:000003c: error: type mismatch in i32.load, expected [i32] but got []
   000003c: error: OnLoadExpr callback failed
 out/test/spec/load.wast:512: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.54.wasm:0000021: error: type mismatch in i32.load, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/load.wast:522: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.55.wasm:0000021: error: type mismatch in i32.load, expected [i32] but got []
   0000021: error: OnLoadExpr callback failed
 out/test/spec/load.wast:532: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.56.wasm:0000027: error: type mismatch in i32.load, expected [i32] but got []
   0000027: error: OnLoadExpr callback failed
 out/test/spec/load.wast:542: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.57.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
 out/test/spec/load.wast:551: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.58.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
 out/test/spec/load.wast:560: assert_invalid passed:
-  error: type mismatch in i32.load, expected [i32] but got []
+  out/test/spec/load/load.59.wasm:000001f: error: type mismatch in i32.load, expected [i32] but got []
   000001f: error: OnLoadExpr callback failed
-96/96 tests passed.
+97/97 tests passed.
 ;;; STDOUT ;;)

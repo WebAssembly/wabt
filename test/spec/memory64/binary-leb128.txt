@@ -41,13 +41,13 @@ out/test/spec/memory64/binary-leb128.wast:442: assert_malformed passed:
 out/test/spec/memory64/binary-leb128.wast:461: assert_malformed passed:
   0000024: error: unable to read u32 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:482: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:492: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:503: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:513: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:525: assert_malformed passed:
   000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/memory64/binary-leb128.wast:533: assert_malformed passed:
@@ -99,22 +99,22 @@ out/test/spec/memory64/binary-leb128.wast:843: assert_malformed passed:
 out/test/spec/memory64/binary-leb128.wast:862: assert_malformed passed:
   0000024: error: unable to read u32 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:884: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:894: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:904: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:914: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:925: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:935: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:945: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:955: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:987: assert_malformed passed:
   0000019: error: unable to read u32 leb128: opcode
-57/57 tests passed.
+83/83 tests passed.
 ;;; STDOUT ;;)

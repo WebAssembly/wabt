@@ -1,0 +1,35 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/simd_i64x2_cmp.wast
+(;; STDOUT ;;;
+out/test/spec/simd_i64x2_cmp.wast:380: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.1.wasm:0000022: error: type mismatch in i64x2.eq, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:381: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.2.wasm:0000022: error: type mismatch in i64x2.ne, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:382: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.3.wasm:0000022: error: type mismatch in i64x2.ge_s, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:383: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.4.wasm:0000022: error: type mismatch in i64x2.gt_s, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:384: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.5.wasm:0000022: error: type mismatch in i64x2.le_s, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:385: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.6.wasm:0000022: error: type mismatch in i64x2.lt_s, expected [v128, v128] but got [i32, f32]
+  0000022: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:390: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.7.wasm:000002d: error: type mismatch in i64x2.eq, expected [v128, v128] but got [v128]
+  000002d: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:398: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.8.wasm:000001b: error: type mismatch in i64x2.eq, expected [v128, v128] but got []
+  000001b: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:406: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.9.wasm:000002d: error: type mismatch in i64x2.ne, expected [v128, v128] but got [v128]
+  000002d: error: OnCompareExpr callback failed
+out/test/spec/simd_i64x2_cmp.wast:414: assert_invalid passed:
+  out/test/spec/simd_i64x2_cmp/simd_i64x2_cmp.10.wasm:000001b: error: type mismatch in i64x2.ne, expected [v128, v128] but got []
+  000001b: error: OnCompareExpr callback failed
+113/113 tests passed.
+;;; STDOUT ;;)

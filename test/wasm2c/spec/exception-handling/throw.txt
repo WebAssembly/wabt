@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/throw.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+7/7 tests passed.
+;;; STDOUT ;;)

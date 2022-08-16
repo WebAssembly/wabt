@@ -20,7 +20,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -29,7 +31,6 @@
 #include "src/feature.h"
 #include "src/opcode.h"
 #include "src/result.h"
-#include "src/string-view.h"
 
 #include "src/interp/istream.h"
 
@@ -44,7 +45,8 @@ class ElemSegment;
 class Module;
 class Instance;
 class Thread;
-template <typename T> class RefPtr;
+template <typename T>
+class RefPtr;
 
 using s8 = int8_t;
 using u8 = uint8_t;
@@ -63,14 +65,16 @@ using Buffer = std::vector<u8>;
 using ValueType = wabt::Type;
 using ValueTypes = std::vector<ValueType>;
 
-template <typename T> bool HasType(ValueType);
-template <typename T> void RequireType(ValueType);
+template <typename T>
+bool HasType(ValueType);
+template <typename T>
+void RequireType(ValueType);
 bool IsReference(ValueType);
 bool TypesMatch(ValueType expected, ValueType actual);
 
 using ExternKind = ExternalKind;
 enum class Mutability { Const, Var };
-enum class EventAttr { Exception };
+enum class TagAttr { Exception };
 using SegmentMode = SegmentKind;
 enum class ElemKind { RefNull, RefFunc };
 
@@ -78,46 +82,26 @@ enum class ObjectKind {
   Null,
   Foreign,
   Trap,
+  Exception,
   DefinedFunc,
   HostFunc,
   Table,
   Memory,
   Global,
-  Event,
+  Tag,
   Module,
   Instance,
-  Thread,
+
+  First = Null,
+  Last = Instance,
 };
+
+static const int kCommandTypeCount = WABT_ENUM_COUNT(ObjectKind);
 
 const char* GetName(Mutability);
-const char* GetName(ValueType);
+const std::string GetName(ValueType);
 const char* GetName(ExternKind);
 const char* GetName(ObjectKind);
-
-enum class InitExprKind {
-  None,
-  I32,
-  I64,
-  F32,
-  F64,
-  V128,
-  GlobalGet,
-  RefNull,
-  RefFunc
-};
-
-struct InitExpr {
-  InitExprKind kind;
-  union {
-    u32 i32_;
-    u64 i64_;
-    f32 f32_;
-    f64 f64_;
-    v128 v128_;
-    Index index_;
-    Type type_;
-  };
-};
 
 struct Ref {
   static const Ref Null;
@@ -141,13 +125,13 @@ struct Simd {
 
   inline T& operator[](u8 idx) {
 #if WABT_BIG_ENDIAN
-    idx = (~idx) & (L-1);
+    idx = (~idx) & (L - 1);
 #endif
     return v[idx];
   }
   inline T operator[](u8 idx) const {
 #if WABT_BIG_ENDIAN
-    idx = (~idx) & (L-1);
+    idx = (~idx) & (L - 1);
 #endif
     return v[idx];
   }
@@ -249,19 +233,19 @@ struct GlobalType : ExternType {
   Mutability mut;
 };
 
-struct EventType : ExternType {
-  static const ExternKind skind = ExternKind::Event;
+struct TagType : ExternType {
+  static const ExternKind skind = ExternKind::Tag;
   static bool classof(const ExternType* type);
 
-  explicit EventType(EventAttr, const ValueTypes&);
+  explicit TagType(TagAttr, const ValueTypes&);
 
   std::unique_ptr<ExternType> Clone() const override;
 
-  friend Result Match(const EventType& expected,
-                      const EventType& actual,
+  friend Result Match(const TagType& expected,
+                      const TagType& actual,
                       std::string* out_msg);
 
-  EventAttr attr;
+  TagAttr attr;
   ValueTypes signature;
 };
 
@@ -305,13 +289,40 @@ struct LocalDesc {
   u32 end;
 };
 
+// Metadata for representing exception handlers associated with a function's
+// code. This is needed to look up exceptions from call frames from interpreter
+// instructions.
+struct CatchDesc {
+  Index tag_index;
+  u32 offset;
+};
+
+// Handlers for a catch-less `try` or `try-catch` block are included in the
+// Catch kind. `try-delegate` instructions create a Delegate handler.
+enum class HandlerKind { Catch, Delegate };
+
+struct HandlerDesc {
+  HandlerKind kind;
+  u32 try_start_offset;
+  u32 try_end_offset;
+  std::vector<CatchDesc> catches;
+  union {
+    u32 catch_all_offset;
+    u32 delegate_handler_index;
+  };
+  // Local stack heights at the handler site that need to be restored.
+  u32 values;
+  u32 exceptions;
+};
+
 struct FuncDesc {
   // Includes params.
   ValueType GetLocalType(Index) const;
 
   FuncType type;
   std::vector<LocalDesc> locals;
-  u32 code_offset;
+  u32 code_offset;  // Istream offset.
+  std::vector<HandlerDesc> handlers;
 };
 
 struct TableDesc {
@@ -324,11 +335,11 @@ struct MemoryDesc {
 
 struct GlobalDesc {
   GlobalType type;
-  InitExpr init;
+  FuncDesc init_func;
 };
 
-struct EventDesc {
-  EventType type;
+struct TagDesc {
+  TagType type;
 };
 
 struct ExportDesc {
@@ -344,7 +355,7 @@ struct DataDesc {
   Buffer data;
   SegmentMode mode;
   Index memory_index;
-  InitExpr offset;
+  FuncDesc init_func;
 };
 
 struct ElemExpr {
@@ -357,7 +368,7 @@ struct ElemDesc {
   ValueType type;
   SegmentMode mode;
   Index table_index;
-  InitExpr offset;
+  FuncDesc init_func;
 };
 
 struct ModuleDesc {
@@ -367,7 +378,7 @@ struct ModuleDesc {
   std::vector<TableDesc> tables;
   std::vector<MemoryDesc> memories;
   std::vector<GlobalDesc> globals;
-  std::vector<EventDesc> events;
+  std::vector<TagDesc> tags;
   std::vector<ExportDesc> exports;
   std::vector<StartDesc> starts;
   std::vector<ElemDesc> elems;
@@ -378,13 +389,19 @@ struct ModuleDesc {
 //// Runtime ////
 
 struct Frame {
-  explicit Frame(Ref func, u32 values, u32 offset, Instance*, Module*);
+  explicit Frame(Ref func,
+                 u32 values,
+                 u32 exceptions,
+                 u32 offset,
+                 Instance*,
+                 Module*);
 
   void Mark(Store&);
 
   Ref func;
-  u32 values;  // Height of the value stack at this activation.
-  u32 offset;  // Istream offset; either the return PC, or the current PC.
+  u32 values;      // Height of the value stack at this activation.
+  u32 exceptions;  // Height of the exception stack at this activation.
+  u32 offset;      // Istream offset; either the return PC, or the current PC.
 
   // Cached for convenience. Both are null if func is a HostFunc.
   Instance* inst;
@@ -396,6 +413,8 @@ class FreeList {
  public:
   using Index = size_t;
 
+  ~FreeList();
+
   template <typename... Args>
   Index New(Args&&...);
   void Delete(Index);
@@ -405,38 +424,38 @@ class FreeList {
   const T& Get(Index) const;
   T& Get(Index);
 
-  Index size() const;  // 1 greater than the maximum index.
-  Index count() const; // The number of used elements.
+  Index size() const;   // 1 greater than the maximum index.
+  Index count() const;  // The number of used elements.
 
  private:
-  // TODO: Optimize memory layout? We could probably store all of this
-  // information in one uintptr_t.
-  //
-  // For example, when T is a pointer to an Object (e.g. Store::ObjectList), we
-  // can assume alignment to 4 bytes at least. Given a 32-bit pointer, we can
-  // expect the following layout:
-  //
-  //   nnnnnnnn nnnnnnnn nnnnnnnn nnnnnnn0 f
-  //
-  // where:
-  //   f: "is_free": 0 when the payload is of type T
-  //                 1 when the payload is the index of the next free object
-  //   n: the payload
-  //
-  // When T is a Ref (see Store::RootList below), we'd need to store the
-  // "is_free" bit in most-significant bit instead.
-  //
+  // As for Refs, the free bit is 0x80..0. This bit is never
+  // set for valid Refs, since it would mean more objects
+  // are allocated than the total amount of memory.
+  static const Index refFreeBit = (SIZE_MAX >> 1) + 1;
+
+  // As for Objects, the free bit is 0x1. This bit is never
+  // set for valid Objects, since pointers are aligned to at
+  // least four bytes.
+  static const Index ptrFreeBit = 1;
+  static const int ptrFreeShift = 1;
+
   std::vector<T> list_;
-  std::vector<size_t> free_;
-  std::vector<bool> is_free_;
+  // If free_head_ is zero, there is no free slots in list_,
+  // otherwise free_head_ - 1 represents the first free slot.
+  Index free_head_ = 0;
+  Index free_items_ = 0;
 };
 
 class Store {
  public:
-  using ObjectList = FreeList<std::unique_ptr<Object>>;
+  using ObjectList = FreeList<Object*>;
   using RootList = FreeList<Ref>;
 
   explicit Store(const Features& = Features{});
+
+  Store(const Store&) = delete;
+  Store& operator=(const Store&) = delete;
+  Store& operator=(const Store&&) = delete;
 
   bool IsValid(Ref) const;
   bool HasValueType(Ref, ValueType) const;
@@ -461,15 +480,28 @@ class Store {
   ObjectList::Index object_count() const;
 
   const Features& features() const;
+  void setFeatures(const Features& features) { features_ = features; }
+
+  std::set<Thread*>& threads();
 
  private:
   template <typename T>
   friend class RefPtr;
 
+  struct GCContext {
+    int call_depth = 0;
+    std::vector<bool> marks;
+    std::vector<size_t> untraced_objects;
+  };
+
+  static const int max_call_depth = 10;
+
   Features features_;
+  GCContext gc_context_;
+  // This set contains the currently active Thread objects.
+  std::set<Thread*> threads_;
   ObjectList objects_;
   RootList roots_;
-  std::vector<bool> marks_;
 };
 
 template <typename T>
@@ -644,6 +676,27 @@ class Trap : public Object {
 
   std::string message_;
   std::vector<Frame> trace_;
+};
+
+class Exception : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Exception;
+  static const char* GetTypeName() { return "Exception"; }
+  using Ptr = RefPtr<Exception>;
+
+  static Exception::Ptr New(Store&, Ref tag, Values& args);
+
+  Ref tag() const;
+  Values& args();
+
+ private:
+  friend Store;
+  explicit Exception(Store&, Ref, Values&);
+  void Mark(Store&) override;
+
+  Ref tag_;
+  Values args_;
 };
 
 class Extern : public Object {
@@ -894,26 +947,26 @@ class Global : public Extern {
   Value value_;
 };
 
-class Event : public Extern {
+class Tag : public Extern {
  public:
   static bool classof(const Object* obj);
-  static const ObjectKind skind = ObjectKind::Event;
-  static const char* GetTypeName() { return "Event"; }
-  using Ptr = RefPtr<Event>;
+  static const ObjectKind skind = ObjectKind::Tag;
+  static const char* GetTypeName() { return "Tag"; }
+  using Ptr = RefPtr<Tag>;
 
-  static Event::Ptr New(Store&, EventType);
+  static Tag::Ptr New(Store&, TagType);
 
   Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
 
   const ExternType& extern_type() override;
-  const EventType& type() const;
+  const TagType& type() const;
 
  private:
   friend Store;
-  explicit Event(Store&, EventType);
+  explicit Tag(Store&, TagType);
   void Mark(Store&) override;
 
-  EventType type_;
+  TagType type_;
 };
 
 class ElemSegment {
@@ -992,7 +1045,7 @@ class Instance : public Object {
   const RefVec& tables() const;
   const RefVec& memories() const;
   const RefVec& globals() const;
-  const RefVec& events() const;
+  const RefVec& tags() const;
   const RefVec& exports() const;
   const std::vector<ElemSegment>& elems() const;
   std::vector<ElemSegment>& elems();
@@ -1006,7 +1059,10 @@ class Instance : public Object {
   explicit Instance(Store&, Ref module);
   void Mark(Store&) override;
 
-  Value ResolveInitExpr(Store&, InitExpr);
+  Result CallInitFunc(Store&,
+                      const Ref func_ref,
+                      Value* result,
+                      Trap::Ptr* out_trap);
 
   Ref module_;
   RefVec imports_;
@@ -1014,7 +1070,7 @@ class Instance : public Object {
   RefVec tables_;
   RefVec memories_;
   RefVec globals_;
-  RefVec events_;
+  RefVec tags_;
   RefVec exports_;
   std::vector<ElemSegment> elems_;
   std::vector<DataSegment> datas_;
@@ -1024,17 +1080,11 @@ enum class RunResult {
   Ok,
   Return,
   Trap,
+  Exception,
 };
 
-// TODO: Kinda weird to have a thread as an object, but it makes reference
-// marking simpler.
-class Thread : public Object {
+class Thread {
  public:
-  static bool classof(const Object* obj);
-  static const ObjectKind skind = ObjectKind::Thread;
-  static const char* GetTypeName() { return "Thread"; }
-  using Ptr = RefPtr<Thread>;
-
   struct Options {
     static const u32 kDefaultValueStackSize = 64 * 1024 / sizeof(Value);
     static const u32 kDefaultCallStackSize = 64 * 1024 / sizeof(Frame);
@@ -1044,13 +1094,15 @@ class Thread : public Object {
     Stream* trace_stream = nullptr;
   };
 
-  static Thread::Ptr New(Store&, const Options&);
+  Thread(Store& store, Stream* trace_stream = nullptr);
+  ~Thread();
 
   RunResult Run(Trap::Ptr* out_trap);
   RunResult Run(int num_instructions, Trap::Ptr* out_trap);
   RunResult Step(Trap::Ptr* out_trap);
 
   Store& store();
+  void Mark();
 
   Instance* GetCallerInstance();
 
@@ -1059,9 +1111,6 @@ class Thread : public Object {
   friend DefinedFunc;
 
   struct TraceSource;
-
-  explicit Thread(Store&, const Options&);
-  void Mark(Store&) override;
 
   RunResult PushCall(Ref func, u32 offset, Trap::Ptr* out_trap);
   RunResult PushCall(const DefinedFunc&, Trap::Ptr* out_trap);
@@ -1150,7 +1199,7 @@ class Thread : public Object {
   RunResult DoSimdBitmask();
   template <typename R, typename T>
   RunResult DoSimdShift(BinopFunc<R, T>);
-  template <typename S, typename T>
+  template <typename S>
   RunResult DoSimdLoadSplat(Instr, Trap::Ptr* out_trap);
   template <typename S>
   RunResult DoSimdLoadLane(Instr, Trap::Ptr* out_trap);
@@ -1182,11 +1231,17 @@ class Thread : public Object {
   template <typename T, typename V = T>
   RunResult DoAtomicRmwCmpxchg(Instr, Trap::Ptr* out_trap);
 
+  RunResult DoThrow(Exception::Ptr exn_ref);
+
   RunResult StepInternal(Trap::Ptr* out_trap);
 
   std::vector<Frame> frames_;
   std::vector<Value> values_;
   std::vector<u32> refs_;  // Index into values_.
+
+  // Exception handling requires tracking a separate stack of caught
+  // exceptions for catch blocks.
+  RefVec exceptions_;
 
   // Cached for convenience.
   Store& store_;
