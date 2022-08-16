@@ -132,7 +132,7 @@ There are many make targets available for other configurations as well. They
 are generated from every combination of a compiler, build type and
 configuration.
 
- - compilers: `gcc`, `clang`, `gcc-i686`, `emcc`
+ - compilers: `gcc`, `clang`, `gcc-i686`, `emscripten`
  - build types: `debug`, `release`
  - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `fuzz`, `no-tests`
 
