@@ -140,7 +140,7 @@ class WastParser {
   Result ParseRefKind(Type* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
-  Result ParseQuotedText(std::string* text);
+  Result ParseQuotedText(std::string* text, bool check_utf8 = true);
   bool ParseOffsetOpt(Address* offset);
   bool ParseAlignOpt(Address* align);
   Result ParseMemidx(Location loc, Var* memidx);
