@@ -149,7 +149,7 @@ $ make gcc-debug-no-tests
 
 You'll need [CMake](https://cmake.org). You'll also need
 [Visual Studio](https://www.visualstudio.com/) (2015 or newer) or
-[MinGW](http://www.mingw.org/).
+[MinGW](https://www.mingw-w64.org/).
 
 _Note: Visual Studio 2017 and later come with CMake (and the Ninja build system)
 out of the box, and should be on your PATH if you open a Developer Command prompt.
