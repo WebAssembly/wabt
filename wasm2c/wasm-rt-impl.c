@@ -143,11 +143,11 @@ WASM_RT_NO_RETURN void wasm_rt_throw(void) {
   WASM_RT_LONGJMP(*g_unwind_target, WASM_RT_TRAP_UNCAUGHT_EXCEPTION);
 }
 
-jmp_buf* wasm_rt_get_unwind_target(void) {
+WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void) {
   return g_unwind_target;
 }
 
-void wasm_rt_set_unwind_target(jmp_buf* target) {
+void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target) {
   g_unwind_target = target;
 }
 
