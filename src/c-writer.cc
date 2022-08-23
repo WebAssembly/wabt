@@ -246,10 +246,13 @@ class CWriter {
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&);
   void WriteGlobals();
   void WriteGlobal(const Global&, const std::string&);
+  void WriteGlobalPtr(const Global&, const std::string&);
   void WriteMemories();
   void WriteMemory(const std::string&);
+  void WriteMemoryPtr(const std::string&);
   void WriteTables();
   void WriteTable(const std::string&);
+  void WriteTablePtr(const std::string&);
   void WriteDataInitializers();
   void WriteElemInitializers();
   void WriteInitExports();
@@ -406,7 +409,7 @@ void CWriter::PopLabel() {
 
 // static
 std::string CWriter::AddressOf(const std::string& s) {
-  return "(&" + s + ")";
+  return "&" + s;
 }
 
 // static
@@ -1085,6 +1088,10 @@ void CWriter::WriteGlobal(const Global& global, const std::string& name) {
   Write(global.type, " ", name);
 }
 
+void CWriter::WriteGlobalPtr(const Global& global, const std::string& name) {
+  Write(global.type, "* ", name);
+}
+
 void CWriter::WriteMemories() {
   if (module_->memories.size() == module_->num_memory_imports)
     return;
@@ -1105,6 +1112,10 @@ void CWriter::WriteMemories() {
 
 void CWriter::WriteMemory(const std::string& name) {
   Write("wasm_rt_memory_t ", name, ";");
+}
+
+void CWriter::WriteMemoryPtr(const std::string& name) {
+  Write("wasm_rt_memory_t* ", name, ";");
 }
 
 void CWriter::WriteTables() {
@@ -1129,6 +1140,10 @@ void CWriter::WriteTables() {
 
 void CWriter::WriteTable(const std::string& name) {
   Write("wasm_rt_table_t ", name, ";");
+}
+
+void CWriter::WriteTablePtr(const std::string& name) {
+  Write("wasm_rt_table_t* ", name, ";");
 }
 
 void CWriter::WriteDataInitializers() {
@@ -1277,7 +1292,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = global->name;
         if (kind != WriteExportsKind::Initializers) {
-          WriteGlobal(*global, Deref(mangled_name));
+          WriteGlobalPtr(*global, mangled_name);
           Write(";");
         }
         break;
@@ -1288,7 +1303,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = memory->name;
         if (kind != WriteExportsKind::Initializers) {
-          WriteMemory(Deref(mangled_name));
+          WriteMemoryPtr(mangled_name);
         }
         break;
       }
@@ -1298,7 +1313,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = table->name;
         if (kind != WriteExportsKind::Initializers) {
-          WriteTable(Deref(mangled_name));
+          WriteTablePtr(mangled_name);
         }
         break;
       }

@@ -459,6 +459,7 @@ static u32 func_types[1];
 static void init_func_types(void) {
   func_types[0] = wasm_rt_register_func_type(1, 1, WASM_RT_I32, WASM_RT_I32);
 }
+
 static void init_tags(void) {
 }
 
@@ -499,7 +500,7 @@ u32 (*Z_facZ_fac)(u32);
 
 static void init_exports(void) {
   /* export: 'fac' */
-  Z_facZ_fac = (&w2c_fac);
+  Z_facZ_fac = &w2c_fac;
 }
 
 void Z_fac_init(void) {
