@@ -570,15 +570,11 @@ if (BUILD_TOOLS)
   endif ()
 endif ()
 
-# Python 3.5 is the version shipped in Ubuntu Xenial
-find_package(PythonInterp 3.5)
-if(BUILD_TESTS AND (NOT PYTHONINTERP_FOUND))
-  set(BUILD_TESTS OFF)
-  message(WARNING "Skipping tests. Python 3 is required for wabt testing. Please install python3 to run tests.")
-endif()
-
 find_package(Threads)
 if (BUILD_TESTS)
+  # Python 3.5 is the version shipped in Ubuntu Xenial
+  find_package(PythonInterp 3.5 REQUIRED)
+
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
       message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
