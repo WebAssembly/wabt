@@ -359,8 +359,11 @@ add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 IF (NOT WIN32)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
   if (WABT_INSTALL_RULES)
-    install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(TARGETS wasm-rt-impl)
+    install(
+      FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h
+      TYPE INCLUDE
+    )
   endif ()
 endif ()
 
@@ -690,12 +693,14 @@ endif ()
 
 # install
 if (WABT_INSTALL_RULES AND (BUILD_TOOLS OR BUILD_TESTS))
-  install(TARGETS ${WABT_EXECUTABLES} DESTINATION bin)
+  install(TARGETS ${WABT_EXECUTABLES})
   if (UNIX)
     file(GLOB MAN_FILES "${CMAKE_CURRENT_SOURCE_DIR}/man/*.1")
     foreach(MAN_FILE ${MAN_FILES})
-      install(FILES ${MAN_FILE}
-        DESTINATION ${CMAKE_INSTALL_MANDIR}/man1/)
+      install(
+        FILES ${MAN_FILE}
+        DESTINATION ${CMAKE_INSTALL_MANDIR}/man1/
+      )
     endforeach()
   endif ()
 endif ()
