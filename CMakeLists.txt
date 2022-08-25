@@ -570,8 +570,10 @@ if (BUILD_TOOLS)
   endif ()
 endif ()
 
-find_package(Threads)
 if (BUILD_TESTS)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+
   # Python 3.5 is the version shipped in Ubuntu Xenial
   find_package(PythonInterp 3.5 REQUIRED)
 
@@ -681,10 +683,7 @@ if (BUILD_TESTS)
   c_api_example(start)
   c_api_example(table)
   c_api_example(trap)
-  if (NOT WIN32)
-    # depends on pthreads
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
+  if (CMAKE_USE_PTHREADS_INIT)
     c_api_example(threads)
   endif ()
 endif ()
