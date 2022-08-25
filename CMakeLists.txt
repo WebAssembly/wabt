@@ -351,13 +351,41 @@ set(WABT_LIBRARY_SRC
 )
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
+add_library(wabt::wabt ALIAS wabt)
+
+target_compile_features(wabt PUBLIC cxx_std_17)
+
+if (WABT_INSTALL_RULES)
+  install(
+    TARGETS wabt EXPORT wabt-targets
+    COMPONENT wabt-development
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt"
+  )
+  install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt"
+    COMPONENT wabt-development
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.def"
+  )
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt/"
+    COMPONENT wabt-development
+  )
+endif ()
 
 IF (NOT WIN32)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
+  add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
+
   if (WABT_INSTALL_RULES)
     install(
       TARGETS wasm-rt-impl
+      EXPORT wabt-targets
       COMPONENT wabt-development
+      INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     )
     install(
       FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt.h"
@@ -743,5 +771,40 @@ if (EMSCRIPTEN)
     PROPERTIES
     LINK_FLAGS "${LIBWABT_LINK_FLAGS_STR}"
     LINK_DEPENDS "${WABT_POST_JS};${EMSCRIPTEN_EXPORTED_JSON}"
+  )
+endif ()
+
+# Create find_package configuration files
+if (WABT_INSTALL_RULES)
+  include(CMakePackageConfigHelpers)
+
+  set(WABT_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/wabt"
+      CACHE STRING "Path to wabt CMake files")
+
+  install(
+    EXPORT wabt-targets
+    DESTINATION "${WABT_INSTALL_CMAKEDIR}"
+    NAMESPACE wabt::
+    FILE wabt-targets.cmake
+    COMPONENT wabt-development
+  )
+
+  configure_package_config_file(
+    scripts/wabt-config.cmake.in
+    wabt-config.cmake
+    INSTALL_DESTINATION "${WABT_INSTALL_CMAKEDIR}"
+    NO_SET_AND_CHECK_MACRO
+  )
+
+  write_basic_package_version_file(
+    wabt-config-version.cmake COMPATIBILITY ExactVersion
+  )
+
+  install(
+    FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/wabt-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/wabt-config-version.cmake"
+    DESTINATION "${WABT_INSTALL_CMAKEDIR}"
+    COMPONENT wabt-development
   )
 endif ()
