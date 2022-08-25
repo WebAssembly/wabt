@@ -2,6 +2,7 @@
 /build
 /fuzz-out
 /emscripten
+/out
 *.pyc
 .idea/
 .vscode/

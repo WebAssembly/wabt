@@ -23,6 +23,8 @@
 #include "src/wast-parser.h"
 #include "src/wat-writer.h"
 
+#include "src/embedding/bindings.h"
+
 void bindings_wat2wasm(bindings_string_t* wat,
                        bindings_wasm_feature_t features,
                        bindings_expected_list_u8_string_t* ret0) {
@@ -44,7 +46,7 @@ void bindings_wat2wasm(bindings_string_t* wat,
         FormatErrorsToString(*errors, wabt::Location::Type::Binary);
     // std::string string_result = FormatErrorsToString(
     //     *errors, wabt::Location::Type::Text, line_finder.get());
-    ret0->tag = 1;
+    ret0->is_err = true;
     bindings_string_set(&ret0->val.err, string_result.c_str());
     return;
   }
@@ -62,7 +64,7 @@ void bindings_wat2wasm(bindings_string_t* wat,
   if (result == wabt::Result::Ok) {
     std::unique_ptr<wabt::OutputBuffer> output_buffer;
     output_buffer = stream.ReleaseOutputBuffer();
-    ret0->tag = 0;
+    ret0->is_err = false;
     bindings_list_u8_t okval;
     wabt::OutputBuffer* realOut = output_buffer.release();
     okval.ptr = realOut->data.data();
@@ -70,7 +72,7 @@ void bindings_wat2wasm(bindings_string_t* wat,
     ret0->val.ok = okval;
     return;
   } else {
-    ret0->tag = 1;
+    ret0->is_err = true;
     return;
   }
 }
@@ -95,7 +97,7 @@ void bindings_wasm2wat(bindings_list_u8_t* wasm,
   if (parseResult != wabt::Result::Ok) {
     std::string string_result =
         FormatErrorsToString(*errors, wabt::Location::Type::Binary);
-    ret0->tag = 1;
+    ret0->is_err = true;
     bindings_string_set(&ret0->val.err, string_result.c_str());
     return;
   }
@@ -114,11 +116,11 @@ void bindings_wasm2wat(bindings_list_u8_t* wasm,
     wabt::OutputBuffer* realOut = output_buffer.release();
     std::string string_result(realOut->data.begin(), realOut->data.end());
     bindings_string_set(&okval, string_result.c_str());
-    ret0->tag = 0;
+    ret0->is_err = false;
     ret0->val.ok = okval;
     return;
   } else {
-    ret0->tag = 1;
+    ret0->is_err = true;
     return;
   }
 }

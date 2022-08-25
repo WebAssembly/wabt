@@ -723,8 +723,7 @@ if (WASI)
 
   # just dump everything into one binary so we can reference it from JavaScript
   add_definitions(-Wno-warn-absolute-paths)
-  add_executable(libwabt src/embedding/bindings.cc)
-  add_executable(libwabt src/embedding/embedding.cc)
+  add_executable(libwabt src/embedding/bindings.c src/embedding/embedding.cc)
   #set_source_files_properties(src/embedding/bindings.cc PROPERTIES CMAKE_CXX_FLAGS -mexec-model=reactor)
   # set_source_files_properties( src/embedding/bindings.cc PROPERTIES COMPILE_FLAGS "-mexec-model=reactor" )
   # SET_TARGET_PROPERTIES( libwabt PROPERTIES CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -mexec-model=reactor" )

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <bindings.h>
+#include "src/embedding/bindings.h"
 
 __attribute__((weak, export_name("canonical_abi_realloc")))
 void *canonical_abi_realloc(
@@ -66,19 +66,19 @@ int32_t __wasm_export_bindings_wat2wasm(int32_t arg, int32_t arg0, int32_t arg1)
   bindings_expected_list_u8_string_t ret;
   bindings_wat2wasm(&arg2, arg1, &ret);
   int32_t ptr = (int32_t) &RET_AREA;
-  
+
   if ((ret).is_err) {
     const bindings_string_t *payload3 = &(ret).val.err;
     *((int8_t*)(ptr + 0)) = 1;
     *((int32_t*)(ptr + 8)) = (int32_t) (*payload3).len;
     *((int32_t*)(ptr + 4)) = (int32_t) (*payload3).ptr;
-    
+
   } else {
     const bindings_list_u8_t *payload = &(ret).val.ok;
     *((int8_t*)(ptr + 0)) = 0;
     *((int32_t*)(ptr + 8)) = (int32_t) (*payload).len;
     *((int32_t*)(ptr + 4)) = (int32_t) (*payload).ptr;
-    
+
   }
   return ptr;
 }
@@ -88,19 +88,19 @@ int32_t __wasm_export_bindings_wasm2wat(int32_t arg, int32_t arg0, int32_t arg1)
   bindings_expected_string_string_t ret;
   bindings_wasm2wat(&arg2, arg1, &ret);
   int32_t ptr = (int32_t) &RET_AREA;
-  
+
   if ((ret).is_err) {
     const bindings_string_t *payload3 = &(ret).val.err;
     *((int8_t*)(ptr + 0)) = 1;
     *((int32_t*)(ptr + 8)) = (int32_t) (*payload3).len;
     *((int32_t*)(ptr + 4)) = (int32_t) (*payload3).ptr;
-    
+
   } else {
     const bindings_string_t *payload = &(ret).val.ok;
     *((int8_t*)(ptr + 0)) = 0;
     *((int32_t*)(ptr + 8)) = (int32_t) (*payload).len;
     *((int32_t*)(ptr + 4)) = (int32_t) (*payload).ptr;
-    
+
   }
   return ptr;
 }
