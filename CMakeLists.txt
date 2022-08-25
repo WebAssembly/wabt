@@ -25,10 +25,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Check if wabt is being used directly or via add_subdirectory, FetchContent, etc
-set(WABT_MASTER_PROJECT OFF)
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  set(WABT_MASTER_PROJECT ON)
-endif()
+string(COMPARE EQUAL "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" PROJECT_IS_TOP_LEVEL)
 
 # For git users, attempt to generate a more useful version string
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
@@ -43,9 +40,9 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
               GIT_VERSION
           OUTPUT_STRIP_TRAILING_WHITESPACE)
   if (${GIT_VERSION_RESULT})
-    # Don't issue warning if we aren't the master project;
+    # Don't issue warning if we aren't the top-level project;
     # just assume that whoever included us knows the version they are getting
-    if (WABT_MASTER_PROJECT)
+    if (PROJECT_IS_TOP_LEVEL)
       message(WARNING "${GIT_VERSION_ERROR} Error running git describe to determine version")
     endif()
   else ()
