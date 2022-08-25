@@ -42,6 +42,9 @@
 /* Whether ENABLE_VIRTUAL_TERMINAL_PROCESSING is defined by windows.h */
 #cmakedefine01 HAVE_WIN32_VT100
 
+/* Whether the target architecture is big endian */
+#cmakedefine01 WABT_BIG_ENDIAN
+
 #cmakedefine01 COMPILER_IS_CLANG
 #cmakedefine01 COMPILER_IS_GNU
 #cmakedefine01 COMPILER_IS_MSVC

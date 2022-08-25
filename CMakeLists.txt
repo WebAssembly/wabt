@@ -108,6 +108,9 @@ include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
 check_type_size(size_t SIZEOF_SIZE_T)
 
+include(TestBigEndian)  # Note: deprecated in CMake 3.20
+test_big_endian(WABT_BIG_ENDIAN)
+
 configure_file(src/config.h.in include/wabt/config.h @ONLY)
 
 
@@ -207,9 +210,6 @@ else ()
     if (TARGET_ARCH STREQUAL "i386")
       # wasm doesn't allow for x87 floating point math
       add_definitions(-msse2 -mfpmath=sse)
-    endif ()
-    if (TARGET_ARCH STREQUAL "s390x")
-      add_definitions(-DWABT_BIG_ENDIAN=1)
     endif ()
   endif ()
 endif ()
@@ -384,6 +384,9 @@ endif ()
 IF (NOT WIN32)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
   add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
+  if (WABT_BIG_ENDIAN)
+    target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
+  endif ()
 
   if (WABT_INSTALL_RULES)
     install(
