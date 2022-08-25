@@ -1,9 +1,16 @@
 [package]
 name = "Michael-F-Bryan/wabt"
-version = "1.0.13"
+version = "1.0.14"
 description = "The WebAssembly Binary Toolkit"
 readme = "README-wapm.md"
 repository = "https://github.com/wapm-packages/wabt"
+
+[[module]]
+name = "wabt"
+source = "out/wasi/Debug/libwabt.wasm"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+bindings = { wit-exports = "src/embeddings/bindings.wit", wit-bindgen = "0.1.0" }
 
 [[module]]
 name = "wat2wasm"
