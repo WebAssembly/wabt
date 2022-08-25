@@ -66,6 +66,7 @@ option(USE_UBSAN "Use undefined behavior sanitizer" OFF)
 option(CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(WITH_EXCEPTIONS "Build with exceptions enabled" OFF)
 option(WERROR "Build with warnings as errors" OFF)
+option(WABT_INSTALL_RULES "Include WABT's install() rules" "${PROJECT_IS_TOP_LEVEL}")
 # WASI support is still a work in progress.
 # Only a handful of syscalls are supported at this point.
 option(WITH_WASI "Build WASI support via uvwasi" OFF)
@@ -357,8 +358,10 @@ add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 
 IF (NOT WIN32)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
-  install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  if (WABT_INSTALL_RULES)
+    install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  endif ()
 endif ()
 
 if (BUILD_FUZZ_TOOLS)
@@ -686,12 +689,9 @@ if (BUILD_TESTS)
 endif ()
 
 # install
-if (BUILD_TOOLS OR BUILD_TESTS)
+if (WABT_INSTALL_RULES AND (BUILD_TOOLS OR BUILD_TESTS))
   install(TARGETS ${WABT_EXECUTABLES} DESTINATION bin)
   if (UNIX)
-    if (NOT CMAKE_INSTALL_MANDIR)
-      include(GNUInstallDirs)
-    endif ()
     file(GLOB MAN_FILES "${CMAKE_CURRENT_SOURCE_DIR}/man/*.1")
     foreach(MAN_FILE ${MAN_FILES})
       install(FILES ${MAN_FILE}
