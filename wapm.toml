@@ -10,7 +10,7 @@ name = "wabt"
 source = "out/wasi/Debug/libwabt.wasm"
 abi = "wasi"
 interfaces = {wasi= "0.1.0-unstable"}
-bindings = { wit-exports = "src/embeddings/bindings.wit", wit-bindgen = "0.1.0" }
+bindings = { wit-exports = "src/embedding/bindings.wit", wit-bindgen = "0.1.0" }
 
 [[module]]
 name = "wat2wasm"
