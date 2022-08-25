@@ -1,5 +1,5 @@
 [package]
-name = "wabt"
+name = "Michael-F-Bryan/wabt"
 version = "1.0.13"
 description = "The WebAssembly Binary Toolkit"
 readme = "README-wapm.md"
