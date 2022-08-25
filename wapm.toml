@@ -1,6 +1,6 @@
 [package]
 name = "wabt"
-version = "1.0.12"
+version = "1.0.13"
 description = "The WebAssembly Binary Toolkit"
 readme = "README-wapm.md"
 repository = "https://github.com/wapm-packages/wabt"
