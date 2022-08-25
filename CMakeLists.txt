@@ -170,46 +170,22 @@ else ()
     add_definitions(-Wno-clobbered)
   endif ()
 
+  # wasm doesn't allow for x87 floating point math
   if (NOT EMSCRIPTEN)
-    # try to get the target architecture by compiling a dummy.c file and
-    # checking the architecture using the file command.
-    file(WRITE ${WABT_BINARY_DIR}/dummy.c "main(){}")
-    try_compile(
-      COMPILE_OK
-      ${WABT_BINARY_DIR}
-      ${WABT_BINARY_DIR}/dummy.c
-      COPY_FILE ${WABT_BINARY_DIR}/dummy
-    )
-    if (COMPILE_OK)
-      execute_process(
-        COMMAND file ${WABT_BINARY_DIR}/dummy
-        RESULT_VARIABLE FILE_RESULT
-        OUTPUT_VARIABLE FILE_OUTPUT
-        ERROR_QUIET
-      )
+    check_symbol_exists(__i386__ "" TARGET_IS_X86_32)
+    check_symbol_exists(__SSE2_MATH__ "" HAVE_SSE2_MATH)
 
-      if (FILE_RESULT EQUAL 0)
-        if (${FILE_OUTPUT} MATCHES "x86[-_]64")
-          set(TARGET_ARCH "x86-64")
-        elseif (${FILE_OUTPUT} MATCHES "Intel 80386")
-          set(TARGET_ARCH "i386")
-        elseif (${FILE_OUTPUT} MATCHES "ARM")
-          set(TARGET_ARCH "ARM")
-        elseif (${FILE_OUTPUT} MATCHES "IBM S/390")
-          set(TARGET_ARCH "s390x")
-        else ()
-          message(WARNING "Unknown target architecture!")
-        endif ()
+    if (TARGET_IS_X86_32 AND NOT HAVE_SSE2_MATH)
+      if (COMPILER_IS_GNU OR COMPILER_IS_CLANG)
+        add_definitions(-msse2 -mfpmath=sse)
       else ()
-        message(WARNING "Error running `file` command on dummy executable")
+        message(
+          WARNING
+          "Unknown compiler ${CMAKE_CXX_COMPILER_ID} appears to target x86_32 with x87 "
+          "math. Please add flags to use SSE2 math and set TARGET_IS_X86_32 and "
+          "HAVE_SSE2_MATH appropriately at the CMake command line."
+        )
       endif ()
-    else ()
-      message(WARNING "Error compiling dummy.c file")
-    endif ()
-
-    if (TARGET_ARCH STREQUAL "i386")
-      # wasm doesn't allow for x87 floating point math
-      add_definitions(-msse2 -mfpmath=sse)
     endif ()
   endif ()
 endif ()
