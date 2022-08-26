@@ -14,16 +14,13 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.16)
 project(WABT LANGUAGES C CXX VERSION 1.0.29)
+
 include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if (POLICY CMP0077)
-  cmake_policy(SET CMP0077 NEW)
-endif (POLICY CMP0077)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -631,10 +628,6 @@ if (BUILD_TESTS)
     LIBS gtest_main gtest ${CMAKE_THREAD_LIBS_INIT}
   )
 
-  if (NOT CMAKE_VERSION VERSION_LESS "3.2")
-    set(USES_TERMINAL USES_TERMINAL)
-  endif ()
-
   # test running
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
@@ -642,20 +635,20 @@ if (BUILD_TESTS)
     COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    ${USES_TERMINAL}
+    USES_TERMINAL
   )
 
   add_custom_target(run-unittests
     COMMAND $<TARGET_FILE:wabt-unittests>
     DEPENDS wabt-unittests
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    ${USES_TERMINAL}
+    USES_TERMINAL
   )
 
   add_custom_target(run-c-api-tests
     COMMAND ${PYTHON_EXECUTABLE} ${WABT_SOURCE_DIR}/test/run-c-api-examples.py --bindir $<TARGET_FILE_DIR:wat2wasm>
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    ${USES_TERMINAL}
+    USES_TERMINAL
   )
 
   add_custom_target(check DEPENDS run-unittests run-tests run-c-api-tests)
