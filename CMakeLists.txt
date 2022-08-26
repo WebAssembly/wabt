@@ -570,15 +570,13 @@ if (BUILD_TOOLS)
   endif ()
 endif ()
 
-# Python 3.5 is the version shipped in Ubuntu Xenial
-find_package(PythonInterp 3.5)
-if(BUILD_TESTS AND (NOT PYTHONINTERP_FOUND))
-  set(BUILD_TESTS OFF)
-  message(WARNING "Skipping tests. Python 3 is required for wabt testing. Please install python3 to run tests.")
-endif()
-
-find_package(Threads)
 if (BUILD_TESTS)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+
+  # Python 3.5 is the version shipped in Ubuntu Xenial
+  find_package(PythonInterp 3.5 REQUIRED)
+
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
       message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
@@ -685,10 +683,7 @@ if (BUILD_TESTS)
   c_api_example(start)
   c_api_example(table)
   c_api_example(trap)
-  if (NOT WIN32)
-    # depends on pthreads
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
+  if (CMAKE_USE_PTHREADS_INIT)
     c_api_example(threads)
   endif ()
 endif ()
