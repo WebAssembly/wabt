@@ -1,0 +1,4 @@
+(executable
+ (name test)
+ (libraries ctypes wasmer))
+(env (dev (flags (:standard -w -33))))
