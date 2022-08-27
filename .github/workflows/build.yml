@@ -152,3 +152,31 @@ jobs:
       run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
+
+  build-arch:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [s390x, i386]
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: ${{matrix.arch}}
+
+    - name: Build image
+      run: docker build --platform linux/${{matrix.arch}} -t wabt -f scripts/Dockerfile .
+
+    - name: Unit tests
+      run: docker run --rm -t wabt cmake --build build --target run-unittests
+
+    - name: C API tests
+      run: docker run --rm -t wabt cmake --build build --target run-c-api-tests
+
+    - name: Tests
+      run: docker run --rm -t wabt cmake --build build --target run-tests
