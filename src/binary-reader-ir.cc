@@ -1670,7 +1670,7 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
                                      uint32_t flags,
                                      std::string_view name,
                                      Index table_index) {
-  return SetTableName(index, name);
+  return SetTableName(table_index, name);
 }
 
 }  // end anonymous namespace
