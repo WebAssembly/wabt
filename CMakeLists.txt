@@ -46,12 +46,12 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
       message(WARNING "${GIT_VERSION_ERROR} Error running git describe to determine version")
     endif()
   else ()
-    set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION} (${GIT_VERSION})")
+    set(WABT_VERSION_STRING "${WABT_VERSION_STRING} (${GIT_VERSION})")
   endif ()
 endif ()
 
-if (NOT "${CMAKE_PROJECT_VERSION}")
-  set(CMAKE_PROJECT_VERSION ${PROJECT_VERSION})
+if (NOT "${WABT_VERSION_STRING}")
+  set(WABT_VERSION_STRING ${PROJECT_VERSION})
 endif()
 
 option(BUILD_TESTS "Build GTest-based tests" ON)
@@ -109,10 +109,7 @@ include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
 check_type_size(size_t SIZEOF_SIZE_T)
 
-configure_file(
-  ${WABT_SOURCE_DIR}/src/config.h.in
-  ${WABT_BINARY_DIR}/config.h
-)
+configure_file(src/config.h.in config.h @ONLY)
 
 include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
 
