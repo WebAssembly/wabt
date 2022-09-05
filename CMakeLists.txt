@@ -27,32 +27,31 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Check if wabt is being used directly or via add_subdirectory, FetchContent, etc
 string(COMPARE EQUAL "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" PROJECT_IS_TOP_LEVEL)
 
+# By default use the project version as the version string
+set(WABT_VERSION_STRING "${PROJECT_VERSION}")
+
 # For git users, attempt to generate a more useful version string
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-  find_package(Git QUIET REQUIRED)
-  execute_process(COMMAND
-          "${GIT_EXECUTABLE}" --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git describe --tags
-          RESULT_VARIABLE
-              GIT_VERSION_RESULT
-          ERROR_VARIABLE
-              GIT_VERSION_ERROR
-          OUTPUT_VARIABLE
-              GIT_VERSION
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if (${GIT_VERSION_RESULT})
-    # Don't issue warning if we aren't the top-level project;
-    # just assume that whoever included us knows the version they are getting
-    if (PROJECT_IS_TOP_LEVEL)
-      message(WARNING "${GIT_VERSION_ERROR} Error running git describe to determine version")
-    endif()
-  else ()
-    set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION} (${GIT_VERSION})")
+  find_package(Git)
+  if (Git_FOUND)
+    execute_process(
+      COMMAND "${GIT_EXECUTABLE}" -C "${WABT_SOURCE_DIR}" describe --tags
+      RESULT_VARIABLE GIT_VERSION_RESULT
+      ERROR_VARIABLE GIT_VERSION_ERROR
+      ERROR_STRIP_TRAILING_WHITESPACE
+      OUTPUT_VARIABLE GIT_VERSION
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if (GIT_VERSION_RESULT EQUAL 0)
+      # If we're actually on the tag for this version, don't add the commit description
+      if (NOT GIT_VERSION STREQUAL "${WABT_VERSION_STRING}")
+        string(APPEND WABT_VERSION_STRING " (git~${GIT_VERSION})")
+      endif ()
+    elseif (PROJECT_IS_TOP_LEVEL)
+      message(NOTICE "git: ${GIT_VERSION_ERROR}\n  ** Did you forget to run `git fetch --tags`?")
+    endif ()
   endif ()
 endif ()
-
-if (NOT "${CMAKE_PROJECT_VERSION}")
-  set(CMAKE_PROJECT_VERSION ${PROJECT_VERSION})
-endif()
 
 option(BUILD_TESTS "Build GTest-based tests" ON)
 option(USE_SYSTEM_GTEST "Use system GTest, instead of building" OFF)
@@ -109,10 +108,7 @@ include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
 check_type_size(size_t SIZEOF_SIZE_T)
 
-configure_file(
-  ${WABT_SOURCE_DIR}/src/config.h.in
-  ${WABT_BINARY_DIR}/config.h
-)
+configure_file(src/config.h.in config.h @ONLY)
 
 include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
 
