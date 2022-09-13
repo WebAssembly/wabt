@@ -1,0 +1,74 @@
+[package]
+name = "Michael-F-Bryan/wabt"
+version = "1.0.15"
+description = "The WebAssembly Binary Toolkit"
+readme = "README-wapm.md"
+repository = "https://github.com/wapm-packages/wabt"
+
+[[module]]
+name = "wabt"
+source = "out/wasi/Debug/libwabt.wasm"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+bindings = { wit-exports = "src/embedding/bindings.wit", wit-bindgen = "0.1.0" }
+
+[[module]]
+name = "wat2wasm"
+source = "out/wasi/Debug/wat2wasm"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+
+[[module]]
+name = "wast2json"
+source = "out/wasi/Debug/wast2json"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+
+[[module]]
+name = "wasm2wat"
+source = "out/wasi/Debug/wasm2wat"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+
+[[module]]
+name = "wasm-interp"
+source = "out/wasi/Debug/wasm-interp"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+
+[[module]]
+name = "wasm-validate"
+source = "out/wasi/Debug/wasm-validate"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+
+[[module]]
+name = "wasm-strip"
+source = "out/wasi/Debug/wasm-strip"
+abi = "wasi"
+interfaces = {wasi= "0.1.0-unstable"}
+
+# The commands for each module
+[[command]]
+name = "wat2wasm"
+module = "wat2wasm"
+
+[[command]]
+name = "wast2json"
+module = "wast2json"
+
+[[command]]
+name = "wasm2wat"
+module = "wasm2wat"
+
+[[command]]
+name = "wasm-interp"
+module = "wasm-interp"
+
+[[command]]
+name = "wasm-validate"
+module = "wasm-validate"
+
+[[command]]
+name = "wasm-strip"
+module = "wasm-strip"

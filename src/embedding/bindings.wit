@@ -1,0 +1,25 @@
+flags wasm-feature {
+  exceptions,
+  mutable-globals,
+  sat-float-to-int,
+  sign-extension,
+  simd,
+  threads,
+  multi-value,
+  tail-call,
+  bulk-memory,
+  reference-types,
+  annotations,
+  gc,
+}
+
+wat2wasm: func(wat: string, features: wasm-feature) -> expected<list<u8>, string>
+wasm2wat: func(wasm: list<u8>, features: wasm-feature) -> expected<string, string>
+
+// resource wasm-module {
+//   from_wat: function(filename: string, wat: string, features: wasm-feature) -> wasm-module
+//   from_wasm: function(wasm: pull-buffer<u8>, features: wasm-feature) -> wasm-module
+//   validate: function(self: wasm-module) -> bool
+//   to_text: function(self: wasm-module) -> string
+//   to_binary: function(self: wasm-module) -> push-buffer<u8>
+// }
