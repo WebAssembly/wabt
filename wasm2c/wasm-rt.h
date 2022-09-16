@@ -146,6 +146,10 @@ typedef struct {
   /** The function. The embedder must know the actual C signature of the
    * function and cast to it before calling. */
   wasm_rt_funcref_t func;
+  /** A function instance is a closure of the function over an instance
+   * of the originating module. The module_instance element will be passed into
+   * the function at runtime. */
+  void* module_instance;
 } wasm_rt_elem_t;
 
 /** A Memory object. */
@@ -172,6 +176,9 @@ typedef struct {
 
 /** Initialize the runtime. */
 void wasm_rt_init(void);
+
+/** Is the runtime initialized? */
+bool wasm_rt_is_initialized(void);
 
 /** Free the runtime's state. */
 void wasm_rt_free(void);

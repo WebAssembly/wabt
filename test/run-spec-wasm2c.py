@@ -122,10 +122,10 @@ class CWriter(object):
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
         self.unmangled_names = {}
-
-    def Write(self):
         self._MaybeWriteDummyModule()
         self._CacheModulePrefixes()
+
+    def Write(self):
         self._WriteIncludes()
         self.out_file.write(self.prefix)
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
@@ -144,6 +144,9 @@ class CWriter(object):
 
     def GetModulePrefixUnmangled(self, idx):
         return self.unmangled_names[idx]
+
+    def GetModuleInstanceName(self, idx_or_name=None):
+        return self.GetModulePrefix() + '_instance'
 
     def _CacheModulePrefixes(self):
         idx = 0
@@ -172,6 +175,29 @@ class CWriter(object):
 
                 self.module_prefix_map[name_idx] = name
                 self.unmangled_names[name_idx] = command['as']
+
+    def _WriteModuleInitCall(self, command, uninstantiable):
+        header_filename = utils.ChangeExt(command['filename'], '.h')
+        with open(os.path.join(self.out_dir, header_filename), encoding='utf-8') as f:
+            imported_modules = set()
+            for line in f:
+                if 'import: ' in line:
+                    line_split = line.split()
+                    import_module_name = MangleName(line_split[2][1:-1])
+                    imported_modules.add(import_module_name)
+
+        if uninstantiable:
+            self.out_file.write('ASSERT_TRAP(')
+
+        self.out_file.write('%s_instantiate(&%s_instance' % (self.GetModulePrefix(), self.GetModulePrefix()))
+        for imported_module in sorted(imported_modules):
+            self.out_file.write(', &%s_instance' % imported_module)
+        self.out_file.write(')')
+
+        if uninstantiable:
+            self.out_file.write(')')
+
+        self.out_file.write(';\n')
 
     def _MaybeWriteDummyModule(self):
         if len(self.GetModuleFilenames()) == 0:
@@ -212,15 +238,19 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%s_init();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
+        self._WriteModuleInitCall(command, False)
 
     def _WriteModuleCleanUps(self):
         for idx in range(self.module_idx):
-            self.out_file.write("%s_free();\n" % self.GetModulePrefix(idx))
+            self.out_file.write("%s_free(&%s_instance);\n" % (self.GetModulePrefix(idx), self.GetModulePrefix(idx)))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('ASSERT_TRAP(%s_init());\n' % self.GetModulePrefix())
+        self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
+        self._WriteModuleInitCall(command, True)
 
     def _WriteActionCommand(self, command):
         self.out_file.write('%s;\n' % self._Action(command))
@@ -326,9 +356,14 @@ class CWriter(object):
         mangled_module_name = self.GetModulePrefix(action.get('module'))
         field = mangled_module_name + MangleName(action['field'])
         if type_ == 'invoke':
-            return '%s(%s)' % (field, self._ConstantList(action.get('args', [])))
+            args = self._ConstantList(action.get('args', []))
+            if len(args) == 0:
+                args = f'&{mangled_module_name}_instance'
+            else:
+                args = f'&{mangled_module_name}_instance, {args}'
+            return '%s(%s)' % (field, args)
         elif type_ == 'get':
-            return '*%s' % field
+            return '*%s(%s)' % (field, '&' + mangled_module_name + '_instance')
         else:
             raise Error('Unexpected action type: %s' % type_)
 
@@ -460,11 +495,6 @@ def main(args):
 
         output = io.StringIO()
         cwriter = CWriter(spec_json, prefix, output, out_dir)
-        cwriter.Write()
-
-        main_filename = utils.ChangeExt(json_file_path, '-main.c')
-        with open(main_filename, 'w') as out_main_file:
-            out_main_file.write(output.getvalue())
 
         o_filenames = []
         includes = '-I%s' % options.wasmrt_dir
@@ -476,6 +506,11 @@ def main(args):
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, *args)
             if options.compile:
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes))
+
+        cwriter.Write()
+        main_filename = utils.ChangeExt(json_file_path, '-main.c')
+        with open(main_filename, 'w') as out_main_file:
+            out_main_file.write(output.getvalue())
 
         if options.compile:
             # Compile wasm-rt-impl.
