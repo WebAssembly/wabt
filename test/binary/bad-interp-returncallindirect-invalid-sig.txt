@@ -15,5 +15,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
+out/test/binary/bad-interp-returncallindirect-invalid-sig/bad-interp-returncallindirect-invalid-sig.wasm:0000023: error: function type variable out of range: 100 (max 1)
 0000023: error: OnReturnCallIndirectExpr callback failed
 ;;; STDERR ;;)

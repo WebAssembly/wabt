@@ -15,5 +15,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
+out/test/binary/bad-returncall-invalid-func/bad-returncall-invalid-func.wasm:0000022: error: function variable out of range: 100 (max 1)
 0000022: error: OnReturnCallExpr callback failed
 ;;; STDERR ;;)
