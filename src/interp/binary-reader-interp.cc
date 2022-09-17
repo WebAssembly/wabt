@@ -1139,8 +1139,9 @@ Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
 }
 
 Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
-  if (func_index >= func_types_.size())
+  if (func_index >= func_types_.size()) {
     return Result::Error;
+  }
   FuncType& func_type = func_types_[func_index];
 
   Index drop_count, keep_count, catch_drop_count;
@@ -1171,8 +1172,9 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
 
 Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
                                                     Index table_index) {
-  if (sig_index >= module_.func_types.size())
+  if (sig_index >= module_.func_types.size()) {
     return Result::Error;
+  }
   FuncType& func_type = module_.func_types[sig_index];
 
   Index drop_count, keep_count, catch_drop_count;
