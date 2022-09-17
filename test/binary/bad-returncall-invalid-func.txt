@@ -1,0 +1,20 @@
+;;; TOOL: run-gen-wasm-interp
+;;; ARGS1: --enable-tail-call
+;;; ERROR: 1
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(TABLE) { count[1] funcref flags[0] min[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.const 0
+    return_call leb_i32(100) 0
+  }
+}
+(;; STDERR ;;;
+out/test/binary/bad-returncall-invalid-func/bad-returncall-invalid-func.wasm:0000022: error: function variable out of range: 100 (max 1)
+0000022: error: OnReturnCallExpr callback failed
+;;; STDERR ;;)

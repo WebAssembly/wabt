@@ -1139,6 +1139,9 @@ Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
 }
 
 Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
+  CHECK_RESULT(
+      validator_.OnReturnCall(GetLocation(), Var(func_index, GetLocation())));
+
   FuncType& func_type = func_types_[func_index];
 
   Index drop_count, keep_count, catch_drop_count;
@@ -1169,6 +1172,10 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
 
 Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
                                                     Index table_index) {
+  CHECK_RESULT(validator_.OnReturnCallIndirect(
+      GetLocation(), Var(sig_index, GetLocation()),
+      Var(table_index, GetLocation())));
+
   FuncType& func_type = module_.func_types[sig_index];
 
   Index drop_count, keep_count, catch_drop_count;
