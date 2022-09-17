@@ -1139,7 +1139,6 @@ Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
 }
 
 Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
-  // https://github.com/WebAssembly/wabt/issues/1929#issuecomment-1140043966
   if (func_index >= func_types_.size())
     return Result::Error;
   FuncType& func_type = func_types_[func_index];
@@ -1172,7 +1171,6 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
 
 Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
                                                     Index table_index) {
-  // https://github.com/WebAssembly/wabt/issues/1929
   if (sig_index >= module_.func_types.size())
     return Result::Error;
   FuncType& func_type = module_.func_types[sig_index];

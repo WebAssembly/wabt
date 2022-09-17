@@ -226,7 +226,6 @@ struct AST {
             mc.GetLabel(cast<BrIfExpr>(&e)->var)->label_type;
         return;
       }
-      // https://github.com/WebAssembly/wabt/issues/1922
       case ExprType::BrTable: {
         InsertNode(NodeType::Expr, ExprType::BrTable, &e, 1).u.lt =
             mc.GetLabel(cast<BrTableExpr>(&e)->default_target)->label_type;
