@@ -7,4 +7,10 @@
   (export "" (global 0))
 )
 (;; STDOUT ;;;
+export global __empty:long = 8L;
+
+function f_a():long {
+  return __empty
+}
+
 ;;; STDOUT ;;)

@@ -1,5 +1,6 @@
 ;;; TOOL: run-gen-wasm-interp
 ;;; ARGS1: --enable-tail-call
+;;; ERROR: 1
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }
@@ -14,4 +15,5 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
+0000023: error: OnReturnCallIndirectExpr callback failed
 ;;; STDERR ;;)
