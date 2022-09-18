@@ -1,0 +1,136 @@
+;;; TOOL: run-interp-spec
+;;; ERROR: 36
+(module
+  (func (export "i8x16") (result v128) (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+  (func (export "i16x8") (result v128) (v128.const i16x8 0 1 2 3 4 5 6 7))
+  (func (export "i32x4") (result v128) (v128.const i32x4 0 1 2 3))
+  (func (export "i64x2") (result v128) (v128.const i64x2 0 1))
+  (func (export "f32x4") (result v128) (v128.const f32x4 0 1 2 3))
+  (func (export "f64x2") (result v128) (v128.const f64x2 0 1))
+)
+
+;; passing tests
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 1 2 3 4 5 6 7))
+(assert_return (invoke "i32x4") (v128.const i32x4 0 1 2 3))
+(assert_return (invoke "i64x2") (v128.const i64x2 0 1))
+(assert_return (invoke "f32x4") (v128.const f32x4 0 1 2 3))
+(assert_return (invoke "f64x2") (v128.const f64x2 0 1))
+
+;; should fail
+(assert_return (invoke "i8x16") (v128.const i8x16 -1 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 -1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 -2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 -3 4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 -4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 -5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 -6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 -7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 -8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 -9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 -10 11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 -11 12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 -12 13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 -13 14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 -14 15))
+(assert_return (invoke "i8x16") (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 -15))
+
+(assert_return (invoke "i16x8") (v128.const i16x8 -1 1 2 3 4 5 6 7))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 -1 2 3 4 5 6 7))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 1 -2 3 4 5 6 7))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 1 2 -3 4 5 6 7))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 1 2 3 -4 5 6 7))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 1 2 3 4 -5 6 7))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 1 2 3 4 5 -6 7))
+(assert_return (invoke "i16x8") (v128.const i16x8 0 1 2 3 4 5 6 -7))
+
+(assert_return (invoke "i32x4") (v128.const i32x4 -1 1 2 3))
+(assert_return (invoke "i32x4") (v128.const i32x4 0 -1 2 3))
+(assert_return (invoke "i32x4") (v128.const i32x4 0 1 -2 3))
+(assert_return (invoke "i32x4") (v128.const i32x4 0 1 2 -3))
+
+(assert_return (invoke "i64x2") (v128.const i64x2 -1 1))
+(assert_return (invoke "i64x2") (v128.const i64x2 0 -1))
+
+(assert_return (invoke "f32x4") (v128.const f32x4 -1 1 2 3))
+(assert_return (invoke "f32x4") (v128.const f32x4 0 -1 2 3))
+(assert_return (invoke "f32x4") (v128.const f32x4 0 1 -2 3))
+(assert_return (invoke "f32x4") (v128.const f32x4 0 1 2 -3))
+
+(assert_return (invoke "f64x2") (v128.const f64x2 -1 1))
+(assert_return (invoke "f64x2") (v128.const f64x2 0 -1))
+(;; STDOUT ;;;
+out/test/regress/regress-37.txt:21: mismatch in lane 0 of result 0 of assert_return: expected i8:255, got i8:0
+out/test/regress/regress-37.txt:21: mismatch in result 0 of assert_return: expected v128 i8:255i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:22: mismatch in lane 1 of result 0 of assert_return: expected i8:255, got i8:1
+out/test/regress/regress-37.txt:22: mismatch in result 0 of assert_return: expected v128 i8:0i8:255i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:23: mismatch in lane 2 of result 0 of assert_return: expected i8:254, got i8:2
+out/test/regress/regress-37.txt:23: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:254i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:24: mismatch in lane 3 of result 0 of assert_return: expected i8:253, got i8:3
+out/test/regress/regress-37.txt:24: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:253i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:25: mismatch in lane 4 of result 0 of assert_return: expected i8:252, got i8:4
+out/test/regress/regress-37.txt:25: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:252i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:26: mismatch in lane 5 of result 0 of assert_return: expected i8:251, got i8:5
+out/test/regress/regress-37.txt:26: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:251i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:27: mismatch in lane 6 of result 0 of assert_return: expected i8:250, got i8:6
+out/test/regress/regress-37.txt:27: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:250i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:28: mismatch in lane 7 of result 0 of assert_return: expected i8:249, got i8:7
+out/test/regress/regress-37.txt:28: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:249i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:29: mismatch in lane 8 of result 0 of assert_return: expected i8:248, got i8:8
+out/test/regress/regress-37.txt:29: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:248i8:9i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:30: mismatch in lane 9 of result 0 of assert_return: expected i8:247, got i8:9
+out/test/regress/regress-37.txt:30: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:247i8:10i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:31: mismatch in lane 10 of result 0 of assert_return: expected i8:246, got i8:10
+out/test/regress/regress-37.txt:31: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:246i8:11i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:32: mismatch in lane 11 of result 0 of assert_return: expected i8:245, got i8:11
+out/test/regress/regress-37.txt:32: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:245i8:12i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:33: mismatch in lane 12 of result 0 of assert_return: expected i8:244, got i8:12
+out/test/regress/regress-37.txt:33: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:244i8:13i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:34: mismatch in lane 13 of result 0 of assert_return: expected i8:243, got i8:13
+out/test/regress/regress-37.txt:34: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:243i8:14i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:35: mismatch in lane 14 of result 0 of assert_return: expected i8:242, got i8:14
+out/test/regress/regress-37.txt:35: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:242i8:15, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:36: mismatch in lane 15 of result 0 of assert_return: expected i8:241, got i8:15
+out/test/regress/regress-37.txt:36: mismatch in result 0 of assert_return: expected v128 i8:0i8:1i8:2i8:3i8:4i8:5i8:6i8:7i8:8i8:9i8:10i8:11i8:12i8:13i8:14i8:241, got v128 i32x4:0x03020100 0x07060504 0x0b0a0908 0x0f0e0d0c
+out/test/regress/regress-37.txt:38: mismatch in lane 0 of result 0 of assert_return: expected i16:65535, got i16:0
+out/test/regress/regress-37.txt:38: mismatch in result 0 of assert_return: expected v128 i16:65535i16:1i16:2i16:3i16:4i16:5i16:6i16:7, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:39: mismatch in lane 1 of result 0 of assert_return: expected i16:65535, got i16:1
+out/test/regress/regress-37.txt:39: mismatch in result 0 of assert_return: expected v128 i16:0i16:65535i16:2i16:3i16:4i16:5i16:6i16:7, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:40: mismatch in lane 2 of result 0 of assert_return: expected i16:65534, got i16:2
+out/test/regress/regress-37.txt:40: mismatch in result 0 of assert_return: expected v128 i16:0i16:1i16:65534i16:3i16:4i16:5i16:6i16:7, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:41: mismatch in lane 3 of result 0 of assert_return: expected i16:65533, got i16:3
+out/test/regress/regress-37.txt:41: mismatch in result 0 of assert_return: expected v128 i16:0i16:1i16:2i16:65533i16:4i16:5i16:6i16:7, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:42: mismatch in lane 4 of result 0 of assert_return: expected i16:65532, got i16:4
+out/test/regress/regress-37.txt:42: mismatch in result 0 of assert_return: expected v128 i16:0i16:1i16:2i16:3i16:65532i16:5i16:6i16:7, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:43: mismatch in lane 5 of result 0 of assert_return: expected i16:65531, got i16:5
+out/test/regress/regress-37.txt:43: mismatch in result 0 of assert_return: expected v128 i16:0i16:1i16:2i16:3i16:4i16:65531i16:6i16:7, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:44: mismatch in lane 6 of result 0 of assert_return: expected i16:65530, got i16:6
+out/test/regress/regress-37.txt:44: mismatch in result 0 of assert_return: expected v128 i16:0i16:1i16:2i16:3i16:4i16:5i16:65530i16:7, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:45: mismatch in lane 7 of result 0 of assert_return: expected i16:65529, got i16:7
+out/test/regress/regress-37.txt:45: mismatch in result 0 of assert_return: expected v128 i16:0i16:1i16:2i16:3i16:4i16:5i16:6i16:65529, got v128 i32x4:0x00010000 0x00030002 0x00050004 0x00070006
+out/test/regress/regress-37.txt:47: mismatch in lane 0 of result 0 of assert_return: expected i32:4294967295, got i32:0
+out/test/regress/regress-37.txt:47: mismatch in result 0 of assert_return: expected v128 i32:4294967295i32:1i32:2i32:3, got v128 i32x4:0x00000000 0x00000001 0x00000002 0x00000003
+out/test/regress/regress-37.txt:48: mismatch in lane 1 of result 0 of assert_return: expected i32:4294967295, got i32:1
+out/test/regress/regress-37.txt:48: mismatch in result 0 of assert_return: expected v128 i32:0i32:4294967295i32:2i32:3, got v128 i32x4:0x00000000 0x00000001 0x00000002 0x00000003
+out/test/regress/regress-37.txt:49: mismatch in lane 2 of result 0 of assert_return: expected i32:4294967294, got i32:2
+out/test/regress/regress-37.txt:49: mismatch in result 0 of assert_return: expected v128 i32:0i32:1i32:4294967294i32:3, got v128 i32x4:0x00000000 0x00000001 0x00000002 0x00000003
+out/test/regress/regress-37.txt:50: mismatch in lane 3 of result 0 of assert_return: expected i32:4294967293, got i32:3
+out/test/regress/regress-37.txt:50: mismatch in result 0 of assert_return: expected v128 i32:0i32:1i32:2i32:4294967293, got v128 i32x4:0x00000000 0x00000001 0x00000002 0x00000003
+out/test/regress/regress-37.txt:52: mismatch in lane 0 of result 0 of assert_return: expected i64:18446744073709551615, got i64:0
+out/test/regress/regress-37.txt:52: mismatch in result 0 of assert_return: expected v128 i64:18446744073709551615i64:1, got v128 i32x4:0x00000000 0x00000000 0x00000001 0x00000000
+out/test/regress/regress-37.txt:53: mismatch in lane 1 of result 0 of assert_return: expected i64:18446744073709551615, got i64:1
+out/test/regress/regress-37.txt:53: mismatch in result 0 of assert_return: expected v128 i64:0i64:18446744073709551615, got v128 i32x4:0x00000000 0x00000000 0x00000001 0x00000000
+out/test/regress/regress-37.txt:55: mismatch in lane 0 of result 0 of assert_return: expected f32:-1.000000, got f32:0.000000
+out/test/regress/regress-37.txt:55: mismatch in result 0 of assert_return: expected v128 f32:-1.000000f32:1.000000f32:2.000000f32:3.000000, got v128 i32x4:0x00000000 0x3f800000 0x40000000 0x40400000
+out/test/regress/regress-37.txt:56: mismatch in lane 1 of result 0 of assert_return: expected f32:-1.000000, got f32:1.000000
+out/test/regress/regress-37.txt:56: mismatch in result 0 of assert_return: expected v128 f32:0.000000f32:-1.000000f32:2.000000f32:3.000000, got v128 i32x4:0x00000000 0x3f800000 0x40000000 0x40400000
+out/test/regress/regress-37.txt:57: mismatch in lane 2 of result 0 of assert_return: expected f32:-2.000000, got f32:2.000000
+out/test/regress/regress-37.txt:57: mismatch in result 0 of assert_return: expected v128 f32:0.000000f32:1.000000f32:-2.000000f32:3.000000, got v128 i32x4:0x00000000 0x3f800000 0x40000000 0x40400000
+out/test/regress/regress-37.txt:58: mismatch in lane 3 of result 0 of assert_return: expected f32:-3.000000, got f32:3.000000
+out/test/regress/regress-37.txt:58: mismatch in result 0 of assert_return: expected v128 f32:0.000000f32:1.000000f32:2.000000f32:-3.000000, got v128 i32x4:0x00000000 0x3f800000 0x40000000 0x40400000
+out/test/regress/regress-37.txt:60: mismatch in lane 0 of result 0 of assert_return: expected f64:-1.000000, got f64:0.000000
+out/test/regress/regress-37.txt:60: mismatch in result 0 of assert_return: expected v128 f64:-1.000000f64:1.000000, got v128 i32x4:0x00000000 0x00000000 0x00000000 0x3ff00000
+out/test/regress/regress-37.txt:61: mismatch in lane 1 of result 0 of assert_return: expected f64:-1.000000, got f64:1.000000
+out/test/regress/regress-37.txt:61: mismatch in result 0 of assert_return: expected v128 f64:0.000000f64:-1.000000, got v128 i32x4:0x00000000 0x00000000 0x00000000 0x3ff00000
+7/43 tests passed.
+;;; STDOUT ;;)
