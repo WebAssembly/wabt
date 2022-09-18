@@ -366,6 +366,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result SetMemoryName(Index index, std::string_view name);
   Result SetTableName(Index index, std::string_view name);
   Result SetFunctionName(Index index, std::string_view name);
+  Result SetTypeName(Index index, std::string_view name);
   Result SetGlobalName(Index index, std::string_view name);
   Result SetDataSegmentName(Index index, std::string_view name);
   Result SetElemSegmentName(Index index, std::string_view name);
@@ -1402,6 +1403,22 @@ Result BinaryReaderIR::SetFunctionName(Index index, std::string_view name) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::SetTypeName(Index index, std::string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->types.size()) {
+    PrintError("invalid type index: %" PRIindex, index);
+    return Result::Error;
+  }
+  TypeEntry* type = module_->types[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->type_bindings, MakeDollarName(name));
+  type->name = dollar_name;
+  module_->type_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::SetTableName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
@@ -1496,7 +1513,9 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Local:
     case NameSectionSubsection::Module:
     case NameSectionSubsection::Label:
+      break;
     case NameSectionSubsection::Type:
+      SetTypeName(index, name);
       break;
     case NameSectionSubsection::Tag:
       SetTagName(index, name);

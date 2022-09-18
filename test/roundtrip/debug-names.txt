@@ -1,5 +1,7 @@
 ;;; TOOL: run-roundtrip
+;;; ARGS: --debug-names
 (module $m1
+  (type $t1 (func (param i32 i64)))
   (memory $foo_memory 1)
   (table $bar_table 0 funcref)
   (data $baz_data_seg (i32.const 1024) "hello world")
