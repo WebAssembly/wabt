@@ -553,6 +553,7 @@ static u32 w2c_fac(Z_fac_instance_t*, u32);
 
 static void init_globals(Z_fac_instance_t* instance) {
 }
+
 static void init_memory(Z_fac_instance_t* instance) {
 }
 

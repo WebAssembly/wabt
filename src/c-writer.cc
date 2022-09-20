@@ -1387,7 +1387,7 @@ void CWriter::WriteGlobalInitializers() {
     }
     ++global_index;
   }
-  Write(CloseBrace(), Newline());
+  Write(CloseBrace(), Newline(), Newline());
 }
 
 static inline bool is_droppable(const DataSegment* data_segment) {
