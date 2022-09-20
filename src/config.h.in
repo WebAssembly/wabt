@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#cmakedefine CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION}"
+#cmakedefine WABT_VERSION_STRING "@WABT_VERSION_STRING@"
 
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 

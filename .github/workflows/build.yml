@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-12, windows-latest]
     steps:
     - uses: actions/setup-python@v1
       with:
@@ -43,7 +43,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
     - name: install ninja (osx)
       run: brew install ninja
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-12'
     - name: install ninja (win)
       run: choco install ninja
       if: matrix.os == 'windows-latest'
@@ -74,7 +74,7 @@ jobs:
         submodules: true
     - name: build
       run: |
-        docker run -di --name emscripten -v $(pwd):/src trzeci/emscripten:1.39.10-upstream bash
+        docker run -di --name emscripten -v $(pwd):/src emscripten/emsdk:latest bash
         docker exec emscripten emcc -v
         docker exec emscripten emcmake cmake .
         docker exec emscripten make -j 2 VERBOSE=1
@@ -116,3 +116,35 @@ jobs:
     - run: make clang-release-ubsan
     - run: make test-clang-debug-ubsan
     - run: make test-clang-release-ubsan
+
+  build-min-cmake:
+    name: min-cmake
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install Ninja
+      run: sudo apt-get install ninja-build
+    - name: Detect minimum CMake version
+      run: >
+        awk 'match($0, /cmake_minimum_required\(VERSION *([0-9]+\.[0-9]+)\)/, a)
+        { print "WABT_CMAKE_VER=" a[1]; exit; }' CMakeLists.txt | tee $GITHUB_ENV
+    - name: Install minimum CMake
+      run: |
+        python -m pip install -U setuptools wheel pip
+        python -m pip install "cmake==${WABT_CMAKE_VER}.*"
+        cmake --version
+    - name: Configure WABT
+      run: cmake -G Ninja -S . -B out -DCMAKE_BUILD_TYPE=Release
+    - name: build
+      run: cmake --build out
+    - name: unittests
+      run: cmake --build out --target run-unittests
+    - name: c-api-tests
+      run: cmake --build out --target run-c-api-tests
+    - name: tests
+      run: cmake --build out --target run-tests

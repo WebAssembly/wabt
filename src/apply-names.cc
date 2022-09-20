@@ -77,6 +77,8 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnDelegateExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
+  Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
+  Result OnSimdStoreLaneExpr(SimdStoreLaneExpr*) override;
 
  private:
   void PushLabel(const std::string& label);
@@ -375,6 +377,7 @@ Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
 }
 
 Result NameApplier::OnDelegateExpr(TryExpr* expr) {
+  PopLabel();
   std::string_view label = FindLabelByVar(&expr->delegate_target);
   UseNameForVar(label, &expr->delegate_target);
   return Result::Ok;
@@ -459,6 +462,16 @@ Result NameApplier::OnLocalSetExpr(LocalSetExpr* expr) {
 
 Result NameApplier::OnLocalTeeExpr(LocalTeeExpr* expr) {
   CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
+  return Result::Ok;
+}
+
+Result NameApplier::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
+  CHECK_RESULT(UseNameForMemoryVar(&expr->memidx));
   return Result::Ok;
 }
 

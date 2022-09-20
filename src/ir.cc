@@ -565,8 +565,13 @@ const Module* Script::GetModule(const Var& var) const {
   if (index >= commands.size()) {
     return nullptr;
   }
-  auto* command = cast<ModuleCommand>(commands[index].get());
-  return &command->module;
+  auto* command = commands[index].get();
+  if (isa<ModuleCommand>(command)) {
+    return &cast<ModuleCommand>(command)->module;
+  } else if (isa<ScriptModuleCommand>(command)) {
+    return &cast<ScriptModuleCommand>(command)->module;
+  }
+  return nullptr;
 }
 
 void MakeTypeBindingReverseMapping(
@@ -581,17 +586,19 @@ void MakeTypeBindingReverseMapping(
   }
 }
 
+Var::Var() : Var(kInvalidIndex, Location()) {}
+
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 
 Var::Var(std::string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
-Var::Var(Var&& rhs) : Var(kInvalidIndex) {
+Var::Var(Var&& rhs) : Var() {
   *this = std::move(rhs);
 }
 
-Var::Var(const Var& rhs) : Var(kInvalidIndex) {
+Var::Var(const Var& rhs) : Var() {
   *this = rhs;
 }
 

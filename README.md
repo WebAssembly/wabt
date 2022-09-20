@@ -47,7 +47,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 
 | Proposal   | flag | default | binary | text | validate | interpret | wasm2c |
 | --------------------- | --------------------------- | - | - | - | - | - | - |
-| [exception handling][]| `--enable-exceptions`       |   | ✓ | ✓ | ✓ | ✓ |   |
+| [exception handling][]| `--enable-exceptions`       |   | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [mutable globals][]   | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [sign extension][]    | `--disable-sign-extension`  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -132,7 +132,7 @@ There are many make targets available for other configurations as well. They
 are generated from every combination of a compiler, build type and
 configuration.
 
- - compilers: `gcc`, `clang`, `gcc-i686`, `emcc`
+ - compilers: `gcc`, `clang`, `gcc-i686`, `emscripten`
  - build types: `debug`, `release`
  - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `fuzz`, `no-tests`
 
@@ -149,7 +149,7 @@ $ make gcc-debug-no-tests
 
 You'll need [CMake](https://cmake.org). You'll also need
 [Visual Studio](https://www.visualstudio.com/) (2015 or newer) or
-[MinGW](http://www.mingw.org/).
+[MinGW](https://www.mingw-w64.org/).
 
 _Note: Visual Studio 2017 and later come with CMake (and the Ninja build system)
 out of the box, and should be on your PATH if you open a Developer Command prompt.
@@ -200,7 +200,7 @@ run `make update-gperf` to update the prebuilt C++ sources in `src/prebuilt/`.
 Some examples:
 
 ```sh
-# parse and typecheck test.wat
+# parse test.wat and write to .wasm binary file with the same name
 $ bin/wat2wasm test.wat
 
 # parse test.wat and write to binary file test.wasm

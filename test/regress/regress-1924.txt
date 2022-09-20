@@ -1,0 +1,16 @@
+;;; TOOL: run-wasm-decompile
+(module
+  (type (;0;) (func (result i64)))
+  (func (;0;) (type 0) (result i64)
+    global.get 0)
+  (global (;0;) i64 (i64.const 8))
+  (export "" (global 0))
+)
+(;; STDOUT ;;;
+export global __empty:long = 8L;
+
+function f_a():long {
+  return __empty
+}
+
+;;; STDOUT ;;)

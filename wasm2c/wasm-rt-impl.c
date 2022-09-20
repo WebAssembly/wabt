@@ -37,6 +37,7 @@
 #endif
 
 #define PAGE_SIZE 65536
+#define MAX_EXCEPTION_SIZE PAGE_SIZE
 
 typedef struct FuncType {
   wasm_rt_type_t* params;
@@ -46,23 +47,30 @@ typedef struct FuncType {
 } FuncType;
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-bool g_signal_handler_installed = false;
-char* g_alt_stack;
+static bool g_signal_handler_installed = false;
+static char* g_alt_stack;
 #else
 uint32_t wasm_rt_call_stack_depth;
-uint32_t g_saved_call_stack_depth;
+uint32_t wasm_rt_saved_call_stack_depth;
 #endif
 
-jmp_buf g_jmp_buf;
-FuncType* g_func_types;
-uint32_t g_func_type_count;
+static FuncType* g_func_types;
+static uint32_t g_func_type_count;
+
+jmp_buf wasm_rt_jmp_buf;
+
+static uint32_t g_active_exception_tag;
+static uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
+static uint32_t g_active_exception_size;
+
+static jmp_buf* g_unwind_target;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
 #if !WASM_RT_MEMCHECK_SIGNAL_HANDLER
-  wasm_rt_call_stack_depth = g_saved_call_stack_depth;
+  wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
 #endif
-  WASM_RT_LONGJMP(g_jmp_buf, code);
+  WASM_RT_LONGJMP(wasm_rt_jmp_buf, code);
 }
 
 static bool func_types_are_equal(FuncType* a, FuncType* b) {
@@ -109,6 +117,50 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
   g_func_types = realloc(g_func_types, g_func_type_count * sizeof(FuncType));
   g_func_types[idx] = func_type;
   return idx + 1;
+}
+
+uint32_t wasm_rt_register_tag(uint32_t size) {
+  static uint32_t s_tag_count = 0;
+
+  if (size > MAX_EXCEPTION_SIZE) {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+  return s_tag_count++;
+}
+
+void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values) {
+  assert(size <= MAX_EXCEPTION_SIZE);
+
+  g_active_exception_tag = tag;
+  g_active_exception_size = size;
+
+  if (size) {
+    memcpy(g_active_exception, values, size);
+  }
+}
+
+WASM_RT_NO_RETURN void wasm_rt_throw(void) {
+  WASM_RT_LONGJMP(*g_unwind_target, WASM_RT_TRAP_UNCAUGHT_EXCEPTION);
+}
+
+WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void) {
+  return g_unwind_target;
+}
+
+void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target) {
+  g_unwind_target = target;
+}
+
+uint32_t wasm_rt_exception_tag(void) {
+  return g_active_exception_tag;
+}
+
+uint32_t wasm_rt_exception_size(void) {
+  return g_active_exception_size;
+}
+
+void* wasm_rt_exception(void) {
+  return g_active_exception;
 }
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
@@ -213,6 +265,14 @@ void wasm_rt_init(void) {
 #endif
 }
 
+bool wasm_rt_is_initialized(void) {
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+  return g_signal_handler_installed;
+#else
+  return true;
+#endif
+}
+
 void wasm_rt_free(void) {
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
   free(g_alt_stack);
@@ -290,74 +350,6 @@ void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
 #endif
 }
 
-#ifdef _WIN32
-static float quiet_nanf(float x) {
-  uint32_t tmp;
-  memcpy(&tmp, &x, 4);
-  tmp |= 0x7fc00000lu;
-  memcpy(&x, &tmp, 4);
-  return x;
-}
-
-static double quiet_nan(double x) {
-  uint64_t tmp;
-  memcpy(&tmp, &x, 8);
-  tmp |= 0x7ff8000000000000llu;
-  memcpy(&x, &tmp, 8);
-  return x;
-}
-
-double wasm_rt_trunc(double x) {
-  if (isnan(x)) {
-    return quiet_nan(x);
-  }
-  return trunc(x);
-}
-
-float wasm_rt_truncf(float x) {
-  if (isnan(x)) {
-    return quiet_nanf(x);
-  }
-  return truncf(x);
-}
-
-float wasm_rt_nearbyintf(float x) {
-  if (isnan(x)) {
-    return quiet_nanf(x);
-  }
-  return nearbyintf(x);
-}
-
-double wasm_rt_nearbyint(double x) {
-  if (isnan(x)) {
-    return quiet_nan(x);
-  }
-  return nearbyint(x);
-}
-
-float wasm_rt_fabsf(float x) {
-  if (isnan(x)) {
-    uint32_t tmp;
-    memcpy(&tmp, &x, 4);
-    tmp = tmp & ~(1 << 31);
-    memcpy(&x, &tmp, 4);
-    return x;
-  }
-  return fabsf(x);
-}
-
-double wasm_rt_fabs(double x) {
-  if (isnan(x)) {
-    uint64_t tmp;
-    memcpy(&tmp, &x, 8);
-    tmp = tmp & ~(1ll << 63);
-    memcpy(&x, &tmp, 8);
-    return x;
-  }
-  return fabs(x);
-}
-#endif
-
 void wasm_rt_allocate_table(wasm_rt_table_t* table,
                             uint32_t elements,
                             uint32_t max_elements) {
@@ -392,6 +384,8 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "Unreachable instruction executed";
     case WASM_RT_TRAP_CALL_INDIRECT:
       return "Invalid call_indirect";
+    case WASM_RT_TRAP_UNCAUGHT_EXCEPTION:
+      return "Uncaught exception";
   }
   return "invalid trap code";
 }

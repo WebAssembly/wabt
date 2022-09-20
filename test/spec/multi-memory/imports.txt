@@ -13,7 +13,7 @@ called host spectest.print_f64(f64:24.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
 out/test/spec/multi-memory/imports.wast:93: assert_invalid passed:
-  0000000: error: function type variable out of range: 1 (max 1)
+  out/test/spec/multi-memory/imports/imports.2.wasm:000001e: error: function type variable out of range: 1 (max 1)
   000001e: error: OnImportFunc callback failed
 called host spectest.print_i32(i32:13) =>
 out/test/spec/multi-memory/imports.wast:129: assert_unlinkable passed:

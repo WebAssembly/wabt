@@ -85,7 +85,7 @@ out/test/spec/call_indirect.wast:776: assert_malformed passed:
   ...0 funcref)(func (result i32)  (call_indirect (type $sig) (param i32) (resu...
                                     ^^^^^^^^^^^^^
 out/test/spec/call_indirect.wast:791: assert_invalid passed:
-  0000000: error: table variable out of range: 0 (max 0)
+  out/test/spec/call_indirect/call_indirect.13.wasm:000001c: error: table variable out of range: 0 (max 0)
   000001c: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:799: assert_invalid passed:
   out/test/spec/call_indirect/call_indirect.14.wasm:0000023: error: type mismatch in i32.eqz, expected [i32] but got []
@@ -142,13 +142,13 @@ out/test/spec/call_indirect.wast:977: assert_invalid passed:
   out/test/spec/call_indirect/call_indirect.31.wasm:000003d: error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000003d: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:997: assert_invalid passed:
-  0000000: error: function type variable out of range: 1 (max 1)
+  out/test/spec/call_indirect/call_indirect.32.wasm:0000022: error: function type variable out of range: 1 (max 1)
   0000022: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:1004: assert_invalid passed:
-  0000000: error: function type variable out of range: 1012321300 (max 1)
+  out/test/spec/call_indirect/call_indirect.33.wasm:0000026: error: function type variable out of range: 1012321300 (max 1)
   0000026: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:1015: assert_invalid passed:
-  0000000: error: function variable out of range: 0 (max 0)
+  out/test/spec/call_indirect/call_indirect.34.wasm:0000018: error: function variable out of range: 0 (max 0)
   0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
 169/169 tests passed.
 ;;; STDOUT ;;)

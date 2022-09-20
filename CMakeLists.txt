@@ -14,8 +14,9 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.16)
 project(WABT LANGUAGES C CXX VERSION 1.0.29)
+
 include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -42,37 +43,33 @@ endif ()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Check if wabt is being used directly or via add_subdirectory, FetchContent, etc
-set(WABT_MASTER_PROJECT OFF)
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  set(WABT_MASTER_PROJECT ON)
-endif()
+string(COMPARE EQUAL "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" PROJECT_IS_TOP_LEVEL)
+
+# By default use the project version as the version string
+set(WABT_VERSION_STRING "${PROJECT_VERSION}")
 
 # For git users, attempt to generate a more useful version string
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-  find_package(Git QUIET REQUIRED)
-  execute_process(COMMAND
-          "${GIT_EXECUTABLE}" --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git describe --tags
-          RESULT_VARIABLE
-              GIT_VERSION_RESULT
-          ERROR_VARIABLE
-              GIT_VERSION_ERROR
-          OUTPUT_VARIABLE
-              GIT_VERSION
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if (${GIT_VERSION_RESULT})
-    # Don't issue warning if we aren't the master project;
-    # just assume that whoever included us knows the version they are getting
-    if (WABT_MASTER_PROJECT)
-      message(WARNING "${GIT_VERSION_ERROR} Error running git describe to determine version")
-    endif()
-  else ()
-    set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION} (${GIT_VERSION})")
+  find_package(Git)
+  if (Git_FOUND)
+    execute_process(
+      COMMAND "${GIT_EXECUTABLE}" -C "${WABT_SOURCE_DIR}" describe --tags
+      RESULT_VARIABLE GIT_VERSION_RESULT
+      ERROR_VARIABLE GIT_VERSION_ERROR
+      ERROR_STRIP_TRAILING_WHITESPACE
+      OUTPUT_VARIABLE GIT_VERSION
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if (GIT_VERSION_RESULT EQUAL 0)
+      # If we're actually on the tag for this version, don't add the commit description
+      if (NOT GIT_VERSION STREQUAL "${WABT_VERSION_STRING}")
+        string(APPEND WABT_VERSION_STRING " (git~${GIT_VERSION})")
+      endif ()
+    elseif (PROJECT_IS_TOP_LEVEL)
+      message(NOTICE "git: ${GIT_VERSION_ERROR}\n  ** Did you forget to run `git fetch --tags`?")
+    endif ()
   endif ()
 endif ()
-
-if (NOT "${CMAKE_PROJECT_VERSION}")
-  set(CMAKE_PROJECT_VERSION ${PROJECT_VERSION})
-endif()
 
 option(BUILD_TESTS "Build GTest-based tests" ON)
 option(USE_SYSTEM_GTEST "Use system GTest, instead of building" OFF)
@@ -86,6 +83,7 @@ option(USE_UBSAN "Use undefined behavior sanitizer" OFF)
 option(CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(WITH_EXCEPTIONS "Build with exceptions enabled" OFF)
 option(WERROR "Build with warnings as errors" OFF)
+option(WABT_INSTALL_RULES "Include WABT's install() rules" "${PROJECT_IS_TOP_LEVEL}")
 # WASI support is still a work in progress.
 # Only a handful of syscalls are supported at this point.
 option(WITH_WASI "Build WASI support via uvwasi" OFF)
@@ -128,10 +126,7 @@ include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
 check_type_size(size_t SIZEOF_SIZE_T)
 
-configure_file(
-  ${WABT_SOURCE_DIR}/src/config.h.in
-  ${WABT_BINARY_DIR}/config.h
-)
+configure_file(src/config.h.in config.h @ONLY)
 
 include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
 
@@ -374,11 +369,48 @@ set(WABT_LIBRARY_SRC
 )
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
+add_library(wabt::wabt ALIAS wabt)
+
+target_compile_features(wabt PUBLIC cxx_std_17)
+
+if (WABT_INSTALL_RULES)
+  install(
+    TARGETS wabt EXPORT wabt-targets
+    COMPONENT wabt-development
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt"
+  )
+  install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt"
+    COMPONENT wabt-development
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.def"
+  )
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt/"
+    COMPONENT wabt-development
+  )
+endif ()
 
 IF (NOT WIN32 AND NOT WASI)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
-  install(TARGETS wasm-rt-impl DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(FILES wasm2c/wasm-rt.h wasm2c/wasm-rt-impl.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
+
+  if (WABT_INSTALL_RULES)
+    install(
+      TARGETS wasm-rt-impl
+      EXPORT wabt-targets
+      COMPONENT wabt-development
+      INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    )
+    install(
+      FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt.h"
+      TYPE INCLUDE
+      COMPONENT wabt-development
+    )
+  endif ()
 endif ()
 
 if (BUILD_FUZZ_TOOLS)
@@ -489,6 +521,32 @@ if (BUILD_TOOLS)
       INSTALL
     )
   endif ()
+  # wasm2c
+  set(TEMPLATE_CMAKE ${WABT_SOURCE_DIR}/scripts/gen-wasm2c-templates.cmake)
+
+  # wasm2c generated code templates
+  add_custom_command(
+    OUTPUT wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc
+
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_top.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.top.h" -D symbol="s_header_top" -P ${TEMPLATE_CMAKE}
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_bottom.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h" -D symbol="s_header_bottom" -P ${TEMPLATE_CMAKE}
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_includes.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c" -D symbol="s_source_includes" -P ${TEMPLATE_CMAKE}
+    COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c" -D symbol="s_source_declarations" -P ${TEMPLATE_CMAKE}
+
+    DEPENDS ${WABT_SOURCE_DIR}/src/template/wasm2c.top.h
+    ${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h
+    ${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c
+    ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c
+    )
+
+  add_library(cwriter-template wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
+
+  wabt_executable(
+    NAME wasm2c
+    SOURCES src/tools/wasm2c.cc src/c-writer.cc
+    LIBS cwriter-template
+    INSTALL
+  )
 
   # wasm-opcodecnt
   wabt_executable(
@@ -569,15 +627,13 @@ if (BUILD_TOOLS)
   endif ()
 endif ()
 
-# Python 3.5 is the version shipped in Ubuntu Xenial
-find_package(PythonInterp 3.5)
-if(BUILD_TESTS AND (NOT PYTHONINTERP_FOUND))
-  set(BUILD_TESTS OFF)
-  message(WARNING "Skipping tests. Python 3 is required for wabt testing. Please install python3 to run tests.")
-endif()
-
-find_package(Threads)
 if (BUILD_TESTS)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+
+  # Python 3.5 is the version shipped in Ubuntu Xenial
+  find_package(PythonInterp 3.5 REQUIRED)
+
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
       message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
@@ -627,10 +683,6 @@ if (BUILD_TESTS)
     LIBS gtest_main gtest ${CMAKE_THREAD_LIBS_INIT}
   )
 
-  if (NOT CMAKE_VERSION VERSION_LESS "3.2")
-    set(USES_TERMINAL USES_TERMINAL)
-  endif ()
-
   # test running
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
@@ -638,20 +690,20 @@ if (BUILD_TESTS)
     COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    ${USES_TERMINAL}
+    USES_TERMINAL
   )
 
   add_custom_target(run-unittests
     COMMAND $<TARGET_FILE:wabt-unittests>
     DEPENDS wabt-unittests
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    ${USES_TERMINAL}
+    USES_TERMINAL
   )
 
   add_custom_target(run-c-api-tests
     COMMAND ${PYTHON_EXECUTABLE} ${WABT_SOURCE_DIR}/test/run-c-api-examples.py --bindir $<TARGET_FILE_DIR:wat2wasm>
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    ${USES_TERMINAL}
+    USES_TERMINAL
   )
 
   add_custom_target(check DEPENDS run-unittests run-tests run-c-api-tests)
@@ -688,26 +740,24 @@ if (BUILD_TESTS)
   c_api_example(start)
   c_api_example(table)
   c_api_example(trap)
-  if (NOT WIN32)
-    # depends on pthreads
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
+  if (CMAKE_USE_PTHREADS_INIT)
     c_api_example(threads)
   endif ()
 endif ()
 
 # install
-if (BUILD_TOOLS OR BUILD_TESTS)
-  install(TARGETS ${WABT_EXECUTABLES} DESTINATION bin)
+if (WABT_INSTALL_RULES AND (BUILD_TOOLS OR BUILD_TESTS))
+  install(
+    TARGETS ${WABT_EXECUTABLES}
+    COMPONENT wabt-runtime
+  )
   if (UNIX)
-    if (NOT CMAKE_INSTALL_MANDIR)
-      include(GNUInstallDirs)
-    endif ()
-    file(GLOB MAN_FILES "${CMAKE_CURRENT_SOURCE_DIR}/man/*.1")
-    foreach(MAN_FILE ${MAN_FILES})
-      install(FILES ${MAN_FILE}
-        DESTINATION ${CMAKE_INSTALL_MANDIR}/man1/)
-    endforeach()
+    install(
+      DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/man/"
+      DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+      COMPONENT wabt-documentation
+      FILES_MATCHING PATTERN "*.1"
+    )
   endif ()
 endif ()
 
@@ -776,5 +826,40 @@ if (EMSCRIPTEN)
     PROPERTIES
     LINK_FLAGS "${LIBWABT_LINK_FLAGS_STR}"
     LINK_DEPENDS "${WABT_POST_JS};${EMSCRIPTEN_EXPORTED_JSON}"
+  )
+endif ()
+
+# Create find_package configuration files
+if (WABT_INSTALL_RULES)
+  include(CMakePackageConfigHelpers)
+
+  set(WABT_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/wabt"
+      CACHE STRING "Path to wabt CMake files")
+
+  install(
+    EXPORT wabt-targets
+    DESTINATION "${WABT_INSTALL_CMAKEDIR}"
+    NAMESPACE wabt::
+    FILE wabt-targets.cmake
+    COMPONENT wabt-development
+  )
+
+  configure_package_config_file(
+    scripts/wabt-config.cmake.in
+    wabt-config.cmake
+    INSTALL_DESTINATION "${WABT_INSTALL_CMAKEDIR}"
+    NO_SET_AND_CHECK_MACRO
+  )
+
+  write_basic_package_version_file(
+    wabt-config-version.cmake COMPATIBILITY ExactVersion
+  )
+
+  install(
+    FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/wabt-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/wabt-config-version.cmake"
+    DESTINATION "${WABT_INSTALL_CMAKEDIR}"
+    COMPONENT wabt-development
   )
 endif ()

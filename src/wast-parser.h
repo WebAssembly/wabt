@@ -140,7 +140,7 @@ class WastParser {
   Result ParseRefKind(Type* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
-  Result ParseQuotedText(std::string* text);
+  Result ParseQuotedText(std::string* text, bool check_utf8 = true);
   bool ParseOffsetOpt(Address* offset);
   bool ParseAlignOpt(Address* align);
   Result ParseMemidx(Location loc, Var* memidx);
@@ -207,9 +207,7 @@ class WastParser {
   template <typename T>
   Result ParseMemoryInstrVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
-  Result ParsePlainLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
-  template <typename T>
-  Result ParseMemoryLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
+  Result ParseLoadStoreInstr(Location, Token, std::unique_ptr<Expr>*);
   template <typename T>
   Result ParseSIMDLoadStoreInstr(Location loc,
                                  Token token,

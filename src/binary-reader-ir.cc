@@ -164,22 +164,28 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnOpcode(Opcode opcode) override;
   Result OnAtomicLoadExpr(Opcode opcode,
+                          Index memidx,
                           Address alignment_log2,
                           Address offset) override;
   Result OnAtomicStoreExpr(Opcode opcode,
+                           Index memidx,
                            Address alignment_log2,
                            Address offset) override;
   Result OnAtomicRmwExpr(Opcode opcode,
+                         Index memidx,
                          Address alignment_log2,
                          Address offset) override;
   Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                Index memidx,
                                 Address alignment_log2,
                                 Address offset) override;
   Result OnAtomicWaitExpr(Opcode opcode,
+                          Index memidx,
                           Address alignment_log2,
                           Address offset) override;
   Result OnAtomicFenceExpr(uint32_t consistency_model) override;
   Result OnAtomicNotifyExpr(Opcode opcode,
+                            Index memidx,
                             Address alignment_log2,
                             Address offset) override;
   Result OnBinaryExpr(Opcode opcode) override;
@@ -262,9 +268,11 @@ class BinaryReaderIR : public BinaryReaderNop {
                              uint64_t value) override;
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
   Result OnLoadSplatExpr(Opcode opcode,
+                         Index memidx,
                          Address alignment_log2,
                          Address offset) override;
   Result OnLoadZeroExpr(Opcode opcode,
+                        Index memidx,
                         Address alignment_log2,
                         Address offset) override;
 
@@ -358,6 +366,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result SetMemoryName(Index index, std::string_view name);
   Result SetTableName(Index index, std::string_view name);
   Result SetFunctionName(Index index, std::string_view name);
+  Result SetTypeName(Index index, std::string_view name);
   Result SetGlobalName(Index index, std::string_view name);
   Result SetDataSegmentName(Index index, std::string_view name);
   Result SetElemSegmentName(Index index, std::string_view name);
@@ -454,7 +463,7 @@ void BinaryReaderIR::SetBlockDeclaration(BlockDeclaration* decl,
                                          Type sig_type) {
   if (sig_type.IsIndex()) {
     Index type_index = sig_type.GetIndex();
-    SetFuncDeclaration(decl, Var(type_index));
+    SetFuncDeclaration(decl, Var(type_index, GetLocation()));
   } else {
     decl->has_func_type = false;
     decl->sig.param_types.clear();
@@ -737,38 +746,43 @@ Result BinaryReaderIR::OnOpcode(Opcode opcode) {
 }
 
 Result BinaryReaderIR::OnAtomicLoadExpr(Opcode opcode,
+                                        Index memidx,
                                         Address alignment_log2,
                                         Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicLoadExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicLoadExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicStoreExpr(Opcode opcode,
+                                         Index memidx,
                                          Address alignment_log2,
                                          Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicStoreExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicStoreExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicRmwExpr(Opcode opcode,
+                                       Index memidx,
                                        Address alignment_log2,
                                        Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicRmwExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicRmwExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicRmwCmpxchgExpr(Opcode opcode,
+                                              Index memidx,
                                               Address alignment_log2,
                                               Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicRmwCmpxchgExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicRmwCmpxchgExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicWaitExpr(Opcode opcode,
+                                        Index memidx,
                                         Address alignment_log2,
                                         Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicWaitExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicWaitExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnAtomicFenceExpr(uint32_t consistency_model) {
@@ -776,10 +790,11 @@ Result BinaryReaderIR::OnAtomicFenceExpr(uint32_t consistency_model) {
 }
 
 Result BinaryReaderIR::OnAtomicNotifyExpr(Opcode opcode,
+                                          Index memidx,
                                           Address alignment_log2,
                                           Address offset) {
-  return AppendExpr(
-      MakeUnique<AtomicNotifyExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<AtomicNotifyExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnBinaryExpr(Opcode opcode) {
@@ -796,33 +811,33 @@ Result BinaryReaderIR::OnBlockExpr(Type sig_type) {
 }
 
 Result BinaryReaderIR::OnBrExpr(Index depth) {
-  return AppendExpr(MakeUnique<BrExpr>(Var(depth)));
+  return AppendExpr(MakeUnique<BrExpr>(Var(depth, GetLocation())));
 }
 
 Result BinaryReaderIR::OnBrIfExpr(Index depth) {
-  return AppendExpr(MakeUnique<BrIfExpr>(Var(depth)));
+  return AppendExpr(MakeUnique<BrIfExpr>(Var(depth, GetLocation())));
 }
 
 Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
                                      Index* target_depths,
                                      Index default_target_depth) {
   auto expr = MakeUnique<BrTableExpr>();
-  expr->default_target = Var(default_target_depth);
+  expr->default_target = Var(default_target_depth, GetLocation());
   expr->targets.resize(num_targets);
   for (Index i = 0; i < num_targets; ++i) {
-    expr->targets[i] = Var(target_depths[i]);
+    expr->targets[i] = Var(target_depths[i], GetLocation());
   }
   return AppendExpr(std::move(expr));
 }
 
 Result BinaryReaderIR::OnCallExpr(Index func_index) {
-  return AppendExpr(MakeUnique<CallExpr>(Var(func_index)));
+  return AppendExpr(MakeUnique<CallExpr>(Var(func_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
   auto expr = MakeUnique<CallIndirectExpr>();
   SetFuncDeclaration(&expr->decl, Var(sig_index, GetLocation()));
-  expr->table = Var(table_index);
+  expr->table = Var(table_index, GetLocation());
   return AppendExpr(std::move(expr));
 }
 
@@ -831,14 +846,14 @@ Result BinaryReaderIR::OnCallRefExpr() {
 }
 
 Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
-  return AppendExpr(MakeUnique<ReturnCallExpr>(Var(func_index)));
+  return AppendExpr(MakeUnique<ReturnCallExpr>(Var(func_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index,
                                                 Index table_index) {
   auto expr = MakeUnique<ReturnCallIndirectExpr>();
   SetFuncDeclaration(&expr->decl, Var(sig_index, GetLocation()));
-  expr->table = Var(table_index);
+  expr->table = Var(table_index, GetLocation());
   return AppendExpr(std::move(expr));
 }
 
@@ -949,8 +964,8 @@ Result BinaryReaderIR::OnLoadExpr(Opcode opcode,
                                   Index memidx,
                                   Address alignment_log2,
                                   Address offset) {
-  return AppendExpr(
-      MakeUnique<LoadExpr>(opcode, Var(memidx), 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<LoadExpr>(opcode, Var(memidx, GetLocation()),
+                                         1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnLoopExpr(Type sig_type) {
@@ -963,64 +978,67 @@ Result BinaryReaderIR::OnLoopExpr(Type sig_type) {
 }
 
 Result BinaryReaderIR::OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) {
-  return AppendExpr(
-      MakeUnique<MemoryCopyExpr>(Var(srcmemidx), Var(destmemidx)));
+  return AppendExpr(MakeUnique<MemoryCopyExpr>(Var(srcmemidx, GetLocation()),
+                                               Var(destmemidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnDataDropExpr(Index segment) {
-  return AppendExpr(MakeUnique<DataDropExpr>(Var(segment)));
+  return AppendExpr(MakeUnique<DataDropExpr>(Var(segment, GetLocation())));
 }
 
 Result BinaryReaderIR::OnMemoryFillExpr(Index memidx) {
-  return AppendExpr(MakeUnique<MemoryFillExpr>(Var(memidx)));
+  return AppendExpr(MakeUnique<MemoryFillExpr>(Var(memidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnMemoryGrowExpr(Index memidx) {
-  return AppendExpr(MakeUnique<MemoryGrowExpr>(Var(memidx)));
+  return AppendExpr(MakeUnique<MemoryGrowExpr>(Var(memidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnMemoryInitExpr(Index segment, Index memidx) {
-  return AppendExpr(MakeUnique<MemoryInitExpr>(Var(segment), Var(memidx)));
+  return AppendExpr(MakeUnique<MemoryInitExpr>(Var(segment, GetLocation()),
+                                               Var(memidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnMemorySizeExpr(Index memidx) {
-  return AppendExpr(MakeUnique<MemorySizeExpr>(Var(memidx)));
+  return AppendExpr(MakeUnique<MemorySizeExpr>(Var(memidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableCopyExpr(Index dst_index, Index src_index) {
-  return AppendExpr(MakeUnique<TableCopyExpr>(Var(dst_index), Var(src_index)));
+  return AppendExpr(MakeUnique<TableCopyExpr>(Var(dst_index, GetLocation()),
+                                              Var(src_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnElemDropExpr(Index segment) {
-  return AppendExpr(MakeUnique<ElemDropExpr>(Var(segment)));
+  return AppendExpr(MakeUnique<ElemDropExpr>(Var(segment, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableInitExpr(Index segment, Index table_index) {
-  return AppendExpr(MakeUnique<TableInitExpr>(Var(segment), Var(table_index)));
+  return AppendExpr(MakeUnique<TableInitExpr>(Var(segment, GetLocation()),
+                                              Var(table_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableGetExpr(Index table_index) {
-  return AppendExpr(MakeUnique<TableGetExpr>(Var(table_index)));
+  return AppendExpr(MakeUnique<TableGetExpr>(Var(table_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableSetExpr(Index table_index) {
-  return AppendExpr(MakeUnique<TableSetExpr>(Var(table_index)));
+  return AppendExpr(MakeUnique<TableSetExpr>(Var(table_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableGrowExpr(Index table_index) {
-  return AppendExpr(MakeUnique<TableGrowExpr>(Var(table_index)));
+  return AppendExpr(MakeUnique<TableGrowExpr>(Var(table_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableSizeExpr(Index table_index) {
-  return AppendExpr(MakeUnique<TableSizeExpr>(Var(table_index)));
+  return AppendExpr(MakeUnique<TableSizeExpr>(Var(table_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableFillExpr(Index table_index) {
-  return AppendExpr(MakeUnique<TableFillExpr>(Var(table_index)));
+  return AppendExpr(MakeUnique<TableFillExpr>(Var(table_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
-  return AppendExpr(MakeUnique<RefFuncExpr>(Var(func_index)));
+  return AppendExpr(MakeUnique<RefFuncExpr>(Var(func_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnRefNullExpr(Type type) {
@@ -1062,8 +1080,8 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
                                    Index memidx,
                                    Address alignment_log2,
                                    Address offset) {
-  return AppendExpr(
-      MakeUnique<StoreExpr>(opcode, Var(memidx), 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<StoreExpr>(opcode, Var(memidx, GetLocation()),
+                                          1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
@@ -1173,7 +1191,7 @@ Result BinaryReaderIR::OnSimdLoadLaneExpr(Opcode opcode,
                                           Address offset,
                                           uint64_t value) {
   return AppendExpr(MakeUnique<SimdLoadLaneExpr>(
-      opcode, Var(memidx), 1 << alignment_log2, offset, value));
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
@@ -1182,7 +1200,7 @@ Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
                                            Address offset,
                                            uint64_t value) {
   return AppendExpr(MakeUnique<SimdStoreLaneExpr>(
-      opcode, Var(memidx), 1 << alignment_log2, offset, value));
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
@@ -1190,17 +1208,19 @@ Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
 }
 
 Result BinaryReaderIR::OnLoadSplatExpr(Opcode opcode,
+                                       Index memidx,
                                        Address alignment_log2,
                                        Address offset) {
-  return AppendExpr(
-      MakeUnique<LoadSplatExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<LoadSplatExpr>(
+      opcode, Var(memidx, GetLocation()), 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnLoadZeroExpr(Opcode opcode,
+                                      Index memidx,
                                       Address alignment_log2,
                                       Address offset) {
-  return AppendExpr(
-      MakeUnique<LoadZeroExpr>(opcode, 1 << alignment_log2, offset));
+  return AppendExpr(MakeUnique<LoadZeroExpr>(opcode, Var(memidx, GetLocation()),
+                                             1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnElemSegmentCount(Index count) {
@@ -1383,6 +1403,22 @@ Result BinaryReaderIR::SetFunctionName(Index index, std::string_view name) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::SetTypeName(Index index, std::string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+  if (index >= module_->types.size()) {
+    PrintError("invalid type index: %" PRIindex, index);
+    return Result::Error;
+  }
+  TypeEntry* type = module_->types[index];
+  std::string dollar_name =
+      GetUniqueName(&module_->type_bindings, MakeDollarName(name));
+  type->name = dollar_name;
+  module_->type_bindings.emplace(dollar_name, Binding(index));
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::SetTableName(Index index, std::string_view name) {
   if (name.empty()) {
     return Result::Ok;
@@ -1477,7 +1513,9 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Local:
     case NameSectionSubsection::Module:
     case NameSectionSubsection::Label:
+      break;
     case NameSectionSubsection::Type:
+      SetTypeName(index, name);
       break;
     case NameSectionSubsection::Tag:
       SetTagName(index, name);
@@ -1651,7 +1689,7 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
                                      uint32_t flags,
                                      std::string_view name,
                                      Index table_index) {
-  return SetTableName(index, name);
+  return SetTableName(table_index, name);
 }
 
 }  // end anonymous namespace

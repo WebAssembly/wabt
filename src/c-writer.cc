@@ -33,6 +33,12 @@
 
 #define UNIMPLEMENTED(x) printf("unimplemented: %s\n", (x)), abort()
 
+// code to be inserted into the generated output
+extern const char* s_header_top;
+extern const char* s_header_bottom;
+extern const char* s_source_includes;
+extern const char* s_source_declarations;
+
 namespace wabt {
 
 namespace {
@@ -42,11 +48,13 @@ struct Label {
         const std::string& name,
         const TypeVector& sig,
         size_t type_stack_size,
+        size_t try_catch_stack_size,
         bool used = false)
       : label_type(label_type),
         name(name),
         sig(sig),
         type_stack_size(type_stack_size),
+        try_catch_stack_size(try_catch_stack_size),
         used(used) {}
 
   bool HasValue() const { return !sig.empty(); }
@@ -55,6 +63,7 @@ struct Label {
   const std::string& name;
   const TypeVector& sig;
   size_t type_stack_size;
+  size_t try_catch_stack_size;
   bool used = false;
 };
 
@@ -68,6 +77,8 @@ typedef Name<0> LocalName;
 typedef Name<1> GlobalName;
 typedef Name<2> ExternalPtr;
 typedef Name<3> ExternalRef;
+typedef Name<4> ExternalInstancePtr;
+typedef Name<5> ExternalInstanceRef;
 
 struct GotoLabel {
   explicit GotoLabel(const Var& var) : var(var) {}
@@ -81,6 +92,11 @@ struct LabelDecl {
 
 struct GlobalVar {
   explicit GlobalVar(const Var& var) : var(var) {}
+  const Var& var;
+};
+
+struct GlobalInstanceVar {
+  explicit GlobalInstanceVar(const Var& var) : var(var) {}
   const Var& var;
 };
 
@@ -104,6 +120,14 @@ struct SignedType {
 struct ResultType {
   explicit ResultType(const TypeVector& types) : types(types) {}
   const TypeVector& types;
+};
+
+struct TryCatchLabel {
+  TryCatchLabel(const std::string& name, size_t try_catch_stack_size)
+      : name(name), try_catch_stack_size(try_catch_stack_size), used(false) {}
+  std::string name;
+  size_t try_catch_stack_size;
+  bool used;
 };
 
 struct Newline {};
@@ -155,7 +179,7 @@ class CWriter {
                  const std::string& name,
                  const FuncSignature&,
                  bool used = false);
-  const Label* FindLabel(const Var& var);
+  const Label* FindLabel(const Var& var, bool mark_used = true);
   bool IsTopLabelUsed() const;
   void PopLabel();
 
@@ -164,13 +188,22 @@ class CWriter {
 
   static char MangleType(Type);
   static std::string MangleMultivalueTypes(const TypeVector&);
+  static std::string MangleTagTypes(const TypeVector&);
   static std::string MangleName(std::string_view);
   static std::string LegalizeName(std::string_view);
   std::string ExportName(std::string_view mangled_name);
+  std::string ModuleInstanceTypeName() const;
+  static std::string MangleModuleInstanceName(
+      const std::string_view module_name);
+  static std::string MangleModuleInstanceTypeName(
+      const std::string_view module_name);
   std::string DefineName(SymbolSet*, std::string_view);
   std::string DefineImportName(const std::string& name,
                                std::string_view module_name,
                                std::string_view mangled_field_name);
+  std::string DefineImportInstanceName(const std::string& name,
+                                       std::string_view module_name,
+                                       std::string_view mangled_field_name);
   std::string DefineGlobalScopeName(const std::string&);
   std::string DefineLocalScopeName(const std::string&);
   std::string DefineStackVarName(Index, Type, std::string_view);
@@ -193,7 +226,6 @@ class CWriter {
   enum class WriteExportsKind {
     Declarations,
     Definitions,
-    Initializers,
   };
 
   void Write() {}
@@ -206,6 +238,8 @@ class CWriter {
   void Write(const GlobalName&);
   void Write(const ExternalPtr&);
   void Write(const ExternalRef&);
+  void Write(const ExternalInstancePtr&);
+  void Write(const ExternalInstanceRef&);
   void Write(Type);
   void Write(SignedType);
   void Write(TypeEnum);
@@ -213,6 +247,7 @@ class CWriter {
   void Write(const GotoLabel&);
   void Write(const LabelDecl&);
   void Write(const GlobalVar&);
+  void Write(const GlobalInstanceVar&);
   void Write(const StackVar&);
   void Write(const ResultType&);
   void Write(const Const&);
@@ -220,26 +255,44 @@ class CWriter {
   std::string GenerateHeaderGuard() const;
   void WriteSourceTop();
   void WriteMultivalueTypes();
+  void WriteTagTypes();
   void WriteFuncTypes();
+  void WriteTags();
+  void ComputeUniqueImports();
+  void BeginInstance();
   void WriteImports();
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&);
+  void WriteImportFuncDeclaration(const FuncDeclaration&,
+                                  const std::string& module_name,
+                                  const std::string&);
+  void WriteCallIndirectFuncDeclaration(const FuncDeclaration&,
+                                        const std::string&);
+  void WriteModuleInstance();
   void WriteGlobals();
   void WriteGlobal(const Global&, const std::string&);
+  void WriteGlobalPtr(const Global&, const std::string&);
   void WriteMemories();
   void WriteMemory(const std::string&);
+  void WriteMemoryPtr(const std::string&);
   void WriteTables();
   void WriteTable(const std::string&);
+  void WriteTablePtr(const std::string&);
+  void WriteGlobalInitializers();
   void WriteDataInitializers();
   void WriteElemInitializers();
-  void WriteInitExports();
   void WriteExports(WriteExportsKind);
+  void WriteInitDecl();
+  void WriteFreeDecl();
   void WriteInit();
   void WriteFree();
+  void WriteInitInstanceImport();
   void WriteFuncs();
   void Write(const Func&);
   void WriteParamsAndLocals();
   void WriteParams(const std::vector<std::string>& index_to_name);
+  void WriteParamSymbols(const std::vector<std::string>& index_to_name);
+  void WriteParamTypes(const FuncDeclaration& decl);
   void WriteLocals(const std::vector<std::string>& index_to_name);
   void WriteStackVarDeclarations();
   void Write(const ExprList&);
@@ -268,12 +321,23 @@ class CWriter {
   void Write(const SimdShuffleOpExpr&);
   void Write(const LoadSplatExpr&);
   void Write(const LoadZeroExpr&);
+  void Write(const Block&);
+
+  size_t BeginTry(const TryExpr& tryexpr);
+  void WriteTryCatch(const TryExpr& tryexpr);
+  void WriteTryDelegate(const TryExpr& tryexpr);
+  void Write(const Catch& c);
+  void WriteThrow();
+
+  void PushTryCatch(const std::string& name);
+  void PopTryCatch();
+
+  void PushFuncSection(const std::string_view include_condition = "");
 
   const WriteCOptions& options_;
   const Module* module_ = nullptr;
   const Func* func_ = nullptr;
   Stream* stream_ = nullptr;
-  MemoryStream func_stream_;
   Stream* c_stream_ = nullptr;
   Stream* h_stream_ = nullptr;
   std::string header_name_;
@@ -283,24 +347,25 @@ class CWriter {
 
   SymbolMap global_sym_map_;
   SymbolMap local_sym_map_;
+  SymbolMap import_module_sym_map_;
   StackVarSymbolMap stack_var_sym_map_;
   SymbolSet global_syms_;
   SymbolSet local_syms_;
   SymbolSet import_syms_;
   TypeVector type_stack_;
   std::vector<Label> label_stack_;
+  std::vector<TryCatchLabel> try_catch_stack_;
   std::string module_prefix_;
+
+  std::vector<const Import*> unique_imports_;
+  SymbolSet import_module_set_;       // modules that are imported from
+  SymbolSet import_func_module_set_;  // modules that funcs are imported from
+
+  std::vector<std::pair<std::string, MemoryStream>> func_sections_;
+  SymbolSet func_includes_;
 };
 
 static const char kImplicitFuncLabel[] = "$Bfunc";
-
-#define SECTION_NAME(x) s_header_##x
-#include "src/prebuilt/wasm2c.include.h"
-#undef SECTION_NAME
-
-#define SECTION_NAME(x) s_source_##x
-#include "src/prebuilt/wasm2c.include.c"
-#undef SECTION_NAME
 
 size_t CWriter::MarkTypeStack() const {
   return type_stack_.size();
@@ -335,13 +400,15 @@ void CWriter::PushLabel(LabelType label_type,
                         bool used) {
   if (label_type == LabelType::Loop)
     label_stack_.emplace_back(label_type, name, sig.param_types,
-                              type_stack_.size(), used);
+                              type_stack_.size(), try_catch_stack_.size(),
+                              used);
   else
     label_stack_.emplace_back(label_type, name, sig.result_types,
-                              type_stack_.size(), used);
+                              type_stack_.size(), try_catch_stack_.size(),
+                              used);
 }
 
-const Label* CWriter::FindLabel(const Var& var) {
+const Label* CWriter::FindLabel(const Var& var, bool mark_used) {
   Label* label = nullptr;
 
   if (var.is_index()) {
@@ -360,7 +427,9 @@ const Label* CWriter::FindLabel(const Var& var) {
   }
 
   assert(label);
-  label->used = true;
+  if (mark_used) {
+    label->used = true;
+  }
   return label;
 }
 
@@ -375,7 +444,7 @@ void CWriter::PopLabel() {
 
 // static
 std::string CWriter::AddressOf(const std::string& s) {
-  return "(&" + s + ")";
+  return "&" + s;
 }
 
 // static
@@ -405,6 +474,16 @@ std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
 }
 
 // static
+std::string CWriter::MangleTagTypes(const TypeVector& types) {
+  assert(types.size() >= 2);
+  std::string result = "wasm_tag_";
+  for (auto type : types) {
+    result += MangleType(type);
+  }
+  return result;
+}
+
+// static
 std::string CWriter::MangleName(std::string_view name) {
   const char kPrefix = 'Z';
   std::string result = "Z_";
@@ -423,9 +502,24 @@ std::string CWriter::MangleName(std::string_view name) {
   return result;
 }
 
-// static
 std::string CWriter::ExportName(std::string_view mangled_name) {
   return module_prefix_ + std::string(mangled_name);
+}
+
+std::string CWriter::ModuleInstanceTypeName() const {
+  return module_prefix_ + "_instance_t";
+}
+
+// static
+std::string CWriter::MangleModuleInstanceName(
+    const std::string_view module_name) {
+  return MangleName(module_name) + "_instance";
+}
+
+// static
+std::string CWriter::MangleModuleInstanceTypeName(
+    const std::string_view module_name) {
+  return MangleName(module_name) + "_instance_t";
 }
 
 // static
@@ -469,8 +563,18 @@ std::string_view StripLeadingDollar(std::string_view name) {
 
 std::string CWriter::DefineImportName(const std::string& name,
                                       std::string_view module,
-                                      std::string_view mangled_field_name) {
-  std::string mangled = MangleName(module) + mangled_field_name;
+                                      std::string_view field_name) {
+  std::string mangled = MangleName(module) + MangleName(field_name);
+  import_syms_.insert(name);
+  global_syms_.insert(mangled);
+  global_sym_map_.insert(SymbolMap::value_type(name, mangled));
+  return mangled;
+}
+
+std::string CWriter::DefineImportInstanceName(const std::string& name,
+                                              std::string_view module,
+                                              std::string_view field_name) {
+  std::string mangled = MangleName(module) + MangleName(field_name);
   import_syms_.insert(name);
   global_syms_.insert(mangled);
   global_sym_map_.insert(SymbolMap::value_type(name, mangled));
@@ -584,12 +688,30 @@ void CWriter::Write(const ExternalPtr& name) {
   }
 }
 
+void CWriter::Write(const ExternalInstancePtr& name) {
+  bool is_import = import_syms_.count(name.name) != 0;
+  if (is_import) {
+    Write("instance->", GetGlobalName(name.name));
+  } else {
+    Write("&instance->", GetGlobalName(name.name));
+  }
+}
+
 void CWriter::Write(const ExternalRef& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (is_import) {
     Write(Deref(GetGlobalName(name.name)));
   } else {
     Write(GetGlobalName(name.name));
+  }
+}
+
+void CWriter::Write(const ExternalInstanceRef& name) {
+  bool is_import = import_syms_.count(name.name) != 0;
+  if (is_import) {
+    Write(Deref("instance->" + GetGlobalName(name.name)));
+  } else {
+    Write("instance->", GetGlobalName(name.name));
   }
 }
 
@@ -612,6 +734,15 @@ void CWriter::Write(const GotoLabel& goto_label) {
               StackVar(amount - i - 1), "; ");
       }
     }
+
+    assert(try_catch_stack_.size() >= label->try_catch_stack_size);
+
+    if (try_catch_stack_.size() != label->try_catch_stack_size) {
+      const std::string& name =
+          try_catch_stack_.at(label->try_catch_stack_size).name;
+
+      Write("wasm_rt_set_unwind_target(", name, "_outer_target);", Newline());
+    }
   }
 
   if (goto_label.var.is_name()) {
@@ -620,7 +751,7 @@ void CWriter::Write(const GotoLabel& goto_label) {
     // We've generated names for all labels, so we should only be using an
     // index when branching to the implicit function label, which can't be
     // named.
-    Write("goto ", Var(kImplicitFuncLabel), ";");
+    Write("goto ", Var(kImplicitFuncLabel, {}), ";");
   }
 }
 
@@ -632,6 +763,11 @@ void CWriter::Write(const LabelDecl& label) {
 void CWriter::Write(const GlobalVar& var) {
   assert(var.var.is_name());
   Write(ExternalRef(var.var.name()));
+}
+
+void CWriter::Write(const GlobalInstanceVar& var) {
+  assert(var.var.is_name());
+  Write(ExternalInstanceRef(var.var.name()));
 }
 
 void CWriter::Write(const StackVar& sv) {
@@ -755,6 +891,21 @@ void CWriter::Write(const Const& const_) {
   }
 }
 
+void CWriter::WriteInitDecl() {
+  Write("void " + module_prefix_ + "_init_module(void);", Newline());
+  Write("void " + module_prefix_ + "_instantiate(", ModuleInstanceTypeName(),
+        "*");
+  for (auto import_module_name : import_module_set_) {
+    Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "*");
+  }
+  Write(");", Newline());
+}
+
+void CWriter::WriteFreeDecl() {
+  Write("void " + module_prefix_ + "_free(", ModuleInstanceTypeName(), "*);",
+        Newline());
+}
+
 void CWriter::WriteInitExpr(const ExprList& expr_list) {
   if (expr_list.empty())
     return;
@@ -767,7 +918,7 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
       break;
 
     case ExprType::GlobalGet:
-      Write(GlobalVar(cast<GlobalGetExpr>(expr)->var));
+      Write(GlobalInstanceVar(cast<GlobalGetExpr>(expr)->var));
       break;
 
     default:
@@ -792,6 +943,7 @@ void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
   Write(s_source_declarations);
+  Write(Newline());
 }
 
 void CWriter::WriteMultivalueTypes() {
@@ -809,6 +961,28 @@ void CWriter::WriteMultivalueTypes() {
     Write("struct ", name, " ", OpenBrace());
     for (Index i = 0; i < num_results; ++i) {
       Type type = func_type->GetResultType(i);
+      Write(type);
+      Writef(" %c%d;", MangleType(type), i);
+      Write(Newline());
+    }
+    Write(CloseBrace(), ";", Newline(), "#endif  /* ", name, " */", Newline());
+  }
+}
+
+void CWriter::WriteTagTypes() {
+  for (const Tag* tag : module_->tags) {
+    const FuncDeclaration& tag_type = tag->decl;
+    Index num_params = tag_type.GetNumParams();
+    if (num_params <= 1) {
+      continue;
+    }
+    const std::string name = MangleTagTypes(tag_type.sig.param_types);
+    // use same method as WriteMultivalueTypes
+    Write("#ifndef ", name, Newline());
+    Write("#define ", name, " ", name, Newline());
+    Write("struct ", name, " ", OpenBrace());
+    for (Index i = 0; i < num_params; ++i) {
+      Type type = tag_type.GetParamType(i);
       Write(type);
       Writef(" %c%d;", MangleType(type), i);
       Write(Newline());
@@ -848,54 +1022,219 @@ void CWriter::WriteFuncTypes() {
   Write(CloseBrace(), Newline());
 }
 
-void CWriter::WriteImports() {
-  if (module_->imports.empty())
-    return;
+void CWriter::WriteTags() {
+  Index tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      Write("static u32 ", DefineGlobalScopeName(tag->name), ";", Newline());
+    }
+    tag_index++;
+  }
 
   Write(Newline());
 
-  // TODO(binji): Write imports ordered by type.
+  Write("static void init_tags(void) ", OpenBrace());
+
+  tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      const FuncDeclaration& tag_type = tag->decl;
+      Index num_params = tag_type.GetNumParams();
+      Write(GlobalName(tag->name), " = wasm_rt_register_tag(");
+      if (num_params == 0) {
+        Write("0");
+      } else if (num_params == 1) {
+        Write("sizeof(", tag_type.GetParamType(0), ")");
+      } else {
+        Write("sizeof(struct ", MangleTagTypes(tag_type.sig.param_types), ")");
+      }
+
+      Write(");", Newline());
+    }
+    tag_index++;
+  }
+  Write(CloseBrace(), Newline());
+}
+
+void CWriter::ComputeUniqueImports() {
+  using modname_name_pair = std::pair<std::string, std::string>;
+  std::map<modname_name_pair, const Import*> import_map;
   for (const Import* import : module_->imports) {
-    Write("/* import: '", import->module_name, "' '", import->field_name,
-          "' */", Newline());
-    Write("extern ");
+    // After emplacing, the returned bool says whether the insert happened;
+    // i.e., was there already an import with the same modname and name?
+    // If there was, make sure it was at least the same kind of import.
+    const auto iterator_and_insertion_bool = import_map.emplace(
+        modname_name_pair(import->module_name, import->field_name), import);
+    if (!iterator_and_insertion_bool.second) {
+      if (iterator_and_insertion_bool.first->second->kind() != import->kind()) {
+        UNIMPLEMENTED("contradictory import declaration");
+      } else {
+        fprintf(stderr, "warning: duplicate import declaration \"%s\" \"%s\"\n",
+                import->module_name.c_str(), import->field_name.c_str());
+      }
+    }
+    import_module_set_.insert(import->module_name);
+    if (import->kind() == ExternalKind::Func) {
+      import_func_module_set_.insert(import->module_name);
+    }
+  }
+
+  for (const auto& node : import_map) {
+    unique_imports_.push_back(node.second);
+  }
+}
+
+void CWriter::BeginInstance() {
+  if (module_->imports.empty()) {
+    Write("typedef struct ", ModuleInstanceTypeName(), " ", OpenBrace());
+    return;
+  }
+
+  ComputeUniqueImports();
+
+  // define names of per-instance imports
+  for (const Import* import : module_->imports) {
     switch (import->kind()) {
       case ExternalKind::Func: {
         const Func& func = cast<FuncImport>(import)->func;
-        WriteFuncDeclaration(func.decl,
-                             DefineImportName(func.name, import->module_name,
-                                              MangleName(import->field_name)));
-        Write(";");
-        break;
-      }
+        DefineImportName(func.name, import->module_name, import->field_name);
+        import_module_sym_map_.emplace(func.name, import->module_name);
+      } break;
 
+      case ExternalKind::Tag: {
+        const Tag& tag = cast<TagImport>(import)->tag;
+        DefineImportName(tag.name, import->module_name, import->field_name);
+        import_module_sym_map_.emplace(tag.name, import->module_name);
+      } break;
+
+      case ExternalKind::Global:
+        DefineImportInstanceName(cast<GlobalImport>(import)->global.name,
+                                 import->module_name, import->field_name);
+        break;
+
+      case ExternalKind::Memory:
+        DefineImportInstanceName(cast<MemoryImport>(import)->memory.name,
+                                 import->module_name, import->field_name);
+        break;
+
+      case ExternalKind::Table:
+        DefineImportInstanceName(cast<TableImport>(import)->table.name,
+                                 import->module_name, import->field_name);
+        break;
+
+      default:
+        WABT_UNREACHABLE;
+    }
+  }
+
+  // Forward declaring module instance types
+  for (auto import_module : import_module_set_) {
+    Write("struct ", MangleModuleInstanceTypeName(import_module), ";",
+          Newline());
+  }
+
+  // Forward declaring module imports
+  for (const Import* import : unique_imports_) {
+    if ((import->kind() == ExternalKind::Func) ||
+        (import->kind() == ExternalKind::Tag)) {
+      continue;
+    }
+
+    Write("extern ");
+    switch (import->kind()) {
       case ExternalKind::Global: {
         const Global& global = cast<GlobalImport>(import)->global;
-        WriteGlobal(global, DefineImportName(global.name, import->module_name,
-                                             MangleName(import->field_name)));
-        Write(";");
+        Write(global.type);
         break;
       }
 
       case ExternalKind::Memory: {
-        const Memory& memory = cast<MemoryImport>(import)->memory;
-        WriteMemory(DefineImportName(memory.name, import->module_name,
-                                     MangleName(import->field_name)));
+        Write("wasm_rt_memory_t");
         break;
       }
 
       case ExternalKind::Table: {
-        const Table& table = cast<TableImport>(import)->table;
-        WriteTable(DefineImportName(table.name, import->module_name,
-                                    MangleName(import->field_name)));
+        Write("wasm_rt_table_t");
         break;
       }
 
       default:
         WABT_UNREACHABLE;
     }
+    Write("* ", MangleName(import->module_name), MangleName(import->field_name),
+          "(struct ", MangleModuleInstanceTypeName(import->module_name), "*);",
+          Newline());
+  }
+  Write(Newline());
+
+  // Add pointers to module instances that any func is imported from,
+  // so that imported functions can be given their own module instances
+  // when invoked
+  Write("typedef struct ", ModuleInstanceTypeName(), " ", OpenBrace());
+  for (auto import_module : import_func_module_set_) {
+    Write("struct ", MangleModuleInstanceTypeName(import_module), "* ",
+          MangleModuleInstanceName(import_module) + ";", Newline());
+  }
+
+  for (const Import* import : unique_imports_) {
+    if ((import->kind() == ExternalKind::Func) ||
+        (import->kind() == ExternalKind::Tag)) {
+      continue;
+    }
+
+    Write("/* import: '", import->module_name, "' '", import->field_name,
+          "' */", Newline());
+
+    switch (import->kind()) {
+      case ExternalKind::Global:
+        WriteGlobal(cast<GlobalImport>(import)->global,
+                    "*" + MangleName(import->module_name) +
+                        MangleName(import->field_name));
+        break;
+
+      case ExternalKind::Memory:
+        WriteMemory("*" + MangleName(import->module_name) +
+                    MangleName(import->field_name));
+        break;
+
+      case ExternalKind::Table:
+        WriteTable("*" + MangleName(import->module_name) +
+                   MangleName(import->field_name));
+        break;
+
+      default:
+        WABT_UNREACHABLE;
+    }
 
     Write(Newline());
+  }
+}
+
+// Write module-wide imports (funcs & tags), which aren't tied to an instance.
+void CWriter::WriteImports() {
+  if (module_->imports.empty())
+    return;
+
+  Write(Newline());
+
+  for (const Import* import : unique_imports_) {
+    if (import->kind() == ExternalKind::Func) {
+      Write("/* import: '", import->module_name, "' '", import->field_name,
+            "' */", Newline());
+      const Func& func = cast<FuncImport>(import)->func;
+      WriteImportFuncDeclaration(
+          func.decl, import->module_name,
+          MangleName(import->module_name) + MangleName(import->field_name));
+      Write(";");
+      Write(Newline());
+    } else if (import->kind() == ExternalKind::Tag) {
+      Write("/* import: '", import->module_name, "' '", import->field_name,
+            "' */", Newline());
+      Write("extern const u32 *", MangleName(import->module_name),
+            MangleName(import->field_name), ";", Newline());
+    }
   }
 }
 
@@ -920,64 +1259,73 @@ void CWriter::WriteFuncDeclarations() {
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name) {
   Write(ResultType(decl.sig.result_types), " ", name, "(");
-  if (decl.GetNumParams() == 0) {
-    Write("void");
-  } else {
-    for (Index i = 0; i < decl.GetNumParams(); ++i) {
-      if (i != 0)
-        Write(", ");
-      Write(decl.GetParamType(i));
-    }
-  }
+  Write(ModuleInstanceTypeName(), "*");
+  WriteParamTypes(decl);
   Write(")");
+}
+
+void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
+                                         const std::string& module_name,
+                                         const std::string& name) {
+  Write(ResultType(decl.sig.result_types), " ", name, "(");
+  Write("struct ", MangleModuleInstanceTypeName(module_name), "*");
+  WriteParamTypes(decl);
+  Write(")");
+}
+
+void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
+                                               const std::string& name) {
+  Write(ResultType(decl.sig.result_types), " ", name, "(void*");
+  WriteParamTypes(decl);
+  Write(")");
+}
+
+void CWriter::WriteModuleInstance() {
+  BeginInstance();
+  WriteGlobals();
+  WriteMemories();
+  WriteTables();
+
+  // C forbids an empty struct
+  if (module_->globals.empty() && module_->memories.empty() &&
+      module_->tables.empty()) {
+    Write("char dummy_member;", Newline());
+  }
+
+  Write(CloseBrace(), " ", ModuleInstanceTypeName(), ";", Newline());
+  Write(Newline());
 }
 
 void CWriter::WriteGlobals() {
   Index global_index = 0;
   if (module_->globals.size() != module_->num_global_imports) {
-    Write(Newline());
-
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
-        Write("static ");
         WriteGlobal(*global, DefineGlobalScopeName(global->name));
-        Write(";", Newline());
+        Write(Newline());
       }
       ++global_index;
     }
   }
-
-  Write(Newline(), "static void init_globals(void) ", OpenBrace());
-  global_index = 0;
-  for (const Global* global : module_->globals) {
-    bool is_import = global_index < module_->num_global_imports;
-    if (!is_import) {
-      assert(!global->init_expr.empty());
-      Write(GlobalName(global->name), " = ");
-      WriteInitExpr(global->init_expr);
-      Write(";", Newline());
-    }
-    ++global_index;
-  }
-  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteGlobal(const Global& global, const std::string& name) {
-  Write(global.type, " ", name);
+  Write(global.type, " ", name, ";");
+}
+
+void CWriter::WriteGlobalPtr(const Global& global, const std::string& name) {
+  Write(global.type, "* ", name, "(", ModuleInstanceTypeName(), "* instance)");
 }
 
 void CWriter::WriteMemories() {
   if (module_->memories.size() == module_->num_memory_imports)
     return;
 
-  Write(Newline());
-
   Index memory_index = 0;
   for (const Memory* memory : module_->memories) {
     bool is_import = memory_index < module_->num_memory_imports;
     if (!is_import) {
-      Write("static ");
       WriteMemory(DefineGlobalScopeName(memory->name));
       Write(Newline());
     }
@@ -989,19 +1337,21 @@ void CWriter::WriteMemory(const std::string& name) {
   Write("wasm_rt_memory_t ", name, ";");
 }
 
+void CWriter::WriteMemoryPtr(const std::string& name) {
+  Write("wasm_rt_memory_t* ", name, "(", ModuleInstanceTypeName(),
+        "* instance)");
+}
+
 void CWriter::WriteTables() {
   if (module_->tables.size() == module_->num_table_imports) {
     return;
   }
-
-  Write(Newline());
 
   assert(module_->tables.size() <= 1);
   Index table_index = 0;
   for (const Table* table : module_->tables) {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
-      Write("static ");
       WriteTable(DefineGlobalScopeName(table->name));
       Write(Newline());
     }
@@ -1011,6 +1361,28 @@ void CWriter::WriteTables() {
 
 void CWriter::WriteTable(const std::string& name) {
   Write("wasm_rt_table_t ", name, ";");
+}
+
+void CWriter::WriteTablePtr(const std::string& name) {
+  Write("wasm_rt_table_t* ", name, "(", ModuleInstanceTypeName(),
+        "* instance)");
+}
+
+void CWriter::WriteGlobalInitializers() {
+  Write(Newline(), "static void init_globals(", ModuleInstanceTypeName(),
+        "* instance) ", OpenBrace());
+  Index global_index = 0;
+  for (const Global* global : module_->globals) {
+    bool is_import = global_index < module_->num_global_imports;
+    if (!is_import) {
+      assert(!global->init_expr.empty());
+      Write(ExternalInstanceRef(global->name), " = ");
+      WriteInitExpr(global->init_expr);
+      Write(";", Newline());
+    }
+    ++global_index;
+  }
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteDataInitializers() {
@@ -1045,20 +1417,21 @@ void CWriter::WriteDataInitializers() {
     memory = module_->memories[0];
   }
 
-  Write(Newline(), "static void init_memory(void) ", OpenBrace());
+  Write("static void init_memory(", ModuleInstanceTypeName(), "* instance) ",
+        OpenBrace());
   if (module_->memories.size() > module_->num_memory_imports) {
     Index memory_idx = module_->num_memory_imports;
     for (Index i = memory_idx; i < module_->memories.size(); i++) {
       memory = module_->memories[i];
       uint32_t max =
           memory->page_limits.has_max ? memory->page_limits.max : 65536;
-      Write("wasm_rt_allocate_memory(", ExternalPtr(memory->name), ", ",
+      Write("wasm_rt_allocate_memory(", ExternalInstancePtr(memory->name), ", ",
             memory->page_limits.initial, ", ", max, ");", Newline());
     }
   }
   data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {
-    Write("LOAD_DATA(", ExternalRef(memory->name), ", ");
+    Write("LOAD_DATA(", ExternalInstanceRef(memory->name), ", ");
     WriteInitExpr(data_segment->offset);
     Write(", data_segment_data_", data_segment_index, ", ",
           data_segment->data.size());
@@ -1070,7 +1443,8 @@ void CWriter::WriteDataInitializers() {
 }
 
 void CWriter::WriteElemInitializers() {
-  Write(Newline(), "static void init_table(void) ", OpenBrace());
+  Write(Newline(), "static void init_table(", ModuleInstanceTypeName(),
+        "* instance) ", OpenBrace());
 
   if (!module_->types.size()) {
     // If there are no types there cannot be any table entries either.
@@ -1086,7 +1460,7 @@ void CWriter::WriteElemInitializers() {
   if (table && module_->num_table_imports == 0) {
     uint32_t max =
         table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
-    Write("wasm_rt_allocate_table(", ExternalPtr(table->name), ", ",
+    Write("wasm_rt_allocate_table(", ExternalInstancePtr(table->name), ", ",
           table->elem_limits.initial, ", ", max, ");", Newline());
   }
   Index elem_segment_index = 0;
@@ -1108,9 +1482,20 @@ void CWriter::WriteElemInitializers() {
       const Func* func = module_->GetFunc(cast<RefFuncExpr>(expr)->var);
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
 
-      Write(ExternalRef(table->name), ".data[offset + ", i,
-            "] = (wasm_rt_elem_t){func_types[", func_type_index,
-            "], (wasm_rt_funcref_t)", ExternalPtr(func->name), "};", Newline());
+      bool is_import = import_module_sym_map_.count(func->name) != 0;
+      if (is_import) {
+        Write(ExternalInstanceRef(table->name), ".data[offset + ", i,
+              "] = (wasm_rt_elem_t){func_types[", func_type_index,
+              "], (wasm_rt_funcref_t)", ExternalPtr(func->name),
+              ", (void*)(instance->",
+              MangleModuleInstanceName(import_module_sym_map_[func->name]),
+              ")};", Newline());
+      } else {
+        Write(ExternalInstanceRef(table->name), ".data[offset + ", i,
+              "] = (wasm_rt_elem_t){func_types[", func_type_index,
+              "], (wasm_rt_funcref_t)", ExternalPtr(func->name),
+              ", (void*)instance};", Newline());
+      }
       ++i;
     }
     ++elem_segment_index;
@@ -1119,37 +1504,34 @@ void CWriter::WriteElemInitializers() {
   Write(CloseBrace(), Newline());
 }
 
-void CWriter::WriteInitExports() {
-  Write(Newline(), "static void init_exports(void) ", OpenBrace());
-  WriteExports(WriteExportsKind::Initializers);
-  Write(CloseBrace(), Newline());
-}
-
 void CWriter::WriteExports(WriteExportsKind kind) {
   if (module_->exports.empty())
     return;
 
-  if (kind != WriteExportsKind::Initializers) {
-    Write(Newline());
-  }
-
   for (const Export* export_ : module_->exports) {
-    Write("/* export: '", export_->name, "' */", Newline());
-    if (kind == WriteExportsKind::Declarations) {
-      Write("extern ");
-    }
+    Write(Newline(), "/* export: '", export_->name, "' */", Newline());
 
     std::string mangled_name;
     std::string internal_name;
+    std::vector<std::string> index_to_name;
 
     switch (export_->kind) {
       case ExternalKind::Func: {
         const Func* func = module_->GetFunc(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = func->name;
-        if (kind != WriteExportsKind::Initializers) {
-          WriteFuncDeclaration(func->decl, Deref(mangled_name));
-          Write(";");
+        if (kind == WriteExportsKind::Declarations) {
+          WriteFuncDeclaration(func->decl, mangled_name);
+        } else {
+          func_ = func;
+          local_syms_ = global_syms_;
+          local_sym_map_.clear();
+          stack_var_sym_map_.clear();
+          Write(ResultType(func_->decl.sig.result_types), " ", mangled_name,
+                "(");
+          MakeTypeBindingReverseMapping(func_->GetNumParamsAndLocals(),
+                                        func_->bindings, &index_to_name);
+          WriteParams(index_to_name);
         }
         break;
       }
@@ -1158,10 +1540,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         const Global* global = module_->GetGlobal(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = global->name;
-        if (kind != WriteExportsKind::Initializers) {
-          WriteGlobal(*global, Deref(mangled_name));
-          Write(";");
-        }
+        WriteGlobalPtr(*global, mangled_name);
         break;
       }
 
@@ -1169,9 +1548,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         const Memory* memory = module_->GetMemory(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = memory->name;
-        if (kind != WriteExportsKind::Initializers) {
-          WriteMemory(Deref(mangled_name));
-        }
+        WriteMemoryPtr(mangled_name);
         break;
       }
 
@@ -1179,9 +1556,18 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         const Table* table = module_->GetTable(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = table->name;
-        if (kind != WriteExportsKind::Initializers) {
-          WriteTable(Deref(mangled_name));
+        WriteTablePtr(mangled_name);
+        break;
+      }
+
+      case ExternalKind::Tag: {
+        const Tag* tag = module_->GetTag(export_->var);
+        mangled_name = ExportName(MangleName(export_->name));
+        internal_name = tag->name;
+        if (kind == WriteExportsKind::Declarations) {
+          Write("extern ");
         }
+        Write("const u32 *", mangled_name);
         break;
       }
 
@@ -1189,29 +1575,145 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         WABT_UNREACHABLE;
     }
 
-    if (kind == WriteExportsKind::Initializers) {
-      Write(mangled_name, " = ", ExternalPtr(internal_name), ";");
+    if (kind == WriteExportsKind::Declarations) {
+      Write(";");
+      continue;
     }
 
-    Write(Newline());
+    Write(" ");
+    switch (export_->kind) {
+      case ExternalKind::Func: {
+        Write(OpenBrace());
+        Write("return ", ExternalRef(internal_name), "(");
+
+        bool is_import = import_module_sym_map_.count(internal_name) != 0;
+        if (is_import) {
+          Write("instance->", MangleModuleInstanceName(
+                                  import_module_sym_map_[internal_name]));
+        } else {
+          Write("instance");
+        }
+        WriteParamSymbols(index_to_name);
+        Write(CloseBrace(), Newline());
+
+        local_sym_map_.clear();
+        stack_var_sym_map_.clear();
+        func_ = nullptr;
+        break;
+      }
+
+      case ExternalKind::Global:
+      case ExternalKind::Memory:
+      case ExternalKind::Table: {
+        Write(OpenBrace());
+        Write("return ", ExternalInstancePtr(internal_name), ";", Newline());
+        Write(CloseBrace(), Newline());
+        break;
+      }
+
+      case ExternalKind::Tag:
+        Write("= ", ExternalPtr(internal_name), ";", Newline());
+        break;
+
+      default:
+        WABT_UNREACHABLE;
+    }
   }
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "void ", module_prefix_, "_init(void) ", OpenBrace());
+  Write(Newline(), "void " + module_prefix_ + "_init_module(void) ",
+        OpenBrace());
+  Write("assert(wasm_rt_is_initialized());", Newline());
+  Write("s_module_initialized = true;", Newline());
   Write("init_func_types();", Newline());
-  Write("init_globals();", Newline());
-  Write("init_memory();", Newline());
-  Write("init_table();", Newline());
-  Write("init_exports();", Newline());
+  Write("init_tags();", Newline());
+  Write(CloseBrace(), Newline());
+
+  Write(Newline(), "void " + module_prefix_ + "_instantiate(",
+        ModuleInstanceTypeName(), "* instance");
+  for (auto import_module_name : import_module_set_) {
+    Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "* ",
+          MangleModuleInstanceName(import_module_name));
+  }
+  Write(") ", OpenBrace());
+
+  Write("assert(wasm_rt_is_initialized());", Newline());
+  Write("assert(s_module_initialized);", Newline());
+
+  if (!module_->imports.empty()) {
+    Write("init_instance_import(instance");
+    for (auto import_module_name : import_module_set_) {
+      Write(", ", MangleModuleInstanceName(import_module_name));
+    }
+    Write(");", Newline());
+  }
+
+  Write("init_globals(instance);", Newline());
+  Write("init_memory(instance);", Newline());
+  Write("init_table(instance);", Newline());
   for (Var* var : module_->starts) {
-    Write(ExternalRef(module_->GetFunc(*var)->name), "();", Newline());
+    Write(ExternalRef(module_->GetFunc(*var)->name));
+    bool is_import =
+        import_module_sym_map_.count(module_->GetFunc(*var)->name) != 0;
+    if (is_import) {
+      Write("(instance->",
+            MangleModuleInstanceName(
+                import_module_sym_map_[module_->GetFunc(*var)->name]) +
+                ");");
+    } else {
+      Write("(instance);");
+    }
+    Write(Newline());
+  }
+  Write(CloseBrace(), Newline());
+}
+
+void CWriter::WriteInitInstanceImport() {
+  if (module_->imports.empty())
+    return;
+
+  Write(Newline(), "static void init_instance_import(",
+        ModuleInstanceTypeName(), "* instance");
+  for (auto import_module_name : import_module_set_) {
+    Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "* ",
+          MangleModuleInstanceName(import_module_name));
+  }
+  Write(")", OpenBrace());
+
+  for (auto import_module : import_func_module_set_) {
+    Write("instance->", MangleModuleInstanceName(import_module), " = ",
+          MangleModuleInstanceName(import_module), ";", Newline());
+  }
+
+  for (const Import* import : unique_imports_) {
+    switch (import->kind()) {
+      case ExternalKind::Func:
+      case ExternalKind::Tag:
+        break;
+
+      case ExternalKind::Global:
+      case ExternalKind::Memory:
+      case ExternalKind::Table: {
+        Write("instance->",
+              MangleName(import->module_name) + MangleName(import->field_name),
+              " = ",
+              MangleName(import->module_name) + MangleName(import->field_name),
+              "(", MangleModuleInstanceName(import->module_name), ");",
+              Newline());
+        break;
+      }
+
+      default:
+        WABT_UNREACHABLE;
+    }
   }
   Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteFree() {
-  Write(Newline(), "void " + module_prefix_ + "_free(void) ", OpenBrace());
+  Write(Newline(), "void " + module_prefix_ + "_free(",
+        ModuleInstanceTypeName(), "* instance) ", OpenBrace());
 
   if (module_->types.size()) {
     // If there are no types there cannot be any table entries either.
@@ -1220,7 +1722,8 @@ void CWriter::WriteFree() {
     for (const Table* table : module_->tables) {
       bool is_import = table_index < module_->num_table_imports;
       if (!is_import) {
-        Write("wasm_rt_free_table(", ExternalPtr(table->name), ");", Newline());
+        Write("wasm_rt_free_table(", ExternalInstancePtr(table->name), ");",
+              Newline());
       }
       ++table_index;
     }
@@ -1231,7 +1734,7 @@ void CWriter::WriteFree() {
     for (const Memory* memory : module_->memories) {
       bool is_import = memory_index < module_->num_memory_imports;
       if (!is_import) {
-        Write("wasm_rt_free_memory(", ExternalPtr(memory->name), ");",
+        Write("wasm_rt_free_memory(", ExternalInstancePtr(memory->name), ");",
               Newline());
       }
       ++memory_index;
@@ -1251,20 +1754,26 @@ void CWriter::WriteFuncs() {
   }
 }
 
+void CWriter::PushFuncSection(const std::string_view include_condition) {
+  func_sections_.emplace_back(include_condition, MemoryStream{});
+  stream_ = &func_sections_.back().second;
+}
+
 void CWriter::Write(const Func& func) {
   func_ = &func;
   // Copy symbols from global symbol table so we don't shadow them.
   local_syms_ = global_syms_;
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
+  func_sections_.clear();
+  func_includes_.clear();
 
   Write("static ", ResultType(func.decl.sig.result_types), " ",
         GlobalName(func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
 
-  stream_ = &func_stream_;
-  stream_->ClearOffset();
+  PushFuncSection();
 
   std::string label = DefineLocalScopeName(kImplicitFuncLabel);
   ResetTypeStack(0);
@@ -1296,12 +1805,15 @@ void CWriter::Write(const Func& func) {
 
   WriteStackVarDeclarations();
 
-  std::unique_ptr<OutputBuffer> buf = func_stream_.ReleaseOutputBuffer();
-  stream_->WriteData(buf->data.data(), buf->data.size());
+  for (auto& [condition, stream] : func_sections_) {
+    std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
+    if (condition.empty() || func_includes_.count(condition)) {
+      stream_->WriteData(buf->data.data(), buf->data.size());
+    }
+  }
 
   Write(CloseBrace());
 
-  func_stream_.Clear();
   func_ = nullptr;
 }
 
@@ -1310,26 +1822,49 @@ void CWriter::WriteParamsAndLocals() {
   MakeTypeBindingReverseMapping(func_->GetNumParamsAndLocals(), func_->bindings,
                                 &index_to_name);
   WriteParams(index_to_name);
+  Write(" ", OpenBrace());
   WriteLocals(index_to_name);
 }
 
 void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
-  if (func_->GetNumParams() == 0) {
-    Write("void");
-  } else {
+  Write(ModuleInstanceTypeName(), "* instance");
+  if (func_->GetNumParams() != 0) {
     Indent(4);
     for (Index i = 0; i < func_->GetNumParams(); ++i) {
-      if (i != 0) {
-        Write(", ");
-        if ((i % 8) == 0)
-          Write(Newline());
+      Write(", ");
+      if (i != 0 && (i % 8) == 0) {
+        Write(Newline());
       }
       Write(func_->GetParamType(i), " ",
             DefineLocalScopeName(index_to_name[i]));
     }
     Dedent(4);
   }
-  Write(") ", OpenBrace());
+  Write(")");
+}
+
+void CWriter::WriteParamSymbols(const std::vector<std::string>& index_to_name) {
+  if (func_->GetNumParams() != 0) {
+    Indent(4);
+    for (Index i = 0; i < func_->GetNumParams(); ++i) {
+      Write(", ");
+      if (i != 0 && (i % 8) == 0) {
+        Write(Newline());
+      }
+      Write(local_sym_map_[index_to_name[i]]);
+    }
+    Dedent(4);
+  }
+  Write(");", Newline());
+}
+
+void CWriter::WriteParamTypes(const FuncDeclaration& decl) {
+  if (decl.GetNumParams() != 0) {
+    for (Index i = 0; i < decl.GetNumParams(); ++i) {
+      Write(", ");
+      Write(decl.GetParamType(i));
+    }
+  }
 }
 
 void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
@@ -1388,6 +1923,199 @@ void CWriter::WriteStackVarDeclarations() {
   }
 }
 
+void CWriter::Write(const Block& block) {
+  std::string label = DefineLocalScopeName(block.label);
+  DropTypes(block.decl.GetNumParams());
+  size_t mark = MarkTypeStack();
+  PushLabel(LabelType::Block, block.label, block.decl.sig);
+  PushTypes(block.decl.sig.param_types);
+  Write(block.exprs, LabelDecl(label));
+  ResetTypeStack(mark);
+  PopLabel();
+  PushTypes(block.decl.sig.result_types);
+}
+
+size_t CWriter::BeginTry(const TryExpr& tryexpr) {
+  Write(OpenBrace()); /* beginning of try-catch */
+  const std::string tlabel = DefineLocalScopeName(tryexpr.block.label);
+  Write("WASM_RT_UNWIND_TARGET *", tlabel,
+        "_outer_target = wasm_rt_get_unwind_target();", Newline());
+  Write("WASM_RT_UNWIND_TARGET ", tlabel, "_unwind_target;", Newline());
+  Write("if (!wasm_rt_try(", tlabel, "_unwind_target)) ");
+  Write(OpenBrace()); /* beginning of try block */
+  DropTypes(tryexpr.block.decl.GetNumParams());
+  const size_t mark = MarkTypeStack();
+  PushLabel(LabelType::Try, tryexpr.block.label, tryexpr.block.decl.sig);
+  PushTypes(tryexpr.block.decl.sig.param_types);
+  Write("wasm_rt_set_unwind_target(&", tlabel, "_unwind_target);", Newline());
+  PushTryCatch(tlabel);
+  Write(tryexpr.block.exprs);
+  ResetTypeStack(mark);
+  Write("wasm_rt_set_unwind_target(", tlabel, "_outer_target);", Newline());
+  Write(CloseBrace());          /* end of try block */
+  Write(" else ", OpenBrace()); /* beginning of catch blocks or delegate */
+  assert(label_stack_.back().name == tryexpr.block.label);
+  assert(label_stack_.back().label_type == LabelType::Try);
+  label_stack_.back().label_type = LabelType::Catch;
+  if (try_catch_stack_.back().used) {
+    Write(tlabel, "_catch:;", Newline());
+  }
+
+  return mark;
+}
+
+void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
+  const size_t mark = BeginTry(tryexpr);
+
+  /* exception has been thrown -- do we catch it? */
+
+  assert(local_sym_map_.count(tryexpr.block.label) == 1);
+  const std::string& tlabel = local_sym_map_[tryexpr.block.label];
+
+  Write("wasm_rt_set_unwind_target(", tlabel, "_outer_target);", Newline());
+  PopTryCatch();
+
+  /* save the thrown exception to the stack if it might be rethrown later */
+  PushFuncSection("rethrow_" + tlabel);
+  Write("/* save exception ", tlabel, " for rethrow */", Newline());
+  Write("uint32_t ", tlabel, "_tag = wasm_rt_exception_tag();", Newline());
+  Write("uint32_t ", tlabel, "_size = wasm_rt_exception_size();", Newline());
+  Write("void *", tlabel, " = alloca(", tlabel, "_size);", Newline());
+  Write("wasm_rt_memcpy(", tlabel, ", wasm_rt_exception(), ", tlabel, "_size);",
+        Newline());
+  PushFuncSection();
+
+  assert(!tryexpr.catches.empty());
+  bool has_catch_all{};
+  for (auto it = tryexpr.catches.cbegin(); it != tryexpr.catches.cend(); ++it) {
+    if (it == tryexpr.catches.cbegin()) {
+      Write(Newline());
+    } else {
+      Write(" else ");
+    }
+    ResetTypeStack(mark);
+    Write(*it);
+    if (it->IsCatchAll()) {
+      has_catch_all = true;
+      break;
+    }
+  }
+  if (!has_catch_all) {
+    /* if not caught, rethrow */
+    Write(" else ", OpenBrace());
+    WriteThrow();
+    Write(CloseBrace(), Newline());
+  }
+  Write(CloseBrace(), Newline()); /* end of catch blocks */
+  Write(CloseBrace(), Newline()); /* end of try-catch */
+
+  ResetTypeStack(mark);
+  Write(LabelDecl(label_stack_.back().name));
+  PopLabel();
+  PushTypes(tryexpr.block.decl.sig.result_types);
+}
+
+void CWriter::Write(const Catch& c) {
+  if (c.IsCatchAll()) {
+    Write(c.exprs);
+    return;
+  }
+
+  Write("if (wasm_rt_exception_tag() == ",
+        ExternalRef(module_->GetTag(c.var)->name), ") ", OpenBrace());
+
+  const Tag* tag = module_->GetTag(c.var);
+  const FuncDeclaration& tag_type = tag->decl;
+  const Index num_params = tag_type.GetNumParams();
+  if (num_params == 1) {
+    PushType(tag_type.GetParamType(0));
+    Write("wasm_rt_memcpy(&", StackVar(0), ", wasm_rt_exception(), sizeof(",
+          tag_type.GetParamType(0), "));", Newline());
+  } else if (num_params > 1) {
+    for (const auto& type : tag_type.sig.param_types) {
+      PushType(type);
+    }
+    Write(OpenBrace());
+    Write("struct ", MangleTagTypes(tag_type.sig.param_types), " tmp;",
+          Newline());
+    Write("wasm_rt_memcpy(&tmp, wasm_rt_exception(), sizeof(tmp));", Newline());
+    for (unsigned int i = 0; i < tag_type.sig.param_types.size(); ++i) {
+      Write(StackVar(i));
+      Writef(" = tmp.%c%d;", MangleType(tag_type.sig.param_types.at(i)), i);
+      Write(Newline());
+    }
+
+    Write(CloseBrace(), Newline());
+  }
+
+  Write(c.exprs);
+  Write(CloseBrace());
+}
+
+void CWriter::WriteThrow() {
+  if (try_catch_stack_.empty()) {
+    Write("wasm_rt_throw();", Newline());
+  } else {
+    Write("goto ", try_catch_stack_.back().name, "_catch;", Newline());
+    try_catch_stack_.back().used = true;
+  }
+}
+
+void CWriter::PushTryCatch(const std::string& name) {
+  try_catch_stack_.emplace_back(name, try_catch_stack_.size());
+}
+
+void CWriter::PopTryCatch() {
+  assert(!try_catch_stack_.empty());
+  try_catch_stack_.pop_back();
+}
+
+void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
+  const size_t mark = BeginTry(tryexpr);
+
+  /* exception has been thrown -- where do we delegate it? */
+
+  if (tryexpr.delegate_target.is_index()) {
+    /* must be the implicit function label */
+    assert(!try_catch_stack_.empty());
+    const std::string& unwind_name = try_catch_stack_.at(0).name;
+    Write("wasm_rt_set_unwind_target(", unwind_name, "_outer_target);",
+          Newline());
+
+    Write("wasm_rt_throw();", Newline());
+  } else {
+    const Label* label = FindLabel(tryexpr.delegate_target, false);
+
+    assert(try_catch_stack_.size() >= label->try_catch_stack_size);
+
+    if (label->label_type == LabelType::Try) {
+      Write("goto ", LocalName(label->name), "_catch;", Newline());
+      try_catch_stack_.at(label->try_catch_stack_size).used = true;
+    } else if (label->try_catch_stack_size == 0) {
+      assert(!try_catch_stack_.empty());
+      const std::string& unwind_name = try_catch_stack_.at(0).name;
+      Write("wasm_rt_set_unwind_target(", unwind_name, "_outer_target);",
+            Newline());
+
+      Write("wasm_rt_throw();", Newline());
+    } else {
+      const std::string label_target =
+          try_catch_stack_.at(label->try_catch_stack_size - 1).name + "_catch";
+      Write("goto ", label_target, ";", Newline());
+      try_catch_stack_.at(label->try_catch_stack_size - 1).used = true;
+    }
+  }
+
+  Write(CloseBrace(), Newline());
+  Write(CloseBrace(), Newline());
+
+  PopTryCatch();
+  ResetTypeStack(mark);
+  Write(LabelDecl(label_stack_.back().name));
+  PopLabel();
+  PushTypes(tryexpr.block.decl.sig.result_types);
+}
+
 void CWriter::Write(const ExprList& exprs) {
   for (const Expr& expr : exprs) {
     switch (expr.type()) {
@@ -1395,19 +2123,9 @@ void CWriter::Write(const ExprList& exprs) {
         Write(*cast<BinaryExpr>(&expr));
         break;
 
-      case ExprType::Block: {
-        const Block& block = cast<BlockExpr>(&expr)->block;
-        std::string label = DefineLocalScopeName(block.label);
-        DropTypes(block.decl.GetNumParams());
-        size_t mark = MarkTypeStack();
-        PushLabel(LabelType::Block, block.label, block.decl.sig);
-        PushTypes(block.decl.sig.param_types);
-        Write(block.exprs, LabelDecl(label));
-        ResetTypeStack(mark);
-        PopLabel();
-        PushTypes(block.decl.sig.result_types);
+      case ExprType::Block:
+        Write(cast<BlockExpr>(&expr)->block);
         break;
-      }
 
       case ExprType::Br:
         Write(GotoLabel(cast<BrExpr>(&expr)->var), Newline());
@@ -1450,10 +2168,15 @@ void CWriter::Write(const ExprList& exprs) {
         }
 
         Write(GlobalVar(var), "(");
+        bool is_import = import_module_sym_map_.count(func.name) != 0;
+        if (is_import) {
+          Write("instance->",
+                MangleModuleInstanceName(import_module_sym_map_[func.name]));
+        } else {
+          Write("instance");
+        }
         for (Index i = 0; i < num_params; ++i) {
-          if (i != 0) {
-            Write(", ");
-          }
+          Write(", ");
           Write(StackVar(num_params - i - 1));
         }
         Write(");", Newline());
@@ -1492,9 +2215,11 @@ void CWriter::Write(const ExprList& exprs) {
         assert(decl.has_func_type);
         Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
 
-        Write("CALL_INDIRECT(", ExternalRef(table->name), ", ");
-        WriteFuncDeclaration(decl, "(*)");
+        Write("CALL_INDIRECT(", ExternalInstanceRef(table->name), ", ");
+        WriteCallIndirectFuncDeclaration(decl, "(*)");
         Write(", ", func_type_index, ", ", StackVar(0));
+        Write(", ", ExternalInstanceRef(table->name), ".data[", StackVar(0),
+              "].module_instance");
         for (Index i = 0; i < num_params; ++i) {
           Write(", ", StackVar(num_params - i));
         }
@@ -1540,13 +2265,13 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::GlobalGet: {
         const Var& var = cast<GlobalGetExpr>(&expr)->var;
         PushType(module_->GetGlobal(var)->type);
-        Write(StackVar(0), " = ", GlobalVar(var), ";", Newline());
+        Write(StackVar(0), " = ", GlobalInstanceVar(var), ";", Newline());
         break;
       }
 
       case ExprType::GlobalSet: {
         const Var& var = cast<GlobalSetExpr>(&expr)->var;
-        Write(GlobalVar(var), " = ", StackVar(0), ";", Newline());
+        Write(GlobalInstanceVar(var), " = ", StackVar(0), ";", Newline());
         DropTypes(1);
         break;
       }
@@ -1637,8 +2362,9 @@ void CWriter::Write(const ExprList& exprs) {
         Memory* memory = module_->memories[module_->GetMemoryIndex(
             cast<MemoryGrowExpr>(&expr)->memidx)];
 
-        Write(StackVar(0), " = wasm_rt_grow_memory(", ExternalPtr(memory->name),
-              ", ", StackVar(0), ");", Newline());
+        Write(StackVar(0), " = wasm_rt_grow_memory(",
+              ExternalInstancePtr(memory->name), ", ", StackVar(0), ");",
+              Newline());
         break;
       }
 
@@ -1647,7 +2373,7 @@ void CWriter::Write(const ExprList& exprs) {
             cast<MemorySizeExpr>(&expr)->memidx)];
 
         PushType(Type::I32);
-        Write(StackVar(0), " = ", ExternalRef(memory->name), ".pages;",
+        Write(StackVar(0), " = ", ExternalInstanceRef(memory->name), ".pages;",
               Newline());
         break;
       }
@@ -1658,7 +2384,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Return:
         // Goto the function label instead; this way we can do shared function
         // cleanup code in one place.
-        Write(GotoLabel(Var(label_stack_.size() - 1)), Newline());
+        Write(GotoLabel(Var(label_stack_.size() - 1, {})), Newline());
         // Stop processing this ExprList, since the following are unreachable.
         return;
 
@@ -1715,6 +2441,60 @@ void CWriter::Write(const ExprList& exprs) {
         Write("UNREACHABLE;", Newline());
         return;
 
+      case ExprType::Throw: {
+        const Var& var = cast<ThrowExpr>(&expr)->var;
+        const Tag* tag = module_->GetTag(var);
+
+        Index num_params = tag->decl.GetNumParams();
+        if (num_params == 0) {
+          Write("wasm_rt_load_exception(", ExternalRef(tag->name),
+                ", 0, NULL);", Newline());
+        } else if (num_params == 1) {
+          Write("wasm_rt_load_exception(", ExternalRef(tag->name), ", sizeof(",
+                tag->decl.GetParamType(0), "), &", StackVar(0), ");",
+                Newline());
+        } else {
+          Write(OpenBrace());
+          Write("struct ", MangleTagTypes(tag->decl.sig.param_types));
+          Write(" tmp = {");
+          for (Index i = 0; i < num_params; ++i) {
+            Write(StackVar(i), ", ");
+          }
+          Write("};", Newline());
+          Write("wasm_rt_load_exception(", ExternalRef(tag->name),
+                ", sizeof(tmp), &tmp);", Newline());
+          Write(CloseBrace(), Newline());
+        }
+
+        WriteThrow();
+      } break;
+
+      case ExprType::Rethrow: {
+        const RethrowExpr* rethrow = cast<RethrowExpr>(&expr);
+        assert(rethrow->var.is_name());
+        const LocalName ex{rethrow->var.name()};
+        assert(local_sym_map_.count(ex.name) == 1);
+        func_includes_.insert("rethrow_" + local_sym_map_[ex.name]);
+        Write("wasm_rt_load_exception(", ex, "_tag, ", ex, "_size, ", ex, ");",
+              Newline());
+        WriteThrow();
+      } break;
+
+      case ExprType::Try: {
+        const TryExpr& tryexpr = *cast<TryExpr>(&expr);
+        switch (tryexpr.kind) {
+          case TryKind::Plain:
+            Write(tryexpr.block);
+            break;
+          case TryKind::Catch:
+            WriteTryCatch(tryexpr);
+            break;
+          case TryKind::Delegate:
+            WriteTryDelegate(tryexpr);
+            break;
+        }
+      } break;
+
       case ExprType::AtomicLoad:
       case ExprType::AtomicRmw:
       case ExprType::AtomicRmwCmpxchg:
@@ -1722,11 +2502,8 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicWait:
       case ExprType::AtomicFence:
       case ExprType::AtomicNotify:
-      case ExprType::Rethrow:
       case ExprType::ReturnCall:
       case ExprType::ReturnCallIndirect:
-      case ExprType::Throw:
-      case ExprType::Try:
       case ExprType::CallRef:
         UNIMPLEMENTED("...");
         break;
@@ -2068,8 +2845,11 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::F32ConvertI32U:
-    case Opcode::F32DemoteF64:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)");
+      break;
+
+    case Opcode::F32DemoteF64:
+      WriteSimpleUnaryExpr(expr.opcode, "(f32)wasm_quiet");
       break;
 
     case Opcode::F32ConvertI64U:
@@ -2087,8 +2867,11 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::F64ConvertI32U:
-    case Opcode::F64PromoteF32:
       WriteSimpleUnaryExpr(expr.opcode, "(f64)");
+      break;
+
+    case Opcode::F64PromoteF32:
+      WriteSimpleUnaryExpr(expr.opcode, "(f64)wasm_quietf");
       break;
 
     case Opcode::F64ConvertI64U:
@@ -2143,8 +2926,8 @@ void CWriter::Write(const LoadExpr& expr) {
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
   Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", func, "(", ExternalPtr(memory->name),
-        ", (u64)(", StackVar(0), ")");
+  Write(StackVar(0, result_type), " = ", func, "(",
+        ExternalInstancePtr(memory->name), ", (u64)(", StackVar(0), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset, "u");
   Write(");", Newline());
@@ -2171,7 +2954,8 @@ void CWriter::Write(const StoreExpr& expr) {
 
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
-  Write(func, "(", ExternalPtr(memory->name), ", (u64)(", StackVar(1), ")");
+  Write(func, "(", ExternalInstancePtr(memory->name), ", (u64)(", StackVar(1),
+        ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write(", ", StackVar(0), ");", Newline());
@@ -2210,51 +2994,51 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_fabsf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_fabsf");
       break;
 
     case Opcode::F64Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_fabs");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_fabs");
       break;
 
     case Opcode::F32Sqrt:
-      WriteSimpleUnaryExpr(expr.opcode, "sqrtf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_sqrtf");
       break;
 
     case Opcode::F64Sqrt:
-      WriteSimpleUnaryExpr(expr.opcode, "sqrt");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_sqrt");
       break;
 
     case Opcode::F32Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "ceilf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_ceilf");
       break;
 
     case Opcode::F64Ceil:
-      WriteSimpleUnaryExpr(expr.opcode, "ceil");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_ceil");
       break;
 
     case Opcode::F32Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "floorf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_floorf");
       break;
 
     case Opcode::F64Floor:
-      WriteSimpleUnaryExpr(expr.opcode, "floor");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_floor");
       break;
 
     case Opcode::F32Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_truncf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_truncf");
       break;
 
     case Opcode::F64Trunc:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_trunc");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_trunc");
       break;
 
     case Opcode::F32Nearest:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_nearbyintf");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_nearbyintf");
       break;
 
     case Opcode::F64Nearest:
-      WriteSimpleUnaryExpr(expr.opcode, "wasm_rt_nearbyint");
+      WriteSimpleUnaryExpr(expr.opcode, "wasm_nearbyint");
       break;
 
     case Opcode::I32Extend8S:
@@ -2357,7 +3141,7 @@ void CWriter::Write(const LoadSplatExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
-        ExternalPtr(memory->name), ", (u64)(", StackVar(0));
+        ExternalInstancePtr(memory->name), ", (u64)(", StackVar(0));
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write("));", Newline());
@@ -2377,28 +3161,31 @@ void CWriter::WriteCHeader() {
   Write("#define ", guard, Newline());
   Write(Newline());
   Write(s_header_top);
+  Write(Newline());
+  WriteModuleInstance();
+  WriteInitDecl();
+  WriteFreeDecl();
   WriteMultivalueTypes();
   WriteImports();
-  Write("void ", module_prefix_, "_init(void);", Newline());
-  Write("void ", module_prefix_, "_free(void);", Newline());
   WriteExports(WriteExportsKind::Declarations);
-  Write(s_header_bottom);
+  Write(Newline(), s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
 }
 
 void CWriter::WriteCSource() {
   stream_ = c_stream_;
+  Write("/* Automatically generated by wasm2c */", Newline());
   WriteSourceTop();
   WriteFuncTypes();
+  WriteTagTypes();
+  WriteTags();
   WriteFuncDeclarations();
-  WriteGlobals();
-  WriteMemories();
-  WriteTables();
   WriteFuncs();
+  WriteGlobalInitializers();
   WriteDataInitializers();
   WriteElemInitializers();
   WriteExports(WriteExportsKind::Definitions);
-  WriteInitExports();
+  WriteInitInstanceImport();
   WriteInit();
   WriteFree();
 }

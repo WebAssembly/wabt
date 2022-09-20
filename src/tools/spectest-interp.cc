@@ -198,41 +198,39 @@ ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
 
   v128 vec = ev.value.value.Get<v128>();
 
-  for (int lane = 0; lane < lane_count; ++lane) {
-    switch (ev.lane_type) {
-      case Type::I8:
-        result.nan[0] = ExpectedNan::None;
-        result.value.value.Set<u32>(vec.u8(lane));
-        break;
+  switch (ev.lane_type) {
+    case Type::I8:
+      result.nan[0] = ExpectedNan::None;
+      result.value.value.Set<u32>(vec.u8(lane));
+      break;
 
-      case Type::I16:
-        result.nan[0] = ExpectedNan::None;
-        result.value.value.Set<u32>(vec.u16(lane));
-        break;
+    case Type::I16:
+      result.nan[0] = ExpectedNan::None;
+      result.value.value.Set<u32>(vec.u16(lane));
+      break;
 
-      case Type::I32:
-        result.nan[0] = ExpectedNan::None;
-        result.value.value.Set<u32>(vec.u32(lane));
-        break;
+    case Type::I32:
+      result.nan[0] = ExpectedNan::None;
+      result.value.value.Set<u32>(vec.u32(lane));
+      break;
 
-      case Type::I64:
-        result.nan[0] = ExpectedNan::None;
-        result.value.value.Set<u64>(vec.u64(lane));
-        break;
+    case Type::I64:
+      result.nan[0] = ExpectedNan::None;
+      result.value.value.Set<u64>(vec.u64(lane));
+      break;
 
-      case Type::F32:
-        result.nan[0] = ev.nan[lane];
-        result.value.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
-        break;
+    case Type::F32:
+      result.nan[0] = ev.nan[lane];
+      result.value.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
+      break;
 
-      case Type::F64:
-        result.nan[0] = ev.nan[lane];
-        result.value.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
-        break;
+    case Type::F64:
+      result.nan[0] = ev.nan[lane];
+      result.value.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
+      break;
 
-      default:
-        WABT_UNREACHABLE;
-    }
+    default:
+      WABT_UNREACHABLE;
   }
   return result;
 }
@@ -247,35 +245,33 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
 
   v128 vec = tv.value.Get<v128>();
 
-  for (int lane = 0; lane < lane_count; ++lane) {
-    switch (lane_type) {
-      case Type::I8:
-        result.value.Set<u32>(vec.u8(lane));
-        break;
+  switch (lane_type) {
+    case Type::I8:
+      result.value.Set<u32>(vec.u8(lane));
+      break;
 
-      case Type::I16:
-        result.value.Set<u32>(vec.u16(lane));
-        break;
+    case Type::I16:
+      result.value.Set<u32>(vec.u16(lane));
+      break;
 
-      case Type::I32:
-        result.value.Set<u32>(vec.u32(lane));
-        break;
+    case Type::I32:
+      result.value.Set<u32>(vec.u32(lane));
+      break;
 
-      case Type::I64:
-        result.value.Set<u64>(vec.u64(lane));
-        break;
+    case Type::I64:
+      result.value.Set<u64>(vec.u64(lane));
+      break;
 
-      case Type::F32:
-        result.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
-        break;
+    case Type::F32:
+      result.value.Set<f32>(Bitcast<f32>(vec.f32_bits(lane)));
+      break;
 
-      case Type::F64:
-        result.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
-        break;
+    case Type::F64:
+      result.value.Set<f64>(Bitcast<f64>(vec.f64_bits(lane)));
+      break;
 
-      default:
-        WABT_UNREACHABLE;
-    }
+    default:
+      WABT_UNREACHABLE;
   }
   return result;
 }
@@ -1274,6 +1270,7 @@ wabt::Result CommandRunner::Run(const Script& script) {
   for (const CommandPtr& command : script.commands) {
     switch (command->type) {
       case CommandType::Module:
+      case CommandType::ScriptModule:
         TallyCommand(OnModuleCommand(cast<ModuleCommand>(command.get())));
         break;
 

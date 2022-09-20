@@ -40,6 +40,7 @@ class OpcodeInfo {
     Float64,
     Uint32Uint32,
     Uint32Uint32Uint32,
+    Uint32Uint32Uint32Uint32,
     BlockSig,
     BrTable,
     V128,

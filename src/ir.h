@@ -41,8 +41,9 @@ enum class VarType {
 };
 
 struct Var {
-  explicit Var(Index index = kInvalidIndex, const Location& loc = Location());
-  explicit Var(std::string_view name, const Location& loc = Location());
+  explicit Var();
+  explicit Var(Index index, const Location& loc);
+  explicit Var(std::string_view name, const Location& loc);
   Var(Var&&);
   Var(const Var&);
   Var& operator=(const Var&);
@@ -716,30 +717,13 @@ class ConstExpr : public ExprMixin<ExprType::Const> {
 
 // TODO(binji): Rename this, it is used for more than loads/stores now.
 template <ExprType TypeEnum>
-class LoadStoreExpr : public ExprMixin<TypeEnum> {
+class LoadStoreExpr : public MemoryExpr<TypeEnum> {
  public:
   LoadStoreExpr(Opcode opcode,
+                Var memidx,
                 Address align,
                 Address offset,
                 const Location& loc = Location())
-      : ExprMixin<TypeEnum>(loc),
-        opcode(opcode),
-        align(align),
-        offset(offset) {}
-
-  Opcode opcode;
-  Address align;
-  Address offset;
-};
-
-template <ExprType TypeEnum>
-class MemoryLoadStoreExpr : public MemoryExpr<TypeEnum> {
- public:
-  MemoryLoadStoreExpr(Opcode opcode,
-                      Var memidx,
-                      Address align,
-                      Address offset,
-                      const Location& loc = Location())
       : MemoryExpr<TypeEnum>(memidx, loc),
         opcode(opcode),
         align(align),
@@ -750,8 +734,8 @@ class MemoryLoadStoreExpr : public MemoryExpr<TypeEnum> {
   Address offset;
 };
 
-typedef MemoryLoadStoreExpr<ExprType::Load> LoadExpr;
-typedef MemoryLoadStoreExpr<ExprType::Store> StoreExpr;
+typedef LoadStoreExpr<ExprType::Load> LoadExpr;
+typedef LoadStoreExpr<ExprType::Store> StoreExpr;
 
 typedef LoadStoreExpr<ExprType::AtomicLoad> AtomicLoadExpr;
 typedef LoadStoreExpr<ExprType::AtomicStore> AtomicStoreExpr;
@@ -1321,6 +1305,7 @@ class InvokeAction : public ActionMixin<ActionType::Invoke> {
 
 enum class CommandType {
   Module,
+  ScriptModule,
   Action,
   Register,
   AssertMalformed,
@@ -1359,6 +1344,15 @@ class CommandMixin : public Command {
 class ModuleCommand : public CommandMixin<CommandType::Module> {
  public:
   Module module;
+};
+
+class ScriptModuleCommand : public CommandMixin<CommandType::ScriptModule> {
+ public:
+  // Both the module and the script_module need to be stored since the module
+  // has the parsed information about the module, but the script_module has the
+  // original contents (binary or quoted).
+  Module module;
+  std::unique_ptr<ScriptModule> script_module;
 };
 
 template <CommandType TypeEnum>

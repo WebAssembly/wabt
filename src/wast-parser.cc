@@ -904,7 +904,8 @@ Result WastParser::ParseValueType(Var* out_type) {
   const bool is_value_type = PeekMatch(TokenType::ValueType);
 
   if (!is_value_type && !is_ref_type) {
-    return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "externref"});
+    return ErrorExpected(
+        {"i32", "i64", "f32", "f64", "v128", "externref", "funcref"});
   }
 
   if (is_ref_type) {
@@ -936,7 +937,7 @@ Result WastParser::ParseValueType(Var* out_type) {
     return Result::Error;
   }
 
-  *out_type = Var(type);
+  *out_type = Var(type, GetLocation());
   return Result::Ok;
 }
 
@@ -1021,7 +1022,7 @@ bool WastParser::ParseRefTypeOpt(Type* out_type) {
   return true;
 }
 
-Result WastParser::ParseQuotedText(std::string* text) {
+Result WastParser::ParseQuotedText(std::string* text, bool check_utf8) {
   WABT_TRACE(ParseQuotedText);
   if (!PeekMatch(TokenType::Text)) {
     return ErrorExpected({"a quoted string"}, "\"foo\"");
@@ -1029,7 +1030,7 @@ Result WastParser::ParseQuotedText(std::string* text) {
 
   Token token = Consume();
   RemoveEscapes(token.text(), std::back_inserter(*text));
-  if (!IsValidUtf8(text->data(), text->length())) {
+  if (check_utf8 && !IsValidUtf8(text->data(), text->length())) {
     Error(token.loc, "quoted string has an invalid utf-8 encoding");
   }
   return Result::Ok;
@@ -1158,8 +1159,14 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
     // modules.
     CommandPtr command;
     CHECK_RESULT(ParseModuleCommand(nullptr, &command));
-    auto module_command = cast<ModuleCommand>(std::move(command));
-    *module = std::move(module_command->module);
+    if (isa<ModuleCommand>(command.get())) {
+      auto module_command = cast<ModuleCommand>(std::move(command));
+      *module = std::move(module_command->module);
+    } else {
+      assert(isa<ScriptModuleCommand>(command.get()));
+      auto module_command = cast<ScriptModuleCommand>(std::move(command));
+      *module = std::move(module_command->module);
+    }
   } else if (IsModuleField(PeekPair())) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     CHECK_RESULT(ParseModuleFieldList(module.get()));
@@ -1647,7 +1654,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
     if (MatchLpar(TokenType::Data)) {
       auto data_segment_field = MakeUnique<DataSegmentModuleField>(loc);
       DataSegment& data_segment = data_segment_field->data_segment;
-      data_segment.memory_var = Var(module->memories.size());
+      data_segment.memory_var = Var(module->memories.size(), GetLocation());
       data_segment.offset.push_back(MakeUnique<ConstExpr>(
           field->memory.page_limits.is_64 ? Const::I64(0) : Const::I32(0)));
       data_segment.offset.back().loc = loc;
@@ -1719,7 +1726,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
 
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
-    elem_segment.table_var = Var(module->tables.size());
+    elem_segment.table_var = Var(module->tables.size(), GetLocation());
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     elem_segment.elem_type = elem_type;
@@ -1938,7 +1945,7 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   std::string_view name = tk.text();
   name.remove_prefix(sizeof("metadata.code.") - 1);
   std::string data_text;
-  CHECK_RESULT(ParseQuotedText(&data_text));
+  CHECK_RESULT(ParseQuotedText(&data_text, false));
   std::vector<uint8_t> data(data_text.begin(), data_text.end());
   exprs->push_back(MakeUnique<CodeMetadataExpr>(name, std::move(data)));
   TokenType rpar = Peek();
@@ -1986,22 +1993,9 @@ Result WastParser::ParseMemoryInstrVar(Location loc,
 }
 
 template <typename T>
-Result WastParser::ParsePlainLoadStoreInstr(Location loc,
-                                            Token token,
-                                            std::unique_ptr<Expr>* out_expr) {
-  Opcode opcode = token.opcode();
-  Address offset;
-  Address align;
-  ParseOffsetOpt(&offset);
-  ParseAlignOpt(&align);
-  out_expr->reset(new T(opcode, align, offset, loc));
-  return Result::Ok;
-}
-
-template <typename T>
-Result WastParser::ParseMemoryLoadStoreInstr(Location loc,
-                                             Token token,
-                                             std::unique_ptr<Expr>* out_expr) {
+Result WastParser::ParseLoadStoreInstr(Location loc,
+                                       Token token,
+                                       std::unique_ptr<Expr>* out_expr) {
   Opcode opcode = token.opcode();
   Var memidx;
   Address offset;
@@ -2220,13 +2214,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
 
     case TokenType::Load:
-      CHECK_RESULT(
-          ParseMemoryLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Store:
-      CHECK_RESULT(
-          ParseMemoryLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
       break;
 
     case TokenType::Const: {
@@ -2386,8 +2378,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::AtomicNotify: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
       break;
     }
 
@@ -2402,32 +2393,28 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::AtomicWait: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicWaitExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicWaitExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicLoad: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicLoadExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicLoadExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicStore: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicStoreExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicStoreExpr>(loc, token, out_expr));
       break;
     }
 
     case TokenType::AtomicRmw: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicRmwExpr>(loc, token, out_expr));
+      CHECK_RESULT(ParseLoadStoreInstr<AtomicRmwExpr>(loc, token, out_expr));
       break;
     }
 
@@ -2435,7 +2422,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
       CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
+          ParseLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
       break;
     }
 
@@ -3308,15 +3295,20 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   std::unique_ptr<ScriptModule> script_module;
   CHECK_RESULT(ParseScriptModule(&script_module));
 
-  auto command = MakeUnique<ModuleCommand>();
-  Module& module = command->module;
+  Module* module = nullptr;
 
   switch (script_module->type()) {
-    case ScriptModuleType::Text:
-      module = std::move(cast<TextScriptModule>(script_module.get())->module);
+    case ScriptModuleType::Text: {
+      auto command = MakeUnique<ModuleCommand>();
+      module = &command->module;
+      *module = std::move(cast<TextScriptModule>(script_module.get())->module);
+      *out_command = std::move(command);
       break;
+    }
 
     case ScriptModuleType::Binary: {
+      auto command = MakeUnique<ScriptModuleCommand>();
+      module = &command->module;
       auto* bsm = cast<BinaryScriptModule>(script_module.get());
       ReadBinaryOptions options;
 #if WABT_TRACING
@@ -3327,9 +3319,9 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       Errors errors;
       const char* filename = "<text>";
       ReadBinaryIr(filename, bsm->data.data(), bsm->data.size(), options,
-                   &errors, &module);
-      module.name = bsm->name;
-      module.loc = bsm->loc;
+                   &errors, module);
+      module->name = bsm->name;
+      module->loc = bsm->loc;
       for (const auto& error : errors) {
         assert(error.error_level == ErrorLevel::Error);
         if (error.loc.offset == kInvalidOffset) {
@@ -3339,6 +3331,9 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
                 error.loc.offset, error.message.c_str());
         }
       }
+
+      command->script_module = std::move(script_module);
+      *out_command = std::move(command);
       break;
     }
 
@@ -3350,15 +3345,14 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   if (script) {
     Index command_index = script->commands.size();
 
-    if (!module.name.empty()) {
-      script->module_bindings.emplace(module.name,
-                                      Binding(module.loc, command_index));
+    if (!module->name.empty()) {
+      script->module_bindings.emplace(module->name,
+                                      Binding(module->loc, command_index));
     }
 
     last_module_index_ = command_index;
   }
 
-  *out_command = std::move(command);
   return Result::Ok;
 }
 

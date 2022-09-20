@@ -1,4 +1,3 @@
-%%top
 #include <stdint.h>
 
 #include "wasm-rt.h"
@@ -20,10 +19,4 @@ typedef double f64;
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-%%bottom
-
-#ifdef __cplusplus
-}
 #endif

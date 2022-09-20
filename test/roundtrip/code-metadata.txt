@@ -4,5 +4,5 @@
   (func $f (param i32) (result i32)
     i32.const 1234
     local.get 0
-    (@metadata.code.test "aa\01a") i32.add
+    (@metadata.code.test "aa\01a\ff") i32.add
     return))

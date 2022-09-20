@@ -122,10 +122,10 @@ class CWriter(object):
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
         self.unmangled_names = {}
-
-    def Write(self):
         self._MaybeWriteDummyModule()
         self._CacheModulePrefixes()
+
+    def Write(self):
         self._WriteIncludes()
         self.out_file.write(self.prefix)
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
@@ -144,6 +144,9 @@ class CWriter(object):
 
     def GetModulePrefixUnmangled(self, idx):
         return self.unmangled_names[idx]
+
+    def GetModuleInstanceName(self, idx_or_name=None):
+        return self.GetModulePrefix() + '_instance'
 
     def _CacheModulePrefixes(self):
         idx = 0
@@ -173,6 +176,29 @@ class CWriter(object):
                 self.module_prefix_map[name_idx] = name
                 self.unmangled_names[name_idx] = command['as']
 
+    def _WriteModuleInitCall(self, command, uninstantiable):
+        header_filename = utils.ChangeExt(command['filename'], '.h')
+        with open(os.path.join(self.out_dir, header_filename), encoding='utf-8') as f:
+            imported_modules = set()
+            for line in f:
+                if 'import: ' in line:
+                    line_split = line.split()
+                    import_module_name = MangleName(line_split[2][1:-1])
+                    imported_modules.add(import_module_name)
+
+        if uninstantiable:
+            self.out_file.write('ASSERT_TRAP(')
+
+        self.out_file.write('%s_instantiate(&%s_instance' % (self.GetModulePrefix(), self.GetModulePrefix()))
+        for imported_module in sorted(imported_modules):
+            self.out_file.write(', &%s_instance' % imported_module)
+        self.out_file.write(')')
+
+        if uninstantiable:
+            self.out_file.write(')')
+
+        self.out_file.write(';\n')
+
     def _MaybeWriteDummyModule(self):
         if len(self.GetModuleFilenames()) == 0:
             # This test doesn't have any valid modules, so just use a dummy instead.
@@ -200,6 +226,7 @@ class CWriter(object):
             'action': self._WriteActionCommand,
             'assert_return': self._WriteAssertReturnCommand,
             'assert_trap': self._WriteAssertActionCommand,
+            'assert_exception': self._WriteAssertActionCommand,
             'assert_exhaustion': self._WriteAssertActionCommand,
         }
 
@@ -211,15 +238,19 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%s_init();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
+        self._WriteModuleInitCall(command, False)
 
     def _WriteModuleCleanUps(self):
         for idx in range(self.module_idx):
-            self.out_file.write("%s_free();\n" % self.GetModulePrefix(idx))
+            self.out_file.write("%s_free(&%s_instance);\n" % (self.GetModulePrefix(idx), self.GetModulePrefix(idx)))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('ASSERT_TRAP(%s_init());\n' % self.GetModulePrefix())
+        self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
+        self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
+        self._WriteModuleInitCall(command, True)
 
     def _WriteActionCommand(self, command):
         self.out_file.write('%s;\n' % self._Action(command))
@@ -276,6 +307,7 @@ class CWriter(object):
             'assert_exhaustion': 'ASSERT_EXHAUSTION',
             'assert_return': 'ASSERT_RETURN',
             'assert_trap': 'ASSERT_TRAP',
+            'assert_exception': 'ASSERT_EXCEPTION',
         }
 
         assert_macro = assert_map[command['type']]
@@ -324,9 +356,14 @@ class CWriter(object):
         mangled_module_name = self.GetModulePrefix(action.get('module'))
         field = mangled_module_name + MangleName(action['field'])
         if type_ == 'invoke':
-            return '%s(%s)' % (field, self._ConstantList(action.get('args', [])))
+            args = self._ConstantList(action.get('args', []))
+            if len(args) == 0:
+                args = f'&{mangled_module_name}_instance'
+            else:
+                args = f'&{mangled_module_name}_instance, {args}'
+            return '%s(%s)' % (field, args)
         elif type_ == 'get':
-            return '*%s' % field
+            return '*%s(%s)' % (field, '&' + mangled_module_name + '_instance')
         else:
             raise Error('Unexpected action type: %s' % type_)
 
@@ -341,10 +378,17 @@ def Compile(cc, c_filename, out_dir, *args):
     if IS_WINDOWS:
         args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
-        args += ['-c', c_filename, '-o', o_filename,
+        # See "Compiling the wasm2c output" section of wasm2c/README.md
+        # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
+        # and '-frounding-math' to maintain conformance with the spec tests
+        # (GCC also requires '-fsignaling-nans')
+        args += ['-c', c_filename, '-o', o_filename, '-O2',
                  '-Wall', '-Werror', '-Wno-unused',
+                 '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
                  '-Wno-infinite-recursion',
+                 '-fno-optimize-sibling-calls',
+                 '-frounding-math', '-fsignaling-nans',
                  '-std=c99', '-D_DEFAULT_SOURCE']
     # Use RunWithArgsForStdout and discard stdout because cl.exe
     # unconditionally prints the name of input files on stdout
@@ -405,6 +449,7 @@ def main(args):
                         help='print the commands that are run.',
                         action='store_true')
     parser.add_argument('file', help='wast file.')
+    parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-multi-memory', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
@@ -418,6 +463,7 @@ def main(args):
         wast2json.verbose = options.print_cmd
         wast2json.AppendOptionalArgs({
             '-v': options.verbose,
+            '--enable-exceptions': options.enable_exceptions,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types})
@@ -431,6 +477,7 @@ def main(args):
             error_cmdline=options.error_cmdline)
         wasm2c.verbose = options.print_cmd
         wasm2c.AppendOptionalArgs({
+            '--enable-exceptions': options.enable_exceptions,
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
@@ -448,11 +495,6 @@ def main(args):
 
         output = io.StringIO()
         cwriter = CWriter(spec_json, prefix, output, out_dir)
-        cwriter.Write()
-
-        main_filename = utils.ChangeExt(json_file_path, '-main.c')
-        with open(main_filename, 'w') as out_main_file:
-            out_main_file.write(output.getvalue())
 
         o_filenames = []
         includes = '-I%s' % options.wasmrt_dir
@@ -464,6 +506,11 @@ def main(args):
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, *args)
             if options.compile:
                 o_filenames.append(Compile(cc, c_filename, out_dir, includes))
+
+        cwriter.Write()
+        main_filename = utils.ChangeExt(json_file_path, '-main.c')
+        with open(main_filename, 'w') as out_main_file:
+            out_main_file.write(output.getvalue())
 
         if options.compile:
             # Compile wasm-rt-impl.

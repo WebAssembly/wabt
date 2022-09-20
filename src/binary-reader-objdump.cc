@@ -535,6 +535,10 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeUint32Uint32Uint32(uint32_t value,
                                     uint32_t value2,
                                     uint32_t value3) override;
+  Result OnOpcodeUint32Uint32Uint32Uint32(uint32_t value,
+                                          uint32_t value2,
+                                          uint32_t value3,
+                                          uint32_t value4) override;
   Result OnOpcodeUint64(uint64_t value) override;
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
@@ -826,6 +830,18 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32Uint32(
     return Result::Ok;
   }
   LogOpcode("%u %u %u", value, value2, value3);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32Uint32Uint32(
+    uint32_t value,
+    uint32_t value2,
+    uint32_t value3,
+    uint32_t value4) {
+  if (!in_function_body) {
+    return Result::Ok;
+  }
+  LogOpcode("%u %u %u %u", value, value2, value3, value4);
   return Result::Ok;
 }
 
