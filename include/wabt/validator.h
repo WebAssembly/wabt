@@ -17,9 +17,9 @@
 #ifndef WABT_VALIDATOR_H_
 #define WABT_VALIDATOR_H_
 
-#include "src/error.h"
-#include "src/feature.h"
-#include "src/shared-validator.h"
+#include "wabt/error.h"
+#include "wabt/feature.h"
+#include "wabt/shared-validator.h"
 
 namespace wabt {
 

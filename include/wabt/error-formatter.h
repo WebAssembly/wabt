@@ -21,9 +21,9 @@
 #include <memory>
 #include <string>
 
-#include "src/color.h"
-#include "src/error.h"
-#include "src/lexer-source-line-finder.h"
+#include "wabt/color.h"
+#include "wabt/error.h"
+#include "wabt/lexer-source-line-finder.h"
 
 namespace wabt {
 

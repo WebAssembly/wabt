@@ -20,12 +20,12 @@
 #include <array>
 #include <unordered_map>
 
-#include "src/circular-array.h"
-#include "src/error.h"
-#include "src/feature.h"
-#include "src/intrusive-list.h"
-#include "src/ir.h"
-#include "src/wast-lexer.h"
+#include "wabt/circular-array.h"
+#include "wabt/error.h"
+#include "wabt/feature.h"
+#include "wabt/intrusive-list.h"
+#include "wabt/ir.h"
+#include "wabt/wast-lexer.h"
 
 namespace wabt {
 

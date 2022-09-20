@@ -19,9 +19,9 @@
 
 #include <vector>
 
-#include "src/common.h"
-#include "src/leb128.h"
-#include "src/opcode-code-table.h"
+#include "wabt/common.h"
+#include "wabt/leb128.h"
+#include "wabt/opcode-code-table.h"
 
 namespace wabt {
 
@@ -36,7 +36,7 @@ struct Opcode {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text, decomp)                                             \
   Name,
-#include "src/opcode.def"
+#include "wabt/opcode.def"
 #undef WABT_OPCODE
     Invalid,
   };
@@ -45,7 +45,7 @@ struct Opcode {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text, decomp)                                             \
   static Opcode Name##_Opcode;
-#include "src/opcode.def"
+#include "wabt/opcode.def"
 #undef WABT_OPCODE
 
   Opcode() = default;  // Provided so Opcode can be member of a union.

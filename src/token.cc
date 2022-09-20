@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/token.h"
+#include "wabt/token.h"
 
 namespace wabt {
 

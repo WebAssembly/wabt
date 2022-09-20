@@ -20,9 +20,9 @@
 #include <map>
 #include <string>
 
-#include "src/common.h"
-#include "src/feature.h"
-#include "src/stream.h"
+#include "wabt/common.h"
+#include "wabt/feature.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 

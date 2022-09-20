@@ -26,10 +26,10 @@
 #include <type_traits>
 #include <vector>
 
-#include "src/binding-hash.h"
-#include "src/common.h"
-#include "src/intrusive-list.h"
-#include "src/opcode.h"
+#include "wabt/binding-hash.h"
+#include "wabt/common.h"
+#include "wabt/intrusive-list.h"
+#include "wabt/opcode.h"
 
 namespace wabt {
 

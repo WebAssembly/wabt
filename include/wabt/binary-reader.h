@@ -21,11 +21,11 @@
 #include <stdint.h>
 #include <string_view>
 
-#include "src/binary.h"
-#include "src/common.h"
-#include "src/error.h"
-#include "src/feature.h"
-#include "src/opcode.h"
+#include "wabt/binary.h"
+#include "wabt/common.h"
+#include "wabt/error.h"
+#include "wabt/feature.h"
+#include "wabt/opcode.h"
 
 namespace wabt {
 

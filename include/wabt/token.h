@@ -19,8 +19,8 @@
 
 #include <string_view>
 
-#include "src/literal.h"
-#include "src/opcode.h"
+#include "wabt/literal.h"
+#include "wabt/opcode.h"
 
 namespace wabt {
 

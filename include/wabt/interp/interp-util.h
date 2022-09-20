@@ -21,7 +21,7 @@
 #include <string_view>
 #include <vector>
 
-#include "src/interp/interp.h"
+#include "wabt/interp/interp.h"
 
 namespace wabt {
 

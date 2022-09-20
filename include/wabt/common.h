@@ -33,11 +33,11 @@
 
 #include "config.h"
 
-#include "src/base-types.h"
-#include "src/make-unique.h"
-#include "src/result.h"
-#include "src/string-format.h"
-#include "src/type.h"
+#include "wabt/base-types.h"
+#include "wabt/make-unique.h"
+#include "wabt/result.h"
+#include "wabt/string-format.h"
+#include "wabt/type.h"
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))

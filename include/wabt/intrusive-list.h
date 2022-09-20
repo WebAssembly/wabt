@@ -21,7 +21,7 @@
 #include <iterator>
 #include <memory>
 
-#include "src/make-unique.h"
+#include "wabt/make-unique.h"
 
 // This uses a similar interface as std::list, but is missing the following
 // features:

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "src/feature.h"
+#include "wabt/feature.h"
 
-#include "src/option-parser.h"
+#include "wabt/option-parser.h"
 
 namespace wabt {
 
@@ -30,7 +30,7 @@ void Features::AddOptions(OptionParser* parser) {
                       [this]() { enable_##variable(); });  \
   }
 
-#include "src/feature.def"
+#include "wabt/feature.def"
 #undef WABT_FEATURE
   parser->AddOption("enable-all", "Enable all features",
                     [this]() { EnableAll(); });

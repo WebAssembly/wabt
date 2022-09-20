@@ -22,14 +22,14 @@
 #include <string>
 #include <vector>
 
-#include "src/common.h"
-#include "src/error.h"
-#include "src/feature.h"
-#include "src/ir.h"
-#include "src/opcode.h"
-#include "src/type-checker.h"
+#include "wabt/common.h"
+#include "wabt/error.h"
+#include "wabt/feature.h"
+#include "wabt/ir.h"
+#include "wabt/opcode.h"
+#include "wabt/type-checker.h"
 
-#include "src/binary-reader.h"  // For TypeMut.
+#include "wabt/binary-reader.h"  // For TypeMut.
 
 namespace wabt {
 

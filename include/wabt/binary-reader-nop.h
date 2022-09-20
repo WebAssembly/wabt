@@ -17,7 +17,7 @@
 #ifndef WABT_BINARY_READER_NOP_H_
 #define WABT_BINARY_READER_NOP_H_
 
-#include "src/binary-reader.h"
+#include "wabt/binary-reader.h"
 
 namespace wabt {
 

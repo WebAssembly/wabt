@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "src/intrusive-list.h"
-#include "src/make-unique.h"
+#include "wabt/intrusive-list.h"
+#include "wabt/make-unique.h"
 
 using namespace wabt;
 

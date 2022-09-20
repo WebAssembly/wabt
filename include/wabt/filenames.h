@@ -17,7 +17,7 @@
 #ifndef WABT_FILENAMES_H_
 #define WABT_FILENAMES_H_
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 namespace wabt {
 

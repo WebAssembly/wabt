@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "src/ir.h"
+#include "wabt/ir.h"
 
 #include <cassert>
 #include <cstddef>
 #include <numeric>
 
-#include "src/cast.h"
+#include "wabt/cast.h"
 
 namespace {
 

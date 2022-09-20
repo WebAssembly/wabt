@@ -16,11 +16,11 @@
 
 #include "gtest/gtest.h"
 
-#include "src/binary-reader.h"
-#include "src/error-formatter.h"
+#include "wabt/binary-reader.h"
+#include "wabt/error-formatter.h"
 
-#include "src/interp/binary-reader-interp.h"
-#include "src/interp/interp.h"
+#include "wabt/interp/binary-reader-interp.h"
+#include "wabt/interp/interp.h"
 
 using namespace wabt;
 using namespace wabt::interp;

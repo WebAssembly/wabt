@@ -17,7 +17,7 @@
 #ifndef WABT_APPLY_NAMES_H_
 #define WABT_APPLY_NAMES_H_
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 namespace wabt {
 

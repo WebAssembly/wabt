@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader-nop.h"
-#include "src/binary-reader.h"
-#include "src/binary.h"
-#include "src/error-formatter.h"
-#include "src/leb128.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
+#include "wabt/binary-reader-nop.h"
+#include "wabt/binary-reader.h"
+#include "wabt/binary.h"
+#include "wabt/error-formatter.h"
+#include "wabt/leb128.h"
+#include "wabt/option-parser.h"
+#include "wabt/stream.h"
 
 using namespace wabt;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/literal.h"
+#include "wabt/literal.h"
 
 #include <cassert>
 #include <cerrno>

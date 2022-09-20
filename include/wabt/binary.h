@@ -17,7 +17,7 @@
 #ifndef WABT_BINARY_H_
 #define WABT_BINARY_H_
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 #define WABT_BINARY_MAGIC 0x6d736100
 #define WABT_BINARY_VERSION 1

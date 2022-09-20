@@ -17,9 +17,9 @@
 #ifndef WABT_BINARY_READER_INTERP_H_
 #define WABT_BINARY_READER_INTERP_H_
 
-#include "src/common.h"
-#include "src/error.h"
-#include "src/interp/interp.h"
+#include "wabt/common.h"
+#include "wabt/error.h"
+#include "wabt/interp/interp.h"
 
 namespace wabt {
 

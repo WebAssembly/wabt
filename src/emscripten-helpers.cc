@@ -25,22 +25,22 @@
 #include <utility>
 #include <vector>
 
-#include "src/apply-names.h"
-#include "src/binary-reader-ir.h"
-#include "src/binary-reader.h"
-#include "src/binary-writer-spec.h"
-#include "src/binary-writer.h"
-#include "src/common.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/filenames.h"
-#include "src/generate-names.h"
-#include "src/ir.h"
-#include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-lexer.h"
-#include "src/wast-parser.h"
-#include "src/wat-writer.h"
+#include "wabt/apply-names.h"
+#include "wabt/binary-reader-ir.h"
+#include "wabt/binary-reader.h"
+#include "wabt/binary-writer-spec.h"
+#include "wabt/binary-writer.h"
+#include "wabt/common.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/filenames.h"
+#include "wabt/generate-names.h"
+#include "wabt/ir.h"
+#include "wabt/stream.h"
+#include "wabt/validator.h"
+#include "wabt/wast-lexer.h"
+#include "wabt/wast-parser.h"
+#include "wabt/wat-writer.h"
 
 typedef std::unique_ptr<wabt::OutputBuffer> WabtOutputBufferPtr;
 typedef std::pair<std::string, WabtOutputBufferPtr>
@@ -91,7 +91,7 @@ void wabt_destroy_features(wabt::Features* f) {
   void wabt_set_##variable##_enabled(wabt::Features* f, int enabled) { \
     f->set_##variable##_enabled(enabled);                              \
   }
-#include "src/feature.def"
+#include "wabt/feature.def"
 #undef WABT_FEATURE
 
 wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,

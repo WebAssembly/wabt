@@ -17,10 +17,10 @@
 #ifndef WABT_BINARY_WRITER_H_
 #define WABT_BINARY_WRITER_H_
 
-#include "src/common.h"
-#include "src/feature.h"
-#include "src/opcode.h"
-#include "src/stream.h"
+#include "wabt/common.h"
+#include "wabt/feature.h"
+#include "wabt/opcode.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 

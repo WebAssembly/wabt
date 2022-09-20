@@ -29,7 +29,7 @@
 #define WABT_TRACING 0
 #endif
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 namespace wabt {
 

@@ -17,7 +17,7 @@
 #ifndef WABT_DECOMPILER_NAMING_H_
 #define WABT_DECOMPILER_NAMING_H_
 
-#include "src/decompiler-ast.h"
+#include "wabt/decompiler-ast.h"
 
 #include <set>
 

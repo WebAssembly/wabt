@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "src/wast-lexer.h"
-#include "src/wast-parser.h"
+#include "wabt/wast-lexer.h"
+#include "wabt/wast-parser.h"
 
 using namespace wabt;
 

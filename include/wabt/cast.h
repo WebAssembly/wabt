@@ -20,7 +20,7 @@
 #include <memory>
 #include <type_traits>
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 // Modeled after LLVM's dynamic casts:
 // http://llvm.org/docs/ProgrammersManual.html#the-isa-cast-and-dyn-cast-templates

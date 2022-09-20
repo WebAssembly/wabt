@@ -21,9 +21,9 @@
 #include <string>
 #include <vector>
 
-#include "src/common.h"
-#include "src/opcode.h"
-#include "src/stream.h"
+#include "wabt/common.h"
+#include "wabt/opcode.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 namespace interp {

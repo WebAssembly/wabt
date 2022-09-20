@@ -21,12 +21,12 @@
 #include <cstdio>
 #include <memory>
 
-#include "src/common.h"
-#include "src/lexer-source-line-finder.h"
-#include "src/literal.h"
-#include "src/make-unique.h"
-#include "src/opcode.h"
-#include "src/token.h"
+#include "wabt/common.h"
+#include "wabt/lexer-source-line-finder.h"
+#include "wabt/literal.h"
+#include "wabt/make-unique.h"
+#include "wabt/opcode.h"
+#include "wabt/token.h"
 
 namespace wabt {
 

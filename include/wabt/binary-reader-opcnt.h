@@ -20,8 +20,8 @@
 #include <map>
 #include <vector>
 
-#include "src/common.h"
-#include "src/opcode.h"
+#include "wabt/common.h"
+#include "wabt/opcode.h"
 
 namespace wabt {
 

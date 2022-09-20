@@ -17,7 +17,7 @@
 #ifndef WABT_WAT_WRITER_H_
 #define WABT_WAT_WRITER_H_
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 namespace wabt {
 

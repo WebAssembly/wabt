@@ -17,8 +17,8 @@
 #ifndef WABT_DECOMPILER_LS_H_
 #define WABT_DECOMPILER_LS_H_
 
-#include "src/decompiler-ast.h"
-#include "src/string-util.h"
+#include "wabt/decompiler-ast.h"
+#include "wabt/string-util.h"
 
 #include <map>
 

@@ -20,9 +20,9 @@
 #include <functional>
 #include <vector>
 
-#include "src/common.h"
-#include "src/feature.h"
-#include "src/opcode.h"
+#include "wabt/common.h"
+#include "wabt/feature.h"
+#include "wabt/opcode.h"
 
 namespace wabt {
 

@@ -26,13 +26,13 @@
 #include <type_traits>
 #include <vector>
 
-#include "src/cast.h"
-#include "src/common.h"
-#include "src/feature.h"
-#include "src/opcode.h"
-#include "src/result.h"
+#include "wabt/cast.h"
+#include "wabt/common.h"
+#include "wabt/feature.h"
+#include "wabt/opcode.h"
+#include "wabt/result.h"
 
-#include "src/interp/istream.h"
+#include "wabt/interp/istream.h"
 
 namespace wabt {
 namespace interp {
@@ -1270,6 +1270,6 @@ struct Thread::TraceSource : Istream::TraceSource {
 }  // namespace interp
 }  // namespace wabt
 
-#include "src/interp/interp-inl.h"
+#include "wabt/interp/interp-inl.h"
 
 #endif  // WABT_INTERP_H_

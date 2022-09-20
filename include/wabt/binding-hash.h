@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 namespace wabt {
 

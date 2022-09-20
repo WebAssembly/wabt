@@ -17,10 +17,10 @@
 #ifndef WABT_DECOMPILER_AST_H_
 #define WABT_DECOMPILER_AST_H_
 
-#include "src/cast.h"
-#include "src/generate-names.h"
-#include "src/ir-util.h"
-#include "src/ir.h"
+#include "wabt/cast.h"
+#include "wabt/generate-names.h"
+#include "wabt/ir-util.h"
+#include "wabt/ir.h"
 
 #include <map>
 

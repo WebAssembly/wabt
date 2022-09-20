@@ -17,7 +17,7 @@
 #ifndef WABT_FEATURE_H_
 #define WABT_FEATURE_H_
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 namespace wabt {
 
@@ -29,7 +29,7 @@ class Features {
 
   void EnableAll() {
 #define WABT_FEATURE(variable, flag, default_, help) enable_##variable();
-#include "src/feature.def"
+#include "wabt/feature.def"
 #undef WABT_FEATURE
   }
 
@@ -41,7 +41,7 @@ class Features {
     variable##_enabled_ = value;                                  \
     UpdateDependencies();                                         \
   }
-#include "src/feature.def"
+#include "wabt/feature.def"
 #undef WABT_FEATURE
 
  private:
@@ -49,7 +49,7 @@ class Features {
 
 #define WABT_FEATURE(variable, flag, default_, help) \
   bool variable##_enabled_ = default_;
-#include "src/feature.def"
+#include "wabt/feature.def"
 #undef WABT_FEATURE
 };
 

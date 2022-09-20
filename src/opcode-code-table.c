@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "src/opcode-code-table.h"
+#include "wabt/opcode-code-table.h"
 
-#include "config.h"
+#include "wabt/config.h"
 
 #include <stdint.h>
 

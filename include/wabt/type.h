@@ -22,8 +22,8 @@
 #include <vector>
 
 #include "config.h"
-#include "src/base-types.h"
-#include "src/string-format.h"
+#include "wabt/base-types.h"
+#include "wabt/string-format.h"
 
 namespace wabt {
 

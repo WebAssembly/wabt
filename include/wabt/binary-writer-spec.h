@@ -21,9 +21,9 @@
 #include <utility>
 #include <vector>
 
-#include "src/binary-writer.h"
-#include "src/common.h"
-#include "src/ir.h"
+#include "wabt/binary-writer.h"
+#include "wabt/common.h"
+#include "wabt/ir.h"
 
 namespace wabt {
 

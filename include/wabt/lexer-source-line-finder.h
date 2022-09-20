@@ -21,9 +21,9 @@
 #include <string>
 #include <vector>
 
-#include "src/common.h"
-#include "src/lexer-source.h"
-#include "src/range.h"
+#include "wabt/common.h"
+#include "wabt/lexer-source.h"
+#include "wabt/range.h"
 
 namespace wabt {
 

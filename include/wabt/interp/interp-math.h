@@ -27,8 +27,8 @@
 #include <immintrin.h>
 #endif
 
-#include "src/common.h"
-#include "src/interp/interp.h"
+#include "wabt/common.h"
+#include "wabt/interp/interp.h"
 
 namespace wabt {
 namespace interp {

@@ -20,18 +20,18 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "config.h"
+#include "wabt/config.h"
 
-#include "src/apply-names.h"
-#include "src/common.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/generate-names.h"
-#include "src/ir.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
-#include "src/wast-parser.h"
-#include "src/wat-writer.h"
+#include "wabt/apply-names.h"
+#include "wabt/common.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/generate-names.h"
+#include "wabt/ir.h"
+#include "wabt/option-parser.h"
+#include "wabt/stream.h"
+#include "wabt/wast-parser.h"
+#include "wabt/wat-writer.h"
 
 using namespace wabt;
 

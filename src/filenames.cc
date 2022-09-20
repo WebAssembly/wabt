@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/filenames.h"
+#include "wabt/filenames.h"
 
 namespace wabt {
 
