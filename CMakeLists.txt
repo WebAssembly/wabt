@@ -783,10 +783,23 @@ if (WASI)
   set_target_properties(libwabt
     PROPERTIES
     COMPILE_OPTIONS "-fno-exceptions -mexec-model=reactor"
+    OUTPUT_NAME libwabt.wasm
+    COMPILE_FLAGS "-fno-exceptions -mexec-model=reactor"
+    CMAKE_CXX_FLAGS "-fno-exceptions -mexec-model=reactor"
   )
 
-  set_target_properties(libwabt PROPERTIES OUTPUT_NAME libwabt.wasm)
-  set_target_properties(libwabt PROPERTIES COMPILE_FLAGS "-fno-exceptions -mexec-model=reactor")
+  set(LIBWABT_LINK_FLAGS
+    -fno-exceptions
+    -mexec-model=reactor
+    -Oz
+  )
+  string(REPLACE ";" " " LIBWABT_LINK_FLAGS_STR "${LIBWABT_LINK_FLAGS}")
+
+  set_target_properties(libwabt
+    PROPERTIES
+    LINK_FLAGS "${LIBWABT_LINK_FLAGS_STR}"
+  )
+
 
 endif()
 
