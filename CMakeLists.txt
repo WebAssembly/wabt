@@ -767,7 +767,7 @@ if (WASI)
 
   # exceptions are never needed
   # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -mexec-model=reactor")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -mexec-model=reactor")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 
   # libwabt.wasm
 
@@ -782,7 +782,7 @@ if (WASI)
   target_link_libraries(libwabt wabt)
   set_target_properties(libwabt
     PROPERTIES
-    FLAGS "-fno-exceptions -mexec-model=reactor"
+    COMPILE_OPTIONS "-fno-exceptions -mexec-model=reactor"
   )
 
   set_target_properties(libwabt PROPERTIES OUTPUT_NAME libwabt.wasm)
