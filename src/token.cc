@@ -23,7 +23,7 @@ const char* GetTokenTypeName(TokenType token_type) {
 #define WABT_TOKEN(name, string) string,
 #define WABT_TOKEN_FIRST(name, string)
 #define WABT_TOKEN_LAST(name, string)
-#include "token.def"
+#include "wabt/token.def"
 #undef WABT_TOKEN
 #undef WABT_TOKEN_FIRST
 #undef WABT_TOKEN_LAST

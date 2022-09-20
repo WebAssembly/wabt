@@ -31,7 +31,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "config.h"
+#include "wabt/config.h"
 
 #include "wabt/base-types.h"
 #include "wabt/make-unique.h"

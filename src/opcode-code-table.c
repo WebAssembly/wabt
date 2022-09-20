@@ -24,7 +24,7 @@ typedef enum WabtOpcodeEnum {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text, decomp)                                             \
   Name,
-#include "opcode.def"
+#include "wabt/opcode.def"
 #undef WABT_OPCODE
   Invalid,
 } WabtOpcodeEnum;
@@ -36,6 +36,6 @@ uint32_t WabtOpcodeCodeTable[WABT_OPCODE_CODE_TABLE_SIZE] = {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text, decomp)                                             \
   [(prefix << 8) + code] = Name,
-#include "opcode.def"
+#include "wabt/opcode.def"
 #undef WABT_OPCODE
 };

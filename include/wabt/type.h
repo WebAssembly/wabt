@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "config.h"
+#include "wabt/config.h"
 #include "wabt/base-types.h"
 #include "wabt/string-format.h"
 

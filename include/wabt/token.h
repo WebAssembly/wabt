@@ -36,7 +36,7 @@ enum class TokenType {
 #define WABT_TOKEN(name, string) name,
 #define WABT_TOKEN_FIRST(group, first) First_##group = first,
 #define WABT_TOKEN_LAST(group, last) Last_##group = last,
-#include "token.def"
+#include "wabt/token.def"
 #undef WABT_TOKEN
 #undef WABT_TOKEN_FIRST
 #undef WABT_TOKEN_LAST

@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
+#include "wabt/config.h"
 
 #define PRIstringview "%.*s"
 #define WABT_PRINTF_STRING_VIEW_ARG(x) \

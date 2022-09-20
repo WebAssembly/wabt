@@ -30,7 +30,7 @@ namespace wabt {
 
 namespace {
 
-#include "wabt/prebuilt/lexer-keywords.cc"
+#include "prebuilt/lexer-keywords.cc"
 
 }  // namespace
 
