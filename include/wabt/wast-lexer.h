@@ -54,7 +54,7 @@ class WastLexer {
 
  private:
   static const int kEof = -1;
-  enum class CharClass { Reserved = 1, Keyword = 2, HexDigit = 4, Digit = 8 };
+  enum class CharClass { IdChar = 1, Keyword = 2, HexDigit = 4, Digit = 8 };
 
   Location GetLocation();
   std::string_view GetText(size_t offset = 0);
@@ -76,12 +76,16 @@ class WastLexer {
   static bool IsDigit(int c) { return IsCharClass(c, CharClass::Digit); }
   static bool IsHexDigit(int c) { return IsCharClass(c, CharClass::HexDigit); }
   static bool IsKeyword(int c) { return IsCharClass(c, CharClass::Keyword); }
-  static bool IsReserved(int c) { return IsCharClass(c, CharClass::Reserved); }
+  static bool IsIdChar(int c) { return IsCharClass(c, CharClass::IdChar); }
 
   bool ReadNum();
   bool ReadHexNum();
-  int ReadReservedChars();
-  bool NoTrailingReservedChars() { return ReadReservedChars() == 0; }
+
+  enum class ReservedChars { None, Some, Id };
+  ReservedChars ReadReservedChars();
+  bool NoTrailingReservedChars() {
+    return ReadReservedChars() == ReservedChars::None;
+  }
   void ReadSign();
   Token GetStringToken(WastParser*);
   Token GetNumberToken(TokenType);

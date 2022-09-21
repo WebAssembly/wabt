@@ -24,7 +24,9 @@
 #include "wabt/lexer-source.h"
 #include "wabt/wast-parser.h"
 
-#define ERROR(...) parser->Error(GetLocation(), __VA_ARGS__)
+#define ERROR(...) \
+  if (parser)      \
+  parser->Error(GetLocation(), __VA_ARGS__)
 
 namespace wabt {
 
@@ -165,7 +167,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       default:
         if (IsKeyword(PeekChar())) {
           return GetKeywordToken();
-        } else if (IsReserved(PeekChar())) {
+        } else if (IsIdChar(PeekChar())) {
           return GetReservedToken();
         } else {
           ReadChar();
@@ -310,6 +312,10 @@ Token WastLexer::GetStringToken(WastParser* parser) {
         continue;
 
       case '"':
+        if (PeekChar() == '"') {
+          ERROR("invalid string token");
+          has_error = true;
+        }
         in_string = false;
         break;
 
@@ -417,13 +423,13 @@ bool WastLexer::IsCharClass(int c, CharClass bit) {
   //   def IsDigit(c): return Range(c, '0', '9')
   //   def IsHexDigit(c): return IsDigit(c) or Range(c.lower(), 'a', 'f')
   //   def IsKeyword(c): return Range(c, 'a', 'z')
-  //   def IsReserved(c): return Range(c, '!', '~') and c not in '"(),;[]{}'
+  //   def IsIdChar(c): return Range(c, '!', '~') and c not in '"(),;[]{}'
   //
   //   print ([0] + [
   //       (8 if IsDigit(c) else 0) |
   //       (4 if IsHexDigit(c) else 0) |
   //       (2 if IsKeyword(c) else 0) |
-  //       (1 if IsReserved(c) else 0)
+  //       (1 if IsIdChar(c) else 0)
   //       for c in map(chr, range(0, 127))
   //   ])
   static const char kCharClasses[257] = {
@@ -456,13 +462,23 @@ bool WastLexer::ReadHexNum() {
   return false;
 }
 
-int WastLexer::ReadReservedChars() {
-  int count = 0;
-  while (IsReserved(PeekChar())) {
-    ReadChar();
-    ++count;
+WastLexer::ReservedChars WastLexer::ReadReservedChars() {
+  ReservedChars ret{ReservedChars::None};
+  while (true) {
+    auto peek = PeekChar();
+    if (IsIdChar(peek)) {
+      ReadChar();
+      if (ret == ReservedChars::None) {
+        ret = ReservedChars::Id;
+      }
+    } else if (peek == '"') {
+      GetStringToken(nullptr);
+      ret = ReservedChars::Some;
+    } else {
+      break;
+    }
   }
-  return count;
+  return ret;
 }
 
 void WastLexer::ReadSign() {
@@ -562,10 +578,11 @@ Token WastLexer::GetNameEqNumToken(std::string_view name,
 
 Token WastLexer::GetIdToken() {
   ReadChar();
-  if (NoTrailingReservedChars()) {
-    return TextToken(TokenType::Reserved);
+  if (ReadReservedChars() == ReservedChars::Id) {
+    return TextToken(TokenType::Var);
   }
-  return TextToken(TokenType::Var);
+
+  return TextToken(TokenType::Reserved);
 }
 
 Token WastLexer::GetKeywordToken() {
