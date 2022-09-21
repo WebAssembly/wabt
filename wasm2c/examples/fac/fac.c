@@ -546,25 +546,7 @@ static void init_func_types(void) {
   func_types[0] = wasm_rt_register_func_type(1, 1, WASM_RT_I32, WASM_RT_I32);
 }
 
-static void init_tags(void) {
-}
-
 static u32 w2c_fac(Z_fac_instance_t*, u32);
-
-static void init_globals(Z_fac_instance_t* instance) {
-}
-
-static void init_memory(Z_fac_instance_t* instance) {
-}
-
-static void init_data_instances(Z_fac_instance_t *instance) {
-}
-
-static void init_table(Z_fac_instance_t* instance) {
-}
-
-static void init_elem_instances(Z_fac_instance_t *instance) {
-}
 
 static u32 w2c_fac(Z_fac_instance_t* instance, u32 w2c_p0) {
   FUNC_PROLOGUE;
@@ -595,17 +577,11 @@ void Z_fac_init_module(void) {
   assert(wasm_rt_is_initialized());
   s_module_initialized = true;
   init_func_types();
-  init_tags();
 }
 
 void Z_fac_instantiate(Z_fac_instance_t* instance) {
   assert(wasm_rt_is_initialized());
   assert(s_module_initialized);
-  init_globals(instance);
-  init_memory(instance);
-  init_table(instance);
-  init_data_instances(instance);
-  init_elem_instances(instance);
 }
 
 void Z_fac_free(Z_fac_instance_t* instance) {
