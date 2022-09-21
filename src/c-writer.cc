@@ -1446,19 +1446,20 @@ void CWriter::WriteDataInitializers() {
     }
   }
   for (const DataSegment* data_segment : module_->data_segments) {
-    if (data_segment->kind == SegmentKind::Active) {
-      const Memory* memory =
-          module_->memories[module_->GetMemoryIndex(data_segment->memory_var)];
-      Write("LOAD_DATA(", ExternalInstanceRef(memory->name), ", ");
-      WriteInitExpr(data_segment->offset);
-      if (data_segment->data.empty()) {
-        Write(", NULL, 0");
-      } else {
-        Write(", data_segment_data_", GetGlobalName(data_segment->name), ", ",
-              data_segment->data.size());
-      }
-      Write(");", Newline());
+    if (data_segment->kind != SegmentKind::Active) {
+      continue;
     }
+    const Memory* memory =
+        module_->memories[module_->GetMemoryIndex(data_segment->memory_var)];
+    Write("LOAD_DATA(", ExternalInstanceRef(memory->name), ", ");
+    WriteInitExpr(data_segment->offset);
+    if (data_segment->data.empty()) {
+      Write(", NULL, 0");
+    } else {
+      Write(", data_segment_data_", GetGlobalName(data_segment->name), ", ",
+            data_segment->data.size());
+    }
+    Write(");", Newline());
   }
 
   Write(CloseBrace(), Newline());
