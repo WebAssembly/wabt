@@ -945,7 +945,6 @@ void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
   Write(s_source_declarations);
-  Write(Newline());
 }
 
 void CWriter::WriteMultivalueTypes() {
@@ -994,16 +993,15 @@ void CWriter::WriteTagTypes() {
 }
 
 void CWriter::WriteFuncTypes() {
-  if (module_->types.size()) {
-    Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
-    Write(Newline());
-  }
-  Write(Newline());
-  Write("static void init_func_types(void) ", OpenBrace());
-  if (!module_->types.size()) {
-    Write(CloseBrace(), Newline());
+  if (module_->types.empty()) {
     return;
   }
+
+  Write(Newline());
+  Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
+  Write(Newline());
+
+  Write(Newline(), "static void init_func_types(void) ", OpenBrace());
   Index func_type_index = 0;
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
@@ -1035,9 +1033,11 @@ void CWriter::WriteTags() {
     tag_index++;
   }
 
-  Write(Newline());
+  if (module_->tags.empty()) {
+    return;
+  }
 
-  Write("static void init_tags(void) ", OpenBrace());
+  Write(Newline(), "static void init_tags(void) ", OpenBrace());
 
   tag_index = 0;
   for (const Tag* tag : module_->tags) {
@@ -1374,6 +1374,9 @@ void CWriter::WriteTablePtr(const std::string& name) {
 }
 
 void CWriter::WriteGlobalInitializers() {
+  if (module_->globals.empty())
+    return;
+
   Write(Newline(), "static void init_globals(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
   Index global_index = 0;
@@ -1411,30 +1414,28 @@ void CWriter::WriteDataInstances() {
 }
 
 void CWriter::WriteDataInitializers() {
-  if (!module_->memories.empty()) {
-    if (module_->data_segments.empty()) {
-      Write(Newline());
-    } else {
-      for (const DataSegment* data_segment : module_->data_segments) {
-        if (data_segment->data.size()) {
-          Write(Newline(), "static const u8 data_segment_data_",
-                GetGlobalName(data_segment->name), "[] = ", OpenBrace());
-          size_t i = 0;
-          for (uint8_t x : data_segment->data) {
-            Writef("0x%02x, ", x);
-            if ((++i % 12) == 0)
-              Write(Newline());
-          }
-          if (i > 0)
-            Write(Newline());
-          Write(CloseBrace(), ";", Newline());
-        }
+  if (module_->memories.empty()) {
+    return;
+  }
+
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->data.size()) {
+      Write(Newline(), "static const u8 data_segment_data_",
+            GetGlobalName(data_segment->name), "[] = ", OpenBrace());
+      size_t i = 0;
+      for (uint8_t x : data_segment->data) {
+        Writef("0x%02x, ", x);
+        if ((++i % 12) == 0)
+          Write(Newline());
       }
+      if (i > 0)
+        Write(Newline());
+      Write(CloseBrace(), ";", Newline());
     }
   }
 
-  Write("static void init_memory(", ModuleInstanceTypeName(), "* instance) ",
-        OpenBrace());
+  Write(Newline(), "static void init_memories(", ModuleInstanceTypeName(),
+        "* instance) ", OpenBrace());
   if (module_->memories.size() > module_->num_memory_imports) {
     Index memory_idx = module_->num_memory_imports;
     for (Index i = memory_idx; i < module_->memories.size(); i++) {
@@ -1445,6 +1446,7 @@ void CWriter::WriteDataInitializers() {
             memory->page_limits.initial, ", ", max, ");", Newline());
     }
   }
+
   for (const DataSegment* data_segment : module_->data_segments) {
     if (data_segment->kind != SegmentKind::Active) {
       continue;
@@ -1464,17 +1466,19 @@ void CWriter::WriteDataInitializers() {
 
   Write(CloseBrace(), Newline());
 
-  Write(Newline(), "static void init_data_instances(", ModuleInstanceTypeName(),
-        " *instance) ", OpenBrace());
+  if (!module_->data_segments.empty()) {
+    Write(Newline(), "static void init_data_instances(",
+          ModuleInstanceTypeName(), " *instance) ", OpenBrace());
 
-  for (const DataSegment* data_segment : module_->data_segments) {
-    if (is_droppable(data_segment)) {
-      Write("instance->data_segment_dropped_",
-            GetGlobalName(data_segment->name), " = false;", Newline());
+    for (const DataSegment* data_segment : module_->data_segments) {
+      if (is_droppable(data_segment)) {
+        Write("instance->data_segment_dropped_",
+              GetGlobalName(data_segment->name), " = false;", Newline());
+      }
     }
-  }
 
-  Write(CloseBrace(), Newline());
+    Write(CloseBrace(), Newline());
+  }
 }
 
 void CWriter::WriteElemInstances() {
@@ -1488,13 +1492,16 @@ void CWriter::WriteElemInstances() {
 }
 
 void CWriter::WriteElemInitializers() {
+  if (module_->tables.empty()) {
+    return;
+  }
+
   for (const ElemSegment* elem_segment : module_->elem_segments) {
     if (elem_segment->elem_exprs.empty()) {
       continue;
     }
 
-    Write(Newline(),
-          "static const wasm_elem_segment_expr_t elem_segment_exprs_",
+    Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
           GetGlobalName(elem_segment->name), "[] = ", OpenBrace());
 
     for (const ExprList& elem_expr : elem_segment->elem_exprs) {
@@ -1527,7 +1534,7 @@ void CWriter::WriteElemInitializers() {
     Write(CloseBrace(), ";", Newline());
   }
 
-  Write(Newline(), "static void init_table(", ModuleInstanceTypeName(),
+  Write(Newline(), "static void init_tables(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
 
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
@@ -1564,17 +1571,19 @@ void CWriter::WriteElemInitializers() {
 
   Write(CloseBrace(), Newline());
 
-  Write(Newline(), "static void init_elem_instances(", ModuleInstanceTypeName(),
-        " *instance) ", OpenBrace());
+  if (!module_->elem_segments.empty()) {
+    Write(Newline(), "static void init_elem_instances(",
+          ModuleInstanceTypeName(), " *instance) ", OpenBrace());
 
-  for (const ElemSegment* elem_segment : module_->elem_segments) {
-    if (is_droppable(elem_segment)) {
-      Write("instance->elem_segment_dropped_",
-            GetGlobalName(elem_segment->name), " = false;", Newline());
+    for (const ElemSegment* elem_segment : module_->elem_segments) {
+      if (is_droppable(elem_segment)) {
+        Write("instance->elem_segment_dropped_",
+              GetGlobalName(elem_segment->name), " = false;", Newline());
+      }
     }
-  }
 
-  Write(CloseBrace(), Newline());
+    Write(CloseBrace(), Newline());
+  }
 }
 
 void CWriter::WriteExports(WriteExportsKind kind) {
@@ -1649,7 +1658,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
     }
 
     if (kind == WriteExportsKind::Declarations) {
-      Write(";");
+      Write(";", Newline());
       continue;
     }
 
@@ -1699,8 +1708,12 @@ void CWriter::WriteInit() {
         OpenBrace());
   Write("assert(wasm_rt_is_initialized());", Newline());
   Write("s_module_initialized = true;", Newline());
-  Write("init_func_types();", Newline());
-  Write("init_tags();", Newline());
+  if (!module_->types.empty()) {
+    Write("init_func_types();", Newline());
+  }
+  if (!module_->tags.empty()) {
+    Write("init_tags();", Newline());
+  }
   Write(CloseBrace(), Newline());
 
   Write(Newline(), "void " + module_prefix_ + "_instantiate(",
@@ -1722,11 +1735,22 @@ void CWriter::WriteInit() {
     Write(");", Newline());
   }
 
-  Write("init_globals(instance);", Newline());
-  Write("init_memory(instance);", Newline());
-  Write("init_table(instance);", Newline());
-  Write("init_data_instances(instance);", Newline());
-  Write("init_elem_instances(instance);", Newline());
+  if (!module_->globals.empty()) {
+    Write("init_globals(instance);", Newline());
+  }
+  if (!module_->memories.empty()) {
+    Write("init_memories(instance);", Newline());
+  }
+  if (!module_->tables.empty()) {
+    Write("init_tables(instance);", Newline());
+  }
+  if (!module_->memories.empty() && !module_->data_segments.empty()) {
+    Write("init_data_instances(instance);", Newline());
+  }
+  if (!module_->tables.empty() && !module_->elem_segments.empty()) {
+    Write("init_elem_instances(instance);", Newline());
+  }
+
   for (Var* var : module_->starts) {
     Write(ExternalRef(module_->GetFunc(*var)->name));
     bool is_import =
@@ -3333,7 +3357,7 @@ void CWriter::WriteCHeader() {
   WriteMultivalueTypes();
   WriteImports();
   WriteExports(WriteExportsKind::Declarations);
-  Write(Newline(), s_header_bottom);
+  Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
 }
 
