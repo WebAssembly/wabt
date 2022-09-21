@@ -56,6 +56,7 @@ endif ()
 option(BUILD_TESTS "Build GTest-based tests" ON)
 option(USE_SYSTEM_GTEST "Use system GTest, instead of building" OFF)
 option(BUILD_TOOLS "Build wabt commandline tools" ON)
+option(BUILD_UVWASI "Build uvwasi for use by compiled applications" ON)
 option(BUILD_FUZZ_TOOLS "Build tools that can repro fuzz bugs" OFF)
 option(BUILD_LIBWASM "Build libwasm" ON)
 option(USE_ASAN "Use address sanitizer" OFF)
@@ -353,6 +354,7 @@ set(WABT_LIBRARY_SRC
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 add_library(wabt::wabt ALIAS wabt)
 
+
 target_compile_features(wabt PUBLIC cxx_std_17)
 
 if (WABT_INSTALL_RULES)
@@ -393,6 +395,10 @@ IF (NOT WIN32)
       COMPONENT wabt-development
     )
   endif ()
+endif ()
+
+if (BUILD_UVWASI)
+    add_subdirectory("third_party/uvwasi" )
 endif ()
 
 if (BUILD_FUZZ_TOOLS)
