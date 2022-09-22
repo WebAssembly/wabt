@@ -5,5 +5,6 @@ out/test/spec/unreached-valid.wast:42: assert_trap passed: unreachable executed
 out/test/spec/unreached-valid.wast:43: assert_trap passed: unreachable executed
 out/test/spec/unreached-valid.wast:44: assert_trap passed: unreachable executed
 out/test/spec/unreached-valid.wast:45: assert_trap passed: unreachable executed
-6/6 tests passed.
+out/test/spec/unreached-valid.wast:63: assert_trap passed: unreachable executed
+7/7 tests passed.
 ;;; STDOUT ;;)
