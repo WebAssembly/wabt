@@ -10,32 +10,58 @@
 .Ar file
 .Sh DESCRIPTION
 .Nm
-translates from WebAssembly text format to the WebAssembly binary format.
+Read a file in the wasm text format, check it for errors, and convert it to the wasm binary format.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl Fl help
+Print this help message
+.It Fl Fl version
+Print version information
 .It Fl v , Fl Fl verbose
 Use multiple times for more info
-.It Fl Fl help
-Print a help message
 .It Fl Fl debug-parser
 Turn on debugging the parser of wat files
 .It Fl d , Fl Fl dump-module
 Print a hexdump of the module to stdout
 .It Fl Fl enable-exceptions
-Experimental exception handling
+Enable Experimental exception handling
 .It Fl Fl disable-mutable-globals
-Import/export mutable globals
-.It Fl Fl enable-saturating-float-to-int
-Saturating float-to-int operators
-.It Fl Fl enable-sign-extension
-Sign-extension operators
+Disable Import/export mutable globals
+.It Fl Fl disable-saturating-float-to-int
+Disable Saturating float-to-int operators
+.It Fl Fl disable-sign-extension
+Disable Sign-extension operators
 .It Fl Fl disable-simd
-SIMD support
+Disable SIMD support
 .It Fl Fl enable-threads
-Threading support
+Enable Threading support
+.It Fl Fl enable-function-references
+Enable Typed function references
+.It Fl Fl disable-multi-value
+Disable Multi-value
+.It Fl Fl enable-tail-call
+Enable Tail-call support
+.It Fl Fl disable-bulk-memory
+Disable Bulk-memory operations
+.It Fl Fl disable-reference-types
+Disable Reference types (externref)
+.It Fl Fl enable-annotations
+Enable Custom annotation syntax
+.It Fl Fl enable-code-metadata
+Enable Code metadata
+.It Fl Fl enable-gc
+Enable Garbage collection
+.It Fl Fl enable-memory64
+Enable 64-bit memory
+.It Fl Fl enable-multi-memory
+Enable Multi-memory
+.It Fl Fl enable-extended-const
+Enable Extended constant expressions
+.It Fl Fl enable-all
+Enable all features
 .It Fl o , Fl Fl output=FILE
-output wasm binary file
+Output wasm binary file. Use "-" to write to stdout.
 .It Fl r , Fl Fl relocatable
 Create a relocatable wasm binary (suitable for linking with e.g. lld)
 .It Fl Fl no-canonicalize-leb128s
@@ -58,6 +84,7 @@ Parse spec-test.wast, and write verbose output to stdout (including the meaning 
 .Pp
 .Dl $ wat2wasm spec-test.wast -v
 .Sh SEE ALSO
+.Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,
 .Xr wasm-objdump 1 ,
 .Xr wasm-opcodecnt 1 ,

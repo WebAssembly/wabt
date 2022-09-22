@@ -10,10 +10,14 @@
 .Ar
 .Sh DESCRIPTION
 .Nm
-prints information about a wasm binary, similar to objdump.
+Print information about the contents of wasm binaries.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl Fl help
+Print a help message
+.It Fl Fl version
+Print version information
 .It Fl h , Fl Fl headers
 Print headers
 .It Fl j , Fl Fl section=SECTION
@@ -28,12 +32,13 @@ Print extra debug information
 Show section details
 .It Fl r , Fl Fl reloc
 Show relocations inline with disassembly
-.It Fl Fl help
-Print a help message
+.It Fl Fl section-offsets
+Print section offsets instead of file offsets in code disassembly
 .El
 .Sh EXAMPLES
 .Dl $ wasm-objdump test.wasm
 .Sh SEE ALSO
+.Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,
 .Xr wasm-opcodecnt 1 ,
 .Xr wasm-strip 1 ,
