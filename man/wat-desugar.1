@@ -10,34 +10,60 @@
 .Ar file
 .Sh DESCRIPTION
 .Nm
-parses .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and prints "canonical" flat format.
+Parses .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and prints "canonical" flat format.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
+.It Fl Fl version
+Print version information
 .It Fl o , Fl Fl output=FILE
 Output file for the formatted file
 .It Fl Fl debug-parser
 Turn on debugging the parser of wat files
 .It Fl f , Fl Fl fold-exprs
 Write folded expressions where possible
-.It Fl Fl enable-exceptions
-Experimental exception handling
-.It Fl Fl disable-mutable-globals
-Import/export mutable globals
-.It Fl Fl enable-saturating-float-to-int
-Saturating float-to-int operators
-.It Fl Fl enable-sign-extension
-Sign-extension operators
-.It Fl Fl disable-simd
-SIMD support
-.It Fl Fl enable-threads
-Threading support
 .It Fl Fl inline-exports
 Write all exports inline
 .It Fl Fl inline-imports
 Write all imports inline
+.It Fl Fl enable-exceptions
+Enable Experimental exception handling
+.It Fl Fl disable-mutable-globals
+Disable Import/export mutable globals
+.It Fl Fl disable-saturating-float-to-int
+Disable Saturating float-to-int operators
+.It Fl Fl disable-sign-extension
+Disable Sign-extension operators
+.It Fl Fl disable-simd
+Disable SIMD support
+.It Fl Fl enable-threads
+Enable Threading support
+.It Fl Fl enable-function-references
+Enable Typed function references
+.It Fl Fl disable-multi-value
+Disable Multi-value
+.It Fl Fl enable-tail-call
+Enable Tail-call support
+.It Fl Fl disable-bulk-memory
+Disable Bulk-memory operations
+.It Fl Fl disable-reference-types
+Disable Reference types (externref)
+.It Fl Fl enable-annotations
+Enable Custom annotation syntax
+.It Fl Fl enable-code-metadata
+Enable Code metadata
+.It Fl Fl enable-gc
+Enable Garbage collection
+.It Fl Fl enable-memory64
+Enable 64-bit memory
+.It Fl Fl enable-multi-memory
+Enable Multi-memory
+.It Fl Fl enable-extended-const
+Enable Extended constant expressions
+.It Fl Fl enable-all
+Enable all features
 .It Fl Fl generate-names
 Give auto-generated names to non-named functions, types, etc.
 .El
@@ -54,6 +80,7 @@ Generate names for indexed variables
 .Pp
 .Dl $ wat-desugar --generate-names test.wat
 .Sh SEE ALSO
+.Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,
 .Xr wasm-objdump 1 ,
 .Xr wasm-opcodecnt 1 ,
@@ -62,7 +89,7 @@ Generate names for indexed variables
 .Xr wasm2c 1 ,
 .Xr wasm2wat 1 ,
 .Xr wast2json 1 ,
-.Xr wat2wasm 1,
+.Xr wat2wasm 1 ,
 .Xr spectest-interp 1
 .Sh BUGS
 If you find a bug, please report it at
