@@ -1,4 +1,4 @@
-
+#!/usr/bin/env lua
 
 local format_br = '\n.br\n'
 local tools = {
