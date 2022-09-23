@@ -133,7 +133,7 @@ class WastParser {
   bool ParseElemExprOpt(ExprList* out_elem_expr);
   bool ParseElemExprListOpt(ExprListVector* out_list);
   bool ParseElemExprVarListOpt(ExprListVector* out_list);
-  Result ParseValueType(Var* out_type);
+  Result ParseValueType(Type* out_type, Var* out_var = nullptr);
   Result ParseValueTypeList(
       TypeVector* out_type_list,
       std::unordered_map<uint32_t, std::string>* type_names);
