@@ -154,6 +154,10 @@ TOOLS = {
         ] + wasm2c_args),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
+    'run-wasm2c': [
+        ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm2c)s -n test %(temp_file)s.wasm'),
+    ],
     'run-wasm-decompile': [
         ('RUN', '%(wat2wasm)s --enable-all %(in_file)s -o %(temp_file)s.wasm'),
         ('RUN', '%(wasm-decompile)s --enable-all %(temp_file)s.wasm'),
