@@ -12,13 +12,13 @@ SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 output_file=$(basename -- "$1")
 output_file="${output_file%%.*}.elf"
 
-set -v
+set -x
 
 cd $SCRIPT_DIR
 make clean
 
-cp ${ORIGIN_DIR}/$1 ./input.wasm
-make input.c
+cp ${ORIGIN_DIR}/$1 ./main.wasm
+make main.c
 
-make input.elf
-cp -f input.elf ${ORIGIN_DIR}/${output_file}
+make main.elf
+cp -f main.elf ${ORIGIN_DIR}/${output_file}

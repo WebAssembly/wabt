@@ -8,20 +8,20 @@ UVWASI_PATH=$(WABT_ROOT)/third_party/uvwasi
 
 DEPS=-I$(UVWASI_PATH)/include -L$(WABT_ROOT)/build/_deps/libuv-build -L$(WABT_ROOT)/build/third_party/uvwasi
 
-LIBS=-luvwasi_a -luv_a -lpthread -ldl -lm
+LIBS=-luvwasi_a -luv_a
 
 DBG_FLAGS=-g
-REL_FLAGS=-O3 -flto -fomit-frame-pointer -fno-stack-protector
+REL_FLAGS=-O3
 
 CFLAGS=$(REL_FLAGS)
 
-all: input.elf
+all: main.elf
 
 clean:
-	rm -rf $(ALL_RESULTS) input.*
+	rm -rf $(ALL_RESULTS) main.* *.elf
 
-input.c:
-	$(WASM2C) input.wasm -o input.c
+main.c:
+	$(WASM2C) main.wasm -o main.c
 
-input.elf: input.c  uvwasi-rt-main.c $(WASM2C_RUNTIME_FILES)
-	$(CC) $(CFLAGS) input.c uvwasi-rt-main.c -o input.elf -I$(WASM2C_RUNTIME_PATH) $(WASM2C_RUNTIME_FILES) $(DEPS) $(LIBS)
+main.elf: main.c wasi-main.c $(WASM2C_RUNTIME_FILES)
+	$(CC) $(CFLAGS) main.c wasi-main.c -o main.elf -I$(WASM2C_RUNTIME_PATH) $(WASM2C_RUNTIME_FILES) $(DEPS) $(LIBS)

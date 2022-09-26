@@ -3,32 +3,16 @@
 #include <stdlib.h>
 #include "uvwasi.h"
 #include "uvwasi-rt.h"
-
-#define MODULE_NAME input
-#define MODULE_HEADER "input.h"
-#include MODULE_HEADER
-
-//force pre-processor expansion of m_name
-#define __module_init(m_name) Z_## m_name ##_init_module()
-#define module_init(m_name) __module_init(m_name)
-
-#define __module_instantiate(m_name, instance_p, wasi_p) Z_## m_name ##_instantiate(instance_p, wasi_p)
-#define module_instantiate(m_name ,instance_p, wasi_p) __module_instantiate(m_name ,instance_p, wasi_p)
-
-#define __module_free(m_name, instance_p)  Z_## m_name ##_free(instance_p)
-#define module_free(m_name, instance_p) __module_free(m_name, instance_p)
-
-#define __module_start(m_name, instance_p) Z_ ## m_name ## Z__start(instance_p)
-#define module_start(m_name, instance_p) __module_start(m_name, instance_p)
+#include "main.h"
 
 int main(int argc, const char** argv)
 {
-    Z_input_instance_t local_instance;
+    Z_main_instance_t local_instance;
     uvwasi_t local_uvwasi_state;
 
     struct Z_wasi_snapshot_preview1_instance_t wasi_state = {
 	.uvwasi = &local_uvwasi_state,
-	.instance_memory = &local_instance.w2c_memory
+	.instance_memory = Z_mainZ_memory(&local_instance),
     };
 
     uvwasi_options_t init_options;
@@ -64,10 +48,10 @@ int main(int argc, const char** argv)
         exit(1);
     }
 
-    module_init(MODULE_NAME);
-    module_instantiate(MODULE_NAME, &local_instance, (struct Z_wasi_snapshot_preview1_instance_t *) &wasi_state);
-    module_start(MODULE_NAME, &local_instance);
-    module_free(MODULE_NAME, &local_instance);
+    Z_main_init_module();
+    Z_main_instantiate(&local_instance, (struct Z_wasi_snapshot_preview1_instance_t *) &wasi_state);
+    Z_mainZ__start(&local_instance);
+    Z_main_free(&local_instance);
 
     uvwasi_destroy(&local_uvwasi_state);
     wasm_rt_free();
