@@ -465,7 +465,6 @@ static Result ReadAndRunModule(const char* module_filename) {
     return Result::Error;
 #endif
   } else {
-    // PopulateImports(module, &imports);
     BindImports(module, imports);
   }
 
