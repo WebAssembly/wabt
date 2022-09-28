@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "src/binary-reader.h"
 #include "src/error-formatter.h"
@@ -39,6 +40,9 @@
 using namespace wabt;
 using namespace wabt::interp;
 
+using ExportMap = std::map<std::string, Extern::Ptr>;
+using Registry = std::map<std::string, ExportMap>;
+
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
@@ -48,6 +52,7 @@ static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
 static bool s_wasi;
+static std::vector<std::string> s_modules;
 static std::vector<std::string> s_wasi_env;
 static std::vector<std::string> s_wasi_argv;
 static std::vector<std::string> s_wasi_dirs;
@@ -55,6 +60,8 @@ static std::vector<std::string> s_wasi_dirs;
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
 static std::unique_ptr<FileStream> s_stderr_stream;
+
+static Registry s_registry;
 
 static Store s_store;
 
@@ -111,6 +118,10 @@ static void ParseOptions(int argc, char** argv) {
       'd', "dir", "DIR", "Pass the given directory the the WASI runtime",
       [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
   parser.AddOption(
+      'm', "module", "[(@|$)NAME]:PATH",
+      "load wasm-module PATH and provide all exports via module-name NAME for imports of following modules",
+      [](const std::string& argument) { s_modules.push_back(argument); });
+  parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
       []() { s_run_all_exports = true; });
@@ -161,33 +172,169 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
   return result;
 }
 
-static void BindImports(const Module::Ptr& module, RefVec& imports) {
+static bool IsHostPrint(const ImportDesc &import) {
+  return import.type.type->kind == ExternKind::Func &&
+         ((s_host_print && import.type.module == "host" &&
+           import.type.name == "print") ||
+         s_dummy_import_func);
+}
+
+static Ref GenerateHostPrint(const ImportDesc &import) {
   auto* stream = s_stdout_stream.get();
 
-  for (auto&& import : module->desc().imports) {
-    if (import.type.type->kind == ExternKind::Func &&
-        ((s_host_print && import.type.module == "host" &&
-          import.type.name == "print") ||
-         s_dummy_import_func)) {
-      auto func_type = *cast<FuncType>(import.type.type.get());
-      auto import_name = StringPrintf("%s.%s", import.type.module.c_str(),
-                                      import.type.name.c_str());
+  auto func_type = *cast<FuncType>(import.type.type.get());
+  auto import_name = StringPrintf("%s.%s", import.type.module.c_str(),
+                                  import.type.name.c_str());
 
-      auto host_func = HostFunc::New(
-          s_store, func_type,
-          [=](Thread& thread, const Values& params, Values& results,
-              Trap::Ptr* trap) -> Result {
-            printf("called host ");
-            WriteCall(stream, import_name, func_type, params, results, *trap);
-            return Result::Ok;
-          });
-      imports.push_back(host_func.ref());
+  auto host_func = HostFunc::New(
+      s_store, func_type,
+      [=](Thread& thread, const Values& params, Values& results,
+          Trap::Ptr* trap) -> Result {
+        printf("called host ");
+        WriteCall(stream, import_name, func_type, params, results, *trap);
+        return Result::Ok;
+      });
+  
+  return host_func.ref();
+}
+
+static Extern::Ptr GetImport(const std::string& module,
+                             const std::string& name) {
+  auto mod_iter = s_registry.find(module);
+  if (mod_iter != s_registry.end()) {
+    auto extern_iter = mod_iter->second.find(name);
+    if (extern_iter != mod_iter->second.end()) {
+      return extern_iter->second;
+    }
+  }
+  return {};
+}
+
+/*static void PopulateImports(const Module::Ptr& module,
+                            RefVec* imports) {
+  for (auto&& import : module->desc().imports) {
+    if (IsHostPrint(import)) {
+      imports->push_back(GenerateHostPrint(import));
+      continue;
+    }
+    auto extern_ = GetImport(import.type.module, import.type.name);
+    imports->push_back(extern_ ? extern_.ref() : Ref::Null);
+  }
+}//*/
+
+static void PopulateExports(const Instance::Ptr& instance,
+                            Module::Ptr &module,
+                            ExportMap &map) {
+  map.clear();
+  // Module::Ptr module{s_store, instance->module()};
+  for (size_t i = 0; i < module->export_types().size(); ++i) {
+    const ExportType& export_type = module->export_types()[i];
+    auto export_ = s_store.UnsafeGet<Extern>(instance->exports()[i]);
+    map[export_type.name] = export_; // this is causing me problems
+  }
+}
+
+/*
+void CommandRunner::PopulateExports(const Instance::Ptr& instance,
+                                    ExportMap* map) {
+  map->clear();
+  interp::Module::Ptr module{store_, instance->module()};
+  for (size_t i = 0; i < module->export_types().size(); ++i) {
+    const ExportType& export_type = module->export_types()[i];
+    (*map)[export_type.name] = store_.UnsafeGet<Extern>(instance->exports()[i]);
+  }
+}
+
+wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
+  Errors errors;
+  auto module = ReadModule(command->filename, &errors);
+  FormatErrorsToFile(errors, Location::Type::Binary);
+
+  if (!module) {
+    PrintError(command->line, "error reading module: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
+  RefVec imports;
+  PopulateImports(module, &imports);
+
+  Trap::Ptr trap;
+  auto instance = Instance::Instantiate(store_, module.ref(), imports, &trap);
+  if (trap) {
+    assert(!instance);
+    PrintError(command->line, "error instantiating module: \"%s\"",
+               trap->message().c_str());
+    return wabt::Result::Error;
+  }
+
+  PopulateExports(instance, &last_instance_);
+  if (!command->name.empty()) {
+    instances_[command->name] = last_instance_;
+  }
+
+  return wabt::Result::Ok;
+}
+//*/
+
+static std::string GetPathName(std::string module_arg) {
+  size_t path_at = module_arg.find_first_of(':');
+
+  path_at = path_at == std::string::npos ? 0 : path_at+1;
+
+  return module_arg.substr(path_at);
+}
+
+static std::string GetRegistryName(std::string module_arg,
+                                   const Module::Ptr& module) {
+  size_t split_pos = module_arg.find_first_of(':');
+  std::string override_name = module_arg.substr(0, split_pos);
+  std::string path_name = module_arg.substr(split_pos + 1);
+  std::string debug_name = ""; //GetDebugName(module);
+
+  // check if override_name starts with @ and return override_name
+  if (override_name[0] == '@') {
+    return override_name.substr(1);
+  }
+
+  // if no override_name is provided -> use debug name or filename
+  if (override_name.empty()) {
+    // prefer debug_name, if no override_name is provided
+    if (!debug_name.empty()) {
+      return debug_name;
+    }
+
+    // use file_name (without extension)
+    size_t fstart = path_name.find_last_of("/\\");
+    size_t fend = path_name.find_last_of(".");
+    fstart = fstart == std::string::npos ? 0 : fstart;
+    fend = fend < fstart ? std::string::npos : fend;
+
+    return path_name.substr(fstart, fend);
+  }
+
+  // prefer debug_name if override_name starts with '$'
+  if (override_name[0] == '$' && !debug_name.empty()) {
+    return debug_name;
+  }
+
+  // return the override_name (remove leading '$' if present)
+  bool leading_dollar = override_name[0] == '$';
+  return override_name.substr(leading_dollar ? 1:0);
+}
+
+static void BindImports(const Module::Ptr& module, RefVec& imports) {
+  for (auto&& import : module->desc().imports) {
+    if (IsHostPrint(import)) {
+      imports.push_back(GenerateHostPrint(import));
       continue;
     }
 
     // By default, just push an null reference. This won't resolve, and
     // instantiation will fail.
-    imports.push_back(Ref::Null);
+
+    Extern::Ptr extern_ = GetImport(import.type.module, import.type.name);
+    imports.push_back(extern_ ? extern_.ref() : Ref::Null);
   }
 }
 
@@ -238,6 +385,43 @@ static Result ReadAndRunModule(const char* module_filename) {
   }
 
   RefVec imports;
+
+  std::vector<Module::Ptr> modules_loaded(s_modules.size());
+  ExportMap load_map;
+  for (auto import_module : s_modules) {
+    std::string module_path = GetPathName(import_module);
+
+    Module::Ptr load_module;
+    result = ReadModule(module_path.c_str(), &errors, &load_module);
+    if (!Succeeded(result)) {
+      FormatErrorsToFile(errors, Location::Type::Binary);
+      return result;
+    }
+
+    RefVec load_imports;
+    // PopulateImports(module, &imports);
+    BindImports(load_module, load_imports);
+
+    /* // this is how wasm-interp.exe does it
+    Instance::Ptr load_instance;
+    CHECK_RESULT(InstantiateModule(load_imports, load_module, &load_instance));
+    /*/ // this is how spectest-interp.exe does it
+    Trap::Ptr trap;
+    auto load_instance = Instance::Instantiate(s_store, load_module.ref(), load_imports, &trap);
+    if (trap) {
+      assert(!load_instance);
+      s_stderr_stream.get()->Writef("error instantiating module: \"%s\"",
+                                    trap->message().c_str());
+      return wabt::Result::Error;
+    }
+    //*/
+
+    std::string reg_name = GetRegistryName(import_module, load_module);
+    PopulateExports(load_instance, load_module, load_map);
+    s_registry[reg_name] = std::move(load_map);
+
+    modules_loaded.push_back(load_module);
+  }
 
 #if WITH_WASI
   uvwasi_t uvwasi;
@@ -299,6 +483,7 @@ static Result ReadAndRunModule(const char* module_filename) {
     return Result::Error;
 #endif
   } else {
+    // PopulateImports(module, &imports);
     BindImports(module, imports);
   }
 
