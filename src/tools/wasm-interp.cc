@@ -194,7 +194,7 @@ static Ref GenerateHostPrint(const ImportDesc &import) {
         WriteCall(stream, import_name, func_type, params, results, *trap);
         return Result::Ok;
       });
-  
+
   return host_func.ref();
 }
 
@@ -481,6 +481,11 @@ static Result ReadAndRunModule(const char* module_filename) {
         WasiRunStart(instance, &uvwasi, s_stderr_stream.get(), s_trace_stream));
   }
 #endif
+
+  for (auto &pair : s_registry) {
+    pair.second.clear();
+  }
+  s_registry.clear();
 
   return Result::Ok;
 }
