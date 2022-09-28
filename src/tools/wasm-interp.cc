@@ -119,7 +119,9 @@ static void ParseOptions(int argc, char** argv) {
       [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
   parser.AddOption(
       'm', "module", "[(@|$)NAME]:PATH",
-      "load wasm-module PATH and provide all exports via module-name NAME for imports of following modules",
+      "load wasm-module PATH and provide all exports via module-name NAME for imports of following modules. "
+      "@ will always use NAME"/*", $ will prefer a given debug-name in the namesection"*/ ". "
+      "if NAME isn't provided, the file-name without the extension will be used.",
       [](const std::string& argument) { s_modules.push_back(argument); });
   parser.AddOption(
       "run-all-exports",
@@ -222,49 +224,6 @@ static void PopulateExports(const Instance::Ptr& instance,
   }
 }
 
-/*
-void CommandRunner::PopulateExports(const Instance::Ptr& instance,
-                                    ExportMap* map) {
-  map->clear();
-  interp::Module::Ptr module{store_, instance->module()};
-  for (size_t i = 0; i < module->export_types().size(); ++i) {
-    const ExportType& export_type = module->export_types()[i];
-    (*map)[export_type.name] = store_.UnsafeGet<Extern>(instance->exports()[i]);
-  }
-}
-
-wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
-  Errors errors;
-  auto module = ReadModule(command->filename, &errors);
-  FormatErrorsToFile(errors, Location::Type::Binary);
-
-  if (!module) {
-    PrintError(command->line, "error reading module: \"%s\"",
-               command->filename.c_str());
-    return wabt::Result::Error;
-  }
-
-  RefVec imports;
-  PopulateImports(module, &imports);
-
-  Trap::Ptr trap;
-  auto instance = Instance::Instantiate(store_, module.ref(), imports, &trap);
-  if (trap) {
-    assert(!instance);
-    PrintError(command->line, "error instantiating module: \"%s\"",
-               trap->message().c_str());
-    return wabt::Result::Error;
-  }
-
-  PopulateExports(instance, &last_instance_);
-  if (!command->name.empty()) {
-    instances_[command->name] = last_instance_;
-  }
-
-  return wabt::Result::Ok;
-}
-//*/
-
 static std::string GetPathName(std::string module_arg) {
   size_t path_at = module_arg.find_first_of(':');
 
@@ -276,9 +235,12 @@ static std::string GetPathName(std::string module_arg) {
 static std::string GetRegistryName(std::string module_arg,
                                    const Module::Ptr& module) {
   size_t split_pos = module_arg.find_first_of(':');
-  std::string override_name = module_arg.substr(0, split_pos);
-  std::string path_name = module_arg.substr(split_pos + 1);
-  std::string debug_name = ""; //GetDebugName(module);
+  if (split_pos == std::string::npos) {
+    split_pos = 0;
+  }
+  std::string override_name = module_arg.substr(0, split_pos ? split_pos : 0);
+  std::string path_name = module_arg.substr(split_pos);
+  std::string debug_name = ""; // GetDebugName(module);
 
   // check if override_name starts with @ and return override_name
   if (override_name[0] == '@') {
@@ -481,11 +443,6 @@ static Result ReadAndRunModule(const char* module_filename) {
   }
 #endif
 
-  for (auto &pair : s_registry) {
-    pair.second.clear();
-  }
-  s_registry.clear();
-
   return Result::Ok;
 }
 
@@ -498,6 +455,12 @@ int ProgramMain(int argc, char** argv) {
   s_store.setFeatures(s_features);
 
   wabt::Result result = ReadAndRunModule(s_infile);
+
+  for (auto &pair : s_registry) {
+    pair.second.clear();
+  }
+  s_registry.clear();
+
   return result != wabt::Result::Ok;
 }
 
