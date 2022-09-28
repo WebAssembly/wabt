@@ -24,21 +24,21 @@
 #include <string>
 #include <vector>
 
-#include "src/binary-reader.h"
-#include "src/cast.h"
-#include "src/common.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/interp/binary-reader-interp.h"
-#include "src/interp/interp-util.h"
-#include "src/interp/interp.h"
-#include "src/literal.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
-#include "src/string-util.h"
-#include "src/validator.h"
-#include "src/wast-lexer.h"
-#include "src/wast-parser.h"
+#include "wabt/binary-reader.h"
+#include "wabt/cast.h"
+#include "wabt/common.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/interp/binary-reader-interp.h"
+#include "wabt/interp/interp-util.h"
+#include "wabt/interp/interp.h"
+#include "wabt/literal.h"
+#include "wabt/option-parser.h"
+#include "wabt/stream.h"
+#include "wabt/string-util.h"
+#include "wabt/validator.h"
+#include "wabt/wast-lexer.h"
+#include "wabt/wast-parser.h"
 
 using namespace wabt;
 using namespace wabt::interp;

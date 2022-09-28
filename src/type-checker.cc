@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/type-checker.h"
+#include "wabt/type-checker.h"
 
 #include <cinttypes>
 

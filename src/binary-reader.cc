@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader.h"
+#include "wabt/binary-reader.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -24,13 +24,13 @@
 #include <cstring>
 #include <vector>
 
-#include "config.h"
+#include "wabt/config.h"
 
-#include "src/binary-reader-logging.h"
-#include "src/binary.h"
-#include "src/leb128.h"
-#include "src/stream.h"
-#include "src/utf8.h"
+#include "wabt/binary-reader-logging.h"
+#include "wabt/binary.h"
+#include "wabt/leb128.h"
+#include "wabt/stream.h"
+#include "wabt/utf8.h"
 
 #if HAVE_ALLOCA
 #include <alloca.h>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/error-formatter.h"
+#include "wabt/error-formatter.h"
 
 namespace wabt {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/c-writer.h"
+#include "wabt/c-writer.h"
 
 #include <cctype>
 #include <cinttypes>
@@ -22,12 +22,12 @@
 #include <set>
 #include <string_view>
 
-#include "src/cast.h"
-#include "src/common.h"
-#include "src/ir.h"
-#include "src/literal.h"
-#include "src/stream.h"
-#include "src/string-util.h"
+#include "wabt/cast.h"
+#include "wabt/common.h"
+#include "wabt/ir.h"
+#include "wabt/literal.h"
+#include "wabt/stream.h"
+#include "wabt/string-util.h"
 
 #define INDENT_SIZE 2
 

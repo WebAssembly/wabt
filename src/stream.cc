@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/stream.h"
+#include "wabt/stream.h"
 
 #include <cassert>
 #include <cctype>

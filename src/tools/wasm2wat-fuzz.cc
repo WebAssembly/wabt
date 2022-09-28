@@ -16,10 +16,10 @@
 //
 // https://github.com/google/oss-fuzz/blob/master/projects/wabt/wasm2wat_fuzzer.cc
 
-#include "src/binary-reader-ir.h"
-#include "src/binary-reader.h"
-#include "src/common.h"
-#include "src/ir.h"
+#include "wabt/binary-reader-ir.h"
+#include "wabt/binary-reader.h"
+#include "wabt/common.h"
+#include "wabt/ir.h"
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   wabt::ReadBinaryOptions options;

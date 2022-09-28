@@ -21,19 +21,19 @@
 #include <cstdlib>
 #include <string>
 
-#include "config.h"
+#include "wabt/config.h"
 
-#include "src/binary-writer.h"
-#include "src/common.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/filenames.h"
-#include "src/ir.h"
-#include "src/option-parser.h"
-#include "src/resolve-names.h"
-#include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-parser.h"
+#include "wabt/binary-writer.h"
+#include "wabt/common.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/filenames.h"
+#include "wabt/ir.h"
+#include "wabt/option-parser.h"
+#include "wabt/resolve-names.h"
+#include "wabt/stream.h"
+#include "wabt/validator.h"
+#include "wabt/wast-parser.h"
 
 using namespace wabt;
 

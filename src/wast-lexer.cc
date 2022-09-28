@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#include "src/wast-lexer.h"
+#include "wabt/wast-lexer.h"
 
 #include <cassert>
 #include <cstdio>
 
-#include "config.h"
+#include "wabt/config.h"
 
-#include "src/lexer-source.h"
-#include "src/wast-parser.h"
+#include "wabt/lexer-source.h"
+#include "wabt/wast-parser.h"
 
 #define ERROR(...) parser->Error(GetLocation(), __VA_ARGS__)
 
@@ -30,7 +30,7 @@ namespace wabt {
 
 namespace {
 
-#include "src/prebuilt/lexer-keywords.cc"
+#include "prebuilt/lexer-keywords.cc"
 
 }  // namespace
 

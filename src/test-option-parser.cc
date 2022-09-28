@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "src/option-parser.h"
+#include "wabt/option-parser.h"
 
 using namespace wabt;
 

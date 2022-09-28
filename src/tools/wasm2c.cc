@@ -19,20 +19,20 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "src/apply-names.h"
-#include "src/binary-reader-ir.h"
-#include "src/binary-reader.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/filenames.h"
-#include "src/generate-names.h"
-#include "src/ir.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-lexer.h"
+#include "wabt/apply-names.h"
+#include "wabt/binary-reader-ir.h"
+#include "wabt/binary-reader.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/filenames.h"
+#include "wabt/generate-names.h"
+#include "wabt/ir.h"
+#include "wabt/option-parser.h"
+#include "wabt/stream.h"
+#include "wabt/validator.h"
+#include "wabt/wast-lexer.h"
 
-#include "src/c-writer.h"
+#include "wabt/c-writer.h"
 
 using namespace wabt;
 
@@ -101,7 +101,7 @@ static void ParseOptions(int argc, char** argv) {
   any_non_supported_feature |=                         \
       (s_features.variable##_enabled() != default_) && \
       !IsFeatureSupported(flag);
-#include "src/feature.def"
+#include "wabt/feature.def"
 #undef WABT_FEATURE
 
   if (any_non_supported_feature) {
