@@ -108,6 +108,9 @@ include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
 check_type_size(size_t SIZEOF_SIZE_T)
 
+include(TestBigEndian)  # Note: deprecated in CMake 3.20
+test_big_endian(WABT_BIG_ENDIAN)
+
 configure_file(src/config.h.in include/wabt/config.h @ONLY)
 
 
@@ -167,49 +170,23 @@ else ()
     add_definitions(-Wno-clobbered)
   endif ()
 
+  # wasm doesn't allow for x87 floating point math
   if (NOT EMSCRIPTEN)
-    # try to get the target architecture by compiling a dummy.c file and
-    # checking the architecture using the file command.
-    file(WRITE ${WABT_BINARY_DIR}/dummy.c "main(){}")
-    try_compile(
-      COMPILE_OK
-      ${WABT_BINARY_DIR}
-      ${WABT_BINARY_DIR}/dummy.c
-      COPY_FILE ${WABT_BINARY_DIR}/dummy
-    )
-    if (COMPILE_OK)
-      execute_process(
-        COMMAND file ${WABT_BINARY_DIR}/dummy
-        RESULT_VARIABLE FILE_RESULT
-        OUTPUT_VARIABLE FILE_OUTPUT
-        ERROR_QUIET
-      )
+    check_symbol_exists(__i386__ "" TARGET_IS_X86_32)
+    check_symbol_exists(__SSE2_MATH__ "" HAVE_SSE2_MATH)
 
-      if (FILE_RESULT EQUAL 0)
-        if (${FILE_OUTPUT} MATCHES "x86[-_]64")
-          set(TARGET_ARCH "x86-64")
-        elseif (${FILE_OUTPUT} MATCHES "Intel 80386")
-          set(TARGET_ARCH "i386")
-        elseif (${FILE_OUTPUT} MATCHES "ARM")
-          set(TARGET_ARCH "ARM")
-        elseif (${FILE_OUTPUT} MATCHES "IBM S/390")
-          set(TARGET_ARCH "s390x")
-        else ()
-          message(WARNING "Unknown target architecture!")
-        endif ()
+    if (TARGET_IS_X86_32 AND NOT HAVE_SSE2_MATH)
+      if (COMPILER_IS_GNU OR COMPILER_IS_CLANG)
+        add_compile_options(-msse2 -mfpmath=sse)
       else ()
-        message(WARNING "Error running `file` command on dummy executable")
+        message(
+          WARNING
+          "Unknown compiler ${CMAKE_CXX_COMPILER_ID} appears to target x86-32 with x87 "
+          "math. If you want wasm2c to work in a spec-compliant way, please add flags to "
+          "use SSE2 math and set TARGET_IS_X86_32 and HAVE_SSE2_MATH appropriately at the "
+          "CMake command line."
+        )
       endif ()
-    else ()
-      message(WARNING "Error compiling dummy.c file")
-    endif ()
-
-    if (TARGET_ARCH STREQUAL "i386")
-      # wasm doesn't allow for x87 floating point math
-      add_definitions(-msse2 -mfpmath=sse)
-    endif ()
-    if (TARGET_ARCH STREQUAL "s390x")
-      add_definitions(-DWABT_BIG_ENDIAN=1)
     endif ()
   endif ()
 endif ()
@@ -384,6 +361,9 @@ endif ()
 IF (NOT WIN32)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
   add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
+  if (WABT_BIG_ENDIAN)
+    target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
+  endif ()
 
   if (WABT_INSTALL_RULES)
     install(
