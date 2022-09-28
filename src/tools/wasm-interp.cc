@@ -210,18 +210,6 @@ static Extern::Ptr GetImport(const std::string& module,
   return {};
 }
 
-/*static void PopulateImports(const Module::Ptr& module,
-                            RefVec* imports) {
-  for (auto&& import : module->desc().imports) {
-    if (IsHostPrint(import)) {
-      imports->push_back(GenerateHostPrint(import));
-      continue;
-    }
-    auto extern_ = GetImport(import.type.module, import.type.name);
-    imports->push_back(extern_ ? extern_.ref() : Ref::Null);
-  }
-}//*/
-
 static void PopulateExports(const Instance::Ptr& instance,
                             Module::Ptr &module,
                             ExportMap &map) {
@@ -386,9 +374,11 @@ static Result ReadAndRunModule(const char* module_filename) {
 
   RefVec imports;
 
+  // if we only have dummy imports, we wont need to reghister anything
+  // but we still want to load them.
   std::vector<Module::Ptr> modules_loaded(s_modules.size());
-  ExportMap load_map;
   for (auto import_module : s_modules) {
+    ExportMap load_map;
     std::string module_path = GetPathName(import_module);
 
     Module::Ptr load_module;
@@ -399,26 +389,18 @@ static Result ReadAndRunModule(const char* module_filename) {
     }
 
     RefVec load_imports;
-    // PopulateImports(module, &imports);
     BindImports(load_module, load_imports);
 
-    /* // this is how wasm-interp.exe does it
+    // this is how wasm-interp.exe does it
     Instance::Ptr load_instance;
     CHECK_RESULT(InstantiateModule(load_imports, load_module, &load_instance));
-    /*/ // this is how spectest-interp.exe does it
-    Trap::Ptr trap;
-    auto load_instance = Instance::Instantiate(s_store, load_module.ref(), load_imports, &trap);
-    if (trap) {
-      assert(!load_instance);
-      s_stderr_stream.get()->Writef("error instantiating module: \"%s\"",
-                                    trap->message().c_str());
-      return wabt::Result::Error;
-    }
-    //*/
 
-    std::string reg_name = GetRegistryName(import_module, load_module);
-    PopulateExports(load_instance, load_module, load_map);
-    s_registry[reg_name] = std::move(load_map);
+    // we wont need to register anything, if we only have dummy imports anyway
+    if (!s_dummy_import_func) {
+      std::string reg_name = GetRegistryName(import_module, load_module);
+      PopulateExports(load_instance, load_module, load_map);
+      s_registry[reg_name] = std::move(load_map);
+    }
 
     modules_loaded.push_back(load_module);
   }
