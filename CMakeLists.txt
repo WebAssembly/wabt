@@ -177,13 +177,14 @@ else ()
 
     if (TARGET_IS_X86_32 AND NOT HAVE_SSE2_MATH)
       if (COMPILER_IS_GNU OR COMPILER_IS_CLANG)
-        add_definitions(-msse2 -mfpmath=sse)
+        add_compile_options(-msse2 -mfpmath=sse)
       else ()
         message(
           WARNING
-          "Unknown compiler ${CMAKE_CXX_COMPILER_ID} appears to target x86_32 with x87 "
-          "math. Please add flags to use SSE2 math and set TARGET_IS_X86_32 and "
-          "HAVE_SSE2_MATH appropriately at the CMake command line."
+          "Unknown compiler ${CMAKE_CXX_COMPILER_ID} appears to target x86-32 with x87 "
+          "math. If you want wasm2c to work in a spec-compliant way, please add flags to "
+          "use SSE2 math and set TARGET_IS_X86_32 and HAVE_SSE2_MATH appropriately at the "
+          "CMake command line."
         )
       endif ()
     endif ()
