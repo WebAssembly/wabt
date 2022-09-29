@@ -18,10 +18,10 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "src/binary-reader.h"
 #include "src/error-formatter.h"
@@ -118,10 +118,11 @@ static void ParseOptions(int argc, char** argv) {
       'd', "dir", "DIR", "Pass the given directory the the WASI runtime",
       [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
   parser.AddOption(
-      'm', "module", "[(@|$)NAME]:PATH",
-      "load wasm-module PATH and provide all exports via module-name NAME for imports of following modules. "
-      "@ will always use NAME"/*", $ will prefer a given debug-name in the namesection"*/ ". "
-      "if NAME isn't provided, the file-name without the extension will be used.",
+      'm', "module", "[(@|$)NAME:]FILE",
+      "load module FILE and provide all exports under NAME for upcoming "
+      "imports. if NAME is empty, the preference will be used. "
+      /*"$ prefers the debug-name in the name section, "*/
+      "@ prefers file name (without extension).",
       [](const std::string& argument) { s_modules.push_back(argument); });
   parser.AddOption(
       "run-all-exports",
@@ -174,14 +175,14 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
   return result;
 }
 
-static bool IsHostPrint(const ImportDesc &import) {
+static bool IsHostPrint(const ImportDesc& import) {
   return import.type.type->kind == ExternKind::Func &&
          ((s_host_print && import.type.module == "host" &&
            import.type.name == "print") ||
-         s_dummy_import_func);
+          s_dummy_import_func);
 }
 
-static Ref GenerateHostPrint(const ImportDesc &import) {
+static Ref GenerateHostPrint(const ImportDesc& import) {
   auto* stream = s_stdout_stream.get();
 
   auto func_type = *cast<FuncType>(import.type.type.get());
@@ -213,23 +214,34 @@ static Extern::Ptr GetImport(const std::string& module,
 }
 
 static void PopulateExports(const Instance::Ptr& instance,
-                            Module::Ptr &module,
-                            ExportMap &map) {
+                            Module::Ptr& module,
+                            ExportMap& map) {
   map.clear();
   // Module::Ptr module{s_store, instance->module()};
   for (size_t i = 0; i < module->export_types().size(); ++i) {
     const ExportType& export_type = module->export_types()[i];
     auto export_ = s_store.UnsafeGet<Extern>(instance->exports()[i]);
-    map[export_type.name] = export_; // this is causing me problems
+    map[export_type.name] = export_;
   }
 }
 
 static std::string GetPathName(std::string module_arg) {
   size_t path_at = module_arg.find_first_of(':');
 
-  path_at = path_at == std::string::npos ? 0 : path_at+1;
+  path_at = path_at == std::string::npos ? 0 : path_at + 1;
 
   return module_arg.substr(path_at);
+}
+
+static std::string FileNameOfPath(std::string path_name) {
+  // use file_name (without extension)
+  size_t fstart = path_name.find_last_of("/\\");
+  size_t fend = path_name.find_last_of(".");
+
+  fstart = fstart == std::string::npos ? 0 : fstart;
+  fend = fend < fstart ? std::string::npos : fend;
+
+  return path_name.substr(fstart, fend);
 }
 
 static std::string GetRegistryName(std::string module_arg,
@@ -240,11 +252,15 @@ static std::string GetRegistryName(std::string module_arg,
   }
   std::string override_name = module_arg.substr(0, split_pos ? split_pos : 0);
   std::string path_name = module_arg.substr(split_pos);
-  std::string debug_name = ""; // GetDebugName(module);
+  std::string debug_name = "";  // GetDebugName(module);
 
   // check if override_name starts with @ and return override_name
   if (override_name[0] == '@') {
-    return override_name.substr(1);
+    if (override_name.size() > 1) {
+      return override_name.substr(1);
+    }
+    // ignore debug-name and use filename
+    return FileNameOfPath(path_name);
   }
 
   // if no override_name is provided -> use debug name or filename
@@ -253,14 +269,8 @@ static std::string GetRegistryName(std::string module_arg,
     if (!debug_name.empty()) {
       return debug_name;
     }
-
     // use file_name (without extension)
-    size_t fstart = path_name.find_last_of("/\\");
-    size_t fend = path_name.find_last_of(".");
-    fstart = fstart == std::string::npos ? 0 : fstart;
-    fend = fend < fstart ? std::string::npos : fend;
-
-    return path_name.substr(fstart, fend);
+    return FileNameOfPath(path_name);
   }
 
   // prefer debug_name if override_name starts with '$'
@@ -270,7 +280,7 @@ static std::string GetRegistryName(std::string module_arg,
 
   // return the override_name (remove leading '$' if present)
   bool leading_dollar = override_name[0] == '$';
-  return override_name.substr(leading_dollar ? 1:0);
+  return override_name.substr(leading_dollar ? 1 : 0);
 }
 
 static void BindImports(const Module::Ptr& module, RefVec& imports) {
@@ -456,7 +466,7 @@ int ProgramMain(int argc, char** argv) {
 
   wabt::Result result = ReadAndRunModule(s_infile);
 
-  for (auto &pair : s_registry) {
+  for (auto& pair : s_registry) {
     pair.second.clear();
   }
   s_registry.clear();
