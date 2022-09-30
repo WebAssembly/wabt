@@ -256,7 +256,6 @@ set(WABT_LIBRARY_CC
   src/lexer-source.cc
   src/literal.cc
   src/opcode-code-table.c
-  src/opcode-code-table.c
   src/opcode.cc
   src/option-parser.cc
   src/resolve-names.cc
