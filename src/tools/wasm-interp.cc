@@ -119,11 +119,10 @@ static void ParseOptions(int argc, char** argv) {
       'd', "dir", "DIR", "Pass the given directory the the WASI runtime",
       [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
   parser.AddOption(
-      'm', "module", "[(@|$)NAME:]FILE",
+      'm', "module", "[NAME:]FILE",
       "load module FILE and provide all exports under NAME for upcoming "
-      "imports. if NAME is empty, the preference will be used. "
-      /*"$ prefers the debug-name in the name section, "*/
-      "@ prefers file name (without extension).",
+      "imports. if NAME is empty, the debug-name from the name section "
+      "will be used if present, the filename elsewise.",
       [](const std::string& argument) { s_modules.push_back(argument); });
   parser.AddOption(
       "run-all-exports",
@@ -139,14 +138,27 @@ static void ParseOptions(int argc, char** argv) {
       "will log the call and return an appropriate zero value.",
       []() { s_dummy_import_func = true; });
 
-  parser.AddArgument("filename", OptionParser::ArgumentCount::One,
+  parser.AddArgument("filename+", OptionParser::ArgumentCount::One,
                      [](const char* argument) {
                        s_modules.push_back(argument);
                        s_infile = argument;
-                      });
+                     });
   parser.AddArgument(
-      "arg", OptionParser::ArgumentCount::ZeroOrMore,
-      [](const char* argument) { s_wasi_argv.push_back(argument); });
+      ". arg", OptionParser::ArgumentCount::ZeroOrMore,
+      [](const char* argument) {
+        if (s_continue_wasi_argv) {
+          s_wasi_argv.push_back(argument);
+          return;
+        }
+
+        if (std::string(argument) == ".") {
+          s_continue_wasi_argv = true;
+          return;
+        }
+
+        s_modules.push_back(argument);
+        s_infile = argument;
+      });
   parser.Parse(argc, argv);
 }
 
