@@ -40,14 +40,15 @@
 using namespace wabt;
 using namespace wabt::interp;
 
-using ExportMap = std::map<std::string, Extern::Ptr>;
-using Registry = std::map<std::string, ExportMap>;
+using ExportMap = std::unordered_map<std::string, Extern::Ptr>;
+using Registry = std::unordered_map<std::string, ExportMap>;
 
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
 static Stream* s_trace_stream;
 static bool s_run_all_exports;
+static bool s_continue_wasi_argv = false;
 static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
@@ -139,7 +140,10 @@ static void ParseOptions(int argc, char** argv) {
       []() { s_dummy_import_func = true; });
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
-                     [](const char* argument) { s_infile = argument; });
+                     [](const char* argument) {
+                       s_modules.push_back(argument);
+                       s_infile = argument;
+                      });
   parser.AddArgument(
       "arg", OptionParser::ArgumentCount::ZeroOrMore,
       [](const char* argument) { s_wasi_argv.push_back(argument); });
@@ -177,10 +181,27 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
 
 static bool IsHostPrint(const ImportDesc& import) {
   return import.type.type->kind == ExternKind::Func &&
-         ((s_host_print && import.type.module == "host" &&
-           import.type.name == "print") ||
-          s_dummy_import_func);
+         (s_host_print &&
+          import.type.module == "host" &&
+          import.type.name == "print");
 }
+
+#if WITH_WASI
+static bool IsWasiImport(const ImportDesc& import) {
+  return import.type.type->kind == ExternKind::Func && 
+         (import.type.module == "wasi_snapshot_preview1" ||
+          import.type.module == "wasi_unstable");
+}
+
+static bool HasWasiImport(const Module::Ptr module) {
+  for (auto&& import : module->desc().imports) {
+    if (IsWasiImport(import)) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
 
 static Ref GenerateHostPrint(const ImportDesc& import) {
   auto* stream = s_stdout_stream.get();
@@ -193,7 +214,6 @@ static Ref GenerateHostPrint(const ImportDesc& import) {
       s_store, func_type,
       [=](Thread& thread, const Values& params, Values& results,
           Trap::Ptr* trap) -> Result {
-        printf("called host ");
         WriteCall(stream, import_name, func_type, params, results, *trap);
         return Result::Ok;
       });
@@ -244,43 +264,33 @@ static std::string FileNameOfPath(std::string path_name) {
   return path_name.substr(fstart, fend);
 }
 
+static std::string GetDebugName(const Module::Ptr& module) {
+  // TODO: query debug_name
+  return "";
+}
+
 static std::string GetRegistryName(std::string module_arg,
                                    const Module::Ptr& module) {
   size_t split_pos = module_arg.find_first_of(':');
   if (split_pos == std::string::npos) {
     split_pos = 0;
   }
-  std::string override_name = module_arg.substr(0, split_pos ? split_pos : 0);
-  std::string path_name = module_arg.substr(split_pos);
-  std::string debug_name = "";  // GetDebugName(module);
+  std::string override_name = module_arg.substr(0, split_pos);
+  std::string path_name = module_arg.substr(split_pos ? split_pos + 1 : split_pos);
+  std::string debug_name = GetDebugName(module);
 
-  // check if override_name starts with @ and return override_name
-  if (override_name[0] == '@') {
-    if (override_name.size() > 1) {
-      return override_name.substr(1);
-    }
-    // ignore debug-name and use filename
-    return FileNameOfPath(path_name);
+  // use override_name if present
+  if (!override_name.empty()) {
+    return override_name;
   }
 
-  // if no override_name is provided -> use debug name or filename
-  if (override_name.empty()) {
-    // prefer debug_name, if no override_name is provided
-    if (!debug_name.empty()) {
-      return debug_name;
-    }
-    // use file_name (without extension)
-    return FileNameOfPath(path_name);
-  }
-
-  // prefer debug_name if override_name starts with '$'
-  if (override_name[0] == '$' && !debug_name.empty()) {
+  // prefer debug_name
+  if (!debug_name.empty()) {
     return debug_name;
   }
 
-  // return the override_name (remove leading '$' if present)
-  bool leading_dollar = override_name[0] == '$';
-  return override_name.substr(leading_dollar ? 1 : 0);
+  // fall back to file-name
+  return FileNameOfPath(path_name);
 }
 
 static void BindImports(const Module::Ptr& module, RefVec& imports) {
@@ -290,11 +300,26 @@ static void BindImports(const Module::Ptr& module, RefVec& imports) {
       continue;
     }
 
+#if WITH_WASI
+    // If there are wasi imports, we need to make a new instance for it
+    if (IsWasiImport(import)) {
+      imports.push_back(WasiGetImport(module, import));
+      continue;
+    }
+#endif
+
     // By default, just push an null reference. This won't resolve, and
     // instantiation will fail.
 
     Extern::Ptr extern_ = GetImport(import.type.module, import.type.name);
-    imports.push_back(extern_ ? extern_.ref() : Ref::Null);
+    if (extern_) {
+      imports.push_back(extern_.ref());
+      continue;
+    }
+
+    // only populate missing imports for dummy-import-func
+    imports.push_back(s_dummy_import_func ?
+                      GenerateHostPrint(import) : Ref::Null);
   }
 }
 
@@ -335,20 +360,84 @@ static Result InstantiateModule(RefVec& imports,
   return Result::Ok;
 }
 
-static Result ReadAndRunModule(const char* module_filename) {
-  Errors errors;
-  Module::Ptr module;
-  Result result = ReadModule(module_filename, &errors, &module);
-  if (!Succeeded(result)) {
-    FormatErrorsToFile(errors, Location::Type::Binary);
-    return result;
+static Result InitWasi(uvwasi_t* uvwasi) {
+  uvwasi_errno_t err;
+  uvwasi_options_t init_options;
+
+  std::vector<const char*> argv;
+  argv.push_back(s_infile);
+  for (auto& s : s_wasi_argv) {
+    if (s_trace_stream) {
+      s_trace_stream->Writef("wasi: arg: \"%s\"\n", s.c_str());
+    }
+    argv.push_back(s.c_str());
+  }
+  argv.push_back(nullptr);
+
+  std::vector<const char*> envp;
+  for (auto& s : s_wasi_env) {
+    if (s_trace_stream) {
+      s_trace_stream->Writef("wasi: env: \"%s\"\n", s.c_str());
+    }
+    envp.push_back(s.c_str());
+  }
+  envp.push_back(nullptr);
+
+  std::vector<uvwasi_preopen_t> dirs;
+  for (auto& dir : s_wasi_dirs) {
+    if (s_trace_stream) {
+      s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
+    }
+    dirs.push_back({dir.c_str(), dir.c_str()});
   }
 
-  RefVec imports;
+  /* Setup the initialization options. */
+  init_options.in = 0;
+  init_options.out = 1;
+  init_options.err = 2;
+  init_options.fd_table_size = 3;
+  init_options.argc = argv.size() - 1;
+  init_options.argv = argv.data();
+  init_options.envp = envp.data();
+  init_options.preopenc = dirs.size();
+  init_options.preopens = dirs.data();
+  init_options.allocator = NULL;
 
+  err = uvwasi_init(uvwasi, &init_options);
+  if (err != UVWASI_ESUCCESS) {
+    s_stderr_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+static Result ReadAndRunModule(const char* module_filename) {
+  Errors errors;
+  Result result;
+#if WITH_WASI
+  uvwasi_t uvwasi;
+#endif
+
+  if (s_wasi) {
+#if WITH_WASI
+    result = InitWasi(&uvwasi);
+    if (result == Result::Error) {
+      return result;
+    }
+    // CHECK_RESULT(WasiBindImports(modules_loaded.back(), imports, s_stderr_stream.get(),
+                                 // s_trace_stream));
+#else
+    s_stderr_stream.get()->Writef("wasi support not compiled in\n");
+    return Result::Error;
+#endif
+  }
+
+  // First PopulateExports
+  // then reference all BindImports
   // if we only have dummy imports, we wont need to reghister anything
   // but we still want to load them.
   std::vector<Module::Ptr> modules_loaded(s_modules.size());
+  std::vector<Instance::Ptr> instance_loaded(s_modules.size());
   for (auto import_module : s_modules) {
     ExportMap load_map;
     std::string module_path = GetPathName(import_module);
@@ -363,95 +452,37 @@ static Result ReadAndRunModule(const char* module_filename) {
     RefVec load_imports;
     BindImports(load_module, load_imports);
 
-    // this is how wasm-interp.exe does it
     Instance::Ptr load_instance;
     CHECK_RESULT(InstantiateModule(load_imports, load_module, &load_instance));
 
-    // we wont need to register anything, if we only have dummy imports anyway
-    if (!s_dummy_import_func) {
-      std::string reg_name = GetRegistryName(import_module, load_module);
-      PopulateExports(load_instance, load_module, load_map);
-      s_registry[reg_name] = std::move(load_map);
+    instance_loaded.push_back(load_instance);
+
+#if WITH_WASI
+    if (HasWasiImport(load_module)) {
+      RegisterWasiInstance(load_instance, &uvwasi, s_stderr_stream.get(), s_trace_stream);
     }
+#endif
+
+    std::string reg_name = GetRegistryName(import_module, load_module);
+    PopulateExports(load_instance, load_module, load_map);
+    s_registry[reg_name] = std::move(load_map);
 
     modules_loaded.push_back(load_module);
   }
 
-#if WITH_WASI
-  uvwasi_t uvwasi;
-#endif
-
-  if (s_wasi) {
-#if WITH_WASI
-    uvwasi_errno_t err;
-    uvwasi_options_t init_options;
-
-    std::vector<const char*> argv;
-    argv.push_back(module_filename);
-    for (auto& s : s_wasi_argv) {
-      if (s_trace_stream) {
-        s_trace_stream->Writef("wasi: arg: \"%s\"\n", s.c_str());
-      }
-      argv.push_back(s.c_str());
-    }
-    argv.push_back(nullptr);
-
-    std::vector<const char*> envp;
-    for (auto& s : s_wasi_env) {
-      if (s_trace_stream) {
-        s_trace_stream->Writef("wasi: env: \"%s\"\n", s.c_str());
-      }
-      envp.push_back(s.c_str());
-    }
-    envp.push_back(nullptr);
-
-    std::vector<uvwasi_preopen_t> dirs;
-    for (auto& dir : s_wasi_dirs) {
-      if (s_trace_stream) {
-        s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
-      }
-      dirs.push_back({dir.c_str(), dir.c_str()});
-    }
-
-    /* Setup the initialization options. */
-    init_options.in = 0;
-    init_options.out = 1;
-    init_options.err = 2;
-    init_options.fd_table_size = 3;
-    init_options.argc = argv.size() - 1;
-    init_options.argv = argv.data();
-    init_options.envp = envp.data();
-    init_options.preopenc = dirs.size();
-    init_options.preopens = dirs.data();
-    init_options.allocator = NULL;
-
-    err = uvwasi_init(&uvwasi, &init_options);
-    if (err != UVWASI_ESUCCESS) {
-      s_stderr_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
-      return Result::Error;
-    }
-    CHECK_RESULT(WasiBindImports(module, imports, s_stderr_stream.get(),
-                                 s_trace_stream));
-#else
-    s_stderr_stream.get()->Writef("wasi support not compiled in\n");
-    return Result::Error;
-#endif
-  } else {
-    BindImports(module, imports);
-  }
-
-  Instance::Ptr instance;
-  CHECK_RESULT(InstantiateModule(imports, module, &instance));
-
   if (s_run_all_exports) {
-    RunAllExports(instance, &errors);
+    RunAllExports(instance_loaded.back(), &errors);
   }
 #ifdef WITH_WASI
   if (s_wasi) {
     CHECK_RESULT(
-        WasiRunStart(instance, &uvwasi, s_stderr_stream.get(), s_trace_stream));
+        WasiRunStart(instance_loaded.back(), &uvwasi, s_stderr_stream.get(), s_trace_stream));
   }
 #endif
+  // unregister all;
+  for (auto&& instance : instance_loaded) {
+    UnregisterWasiInstance(instance);
+  }
 
   return Result::Ok;
 }
@@ -466,9 +497,6 @@ int ProgramMain(int argc, char** argv) {
 
   wabt::Result result = ReadAndRunModule(s_infile);
 
-  for (auto& pair : s_registry) {
-    pair.second.clear();
-  }
   s_registry.clear();
 
   return result != wabt::Result::Ok;

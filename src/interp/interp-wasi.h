@@ -28,10 +28,14 @@ struct uvwasi_s;
 namespace wabt {
 namespace interp {
 
-Result WasiBindImports(const Module::Ptr& module,
-                       RefVec& imports,
-                       Stream* err_stream,
-                       Stream* trace_stream);
+Result RegisterWasiInstance(const Instance::Ptr& instance,
+                            uvwasi_s* uvwasi,
+                            Stream* stream,
+                            Stream* trace_stream);
+
+void UnregisterWasiInstance(const Instance::Ptr& instance);
+
+Ref WasiGetImport(const Module::Ptr& module, const ImportDesc& import);
 
 Result WasiRunStart(const Instance::Ptr& instance,
                     uvwasi_s* uvwasi,

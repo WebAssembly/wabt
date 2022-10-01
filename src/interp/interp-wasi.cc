@@ -35,6 +35,7 @@
 
 #include "uvwasi.h"
 
+#include <cstdio>
 #include <cinttypes>
 #include <unordered_map>
 
@@ -652,57 +653,14 @@ std::unordered_map<Instance*, WasiInstance*> wasiInstances;
 namespace wabt {
 namespace interp {
 
-Result WasiBindImports(const Module::Ptr& module,
-                       RefVec& imports,
-                       Stream* stream,
-                       Stream* trace_stream) {
-  Store* store = module.store();
-  for (auto&& import : module->desc().imports) {
-    if (import.type.type->kind != ExternKind::Func) {
-      stream->Writef("wasi error: invalid import type: %s\n",
-                     import.type.name.c_str());
-      return Result::Error;
-    }
-
-    if (import.type.module != "wasi_snapshot_preview1" &&
-        import.type.module != "wasi_unstable") {
-      stream->Writef("wasi error: unknown module import: `%s`\n",
-                     import.type.module.c_str());
-      return Result::Error;
-    }
-
-    auto func_type = *cast<FuncType>(import.type.type.get());
-    auto import_name = StringPrintf("%s.%s", import.type.module.c_str(),
-                                    import.type.name.c_str());
-    HostFunc::Ptr host_func;
-
-    // TODO(sbc): Validate signatures of imports.
-#define WASI_FUNC(NAME)                                 \
-  if (import.type.name == #NAME) {                      \
-    host_func = HostFunc::New(*store, func_type, NAME); \
-    goto found;                                         \
-  }
-#include "wasi_api.def"
-#undef WASI_FUNC
-
-    stream->Writef("unknown wasi API import: `%s`\n", import.type.name.c_str());
-    return Result::Error;
-  found:
-    imports.push_back(host_func.ref());
-  }
-
-  return Result::Ok;
-}
-
-Result WasiRunStart(const Instance::Ptr& instance,
-                    uvwasi_s* uvwasi,
-                    Stream* err_stream,
-                    Stream* trace_stream) {
+Result RegisterWasiInstance(const Instance::Ptr& instance,
+                            uvwasi_s* uvwasi,
+                            Stream* err_stream,
+                            Stream* trace_stream) {
   Store* store = instance.store();
   auto module = store->UnsafeGet<Module>(instance->module());
   auto&& module_desc = module->desc();
-
-  Func::Ptr start;
+  
   Memory::Ptr memory;
   for (auto&& export_ : module_desc.exports) {
     if (export_.type.name == "memory") {
@@ -711,26 +669,74 @@ Result WasiRunStart(const Instance::Ptr& instance,
         return Result::Error;
       }
       memory = store->UnsafeGet<Memory>(instance->memories()[export_.index]);
+      break;
     }
+  }
+
+  if (!memory) {
+    err_stream->Writef("wasi error: memory export not found\n");
+    return Result::Error;
+  }
+
+  WasiInstance* wasi = new WasiInstance(instance, uvwasi, std::move(memory).get(), trace_stream);
+  wasiInstances[instance.get()] = std::move(wasi);
+
+  return Result::Ok;
+}
+
+void UnregisterWasiInstance(const Instance::Ptr& instance) {
+  WasiInstance* wasi = wasiInstances[instance.get()];
+  if (wasi) {
+    wasiInstances.erase(instance.get());
+    delete wasi;
+  }
+}
+
+Ref WasiGetImport(const Module::Ptr& module, const ImportDesc& import) {
+  auto func_type = *cast<FuncType>(import.type.type.get());
+  HostFunc::Ptr host_func;
+  Store* store = module.store();
+
+  // TODO(sbc): Validate signatures of imports.
+#define WASI_FUNC(NAME)                                  \
+  if (import.type.name == #NAME) {                       \
+    return HostFunc::New(*store, func_type, NAME).ref(); \
+  }
+#include "wasi_api.def"
+#undef WASI_FUNC
+
+  return Ref::Null;
+}
+
+static Result FindWasiEntryPoint(const Instance::Ptr& instance,
+                                 Stream* err_stream,
+                                 Func::Ptr* entry_func) {
+  Store* store = instance.store();
+  auto module = store->UnsafeGet<Module>(instance->module());
+  auto&& module_desc = module->desc();
+
+  for (auto&& export_ : module_desc.exports) {
     if (export_.type.name == "_start") {
       if (export_.type.type->kind != ExternalKind::Func) {
         err_stream->Writef("wasi error: _start export is not a function\n");
         return Result::Error;
       }
-      start = store->UnsafeGet<Func>(instance->funcs()[export_.index]);
-    }
-    if (start && memory) {
-      break;
+      *entry_func = store->UnsafeGet<Func>(instance->funcs()[export_.index]);
+      return Result::Ok;
     }
   }
+  return Result::Error;
+}
 
-  if (!start) {
-    err_stream->Writef("wasi error: _start export not found\n");
-    return Result::Error;
-  }
-
-  if (!memory) {
-    err_stream->Writef("wasi error: memory export not found\n");
+Result WasiRunStart(const Instance::Ptr& instance,
+                    uvwasi_s* uvwasi,
+                    Stream* err_stream,
+                    Stream* trace_stream) {
+  Func::Ptr start;
+  Result found = FindWasiEntryPoint(instance, err_stream, &start);
+  if (found == Result::Error) {
+    err_stream->Writef("wasi error: "
+                       "_start export not a function or not found\n");
     return Result::Error;
   }
 
@@ -739,11 +745,8 @@ Result WasiRunStart(const Instance::Ptr& instance,
     return Result::Error;
   }
 
-  // Register memory
-  WasiInstance wasi(instance, uvwasi, memory.get(), trace_stream);
-  wasiInstances[instance.get()] = &wasi;
-
   // Call start ([] -> [])
+  Store* store = instance.store();
   Values params;
   Values results;
   Trap::Ptr trap;
@@ -753,7 +756,7 @@ Result WasiRunStart(const Instance::Ptr& instance,
   }
 
   // Unregister memory
-  wasiInstances.erase(instance.get());
+  UnregisterWasiInstance(instance);
   return res;
 }
 
