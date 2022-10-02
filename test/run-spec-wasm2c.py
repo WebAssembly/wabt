@@ -332,14 +332,14 @@ class CWriter(object):
             return F64ToC(int(value))
         elif type_ == 'externref':
             if value == 'null':
-                return 'externref(0)'
+                return 'wasm_rt_externref_null_value'
             else:
-                return 'externref(%s+1)' % value  # externref(0) is not null
+                return 'spectest_make_externref(%s)' % value
         elif type_ == 'funcref':
             if value == 'null':
-                return 'funcref(0)'
+                return 'wasm_rt_funcref_null_value'
             else:
-                return 'funcref(%s)' % value
+                assert False  # can't make an arbitrary funcref from an integer value
         else:
             assert False
 

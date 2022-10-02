@@ -200,16 +200,8 @@ static bool is_equal_wasm_rt_funcref_t(wasm_rt_funcref_t x,
          (x.module_instance == y.module_instance);
 }
 
-wasm_rt_externref_t externref(u64 x) {
-  return (wasm_rt_externref_t)x;
-}
-
-wasm_rt_funcref_t funcref(u64 x) {
-  if (x == 0) {
-    return (wasm_rt_funcref_t){0, NULL, 0};
-  } else {
-    abort();
-  }
+wasm_rt_externref_t spectest_make_externref(u64 x) {
+  return (wasm_rt_externref_t)(x + 1);  // externref(0) is not null
 }
 
 static bool is_equal_f32(f32 x, f32 y) {

@@ -156,6 +156,9 @@ typedef struct {
   void* module_instance;
 } wasm_rt_funcref_t;
 
+/** Default (null) value of a funcref */
+static const wasm_rt_funcref_t wasm_rt_funcref_null_value = {0, NULL, NULL};
+
 /** The type of an external reference (opaque to WebAssembly). */
 typedef void* wasm_rt_externref_t;
 
@@ -347,9 +350,11 @@ void wasm_rt_allocate_funcref_table(wasm_rt_funcref_table_t*,
  */
 void wasm_rt_free_funcref_table(wasm_rt_funcref_table_t*);
 
-/** Initialize an externref Table object with an element count of `elements` and
- * a maximum size of `max_elements`. Usage as per
- * wasm_rt_allocate_funcref_table. */
+/**
+ * Initialize an externref Table object with an element count
+ * of `elements` and a maximum size of `max_elements`.
+ * Usage as per wasm_rt_allocate_funcref_table.
+ */
 void wasm_rt_allocate_externref_table(wasm_rt_externref_table_t*,
                                       uint32_t elements,
                                       uint32_t max_elements);

@@ -278,8 +278,9 @@ class CWriter {
   void WriteMemory(const std::string&);
   void WriteMemoryPtr(const std::string&);
   void WriteTables();
-  void WriteTable(const std::string&, const std::string&);
-  void WriteTablePtr(const std::string&, const std::string&);
+  void WriteTable(const std::string&, const wabt::Type&);
+  void WriteTablePtr(const std::string&, const Table&);
+  void WriteTableType(const wabt::Type&);
   void WriteDataInstances();
   void WriteElemInstances();
   void WriteGlobalInitializers();
@@ -1203,9 +1204,7 @@ void CWriter::BeginInstance() {
       }
 
       case ExternalKind::Table:
-        Write("wasm_rt_",
-              GetReferenceTypeName(cast<TableImport>(import)->table.elem_type),
-              "_table_t");
+        WriteTableType(cast<TableImport>(import)->table.elem_type);
         break;
 
       default:
@@ -1251,7 +1250,7 @@ void CWriter::BeginInstance() {
         const Table& table = cast<TableImport>(import)->table;
         WriteTable("*" + MangleName(import->module_name) +
                        MangleName(import->field_name),
-                   GetReferenceTypeName(table.elem_type));
+                   table.elem_type);
       } break;
 
       default:
@@ -1403,21 +1402,25 @@ void CWriter::WriteTables() {
   for (const Table* table : module_->tables) {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
-      WriteTable(DefineGlobalScopeName(table->name),
-                 GetReferenceTypeName(table->elem_type));
+      WriteTable(DefineGlobalScopeName(table->name), table->elem_type);
       Write(Newline());
     }
     ++table_index;
   }
 }
 
-void CWriter::WriteTable(const std::string& name, const std::string& type) {
-  Write("wasm_rt_", type, "_table_t ", name, ";");
+void CWriter::WriteTable(const std::string& name, const wabt::Type& type) {
+  WriteTableType(type);
+  Write(" ", name, ";");
 }
 
-void CWriter::WriteTablePtr(const std::string& name, const std::string& type) {
-  Write("wasm_rt_", type, "_table_t* ", name, "(", ModuleInstanceTypeName(),
-        "* instance)");
+void CWriter::WriteTablePtr(const std::string& name, const Table& table) {
+  WriteTableType(table.elem_type);
+  Write("* ", name, "(", ModuleInstanceTypeName(), "* instance)");
+}
+
+void CWriter::WriteTableType(const wabt::Type& type) {
+  Write("wasm_rt_", GetReferenceTypeName(type), "_table_t");
 }
 
 void CWriter::WriteGlobalInitializers() {
@@ -1695,7 +1698,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         const Table* table = module_->GetTable(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = table->name;
-        WriteTablePtr(mangled_name, GetReferenceTypeName(table->elem_type));
+        WriteTablePtr(mangled_name, *table);
         break;
       }
 
@@ -3558,7 +3561,7 @@ const char* CWriter::GetReferenceTypeName(const Type& type) {
 const char* CWriter::GetReferenceNullValue(const Type& type) {
   switch (type) {
     case Type::FuncRef:
-      return "(wasm_rt_funcref_t){0, NULL, 0}";
+      return "wasm_rt_funcref_null_value";
     case Type::ExternRef:
       return "wasm_rt_externref_null_value";
     default:
