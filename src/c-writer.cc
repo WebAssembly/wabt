@@ -459,18 +459,18 @@ std::string CWriter::Deref(const std::string& s) {
 
 // static
 char CWriter::MangleType(Type type) {
+  // clang-format off
   switch (type) {
     case Type::I32: return 'i';
     case Type::I64: return 'j';
     case Type::F32: return 'f';
     case Type::F64: return 'd';
-    case Type::FuncRef:
-      return 'r';
-    case Type::ExternRef:
-      return 'e';
+    case Type::FuncRef: return 'r';
+    case Type::ExternRef: return 'e';
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 }
 
 // static
@@ -799,37 +799,33 @@ void CWriter::Write(const StackVar& sv) {
 }
 
 void CWriter::Write(Type type) {
+  // clang-format off
   switch (type) {
     case Type::I32: Write("u32"); break;
     case Type::I64: Write("u64"); break;
     case Type::F32: Write("f32"); break;
     case Type::F64: Write("f64"); break;
-    case Type::FuncRef:
-      Write("wasm_rt_funcref_t");
-      break;
-    case Type::ExternRef:
-      Write("wasm_rt_externref_t");
-      break;
+    case Type::FuncRef: Write("wasm_rt_funcref_t"); break;
+    case Type::ExternRef: Write("wasm_rt_externref_t"); break;
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 }
 
 void CWriter::Write(TypeEnum type) {
+  // clang-format off
   switch (type.type) {
     case Type::I32: Write("WASM_RT_I32"); break;
     case Type::I64: Write("WASM_RT_I64"); break;
     case Type::F32: Write("WASM_RT_F32"); break;
     case Type::F64: Write("WASM_RT_F64"); break;
-    case Type::FuncRef:
-      Write("WASM_RT_FUNCREF");
-      break;
-    case Type::ExternRef:
-      Write("WASM_RT_EXTERNREF");
-      break;
+    case Type::FuncRef: Write("WASM_RT_FUNCREF"); break;
+    case Type::ExternRef: Write("WASM_RT_EXTERNREF"); break;
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 }
 
 void CWriter::Write(SignedType type) {
