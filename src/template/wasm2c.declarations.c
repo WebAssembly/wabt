@@ -506,23 +506,8 @@ static inline void table_copy(wasm_rt_table_t* dest,
   if (UNLIKELY(src_addr + (uint64_t)n > src->size))
     TRAP(OOB);
 
-  if (n == 0) {
-    return;
-  }
-
-  if (dest->data + dest_addr == src->data + src_addr) {
-    return;
-  }
-
-  if (dest->data + dest_addr < src->data + src_addr) {
-    for (u32 i = 0; i < n; i++) {
-      dest->data[dest_addr + i] = src->data[src_addr + i];
-    }
-  } else {
-    for (u32 i = n; i > 0; i--) {
-      dest->data[dest_addr + i - 1] = src->data[src_addr + i - 1];
-    }
-  }
+  memmove(dest->data + dest_addr, src->data + src_addr,
+          n * sizeof(wasm_rt_elem_t));
 }
 
 static bool s_module_initialized = false;
