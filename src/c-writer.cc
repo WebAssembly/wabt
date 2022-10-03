@@ -222,6 +222,8 @@ class CWriter {
   }
 
   std::string GetGlobalName(const std::string&) const;
+  static const char* GetReferenceTypeName(const Type& type);
+  static const char* GetReferenceNullValue(const Type& type);
 
   enum class WriteExportsKind {
     Declarations,
@@ -276,8 +278,9 @@ class CWriter {
   void WriteMemory(const std::string&);
   void WriteMemoryPtr(const std::string&);
   void WriteTables();
-  void WriteTable(const std::string&);
-  void WriteTablePtr(const std::string&);
+  void WriteTable(const std::string&, const wabt::Type&);
+  void WriteTablePtr(const std::string&, const Table&);
+  void WriteTableType(const wabt::Type&);
   void WriteDataInstances();
   void WriteElemInstances();
   void WriteGlobalInitializers();
@@ -456,13 +459,18 @@ std::string CWriter::Deref(const std::string& s) {
 
 // static
 char CWriter::MangleType(Type type) {
+  // clang-format off
   switch (type) {
     case Type::I32: return 'i';
     case Type::I64: return 'j';
     case Type::F32: return 'f';
     case Type::F64: return 'd';
-    default: WABT_UNREACHABLE;
+    case Type::FuncRef: return 'r';
+    case Type::ExternRef: return 'e';
+    default:
+      WABT_UNREACHABLE;
   }
+  // clang-format on
 }
 
 // static
@@ -791,25 +799,33 @@ void CWriter::Write(const StackVar& sv) {
 }
 
 void CWriter::Write(Type type) {
+  // clang-format off
   switch (type) {
     case Type::I32: Write("u32"); break;
     case Type::I64: Write("u64"); break;
     case Type::F32: Write("f32"); break;
     case Type::F64: Write("f64"); break;
+    case Type::FuncRef: Write("wasm_rt_funcref_t"); break;
+    case Type::ExternRef: Write("wasm_rt_externref_t"); break;
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 }
 
 void CWriter::Write(TypeEnum type) {
+  // clang-format off
   switch (type.type) {
     case Type::I32: Write("WASM_RT_I32"); break;
     case Type::I64: Write("WASM_RT_I64"); break;
     case Type::F32: Write("WASM_RT_F32"); break;
     case Type::F64: Write("WASM_RT_F64"); break;
+    case Type::FuncRef: Write("WASM_RT_FUNCREF"); break;
+    case Type::ExternRef: Write("WASM_RT_EXTERNREF"); break;
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 }
 
 void CWriter::Write(SignedType type) {
@@ -921,6 +937,31 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
 
     case ExprType::GlobalGet:
       Write(GlobalInstanceVar(cast<GlobalGetExpr>(expr)->var));
+      break;
+
+    case ExprType::RefFunc: {
+      const Func* func = module_->GetFunc(cast<RefFuncExpr>(expr)->var);
+      const FuncDeclaration& decl = func->decl;
+
+      assert(decl.has_func_type);
+      Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
+
+      Write("(wasm_rt_funcref_t){func_types[", func_type_index, "], ",
+            "(wasm_rt_function_ptr_t)", ExternalPtr(func->name), ", ");
+
+      bool is_import = import_module_sym_map_.count(func->name) != 0;
+      if (is_import) {
+        Write("instance->",
+              MangleModuleInstanceName(import_module_sym_map_[func->name]));
+      } else {
+        Write("instance");
+      }
+
+      Write("};", Newline());
+    } break;
+
+    case ExprType::RefNull:
+      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type));
       break;
 
     default:
@@ -1158,10 +1199,9 @@ void CWriter::BeginInstance() {
         break;
       }
 
-      case ExternalKind::Table: {
-        Write("wasm_rt_table_t");
+      case ExternalKind::Table:
+        WriteTableType(cast<TableImport>(import)->table.elem_type);
         break;
-      }
 
       default:
         WABT_UNREACHABLE;
@@ -1202,10 +1242,12 @@ void CWriter::BeginInstance() {
                     MangleName(import->field_name));
         break;
 
-      case ExternalKind::Table:
+      case ExternalKind::Table: {
+        const Table& table = cast<TableImport>(import)->table;
         WriteTable("*" + MangleName(import->module_name) +
-                   MangleName(import->field_name));
-        break;
+                       MangleName(import->field_name),
+                   table.elem_type);
+      } break;
 
       default:
         WABT_UNREACHABLE;
@@ -1352,25 +1394,29 @@ void CWriter::WriteTables() {
     return;
   }
 
-  assert(module_->tables.size() <= 1);
   Index table_index = 0;
   for (const Table* table : module_->tables) {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
-      WriteTable(DefineGlobalScopeName(table->name));
+      WriteTable(DefineGlobalScopeName(table->name), table->elem_type);
       Write(Newline());
     }
     ++table_index;
   }
 }
 
-void CWriter::WriteTable(const std::string& name) {
-  Write("wasm_rt_table_t ", name, ";");
+void CWriter::WriteTable(const std::string& name, const wabt::Type& type) {
+  WriteTableType(type);
+  Write(" ", name, ";");
 }
 
-void CWriter::WriteTablePtr(const std::string& name) {
-  Write("wasm_rt_table_t* ", name, "(", ModuleInstanceTypeName(),
-        "* instance)");
+void CWriter::WriteTablePtr(const std::string& name, const Table& table) {
+  WriteTableType(table.elem_type);
+  Write("* ", name, "(", ModuleInstanceTypeName(), "* instance)");
+}
+
+void CWriter::WriteTableType(const wabt::Type& type) {
+  Write("wasm_rt_", GetReferenceTypeName(type), "_table_t");
 }
 
 void CWriter::WriteGlobalInitializers() {
@@ -1513,7 +1559,7 @@ void CWriter::WriteElemInitializers() {
           const Index func_type_index =
               module_->GetFuncTypeIndex(func->decl.type_var);
           Write("{", func_type_index, ", ");
-          Write("(wasm_rt_funcref_t)", ExternalPtr(func->name), ", ");
+          Write("(wasm_rt_function_ptr_t)", ExternalPtr(func->name), ", ");
           const bool is_import = import_module_sym_map_.count(func->name) != 0;
           if (is_import) {
             Write("offsetof(", ModuleInstanceTypeName(), ", ",
@@ -1525,7 +1571,7 @@ void CWriter::WriteElemInitializers() {
           Write("}, ", Newline());
         } break;
         case ExprType::RefNull:
-          Write("{0, NULL, 0}, ", Newline());
+          Write("{0, NULL, 0},", Newline());
           break;
         default:
           WABT_UNREACHABLE;
@@ -1537,20 +1583,32 @@ void CWriter::WriteElemInitializers() {
   Write(Newline(), "static void init_tables(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
 
-  const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
-
-  if (table && module_->num_table_imports == 0) {
-    uint32_t max =
-        table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
-    Write("wasm_rt_allocate_table(", ExternalInstancePtr(table->name), ", ",
-          table->elem_limits.initial, ", ", max, ");", Newline());
+  if (module_->tables.size() > module_->num_table_imports) {
+    Index table_idx = module_->num_table_imports;
+    for (Index i = table_idx; i < module_->tables.size(); i++) {
+      const Table* table = module_->tables[i];
+      uint32_t max =
+          table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
+      Write("wasm_rt_allocate_", GetReferenceTypeName(table->elem_type),
+            "_table(", ExternalInstancePtr(table->name), ", ",
+            table->elem_limits.initial, ", ", max, ");", Newline());
+    }
   }
+
   for (const ElemSegment* elem_segment : module_->elem_segments) {
     if (elem_segment->kind != SegmentKind::Active) {
       continue;
     }
 
-    Write("table_init(", ExternalInstancePtr(table->name), ", ");
+    const Table* table = module_->GetTable(elem_segment->table_var);
+
+    // TODO: Resolve whether nonempty externref-type element segments
+    // are permitted (WebAssembly/spec#1543)
+    if (table->elem_type != Type::FuncRef) {
+      WABT_UNREACHABLE;
+    }
+
+    Write("funcref_table_init(", ExternalInstancePtr(table->name), ", ");
     if (elem_segment->elem_exprs.empty()) {
       Write("NULL, 0, ");
     } else {
@@ -1638,7 +1696,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         const Table* table = module_->GetTable(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = table->name;
-        WriteTablePtr(mangled_name);
+        WriteTablePtr(mangled_name, *table);
         break;
       }
 
@@ -1815,13 +1873,12 @@ void CWriter::WriteFree() {
         ModuleInstanceTypeName(), "* instance) ", OpenBrace());
 
   {
-    assert(module_->tables.size() <= 1);
     Index table_index = 0;
     for (const Table* table : module_->tables) {
       bool is_import = table_index < module_->num_table_imports;
       if (!is_import) {
-        Write("wasm_rt_free_table(", ExternalInstancePtr(table->name), ");",
-              Newline());
+        Write("wasm_rt_free_", GetReferenceTypeName(table->elem_type),
+              "_table(", ExternalInstancePtr(table->name), ");", Newline());
       }
       ++table_index;
     }
@@ -1967,7 +2024,8 @@ void CWriter::WriteParamTypes(const FuncDeclaration& decl) {
 
 void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
   Index num_params = func_->GetNumParams();
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::FuncRef,
+                    Type::ExternRef}) {
     Index local_index = 0;
     size_t count = 0;
     for (Type local_type : func_->local_types) {
@@ -1982,7 +2040,12 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
         }
 
         Write(DefineLocalScopeName(index_to_name[num_params + local_index]),
-              " = 0");
+              " = ");
+        if (local_type == Type::FuncRef || local_type == Type::ExternRef) {
+          Write(GetReferenceNullValue(local_type));
+        } else {
+          Write("0");
+        }
         ++count;
       }
       ++local_index;
@@ -1995,7 +2058,8 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
 }
 
 void CWriter::WriteStackVarDeclarations() {
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::FuncRef,
+                    Type::ExternRef}) {
     size_t count = 0;
     for (const auto& [pair, name] : stack_var_sym_map_) {
       Type stp_type = pair.second;
@@ -2307,8 +2371,8 @@ void CWriter::Write(const ExprList& exprs) {
           Write(StackVar(num_params, decl.GetResultType(0)), " = ");
         }
 
-        assert(module_->tables.size() == 1);
-        const Table* table = module_->tables[0];
+        const Table* table =
+            module_->GetTable(cast<CallIndirectExpr>(&expr)->table);
 
         assert(decl.has_func_type);
         Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
@@ -2489,7 +2553,15 @@ void CWriter::Write(const ExprList& exprs) {
             module_->tables[module_->GetTableIndex(inst->table_index)];
         const ElemSegment* src_segment =
             module_->GetElemSegment(inst->segment_index);
-        Write("table_init(", ExternalInstancePtr(dest_table->name), ", ");
+
+        // TODO: This should be an assert because the validator should catch
+        // this, but currently it doesn't.
+        if (dest_table->elem_type != src_segment->elem_type) {
+          WABT_UNREACHABLE;
+        }
+
+        Write(GetReferenceTypeName(dest_table->elem_type), "_table_init(",
+              ExternalInstancePtr(dest_table->name), ", ");
         if (src_segment->elem_exprs.empty()) {
           Write("NULL, 0");
         } else {
@@ -2531,20 +2603,107 @@ void CWriter::Write(const ExprList& exprs) {
         Table* dest_table =
             module_->tables[module_->GetTableIndex(inst->dst_table)];
         const Table* src_table = module_->GetTable(inst->src_table);
-        Write("table_copy(", ExternalInstancePtr(dest_table->name), ", ",
+        if (dest_table->elem_type != src_table->elem_type) {
+          WABT_UNREACHABLE;
+        }
+
+        Write(GetReferenceTypeName(dest_table->elem_type), "_table_copy(",
+              ExternalInstancePtr(dest_table->name), ", ",
               ExternalInstancePtr(src_table->name), ", ", StackVar(2), ", ",
               StackVar(1), ", ", StackVar(0), ");", Newline());
+        DropTypes(3);
       } break;
 
-      case ExprType::TableGet:
-      case ExprType::TableSet:
-      case ExprType::TableGrow:
-      case ExprType::TableSize:
-      case ExprType::TableFill:
-      case ExprType::RefFunc:
+      case ExprType::TableGet: {
+        const Table* table = module_->GetTable(cast<TableGetExpr>(&expr)->var);
+        Write(StackVar(0, table->elem_type), " = ",
+              GetReferenceTypeName(table->elem_type), "_table_get(",
+              ExternalInstancePtr(table->name), ", ", StackVar(0), ");",
+              Newline());
+        DropTypes(1);
+        PushType(table->elem_type);
+      } break;
+
+      case ExprType::TableSet: {
+        const Table* table = module_->GetTable(cast<TableSetExpr>(&expr)->var);
+        Write(GetReferenceTypeName(table->elem_type), "_table_set(",
+              ExternalInstancePtr(table->name), ", ", StackVar(1), ", ",
+              StackVar(0), ");", Newline());
+        DropTypes(2);
+      } break;
+
+      case ExprType::TableGrow: {
+        const Table* table = module_->GetTable(cast<TableGrowExpr>(&expr)->var);
+        Write(StackVar(1, Type::I32), " = wasm_rt_grow_",
+              GetReferenceTypeName(table->elem_type), "_table(",
+              ExternalInstancePtr(table->name), ", ", StackVar(0), ", ",
+              StackVar(1), ");", Newline());
+        DropTypes(2);
+        PushType(Type::I32);
+      } break;
+
+      case ExprType::TableSize: {
+        const Table* table = module_->GetTable(cast<TableSizeExpr>(&expr)->var);
+
+        PushType(Type::I32);
+        Write(StackVar(0), " = ", ExternalInstanceRef(table->name), ".size;",
+              Newline());
+      } break;
+
+      case ExprType::TableFill: {
+        const Table* table = module_->GetTable(cast<TableFillExpr>(&expr)->var);
+        Write(GetReferenceTypeName(table->elem_type), "_table_fill(",
+              ExternalInstancePtr(table->name), ", ", StackVar(2), ", ",
+              StackVar(1), ", ", StackVar(0), ");", Newline());
+        DropTypes(3);
+      } break;
+
+      case ExprType::RefFunc: {
+        const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
+        PushType(Type::FuncRef);
+        const FuncDeclaration& decl = func->decl;
+
+        assert(decl.has_func_type);
+        Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
+
+        Write(StackVar(0), " = (wasm_rt_funcref_t){func_types[",
+              func_type_index, "], (wasm_rt_function_ptr_t)",
+              ExternalPtr(func->name), ", ");
+
+        bool is_import = import_module_sym_map_.count(func->name) != 0;
+        if (is_import) {
+          Write("instance->",
+                MangleModuleInstanceName(import_module_sym_map_[func->name]));
+        } else {
+          Write("instance");
+        }
+
+        Write("};", Newline());
+      } break;
+
       case ExprType::RefNull:
+        PushType(cast<RefNullExpr>(&expr)->type);
+        Write(StackVar(0), " = ",
+              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type), ";",
+              Newline());
+        break;
+
       case ExprType::RefIsNull:
-        UNIMPLEMENTED("...");
+        switch (StackType(0)) {
+          case Type::FuncRef:
+            Write(StackVar(0, Type::I32), " = (", StackVar(0), ".func == NULL",
+                  ");", Newline());
+            break;
+          case Type::ExternRef:
+            Write(StackVar(0, Type::I32), " = (", StackVar(0),
+                  " == wasm_rt_externref_null_value);", Newline());
+            break;
+          default:
+            WABT_UNREACHABLE;
+        }
+
+        DropTypes(1);
+        PushType(Type::I32);
         break;
 
       case ExprType::MemoryGrow: {
@@ -3385,6 +3544,30 @@ Result CWriter::WriteModule(const Module& module) {
   WriteCHeader();
   WriteCSource();
   return result_;
+}
+
+// static
+const char* CWriter::GetReferenceTypeName(const Type& type) {
+  switch (type) {
+    case Type::FuncRef:
+      return "funcref";
+    case Type::ExternRef:
+      return "externref";
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+// static
+const char* CWriter::GetReferenceNullValue(const Type& type) {
+  switch (type) {
+    case Type::FuncRef:
+      return "wasm_rt_funcref_null_value";
+    case Type::ExternRef:
+      return "wasm_rt_externref_null_value";
+    default:
+      WABT_UNREACHABLE;
+  }
 }
 
 }  // end anonymous namespace

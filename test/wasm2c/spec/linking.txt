@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/linking.wast
+(;; STDOUT ;;;
+90/90 tests passed.
+;;; STDOUT ;;)
