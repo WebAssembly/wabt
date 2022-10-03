@@ -96,9 +96,10 @@ void wabt_destroy_features(wabt::Features* f) {
 
 wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
                                             const void* data,
-                                            size_t size) {
+                                            size_t size,
+                                            wabt::Errors* errors) {
   std::unique_ptr<wabt::WastLexer> lexer =
-      wabt::WastLexer::CreateBufferLexer(filename, data, size);
+      wabt::WastLexer::CreateBufferLexer(filename, data, size, errors);
   return lexer.release();
 }
 
