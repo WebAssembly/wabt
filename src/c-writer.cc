@@ -1602,6 +1602,8 @@ void CWriter::WriteElemInitializers() {
 
     const Table* table = module_->GetTable(elem_segment->table_var);
 
+    // TODO: Resolve whether nonempty externref-type element segments
+    // are permitted (WebAssembly/spec#1543)
     if (table->elem_type != Type::FuncRef) {
       WABT_UNREACHABLE;
     }
@@ -2551,6 +2553,9 @@ void CWriter::Write(const ExprList& exprs) {
             module_->tables[module_->GetTableIndex(inst->table_index)];
         const ElemSegment* src_segment =
             module_->GetElemSegment(inst->segment_index);
+
+        // TODO: This should be an assert because the validator should catch
+        // this, but currently it doesn't.
         if (dest_table->elem_type != src_segment->elem_type) {
           WABT_UNREACHABLE;
         }
