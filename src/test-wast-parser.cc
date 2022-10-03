@@ -34,8 +34,9 @@ std::string repeat(std::string s, size_t count) {
 }
 
 Errors ParseInvalidModule(std::string text) {
-  auto lexer = WastLexer::CreateBufferLexer("test", text.c_str(), text.size());
   Errors errors;
+  auto lexer =
+      WastLexer::CreateBufferLexer("test", text.c_str(), text.size(), &errors);
   std::unique_ptr<Module> module;
   Features features;
   WastParseOptions options(features);

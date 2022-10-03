@@ -90,10 +90,10 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read %s\n", s_infile);
   }
 
-  std::unique_ptr<WastLexer> lexer(WastLexer::CreateBufferLexer(
-      s_infile, file_data.data(), file_data.size()));
-
   Errors errors;
+  std::unique_ptr<WastLexer> lexer(WastLexer::CreateBufferLexer(
+      s_infile, file_data.data(), file_data.size(), &errors));
+
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   result = ParseWastScript(lexer.get(), &script, &errors, &parse_wast_options);

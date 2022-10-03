@@ -1382,9 +1382,9 @@ wabt::Result CommandRunner::ReadInvalidTextModule(
     const std::string& header) {
   std::vector<uint8_t> file_data;
   wabt::Result result = ReadFile(module_filename, &file_data);
-  std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
-      module_filename, file_data.data(), file_data.size());
   Errors errors;
+  std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
+      module_filename, file_data.data(), file_data.size(), &errors);
   if (Succeeded(result)) {
     std::unique_ptr<wabt::Module> module;
     WastParseOptions options(s_features);

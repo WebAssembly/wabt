@@ -22,11 +22,8 @@
 #include "wabt/config.h"
 
 #include "wabt/lexer-source.h"
-#include "wabt/wast-parser.h"
 
-#define ERROR(...) \
-  if (parser)      \
-  parser->Error(GetLocation(), __VA_ARGS__)
+#define ERROR(...) Error(GetLocation(), __VA_ARGS__)
 
 namespace wabt {
 
@@ -37,7 +34,8 @@ namespace {
 }  // namespace
 
 WastLexer::WastLexer(std::unique_ptr<LexerSource> source,
-                     std::string_view filename)
+                     std::string_view filename,
+                     Errors* errors)
     : source_(std::move(source)),
       filename_(filename),
       line_(1),
@@ -45,17 +43,20 @@ WastLexer::WastLexer(std::unique_ptr<LexerSource> source,
       buffer_end_(buffer_ + source_->size()),
       line_start_(buffer_),
       token_start_(buffer_),
-      cursor_(buffer_) {}
+      cursor_(buffer_),
+      errors_(errors) {}
 
 // static
 std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(
     std::string_view filename,
     const void* data,
-    size_t size) {
-  return MakeUnique<WastLexer>(MakeUnique<LexerSource>(data, size), filename);
+    size_t size,
+    Errors* errors) {
+  return MakeUnique<WastLexer>(MakeUnique<LexerSource>(data, size), filename,
+                               errors);
 }
 
-Token WastLexer::GetToken(WastParser* parser) {
+Token WastLexer::GetToken() {
   while (true) {
     token_start_ = cursor_;
     switch (PeekChar()) {
@@ -64,7 +65,7 @@ Token WastLexer::GetToken(WastParser* parser) {
 
       case '(':
         if (MatchString("(;")) {
-          if (ReadBlockComment(parser)) {
+          if (ReadBlockComment()) {
             continue;
           }
           return BareToken(TokenType::Eof);
@@ -103,7 +104,7 @@ Token WastLexer::GetToken(WastParser* parser) {
         continue;
 
       case '"':
-        return GetStringToken(parser);
+        return GetStringToken();
 
       case '+':
       case '-':
@@ -234,7 +235,7 @@ void WastLexer::Newline() {
   line_start_ = cursor_;
 }
 
-bool WastLexer::ReadBlockComment(WastParser* parser) {
+bool WastLexer::ReadBlockComment() {
   int nesting = 1;
   while (true) {
     switch (ReadChar()) {
@@ -294,7 +295,7 @@ void WastLexer::ReadWhitespace() {
   }
 }
 
-Token WastLexer::GetStringToken(WastParser* parser) {
+Token WastLexer::GetStringToken() {
   const char* saved_token_start = token_start_;
   bool has_error = false;
   bool in_string = true;
@@ -472,7 +473,7 @@ WastLexer::ReservedChars WastLexer::ReadReservedChars() {
         ret = ReservedChars::Id;
       }
     } else if (peek == '"') {
-      GetStringToken(nullptr);
+      GetStringToken();
       ret = ReservedChars::Some;
     } else {
       break;
@@ -606,6 +607,11 @@ Token WastLexer::GetKeywordToken() {
 Token WastLexer::GetReservedToken() {
   ReadReservedChars();
   return TextToken(TokenType::Reserved);
+}
+
+void WastLexer::Error(Location loc, const char* format, ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  errors_->emplace_back(ErrorLevel::Error, loc, buffer);
 }
 
 }  // namespace wabt

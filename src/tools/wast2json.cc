@@ -104,13 +104,13 @@ int ProgramMain(int argc, char** argv) {
 
   std::vector<uint8_t> file_data;
   Result result = ReadFile(s_infile, &file_data);
+  Errors errors;
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
-      s_infile, file_data.data(), file_data.size());
+      s_infile, file_data.data(), file_data.size(), &errors);
   if (Failed(result)) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
   }
 
-  Errors errors;
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   result = ParseWastScript(lexer.get(), &script, &errors, &parse_wast_options);
