@@ -584,7 +584,7 @@ void WastParser::Error(Location loc, const char* format, ...) {
 
 Token WastParser::GetToken() {
   if (tokens_.empty()) {
-    tokens_.push_back(lexer_->GetToken(this));
+    tokens_.push_back(lexer_->GetToken());
   }
   return tokens_.front();
 }
@@ -595,7 +595,7 @@ Location WastParser::GetLocation() {
 
 TokenType WastParser::Peek(size_t n) {
   while (tokens_.size() <= n) {
-    Token cur = lexer_->GetToken(this);
+    Token cur = lexer_->GetToken();
     if (cur.token_type() != TokenType::LparAnn) {
       tokens_.push_back(cur);
     } else {
@@ -613,7 +613,7 @@ TokenType WastParser::Peek(size_t n) {
       }
       int indent = 1;
       while (indent > 0) {
-        cur = lexer_->GetToken(this);
+        cur = lexer_->GetToken();
         switch (cur.token_type()) {
           case TokenType::Lpar:
           case TokenType::LparAnn:

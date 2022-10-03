@@ -33,6 +33,9 @@ out/test/spec/tokens.wast:144: assert_malformed passed:
   (data $l"a ")
         ^^^^^^
 out/test/spec/tokens.wast:154: assert_malformed passed:
+  out/test/spec/tokens/tokens.33.wat:1:7: error: invalid string token
+  (data $l"a ""b")
+        ^^^^^^
   out/test/spec/tokens/tokens.33.wat:1:7: error: unexpected token $l"a ""b", expected ).
   (data $l"a ""b")
         ^^^^^^^^^

@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "wabt/common.h"
+#include "wabt/error.h"
 #include "wabt/lexer-source-line-finder.h"
 #include "wabt/literal.h"
 #include "wabt/make-unique.h"
@@ -32,20 +33,22 @@ namespace wabt {
 
 class ErrorHandler;
 class LexerSource;
-class WastParser;
 
 class WastLexer {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 
-  WastLexer(std::unique_ptr<LexerSource> source, std::string_view filename);
+  WastLexer(std::unique_ptr<LexerSource> source,
+            std::string_view filename,
+            Errors*);
 
   // Convenience functions.
   static std::unique_ptr<WastLexer> CreateBufferLexer(std::string_view filename,
                                                       const void* data,
-                                                      size_t size);
+                                                      size_t size,
+                                                      Errors*);
 
-  Token GetToken(WastParser* parser);
+  Token GetToken();
 
   // TODO(binji): Move this out of the lexer.
   std::unique_ptr<LexerSourceLineFinder> MakeLineFinder() {
@@ -68,7 +71,7 @@ class WastLexer {
   bool MatchChar(char);
   bool MatchString(std::string_view);
   void Newline();
-  bool ReadBlockComment(WastParser*);  // Returns false if EOF.
+  bool ReadBlockComment();             // Returns false if EOF.
   bool ReadLineComment();              // Returns false if EOF.
   void ReadWhitespace();
 
@@ -87,7 +90,7 @@ class WastLexer {
     return ReadReservedChars() == ReservedChars::None;
   }
   void ReadSign();
-  Token GetStringToken(WastParser*);
+  Token GetStringToken();
   Token GetNumberToken(TokenType);
   Token GetHexNumberToken(TokenType);
   Token GetInfToken();
@@ -105,6 +108,9 @@ class WastLexer {
   const char* line_start_;
   const char* token_start_;
   const char* cursor_;
+
+  Errors* errors_;
+  void WABT_PRINTF_FORMAT(3, 4) Error(Location, const char* format, ...);
 };
 
 }  // namespace wabt
