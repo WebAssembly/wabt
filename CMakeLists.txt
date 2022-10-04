@@ -495,14 +495,13 @@ if (BUILD_TOOLS)
     ${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h
     ${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c
     ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c
-    )
+  )
 
-  add_library(cwriter-template wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
+  set(CWRITER_TEMPLATE_SRC wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
 
   wabt_executable(
     NAME wasm2c
-    SOURCES src/tools/wasm2c.cc src/c-writer.cc
-    LIBS cwriter-template
+    SOURCES src/tools/wasm2c.cc src/c-writer.cc ${CWRITER_TEMPLATE_SRC}
     INSTALL
   )
 
