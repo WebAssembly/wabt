@@ -23,7 +23,7 @@
 #include "src/wast-parser.h"
 #include "src/wat-writer.h"
 
-#include "src/embedding/bindings.h"
+#include "src/embedding/wabt.h"
 
 void bindings_wat2wasm(bindings_string_t* wat,
                        bindings_wasm_feature_t features,
