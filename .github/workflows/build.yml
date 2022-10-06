@@ -50,7 +50,7 @@ jobs:
     - name: mkdir
       run: mkdir -p out
     - name: cmake
-      run: cmake .. -G Ninja -DWERROR=ON -Werror=dev
+      run: cmake .. -G Ninja -DWITH_WASI=ON -DWERROR=ON -Werror=dev
       working-directory: out
       if: matrix.os != 'windows-latest'
     - name: cmake (windows)
