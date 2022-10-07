@@ -16,7 +16,7 @@
 
 #include "gtest/gtest.h"
 
-#include "src/filenames.h"
+#include "wabt/filenames.h"
 
 using namespace wabt;
 

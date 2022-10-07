@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#include "src/wast-parser.h"
+#include "wabt/wast-parser.h"
 
-#include "src/binary-reader-ir.h"
-#include "src/binary-reader.h"
-#include "src/cast.h"
-#include "src/expr-visitor.h"
-#include "src/make-unique.h"
-#include "src/resolve-names.h"
-#include "src/stream.h"
-#include "src/utf8.h"
-#include "src/validator.h"
+#include "wabt/binary-reader-ir.h"
+#include "wabt/binary-reader.h"
+#include "wabt/cast.h"
+#include "wabt/expr-visitor.h"
+#include "wabt/make-unique.h"
+#include "wabt/resolve-names.h"
+#include "wabt/stream.h"
+#include "wabt/utf8.h"
+#include "wabt/validator.h"
 
 #define WABT_TRACING 0
-#include "src/tracing.h"
+#include "wabt/tracing.h"
 
 #define EXPECT(token_type) CHECK_RESULT(Expect(TokenType::token_type))
 
@@ -584,7 +584,7 @@ void WastParser::Error(Location loc, const char* format, ...) {
 
 Token WastParser::GetToken() {
   if (tokens_.empty()) {
-    tokens_.push_back(lexer_->GetToken(this));
+    tokens_.push_back(lexer_->GetToken());
   }
   return tokens_.front();
 }
@@ -595,7 +595,7 @@ Location WastParser::GetLocation() {
 
 TokenType WastParser::Peek(size_t n) {
   while (tokens_.size() <= n) {
-    Token cur = lexer_->GetToken(this);
+    Token cur = lexer_->GetToken();
     if (cur.token_type() != TokenType::LparAnn) {
       tokens_.push_back(cur);
     } else {
@@ -613,7 +613,7 @@ TokenType WastParser::Peek(size_t n) {
       }
       int indent = 1;
       while (indent > 0) {
-        cur = lexer_->GetToken(this);
+        cur = lexer_->GetToken();
         switch (cur.token_type()) {
           case TokenType::Lpar:
           case TokenType::LparAnn:

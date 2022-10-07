@@ -39,7 +39,7 @@ DEFAULT_TIMEOUT = 120    # seconds
 SLOW_TIMEOUT_MULTIPLIER = 3
 
 if sys.byteorder == 'big':
-    wasm2c_args = ['--cflags=-DWABT_BIG_ENDIAN']
+    wasm2c_args = ['--cflags=-DWABT_BIG_ENDIAN=1']
 else:
     wasm2c_args = []
 

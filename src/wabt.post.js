@@ -110,11 +110,12 @@ FEATURES.forEach(function(feature) {
 
 
 /// Lexer
-function Lexer(filename, buffer) {
+function Lexer(filename, buffer, errors) {
   this.filenameObj = allocateCString(filename);
   this.bufferObj = allocateBuffer(buffer);
   this.addr = Module._wabt_new_wast_buffer_lexer(
-      this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size);
+      this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size,
+      errors.addr);
 }
 Lexer.prototype = Object.create(Object.prototype);
 
@@ -159,10 +160,9 @@ OutputBuffer.prototype.destroy = function() {
 
 
 /// Errors
-function Errors(kind, lexer) {
+function Errors(kind) {
   this.kind = kind;
   this.addr = Module._wabt_new_errors();
-  this.lexer = lexer;
 }
 Errors.prototype = Object.create(Object.prototype);
 
@@ -194,8 +194,9 @@ Errors.prototype.destroy = function() {
 
 /// parseWat
 function parseWat(filename, buffer, options) {
-  var lexer = new Lexer(filename, buffer);
-  var errors = new Errors('text', lexer);
+  var errors = new Errors('text');
+  var lexer = new Lexer(filename, buffer, errors);
+  errors.lexer = lexer;
   var features = new Features(options || {});
 
   try {

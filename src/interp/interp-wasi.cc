@@ -28,8 +28,8 @@
  * https://github.com/WebAssembly/wasi-libc/blob/master/libc-bottom-half/headers/public/wasi/api.h
  */
 
-#include "src/interp/interp-wasi.h"
-#include "src/interp/interp-util.h"
+#include "wabt/interp/interp-wasi.h"
+#include "wabt/interp/interp-util.h"
 
 #ifdef WITH_WASI
 

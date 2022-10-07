@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include "src/interp/interp.h"
+#include "wabt/interp/interp.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cinttypes>
 
-#include "src/interp/interp-math.h"
-#include "src/make-unique.h"
+#include "wabt/interp/interp-math.h"
+#include "wabt/make-unique.h"
 
 namespace wabt {
 namespace interp {

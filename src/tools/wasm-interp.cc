@@ -22,15 +22,15 @@
 #include <string>
 #include <vector>
 
-#include "src/binary-reader.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/interp/binary-reader-interp.h"
-#include "src/interp/interp-util.h"
-#include "src/interp/interp-wasi.h"
-#include "src/interp/interp.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
+#include "wabt/binary-reader.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/interp/binary-reader-interp.h"
+#include "wabt/interp/interp-util.h"
+#include "wabt/interp/interp-wasi.h"
+#include "wabt/interp/interp.h"
+#include "wabt/option-parser.h"
+#include "wabt/stream.h"
 
 #ifdef WITH_WASI
 #include "uvwasi.h"

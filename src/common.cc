@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 #include <cassert>
 #include <cerrno>

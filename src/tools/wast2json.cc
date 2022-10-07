@@ -21,20 +21,20 @@
 #include <cstdlib>
 #include <string>
 
-#include "config.h"
+#include "wabt/config.h"
 
-#include "src/binary-writer-spec.h"
-#include "src/binary-writer.h"
-#include "src/common.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/filenames.h"
-#include "src/ir.h"
-#include "src/option-parser.h"
-#include "src/resolve-names.h"
-#include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-parser.h"
+#include "wabt/binary-writer-spec.h"
+#include "wabt/binary-writer.h"
+#include "wabt/common.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/filenames.h"
+#include "wabt/ir.h"
+#include "wabt/option-parser.h"
+#include "wabt/resolve-names.h"
+#include "wabt/stream.h"
+#include "wabt/validator.h"
+#include "wabt/wast-parser.h"
 
 using namespace wabt;
 
@@ -104,13 +104,13 @@ int ProgramMain(int argc, char** argv) {
 
   std::vector<uint8_t> file_data;
   Result result = ReadFile(s_infile, &file_data);
+  Errors errors;
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
-      s_infile, file_data.data(), file_data.size());
+      s_infile, file_data.data(), file_data.size(), &errors);
   if (Failed(result)) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
   }
 
-  Errors errors;
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   result = ParseWastScript(lexer.get(), &script, &errors, &parse_wast_options);

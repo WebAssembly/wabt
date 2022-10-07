@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/shared-validator.h"
+#include "wabt/shared-validator.h"
 
 #include <algorithm>
 #include <cinttypes>

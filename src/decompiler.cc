@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "src/decompiler.h"
+#include "wabt/decompiler.h"
 
-#include "src/decompiler-ast.h"
-#include "src/decompiler-ls.h"
-#include "src/decompiler-naming.h"
+#include "wabt/decompiler-ast.h"
+#include "wabt/decompiler-ls.h"
+#include "wabt/decompiler-naming.h"
 
-#include "src/stream.h"
+#include "wabt/stream.h"
 
 #define WABT_TRACING 0
-#include "src/tracing.h"
+#include "wabt/tracing.h"
 
 #include <inttypes.h>
 

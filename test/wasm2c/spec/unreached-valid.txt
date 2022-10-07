@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/unreached-valid.wast
+(;; STDOUT ;;;
+5/5 tests passed.
+;;; STDOUT ;;)

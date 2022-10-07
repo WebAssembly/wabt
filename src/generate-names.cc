@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "src/generate-names.h"
+#include "wabt/generate-names.h"
 
 #include <cassert>
 #include <cstdio>
 #include <string>
 #include <vector>
 
-#include "src/cast.h"
-#include "src/expr-visitor.h"
-#include "src/ir.h"
+#include "wabt/cast.h"
+#include "wabt/expr-visitor.h"
+#include "wabt/ir.h"
 
 namespace wabt {
 

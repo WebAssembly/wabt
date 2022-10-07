@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/table_get.wast
+(;; STDOUT ;;;
+9/9 tests passed.
+;;; STDOUT ;;)
