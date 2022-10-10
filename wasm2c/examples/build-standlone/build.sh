@@ -17,7 +17,7 @@ set -x
 cd $SCRIPT_DIR
 make clean
 
-cp ${ORIGIN_DIR}/$1 ./main.wasm
+cp $1 ./main.wasm
 make main.c
 
 make main.elf
