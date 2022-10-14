@@ -253,8 +253,9 @@ static Ref GenerateHostPrint(const ImportDesc& import) {
   auto* stream = s_stdout_stream.get();
 
   auto func_type = *cast<FuncType>(import.type.type.get());
-  auto import_name = StringPrintf("called host %s.%s", import.type.module.c_str(),
-                                  import.type.name.c_str());
+  auto import_name =
+      StringPrintf("called host %s.%s", import.type.module.c_str(),
+                   import.type.name.c_str());
 
   auto host_func = HostFunc::New(
       s_store, func_type,
