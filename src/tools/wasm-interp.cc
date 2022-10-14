@@ -196,6 +196,57 @@ static bool HasWasiImport(const Module::Ptr module) {
   }
   return false;
 }
+
+static Result InitWasi(uvwasi_t* uvwasi) {
+  uvwasi_errno_t err;
+  uvwasi_options_t init_options;
+
+  std::vector<const char*> argv;
+  argv.push_back(s_infile);
+  for (auto& s : s_wasi_argv) {
+    if (s_trace_stream) {
+      s_trace_stream->Writef("wasi: arg: \"%s\"\n", s.c_str());
+    }
+    argv.push_back(s.c_str());
+  }
+  argv.push_back(nullptr);
+
+  std::vector<const char*> envp;
+  for (auto& s : s_wasi_env) {
+    if (s_trace_stream) {
+      s_trace_stream->Writef("wasi: env: \"%s\"\n", s.c_str());
+    }
+    envp.push_back(s.c_str());
+  }
+  envp.push_back(nullptr);
+
+  std::vector<uvwasi_preopen_t> dirs;
+  for (auto& dir : s_wasi_dirs) {
+    if (s_trace_stream) {
+      s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
+    }
+    dirs.push_back({dir.c_str(), dir.c_str()});
+  }
+
+  /* Setup the initialization options. */
+  init_options.in = 0;
+  init_options.out = 1;
+  init_options.err = 2;
+  init_options.fd_table_size = 3;
+  init_options.argc = argv.size() - 1;
+  init_options.argv = argv.data();
+  init_options.envp = envp.data();
+  init_options.preopenc = dirs.size();
+  init_options.preopens = dirs.data();
+  init_options.allocator = NULL;
+
+  err = uvwasi_init(uvwasi, &init_options);
+  if (err != UVWASI_ESUCCESS) {
+    s_stderr_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
+    return Result::Error;
+  }
+  return Result::Ok;
+}
 #endif
 
 static Ref GenerateHostPrint(const ImportDesc& import) {
@@ -340,57 +391,6 @@ static Result InstantiateModule(RefVec& imports,
   *out_instance = Instance::Instantiate(s_store, module.ref(), imports, &trap);
   if (!*out_instance) {
     WriteTrap(s_stderr_stream.get(), "error initializing module", trap);
-    return Result::Error;
-  }
-  return Result::Ok;
-}
-
-static Result InitWasi(uvwasi_t* uvwasi) {
-  uvwasi_errno_t err;
-  uvwasi_options_t init_options;
-
-  std::vector<const char*> argv;
-  argv.push_back(s_infile);
-  for (auto& s : s_wasi_argv) {
-    if (s_trace_stream) {
-      s_trace_stream->Writef("wasi: arg: \"%s\"\n", s.c_str());
-    }
-    argv.push_back(s.c_str());
-  }
-  argv.push_back(nullptr);
-
-  std::vector<const char*> envp;
-  for (auto& s : s_wasi_env) {
-    if (s_trace_stream) {
-      s_trace_stream->Writef("wasi: env: \"%s\"\n", s.c_str());
-    }
-    envp.push_back(s.c_str());
-  }
-  envp.push_back(nullptr);
-
-  std::vector<uvwasi_preopen_t> dirs;
-  for (auto& dir : s_wasi_dirs) {
-    if (s_trace_stream) {
-      s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
-    }
-    dirs.push_back({dir.c_str(), dir.c_str()});
-  }
-
-  /* Setup the initialization options. */
-  init_options.in = 0;
-  init_options.out = 1;
-  init_options.err = 2;
-  init_options.fd_table_size = 3;
-  init_options.argc = argv.size() - 1;
-  init_options.argv = argv.data();
-  init_options.envp = envp.data();
-  init_options.preopenc = dirs.size();
-  init_options.preopens = dirs.data();
-  init_options.allocator = NULL;
-
-  err = uvwasi_init(uvwasi, &init_options);
-  if (err != UVWASI_ESUCCESS) {
-    s_stderr_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
     return Result::Error;
   }
   return Result::Ok;
