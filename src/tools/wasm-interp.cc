@@ -141,7 +141,7 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
   parser.AddArgument(
-      ". arg", OptionParser::ArgumentCount::ZeroOrMore,
+      "arg", OptionParser::ArgumentCount::ZeroOrMore,
       [](const char* argument) { s_wasi_argv.push_back(argument); });
   parser.Parse(argc, argv);
 }
