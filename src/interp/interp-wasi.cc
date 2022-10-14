@@ -756,7 +756,7 @@ Result WasiRunStart(const Instance::Ptr& instance,
   }
 
   // Unregister memory
-  UnregisterWasiInstance(instance);
+  WasiUnregisterInstance(instance);
   return res;
 }
 

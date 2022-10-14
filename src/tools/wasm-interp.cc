@@ -276,7 +276,7 @@ static std::string GetRegistryName(std::string module_arg,
   }
 
   // fall back to file-name
-  return StripExtension(GetBasename(path_name));
+  return std::string(StripExtension(GetBasename(path_name)));
 }
 
 static void BindImports(const Module::Ptr& module, RefVec& imports) {
