@@ -463,11 +463,11 @@ static Result ReadAndRunModule(const char* module_filename) {
     CHECK_RESULT(WasiRunStart(instance_loaded.back(), &uvwasi,
                               s_stderr_stream.get(), s_trace_stream));
   }
-#endif
   // unregister all;
   for (auto& instance : instance_loaded) {
     WasiUnregisterInstance(instance);
   }
+#endif
 
   return Result::Ok;
 }
