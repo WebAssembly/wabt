@@ -18,11 +18,11 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "src/binary-reader-objdump.h"
-#include "src/binary-reader.h"
-#include "src/common.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
+#include "wabt/binary-reader-objdump.h"
+#include "wabt/binary-reader.h"
+#include "wabt/common.h"
+#include "wabt/option-parser.h"
+#include "wabt/stream.h"
 
 using namespace wabt;
 

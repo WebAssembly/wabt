@@ -20,7 +20,7 @@
 
 #include "gtest/gtest.h"
 
-#include "src/literal.h"
+#include "wabt/literal.h"
 
 #define FOREACH_UINT32_MULTIPLIER 1
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader-ir.h"
+#include "wabt/binary-reader-ir.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -24,10 +24,10 @@
 #include <deque>
 #include <vector>
 
-#include "src/binary-reader-nop.h"
-#include "src/cast.h"
-#include "src/common.h"
-#include "src/ir.h"
+#include "wabt/binary-reader-nop.h"
+#include "wabt/cast.h"
+#include "wabt/common.h"
+#include "wabt/ir.h"
 
 namespace wabt {
 

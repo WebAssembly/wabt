@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader-opcnt.h"
+#include "wabt/binary-reader-opcnt.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -22,10 +22,10 @@
 #include <cstdint>
 #include <cstdio>
 
-#include "src/binary-reader-nop.h"
-#include "src/common.h"
-#include "src/literal.h"
-#include "src/stream.h"
+#include "wabt/binary-reader-nop.h"
+#include "wabt/common.h"
+#include "wabt/literal.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 

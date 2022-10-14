@@ -10,21 +10,27 @@
 .Ar file
 .Sh DESCRIPTION
 .Nm
-removes sections of a WebAssembly binary file.
+Remove sections of a WebAssembly binary file.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
 Print a help message
+.It Fl Fl version
+Print version information
+.It Fl o , Fl Fl output=FILE
+output wasm binary file
 .El
 .Sh EXAMPLES
 Remove all custom sections from test.wasm
 .Pp
 .Dl $ wasm-strip test.wasm
 .Sh SEE ALSO
+.Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,
 .Xr wasm-objdump 1 ,
 .Xr wasm-opcodecnt 1 ,
+.Xr wasm-strip 1 ,
 .Xr wasm-validate 1 ,
 .Xr wasm2c 1 ,
 .Xr wasm2wat 1 ,

@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/ref_is_null.wast
+(;; STDOUT ;;;
+11/11 tests passed.
+;;; STDOUT ;;)

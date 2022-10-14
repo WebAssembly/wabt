@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "src/interp/interp-util.h"
+#include "wabt/interp/interp-util.h"
 
 #include <cinttypes>
 
-#include "src/stream.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 namespace interp {

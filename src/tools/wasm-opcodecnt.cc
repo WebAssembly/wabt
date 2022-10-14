@@ -24,10 +24,10 @@
 #include <map>
 #include <vector>
 
-#include "src/binary-reader-opcnt.h"
-#include "src/binary-reader.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
+#include "wabt/binary-reader-opcnt.h"
+#include "wabt/binary-reader.h"
+#include "wabt/option-parser.h"
+#include "wabt/stream.h"
 
 #define ERROR(fmt, ...) \
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)

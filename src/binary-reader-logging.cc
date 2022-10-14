@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader-logging.h"
+#include "wabt/binary-reader-logging.h"
 
 #include <cinttypes>
 
-#include "src/stream.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 

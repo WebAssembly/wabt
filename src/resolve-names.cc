@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#include "src/resolve-names.h"
+#include "wabt/resolve-names.h"
 
 #include <cassert>
 #include <cstdio>
 
-#include "src/cast.h"
-#include "src/expr-visitor.h"
-#include "src/ir.h"
-#include "src/wast-lexer.h"
+#include "wabt/cast.h"
+#include "wabt/expr-visitor.h"
+#include "wabt/ir.h"
+#include "wabt/wast-lexer.h"
 
 namespace wabt {
 

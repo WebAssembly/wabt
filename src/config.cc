@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "config.h"
+#include "wabt/config.h"
 
 #include <cstdarg>
 #include <cstdio>
