@@ -18,14 +18,15 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "wabt/binary-reader.h"
 #include "wabt/error-formatter.h"
 #include "wabt/feature.h"
+#include "wabt/filenames.h"
 #include "wabt/interp/binary-reader-interp.h"
 #include "wabt/interp/interp-util.h"
 #include "wabt/interp/interp-wasi.h"
@@ -248,17 +249,6 @@ static std::string GetPathName(std::string module_arg) {
   return module_arg.substr(path_at);
 }
 
-static std::string FileNameOfPath(std::string path_name) {
-  // use file_name (without extension)
-  size_t fstart = path_name.find_last_of("/\\");
-  size_t fend = path_name.find_last_of(".");
-
-  fstart = fstart == std::string::npos ? 0 : fstart;
-  fend = fend < fstart ? std::string::npos : fend;
-
-  return path_name.substr(fstart, fend);
-}
-
 static std::string GetDebugName(const Module::Ptr& module) {
   // TODO: query debug_name
   return "";
@@ -286,7 +276,7 @@ static std::string GetRegistryName(std::string module_arg,
   }
 
   // fall back to file-name
-  return FileNameOfPath(path_name);
+  return StripExtension(GetBasename(path_name));
 }
 
 static void BindImports(const Module::Ptr& module, RefVec& imports) {
@@ -476,7 +466,7 @@ static Result ReadAndRunModule(const char* module_filename) {
   }
 #endif
   // unregister all;
-  for (auto&& instance : instance_loaded) {
+  for (auto& instance : instance_loaded) {
     WasiUnregisterInstance(instance);
   }
 

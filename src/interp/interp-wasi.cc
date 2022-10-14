@@ -36,7 +36,6 @@
 #include "uvwasi.h"
 
 #include <cinttypes>
-#include <cstdio>
 #include <unordered_map>
 
 using namespace wabt;
@@ -678,9 +677,8 @@ Result WasiRegisterInstance(const Instance::Ptr& instance,
     return Result::Error;
   }
 
-  WasiInstance* wasi =
+  wasiInstances[instance.get()] =
       new WasiInstance(instance, uvwasi, std::move(memory).get(), trace_stream);
-  wasiInstances[instance.get()] = std::move(wasi);
 
   return Result::Ok;
 }
