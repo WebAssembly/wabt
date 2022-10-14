@@ -35,8 +35,8 @@
 
 #include "uvwasi.h"
 
-#include <cstdio>
 #include <cinttypes>
+#include <cstdio>
 #include <unordered_map>
 
 using namespace wabt;
