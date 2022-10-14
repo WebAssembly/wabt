@@ -49,7 +49,6 @@ static const char* s_infile;
 static Thread::Options s_thread_options;
 static Stream* s_trace_stream;
 static bool s_run_all_exports;
-static bool s_continue_wasi_argv = false;
 static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
