@@ -177,14 +177,13 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
 
 static bool IsHostPrint(const ImportDesc& import) {
   return import.type.type->kind == ExternKind::Func &&
-         (s_host_print &&
-          import.type.module == "host" &&
+         (s_host_print && import.type.module == "host" &&
           import.type.name == "print");
 }
 
 #if WITH_WASI
 static bool IsWasiImport(const ImportDesc& import) {
-  return import.type.type->kind == ExternKind::Func && 
+  return import.type.type->kind == ExternKind::Func &&
          (import.type.module == "wasi_snapshot_preview1" ||
           import.type.module == "wasi_unstable");
 }
@@ -272,7 +271,8 @@ static std::string GetRegistryName(std::string module_arg,
     split_pos = 0;
   }
   std::string override_name = module_arg.substr(0, split_pos);
-  std::string path_name = module_arg.substr(split_pos ? split_pos + 1 : split_pos);
+  std::string path_name =
+      module_arg.substr(split_pos ? split_pos + 1 : split_pos);
   std::string debug_name = GetDebugName(module);
 
   // use override_name if present
@@ -314,8 +314,8 @@ static void BindImports(const Module::Ptr& module, RefVec& imports) {
     }
 
     // only populate missing imports for dummy-import-func
-    imports.push_back(s_dummy_import_func ?
-                      GenerateHostPrint(import) : Ref::Null);
+    imports.push_back(s_dummy_import_func ? GenerateHostPrint(import)
+                                          : Ref::Null);
   }
 }
 
@@ -420,8 +420,6 @@ static Result ReadAndRunModule(const char* module_filename) {
     if (result == Result::Error) {
       return result;
     }
-    // CHECK_RESULT(WasiBindImports(modules_loaded.back(), imports, s_stderr_stream.get(),
-                                 // s_trace_stream));
 #else
     s_stderr_stream.get()->Writef("wasi support not compiled in\n");
     return Result::Error;
@@ -456,7 +454,8 @@ static Result ReadAndRunModule(const char* module_filename) {
 
 #if WITH_WASI
     if (HasWasiImport(load_module)) {
-      WasiRegisterInstance(load_instance, &uvwasi, s_stderr_stream.get(), s_trace_stream);
+      WasiRegisterInstance(load_instance, &uvwasi, s_stderr_stream.get(),
+                           s_trace_stream);
     }
 #endif
 
@@ -472,8 +471,8 @@ static Result ReadAndRunModule(const char* module_filename) {
   }
 #ifdef WITH_WASI
   if (s_wasi) {
-    CHECK_RESULT(
-        WasiRunStart(instance_loaded.back(), &uvwasi, s_stderr_stream.get(), s_trace_stream));
+    CHECK_RESULT(WasiRunStart(instance_loaded.back(), &uvwasi,
+                              s_stderr_stream.get(), s_trace_stream));
   }
 #endif
   // unregister all;

@@ -660,7 +660,7 @@ Result WasiRegisterInstance(const Instance::Ptr& instance,
   Store* store = instance.store();
   auto module = store->UnsafeGet<Module>(instance->module());
   auto&& module_desc = module->desc();
-  
+
   Memory::Ptr memory;
   for (auto&& export_ : module_desc.exports) {
     if (export_.type.name == "memory") {
@@ -678,7 +678,8 @@ Result WasiRegisterInstance(const Instance::Ptr& instance,
     return Result::Error;
   }
 
-  WasiInstance* wasi = new WasiInstance(instance, uvwasi, std::move(memory).get(), trace_stream);
+  WasiInstance* wasi =
+      new WasiInstance(instance, uvwasi, std::move(memory).get(), trace_stream);
   wasiInstances[instance.get()] = std::move(wasi);
 
   return Result::Ok;
@@ -735,8 +736,9 @@ Result WasiRunStart(const Instance::Ptr& instance,
   Func::Ptr start;
   Result found = FindWasiEntryPoint(instance, err_stream, &start);
   if (found == Result::Error) {
-    err_stream->Writef("wasi error: "
-                       "_start export not a function or not found\n");
+    err_stream->Writef(
+        "wasi error: "
+        "_start export not a function or not found\n");
     return Result::Error;
   }
 
