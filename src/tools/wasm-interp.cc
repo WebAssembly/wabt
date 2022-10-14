@@ -138,27 +138,11 @@ static void ParseOptions(int argc, char** argv) {
       "will log the call and return an appropriate zero value.",
       []() { s_dummy_import_func = true; });
 
-  parser.AddArgument("filename+", OptionParser::ArgumentCount::One,
-                     [](const char* argument) {
-                       s_modules.push_back(argument);
-                       s_infile = argument;
-                     });
+  parser.AddArgument("filename", OptionParser::ArgumentCount::One,
+                     [](const char* argument) { s_infile = argument; });
   parser.AddArgument(
       ". arg", OptionParser::ArgumentCount::ZeroOrMore,
-      [](const char* argument) {
-        if (s_continue_wasi_argv) {
-          s_wasi_argv.push_back(argument);
-          return;
-        }
-
-        if (std::string(argument) == ".") {
-          s_continue_wasi_argv = true;
-          return;
-        }
-
-        s_modules.push_back(argument);
-        s_infile = argument;
-      });
+      [](const char* argument) { s_wasi_argv.push_back(argument); });
   parser.Parse(argc, argv);
 }
 
@@ -448,6 +432,7 @@ static Result ReadAndRunModule(const char* module_filename) {
   // then reference all BindImports
   // if we only have dummy imports, we wont need to reghister anything
   // but we still want to load them.
+  s_modules.push_back(s_infile);
   std::vector<Module::Ptr> modules_loaded(s_modules.size());
   std::vector<Instance::Ptr> instance_loaded(s_modules.size());
   for (auto import_module : s_modules) {
@@ -471,7 +456,7 @@ static Result ReadAndRunModule(const char* module_filename) {
 
 #if WITH_WASI
     if (HasWasiImport(load_module)) {
-      RegisterWasiInstance(load_instance, &uvwasi, s_stderr_stream.get(), s_trace_stream);
+      WasiRegisterInstance(load_instance, &uvwasi, s_stderr_stream.get(), s_trace_stream);
     }
 #endif
 
@@ -493,7 +478,7 @@ static Result ReadAndRunModule(const char* module_filename) {
 #endif
   // unregister all;
   for (auto&& instance : instance_loaded) {
-    UnregisterWasiInstance(instance);
+    WasiUnregisterInstance(instance);
   }
 
   return Result::Ok;

@@ -653,7 +653,7 @@ std::unordered_map<Instance*, WasiInstance*> wasiInstances;
 namespace wabt {
 namespace interp {
 
-Result RegisterWasiInstance(const Instance::Ptr& instance,
+Result WasiRegisterInstance(const Instance::Ptr& instance,
                             uvwasi_s* uvwasi,
                             Stream* err_stream,
                             Stream* trace_stream) {
@@ -684,7 +684,7 @@ Result RegisterWasiInstance(const Instance::Ptr& instance,
   return Result::Ok;
 }
 
-void UnregisterWasiInstance(const Instance::Ptr& instance) {
+void WasiUnregisterInstance(const Instance::Ptr& instance) {
   WasiInstance* wasi = wasiInstances[instance.get()];
   if (wasi) {
     wasiInstances.erase(instance.get());
