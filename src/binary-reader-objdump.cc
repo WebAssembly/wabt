@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader-objdump.h"
+#include "wabt/binary-reader-objdump.h"
 
 #include <algorithm>
 #include <cassert>
@@ -27,10 +27,10 @@
 #include <strings.h>
 #endif
 
-#include "src/binary-reader-nop.h"
-#include "src/filenames.h"
-#include "src/literal.h"
-#include "src/string-util.h"
+#include "wabt/binary-reader-nop.h"
+#include "wabt/filenames.h"
+#include "wabt/literal.h"
+#include "wabt/string-util.h"
 
 namespace wabt {
 

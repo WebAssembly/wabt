@@ -86,7 +86,7 @@ def F64ToC(f64_bits):
 
 def MangleType(t):
     return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd',
-            'externref': 'e', 'funcref': 'f'}[t]
+            'externref': 'e', 'funcref': 'r'}[t]
 
 
 def MangleTypes(types):
@@ -331,9 +331,15 @@ class CWriter(object):
         elif type_ == 'f64':
             return F64ToC(int(value))
         elif type_ == 'externref':
-            return 'externref(%s)' % value
+            if value == 'null':
+                return 'wasm_rt_externref_null_value'
+            else:
+                return 'spectest_make_externref(%s)' % value
         elif type_ == 'funcref':
-            return 'funcref(%s)' % value
+            if value == 'null':
+                return 'wasm_rt_funcref_null_value'
+            else:
+                assert False  # can't make an arbitrary funcref from an integer value
         else:
             assert False
 

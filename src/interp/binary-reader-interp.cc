@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "src/interp/binary-reader-interp.h"
+#include "wabt/interp/binary-reader-interp.h"
 
 #include <map>
 #include <set>
 
-#include "src/binary-reader-nop.h"
-#include "src/feature.h"
-#include "src/interp/interp.h"
-#include "src/shared-validator.h"
-#include "src/stream.h"
+#include "wabt/binary-reader-nop.h"
+#include "wabt/feature.h"
+#include "wabt/interp/interp.h"
+#include "wabt/shared-validator.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 namespace interp {

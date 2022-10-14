@@ -10,30 +10,52 @@
 .Ar file
 .Sh DESCRIPTION
 .Nm
-reads a file in the WebAssembly binary format and validates it.
+Read a file in the WebAssembly binary format, and validate it.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl v , Fl Fl verbose
-Use multiple times for more info
 .It Fl Fl help
 Print this help message
+.It Fl Fl version
+Print version information
+.It Fl v , Fl Fl verbose
+Use multiple times for more info
 .It Fl Fl enable-exceptions
 Enable Experimental exception handling
 .It Fl Fl disable-mutable-globals
 Disable Import/export mutable globals
-.It Fl Fl enable-saturating-float-to-int
-Enable Saturating float-to-int operators
-.It Fl Fl enable-sign-extension
-Enable Sign-extension operators
+.It Fl Fl disable-saturating-float-to-int
+Disable Saturating float-to-int operators
+.It Fl Fl disable-sign-extension
+Disable Sign-extension operators
 .It Fl Fl disable-simd
 Disable SIMD support
 .It Fl Fl enable-threads
 Enable Threading support
-.It Fl Fl enable-multi-value
-Enable Multi-value
+.It Fl Fl enable-function-references
+Enable Typed function references
+.It Fl Fl disable-multi-value
+Disable Multi-value
 .It Fl Fl enable-tail-call
 Enable Tail-call support
+.It Fl Fl disable-bulk-memory
+Disable Bulk-memory operations
+.It Fl Fl disable-reference-types
+Disable Reference types (externref)
+.It Fl Fl enable-annotations
+Enable Custom annotation syntax
+.It Fl Fl enable-code-metadata
+Enable Code metadata
+.It Fl Fl enable-gc
+Enable Garbage collection
+.It Fl Fl enable-memory64
+Enable 64-bit memory
+.It Fl Fl enable-multi-memory
+Enable Multi-memory
+.It Fl Fl enable-extended-const
+Enable Extended constant expressions
+.It Fl Fl enable-all
+Enable all features
 .It Fl Fl no-debug-names
 Ignore debug names in the binary file
 .It Fl Fl ignore-custom-section-errors
@@ -44,6 +66,7 @@ Validate binary file test.wasm
 .Pp
 .Dl $ wasm-validate test.wasm
 .Sh SEE ALSO
+.Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,
 .Xr wasm-objdump 1 ,
 .Xr wasm-opcodecnt 1 ,

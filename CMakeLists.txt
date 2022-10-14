@@ -15,7 +15,7 @@
 #
 
 cmake_minimum_required(VERSION 3.16)
-project(WABT LANGUAGES C CXX VERSION 1.0.29)
+project(WABT LANGUAGES C CXX VERSION 1.0.30)
 
 include(GNUInstallDirs)
 
@@ -108,9 +108,11 @@ include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
 check_type_size(size_t SIZEOF_SIZE_T)
 
-configure_file(src/config.h.in config.h @ONLY)
+include(TestBigEndian)  # Note: deprecated in CMake 3.20
+test_big_endian(WABT_BIG_ENDIAN)
 
-include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
+configure_file(src/config.h.in include/wabt/config.h @ONLY)
+
 
 if (COMPILER_IS_MSVC)
   if (WERROR)
@@ -168,49 +170,23 @@ else ()
     add_definitions(-Wno-clobbered)
   endif ()
 
+  # wasm doesn't allow for x87 floating point math
   if (NOT EMSCRIPTEN)
-    # try to get the target architecture by compiling a dummy.c file and
-    # checking the architecture using the file command.
-    file(WRITE ${WABT_BINARY_DIR}/dummy.c "main(){}")
-    try_compile(
-      COMPILE_OK
-      ${WABT_BINARY_DIR}
-      ${WABT_BINARY_DIR}/dummy.c
-      COPY_FILE ${WABT_BINARY_DIR}/dummy
-    )
-    if (COMPILE_OK)
-      execute_process(
-        COMMAND file ${WABT_BINARY_DIR}/dummy
-        RESULT_VARIABLE FILE_RESULT
-        OUTPUT_VARIABLE FILE_OUTPUT
-        ERROR_QUIET
-      )
+    check_symbol_exists(__i386__ "" TARGET_IS_X86_32)
+    check_symbol_exists(__SSE2_MATH__ "" HAVE_SSE2_MATH)
 
-      if (FILE_RESULT EQUAL 0)
-        if (${FILE_OUTPUT} MATCHES "x86[-_]64")
-          set(TARGET_ARCH "x86-64")
-        elseif (${FILE_OUTPUT} MATCHES "Intel 80386")
-          set(TARGET_ARCH "i386")
-        elseif (${FILE_OUTPUT} MATCHES "ARM")
-          set(TARGET_ARCH "ARM")
-        elseif (${FILE_OUTPUT} MATCHES "IBM S/390")
-          set(TARGET_ARCH "s390x")
-        else ()
-          message(WARNING "Unknown target architecture!")
-        endif ()
+    if (TARGET_IS_X86_32 AND NOT HAVE_SSE2_MATH)
+      if (COMPILER_IS_GNU OR COMPILER_IS_CLANG)
+        add_compile_options(-msse2 -mfpmath=sse)
       else ()
-        message(WARNING "Error running `file` command on dummy executable")
+        message(
+          WARNING
+          "Unknown compiler ${CMAKE_CXX_COMPILER_ID} appears to target x86-32 with x87 "
+          "math. If you want wasm2c to work in a spec-compliant way, please add flags to "
+          "use SSE2 math and set TARGET_IS_X86_32 and HAVE_SSE2_MATH appropriately at the "
+          "CMake command line."
+        )
       endif ()
-    else ()
-      message(WARNING "Error compiling dummy.c file")
-    endif ()
-
-    if (TARGET_ARCH STREQUAL "i386")
-      # wasm doesn't allow for x87 floating point math
-      add_definitions(-msse2 -mfpmath=sse)
-    endif ()
-    if (TARGET_ARCH STREQUAL "s390x")
-      add_definitions(-DWABT_BIG_ENDIAN=1)
     endif ()
   endif ()
 endif ()
@@ -254,124 +230,129 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 
 add_custom_target(everything)
 
-set(WABT_LIBRARY_SRC
-  ${WABT_BINARY_DIR}/config.h
-
-  src/apply-names.h
+set(WABT_LIBRARY_CC
   src/apply-names.cc
-  src/binary.h
-  src/binary.cc
-  src/binary-reader.h
-  src/binary-reader.cc
-  src/binary-reader-ir.h
   src/binary-reader-ir.cc
-  src/binary-reader-logging.h
   src/binary-reader-logging.cc
-  src/binary-writer.h
-  src/binary-writer.cc
-  src/binary-writer-spec.h
+  src/binary-reader.cc
   src/binary-writer-spec.cc
-  src/binding-hash.h
+  src/binary-writer.cc
+  src/binary.cc
   src/binding-hash.cc
-  src/color.h
   src/color.cc
-  src/common.h
   src/common.cc
-  src/config.h.in
   src/config.cc
-  src/decompiler.h
-  src/decompiler-ast.h
-  src/decompiler-ls.h
-  src/decompiler-naming.h
+  src/config.h.in
   src/decompiler.cc
-  src/error-formatter.h
   src/error-formatter.cc
-  src/expr-visitor.h
   src/expr-visitor.cc
-  src/feature.h
   src/feature.cc
-  src/filenames.h
   src/filenames.cc
-  src/generate-names.h
   src/generate-names.cc
-  src/ir.h
-  src/ir.cc
-  src/ir-util.h
   src/ir-util.cc
-  src/leb128.h
+  src/ir.cc
   src/leb128.cc
-  src/lexer-source.h
-  src/lexer-source.cc
-  src/lexer-source-line-finder.h
   src/lexer-source-line-finder.cc
-  src/literal.h
+  src/lexer-source.cc
   src/literal.cc
-  src/opcode.h
-  src/opcode.cc
-  src/opcode-code-table.h
   src/opcode-code-table.c
-  src/option-parser.h
+  src/opcode.cc
   src/option-parser.cc
-  src/resolve-names.h
   src/resolve-names.cc
-  src/shared-validator.h
   src/shared-validator.cc
-  src/stream.h
   src/stream.cc
-  src/string-util.h
-  src/token.h
   src/token.cc
-  src/tracing.h
   src/tracing.cc
-  src/type.h
-  src/type-checker.h
   src/type-checker.cc
-  src/utf8.h
   src/utf8.cc
-  src/validator.h
   src/validator.cc
-  src/wast-lexer.h
   src/wast-lexer.cc
-  src/wast-parser.h
   src/wast-parser.cc
-  src/wat-writer.h
   src/wat-writer.cc
 
   # TODO(binji): Move this into its own library?
-  src/interp/binary-reader-interp.h
   src/interp/binary-reader-interp.cc
-  src/interp/interp.h
   src/interp/interp.cc
-  src/interp/interp-inl.h
-  src/interp/interp-math.h
-  src/interp/interp-util.h
   src/interp/interp-util.cc
-  src/interp/istream.h
   src/interp/istream.cc
 )
+
+set(WABT_LIBRARY_H
+  ${WABT_BINARY_DIR}/include/wabt/config.h
+
+  include/wabt/apply-names.h
+  include/wabt/binary-reader-ir.h
+  include/wabt/binary-reader-logging.h
+  include/wabt/binary-reader.h
+  include/wabt/binary-writer-spec.h
+  include/wabt/binary-writer.h
+  include/wabt/binary.h
+  include/wabt/binding-hash.h
+  include/wabt/color.h
+  include/wabt/common.h
+  include/wabt/decompiler-ast.h
+  include/wabt/decompiler-ls.h
+  include/wabt/decompiler-naming.h
+  include/wabt/decompiler.h
+  include/wabt/error-formatter.h
+  include/wabt/expr-visitor.h
+  include/wabt/feature.h
+  include/wabt/filenames.h
+  include/wabt/generate-names.h
+  include/wabt/ir-util.h
+  include/wabt/ir.h
+  include/wabt/leb128.h
+  include/wabt/lexer-source-line-finder.h
+  include/wabt/lexer-source.h
+  include/wabt/literal.h
+  include/wabt/opcode-code-table.h
+  include/wabt/opcode.h
+  include/wabt/option-parser.h
+  include/wabt/resolve-names.h
+  include/wabt/shared-validator.h
+  include/wabt/stream.h
+  include/wabt/string-util.h
+  include/wabt/token.h
+  include/wabt/tracing.h
+  include/wabt/type-checker.h
+  include/wabt/type.h
+  include/wabt/utf8.h
+  include/wabt/validator.h
+  include/wabt/wast-lexer.h
+  include/wabt/wast-parser.h
+  include/wabt/wat-writer.h
+
+  # TODO(binji): Move this into its own library?
+  include/wabt/interp/binary-reader-interp.h
+  include/wabt/interp/interp-inl.h
+  include/wabt/interp/interp-math.h
+  include/wabt/interp/interp-util.h
+  include/wabt/interp/interp.h
+  include/wabt/interp/istream.h
+)
+
+set(WABT_LIBRARY_SRC ${WABT_LIBRARY_CC} ${WABT_LIBRARY_H})
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 add_library(wabt::wabt ALIAS wabt)
 
 target_compile_features(wabt PUBLIC cxx_std_17)
+target_include_directories(
+  wabt
+  PUBLIC
+  "$<BUILD_INTERFACE:${WABT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${WABT_BINARY_DIR}/include>"
+)
 
 if (WABT_INSTALL_RULES)
   install(
     TARGETS wabt EXPORT wabt-targets
     COMPONENT wabt-development
-    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt"
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   )
   install(
-    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt"
-    COMPONENT wabt-development
-    FILES_MATCHING
-    PATTERN "*.h"
-    PATTERN "*.def"
-  )
-  install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/wabt/"
+    DIRECTORY "${WABT_SOURCE_DIR}/include/" "${WABT_BINARY_DIR}/include/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     COMPONENT wabt-development
   )
 endif ()
@@ -379,6 +360,9 @@ endif ()
 IF (NOT WIN32)
   add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
   add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
+  if (WABT_BIG_ENDIAN)
+    target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
+  endif ()
 
   if (WABT_INSTALL_RULES)
     install(
@@ -407,7 +391,7 @@ endif ()
 # libwasm, which implenents the wasm C API
 if (BUILD_LIBWASM)
   add_library(wasm SHARED ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
-  target_link_libraries(wasm wabt)
+  target_link_libraries(wasm PUBLIC wabt)
   target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
   if (COMPILER_IS_MSVC)
     target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__declspec(dllexport)")
@@ -511,14 +495,13 @@ if (BUILD_TOOLS)
     ${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h
     ${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c
     ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c
-    )
+  )
 
-  add_library(cwriter-template wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
+  set(CWRITER_TEMPLATE_SRC wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
 
   wabt_executable(
     NAME wasm2c
-    SOURCES src/tools/wasm2c.cc src/c-writer.cc
-    LIBS cwriter-template
+    SOURCES src/tools/wasm2c.cc src/c-writer.cc ${CWRITER_TEMPLATE_SRC}
     INSTALL
   )
 

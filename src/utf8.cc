@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/utf8.h"
+#include "wabt/utf8.h"
 
 #include <cstdint>
 

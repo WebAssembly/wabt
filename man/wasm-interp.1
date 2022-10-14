@@ -10,36 +10,71 @@
 .Ar file
 .Sh DESCRIPTION
 .Nm
-decodes and runs a WebAssembly binary file using a stack-based interpreter.
+Read a file in the wasm binary format, and run it in a stack-based interpreter.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl v , Fl Fl verbose
-Use multiple times for more info
 .It Fl Fl help
 Print a help message
+.It Fl Fl version
+Print version information
+.It Fl v , Fl Fl verbose
+Use multiple times for more info
 .It Fl Fl enable-exceptions
-Experimental exception handling
+Enable Experimental exception handling
 .It Fl Fl disable-mutable-globals
-Import/export mutable globals
-.It Fl Fl enable-saturating-float-to-int
-Saturating float-to-int operators
-.It Fl Fl enable-sign-extension
-Sign-extension operators
+Disable Import/export mutable globals
+.It Fl Fl disable-saturating-float-to-int
+Disable Saturating float-to-int operators
+.It Fl Fl disable-sign-extension
+Disable Sign-extension operators
 .It Fl Fl disable-simd
-SIMD support
+Disable SIMD support
 .It Fl Fl enable-threads
-Threading support
+Enable Threading support
+.It Fl Fl enable-function-references
+Enable Typed function references
+.It Fl Fl disable-multi-value
+Disable Multi-value
+.It Fl Fl enable-tail-call
+Enable Tail-call support
+.It Fl Fl disable-bulk-memory
+Disable Bulk-memory operations
+.It Fl Fl disable-reference-types
+Disable Reference types (externref)
+.It Fl Fl enable-annotations
+Enable Custom annotation syntax
+.It Fl Fl enable-code-metadata
+Enable Code metadata
+.It Fl Fl enable-gc
+Enable Garbage collection
+.It Fl Fl enable-memory64
+Enable 64-bit memory
+.It Fl Fl enable-multi-memory
+Enable Multi-memory
+.It Fl Fl enable-extended-const
+Enable Extended constant expressions
+.It Fl Fl enable-all
+Enable all features
 .It Fl V , Fl Fl value-stack-size=SIZE
 Size in elements of the value stack
 .It Fl C , Fl Fl call-stack-size=SIZE
 Size in elements of the call stack
 .It Fl t , Fl Fl trace
 Trace execution
+.It Fl Fl wasi
+Assume input module is WASI compliant (Export
+WASI API the the module and invoke _start function)
+.It Fl e , Fl Fl env=ENV
+Pass the given environment string in the WASI runtime
+.It Fl d , Fl Fl dir=DIR
+Pass the given directory the the WASI runtime
 .It Fl Fl run-all-exports
 Run all the exported functions, in order. Useful for testing
 .It Fl Fl host-print
 Include an importable function named "host.print" for printing to stdout
+.It Fl Fl dummy-import-func
+Provide a dummy implementation of all imported functions. The function will log the call and return an appropriate zero value.
 .El
 .Sh EXAMPLES
 Parse binary file test.wasm, and type-check it
@@ -58,6 +93,7 @@ Parse test.wasm and run all its exported functions, setting the value stack size
 .Pp
 .Dl $ wasm-interp test.wasm -V 100 --run-all-exports
 .Sh SEE ALSO
+.Xr wasm-decompile 1 ,
 .Xr wasm-objdump 1 ,
 .Xr wasm-opcodecnt 1 ,
 .Xr wasm-strip 1 ,

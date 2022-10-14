@@ -16,12 +16,12 @@
 
 #include <wasm.h>
 
-#include "src/binary-reader.h"
-#include "src/cast.h"
-#include "src/error-formatter.h"
-#include "src/interp/binary-reader-interp.h"
-#include "src/interp/interp-util.h"
-#include "src/interp/interp.h"
+#include "wabt/binary-reader.h"
+#include "wabt/cast.h"
+#include "wabt/error-formatter.h"
+#include "wabt/interp/binary-reader-interp.h"
+#include "wabt/interp/interp-util.h"
+#include "wabt/interp/interp.h"
 
 using namespace wabt;
 using namespace wabt::interp;

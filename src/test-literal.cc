@@ -21,7 +21,7 @@
 
 #include "gtest/gtest.h"
 
-#include "src/literal.h"
+#include "wabt/literal.h"
 
 using namespace wabt;
 

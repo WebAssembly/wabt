@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/interp/istream.h"
+#include "wabt/interp/istream.h"
 
 #include <cinttypes>
 

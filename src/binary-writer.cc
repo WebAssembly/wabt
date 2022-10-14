@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary-writer.h"
+#include "wabt/binary-writer.h"
 
 #include <cassert>
 #include <cmath>
@@ -25,14 +25,14 @@
 #include <string_view>
 #include <vector>
 
-#include "config.h"
+#include "wabt/config.h"
 
-#include "src/binary.h"
-#include "src/cast.h"
-#include "src/expr-visitor.h"
-#include "src/ir.h"
-#include "src/leb128.h"
-#include "src/stream.h"
+#include "wabt/binary.h"
+#include "wabt/cast.h"
+#include "wabt/expr-visitor.h"
+#include "wabt/ir.h"
+#include "wabt/leb128.h"
+#include "wabt/stream.h"
 
 #define PRINT_HEADER_NO_INDEX -1
 #define MAX_U32_LEB128_BYTES 5

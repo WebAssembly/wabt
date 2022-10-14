@@ -10,26 +10,65 @@
 .Ar
 .Sh DESCRIPTION
 .Nm
-reads a file in the wasm binary format, and counts opcode usage for instructions.
+Read a file in the wasm binary format, and count opcode usage for instructions.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl v , Fl Fl verbose
-Use multiple times for more info
 .It Fl Fl help
 Print a help message
+.It Fl Fl version
+Print version information
+.It Fl v , Fl Fl verbose
+Use multiple times for more info
+.It Fl Fl enable-exceptions
+Enable Experimental exception handling
+.It Fl Fl disable-mutable-globals
+Disable Import/export mutable globals
+.It Fl Fl disable-saturating-float-to-int
+Disable Saturating float-to-int operators
+.It Fl Fl disable-sign-extension
+Disable Sign-extension operators
+.It Fl Fl disable-simd
+Disable SIMD support
+.It Fl Fl enable-threads
+Enable Threading support
+.It Fl Fl enable-function-references
+Enable Typed function references
+.It Fl Fl disable-multi-value
+Disable Multi-value
+.It Fl Fl enable-tail-call
+Enable Tail-call support
+.It Fl Fl disable-bulk-memory
+Disable Bulk-memory operations
+.It Fl Fl disable-reference-types
+Disable Reference types (externref)
+.It Fl Fl enable-annotations
+Enable Custom annotation syntax
+.It Fl Fl enable-code-metadata
+Enable Code metadata
+.It Fl Fl enable-gc
+Enable Garbage collection
+.It Fl Fl enable-memory64
+Enable 64-bit memory
+.It Fl Fl enable-multi-memory
+Enable Multi-memory
+.It Fl Fl enable-extended-const
+Enable Extended constant expressions
+.It Fl Fl enable-all
+Enable all features
 .It Fl o , Fl Fl output=FILENAME
 Output file for the opcode counts, by default use stdout
 .It Fl c , Fl Fl cutoff=N
 Cutoff for reporting counts less than N
 .It Fl s , Fl Fl separator=SEPARATOR
-Separator text between element and count when reporting counts expected filename argument
+Separator text between element and count when reporting counts
 .El
 .Sh EXAMPLES
 Parse binary file test.wasm and write pcode dist file test.dist
 .Pp
 .Dl $ wasm-opcodecnt test.wasm -o test.dist
 .Sh SEE ALSO
+.Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,
 .Xr wasm-objdump 1 ,
 .Xr wasm-strip 1 ,
