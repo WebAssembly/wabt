@@ -1,4 +1,5 @@
 demo.wasm
+demo.int.wasm
 demo.wasm2c.c
 demo.wasm2c.h
 demo.wasm2c.out

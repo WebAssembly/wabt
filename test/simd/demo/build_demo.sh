@@ -44,13 +44,13 @@ if [ $? -eq 0 ]; then
 
         echo " - [X] Emitting LLVM IR"
 
-        $clang_path -I$wasm2c_folder -I$simde_folder -S -emit-llvm -mavx \
+        $clang_path -D ENABLESIMD -I$wasm2c_folder -I$simde_folder -S -emit-llvm -mavx \
                     $curfile.main.c                  \
                     $curfile.wasm2c.c                \
                     $wasm2c_folder/wasm-rt-impl.c    
         
         echo " - [X] Building wasm2c output"
-        $clang_path -I$wasm2c_folder -I$simde_folder -lm -o $curfile.wasm2c.out -mavx \
+        $clang_path -D ENABLESIMD -I$wasm2c_folder -I$simde_folder -lm -o $curfile.wasm2c.out -mavx \
                     $curfile.main.c                  \
                     $curfile.wasm2c.c                \
                     $wasm2c_folder/wasm-rt-impl.c    

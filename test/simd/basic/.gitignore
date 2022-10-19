@@ -1,5 +1,4 @@
 basic.int.wasm
-basic.main.ll
 basic.wasm
 basic.wasm2c.c
 basic.wasm2c.h
@@ -7,4 +6,4 @@ basic.wasm2c.out
 basic.wasm2c.out.objdump.txt
 basic.wasm2c.verbose_log.txt
 basic.wasm2c.wat
-wasm-rt-impl.ll 
+*.ll

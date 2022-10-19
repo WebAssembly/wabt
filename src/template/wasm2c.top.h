@@ -1,8 +1,10 @@
 #include <stdint.h>
 
 #include "wasm-rt.h"
-/* SIMD support through SIMD-everywhere */
+
+#if defined(ENABLESIMD)
 #include "simde/wasm/simd128.h" 
+#endif
 
 /* TODO(binji): only use stdint.h types in header */
 #ifndef WASM_RT_CORE_TYPES_DEFINED
@@ -17,7 +19,11 @@ typedef uint64_t u64;
 typedef int64_t s64;
 typedef float f32;
 typedef double f64;
+
+#if defined(ENABLESIMD)
 typedef simde_v128_t v128;
+#endif
+
 #endif
 
 #ifdef __cplusplus

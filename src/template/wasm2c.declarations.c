@@ -122,6 +122,7 @@ DEFINE_STORE(i64_store32, u32, u64)
 
 // SIMD
 
+#if defined(ENABLESIMD)
 
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t1, t2, t3)        \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
@@ -234,6 +235,7 @@ DEFINE_SIMD_STORE_LANE(v128_store32_lane3, simde_wasm_v128_store32_lane, simde_v
 DEFINE_SIMD_STORE_LANE(v128_store64_lane0, simde_wasm_v128_store64_lane, simde_v128_t, simde_v128_t, 0);
 DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, simde_v128_t, simde_v128_t, 1);
 
+#endif
 
 #if defined(_MSC_VER)
 
