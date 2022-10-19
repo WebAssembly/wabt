@@ -1,0 +1,8 @@
+demo.wasm
+demo.wasm2c.c
+demo.wasm2c.h
+demo.wasm2c.out
+demo.wasm2c.out.objdump.txt
+demo.wasm2c.verbose_log.txt
+demo.wasm2c.wat
+*.ll
