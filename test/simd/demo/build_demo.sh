@@ -1,5 +1,5 @@
-clang_path="/mnt/d/research/wasmsimd/clang15/clang+llvm-15.0.2-x86_64-unknown-linux-gnu/bin/clang"
-ld_path="/mnt/d/research/wasmsimd/clang15/clang+llvm-15.0.2-x86_64-unknown-linux-gnu/bin/wasm-ld"
+clang_path=clang
+ld_path=wasm-ld
 
 ## WASM2C Folder
 wasm2c_folder=../../../wasm2c
@@ -19,6 +19,7 @@ fi
 
 echo "[X] Build $curfile.c"
 echo " - [X] Compiling to WASM with clang"
+# Tested with clang 15
 $clang_path -O3 --target=wasm32-unknown-unknown-wasm -msimd128 -c -o $curfile.int.wasm $curfile.c 
 $ld_path -m wasm32 --export-all --no-entry --growable-table --stack-first -z stack-size=1048576 $curfile.int.wasm -o $curfile.wasm
 
@@ -36,12 +37,6 @@ if [ $? -eq 0 ]; then
 
     $bin_folder/wasm2c $curfile.wasm -vv -o $curfile.wasm2c.c &> $curfile.wasm2c.verbose_log.txt
     if [ $? -eq 0 ]; then
-        # read -p "Press enter to continue"
-        # Replace this line before building in $curfile.wasm2c.c
-        # v128 w2c_l20 = 0, w2c_l24 = 0, w2c_l25 = 0, w2c_l26 = 0, w2c_l27 = 0, w2c_l28 = 0, w2c_l29 = 0, w2c_l30 = 0, 
-        #    w2c_l33 = 0;
-        # v128 w2c_l20, w2c_l24, w2c_l25, w2c_l26, w2c_l27, w2c_l28, w2c_l29, w2c_l30, w2c_l33;
-
         echo " - [X] Emitting LLVM IR"
 
         $clang_path -D ENABLESIMD -I$wasm2c_folder -I$simde_folder -S -emit-llvm -mavx \

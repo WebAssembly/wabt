@@ -1,5 +1,6 @@
-clang_path="/mnt/d/research/wasmsimd/clang15/clang+llvm-15.0.2-x86_64-unknown-linux-gnu/bin/clang"
-ld_path="/mnt/d/research/wasmsimd/clang15/clang+llvm-15.0.2-x86_64-unknown-linux-gnu/bin/wasm-ld"
+#uses clang-15
+clang_path=clang
+ld_path=wasm-ld
 
 ## WASM2C Folder
 wasm2c_folder=../../../wasm2c
