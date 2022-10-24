@@ -18,6 +18,7 @@
 #define WABT_TYPE_CHECKER_H_
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 #include "wabt/common.h"
@@ -171,12 +172,14 @@ class TypeChecker {
                            Type expected2,
                            Type expected3,
                            const char* desc);
-  Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
-  Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
+  Result CheckOpcode1(Opcode opcode,
+                      std::optional<Type> memory_type = std::nullopt);
+  Result CheckOpcode2(Opcode opcode,
+                      std::optional<Type> memory_type = std::nullopt);
   Result CheckOpcode3(Opcode opcode,
-                      const Limits* limits1 = nullptr,
-                      const Limits* limits2 = nullptr,
-                      const Limits* limits3 = nullptr);
+                      std::optional<Type> memory_type1 = std::nullopt,
+                      std::optional<Type> memory_type2 = std::nullopt,
+                      std::optional<Type> memory_type3 = std::nullopt);
   Result OnEnd(Label* label, const char* sig_desc, const char* end_desc);
 
   template <typename... Args>
