@@ -21,8 +21,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "wabt/config.h"
 #include "wabt/base-types.h"
+#include "wabt/config.h"
 #include "wabt/string-format.h"
 
 namespace wabt {
@@ -80,18 +80,30 @@ class Type {
 
   std::string GetName() const {
     switch (enum_) {
-      case Type::I32:       return "i32";
-      case Type::I64:       return "i64";
-      case Type::F32:       return "f32";
-      case Type::F64:       return "f64";
-      case Type::V128:      return "v128";
-      case Type::I8:        return "i8";
-      case Type::I16:       return "i16";
-      case Type::FuncRef:   return "funcref";
-      case Type::Func:      return "func";
-      case Type::Void:      return "void";
-      case Type::Any:       return "any";
-      case Type::ExternRef: return "externref";
+      case Type::I32:
+        return "i32";
+      case Type::I64:
+        return "i64";
+      case Type::F32:
+        return "f32";
+      case Type::F64:
+        return "f64";
+      case Type::V128:
+        return "v128";
+      case Type::I8:
+        return "i8";
+      case Type::I16:
+        return "i16";
+      case Type::FuncRef:
+        return "funcref";
+      case Type::Func:
+        return "func";
+      case Type::Void:
+        return "void";
+      case Type::Any:
+        return "any";
+      case Type::ExternRef:
+        return "externref";
       case Type::Reference:
         return StringPrintf("(ref %d)", type_index_);
       default:
@@ -101,11 +113,16 @@ class Type {
 
   const char* GetRefKindName() const {
     switch (enum_) {
-      case Type::FuncRef:   return "func";
-      case Type::ExternRef: return "extern";
-      case Type::Struct:    return "struct";
-      case Type::Array:     return "array";
-      default:              return "<invalid>";
+      case Type::FuncRef:
+        return "func";
+      case Type::ExternRef:
+        return "extern";
+      case Type::Struct:
+        return "struct";
+      case Type::Array:
+        return "array";
+      default:
+        return "<invalid>";
     }
   }
 

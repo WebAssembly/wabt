@@ -3,7 +3,7 @@
 #include "wasm-rt.h"
 
 #if defined(WASM_RT_ENABLE_SIMD)
-#include "simde/wasm/simd128.h" 
+#include "simde/wasm/simd128.h"
 #endif
 
 /* TODO(binji): only use stdint.h types in header */
