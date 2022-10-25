@@ -1,9 +1,0 @@
-basic.int.wasm
-basic.wasm
-basic.wasm2c.c
-basic.wasm2c.h
-basic.wasm2c.out
-basic.wasm2c.out.objdump.txt
-basic.wasm2c.verbose_log.txt
-basic.wasm2c.wat
-*.ll

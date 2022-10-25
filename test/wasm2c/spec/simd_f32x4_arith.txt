@@ -1,0 +1,2 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_f32x4_arith.wast

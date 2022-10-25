@@ -31,6 +31,7 @@ from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 WASM2C_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'wasm2c')
+SIMDE_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'third_party/simde')
 IS_WINDOWS = sys.platform == 'win32'
 IS_MACOS = platform.mac_ver()[0] != ''
 MAX_COMMANDS_PER_FUNCTION = 1024  # GCC has trouble with extremely long function bodies
@@ -86,7 +87,7 @@ def F64ToC(f64_bits):
 
 
 def MangleType(t):
-    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd',
+    return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd', 'v128': 'o',
             'externref': 'e', 'funcref': 'r'}[t]
 
 
@@ -299,6 +300,7 @@ class CWriter(object):
                     'f32': 'ASSERT_RETURN_F32',
                     'i64': 'ASSERT_RETURN_I64',
                     'f64': 'ASSERT_RETURN_F64',
+                    'v128': 'ASSERT_RETURN_V128',
                     'externref': 'ASSERT_RETURN_EXTERNREF',
                     'funcref': 'ASSERT_RETURN_FUNCREF',
                 }
@@ -336,7 +338,11 @@ class CWriter(object):
         type_ = const['type']
         value = const['value']
         if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
-            assert False
+            assert False  # TODO: add support for nan in asserted SIMD return from a test
+        if type_ == 'i8':
+            return '%su' % int(value)
+        if type_ == 'i16':
+            return '%su' % int(value)
         if type_ == 'i32':
             return '%su' % int(value)
         elif type_ == 'i64':
@@ -345,6 +351,8 @@ class CWriter(object):
             return F32ToC(int(value))
         elif type_ == 'f64':
             return F64ToC(int(value))
+        elif type_ == 'v128':
+            return 'simde_wasm_' + const['lane_type'] + 'x' + str(len(const['value'])) + '_make(' + ','.join([self._Constant({'type': const['lane_type'], 'value': x}) for x in value]) + ')'
         elif type_ == 'externref':
             if value == 'null':
                 return 'wasm_rt_externref_null_value'
@@ -399,15 +407,16 @@ def Compile(cc, c_filename, out_dir, *args):
     else:
         ext = '.o'
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, ext), out_dir)
-    args = list(args)
+    args = [val for sublist in args for val in sublist]
     if IS_WINDOWS:
-        args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
+        args += ['/nologo', '/DWASM_RT_ENABLE_SIMD', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
         # See "Compiling the wasm2c output" section of wasm2c/README.md
         # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
         # and '-frounding-math' to maintain conformance with the spec tests
         # (GCC also requires '-fsignaling-nans')
         args += ['-c', c_filename, '-o', o_filename, '-O2',
+                 '-DWASM_RT_ENABLE_SIMD',
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
@@ -452,6 +461,8 @@ def main(args):
                         help='directory to search for all executables.')
     parser.add_argument('--wasmrt-dir', metavar='PATH',
                         help='directory with wasm-rt files', default=WASM2C_DIR)
+    parser.add_argument('--simde-dir', metavar='PATH',
+                        help='directory with SIMD Everywhere files', default=SIMDE_DIR)
     parser.add_argument('--cc', metavar='PATH',
                         help='the path to the C compiler',
                         default=default_compiler)
@@ -525,7 +536,7 @@ def main(args):
         cwriter = CWriter(spec_json, prefix, output, out_dir)
 
         o_filenames = []
-        includes = '-I%s' % options.wasmrt_dir
+        includes = ['-I%s' % options.wasmrt_dir, '-I%s' % options.simde_dir]
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)

@@ -2,7 +2,7 @@
 
 #include "wasm-rt.h"
 
-#if defined(ENABLESIMD)
+#if defined(WASM_RT_ENABLE_SIMD)
 #include "simde/wasm/simd128.h" 
 #endif
 
@@ -20,7 +20,7 @@ typedef int64_t s64;
 typedef float f32;
 typedef double f64;
 
-#if defined(ENABLESIMD)
+#if defined(WASM_RT_ENABLE_SIMD)
 typedef simde_v128_t v128;
 #endif
 

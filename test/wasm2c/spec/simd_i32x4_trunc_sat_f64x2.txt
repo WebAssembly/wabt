@@ -1,0 +1,2 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_i32x4_trunc_sat_f64x2.wast

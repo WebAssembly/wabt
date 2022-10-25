@@ -4418,7 +4418,6 @@ void CWriter::Write(const SimdLoadLaneExpr& expr) {
     case Opcode::V128Load32Lane: func = "v128_load32_lane"; break;
     case Opcode::V128Load64Lane: func = "v128_load64_lane"; break;
     default:
-        printf("issue with SimdLoadLaneExpr opcode %s \n", expr.opcode.GetName());
         WABT_UNREACHABLE;
   }
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
@@ -4428,6 +4427,7 @@ void CWriter::Write(const SimdLoadLaneExpr& expr) {
 
   if (expr.offset != 0)
     Write(" + ", expr.offset, "u");
+  Write(", ", StackVar(0) );
   Write(");", Newline());
 
   DropTypes(2);
@@ -4443,7 +4443,6 @@ void CWriter::Write(const SimdStoreLaneExpr& expr) {
   case Opcode::V128Store32Lane: func = "v128_store32_lane"; break;
   case Opcode::V128Store64Lane: func = "v128_store64_lane"; break;
   default:
-      printf("issue with SimdStoreLaneExpr opcode %s \n", expr.opcode.GetName());
       WABT_UNREACHABLE;
   }
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
@@ -4511,9 +4510,7 @@ void CWriter::Write(const LoadZeroExpr& expr) {
     /* SIMD V128 LoadZero Opcodes */
     case Opcode::V128Load32Zero: func = "v128_load32_zero"; break;
     case Opcode::V128Load64Zero: func = "v128_load64_zero"; break;
-
     default:
-      printf("issue with LoadZeroExpr opcode %s \n", expr.opcode.GetName());
       WABT_UNREACHABLE;
   }
 

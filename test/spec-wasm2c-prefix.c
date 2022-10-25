@@ -100,6 +100,25 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                    \
   } while (0)
 
+#define ASSERT_RETURN_V128(f, expected)                                       \
+  do {                                                                        \
+    g_tests_run++;                                                            \
+    int trap_code = wasm_rt_impl_try();                                       \
+    if (trap_code) {                                                          \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                        \
+            wasm_rt_strerror(trap_code));                                     \
+    } else {                                                                  \
+      v128 actual = f;                                                        \
+      if (is_equal_v128(actual, expected)) {                                  \
+        g_tests_passed++;                                                     \
+      } else {                                                                \
+        error(__FILE__, __LINE__,                                             \
+              "in " #f ": expected {%" PRIu64 ", %" PRIu64 "}, got {%" PRIu64 \
+              ", %" PRIu64 "}\n");                                            \
+      }                                                                       \
+    }                                                                         \
+  } while (0)
+
 #define ASSERT_RETURN_FUNCREF(f, expected)                                \
   do {                                                                    \
     g_tests_run++;                                                        \
@@ -161,7 +180,6 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                    \
   } while (0)
 
-
 #define ASSERT_RETURN_I32(f, expected) ASSERT_RETURN_T(u32, "u", f, expected)
 #define ASSERT_RETURN_I64(f, expected) ASSERT_RETURN_T(u64, PRIu64, f, expected)
 #define ASSERT_RETURN_F32(f, expected) ASSERT_RETURN_T(f32, ".9g", f, expected)
@@ -188,6 +206,15 @@ static bool is_equal_u64(u64 x, u64 y) {
 
 #define is_equal_i32 is_equal_u32
 #define is_equal_i64 is_equal_u64
+
+#ifdef WASM_RT_ENABLE_SIMD
+static bool is_equal_v128(v128 x, v128 y) {
+  return (simde_wasm_i64x2_extract_lane(x, 0) ==
+          simde_wasm_i64x2_extract_lane(y, 0)) &&
+         (simde_wasm_i64x2_extract_lane(x, 1) ==
+          simde_wasm_i64x2_extract_lane(y, 1));
+}
+#endif
 
 static bool is_equal_wasm_rt_externref_t(wasm_rt_externref_t x,
                                          wasm_rt_externref_t y) {
