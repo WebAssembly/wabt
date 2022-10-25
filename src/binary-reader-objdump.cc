@@ -1216,7 +1216,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   void PrintDetails(const char* fmt, ...);
   Result PrintSymbolFlags(uint32_t flags);
   Result PrintSegmentFlags(uint32_t flags);
-  void PrintInitExpr(const InitExpr& expr);
+  void PrintInitExpr(const InitExpr& expr, bool as_unsigned = false);
   Result OnCount(Index count);
 
   std::unique_ptr<FileStream> out_stream_;
@@ -1685,7 +1685,7 @@ Result BinaryReaderObjdump::OnElemSegmentElemExprCount(Index index,
   if (elem_flags_ & SegPassive) {
     PrintDetails("\n");
   } else {
-    PrintInitExpr(current_init_expr_);
+    PrintInitExpr(current_init_expr_, /*as_unsigned=*/true);
   }
   return Result::Ok;
 }
@@ -1704,7 +1704,8 @@ Result BinaryReaderObjdump::BeginGlobal(Index index, Type type, bool mutable_) {
   return Result::Ok;
 }
 
-void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
+void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr,
+                                        bool as_unsigned) {
   assert(expr.insts.size() > 0);
 
   // We have two different way to print init expressions.  One for
@@ -1757,10 +1758,18 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
 
   switch (expr.type) {
     case InitExprType::I32:
-      PrintDetails(" - init i32=%d\n", expr.insts[0].imm.i32);
+      if (as_unsigned) {
+        PrintDetails(" - init i32=%u\n", expr.insts[0].imm.i32);
+      } else {
+        PrintDetails(" - init i32=%d\n", expr.insts[0].imm.i32);
+      }
       break;
     case InitExprType::I64:
-      PrintDetails(" - init i64=%" PRId64 "\n", expr.insts[0].imm.i64);
+      if (as_unsigned) {
+        PrintDetails(" - init i64=%" PRIu64 "\n", expr.insts[0].imm.i64);
+      } else {
+        PrintDetails(" - init i64=%" PRId64 "\n", expr.insts[0].imm.i64);
+      }
       break;
     case InitExprType::F64: {
       char buffer[WABT_MAX_DOUBLE_HEX];
@@ -1952,7 +1961,7 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   if (data_flags_ & SegPassive) {
     PrintDetails("\n");
   } else {
-    PrintInitExpr(current_init_expr_);
+    PrintInitExpr(current_init_expr_, /*as_unsigned=*/true);
   }
 
   out_stream_->WriteMemoryDump(src_data, size, data_offset_, PrintChars::Yes,
