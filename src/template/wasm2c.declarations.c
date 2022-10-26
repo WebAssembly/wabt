@@ -128,6 +128,7 @@ DEFINE_STORE(i64_store32, u32, u64)
   static inline t name(wasm_rt_memory_t* mem, u64 addr) { \
     MEMCHECK(mem, addr, t);                               \
     t result = func((v128*)&mem->data[addr]);             \
+    wasm_asm("" ::"rx"(result));                         \
     return result;                                        \
   }
 
@@ -135,6 +136,7 @@ DEFINE_STORE(i64_store32, u32, u64)
   static inline t name(wasm_rt_memory_t* mem, u64 addr, t vec) { \
     MEMCHECK(mem, addr, t);                                      \
     t result = func((v128*)&mem->data[addr], vec, lane);         \
+    wasm_asm("" ::"rx"(result));                                \
     return result;                                               \
   }
 

@@ -2098,7 +2098,9 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
         Write(DefineLocalScopeName(index_to_name[num_params + local_index]));
         if (local_type == Type::FuncRef || local_type == Type::ExternRef) {
           Write(" = ", GetReferenceNullValue(local_type));
-        } else if (type != Type::V128) {
+        } else if (local_type == Type::V128) {
+          Write(" = simde_wasm_i64x2_make(0, 0)");
+        } else {
           Write(" = 0");
         }
         ++count;
@@ -3891,20 +3893,48 @@ void CWriter::Write(const ConvertExpr& expr) {
 void CWriter::Write(const LoadExpr& expr) {
   const char* func = nullptr;
   switch (expr.opcode) {
-    case Opcode::I32Load: func = "i32_load"; break;
-    case Opcode::I64Load: func = "i64_load"; break;
-    case Opcode::F32Load: func = "f32_load"; break;
-    case Opcode::F64Load: func = "f64_load"; break;
-    case Opcode::I32Load8S: func = "i32_load8_s"; break;
-    case Opcode::I64Load8S: func = "i64_load8_s"; break;
-    case Opcode::I32Load8U: func = "i32_load8_u"; break;
-    case Opcode::I64Load8U: func = "i64_load8_u"; break;
-    case Opcode::I32Load16S: func = "i32_load16_s"; break;
-    case Opcode::I64Load16S: func = "i64_load16_s"; break;
-    case Opcode::I32Load16U: func = "i32_load16_u"; break;
-    case Opcode::I64Load16U: func = "i64_load16_u"; break;
-    case Opcode::I64Load32S: func = "i64_load32_s"; break;
-    case Opcode::I64Load32U: func = "i64_load32_u"; break;
+    case Opcode::I32Load:
+      func = "i32_load";
+      break;
+    case Opcode::I64Load:
+      func = "i64_load";
+      break;
+    case Opcode::F32Load:
+      func = "f32_load";
+      break;
+    case Opcode::F64Load:
+      func = "f64_load";
+      break;
+    case Opcode::I32Load8S:
+      func = "i32_load8_s";
+      break;
+    case Opcode::I64Load8S:
+      func = "i64_load8_s";
+      break;
+    case Opcode::I32Load8U:
+      func = "i32_load8_u";
+      break;
+    case Opcode::I64Load8U:
+      func = "i64_load8_u";
+      break;
+    case Opcode::I32Load16S:
+      func = "i32_load16_s";
+      break;
+    case Opcode::I64Load16S:
+      func = "i64_load16_s";
+      break;
+    case Opcode::I32Load16U:
+      func = "i32_load16_u";
+      break;
+    case Opcode::I64Load16U:
+      func = "i64_load16_u";
+      break;
+    case Opcode::I64Load32S:
+      func = "i64_load32_s";
+      break;
+    case Opcode::I64Load32U:
+      func = "i64_load32_u";
+      break;
     /* SIMD V128 Load Opcodes */
     case Opcode::V128Load:
       func = "v128_load";
