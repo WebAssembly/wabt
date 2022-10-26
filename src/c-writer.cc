@@ -3977,15 +3977,33 @@ void CWriter::Write(const LoadExpr& expr) {
 void CWriter::Write(const StoreExpr& expr) {
   const char* func = nullptr;
   switch (expr.opcode) {
-    case Opcode::I32Store: func = "i32_store"; break;
-    case Opcode::I64Store: func = "i64_store"; break;
-    case Opcode::F32Store: func = "f32_store"; break;
-    case Opcode::F64Store: func = "f64_store"; break;
-    case Opcode::I32Store8: func = "i32_store8"; break;
-    case Opcode::I64Store8: func = "i64_store8"; break;
-    case Opcode::I32Store16: func = "i32_store16"; break;
-    case Opcode::I64Store16: func = "i64_store16"; break;
-    case Opcode::I64Store32: func = "i64_store32"; break;
+    case Opcode::I32Store:
+      func = "i32_store";
+      break;
+    case Opcode::I64Store:
+      func = "i64_store";
+      break;
+    case Opcode::F32Store:
+      func = "f32_store";
+      break;
+    case Opcode::F64Store:
+      func = "f64_store";
+      break;
+    case Opcode::I32Store8:
+      func = "i32_store8";
+      break;
+    case Opcode::I64Store8:
+      func = "i64_store8";
+      break;
+    case Opcode::I32Store16:
+      func = "i32_store16";
+      break;
+    case Opcode::I64Store16:
+      func = "i64_store16";
+      break;
+    case Opcode::I64Store32:
+      func = "i64_store32";
+      break;
     case Opcode::V128Store:
       func = "v128_store";
       break;
