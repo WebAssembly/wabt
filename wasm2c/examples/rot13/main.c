@@ -45,6 +45,11 @@ void Z_hostZ_buf_done(struct Z_host_instance_t* instance, u32 ptr, u32 size) {
 }
 
 int main(int argc, char** argv) {
+  /* Make sure there is at least one command-line argument. */
+  if (argc < 2) {
+    printf("Invalid argument. Expected '%s WORD'\n", argv[0]);
+    return 1;
+  }
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
