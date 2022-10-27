@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
 #include <signal.h>
 #include <unistd.h>
 #endif
@@ -46,7 +46,7 @@ typedef struct FuncType {
   uint32_t result_count;
 } FuncType;
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
 static bool g_signal_handler_installed = false;
 static char* g_alt_stack;
 #else
@@ -163,7 +163,7 @@ void* wasm_rt_exception(void) {
   return g_active_exception;
 }
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
 static void signal_handler(int sig, siginfo_t* si, void* unused) {
   if (si->si_code == SEGV_ACCERR) {
     wasm_rt_trap(WASM_RT_TRAP_OOB);
@@ -230,7 +230,7 @@ static void os_print_last_error(const char* msg) {
 #endif
 
 void wasm_rt_init(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
 
@@ -266,7 +266,7 @@ void wasm_rt_init(void) {
 }
 
 bool wasm_rt_is_initialized(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
   return g_signal_handler_installed;
 #else
   return true;
@@ -274,7 +274,7 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
   free(g_alt_stack);
 #endif
 }

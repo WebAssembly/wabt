@@ -44,6 +44,10 @@ extern "C" {
 #define wasm_rt_memcpy memcpy
 #endif
 
+#ifndef WASM_RT_SKIP_SIGNAL_RECOVERY
+#define WASM_RT_SKIP_SIGNAL_RECOVERY 0
+#endif
+
 /**
  * Enable memory checking via a signal handler via the following definition:
  *
