@@ -317,24 +317,22 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
   return result;
 }
 
-Result TypeChecker::CheckOpcode1(Opcode opcode,
-                                 const Limits* limits,
-                                 bool has_address_operands) {
-  Result result =
-      PopAndCheck1Type(opcode.GetMemoryParam(
-                           opcode.GetParamType1(), limits,
-                           has_address_operands || opcode.GetMemorySize() != 0),
-                       opcode.GetName());
-  PushType(has_address_operands
-               ? opcode.GetMemoryParam(opcode.GetResultType(), limits, true)
-               : opcode.GetResultType());
+// Some paramater types depend on the memory being used.
+// For example load/store operands, or memory.fill operands.
+static Type GetMemoryParam(Type param, const Limits* limits) {
+  return limits ? limits->IndexType() : param;
+}
+
+Result TypeChecker::CheckOpcode1(Opcode opcode, const Limits* limits) {
+  Result result = PopAndCheck1Type(
+      GetMemoryParam(opcode.GetParamType1(), limits), opcode.GetName());
+  PushType(opcode.GetResultType());
   return result;
 }
 
 Result TypeChecker::CheckOpcode2(Opcode opcode, const Limits* limits) {
   Result result =
-      PopAndCheck2Types(opcode.GetMemoryParam(opcode.GetParamType1(), limits,
-                                              opcode.GetMemorySize() != 0),
+      PopAndCheck2Types(GetMemoryParam(opcode.GetParamType1(), limits),
                         opcode.GetParamType2(), opcode.GetName());
   PushType(opcode.GetResultType());
   return result;
@@ -344,15 +342,10 @@ Result TypeChecker::CheckOpcode3(Opcode opcode,
                                  const Limits* limits1,
                                  const Limits* limits2,
                                  const Limits* limits3) {
-  bool has_address_operands = limits1 || limits2 || limits3;
-  Result result =
-      PopAndCheck3Types(opcode.GetMemoryParam(opcode.GetParamType1(), limits1,
-                                              has_address_operands),
-                        opcode.GetMemoryParam(opcode.GetParamType2(), limits2,
-                                              has_address_operands),
-                        opcode.GetMemoryParam(opcode.GetParamType3(), limits3,
-                                              has_address_operands),
-                        opcode.GetName());
+  Result result = PopAndCheck3Types(
+      GetMemoryParam(opcode.GetParamType1(), limits1),
+      GetMemoryParam(opcode.GetParamType2(), limits2),
+      GetMemoryParam(opcode.GetParamType3(), limits3), opcode.GetName());
   PushType(opcode.GetResultType());
   return result;
 }
@@ -726,7 +719,9 @@ Result TypeChecker::OnMemoryFill(const Limits& limits) {
 }
 
 Result TypeChecker::OnMemoryGrow(const Limits& limits) {
-  return CheckOpcode1(Opcode::MemoryGrow, &limits, true);
+  Result result = PopAndCheck1Type(limits.IndexType(), "memory.grow");
+  PushType(limits.IndexType());
+  return result;
 }
 
 Result TypeChecker::OnMemoryInit(uint32_t segment, const Limits& limits) {

@@ -171,9 +171,7 @@ class TypeChecker {
                            Type expected2,
                            Type expected3,
                            const char* desc);
-  Result CheckOpcode1(Opcode opcode,
-                      const Limits* limits = nullptr,
-                      bool has_address_operands = false);
+  Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode3(Opcode opcode,
                       const Limits* limits1 = nullptr,
