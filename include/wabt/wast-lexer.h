@@ -71,8 +71,8 @@ class WastLexer {
   bool MatchChar(char);
   bool MatchString(std::string_view);
   void Newline();
-  bool ReadBlockComment();  // Returns false if EOF.
-  bool ReadLineComment();   // Returns false if EOF.
+  bool ReadBlockComment();             // Returns false if EOF.
+  bool ReadLineComment();              // Returns false if EOF.
   void ReadWhitespace();
 
   static bool IsCharClass(int c, CharClass);

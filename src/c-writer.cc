@@ -2095,13 +2095,14 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
             Write(Newline());
         }
 
-        Write(DefineLocalScopeName(index_to_name[num_params + local_index]));
+        Write(DefineLocalScopeName(index_to_name[num_params + local_index]),
+              " = ");
         if (local_type == Type::FuncRef || local_type == Type::ExternRef) {
-          Write(" = ", GetReferenceNullValue(local_type));
+          Write(GetReferenceNullValue(local_type));
         } else if (local_type == Type::V128) {
-          Write(" = simde_wasm_i64x2_make(0, 0)");
+          Write("simde_wasm_i64x2_make(0, 0)");
         } else {
-          Write(" = 0");
+          Write("0");
         }
         ++count;
       }
@@ -3892,74 +3893,34 @@ void CWriter::Write(const ConvertExpr& expr) {
 
 void CWriter::Write(const LoadExpr& expr) {
   const char* func = nullptr;
+  // clang-format off
   switch (expr.opcode) {
-    case Opcode::I32Load:
-      func = "i32_load";
-      break;
-    case Opcode::I64Load:
-      func = "i64_load";
-      break;
-    case Opcode::F32Load:
-      func = "f32_load";
-      break;
-    case Opcode::F64Load:
-      func = "f64_load";
-      break;
-    case Opcode::I32Load8S:
-      func = "i32_load8_s";
-      break;
-    case Opcode::I64Load8S:
-      func = "i64_load8_s";
-      break;
-    case Opcode::I32Load8U:
-      func = "i32_load8_u";
-      break;
-    case Opcode::I64Load8U:
-      func = "i64_load8_u";
-      break;
-    case Opcode::I32Load16S:
-      func = "i32_load16_s";
-      break;
-    case Opcode::I64Load16S:
-      func = "i64_load16_s";
-      break;
-    case Opcode::I32Load16U:
-      func = "i32_load16_u";
-      break;
-    case Opcode::I64Load16U:
-      func = "i64_load16_u";
-      break;
-    case Opcode::I64Load32S:
-      func = "i64_load32_s";
-      break;
-    case Opcode::I64Load32U:
-      func = "i64_load32_u";
-      break;
-    /* SIMD V128 Load Opcodes */
-    case Opcode::V128Load:
-      func = "v128_load";
-      break;
-    case Opcode::V128Load8X8S:
-      func = "i16x8_load8x8";
-      break;
-    case Opcode::V128Load8X8U:
-      func = "u16x8_load8x8";
-      break;
-    case Opcode::V128Load16X4S:
-      func = "i32x4_load16x4";
-      break;
-    case Opcode::V128Load16X4U:
-      func = "u32x4_load16x4";
-      break;
-    case Opcode::V128Load32X2S:
-      func = "i64x2_load32x2";
-      break;
-    case Opcode::V128Load32X2U:
-      func = "u64x2_load32x2";
-      break;
+    case Opcode::I32Load: func = "i32_load"; break;
+    case Opcode::I64Load: func = "i64_load"; break;
+    case Opcode::F32Load: func = "f32_load"; break;
+    case Opcode::F64Load: func = "f64_load"; break;
+    case Opcode::I32Load8S: func = "i32_load8_s"; break;
+    case Opcode::I64Load8S: func = "i64_load8_s"; break;
+    case Opcode::I32Load8U: func = "i32_load8_u"; break;
+    case Opcode::I64Load8U: func = "i64_load8_u"; break;
+    case Opcode::I32Load16S: func = "i32_load16_s"; break;
+    case Opcode::I64Load16S: func = "i64_load16_s"; break;
+    case Opcode::I32Load16U: func = "i32_load16_u"; break;
+    case Opcode::I64Load16U: func = "i64_load16_u"; break;
+    case Opcode::I64Load32S: func = "i64_load32_s"; break;
+    case Opcode::I64Load32U: func = "i64_load32_u"; break;
+
+    case Opcode::V128Load: func = "v128_load"; break;
+    case Opcode::V128Load8X8S: func = "i16x8_load8x8"; break;
+    case Opcode::V128Load8X8U: func = "u16x8_load8x8"; break;
+    case Opcode::V128Load16X4S: func = "i32x4_load16x4"; break;
+    case Opcode::V128Load16X4U: func = "u32x4_load16x4"; break;
+    case Opcode::V128Load32X2S: func = "i64x2_load32x2"; break;
+    case Opcode::V128Load32X2U: func = "u64x2_load32x2"; break;
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
@@ -3976,41 +3937,23 @@ void CWriter::Write(const LoadExpr& expr) {
 
 void CWriter::Write(const StoreExpr& expr) {
   const char* func = nullptr;
+  // clang-format off
   switch (expr.opcode) {
-    case Opcode::I32Store:
-      func = "i32_store";
-      break;
-    case Opcode::I64Store:
-      func = "i64_store";
-      break;
-    case Opcode::F32Store:
-      func = "f32_store";
-      break;
-    case Opcode::F64Store:
-      func = "f64_store";
-      break;
-    case Opcode::I32Store8:
-      func = "i32_store8";
-      break;
-    case Opcode::I64Store8:
-      func = "i64_store8";
-      break;
-    case Opcode::I32Store16:
-      func = "i32_store16";
-      break;
-    case Opcode::I64Store16:
-      func = "i64_store16";
-      break;
-    case Opcode::I64Store32:
-      func = "i64_store32";
-      break;
-    case Opcode::V128Store:
-      func = "v128_store";
-      break;
+    case Opcode::I32Store: func = "i32_store"; break;
+    case Opcode::I64Store: func = "i64_store"; break;
+    case Opcode::F32Store: func = "f32_store"; break;
+    case Opcode::F64Store: func = "f64_store"; break;
+    case Opcode::I32Store8: func = "i32_store8"; break;
+    case Opcode::I64Store8: func = "i64_store8"; break;
+    case Opcode::I32Store16: func = "i32_store16"; break;
+    case Opcode::I64Store16: func = "i64_store16"; break;
+    case Opcode::I64Store32: func = "i64_store32"; break;
+    case Opcode::V128Store: func = "v128_store"; break;
 
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
@@ -4362,7 +4305,7 @@ void CWriter::Write(const TernaryExpr& expr) {
     case Opcode::V128BitSelect: {
       Type result_type = expr.opcode.GetResultType();
       Write(StackVar(2, result_type), " = ", "simde_wasm_v128_bitselect", "(",
-            StackVar(0), ", ", StackVar(1), ", ", StackVar(2), ");", Newline());
+            StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");", Newline());
       DropTypes(3);
       PushType(result_type);
       break;
@@ -4487,7 +4430,7 @@ void CWriter::Write(const SimdLoadLaneExpr& expr) {
   }
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
   Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", func, expr.val, "(",
+  Write(StackVar(1, result_type), " = ", func, expr.val, "(",
         ExternalInstancePtr(memory->name), ", (u64)(", StackVar(1), ")");
 
   if (expr.offset != 0)
@@ -4553,8 +4496,8 @@ void CWriter::Write(const SimdShuffleOpExpr& expr) {
 }
 
 void CWriter::Write(const LoadSplatExpr& expr) {
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+
   const char* func = nullptr;
   switch (expr.opcode) {
     case Opcode::V128Load8Splat:
@@ -4584,8 +4527,7 @@ void CWriter::Write(const LoadSplatExpr& expr) {
 }
 
 void CWriter::Write(const LoadZeroExpr& expr) {
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
   const char* func = nullptr;
   switch (expr.opcode) {
