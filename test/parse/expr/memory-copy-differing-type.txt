@@ -1,0 +1,35 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-all
+
+(;
+Note that this test covers an interaction between the memory64 and
+multi-memory proposals.
+
+Neither proposal includes a test like this because each proposal only
+implements itself on top of the current standard. Once one of the two proposals
+is standardized, this test should be removed in favor of a spec test in the
+proposal that is yet to be standardized.
+;)
+
+(module
+  (memory $mem64 i64 1)
+  (memory $mem32 i32 1)
+  (func
+    i32.const 0
+    i64.const 0
+    i32.const 0
+    memory.copy $mem32 $mem64
+    i64.const 0
+    i32.const 0
+    i32.const 0
+    memory.copy $mem64 $mem32
+    i64.const 0
+    i64.const 0
+    i64.const 0
+    memory.copy $mem64 $mem64
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.copy $mem32 $mem32
+  )
+)
