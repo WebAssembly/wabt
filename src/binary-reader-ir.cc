@@ -1495,7 +1495,7 @@ Result BinaryReaderIR::SetTagName(Index index, std::string_view name) {
   std::string dollar_name =
       GetUniqueName(&module_->tag_bindings, MakeDollarName(name));
   tag->name = dollar_name;
-  module_->global_bindings.emplace(dollar_name, Binding(index));
+  module_->tag_bindings.emplace(dollar_name, Binding(index));
   return Result::Ok;
 }
 
