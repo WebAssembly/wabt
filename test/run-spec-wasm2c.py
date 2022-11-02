@@ -338,7 +338,7 @@ class CWriter(object):
         type_ = const['type']
         value = const['value']
         if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
-            assert False  # TODO: add support for nan in asserted SIMD return from a test
+            return 'SIMDE_MATH_NANF'
         if type_ == 'i8':
             return '%su' % int(value)
         if type_ == 'i16':
@@ -526,7 +526,6 @@ def main(args):
 
         with open(json_file_path, encoding='utf-8') as json_file:
             spec_json = json.load(json_file)
-
         prefix = ''
         if options.prefix:
             with open(options.prefix) as prefix_file:
