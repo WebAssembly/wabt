@@ -100,23 +100,27 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                    \
   } while (0)
 
-#define ASSERT_RETURN_V128(f, expected)                                       \
-  do {                                                                        \
-    g_tests_run++;                                                            \
-    int trap_code = wasm_rt_impl_try();                                       \
-    if (trap_code) {                                                          \
-      error(__FILE__, __LINE__, #f " trapped (%s).\n",                        \
-            wasm_rt_strerror(trap_code));                                     \
-    } else {                                                                  \
-      v128 actual = f;                                                        \
-      if (is_equal_v128(actual, expected)) {                                  \
-        g_tests_passed++;                                                     \
-      } else {                                                                \
-        error(__FILE__, __LINE__,                                             \
-              "in " #f ": expected {%" PRIu64 ", %" PRIu64 "}, got {%" PRIu64 \
-              ", %" PRIu64 "}\n");                                            \
-      }                                                                       \
-    }                                                                         \
+#define ASSERT_RETURN_V128(f, expected)                                      \
+  do {                                                                       \
+    g_tests_run++;                                                           \
+    int trap_code = wasm_rt_impl_try();                                      \
+    if (trap_code) {                                                         \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                       \
+            wasm_rt_strerror(trap_code));                                    \
+    } else {                                                                 \
+      v128 actual = f;                                                       \
+      if (is_equal_v128(actual, expected)) {                                 \
+        g_tests_passed++;                                                    \
+      } else {                                                               \
+        error(__FILE__, __LINE__,                                            \
+              "in " #f ": expected {0x%" PRIx64 ", 0x%" PRIx64 "}, got {0x%" \
+              PRIx64 ", 0x%" PRIx64 "}\n",                                   \
+              simde_wasm_i64x2_extract_lane(expected, 0),                    \
+              simde_wasm_i64x2_extract_lane(expected, 1),                    \
+              simde_wasm_i64x2_extract_lane(actual, 0),                      \
+              simde_wasm_i64x2_extract_lane(actual, 1));                     \
+      }                                                                      \
+    }                                                                        \
   } while (0)
 
 #define ASSERT_RETURN_FUNCREF(f, expected)                                \
