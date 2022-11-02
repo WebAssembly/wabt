@@ -1,2 +1,3 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/simd_f64x2_arith.wast
+;;; SLOW:
