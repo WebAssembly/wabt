@@ -100,6 +100,7 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                    \
   } while (0)
 
+#ifdef WASM_RT_ENABLE_SIMD
 #define ASSERT_RETURN_V128(f, expected)                                      \
   do {                                                                       \
     g_tests_run++;                                                           \
@@ -122,6 +123,7 @@ static void error(const char* file, int line, const char* format, ...) {
       }                                                                      \
     }                                                                        \
   } while (0)
+#endif
 
 #define ASSERT_RETURN_FUNCREF(f, expected)                                \
   do {                                                                    \
@@ -161,6 +163,27 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                         \
   } while (0)
 
+#ifdef WASM_RT_ENABLE_SIMD
+#define ASSERT_RETURN_NAN_V(type, vtype, f, kind)                    \
+  do {                                                               \
+    g_tests_run++;                                                   \
+    if (wasm_rt_impl_try() != 0) {                                   \
+      error(__FILE__, __LINE__, #f " trapped.\n");                   \
+    } else {                                                         \
+      type actual = f;                                               \
+      if (is_##kind##_nan_##vtype(actual)) {                         \
+        g_tests_passed++;                                            \
+      } else {                                                       \
+        error(__FILE__, __LINE__,                                    \
+              "in " #f ": expected result to be a " #vtype " " #kind \
+              " nan, got {0x%" PRIx64 ", 0x%" PRIx64 "}.\n",         \
+              simde_wasm_i64x2_extract_lane(actual, 0),              \
+              simde_wasm_i64x2_extract_lane(actual, 1));             \
+      }                                                              \
+    }                                                                \
+  } while (0)
+#endif
+
 #define MULTI_T_UNPACK_(...) __VA_ARGS__
 #define MULTI_T_UNPACK(arg) MULTI_T_UNPACK_ arg
 #define MULTI_i32 "%u"
@@ -195,10 +218,19 @@ static void error(const char* file, int line, const char* format, ...) {
   ASSERT_RETURN_NAN_T(f32, u32, "08x", f, canonical)
 #define ASSERT_RETURN_CANONICAL_NAN_F64(f) \
   ASSERT_RETURN_NAN_T(f64, u64, "016x", f, canonical)
+#define ASSERT_RETURN_CANONICAL_NAN_F32X4(f) \
+  ASSERT_RETURN_NAN_V(v128, f32x4, f, canonical)
+#define ASSERT_RETURN_CANONICAL_NAN_F64X2(f) \
+  ASSERT_RETURN_NAN_V(v128, f64x2, f, canonical)
 #define ASSERT_RETURN_ARITHMETIC_NAN_F32(f) \
   ASSERT_RETURN_NAN_T(f32, u32, "08x", f, arithmetic)
 #define ASSERT_RETURN_ARITHMETIC_NAN_F64(f) \
   ASSERT_RETURN_NAN_T(f64, u64, "016x", f, arithmetic)
+#define ASSERT_RETURN_ARITHMETIC_NAN_F32X4(f) \
+  ASSERT_RETURN_NAN_V(v128, f32x4, f, arithmetic)
+#define ASSERT_RETURN_ARITHMETIC_NAN_F64X2(f) \
+  ASSERT_RETURN_NAN_V(v128, f64x2, f, arithmetic)
+
 
 static bool is_equal_u32(u32 x, u32 y) {
   return x == y;
@@ -278,6 +310,34 @@ static bool is_arithmetic_nan_f32(u32 x) {
 static bool is_arithmetic_nan_f64(u64 x) {
   return (x & 0x7ff8000000000000) == 0x7ff8000000000000;
 }
+
+#ifdef WASM_RT_ENABLE_SIMD
+static bool is_canonical_nan_f32x4(v128 x) {
+  return is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 0)) ||
+         is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 1)) ||
+         is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 2)) ||
+         is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 3));
+}
+
+static bool is_canonical_nan_f64x2(v128 x) {
+  return is_canonical_nan_f64(simde_wasm_i64x2_extract_lane(x, 0)) ||
+         is_canonical_nan_f64(simde_wasm_i64x2_extract_lane(x, 1));
+}
+
+static bool is_arithmetic_nan_f32x4(v128 x) {
+  return is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 0)) ||
+         is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 1)) ||
+         is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 2)) ||
+         is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 3));
+}
+
+static bool is_arithmetic_nan_f64x2(v128 x) {
+  return is_arithmetic_nan_f64(simde_wasm_i64x2_extract_lane(x, 0)) ||
+         is_arithmetic_nan_f64(simde_wasm_i64x2_extract_lane(x, 1));
+}
+
+#endif
+
 
 typedef struct Z_spectest_instance_t {
   wasm_rt_funcref_table_t spectest_table;

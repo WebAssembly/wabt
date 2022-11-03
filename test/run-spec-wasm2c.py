@@ -294,6 +294,20 @@ class CWriter(object):
                 }
                 assert_macro = assert_map[(type_)]
                 self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+            elif type_ == 'v128' and 'nan:canonical' in value:
+                assert_map = {
+                    2 : 'ASSERT_RETURN_CANONICAL_NAN_F64X2',
+                    4 : 'ASSERT_RETURN_CANONICAL_NAN_F32X4',
+                }
+                assert_macro = assert_map[len(value)]
+                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+            elif type_ == 'v128' and 'nan:arithmetic' in value:
+                assert_map = {
+                    2 : 'ASSERT_RETURN_ARITHMETIC_NAN_F64X2',
+                    4 : 'ASSERT_RETURN_ARITHMETIC_NAN_F32X4',
+                }
+                assert_macro = assert_map[len(value)]
+                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
             else:
                 assert_map = {
                     'i32': 'ASSERT_RETURN_I32',
@@ -337,8 +351,14 @@ class CWriter(object):
     def _Constant(self, const):
         type_ = const['type']
         value = const['value']
-        if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
+        if type_ == 'f32' and value  == 'nan:canonical':
             return 'SIMDE_MATH_NANF'
+        if type_ == 'f32' and value  == 'nan:arithmetic':
+            return '-SIMDE_MATH_NANF' # NaN with 1 in MSB of payload
+        if type_ == 'f64' and value == 'nan:canonical':
+            return 'SIMDE_MATH_NAN'
+        if type_ == 'f64' and value == 'nan:arithmetic':
+            return '-SIMDE_MATH_NAN' # NaN with 1 in MSB of payload
         if type_ == 'i8':
             return '%su' % int(value)
         if type_ == 'i16':
