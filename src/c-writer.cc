@@ -163,8 +163,6 @@ class CWriter {
   typedef std::pair<Index, Type> StackTypePair;
   typedef std::map<StackTypePair, std::string> StackVarSymbolMap;
 
-  void UseStream(Stream*);
-
   void WriteCHeader();
   void WriteCSource();
 
@@ -193,10 +191,8 @@ class CWriter {
   static std::string LegalizeName(std::string_view);
   std::string ExportName(std::string_view mangled_name);
   std::string ModuleInstanceTypeName() const;
-  static std::string MangleModuleInstanceName(
-      const std::string_view module_name);
-  static std::string MangleModuleInstanceTypeName(
-      const std::string_view module_name);
+  static std::string MangleModuleInstanceName(std::string_view module_name);
+  static std::string MangleModuleInstanceTypeName(std::string_view module_name);
   std::string DefineName(SymbolSet*, std::string_view);
   std::string DefineImportName(const std::string& name,
                                std::string_view module_name,
@@ -204,8 +200,8 @@ class CWriter {
   std::string DefineImportInstanceName(const std::string& name,
                                        std::string_view module_name,
                                        std::string_view mangled_field_name);
-  std::string DefineGlobalScopeName(const std::string&);
-  std::string DefineLocalScopeName(const std::string&);
+  std::string DefineGlobalScopeName(std::string_view);
+  std::string DefineLocalScopeName(std::string_view);
   std::string DefineStackVarName(Index, Type, std::string_view);
 
   void Indent(int size = INDENT_SIZE);
@@ -337,7 +333,7 @@ class CWriter {
   void PushTryCatch(const std::string& name);
   void PopTryCatch();
 
-  void PushFuncSection(const std::string_view include_condition = "");
+  void PushFuncSection(std::string_view include_condition = "");
 
   const WriteCOptions& options_;
   const Module* module_ = nullptr;
@@ -370,7 +366,7 @@ class CWriter {
   SymbolSet func_includes_;
 };
 
-static const char kImplicitFuncLabel[] = "$Bfunc";
+constexpr std::string_view kImplicitFuncLabel = "$Bfunc";
 
 size_t CWriter::MarkTypeStack() const {
   return type_stack_.size();
@@ -521,14 +517,13 @@ std::string CWriter::ModuleInstanceTypeName() const {
 }
 
 // static
-std::string CWriter::MangleModuleInstanceName(
-    const std::string_view module_name) {
+std::string CWriter::MangleModuleInstanceName(std::string_view module_name) {
   return MangleName(module_name) + "_instance";
 }
 
 // static
 std::string CWriter::MangleModuleInstanceTypeName(
-    const std::string_view module_name) {
+    std::string_view module_name) {
   return MangleName(module_name) + "_instance_t";
 }
 
@@ -591,13 +586,13 @@ std::string CWriter::DefineImportInstanceName(const std::string& name,
   return "(*" + mangled + ")";
 }
 
-std::string CWriter::DefineGlobalScopeName(const std::string& name) {
+std::string CWriter::DefineGlobalScopeName(std::string_view name) {
   std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
   global_sym_map_.insert(SymbolMap::value_type(name, unique));
   return unique;
 }
 
-std::string CWriter::DefineLocalScopeName(const std::string& name) {
+std::string CWriter::DefineLocalScopeName(std::string_view name) {
   std::string unique = DefineName(&local_syms_, StripLeadingDollar(name));
   local_sym_map_.insert(SymbolMap::value_type(name, unique));
   return unique;
@@ -1909,7 +1904,7 @@ void CWriter::WriteFuncs() {
   }
 }
 
-void CWriter::PushFuncSection(const std::string_view include_condition) {
+void CWriter::PushFuncSection(std::string_view include_condition) {
   func_sections_.emplace_back(include_condition, MemoryStream{});
   stream_ = &func_sections_.back().second;
 }
