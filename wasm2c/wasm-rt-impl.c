@@ -25,7 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY && \
+    !defined(_WIN32)
 #include <signal.h>
 #include <unistd.h>
 #endif
@@ -48,8 +49,14 @@ typedef struct FuncType {
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
 static bool g_signal_handler_installed = false;
-static char* g_alt_stack;
+#ifdef _WIN32
+static void* g_sig_handler_handle = 0;
 #else
+static char* g_alt_stack = 0;
+#endif
+#endif
+
+#if WASM_RT_USE_STACK_DEPTH_COUNT
 uint32_t wasm_rt_call_stack_depth;
 uint32_t wasm_rt_saved_call_stack_depth;
 #endif
@@ -67,7 +74,7 @@ static jmp_buf* g_unwind_target;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
-#if !WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if WASM_RT_USE_STACK_DEPTH_COUNT
   wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
 #endif
   WASM_RT_LONGJMP(wasm_rt_jmp_buf, code);
@@ -163,30 +170,29 @@ void* wasm_rt_exception(void) {
   return g_active_exception;
 }
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
-static void signal_handler(int sig, siginfo_t* si, void* unused) {
-  if (si->si_code == SEGV_ACCERR) {
-    wasm_rt_trap(WASM_RT_TRAP_OOB);
-  } else {
-    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
-  }
-}
-#endif
-
 #ifdef _WIN32
 static void* os_mmap(size_t size) {
-  return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_NOACCESS);
+  void* ret = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
+  return ret;
 }
 
 static int os_munmap(void* addr, size_t size) {
-  BOOL succeeded = VirtualFree(addr, size, MEM_RELEASE);
+  // Windows can only unmap the whole mapping
+  (void)size; /* unused */
+  BOOL succeeded = VirtualFree(addr, 0, MEM_RELEASE);
   return succeeded ? 0 : -1;
 }
 
 static int os_mprotect(void* addr, size_t size) {
-  DWORD old;
-  BOOL succeeded = VirtualProtect((LPVOID)addr, size, PAGE_READWRITE, &old);
-  return succeeded ? 0 : -1;
+  if (size == 0) {
+    return 0;
+  }
+  void* ret = VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
+  if (ret == addr) {
+    return 0;
+  }
+  VirtualFree(addr, 0, MEM_RELEASE);
+  return -1;
 }
 
 static void os_print_last_error(const char* msg) {
@@ -206,6 +212,29 @@ static void os_print_last_error(const char* msg) {
     printf("%s. No error code.\n", msg);
   }
 }
+
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+
+static LONG os_signal_handler(PEXCEPTION_POINTERS info) {
+  if (info->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else if (info->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW) {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+  return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void os_install_signal_handler(void) {
+  g_sig_handler_handle =
+      AddVectoredExceptionHandler(1 /* CALL_FIRST */, os_signal_handler);
+}
+
+static void os_cleanup_signal_handler(void) {
+  RemoveVectoredExceptionHandler(g_sig_handler_handle);
+}
+
+#endif
+
 #else
 static void* os_mmap(size_t size) {
   int map_prot = PROT_NONE;
@@ -227,46 +256,63 @@ static int os_mprotect(void* addr, size_t size) {
 static void os_print_last_error(const char* msg) {
   perror(msg);
 }
+
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
+  if (si->si_code == SEGV_ACCERR) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+}
+
+static void os_install_signal_handler(void) {
+  /* Use alt stack to handle SIGSEGV from stack overflow */
+  g_alt_stack = malloc(SIGSTKSZ);
+  if (g_alt_stack == NULL) {
+    perror("malloc failed");
+    abort();
+  }
+
+  stack_t ss;
+  ss.ss_sp = g_alt_stack;
+  ss.ss_flags = 0;
+  ss.ss_size = SIGSTKSZ;
+  if (sigaltstack(&ss, NULL) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+
+  struct sigaction sa;
+  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_sigaction = os_signal_handler;
+
+  /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
+    perror("sigaction failed");
+    abort();
+  }
+}
+
+static void os_cleanup_signal_handler(void) {
+  free(g_alt_stack);
+}
+#endif
+
 #endif
 
 void wasm_rt_init(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
-
-    /* Use alt stack to handle SIGSEGV from stack overflow */
-    g_alt_stack = malloc(SIGSTKSZ);
-    if (g_alt_stack == NULL) {
-      perror("malloc failed");
-      abort();
-    }
-
-    stack_t ss;
-    ss.ss_sp = g_alt_stack;
-    ss.ss_flags = 0;
-    ss.ss_size = SIGSTKSZ;
-    if (sigaltstack(&ss, NULL) != 0) {
-      perror("sigaltstack failed");
-      abort();
-    }
-
-    struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_sigaction = signal_handler;
-
-    /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
-    if (sigaction(SIGSEGV, &sa, NULL) != 0 ||
-        sigaction(SIGBUS, &sa, NULL) != 0) {
-      perror("sigaction failed");
-      abort();
-    }
+    os_install_signal_handler();
   }
 #endif
 }
 
 bool wasm_rt_is_initialized(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
   return g_signal_handler_installed;
 #else
   return true;
@@ -274,8 +320,8 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX && !WASM_RT_SKIP_SIGNAL_RECOVERY
-  free(g_alt_stack);
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+  os_cleanup_signal_handler();
 #endif
 }
 
@@ -283,11 +329,11 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   uint32_t byte_length = initial_pages * PAGE_SIZE;
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
   /* Reserve 8GiB. */
   void* addr = os_mmap(0x200000000ul);
 
-  if (addr == (void*)-1) {
+  if (!addr) {
     os_print_last_error("os_mmap failed.");
     abort();
   }
@@ -317,7 +363,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t old_size = old_pages * PAGE_SIZE;
   uint32_t new_size = new_pages * PAGE_SIZE;
   uint32_t delta_size = delta * PAGE_SIZE;
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
   uint8_t* new_data = memory->data;
   int ret = os_mprotect(new_data + old_size, delta_size);
   if (ret != 0) {
@@ -343,7 +389,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
 }
 
 void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
   os_munmap(memory->data, memory->size);  // ignore error?
 #else
   free(memory->data);
