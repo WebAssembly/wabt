@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS: --debug-names --enable-exceptions
+(module (tag $t (export "tag")))
+(;; STDOUT ;;;
+0/0 tests passed.
+;;; STDOUT ;;)

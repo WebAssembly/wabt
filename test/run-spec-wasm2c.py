@@ -463,6 +463,7 @@ def main(args):
     parser.add_argument('--enable-multi-memory', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
+    parser.add_argument('--debug-names', action='store_true')
     options = parser.parse_args(args)
 
     with utils.TempDirectory(options.out_dir, 'run-spec-wasm2c-') as out_dir:
@@ -476,7 +477,8 @@ def main(args):
             '--enable-exceptions': options.enable_exceptions,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
-            '--disable-reference-types': options.disable_reference_types})
+            '--disable-reference-types': options.disable_reference_types,
+            '--debug-names': options.debug_names})
 
         json_file_path = utils.ChangeDir(
             utils.ChangeExt(options.file, '.json'), out_dir)
