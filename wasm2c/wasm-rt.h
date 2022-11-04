@@ -44,10 +44,6 @@ extern "C" {
 #define wasm_rt_memcpy memcpy
 #endif
 
-#ifndef WASM_RT_SKIP_SIGNAL_RECOVERY
-#define WASM_RT_SKIP_SIGNAL_RECOVERY 0
-#endif
-
 /**
  * Enable memory checking via a signal handler via the following definition:
  *
@@ -56,35 +52,53 @@ extern "C" {
  * This is usually 10%-25% faster, but requires OS-specific support.
  */
 
-/** Check whether the signal handler is supported at all. */
-#if (defined(__linux__) || defined(__unix__) || defined(__APPLE__)) && \
-    defined(__WORDSIZE) && __WORDSIZE == 64
+#ifndef WASM_RT_SKIP_SIGNAL_RECOVERY
+#define WASM_RT_SKIP_SIGNAL_RECOVERY 0
+#endif
 
-/* If the signal handler is supported, then use it by default. */
+/** Signal handler not supported on 32-bit platforms. */
+#if UINTPTR_MAX > 0xffffffff
+
+#define WASM_RT_SIGNAL_RECOVERY_SUPPORTED 1
+
+/* Signal handler is supported. Use it by default. */
 #ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
 #endif
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 1
+#else
+#define WASM_RT_SIGNAL_RECOVERY_SUPPORTED 0
+
+/* Signal handler is not supported. */
+#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
 #endif
 
-#else
+#endif
 
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && \
+    (!WASM_RT_SKIP_SIGNAL_RECOVERY && !WASM_RT_SIGNAL_RECOVERY_SUPPORTED)
 /* The signal handler is not supported, error out if the user was trying to
  * enable it. */
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #error "Signal handler is not supported for this OS/Architecture!"
 #endif
 
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX 0
+#ifndef WASM_RT_USE_STACK_DEPTH_COUNT
+/* The signal handler on POSIX can detect call stack overflows. On windows, or
+ * platforms without a signal handler, we use stack depth counting. */
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !defined(_WIN32)
+#define WASM_RT_USE_STACK_DEPTH_COUNT 0
+#else
+#define WASM_RT_USE_STACK_DEPTH_COUNT 1
+#endif
+#endif
 
+#if WASM_RT_USE_STACK_DEPTH_COUNT
 /**
- * When the signal handler is not used, stack depth is limited explicitly.
- * The maximum stack depth before trapping can be configured by defining
- * this symbol before including wasm-rt when building the generated c files,
- * for example:
+ * When the signal handler cannot be used to detect stack overflows, stack depth
+ * is limited explicitly. The maximum stack depth before trapping can be
+ * configured by defining this symbol before including wasm-rt when building the
+ * generated c files, for example:
  *
  * ```
  *   cc -c -DWASM_RT_MAX_CALL_STACK_DEPTH=100 my_module.c -o my_module.o
@@ -105,7 +119,7 @@ extern uint32_t wasm_rt_call_stack_depth;
 #define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
-#if defined(__APPLE__) && WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if defined(__APPLE__) && WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 1
 #else
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 0
@@ -291,7 +305,7 @@ uint32_t wasm_rt_exception_size(void);
  */
 void* wasm_rt_exception(void);
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER_POSIX
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !defined(_WIN32)
 #define WASM_RT_SETJMP(buf) sigsetjmp(buf, 1)
 #else
 #define WASM_RT_SETJMP(buf) setjmp(buf)
