@@ -18,6 +18,7 @@
 
 #include <cctype>
 #include <cinttypes>
+#include <limits>
 #include <map>
 #include <set>
 #include <string_view>
@@ -67,18 +68,36 @@ struct Label {
   bool used = false;
 };
 
-template <int>
-struct Name {
-  explicit Name(const std::string& name) : name(name) {}
+struct LocalName {
+  explicit LocalName(const std::string& name) : name(name) {}
   const std::string& name;
 };
 
-using LocalName = Name<0>;
-using GlobalName = Name<1>;
-using ExternalPtr = Name<2>;
-using ExternalRef = Name<3>;
-using ExternalInstancePtr = Name<4>;
-using ExternalInstanceRef = Name<5>;
+template <ModuleFieldType>
+struct GlobalName {
+  explicit GlobalName(const std::string& name) : name(name) {}
+  const std::string& name;
+};
+
+template <ModuleFieldType T>
+struct ExternalPtr : GlobalName<T> {
+  using GlobalName<T>::GlobalName;
+};
+
+template <ModuleFieldType T>
+struct ExternalRef : GlobalName<T> {
+  using GlobalName<T>::GlobalName;
+};
+
+template <ModuleFieldType T>
+struct ExternalInstancePtr : GlobalName<T> {
+  using GlobalName<T>::GlobalName;
+};
+
+template <ModuleFieldType T>
+struct ExternalInstanceRef : GlobalName<T> {
+  using GlobalName<T>::GlobalName;
+};
 
 struct GotoLabel {
   explicit GotoLabel(const Var& var) : var(var) {}
@@ -177,6 +196,7 @@ class CWriter {
   void PopLabel();
 
   static char MangleType(Type);
+  static constexpr char MangleField(ModuleFieldType);
   static std::string MangleMultivalueTypes(const TypeVector&);
   static std::string MangleTagTypes(const TypeVector&);
   static std::string MangleName(std::string_view);
@@ -186,12 +206,10 @@ class CWriter {
   static std::string MangleModuleInstanceName(std::string_view module_name);
   static std::string MangleModuleInstanceTypeName(std::string_view module_name);
   std::string DefineName(SymbolSet*, std::string_view);
-  std::string DefineImportName(const std::string& name,
-                               std::string_view module_name,
-                               std::string_view mangled_field_name);
-  std::string DefineImportInstanceName(const std::string& name,
-                                       std::string_view module_name,
-                                       std::string_view mangled_field_name);
+  void DefineImportName(const Import* import,
+                        std::string_view module_name,
+                        std::string_view field_name);
+  template <ModuleFieldType>
   std::string DefineGlobalScopeName(std::string_view);
   std::string DefineLocalScopeName(std::string_view);
   std::string DefineStackVarName(Index, Type, std::string_view);
@@ -224,11 +242,16 @@ class CWriter {
   void Write(Index);
   void Write(std::string_view);
   void Write(const LocalName&);
-  void Write(const GlobalName&);
-  void Write(const ExternalPtr&);
-  void Write(const ExternalRef&);
-  void Write(const ExternalInstancePtr&);
-  void Write(const ExternalInstanceRef&);
+  template <ModuleFieldType T>
+  void Write(const GlobalName<T>&);
+  template <ModuleFieldType T>
+  void Write(const ExternalPtr<T>&);
+  template <ModuleFieldType T>
+  void Write(const ExternalRef<T>&);
+  template <ModuleFieldType T>
+  void Write(const ExternalInstancePtr<T>&);
+  template <ModuleFieldType T>
+  void Write(const ExternalInstanceRef<T>&);
   void Write(Type);
   void Write(SignedType);
   void Write(TypeEnum);
@@ -451,6 +474,13 @@ char CWriter::MangleType(Type type) {
 }
 
 // static
+constexpr char CWriter::MangleField(ModuleFieldType type) {
+  assert(static_cast<std::underlying_type<ModuleFieldType>::type>(type) <
+         std::numeric_limits<char>::max());
+  return static_cast<char>(type);
+}
+
+// static
 std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
   assert(types.size() >= 2);
   std::string result = "wasm_multi_";
@@ -547,35 +577,65 @@ std::string_view StripLeadingDollar(std::string_view name) {
   return name;
 }
 
-std::string CWriter::DefineImportName(const std::string& name,
-                                      std::string_view module,
-                                      std::string_view field_name) {
-  std::string mangled = MangleName(module) + MangleName(field_name);
-  import_syms_.insert(name);
-  global_syms_.insert(mangled);
-  global_sym_map_.insert(SymbolMap::value_type(name, mangled));
-  return mangled;
+std::string_view StripTrailingSigil(std::string_view name) {
+  if (!name.empty()) {
+    name.remove_suffix(1);
+  }
+  return name;
 }
 
-std::string CWriter::DefineImportInstanceName(const std::string& name,
-                                              std::string_view module,
-                                              std::string_view field_name) {
+void CWriter::DefineImportName(const Import* import,
+                               std::string_view module,
+                               std::string_view field_name) {
   std::string mangled = MangleName(module) + MangleName(field_name);
+  std::string name;
+  ModuleFieldType type;
+
+  switch (import->kind()) {
+    case ExternalKind::Func:
+      type = ModuleFieldType::Func;
+      name = cast<FuncImport>(import)->func.name;
+      break;
+    case ExternalKind::Tag:
+      type = ModuleFieldType::Tag;
+      name = cast<TagImport>(import)->tag.name;
+      break;
+    case ExternalKind::Global:
+      type = ModuleFieldType::Global;
+      name = cast<GlobalImport>(import)->global.name;
+      break;
+    case ExternalKind::Memory:
+      type = ModuleFieldType::Memory;
+      name = cast<MemoryImport>(import)->memory.name;
+      break;
+    case ExternalKind::Table:
+      type = ModuleFieldType::Table;
+      name = cast<TableImport>(import)->table.name;
+      break;
+  }
+
   import_syms_.insert(name);
+  import_module_sym_map_.emplace(name, import->module_name);
   global_syms_.insert(mangled);
-  global_sym_map_.insert(SymbolMap::value_type(name, mangled));
-  return "(*" + mangled + ")";
+  bool success =
+      global_sym_map_.emplace(name + MangleField(type), mangled).second;
+  assert(success);
 }
 
+template <ModuleFieldType T>
 std::string CWriter::DefineGlobalScopeName(std::string_view name) {
-  std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
-  global_sym_map_.insert(SymbolMap::value_type(name, unique));
+  std::string mangled = std::string(name) + MangleField(T);
+  std::string unique = DefineName(
+      &global_syms_, StripTrailingSigil(StripLeadingDollar(mangled)));
+  bool success = global_sym_map_.emplace(mangled, unique).second;
+  assert(success);
   return unique;
 }
 
 std::string CWriter::DefineLocalScopeName(std::string_view name) {
   std::string unique = DefineName(&local_syms_, StripLeadingDollar(name));
-  local_sym_map_.insert(SymbolMap::value_type(name, unique));
+  bool success = local_sym_map_.emplace(name, unique).second;
+  assert(success);
   return unique;
 }
 
@@ -584,7 +644,8 @@ std::string CWriter::DefineStackVarName(Index index,
                                         std::string_view name) {
   std::string unique = DefineName(&local_syms_, name);
   StackTypePair stp = {index, type};
-  stack_var_sym_map_.insert(StackVarSymbolMap::value_type(stp, unique));
+  bool success = stack_var_sym_map_.emplace(stp, unique).second;
+  assert(success);
   return unique;
 }
 
@@ -654,42 +715,48 @@ void CWriter::Write(const LocalName& name) {
   Write(local_sym_map_[name.name]);
 }
 
-void CWriter::Write(const GlobalName& name) {
-  // TODO(keithw) deal with duplicates across module fields
-  Write(global_sym_map_.at(name.name));
+template <ModuleFieldType T>
+void CWriter::Write(const GlobalName<T>& name) {
+  std::string mangled = name.name + MangleField(T);
+  assert(global_sym_map_.count(mangled) == 1);
+  Write(global_sym_map_.at(mangled));
 }
 
-void CWriter::Write(const ExternalPtr& name) {
+template <ModuleFieldType T>
+void CWriter::Write(const ExternalPtr<T>& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (!is_import) {
     Write("&");
   }
-  Write(GlobalName(name.name));
+  Write(GlobalName<T>(name.name));
 }
 
-void CWriter::Write(const ExternalInstancePtr& name) {
+template <ModuleFieldType T>
+void CWriter::Write(const ExternalInstancePtr<T>& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (!is_import) {
     Write("&");
   }
-  Write("instance->", GlobalName(name.name));
+  Write("instance->", GlobalName<T>(name.name));
 }
 
-void CWriter::Write(const ExternalRef& name) {
+template <ModuleFieldType T>
+void CWriter::Write(const ExternalRef<T>& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (is_import) {
-    Write("(*", GlobalName(name.name), ")");
+    Write("(*", GlobalName<T>(name.name), ")");
   } else {
-    Write(GlobalName(name.name));
+    Write(GlobalName<T>(name.name));
   }
 }
 
-void CWriter::Write(const ExternalInstanceRef& name) {
+template <ModuleFieldType T>
+void CWriter::Write(const ExternalInstanceRef<T>& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (is_import) {
-    Write("(*instance->", GlobalName(name.name), ")");
+    Write("(*instance->", GlobalName<T>(name.name), ")");
   } else {
-    Write("instance->", GlobalName(name.name));
+    Write("instance->", GlobalName<T>(name.name));
   }
 }
 
@@ -740,7 +807,7 @@ void CWriter::Write(const LabelDecl& label) {
 
 void CWriter::Write(const GlobalInstanceVar& var) {
   assert(var.var.is_name());
-  Write(ExternalInstanceRef(var.var.name()));
+  Write(ExternalInstanceRef<ModuleFieldType::Global>(var.var.name()));
 }
 
 void CWriter::Write(const StackVar& sv) {
@@ -910,7 +977,8 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
       Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
 
       Write("(wasm_rt_funcref_t){func_types[", func_type_index, "], ",
-            "(wasm_rt_function_ptr_t)", ExternalPtr(func->name), ", ");
+            "(wasm_rt_function_ptr_t)",
+            ExternalPtr<ModuleFieldType::Func>(func->name), ", ");
 
       bool is_import = import_module_sym_map_.count(func->name) != 0;
       if (is_import) {
@@ -1032,7 +1100,9 @@ void CWriter::WriteTags() {
   for (const Tag* tag : module_->tags) {
     bool is_import = tag_index < module_->num_tag_imports;
     if (!is_import) {
-      Write("static u32 ", DefineGlobalScopeName(tag->name), ";", Newline());
+      Write("static u32 ",
+            DefineGlobalScopeName<ModuleFieldType::Tag>(tag->name), ";",
+            Newline());
     }
     tag_index++;
   }
@@ -1049,7 +1119,8 @@ void CWriter::WriteTags() {
     if (!is_import) {
       const FuncDeclaration& tag_type = tag->decl;
       Index num_params = tag_type.GetNumParams();
-      Write(GlobalName(tag->name), " = wasm_rt_register_tag(");
+      Write(GlobalName<ModuleFieldType::Tag>(tag->name),
+            " = wasm_rt_register_tag(");
       if (num_params == 0) {
         Write("0");
       } else if (num_params == 1) {
@@ -1103,37 +1174,7 @@ void CWriter::BeginInstance() {
 
   // define names of per-instance imports
   for (const Import* import : module_->imports) {
-    switch (import->kind()) {
-      case ExternalKind::Func: {
-        const Func& func = cast<FuncImport>(import)->func;
-        DefineImportName(func.name, import->module_name, import->field_name);
-        import_module_sym_map_.emplace(func.name, import->module_name);
-      } break;
-
-      case ExternalKind::Tag: {
-        const Tag& tag = cast<TagImport>(import)->tag;
-        DefineImportName(tag.name, import->module_name, import->field_name);
-        import_module_sym_map_.emplace(tag.name, import->module_name);
-      } break;
-
-      case ExternalKind::Global:
-        DefineImportInstanceName(cast<GlobalImport>(import)->global.name,
-                                 import->module_name, import->field_name);
-        break;
-
-      case ExternalKind::Memory:
-        DefineImportInstanceName(cast<MemoryImport>(import)->memory.name,
-                                 import->module_name, import->field_name);
-        break;
-
-      case ExternalKind::Table:
-        DefineImportInstanceName(cast<TableImport>(import)->table.name,
-                                 import->module_name, import->field_name);
-        break;
-
-      default:
-        WABT_UNREACHABLE;
-    }
+    DefineImportName(import, import->module_name, import->field_name);
   }
 
   // Forward declaring module instance types
@@ -1257,7 +1298,8 @@ void CWriter::WriteFuncDeclarations() {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
       Write("static ");
-      WriteFuncDeclaration(func->decl, DefineGlobalScopeName(func->name));
+      WriteFuncDeclaration(
+          func->decl, DefineGlobalScopeName<ModuleFieldType::Func>(func->name));
       Write(";", Newline());
     }
     ++func_index;
@@ -1312,7 +1354,8 @@ void CWriter::WriteGlobals() {
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
-        WriteGlobal(*global, DefineGlobalScopeName(global->name));
+        WriteGlobal(*global, DefineGlobalScopeName<ModuleFieldType::Global>(
+                                 global->name));
         Write(Newline());
       }
       ++global_index;
@@ -1336,7 +1379,7 @@ void CWriter::WriteMemories() {
   for (const Memory* memory : module_->memories) {
     bool is_import = memory_index < module_->num_memory_imports;
     if (!is_import) {
-      WriteMemory(DefineGlobalScopeName(memory->name));
+      WriteMemory(DefineGlobalScopeName<ModuleFieldType::Memory>(memory->name));
       Write(Newline());
     }
     ++memory_index;
@@ -1361,7 +1404,8 @@ void CWriter::WriteTables() {
   for (const Table* table : module_->tables) {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
-      WriteTable(DefineGlobalScopeName(table->name), table->elem_type);
+      WriteTable(DefineGlobalScopeName<ModuleFieldType::Table>(table->name),
+                 table->elem_type);
       Write(Newline());
     }
     ++table_index;
@@ -1393,7 +1437,7 @@ void CWriter::WriteGlobalInitializers() {
     bool is_import = global_index < module_->num_global_imports;
     if (!is_import) {
       assert(!global->init_expr.empty());
-      Write(ExternalInstanceRef(global->name), " = ");
+      Write(ExternalInstanceRef<ModuleFieldType::Global>(global->name), " = ");
       WriteInitExpr(global->init_expr);
       Write(";", Newline());
     }
@@ -1414,10 +1458,10 @@ static inline bool is_droppable(const ElemSegment* elem_segment) {
 
 void CWriter::WriteDataInstances() {
   for (const DataSegment* data_segment : module_->data_segments) {
-    DefineGlobalScopeName(data_segment->name);
+    std::string name =
+        DefineGlobalScopeName<ModuleFieldType::DataSegment>(data_segment->name);
     if (is_droppable(data_segment)) {
-      Write("bool ", "data_segment_dropped_", GlobalName(data_segment->name),
-            " : 1;", Newline());
+      Write("bool ", "data_segment_dropped_", name, " : 1;", Newline());
     }
   }
 }
@@ -1432,7 +1476,8 @@ void CWriter::WriteDataInitializers() {
       continue;
     }
     Write(Newline(), "static const u8 data_segment_data_",
-          GlobalName(data_segment->name), "[] = ", OpenBrace());
+          GlobalName<ModuleFieldType::DataSegment>(data_segment->name),
+          "[] = ", OpenBrace());
     size_t i = 0;
     for (uint8_t x : data_segment->data) {
       Writef("0x%02x, ", x);
@@ -1452,7 +1497,8 @@ void CWriter::WriteDataInitializers() {
       const Memory* memory = module_->memories[i];
       uint32_t max =
           memory->page_limits.has_max ? memory->page_limits.max : 65536;
-      Write("wasm_rt_allocate_memory(", ExternalInstancePtr(memory->name), ", ",
+      Write("wasm_rt_allocate_memory(",
+            ExternalInstancePtr<ModuleFieldType::Memory>(memory->name), ", ",
             memory->page_limits.initial, ", ", max, ");", Newline());
     }
   }
@@ -1463,12 +1509,14 @@ void CWriter::WriteDataInitializers() {
     }
     const Memory* memory =
         module_->memories[module_->GetMemoryIndex(data_segment->memory_var)];
-    Write("LOAD_DATA(", ExternalInstanceRef(memory->name), ", ");
+    Write("LOAD_DATA(",
+          ExternalInstanceRef<ModuleFieldType::Memory>(memory->name), ", ");
     WriteInitExpr(data_segment->offset);
     if (data_segment->data.empty()) {
       Write(", NULL, 0");
     } else {
-      Write(", data_segment_data_", GlobalName(data_segment->name), ", ",
+      Write(", data_segment_data_",
+            GlobalName<ModuleFieldType::DataSegment>(data_segment->name), ", ",
             data_segment->data.size());
     }
     Write(");", Newline());
@@ -1482,7 +1530,8 @@ void CWriter::WriteDataInitializers() {
 
     for (const DataSegment* data_segment : module_->data_segments) {
       if (is_droppable(data_segment)) {
-        Write("instance->data_segment_dropped_", GlobalName(data_segment->name),
+        Write("instance->data_segment_dropped_",
+              GlobalName<ModuleFieldType::DataSegment>(data_segment->name),
               " = false;", Newline());
       }
     }
@@ -1493,10 +1542,10 @@ void CWriter::WriteDataInitializers() {
 
 void CWriter::WriteElemInstances() {
   for (const ElemSegment* elem_segment : module_->elem_segments) {
-    DefineGlobalScopeName(elem_segment->name);
+    std::string name =
+        DefineGlobalScopeName<ModuleFieldType::ElemSegment>(elem_segment->name);
     if (is_droppable(elem_segment)) {
-      Write("bool ", "elem_segment_dropped_", GlobalName(elem_segment->name),
-            " : 1;", Newline());
+      Write("bool ", "elem_segment_dropped_", name, " : 1;", Newline());
     }
   }
 }
@@ -1518,7 +1567,8 @@ void CWriter::WriteElemInitializers() {
     }
 
     Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
-          GlobalName(elem_segment->name), "[] = ", OpenBrace());
+          GlobalName<ModuleFieldType::ElemSegment>(elem_segment->name),
+          "[] = ", OpenBrace());
 
     for (const ExprList& elem_expr : elem_segment->elem_exprs) {
       assert(elem_expr.size() == 1);
@@ -1529,7 +1579,8 @@ void CWriter::WriteElemInitializers() {
           const Index func_type_index =
               module_->GetFuncTypeIndex(func->decl.type_var);
           Write("{", func_type_index, ", ");
-          Write("(wasm_rt_function_ptr_t)", ExternalPtr(func->name), ", ");
+          Write("(wasm_rt_function_ptr_t)",
+                ExternalPtr<ModuleFieldType::Func>(func->name), ", ");
           const bool is_import = import_module_sym_map_.count(func->name) != 0;
           if (is_import) {
             Write("offsetof(", ModuleInstanceTypeName(), ", ",
@@ -1560,8 +1611,8 @@ void CWriter::WriteElemInitializers() {
       uint32_t max =
           table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
       Write("wasm_rt_allocate_", GetReferenceTypeName(table->elem_type),
-            "_table(", ExternalInstancePtr(table->name), ", ",
-            table->elem_limits.initial, ", ", max, ");", Newline());
+            "_table(", ExternalInstancePtr<ModuleFieldType::Table>(table->name),
+            ", ", table->elem_limits.initial, ", ", max, ");", Newline());
     }
   }
 
@@ -1583,7 +1634,8 @@ void CWriter::WriteElemInitializers() {
 
     for (const ElemSegment* elem_segment : module_->elem_segments) {
       if (is_droppable(elem_segment)) {
-        Write("instance->elem_segment_dropped_", GlobalName(elem_segment->name),
+        Write("instance->elem_segment_dropped_",
+              GlobalName<ModuleFieldType::ElemSegment>(elem_segment->name),
               " = false;", Newline());
       }
     }
@@ -1600,7 +1652,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
   assert(dst_table->elem_type == src_segment->elem_type);
 
   Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
-        ExternalInstancePtr(dst_table->name), ", ");
+        ExternalInstancePtr<ModuleFieldType::Table>(dst_table->name), ", ");
 
   // elem segment exprs needed only for funcref tables
   // because externref tables can only be initialized with ref.null
@@ -1608,7 +1660,8 @@ void CWriter::WriteElemTableInit(bool active_initialization,
     if (src_segment->elem_exprs.empty()) {
       Write("NULL, ");
     } else {
-      Write("elem_segment_exprs_", GlobalName(src_segment->name), ", ");
+      Write("elem_segment_exprs_",
+            GlobalName<ModuleFieldType::ElemSegment>(src_segment->name), ", ");
     }
   }
 
@@ -1619,7 +1672,8 @@ void CWriter::WriteElemTableInit(bool active_initialization,
     Write(", 0, ", src_segment->elem_exprs.size());
   } else {
     if (is_droppable(src_segment)) {
-      Write("(instance->elem_segment_dropped_", GlobalName(src_segment->name),
+      Write("(instance->elem_segment_dropped_",
+            GlobalName<ModuleFieldType::ElemSegment>(src_segment->name),
             " ? 0 : ", src_segment->elem_exprs.size(), "), ");
     } else {
       Write("0, ");
@@ -1715,7 +1769,8 @@ void CWriter::WriteExports(WriteExportsKind kind) {
     switch (export_->kind) {
       case ExternalKind::Func: {
         Write(OpenBrace());
-        Write("return ", ExternalRef(internal_name), "(");
+        Write("return ", ExternalRef<ModuleFieldType::Func>(internal_name),
+              "(");
 
         bool is_import = import_module_sym_map_.count(internal_name) != 0;
         if (is_import) {
@@ -1734,16 +1789,32 @@ void CWriter::WriteExports(WriteExportsKind kind) {
       }
 
       case ExternalKind::Global:
-      case ExternalKind::Memory:
-      case ExternalKind::Table: {
         Write(OpenBrace());
-        Write("return ", ExternalInstancePtr(internal_name), ";", Newline());
+        Write("return ",
+              ExternalInstancePtr<ModuleFieldType::Global>(internal_name), ";",
+              Newline());
         Write(CloseBrace(), Newline());
         break;
-      }
+
+      case ExternalKind::Memory:
+        Write(OpenBrace());
+        Write("return ",
+              ExternalInstancePtr<ModuleFieldType::Memory>(internal_name), ";",
+              Newline());
+        Write(CloseBrace(), Newline());
+        break;
+
+      case ExternalKind::Table:
+        Write(OpenBrace());
+        Write("return ",
+              ExternalInstancePtr<ModuleFieldType::Table>(internal_name), ";",
+              Newline());
+        Write(CloseBrace(), Newline());
+        break;
 
       case ExternalKind::Tag:
-        Write("= ", ExternalPtr(internal_name), ";", Newline());
+        Write("= ", ExternalPtr<ModuleFieldType::Tag>(internal_name), ";",
+              Newline());
         break;
 
       default:
@@ -1801,7 +1872,7 @@ void CWriter::WriteInit() {
   }
 
   for (Var* var : module_->starts) {
-    Write(ExternalRef(module_->GetFunc(*var)->name));
+    Write(ExternalRef<ModuleFieldType::Func>(module_->GetFunc(*var)->name));
     bool is_import =
         import_module_sym_map_.count(module_->GetFunc(*var)->name) != 0;
     if (is_import) {
@@ -1869,7 +1940,9 @@ void CWriter::WriteFree() {
       bool is_import = table_index < module_->num_table_imports;
       if (!is_import) {
         Write("wasm_rt_free_", GetReferenceTypeName(table->elem_type),
-              "_table(", ExternalInstancePtr(table->name), ");", Newline());
+              "_table(",
+              ExternalInstancePtr<ModuleFieldType::Table>(table->name), ");",
+              Newline());
       }
       ++table_index;
     }
@@ -1880,7 +1953,8 @@ void CWriter::WriteFree() {
     for (const Memory* memory : module_->memories) {
       bool is_import = memory_index < module_->num_memory_imports;
       if (!is_import) {
-        Write("wasm_rt_free_memory(", ExternalInstancePtr(memory->name), ");",
+        Write("wasm_rt_free_memory(",
+              ExternalInstancePtr<ModuleFieldType::Memory>(memory->name), ");",
               Newline());
       }
       ++memory_index;
@@ -1915,7 +1989,7 @@ void CWriter::Write(const Func& func) {
   func_includes_.clear();
 
   Write("static ", ResultType(func.decl.sig.result_types), " ",
-        GlobalName(func.name), "(");
+        GlobalName<ModuleFieldType::Func>(func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
 
@@ -2175,7 +2249,8 @@ void CWriter::Write(const Catch& c) {
   }
 
   Write("if (wasm_rt_exception_tag() == ",
-        ExternalRef(module_->GetTag(c.var)->name), ") ", OpenBrace());
+        ExternalRef<ModuleFieldType::Tag>(module_->GetTag(c.var)->name), ") ",
+        OpenBrace());
 
   const Tag* tag = module_->GetTag(c.var);
   const FuncDeclaration& tag_type = tag->decl;
@@ -2321,7 +2396,7 @@ void CWriter::Write(const ExprList& exprs) {
         }
 
         assert(var.is_name());
-        Write(ExternalRef(var.name()), "(");
+        Write(ExternalRef<ModuleFieldType::Func>(var.name()), "(");
         bool is_import = import_module_sym_map_.count(func.name) != 0;
         if (is_import) {
           Write("instance->",
@@ -2369,11 +2444,12 @@ void CWriter::Write(const ExprList& exprs) {
         assert(decl.has_func_type);
         Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
 
-        Write("CALL_INDIRECT(", ExternalInstanceRef(table->name), ", ");
+        Write("CALL_INDIRECT(",
+              ExternalInstanceRef<ModuleFieldType::Table>(table->name), ", ");
         WriteCallIndirectFuncDeclaration(decl, "(*)");
         Write(", ", func_type_index, ", ", StackVar(0));
-        Write(", ", ExternalInstanceRef(table->name), ".data[", StackVar(0),
-              "].module_instance");
+        Write(", ", ExternalInstanceRef<ModuleFieldType::Table>(table->name),
+              ".data[", StackVar(0), "].module_instance");
         for (Index i = 0; i < num_params; ++i) {
           Write(", ", StackVar(num_params - i));
         }
@@ -2498,7 +2574,8 @@ void CWriter::Write(const ExprList& exprs) {
         const auto inst = cast<MemoryFillExpr>(&expr);
         Memory* memory =
             module_->memories[module_->GetMemoryIndex(inst->memidx)];
-        Write("memory_fill(", ExternalInstancePtr(memory->name), ", ",
+        Write("memory_fill(",
+              ExternalInstancePtr<ModuleFieldType::Memory>(memory->name), ", ",
               StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");",
               Newline());
         DropTypes(3);
@@ -2509,9 +2586,12 @@ void CWriter::Write(const ExprList& exprs) {
         Memory* dest_memory =
             module_->memories[module_->GetMemoryIndex(inst->destmemidx)];
         const Memory* src_memory = module_->GetMemory(inst->srcmemidx);
-        Write("memory_copy(", ExternalInstancePtr(dest_memory->name), ", ",
-              ExternalInstancePtr(src_memory->name), ", ", StackVar(2), ", ",
-              StackVar(1), ", ", StackVar(0), ");", Newline());
+        Write("memory_copy(",
+              ExternalInstancePtr<ModuleFieldType::Memory>(dest_memory->name),
+              ", ",
+              ExternalInstancePtr<ModuleFieldType::Memory>(src_memory->name),
+              ", ", StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");",
+              Newline());
         DropTypes(3);
       } break;
 
@@ -2520,15 +2600,18 @@ void CWriter::Write(const ExprList& exprs) {
         Memory* dest_memory =
             module_->memories[module_->GetMemoryIndex(inst->memidx)];
         const DataSegment* src_data = module_->GetDataSegment(inst->var);
-        Write("memory_init(", ExternalInstancePtr(dest_memory->name), ", ");
+        Write("memory_init(",
+              ExternalInstancePtr<ModuleFieldType::Memory>(dest_memory->name),
+              ", ");
         if (src_data->data.empty()) {
           Write("NULL, 0");
         } else {
-          Write("data_segment_data_", GlobalName(src_data->name), ", ");
+          Write("data_segment_data_",
+                GlobalName<ModuleFieldType::DataSegment>(src_data->name), ", ");
           if (is_droppable(src_data)) {
             Write("(", "instance->data_segment_dropped_",
-                  GlobalName(src_data->name), " ? 0 : ", src_data->data.size(),
-                  ")");
+                  GlobalName<ModuleFieldType::DataSegment>(src_data->name),
+                  " ? 0 : ", src_data->data.size(), ")");
           } else {
             Write("0");
           }
@@ -2554,7 +2637,8 @@ void CWriter::Write(const ExprList& exprs) {
         const auto inst = cast<DataDropExpr>(&expr);
         const DataSegment* data = module_->GetDataSegment(inst->var);
         if (is_droppable(data)) {
-          Write("instance->data_segment_dropped_", GlobalName(data->name),
+          Write("instance->data_segment_dropped_",
+                GlobalName<ModuleFieldType::DataSegment>(data->name),
                 " = true;", Newline());
         }
       } break;
@@ -2563,8 +2647,9 @@ void CWriter::Write(const ExprList& exprs) {
         const auto inst = cast<ElemDropExpr>(&expr);
         const ElemSegment* seg = module_->GetElemSegment(inst->var);
         if (is_droppable(seg)) {
-          Write("instance->elem_segment_dropped_", GlobalName(seg->name),
-                " = true;", Newline());
+          Write("instance->elem_segment_dropped_",
+                GlobalName<ModuleFieldType::ElemSegment>(seg->name), " = true;",
+                Newline());
         }
       } break;
 
@@ -2577,10 +2662,11 @@ void CWriter::Write(const ExprList& exprs) {
           WABT_UNREACHABLE;
         }
 
-        Write(GetReferenceTypeName(dest_table->elem_type), "_table_copy(",
-              ExternalInstancePtr(dest_table->name), ", ",
-              ExternalInstancePtr(src_table->name), ", ", StackVar(2), ", ",
-              StackVar(1), ", ", StackVar(0), ");", Newline());
+        Write(
+            GetReferenceTypeName(dest_table->elem_type), "_table_copy(",
+            ExternalInstancePtr<ModuleFieldType::Table>(dest_table->name), ", ",
+            ExternalInstancePtr<ModuleFieldType::Table>(src_table->name), ", ",
+            StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");", Newline());
         DropTypes(3);
       } break;
 
@@ -2588,8 +2674,8 @@ void CWriter::Write(const ExprList& exprs) {
         const Table* table = module_->GetTable(cast<TableGetExpr>(&expr)->var);
         Write(StackVar(0, table->elem_type), " = ",
               GetReferenceTypeName(table->elem_type), "_table_get(",
-              ExternalInstancePtr(table->name), ", ", StackVar(0), ");",
-              Newline());
+              ExternalInstancePtr<ModuleFieldType::Table>(table->name), ", ",
+              StackVar(0), ");", Newline());
         DropTypes(1);
         PushType(table->elem_type);
       } break;
@@ -2597,8 +2683,8 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::TableSet: {
         const Table* table = module_->GetTable(cast<TableSetExpr>(&expr)->var);
         Write(GetReferenceTypeName(table->elem_type), "_table_set(",
-              ExternalInstancePtr(table->name), ", ", StackVar(1), ", ",
-              StackVar(0), ");", Newline());
+              ExternalInstancePtr<ModuleFieldType::Table>(table->name), ", ",
+              StackVar(1), ", ", StackVar(0), ");", Newline());
         DropTypes(2);
       } break;
 
@@ -2606,8 +2692,8 @@ void CWriter::Write(const ExprList& exprs) {
         const Table* table = module_->GetTable(cast<TableGrowExpr>(&expr)->var);
         Write(StackVar(1, Type::I32), " = wasm_rt_grow_",
               GetReferenceTypeName(table->elem_type), "_table(",
-              ExternalInstancePtr(table->name), ", ", StackVar(0), ", ",
-              StackVar(1), ");", Newline());
+              ExternalInstancePtr<ModuleFieldType::Table>(table->name), ", ",
+              StackVar(0), ", ", StackVar(1), ");", Newline());
         DropTypes(2);
         PushType(Type::I32);
       } break;
@@ -2616,15 +2702,17 @@ void CWriter::Write(const ExprList& exprs) {
         const Table* table = module_->GetTable(cast<TableSizeExpr>(&expr)->var);
 
         PushType(Type::I32);
-        Write(StackVar(0), " = ", ExternalInstanceRef(table->name), ".size;",
-              Newline());
+        Write(StackVar(0), " = ",
+              ExternalInstanceRef<ModuleFieldType::Table>(table->name),
+              ".size;", Newline());
       } break;
 
       case ExprType::TableFill: {
         const Table* table = module_->GetTable(cast<TableFillExpr>(&expr)->var);
         Write(GetReferenceTypeName(table->elem_type), "_table_fill(",
-              ExternalInstancePtr(table->name), ", ", StackVar(2), ", ",
-              StackVar(1), ", ", StackVar(0), ");", Newline());
+              ExternalInstancePtr<ModuleFieldType::Table>(table->name), ", ",
+              StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");",
+              Newline());
         DropTypes(3);
       } break;
 
@@ -2638,7 +2726,7 @@ void CWriter::Write(const ExprList& exprs) {
 
         Write(StackVar(0), " = (wasm_rt_funcref_t){func_types[",
               func_type_index, "], (wasm_rt_function_ptr_t)",
-              ExternalPtr(func->name), ", ");
+              ExternalPtr<ModuleFieldType::Func>(func->name), ", ");
 
         bool is_import = import_module_sym_map_.count(func->name) != 0;
         if (is_import) {
@@ -2682,8 +2770,8 @@ void CWriter::Write(const ExprList& exprs) {
             cast<MemoryGrowExpr>(&expr)->memidx)];
 
         Write(StackVar(0), " = wasm_rt_grow_memory(",
-              ExternalInstancePtr(memory->name), ", ", StackVar(0), ");",
-              Newline());
+              ExternalInstancePtr<ModuleFieldType::Memory>(memory->name), ", ",
+              StackVar(0), ");", Newline());
         break;
       }
 
@@ -2692,8 +2780,9 @@ void CWriter::Write(const ExprList& exprs) {
             cast<MemorySizeExpr>(&expr)->memidx)];
 
         PushType(Type::I32);
-        Write(StackVar(0), " = ", ExternalInstanceRef(memory->name), ".pages;",
-              Newline());
+        Write(StackVar(0), " = ",
+              ExternalInstanceRef<ModuleFieldType::Memory>(memory->name),
+              ".pages;", Newline());
         break;
       }
 
@@ -2766,10 +2855,12 @@ void CWriter::Write(const ExprList& exprs) {
 
         Index num_params = tag->decl.GetNumParams();
         if (num_params == 0) {
-          Write("wasm_rt_load_exception(", ExternalRef(tag->name),
-                ", 0, NULL);", Newline());
+          Write("wasm_rt_load_exception(",
+                ExternalRef<ModuleFieldType::Tag>(tag->name), ", 0, NULL);",
+                Newline());
         } else if (num_params == 1) {
-          Write("wasm_rt_load_exception(", ExternalRef(tag->name), ", sizeof(",
+          Write("wasm_rt_load_exception(",
+                ExternalRef<ModuleFieldType::Tag>(tag->name), ", sizeof(",
                 tag->decl.GetParamType(0), "), &", StackVar(0), ");",
                 Newline());
         } else {
@@ -2780,7 +2871,8 @@ void CWriter::Write(const ExprList& exprs) {
             Write(StackVar(i), ", ");
           }
           Write("};", Newline());
-          Write("wasm_rt_load_exception(", ExternalRef(tag->name),
+          Write("wasm_rt_load_exception(",
+                ExternalRef<ModuleFieldType::Tag>(tag->name),
                 ", sizeof(tmp), &tmp);", Newline());
           Write(CloseBrace(), Newline());
         }
@@ -3246,7 +3338,8 @@ void CWriter::Write(const LoadExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(",
-        ExternalInstancePtr(memory->name), ", (u64)(", StackVar(0), ")");
+        ExternalInstancePtr<ModuleFieldType::Memory>(memory->name), ", (u64)(",
+        StackVar(0), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset, "u");
   Write(");", Newline());
@@ -3273,8 +3366,8 @@ void CWriter::Write(const StoreExpr& expr) {
 
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
-  Write(func, "(", ExternalInstancePtr(memory->name), ", (u64)(", StackVar(1),
-        ")");
+  Write(func, "(", ExternalInstancePtr<ModuleFieldType::Memory>(memory->name),
+        ", (u64)(", StackVar(1), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write(", ", StackVar(0), ");", Newline());
@@ -3460,7 +3553,8 @@ void CWriter::Write(const LoadSplatExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
-        ExternalInstancePtr(memory->name), ", (u64)(", StackVar(0));
+        ExternalInstancePtr<ModuleFieldType::Memory>(memory->name), ", (u64)(",
+        StackVar(0));
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write("));", Newline());
