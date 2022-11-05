@@ -20,6 +20,7 @@
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef __cplusplus
@@ -42,6 +43,12 @@ extern "C" {
 #define wasm_rt_memcpy __builtin_memcpy
 #else
 #define wasm_rt_memcpy memcpy
+#endif
+
+#if __has_builtin(__builtin_unreachable)
+#define wasm_rt_unreachable __builtin_unreachable
+#else
+#define wasm_rt_unreachable abort
 #endif
 
 /**

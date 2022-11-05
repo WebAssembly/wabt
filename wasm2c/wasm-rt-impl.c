@@ -77,7 +77,13 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
 #if WASM_RT_USE_STACK_DEPTH_COUNT
   wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
 #endif
+
+#ifdef WASM_RT_TRAP_HANDLER
+  WASM_RT_TRAP_HANDLER(code);
+  wasm_rt_unreachable();
+#else
   WASM_RT_LONGJMP(wasm_rt_jmp_buf, code);
+#endif
 }
 
 static bool func_types_are_equal(FuncType* a, FuncType* b) {
