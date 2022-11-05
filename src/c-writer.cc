@@ -655,10 +655,7 @@ void CWriter::Write(const LocalName& name) {
 
 void CWriter::Write(const GlobalName& name) {
   // TODO(keithw) deal with duplicates across module fields
-  assert(global_sym_map_.count(name.name) == 1);
-  auto iter = global_sym_map_.find(name.name);
-  assert(iter != global_sym_map_.end());
-  Write(iter->second);
+  Write(global_sym_map_.at(name.name));
 }
 
 void CWriter::Write(const ExternalPtr& name) {
