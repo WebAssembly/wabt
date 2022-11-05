@@ -299,9 +299,16 @@ initialize the runtime. `wasm_rt_free` frees any global
 state. `wasm_rt_is_initialized` can be used to confirm that the
 runtime has been initialized.
 
-`wasm_rt_trap` is a function that is called when the module traps. Some
-possible implementations are to throw a C++ exception, or to just abort the
-program execution.
+`wasm_rt_trap` is a function that is called when the module traps. Some possible
+implementations are to throw a C++ exception, or to just abort the program
+execution. The default runtime included in wasm2c unwinds the stack using
+`longjmp`. You can overide this call to `longjmp` from the embeder by defining a
+custom trap handler with the signature `void
+wasm2c_custom_trap_handler(wasm_rt_trap_t code)` and compiling the runtime with
+the with macro definition `#define WASM_RT_MEMCHECK_SIGNAL_HANDLER
+wasm2c_custom_trap_handler`. It is recommended that you add this macro
+definition via a compiler flag
+(`-DWASM_RT_MEMCHECK_SIGNAL_HANDLER=wasm2c_custom_trap_handler` on clang/gcc).
 
 `wasm_rt_register_func_type` is a function that registers a function type. It
 is a variadic function where the first two arguments give the number of
