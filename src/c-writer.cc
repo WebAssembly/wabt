@@ -90,11 +90,6 @@ struct LabelDecl {
   std::string name;
 };
 
-struct GlobalVar {
-  explicit GlobalVar(const Var& var) : var(var) {}
-  const Var& var;
-};
-
 struct GlobalInstanceVar {
   explicit GlobalInstanceVar(const Var& var) : var(var) {}
   const Var& var;
@@ -181,9 +176,6 @@ class CWriter {
   bool IsTopLabelUsed() const;
   void PopLabel();
 
-  static std::string AddressOf(const std::string&);
-  static std::string Deref(const std::string&);
-
   static char MangleType(Type);
   static std::string MangleMultivalueTypes(const TypeVector&);
   static std::string MangleTagTypes(const TypeVector&);
@@ -217,7 +209,6 @@ class CWriter {
     Write(std::forward<Args>(args)...);
   }
 
-  std::string GetGlobalName(const std::string&) const;
   static const char* GetReferenceTypeName(const Type& type);
   static const char* GetReferenceNullValue(const Type& type);
 
@@ -244,7 +235,6 @@ class CWriter {
   void Write(const Var&);
   void Write(const GotoLabel&);
   void Write(const LabelDecl&);
-  void Write(const GlobalVar&);
   void Write(const GlobalInstanceVar&);
   void Write(const StackVar&);
   void Write(const ResultType&);
@@ -441,16 +431,6 @@ bool CWriter::IsTopLabelUsed() const {
 
 void CWriter::PopLabel() {
   label_stack_.pop_back();
-}
-
-// static
-std::string CWriter::AddressOf(const std::string& s) {
-  return "&" + s;
-}
-
-// static
-std::string CWriter::Deref(const std::string& s) {
-  return "(*" + s + ")";
 }
 
 // static
@@ -673,50 +653,42 @@ void CWriter::Write(const LocalName& name) {
   Write(local_sym_map_[name.name]);
 }
 
-std::string CWriter::GetGlobalName(const std::string& name) const {
-  assert(global_sym_map_.count(name) == 1);
-  auto iter = global_sym_map_.find(name);
-  assert(iter != global_sym_map_.end());
-  return iter->second;
-}
-
 void CWriter::Write(const GlobalName& name) {
-  Write(GetGlobalName(name.name));
+  // TODO(keithw) deal with duplicates across module fields
+  Write(global_sym_map_.at(name.name));
 }
 
 void CWriter::Write(const ExternalPtr& name) {
   bool is_import = import_syms_.count(name.name) != 0;
-  if (is_import) {
-    Write(GetGlobalName(name.name));
-  } else {
-    Write(AddressOf(GetGlobalName(name.name)));
+  if (!is_import) {
+    Write("&");
   }
+  Write(GlobalName(name.name));
 }
 
 void CWriter::Write(const ExternalInstancePtr& name) {
   bool is_import = import_syms_.count(name.name) != 0;
-  if (is_import) {
-    Write("instance->", GetGlobalName(name.name));
-  } else {
-    Write("&instance->", GetGlobalName(name.name));
+  if (!is_import) {
+    Write("&");
   }
+  Write("instance->", GlobalName(name.name));
 }
 
 void CWriter::Write(const ExternalRef& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (is_import) {
-    Write(Deref(GetGlobalName(name.name)));
+    Write("(*", GlobalName(name.name), ")");
   } else {
-    Write(GetGlobalName(name.name));
+    Write(GlobalName(name.name));
   }
 }
 
 void CWriter::Write(const ExternalInstanceRef& name) {
   bool is_import = import_syms_.count(name.name) != 0;
   if (is_import) {
-    Write(Deref("instance->" + GetGlobalName(name.name)));
+    Write("(*instance->", GlobalName(name.name), ")");
   } else {
-    Write("instance->", GetGlobalName(name.name));
+    Write("instance->", GlobalName(name.name));
   }
 }
 
@@ -763,11 +735,6 @@ void CWriter::Write(const GotoLabel& goto_label) {
 void CWriter::Write(const LabelDecl& label) {
   if (IsTopLabelUsed())
     Write(label.name, ":;", Newline());
-}
-
-void CWriter::Write(const GlobalVar& var) {
-  assert(var.var.is_name());
-  Write(ExternalRef(var.var.name()));
 }
 
 void CWriter::Write(const GlobalInstanceVar& var) {
@@ -1448,7 +1415,7 @@ void CWriter::WriteDataInstances() {
   for (const DataSegment* data_segment : module_->data_segments) {
     DefineGlobalScopeName(data_segment->name);
     if (is_droppable(data_segment)) {
-      Write("bool ", "data_segment_dropped_", GetGlobalName(data_segment->name),
+      Write("bool ", "data_segment_dropped_", GlobalName(data_segment->name),
             " : 1;", Newline());
     }
   }
@@ -1462,7 +1429,7 @@ void CWriter::WriteDataInitializers() {
   for (const DataSegment* data_segment : module_->data_segments) {
     if (data_segment->data.size()) {
       Write(Newline(), "static const u8 data_segment_data_",
-            GetGlobalName(data_segment->name), "[] = ", OpenBrace());
+            GlobalName(data_segment->name), "[] = ", OpenBrace());
       size_t i = 0;
       for (uint8_t x : data_segment->data) {
         Writef("0x%02x, ", x);
@@ -1499,7 +1466,7 @@ void CWriter::WriteDataInitializers() {
     if (data_segment->data.empty()) {
       Write(", NULL, 0");
     } else {
-      Write(", data_segment_data_", GetGlobalName(data_segment->name), ", ",
+      Write(", data_segment_data_", GlobalName(data_segment->name), ", ",
             data_segment->data.size());
     }
     Write(");", Newline());
@@ -1513,8 +1480,8 @@ void CWriter::WriteDataInitializers() {
 
     for (const DataSegment* data_segment : module_->data_segments) {
       if (is_droppable(data_segment)) {
-        Write("instance->data_segment_dropped_",
-              GetGlobalName(data_segment->name), " = false;", Newline());
+        Write("instance->data_segment_dropped_", GlobalName(data_segment->name),
+              " = false;", Newline());
       }
     }
 
@@ -1526,7 +1493,7 @@ void CWriter::WriteElemInstances() {
   for (const ElemSegment* elem_segment : module_->elem_segments) {
     DefineGlobalScopeName(elem_segment->name);
     if (is_droppable(elem_segment)) {
-      Write("bool ", "elem_segment_dropped_", GetGlobalName(elem_segment->name),
+      Write("bool ", "elem_segment_dropped_", GlobalName(elem_segment->name),
             " : 1;", Newline());
     }
   }
@@ -1543,7 +1510,7 @@ void CWriter::WriteElemInitializers() {
     }
 
     Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
-          GetGlobalName(elem_segment->name), "[] = ", OpenBrace());
+          GlobalName(elem_segment->name), "[] = ", OpenBrace());
 
     for (const ExprList& elem_expr : elem_segment->elem_exprs) {
       assert(elem_expr.size() == 1);
@@ -1607,7 +1574,7 @@ void CWriter::WriteElemInitializers() {
     if (elem_segment->elem_exprs.empty()) {
       Write("NULL, 0, ");
     } else {
-      Write("elem_segment_exprs_", GetGlobalName(elem_segment->name), ", ",
+      Write("elem_segment_exprs_", GlobalName(elem_segment->name), ", ",
             elem_segment->elem_exprs.size(), ", ");
     }
     WriteInitExpr(elem_segment->offset);
@@ -1630,8 +1597,8 @@ void CWriter::WriteElemInitializers() {
 
     for (const ElemSegment* elem_segment : module_->elem_segments) {
       if (is_droppable(elem_segment)) {
-        Write("instance->elem_segment_dropped_",
-              GetGlobalName(elem_segment->name), " = false;", Newline());
+        Write("instance->elem_segment_dropped_", GlobalName(elem_segment->name),
+              " = false;", Newline());
       }
     }
 
@@ -2324,7 +2291,8 @@ void CWriter::Write(const ExprList& exprs) {
           Write(StackVar(num_params - 1, func.GetResultType(0)), " = ");
         }
 
-        Write(GlobalVar(var), "(");
+        assert(var.is_name());
+        Write(ExternalRef(var.name()), "(");
         bool is_import = import_module_sym_map_.count(func.name) != 0;
         if (is_import) {
           Write("instance->",
@@ -2527,11 +2495,11 @@ void CWriter::Write(const ExprList& exprs) {
         if (src_data->data.empty()) {
           Write("NULL, 0");
         } else {
-          Write("data_segment_data_", GetGlobalName(src_data->name), ", ");
+          Write("data_segment_data_", GlobalName(src_data->name), ", ");
           if (is_droppable(src_data)) {
             Write("(", "instance->data_segment_dropped_",
-                  GetGlobalName(src_data->name),
-                  " ? 0 : ", src_data->data.size(), ")");
+                  GlobalName(src_data->name), " ? 0 : ", src_data->data.size(),
+                  ")");
           } else {
             Write("0");
           }
@@ -2560,10 +2528,10 @@ void CWriter::Write(const ExprList& exprs) {
         if (src_segment->elem_exprs.empty()) {
           Write("NULL, 0");
         } else {
-          Write("elem_segment_exprs_", GetGlobalName(src_segment->name), ", ");
+          Write("elem_segment_exprs_", GlobalName(src_segment->name), ", ");
           if (is_droppable(src_segment)) {
             Write("(instance->elem_segment_dropped_",
-                  GetGlobalName(src_segment->name),
+                  GlobalName(src_segment->name),
                   " ? 0 : ", src_segment->elem_exprs.size(), ")");
           } else {
             Write("0");
@@ -2579,7 +2547,7 @@ void CWriter::Write(const ExprList& exprs) {
         const auto inst = cast<DataDropExpr>(&expr);
         const DataSegment* data = module_->GetDataSegment(inst->var);
         if (is_droppable(data)) {
-          Write("instance->data_segment_dropped_", GetGlobalName(data->name),
+          Write("instance->data_segment_dropped_", GlobalName(data->name),
                 " = true;", Newline());
         }
       } break;
@@ -2588,7 +2556,7 @@ void CWriter::Write(const ExprList& exprs) {
         const auto inst = cast<ElemDropExpr>(&expr);
         const ElemSegment* seg = module_->GetElemSegment(inst->var);
         if (is_droppable(seg)) {
-          Write("instance->elem_segment_dropped_", GetGlobalName(seg->name),
+          Write("instance->elem_segment_dropped_", GlobalName(seg->name),
                 " = true;", Newline());
         }
       } break;
