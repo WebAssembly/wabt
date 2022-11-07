@@ -339,6 +339,15 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
+  for (uint32_t i = 0; i < g_func_type_count; ++i) {
+    free(g_func_types[i].params);
+    free(g_func_types[i].results);
+  }
+
+  g_func_type_count = 0;
+  free(g_func_types);
+  g_func_types = NULL;
+
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
   os_cleanup_signal_handler();
 #endif
