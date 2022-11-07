@@ -51,8 +51,6 @@ typedef struct FuncType {
 static bool g_signal_handler_installed = false;
 #ifdef _WIN32
 static void* g_sig_handler_handle = 0;
-#else
-static char* g_alt_stack = 0;
 #endif
 #endif
 
@@ -268,14 +266,11 @@ static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
 
 static void os_install_signal_handler(void) {
   /* Use alt stack to handle SIGSEGV from stack overflow */
-  g_alt_stack = malloc(SIGSTKSZ);
-  if (g_alt_stack == NULL) {
-    perror("malloc failed");
-    abort();
-  }
+  /* We can use static data here to avoid calling malloc/free */
+  static char alt_stack[SIGSTKSZ];
 
   stack_t ss;
-  ss.ss_sp = g_alt_stack;
+  ss.ss_sp = alt_stack;
   ss.ss_flags = 0;
   ss.ss_size = SIGSTKSZ;
   if (sigaltstack(&ss, NULL) != 0) {
@@ -308,8 +303,6 @@ static void os_cleanup_signal_handler(void) {
     perror("sigaltstack failed");
     abort();
   }
-
-  free(g_alt_stack);
 }
 #endif
 
