@@ -296,6 +296,19 @@ static void os_install_signal_handler(void) {
 }
 
 static void os_cleanup_signal_handler(void) {
+  /* Undo what was done in os_install_signal_handler */
+  struct sigaction sa;
+  sa.sa_handler = SIG_DFL;
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
+    perror("sigaction failed");
+    abort();
+  }
+
+  if (sigaltstack(NULL, NULL) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+
   free(g_alt_stack);
 }
 #endif
