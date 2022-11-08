@@ -37,6 +37,11 @@
 #include <sys/mman.h>
 #endif
 
+#if _MSC_VER
+#include <malloc.h>
+#define alloca _alloca
+#endif
+
 #define PAGE_SIZE 65536
 #define MAX_EXCEPTION_SIZE PAGE_SIZE
 
@@ -102,11 +107,13 @@ static bool func_types_are_equal(FuncType* a, FuncType* b) {
 uint32_t wasm_rt_register_func_type(uint32_t param_count,
                                     uint32_t result_count,
                                     ...) {
+  size_t param_size = param_count * sizeof(wasm_rt_type_t);
+  size_t result_size = result_count * sizeof(wasm_rt_type_t);
   FuncType func_type;
   func_type.param_count = param_count;
-  func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
+  func_type.params = alloca(param_size);
   func_type.result_count = result_count;
-  func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
+  func_type.results = alloca(result_size);
 
   va_list args;
   va_start(args, result_count);
@@ -118,13 +125,18 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
     func_type.results[i] = va_arg(args, wasm_rt_type_t);
   va_end(args);
 
-  for (i = 0; i < g_func_type_count; ++i) {
-    if (func_types_are_equal(&g_func_types[i], &func_type)) {
-      free(func_type.params);
-      free(func_type.results);
+  for (i = 0; i < g_func_type_count; ++i)
+    if (func_types_are_equal(&g_func_types[i], &func_type))
       return i + 1;
-    }
-  }
+
+  // This is a new/unseed type.  Copy our stack allocated params/results into
+  // permanent heap allocated space.
+  wasm_rt_type_t* params = malloc(param_size);
+  wasm_rt_type_t* results = malloc(result_size);
+  memcpy(params, func_type.params, param_size);
+  memcpy(results, func_type.results, result_size);
+  func_type.params = params;
+  func_type.results = results;
 
   uint32_t idx = g_func_type_count++;
   g_func_types = realloc(g_func_types, g_func_type_count * sizeof(FuncType));
