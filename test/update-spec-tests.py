@@ -93,11 +93,11 @@ def main(args):
         'multi-memory': '--enable-multi-memory',
         'exception-handling': '--enable-exceptions',
         'extended-const': '--enable-extended-const',
+        'tail-call': '--enable-tail-call',
     }
 
     unimplemented = set([
         'gc',
-        'tail-call',
         'function-references',
         'threads',
         'annotations',

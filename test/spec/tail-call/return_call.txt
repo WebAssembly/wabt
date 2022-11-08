@@ -1,0 +1,36 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/tail-call/return_call.wast
+;;; ARGS*: --enable-tail-call
+(;; STDOUT ;;;
+out/test/spec/tail-call/return_call.wast:124: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.1.wasm:000001e: error: return signatures have inconsistent types: expected [i32], got []
+  000001e: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:131: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.2.wasm:000001f: error: return signatures have inconsistent types: expected [i32], got [i64]
+  000001f: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:139: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.3.wasm:000001e: error: type mismatch in return_call, expected [i32] but got []
+  000001e: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:146: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.4.wasm:000001f: error: type mismatch in return_call, expected [f64, i32] but got []
+  000001f: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:164: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.7.wasm:0000022: error: type mismatch in return_call, expected [i32, i32] but got [i32]
+  0000022: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:171: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.8.wasm:0000022: error: type mismatch in return_call, expected [i32, i32] but got [i32]
+  0000022: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:178: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.9.wasm:000002a: error: type mismatch in return_call, expected [i32, f64] but got [f64, i32]
+  000002a: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:185: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.10.wasm:000002a: error: type mismatch in return_call, expected [f64, i32] but got [i32, f64]
+  000002a: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:196: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.11.wasm:0000019: error: function variable out of range: 1 (max 1)
+  0000019: error: OnReturnCallExpr callback failed
+out/test/spec/tail-call/return_call.wast:200: assert_invalid passed:
+  out/test/spec/tail-call/return_call/return_call.12.wasm:000001d: error: function variable out of range: 1012321300 (max 1)
+  000001d: error: OnReturnCallExpr callback failed
+44/44 tests passed.
+;;; STDOUT ;;)
