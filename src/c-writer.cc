@@ -1221,7 +1221,7 @@ void CWriter::BeginInstance() {
 
 // Write module-wide imports (funcs & tags), which aren't tied to an instance.
 void CWriter::WriteImports() {
-  if (module_->imports.empty())
+  if (unique_imports_.empty())
     return;
 
   Write(Newline());
@@ -1747,7 +1747,7 @@ void CWriter::WriteInit() {
   Write("assert(wasm_rt_is_initialized());", Newline());
   Write("assert(s_module_initialized);", Newline());
 
-  if (!module_->imports.empty()) {
+  if (!import_module_set_.empty()) {
     Write("init_instance_import(instance");
     for (auto import_module_name : import_module_set_) {
       Write(", ", MangleModuleInstanceName(import_module_name));
@@ -1789,7 +1789,7 @@ void CWriter::WriteInit() {
 }
 
 void CWriter::WriteInitInstanceImport() {
-  if (module_->imports.empty())
+  if (import_module_set_.empty())
     return;
 
   Write(Newline(), "static void init_instance_import(",
