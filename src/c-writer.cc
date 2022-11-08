@@ -875,7 +875,7 @@ void CWriter::WriteInitDecl() {
   Write("void " + module_prefix_ + "_init_module(void);", Newline());
   Write("void " + module_prefix_ + "_instantiate(", ModuleInstanceTypeName(),
         "*");
-  for (auto import_module_name : import_module_set_) {
+  for (const auto& import_module_name : import_module_set_) {
     Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "*");
   }
   Write(");", Newline());
@@ -1136,7 +1136,7 @@ void CWriter::BeginInstance() {
   }
 
   // Forward declaring module instance types
-  for (auto import_module : import_module_set_) {
+  for (const auto& import_module : import_module_set_) {
     Write("struct ", MangleModuleInstanceTypeName(import_module), ";",
           Newline());
   }
@@ -1178,7 +1178,7 @@ void CWriter::BeginInstance() {
   // so that imported functions can be given their own module instances
   // when invoked
   Write("typedef struct ", ModuleInstanceTypeName(), " ", OpenBrace());
-  for (auto import_module : import_func_module_set_) {
+  for (const auto& import_module : import_func_module_set_) {
     Write("struct ", MangleModuleInstanceTypeName(import_module), "* ",
           MangleModuleInstanceName(import_module) + ";", Newline());
   }
@@ -1221,7 +1221,7 @@ void CWriter::BeginInstance() {
 
 // Write module-wide imports (funcs & tags), which aren't tied to an instance.
 void CWriter::WriteImports() {
-  if (module_->imports.empty())
+  if (unique_imports_.empty())
     return;
 
   Write(Newline());
@@ -1427,19 +1427,20 @@ void CWriter::WriteDataInitializers() {
   }
 
   for (const DataSegment* data_segment : module_->data_segments) {
-    if (data_segment->data.size()) {
-      Write(Newline(), "static const u8 data_segment_data_",
-            GlobalName(data_segment->name), "[] = ", OpenBrace());
-      size_t i = 0;
-      for (uint8_t x : data_segment->data) {
-        Writef("0x%02x, ", x);
-        if ((++i % 12) == 0)
-          Write(Newline());
-      }
-      if (i > 0)
-        Write(Newline());
-      Write(CloseBrace(), ";", Newline());
+    if (data_segment->data.empty()) {
+      continue;
     }
+    Write(Newline(), "static const u8 data_segment_data_",
+          GlobalName(data_segment->name), "[] = ", OpenBrace());
+    size_t i = 0;
+    for (uint8_t x : data_segment->data) {
+      Writef("0x%02x, ", x);
+      if ((++i % 12) == 0)
+        Write(Newline());
+    }
+    if (i > 0)
+      Write(Newline());
+    Write(CloseBrace(), ";", Newline());
   }
 
   Write(Newline(), "static void init_memories(", ModuleInstanceTypeName(),
@@ -1738,7 +1739,7 @@ void CWriter::WriteInit() {
 
   Write(Newline(), "void " + module_prefix_ + "_instantiate(",
         ModuleInstanceTypeName(), "* instance");
-  for (auto import_module_name : import_module_set_) {
+  for (const auto& import_module_name : import_module_set_) {
     Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "* ",
           MangleModuleInstanceName(import_module_name));
   }
@@ -1747,9 +1748,9 @@ void CWriter::WriteInit() {
   Write("assert(wasm_rt_is_initialized());", Newline());
   Write("assert(s_module_initialized);", Newline());
 
-  if (!module_->imports.empty()) {
+  if (!import_module_set_.empty()) {
     Write("init_instance_import(instance");
-    for (auto import_module_name : import_module_set_) {
+    for (const auto& import_module_name : import_module_set_) {
       Write(", ", MangleModuleInstanceName(import_module_name));
     }
     Write(");", Newline());
@@ -1789,18 +1790,18 @@ void CWriter::WriteInit() {
 }
 
 void CWriter::WriteInitInstanceImport() {
-  if (module_->imports.empty())
+  if (import_module_set_.empty())
     return;
 
   Write(Newline(), "static void init_instance_import(",
         ModuleInstanceTypeName(), "* instance");
-  for (auto import_module_name : import_module_set_) {
+  for (const auto& import_module_name : import_module_set_) {
     Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "* ",
           MangleModuleInstanceName(import_module_name));
   }
   Write(")", OpenBrace());
 
-  for (auto import_module : import_func_module_set_) {
+  for (const auto& import_module : import_func_module_set_) {
     Write("instance->", MangleModuleInstanceName(import_module), " = ",
           MangleModuleInstanceName(import_module), ";", Newline());
   }
