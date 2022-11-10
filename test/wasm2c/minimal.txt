@@ -551,6 +551,23 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
   }
 }
 
+// Currently we only support initializing externref tables with ref.null.
+static inline void externref_table_init(wasm_rt_externref_table_t* dest,
+                                        const wasm_rt_externref_t* src,
+                                        u32 src_size,
+                                        u32 dest_addr,
+                                        u32 src_addr,
+                                        u32 n) {
+  if (UNLIKELY(src_addr + (uint64_t)n > src_size))
+    TRAP(OOB);
+  if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
+    TRAP(OOB);
+  for (u32 i = 0; i < n; i++) {
+    const wasm_rt_externref_t* src_expr = &src[src_addr + i];
+    dest->data[dest_addr + i] = *src_expr;
+  }
+}
+
 #define DEFINE_TABLE_COPY(type)                                              \
   static inline void type##_table_copy(wasm_rt_##type##_table_t* dest,       \
                                        const wasm_rt_##type##_table_t* src,  \

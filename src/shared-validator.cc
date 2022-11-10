@@ -253,15 +253,27 @@ Result SharedValidator::OnElemSegment(const Location& loc,
                                       Var table_var,
                                       SegmentKind kind) {
   Result result = Result::Ok;
+  TableType table_type;
   if (kind == SegmentKind::Active) {
-    result |= CheckTableIndex(table_var);
+    result |= CheckTableIndex(table_var, &table_type);
   }
-  elems_.push_back(ElemType{Type::Void});  // Updated in OnElemSegmentElemType.
+  // Type gets set later in OnElemSegmentElemType.
+  elems_.push_back(
+      ElemType{Type::Void, kind == SegmentKind::Active, table_type.element});
   return result;
 }
 
-void SharedValidator::OnElemSegmentElemType(Type elem_type) {
-  elems_.back().element = elem_type;
+Result SharedValidator::OnElemSegmentElemType(const Location& loc,
+                                              Type elem_type) {
+  Result result = Result::Ok;
+  auto& elem = elems_.back();
+  if (elem.is_active) {
+    // Check that the type of the elem segment matches the table in which
+    // it is active.
+    result |= CheckType(loc, elem.table_type, elem_type, "elem segment");
+  }
+  elem.element = elem_type;
+  return result;
 }
 
 Result SharedValidator::OnElemSegmentElemExpr_RefNull(const Location& loc,
@@ -272,6 +284,8 @@ Result SharedValidator::OnElemSegmentElemExpr_RefNull(const Location& loc,
 Result SharedValidator::OnElemSegmentElemExpr_RefFunc(const Location& loc,
                                                       Var func_var) {
   Result result = Result::Ok;
+  result |=
+      CheckType(loc, Type::FuncRef, elems_.back().element, "elem expression");
   result |= CheckFuncIndex(func_var);
   declared_funcs_.insert(func_var.index());
   return result;

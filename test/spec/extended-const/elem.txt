@@ -73,5 +73,17 @@ out/test/spec/extended-const/elem.wast:517: assert_invalid passed:
   0000022: error: expected ref.null or ref.func in passive element segment
   0000023: error: expected END opcode after element expression
 out/test/spec/extended-const/elem.wast:575: assert_trap passed: uninitialized table element
-76/76 tests passed.
+out/test/spec/extended-const/elem.wast:608: assert_invalid passed:
+  out/test/spec/extended-const/elem/elem.61.wasm:000001f: error: type mismatch at elem segment. got externref, expected funcref
+  000001f: error: OnElemSegmentElemType callback failed
+out/test/spec/extended-const/elem.wast:613: assert_invalid passed:
+  out/test/spec/extended-const/elem/elem.62.wasm:0000017: error: type mismatch at elem segment. got funcref, expected externref
+  0000017: error: OnElemSegmentElemType callback failed
+out/test/spec/extended-const/elem.wast:618: assert_invalid passed:
+  out/test/spec/extended-const/elem/elem.63.wasm:0000032: error: type mismatch at table.init. got funcref, expected externref
+  0000032: error: OnTableInitExpr callback failed
+out/test/spec/extended-const/elem.wast:627: assert_invalid passed:
+  out/test/spec/extended-const/elem/elem.64.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
+  0000030: error: OnTableInitExpr callback failed
+90/90 tests passed.
 ;;; STDOUT ;;)

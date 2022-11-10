@@ -88,7 +88,7 @@ class SharedValidator {
   Result OnStart(const Location&, Var func_var);
 
   Result OnElemSegment(const Location&, Var table_var, SegmentKind);
-  void OnElemSegmentElemType(Type elem_type);
+  Result OnElemSegmentElemType(const Location&, Type elem_type);
   Result OnElemSegmentElemExpr_RefNull(const Location&, Type type);
   Result OnElemSegmentElemExpr_RefFunc(const Location&, Var func_var);
   Result OnElemSegmentElemExpr_Other(const Location&);
@@ -236,9 +236,12 @@ class SharedValidator {
 
   struct ElemType {
     ElemType() = default;
-    ElemType(Type element) : element(element) {}
+    ElemType(Type element, bool is_active, Type table_type)
+        : element(element), is_active(is_active), table_type(table_type) {}
 
     Type element;
+    bool is_active;
+    Type table_type;
   };
 
   struct LocalDecl {

@@ -727,10 +727,9 @@ Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 }
 
 Result BinaryReaderInterp::OnElemSegmentElemType(Index index, Type elem_type) {
-  validator_.OnElemSegmentElemType(elem_type);
   ElemDesc& elem = module_.elems.back();
   elem.type = elem_type;
-  return Result::Ok;
+  return validator_.OnElemSegmentElemType(GetLocation(), elem_type);
 }
 
 Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,

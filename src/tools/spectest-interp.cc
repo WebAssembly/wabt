@@ -1226,6 +1226,7 @@ CommandRunner::CommandRunner() : store_(s_features) {
   } const print_funcs[] = {
       {"print", interp::FuncType{{}, {}}},
       {"print_i32", interp::FuncType{{ValueType::I32}, {}}},
+      {"print_i64", interp::FuncType{{ValueType::I64}, {}}},
       {"print_f32", interp::FuncType{{ValueType::F32}, {}}},
       {"print_f64", interp::FuncType{{ValueType::F64}, {}}},
       {"print_i32_f32", interp::FuncType{{ValueType::I32, ValueType::F32}, {}}},

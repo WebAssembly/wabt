@@ -270,6 +270,10 @@ void Z_spectestZ_print_i32(Z_spectest_instance_t* instance, uint32_t i) {
   printf("spectest.print_i32(%d)\n", i);
 }
 
+void Z_spectestZ_print_i64(Z_spectest_instance_t* instance, uint64_t i) {
+  printf("spectest.print_i64(%" PRIu64 ")\n", i);
+}
+
 void Z_spectestZ_print_f32(Z_spectest_instance_t* instance, float f) {
   printf("spectest.print_f32(%g)\n", f);
 }
