@@ -929,7 +929,7 @@ class Global : public Extern {
   Result Get(T* out) const;
   template <typename T>
   Result WABT_VECTORCALL Set(T);
-  Result Set(Store&, Ref);
+  void Set(Store&, Ref);
 
   template <typename T>
   T WABT_VECTORCALL UnsafeGet() const;

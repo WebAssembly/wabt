@@ -208,6 +208,7 @@ Store::Store(const Features& features) : features_(features) {
   roots_.New(ref);
 }
 
+#ifndef NDEBUG
 bool Store::HasValueType(Ref ref, ValueType type) const {
   // TODO opt?
   if (!IsValid(ref)) {
@@ -229,6 +230,7 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
       return false;
   }
 }
+#endif
 
 Store::RootList::Index Store::NewRoot(Ref ref) {
   return roots_.New(ref);
@@ -490,7 +492,8 @@ Ref Table::UnsafeGet(u32 offset) const {
 }
 
 Result Table::Set(Store& store, u32 offset, Ref ref) {
-  if (IsValidRange(offset, 1) && store.HasValueType(ref, type_.element)) {
+  assert(store.HasValueType(ref, type_.element));
+  if (IsValidRange(offset, 1)) {
     elements_[offset] = ref;
     return Result::Ok;
   }
@@ -500,8 +503,8 @@ Result Table::Set(Store& store, u32 offset, Ref ref) {
 Result Table::Grow(Store& store, u32 count, Ref ref) {
   size_t old_size = elements_.size();
   u32 new_size;
-  if (store.HasValueType(ref, type_.element) &&
-      CanGrow<u32>(type_.limits, old_size, count, &new_size)) {
+  assert(store.HasValueType(ref, type_.element));
+  if (CanGrow<u32>(type_.limits, old_size, count, &new_size)) {
     // Grow the limits of the table too, so that if it is used as an
     // import to another module its new size is honored.
     type_.limits.initial += count;
@@ -513,7 +516,8 @@ Result Table::Grow(Store& store, u32 count, Ref ref) {
 }
 
 Result Table::Fill(Store& store, u32 offset, Ref ref, u32 size) {
-  if (IsValidRange(offset, size) && store.HasValueType(ref, type_.element)) {
+  assert(store.HasValueType(ref, type_.element));
+  if (IsValidRange(offset, size)) {
     std::fill(elements_.begin() + offset, elements_.begin() + offset + size,
               ref);
     return Result::Ok;
@@ -681,12 +685,9 @@ Result Global::Match(Store& store,
   return MatchImpl(store, import_type, type_, out_trap);
 }
 
-Result Global::Set(Store& store, Ref ref) {
-  if (store.HasValueType(ref, type_.type)) {
-    value_.Set(ref);
-    return Result::Ok;
-  }
-  return Result::Error;
+void Global::Set(Store& store, Ref ref) {
+  assert(store.HasValueType(ref, type_.type));
+  value_.Set(ref);
 }
 
 void Global::UnsafeSet(Value value) {
