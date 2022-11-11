@@ -2660,7 +2660,8 @@ void CWriter::Write(const ExprList& exprs) {
             break;
           case Type::ExternRef:
             Write(StackVar(0, Type::I32), " = (", StackVar(0),
-                  " == wasm_rt_externref_null_value);", Newline());
+                  " == ", GetReferenceNullValue(Type::ExternRef), ");",
+                  Newline());
             break;
           default:
             WABT_UNREACHABLE;
