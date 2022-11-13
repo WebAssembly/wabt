@@ -1510,8 +1510,18 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
-          GlobalName(elem_segment->name), "[] = ", OpenBrace());
+    switch (elem_segment->elem_type) {
+      case Type::FuncRef:
+        Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
+              GlobalName(elem_segment->name), "[] = ", OpenBrace());
+        break;
+      case Type::ExternRef:
+        Write("static const wasm_rt_externref_t elem_segment_exprs_",
+              GlobalName(elem_segment->name), "[] = ", OpenBrace());
+        break;
+      default:
+        WABT_UNREACHABLE;
+    }
 
     for (const ExprList& elem_expr : elem_segment->elem_exprs) {
       assert(elem_expr.size() == 1);
@@ -1531,10 +1541,14 @@ void CWriter::WriteElemInitializers() {
           } else {
             Write("0");
           }
-          Write("}, ", Newline());
+          Write("},", Newline());
         } break;
         case ExprType::RefNull:
-          Write("{0, NULL, 0},", Newline());
+          if (elem_segment->elem_type == Type::FuncRef) {
+            Write("{0, NULL, 0},", Newline());
+          } else {
+            Write("NULL,", Newline());
+          }
           break;
         default:
           WABT_UNREACHABLE;
@@ -1565,13 +1579,13 @@ void CWriter::WriteElemInitializers() {
 
     const Table* table = module_->GetTable(elem_segment->table_var);
 
-    // TODO: Resolve whether nonempty externref-type element segments
-    // are permitted (WebAssembly/spec#1543)
-    if (table->elem_type != Type::FuncRef) {
+    if (table->elem_type != Type::FuncRef &&
+        table->elem_type != Type::ExternRef) {
       WABT_UNREACHABLE;
     }
 
-    Write("funcref_table_init(", ExternalInstancePtr(table->name), ", ");
+    Write(GetReferenceTypeName(table->elem_type), "_table_init(",
+          ExternalInstancePtr(table->name), ", ");
     if (elem_segment->elem_exprs.empty()) {
       Write("NULL, 0, ");
     } else {
@@ -1579,14 +1593,18 @@ void CWriter::WriteElemInitializers() {
             elem_segment->elem_exprs.size(), ", ");
     }
     WriteInitExpr(elem_segment->offset);
-    if (elem_segment->elem_exprs.empty()) {
-      // It's mandatory to handle the case of a zero-length elem segment
-      // (even in a module with no types). This must trap if the offset
-      // is out of bounds.
-      Write(", 0, 0, instance, NULL);", Newline());
+    if (table->elem_type == Type::ExternRef) {
+      Write(", 0, ", elem_segment->elem_exprs.size(), ");", Newline());
     } else {
-      Write(", 0, ", elem_segment->elem_exprs.size(),
-            ", instance, func_types);", Newline());
+      if (elem_segment->elem_exprs.empty()) {
+        // It's mandatory to handle the case of a zero-length elem segment
+        // (even in a module with no types). This must trap if the offset
+        // is out of bounds.
+        Write(", 0, 0, instance, NULL);", Newline());
+      } else {
+        Write(", 0, ", elem_segment->elem_exprs.size(),
+              ", instance, func_types);", Newline());
+      }
     }
   }
 

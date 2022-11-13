@@ -252,13 +252,11 @@ out/test/spec/simd_lane.wast:449: assert_invalid passed:
   out/test/spec/simd_lane/simd_lane.46.wasm:000002f: error: lane index must be less than 4 (got 255)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:450: assert_invalid passed:
-  out/test/spec/simd_lane/simd_lane.47.wasm:000002f: error: lane index must be less than 4 (got 4)
-  out/test/spec/simd_lane/simd_lane.47.wasm:000002f: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
-  000002f: error: OnSimdLaneOpExpr callback failed
+  out/test/spec/simd_lane/simd_lane.47.wasm:0000032: error: lane index must be less than 4 (got 4)
+  0000032: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:451: assert_invalid passed:
-  out/test/spec/simd_lane/simd_lane.48.wasm:000002f: error: lane index must be less than 4 (got 255)
-  out/test/spec/simd_lane/simd_lane.48.wasm:000002f: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
-  000002f: error: OnSimdLaneOpExpr callback failed
+  out/test/spec/simd_lane/simd_lane.48.wasm:0000032: error: lane index must be less than 4 (got 255)
+  0000032: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:452: assert_invalid passed:
   out/test/spec/simd_lane/simd_lane.49.wasm:000002d: error: lane index must be less than 2 (got 2)
   000002d: error: OnSimdLaneOpExpr callback failed
@@ -302,9 +300,8 @@ out/test/spec/simd_lane.wast:468: assert_invalid passed:
   out/test/spec/simd_lane/simd_lane.62.wasm:000002f: error: lane index must be less than 4 (got 4)
   000002f: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:469: assert_invalid passed:
-  out/test/spec/simd_lane/simd_lane.63.wasm:000002f: error: lane index must be less than 4 (got 4)
-  out/test/spec/simd_lane/simd_lane.63.wasm:000002f: error: type mismatch in f32x4.replace_lane, expected [v128, f32] but got [v128, i32]
-  000002f: error: OnSimdLaneOpExpr callback failed
+  out/test/spec/simd_lane/simd_lane.63.wasm:0000032: error: lane index must be less than 4 (got 4)
+  0000032: error: OnSimdLaneOpExpr callback failed
 out/test/spec/simd_lane.wast:470: assert_invalid passed:
   out/test/spec/simd_lane/simd_lane.64.wasm:000002d: error: lane index must be less than 2 (got 2)
   000002d: error: OnSimdLaneOpExpr callback failed

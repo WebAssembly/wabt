@@ -6,6 +6,7 @@
 #if defined(_MSC_VER)
 #include <intrin.h>
 #include <malloc.h>
+#define alloca _alloca
 #else
 #include <alloca.h>
 #endif
@@ -14,16 +15,16 @@
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define FUNC_PROLOGUE
-
-#define FUNC_EPILOGUE
-#else
+#if WASM_RT_USE_STACK_DEPTH_COUNT
 #define FUNC_PROLOGUE                                            \
   if (++wasm_rt_call_stack_depth > WASM_RT_MAX_CALL_STACK_DEPTH) \
     TRAP(EXHAUSTION);
 
 #define FUNC_EPILOGUE --wasm_rt_call_stack_depth
+#else
+#define FUNC_PROLOGUE
+
+#define FUNC_EPILOGUE
 #endif
 
 #define UNREACHABLE TRAP(UNREACHABLE)
@@ -134,8 +135,6 @@ DEFINE_STORE(i64_store16, u16, u64)
 DEFINE_STORE(i64_store32, u32, u64)
 
 #if defined(_MSC_VER)
-
-#define alloca _alloca
 
 // Adapted from
 // https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
@@ -509,6 +508,23 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
   }
 }
 
+// Currently we only support initializing externref tables with ref.null.
+static inline void externref_table_init(wasm_rt_externref_table_t* dest,
+                                        const wasm_rt_externref_t* src,
+                                        u32 src_size,
+                                        u32 dest_addr,
+                                        u32 src_addr,
+                                        u32 n) {
+  if (UNLIKELY(src_addr + (uint64_t)n > src_size))
+    TRAP(OOB);
+  if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
+    TRAP(OOB);
+  for (u32 i = 0; i < n; i++) {
+    const wasm_rt_externref_t* src_expr = &src[src_addr + i];
+    dest->data[dest_addr + i] = *src_expr;
+  }
+}
+
 #define DEFINE_TABLE_COPY(type)                                              \
   static inline void type##_table_copy(wasm_rt_##type##_table_t* dest,       \
                                        const wasm_rt_##type##_table_t* src,  \
@@ -518,23 +534,8 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
     if (UNLIKELY(src_addr + (uint64_t)n > src->size))                        \
       TRAP(OOB);                                                             \
                                                                              \
-    if (n == 0) {                                                            \
-      return;                                                                \
-    }                                                                        \
-                                                                             \
-    if (dest->data + dest_addr == src->data + src_addr) {                    \
-      return;                                                                \
-    }                                                                        \
-                                                                             \
-    if (dest->data + dest_addr < src->data + src_addr) {                     \
-      for (u32 i = 0; i < n; i++) {                                          \
-        dest->data[dest_addr + i] = src->data[src_addr + i];                 \
-      }                                                                      \
-    } else {                                                                 \
-      for (u32 i = n; i > 0; i--) {                                          \
-        dest->data[dest_addr + i - 1] = src->data[src_addr + i - 1];         \
-      }                                                                      \
-    }                                                                        \
+    memmove(dest->data + dest_addr, src->data + src_addr,                    \
+            n * sizeof(wasm_rt_##type##_t));                                 \
   }
 
 DEFINE_TABLE_COPY(funcref)

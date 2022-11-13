@@ -775,7 +775,8 @@ Result Validator::CheckModule() {
       result_ |= validator_.OnElemSegment(field.loc, f->elem_segment.table_var,
                                           f->elem_segment.kind);
 
-      validator_.OnElemSegmentElemType(f->elem_segment.elem_type);
+      result_ |= validator_.OnElemSegmentElemType(field.loc,
+                                                  f->elem_segment.elem_type);
 
       // Init expr.
       if (f->elem_segment.offset.size()) {
