@@ -393,8 +393,13 @@ IF (NOT WIN32)
       INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     )
     install(
-      FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt.h"
+      FILES "wasm2c/wasm-rt.h"
       TYPE INCLUDE
+      COMPONENT wabt-development
+    )
+    install(
+      FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c"
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/wabt/wasm2c"
       COMPONENT wabt-development
     )
   endif ()
