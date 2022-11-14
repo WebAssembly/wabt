@@ -2536,11 +2536,7 @@ void CWriter::Write(const ExprList& exprs) {
         const ElemSegment* src_segment =
             module_->GetElemSegment(inst->segment_index);
 
-        // TODO: This should be an assert because the validator should catch
-        // this, but currently it doesn't.
-        if (dest_table->elem_type != src_segment->elem_type) {
-          WABT_UNREACHABLE;
-        }
+        assert(dest_table->elem_type == src_segment->elem_type);
 
         Write(GetReferenceTypeName(dest_table->elem_type), "_table_init(",
               ExternalInstancePtr(dest_table->name), ", ");
