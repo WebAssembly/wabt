@@ -15,7 +15,7 @@
 #
 
 cmake_minimum_required(VERSION 3.16)
-project(WABT LANGUAGES C CXX VERSION 1.0.30)
+project(WABT LANGUAGES C CXX VERSION 1.0.31)
 
 include(GNUInstallDirs)
 
