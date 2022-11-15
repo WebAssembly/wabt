@@ -17,8 +17,8 @@
 #ifndef WABT_BASE_TYPES_H_
 #define WABT_BASE_TYPES_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 namespace wabt {
 
