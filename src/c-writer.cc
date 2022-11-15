@@ -272,6 +272,7 @@ class CWriter {
   void WriteGlobalInitializers();
   void WriteDataInitializers();
   void WriteElemInitializers();
+  void WriteElemTableInit(bool, const ElemSegment*, const Table*);
   void WriteExports(WriteExportsKind);
   void WriteInitDecl();
   void WriteFreeDecl();
@@ -1510,18 +1511,14 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    switch (elem_segment->elem_type) {
-      case Type::FuncRef:
-        Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
-              GlobalName(elem_segment->name), "[] = ", OpenBrace());
-        break;
-      case Type::ExternRef:
-        Write("static const wasm_rt_externref_t elem_segment_exprs_",
-              GlobalName(elem_segment->name), "[] = ", OpenBrace());
-        break;
-      default:
-        WABT_UNREACHABLE;
+    if (elem_segment->elem_type == Type::ExternRef) {
+      // no need to store externref elem initializers because only
+      // ref.null is possible
+      continue;
     }
+
+    Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
+          GlobalName(elem_segment->name), "[] = ", OpenBrace());
 
     for (const ExprList& elem_expr : elem_segment->elem_exprs) {
       assert(elem_expr.size() == 1);
@@ -1544,11 +1541,7 @@ void CWriter::WriteElemInitializers() {
           Write("},", Newline());
         } break;
         case ExprType::RefNull:
-          if (elem_segment->elem_type == Type::FuncRef) {
-            Write("{0, NULL, 0},", Newline());
-          } else {
-            Write("NULL,", Newline());
-          }
+          Write("{0, NULL, 0},", Newline());
           break;
         default:
           WABT_UNREACHABLE;
@@ -1579,33 +1572,7 @@ void CWriter::WriteElemInitializers() {
 
     const Table* table = module_->GetTable(elem_segment->table_var);
 
-    if (table->elem_type != Type::FuncRef &&
-        table->elem_type != Type::ExternRef) {
-      WABT_UNREACHABLE;
-    }
-
-    Write(GetReferenceTypeName(table->elem_type), "_table_init(",
-          ExternalInstancePtr(table->name), ", ");
-    if (elem_segment->elem_exprs.empty()) {
-      Write("NULL, 0, ");
-    } else {
-      Write("elem_segment_exprs_", GlobalName(elem_segment->name), ", ",
-            elem_segment->elem_exprs.size(), ", ");
-    }
-    WriteInitExpr(elem_segment->offset);
-    if (table->elem_type == Type::ExternRef) {
-      Write(", 0, ", elem_segment->elem_exprs.size(), ");", Newline());
-    } else {
-      if (elem_segment->elem_exprs.empty()) {
-        // It's mandatory to handle the case of a zero-length elem segment
-        // (even in a module with no types). This must trap if the offset
-        // is out of bounds.
-        Write(", 0, 0, instance, NULL);", Newline());
-      } else {
-        Write(", 0, ", elem_segment->elem_exprs.size(),
-              ", instance, func_types);", Newline());
-      }
-    }
+    WriteElemTableInit(true, elem_segment, table);
   }
 
   Write(CloseBrace(), Newline());
@@ -1623,6 +1590,49 @@ void CWriter::WriteElemInitializers() {
 
     Write(CloseBrace(), Newline());
   }
+}
+
+void CWriter::WriteElemTableInit(bool active_initialization,
+                                 const ElemSegment* src_segment,
+                                 const Table* dst_table) {
+  assert(dst_table->elem_type == Type::FuncRef ||
+         dst_table->elem_type == Type::ExternRef);
+  assert(dst_table->elem_type == src_segment->elem_type);
+
+  Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
+        ExternalInstancePtr(dst_table->name), ", ");
+
+  // elem segment exprs needed only for funcref tables
+  // because externref tables can only be initialized with ref.null
+  if (dst_table->elem_type == Type::FuncRef) {
+    if (src_segment->elem_exprs.empty()) {
+      Write("NULL, ");
+    } else {
+      Write("elem_segment_exprs_", GlobalName(src_segment->name), ", ");
+    }
+  }
+
+  // src_size, dest_addr, src_addr, N
+  if (active_initialization) {
+    Write(src_segment->elem_exprs.size(), ", ");
+    WriteInitExpr(src_segment->offset);
+    Write(", 0, ", src_segment->elem_exprs.size());
+  } else {
+    if (is_droppable(src_segment)) {
+      Write("(instance->elem_segment_dropped_", GlobalName(src_segment->name),
+            " ? 0 : ", src_segment->elem_exprs.size(), "), ");
+    } else {
+      Write("0, ");
+    }
+    Write(StackVar(2), ", ", StackVar(1), ", ", StackVar(0));
+  }
+
+  if (dst_table->elem_type == Type::FuncRef) {
+    Write(", instance, ",
+          src_segment->elem_exprs.empty() ? "NULL" : "func_types");
+  }
+
+  Write(");", Newline());
 }
 
 void CWriter::WriteExports(WriteExportsKind kind) {
@@ -2536,25 +2546,7 @@ void CWriter::Write(const ExprList& exprs) {
         const ElemSegment* src_segment =
             module_->GetElemSegment(inst->segment_index);
 
-        assert(dest_table->elem_type == src_segment->elem_type);
-
-        Write(GetReferenceTypeName(dest_table->elem_type), "_table_init(",
-              ExternalInstancePtr(dest_table->name), ", ");
-        if (src_segment->elem_exprs.empty()) {
-          Write("NULL, 0");
-        } else {
-          Write("elem_segment_exprs_", GlobalName(src_segment->name), ", ");
-          if (is_droppable(src_segment)) {
-            Write("(instance->elem_segment_dropped_",
-                  GlobalName(src_segment->name),
-                  " ? 0 : ", src_segment->elem_exprs.size(), ")");
-          } else {
-            Write("0");
-          }
-        }
-
-        Write(", ", StackVar(2), ", ", StackVar(1), ", ", StackVar(0));
-        Write(", instance, func_types);", Newline());
+        WriteElemTableInit(false, src_segment, dest_table);
         DropTypes(3);
       } break;
 
