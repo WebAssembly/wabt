@@ -103,7 +103,7 @@ class CircularArray {
   }
 
  private:
-  static const size_type kMask = kCapacity - 1;
+  static constexpr size_type kMask = kCapacity - 1;
 
   size_t position(size_t index) const { return (front_ + index) & kMask; }
 

@@ -26,9 +26,9 @@ typedef uint32_t Index;    // An index into one of the many index spaces.
 typedef uint64_t Address;  // An address or size in linear memory.
 typedef size_t Offset;     // An offset into a host's file or memory buffer.
 
-static const Address kInvalidAddress = ~0;
-static const Index kInvalidIndex = ~0;
-static const Offset kInvalidOffset = ~0;
+constexpr Address kInvalidAddress = ~0;
+constexpr Index kInvalidIndex = ~0;
+constexpr Offset kInvalidOffset = ~0;
 
 }  // namespace wabt
 

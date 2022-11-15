@@ -204,7 +204,7 @@ enum class LabelType {
   First = Func,
   Last = Catch,
 };
-static const int kLabelTypeCount = WABT_ENUM_COUNT(LabelType);
+constexpr int kLabelTypeCount = WABT_ENUM_COUNT(LabelType);
 
 struct Location {
   enum class Type {
@@ -291,7 +291,7 @@ enum class RelocType {
   First = FuncIndexLEB,
   Last = MemoryAddressTLSI32,
 };
-static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
+constexpr int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
 struct Reloc {
   Reloc(RelocType, size_t offset, Index index, int32_t addend = 0);
@@ -365,7 +365,7 @@ enum class ExternalKind {
   First = Func,
   Last = Tag,
 };
-static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
+constexpr int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 
 struct Limits {
   Limits() = default;

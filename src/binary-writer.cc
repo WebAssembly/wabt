@@ -96,7 +96,7 @@ namespace {
 
 /* TODO(binji): better leb size guess. Some sections we know will only be 1
  byte, but others we can be fairly certain will be larger. */
-static const size_t LEB_SECTION_SIZE_GUESS = 1;
+constexpr size_t LEB_SECTION_SIZE_GUESS = 1;
 
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)

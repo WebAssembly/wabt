@@ -1320,7 +1320,7 @@ enum class CommandType {
   First = Module,
   Last = AssertException,
 };
-static const int kCommandTypeCount = WABT_ENUM_COUNT(CommandType);
+constexpr int kCommandTypeCount = WABT_ENUM_COUNT(CommandType);
 
 class Command {
  public:

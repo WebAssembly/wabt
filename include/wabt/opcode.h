@@ -91,9 +91,9 @@ struct Opcode {
   bool IsInvalid() const { return enum_ >= Invalid; }
 
  private:
-  static const uint32_t kMathPrefix = 0xfc;
-  static const uint32_t kThreadsPrefix = 0xfe;
-  static const uint32_t kSimdPrefix = 0xfd;
+  static constexpr uint32_t kMathPrefix = 0xfc;
+  static constexpr uint32_t kThreadsPrefix = 0xfe;
+  static constexpr uint32_t kSimdPrefix = 0xfd;
 
   struct Info {
     const char* name;
