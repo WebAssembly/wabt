@@ -35,8 +35,8 @@ struct FilenameMemoryStreamPair {
   std::unique_ptr<MemoryStream> stream;
 };
 
-typedef std::function<Stream*(std::string_view filename)>
-    WriteBinarySpecStreamFactory;
+using WriteBinarySpecStreamFactory =
+    std::function<Stream*(std::string_view filename)>;
 
 Result WriteBinarySpecScript(Stream* json_stream,
                              WriteBinarySpecStreamFactory module_stream_factory,

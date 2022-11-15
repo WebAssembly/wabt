@@ -42,8 +42,8 @@ struct Binding {
 // object through a pointer to std::unordered_multimap.
 class BindingHash : public std::unordered_multimap<std::string, Binding> {
  public:
-  typedef std::function<void(const value_type&, const value_type&)>
-      DuplicateCallback;
+  using DuplicateCallback =
+      std::function<void(const value_type&, const value_type&)>;
 
   void FindDuplicates(DuplicateCallback callback) const;
 
@@ -59,7 +59,7 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
   }
 
  private:
-  typedef std::vector<const value_type*> ValueTypeVector;
+  using ValueTypeVector = std::vector<const value_type*>;
 
   void CreateDuplicatesVector(ValueTypeVector* out_duplicates) const;
   void SortDuplicatesVectorByLocation(ValueTypeVector* duplicates) const;

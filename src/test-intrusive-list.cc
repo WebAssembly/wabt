@@ -63,7 +63,7 @@ struct TestObject : intrusive_list_base<TestObject> {
 // static
 int TestObject::creation_count = 0;
 
-typedef intrusive_list<TestObject> TestObjectList;
+using TestObjectList = intrusive_list<TestObject>;
 
 class IntrusiveListTest : public ::testing::Test {
  protected:

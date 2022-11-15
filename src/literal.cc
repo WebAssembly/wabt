@@ -37,7 +37,7 @@ struct FloatTraitsBase {};
 
 template <>
 struct FloatTraitsBase<float> {
-  typedef uint32_t Uint;
+  using Uint = uint32_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 23;
   static constexpr float kHugeVal = HUGE_VALF;
@@ -48,7 +48,7 @@ struct FloatTraitsBase<float> {
 
 template <>
 struct FloatTraitsBase<double> {
-  typedef uint64_t Uint;
+  using Uint = uint64_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 52;
   static constexpr float kHugeVal = HUGE_VAL;
@@ -61,7 +61,7 @@ struct FloatTraitsBase<double> {
 
 template <typename T>
 struct FloatTraits : FloatTraitsBase<T> {
-  typedef typename FloatTraitsBase<T>::Uint Uint;
+  using Uint = typename FloatTraitsBase<T>::Uint;
   using FloatTraitsBase<T>::kBits;
   using FloatTraitsBase<T>::kSigBits;
 
@@ -80,9 +80,9 @@ struct FloatTraits : FloatTraitsBase<T> {
 template <typename T>
 class FloatParser {
  public:
-  typedef FloatTraits<T> Traits;
-  typedef typename Traits::Uint Uint;
-  typedef T Float;
+  using Traits = FloatTraits<T>;
+  using Uint = typename Traits::Uint;
+  using Float = T;
 
   static Result Parse(LiteralType,
                       const char* s,
@@ -107,8 +107,8 @@ class FloatParser {
 template <typename T>
 class FloatWriter {
  public:
-  typedef FloatTraits<T> Traits;
-  typedef typename Traits::Uint Uint;
+  using Traits = FloatTraits<T>;
+  using Uint = typename Traits::Uint;
 
   static void WriteHex(char* out, size_t size, Uint bits);
 };
@@ -719,7 +719,7 @@ Result ParseInt(const char* s,
                 const char* end,
                 U* out,
                 ParseIntType parse_type) {
-  typedef typename std::make_signed<U>::type S;
+  using S = typename std::make_signed<U>::type;
   uint64_t value;
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
