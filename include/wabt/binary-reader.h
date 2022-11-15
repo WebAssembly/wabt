@@ -17,8 +17,8 @@
 #ifndef WABT_BINARY_READER_H_
 #define WABT_BINARY_READER_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 #include <string_view>
 
 #include "wabt/binary.h"

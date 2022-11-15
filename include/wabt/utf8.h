@@ -17,7 +17,7 @@
 #ifndef WABT_UTF8_H_
 #define WABT_UTF8_H_
 
-#include <stdlib.h>
+#include <cstddef>
 
 namespace wabt {
 
