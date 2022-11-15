@@ -56,7 +56,7 @@ class WastLexer {
   }
 
  private:
-  static const int kEof = -1;
+  static constexpr int kEof = -1;
   enum class CharClass { IdChar = 1, Keyword = 2, HexDigit = 4, Digit = 8 };
 
   Location GetLocation();

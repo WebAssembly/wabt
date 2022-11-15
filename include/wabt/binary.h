@@ -65,7 +65,7 @@ enum class BinarySection {
   Last = Tag,
 };
 /* clang-format on */
-static const int kBinarySectionCount = WABT_ENUM_COUNT(BinarySection);
+constexpr int kBinarySectionCount = WABT_ENUM_COUNT(BinarySection);
 
 enum class BinarySectionOrder {
 #define V(Name, name, code) Name,

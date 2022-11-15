@@ -96,7 +96,7 @@ enum class ObjectKind {
   Last = Instance,
 };
 
-static const int kCommandTypeCount = WABT_ENUM_COUNT(ObjectKind);
+constexpr int kCommandTypeCount = WABT_ENUM_COUNT(ObjectKind);
 
 const char* GetName(Mutability);
 const std::string GetName(ValueType);
@@ -119,7 +119,7 @@ using RefVec = std::vector<Ref>;
 template <typename T, u8 L>
 struct Simd {
   using LaneType = T;
-  static const u8 lanes = L;
+  static constexpr u8 lanes = L;
 
   T v[L];
 
@@ -1086,8 +1086,8 @@ enum class RunResult {
 class Thread {
  public:
   struct Options {
-    static const u32 kDefaultValueStackSize = 64 * 1024 / sizeof(Value);
-    static const u32 kDefaultCallStackSize = 64 * 1024 / sizeof(Frame);
+    static constexpr u32 kDefaultValueStackSize = 64 * 1024 / sizeof(Value);
+    static constexpr u32 kDefaultCallStackSize = 64 * 1024 / sizeof(Frame);
 
     u32 value_stack_size = kDefaultValueStackSize;
     u32 call_stack_size = kDefaultCallStackSize;

@@ -95,7 +95,7 @@ class Istream {
  public:
   using SerializedOpcode = u32;  // TODO: change to u16
   using Offset = u32;
-  static const Offset kInvalidOffset = ~0;
+  static constexpr Offset kInvalidOffset = ~0;
   // Each br_table entry is made up of three instructions:
   //
   //   interp_drop_keep $drop $keep
@@ -103,7 +103,7 @@ class Istream {
   //   br $label
   //
   // Each opcode is a SerializedOpcode, and each immediate is a u32.
-  static const Offset kBrTableEntrySize =
+  static constexpr Offset kBrTableEntrySize =
       sizeof(SerializedOpcode) * 3 + 4 * sizeof(u32);
 
   // Emit API.
