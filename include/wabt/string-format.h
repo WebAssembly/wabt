@@ -17,6 +17,7 @@
 #ifndef WABT_STRING_FORMAT_H_
 #define WABT_STRING_FORMAT_H_
 
+#include <stdarg.h>
 #include <string>
 #include <vector>
 
