@@ -28,7 +28,7 @@ namespace wabt {
 
 class TypeChecker {
  public:
-  typedef std::function<void(const char* msg)> ErrorCallback;
+  using ErrorCallback = std::function<void(const char* msg)>;
 
   struct Label {
     Label(LabelType,

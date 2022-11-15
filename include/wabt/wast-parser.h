@@ -36,7 +36,7 @@ struct WastParseOptions {
   bool debug_parsing = false;
 };
 
-typedef std::array<TokenType, 2> TokenTypePair;
+using TokenTypePair = std::array<TokenType, 2>;
 
 class WastParser {
  public:
@@ -114,7 +114,7 @@ class WastParser {
   // token (used for printing better error messages).
   void ConsumeIfLpar() { Match(TokenType::Lpar); }
 
-  typedef bool SynchronizeFunc(TokenTypePair pair);
+  using SynchronizeFunc = bool(*)(TokenTypePair pair);
 
   // Attempt to synchronize the token stream by dropping tokens until the
   // SynchronizeFunc returns true, or until a token limit is reached. This

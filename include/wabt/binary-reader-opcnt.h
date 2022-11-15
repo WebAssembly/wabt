@@ -84,7 +84,7 @@ bool operator<=(const OpcodeInfo&, const OpcodeInfo&);
 bool operator>(const OpcodeInfo&, const OpcodeInfo&);
 bool operator>=(const OpcodeInfo&, const OpcodeInfo&);
 
-typedef std::map<OpcodeInfo, size_t> OpcodeInfoCounts;
+using OpcodeInfoCounts = std::map<OpcodeInfo, size_t>;
 
 Result ReadBinaryOpcnt(const void* data,
                        size_t size,

@@ -31,8 +31,8 @@ class OptionParser {
   enum class ArgumentCount { One, OneOrMore, ZeroOrMore };
 
   struct Option;
-  typedef std::function<void(const char*)> Callback;
-  typedef std::function<void()> NullCallback;
+  using Callback = std::function<void(const char*)>;
+  using NullCallback = std::function<void()>;
 
   struct Option {
     Option(char short_name,

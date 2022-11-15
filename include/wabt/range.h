@@ -29,8 +29,8 @@ struct Range {
   T size() const { return end - start; }
 };
 
-typedef Range<Offset> OffsetRange;
-typedef Range<int> ColumnRange;
+using OffsetRange = Range<Offset>;
+using ColumnRange = Range<int>;
 
 }  // namespace wabt
 

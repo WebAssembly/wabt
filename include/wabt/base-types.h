@@ -22,9 +22,9 @@
 
 namespace wabt {
 
-typedef uint32_t Index;    // An index into one of the many index spaces.
-typedef uint64_t Address;  // An address or size in linear memory.
-typedef size_t Offset;     // An offset into a host's file or memory buffer.
+using Index = uint32_t;    // An index into one of the many index spaces.
+using Address = uint64_t;  // An address or size in linear memory.
+using Offset = size_t;     // An offset into a host's file or memory buffer.
 
 constexpr Address kInvalidAddress = ~0;
 constexpr Index kInvalidIndex = ~0;

@@ -99,8 +99,8 @@ static void ParseOptions(int argc, char** argv) {
 namespace spectest {
 
 class Command;
-typedef std::unique_ptr<Command> CommandPtr;
-typedef std::vector<CommandPtr> CommandPtrVector;
+using CommandPtr = std::unique_ptr<Command>;
+using CommandPtrVector = std::vector<CommandPtr>;
 
 class Script {
  public:
@@ -155,7 +155,7 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
   Action action;
 };
 
-typedef ActionCommandBase<CommandType::Action> ActionCommand;
+using ActionCommand = ActionCommandBase<CommandType::Action>;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
@@ -289,9 +289,9 @@ class AssertTrapCommandBase : public CommandMixin<TypeEnum> {
   std::string text;
 };
 
-typedef AssertTrapCommandBase<CommandType::AssertTrap> AssertTrapCommand;
-typedef AssertTrapCommandBase<CommandType::AssertExhaustion>
-    AssertExhaustionCommand;
+using AssertTrapCommand = AssertTrapCommandBase<CommandType::AssertTrap>;
+using AssertExhaustionCommand =
+    AssertTrapCommandBase<CommandType::AssertExhaustion>;
 
 template <CommandType TypeEnum>
 class AssertModuleCommand : public CommandMixin<TypeEnum> {
@@ -301,13 +301,13 @@ class AssertModuleCommand : public CommandMixin<TypeEnum> {
   std::string text;
 };
 
-typedef AssertModuleCommand<CommandType::AssertMalformed>
-    AssertMalformedCommand;
-typedef AssertModuleCommand<CommandType::AssertInvalid> AssertInvalidCommand;
-typedef AssertModuleCommand<CommandType::AssertUnlinkable>
-    AssertUnlinkableCommand;
-typedef AssertModuleCommand<CommandType::AssertUninstantiable>
-    AssertUninstantiableCommand;
+using AssertMalformedCommand =
+    AssertModuleCommand<CommandType::AssertMalformed>;
+using AssertInvalidCommand = AssertModuleCommand<CommandType::AssertInvalid>;
+using AssertUnlinkableCommand =
+    AssertModuleCommand<CommandType::AssertUnlinkable>;
+using AssertUninstantiableCommand =
+    AssertModuleCommand<CommandType::AssertUninstantiable>;
 
 class AssertExceptionCommand
     : public CommandMixin<CommandType::AssertException> {

@@ -370,8 +370,8 @@ struct FuncCodeMetadata {
 struct CodeMetadataSection {
   std::vector<FuncCodeMetadata> entries;
 };
-typedef std::unordered_map<std::string_view, CodeMetadataSection>
-    CodeMetadataSections;
+using CodeMetadataSections =
+    std::unordered_map<std::string_view, CodeMetadataSection>;
 
 class BinaryWriter {
   WABT_DISALLOW_COPY_AND_ASSIGN(BinaryWriter);

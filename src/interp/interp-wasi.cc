@@ -49,45 +49,45 @@ namespace {
 
 // BEGIN: wasi.h types from wasi-libc
 
-typedef uint32_t __wasi_size_t;
-typedef uint32_t __wasi_ptr_t;
+using __wasi_size_t = uint32_t;
+using __wasi_ptr_t = uint32_t;
 
 static_assert(sizeof(__wasi_size_t) == 4, "witx calculated size");
 static_assert(alignof(__wasi_size_t) == 4, "witx calculated align");
 static_assert(sizeof(__wasi_ptr_t) == 4, "witx calculated size");
 static_assert(alignof(__wasi_ptr_t) == 4, "witx calculated align");
 
-typedef struct __wasi_prestat_dir_t {
+struct __wasi_prestat_dir_t {
   __wasi_size_t pr_name_len;
-} __wasi_prestat_dir_t;
+};
 
-typedef uint8_t __wasi_preopentype_t;
-typedef uint64_t __wasi_rights_t;
-typedef uint16_t __wasi_fdflags_t;
-typedef uint8_t __wasi_filetype_t;
-typedef uint16_t __wasi_oflags_t;
-typedef uint32_t __wasi_lookupflags_t;
-typedef uint32_t __wasi_fd_t;
-typedef uint64_t __wasi_timestamp_t;
-typedef uint8_t __wasi_whence_t;
-typedef int64_t __wasi_filedelta_t;
-typedef uint64_t __wasi_filesize_t;
+using __wasi_preopentype_t = uint8_t;
+using __wasi_rights_t = uint64_t;
+using __wasi_fdflags_t = uint16_t;
+using __wasi_filetype_t = uint8_t;
+using __wasi_oflags_t = uint16_t;
+using __wasi_lookupflags_t = uint32_t;
+using __wasi_fd_t = uint32_t;
+using __wasi_timestamp_t = uint64_t;
+using __wasi_whence_t = uint8_t;
+using __wasi_filedelta_t = int64_t;
+using __wasi_filesize_t = uint64_t;
 
-typedef union __wasi_prestat_u_t {
+union __wasi_prestat_u_t {
   __wasi_prestat_dir_t dir;
-} __wasi_prestat_u_t;
+};
 
 struct __wasi_prestat_t {
   __wasi_preopentype_t tag;
   __wasi_prestat_u_t u;
 };
 
-typedef struct __wasi_fdstat_t {
+struct __wasi_fdstat_t {
   __wasi_filetype_t fs_filetype;
   __wasi_fdflags_t fs_flags;
   __wasi_rights_t fs_rights_base;
   __wasi_rights_t fs_rights_inheriting;
-} __wasi_fdstat_t;
+};
 
 static_assert(sizeof(__wasi_fdstat_t) == 24, "witx calculated size");
 static_assert(alignof(__wasi_fdstat_t) == 8, "witx calculated align");
@@ -110,22 +110,22 @@ static_assert(alignof(__wasi_iovec_t) == 4, "witx calculated align");
 static_assert(offsetof(__wasi_iovec_t, buf) == 0, "witx calculated offset");
 static_assert(offsetof(__wasi_iovec_t, buf_len) == 4, "witx calculated offset");
 
-typedef uint64_t __wasi_device_t;
+using __wasi_device_t = uint64_t;
 
 static_assert(sizeof(__wasi_device_t) == 8, "witx calculated size");
 static_assert(alignof(__wasi_device_t) == 8, "witx calculated align");
 
-typedef uint64_t __wasi_inode_t;
+using __wasi_inode_t = uint64_t;
 
 static_assert(sizeof(__wasi_inode_t) == 8, "witx calculated size");
 static_assert(alignof(__wasi_inode_t) == 8, "witx calculated align");
 
-typedef uint64_t __wasi_linkcount_t;
+using __wasi_linkcount_t = uint64_t;
 
 static_assert(sizeof(__wasi_linkcount_t) == 8, "witx calculated size");
 static_assert(alignof(__wasi_linkcount_t) == 8, "witx calculated align");
 
-typedef struct __wasi_filestat_t {
+struct __wasi_filestat_t {
   __wasi_device_t dev;
   __wasi_inode_t ino;
   __wasi_filetype_t filetype;
@@ -134,7 +134,7 @@ typedef struct __wasi_filestat_t {
   __wasi_timestamp_t atim;
   __wasi_timestamp_t mtim;
   __wasi_timestamp_t ctim;
-} __wasi_filestat_t;
+};
 
 static_assert(sizeof(__wasi_filestat_t) == 64, "witx calculated size");
 static_assert(alignof(__wasi_filestat_t) == 8, "witx calculated align");

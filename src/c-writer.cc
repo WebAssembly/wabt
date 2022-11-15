@@ -73,12 +73,12 @@ struct Name {
   const std::string& name;
 };
 
-typedef Name<0> LocalName;
-typedef Name<1> GlobalName;
-typedef Name<2> ExternalPtr;
-typedef Name<3> ExternalRef;
-typedef Name<4> ExternalInstancePtr;
-typedef Name<5> ExternalInstanceRef;
+using LocalName = Name<0>;
+using GlobalName = Name<1>;
+using ExternalPtr = Name<2>;
+using ExternalRef = Name<3>;
+using ExternalInstancePtr = Name<4>;
+using ExternalInstanceRef = Name<5>;
 
 struct GotoLabel {
   explicit GotoLabel(const Var& var) : var(var) {}
@@ -153,10 +153,10 @@ class CWriter {
   Result WriteModule(const Module&);
 
  private:
-  typedef std::set<std::string> SymbolSet;
-  typedef std::map<std::string, std::string> SymbolMap;
-  typedef std::pair<Index, Type> StackTypePair;
-  typedef std::map<StackTypePair, std::string> StackVarSymbolMap;
+  using SymbolSet = std::set<std::string>;
+  using SymbolMap = std::map<std::string, std::string>;
+  using StackTypePair = std::pair<Index, Type>;
+  using StackVarSymbolMap = std::map<StackTypePair, std::string>;
 
   void WriteCHeader();
   void WriteCSource();

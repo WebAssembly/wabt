@@ -142,7 +142,7 @@ void RemoveEscapes(std::string_view text, OutputIter dest) {
   }
 }
 
-typedef std::vector<std::string_view> TextVector;
+using TextVector = std::vector<std::string_view>;
 
 template <typename OutputIter>
 void RemoveEscapes(const TextVector& texts, OutputIter out) {

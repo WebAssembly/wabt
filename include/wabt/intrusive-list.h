@@ -53,15 +53,15 @@ template <typename T>
 class intrusive_list {
  public:
   // types:
-  typedef T value_type;
-  typedef value_type& reference;
-  typedef const value_type& const_reference;
+  using value_type = T;
+  using reference = value_type&;
+  using const_reference = const value_type&;
   class iterator;
   class const_iterator;
-  typedef std::size_t size_type;
-  typedef std::ptrdiff_t difference_type;
-  typedef std::reverse_iterator<iterator> reverse_iterator;
-  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+  using size_type = std::size_t;
+  using difference_type = std::ptrdiff_t;
+  using reverse_iterator = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
   // construct/copy/destroy:
   intrusive_list();
@@ -142,11 +142,11 @@ class intrusive_list {
 template <typename T>
 class intrusive_list<T>::iterator {
  public:
-  typedef std::ptrdiff_t difference_type;
-  typedef std::bidirectional_iterator_tag iterator_category;
-  typedef T value_type;
-  typedef T* pointer;
-  typedef T& reference;
+  using difference_type = std::ptrdiff_t;
+  using iterator_category = std::bidirectional_iterator_tag;
+  using value_type = T;
+  using pointer = T*;
+  using reference = T&;
 
   iterator(const intrusive_list<T>& list, T* node)
       : list_(&list), node_(node) {}
@@ -205,11 +205,11 @@ class intrusive_list<T>::iterator {
 template <typename T>
 class intrusive_list<T>::const_iterator {
  public:
-  typedef std::ptrdiff_t difference_type;
-  typedef std::bidirectional_iterator_tag iterator_category;
-  typedef T value_type;
-  typedef const T* pointer;
-  typedef const T& reference;
+  using difference_type = std::ptrdiff_t;
+  using iterator_category = std::bidirectional_iterator_tag;
+  using value_type = T;
+  using pointer = const T*;
+  using reference = const T&;
 
   const_iterator(const intrusive_list<T>& list, T* node)
       : list_(&list), node_(node) {}

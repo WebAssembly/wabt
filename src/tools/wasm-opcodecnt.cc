@@ -98,7 +98,7 @@ static size_t SumCounts(const OpcodeInfoCounts& info_counts) {
 }
 
 void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
-  typedef std::pair<Opcode, size_t> OpcodeCountPair;
+  using OpcodeCountPair = std::pair<Opcode, size_t>;
 
   std::map<Opcode, size_t> counts;
   for (auto& [info, count] : info_counts) {
@@ -122,9 +122,9 @@ void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
 
 void WriteCountsWithImmediates(Stream& stream, const OpcodeInfoCounts& counts) {
   // Remove const from the key type so we can sort below.
-  typedef std::pair<std::remove_const<OpcodeInfoCounts::key_type>::type,
-                    OpcodeInfoCounts::mapped_type>
-      OpcodeInfoCountPair;
+  using OpcodeInfoCountPair =
+      std::pair<std::remove_const<OpcodeInfoCounts::key_type>::type,
+                OpcodeInfoCounts::mapped_type>;
 
   std::vector<OpcodeInfoCountPair> sorted;
   std::copy_if(counts.begin(), counts.end(), std::back_inserter(sorted),

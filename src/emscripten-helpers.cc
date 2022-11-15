@@ -42,9 +42,9 @@
 #include "wabt/wast-parser.h"
 #include "wabt/wat-writer.h"
 
-typedef std::unique_ptr<wabt::OutputBuffer> WabtOutputBufferPtr;
-typedef std::pair<std::string, WabtOutputBufferPtr>
-    WabtFilenameOutputBufferPair;
+using WabtOutputBufferPtr = std::unique_ptr<wabt::OutputBuffer>;
+using WabtFilenameOutputBufferPair =
+    std::pair<std::string, WabtOutputBufferPtr>;
 
 struct WabtParseWatResult {
   wabt::Result result;

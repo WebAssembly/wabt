@@ -78,7 +78,7 @@ struct Var {
     std::string name_;
   };
 };
-typedef std::vector<Var> VarVector;
+using VarVector = std::vector<Var>;
 
 struct Const {
   static constexpr uintptr_t kRefNullBits = ~uintptr_t(0);
@@ -200,7 +200,7 @@ struct Const {
   v128 data_;
   ExpectedNan nan_[4];
 };
-typedef std::vector<Const> ConstVector;
+using ConstVector = std::vector<Const>;
 
 struct FuncSignature {
   TypeVector param_types;
@@ -377,9 +377,9 @@ enum class ExprType {
 const char* GetExprTypeName(ExprType type);
 
 class Expr;
-typedef intrusive_list<Expr> ExprList;
+using ExprList = intrusive_list<Expr>;
 
-typedef FuncDeclaration BlockDeclaration;
+using BlockDeclaration = FuncDeclaration;
 
 struct Block {
   Block() = default;
@@ -402,7 +402,7 @@ struct Catch {
     return var.is_index() && var.index() == kInvalidIndex;
   }
 };
-typedef std::vector<Catch> CatchVector;
+using CatchVector = std::vector<Catch>;
 
 enum class TryKind { Plain, Catch, Delegate };
 
@@ -456,16 +456,16 @@ class MemoryBinaryExpr : public ExprMixin<TypeEnum> {
   Var destmemidx;
 };
 
-typedef ExprMixin<ExprType::Drop> DropExpr;
-typedef ExprMixin<ExprType::Nop> NopExpr;
-typedef ExprMixin<ExprType::Return> ReturnExpr;
-typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
+using DropExpr = ExprMixin<ExprType::Drop>;
+using NopExpr = ExprMixin<ExprType::Nop>;
+using ReturnExpr = ExprMixin<ExprType::Return>;
+using UnreachableExpr = ExprMixin<ExprType::Unreachable>;
 
-typedef MemoryExpr<ExprType::MemoryGrow> MemoryGrowExpr;
-typedef MemoryExpr<ExprType::MemorySize> MemorySizeExpr;
-typedef MemoryExpr<ExprType::MemoryFill> MemoryFillExpr;
+using MemoryGrowExpr = MemoryExpr<ExprType::MemoryGrow>;
+using MemorySizeExpr = MemoryExpr<ExprType::MemorySize>;
+using MemoryFillExpr = MemoryExpr<ExprType::MemoryFill>;
 
-typedef MemoryBinaryExpr<ExprType::MemoryCopy> MemoryCopyExpr;
+using MemoryCopyExpr = MemoryBinaryExpr<ExprType::MemoryCopy>;
 
 template <ExprType TypeEnum>
 class RefTypeExpr : public ExprMixin<TypeEnum> {
@@ -476,8 +476,8 @@ class RefTypeExpr : public ExprMixin<TypeEnum> {
   Type type;
 };
 
-typedef RefTypeExpr<ExprType::RefNull> RefNullExpr;
-typedef ExprMixin<ExprType::RefIsNull> RefIsNullExpr;
+using RefNullExpr = RefTypeExpr<ExprType::RefNull>;
+using RefIsNullExpr = ExprMixin<ExprType::RefIsNull>;
 
 template <ExprType TypeEnum>
 class OpcodeExpr : public ExprMixin<TypeEnum> {
@@ -488,11 +488,11 @@ class OpcodeExpr : public ExprMixin<TypeEnum> {
   Opcode opcode;
 };
 
-typedef OpcodeExpr<ExprType::Binary> BinaryExpr;
-typedef OpcodeExpr<ExprType::Compare> CompareExpr;
-typedef OpcodeExpr<ExprType::Convert> ConvertExpr;
-typedef OpcodeExpr<ExprType::Unary> UnaryExpr;
-typedef OpcodeExpr<ExprType::Ternary> TernaryExpr;
+using BinaryExpr = OpcodeExpr<ExprType::Binary>;
+using CompareExpr = OpcodeExpr<ExprType::Compare>;
+using ConvertExpr = OpcodeExpr<ExprType::Convert>;
+using UnaryExpr = OpcodeExpr<ExprType::Unary>;
+using TernaryExpr = OpcodeExpr<ExprType::Ternary>;
 
 class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
  public:
@@ -570,28 +570,28 @@ class MemoryVarExpr : public MemoryExpr<TypeEnum> {
   Var var;
 };
 
-typedef VarExpr<ExprType::Br> BrExpr;
-typedef VarExpr<ExprType::BrIf> BrIfExpr;
-typedef VarExpr<ExprType::Call> CallExpr;
-typedef VarExpr<ExprType::RefFunc> RefFuncExpr;
-typedef VarExpr<ExprType::GlobalGet> GlobalGetExpr;
-typedef VarExpr<ExprType::GlobalSet> GlobalSetExpr;
-typedef VarExpr<ExprType::LocalGet> LocalGetExpr;
-typedef VarExpr<ExprType::LocalSet> LocalSetExpr;
-typedef VarExpr<ExprType::LocalTee> LocalTeeExpr;
-typedef VarExpr<ExprType::ReturnCall> ReturnCallExpr;
-typedef VarExpr<ExprType::Throw> ThrowExpr;
-typedef VarExpr<ExprType::Rethrow> RethrowExpr;
+using BrExpr = VarExpr<ExprType::Br>;
+using BrIfExpr = VarExpr<ExprType::BrIf>;
+using CallExpr = VarExpr<ExprType::Call>;
+using RefFuncExpr = VarExpr<ExprType::RefFunc>;
+using GlobalGetExpr = VarExpr<ExprType::GlobalGet>;
+using GlobalSetExpr = VarExpr<ExprType::GlobalSet>;
+using LocalGetExpr = VarExpr<ExprType::LocalGet>;
+using LocalSetExpr = VarExpr<ExprType::LocalSet>;
+using LocalTeeExpr = VarExpr<ExprType::LocalTee>;
+using ReturnCallExpr = VarExpr<ExprType::ReturnCall>;
+using ThrowExpr = VarExpr<ExprType::Throw>;
+using RethrowExpr = VarExpr<ExprType::Rethrow>;
 
-typedef VarExpr<ExprType::DataDrop> DataDropExpr;
-typedef VarExpr<ExprType::ElemDrop> ElemDropExpr;
-typedef VarExpr<ExprType::TableGet> TableGetExpr;
-typedef VarExpr<ExprType::TableSet> TableSetExpr;
-typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
-typedef VarExpr<ExprType::TableSize> TableSizeExpr;
-typedef VarExpr<ExprType::TableFill> TableFillExpr;
+using DataDropExpr = VarExpr<ExprType::DataDrop>;
+using ElemDropExpr = VarExpr<ExprType::ElemDrop>;
+using TableGetExpr = VarExpr<ExprType::TableGet>;
+using TableSetExpr = VarExpr<ExprType::TableSet>;
+using TableGrowExpr = VarExpr<ExprType::TableGrow>;
+using TableSizeExpr = VarExpr<ExprType::TableSize>;
+using TableFillExpr = VarExpr<ExprType::TableFill>;
 
-typedef MemoryVarExpr<ExprType::MemoryInit> MemoryInitExpr;
+using MemoryInitExpr = MemoryVarExpr<ExprType::MemoryInit>;
 
 class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
@@ -674,8 +674,8 @@ class BlockExprBase : public ExprMixin<TypeEnum> {
   Block block;
 };
 
-typedef BlockExprBase<ExprType::Block> BlockExpr;
-typedef BlockExprBase<ExprType::Loop> LoopExpr;
+using BlockExpr = BlockExprBase<ExprType::Block>;
+using LoopExpr = BlockExprBase<ExprType::Loop>;
 
 class IfExpr : public ExprMixin<ExprType::If> {
  public:
@@ -734,17 +734,17 @@ class LoadStoreExpr : public MemoryExpr<TypeEnum> {
   Address offset;
 };
 
-typedef LoadStoreExpr<ExprType::Load> LoadExpr;
-typedef LoadStoreExpr<ExprType::Store> StoreExpr;
+using LoadExpr = LoadStoreExpr<ExprType::Load>;
+using StoreExpr = LoadStoreExpr<ExprType::Store>;
 
-typedef LoadStoreExpr<ExprType::AtomicLoad> AtomicLoadExpr;
-typedef LoadStoreExpr<ExprType::AtomicStore> AtomicStoreExpr;
-typedef LoadStoreExpr<ExprType::AtomicRmw> AtomicRmwExpr;
-typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
-typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
-typedef LoadStoreExpr<ExprType::AtomicNotify> AtomicNotifyExpr;
-typedef LoadStoreExpr<ExprType::LoadSplat> LoadSplatExpr;
-typedef LoadStoreExpr<ExprType::LoadZero> LoadZeroExpr;
+using AtomicLoadExpr = LoadStoreExpr<ExprType::AtomicLoad>;
+using AtomicStoreExpr = LoadStoreExpr<ExprType::AtomicStore>;
+using AtomicRmwExpr = LoadStoreExpr<ExprType::AtomicRmw>;
+using AtomicRmwCmpxchgExpr = LoadStoreExpr<ExprType::AtomicRmwCmpxchg>;
+using AtomicWaitExpr = LoadStoreExpr<ExprType::AtomicWait>;
+using AtomicNotifyExpr = LoadStoreExpr<ExprType::AtomicNotify>;
+using LoadSplatExpr = LoadStoreExpr<ExprType::LoadSplat>;
+using LoadZeroExpr = LoadStoreExpr<ExprType::LoadZero>;
 
 class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
  public:
@@ -765,8 +765,8 @@ struct Tag {
 
 class LocalTypes {
  public:
-  typedef std::pair<Type, Index> Decl;
-  typedef std::vector<Decl> Decls;
+  using Decl = std::pair<Type, Index>;
+  using Decls = std::vector<Decl>;
 
   struct const_iterator {
     const_iterator(Decls::const_iterator decl, Index index)
@@ -865,7 +865,7 @@ struct Table {
   Type elem_type;
 };
 
-typedef std::vector<ExprList> ExprListVector;
+using ExprListVector = std::vector<ExprList>;
 
 struct ElemSegment {
   explicit ElemSegment(std::string_view name) : name(name) {}
@@ -1001,7 +1001,7 @@ class ModuleField : public intrusive_list_base<ModuleField> {
   ModuleFieldType type_;
 };
 
-typedef intrusive_list<ModuleField> ModuleFieldList;
+using ModuleFieldList = intrusive_list<ModuleField>;
 
 template <ModuleFieldType TypeEnum>
 class ModuleFieldMixin : public ModuleField {
@@ -1249,8 +1249,8 @@ class DataScriptModule : public ScriptModuleMixin<TypeEnum> {
   std::vector<uint8_t> data;
 };
 
-typedef DataScriptModule<ScriptModuleType::Binary> BinaryScriptModule;
-typedef DataScriptModule<ScriptModuleType::Quoted> QuotedScriptModule;
+using BinaryScriptModule = DataScriptModule<ScriptModuleType::Binary>;
+using QuotedScriptModule = DataScriptModule<ScriptModuleType::Quoted>;
 
 enum class ActionType {
   Invoke,
@@ -1276,7 +1276,7 @@ class Action {
   ActionType type_;
 };
 
-typedef std::unique_ptr<Action> ActionPtr;
+using ActionPtr = std::unique_ptr<Action>;
 
 template <ActionType TypeEnum>
 class ActionMixin : public Action {
@@ -1361,7 +1361,7 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
   ActionPtr action;
 };
 
-typedef ActionCommandBase<CommandType::Action> ActionCommand;
+using ActionCommand = ActionCommandBase<CommandType::Action>;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
@@ -1385,9 +1385,9 @@ class AssertTrapCommandBase : public CommandMixin<TypeEnum> {
   std::string text;
 };
 
-typedef AssertTrapCommandBase<CommandType::AssertTrap> AssertTrapCommand;
-typedef AssertTrapCommandBase<CommandType::AssertExhaustion>
-    AssertExhaustionCommand;
+using AssertTrapCommand = AssertTrapCommandBase<CommandType::AssertTrap>;
+using AssertExhaustionCommand =
+    AssertTrapCommandBase<CommandType::AssertExhaustion>;
 
 template <CommandType TypeEnum>
 class AssertModuleCommand : public CommandMixin<TypeEnum> {
@@ -1396,13 +1396,13 @@ class AssertModuleCommand : public CommandMixin<TypeEnum> {
   std::string text;
 };
 
-typedef AssertModuleCommand<CommandType::AssertMalformed>
-    AssertMalformedCommand;
-typedef AssertModuleCommand<CommandType::AssertInvalid> AssertInvalidCommand;
-typedef AssertModuleCommand<CommandType::AssertUnlinkable>
-    AssertUnlinkableCommand;
-typedef AssertModuleCommand<CommandType::AssertUninstantiable>
-    AssertUninstantiableCommand;
+using AssertMalformedCommand =
+    AssertModuleCommand<CommandType::AssertMalformed>;
+using AssertInvalidCommand = AssertModuleCommand<CommandType::AssertInvalid>;
+using AssertUnlinkableCommand =
+    AssertModuleCommand<CommandType::AssertUnlinkable>;
+using AssertUninstantiableCommand =
+    AssertModuleCommand<CommandType::AssertUninstantiable>;
 
 class AssertExceptionCommand
     : public CommandMixin<CommandType::AssertException> {
@@ -1410,8 +1410,8 @@ class AssertExceptionCommand
   ActionPtr action;
 };
 
-typedef std::unique_ptr<Command> CommandPtr;
-typedef std::vector<CommandPtr> CommandPtrVector;
+using CommandPtr = std::unique_ptr<Command>;
+using CommandPtrVector = std::vector<CommandPtr>;
 
 struct Script {
   WABT_DISALLOW_COPY_AND_ASSIGN(Script);

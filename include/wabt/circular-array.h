@@ -29,11 +29,11 @@ namespace wabt {
 template <class T, size_t kCapacity>
 class CircularArray {
  public:
-  typedef T value_type;
-  typedef value_type& reference;
-  typedef const value_type& const_reference;
-  typedef size_t size_type;
-  typedef ptrdiff_t difference_type;
+  using value_type = T;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+  using size_type = size_t;
+  using difference_type = ptrdiff_t;
 
   CircularArray() {
     static_assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0),
