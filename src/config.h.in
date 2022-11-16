@@ -22,6 +22,8 @@
 
 #cmakedefine WABT_VERSION_STRING "@WABT_VERSION_STRING@"
 
+#cmakedefine WABT_DEBUG @WABT_DEBUG@
+
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 
 /* Whether <alloca.h> is available */

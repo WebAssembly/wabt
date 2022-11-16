@@ -111,6 +111,10 @@ check_type_size(size_t SIZEOF_SIZE_T)
 include(TestBigEndian)  # Note: deprecated in CMake 3.20
 test_big_endian(WABT_BIG_ENDIAN)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(WABT_DEBUG 1)
+endif ()
+
 configure_file(src/config.h.in include/wabt/config.h @ONLY)
 
 
