@@ -296,15 +296,15 @@ class CWriter(object):
                 self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
             elif type_ == 'v128' and 'nan:canonical' in value:
                 assert_map = {
-                    2 : 'ASSERT_RETURN_CANONICAL_NAN_F64X2',
-                    4 : 'ASSERT_RETURN_CANONICAL_NAN_F32X4',
+                    2: 'ASSERT_RETURN_CANONICAL_NAN_F64X2',
+                    4: 'ASSERT_RETURN_CANONICAL_NAN_F32X4',
                 }
                 assert_macro = assert_map[len(value)]
                 self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
             elif type_ == 'v128' and 'nan:arithmetic' in value:
                 assert_map = {
-                    2 : 'ASSERT_RETURN_ARITHMETIC_NAN_F64X2',
-                    4 : 'ASSERT_RETURN_ARITHMETIC_NAN_F32X4',
+                    2: 'ASSERT_RETURN_ARITHMETIC_NAN_F64X2',
+                    4: 'ASSERT_RETURN_ARITHMETIC_NAN_F32X4',
                 }
                 assert_macro = assert_map[len(value)]
                 self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
@@ -351,14 +351,14 @@ class CWriter(object):
     def _Constant(self, const):
         type_ = const['type']
         value = const['value']
-        if type_ == 'f32' and value  == 'nan:canonical':
+        if type_ == 'f32' and value == 'nan:canonical':
             return 'SIMDE_MATH_NANF'
-        if type_ == 'f32' and value  == 'nan:arithmetic':
-            return '-SIMDE_MATH_NANF' # NaN with 1 in MSB of payload
+        if type_ == 'f32' and value == 'nan:arithmetic':
+            return '-SIMDE_MATH_NANF'  # NaN with 1 in MSB of payload
         if type_ == 'f64' and value == 'nan:canonical':
             return 'SIMDE_MATH_NAN'
         if type_ == 'f64' and value == 'nan:arithmetic':
-            return '-SIMDE_MATH_NAN' # NaN with 1 in MSB of payload
+            return '-SIMDE_MATH_NAN'  # NaN with 1 in MSB of payload
         if type_ == 'i8':
             return '%su' % int(value)
         if type_ == 'i16':
@@ -429,14 +429,21 @@ def Compile(cc, c_filename, out_dir, *args):
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, ext), out_dir)
     args = [val for sublist in args for val in sublist]
     if IS_WINDOWS:
-        args += ['/nologo', '/DWASM_RT_ENABLE_SIMD', '/MDd', '/c', c_filename, '/Fo' + o_filename]
+        args += ['/nologo', '/DWASM_RT_ENABLE_SIMD',
+                 '/arch:AVX', '/arch:AVX2', '/arch:AVX512',
+                 '/arch:IA32', '/arch:SSE', '/arch:SSE2',
+                 '/arch:ARMv7VE', '/arch:VFPv4',
+                 '/arch:armv8.0', '/arch:armv8.1', '/arch:armv8.2',
+                 '/arch:armv8.3', '/arch:armv8.4', '/arch:armv8.5',
+                 '/arch:armv8.6', '/arch:armv8.7', '/arch:armv8.8',
+                 '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
         # See "Compiling the wasm2c output" section of wasm2c/README.md
         # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
         # and '-frounding-math' to maintain conformance with the spec tests
         # (GCC also requires '-fsignaling-nans')
         args += ['-c', c_filename, '-o', o_filename, '-O2',
-                 '-DWASM_RT_ENABLE_SIMD',
+                 '-DWASM_RT_ENABLE_SIMD', '-march=native',
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
