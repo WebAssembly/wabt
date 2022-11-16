@@ -382,31 +382,29 @@ if (WABT_INSTALL_RULES)
   )
 endif ()
 
-IF (NOT WIN32)
-  add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
-  add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
-  if (WABT_BIG_ENDIAN)
-    target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
-  endif ()
+add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
+add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
+if (WABT_BIG_ENDIAN)
+  target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
+endif ()
 
-  if (WABT_INSTALL_RULES)
-    install(
-      TARGETS wasm-rt-impl
-      EXPORT wabt-targets
-      COMPONENT wabt-development
-      INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-    )
-    install(
-      FILES "wasm2c/wasm-rt.h"
-      TYPE INCLUDE
-      COMPONENT wabt-development
-    )
-    install(
-      FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c"
-      DESTINATION "${CMAKE_INSTALL_DATADIR}/wabt/wasm2c"
-      COMPONENT wabt-development
-    )
-  endif ()
+if (WABT_INSTALL_RULES)
+  install(
+    TARGETS wasm-rt-impl
+    EXPORT wabt-targets
+    COMPONENT wabt-development
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  )
+  install(
+    FILES "wasm2c/wasm-rt.h"
+    TYPE INCLUDE
+    COMPONENT wabt-development
+  )
+  install(
+    FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/wabt/wasm2c"
+    COMPONENT wabt-development
+  )
 endif ()
 
 if (BUILD_FUZZ_TOOLS)
