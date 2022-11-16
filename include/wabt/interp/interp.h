@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "wabt/cast.h"
+#include "wabt/config.h"
 #include "wabt/common.h"
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
@@ -580,7 +581,7 @@ struct Value {
   };
 
  public:
-#ifndef NDEBUG
+#ifdef WABT_DEBUG
   Value() : v128_(0, 0, 0, 0), type(ValueType::Any) {}
   void SetType(ValueType t) { type = t; }
   void CheckType(ValueType t) const {
