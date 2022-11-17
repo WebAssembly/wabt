@@ -421,13 +421,13 @@ class CWriter(object):
             raise Error('Unexpected action type: %s' % type_)
 
 
-def Compile(cc, c_filename, out_dir, *args):
+def Compile(cc, c_filename, out_dir, args):
     if IS_WINDOWS:
         ext = '.obj'
     else:
         ext = '.o'
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, ext), out_dir)
-    args = [val for sublist in args for val in sublist]
+    args = args.copy()
     if IS_WINDOWS:
         args += ['/nologo', '/DWASM_RT_ENABLE_SIMD',
                  '/arch:AVX', '/arch:AVX2', '/arch:AVX512',

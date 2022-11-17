@@ -335,7 +335,6 @@ static bool is_arithmetic_nan_f64x2(v128 x) {
   return is_arithmetic_nan_f64(simde_wasm_i64x2_extract_lane(x, 0)) ||
          is_arithmetic_nan_f64(simde_wasm_i64x2_extract_lane(x, 1));
 }
-
 #endif
 
 
