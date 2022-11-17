@@ -280,7 +280,19 @@ class CWriter(object):
         if len(expected) == 1:
             type_ = expected[0]['type']
             value = expected[0]['value']
-            if value == 'nan:canonical':
+            if type_ == 'v128':
+                lane_type = expected[0]['lane_type']
+                lane_count = len(expected[0]['value'])
+                # type, fmt_expected, fmt_got, f, compare, expected, found
+                self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, %s, (%s), (%s));\n' %
+                                    ("v128",
+                                     " ".join("MULTI_" + ("str" if val in ('nan:canonical', 'nan:arithmetic') else lane_type) for val in value),
+                                     " ".join("MULTI_" + lane_type for _ in value),
+                                     self._Action(command),
+                                     self._SIMDCompareVector(expected[0]),
+                                     self._SIMDConstantList(expected[0]),
+                                     self._SIMDFoundList(lane_type, lane_count)))
+            elif value == 'nan:canonical':
                 assert_map = {
                     'f32': 'ASSERT_RETURN_CANONICAL_NAN_F32',
                     'f64': 'ASSERT_RETURN_CANONICAL_NAN_F64',
@@ -294,27 +306,12 @@ class CWriter(object):
                 }
                 assert_macro = assert_map[(type_)]
                 self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
-            elif type_ == 'v128' and 'nan:canonical' in value:
-                assert_map = {
-                    2: 'ASSERT_RETURN_CANONICAL_NAN_F64X2',
-                    4: 'ASSERT_RETURN_CANONICAL_NAN_F32X4',
-                }
-                assert_macro = assert_map[len(value)]
-                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
-            elif type_ == 'v128' and 'nan:arithmetic' in value:
-                assert_map = {
-                    2: 'ASSERT_RETURN_ARITHMETIC_NAN_F64X2',
-                    4: 'ASSERT_RETURN_ARITHMETIC_NAN_F32X4',
-                }
-                assert_macro = assert_map[len(value)]
-                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
             else:
                 assert_map = {
                     'i32': 'ASSERT_RETURN_I32',
                     'f32': 'ASSERT_RETURN_F32',
                     'i64': 'ASSERT_RETURN_I64',
                     'f64': 'ASSERT_RETURN_F64',
-                    'v128': 'ASSERT_RETURN_V128',
                     'externref': 'ASSERT_RETURN_EXTERNREF',
                     'funcref': 'ASSERT_RETURN_FUNCREF',
                 }
@@ -328,9 +325,10 @@ class CWriter(object):
             self._WriteAssertActionCommand(command)
         else:
             result_types = [result['type'] for result in expected]
-            # type, fmt, f, compare, expected, found
-            self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, (%s), (%s));\n' %
+            # type, fmt_expected, fmt_got, f, compare, expected, found
+            self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, %s, (%s), (%s));\n' %
                                 ("struct wasm_multi_" + MangleTypes(result_types),
+                                 " ".join("MULTI_" + ty for ty in result_types),
                                  " ".join("MULTI_" + ty for ty in result_types),
                                  self._Action(command),
                                  self._CompareList(expected),
@@ -351,14 +349,6 @@ class CWriter(object):
     def _Constant(self, const):
         type_ = const['type']
         value = const['value']
-        if type_ == 'f32' and value == 'nan:canonical':
-            return 'SIMDE_MATH_NANF'
-        if type_ == 'f32' and value == 'nan:arithmetic':
-            return '-SIMDE_MATH_NANF'  # NaN with 1 in MSB of payload
-        if type_ == 'f64' and value == 'nan:canonical':
-            return 'SIMDE_MATH_NAN'
-        if type_ == 'f64' and value == 'nan:arithmetic':
-            return '-SIMDE_MATH_NAN'  # NaN with 1 in MSB of payload
         if type_ == 'i8':
             return '%su' % int(value)
         if type_ == 'i16':
@@ -368,8 +358,12 @@ class CWriter(object):
         elif type_ == 'i64':
             return '%sull' % int(value)
         elif type_ == 'f32':
+            if value in ('nan:canonical', 'nan:arithmetic'):
+                return '"(f32 %s)"' % value
             return F32ToC(int(value))
         elif type_ == 'f64':
+            if value in ('nan:canonical', 'nan:arithmetic'):
+                return '"(f64 %s)"' % value
             return F64ToC(int(value))
         elif type_ == 'v128':
             return 'simde_wasm_' + const['lane_type'] + 'x' + str(len(const['value'])) + '_make(' + ','.join([self._Constant({'type': const['lane_type'], 'value': x}) for x in value]) + ')'
@@ -402,6 +396,28 @@ class CWriter(object):
 
     def _CompareList(self, consts):
         return ' && '.join(self._Compare(num, const) for num, const in enumerate(consts))
+
+    def _SIMDConstantList(self, const):
+        return ', '.join(self._Constant({'type': const['lane_type'], 'value': val}) for val in const['value'])
+
+    def _SIMDFound(self, num, lane_type, lane_count):
+        return 'simde_wasm_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
+
+    def _SIMDFoundList(self, lane_type, lane_count):
+        return ', '.join(self._SIMDFound(num, lane_type, lane_count) for num in range(lane_count))
+
+    def _SIMDCompare(self, num, val, lane_type, lane_count):
+        if val == 'nan:canonical':
+            return 'is_canonical_nan_%s(%s_bits(%s))' % (lane_type, lane_type, self._SIMDFound(num, lane_type, lane_count))
+        elif val == 'nan:arithmetic':
+            return 'is_arithmetic_nan_%s(%s_bits(%s))' % (lane_type, lane_type, self._SIMDFound(num, lane_type, lane_count))
+        else:
+            return "is_equal_%s(%s, %s)" % (lane_type,
+                                            self._Constant({'type': lane_type, 'value':val}),
+                                            self._SIMDFound(num, lane_type, lane_count))
+
+    def _SIMDCompareVector(self, const):
+        return ' && '.join(self._SIMDCompare(num, val, const['lane_type'], len(const['value'])) for num, val in enumerate(const['value']))
 
     def _Action(self, command):
         action = command['action']

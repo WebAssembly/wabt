@@ -100,31 +100,6 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                    \
   } while (0)
 
-#ifdef WASM_RT_ENABLE_SIMD
-#define ASSERT_RETURN_V128(f, expected)                                      \
-  do {                                                                       \
-    g_tests_run++;                                                           \
-    int trap_code = wasm_rt_impl_try();                                      \
-    if (trap_code) {                                                         \
-      error(__FILE__, __LINE__, #f " trapped (%s).\n",                       \
-            wasm_rt_strerror(trap_code));                                    \
-    } else {                                                                 \
-      v128 actual = f;                                                       \
-      if (is_equal_v128(actual, expected)) {                                 \
-        g_tests_passed++;                                                    \
-      } else {                                                               \
-        error(__FILE__, __LINE__,                                            \
-              "in " #f ": expected {0x%" PRIx64 ", 0x%" PRIx64 "}, got {0x%" \
-              PRIx64 ", 0x%" PRIx64 "}\n",                                   \
-              simde_wasm_i64x2_extract_lane(expected, 0),                    \
-              simde_wasm_i64x2_extract_lane(expected, 1),                    \
-              simde_wasm_i64x2_extract_lane(actual, 0),                      \
-              simde_wasm_i64x2_extract_lane(actual, 1));                     \
-      }                                                                      \
-    }                                                                        \
-  } while (0)
-#endif
-
 #define ASSERT_RETURN_FUNCREF(f, expected)                                \
   do {                                                                    \
     g_tests_run++;                                                        \
@@ -163,48 +138,31 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                         \
   } while (0)
 
-#ifdef WASM_RT_ENABLE_SIMD
-#define ASSERT_RETURN_NAN_V(type, vtype, f, kind)                    \
-  do {                                                               \
-    g_tests_run++;                                                   \
-    if (wasm_rt_impl_try() != 0) {                                   \
-      error(__FILE__, __LINE__, #f " trapped.\n");                   \
-    } else {                                                         \
-      type actual = f;                                               \
-      if (is_##kind##_nan_##vtype(actual)) {                         \
-        g_tests_passed++;                                            \
-      } else {                                                       \
-        error(__FILE__, __LINE__,                                    \
-              "in " #f ": expected result to be a " #vtype " " #kind \
-              " nan, got {0x%" PRIx64 ", 0x%" PRIx64 "}.\n",         \
-              simde_wasm_i64x2_extract_lane(actual, 0),              \
-              simde_wasm_i64x2_extract_lane(actual, 1));             \
-      }                                                              \
-    }                                                                \
-  } while (0)
-#endif
-
 #define MULTI_T_UNPACK_(...) __VA_ARGS__
 #define MULTI_T_UNPACK(arg) MULTI_T_UNPACK_ arg
-#define MULTI_i32 "%u"
-#define MULTI_i64 "%" PRIu64
-#define MULTI_f32 "%.9g"
-#define MULTI_f64 "%.17g"
-#define ASSERT_RETURN_MULTI_T(type, fmt, f, compare, expected, found)    \
-  do {                                                                   \
-    g_tests_run++;                                                       \
-    if (wasm_rt_impl_try() != 0) {                                       \
-      error(__FILE__, __LINE__, #f " trapped.\n");                       \
-    } else {                                                             \
-      type actual = f;                                                   \
-      if (compare) {                                                     \
-        g_tests_passed++;                                                \
-      } else {                                                           \
-        error(__FILE__, __LINE__,                                        \
-              "in " #f ": expected " fmt ", got " fmt ".\n",             \
-              MULTI_T_UNPACK(expected), MULTI_T_UNPACK(found));          \
-      }                                                                  \
-    }                                                                    \
+#define MULTI_i8 "%su "
+#define MULTI_i16 "%su "
+#define MULTI_i32 "%u "
+#define MULTI_i64 "%" PRIu64 " "
+#define MULTI_f32 "%.9g "
+#define MULTI_f64 "%.17g "
+#define MULTI_str "%s "
+#define ASSERT_RETURN_MULTI_T(type, fmt_expected, fmt_got, f, compare,        \
+                              expected, found)                                \
+  do {                                                                        \
+    g_tests_run++;                                                            \
+    if (wasm_rt_impl_try() != 0) {                                            \
+      error(__FILE__, __LINE__, #f " trapped.\n");                            \
+    } else {                                                                  \
+      type actual = f;                                                        \
+      if (compare) {                                                          \
+        g_tests_passed++;                                                     \
+      } else {                                                                \
+        error(__FILE__, __LINE__,                                             \
+              "in " #f ": expected <" fmt_expected ">, got <" fmt_got ">.\n", \
+              MULTI_T_UNPACK(expected), MULTI_T_UNPACK(found));               \
+      }                                                                       \
+    }                                                                         \
   } while (0)
 
 #define ASSERT_RETURN_I32(f, expected) ASSERT_RETURN_T(u32, "u", f, expected)
@@ -218,19 +176,18 @@ static void error(const char* file, int line, const char* format, ...) {
   ASSERT_RETURN_NAN_T(f32, u32, "08x", f, canonical)
 #define ASSERT_RETURN_CANONICAL_NAN_F64(f) \
   ASSERT_RETURN_NAN_T(f64, u64, "016x", f, canonical)
-#define ASSERT_RETURN_CANONICAL_NAN_F32X4(f) \
-  ASSERT_RETURN_NAN_V(v128, f32x4, f, canonical)
-#define ASSERT_RETURN_CANONICAL_NAN_F64X2(f) \
-  ASSERT_RETURN_NAN_V(v128, f64x2, f, canonical)
 #define ASSERT_RETURN_ARITHMETIC_NAN_F32(f) \
   ASSERT_RETURN_NAN_T(f32, u32, "08x", f, arithmetic)
 #define ASSERT_RETURN_ARITHMETIC_NAN_F64(f) \
   ASSERT_RETURN_NAN_T(f64, u64, "016x", f, arithmetic)
-#define ASSERT_RETURN_ARITHMETIC_NAN_F32X4(f) \
-  ASSERT_RETURN_NAN_V(v128, f32x4, f, arithmetic)
-#define ASSERT_RETURN_ARITHMETIC_NAN_F64X2(f) \
-  ASSERT_RETURN_NAN_V(v128, f64x2, f, arithmetic)
 
+static bool is_equal_u8(u8 x, u8 y) {
+  return x == y;
+}
+
+static bool is_equal_u16(u16 x, u16 y) {
+  return x == y;
+}
 
 static bool is_equal_u32(u32 x, u32 y) {
   return x == y;
@@ -240,17 +197,10 @@ static bool is_equal_u64(u64 x, u64 y) {
   return x == y;
 }
 
+#define is_equal_i8 is_equal_u8
+#define is_equal_i16 is_equal_u16
 #define is_equal_i32 is_equal_u32
 #define is_equal_i64 is_equal_u64
-
-#ifdef WASM_RT_ENABLE_SIMD
-static bool is_equal_v128(v128 x, v128 y) {
-  return (simde_wasm_i64x2_extract_lane(x, 0) ==
-          simde_wasm_i64x2_extract_lane(y, 0)) &&
-         (simde_wasm_i64x2_extract_lane(x, 1) ==
-          simde_wasm_i64x2_extract_lane(y, 1));
-}
-#endif
 
 static bool is_equal_wasm_rt_externref_t(wasm_rt_externref_t x,
                                          wasm_rt_externref_t y) {
@@ -267,18 +217,24 @@ wasm_rt_externref_t spectest_make_externref(u64 x) {
   return (wasm_rt_externref_t)(x + 1);  // externref(0) is not null
 }
 
-static bool is_equal_f32(f32 x, f32 y) {
-  u32 ux, uy;
+static u32 f32_bits(f32 x) {
+  u32 ux;
   memcpy(&ux, &x, sizeof(ux));
-  memcpy(&uy, &y, sizeof(uy));
-  return ux == uy;
+  return ux;
+}
+
+static u64 f64_bits(f64 x) {
+  u64 ux;
+  memcpy(&ux, &x, sizeof(ux));
+  return ux;
+}
+
+static bool is_equal_f32(f32 x, f32 y) {
+  return f32_bits(x) == f32_bits(y);
 }
 
 static bool is_equal_f64(f64 x, f64 y) {
-  u64 ux, uy;
-  memcpy(&ux, &x, sizeof(ux));
-  memcpy(&uy, &y, sizeof(uy));
-  return ux == uy;
+  return f64_bits(x) == f64_bits(y);
 }
 
 static f32 make_nan_f32(u32 x) {
@@ -310,33 +266,6 @@ static bool is_arithmetic_nan_f32(u32 x) {
 static bool is_arithmetic_nan_f64(u64 x) {
   return (x & 0x7ff8000000000000) == 0x7ff8000000000000;
 }
-
-#ifdef WASM_RT_ENABLE_SIMD
-static bool is_canonical_nan_f32x4(v128 x) {
-  return is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 0)) ||
-         is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 1)) ||
-         is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 2)) ||
-         is_canonical_nan_f32(simde_wasm_i32x4_extract_lane(x, 3));
-}
-
-static bool is_canonical_nan_f64x2(v128 x) {
-  return is_canonical_nan_f64(simde_wasm_i64x2_extract_lane(x, 0)) ||
-         is_canonical_nan_f64(simde_wasm_i64x2_extract_lane(x, 1));
-}
-
-static bool is_arithmetic_nan_f32x4(v128 x) {
-  return is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 0)) ||
-         is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 1)) ||
-         is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 2)) ||
-         is_arithmetic_nan_f32(simde_wasm_i32x4_extract_lane(x, 3));
-}
-
-static bool is_arithmetic_nan_f64x2(v128 x) {
-  return is_arithmetic_nan_f64(simde_wasm_i64x2_extract_lane(x, 0)) ||
-         is_arithmetic_nan_f64(simde_wasm_i64x2_extract_lane(x, 1));
-}
-#endif
-
 
 typedef struct Z_spectest_instance_t {
   wasm_rt_funcref_table_t spectest_table;
