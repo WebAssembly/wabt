@@ -413,7 +413,7 @@ class CWriter(object):
             return 'is_arithmetic_nan_%s(%s_bits(%s))' % (lane_type, lane_type, self._SIMDFound(num, lane_type, lane_count))
         else:
             return "is_equal_%s(%s, %s)" % (lane_type,
-                                            self._Constant({'type': lane_type, 'value':val}),
+                                            self._Constant({'type': lane_type, 'value': val}),
                                             self._SIMDFound(num, lane_type, lane_count))
 
     def _SIMDCompareVector(self, const):
