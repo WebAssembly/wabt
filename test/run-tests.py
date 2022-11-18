@@ -36,7 +36,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(TEST_DIR)
 OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
 DEFAULT_TIMEOUT = 120    # seconds
-SLOW_TIMEOUT_MULTIPLIER = 10
+SLOW_TIMEOUT_MULTIPLIER = 30
 
 if sys.byteorder == 'big':
     wasm2c_args = ['--cflags=-DWABT_BIG_ENDIAN=1']
