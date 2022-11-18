@@ -446,12 +446,6 @@ def Compile(cc, c_filename, out_dir, args):
     args = args.copy()
     if IS_WINDOWS:
         args += ['/nologo', '/DWASM_RT_ENABLE_SIMD',
-                 '/arch:AVX', '/arch:AVX2', '/arch:AVX512',
-                 '/arch:IA32', '/arch:SSE', '/arch:SSE2',
-                 '/arch:ARMv7VE', '/arch:VFPv4',
-                 '/arch:armv8.0', '/arch:armv8.1', '/arch:armv8.2',
-                 '/arch:armv8.3', '/arch:armv8.4', '/arch:armv8.5',
-                 '/arch:armv8.6', '/arch:armv8.7', '/arch:armv8.8',
                  '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
         # See "Compiling the wasm2c output" section of wasm2c/README.md
@@ -459,7 +453,7 @@ def Compile(cc, c_filename, out_dir, args):
         # and '-frounding-math' to maintain conformance with the spec tests
         # (GCC also requires '-fsignaling-nans')
         args += ['-c', c_filename, '-o', o_filename, '-O2',
-                 '-DWASM_RT_ENABLE_SIMD', '-march=native',
+                 '-DWASM_RT_ENABLE_SIMD',
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
