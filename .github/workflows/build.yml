@@ -84,8 +84,8 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       USE_NINJA: "1"
-      CC: "clang" # used by the wasm2c tests
-      WASM2C_CFLAGS: "-fsanitize=address"
+      CC: "clang"
+      WASM2C_CFLAGS: "-fsanitize=address -march=x86-64-v2"
     steps:
     - uses: actions/setup-python@v1
       with:
@@ -104,8 +104,8 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       USE_NINJA: "1"
-      CC: "clang" # used by the wasm2c tests
-      WASM2C_CFLAGS: "-fsanitize=undefined"
+      CC: "clang"
+      WASM2C_CFLAGS: "-fsanitize=undefined -march=x86-64-v2"
     steps:
     - uses: actions/setup-python@v1
       with:
