@@ -226,11 +226,18 @@ DEFINE_STORE(i64_store32, u32, u64)
 
 #if defined(WASM_RT_ENABLE_SIMD)
 
+#ifdef __x86_64__
+#define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));
+#else
+#define SIMD_FORCE_READ(var)
+#endif
+// TODO: equivalent constraint for ARM and other architectures
+
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t)              \
   static inline t name(wasm_rt_memory_t* mem, u64 addr) { \
     MEMCHECK(mem, addr, t);                               \
     t result = func((v128*)&mem->data[addr]);             \
-    wasm_asm("" ::"rx"(result));                          \
+    SIMD_FORCE_READ(result);                              \
     return result;                                        \
   }
 
@@ -238,7 +245,7 @@ DEFINE_STORE(i64_store32, u32, u64)
   static inline t name(wasm_rt_memory_t* mem, u64 addr, t vec) { \
     MEMCHECK(mem, addr, t);                                      \
     t result = func((v128*)&mem->data[addr], vec, lane);         \
-    wasm_asm("" ::"rx"(result));                                 \
+    SIMD_FORCE_READ(result);                                     \
     return result;                                               \
   }
 
