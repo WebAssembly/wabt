@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS: --debug-names --enable-memory64 --no-sandbox
+;;; STDIN_FILE: test/wasm2c/no-sandbox/wast/stack_pointer.wast
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)
