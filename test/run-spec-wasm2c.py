@@ -129,6 +129,7 @@ class CWriter(object):
     def Write(self):
         self._WriteIncludes()
         self.out_file.write(self.prefix)
+        self._WriteModuleInstances()
         self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
         for command in self.commands:
             self._WriteCommand(command)
@@ -147,7 +148,7 @@ class CWriter(object):
         return self.unmangled_names[idx]
 
     def GetModuleInstanceName(self, idx_or_name=None):
-        return self.GetModulePrefix() + '_instance'
+        return self.GetModulePrefix(idx_or_name) + '_instance'
 
     def _CacheModulePrefixes(self):
         idx = 0
@@ -243,8 +244,14 @@ class CWriter(object):
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
         self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
-        self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
         self._WriteModuleInitCall(command, False)
+
+    def _WriteModuleInstances(self):
+        idx = 0
+        for command in self.commands:
+            if IsModuleCommand(command):
+                self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(idx), self.GetModuleInstanceName(idx)))
+                idx += 1
 
     def _WriteModuleCleanUps(self):
         for idx in range(self.module_idx):
@@ -253,7 +260,6 @@ class CWriter(object):
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
         self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
-        self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(), self.GetModuleInstanceName()))
         self._WriteModuleInitCall(command, True)
 
     def _WriteActionCommand(self, command):
