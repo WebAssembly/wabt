@@ -33,6 +33,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 WASM2C_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'wasm2c')
 IS_WINDOWS = sys.platform == 'win32'
 IS_MACOS = platform.mac_ver()[0] != ''
+MAX_COMMANDS_PER_FUNCTION = 1024  # GCC has trouble with extremely long function bodies
 
 
 def ReinterpretF32(f32_bits):
@@ -130,11 +131,19 @@ class CWriter(object):
         self._WriteIncludes()
         self.out_file.write(self.prefix)
         self._WriteModuleInstances()
-        self.out_file.write("\nvoid run_spec_tests(void) {\n\n")
-        for command in self.commands:
+        test_function_num = 0
+        self.out_file.write('\nvoid run_spec_tests_0(void) {\n\n')
+        for i, command in enumerate(self.commands):
             self._WriteCommand(command)
+            if i % MAX_COMMANDS_PER_FUNCTION == MAX_COMMANDS_PER_FUNCTION - 1:
+                test_function_num += 1
+                self.out_file.write('\n}\n\nvoid run_spec_tests_%d(void) {\n\n' % test_function_num)
+
+        self.out_file.write('\n}\n\nvoid run_spec_tests(void) {\n\n')
+        for i in range(test_function_num + 1):
+            self.out_file.write('run_spec_tests_%d();\n' % i)
         self._WriteModuleCleanUps()
-        self.out_file.write("\n}\n")
+        self.out_file.write('\n}\n')
 
     def GetModuleFilenames(self):
         return [c['filename'] for c in self.commands if IsModuleCommand(c)]
