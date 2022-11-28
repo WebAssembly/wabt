@@ -81,9 +81,10 @@ jobs:
 
   build-asan:
     name: asan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       USE_NINJA: "1"
+      CC: "clang" # used by the wasm2c tests
       WASM2C_CFLAGS: "-fsanitize=address"
     steps:
     - uses: actions/setup-python@v1
@@ -100,9 +101,10 @@ jobs:
 
   build-ubsan:
     name: ubsan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       USE_NINJA: "1"
+      CC: "clang" # used by the wasm2c tests
       WASM2C_CFLAGS: "-fsanitize=undefined"
     steps:
     - uses: actions/setup-python@v1
