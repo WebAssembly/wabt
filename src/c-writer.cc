@@ -477,7 +477,7 @@ char CWriter::MangleType(Type type) {
 constexpr char CWriter::MangleField(ModuleFieldType type) {
   assert(static_cast<std::underlying_type<ModuleFieldType>::type>(type) <
          std::numeric_limits<char>::max());
-  return static_cast<char>(type);
+  return 'a' + static_cast<char>(type);
 }
 
 // static
@@ -577,13 +577,6 @@ std::string_view StripLeadingDollar(std::string_view name) {
   return name;
 }
 
-std::string_view StripTrailingSigil(std::string_view name) {
-  if (!name.empty()) {
-    name.remove_suffix(1);
-  }
-  return name;
-}
-
 void CWriter::DefineImportName(const Import* import,
                                std::string_view module,
                                std::string_view field_name) {
@@ -625,8 +618,7 @@ void CWriter::DefineImportName(const Import* import,
 template <ModuleFieldType T>
 std::string CWriter::DefineGlobalScopeName(std::string_view name) {
   std::string mangled = std::string(name) + MangleField(T);
-  std::string unique = DefineName(
-      &global_syms_, StripTrailingSigil(StripLeadingDollar(mangled)));
+  std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
   bool success = global_sym_map_.emplace(mangled, unique).second;
   assert(success);
   return unique;
