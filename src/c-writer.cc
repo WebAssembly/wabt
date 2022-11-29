@@ -192,7 +192,7 @@ class CWriter {
   bool IsTopLabelUsed() const;
   void PopLabel();
 
-  static char MangleType(Type);
+  static constexpr char MangleType(Type);
   static constexpr char MangleField(ModuleFieldType);
   static std::string MangleMultivalueTypes(const TypeVector&);
   static std::string MangleTagTypes(const TypeVector&);
@@ -449,7 +449,7 @@ void CWriter::PopLabel() {
 }
 
 // static
-char CWriter::MangleType(Type type) {
+constexpr char CWriter::MangleType(Type type) {
   // clang-format off
   switch (type) {
     case Type::I32: return 'i';
