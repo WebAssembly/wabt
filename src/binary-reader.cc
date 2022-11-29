@@ -562,7 +562,22 @@ Index BinaryReader::NumTotalFuncs() {
 
 Result BinaryReader::ReadInitExpr(Index index) {
   // Read instructions until END opcode is reached.
-  return ReadInstructions(/*stop_on_end=*/true, read_end_, NULL);
+  Offset start_offset = state_.offset;
+  Offset end_offset = read_end_;
+  bool stop_on_end = true;
+
+  Opcode opcode;
+  CHECK_RESULT(ReadOpcode(&opcode, "init expr opcode"));
+  if (opcode == Opcode::ConstExprLen) {
+    uint32_t size;
+    CHECK_RESULT(ReadU32Leb128(&size, "init expr length"));
+    stop_on_end = false;
+    end_offset = state_.offset + size;
+  } else {
+    state_.offset = start_offset;
+  }
+
+  return ReadInstructions(stop_on_end, end_offset, NULL);
 }
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
@@ -2700,7 +2715,14 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     for (Index j = 0; j < num_elem_exprs; ++j) {
       if (flags & SegUseElemExprs) {
         Opcode opcode;
+        uint32_t length = 0;
+        Offset start = 0;
         CHECK_RESULT(ReadOpcode(&opcode, "elem expr opcode"));
+        if (opcode == Opcode::ConstExprLen) {
+          CHECK_RESULT(ReadU32Leb128(&length, "init expr length"));
+          start = state_.offset;
+          CHECK_RESULT(ReadOpcode(&opcode, "elem expr opcode"));
+        }
         if (opcode == Opcode::RefNull) {
           Type type;
           CHECK_RESULT(ReadRefType(&type, "elem expr ref.null type"));
@@ -2716,6 +2738,9 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
         ERROR_UNLESS(opcode == Opcode::End,
                      "expected END opcode after element expression");
+        if (start) {
+         ERROR_UNLESS(state_.offset == start + length, "unexpected end of init expr");
+        }
       } else {
         Index func_index;
         CHECK_RESULT(ReadIndex(&func_index, "elem expr func index"));

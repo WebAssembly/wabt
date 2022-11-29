@@ -35,26 +35,26 @@ out/test/spec/data.wast:400: assert_invalid passed:
   out/test/spec/data/data.49.wasm:0000011: error: type mismatch in initializer expression, expected [i32] but got []
   0000012: error: EndDataSegmentInitExpr callback failed
 out/test/spec/data.wast:408: assert_invalid passed:
-  out/test/spec/data/data.50.wasm:0000015: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000016: error: EndDataSegmentInitExpr callback failed
+  out/test/spec/data/data.50.wasm:0000017: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000018: error: EndDataSegmentInitExpr callback failed
 out/test/spec/data.wast:416: assert_invalid passed:
-  out/test/spec/data/data.51.wasm:000002b: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  000002c: error: EndDataSegmentInitExpr callback failed
+  out/test/spec/data/data.51.wasm:000002d: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002e: error: EndDataSegmentInitExpr callback failed
 out/test/spec/data.wast:425: assert_invalid passed:
-  out/test/spec/data/data.52.wasm:000002b: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  000002c: error: EndDataSegmentInitExpr callback failed
+  out/test/spec/data/data.52.wasm:000002d: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002e: error: EndDataSegmentInitExpr callback failed
 out/test/spec/data.wast:434: assert_invalid passed:
-  out/test/spec/data/data.53.wasm:0000014: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
-  0000014: error: OnUnaryExpr callback failed
+  out/test/spec/data/data.53.wasm:0000016: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
+  0000016: error: OnUnaryExpr callback failed
 out/test/spec/data.wast:442: assert_invalid passed:
   out/test/spec/data/data.54.wasm:0000012: error: invalid initializer: instruction not valid in initializer expression: nop
   0000012: error: OnNopExpr callback failed
 out/test/spec/data.wast:450: assert_invalid passed:
-  out/test/spec/data/data.55.wasm:0000012: error: invalid initializer: instruction not valid in initializer expression: nop
-  0000012: error: OnNopExpr callback failed
-out/test/spec/data.wast:458: assert_invalid passed:
-  out/test/spec/data/data.56.wasm:0000014: error: invalid initializer: instruction not valid in initializer expression: nop
+  out/test/spec/data/data.55.wasm:0000014: error: invalid initializer: instruction not valid in initializer expression: nop
   0000014: error: OnNopExpr callback failed
+out/test/spec/data.wast:458: assert_invalid passed:
+  out/test/spec/data/data.56.wasm:0000016: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000016: error: OnNopExpr callback failed
 out/test/spec/data.wast:466: assert_invalid passed:
   out/test/spec/data/data.57.wasm:0000020: error: initializer expression cannot reference a mutable global
   0000020: error: OnGlobalGetExpr callback failed

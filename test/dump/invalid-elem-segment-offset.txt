@@ -37,21 +37,24 @@
 000001a: 01                                        ; num elem segments
 ; elem segment header 0
 000001b: 00                                        ; segment flags
-000001c: 41                                        ; i32.const
-000001d: 01                                        ; i32 literal
-000001e: 45                                        ; i32.eqz
-000001f: 0b                                        ; end
-0000020: 01                                        ; num elems
-0000021: 00                                        ; elem function index
-0000019: 08                                        ; FIXUP section size
+000001c: c5                                        ; const_expr.len
+000001d: 00                                        ; init expr body size (guess)
+000001e: 41                                        ; i32.const
+000001f: 01                                        ; i32 literal
+0000020: 45                                        ; i32.eqz
+0000021: 0b                                        ; end
+000001d: 04                                        ; FIXUP init expr size
+0000022: 01                                        ; num elems
+0000023: 00                                        ; elem function index
+0000019: 0a                                        ; FIXUP section size
 ; section "Code" (10)
-0000022: 0a                                        ; section code
-0000023: 00                                        ; section size (guess)
-0000024: 01                                        ; num functions
+0000024: 0a                                        ; section code
+0000025: 00                                        ; section size (guess)
+0000026: 01                                        ; num functions
 ; function body 0
-0000025: 00                                        ; func body size (guess)
-0000026: 00                                        ; local decl count
-0000027: 0b                                        ; end
-0000025: 02                                        ; FIXUP func body size
-0000023: 04                                        ; FIXUP section size
+0000027: 00                                        ; func body size (guess)
+0000028: 00                                        ; local decl count
+0000029: 0b                                        ; end
+0000027: 02                                        ; FIXUP func body size
+0000025: 04                                        ; FIXUP section size
 ;;; STDERR ;;)

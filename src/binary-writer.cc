@@ -1130,8 +1130,20 @@ void BinaryWriter::WriteExprList(const Func* func, const ExprList& exprs) {
 }
 
 void BinaryWriter::WriteInitExpr(const ExprList& expr) {
+  /* TODO(binji): better guess of the size of the const expr body */
+  const Offset leb_size_guess = 1;
+  Offset size_offset;
+  if (expr.size() > 1) {
+    WriteOpcode(stream_, Opcode::ConstExprLen);
+    size_offset =
+        WriteU32Leb128Space(leb_size_guess, "init expr body size (guess)");
+  }
   WriteExprList(nullptr, expr);
   WriteOpcode(stream_, Opcode::End);
+  if (expr.size() > 1) {
+    WriteFixupU32Leb128Size(size_offset, leb_size_guess,
+                            "FIXUP init expr size");
+  }
 }
 
 void BinaryWriter::WriteFuncLocals(const Func* func,

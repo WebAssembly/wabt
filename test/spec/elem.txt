@@ -22,26 +22,26 @@ out/test/spec/elem.wast:372: assert_invalid passed:
   out/test/spec/elem/elem.38.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
   0000013: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:380: assert_invalid passed:
-  out/test/spec/elem/elem.39.wasm:0000016: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000017: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/elem/elem.39.wasm:0000018: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000019: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:388: assert_invalid passed:
-  out/test/spec/elem/elem.40.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  000002d: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/elem/elem.40.wasm:000002e: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002f: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:397: assert_invalid passed:
-  out/test/spec/elem/elem.41.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  000002d: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/elem/elem.41.wasm:000002e: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002f: error: EndElemSegmentInitExpr callback failed
 out/test/spec/elem.wast:407: assert_invalid passed:
-  out/test/spec/elem/elem.42.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
-  0000015: error: OnUnaryExpr callback failed
+  out/test/spec/elem/elem.42.wasm:0000017: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
+  0000017: error: OnUnaryExpr callback failed
 out/test/spec/elem.wast:415: assert_invalid passed:
   out/test/spec/elem/elem.43.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
   0000013: error: OnNopExpr callback failed
 out/test/spec/elem.wast:423: assert_invalid passed:
-  out/test/spec/elem/elem.44.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
-  0000013: error: OnNopExpr callback failed
-out/test/spec/elem.wast:431: assert_invalid passed:
-  out/test/spec/elem/elem.45.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: nop
+  out/test/spec/elem/elem.44.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: nop
   0000015: error: OnNopExpr callback failed
+out/test/spec/elem.wast:431: assert_invalid passed:
+  out/test/spec/elem/elem.45.wasm:0000017: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000017: error: OnNopExpr callback failed
 out/test/spec/elem.wast:439: assert_invalid passed:
   out/test/spec/elem/elem.46.wasm:0000021: error: initializer expression cannot reference a mutable global
   0000021: error: OnGlobalGetExpr callback failed
@@ -58,7 +58,7 @@ out/test/spec/elem.wast:476: assert_invalid passed:
   out/test/spec/elem/elem.50.wasm:0000018: error: type mismatch at elem expression. got externref, expected funcref
   0000018: error: OnElemSegmentElemExpr_RefNull callback failed
 out/test/spec/elem.wast:484: assert_invalid passed:
-  0000019: error: expected END opcode after element expression
+  000001b: error: expected END opcode after element expression
 out/test/spec/elem.wast:492: assert_invalid passed:
   0000017: error: expected ref.null or ref.func in passive element segment
   0000018: error: expected END opcode after element expression
@@ -69,8 +69,8 @@ out/test/spec/elem.wast:508: assert_invalid passed:
   0000022: error: expected ref.null or ref.func in passive element segment
   0000023: error: expected END opcode after element expression
 out/test/spec/elem.wast:517: assert_invalid passed:
-  0000017: error: expected ref.null or ref.func in passive element segment
-  0000018: error: expected END opcode after element expression
+  0000019: error: expected ref.null or ref.func in passive element segment
+  000001a: error: expected END opcode after element expression
 out/test/spec/elem.wast:574: assert_trap passed: uninitialized table element
 out/test/spec/elem.wast:607: assert_invalid passed:
   out/test/spec/elem/elem.61.wasm:000001f: error: type mismatch at elem segment. got externref, expected funcref

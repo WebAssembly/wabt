@@ -10,20 +10,20 @@ out/test/spec/extended-const/global.wast:290: assert_invalid passed:
   out/test/spec/extended-const/global/global.2.wasm:0000035: error: can't global.set on immutable global at index 0.
   0000035: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:299: assert_invalid passed:
-  out/test/spec/extended-const/global/global.5.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: f32.neg
-  0000013: error: OnUnaryExpr callback failed
+  out/test/spec/extended-const/global/global.5.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: f32.neg
+  0000015: error: OnUnaryExpr callback failed
 out/test/spec/extended-const/global.wast:304: assert_invalid passed:
   out/test/spec/extended-const/global/global.6.wasm:000000f: error: invalid initializer: instruction not valid in initializer expression: local.get
   000000f: error: OnLocalGetExpr callback failed
 out/test/spec/extended-const/global.wast:309: assert_invalid passed:
-  out/test/spec/extended-const/global/global.7.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: f32.neg
-  0000013: error: OnUnaryExpr callback failed
+  out/test/spec/extended-const/global/global.7.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: f32.neg
+  0000015: error: OnUnaryExpr callback failed
 out/test/spec/extended-const/global.wast:314: assert_invalid passed:
-  out/test/spec/extended-const/global/global.8.wasm:0000010: error: invalid initializer: instruction not valid in initializer expression: nop
-  0000010: error: OnNopExpr callback failed
+  out/test/spec/extended-const/global/global.8.wasm:0000012: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000012: error: OnNopExpr callback failed
 out/test/spec/extended-const/global.wast:319: assert_invalid passed:
-  out/test/spec/extended-const/global/global.9.wasm:0000010: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
-  0000010: error: OnUnaryExpr callback failed
+  out/test/spec/extended-const/global/global.9.wasm:0000012: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
+  0000012: error: OnUnaryExpr callback failed
 out/test/spec/extended-const/global.wast:324: assert_invalid passed:
   out/test/spec/extended-const/global/global.10.wasm:000000e: error: invalid initializer: instruction not valid in initializer expression: nop
   000000e: error: OnNopExpr callback failed
@@ -31,8 +31,8 @@ out/test/spec/extended-const/global.wast:329: assert_invalid passed:
   out/test/spec/extended-const/global/global.11.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got [f32]
   0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:334: assert_invalid passed:
-  out/test/spec/extended-const/global/global.12.wasm:0000011: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000012: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.12.wasm:0000013: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000014: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:339: assert_invalid passed:
   out/test/spec/extended-const/global/global.13.wasm:000000d: error: type mismatch in initializer expression, expected [i32] but got []
   000000e: error: EndGlobalInitExpr callback failed
@@ -40,11 +40,11 @@ out/test/spec/extended-const/global.wast:344: assert_invalid passed:
   out/test/spec/extended-const/global/global.14.wasm:0000017: error: type mismatch in initializer expression, expected [funcref] but got [externref]
   0000018: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:349: assert_invalid passed:
-  out/test/spec/extended-const/global/global.15.wasm:0000027: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000028: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.15.wasm:0000029: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002a: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:354: assert_invalid passed:
-  out/test/spec/extended-const/global/global.16.wasm:0000027: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000028: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.16.wasm:0000029: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002a: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:359: assert_invalid passed:
   out/test/spec/extended-const/global/global.17.wasm:000000f: error: initializer expression can only reference an imported global
   000000f: error: OnGlobalGetExpr callback failed

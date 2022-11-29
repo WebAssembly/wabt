@@ -26,14 +26,17 @@
 000000f: 01                                        ; num data segments
 ; data segment header 0
 0000010: 00                                        ; segment flags
-0000011: 41                                        ; i32.const
-0000012: 01                                        ; i32 literal
+0000011: c5                                        ; const_expr.len
+0000012: 00                                        ; init expr body size (guess)
 0000013: 41                                        ; i32.const
-0000014: 02                                        ; i32 literal
-0000015: 6a                                        ; i32.add
-0000016: 0b                                        ; end
-0000017: 03                                        ; data segment size
+0000014: 01                                        ; i32 literal
+0000015: 41                                        ; i32.const
+0000016: 02                                        ; i32 literal
+0000017: 6a                                        ; i32.add
+0000018: 0b                                        ; end
+0000012: 06                                        ; FIXUP init expr size
+0000019: 03                                        ; data segment size
 ; data segment data 0
-0000018: 666f 6f                                   ; data segment data
-000000e: 0c                                        ; FIXUP section size
+000001a: 666f 6f                                   ; data segment data
+000000e: 0e                                        ; FIXUP section size
 ;;; STDERR ;;)
