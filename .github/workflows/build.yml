@@ -119,6 +119,24 @@ jobs:
     - run: make test-clang-debug-ubsan
     - run: make test-clang-release-ubsan
 
+  build-wasm2c-memchecked:
+    name: wasm2c-memchecked
+    runs-on: ubuntu-22.04
+    env:
+      USE_NINJA: "1"
+      CC: "clang" # used by the wasm2c tests
+      WASM2C_CFLAGS: "-fsanitize=address -DWASM_RT_MEMCHECK_SIGNAL_HANDLER=0"
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - run: sudo apt-get install ninja-build
+    - run: make clang-debug-asan
+    - run: make test-clang-debug-asan
+
   build-min-cmake:
     name: min-cmake
     runs-on: ubuntu-latest
