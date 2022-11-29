@@ -209,8 +209,7 @@ class CWriter {
   void DefineImportName(const Import* import,
                         std::string_view module_name,
                         std::string_view field_name);
-  template <ModuleFieldType>
-  std::string DefineGlobalScopeName(std::string_view);
+  std::string DefineGlobalScopeName(ModuleFieldType, std::string_view);
   std::string DefineLocalScopeName(std::string_view);
   std::string DefineStackVarName(Index, Type, std::string_view);
 
@@ -615,9 +614,9 @@ void CWriter::DefineImportName(const Import* import,
   assert(success);
 }
 
-template <ModuleFieldType T>
-std::string CWriter::DefineGlobalScopeName(std::string_view name) {
-  std::string mangled = std::string(name) + MangleField(T);
+std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
+                                           std::string_view name) {
+  std::string mangled = std::string(name) + MangleField(type);
   std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
   bool success = global_sym_map_.emplace(mangled, unique).second;
   assert(success);
@@ -1093,7 +1092,7 @@ void CWriter::WriteTags() {
     bool is_import = tag_index < module_->num_tag_imports;
     if (!is_import) {
       Write("static u32 ",
-            DefineGlobalScopeName<ModuleFieldType::Tag>(tag->name), ";",
+            DefineGlobalScopeName(ModuleFieldType::Tag, tag->name), ";",
             Newline());
     }
     tag_index++;
@@ -1291,7 +1290,7 @@ void CWriter::WriteFuncDeclarations() {
     if (!is_import) {
       Write("static ");
       WriteFuncDeclaration(
-          func->decl, DefineGlobalScopeName<ModuleFieldType::Func>(func->name));
+          func->decl, DefineGlobalScopeName(ModuleFieldType::Func, func->name));
       Write(";", Newline());
     }
     ++func_index;
@@ -1346,8 +1345,8 @@ void CWriter::WriteGlobals() {
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
-        WriteGlobal(*global, DefineGlobalScopeName<ModuleFieldType::Global>(
-                                 global->name));
+        WriteGlobal(*global, DefineGlobalScopeName(ModuleFieldType::Global,
+                                                   global->name));
         Write(Newline());
       }
       ++global_index;
@@ -1371,7 +1370,7 @@ void CWriter::WriteMemories() {
   for (const Memory* memory : module_->memories) {
     bool is_import = memory_index < module_->num_memory_imports;
     if (!is_import) {
-      WriteMemory(DefineGlobalScopeName<ModuleFieldType::Memory>(memory->name));
+      WriteMemory(DefineGlobalScopeName(ModuleFieldType::Memory, memory->name));
       Write(Newline());
     }
     ++memory_index;
@@ -1396,7 +1395,7 @@ void CWriter::WriteTables() {
   for (const Table* table : module_->tables) {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
-      WriteTable(DefineGlobalScopeName<ModuleFieldType::Table>(table->name),
+      WriteTable(DefineGlobalScopeName(ModuleFieldType::Table, table->name),
                  table->elem_type);
       Write(Newline());
     }
@@ -1451,7 +1450,7 @@ static inline bool is_droppable(const ElemSegment* elem_segment) {
 void CWriter::WriteDataInstances() {
   for (const DataSegment* data_segment : module_->data_segments) {
     std::string name =
-        DefineGlobalScopeName<ModuleFieldType::DataSegment>(data_segment->name);
+        DefineGlobalScopeName(ModuleFieldType::DataSegment, data_segment->name);
     if (is_droppable(data_segment)) {
       Write("bool ", "data_segment_dropped_", name, " : 1;", Newline());
     }
@@ -1535,7 +1534,7 @@ void CWriter::WriteDataInitializers() {
 void CWriter::WriteElemInstances() {
   for (const ElemSegment* elem_segment : module_->elem_segments) {
     std::string name =
-        DefineGlobalScopeName<ModuleFieldType::ElemSegment>(elem_segment->name);
+        DefineGlobalScopeName(ModuleFieldType::ElemSegment, elem_segment->name);
     if (is_droppable(elem_segment)) {
       Write("bool ", "elem_segment_dropped_", name, " : 1;", Newline());
     }
