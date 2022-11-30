@@ -1,0 +1,17 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS: --debug-names --enable-exceptions
+(module
+ (func $foo)
+ (export "func" (func $foo))
+ (global $foo i32 (i32.const 14))
+ (table $foo (export "tab") 0 funcref)
+ (elem $foo)
+ (memory $foo (export "mem") 0)
+ (data $foo)
+ (tag $foo (export "tag"))
+)
+
+(assert_return (invoke "func"))
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)

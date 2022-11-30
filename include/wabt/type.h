@@ -64,7 +64,7 @@ class Type {
   Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
     assert(e == Enum::Reference);
   }
-  operator Enum() const { return enum_; }
+  constexpr operator Enum() const { return enum_; }
 
   bool IsRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
