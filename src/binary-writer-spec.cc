@@ -568,8 +568,17 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteAction(*assert_return_command->action);
         WriteSeparator();
-        WriteKey("expected");
-        WriteConstVector(assert_return_command->expected);
+        const Expectation* expectation = assert_return_command->expected.get();
+        switch (expectation->type()) {
+          case ExpectationType::Values:
+            WriteKey("expected");
+            break;
+
+          case ExpectationType::Either:
+            WriteKey("either");
+            break;
+        }
+        WriteConstVector(expectation->expected);
         break;
       }
 

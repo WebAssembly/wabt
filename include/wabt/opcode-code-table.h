@@ -24,7 +24,12 @@
 extern "C" {
 #endif
 
-#define WABT_OPCODE_CODE_TABLE_SIZE 65536
+#define WABT_OPCODE_CODE_TABLE_SIZE 131072
+
+/*
+ * Number of bits required to store an opcode
+ */
+#define MAX_OPCODE_BITS 9
 
 /* This structure is defined in C because C++ doesn't (yet) allow you to use
  * designated array initializers, i.e. [10] = {foo}.

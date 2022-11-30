@@ -41,6 +41,7 @@ options:
       --enable-memory64                        Enable 64-bit memory
       --enable-multi-memory                    Enable Multi-memory
       --enable-extended-const                  Enable Extended constant expressions
+      --enable-relaxed-simd                    Enable Relaxed SIMD
       --enable-all                             Enable all features
   -V, --value-stack-size=SIZE                  Size in elements of the value stack
   -C, --call-stack-size=SIZE                   Size in elements of the call stack

@@ -66,6 +66,14 @@ class ScriptValidator {
                         const TypeVector& actual,
                         const TypeVector& expected,
                         const char* desc);
+  void CheckExpectation(const Location* loc,
+                        const TypeVector& result_types,
+                        const ConstVector& expected,
+                        const char* desc);
+  void CheckExpectationTypes(const Location* loc,
+                             const TypeVector& result_types,
+                             const Expectation* expect,
+                             const char* desc);
 
   const TypeVector* CheckInvoke(const InvokeAction* action);
   Result CheckGet(const GetAction* action, Type* out_type);
@@ -203,6 +211,39 @@ void ScriptValidator::CheckResultTypes(const Location* loc,
   } else {
     PrintError(loc, "expected %" PRIzd " results, got %" PRIzd, expected.size(),
                actual.size());
+  }
+}
+
+void ScriptValidator::CheckExpectation(const Location* loc,
+                                       const TypeVector& result_types,
+                                       const ConstVector& expected,
+                                       const char* desc) {
+  // Here we take the concrete expected output types verify those actains
+  // the types that are the result of the action.
+  TypeVector actual_types;
+  for (auto ex : expected) {
+    actual_types.push_back(ex.type());
+  }
+  CheckResultTypes(loc, actual_types, result_types, desc);
+}
+
+void ScriptValidator::CheckExpectationTypes(const Location* loc,
+                                            const TypeVector& result_types,
+                                            const Expectation* expect,
+                                            const char* desc) {
+  switch (expect->type()) {
+    case ExpectationType::Values: {
+      CheckExpectation(loc, result_types, expect->expected, desc);
+      break;
+    }
+
+    case ExpectationType::Either: {
+      auto* either = cast<EitherExpectation>(expect);
+      for (auto alt : either->expected) {
+        CheckExpectation(loc, result_types, {alt}, desc);
+      }
+      break;
+    }
   }
 }
 
@@ -984,19 +1025,16 @@ void ScriptValidator::CheckCommand(const Command* command) {
       auto* assert_return_command = cast<AssertReturnCommand>(command);
       const Action* action = assert_return_command->action.get();
       ActionResult result = CheckAction(action);
-      // Here we take the concrete expected output types verify those actains
-      // the types that are the result of the action.
-      TypeVector actual_types;
-      for (auto ex : assert_return_command->expected) {
-        actual_types.push_back(ex.type());
-      }
+      const Expectation* expected = assert_return_command->expected.get();
       switch (result.kind) {
         case ActionResult::Kind::Types:
-          CheckResultTypes(&action->loc, actual_types, *result.types, "action");
+          CheckExpectationTypes(&action->loc, *result.types, expected,
+                                "action");
           break;
 
         case ActionResult::Kind::Type:
-          CheckResultTypes(&action->loc, actual_types, {result.type}, "action");
+          CheckExpectationTypes(&action->loc, {result.type}, expected,
+                                "action");
           break;
 
         case ActionResult::Kind::Error:

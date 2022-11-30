@@ -202,6 +202,54 @@ struct Const {
 };
 using ConstVector = std::vector<Const>;
 
+enum class ExpectationType {
+  Values,
+  Either,
+};
+
+class Expectation {
+ public:
+  Expectation() = delete;
+  virtual ~Expectation() = default;
+  ExpectationType type() const { return type_; }
+
+  Location loc;
+
+  ConstVector expected;
+
+ protected:
+  explicit Expectation(ExpectationType type, const Location& loc = Location())
+      : loc(loc), type_(type) {}
+
+ private:
+  ExpectationType type_;
+};
+
+template <ExpectationType TypeEnum>
+class ExpectationMixin : public Expectation {
+ public:
+  static bool classof(const Expectation* expectation) {
+    return expectation->type() == TypeEnum;
+  }
+
+  explicit ExpectationMixin(const Location& loc = Location())
+      : Expectation(TypeEnum, loc) {}
+};
+
+class ValueExpectation : public ExpectationMixin<ExpectationType::Values> {
+ public:
+  explicit ValueExpectation(const Location& loc = Location())
+      : ExpectationMixin<ExpectationType::Values>(loc) {}
+};
+
+struct EitherExpectation : public ExpectationMixin<ExpectationType::Either> {
+ public:
+  explicit EitherExpectation(const Location& loc = Location())
+      : ExpectationMixin<ExpectationType::Either>(loc) {}
+};
+
+typedef std::unique_ptr<Expectation> ExpectationPtr;
+
 struct FuncSignature {
   TypeVector param_types;
   TypeVector result_types;
@@ -1375,7 +1423,7 @@ class RegisterCommand : public CommandMixin<CommandType::Register> {
 class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
  public:
   ActionPtr action;
-  ConstVector expected;
+  ExpectationPtr expected;
 };
 
 template <CommandType TypeEnum>

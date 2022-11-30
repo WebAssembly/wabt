@@ -1149,6 +1149,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     istream.Trace(trace_stream_, pc, trace_source_.get());
   }
 
+  // clang-format off
   auto instr = istream.Read(&pc);
   switch (instr.op) {
     case O::Unreachable:
@@ -1614,8 +1615,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::V128And:       return DoSimdBinop(IntAnd<u64>);
     case O::V128Or:        return DoSimdBinop(IntOr<u64>);
     case O::V128Xor:       return DoSimdBinop(IntXor<u64>);
-    case O::V128BitSelect: return DoSimdBitSelect();
     case O::V128AnyTrue:      return DoSimdIsTrue<u8x16, 1>();
+
+    case O::V128BitSelect:
+    case O::I8X16RelaxedLaneSelect:
+    case O::I16X8RelaxedLaneSelect:
+    case O::I32X4RelaxedLaneSelect:
+    case O::I64X2RelaxedLaneSelect:
+      return DoSimdBitSelect();
 
     case O::I8X16Neg:          return DoSimdUnop(IntNeg<u8>);
     case O::I8X16Bitmask:      return DoSimdBitmask<s8x16>();
@@ -1693,10 +1700,16 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::F32X4Sub:          return DoSimdBinop(Sub<f32>);
     case O::F32X4Mul:          return DoSimdBinop(Mul<f32>);
     case O::F32X4Div:          return DoSimdBinop(FloatDiv<f32>);
-    case O::F32X4Min:          return DoSimdBinop(FloatMin<f32>);
-    case O::F32X4Max:          return DoSimdBinop(FloatMax<f32>);
     case O::F32X4PMin:         return DoSimdBinop(FloatPMin<f32>);
     case O::F32X4PMax:         return DoSimdBinop(FloatPMax<f32>);
+
+    case O::F32X4Min:
+    case O::F32X4RelaxedMin:
+      return DoSimdBinop(FloatMin<f32>);
+
+    case O::F32X4Max:
+    case O::F32X4RelaxedMax:
+      return DoSimdBinop(FloatMax<f32>);
 
     case O::F64X2Abs:          return DoSimdUnop(FloatAbs<f64>);
     case O::F64X2Neg:          return DoSimdUnop(FloatNeg<f64>);
@@ -1705,23 +1718,44 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::F64X2Sub:          return DoSimdBinop(Sub<f64>);
     case O::F64X2Mul:          return DoSimdBinop(Mul<f64>);
     case O::F64X2Div:          return DoSimdBinop(FloatDiv<f64>);
-    case O::F64X2Min:          return DoSimdBinop(FloatMin<f64>);
-    case O::F64X2Max:          return DoSimdBinop(FloatMax<f64>);
     case O::F64X2PMin:         return DoSimdBinop(FloatPMin<f64>);
     case O::F64X2PMax:         return DoSimdBinop(FloatPMax<f64>);
 
-    case O::I32X4TruncSatF32X4S: return DoSimdUnop(IntTruncSat<s32, f32>);
-    case O::I32X4TruncSatF32X4U: return DoSimdUnop(IntTruncSat<u32, f32>);
+    case O::F64X2Min:
+    case O::F64X2RelaxedMin:
+      return DoSimdBinop(FloatMin<f64>);
+
+    case O::F64X2Max:
+    case O::F64X2RelaxedMax:
+      return DoSimdBinop(FloatMax<f64>);
+
+    case O::I32X4TruncSatF32X4S:
+    case O::I32X4RelaxedTruncF32X4S:
+      return DoSimdUnop(IntTruncSat<s32, f32>);
+
+    case O::I32X4TruncSatF32X4U:
+    case O::I32X4RelaxedTruncF32X4U:
+      return DoSimdUnop(IntTruncSat<u32, f32>);
+
+    case O::I32X4TruncSatF64X2SZero:
+    case O::I32X4RelaxedTruncF64X2SZero:
+      return DoSimdUnopZero(IntTruncSat<s32, f64>);
+
+    case O::I32X4TruncSatF64X2UZero:
+    case O::I32X4RelaxedTruncF64X2UZero:
+      return DoSimdUnopZero(IntTruncSat<u32, f64>);
+
     case O::F32X4ConvertI32X4S:  return DoSimdUnop(Convert<f32, s32>);
     case O::F32X4ConvertI32X4U:  return DoSimdUnop(Convert<f32, u32>);
     case O::F32X4DemoteF64X2Zero: return DoSimdUnopZero(Convert<f32, f64>);
     case O::F64X2PromoteLowF32X4: return DoSimdConvert<f64x2, f32x4, true>();
-    case O::I32X4TruncSatF64X2SZero: return DoSimdUnopZero(IntTruncSat<s32, f64>);
-    case O::I32X4TruncSatF64X2UZero: return DoSimdUnopZero(IntTruncSat<u32, f64>);
     case O::F64X2ConvertLowI32X4S: return DoSimdConvert<f64x2, s32x4, true>();
     case O::F64X2ConvertLowI32X4U: return DoSimdConvert<f64x2, u32x4, true>();
 
-    case O::I8X16Swizzle:     return DoSimdSwizzle();
+    case O::I8X16Swizzle:
+    case O::I8X16RelaxedSwizzle:
+      return DoSimdSwizzle();
+
     case O::I8X16Shuffle:     return DoSimdShuffle(instr);
 
     case O::V128Load8Splat:    return DoSimdLoadSplat<u8x16>(instr, out_trap);
@@ -1795,9 +1829,18 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I64X2ExtmulLowI32X4U: return DoSimdExtmul<u64x2, u32x4, true>();
     case O::I64X2ExtmulHighI32X4U: return DoSimdExtmul<u64x2, u32x4, false>();
 
-    case O::I16X8Q15mulrSatS: return DoSimdBinop(SaturatingRoundingQMul<s16>);
+    case O::I16X8Q15mulrSatS:
+    case O::I16X8RelaxedQ15mulrS:
+      return DoSimdBinop(SaturatingRoundingQMul<s16>);
 
     case O::I32X4DotI16X8S: return DoSimdDot<u32x4, s16x8>();
+    case O::I16X8DotI8X16I7X16S: return DoSimdDot<u16x8, s8x16>();
+    case O::I32X4DotI8X16I7X16AddS: return DoSimdDotAdd<u32x4, s16x8>();
+
+    case O::F32X4RelaxedMadd: return DoSimdRelaxedMadd<f32>();
+    case O::F32X4RelaxedNmadd: return DoSimdRelaxedNmadd<f32>();
+    case O::F64X2RelaxedMadd: return DoSimdRelaxedMadd<f64>();
+    case O::F64X2RelaxedNmadd: return DoSimdRelaxedNmadd<f64>();
 
     case O::AtomicFence:
     case O::MemoryAtomicNotify:
@@ -1907,6 +1950,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       WABT_UNREACHABLE;
       break;
   }
+  // clang-format on
 
   return RunResult::Ok;
 }
@@ -2429,6 +2473,52 @@ RunResult Thread::DoSimdDot() {
     SL lo = SL(lhs[laneidx]) * SL(rhs[laneidx]);
     SL hi = SL(lhs[laneidx + 1]) * SL(rhs[laneidx + 1]);
     result[i] = Add(lo, hi);
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename S, typename T>
+RunResult Thread::DoSimdDotAdd() {
+  using SL = typename S::LaneType;
+  auto acc = Pop<S>();
+  auto rhs = Pop<T>();
+  auto lhs = Pop<T>();
+  S result;
+  for (u8 i = 0; i < S::lanes; ++i) {
+    u8 laneidx = i * 2;
+    SL lo = SL(lhs[laneidx]) * SL(rhs[laneidx]);
+    SL hi = SL(lhs[laneidx + 1]) * SL(rhs[laneidx + 1]);
+    result[i] = Add(lo, hi);
+    result[i] = Add(result[i], acc[i]);
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename S>
+RunResult Thread::DoSimdRelaxedMadd() {
+  using SS = typename Simd128<S>::Type;
+  auto c = Pop<SS>();
+  auto b = Pop<SS>();
+  auto a = Pop<SS>();
+  SS result;
+  for (u8 i = 0; i < SS::lanes; ++i) {
+    result[i] = a[i] * b[i] + c[i];
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+template <typename S>
+RunResult Thread::DoSimdRelaxedNmadd() {
+  using SS = typename Simd128<S>::Type;
+  auto c = Pop<SS>();
+  auto b = Pop<SS>();
+  auto a = Pop<SS>();
+  SS result;
+  for (u8 i = 0; i < SS::lanes; ++i) {
+    result[i] = -(a[i] * b[i]) + c[i];
   }
   Push(result);
   return RunResult::Ok;

@@ -3251,7 +3251,7 @@ Result WastParser::ParseAssertReturnCommand(CommandPtr* out_command) {
   EXPECT(AssertReturn);
   auto command = MakeUnique<AssertReturnCommand>();
   CHECK_RESULT(ParseAction(&command->action));
-  CHECK_RESULT(ParseConstList(&command->expected, ConstType::Expectation));
+  CHECK_RESULT(ParseExpectedValues(&command->expected));
   EXPECT(Rpar);
   *out_command = std::move(command);
   return Result::Ok;
@@ -3432,6 +3432,29 @@ Result WastParser::ParseAction(ActionPtr* out_action) {
     default:
       return ErrorExpected({"invoke", "get"});
   }
+  EXPECT(Rpar);
+  return Result::Ok;
+}
+
+Result WastParser::ParseExpectedValues(ExpectationPtr* expectation) {
+  WABT_TRACE(ParseExpectedValues);
+  Location loc = GetLocation();
+  if (PeekMatchLpar(TokenType::Either)) {
+    auto either = MakeUnique<EitherExpectation>(loc);
+    CHECK_RESULT(ParseEither(&either->expected));
+    *expectation = std::move(either);
+  } else {
+    auto values = MakeUnique<ValueExpectation>(loc);
+    CHECK_RESULT(ParseConstList(&values->expected, ConstType::Expectation));
+    *expectation = std::move(values);
+  }
+  return Result::Ok;
+}
+
+Result WastParser::ParseEither(ConstVector* alternatives) {
+  WABT_TRACE(ParseEither);
+  MatchLpar(TokenType::Either);
+  CHECK_RESULT(ParseConstList(alternatives, ConstType::Expectation));
   EXPECT(Rpar);
   return Result::Ok;
 }

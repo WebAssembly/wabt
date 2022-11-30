@@ -186,6 +186,8 @@ class WastParser {
   Result ParseF32(Const*, ConstType type);
   Result ParseF64(Const*, ConstType type);
   Result ParseConst(Const*, ConstType type);
+  Result ParseExpectedValues(ExpectationPtr*);
+  Result ParseEither(ConstVector*);
   Result ParseExternref(Const*);
   Result ParseExpectedNan(ExpectedNan* expected);
   Result ParseConstList(ConstVector*, ConstType type);
