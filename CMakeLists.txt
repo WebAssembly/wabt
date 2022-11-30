@@ -534,6 +534,10 @@ if (BUILD_TOOLS)
     add_definitions(-DWITH_WASI)
     set(INTERP_LIBS uvwasi_a)
     set(EXTRA_INTERP_SRC src/interp/interp-wasi.cc)
+
+    if (COMPILER_IS_GNU)
+      target_compile_options(uv_a PRIVATE "-Wno-sign-compare")
+    endif ()
   endif()
 
   # wasm-interp
@@ -618,6 +622,10 @@ if (BUILD_TESTS)
     add_library(gtest_main STATIC
       third_party/gtest/googletest/src/gtest_main.cc
     )
+
+    if (COMPILER_IS_GNU)
+      target_compile_options(gtest PRIVATE "-Wno-maybe-uninitialized")
+    endif ()
   endif ()
 
   # hexfloat-test
