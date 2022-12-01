@@ -74,6 +74,10 @@ def ProcessProposalDir(name, flags=None):
                os.path.join(PROPOSALS_DIR, name),
                'run-interp-spec',
                flags)
+    ProcessDir(os.path.join(WASM2C_SPEC_TEST_DIR, name),
+               os.path.join(PROPOSALS_DIR, name),
+               'run-spec-wasm2c',
+               flags)
 
 
 def main(args):
