@@ -331,8 +331,8 @@ void* wasm_rt_exception(void);
  *  ```
  */
 void wasm_rt_allocate_memory(wasm_rt_memory_t*,
-                             uint32_t initial_pages,
-                             uint32_t max_pages);
+                             uint64_t initial_pages,
+                             uint64_t max_pages);
 
 /**
  * Grow a Memory object by `pages`, and return the previous page count. If
@@ -349,7 +349,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t*,
  *    }
  *  ```
  */
-uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
+uint64_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint64_t pages);
 
 /**
  * Free a Memory object.

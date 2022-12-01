@@ -477,6 +477,7 @@ def main(args):
     parser.add_argument('file', help='wast file.')
     parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-multi-memory', action='store_true')
+    parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
@@ -491,6 +492,7 @@ def main(args):
         wast2json.AppendOptionalArgs({
             '-v': options.verbose,
             '--enable-exceptions': options.enable_exceptions,
+            '--enable-memory64': options.enable_memory64,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types,
@@ -506,6 +508,7 @@ def main(args):
         wasm2c.verbose = options.print_cmd
         wasm2c.AppendOptionalArgs({
             '--enable-exceptions': options.enable_exceptions,
+            '--enable-memory64': options.enable_memory64,
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))

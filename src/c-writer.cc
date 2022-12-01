@@ -2759,7 +2759,7 @@ void CWriter::Write(const ExprList& exprs) {
         Memory* memory = module_->memories[module_->GetMemoryIndex(
             cast<MemorySizeExpr>(&expr)->memidx)];
 
-        PushType(Type::I32);
+        PushType(memory->page_limits.IndexType());
         Write(StackVar(0), " = ",
               ExternalInstanceRef(ModuleFieldType::Memory, memory->name),
               ".pages;", Newline());
