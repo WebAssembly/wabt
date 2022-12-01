@@ -83,7 +83,6 @@
 #define PRIoffset PRIzx
 
 namespace wabt {
-#if WABT_BIG_ENDIAN
 inline void MemcpyEndianAware(void* dst,
                               const void* src,
                               size_t dsize,
@@ -91,21 +90,14 @@ inline void MemcpyEndianAware(void* dst,
                               size_t doff,
                               size_t soff,
                               size_t len) {
+#if WABT_BIG_ENDIAN
   memcpy(static_cast<char*>(dst) + (dsize) - (len) - (doff),
          static_cast<const char*>(src) + (ssize) - (len) - (soff), (len));
-}
 #else
-inline void MemcpyEndianAware(void* dst,
-                              const void* src,
-                              size_t dsize,
-                              size_t ssize,
-                              size_t doff,
-                              size_t soff,
-                              size_t len) {
   memcpy(static_cast<char*>(dst) + (doff),
          static_cast<const char*>(src) + (soff), (len));
-}
 #endif
+}
 }
 
 struct v128 {
