@@ -361,11 +361,15 @@ void wasm_rt_free(void) {
 }
 
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
-                             uint32_t initial_pages,
-                             uint32_t max_pages) {
-  uint32_t byte_length = initial_pages * PAGE_SIZE;
+                             uint64_t initial_pages,
+                             uint64_t max_pages,
+                             bool is64) {
+  uint64_t byte_length = initial_pages * PAGE_SIZE;
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
   /* Reserve 8GiB. */
+  assert(
+      !is64 &&
+      "memory64 is not yet compatible with WASM_RT_MEMCHECK_SIGNAL_HANDLER");
   void* addr = os_mmap(0x200000000ul);
 
   if (!addr) {
@@ -384,30 +388,31 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
+  memory->is64 = is64;
 }
 
-uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
-  uint32_t old_pages = memory->pages;
-  uint32_t new_pages = memory->pages + delta;
+uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
+  uint64_t old_pages = memory->pages;
+  uint64_t new_pages = memory->pages + delta;
   if (new_pages == 0) {
     return 0;
   }
   if (new_pages < old_pages || new_pages > memory->max_pages) {
-    return (uint32_t)-1;
+    return (uint64_t)-1;
   }
-  uint32_t old_size = old_pages * PAGE_SIZE;
-  uint32_t new_size = new_pages * PAGE_SIZE;
-  uint32_t delta_size = delta * PAGE_SIZE;
+  uint64_t old_size = old_pages * PAGE_SIZE;
+  uint64_t new_size = new_pages * PAGE_SIZE;
+  uint64_t delta_size = delta * PAGE_SIZE;
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
   uint8_t* new_data = memory->data;
   int ret = os_mprotect(new_data + old_size, delta_size);
   if (ret != 0) {
-    return (uint32_t)-1;
+    return (uint64_t)-1;
   }
 #else
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
-    return (uint32_t)-1;
+    return (uint64_t)-1;
   }
 #if !WABT_BIG_ENDIAN
   memset(new_data + old_size, 0, delta_size);

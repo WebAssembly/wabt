@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/address.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+255/255 tests passed.
+;;; STDOUT ;;)

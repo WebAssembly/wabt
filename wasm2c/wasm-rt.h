@@ -76,7 +76,11 @@ extern "C" {
 
 /* Signal handler is supported. Use it by default. */
 #ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#ifdef SUPPORT_MEMORY64
+#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
+#else
 #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
+#endif
 #endif
 
 #else
@@ -202,9 +206,11 @@ typedef struct {
   uint8_t* data;
   /** The current and maximum page count for this Memory object. If there is no
    * maximum, `max_pages` is 0xffffffffu (i.e. UINT32_MAX). */
-  uint32_t pages, max_pages;
+  uint64_t pages, max_pages;
   /** The current size of the linear memory, in bytes. */
-  uint32_t size;
+  uint64_t size;
+  /** Is this memory indexed by u64 (as opposed to default u32) */
+  bool is64;
 } wasm_rt_memory_t;
 
 /** A Table of type funcref. */
@@ -352,8 +358,9 @@ void* wasm_rt_exception(void);
  *  ```
  */
 void wasm_rt_allocate_memory(wasm_rt_memory_t*,
-                             uint32_t initial_pages,
-                             uint32_t max_pages);
+                             uint64_t initial_pages,
+                             uint64_t max_pages,
+                             bool is64);
 
 /**
  * Grow a Memory object by `pages`, and return the previous page count. If
@@ -370,7 +377,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t*,
  *    }
  *  ```
  */
-uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
+uint64_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint64_t pages);
 
 /**
  * Free a Memory object.

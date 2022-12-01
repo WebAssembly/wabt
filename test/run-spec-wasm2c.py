@@ -34,6 +34,7 @@ WASM2C_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'wasm2c')
 IS_WINDOWS = sys.platform == 'win32'
 IS_MACOS = platform.mac_ver()[0] != ''
 MAX_COMMANDS_PER_FUNCTION = 1024  # GCC has trouble with extremely long function bodies
+SKIPPED = 2
 
 
 def ReinterpretF32(f32_bits):
@@ -393,13 +394,13 @@ class CWriter(object):
             raise Error('Unexpected action type: %s' % type_)
 
 
-def Compile(cc, c_filename, out_dir, *args):
+def Compile(cc, c_filename, out_dir, *cflags):
     if IS_WINDOWS:
         ext = '.obj'
     else:
         ext = '.o'
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, ext), out_dir)
-    args = list(args)
+    args = list(cflags)
     if IS_WINDOWS:
         args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
@@ -477,6 +478,7 @@ def main(args):
     parser.add_argument('file', help='wast file.')
     parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-multi-memory', action='store_true')
+    parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
@@ -491,6 +493,7 @@ def main(args):
         wast2json.AppendOptionalArgs({
             '-v': options.verbose,
             '--enable-exceptions': options.enable_exceptions,
+            '--enable-memory64': options.enable_memory64,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types,
@@ -506,6 +509,7 @@ def main(args):
         wasm2c.verbose = options.print_cmd
         wasm2c.AppendOptionalArgs({
             '--enable-exceptions': options.enable_exceptions,
+            '--enable-memory64': options.enable_memory64,
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
@@ -525,7 +529,12 @@ def main(args):
         cwriter = CWriter(spec_json, prefix, output, out_dir)
 
         o_filenames = []
-        includes = '-I%s' % options.wasmrt_dir
+        cflags = ['-I%s' % options.wasmrt_dir]
+        if options.enable_memory64:
+            if IS_WINDOWS:
+                sys.stderr.write('skipping: wasm2c+memory64 is not yet supported under msvc\n')
+                return SKIPPED
+            cflags.append('-DSUPPORT_MEMORY64=1')
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
@@ -533,7 +542,7 @@ def main(args):
             args = ['-n', cwriter.GetModulePrefixUnmangled(i)]
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, *args)
             if options.compile:
-                o_filenames.append(Compile(cc, c_filename, out_dir, includes))
+                o_filenames.append(Compile(cc, c_filename, out_dir, *cflags))
 
         cwriter.Write()
         main_filename = utils.ChangeExt(json_file_path, '-main.c')
@@ -543,10 +552,10 @@ def main(args):
         if options.compile:
             # Compile wasm-rt-impl.
             wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
-            o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
+            o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, *cflags))
 
             # Compile and link -main test run entry point
-            o_filenames.append(Compile(cc, main_filename, out_dir, includes))
+            o_filenames.append(Compile(cc, main_filename, out_dir, *cflags))
             if IS_WINDOWS:
                 exe_ext = '.exe'
                 libs = []
