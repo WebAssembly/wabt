@@ -67,6 +67,8 @@ static bool IsFeatureSupported(const std::string& feature) {
 
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm2c", s_description);
+  bool experimental_flag_is_set = false;
+  bool experimental_feature_enabled = false;
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
@@ -82,19 +84,36 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption(
       'n', "module-name", "MODNAME",
       "Unique name for the module being generated. This name is prefixed to\n"
-      "each of the generaed C symbols. By default, the module name from the\n"
+      "each of the generated C symbols. By default, the module name from the\n"
       "names section is used. If that is not present the name of the input\n"
       "file is used as the default.\n",
       [](const char* argument) { s_write_c_options.module_name = argument; });
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
+  parser.AddOption("experimental", "Enable flags marked as (Experimental)\n",
+                   [&]() { experimental_flag_is_set = true; });
+  parser.AddOption("no-sandbox",
+                   "(Experimental) Disable all sandboxing and unify host and\n"
+                   "WebAssembly address space for maximum compatibility.\n",
+                   [&]() {
+                     s_write_c_options.no_sandbox = true;
+                     experimental_feature_enabled = true;
+                   });
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) {
                        s_infile = argument;
                        ConvertBackslashToSlash(&s_infile);
                      });
   parser.Parse(argc, argv);
+
+  // Check that experimental flag is set for experimental features.
+  if (experimental_feature_enabled && !experimental_flag_is_set) {
+    fprintf(stderr,
+            "Some enabled features are experimental please set --experimental "
+            "flag to enable them.\n");
+    exit(1);
+  }
 
   bool any_non_supported_feature = false;
 #define WABT_FEATURE(variable, flag, default_, help)   \

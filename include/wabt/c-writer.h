@@ -26,6 +26,7 @@ class Stream;
 
 struct WriteCOptions {
   std::string_view module_name;
+  bool no_sandbox;
 };
 
 Result WriteC(Stream* c_stream,
