@@ -642,3 +642,13 @@ void buf_done(struct Z_host_instance_t* instance, u32 ptr, u32 size) {
   printf("%s -> %.*s\n", instance->input, (int)size, &instance->memory.data[ptr]);
 }
 ```
+
+## No sandbox mode (experimental)
+
+No-sandbox mode is a work in progress. It can be enabled via `--no-sandbox`.
+The plan is that, among other things, it will turn WebAssembly loads and stores
+in to native host loads and stores without any bounds checking, and that it
+will allow pointers to be shared between WebAssembly and the host. i.e. The
+linear memory in WebAssembly and the host process address space will be the
+same.
+
