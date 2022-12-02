@@ -159,7 +159,7 @@ Result FloatParser<T>::ParseFloat(const char* s,
   // so remove them first.
   assert(s <= end);
   const size_t kBufferSize = end - s + 1;  // +1 for \0.
-  char* buffer = static_cast<char*>(alloca(kBufferSize));
+  char buffer[kBufferSize];
   auto buffer_end =
       std::copy_if(s, end, buffer, [](char c) -> bool { return c != '_'; });
   assert(buffer_end < buffer + kBufferSize);

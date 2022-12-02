@@ -22,10 +22,6 @@
 
 #include "wabt/config.h"
 
-#if HAVE_ALLOCA
-#include <alloca.h>
-#endif
-
 namespace wabt {
 
 OptionParser::Option::Option(char short_name,

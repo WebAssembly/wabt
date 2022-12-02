@@ -26,9 +26,6 @@
 
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 
-/* Whether <alloca.h> is available */
-#cmakedefine01 HAVE_ALLOCA_H
-
 /* Whether <unistd.h> is available */
 #cmakedefine01 HAVE_UNISTD_H
 
@@ -54,15 +51,6 @@
 #cmakedefine01 WITH_EXCEPTIONS
 
 #define SIZEOF_SIZE_T @SIZEOF_SIZE_T@
-
-#if HAVE_ALLOCA_H
-#include <alloca.h>
-#elif COMPILER_IS_MSVC
-#include <malloc.h>
-#define alloca _alloca
-#elif defined(__MINGW32__)
-#include <malloc.h>
-#endif
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
 
