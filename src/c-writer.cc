@@ -25,6 +25,7 @@
 
 #include "wabt/cast.h"
 #include "wabt/common.h"
+#include "wabt/compiler-support.h"
 #include "wabt/ir.h"
 #include "wabt/literal.h"
 #include "wabt/stream.h"
@@ -601,20 +602,27 @@ void CWriter::DefineImportName(const Import* import,
   import_syms_.insert(name);
   import_module_sym_map_.emplace(name, import->module_name);
   global_syms_.insert(mangled);
-  assert(global_sym_map_.emplace(name + MangleField(type), mangled).second);
+  bool success =
+      global_sym_map_.emplace(name + MangleField(type), mangled).second;
+  WASM_UNUSED(success);
+  assert(success);
 }
 
 std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
                                            std::string_view name) {
   std::string mangled = std::string(name) + MangleField(type);
   std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
-  assert(global_sym_map_.emplace(mangled, unique).second);
+  bool success = global_sym_map_.emplace(mangled, unique).second;
+  WASM_UNUSED(success);
+  assert(success);
   return unique;
 }
 
 std::string CWriter::DefineLocalScopeName(std::string_view name) {
   std::string unique = DefineName(&local_syms_, StripLeadingDollar(name));
-  assert(local_sym_map_.emplace(name, unique).second);
+  bool success = local_sym_map_.emplace(name, unique).second;
+  WASM_UNUSED(success);
+  assert(success);
   return unique;
 }
 
@@ -623,7 +631,9 @@ std::string CWriter::DefineStackVarName(Index index,
                                         std::string_view name) {
   std::string unique = DefineName(&local_syms_, name);
   StackTypePair stp = {index, type};
-  assert(stack_var_sym_map_.emplace(stp, unique).second);
+  bool success = stack_var_sym_map_.emplace(stp, unique).second;
+  WASM_UNUSED(success);
+  assert(success);
   return unique;
 }
 

@@ -315,6 +315,7 @@ set(WABT_LIBRARY_H
   include/wabt/binding-hash.h
   include/wabt/color.h
   include/wabt/common.h
+  include/wabt/compiler-support.h
   include/wabt/decompiler-ast.h
   include/wabt/decompiler-ls.h
   include/wabt/decompiler-naming.h
