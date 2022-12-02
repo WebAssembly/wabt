@@ -164,7 +164,7 @@ else ()
   #   interfaces, etc.
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
   add_definitions(
-    -Wall -Wextra -Wno-unused-parameter -Wpointer-arith -Wuninitialized
+    -Wall -Wextra -Wno-unused-parameter -Wpointer-arith -Wuninitialized -Wimplicit-fallthrough
   )
 
   set(CMAKE_CXX_EXTENSIONS OFF)

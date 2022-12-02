@@ -691,6 +691,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const char* fmt, ...) {
         case Opcode::Catch:
         case Opcode::CatchAll:
           indent_level--;
+          break;
         default:
           break;
       }
