@@ -601,7 +601,7 @@ void CWriter::DefineImportName(const Import* import,
   import_syms_.insert(name);
   import_module_sym_map_.emplace(name, import->module_name);
   global_syms_.insert(mangled);
-  bool success WABT_UNUSED =
+  [[maybe_unused]] bool success =
       global_sym_map_.emplace(name + MangleField(type), mangled).second;
   assert(success);
 }
@@ -610,14 +610,15 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
                                            std::string_view name) {
   std::string mangled = std::string(name) + MangleField(type);
   std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
-  bool success WABT_UNUSED = global_sym_map_.emplace(mangled, unique).second;
+  [[maybe_unused]] bool success =
+      global_sym_map_.emplace(mangled, unique).second;
   assert(success);
   return unique;
 }
 
 std::string CWriter::DefineLocalScopeName(std::string_view name) {
   std::string unique = DefineName(&local_syms_, StripLeadingDollar(name));
-  bool success WABT_UNUSED = local_sym_map_.emplace(name, unique).second;
+  [[maybe_unused]] bool success = local_sym_map_.emplace(name, unique).second;
   assert(success);
   return unique;
 }
@@ -627,7 +628,8 @@ std::string CWriter::DefineStackVarName(Index index,
                                         std::string_view name) {
   std::string unique = DefineName(&local_syms_, name);
   StackTypePair stp = {index, type};
-  bool success WABT_UNUSED = stack_var_sym_map_.emplace(stp, unique).second;
+  [[maybe_unused]] bool success =
+      stack_var_sym_map_.emplace(stp, unique).second;
   assert(success);
   return unique;
 }
