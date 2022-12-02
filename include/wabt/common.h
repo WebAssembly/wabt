@@ -391,7 +391,7 @@ void InitStdio();
 
 extern const char* g_kind_name[];
 
-static WABT_INLINE const char* GetKindName(ExternalKind kind) {
+static inline const char* GetKindName(ExternalKind kind) {
   return static_cast<size_t>(kind) < kExternalKindCount
              ? g_kind_name[static_cast<size_t>(kind)]
              : "<error_kind>";
@@ -401,7 +401,7 @@ static WABT_INLINE const char* GetKindName(ExternalKind kind) {
 
 extern const char* g_reloc_type_name[];
 
-static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
+static inline const char* GetRelocTypeName(RelocType reloc) {
   return static_cast<size_t>(reloc) < kRelocTypeCount
              ? g_reloc_type_name[static_cast<size_t>(reloc)]
              : "<error_reloc_type>";
@@ -409,7 +409,7 @@ static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
 
 /* symbol */
 
-static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
+static inline const char* GetSymbolTypeName(SymbolType type) {
   switch (type) {
     case SymbolType::Function:
       return "func";
