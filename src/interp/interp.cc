@@ -270,7 +270,7 @@ void Store::Collect() {
 
   // This vector is often empty since the default maximum
   // recursion is usually enough to mark all objects.
-  while (WABT_UNLIKELY(!gc_context_.untraced_objects.empty())) {
+  while (!gc_context_.untraced_objects.empty()) [[unlikely]] {
     size_t index = gc_context_.untraced_objects.back();
 
     assert(gc_context_.marks[index]);
@@ -298,7 +298,7 @@ void Store::Mark(Ref ref) {
 
   gc_context_.marks[index] = true;
 
-  if (WABT_UNLIKELY(gc_context_.call_depth >= max_call_depth)) {
+  if (gc_context_.call_depth >= max_call_depth) [[unlikely]] {
     gc_context_.untraced_objects.push_back(index);
     return;
   }
@@ -1003,7 +1003,7 @@ void Thread::PushValues(const ValueTypes& types, const Values& values) {
 
 #define TRAP(msg) *out_trap = Trap::New(store_, (msg), frames_), RunResult::Trap
 #define TRAP_IF(cond, msg)     \
-  if (WABT_UNLIKELY((cond))) { \
+  if ((cond)) [[unlikely]] { \
     return TRAP(msg);          \
   }
 #define TRAP_UNLESS(cond, msg) TRAP_IF(!(cond), msg)

@@ -58,7 +58,7 @@ template <
     typename T,
     typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
 T WABT_VECTORCALL CanonNaN(T val) {
-  if (WABT_UNLIKELY(std::isnan(val))) {
+  if (std::isnan(val)) [[unlikely]] {
     return std::numeric_limits<f32>::quiet_NaN();
   }
   return val;
@@ -162,11 +162,11 @@ bool IsNormalDivRem(T lhs, T rhs) {
 
 template <typename T>
 RunResult WABT_VECTORCALL IntDiv(T lhs, T rhs, T* out, std::string* out_msg) {
-  if (WABT_UNLIKELY(rhs == 0)) {
+  if (rhs == 0) [[unlikely]] {
     *out_msg = "integer divide by zero";
     return RunResult::Trap;
   }
-  if (WABT_LIKELY(IsNormalDivRem(lhs, rhs))) {
+  if (IsNormalDivRem(lhs, rhs)) [[likely]] {
     *out = lhs / rhs;
     return RunResult::Ok;
   } else {
@@ -177,11 +177,11 @@ RunResult WABT_VECTORCALL IntDiv(T lhs, T rhs, T* out, std::string* out_msg) {
 
 template <typename T>
 RunResult WABT_VECTORCALL IntRem(T lhs, T rhs, T* out, std::string* out_msg) {
-  if (WABT_UNLIKELY(rhs == 0)) {
+  if (rhs == 0) [[unlikely]] {
     *out_msg = "integer divide by zero";
     return RunResult::Trap;
   }
-  if (WABT_LIKELY(IsNormalDivRem(lhs, rhs))) {
+  if (IsNormalDivRem(lhs, rhs)) [[likely]] {
     *out = lhs % rhs;
   } else {
     *out = 0;
@@ -253,7 +253,7 @@ template <typename T>
 T WABT_VECTORCALL FloatDiv(T lhs, T rhs) {
   // IEE754 specifies what should happen when dividing a float by zero, but
   // C/C++ says it is undefined behavior.
-  if (WABT_UNLIKELY(rhs == 0)) {
+  if (rhs == 0) [[unlikely]] {
     return std::isnan(lhs) || lhs == 0
                ? std::numeric_limits<T>::quiet_NaN()
                : ((std::signbit(lhs) ^ std::signbit(rhs))
@@ -265,9 +265,9 @@ T WABT_VECTORCALL FloatDiv(T lhs, T rhs) {
 
 template <typename T>
 T WABT_VECTORCALL FloatMin(T lhs, T rhs) {
-  if (WABT_UNLIKELY(std::isnan(lhs) || std::isnan(rhs))) {
+  if (std::isnan(lhs) || std::isnan(rhs)) [[unlikely]] {
     return std::numeric_limits<T>::quiet_NaN();
-  } else if (WABT_UNLIKELY(lhs == 0 && rhs == 0)) {
+  } else if (lhs == 0 && rhs == 0) [[unlikely]] {
     return std::signbit(lhs) ? lhs : rhs;
   } else {
     return std::min(lhs, rhs);
@@ -281,9 +281,9 @@ T WABT_VECTORCALL FloatPMin(T lhs, T rhs) {
 
 template <typename T>
 T WABT_VECTORCALL FloatMax(T lhs, T rhs) {
-  if (WABT_UNLIKELY(std::isnan(lhs) || std::isnan(rhs))) {
+  if (std::isnan(lhs) || std::isnan(rhs)) [[unlikely]] {
     return std::numeric_limits<T>::quiet_NaN();
-  } else if (WABT_UNLIKELY(lhs == 0 && rhs == 0)) {
+  } else if (lhs == 0 && rhs == 0) [[unlikely]] {
     return std::signbit(lhs) ? rhs : lhs;
   } else {
     return std::max(lhs, rhs);
@@ -319,13 +319,13 @@ inline f32 WABT_VECTORCALL Convert(f64 val) {
   // case them.
   const f64 kMin = 3.4028234663852886e38;
   const f64 kMax = 3.4028235677973366e38;
-  if (WABT_LIKELY(val >= -kMin && val <= kMin)) {
+  if (val >= -kMin && val <= kMin) [[likely]] {
     return val;
-  } else if (WABT_UNLIKELY(val > kMin && val < kMax)) {
+  } else if (val > kMin && val < kMax) [[unlikely]] {
     return std::numeric_limits<f32>::max();
-  } else if (WABT_UNLIKELY(val > -kMax && val < -kMin)) {
+  } else if (val > -kMax && val < -kMin) [[unlikely]] {
     return -std::numeric_limits<f32>::max();
-  } else if (WABT_UNLIKELY(std::isnan(val))) {
+  } else if (std::isnan(val)) [[unlikely]] {
     return std::numeric_limits<f32>::quiet_NaN();
   } else {
     return std::copysign(std::numeric_limits<f32>::infinity(), val);
@@ -362,9 +362,9 @@ T WABT_VECTORCALL IntExtend(T val) {
 
 template <typename R, typename T>
 R WABT_VECTORCALL IntTruncSat(T val) {
-  if (WABT_UNLIKELY(std::isnan(val))) {
+  if (std::isnan(val)) [[unlikely]] {
     return 0;
-  } else if (WABT_UNLIKELY(!CanConvert<R>(val))) {
+  } else if (!CanConvert<R>(val)) [[unlikely]] {
     return std::signbit(val) ? std::numeric_limits<R>::min()
                              : std::numeric_limits<R>::max();
   } else {

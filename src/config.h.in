@@ -66,9 +66,6 @@
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
 
-#define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
-#define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
-
 #define WABT_VECTORCALL
 
 #if __MINGW32__
@@ -94,8 +91,6 @@
 #include <string.h>
 
 #define WABT_STATIC_ASSERT(x) _STATIC_ASSERT(x)
-#define WABT_UNLIKELY(x) (x)
-#define WABT_LIKELY(x) (x)
 #define WABT_PRINTF_FORMAT(format_arg, first_arg)
 
 #define WABT_VECTORCALL __vectorcall

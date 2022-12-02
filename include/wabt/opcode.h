@@ -155,11 +155,11 @@ inline Opcode Opcode::FromCode(uint32_t code) {
 inline Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
   uint32_t prefix_code = PrefixCode(prefix, code);
 
-  if (WABT_LIKELY(prefix_code < WABT_ARRAY_SIZE(WabtOpcodeCodeTable))) {
+  if (prefix_code < WABT_ARRAY_SIZE(WabtOpcodeCodeTable)) [[likely]] {
     uint32_t value = WabtOpcodeCodeTable[prefix_code];
     // The default value in the table is 0. That's a valid value, but only if
     // the code is 0 (for nop).
-    if (WABT_LIKELY(value != 0 || code == 0)) {
+    if (value != 0 || code == 0) [[likely]] {
       return Opcode(static_cast<Enum>(value));
     }
   }
