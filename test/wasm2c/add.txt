@@ -120,10 +120,12 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     dest_chars[n - i - 1] = cursor;
   }
 }
-#define LOAD_DATA(m, o, i, s)                   \
-  do {                                          \
-    RANGE_CHECK((&m), m.size - o - s, s);       \
-    load_data(&(m.data[m.size - o - s]), i, s); \
+#define LOAD_DATA(m, o, check_only, i, s)         \
+  do {                                            \
+    RANGE_CHECK((&m), m.size - o - s, s);         \
+    if (!check_only) {                            \
+      load_data(&(m.data[m.size - o - s]), i, s); \
+    }                                             \
   } while (0)
 #define DEFINE_LOAD(name, t1, t2, t3)                                  \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {             \
@@ -146,10 +148,12 @@ static inline void load_data(void* dest, const void* src, size_t n) {
 static inline void load_data(void* dest, const void* src, size_t n) {
   memcpy(dest, src, n);
 }
-#define LOAD_DATA(m, o, i, s)      \
-  do {                             \
-    RANGE_CHECK((&m), o, s);       \
-    load_data(&(m.data[o]), i, s); \
+#define LOAD_DATA(m, o, check_only, i, s) \
+  do {                                    \
+    RANGE_CHECK((&m), o, s);              \
+    if (!check_only) {                    \
+      load_data(&(m.data[o]), i, s);      \
+    }                                     \
   } while (0)
 #define DEFINE_LOAD(name, t1, t2, t3)                      \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
@@ -203,174 +207,116 @@ DEFINE_STORE(i64_store32, u32, u64)
 #endif
 // TODO: equivalent constraint for ARM and other architectures
 
-#define DEFINE_SIMD_LOAD_FUNC(name, func, t)              \
-  static inline t name(wasm_rt_memory_t* mem, u64 addr) { \
-    MEMCHECK(mem, addr, t);                               \
-    t result = func((v128*)&mem->data[addr]);             \
-    SIMD_FORCE_READ(result);                              \
-    return result;                                        \
+#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                 \
+  static inline v128 name(wasm_rt_memory_t* mem, u64 addr) { \
+    MEMCHECK(mem, addr, t);                                  \
+    v128 result = func((v128*)&mem->data[addr]);             \
+    SIMD_FORCE_READ(result);                                 \
+    return result;                                           \
   }
 
-#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)               \
-  static inline t name(wasm_rt_memory_t* mem, u64 addr, t vec) { \
-    MEMCHECK(mem, addr, t);                                      \
-    t result = func((v128*)&mem->data[addr], vec, lane);         \
-    SIMD_FORCE_READ(result);                                     \
-    return result;                                               \
+#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                  \
+  static inline v128 name(wasm_rt_memory_t* mem, u64 addr, v128 vec) { \
+    MEMCHECK(mem, addr, t);                                         \
+    v128 result = func((v128*)&mem->data[addr], vec, lane);         \
+    SIMD_FORCE_READ(result);                                        \
+    return result;                                                  \
   }
 
-#define DEFINE_SIMD_STORE(name, t)                                    \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t value) { \
-    MEMCHECK(mem, addr, t);                                           \
-    simde_wasm_v128_store((v128*)&mem->data[addr], value);            \
+#define DEFINE_SIMD_STORE(name, t)                                       \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, v128 value) { \
+    MEMCHECK(mem, addr, t);                                              \
+    simde_wasm_v128_store((v128*)&mem->data[addr], value);               \
   }
 
-#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                   \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t value) { \
-    MEMCHECK(mem, addr, t);                                           \
-    func((v128*)&mem->data[addr], value, lane);                       \
+#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                      \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, v128 value) { \
+    MEMCHECK(mem, addr, t);                                              \
+    func((v128*)&mem->data[addr], value, lane);                          \
   }
 
-DEFINE_SIMD_LOAD_FUNC(v128_load, simde_wasm_v128_load, v128);
+// clang-format off
+DEFINE_SIMD_LOAD_FUNC(v128_load, simde_wasm_v128_load, v128)
 
-DEFINE_SIMD_LOAD_FUNC(v128_load8_splat, simde_wasm_v128_load8_splat, v128);
-DEFINE_SIMD_LOAD_FUNC(v128_load16_splat, simde_wasm_v128_load16_splat, v128);
-DEFINE_SIMD_LOAD_FUNC(v128_load32_splat, simde_wasm_v128_load32_splat, v128);
-DEFINE_SIMD_LOAD_FUNC(v128_load64_splat, simde_wasm_v128_load64_splat, v128);
-DEFINE_SIMD_LOAD_FUNC(i16x8_load8x8, simde_wasm_i16x8_load8x8, v128);
-DEFINE_SIMD_LOAD_FUNC(u16x8_load8x8, simde_wasm_u16x8_load8x8, v128);
-DEFINE_SIMD_LOAD_FUNC(i32x4_load16x4, simde_wasm_i32x4_load16x4, v128);
-DEFINE_SIMD_LOAD_FUNC(u32x4_load16x4, simde_wasm_u32x4_load16x4, v128);
-DEFINE_SIMD_LOAD_FUNC(i64x2_load32x2, simde_wasm_i64x2_load32x2, v128);
-DEFINE_SIMD_LOAD_FUNC(u64x2_load32x2, simde_wasm_u64x2_load32x2, v128);
+DEFINE_SIMD_LOAD_FUNC(v128_load8_splat, simde_wasm_v128_load8_splat, u8)
+DEFINE_SIMD_LOAD_FUNC(v128_load16_splat, simde_wasm_v128_load16_splat, u16)
+DEFINE_SIMD_LOAD_FUNC(v128_load32_splat, simde_wasm_v128_load32_splat, u32)
+DEFINE_SIMD_LOAD_FUNC(v128_load64_splat, simde_wasm_v128_load64_splat, u64)
 
-DEFINE_SIMD_LOAD_FUNC(v128_load32_zero, simde_wasm_v128_load32_zero, v128);
-DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, simde_wasm_v128_load64_zero, v128);
+DEFINE_SIMD_LOAD_FUNC(i16x8_load8x8, simde_wasm_i16x8_load8x8, u64)
+DEFINE_SIMD_LOAD_FUNC(u16x8_load8x8, simde_wasm_u16x8_load8x8, u64)
+DEFINE_SIMD_LOAD_FUNC(i32x4_load16x4, simde_wasm_i32x4_load16x4, u64)
+DEFINE_SIMD_LOAD_FUNC(u32x4_load16x4, simde_wasm_u32x4_load16x4, u64)
+DEFINE_SIMD_LOAD_FUNC(i64x2_load32x2, simde_wasm_i64x2_load32x2, u64)
+DEFINE_SIMD_LOAD_FUNC(u64x2_load32x2, simde_wasm_u64x2_load32x2, u64)
 
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane0, simde_wasm_v128_load8_lane, v128, 0);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane1, simde_wasm_v128_load8_lane, v128, 1);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane2, simde_wasm_v128_load8_lane, v128, 2);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane3, simde_wasm_v128_load8_lane, v128, 3);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane4, simde_wasm_v128_load8_lane, v128, 4);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane5, simde_wasm_v128_load8_lane, v128, 5);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane6, simde_wasm_v128_load8_lane, v128, 6);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane7, simde_wasm_v128_load8_lane, v128, 7);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane8, simde_wasm_v128_load8_lane, v128, 8);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane9, simde_wasm_v128_load8_lane, v128, 9);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane10, simde_wasm_v128_load8_lane, v128, 10);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane11, simde_wasm_v128_load8_lane, v128, 11);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane12, simde_wasm_v128_load8_lane, v128, 12);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane13, simde_wasm_v128_load8_lane, v128, 13);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane14, simde_wasm_v128_load8_lane, v128, 14);
-DEFINE_SIMD_LOAD_LANE(v128_load8_lane15, simde_wasm_v128_load8_lane, v128, 15);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane0, simde_wasm_v128_load16_lane, v128, 0);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane1, simde_wasm_v128_load16_lane, v128, 1);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane2, simde_wasm_v128_load16_lane, v128, 2);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane3, simde_wasm_v128_load16_lane, v128, 3);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane4, simde_wasm_v128_load16_lane, v128, 4);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane5, simde_wasm_v128_load16_lane, v128, 5);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane6, simde_wasm_v128_load16_lane, v128, 6);
-DEFINE_SIMD_LOAD_LANE(v128_load16_lane7, simde_wasm_v128_load16_lane, v128, 7);
-DEFINE_SIMD_LOAD_LANE(v128_load32_lane0, simde_wasm_v128_load32_lane, v128, 0);
-DEFINE_SIMD_LOAD_LANE(v128_load32_lane1, simde_wasm_v128_load32_lane, v128, 1);
-DEFINE_SIMD_LOAD_LANE(v128_load32_lane2, simde_wasm_v128_load32_lane, v128, 2);
-DEFINE_SIMD_LOAD_LANE(v128_load32_lane3, simde_wasm_v128_load32_lane, v128, 3);
-DEFINE_SIMD_LOAD_LANE(v128_load64_lane0, simde_wasm_v128_load64_lane, v128, 0);
-DEFINE_SIMD_LOAD_LANE(v128_load64_lane1, simde_wasm_v128_load64_lane, v128, 1);
+DEFINE_SIMD_LOAD_FUNC(v128_load32_zero, simde_wasm_v128_load32_zero, u32)
+DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, simde_wasm_v128_load64_zero, u64)
 
-DEFINE_SIMD_STORE(v128_store, v128);
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane0, simde_wasm_v128_load8_lane, u8, 0)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane1, simde_wasm_v128_load8_lane, u8, 1)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane2, simde_wasm_v128_load8_lane, u8, 2)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane3, simde_wasm_v128_load8_lane, u8, 3)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane4, simde_wasm_v128_load8_lane, u8, 4)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane5, simde_wasm_v128_load8_lane, u8, 5)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane6, simde_wasm_v128_load8_lane, u8, 6)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane7, simde_wasm_v128_load8_lane, u8, 7)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane8, simde_wasm_v128_load8_lane, u8, 8)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane9, simde_wasm_v128_load8_lane, u8, 9)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane10, simde_wasm_v128_load8_lane, u8, 10)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane11, simde_wasm_v128_load8_lane, u8, 11)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane12, simde_wasm_v128_load8_lane, u8, 12)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane13, simde_wasm_v128_load8_lane, u8, 13)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane14, simde_wasm_v128_load8_lane, u8, 14)
+DEFINE_SIMD_LOAD_LANE(v128_load8_lane15, simde_wasm_v128_load8_lane, u8, 15)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane0, simde_wasm_v128_load16_lane, u16, 0)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane1, simde_wasm_v128_load16_lane, u16, 1)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane2, simde_wasm_v128_load16_lane, u16, 2)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane3, simde_wasm_v128_load16_lane, u16, 3)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane4, simde_wasm_v128_load16_lane, u16, 4)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane5, simde_wasm_v128_load16_lane, u16, 5)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane6, simde_wasm_v128_load16_lane, u16, 6)
+DEFINE_SIMD_LOAD_LANE(v128_load16_lane7, simde_wasm_v128_load16_lane, u16, 7)
+DEFINE_SIMD_LOAD_LANE(v128_load32_lane0, simde_wasm_v128_load32_lane, u32, 0)
+DEFINE_SIMD_LOAD_LANE(v128_load32_lane1, simde_wasm_v128_load32_lane, u32, 1)
+DEFINE_SIMD_LOAD_LANE(v128_load32_lane2, simde_wasm_v128_load32_lane, u32, 2)
+DEFINE_SIMD_LOAD_LANE(v128_load32_lane3, simde_wasm_v128_load32_lane, u32, 3)
+DEFINE_SIMD_LOAD_LANE(v128_load64_lane0, simde_wasm_v128_load64_lane, u64, 0)
+DEFINE_SIMD_LOAD_LANE(v128_load64_lane1, simde_wasm_v128_load64_lane, u64, 1)
 
-DEFINE_SIMD_STORE_LANE(v128_store8_lane0, simde_wasm_v128_store8_lane, v128, 0);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane1, simde_wasm_v128_store8_lane, v128, 1);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane2, simde_wasm_v128_store8_lane, v128, 2);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane3, simde_wasm_v128_store8_lane, v128, 3);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane4, simde_wasm_v128_store8_lane, v128, 4);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane5, simde_wasm_v128_store8_lane, v128, 5);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane6, simde_wasm_v128_store8_lane, v128, 6);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane7, simde_wasm_v128_store8_lane, v128, 7);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane8, simde_wasm_v128_store8_lane, v128, 8);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane9, simde_wasm_v128_store8_lane, v128, 9);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane10,
-                       simde_wasm_v128_store8_lane,
-                       v128,
-                       10);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane11,
-                       simde_wasm_v128_store8_lane,
-                       v128,
-                       11);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane12,
-                       simde_wasm_v128_store8_lane,
-                       v128,
-                       12);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane13,
-                       simde_wasm_v128_store8_lane,
-                       v128,
-                       13);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane14,
-                       simde_wasm_v128_store8_lane,
-                       v128,
-                       14);
-DEFINE_SIMD_STORE_LANE(v128_store8_lane15,
-                       simde_wasm_v128_store8_lane,
-                       v128,
-                       15);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane0,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       0);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane1,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       1);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane2,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       2);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane3,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       3);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane4,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       4);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane5,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       5);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane6,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       6);
-DEFINE_SIMD_STORE_LANE(v128_store16_lane7,
-                       simde_wasm_v128_store16_lane,
-                       v128,
-                       7);
-DEFINE_SIMD_STORE_LANE(v128_store32_lane0,
-                       simde_wasm_v128_store32_lane,
-                       v128,
-                       0);
-DEFINE_SIMD_STORE_LANE(v128_store32_lane1,
-                       simde_wasm_v128_store32_lane,
-                       v128,
-                       1);
-DEFINE_SIMD_STORE_LANE(v128_store32_lane2,
-                       simde_wasm_v128_store32_lane,
-                       v128,
-                       2);
-DEFINE_SIMD_STORE_LANE(v128_store32_lane3,
-                       simde_wasm_v128_store32_lane,
-                       v128,
-                       3);
-DEFINE_SIMD_STORE_LANE(v128_store64_lane0,
-                       simde_wasm_v128_store64_lane,
-                       v128,
-                       0);
-DEFINE_SIMD_STORE_LANE(v128_store64_lane1,
-                       simde_wasm_v128_store64_lane,
-                       v128,
-                       1);
+DEFINE_SIMD_STORE(v128_store, v128)
 
+DEFINE_SIMD_STORE_LANE(v128_store8_lane0, simde_wasm_v128_store8_lane, u8, 0)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane1, simde_wasm_v128_store8_lane, u8, 1)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane2, simde_wasm_v128_store8_lane, u8, 2)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane3, simde_wasm_v128_store8_lane, u8, 3)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane4, simde_wasm_v128_store8_lane, u8, 4)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane5, simde_wasm_v128_store8_lane, u8, 5)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane6, simde_wasm_v128_store8_lane, u8, 6)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane7, simde_wasm_v128_store8_lane, u8, 7)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane8, simde_wasm_v128_store8_lane, u8, 8)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane9, simde_wasm_v128_store8_lane, u8, 9)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane10, simde_wasm_v128_store8_lane, u8, 10)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane11, simde_wasm_v128_store8_lane, u8, 11)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane12, simde_wasm_v128_store8_lane, u8, 12)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane13, simde_wasm_v128_store8_lane, u8, 13)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane14, simde_wasm_v128_store8_lane, u8, 14)
+DEFINE_SIMD_STORE_LANE(v128_store8_lane15, simde_wasm_v128_store8_lane, u8, 15)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane0, simde_wasm_v128_store16_lane, u16, 0)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane1, simde_wasm_v128_store16_lane, u16, 1)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane2, simde_wasm_v128_store16_lane, u16, 2)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane3, simde_wasm_v128_store16_lane, u16, 3)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane4, simde_wasm_v128_store16_lane, u16, 4)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane5, simde_wasm_v128_store16_lane, u16, 5)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane6, simde_wasm_v128_store16_lane, u16, 6)
+DEFINE_SIMD_STORE_LANE(v128_store16_lane7, simde_wasm_v128_store16_lane, u16, 7)
+DEFINE_SIMD_STORE_LANE(v128_store32_lane0, simde_wasm_v128_store32_lane, u32, 0)
+DEFINE_SIMD_STORE_LANE(v128_store32_lane1, simde_wasm_v128_store32_lane, u32, 1)
+DEFINE_SIMD_STORE_LANE(v128_store32_lane2, simde_wasm_v128_store32_lane, u32, 2)
+DEFINE_SIMD_STORE_LANE(v128_store32_lane3, simde_wasm_v128_store32_lane, u32, 3)
+DEFINE_SIMD_STORE_LANE(v128_store64_lane0, simde_wasm_v128_store64_lane, u64, 0)
+DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
+// clang-format on
 #endif
 
 #if defined(_MSC_VER)
@@ -663,7 +609,7 @@ static float wasm_fabsf(float x) {
   if (UNLIKELY(isnan(x))) {
     uint32_t tmp;
     memcpy(&tmp, &x, 4);
-    tmp = tmp & ~(1 << 31);
+    tmp = tmp & ~((uint32_t)1 << 31);
     memcpy(&x, &tmp, 4);
     return x;
   }
@@ -674,7 +620,7 @@ static double wasm_fabs(double x) {
   if (UNLIKELY(isnan(x))) {
     uint64_t tmp;
     memcpy(&tmp, &x, 8);
-    tmp = tmp & ~(1ll << 63);
+    tmp = tmp & ~((uint64_t)1 << 63);
     memcpy(&x, &tmp, 8);
     return x;
   }
@@ -711,6 +657,7 @@ static inline void memory_copy(wasm_rt_memory_t* dest,
 }
 
 static inline void memory_init(wasm_rt_memory_t* dest,
+                               bool check_only,
                                const u8* src,
                                u32 src_size,
                                u32 dest_addr,
@@ -718,7 +665,7 @@ static inline void memory_init(wasm_rt_memory_t* dest,
                                u32 n) {
   if (UNLIKELY(src_addr + (uint64_t)n > src_size))
     TRAP(OOB);
-  LOAD_DATA((*dest), dest_addr, src + src_addr, n);
+  LOAD_DATA((*dest), dest_addr, check_only, src + src_addr, n);
 }
 
 typedef struct {
