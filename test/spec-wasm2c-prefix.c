@@ -121,8 +121,10 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_NAN_T(type, itype, fmt, f, kind)                        \
   do {                                                                        \
     g_tests_run++;                                                            \
-    if (wasm_rt_impl_try() != 0) {                                            \
-      error(__FILE__, __LINE__, #f " trapped.\n");                            \
+    int trap_code = wasm_rt_impl_try();                                       \
+    if (trap_code) {                                                          \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                        \
+            wasm_rt_strerror(trap_code));                                     \
     } else {                                                                  \
       type actual = f;                                                        \
       itype iactual;                                                          \
@@ -151,8 +153,10 @@ static void error(const char* file, int line, const char* format, ...) {
                               expected, found)                                \
   do {                                                                        \
     g_tests_run++;                                                            \
-    if (wasm_rt_impl_try() != 0) {                                            \
-      error(__FILE__, __LINE__, #f " trapped.\n");                            \
+    int trap_code = wasm_rt_impl_try();                                       \
+    if (trap_code) {                                                          \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                        \
+            wasm_rt_strerror(trap_code));                                     \
     } else {                                                                  \
       type actual = f;                                                        \
       if (compare) {                                                          \
