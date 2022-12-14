@@ -1504,9 +1504,9 @@ void CWriter::WriteDataInitializers() {
           ExternalInstanceRef(ModuleFieldType::Memory, memory->name), ", ");
     WriteInitExpr(data_segment->offset);
     if (data_segment->data.empty()) {
-      Write(", NULL, 0");
+      Write(", true, NULL, 0");
     } else {
-      Write(", data_segment_data_",
+      Write(", false, data_segment_data_",
             GlobalName(ModuleFieldType::DataSegment, data_segment->name), ", ",
             data_segment->data.size());
     }
@@ -2597,9 +2597,9 @@ void CWriter::Write(const ExprList& exprs) {
               ExternalInstancePtr(ModuleFieldType::Memory, dest_memory->name),
               ", ");
         if (src_data->data.empty()) {
-          Write("NULL, 0");
+          Write("true, NULL, 0");
         } else {
-          Write("data_segment_data_",
+          Write("false, data_segment_data_",
                 GlobalName(ModuleFieldType::DataSegment, src_data->name), ", ");
           if (is_droppable(src_data)) {
             Write("(", "instance->data_segment_dropped_",
@@ -4423,7 +4423,7 @@ void CWriter::Write(const SimdLoadLaneExpr& expr) {
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(1, result_type), " = ", func, expr.val, "(",
-        ExternalInstancePtr(memory->name), ", (u64)(", StackVar(1), ")");
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(", StackVar(1), ")");
 
   if (expr.offset != 0)
     Write(" + ", expr.offset, "u");
@@ -4448,7 +4448,7 @@ void CWriter::Write(const SimdStoreLaneExpr& expr) {
   // clang-format on
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
-  Write(func, expr.val, "(", ExternalInstancePtr(memory->name), ", (u64)(",
+  Write(func, expr.val, "(", ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
         StackVar(1), ")");
 
   if (expr.offset != 0)
@@ -4520,7 +4520,7 @@ void CWriter::Write(const LoadZeroExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(",
-        ExternalInstancePtr(memory->name), ", (u64)(", StackVar(0), ")");
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(", StackVar(0), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write(");", Newline());

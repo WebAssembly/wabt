@@ -48,10 +48,12 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     dest_chars[n - i - 1] = cursor;
   }
 }
-#define LOAD_DATA(m, o, i, s)                   \
-  do {                                          \
-    RANGE_CHECK((&m), m.size - o - s, s);       \
-    load_data(&(m.data[m.size - o - s]), i, s); \
+#define LOAD_DATA(m, o, check_only, i, s)         \
+  do {                                            \
+    RANGE_CHECK((&m), m.size - o - s, s);         \
+    if (!check_only) {                            \
+      load_data(&(m.data[m.size - o - s]), i, s); \
+    }                                             \
   } while (0)
 #define DEFINE_LOAD(name, t1, t2, t3)                                  \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {             \
@@ -74,10 +76,12 @@ static inline void load_data(void* dest, const void* src, size_t n) {
 static inline void load_data(void* dest, const void* src, size_t n) {
   memcpy(dest, src, n);
 }
-#define LOAD_DATA(m, o, i, s)      \
-  do {                             \
-    RANGE_CHECK((&m), o, s);       \
-    load_data(&(m.data[o]), i, s); \
+#define LOAD_DATA(m, o, check_only, i, s) \
+  do {                                    \
+    RANGE_CHECK((&m), o, s);              \
+    if (!check_only) {                    \
+      load_data(&(m.data[o]), i, s);      \
+    }                                     \
   } while (0)
 #define DEFINE_LOAD(name, t1, t2, t3)                      \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
@@ -165,17 +169,17 @@ DEFINE_SIMD_LOAD_FUNC(v128_load, simde_wasm_v128_load, v128)
 DEFINE_SIMD_LOAD_FUNC(v128_load8_splat, simde_wasm_v128_load8_splat, u8)
 DEFINE_SIMD_LOAD_FUNC(v128_load16_splat, simde_wasm_v128_load16_splat, u16)
 DEFINE_SIMD_LOAD_FUNC(v128_load32_splat, simde_wasm_v128_load32_splat, u32)
-DEFINE_SIMD_LOAD_FUNC(v128_load64_splat, simde_wasm_v128_load64_splat, v128)
+DEFINE_SIMD_LOAD_FUNC(v128_load64_splat, simde_wasm_v128_load64_splat, u64)
 
-DEFINE_SIMD_LOAD_FUNC(i16x8_load8x8, simde_wasm_i16x8_load8x8, v128)
-DEFINE_SIMD_LOAD_FUNC(u16x8_load8x8, simde_wasm_u16x8_load8x8, v128)
-DEFINE_SIMD_LOAD_FUNC(i32x4_load16x4, simde_wasm_i32x4_load16x4, v128)
-DEFINE_SIMD_LOAD_FUNC(u32x4_load16x4, simde_wasm_u32x4_load16x4, v128)
-DEFINE_SIMD_LOAD_FUNC(i64x2_load32x2, simde_wasm_i64x2_load32x2, v128)
-DEFINE_SIMD_LOAD_FUNC(u64x2_load32x2, simde_wasm_u64x2_load32x2, v128)
+DEFINE_SIMD_LOAD_FUNC(i16x8_load8x8, simde_wasm_i16x8_load8x8, u64)
+DEFINE_SIMD_LOAD_FUNC(u16x8_load8x8, simde_wasm_u16x8_load8x8, u64)
+DEFINE_SIMD_LOAD_FUNC(i32x4_load16x4, simde_wasm_i32x4_load16x4, u64)
+DEFINE_SIMD_LOAD_FUNC(u32x4_load16x4, simde_wasm_u32x4_load16x4, u64)
+DEFINE_SIMD_LOAD_FUNC(i64x2_load32x2, simde_wasm_i64x2_load32x2, u64)
+DEFINE_SIMD_LOAD_FUNC(u64x2_load32x2, simde_wasm_u64x2_load32x2, u64)
 
 DEFINE_SIMD_LOAD_FUNC(v128_load32_zero, simde_wasm_v128_load32_zero, u32)
-DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, simde_wasm_v128_load64_zero, u32)
+DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, simde_wasm_v128_load64_zero, u64)
 
 DEFINE_SIMD_LOAD_LANE(v128_load8_lane0, simde_wasm_v128_load8_lane, u8, 0)
 DEFINE_SIMD_LOAD_LANE(v128_load8_lane1, simde_wasm_v128_load8_lane, u8, 1)
@@ -533,7 +537,7 @@ static float wasm_fabsf(float x) {
   if (UNLIKELY(isnan(x))) {
     uint32_t tmp;
     memcpy(&tmp, &x, 4);
-    tmp = tmp & ~(1 << 31);
+    tmp = tmp & ~((uint32_t)1 << 31);
     memcpy(&x, &tmp, 4);
     return x;
   }
@@ -544,7 +548,7 @@ static double wasm_fabs(double x) {
   if (UNLIKELY(isnan(x))) {
     uint64_t tmp;
     memcpy(&tmp, &x, 8);
-    tmp = tmp & ~(1ll << 63);
+    tmp = tmp & ~((uint64_t)1 << 63);
     memcpy(&x, &tmp, 8);
     return x;
   }
@@ -581,6 +585,7 @@ static inline void memory_copy(wasm_rt_memory_t* dest,
 }
 
 static inline void memory_init(wasm_rt_memory_t* dest,
+                               bool check_only,
                                const u8* src,
                                u32 src_size,
                                u32 dest_addr,
@@ -588,7 +593,7 @@ static inline void memory_init(wasm_rt_memory_t* dest,
                                u32 n) {
   if (UNLIKELY(src_addr + (uint64_t)n > src_size))
     TRAP(OOB);
-  LOAD_DATA((*dest), dest_addr, src + src_addr, n);
+  LOAD_DATA((*dest), dest_addr, check_only, src + src_addr, n);
 }
 
 typedef struct {

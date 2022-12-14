@@ -487,7 +487,7 @@ def main(args):
     default_compiler = 'cc'
     if IS_WINDOWS:
         default_compiler = 'cl.exe'
-    default_compiler = os.getenv('CC', default_compiler)
+    default_compiler = os.getenv('WASM2C_CC', os.getenv('CC', default_compiler))
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--out-dir', metavar='PATH',
                         help='output directory for files.')
@@ -557,7 +557,7 @@ def main(args):
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
-        cc = utils.Executable(options.cc, *options.cflags, forward_stderr=True,
+        cc = utils.Executable(options.cc, after_args=options.cflags, forward_stderr=True,
                               forward_stdout=False)
         cc.verbose = options.print_cmd
 
