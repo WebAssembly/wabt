@@ -302,6 +302,7 @@ static void os_install_signal_handler(void) {
   }
 
   struct sigaction sa;
+  memset(&sa , '\0', sizeof(sa));
   sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = os_signal_handler;
@@ -316,6 +317,7 @@ static void os_install_signal_handler(void) {
 static void os_cleanup_signal_handler(void) {
   /* Undo what was done in os_install_signal_handler */
   struct sigaction sa;
+  memset(&sa , '\0', sizeof(sa));
   sa.sa_handler = SIG_DFL;
   if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
     perror("sigaction failed");
