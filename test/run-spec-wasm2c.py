@@ -476,7 +476,6 @@ def main(args):
                         action='store_true')
     parser.add_argument('file', help='wast file.')
     parser.add_argument('--enable-exceptions', action='store_true')
-    parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--enable-multi-memory', action='store_true')
     parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')

@@ -197,6 +197,8 @@ endif ()
 
 set(USE_SANITIZER FALSE)
 
+add_compile_options(-g)
+
 function(sanitizer NAME FLAGS)
   if (${NAME})
     if (USE_SANITIZER)
@@ -236,20 +238,22 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 set(TEMPLATE_CMAKE ${WABT_SOURCE_DIR}/scripts/gen-wasm2c-templates.cmake)
 
 add_custom_command(
-  OUTPUT wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc
+  OUTPUT wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc wasm2c_source_declarations_nosandbox.cc
 
   COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_top.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.top.h" -D symbol="s_header_top" -P ${TEMPLATE_CMAKE}
   COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_bottom.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h" -D symbol="s_header_bottom" -P ${TEMPLATE_CMAKE}
   COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_includes.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c" -D symbol="s_source_includes" -P ${TEMPLATE_CMAKE}
   COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c" -D symbol="s_source_declarations" -P ${TEMPLATE_CMAKE}
+  COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_declarations_nosandbox.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.nosandbox.c" -D symbol="s_source_declarations_nosandbox" -P ${TEMPLATE_CMAKE}
 
   DEPENDS ${WABT_SOURCE_DIR}/src/template/wasm2c.top.h
   ${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h
   ${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c
   ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c
+  ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.nosandbox.c
 )
 
-set(CWRITER_TEMPLATE_SRC wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
+set(CWRITER_TEMPLATE_SRC wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc wasm2c_source_declarations_nosandbox.cc)
 
 add_custom_target(everything)
 
