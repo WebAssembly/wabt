@@ -178,6 +178,8 @@ class CWriter {
   void WriteCHeader();
   void WriteCSource();
 
+  bool SkipImport(const Import* import) const;
+
   size_t MarkTypeStack() const;
   void ResetTypeStack(size_t mark);
   Type StackType(Index) const;
@@ -273,6 +275,7 @@ class CWriter {
                                         const std::string&);
   void WriteModuleInstance();
   void WriteGlobals();
+  void WriteStackPointerGlobal(const Global& global);
   void WriteGlobal(const Global&, const std::string&);
   void WriteGlobalPtr(const Global&, const std::string&);
   void WriteMemories();
@@ -370,9 +373,19 @@ class CWriter {
 
   std::vector<std::pair<std::string, MemoryStream>> func_sections_;
   SymbolSet func_includes_;
+  const Global* stack_pointer_global_ = nullptr;
 };
 
 constexpr std::string_view kImplicitFuncLabel = "$Bfunc";
+constexpr std::string_view kEnvModuleName = "env";
+constexpr std::string_view kStackPointerName = "$__stack_pointer";
+constexpr std::string_view kStackPointerNameWithoutDollar = "__stack_pointer";
+
+constexpr size_t kStackSize = 64 * 1024;
+constexpr size_t kStackBufferSize = 4 * 1024;
+constexpr std::string_view kStackArrayVariableName = "g_w2c_stack_array";
+constexpr std::string_view kStackOffsetGlobalVariableName =
+    "g_w2c_stack_offset";
 
 size_t CWriter::MarkTypeStack() const {
   return type_stack_.size();
@@ -498,7 +511,7 @@ std::string CWriter::MangleName(std::string_view name) {
   std::string result = "Z_";
 
   if (!name.empty()) {
-    for (unsigned char c : name) {
+    for (char c : name) {
       if ((isalnum(c) && c != kPrefix) || c == '_') {
         result += c;
       } else {
@@ -1121,10 +1134,18 @@ void CWriter::WriteTags() {
   Write(CloseBrace(), Newline());
 }
 
+bool CWriter::SkipImport(const Import* import) const {
+  return options_.no_sandbox && import->module_name == kEnvModuleName &&
+         import->field_name == kStackPointerNameWithoutDollar;
+}
+
 void CWriter::ComputeUniqueImports() {
   using modname_name_pair = std::pair<std::string, std::string>;
   std::map<modname_name_pair, const Import*> import_map;
   for (const Import* import : module_->imports) {
+    if (SkipImport(import)) {
+      continue;
+    }
     // After emplacing, the returned bool says whether the insert happened;
     // i.e., was there already an import with the same modname and name?
     // If there was, make sure it was at least the same kind of import.
@@ -1150,15 +1171,18 @@ void CWriter::ComputeUniqueImports() {
 }
 
 void CWriter::BeginInstance() {
-  if (module_->imports.empty()) {
+  ComputeUniqueImports();
+
+  if (unique_imports_.empty()) {
     Write("typedef struct ", ModuleInstanceTypeName(), " ", OpenBrace());
     return;
   }
 
-  ComputeUniqueImports();
-
   // define names of per-instance imports
   for (const Import* import : module_->imports) {
+    if (SkipImport(import)) {
+      continue;
+    }
     DefineImportName(import, import->module_name, import->field_name);
   }
 
@@ -1219,6 +1243,13 @@ void CWriter::BeginInstance() {
     Write("/* import: '", import->module_name, "' '", import->field_name,
           "' */", Newline());
 
+    if (options_.no_sandbox && import->kind() == ExternalKind::Global &&
+        import->field_name == kStackPointerName) {
+      Write("/* ", kStackPointerName,
+            " implementation is replaced with thread-local array */",
+            Newline());
+      continue;
+    }
     switch (import->kind()) {
       case ExternalKind::Global:
         WriteGlobal(cast<GlobalImport>(import)->global,
@@ -1335,17 +1366,33 @@ void CWriter::WriteModuleInstance() {
 
 void CWriter::WriteGlobals() {
   Index global_index = 0;
-  if (module_->globals.size() != module_->num_global_imports) {
-    for (const Global* global : module_->globals) {
+  for (const Global* global : module_->globals) {
+    if (options_.no_sandbox && global->name == kStackPointerName) {
+      // Remember the global to write it later (it needs to be part of .c file)
+      stack_pointer_global_ = global;
+    } else {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
         WriteGlobal(*global, DefineGlobalScopeName(ModuleFieldType::Global,
                                                    global->name));
         Write(Newline());
       }
-      ++global_index;
     }
+    ++global_index;
   }
+}
+
+void CWriter::WriteStackPointerGlobal(const Global& global) {
+  assert(options_.no_sandbox);
+  // Ideally we would want to have a guard page here in order to
+  // catch stack-overflows. For now just add 4k as a buffer page.
+  // We also add a range check against kStackSize on GlobalSet,
+  // note that since leaf functions do not set the __stack_pointer
+  // they won't trigger the range check in global.set
+  Write("wasm_thread_local uint8_t ", kStackArrayVariableName, "[", kStackSize,
+        " + ", kStackBufferSize, "];", Newline());
+  Write("wasm_thread_local uintptr_t ", kStackOffsetGlobalVariableName,
+        " = sizeof(", kStackArrayVariableName, ");", Newline());
 }
 
 void CWriter::WriteGlobal(const Global& global, const std::string& name) {
@@ -1415,10 +1462,17 @@ void CWriter::WriteGlobalInitializers() {
   if (module_->globals.empty())
     return;
 
+  if (stack_pointer_global_ != nullptr) {
+    WriteStackPointerGlobal(*stack_pointer_global_);
+  }
+
   Write(Newline(), "static void init_globals(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
   Index global_index = 0;
   for (const Global* global : module_->globals) {
+    // Ignore __stack_pointer in no-sandbox mode
+    if (options_.no_sandbox && global->name == kStackPointerName) continue;
+
     bool is_import = global_index < module_->num_global_imports;
     if (!is_import) {
       assert(!global->init_expr.empty());
@@ -2479,14 +2533,26 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::GlobalGet: {
         const Var& var = cast<GlobalGetExpr>(&expr)->var;
-        PushType(module_->GetGlobal(var)->type);
-        Write(StackVar(0), " = ", GlobalInstanceVar(var), ";", Newline());
+        if (options_.no_sandbox && var.name() == kStackPointerName) {
+          PushType(module_->GetGlobal(var)->type);
+          Write(StackVar(0), " = ((uintptr_t)&", kStackArrayVariableName, "[0]) + ", kStackOffsetGlobalVariableName, ";",
+                Newline());
+        } else {
+          PushType(module_->GetGlobal(var)->type);
+          Write(StackVar(0), " = ", GlobalInstanceVar(var), ";", Newline());
+        }
         break;
       }
 
       case ExprType::GlobalSet: {
         const Var& var = cast<GlobalSetExpr>(&expr)->var;
-        Write(GlobalInstanceVar(var), " = ", StackVar(0), ";", Newline());
+        if (options_.no_sandbox && var.name() == kStackPointerName) {
+          Write("if (UNLIKELY(", StackVar(0), " < ", kStackBufferSize, " + (uintptr_t)", kStackArrayVariableName, ")) TRAP(OOB);", Newline());
+          Write("if (UNLIKELY(", StackVar(0), " > ", kStackBufferSize + kStackSize, " + (uintptr_t)", kStackArrayVariableName, ")) TRAP(OOB);", Newline());
+          Write(kStackOffsetGlobalVariableName, " = ", StackVar(0), " - ((uintptr_t)&", kStackArrayVariableName, "[0]);", Newline());
+        } else {
+          Write(GlobalInstanceVar(var), " = ", StackVar(0), ";", Newline());
+        }
         DropTypes(1);
         break;
       }

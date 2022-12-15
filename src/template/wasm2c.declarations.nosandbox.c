@@ -32,8 +32,10 @@
 #endif
 
 #ifdef __GNUC__
+#define wasm_thread_local __thread
 #define wasm_asm __asm__
 #else
+#define wasm_thread_local __declspec(thread)
 #define wasm_asm(X)
 #endif
 
