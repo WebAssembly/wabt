@@ -89,6 +89,10 @@ static void ParseOptions(int argc, char** argv) {
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
+  parser.AddOption("no-sandbox",
+                   "Don't generate sandboxed code but make it\n"
+                   "compatible with native code instead.\n",
+                   []() { s_write_c_options.no_sandbox = true; });
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) {
                        s_infile = argument;
