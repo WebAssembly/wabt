@@ -117,7 +117,9 @@ function compile() {
     var binaryOutput = module.toBinary({log: true, write_debug_names:true});
     outputLog = binaryOutput.log;
     binaryBuffer = binaryOutput.buffer;
-    outputBase64 = btoa(binaryBuffer);
+    // binaryBuffer is a Uint8Array, so we need to convert it to a string to use btoa
+    // https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
+    outputBase64 = btoa((String.fromCharCode.apply(null, binaryBuffer));
 
     var blob = new Blob([binaryOutput.buffer]);
     if (binaryBlobUrl) {
