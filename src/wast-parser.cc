@@ -2119,9 +2119,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Consume();
       TypeVector result;
       if (options_->features.reference_types_enabled() &&
-          MatchLpar(TokenType::Result)) {
-        CHECK_RESULT(ParseValueTypeList(&result, nullptr));
-        EXPECT(Rpar);
+          PeekMatchLpar(TokenType::Result)) {
+        CHECK_RESULT(ParseResultList(&result, nullptr));
       }
       out_expr->reset(new SelectExpr(result, loc));
       break;
