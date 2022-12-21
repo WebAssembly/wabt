@@ -751,12 +751,12 @@ if (EMSCRIPTEN)
   set_target_properties(libwabtjs PROPERTIES OUTPUT_NAME libwabt)
 
   set(WABT_POST_JS ${WABT_SOURCE_DIR}/src/wabt.post.js)
-  set(EMSCRIPTEN_EXPORTED_JSON ${WABT_SOURCE_DIR}/src/emscripten-exported.json)
+  set(EMSCRIPTEN_EXPORTS ${WABT_SOURCE_DIR}/src/emscripten-exports.txt)
 
   set(LIBWABT_LINK_FLAGS
     -s SINGLE_FILE
     --post-js ${WABT_POST_JS}
-    -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
+    -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTS}\"
     -s RESERVED_FUNCTION_POINTERS=10
     -s NO_EXIT_RUNTIME=1
     -s ALLOW_MEMORY_GROWTH=1
@@ -770,7 +770,7 @@ if (EMSCRIPTEN)
   set_target_properties(libwabtjs
     PROPERTIES
     LINK_FLAGS "${LIBWABT_LINK_FLAGS_STR}"
-    LINK_DEPENDS "${WABT_POST_JS};${EMSCRIPTEN_EXPORTED_JSON}"
+    LINK_DEPENDS "${WABT_POST_JS};${EMSCRIPTEN_EXPORTS}"
   )
 endif ()
 
