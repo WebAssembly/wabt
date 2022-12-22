@@ -27,6 +27,7 @@ var FEATURES = [
   'tail_call',
   'bulk_memory',
   'reference_types',
+  'relaxed_simd',
 ];
 
 /// If value is not undefined, return it. Otherwise return default_.
