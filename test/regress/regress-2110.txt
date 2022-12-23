@@ -5,7 +5,7 @@
 )
 
 (;; STDERR ;;;
-out/test/regress/regress-38.txt:4:3: error: tag not allowed
+out/test/regress/regress-2110.txt:4:3: error: tag not allowed
   (tag $e0 (param i32))
   ^
 ;;; STDERR ;;)
