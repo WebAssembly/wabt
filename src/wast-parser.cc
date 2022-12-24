@@ -1346,6 +1346,10 @@ Result WastParser::ParseElemModuleField(Module* module) {
 
 Result WastParser::ParseTagModuleField(Module* module) {
   WABT_TRACE(ParseTagModuleField);
+  if (!options_->features.exceptions_enabled()) {
+    Error(Consume().loc, "tag not allowed");
+    return Result::Error;
+  }
   EXPECT(Lpar);
   EXPECT(Tag);
   std::string name;

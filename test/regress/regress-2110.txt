@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (tag $e0 (param i32))
+)
+
+(;; STDERR ;;;
+out/test/regress/regress-2110.txt:4:3: error: tag not allowed
+  (tag $e0 (param i32))
+  ^
+;;; STDERR ;;)
