@@ -19,30 +19,15 @@ var features = getLocalStorageFeatures();
 
 function getLocalStorageFeatures() {
   try {
-    return JSON.parse(localStorage && localStorage.getItem("features")) || defaultFeatures;
+    return JSON.parse(localStorage && localStorage.getItem("features")) || {};
   } catch (e) {
     console.log(e);
-    return { mutable_globals: true };
+    return {};
   }
 }
 
 WabtModule().then(function(wabt) {
 
-// TODO: Share feature selection and other code with wat2wasm/demo.js
-var FEATURES = [
-  'exceptions',
-  'mutable_globals',
-  'sat_float_to_int',
-  'sign_extension',
-  'simd',
-  'threads',
-  'multi_value',
-  'tail_call',
-  'bulk_memory',
-  'reference_types',
-];
-
-var defaultFeatures = { mutable_globals: true };
 var editorEl = document.querySelector('.editor');
 var uploadEl = document.getElementById('upload');
 var selectEl = document.getElementById('select');
@@ -65,9 +50,9 @@ editorContainer.ondrop = function(e) {
   readAndCompileFile(file);
 }
 var fileBuffer = null;
-for (var feature of FEATURES) {
-  var featureEl = document.getElementById(feature);
-  featureEl.checked = !!features[feature];
+for (const [f, v] of Object.entries(wabt.FEATURES)) {
+  var featureEl = document.getElementById(f);
+  featureEl.checked = !!(features[f] !== undefined ? features[f] : v);
   featureEl.addEventListener('change', event => {
     var feature = event.target.id;
     features[feature] = event.target.checked;
