@@ -226,7 +226,7 @@ class CWriter {
   static const char* GetReferenceTypeName(const Type& type);
   static const char* GetReferenceNullValue(const Type& type);
 
-  enum class WriteExportsKind {
+  enum class CWriterPhase {
     Declarations,
     Definitions,
   };
@@ -287,12 +287,13 @@ class CWriter {
   void WriteDataInitializers();
   void WriteElemInitializers();
   void WriteElemTableInit(bool, const ElemSegment*, const Table*);
-  void WriteExports(WriteExportsKind);
+  void WriteExports(CWriterPhase);
   void WriteInitDecl();
   void WriteFreeDecl();
   void WriteInit();
   void WriteFree();
   void WriteInitInstanceImport();
+  void WriteImportProperties(CWriterPhase);
   void WriteFuncs();
   void Write(const Func&);
   void WriteParamsAndLocals();
@@ -1669,7 +1670,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
   Write(");", Newline());
 }
 
-void CWriter::WriteExports(WriteExportsKind kind) {
+void CWriter::WriteExports(CWriterPhase kind) {
   if (module_->exports.empty())
     return;
 
@@ -1685,7 +1686,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         const Func* func = module_->GetFunc(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = func->name;
-        if (kind == WriteExportsKind::Declarations) {
+        if (kind == CWriterPhase::Declarations) {
           WriteFuncDeclaration(func->decl, mangled_name);
         } else {
           func_ = func;
@@ -1729,7 +1730,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         const Tag* tag = module_->GetTag(export_->var);
         mangled_name = ExportName(MangleName(export_->name));
         internal_name = tag->name;
-        if (kind == WriteExportsKind::Declarations) {
+        if (kind == CWriterPhase::Declarations) {
           Write("extern ");
         }
         Write("const u32 *", mangled_name);
@@ -1740,7 +1741,7 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         WABT_UNREACHABLE;
     }
 
-    if (kind == WriteExportsKind::Declarations) {
+    if (kind == CWriterPhase::Declarations) {
       Write(";", Newline());
       continue;
     }
@@ -1908,6 +1909,39 @@ void CWriter::WriteInitInstanceImport() {
     }
   }
   Write(CloseBrace(), Newline());
+}
+
+void CWriter::WriteImportProperties(CWriterPhase kind) {
+  if (import_module_set_.empty())
+    return;
+
+  auto write_import_prop = [&](const Import* import, std::string prop,
+                               uint32_t value) {
+    Write(Newline());
+    if (kind == CWriterPhase::Declarations) {
+      Write("extern ");
+    }
+    Write("const u32 " + module_prefix_ + "_",
+          prop + "_" + MangleName(import->module_name) +
+              MangleName(import->field_name));
+    if (kind == CWriterPhase::Definitions) {
+      Write(" = ", value);
+    }
+
+    Write(";", Newline());
+  };
+
+  for (const Import* import : unique_imports_) {
+    if (import->kind() == ExternalKind::Memory) {
+      const Limits* memory_limits =
+          &(cast<MemoryImport>(import)->memory.page_limits);
+      write_import_prop(import, "min", memory_limits->initial);
+      write_import_prop(import, "max",
+                        memory_limits->has_max
+                            ? memory_limits->max
+                            : std::numeric_limits<uint32_t>::max());
+    }
+  }
 }
 
 void CWriter::WriteFree() {
@@ -3560,7 +3594,8 @@ void CWriter::WriteCHeader() {
   WriteFreeDecl();
   WriteMultivalueTypes();
   WriteImports();
-  WriteExports(WriteExportsKind::Declarations);
+  WriteImportProperties(CWriterPhase::Declarations);
+  WriteExports(CWriterPhase::Declarations);
   Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
 }
@@ -3577,8 +3612,9 @@ void CWriter::WriteCSource() {
   WriteDataInitializers();
   WriteElemInitializers();
   WriteFuncs();
-  WriteExports(WriteExportsKind::Definitions);
+  WriteExports(CWriterPhase::Definitions);
   WriteInitInstanceImport();
+  WriteImportProperties(CWriterPhase::Definitions);
   WriteInit();
   WriteFree();
 }
