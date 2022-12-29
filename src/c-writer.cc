@@ -146,11 +146,13 @@ struct OpenBrace {};
 struct CloseBrace {};
 
 int GetShiftMask(Type type) {
+  // clang-format off
   switch (type) {
     case Type::I32: return 31;
     case Type::I64: return 63;
     default: WABT_UNREACHABLE; return 0;
   }
+  // clang-format on
 }
 
 class CWriter {
@@ -840,12 +842,14 @@ void CWriter::Write(TypeEnum type) {
 }
 
 void CWriter::Write(SignedType type) {
+  // clang-format off
   switch (type.type) {
     case Type::I32: Write("s32"); break;
     case Type::I64: Write("s64"); break;
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 }
 
 void CWriter::Write(const ResultType& rt) {
@@ -3328,6 +3332,7 @@ void CWriter::Write(const ConvertExpr& expr) {
 
 void CWriter::Write(const LoadExpr& expr) {
   const char* func = nullptr;
+  // clang-format off
   switch (expr.opcode) {
     case Opcode::I32Load: func = "i32_load"; break;
     case Opcode::I64Load: func = "i64_load"; break;
@@ -3347,6 +3352,7 @@ void CWriter::Write(const LoadExpr& expr) {
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
@@ -3363,6 +3369,7 @@ void CWriter::Write(const LoadExpr& expr) {
 
 void CWriter::Write(const StoreExpr& expr) {
   const char* func = nullptr;
+  // clang-format off
   switch (expr.opcode) {
     case Opcode::I32Store: func = "i32_store"; break;
     case Opcode::I64Store: func = "i64_store"; break;
@@ -3377,6 +3384,7 @@ void CWriter::Write(const StoreExpr& expr) {
     default:
       WABT_UNREACHABLE;
   }
+  // clang-format on
 
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
