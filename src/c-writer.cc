@@ -1325,7 +1325,9 @@ void CWriter::WriteFuncDeclarations() {
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name) {
   Write(ResultType(decl.sig.result_types), " ", name, "(");
-  Write(ModuleInstanceTypeName(), "*");
+  if (!options_.no_sandbox) {
+    Write(ModuleInstanceTypeName(), "*");
+  }
   WriteParamTypes(decl);
   Write(")");
 }
@@ -1334,14 +1336,19 @@ void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
                                          const std::string& module_name,
                                          const std::string& name) {
   Write(ResultType(decl.sig.result_types), " ", name, "(");
-  Write("struct ", MangleModuleInstanceTypeName(module_name), "*");
+  if (!options_.no_sandbox) {
+    Write("struct ", MangleModuleInstanceTypeName(module_name), "*");
+  }
   WriteParamTypes(decl);
   Write(")");
 }
 
 void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
                                                const std::string& name) {
-  Write(ResultType(decl.sig.result_types), " ", name, "(void*");
+  Write(ResultType(decl.sig.result_types), " ", name, "(");
+  if (!options_.no_sandbox) {
+    Write("void*");
+  }
   WriteParamTypes(decl);
   Write(")");
 }
@@ -1810,13 +1817,14 @@ void CWriter::WriteExports(WriteExportsKind kind) {
         Write(OpenBrace());
         Write("return ", ExternalRef(ModuleFieldType::Func, internal_name),
               "(");
-
-        bool is_import = import_module_sym_map_.count(internal_name) != 0;
-        if (is_import) {
-          Write("instance->", MangleModuleInstanceName(
-                                  import_module_sym_map_[internal_name]));
-        } else {
-          Write("instance");
+        if (!options_.no_sandbox) {
+          bool is_import = import_module_sym_map_.count(internal_name) != 0;
+          if (is_import) {
+            Write("instance->", MangleModuleInstanceName(
+                                    import_module_sym_map_[internal_name]));
+          } else {
+            Write("instance");
+          }
         }
         WriteParamSymbols(index_to_name);
         Write(CloseBrace(), Newline());
@@ -2086,11 +2094,20 @@ void CWriter::WriteParamsAndLocals() {
 }
 
 void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
-  Write(ModuleInstanceTypeName(), "* instance");
+  bool need_comma = false;
+  if (!options_.no_sandbox) {
+    Write(ModuleInstanceTypeName(), "* instance");
+    need_comma = true;
+  }
   if (func_->GetNumParams() != 0) {
     Indent(4);
     for (Index i = 0; i < func_->GetNumParams(); ++i) {
-      Write(", ");
+      if (need_comma) {
+        Write(", ");
+      } else {
+        need_comma = true;
+      }
+
       if (i != 0 && (i % 8) == 0) {
         Write(Newline());
       }
@@ -2103,10 +2120,15 @@ void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
 }
 
 void CWriter::WriteParamSymbols(const std::vector<std::string>& index_to_name) {
+  bool needs_comma = !options_.no_sandbox;
   if (func_->GetNumParams() != 0) {
     Indent(4);
     for (Index i = 0; i < func_->GetNumParams(); ++i) {
-      Write(", ");
+      if (needs_comma) {
+        Write(", ");
+      } else {
+        needs_comma = true;
+      }
       if (i != 0 && (i % 8) == 0) {
         Write(Newline());
       }
@@ -2118,9 +2140,14 @@ void CWriter::WriteParamSymbols(const std::vector<std::string>& index_to_name) {
 }
 
 void CWriter::WriteParamTypes(const FuncDeclaration& decl) {
+  bool needs_comma = !options_.no_sandbox;
   if (decl.GetNumParams() != 0) {
     for (Index i = 0; i < decl.GetNumParams(); ++i) {
-      Write(", ");
+      if (needs_comma) {
+        Write(", ");
+      } else {
+        needs_comma = true;
+      }
       Write(decl.GetParamType(i));
     }
   }
@@ -2436,15 +2463,23 @@ void CWriter::Write(const ExprList& exprs) {
 
         assert(var.is_name());
         Write(ExternalRef(ModuleFieldType::Func, var.name()), "(");
-        bool is_import = import_module_sym_map_.count(func.name) != 0;
-        if (is_import) {
-          Write("instance->",
-                MangleModuleInstanceName(import_module_sym_map_[func.name]));
-        } else {
-          Write("instance");
+        if (!options_.no_sandbox) {
+          bool is_import = import_module_sym_map_.count(func.name) != 0;
+          if (is_import) {
+            Write("instance->",
+                  MangleModuleInstanceName(import_module_sym_map_[func.name]));
+          } else {
+            Write("instance");
+          }
         }
+
+        bool needs_comma = !options_.no_sandbox;
         for (Index i = 0; i < num_params; ++i) {
-          Write(", ");
+          if (needs_comma) {
+            Write(", ");
+          } else {
+            needs_comma = true;
+          }
           Write(StackVar(num_params - i - 1));
         }
         Write(");", Newline());

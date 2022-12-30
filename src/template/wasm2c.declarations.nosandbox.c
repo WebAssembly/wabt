@@ -513,4 +513,31 @@ DEFINE_TABLE_SET(externref)
 DEFINE_TABLE_FILL(funcref)
 DEFINE_TABLE_FILL(externref)
 
+// TODO: This is a temporary workaround for env module, remove them if they are
+//  not needed or replace with proper implementation
+struct Z_env_instance_t {};
+
+wasm_rt_funcref_table_t* Z_envZ___indirect_function_table(
+    struct Z_env_instance_t* unused) {
+  return NULL;
+}
+
+u64* Z_envZ___memory_base(struct Z_env_instance_t* unused) {
+  return NULL;
+}
+
+u64* Z_envZ___table_base(struct Z_env_instance_t* unused) {
+  return NULL;
+}
+
+u32* Z_envZ___table_base32(struct Z_env_instance_t* unused) {
+  return NULL;
+}
+
+wasm_rt_memory_t* Z_envZ_memory(struct Z_env_instance_t* unused) {
+  return NULL;
+}
+
+// END OF evn workaround
+
 static bool s_module_initialized = false;

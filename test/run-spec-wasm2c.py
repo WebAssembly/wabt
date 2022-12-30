@@ -113,7 +113,7 @@ def IsModuleCommand(command):
 
 class CWriter(object):
 
-    def __init__(self, spec_json, prefix, out_file, out_dir):
+    def __init__(self, spec_json, prefix, out_file, out_dir, no_sandbox):
         self.source_filename = os.path.basename(spec_json['source_filename'])
         self.commands = spec_json['commands']
         self.out_file = out_file
@@ -122,6 +122,7 @@ class CWriter(object):
         self.module_idx = 0
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
+        self.no_sandbox = no_sandbox
         self.unmangled_names = {}
         self.idx_to_module_name = {}
         self._MaybeWriteDummyModule()
@@ -252,6 +253,8 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
+        if self.no_sandbox:
+            return
         self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
         self._WriteModuleInitCall(command, False)
 
@@ -263,11 +266,15 @@ class CWriter(object):
                 idx += 1
 
     def _WriteModuleCleanUps(self):
+        if self.no_sandbox:
+            return
         for idx in range(self.module_idx):
             self.out_file.write("%s_free(&%s_instance);\n" % (self.GetModulePrefix(idx), self.GetModulePrefix(idx)))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
+        if self.no_sandbox:
+            return
         self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
         self._WriteModuleInitCall(command, True)
 
@@ -382,10 +389,16 @@ class CWriter(object):
         field = mangled_module_name + MangleName(action['field'])
         if type_ == 'invoke':
             args = self._ConstantList(action.get('args', []))
-            if len(args) == 0:
-                args = f'&{mangled_module_name}_instance'
+            if self.no_sandbox:
+                if len(args) == 0:
+                    args = f''
+                else:
+                    args = f'{args}'
             else:
-                args = f'&{mangled_module_name}_instance, {args}'
+                if len(args) == 0:
+                    args = f'&{mangled_module_name}_instance'
+                else:
+                    args = f'&{mangled_module_name}_instance, {args}'
             return '%s(%s)' % (field, args)
         elif type_ == 'get':
             return '*%s(%s)' % (field, '&' + mangled_module_name + '_instance')
@@ -527,7 +540,7 @@ def main(args):
                 prefix = prefix_file.read() + '\n'
 
         output = io.StringIO()
-        cwriter = CWriter(spec_json, prefix, output, out_dir)
+        cwriter = CWriter(spec_json, prefix, output, out_dir, options.no_sandbox)
 
         o_filenames = []
         includes = '-I%s' % options.wasmrt_dir
