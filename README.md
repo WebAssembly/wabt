@@ -77,7 +77,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [memory64]: https://github.com/WebAssembly/memory64
 [multi-memory]: https://github.com/WebAssembly/multi-memory
 [extended-const]: https://github.com/WebAssembly/extended-const
-[relaxed-simd*]: https://github.com/WebAssembly/relaxed-simd (except the f32x4.relaxed_dot_bf16x8_add_f32x4 instruction which is not yet implemented)
+[relaxed-simd]: https://github.com/WebAssembly/relaxed-simd
 
 ## Cloning
 
