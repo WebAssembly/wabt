@@ -167,6 +167,7 @@ typedef enum {
   WASM_RT_I64,
   WASM_RT_F32,
   WASM_RT_F64,
+  WASM_RT_V128,
   WASM_RT_FUNCREF,
   WASM_RT_EXTERNREF,
 } wasm_rt_type_t;

@@ -121,8 +121,10 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_NAN_T(type, itype, fmt, f, kind)                        \
   do {                                                                        \
     g_tests_run++;                                                            \
-    if (wasm_rt_impl_try() != 0) {                                            \
-      error(__FILE__, __LINE__, #f " trapped.\n");                            \
+    int trap_code = wasm_rt_impl_try();                                       \
+    if (trap_code) {                                                          \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                        \
+            wasm_rt_strerror(trap_code));                                     \
     } else {                                                                  \
       type actual = f;                                                        \
       itype iactual;                                                          \
@@ -140,25 +142,31 @@ static void error(const char* file, int line, const char* format, ...) {
 
 #define MULTI_T_UNPACK_(...) __VA_ARGS__
 #define MULTI_T_UNPACK(arg) MULTI_T_UNPACK_ arg
-#define MULTI_i32 "%u"
-#define MULTI_i64 "%" PRIu64
-#define MULTI_f32 "%.9g"
-#define MULTI_f64 "%.17g"
-#define ASSERT_RETURN_MULTI_T(type, fmt, f, compare, expected, found)    \
-  do {                                                                   \
-    g_tests_run++;                                                       \
-    if (wasm_rt_impl_try() != 0) {                                       \
-      error(__FILE__, __LINE__, #f " trapped.\n");                       \
-    } else {                                                             \
-      type actual = f;                                                   \
-      if (compare) {                                                     \
-        g_tests_passed++;                                                \
-      } else {                                                           \
-        error(__FILE__, __LINE__,                                        \
-              "in " #f ": expected " fmt ", got " fmt ".\n",             \
-              MULTI_T_UNPACK(expected), MULTI_T_UNPACK(found));          \
-      }                                                                  \
-    }                                                                    \
+#define MULTI_i8 "%su "
+#define MULTI_i16 "%su "
+#define MULTI_i32 "%u "
+#define MULTI_i64 "%" PRIu64 " "
+#define MULTI_f32 "%.9g "
+#define MULTI_f64 "%.17g "
+#define MULTI_str "%s "
+#define ASSERT_RETURN_MULTI_T(type, fmt_expected, fmt_got, f, compare,        \
+                              expected, found)                                \
+  do {                                                                        \
+    g_tests_run++;                                                            \
+    int trap_code = wasm_rt_impl_try();                                       \
+    if (trap_code) {                                                          \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                        \
+            wasm_rt_strerror(trap_code));                                     \
+    } else {                                                                  \
+      type actual = f;                                                        \
+      if (compare) {                                                          \
+        g_tests_passed++;                                                     \
+      } else {                                                                \
+        error(__FILE__, __LINE__,                                             \
+              "in " #f ": expected <" fmt_expected ">, got <" fmt_got ">.\n", \
+              MULTI_T_UNPACK(expected), MULTI_T_UNPACK(found));               \
+      }                                                                       \
+    }                                                                         \
   } while (0)
 
 
@@ -178,6 +186,14 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_ARITHMETIC_NAN_F64(f) \
   ASSERT_RETURN_NAN_T(f64, u64, "016x", f, arithmetic)
 
+static bool is_equal_u8(u8 x, u8 y) {
+  return x == y;
+}
+
+static bool is_equal_u16(u16 x, u16 y) {
+  return x == y;
+}
+
 static bool is_equal_u32(u32 x, u32 y) {
   return x == y;
 }
@@ -186,6 +202,8 @@ static bool is_equal_u64(u64 x, u64 y) {
   return x == y;
 }
 
+#define is_equal_i8 is_equal_u8
+#define is_equal_i16 is_equal_u16
 #define is_equal_i32 is_equal_u32
 #define is_equal_i64 is_equal_u64
 
@@ -209,18 +227,24 @@ wasm_rt_externref_t spectest_make_externref(uintptr_t x) {
   return (wasm_rt_externref_t)(x + 1);  // externref(0) is not null
 }
 
-static bool is_equal_f32(f32 x, f32 y) {
-  u32 ux, uy;
+static u32 f32_bits(f32 x) {
+  u32 ux;
   memcpy(&ux, &x, sizeof(ux));
-  memcpy(&uy, &y, sizeof(uy));
-  return ux == uy;
+  return ux;
+}
+
+static u64 f64_bits(f64 x) {
+  u64 ux;
+  memcpy(&ux, &x, sizeof(ux));
+  return ux;
+}
+
+static bool is_equal_f32(f32 x, f32 y) {
+  return f32_bits(x) == f32_bits(y);
 }
 
 static bool is_equal_f64(f64 x, f64 y) {
-  u64 ux, uy;
-  memcpy(&ux, &x, sizeof(ux));
-  memcpy(&uy, &y, sizeof(uy));
-  return ux == uy;
+  return f64_bits(x) == f64_bits(y);
 }
 
 static f32 make_nan_f32(u32 x) {

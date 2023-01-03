@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_i64x2_cmp.wast
+(;; STDOUT ;;;
+102/102 tests passed.
+;;; STDOUT ;;)

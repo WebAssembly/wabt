@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_bitwise.wast
+(;; STDOUT ;;;
+139/139 tests passed.
+;;; STDOUT ;;)
