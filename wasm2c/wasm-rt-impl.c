@@ -42,6 +42,59 @@
 #define alloca _alloca
 #endif
 
+#if !defined(_WIN32)
+
+#include <pthread.h>
+#define WASM_RT_MUTEX_TYPE pthread_mutex_t
+#define WASM_RT_CREATE_MUTEX(lock)        \
+  do {                                    \
+    if (pthread_mutex_init(&(lock), NULL) != 0) \
+      abort();                            \
+  } while (0)
+#define WASM_RT_DESTROY_MUTEX(lock)          \
+  do {                                       \
+    if (pthread_mutex_destroy(&(lock)) != 0) \
+      abort();                               \
+  } while (0)
+#define WASM_RT_MUTEX_LOCK(lock)          \
+  do {                                    \
+    if (pthread_mutex_lock(&(lock)) != 0) \
+      abort();                            \
+  } while (0)
+#define WASM_RT_MUTEX_UNLOCK(lock)          \
+  do {                                      \
+    if (pthread_mutex_unlock(&(lock)) != 0) \
+      abort();                              \
+  } while (0)
+
+#else
+
+#define WASM_RT_MUTEX_TYPE HANDLE
+#define WASM_RT_CREATE_MUTEX(lock)       \
+  lock = CreateMutex(NULL, FALSE, NULL); \
+  do {                                   \
+    if (!lock)                           \
+      abort();                           \
+  } while (0)
+#define WASM_RT_DESTROY_MUTEX(lock) \
+  do {                              \
+    if (CloseHandle(lock) == 0)     \
+      abort();                      \
+    lock = 0;                       \
+  } while (0)
+#define WASM_RT_MUTEX_LOCK(lock)                              \
+  do {                                                        \
+    if (WaitForSingleObject(lock, INFINITE) != WAIT_OBJECT_0) \
+      abort();                                                \
+  } while (0)
+#define WASM_RT_MUTEX_UNLOCK(lock) \
+  do {                             \
+    if (ReleaseMutex(lock) == 0)   \
+      abort();                     \
+  } while (0)
+
+#endif
+
 #define PAGE_SIZE 65536
 #define MAX_EXCEPTION_SIZE PAGE_SIZE
 
@@ -68,6 +121,9 @@ uint32_t wasm_rt_saved_call_stack_depth;
 
 static FuncType* g_func_types;
 static uint32_t g_func_type_count;
+// Mutex for the func type indexes which are shared across multiple Wasm
+// instances, potentially running on different threads
+static WASM_RT_MUTEX_TYPE g_func_type_mutex;
 
 jmp_buf wasm_rt_jmp_buf;
 
@@ -125,23 +181,37 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
     func_type.results[i] = va_arg(args, wasm_rt_type_t);
   va_end(args);
 
-  for (i = 0; i < g_func_type_count; ++i)
-    if (func_types_are_equal(&g_func_types[i], &func_type))
-      return i + 1;
+  bool found = false;
+  uint32_t result = 0;
 
-  // This is a new/unseed type.  Copy our stack allocated params/results into
-  // permanent heap allocated space.
-  wasm_rt_type_t* params = malloc(param_size);
-  wasm_rt_type_t* results = malloc(result_size);
-  memcpy(params, func_type.params, param_size);
-  memcpy(results, func_type.results, result_size);
-  func_type.params = params;
-  func_type.results = results;
+  WASM_RT_MUTEX_LOCK(g_func_type_mutex);
 
-  uint32_t idx = g_func_type_count++;
-  g_func_types = realloc(g_func_types, g_func_type_count * sizeof(FuncType));
-  g_func_types[idx] = func_type;
-  return idx + 1;
+  for (i = 0; i < g_func_type_count; ++i) {
+    if (func_types_are_equal(&g_func_types[i], &func_type)) {
+      found = true;
+      result = i + 1;
+      break;
+    }
+  }
+
+  if (!found) {
+    // This is a new/unseed type.  Copy our stack allocated params/results into
+    // permanent heap allocated space.
+    wasm_rt_type_t* params = malloc(param_size);
+    wasm_rt_type_t* results = malloc(result_size);
+    memcpy(params, func_type.params, param_size);
+    memcpy(results, func_type.results, result_size);
+    func_type.params = params;
+    func_type.results = results;
+
+    uint32_t idx = g_func_type_count++;
+    g_func_types = realloc(g_func_types, g_func_type_count * sizeof(FuncType));
+    g_func_types[idx] = func_type;
+    result = idx + 1;
+  }
+
+  WASM_RT_MUTEX_UNLOCK(g_func_type_mutex);
+  return result;
 }
 
 uint32_t wasm_rt_register_tag(uint32_t size) {
@@ -334,6 +404,7 @@ static void os_cleanup_signal_handler(void) {
 #endif
 
 void wasm_rt_init(void) {
+  WASM_RT_CREATE_MUTEX(g_func_type_mutex);
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
@@ -351,6 +422,8 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
+  // We don't lock g_func_type_mutex here as we expect there to be no running
+  // wasm instances when this function is called.
   for (uint32_t i = 0; i < g_func_type_count; ++i) {
     free(g_func_types[i].params);
     free(g_func_types[i].results);
@@ -363,6 +436,7 @@ void wasm_rt_free(void) {
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
   os_cleanup_signal_handler();
 #endif
+  WASM_RT_DESTROY_MUTEX(g_func_type_mutex);
 }
 
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
