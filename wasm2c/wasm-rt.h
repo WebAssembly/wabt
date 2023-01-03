@@ -283,9 +283,19 @@ void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values);
 WASM_RT_NO_RETURN void wasm_rt_throw(void);
 
 /**
+ * A hardened jmp_buf that allows us to checks if it is initialized before use
+ */
+typedef struct {
+  /* Is the jmp buf intialized? */
+  bool initialized;
+  /* jmp_buf contents */
+  jmp_buf buffer;
+} wasm_rt_jmp_buf;
+
+/**
  * The type of an unwind target if an exception is thrown and caught.
  */
-#define WASM_RT_UNWIND_TARGET jmp_buf
+#define WASM_RT_UNWIND_TARGET wasm_rt_jmp_buf
 
 /**
  * Get the current unwind target if an exception is thrown.
@@ -313,10 +323,13 @@ uint32_t wasm_rt_exception_size(void);
 void* wasm_rt_exception(void);
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !defined(_WIN32)
-#define WASM_RT_SETJMP(buf) sigsetjmp(buf, 1)
+#define WASM_RT_SETJMP_SETBUF(buf) sigsetjmp(buf, 1)
 #else
-#define WASM_RT_SETJMP(buf) setjmp(buf)
+#define WASM_RT_SETJMP_SETBUF(buf) setjmp(buf)
 #endif
+
+#define WASM_RT_SETJMP(buf) \
+  ((buf).initialized = true, WASM_RT_SETJMP_SETBUF((buf).buffer))
 
 #define wasm_rt_try(target) WASM_RT_SETJMP(target)
 

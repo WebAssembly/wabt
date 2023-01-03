@@ -69,13 +69,13 @@ uint32_t wasm_rt_saved_call_stack_depth;
 static FuncType* g_func_types;
 static uint32_t g_func_type_count;
 
-jmp_buf wasm_rt_jmp_buf;
+wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
 static uint32_t g_active_exception_tag;
 static uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
 static uint32_t g_active_exception_size;
 
-static jmp_buf* g_unwind_target;
+static wasm_rt_jmp_buf* g_unwind_target;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
@@ -87,7 +87,7 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
   WASM_RT_TRAP_HANDLER(code);
   wasm_rt_unreachable();
 #else
-  WASM_RT_LONGJMP(wasm_rt_jmp_buf, code);
+  WASM_RT_LONGJMP(g_wasm_rt_jmp_buf, code);
 #endif
 }
 
