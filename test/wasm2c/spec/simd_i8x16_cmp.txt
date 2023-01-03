@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_i8x16_cmp.wast
+;;; SLOW:
+(;; STDOUT ;;;
+413/413 tests passed.
+;;; STDOUT ;;)

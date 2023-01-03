@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_i16x8_extadd_pairwise_i8x16.wast
+(;; STDOUT ;;;
+16/16 tests passed.
+;;; STDOUT ;;)

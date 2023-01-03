@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_int_to_int_extend.wast
+(;; STDOUT ;;;
+228/228 tests passed.
+;;; STDOUT ;;)

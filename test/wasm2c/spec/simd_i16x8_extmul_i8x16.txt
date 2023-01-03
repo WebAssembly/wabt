@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_i16x8_extmul_i8x16.wast
+(;; STDOUT ;;;
+104/104 tests passed.
+;;; STDOUT ;;)

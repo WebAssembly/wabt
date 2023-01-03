@@ -472,6 +472,7 @@ constexpr char CWriter::MangleType(Type type) {
     case Type::I64: return 'j';
     case Type::F32: return 'f';
     case Type::F64: return 'd';
+    case Type::V128: return 'o';
     case Type::FuncRef: return 'r';
     case Type::ExternRef: return 'e';
     default:
@@ -831,6 +832,7 @@ void CWriter::Write(Type type) {
     case Type::I64: Write("u64"); break;
     case Type::F32: Write("f32"); break;
     case Type::F64: Write("f64"); break;
+    case Type::V128: Write("v128"); break;
     case Type::FuncRef: Write("wasm_rt_funcref_t"); break;
     case Type::ExternRef: Write("wasm_rt_externref_t"); break;
     default:
@@ -846,6 +848,7 @@ void CWriter::Write(TypeEnum type) {
     case Type::I64: Write("WASM_RT_I64"); break;
     case Type::F32: Write("WASM_RT_F32"); break;
     case Type::F64: Write("WASM_RT_F64"); break;
+    case Type::V128: Write("WASM_RT_V128"); break;
     case Type::FuncRef: Write("WASM_RT_FUNCREF"); break;
     case Type::ExternRef: Write("WASM_RT_EXTERNREF"); break;
     default:
@@ -929,6 +932,12 @@ void CWriter::Write(const Const& const_) {
       } else {
         Writef("%.17g", Bitcast<double>(f64_bits));
       }
+      break;
+    }
+    case Type::V128: {
+      Writef("simde_wasm_i32x4_const(0x%08x, 0x%08x, 0x%08x, 0x%08x)",
+             const_.vec128().u32(0), const_.vec128().u32(1),
+             const_.vec128().u32(2), const_.vec128().u32(3));
       break;
     }
 
@@ -2153,8 +2162,8 @@ void CWriter::WriteParamTypes(const FuncDeclaration& decl) {
 
 void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
   Index num_params = func_->GetNumParams();
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::FuncRef,
-                    Type::ExternRef}) {
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
+                    Type::FuncRef, Type::ExternRef}) {
     Index local_index = 0;
     size_t count = 0;
     for (Type local_type : func_->local_types) {
@@ -2172,6 +2181,8 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
               " = ");
         if (local_type == Type::FuncRef || local_type == Type::ExternRef) {
           Write(GetReferenceNullValue(local_type));
+        } else if (local_type == Type::V128) {
+          Write("simde_wasm_i64x2_make(0, 0)");
         } else {
           Write("0");
         }
@@ -2187,8 +2198,8 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
 }
 
 void CWriter::WriteStackVarDeclarations() {
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::FuncRef,
-                    Type::ExternRef}) {
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
+                    Type::FuncRef, Type::ExternRef}) {
     size_t count = 0;
     for (const auto& [pair, name] : stack_var_sym_map_) {
       Type stp_type = pair.second;
@@ -3155,6 +3166,342 @@ void CWriter::Write(const BinaryExpr& expr) {
       WritePrefixBinaryExpr(expr.opcode, "copysign");
       break;
 
+    case Opcode::I8X16Add:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_add");
+      break;
+
+    case Opcode::I8X16AddSatS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_add_sat");
+      break;
+
+    case Opcode::I8X16AddSatU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_add_sat");
+      break;
+
+    case Opcode::I8X16AvgrU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_avgr");
+      break;
+
+    case Opcode::I8X16MaxS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_max");
+      break;
+
+    case Opcode::I8X16MaxU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_max");
+      break;
+
+    case Opcode::I8X16MinS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_min");
+      break;
+
+    case Opcode::I8X16MinU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_min");
+      break;
+
+    case Opcode::I8X16NarrowI16X8S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_narrow_i16x8");
+      break;
+
+    case Opcode::I8X16NarrowI16X8U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_narrow_i16x8");
+      break;
+
+    case Opcode::I8X16Shl:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_shl");
+      break;
+
+    case Opcode::I8X16ShrS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_shr");
+      break;
+
+    case Opcode::I8X16ShrU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_shr");
+      break;
+
+    case Opcode::I8X16Sub:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_sub");
+      break;
+
+    case Opcode::I8X16SubSatS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_sub_sat");
+      break;
+
+    case Opcode::I8X16SubSatU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_sub_sat");
+      break;
+
+    case Opcode::I8X16Swizzle:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_swizzle");
+      break;
+
+    case Opcode::I16X8Add:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_add");
+      break;
+
+    case Opcode::I16X8AvgrU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_avgr");
+      break;
+
+    case Opcode::I16X8AddSatS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_add_sat");
+      break;
+
+    case Opcode::I16X8AddSatU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_add_sat");
+      break;
+
+    case Opcode::I16X8ExtmulHighI8X16S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_extmul_high_i8x16");
+      break;
+
+    case Opcode::I16X8ExtmulHighI8X16U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_extmul_high_u8x16");
+      break;
+
+    case Opcode::I16X8ExtmulLowI8X16S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_extmul_low_i8x16");
+      break;
+
+    case Opcode::I16X8ExtmulLowI8X16U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_extmul_low_u8x16");
+      break;
+
+    case Opcode::I16X8MaxS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_max");
+      break;
+
+    case Opcode::I16X8MaxU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_max");
+      break;
+
+    case Opcode::I16X8MinS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_min");
+      break;
+
+    case Opcode::I16X8MinU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_min");
+      break;
+
+    case Opcode::I16X8Mul:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_mul");
+      break;
+
+    case Opcode::I16X8NarrowI32X4S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_narrow_i32x4");
+      break;
+
+    case Opcode::I16X8NarrowI32X4U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_narrow_i32x4");
+      break;
+
+    case Opcode::I16X8Q15mulrSatS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_q15mulr_sat");
+      break;
+
+    case Opcode::I16X8Shl:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_shl");
+      break;
+
+    case Opcode::I16X8ShrS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_shr");
+      break;
+
+    case Opcode::I16X8ShrU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_shr");
+      break;
+
+    case Opcode::I16X8Sub:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_sub");
+      break;
+
+    case Opcode::I16X8SubSatS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_sub_sat");
+      break;
+
+    case Opcode::I16X8SubSatU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_sub_sat");
+      break;
+
+    case Opcode::I32X4Add:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_add");
+      break;
+
+    case Opcode::I32X4DotI16X8S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_dot_i16x8");
+      break;
+
+    case Opcode::I32X4ExtmulHighI16X8S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_extmul_high_i16x8");
+      break;
+
+    case Opcode::I32X4ExtmulHighI16X8U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_extmul_high_u16x8");
+      break;
+
+    case Opcode::I32X4ExtmulLowI16X8S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_extmul_low_i16x8");
+      break;
+
+    case Opcode::I32X4ExtmulLowI16X8U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_extmul_low_u16x8");
+      break;
+
+    case Opcode::I32X4MaxS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_max");
+      break;
+
+    case Opcode::I32X4MaxU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_max");
+      break;
+
+    case Opcode::I32X4MinS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_min");
+      break;
+
+    case Opcode::I32X4MinU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_min");
+      break;
+
+    case Opcode::I32X4Mul:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_mul");
+      break;
+
+    case Opcode::I32X4Shl:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_shl");
+      break;
+
+    case Opcode::I32X4ShrS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_shr");
+      break;
+
+    case Opcode::I32X4ShrU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_shr");
+      break;
+
+    case Opcode::I32X4Sub:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_sub");
+      break;
+
+    case Opcode::I64X2Add:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_add");
+      break;
+
+    case Opcode::I64X2ExtmulHighI32X4S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_extmul_high_i32x4");
+      break;
+
+    case Opcode::I64X2ExtmulHighI32X4U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u64x2_extmul_high_u32x4");
+      break;
+
+    case Opcode::I64X2ExtmulLowI32X4S:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_extmul_low_i32x4");
+      break;
+
+    case Opcode::I64X2ExtmulLowI32X4U:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u64x2_extmul_low_u32x4");
+      break;
+
+    case Opcode::I64X2Mul:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_mul");
+      break;
+
+    case Opcode::I64X2Shl:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_shl");
+      break;
+
+    case Opcode::I64X2ShrS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_shr");
+      break;
+
+    case Opcode::I64X2ShrU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u64x2_shr");
+      break;
+
+    case Opcode::I64X2Sub:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_sub");
+      break;
+
+    case Opcode::F32X4Add:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_add");
+      break;
+
+    case Opcode::F32X4Div:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_div");
+      break;
+
+    case Opcode::F32X4Max:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_max");
+      break;
+
+    case Opcode::F32X4Mul:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_mul");
+      break;
+
+    case Opcode::F32X4Min:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_min");
+      break;
+
+    case Opcode::F32X4PMax:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_pmax");
+      break;
+
+    case Opcode::F32X4PMin:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_pmin");
+      break;
+
+    case Opcode::F32X4Sub:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_sub");
+      break;
+
+    case Opcode::F64X2Add:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_add");
+      break;
+
+    case Opcode::F64X2Div:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_div");
+      break;
+
+    case Opcode::F64X2Max:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_max");
+      break;
+
+    case Opcode::F64X2Mul:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_mul");
+      break;
+
+    case Opcode::F64X2Min:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_min");
+      break;
+
+    case Opcode::F64X2PMax:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_pmax");
+      break;
+
+    case Opcode::F64X2PMin:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_pmin");
+      break;
+
+    case Opcode::F64X2Sub:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_sub");
+      break;
+
+    case Opcode::V128And:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_v128_and");
+      break;
+
+    case Opcode::V128Andnot:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_v128_andnot");
+      break;
+
+    case Opcode::V128Or:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_v128_or");
+      break;
+
+    case Opcode::V128Xor:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_v128_xor");
+      break;
+
     default:
       WABT_UNREACHABLE;
   }
@@ -3222,6 +3569,197 @@ void CWriter::Write(const CompareExpr& expr) {
     case Opcode::F32Ge:
     case Opcode::F64Ge:
       WriteInfixBinaryExpr(expr.opcode, ">=", AssignOp::Disallowed);
+      break;
+
+    case Opcode::I8X16Eq:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_eq");
+      break;
+
+    case Opcode::I8X16GeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_ge");
+      break;
+
+    case Opcode::I8X16GeU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_ge");
+      break;
+
+    case Opcode::I8X16GtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_gt");
+      break;
+
+    case Opcode::I8X16GtU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_gt");
+      break;
+
+    case Opcode::I8X16LeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_le");
+      break;
+
+    case Opcode::I8X16LeU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_le");
+      break;
+
+    case Opcode::I8X16LtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_lt");
+      break;
+
+    case Opcode::I8X16LtU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_lt");
+      break;
+
+    case Opcode::I8X16Ne:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_ne");
+      break;
+
+    case Opcode::I16X8Eq:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_eq");
+      break;
+
+    case Opcode::I16X8GeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_ge");
+      break;
+
+    case Opcode::I16X8GeU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_ge");
+      break;
+
+    case Opcode::I16X8GtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_gt");
+      break;
+    case Opcode::I16X8GtU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_gt");
+      break;
+
+    case Opcode::I16X8LeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_le");
+      break;
+
+    case Opcode::I16X8LeU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_le");
+      break;
+
+    case Opcode::I16X8LtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_lt");
+      break;
+
+    case Opcode::I16X8LtU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_lt");
+      break;
+
+    case Opcode::I16X8Ne:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_ne");
+      break;
+
+    case Opcode::I32X4Eq:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_eq");
+      break;
+
+    case Opcode::I32X4GeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_ge");
+      break;
+
+    case Opcode::I32X4GeU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_ge");
+      break;
+
+    case Opcode::I32X4GtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_gt");
+      break;
+
+    case Opcode::I32X4GtU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_gt");
+      break;
+
+    case Opcode::I32X4LeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_le");
+      break;
+
+    case Opcode::I32X4LeU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_le");
+      break;
+
+    case Opcode::I32X4LtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_lt");
+      break;
+
+    case Opcode::I32X4LtU:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_lt");
+      break;
+
+    case Opcode::I32X4Ne:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_ne");
+      break;
+
+    case Opcode::I64X2Eq:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_eq");
+      break;
+
+    case Opcode::I64X2GeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_ge");
+      break;
+
+    case Opcode::I64X2GtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_gt");
+      break;
+
+    case Opcode::I64X2LeS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_le");
+      break;
+
+    case Opcode::I64X2LtS:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_lt");
+      break;
+
+    case Opcode::I64X2Ne:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_ne");
+      break;
+
+    case Opcode::F32X4Eq:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_eq");
+      break;
+
+    case Opcode::F32X4Ge:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_ge");
+      break;
+
+    case Opcode::F32X4Gt:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_gt");
+      break;
+
+    case Opcode::F32X4Le:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_le");
+      break;
+
+    case Opcode::F32X4Lt:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_lt");
+      break;
+
+    case Opcode::F32X4Ne:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f32x4_ne");
+      break;
+
+    case Opcode::F64X2Eq:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_eq");
+      break;
+
+    case Opcode::F64X2Ge:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_ge");
+      break;
+
+    case Opcode::F64X2Gt:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_gt");
+      break;
+
+    case Opcode::F64X2Le:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_le");
+      break;
+
+    case Opcode::F64X2Lt:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_lt");
+      break;
+
+    case Opcode::F64X2Ne:
+      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_f64x2_ne");
       break;
 
     default:
@@ -3372,6 +3910,48 @@ void CWriter::Write(const ConvertExpr& expr) {
       WriteSimpleUnaryExpr(expr.opcode, "i64_reinterpret_f64");
       break;
 
+    case Opcode::I32X4TruncSatF32X4S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_trunc_sat_f32x4");
+      break;
+
+    case Opcode::I32X4TruncSatF32X4U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u32x4_trunc_sat_f32x4");
+      break;
+
+    case Opcode::I32X4TruncSatF64X2SZero:
+      WriteSimpleUnaryExpr(expr.opcode,
+                           "simde_wasm_i32x4_trunc_sat_f64x2_zero");
+      break;
+
+    case Opcode::I32X4TruncSatF64X2UZero:
+      WriteSimpleUnaryExpr(expr.opcode,
+                           "simde_wasm_u32x4_trunc_sat_f64x2_zero");
+      break;
+
+    case Opcode::F32X4ConvertI32X4S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_convert_i32x4");
+      break;
+
+    case Opcode::F32X4ConvertI32X4U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_convert_u32x4");
+      break;
+
+    case Opcode::F32X4DemoteF64X2Zero:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_demote_f64x2_zero");
+      break;
+
+    case Opcode::F64X2ConvertLowI32X4S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_convert_low_i32x4");
+      break;
+
+    case Opcode::F64X2ConvertLowI32X4U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_convert_low_u32x4");
+      break;
+
+    case Opcode::F64X2PromoteLowF32X4:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_promote_low_f32x4");
+      break;
+
     default:
       WABT_UNREACHABLE;
   }
@@ -3395,6 +3975,13 @@ void CWriter::Write(const LoadExpr& expr) {
     case Opcode::I64Load16U: func = "i64_load16_u"; break;
     case Opcode::I64Load32S: func = "i64_load32_s"; break;
     case Opcode::I64Load32U: func = "i64_load32_u"; break;
+    case Opcode::V128Load: func = "v128_load"; break;
+    case Opcode::V128Load8X8S: func = "i16x8_load8x8"; break;
+    case Opcode::V128Load8X8U: func = "u16x8_load8x8"; break;
+    case Opcode::V128Load16X4S: func = "i32x4_load16x4"; break;
+    case Opcode::V128Load16X4U: func = "u32x4_load16x4"; break;
+    case Opcode::V128Load32X2S: func = "i64x2_load32x2"; break;
+    case Opcode::V128Load32X2U: func = "u64x2_load32x2"; break;
 
     default:
       WABT_UNREACHABLE;
@@ -3427,6 +4014,7 @@ void CWriter::Write(const StoreExpr& expr) {
     case Opcode::I32Store16: func = "i32_store16"; break;
     case Opcode::I64Store16: func = "i64_store16"; break;
     case Opcode::I64Store32: func = "i64_store32"; break;
+    case Opcode::V128Store: func = "v128_store"; break;
 
     default:
       WABT_UNREACHABLE;
@@ -3542,6 +4130,230 @@ void CWriter::Write(const UnaryExpr& expr) {
       WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s32)(u32)");
       break;
 
+    case Opcode::I8X16Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i8x16_abs");
+      break;
+
+    case Opcode::I8X16AllTrue:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i8x16_all_true");
+      break;
+
+    case Opcode::I8X16Bitmask:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i8x16_bitmask");
+      break;
+
+    case Opcode::I8X16Neg:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i8x16_neg");
+      break;
+
+    case Opcode::I8X16Popcnt:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i8x16_popcnt");
+      break;
+
+    case Opcode::I8X16Splat:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i8x16_splat");
+      break;
+
+    case Opcode::I16X8Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_abs");
+      break;
+
+    case Opcode::I16X8AllTrue:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_all_true");
+      break;
+
+    case Opcode::I16X8Bitmask:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_bitmask");
+      break;
+
+    case Opcode::I16X8ExtaddPairwiseI8X16S:
+      WriteSimpleUnaryExpr(expr.opcode,
+                           "simde_wasm_i16x8_extadd_pairwise_i8x16");
+      break;
+
+    case Opcode::I16X8ExtaddPairwiseI8X16U:
+      WriteSimpleUnaryExpr(expr.opcode,
+                           "simde_wasm_u16x8_extadd_pairwise_u8x16");
+      break;
+
+    case Opcode::I16X8ExtendHighI8X16S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_extend_high_i8x16");
+      break;
+
+    case Opcode::I16X8ExtendHighI8X16U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u16x8_extend_high_u8x16");
+      break;
+
+    case Opcode::I16X8ExtendLowI8X16S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_extend_low_i8x16");
+      break;
+
+    case Opcode::I16X8ExtendLowI8X16U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u16x8_extend_low_u8x16");
+      break;
+
+    case Opcode::I16X8Neg:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_neg");
+      break;
+
+    case Opcode::I16X8Splat:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_splat");
+      break;
+
+    case Opcode::I32X4Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_abs");
+      break;
+
+    case Opcode::I32X4AllTrue:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_all_true");
+      break;
+
+    case Opcode::I32X4Bitmask:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_bitmask");
+      break;
+
+    case Opcode::I32X4ExtaddPairwiseI16X8S:
+      WriteSimpleUnaryExpr(expr.opcode,
+                           "simde_wasm_i32x4_extadd_pairwise_i16x8");
+      break;
+
+    case Opcode::I32X4ExtaddPairwiseI16X8U:
+      WriteSimpleUnaryExpr(expr.opcode,
+                           "simde_wasm_u32x4_extadd_pairwise_u16x8");
+      break;
+
+    case Opcode::I32X4ExtendHighI16X8S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_extend_high_i16x8");
+      break;
+
+    case Opcode::I32X4ExtendHighI16X8U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u32x4_extend_high_u16x8");
+      break;
+
+    case Opcode::I32X4ExtendLowI16X8S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_extend_low_i16x8");
+      break;
+
+    case Opcode::I32X4ExtendLowI16X8U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u32x4_extend_low_u16x8");
+      break;
+
+    case Opcode::I32X4Neg:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_neg");
+      break;
+
+    case Opcode::I32X4Splat:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_splat");
+      break;
+
+    case Opcode::I64X2Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_abs");
+      break;
+
+    case Opcode::I64X2AllTrue:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_all_true");
+      break;
+
+    case Opcode::I64X2Bitmask:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_bitmask");
+      break;
+
+    case Opcode::I64X2ExtendHighI32X4S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_extend_high_i32x4");
+      break;
+
+    case Opcode::I64X2ExtendHighI32X4U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u64x2_extend_high_u32x4");
+      break;
+
+    case Opcode::I64X2ExtendLowI32X4S:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_extend_low_i32x4");
+      break;
+
+    case Opcode::I64X2ExtendLowI32X4U:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u64x2_extend_low_u32x4");
+      break;
+
+    case Opcode::I64X2Neg:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_neg");
+      break;
+
+    case Opcode::I64X2Splat:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_splat");
+      break;
+
+    case Opcode::F32X4Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_abs");
+      break;
+
+    case Opcode::F32X4Ceil:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_ceil");
+      break;
+
+    case Opcode::F32X4Floor:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_floor");
+      break;
+
+    case Opcode::F32X4Nearest:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_nearest");
+      break;
+
+    case Opcode::F32X4Neg:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_neg");
+      break;
+
+    case Opcode::F32X4Splat:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_splat");
+      break;
+
+    case Opcode::F32X4Sqrt:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_sqrt");
+      break;
+
+    case Opcode::F32X4Trunc:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_trunc");
+      break;
+
+    case Opcode::F64X2Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_abs");
+      break;
+
+    case Opcode::F64X2Ceil:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_ceil");
+      break;
+
+    case Opcode::F64X2Floor:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_floor");
+      break;
+
+    case Opcode::F64X2Nearest:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_nearest");
+      break;
+
+    case Opcode::F64X2Neg:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_neg");
+      break;
+
+    case Opcode::F64X2Splat:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_splat");
+      break;
+
+    case Opcode::F64X2Sqrt:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_sqrt");
+      break;
+
+    case Opcode::F64X2Trunc:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_trunc");
+      break;
+
+    case Opcode::V128AnyTrue:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_v128_any_true");
+      break;
+
+    case Opcode::V128Not:
+      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_v128_not");
+      break;
+
     default:
       WABT_UNREACHABLE;
   }
@@ -3551,8 +4363,8 @@ void CWriter::Write(const TernaryExpr& expr) {
   switch (expr.opcode) {
     case Opcode::V128BitSelect: {
       Type result_type = expr.opcode.GetResultType();
-      Write(StackVar(2, result_type), " = ", "v128.bitselect", "(", StackVar(0),
-            ", ", StackVar(1), ", ", StackVar(2), ");", Newline());
+      Write(StackVar(2, result_type), " = ", "simde_wasm_v128_bitselect", "(",
+            StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");", Newline());
       DropTypes(3);
       PushType(result_type);
       break;
@@ -3566,28 +4378,87 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
 
   switch (expr.opcode) {
-    case Opcode::I8X16ExtractLaneS:
-    case Opcode::I8X16ExtractLaneU:
-    case Opcode::I16X8ExtractLaneS:
-    case Opcode::I16X8ExtractLaneU:
-    case Opcode::I32X4ExtractLane:
-    case Opcode::I64X2ExtractLane:
-    case Opcode::F32X4ExtractLane:
-    case Opcode::F64X2ExtractLane: {
-      Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
-            StackVar(0), ", lane Imm: ", expr.val, ");", Newline());
+    case Opcode::I8X16ExtractLaneS: {
+      Write(StackVar(0, result_type), " = simde_wasm_i8x16_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
-    case Opcode::I8X16ReplaceLane:
-    case Opcode::I16X8ReplaceLane:
-    case Opcode::I32X4ReplaceLane:
-    case Opcode::I64X2ReplaceLane:
-    case Opcode::F32X4ReplaceLane:
+    case Opcode::I8X16ExtractLaneU: {
+      Write(StackVar(0, result_type), " = simde_wasm_u8x16_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    case Opcode::I16X8ExtractLaneS: {
+      Write(StackVar(0, result_type), " = simde_wasm_i16x8_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    case Opcode::I16X8ExtractLaneU: {
+      Write(StackVar(0, result_type), " = simde_wasm_u16x8_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    case Opcode::I32X4ExtractLane: {
+      Write(StackVar(0, result_type), " = simde_wasm_i32x4_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    case Opcode::I64X2ExtractLane: {
+      Write(StackVar(0, result_type), " = simde_wasm_i64x2_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    case Opcode::F32X4ExtractLane: {
+      Write(StackVar(0, result_type), " = simde_wasm_f32x4_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    case Opcode::F64X2ExtractLane: {
+      Write(StackVar(0, result_type), " = simde_wasm_f64x2_extract_lane(",
+            StackVar(0), ", ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    case Opcode::I8X16ReplaceLane: {
+      Write(StackVar(1, result_type), " = simde_wasm_i8x16_replace_lane(",
+            StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
+      DropTypes(2);
+      break;
+    }
+    case Opcode::I16X8ReplaceLane: {
+      Write(StackVar(1, result_type), " = simde_wasm_i16x8_replace_lane(",
+            StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
+      DropTypes(2);
+      break;
+    }
+    case Opcode::I32X4ReplaceLane: {
+      Write(StackVar(1, result_type), " = simde_wasm_i32x4_replace_lane(",
+            StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
+      DropTypes(2);
+      break;
+    }
+    case Opcode::I64X2ReplaceLane: {
+      Write(StackVar(1, result_type), " = simde_wasm_i64x2_replace_lane(",
+            StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
+      DropTypes(2);
+      break;
+    }
+    case Opcode::F32X4ReplaceLane: {
+      Write(StackVar(1, result_type), " = simde_wasm_f32x4_replace_lane(",
+            StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
+      DropTypes(2);
+      break;
+    }
     case Opcode::F64X2ReplaceLane: {
-      Write(StackVar(1, result_type), " = ", expr.opcode.GetName(), "(",
-            StackVar(0), ", ", StackVar(1), ", lane Imm: ", expr.val, ");",
-            Newline());
+      Write(StackVar(1, result_type), " = simde_wasm_f64x2_replace_lane(",
+            StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
       DropTypes(2);
       break;
     }
@@ -3599,40 +4470,128 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
 }
 
 void CWriter::Write(const SimdLoadLaneExpr& expr) {
-  UNIMPLEMENTED("SIMD support");
-}
-
-void CWriter::Write(const SimdStoreLaneExpr& expr) {
-  UNIMPLEMENTED("SIMD support");
-}
-
-void CWriter::Write(const SimdShuffleOpExpr& expr) {
+  const char* func = nullptr;
+  // clang-format off
+  switch (expr.opcode) {
+    case Opcode::V128Load8Lane: func = "v128_load8_lane"; break;
+    case Opcode::V128Load16Lane: func = "v128_load16_lane"; break;
+    case Opcode::V128Load32Lane: func = "v128_load32_lane"; break;
+    case Opcode::V128Load64Lane: func = "v128_load64_lane"; break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
   Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(1, result_type), " = ", expr.opcode.GetName(), "(",
-        StackVar(1), " ", StackVar(0), ", lane Imm: $0x%08x %08x %08x %08x",
-        expr.val.u32(0), expr.val.u32(1), expr.val.u32(2), expr.val.u32(3), ")",
-        Newline());
+  Write(StackVar(1, result_type), " = ", func, expr.val, "(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(1), ")");
+
+  if (expr.offset != 0)
+    Write(" + ", expr.offset, "u");
+  Write(", ", StackVar(0));
+  Write(");", Newline());
+
   DropTypes(2);
   PushType(result_type);
 }
 
-void CWriter::Write(const LoadSplatExpr& expr) {
-  assert(module_->memories.size() == 1);
-  Memory* memory = module_->memories[0];
+void CWriter::Write(const SimdStoreLaneExpr& expr) {
+  const char* func = nullptr;
+  // clang-format off
+  switch (expr.opcode) {
+    case Opcode::V128Store8Lane: func = "v128_store8_lane"; break;
+    case Opcode::V128Store16Lane: func = "v128_store16_lane"; break;
+    case Opcode::V128Store32Lane: func = "v128_store32_lane"; break;
+    case Opcode::V128Store64Lane: func = "v128_store64_lane"; break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
-  Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
+  Write(func, expr.val, "(",
         ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(0));
+        StackVar(1), ")");
+
+  if (expr.offset != 0)
+    Write(" + ", expr.offset, "u");
+  Write(", ", StackVar(0));
+  Write(");", Newline());
+
+  DropTypes(2);
+}
+
+void CWriter::Write(const SimdShuffleOpExpr& expr) {
+  Type result_type = expr.opcode.GetResultType();
+  switch (expr.opcode) {
+    case Opcode::I8X16Shuffle: {
+      Write(StackVar(1, result_type), " = simde_wasm_i8x16_shuffle(",
+            StackVar(1), ", ", StackVar(0), ", ", expr.val.u8(0), ", ",
+            expr.val.u8(1), ", ", expr.val.u8(2), ", ", expr.val.u8(3), ", ",
+            expr.val.u8(4), ", ", expr.val.u8(5), ", ", expr.val.u8(6), ", ",
+            expr.val.u8(7), ", ", expr.val.u8(8), ", ", expr.val.u8(9), ", ",
+            expr.val.u8(10), ", ", expr.val.u8(11), ", ", expr.val.u8(12), ", ",
+            expr.val.u8(13), ", ", expr.val.u8(14), ", ", expr.val.u8(15), ");",
+            Newline());
+      DropTypes(2);
+      break;
+    }
+    default:
+      WABT_UNREACHABLE;
+  }
+  PushType(result_type);
+}
+
+void CWriter::Write(const LoadSplatExpr& expr) {
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+
+  const char* func = nullptr;
+  // clang-format off
+  switch (expr.opcode) {
+    case Opcode::V128Load8Splat: func = "v128_load8_splat"; break;
+    case Opcode::V128Load16Splat: func = "v128_load16_splat"; break;
+    case Opcode::V128Load32Splat: func = "v128_load32_splat"; break;
+    case Opcode::V128Load64Splat: func = "v128_load64_splat"; break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+  Type result_type = expr.opcode.GetResultType();
+  Write(StackVar(0, result_type), " = ", func, "(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(0), ")");
   if (expr.offset != 0)
     Write(" + ", expr.offset);
-  Write("));", Newline());
+  Write(");", Newline());
+
   DropTypes(1);
   PushType(result_type);
 }
 
 void CWriter::Write(const LoadZeroExpr& expr) {
-  UNIMPLEMENTED("SIMD support");
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+
+  const char* func = nullptr;
+  // clang-format off
+  switch (expr.opcode) {
+    case Opcode::V128Load32Zero: func = "v128_load32_zero"; break;
+    case Opcode::V128Load64Zero: func = "v128_load64_zero"; break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+
+  Type result_type = expr.opcode.GetResultType();
+  Write(StackVar(0, result_type), " = ", func, "(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(0), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write(");", Newline());
+
+  DropTypes(1);
+  PushType(result_type);
 }
 
 void CWriter::WriteCHeader() {
