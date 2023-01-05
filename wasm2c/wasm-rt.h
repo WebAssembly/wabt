@@ -179,11 +179,17 @@ typedef enum {
  */
 typedef void (*wasm_rt_function_ptr_t)(void);
 
+/**
+ * The type of a function (an arbitrary number of param and result types).
+ * This is represented as an opaque 256-bit ID.
+ */
+typedef const char* wasm_rt_func_type_t;
+
 /** A function instance (the runtime representation of a function).
  * These can be stored in tables of type funcref, or used as values. */
 typedef struct {
-  /** The index as returned from `wasm_rt_register_func_type`. */
-  uint32_t func_type;
+  /** The function's type. */
+  wasm_rt_func_type_t func_type;
   /** The function. The embedder must know the actual C signature of the
    * function and cast to it before calling. */
   wasm_rt_function_ptr_t func;
@@ -194,7 +200,7 @@ typedef struct {
 } wasm_rt_funcref_t;
 
 /** Default (null) value of a funcref */
-static const wasm_rt_funcref_t wasm_rt_funcref_null_value = {0, NULL, NULL};
+static const wasm_rt_funcref_t wasm_rt_funcref_null_value = {NULL, NULL, NULL};
 
 /** The type of an external reference (opaque to WebAssembly). */
 typedef void* wasm_rt_externref_t;
@@ -260,29 +266,7 @@ WASM_RT_NO_RETURN void wasm_rt_trap(wasm_rt_trap_t);
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
 
 /**
- * Register a function type with the given signature. The returned function
- * index is guaranteed to be the same for all calls with the same signature.
- * The following varargs must all be of type `wasm_rt_type_t`, first the
- * params` and then the `results`.
- *
- *  ```
- *    // Register (func (param i32 f32) (result i64)).
- *    wasm_rt_register_func_type(2, 1, WASM_RT_I32, WASM_RT_F32, WASM_RT_I64);
- *    => returns 1
- *
- *    // Register (func (result i64)).
- *    wasm_rt_register_func_type(0, 1, WASM_RT_I32);
- *    => returns 2
- *
- *    // Register (func (param i32 f32) (result i64)) again.
- *    wasm_rt_register_func_type(2, 1, WASM_RT_I32, WASM_RT_F32, WASM_RT_I64);
- *    => returns 1
- *  ```
- */
-uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
-
-/**
- * An tag is represented as an arbitrary pointer.
+ * A tag is represented as an arbitrary pointer.
  */
 typedef const void* wasm_rt_tag_t;
 

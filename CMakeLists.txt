@@ -69,6 +69,7 @@ option(WABT_INSTALL_RULES "Include WABT's install() rules" "${PROJECT_IS_TOP_LEV
 # WASI support is still a work in progress.
 # Only a handful of syscalls are supported at this point.
 option(WITH_WASI "Build WASI support via uvwasi" OFF)
+option(USE_INTERNAL_SHA256 "Use internal PicoSHA2 for SHA-256 support instead of OpenSSL libcrypto" OFF)
 
 if (MSVC)
   set(COMPILER_IS_CLANG 0)
@@ -99,6 +100,17 @@ check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(strcasecmp "strings.h" HAVE_STRCASECMP)
+
+if (NOT USE_INTERNAL_SHA256)
+  find_package(OpenSSL QUIET)
+  if (OpenSSL_FOUND)
+    set(CMAKE_REQUIRED_INCLUDES ${OPENSSL_INCLUDE_DIR})
+    check_include_file("openssl/sha.h" HAVE_OPENSSL_SHA_H)
+    if (HAVE_OPENSSL_SHA_H)
+      find_package_message(OpenSSL "Using OpenSSL libcrypto for SHA-256" "${HAVE_OPENSSL_SHA_H}")
+    endif()
+  endif()
+endif()
 
 if (WIN32)
   check_symbol_exists(ENABLE_VIRTUAL_TERMINAL_PROCESSING "windows.h" HAVE_WIN32_VT100)
@@ -282,6 +294,7 @@ set(WABT_LIBRARY_CC
   src/opcode.cc
   src/option-parser.cc
   src/resolve-names.cc
+  src/sha256.cc
   src/shared-validator.cc
   src/stream.cc
   src/token.cc
@@ -334,6 +347,7 @@ set(WABT_LIBRARY_H
   include/wabt/opcode.h
   include/wabt/option-parser.h
   include/wabt/resolve-names.h
+  include/wabt/sha256.h
   include/wabt/shared-validator.h
   include/wabt/stream.h
   include/wabt/string-util.h
@@ -360,6 +374,12 @@ set(WABT_LIBRARY_SRC ${WABT_LIBRARY_CC} ${WABT_LIBRARY_H})
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 add_library(wabt::wabt ALIAS wabt)
+
+if (HAVE_OPENSSL_SHA_H)
+  target_link_libraries(wabt OpenSSL::Crypto)
+else()
+  include_directories("${WABT_SOURCE_DIR}/third_party/picosha2")
+endif()
 
 target_compile_features(wabt PUBLIC cxx_std_17)
 target_include_directories(

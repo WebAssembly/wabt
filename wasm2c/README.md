@@ -49,8 +49,8 @@ files.
 To actually use our `fac` module, we'll use create a new file, `main.c`, that
 include `fac.h`, initializes the module, and calls `fac`.
 
-`wasm2c` generates a few C symbols based on the `fac.wasm` module: `Z_fac_init_module`, `Z_fac_instantiate`
-and `Z_facZ_fac`.  The first initializes the module, the second constructs an instance of the module, and the third is the
+`wasm2c` generates a few C symbols based on the `fac.wasm` module: `Z_fac_instantiate`
+and `Z_facZ_fac`.  The first constructs an instance of the module, and the second is the
 exported `fac` function.
 
 All the exported symbols shared a common prefix (`Z_fac`) which, by default, is
@@ -79,10 +79,6 @@ int main(int argc, char** argv) {
 
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
-
-  /* Initialize the `fac` module (this registers the module's function types in
-   * a global data structure) */
-  Z_fac_init_module();
 
   /* Declare an instance of the `fac` module. */
   Z_fac_instance_t instance;
@@ -170,7 +166,6 @@ typedef struct Z_fac_instance_t {
   char dummy_member;
 } Z_fac_instance_t;
 
-void Z_fac_init_module(void);
 void Z_fac_instantiate(Z_fac_instance_t*);
 void Z_fac_free(Z_fac_instance_t*);
 
@@ -210,7 +205,7 @@ typedef enum {
 ```
 
 Next is the `wasm_rt_type_t` enum, which is used for specifying function
-signatures. The four WebAssembly value types are included:
+signatures. Six WebAssembly value types are included:
 
 ```c
 typedef enum {
@@ -218,28 +213,35 @@ typedef enum {
   WASM_RT_I64,
   WASM_RT_F32,
   WASM_RT_F64,
+  WASM_RT_FUNCREF,
+  WASM_RT_EXTERNREF,
 } wasm_rt_type_t;
-```
 
-Next is `wasm_rt_funcref_t`, the function signature for a generic function
+Next is `wasm_rt_function_ptr_t`, the function signature for a generic function
 callback. Since a WebAssembly table can contain functions of any given
 signature, it is necessary to convert them to a canonical form:
 
 ```c
-typedef void (*wasm_rt_funcref_t)(void);
+typedef void (*wasm_rt_function_ptr_t)(void);
 ```
 
-Next are the definitions for a table element. `func_type` is a function index
-as returned by `wasm_rt_register_func_type` described below. `module_instance`
-is the pointer to the module instance that should be passed in when the func is
+Next is the definition for a function reference (in WebAssembly 1.0,
+this was the type of all table elements, but funcrefs can now also be
+used as ordinary values, and tables can alternately be declared as
+type externref). In this structure, `wasm_rt_func_type_t` is an opaque
+256-bit ID that can be looked up via the `Z_[modname]_get_func_type`
+function. (A demonstration of this can be found in the `callback`
+example.) `module_instance` is the pointer to the function's
+originating module instance, which will be passed in when the func is
 called.
 
 ```c
 typedef struct {
-  uint32_t func_type;
-  wasm_rt_funcref_t func;
+  wasm_rt_func_type_t func_type;
+  wasm_rt_function_ptr_t func;
   void* module_instance;
-} wasm_rt_elem_t;
+} wasm_rt_funcref_t;
+
 ```
 
 Next is the definition of a memory instance. The `data` field is a pointer to
@@ -263,10 +265,10 @@ limit.
 
 ```c
 typedef struct {
-  wasm_rt_elem_t* data;
+  wasm_rt_funcref_t* data;
   uint32_t max_size;
   uint32_t size;
-} wasm_rt_table_t;
+} wasm_rt_funcref_table_t;
 ```
 
 ## Symbols that must be defined by the embedder
@@ -283,7 +285,6 @@ bool wasm_rt_is_initialized(void);
 void wasm_rt_free(void);
 void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
-uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
 void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64);
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 void wasm_rt_free_memory(wasm_rt_memory_t*);
@@ -309,13 +310,6 @@ the with macro definition `#define WASM_RT_MEMCHECK_SIGNAL_HANDLER
 wasm2c_custom_trap_handler`. It is recommended that you add this macro
 definition via a compiler flag
 (`-DWASM_RT_MEMCHECK_SIGNAL_HANDLER=wasm2c_custom_trap_handler` on clang/gcc).
-
-`wasm_rt_register_func_type` is a function that registers a function type. It
-is a variadic function where the first two arguments give the number of
-parameters and results, and the following arguments are the types. For example,
-the function `func (param i32 f32) (result f64)` would register the function
-type as
-`wasm_rt_register_func_type(2, 1, WASM_RT_I32, WASM_RT_F32, WASM_RT_F64)`.
 
 `wasm_rt_allocate_memory` initializes a memory instance, and allocates at least
 enough space for the given number of initial pages. The memory must be cleared
@@ -386,21 +380,26 @@ must be of type `WASM_RT_UNWIND_TARGET`.
 Finally, `fac.h` defines the module instance type (which in the case
 of `fac` is essentially empty), and the exported symbols provided by
 the module. In our example, the only function we exported was
-`fac`. `Z_fac_init_module()` initializes the whole module and must be
-called before any instance of the module is used.
+`fac`.
 
 `Z_fac_instantiate(Z_fac_instance_t*)` creates an instance of
 the module and must be called before the module instance can be
 used. `Z_fac_free(Z_fac_instance_t*)` frees the instance.
+`Z_fac_get_func_type` can be used to look up a function type ID
+at runtime. It is a variadic function where the first two arguments
+give the number of parameters and results, and the following arguments
+are the types from the wasm_rt_type_t enum described above. The
+`callback` example demonstrates using this to pass a host function to
+a WebAssembly module dynamically at runtime.
 
 ```c
 typedef struct Z_fac_instance_t {
   char dummy_member;
 } Z_fac_instance_t;
 
-void Z_fac_init_module(void);
 void Z_fac_instantiate(Z_fac_instance_t*);
 void Z_fac_free(Z_fac_instance_t*);
+wasm_rt_func_type_t Z_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* export: 'fac' */
 u32 Z_facZ_fac(Z_fac_instance_t*, u32);
@@ -577,9 +576,6 @@ void Z_hostZ_buf_done(struct Z_host_instance_t* instance,
 int main(int argc, char** argv) {
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
-
-  /* Initialize the rot13 module. */
-  Z_rot13_init_module();
 
   /* Declare two instances of the `rot13` module. */
   Z_rot13_instance_t rot13_instance_1;

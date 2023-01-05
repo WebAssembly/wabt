@@ -53,9 +53,6 @@ int main(int argc, char** argv) {
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
-  /* Initialize the rot13 module. */
-  Z_rot13_init_module();
-
   /* Declare an instance of the `rot13` module. */
   Z_rot13_instance_t rot13_instance;
 
