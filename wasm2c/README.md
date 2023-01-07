@@ -347,8 +347,7 @@ Several additional symbols must be defined if wasm2c is being run with
 support for exceptions (`--enable-exceptions`):
 
 ```c
-uint32_t wasm_rt_register_tag(uint32_t size);
-void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values);
+void wasm_rt_load_exception(const char* tag, uint32_t size, const void* values);
 WASM_RT_NO_RETURN void wasm_rt_throw(void);
 WASM_RT_UNWIND_TARGET
 WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void);
@@ -361,8 +360,6 @@ wasm_rt_try(target)
 
 A C implementation of these functions is also available in
 [`wasm-rt-impl.h`](wasm-rt-impl.h) and [`wasm-rt-impl.c`](wasm-rt-impl.c).
-
-`wasm_rt_register_tag` registers an exception type (a tag) with a given size.
 
 `wasm_rt_load_exception` sets the active exception to a given tag, size, and contents.
 

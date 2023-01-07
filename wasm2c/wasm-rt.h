@@ -268,14 +268,9 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap);
 uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
 
 /**
- * Register a tag with the given size. Returns the tag.
- */
-uint32_t wasm_rt_register_tag(uint32_t size);
-
-/**
  * Set the active exception to given tag, size, and contents.
  */
-void wasm_rt_load_exception(uint32_t tag, uint32_t size, const void* values);
+void wasm_rt_load_exception(const char* tag, uint32_t size, const void* values);
 
 /**
  * Throw the active exception.
@@ -310,7 +305,7 @@ void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target);
 /**
  * Tag of the active exception.
  */
-uint32_t wasm_rt_exception_tag(void);
+const char* wasm_rt_exception_tag(void);
 
 /**
  * Size of the active exception.
