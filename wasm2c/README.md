@@ -229,8 +229,8 @@ signature, it is necessary to convert them to a canonical form:
 typedef void (*wasm_rt_funcref_t)(void);
 ```
 
-Next are the definitions for a table element. `func_type` is a function index
-as returned by `wasm_rt_register_func_type` described below. `module_instance`
+Next are the definitions for a table element. `func_type` is a function type value
+possibly returned by `wasm_rt_register_func_type` described below. `module_instance`
 is the pointer to the module instance that should be passed in when the func is
 called.
 
@@ -310,7 +310,8 @@ wasm2c_custom_trap_handler`. It is recommended that you add this macro
 definition via a compiler flag
 (`-DWASM_RT_MEMCHECK_SIGNAL_HANDLER=wasm2c_custom_trap_handler` on clang/gcc).
 
-`wasm_rt_register_func_type` is a function that registers a function type. It
+For modules that import or export function references, `wasm_rt_register_func_type`
+registers each function type to have a consistent value across modules. It
 is a variadic function where the first two arguments give the number of
 parameters and results, and the following arguments are the types. For example,
 the function `func (param i32 f32) (result f64)` would register the function

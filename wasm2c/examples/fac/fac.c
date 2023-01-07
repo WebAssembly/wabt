@@ -577,11 +577,7 @@ DEFINE_TABLE_FILL(externref)
 
 static bool s_module_initialized = false;
 
-static u32 func_types[1];
-
-static void init_func_types(void) {
-  func_types[0] = wasm_rt_register_func_type(1, 1, WASM_RT_I32, WASM_RT_I32);
-}
+static const u32 func_types[1] = {0, };
 
 static u32 w2c_fac(Z_fac_instance_t*, u32);
 
@@ -613,7 +609,6 @@ u32 Z_facZ_fac(Z_fac_instance_t* instance, u32 w2c_p0) {
 void Z_fac_init_module(void) {
   assert(wasm_rt_is_initialized());
   s_module_initialized = true;
-  init_func_types();
 }
 
 void Z_fac_instantiate(Z_fac_instance_t* instance) {

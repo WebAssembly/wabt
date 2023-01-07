@@ -211,6 +211,7 @@ class CWriter {
   std::string DefineGlobalScopeName(ModuleFieldType, std::string_view);
   std::string DefineLocalScopeName(std::string_view);
   std::string DefineStackVarName(Index, Type, std::string_view);
+  static bool ModuleSharesTypes(const Module& module);
 
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
@@ -372,6 +373,8 @@ class CWriter {
 
   std::vector<std::pair<std::string, MemoryStream>> func_sections_;
   SymbolSet func_includes_;
+
+  bool module_shares_types_;
 };
 
 constexpr std::string_view kImplicitFuncLabel = "$Bfunc";
@@ -1054,6 +1057,39 @@ void CWriter::WriteFuncTypes() {
     return;
   }
 
+  // 1) find duplicate types in this module (TODO improve O(N^2) search)
+  std::vector<uint32_t> type_values;
+  type_values.reserve(module_->types.size());
+
+  for (size_t i = 0; i < module_->types.size(); i++) {
+    FuncType* this_type = cast<FuncType>(module_->types[i]);
+    bool duplicate_found = false;
+    for (size_t j = 0; j < i; j++) {
+      const FuncType* other_type = cast<FuncType>(module_->types[j]);
+      if (this_type->sig == other_type->sig) {
+        type_values.push_back(j);
+        duplicate_found = true;
+        break;
+      }
+    }
+    if (!duplicate_found) {
+      type_values.push_back(i);
+    }
+  }
+
+  // 2) if module doesn't share types externally, we can assign type values now
+  if (!module_shares_types_) {
+    Write(Newline());
+    Writef("static const u32 func_types[%" PRIzd "] = {",
+           module_->types.size());
+    for (size_t i = 0; i < type_values.size(); ++i) {
+      Write(type_values[i], ", ");
+    }
+    Write("};", Newline());
+    return;
+  }
+
+  // 3) otherwise, assign type values at module-initialization time
   Write(Newline());
   Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
   Write(Newline());
@@ -1064,17 +1100,22 @@ void CWriter::WriteFuncTypes() {
     FuncType* func_type = cast<FuncType>(type);
     Index num_params = func_type->GetNumParams();
     Index num_results = func_type->GetNumResults();
-    Write("func_types[", func_type_index, "] = wasm_rt_register_func_type(",
-          num_params, ", ", num_results);
-    for (Index i = 0; i < num_params; ++i) {
-      Write(", ", TypeEnum(func_type->GetParamType(i)));
-    }
+    if (type_values.at(func_type_index) != func_type_index) {
+      Write("func_types[", func_type_index, "] = func_types[",
+            type_values.at(func_type_index), "];", Newline());
+    } else {
+      Write("func_types[", func_type_index, "] = wasm_rt_register_func_type(",
+            num_params, ", ", num_results);
+      for (Index i = 0; i < num_params; ++i) {
+        Write(", ", TypeEnum(func_type->GetParamType(i)));
+      }
 
-    for (Index i = 0; i < num_results; ++i) {
-      Write(", ", TypeEnum(func_type->GetResultType(i)));
-    }
+      for (Index i = 0; i < num_results; ++i) {
+        Write(", ", TypeEnum(func_type->GetResultType(i)));
+      }
 
-    Write(");", Newline());
+      Write(");", Newline());
+    }
     ++func_type_index;
   }
   Write(CloseBrace(), Newline());
@@ -1813,7 +1854,7 @@ void CWriter::WriteInit() {
         OpenBrace());
   Write("assert(wasm_rt_is_initialized());", Newline());
   Write("s_module_initialized = true;", Newline());
-  if (!module_->types.empty()) {
+  if (!module_->types.empty() && module_shares_types_) {
     Write("init_func_types();", Newline());
   }
   if (!module_->tags.empty()) {
@@ -3630,6 +3671,7 @@ void CWriter::WriteCSource() {
 Result CWriter::WriteModule(const Module& module) {
   WABT_USE(options_);
   module_ = &module;
+  module_shares_types_ = ModuleSharesTypes(module);
   WriteCHeader();
   WriteCSource();
   return result_;
@@ -3657,6 +3699,73 @@ const char* CWriter::GetReferenceNullValue(const Type& type) {
     default:
       WABT_UNREACHABLE;
   }
+}
+
+// static
+bool CWriter::ModuleSharesTypes(const Module& module) {
+  /* if the module has an import or export that is:
+       - a funcref-typed global
+       - a funcref-typed table, or
+       - a function with a funcref-typed param or result
+
+     then it shares types outside the module. Otherwise, it
+     can compare types for equality simply by comparing
+     (deduplicated) type indexes. */
+
+  auto is_funcref = [](const Type& t) { return t == Type::FuncRef; };
+
+  auto signature_has_funcref = [is_funcref](const FuncSignature& sig) {
+    return std::any_of(sig.param_types.begin(), sig.param_types.end(),
+                       is_funcref) ||
+           std::any_of(sig.result_types.begin(), sig.result_types.end(),
+                       is_funcref);
+  };
+
+  for (const Import* import : module.imports) {
+    switch (import->kind()) {
+      case ExternalKind::Global:
+        if (is_funcref(cast<GlobalImport>(import)->global.type)) {
+          return true;
+        }
+        break;
+      case ExternalKind::Table:
+        if (is_funcref(cast<TableImport>(import)->table.elem_type)) {
+          return true;
+        }
+        break;
+      case ExternalKind::Func:
+        if (signature_has_funcref(cast<FuncImport>(import)->func.decl.sig)) {
+          return true;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  for (const Export* export_ : module.exports) {
+    switch (export_->kind) {
+      case ExternalKind::Global:
+        if (is_funcref(module.GetGlobal(export_->var)->type)) {
+          return true;
+        }
+        break;
+      case ExternalKind::Table:
+        if (is_funcref(module.GetTable(export_->var)->elem_type)) {
+          return true;
+        }
+        break;
+      case ExternalKind::Func:
+        if (signature_has_funcref(module.GetFunc(export_->var)->decl.sig)) {
+          return true;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  return false;
 }
 
 }  // end anonymous namespace
