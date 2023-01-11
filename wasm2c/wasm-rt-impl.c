@@ -71,7 +71,7 @@ static uint32_t g_func_type_count;
 
 wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
-static const char* g_active_exception_tag;
+static wasm_rt_tag_t g_active_exception_tag;
 static uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
 static uint32_t g_active_exception_size;
 
@@ -144,7 +144,7 @@ uint32_t wasm_rt_register_func_type(uint32_t param_count,
   return idx + 1;
 }
 
-void wasm_rt_load_exception(const char* tag,
+void wasm_rt_load_exception(const wasm_rt_tag_t tag,
                             uint32_t size,
                             const void* values) {
   if (size > MAX_EXCEPTION_SIZE) {
@@ -171,7 +171,7 @@ void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target) {
   g_unwind_target = target;
 }
 
-const char* wasm_rt_exception_tag(void) {
+wasm_rt_tag_t wasm_rt_exception_tag(void) {
   return g_active_exception_tag;
 }
 

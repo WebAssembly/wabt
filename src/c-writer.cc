@@ -1085,7 +1085,13 @@ void CWriter::WriteTags() {
   for (const Tag* tag : module_->tags) {
     bool is_import = tag_index < module_->num_tag_imports;
     if (!is_import) {
-      Write("static const char ",
+      // Tags are identified and compared solely by their (unique) address.
+      // The data stored in this variable is never read.
+      if (tag_index == module_->num_tag_imports) {
+        Write(Newline());
+        Write("typedef bool wasm_tag_placeholder_t;", Newline());
+      }
+      Write("static const wasm_tag_placeholder_t ",
             DefineGlobalScopeName(ModuleFieldType::Tag, tag->name), ";",
             Newline());
     }
@@ -1238,7 +1244,7 @@ void CWriter::WriteImports() {
     } else if (import->kind() == ExternalKind::Tag) {
       Write("/* import: '", import->module_name, "' '", import->field_name,
             "' */", Newline());
-      Write("extern const char *", MangleName(import->module_name),
+      Write("extern const wasm_rt_tag_t ", MangleName(import->module_name),
             MangleName(import->field_name), ";", Newline());
     }
   }
@@ -1709,7 +1715,7 @@ void CWriter::WriteExports(CWriterPhase kind) {
         if (kind == CWriterPhase::Declarations) {
           Write("extern ");
         }
-        Write("const char *", mangled_name);
+        Write("const wasm_rt_tag_t ", mangled_name);
         break;
       }
 
@@ -2192,7 +2198,8 @@ void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
   /* save the thrown exception to the stack if it might be rethrown later */
   PushFuncSection("rethrow_" + tlabel);
   Write("/* save exception ", tlabel, " for rethrow */", Newline());
-  Write("const char* ", tlabel, "_tag = wasm_rt_exception_tag();", Newline());
+  Write("const wasm_rt_tag_t ", tlabel, "_tag = wasm_rt_exception_tag();",
+        Newline());
   Write("uint32_t ", tlabel, "_size = wasm_rt_exception_size();", Newline());
   Write("void *", tlabel, " = alloca(", tlabel, "_size);", Newline());
   Write("wasm_rt_memcpy(", tlabel, ", wasm_rt_exception(), ", tlabel, "_size);",
