@@ -1089,7 +1089,7 @@ void CWriter::WriteTags() {
       // The data stored in this variable is never read.
       if (tag_index == module_->num_tag_imports) {
         Write(Newline());
-        Write("typedef bool wasm_tag_placeholder_t;", Newline());
+        Write("typedef char wasm_tag_placeholder_t;", Newline());
       }
       Write("static const wasm_tag_placeholder_t ",
             DefineGlobalScopeName(ModuleFieldType::Tag, tag->name), ";",
