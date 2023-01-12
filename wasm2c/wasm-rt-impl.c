@@ -62,20 +62,20 @@ static char* g_alt_stack = 0;
 #endif
 
 #if WASM_RT_USE_STACK_DEPTH_COUNT
-uint32_t wasm_rt_call_stack_depth;
-uint32_t wasm_rt_saved_call_stack_depth;
+WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
+WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
 #endif
 
 static FuncType* g_func_types;
 static uint32_t g_func_type_count;
 
-wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
+WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
-static wasm_rt_tag_t g_active_exception_tag;
-static uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
-static uint32_t g_active_exception_size;
+static WASM_RT_THREAD_LOCAL wasm_rt_tag_t g_active_exception_tag;
+static WASM_RT_THREAD_LOCAL uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
+static WASM_RT_THREAD_LOCAL uint32_t g_active_exception_size;
 
-static wasm_rt_jmp_buf* g_unwind_target;
+static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);

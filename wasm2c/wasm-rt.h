@@ -51,6 +51,12 @@ extern "C" {
 #define wasm_rt_unreachable abort
 #endif
 
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+#define WASM_RT_THREAD_LOCAL _Thread_local
+#else
+#define WASM_RT_THREAD_LOCAL
+#endif
+
 /**
  * Enable memory checking via a signal handler via the following definition:
  *
@@ -116,7 +122,7 @@ extern "C" {
 #endif
 
 /** Current call stack depth. */
-extern uint32_t wasm_rt_call_stack_depth;
+extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 
 #endif
 

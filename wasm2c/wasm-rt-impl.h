@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /** A setjmp buffer used for handling traps. */
-extern wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
+extern WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !defined(_WIN32)
 #define WASM_RT_LONGJMP_UNCHECKED(buf, val) siglongjmp(buf, val)
@@ -45,7 +45,7 @@ extern wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
 #if WASM_RT_USE_STACK_DEPTH_COUNT
 /** Saved call stack depth that will be restored in case a trap occurs. */
-extern uint32_t wasm_rt_saved_call_stack_depth;
+extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
 #define WASM_RT_SAVE_STACK_DEPTH() \
   wasm_rt_saved_call_stack_depth = wasm_rt_call_stack_depth
 #else
