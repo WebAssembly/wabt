@@ -321,7 +321,7 @@ double* Z_spectestZ_global_f64(Z_spectest_instance_t* instance) {
 static void init_spectest_module(Z_spectest_instance_t* instance) {
   instance->spectest_global_i32 = 666;
   instance->spectest_global_i64 = 666l;
-  wasm_rt_allocate_memory(&instance->spectest_memory, 1, 2);
+  wasm_rt_allocate_memory(&instance->spectest_memory, 1, 2, false);
   wasm_rt_allocate_funcref_table(&instance->spectest_table, 10, 20);
 }
 

@@ -1462,7 +1462,8 @@ void CWriter::WriteDataInitializers() {
           memory->page_limits.has_max ? memory->page_limits.max : 65536;
       Write("wasm_rt_allocate_memory(",
             ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ",
-            memory->page_limits.initial, ", ", max, ");", Newline());
+            memory->page_limits.initial, ", ", max, ", ",
+            memory->page_limits.is_64, ");", Newline());
     }
   }
 
@@ -2773,7 +2774,7 @@ void CWriter::Write(const ExprList& exprs) {
         Memory* memory = module_->memories[module_->GetMemoryIndex(
             cast<MemorySizeExpr>(&expr)->memidx)];
 
-        PushType(Type::I32);
+        PushType(memory->page_limits.IndexType());
         Write(StackVar(0), " = ",
               ExternalInstanceRef(ModuleFieldType::Memory, memory->name),
               ".pages;", Newline());
