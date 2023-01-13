@@ -384,6 +384,7 @@ class TestInfo(object):
         self.slow = False
         self.skip = False
         self.is_roundtrip = False
+        self.is_wasm2c = False
 
     def CreateRoundtripInfo(self, fold_exprs):
         if self.tool not in ROUNDTRIP_TOOLS:
@@ -453,6 +454,7 @@ class TestInfo(object):
         if tool not in TOOLS:
             raise Error('Unknown tool: %s' % tool)
         self.tool = tool
+        self.is_wasm2c = self.tool == 'run-spec-wasm2c'
         for tool_key, tool_value in TOOLS[tool]:
             self.ParseDirective(tool_key, tool_value)
 
@@ -666,7 +668,7 @@ class Status(object):
         assert(self.isatty)
         total_duration = time.time() - self.start_time
         name = info.GetName() if info else ''
-        if (self.total - self.skipped):
+        if self.total - self.skipped:
             percent = 100 * (self.passed + self.failed) / (self.total - self.skipped)
         else:
             percent = 100
@@ -772,7 +774,7 @@ def HandleTestResult(status, info, result, rebase=False):
         if isinstance(result, (Error, KeyboardInterrupt)):
             raise result
 
-        if info.is_roundtrip:
+        if info.is_roundtrip or info.is_wasm2c:
             if result.Failed():
                 if result.GetLastFailure().returncode == 2:
                     # run-roundtrip.py returns 2 if the file couldn't be parsed.

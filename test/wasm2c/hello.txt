@@ -114,9 +114,20 @@ void Z_testZ__start(Z_test_instance_t*);
        TRAP(CALL_INDIRECT),                             \
    ((t)table.data[x].func)(__VA_ARGS__))
 
+#ifdef SUPPORT_MEMORY64
+#define RANGE_CHECK(mem, offset, len)              \
+  do {                                             \
+    uint64_t res;                                  \
+    if (__builtin_add_overflow(offset, len, &res)) \
+      TRAP(OOB);                                   \
+    if (UNLIKELY(res > mem->size))                 \
+      TRAP(OOB);                                   \
+  } while (0);
+#else
 #define RANGE_CHECK(mem, offset, len)               \
   if (UNLIKELY(offset + (uint64_t)len > mem->size)) \
     TRAP(OOB);
+#endif
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define MEMCHECK(mem, a, t)
@@ -672,7 +683,7 @@ static const u8 data_segment_data_w2c_d0[] = {
 };
 
 static void init_memories(Z_test_instance_t* instance) {
-  wasm_rt_allocate_memory(&instance->w2c_memory, 1, 65536);
+  wasm_rt_allocate_memory(&instance->w2c_memory, 1, 65536, 0);
   LOAD_DATA(instance->w2c_memory, 8u, data_segment_data_w2c_d0, 14);
 }
 
