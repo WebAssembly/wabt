@@ -2325,12 +2325,12 @@ Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
                                              Offset section_size) {
   CALLBACK(BeginCodeMetadataSection, name, section_size);
 
-  Index num_funcions;
-  CHECK_RESULT(ReadCount(&num_funcions, "function count"));
-  CALLBACK(OnCodeMetadataFuncCount, num_funcions);
+  Index num_functions;
+  CHECK_RESULT(ReadCount(&num_functions, "function count"));
+  CALLBACK(OnCodeMetadataFuncCount, num_functions);
 
   Index last_function_index = kInvalidIndex;
-  for (Index i = 0; i < num_funcions; ++i) {
+  for (Index i = 0; i < num_functions; ++i) {
     Index function_index;
     CHECK_RESULT(ReadCount(&function_index, "function index"));
     ERROR_UNLESS(function_index >= num_func_imports_,
