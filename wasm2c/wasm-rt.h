@@ -51,7 +51,9 @@ extern "C" {
 #define wasm_rt_unreachable abort
 #endif
 
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+#ifdef _MSC_VER
+#define WASM_RT_THREAD_LOCAL __declspec(thread)
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 #define WASM_RT_THREAD_LOCAL _Thread_local
 #else
 #define WASM_RT_THREAD_LOCAL
