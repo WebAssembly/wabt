@@ -786,6 +786,11 @@ def HandleTestResult(status, info, result, rebase=False):
                 status.Passed(info, result.duration)
         else:
             if result.Failed():
+                if result.GetLastFailure().returncode == 3:
+                    # run-spec-wasm2c.py returns 3 to signal that the test
+                    # should be skipped.
+                    status.Skipped(info)
+                    return
                 # This test has already failed, but diff it anyway.
                 last_failure = result.GetLastFailure()
                 msg = 'expected error code %d, got %d.' % (

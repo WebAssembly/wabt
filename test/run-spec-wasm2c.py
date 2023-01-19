@@ -34,7 +34,7 @@ WASM2C_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'wasm2c')
 IS_WINDOWS = sys.platform == 'win32'
 IS_MACOS = platform.mac_ver()[0] != ''
 MAX_COMMANDS_PER_FUNCTION = 1024  # GCC has trouble with extremely long function bodies
-SKIPPED = 2
+SKIPPED = 3
 
 
 def ReinterpretF32(f32_bits):
