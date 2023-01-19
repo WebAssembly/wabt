@@ -158,6 +158,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnStartFunction(Index func_index) override;
 
+  Result BeginCodeSection(Offset size) override;
   Result OnFunctionBodyCount(Index count) override;
   Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
@@ -309,6 +310,11 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnNameEntry(NameSectionSubsection type,
                      Index index,
                      std::string_view name) override;
+
+  Result OnReloc(RelocType type,
+                 Offset offset,
+                 Index index,
+                 uint32_t addend) override;
 
   Result BeginTagSection(Offset size) override { return Result::Ok; }
   Result OnTagCount(Index count) override { return Result::Ok; }
@@ -710,6 +716,11 @@ Result BinaryReaderIR::OnExport(Index index,
 Result BinaryReaderIR::OnStartFunction(Index func_index) {
   Var start(func_index, GetLocation());
   module_->AppendField(MakeUnique<StartModuleField>(start, GetLocation()));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginCodeSection(Offset size) {
+  module_->code_section_base_ = GetLocation().offset;
   return Result::Ok;
 }
 
@@ -1282,6 +1293,22 @@ Result BinaryReaderIR::OnElemSegmentElemExprCount(Index index, Index count) {
   return Result::Ok;
 }
 
+static Offset GetConstOffset(const ExprList& exprlist) {
+  if (exprlist.size() != 1) {
+    return -1;
+  }
+  const Expr& expr = exprlist.front();
+  if (expr.type() != ExprType::Const) {
+    return -1;
+  }
+  const Const& c = cast<ConstExpr>(&expr)->const_;
+  switch (c.type()) {
+    case Type::I32: return c.u32();
+    case Type::I64: return c.u64();
+    default: return -1;
+  }
+}
+
 Result BinaryReaderIR::OnElemSegmentElemExpr_RefNull(Index segment_index,
                                                      Type type) {
   assert(segment_index == module_->elem_segments.size() - 1);
@@ -1297,10 +1324,15 @@ Result BinaryReaderIR::OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                                      Index func_index) {
   assert(segment_index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[segment_index];
+  Offset segment_offset = GetConstOffset(segment->offset);
+  Offset entry_offset = segment->elem_exprs.size();
   Location loc = GetLocation();
   ExprList init_expr;
   init_expr.push_back(MakeUnique<RefFuncExpr>(Var(func_index, loc), loc));
   segment->elem_exprs.push_back(std::move(init_expr));
+  if (segment->table_var.index() == 0 && segment_offset > 0) {
+    module_->function_index_by_function_pointer_[segment_offset + entry_offset] = func_index;
+  }
   return Result::Ok;
 }
 
@@ -1344,6 +1376,10 @@ Result BinaryReaderIR::OnDataSegmentData(Index index,
   segment->data.resize(size);
   if (size > 0) {
     memcpy(segment->data.data(), data, size);
+    Offset segment_offset = GetConstOffset(segment->offset);
+    if (segment_offset > 0) {
+      module_->data_segment_index_by_end_address_[segment_offset + size - 1] = index;
+    }
   }
   return Result::Ok;
 }
@@ -1534,6 +1570,39 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
       break;
     case NameSectionSubsection::ElemSegment:
       SetElemSegmentName(index, name);
+      break;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnReloc(RelocType type,
+                               Offset offset,
+                               Index index,
+                               uint32_t addend) {
+  switch (type) {
+    case RelocType::TableIndexSLEB:
+    case RelocType::TableIndexSLEB64:
+      module_->function_pointer_load_operand_offsets_.insert(offset);
+      break;
+    case RelocType::TableIndexI32:
+      module_->function_pointer_32_data_initializer_offsets_.insert(offset);
+      break;
+    case RelocType::TableIndexI64:
+      module_->function_pointer_64_data_initializer_offsets_.insert(offset);
+      break;
+    case RelocType::MemoryAddressSLEB:
+    case RelocType::MemoryAddressSLEB64:
+    case RelocType::MemoryAddressLEB:
+    case RelocType::MemoryAddressLEB64:
+      module_->memory_address_operand_offsets_.insert(offset);
+      break;
+    case RelocType::MemoryAddressI32:
+      module_->memory_address_32_data_initializer_offsets_.insert(offset);
+      break;
+    case RelocType::MemoryAddressI64:
+      module_->memory_address_64_data_initializer_offsets_.insert(offset);
+      break;
+    default:
       break;
   }
   return Result::Ok;

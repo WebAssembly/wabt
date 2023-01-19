@@ -20,10 +20,13 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 #include "wabt/binding-hash.h"
@@ -1245,6 +1248,41 @@ struct Module {
   BindingHash memory_bindings;
   BindingHash data_segment_bindings;
   BindingHash elem_segment_bindings;
+
+  // Byte offset of the beginning of the CODE section, after its section identifier.
+  Offset code_section_base_;
+
+  // Offsets of the operands of i{32,64}.const instructions that correspond to taking
+  // the address of a function.  These are relative to code_section_base_.
+  // These are the offsets given by relevant relocation information in reloc.CODE.
+  std::unordered_set<Offset> function_pointer_load_operand_offsets_;
+
+  // Offsets (ordered) of 32- and 64-bit function pointers within global data initializers.
+  // Only one of these two sets is expected to be non-empty at any given time.
+  std::set<Offset> function_pointer_32_data_initializer_offsets_;
+  std::set<Offset> function_pointer_64_data_initializer_offsets_;
+
+  // Offsets of memory operands of load and store instructions that correspond directly
+  // accessing a C++ global by its address, or of operands of i{32,64}.const instructions
+  // that correspond to taking the address of a C++ global.  These are relative to the
+  // beginning of the linear WASM memory.
+  std::unordered_set<Offset> memory_address_operand_offsets_;
+
+  // Offsets (ordered) of 32- and 64-bit memory pointers within global data initializers.
+  // Only one of these two sets is expected to be non-empty at any given time.
+  std::set<Offset> memory_address_32_data_initializer_offsets_;
+  std::set<Offset> memory_address_64_data_initializer_offsets_;
+
+  // Mapping from WASM function pointer values (which are indices into the indirect function
+  // table) to their corresponding function index (index into funcs).
+  std::unordered_map<uint64_t, Index> function_index_by_function_pointer_;
+
+  // Mapping from the end address of each data segment (WASM memory addresses relative
+  // to the beginning of linear memory) to the corresponding DataSegment index (index into
+  // data_segments).
+  // The map is ordered, so given a constant memory address one can find the corresponding data
+  // segment using std::map::lower_bound.
+  std::map<uint64_t, Index> data_segment_index_by_end_address_;
 };
 
 enum class ScriptModuleType {
