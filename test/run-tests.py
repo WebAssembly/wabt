@@ -774,7 +774,7 @@ def HandleTestResult(status, info, result, rebase=False):
         if isinstance(result, (Error, KeyboardInterrupt)):
             raise result
 
-        if info.is_roundtrip:
+        if info.is_roundtrip or info.is_wasm2c:
             if result.Failed():
                 if result.GetLastFailure().returncode == 2:
                     # run-roundtrip.py returns 2 if the file couldn't be parsed.
