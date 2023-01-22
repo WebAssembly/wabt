@@ -351,12 +351,13 @@ void* wasm_rt_exception(void);
 
 /**
  * Initialize a Memory object with an initial page size of `initial_pages` and
- * a maximum page size of `max_pages`.
+ * a maximum page size of `max_pages`, indexed with an i32 or i64.
  *
  *  ```
  *    wasm_rt_memory_t my_memory;
- *    // 1 initial page (65536 bytes), and a maximum of 2 pages.
- *    wasm_rt_allocate_memory(&my_memory, 1, 2);
+ *    // 1 initial page (65536 bytes), and a maximum of 2 pages,
+ *    // indexed with an i32
+ *    wasm_rt_allocate_memory(&my_memory, 1, 2, false);
  *  ```
  */
 void wasm_rt_allocate_memory(wasm_rt_memory_t*,

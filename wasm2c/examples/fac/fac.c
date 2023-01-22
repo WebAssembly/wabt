@@ -35,9 +35,20 @@
        TRAP(CALL_INDIRECT),                             \
    ((t)table.data[x].func)(__VA_ARGS__))
 
+#ifdef SUPPORT_MEMORY64
+#define RANGE_CHECK(mem, offset, len)              \
+  do {                                             \
+    uint64_t res;                                  \
+    if (__builtin_add_overflow(offset, len, &res)) \
+      TRAP(OOB);                                   \
+    if (UNLIKELY(res > mem->size))                 \
+      TRAP(OOB);                                   \
+  } while (0);
+#else
 #define RANGE_CHECK(mem, offset, len)               \
   if (UNLIKELY(offset + (uint64_t)len > mem->size)) \
     TRAP(OOB);
+#endif
 
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER
 #define MEMCHECK(mem, a, t)

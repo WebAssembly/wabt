@@ -284,7 +284,7 @@ void wasm_rt_free(void);
 void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
 uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
-void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages);
+void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64);
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 void wasm_rt_free_memory(wasm_rt_memory_t*);
 void wasm_rt_allocate_funcref_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
@@ -319,7 +319,8 @@ type as
 
 `wasm_rt_allocate_memory` initializes a memory instance, and allocates at least
 enough space for the given number of initial pages. The memory must be cleared
-to zero.
+to zero. The `is64` parameter indicates if the memory is indexed with
+an i32 or i64 address.
 
 `wasm_rt_grow_memory` must grow the given memory instance by the given number
 of pages. If there isn't enough memory to do so, or the new page count would be
@@ -588,8 +589,8 @@ int main(int argc, char** argv) {
   struct Z_host_instance_t host_instance_1;
   struct Z_host_instance_t host_instance_2;
   /* Allocate 1 page of wasm memory (64KiB). */
-  wasm_rt_allocate_memory(&host_instance_1.memory, 1, 1);
-  wasm_rt_allocate_memory(&host_instance_2.memory, 1, 1);
+  wasm_rt_allocate_memory(&host_instance_1.memory, 1, 1, false);
+  wasm_rt_allocate_memory(&host_instance_2.memory, 1, 1, false);
 
   /* Construct the module instances */
   Z_rot13_instantiate(&rot13_instance_1, &host_instance_1);
