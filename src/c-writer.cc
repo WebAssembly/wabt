@@ -1501,6 +1501,7 @@ void CWriter::WriteDataInitializers() {
     }
 
     Write(CloseBrace(), Newline());
+
   }
 }
 
@@ -2653,6 +2654,7 @@ void CWriter::Write(const ExprList& exprs) {
         Table* dest_table =
             module_->tables[module_->GetTableIndex(inst->dst_table)];
         const Table* src_table = module_->GetTable(inst->src_table);
+
         if (dest_table->elem_type != src_table->elem_type) {
           WABT_UNREACHABLE;
         }
