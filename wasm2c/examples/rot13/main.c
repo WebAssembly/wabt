@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   /* Create a `host` module instance to store the memory and current string */
   struct Z_host_instance_t host_instance;
   /* Allocate 1 page of wasm memory (64KiB). */
-  wasm_rt_allocate_memory(&host_instance.memory, 1, 1);
+  wasm_rt_allocate_memory(&host_instance.memory, 1, 1, false);
 
   /* Construct the module instance */
   Z_rot13_instantiate(&rot13_instance, &host_instance);
