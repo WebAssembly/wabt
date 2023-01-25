@@ -194,10 +194,15 @@ static bool is_equal_wasm_rt_externref_t(wasm_rt_externref_t x,
   return x == y;
 }
 
+static inline bool is_equal_wasm_rt_func_type_t(const wasm_rt_func_type_t a,
+                                                const wasm_rt_func_type_t b) {
+  return (a == b) || (a && b && !memcmp(a, b, 32));
+}
+
 static bool is_equal_wasm_rt_funcref_t(wasm_rt_funcref_t x,
                                        wasm_rt_funcref_t y) {
-  return (x.func_type == y.func_type) && (x.func == y.func) &&
-         (x.module_instance == y.module_instance);
+  return is_equal_wasm_rt_func_type_t(x.func_type, y.func_type) &&
+         (x.func == y.func) && (x.module_instance == y.module_instance);
 }
 
 wasm_rt_externref_t spectest_make_externref(uintptr_t x) {

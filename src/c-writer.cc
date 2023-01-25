@@ -27,6 +27,7 @@
 #include "wabt/common.h"
 #include "wabt/ir.h"
 #include "wabt/literal.h"
+#include "wabt/sha256.h"
 #include "wabt/stream.h"
 #include "wabt/string-util.h"
 
@@ -141,6 +142,11 @@ struct TryCatchLabel {
   bool used;
 };
 
+struct FuncTypeExpr {
+  const FuncType* func_type;
+  FuncTypeExpr(const FuncType* f) : func_type(f) {}
+};
+
 struct Newline {};
 struct OpenBrace {};
 struct CloseBrace {};
@@ -212,6 +218,8 @@ class CWriter {
   std::string DefineLocalScopeName(std::string_view);
   std::string DefineStackVarName(Index, Type, std::string_view);
 
+  static void SerializeFuncType(const FuncType&, std::string&);
+
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
   void WriteIndent();
@@ -261,6 +269,7 @@ class CWriter {
   void WriteMultivalueTypes();
   void WriteTagTypes();
   void WriteFuncTypes();
+  void Write(const FuncTypeExpr&);
   void WriteTags();
   void ComputeUniqueImports();
   void BeginInstance();
@@ -292,8 +301,10 @@ class CWriter {
   void WriteExports(CWriterPhase);
   void WriteInitDecl();
   void WriteFreeDecl();
+  void WriteGetFuncTypeDecl();
   void WriteInit();
   void WriteFree();
+  void WriteGetFuncType();
   void WriteInitInstanceImport();
   void WriteImportProperties(CWriterPhase);
   void WriteFuncs();
@@ -372,6 +383,8 @@ class CWriter {
 
   std::vector<std::pair<std::string, MemoryStream>> func_sections_;
   SymbolSet func_includes_;
+
+  std::vector<std::string> unique_func_type_names_;
 };
 
 constexpr std::string_view kImplicitFuncLabel = "$Bfunc";
@@ -925,7 +938,6 @@ void CWriter::Write(const Const& const_) {
 }
 
 void CWriter::WriteInitDecl() {
-  Write("void " + module_prefix_ + "_init_module(void);", Newline());
   Write("void " + module_prefix_ + "_instantiate(", ModuleInstanceTypeName(),
         "*");
   for (const auto& import_module_name : import_module_set_) {
@@ -936,6 +948,12 @@ void CWriter::WriteInitDecl() {
 
 void CWriter::WriteFreeDecl() {
   Write("void " + module_prefix_ + "_free(", ModuleInstanceTypeName(), "*);",
+        Newline());
+}
+
+void CWriter::WriteGetFuncTypeDecl() {
+  Write("wasm_rt_func_type_t ", module_prefix_,
+        "_get_func_type(uint32_t param_count, uint32_t result_count, ...);",
         Newline());
 }
 
@@ -959,9 +977,9 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
       const FuncDeclaration& decl = func->decl;
 
       assert(decl.has_func_type);
-      Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
+      const FuncType* func_type = module_->GetFuncType(decl.type_var);
 
-      Write("(wasm_rt_funcref_t){func_types[", func_type_index, "], ",
+      Write("(wasm_rt_funcref_t){", FuncTypeExpr(func_type), ", ",
             "(wasm_rt_function_ptr_t)",
             ExternalPtr(ModuleFieldType::Func, func->name), ", ");
 
@@ -1055,29 +1073,61 @@ void CWriter::WriteFuncTypes() {
   }
 
   Write(Newline());
-  Writef("static u32 func_types[%" PRIzd "];", module_->types.size());
-  Write(Newline());
 
-  Write(Newline(), "static void init_func_types(void) ", OpenBrace());
-  Index func_type_index = 0;
-  for (TypeEntry* type : module_->types) {
-    FuncType* func_type = cast<FuncType>(type);
-    Index num_params = func_type->GetNumParams();
-    Index num_results = func_type->GetNumResults();
-    Write("func_types[", func_type_index, "] = wasm_rt_register_func_type(",
-          num_params, ", ", num_results);
-    for (Index i = 0; i < num_params; ++i) {
-      Write(", ", TypeEnum(func_type->GetParamType(i)));
+  std::unordered_map<std::string, std::string> type_hash;
+
+  std::string serialized_type;
+  for (const TypeEntry* type : module_->types) {
+    const std::string name =
+        DefineGlobalScopeName(ModuleFieldType::Type, type->name);
+    SerializeFuncType(*cast<FuncType>(type), serialized_type);
+
+    auto prior_type = type_hash.find(serialized_type);
+    if (prior_type != type_hash.end()) {
+      /* duplicate function type */
+      unique_func_type_names_.push_back(prior_type->second);
+    } else {
+      unique_func_type_names_.push_back(name);
+      type_hash.emplace(serialized_type, name);
+      Write("FUNC_TYPE_T(", name, ") = \"");
+      for (uint8_t x : serialized_type) {
+        Writef("\\x%02x", x);
+      }
+      Write("\";", Newline());
     }
-
-    for (Index i = 0; i < num_results; ++i) {
-      Write(", ", TypeEnum(func_type->GetResultType(i)));
-    }
-
-    Write(");", Newline());
-    ++func_type_index;
   }
-  Write(CloseBrace(), Newline());
+}
+
+void CWriter::Write(const FuncTypeExpr& expr) {
+  Index func_type_index = module_->GetFuncTypeIndex(expr.func_type->sig);
+  Write(unique_func_type_names_.at(func_type_index));
+}
+
+// static
+void CWriter::SerializeFuncType(const FuncType& func_type,
+                                std::string& serialized_type) {
+  unsigned int len = func_type.GetNumParams() + func_type.GetNumResults() + 1;
+
+  char* const mangled_signature = static_cast<char*>(alloca(len));
+  char* next_byte = mangled_signature;
+
+  // step 1: serialize each param type
+  for (Index i = 0; i < func_type.GetNumParams(); ++i) {
+    *next_byte++ = MangleType(func_type.GetParamType(i));
+  }
+
+  // step 2: separate params and results with a space
+  *next_byte++ = ' ';
+
+  // step 3: serialize each result type
+  for (Index i = 0; i < func_type.GetNumResults(); ++i) {
+    *next_byte++ = MangleType(func_type.GetResultType(i));
+  }
+
+  assert(next_byte - mangled_signature == len);
+
+  // step 4: SHA-256 the whole string
+  sha256({mangled_signature, len}, serialized_type);
 }
 
 void CWriter::WriteTags() {
@@ -1540,10 +1590,8 @@ void CWriter::WriteElemInitializers() {
       switch (expr.type()) {
         case ExprType::RefFunc: {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
-          const Index func_type_index =
-              module_->GetFuncTypeIndex(func->decl.type_var);
-          Write("{", func_type_index, ", ");
-          Write("(wasm_rt_function_ptr_t)",
+          const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
+          Write("{", FuncTypeExpr(func_type), ", (wasm_rt_function_ptr_t)",
                 ExternalPtr(ModuleFieldType::Func, func->name), ", ");
           const bool is_import = import_module_sym_map_.count(func->name) != 0;
           if (is_import) {
@@ -1556,7 +1604,7 @@ void CWriter::WriteElemInitializers() {
           Write("},", Newline());
         } break;
         case ExprType::RefNull:
-          Write("{0, NULL, 0},", Newline());
+          Write("{NULL, NULL, 0},", Newline());
           break;
         default:
           WABT_UNREACHABLE;
@@ -1646,8 +1694,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
   }
 
   if (dst_table->elem_type == Type::FuncRef) {
-    Write(", instance, ",
-          src_segment->elem_exprs.empty() ? "NULL" : "func_types");
+    Write(", instance");
   }
 
   Write(");", Newline());
@@ -1788,15 +1835,6 @@ void CWriter::WriteExports(CWriterPhase kind) {
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "void " + module_prefix_ + "_init_module(void) ",
-        OpenBrace());
-  Write("assert(wasm_rt_is_initialized());", Newline());
-  Write("s_module_initialized = true;", Newline());
-  if (!module_->types.empty()) {
-    Write("init_func_types();", Newline());
-  }
-  Write(CloseBrace(), Newline());
-
   Write(Newline(), "void " + module_prefix_ + "_instantiate(",
         ModuleInstanceTypeName(), "* instance");
   for (const auto& import_module_name : import_module_set_) {
@@ -1806,7 +1844,6 @@ void CWriter::WriteInit() {
   Write(") ", OpenBrace());
 
   Write("assert(wasm_rt_is_initialized());", Newline());
-  Write("assert(s_module_initialized);", Newline());
 
   if (!import_module_set_.empty()) {
     Write("init_instance_import(instance");
@@ -1846,6 +1883,39 @@ void CWriter::WriteInit() {
     }
     Write(Newline());
   }
+  Write(CloseBrace(), Newline());
+}
+
+void CWriter::WriteGetFuncType() {
+  Write(Newline(), "wasm_rt_func_type_t ", module_prefix_,
+        "_get_func_type(uint32_t param_count, uint32_t result_count, ...) ",
+        OpenBrace());
+
+  Write("va_list args;", Newline());
+
+  for (const TypeEntry* type : module_->types) {
+    const FuncType* func_type = cast<FuncType>(type);
+    const FuncSignature& signature = func_type->sig;
+
+    Write(Newline(), "if (param_count == ", signature.GetNumParams(),
+          " && result_count == ", signature.GetNumResults(), ") ", OpenBrace());
+    Write("va_start(args, result_count);", Newline());
+    Write("if (true");
+    for (const auto& t : signature.param_types) {
+      Write(" && va_arg(args, wasm_rt_type_t) == ", TypeEnum(t));
+    }
+    for (const auto& t : signature.result_types) {
+      Write(" && va_arg(args, wasm_rt_type_t) == ", TypeEnum(t));
+    }
+    Write(") ", OpenBrace());
+    Write("va_end(args);", Newline());
+    Write("return ", FuncTypeExpr(func_type), ";", Newline());
+    Write(CloseBrace(), Newline());
+    Write("va_end(args);", Newline());
+    Write(CloseBrace(), Newline());
+  }
+
+  Write(Newline(), "return NULL;", Newline());
   Write(CloseBrace(), Newline());
 }
 
@@ -2437,12 +2507,12 @@ void CWriter::Write(const ExprList& exprs) {
             module_->GetTable(cast<CallIndirectExpr>(&expr)->table);
 
         assert(decl.has_func_type);
-        Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
+        const FuncType* func_type = module_->GetFuncType(decl.type_var);
 
         Write("CALL_INDIRECT(",
               ExternalInstanceRef(ModuleFieldType::Table, table->name), ", ");
         WriteCallIndirectFuncDeclaration(decl, "(*)");
-        Write(", ", func_type_index, ", ", StackVar(0));
+        Write(", ", FuncTypeExpr(func_type), ", ", StackVar(0));
         Write(", ", ExternalInstanceRef(ModuleFieldType::Table, table->name),
               ".data[", StackVar(0), "].module_instance");
         for (Index i = 0; i < num_params; ++i) {
@@ -2717,10 +2787,10 @@ void CWriter::Write(const ExprList& exprs) {
         const FuncDeclaration& decl = func->decl;
 
         assert(decl.has_func_type);
-        Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
+        const FuncType* func_type = module_->GetFuncType(decl.type_var);
 
-        Write(StackVar(0), " = (wasm_rt_funcref_t){func_types[",
-              func_type_index, "], (wasm_rt_function_ptr_t)",
+        Write(StackVar(0), " = (wasm_rt_funcref_t){", FuncTypeExpr(func_type),
+              ", (wasm_rt_function_ptr_t)",
               ExternalPtr(ModuleFieldType::Func, func->name), ", ");
 
         bool is_import = import_module_sym_map_.count(func->name) != 0;
@@ -3577,6 +3647,7 @@ void CWriter::WriteCHeader() {
   WriteModuleInstance();
   WriteInitDecl();
   WriteFreeDecl();
+  WriteGetFuncTypeDecl();
   WriteMultivalueTypes();
   WriteImports();
   WriteImportProperties(CWriterPhase::Declarations);
@@ -3602,6 +3673,7 @@ void CWriter::WriteCSource() {
   WriteImportProperties(CWriterPhase::Definitions);
   WriteInit();
   WriteFree();
+  WriteGetFuncType();
 }
 
 Result CWriter::WriteModule(const Module& module) {

@@ -45,13 +45,6 @@
 #define PAGE_SIZE 65536
 #define MAX_EXCEPTION_SIZE PAGE_SIZE
 
-typedef struct FuncType {
-  wasm_rt_type_t* params;
-  wasm_rt_type_t* results;
-  uint32_t param_count;
-  uint32_t result_count;
-} FuncType;
-
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
 static bool g_signal_handler_installed = false;
 #ifdef _WIN32
@@ -65,9 +58,6 @@ static char* g_alt_stack = 0;
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
 #endif
-
-static FuncType* g_func_types;
-static uint32_t g_func_type_count;
 
 WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
@@ -89,59 +79,6 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
 #else
   WASM_RT_LONGJMP(g_wasm_rt_jmp_buf, code);
 #endif
-}
-
-static bool func_types_are_equal(FuncType* a, FuncType* b) {
-  if (a->param_count != b->param_count || a->result_count != b->result_count)
-    return 0;
-  uint32_t i;
-  for (i = 0; i < a->param_count; ++i)
-    if (a->params[i] != b->params[i])
-      return 0;
-  for (i = 0; i < a->result_count; ++i)
-    if (a->results[i] != b->results[i])
-      return 0;
-  return 1;
-}
-
-uint32_t wasm_rt_register_func_type(uint32_t param_count,
-                                    uint32_t result_count,
-                                    ...) {
-  size_t param_size = param_count * sizeof(wasm_rt_type_t);
-  size_t result_size = result_count * sizeof(wasm_rt_type_t);
-  FuncType func_type;
-  func_type.param_count = param_count;
-  func_type.params = alloca(param_size);
-  func_type.result_count = result_count;
-  func_type.results = alloca(result_size);
-
-  va_list args;
-  va_start(args, result_count);
-
-  uint32_t i;
-  for (i = 0; i < param_count; ++i)
-    func_type.params[i] = va_arg(args, wasm_rt_type_t);
-  for (i = 0; i < result_count; ++i)
-    func_type.results[i] = va_arg(args, wasm_rt_type_t);
-  va_end(args);
-
-  for (i = 0; i < g_func_type_count; ++i)
-    if (func_types_are_equal(&g_func_types[i], &func_type))
-      return i + 1;
-
-  // This is a new/unseed type.  Copy our stack allocated params/results into
-  // permanent heap allocated space.
-  wasm_rt_type_t* params = malloc(param_size);
-  wasm_rt_type_t* results = malloc(result_size);
-  memcpy(params, func_type.params, param_size);
-  memcpy(results, func_type.results, result_size);
-  func_type.params = params;
-  func_type.results = results;
-
-  uint32_t idx = g_func_type_count++;
-  g_func_types = realloc(g_func_types, g_func_type_count * sizeof(FuncType));
-  g_func_types[idx] = func_type;
-  return idx + 1;
 }
 
 void wasm_rt_load_exception(const wasm_rt_tag_t tag,
@@ -346,15 +283,6 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
-  for (uint32_t i = 0; i < g_func_type_count; ++i) {
-    free(g_func_types[i].params);
-    free(g_func_types[i].results);
-  }
-
-  g_func_type_count = 0;
-  free(g_func_types);
-  g_func_types = NULL;
-
 #if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
   os_cleanup_signal_handler();
 #endif

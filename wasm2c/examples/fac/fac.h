@@ -29,9 +29,9 @@ typedef struct Z_fac_instance_t {
   char dummy_member;
 } Z_fac_instance_t;
 
-void Z_fac_init_module(void);
 void Z_fac_instantiate(Z_fac_instance_t*);
 void Z_fac_free(Z_fac_instance_t*);
+wasm_rt_func_type_t Z_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* export: 'fac' */
 u32 Z_facZ_fac(Z_fac_instance_t*, u32);

@@ -5,3 +5,7 @@ examples/rot13/rot13
 examples/rot13/rot13.c
 examples/rot13/rot13.h
 examples/rot13/rot13.wasm
+examples/callback/callback
+examples/callback/callback.c
+examples/callback/callback.h
+examples/callback/callback.wasm

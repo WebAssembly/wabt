@@ -17,10 +17,6 @@ int main(int argc, char** argv) {
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
-  /* Initialize the `fac` module (this registers the module's function types in
-   * a global data structure) */
-  Z_fac_init_module();
-
   /* Declare an instance of the `fac` module. */
   Z_fac_instance_t instance;
 

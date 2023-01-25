@@ -15,10 +15,15 @@
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
-#define CALL_INDIRECT(table, t, ft, x, ...)             \
-  (LIKELY((x) < table.size && table.data[x].func &&     \
-          table.data[x].func_type == func_types[ft]) || \
-       TRAP(CALL_INDIRECT),                             \
+static inline bool func_types_eq(const wasm_rt_func_type_t a,
+                                 const wasm_rt_func_type_t b) {
+  return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
+}
+
+#define CALL_INDIRECT(table, t, ft, x, ...)              \
+  (LIKELY((x) < table.size && table.data[x].func &&      \
+          func_types_eq(ft, table.data[x].func_type)) || \
+       TRAP(CALL_INDIRECT),                              \
    ((t)table.data[x].func)(__VA_ARGS__))
 
 #ifdef SUPPORT_MEMORY64
@@ -480,7 +485,7 @@ static inline void memory_init(wasm_rt_memory_t* dest,
 }
 
 typedef struct {
-  uint32_t func_type_index;
+  wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
   size_t module_offset;
 } wasm_elem_segment_expr_t;
@@ -491,17 +496,16 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
                                       u32 dest_addr,
                                       u32 src_addr,
                                       u32 n,
-                                      void* module_instance,
-                                      const u32* func_types) {
+                                      void* module_instance) {
   if (UNLIKELY(src_addr + (uint64_t)n > src_size))
     TRAP(OOB);
   if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
     TRAP(OOB);
   for (u32 i = 0; i < n; i++) {
     const wasm_elem_segment_expr_t* src_expr = &src[src_addr + i];
-    dest->data[dest_addr + i] = (wasm_rt_funcref_t){
-        func_types[src_expr->func_type_index], src_expr->func,
-        (char*)module_instance + src_expr->module_offset};
+    dest->data[dest_addr + i] =
+        (wasm_rt_funcref_t){src_expr->type, src_expr->func,
+                            (char*)module_instance + src_expr->module_offset};
   }
 }
 
@@ -572,4 +576,8 @@ DEFINE_TABLE_SET(externref)
 DEFINE_TABLE_FILL(funcref)
 DEFINE_TABLE_FILL(externref)
 
-static bool s_module_initialized = false;
+#if defined(__GNUC__) || defined(__clang__)
+#define FUNC_TYPE_T(x) static const char* const x
+#else
+#define FUNC_TYPE_T(x) static const char x[]
+#endif

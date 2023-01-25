@@ -253,7 +253,6 @@ class CWriter(object):
 
     def _WriteModuleCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
         self._WriteModuleInitCall(command, False)
 
     def _WriteModuleInstances(self):
@@ -269,7 +268,6 @@ class CWriter(object):
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
-        self.out_file.write('%s_init_module();\n' % self.GetModulePrefix())
         self._WriteModuleInitCall(command, True)
 
     def _WriteActionCommand(self, command):
