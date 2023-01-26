@@ -511,7 +511,7 @@ def main(args):
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
-        cc = utils.Executable(options.cc, after_args=options.cflags, forward_stderr=True,
+        cc = utils.Executable(options.cc, *options.cflags, forward_stderr=True,
                               forward_stdout=False)
         cc.verbose = options.print_cmd
 

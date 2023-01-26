@@ -37,10 +37,9 @@ class Error(Exception):
 
 class Executable(object):
 
-    def __init__(self, exe, *before_args, **kwargs):
+    def __init__(self, exe, *after_args, **kwargs):
         self.exe = exe
-        self.before_args = list(before_args)
-        self.after_args = kwargs.get('after_args', [])
+        self.after_args = list(after_args)
         self.basename = kwargs.get('basename',
                                    os.path.basename(exe)).replace('.exe', '')
         self.error_cmdline = kwargs.get('error_cmdline', True)
@@ -52,7 +51,7 @@ class Executable(object):
         return None if forward else subprocess.PIPE
 
     def _RunWithArgsInternal(self, *args, **kwargs):
-        cmd = [self.exe] + self.before_args + list(args) + self.after_args
+        cmd = [self.exe] + list(args) + self.after_args
         cmd_str = shlex.join(cmd)
         if self.verbose:
             print(cmd_str)
