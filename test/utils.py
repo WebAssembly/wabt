@@ -40,7 +40,7 @@ class Executable(object):
     def __init__(self, exe, *before_args, **kwargs):
         self.exe = exe
         self.before_args = list(before_args)
-        self.after_args = []
+        self.after_args = kwargs.get('after_args', [])
         self.basename = kwargs.get('basename',
                                    os.path.basename(exe)).replace('.exe', '')
         self.error_cmdline = kwargs.get('error_cmdline', True)
