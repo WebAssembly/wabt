@@ -70,6 +70,9 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 
 #if WABT_BIG_ENDIAN
 static inline void load_data(void* dest, const void* src, size_t n) {
+  if (!n) {
+    return;
+  }
   size_t i = 0;
   u8* dest_chars = dest;
   memcpy(dest, src, n);
@@ -103,6 +106,9 @@ static inline void load_data(void* dest, const void* src, size_t n) {
   }
 #else
 static inline void load_data(void* dest, const void* src, size_t n) {
+  if (!n) {
+    return;
+  }
   memcpy(dest, src, n);
 }
 #define LOAD_DATA(m, o, i, s)      \
@@ -441,7 +447,7 @@ static float wasm_fabsf(float x) {
   if (UNLIKELY(isnan(x))) {
     uint32_t tmp;
     memcpy(&tmp, &x, 4);
-    tmp = tmp & ~(1 << 31);
+    tmp = tmp & ~(1UL << 31);
     memcpy(&x, &tmp, 4);
     return x;
   }
@@ -452,7 +458,7 @@ static double wasm_fabs(double x) {
   if (UNLIKELY(isnan(x))) {
     uint64_t tmp;
     memcpy(&tmp, &x, 8);
-    tmp = tmp & ~(1ll << 63);
+    tmp = tmp & ~(1ULL << 63);
     memcpy(&x, &tmp, 8);
     return x;
   }

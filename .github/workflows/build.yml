@@ -105,7 +105,7 @@ jobs:
     env:
       USE_NINJA: "1"
       CC: "clang" # used by the wasm2c tests
-      WASM2C_CFLAGS: "-fsanitize=undefined"
+      WASM2C_CFLAGS: "-fno-sanitize-recover=undefined"
     steps:
     - uses: actions/setup-python@v1
       with:
