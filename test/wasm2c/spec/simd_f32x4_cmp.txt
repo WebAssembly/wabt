@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_f32x4_cmp.wast
+;;; SLOW:
+(;; STDOUT ;;;
+2581/2581 tests passed.
+;;; STDOUT ;;)

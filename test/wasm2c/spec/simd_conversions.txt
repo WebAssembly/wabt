@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_conversions.wast
+(;; STDOUT ;;;
+232/232 tests passed.
+;;; STDOUT ;;)

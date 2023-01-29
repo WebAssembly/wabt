@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_load16_lane.wast
+(;; STDOUT ;;;
+32/32 tests passed.
+;;; STDOUT ;;)

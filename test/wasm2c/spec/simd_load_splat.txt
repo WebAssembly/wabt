@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_load_splat.wast
+(;; STDOUT ;;;
+112/112 tests passed.
+;;; STDOUT ;;)

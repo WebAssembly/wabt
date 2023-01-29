@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/simd_f32x4_pmin_pmax.wast
+;;; SLOW:
+(;; STDOUT ;;;
+3872/3872 tests passed.
+;;; STDOUT ;;)
