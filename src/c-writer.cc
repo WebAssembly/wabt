@@ -180,7 +180,7 @@ class CWriter {
         c_stream_(c_stream),
         h_stream_(h_stream),
         header_name_(header_name) {
-    module_prefix_ = MangleName(options_.module_name);
+    module_prefix_ = MangleModuleName(options_.module_name);
   }
 
   Result WriteModule(const Module&);
@@ -213,16 +213,32 @@ class CWriter {
   static constexpr char MangleField(ModuleFieldType);
   static std::string MangleMultivalueTypes(const TypeVector&);
   static std::string MangleTagTypes(const TypeVector&);
+  static std::string Mangle(std::string_view name, bool allow_underscore);
   static std::string MangleName(std::string_view);
-  static std::string LegalizeName(std::string_view);
-  std::string ExportName(std::string_view mangled_name);
+  static std::string MangleModuleName(std::string_view);
+  std::string ExportName(std::string_view module_name,
+                         std::string_view export_name);
+  std::string ExportName(std::string_view export_name);
   std::string ModuleInstanceTypeName() const;
-  static std::string MangleModuleInstanceName(std::string_view module_name);
-  static std::string MangleModuleInstanceTypeName(std::string_view module_name);
-  std::string DefineName(SymbolSet*, std::string_view);
+  static std::string ModuleInstanceTypeName(std::string_view module_name);
+  void ClaimName(SymbolSet& set,
+                 SymbolMap& map,
+                 char type_suffix,
+                 std::string_view wasm_name,
+                 const std::string& c_name);
+  std::string FindUniqueName(SymbolSet& set, std::string_view proposed_name);
+  std::string ClaimUniqueName(SymbolSet& set,
+                              SymbolMap& map,
+                              char type_suffix,
+                              std::string_view wasm_name,
+                              const std::string& proposed_c_name);
   void DefineImportName(const Import* import,
                         std::string_view module_name,
                         std::string_view field_name);
+  void ReserveExportNames();
+  void ReserveExportName(std::string_view);
+  std::string DefineImportedModuleInstanceName(std::string_view name);
+  std::string DefineInstanceMemberName(ModuleFieldType, std::string_view);
   std::string DefineGlobalScopeName(ModuleFieldType, std::string_view);
   std::string DefineLocalScopeName(std::string_view name, bool is_label);
   std::string DefineParamName(std::string_view);
@@ -408,6 +424,9 @@ static constexpr char kParamSuffix =
     'a' + static_cast<char>(ModuleFieldType::Tag) + 1;
 static constexpr char kLabelSuffix = kParamSuffix + 1;
 
+static constexpr char kSymbolPrefix[] = "w2c_";
+static constexpr char kAdminSymbolPrefix[] = "wasm2c_";
+
 size_t CWriter::MarkTypeStack() const {
   return type_stack_.size();
 }
@@ -507,6 +526,37 @@ constexpr char CWriter::MangleField(ModuleFieldType type) {
   return 'a' + static_cast<char>(type);
 }
 
+// remove risky characters for pasting into a C-style comment
+static std::string SanitizeForComment(std::string_view str) {
+  std::string result;
+
+  for (const uint8_t ch : str) {
+    // skip control chars
+    if (ch < ' ') {
+      continue;
+    }
+
+    // skip DEL and any >7-bit chars
+    if (ch > '~') {
+      continue;
+    }
+
+    if (ch == '?') {
+      // escape attempted trigraph
+      result += '\\';
+    }
+
+    if (ch == '/') {
+      // escape attempt to end C-style comment
+      result += '\\';
+    }
+
+    result += ch;
+  }
+
+  return result;
+}
+
 // static
 std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
   assert(types.size() >= 2);
@@ -527,87 +577,170 @@ std::string CWriter::MangleTagTypes(const TypeVector& types) {
   return result;
 }
 
-// static
-std::string CWriter::MangleName(std::string_view name) {
-  const char kPrefix = 'Z';
-  std::string result = "Z_";
+/* The C symbol for an export from this module. */
+std::string CWriter::ExportName(std::string_view export_name) {
+  return kSymbolPrefix + module_prefix_ + '_' + MangleName(export_name);
+}
 
-  if (!name.empty()) {
-    for (unsigned char c : name) {
-      if ((isalnum(c) && c != kPrefix) || c == '_') {
-        result += c;
-      } else {
-        result += kPrefix;
-        result += StringPrintf("%02X", static_cast<uint8_t>(c));
-      }
+/* The C symbol for an export from an arbitrary module. */
+// static
+std::string CWriter::ExportName(std::string_view module_name,
+                                std::string_view export_name) {
+  return kSymbolPrefix + MangleModuleName(module_name) + '_' +
+         MangleName(export_name);
+}
+
+/* The type name of an instance of this module. */
+std::string CWriter::ModuleInstanceTypeName() const {
+  return kSymbolPrefix + module_prefix_;
+}
+
+/* The type name of an instance of an arbitrary module. */
+// static
+std::string CWriter::ModuleInstanceTypeName(std::string_view module_name) {
+  return kSymbolPrefix + MangleModuleName(module_name);
+}
+
+// static
+std::string CWriter::Mangle(std::string_view name, bool allow_underscore) {
+  /*
+   * Name mangling transforms arbitrary Wasm names into "safe" C names
+   * in a deterministic way. To avoid collisions, distinct Wasm names must be
+   * transformed into distinct C names.
+   *
+   * The rules implemented here are:
+   * 1) any hex digit ('A' through 'F') that follows the sequence "0x"
+   *    is escaped
+   * 2) otherwise, any alphanumeric character (and optionally, the underscore)
+        is kept as-is
+   * 3) any other character is escaped
+   *
+   * "Escaped" means the character is represented with the sequence "0xAB",
+   * where A B are hex digits ('0'-'9' or 'A'-'F') representing the character's
+   * numeric value.
+   *
+   * Module names are mangled with allow_underscore=false to prevent
+   * collisions between, e.g., a module "alfa" with export
+   * "bravo_charlie" vs. a module "alfa_bravo" with export "charlie".
+   *
+   * In the implementation, we don't use the standard isalpha/isdigit/isalnum
+   * because the caller might have changed the current locale.
+   */
+
+  auto my_isalpha = [](uint8_t ch) {
+    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+  };
+  auto my_isdigit = [](uint8_t ch) { return (ch >= '0' && ch <= '9'); };
+  auto my_isalnum = [&](uint8_t ch) {
+    return my_isalpha(ch) || my_isdigit(ch);
+  };
+  auto my_ishexdigit = [&](uint8_t ch) {
+    return my_isdigit(ch) || (ch >= 'A' && ch <= 'F');
+  };
+
+  enum State { Any, Zero, ZeroX, ZeroXHexDigit } state{Any};
+
+  std::string result;
+  for (const uint8_t ch : name) {
+    switch (state) {
+      case Any:
+        state = (ch == '0') ? Zero : Any;
+        break;
+      case Zero:
+        state = (ch == 'x') ? ZeroX : Any;
+        break;
+      case ZeroX:
+        state = my_ishexdigit(ch) ? ZeroXHexDigit : Any;
+        break;
+      case ZeroXHexDigit:
+        WABT_UNREACHABLE;
+        break;
+    }
+
+    if ((state != ZeroXHexDigit) &&
+        (my_isalnum(ch) || (allow_underscore && ch == '_'))) {
+      result += ch;
+    } else {
+      result += "0x" + StringPrintf("%02X", ch);
+      state = Any;
     }
   }
 
   return result;
 }
 
-std::string CWriter::ExportName(std::string_view mangled_name) {
-  return module_prefix_ + std::string(mangled_name);
-}
-
-std::string CWriter::ModuleInstanceTypeName() const {
-  return module_prefix_ + "_instance_t";
+// static
+std::string CWriter::MangleName(std::string_view name) {
+  return Mangle(name, true);
 }
 
 // static
-std::string CWriter::MangleModuleInstanceName(std::string_view module_name) {
-  return MangleName(module_name) + "_instance";
+std::string CWriter::MangleModuleName(std::string_view name) {
+  return Mangle(name, false);
 }
 
-// static
-std::string CWriter::MangleModuleInstanceTypeName(
-    std::string_view module_name) {
-  return MangleName(module_name) + "_instance_t";
+/*
+ * Allocate a C symbol (must be unused) in the SymbolSet,
+ * and a mapping from the Wasm name (tagged with
+ * the index space of the name) to that C symbol.
+ */
+void CWriter::ClaimName(SymbolSet& set,
+                        SymbolMap& map,
+                        char type_suffix,
+                        std::string_view wasm_name,
+                        const std::string& c_name) {
+  const std::string type_tagged_wasm_name =
+      std::string(wasm_name) + type_suffix;
+
+  [[maybe_unused]] bool success;
+  success = set.insert(c_name).second;
+  assert(success);
+
+  success = map.emplace(type_tagged_wasm_name, c_name).second;
+  assert(success);
 }
 
-// static
-std::string CWriter::LegalizeName(std::string_view name) {
-  if (name.empty())
-    return "_";
-
-  std::string result;
-  result = isalpha(static_cast<unsigned char>(name[0])) ? name[0] : '_';
-  for (size_t i = 1; i < name.size(); ++i)
-    result += isalnum(static_cast<unsigned char>(name[i])) ? name[i] : '_';
-
-  // In addition to containing valid characters for C, we must also avoid
-  // colliding with things C cares about, such as reserved words (e.g. "void")
-  // or a function name like main() (which a compiler will  complain about if we
-  // define it with another type). To avoid such problems, prefix.
-  result = "w2c_" + result;
-
-  return result;
-}
-
-std::string CWriter::DefineName(SymbolSet* set, std::string_view name) {
-  std::string legal = LegalizeName(name);
-  if (set->find(legal) != set->end()) {
-    std::string base = legal + "_";
+/*
+ * Make a proposed C symbol unique in a given symbol set by appending
+ * an integer to the symbol if necessary.
+ */
+std::string CWriter::FindUniqueName(SymbolSet& set,
+                                    std::string_view proposed_name) {
+  std::string unique{proposed_name};
+  if (set.find(unique) != set.end()) {
+    std::string base = unique + "_";
     size_t count = 0;
     do {
-      legal = base + std::to_string(count++);
-    } while (set->find(legal) != set->end());
+      unique = base + std::to_string(count++);
+    } while (set.find(unique) != set.end());
   }
-  set->insert(legal);
-  return legal;
+  return unique;
+}
+
+/*
+ * Find a unique C symbol in the symbol set and claim it (mapping the
+ * type-tagged Wasm name to it).
+ */
+std::string CWriter::ClaimUniqueName(SymbolSet& set,
+                                     SymbolMap& map,
+                                     char type_suffix,
+                                     std::string_view wasm_name,
+                                     const std::string& proposed_c_name) {
+  const std::string unique = FindUniqueName(set, proposed_c_name);
+  ClaimName(set, map, type_suffix, wasm_name, unique);
+  return unique;
 }
 
 std::string_view StripLeadingDollar(std::string_view name) {
-  if (!name.empty() && name[0] == '$') {
-    name.remove_prefix(1);
-  }
+  assert(!name.empty());
+  assert(name.front() == '$');
+  name.remove_prefix(1);
   return name;
 }
 
 void CWriter::DefineImportName(const Import* import,
                                std::string_view module,
                                std::string_view field_name) {
-  std::string mangled = MangleName(module) + MangleName(field_name);
   std::string name;
   ModuleFieldType type;
 
@@ -636,31 +769,40 @@ void CWriter::DefineImportName(const Import* import,
 
   import_syms_.insert(name);
   import_module_sym_map_.emplace(name, import->module_name);
-  global_syms_.insert(mangled);
-  [[maybe_unused]] bool success =
-      global_sym_map_.emplace(name + MangleField(type), mangled).second;
-  assert(success);
+
+  const std::string mangled = ExportName(module, field_name);
+  global_syms_.erase(mangled);  // duplicate imports are allowed
+  ClaimName(global_syms_, global_sym_map_, MangleField(type), name, mangled);
 }
 
+/*
+ * Reserve a C symbol for the public name of a module's export.  The
+ * format of these is "w2c_" + the module prefix + "_" + the mangled
+ * export name. Reserving the symbol prevents internal functions and
+ * other names from shadowing/overlapping the exports.
+ */
+void CWriter::ReserveExportName(std::string_view name) {
+  ClaimName(global_syms_, global_sym_map_, MangleField(ModuleFieldType::Export),
+            name, ExportName(name));
+}
+
+/*
+ * Names for functions, function types, tags, and segments are globally unique
+ * across modules (formatted the same as an export, as "w2c_" + module prefix +
+ * "_" + the name, made unique if necessary).
+ */
 std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
                                            std::string_view name) {
-  std::string mangled = std::string(name) + MangleField(type);
-  std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
-  [[maybe_unused]] bool success =
-      global_sym_map_.emplace(mangled, unique).second;
-  assert(success);
-  return unique;
+  return ClaimUniqueName(global_syms_, global_sym_map_, MangleField(type), name,
+                         ExportName(StripLeadingDollar(name)));
 }
 
+/* Names for params, locals, and stack vars are formatted as "w2c_" + name. */
 std::string CWriter::DefineLocalScopeName(std::string_view name,
                                           bool is_label) {
-  std::string mangled =
-      std::string(name) + (is_label ? kLabelSuffix : kParamSuffix);
-  std::string unique = DefineName(&local_syms_, StripLeadingDollar(name));
-  [[maybe_unused]] bool success =
-      local_sym_map_.emplace(mangled, unique).second;
-  assert(success);
-  return unique;
+  return ClaimUniqueName(local_syms_, local_sym_map_,
+                         is_label ? kLabelSuffix : kParamSuffix, name,
+                         kSymbolPrefix + MangleName(StripLeadingDollar(name)));
 }
 
 std::string CWriter::DefineParamName(std::string_view name) {
@@ -674,12 +816,34 @@ std::string CWriter::DefineLabelName(std::string_view name) {
 std::string CWriter::DefineStackVarName(Index index,
                                         Type type,
                                         std::string_view name) {
-  std::string unique = DefineName(&local_syms_, name);
+  std::string unique =
+      FindUniqueName(local_syms_, kSymbolPrefix + MangleName(name));
   StackTypePair stp = {index, type};
   [[maybe_unused]] bool success =
       stack_var_sym_map_.emplace(stp, unique).second;
   assert(success);
   return unique;
+}
+
+/*
+ * Members of the module instance (globals, tables, and memories) are formatted
+ * as "w2c_" + the mangled name of the element (made unique if necessary).
+ */
+std::string CWriter::DefineInstanceMemberName(ModuleFieldType type,
+                                              std::string_view name) {
+  return ClaimUniqueName(global_syms_, global_sym_map_, MangleField(type), name,
+                         kSymbolPrefix + MangleName(StripLeadingDollar(name)));
+}
+
+/*
+ * The name of a module-instance member that points to the originating
+ * instance of an imported function is formatted as "w2c_" + originating
+ * module prefix + "_instance".
+ */
+std::string CWriter::DefineImportedModuleInstanceName(std::string_view name) {
+  return ClaimUniqueName(global_syms_, global_sym_map_,
+                         MangleField(ModuleFieldType::Import), name,
+                         ExportName(name, "instance"));
 }
 
 void CWriter::Indent(int size) {
@@ -980,21 +1144,21 @@ void CWriter::Write(const Const& const_) {
 }
 
 void CWriter::WriteInitDecl() {
-  Write("void " + module_prefix_ + "_instantiate(", ModuleInstanceTypeName(),
-        "*");
+  Write("void ", kAdminSymbolPrefix, module_prefix_, "_instantiate(",
+        ModuleInstanceTypeName(), "*");
   for (const auto& import_module_name : import_module_set_) {
-    Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "*");
+    Write(", struct ", ModuleInstanceTypeName(import_module_name), "*");
   }
   Write(");", Newline());
 }
 
 void CWriter::WriteFreeDecl() {
-  Write("void " + module_prefix_ + "_free(", ModuleInstanceTypeName(), "*);",
-        Newline());
+  Write("void ", kAdminSymbolPrefix, module_prefix_, "_free(",
+        ModuleInstanceTypeName(), "*);", Newline());
 }
 
 void CWriter::WriteGetFuncTypeDecl() {
-  Write("wasm_rt_func_type_t ", module_prefix_,
+  Write("wasm_rt_func_type_t ", kAdminSymbolPrefix, module_prefix_,
         "_get_func_type(uint32_t param_count, uint32_t result_count, ...);",
         Newline());
 }
@@ -1027,8 +1191,8 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
 
       bool is_import = import_module_sym_map_.count(func->name) != 0;
       if (is_import) {
-        Write("instance->",
-              MangleModuleInstanceName(import_module_sym_map_[func->name]));
+        Write("instance->", GlobalName(ModuleFieldType::Import,
+                                       import_module_sym_map_[func->name]));
       } else {
         Write("instance");
       }
@@ -1221,7 +1385,8 @@ void CWriter::ComputeUniqueImports() {
 
 void CWriter::BeginInstance() {
   if (module_->imports.empty()) {
-    Write("typedef struct ", ModuleInstanceTypeName(), " ", OpenBrace());
+    Write(Newline(), "typedef struct ", ModuleInstanceTypeName(), " ",
+          OpenBrace());
     return;
   }
 
@@ -1233,9 +1398,13 @@ void CWriter::BeginInstance() {
   }
 
   // Forward declaring module instance types
+  if (import_module_set_.size()) {
+    Write(Newline());
+  }
+
   for (const auto& import_module : import_module_set_) {
-    Write("struct ", MangleModuleInstanceTypeName(import_module), ";",
-          Newline());
+    DefineImportedModuleInstanceName(import_module);
+    Write("struct ", ModuleInstanceTypeName(import_module), ";", Newline());
   }
 
   // Forward declaring module imports
@@ -1265,19 +1434,18 @@ void CWriter::BeginInstance() {
       default:
         WABT_UNREACHABLE;
     }
-    Write("* ", MangleName(import->module_name), MangleName(import->field_name),
-          "(struct ", MangleModuleInstanceTypeName(import->module_name), "*);",
-          Newline());
+    Write("* ", ExportName(import->module_name, import->field_name), "(struct ",
+          ModuleInstanceTypeName(import->module_name), "*);", Newline());
   }
-  Write(Newline());
 
+  Write(Newline(), "typedef struct ", ModuleInstanceTypeName(), " ",
+        OpenBrace());
   // Add pointers to module instances that any func is imported from,
   // so that imported functions can be given their own module instances
   // when invoked
-  Write("typedef struct ", ModuleInstanceTypeName(), " ", OpenBrace());
   for (const auto& import_module : import_func_module_set_) {
-    Write("struct ", MangleModuleInstanceTypeName(import_module), "* ",
-          MangleModuleInstanceName(import_module) + ";", Newline());
+    Write("struct ", ModuleInstanceTypeName(import_module), "* ",
+          GlobalName(ModuleFieldType::Import, import_module), ";", Newline());
   }
 
   for (const Import* import : unique_imports_) {
@@ -1286,25 +1454,25 @@ void CWriter::BeginInstance() {
       continue;
     }
 
-    Write("/* import: '", import->module_name, "' '", import->field_name,
-          "' */", Newline());
+    Write(Newline(), "/* import: '", SanitizeForComment(import->module_name),
+          "' '", SanitizeForComment(import->field_name), "' */", Newline());
 
     switch (import->kind()) {
       case ExternalKind::Global:
         WriteGlobal(cast<GlobalImport>(import)->global,
-                    "*" + MangleName(import->module_name) +
-                        MangleName(import->field_name));
+                    std::string("*") +
+                        ExportName(import->module_name, import->field_name));
         break;
 
       case ExternalKind::Memory:
-        WriteMemory("*" + MangleName(import->module_name) +
-                    MangleName(import->field_name));
+        WriteMemory(std::string("*") +
+                    ExportName(import->module_name, import->field_name));
         break;
 
       case ExternalKind::Table: {
         const Table& table = cast<TableImport>(import)->table;
-        WriteTable("*" + MangleName(import->module_name) +
-                       MangleName(import->field_name),
+        WriteTable(std::string("*") +
+                       ExportName(import->module_name, import->field_name),
                    table.elem_type);
       } break;
 
@@ -1321,23 +1489,22 @@ void CWriter::WriteImports() {
   if (unique_imports_.empty())
     return;
 
-  Write(Newline());
-
   for (const Import* import : unique_imports_) {
     if (import->kind() == ExternalKind::Func) {
-      Write("/* import: '", import->module_name, "' '", import->field_name,
-            "' */", Newline());
+      Write(Newline(), "/* import: '", SanitizeForComment(import->module_name),
+            "' '", SanitizeForComment(import->field_name), "' */", Newline());
       const Func& func = cast<FuncImport>(import)->func;
       WriteImportFuncDeclaration(
           func.decl, import->module_name,
-          MangleName(import->module_name) + MangleName(import->field_name));
+          ExportName(import->module_name, import->field_name));
       Write(";");
       Write(Newline());
     } else if (import->kind() == ExternalKind::Tag) {
-      Write("/* import: '", import->module_name, "' '", import->field_name,
-            "' */", Newline());
-      Write("extern const wasm_rt_tag_t ", MangleName(import->module_name),
-            MangleName(import->field_name), ";", Newline());
+      Write(Newline(), "/* import: '", SanitizeForComment(import->module_name),
+            "' '", SanitizeForComment(import->field_name), "' */", Newline());
+      Write("extern const wasm_rt_tag_t ",
+            ExportName(import->module_name, import->field_name), ";",
+            Newline());
     }
   }
 }
@@ -1373,7 +1540,7 @@ void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
                                          const std::string& module_name,
                                          const std::string& name) {
   Write(ResultType(decl.sig.result_types), " ", name, "(");
-  Write("struct ", MangleModuleInstanceTypeName(module_name), "*");
+  Write("struct ", ModuleInstanceTypeName(module_name), "*");
   WriteParamTypes(decl);
   Write(")");
 }
@@ -1409,8 +1576,8 @@ void CWriter::WriteGlobals() {
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
-        WriteGlobal(*global, DefineGlobalScopeName(ModuleFieldType::Global,
-                                                   global->name));
+        WriteGlobal(*global, DefineInstanceMemberName(ModuleFieldType::Global,
+                                                      global->name));
         Write(Newline());
       }
       ++global_index;
@@ -1434,7 +1601,8 @@ void CWriter::WriteMemories() {
   for (const Memory* memory : module_->memories) {
     bool is_import = memory_index < module_->num_memory_imports;
     if (!is_import) {
-      WriteMemory(DefineGlobalScopeName(ModuleFieldType::Memory, memory->name));
+      WriteMemory(
+          DefineInstanceMemberName(ModuleFieldType::Memory, memory->name));
       Write(Newline());
     }
     ++memory_index;
@@ -1459,7 +1627,7 @@ void CWriter::WriteTables() {
   for (const Table* table : module_->tables) {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
-      WriteTable(DefineGlobalScopeName(ModuleFieldType::Table, table->name),
+      WriteTable(DefineInstanceMemberName(ModuleFieldType::Table, table->name),
                  table->elem_type);
       Write(Newline());
     }
@@ -1638,7 +1806,8 @@ void CWriter::WriteElemInitializers() {
           const bool is_import = import_module_sym_map_.count(func->name) != 0;
           if (is_import) {
             Write("offsetof(", ModuleInstanceTypeName(), ", ",
-                  MangleModuleInstanceName(import_module_sym_map_[func->name]),
+                  GlobalName(ModuleFieldType::Import,
+                             import_module_sym_map_[func->name]),
                   ")");
           } else {
             Write("0");
@@ -1747,16 +1916,16 @@ void CWriter::WriteExports(CWriterPhase kind) {
     return;
 
   for (const Export* export_ : module_->exports) {
-    Write(Newline(), "/* export: '", export_->name, "' */", Newline());
+    Write(Newline(), "/* export: '", SanitizeForComment(export_->name), "' */",
+          Newline());
 
-    std::string mangled_name;
+    const std::string mangled_name = ExportName(export_->name);
     std::string internal_name;
     std::vector<std::string> index_to_name;
 
     switch (export_->kind) {
       case ExternalKind::Func: {
         const Func* func = module_->GetFunc(export_->var);
-        mangled_name = ExportName(MangleName(export_->name));
         internal_name = func->name;
         if (kind == CWriterPhase::Declarations) {
           WriteFuncDeclaration(func->decl, mangled_name);
@@ -1776,7 +1945,6 @@ void CWriter::WriteExports(CWriterPhase kind) {
 
       case ExternalKind::Global: {
         const Global* global = module_->GetGlobal(export_->var);
-        mangled_name = ExportName(MangleName(export_->name));
         internal_name = global->name;
         WriteGlobalPtr(*global, mangled_name);
         break;
@@ -1784,7 +1952,6 @@ void CWriter::WriteExports(CWriterPhase kind) {
 
       case ExternalKind::Memory: {
         const Memory* memory = module_->GetMemory(export_->var);
-        mangled_name = ExportName(MangleName(export_->name));
         internal_name = memory->name;
         WriteMemoryPtr(mangled_name);
         break;
@@ -1792,7 +1959,6 @@ void CWriter::WriteExports(CWriterPhase kind) {
 
       case ExternalKind::Table: {
         const Table* table = module_->GetTable(export_->var);
-        mangled_name = ExportName(MangleName(export_->name));
         internal_name = table->name;
         WriteTablePtr(mangled_name, *table);
         break;
@@ -1800,7 +1966,6 @@ void CWriter::WriteExports(CWriterPhase kind) {
 
       case ExternalKind::Tag: {
         const Tag* tag = module_->GetTag(export_->var);
-        mangled_name = ExportName(MangleName(export_->name));
         internal_name = tag->name;
         if (kind == CWriterPhase::Declarations) {
           Write("extern ");
@@ -1827,8 +1992,9 @@ void CWriter::WriteExports(CWriterPhase kind) {
 
         bool is_import = import_module_sym_map_.count(internal_name) != 0;
         if (is_import) {
-          Write("instance->", MangleModuleInstanceName(
-                                  import_module_sym_map_[internal_name]));
+          Write("instance->",
+                GlobalName(ModuleFieldType::Import,
+                           import_module_sym_map_[internal_name]));
         } else {
           Write("instance");
         }
@@ -1877,11 +2043,11 @@ void CWriter::WriteExports(CWriterPhase kind) {
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "void " + module_prefix_ + "_instantiate(",
+  Write(Newline(), "void ", kAdminSymbolPrefix, module_prefix_, "_instantiate(",
         ModuleInstanceTypeName(), "* instance");
   for (const auto& import_module_name : import_module_set_) {
-    Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "* ",
-          MangleModuleInstanceName(import_module_name));
+    Write(", struct ", ModuleInstanceTypeName(import_module_name), "* ",
+          GlobalName(ModuleFieldType::Import, import_module_name));
   }
   Write(") ", OpenBrace());
 
@@ -1890,7 +2056,7 @@ void CWriter::WriteInit() {
   if (!import_module_set_.empty()) {
     Write("init_instance_import(instance");
     for (const auto& import_module_name : import_module_set_) {
-      Write(", ", MangleModuleInstanceName(import_module_name));
+      Write(", ", GlobalName(ModuleFieldType::Import, import_module_name));
     }
     Write(");", Newline());
   }
@@ -1917,9 +2083,9 @@ void CWriter::WriteInit() {
         import_module_sym_map_.count(module_->GetFunc(*var)->name) != 0;
     if (is_import) {
       Write("(instance->",
-            MangleModuleInstanceName(
-                import_module_sym_map_[module_->GetFunc(*var)->name]) +
-                ");");
+            GlobalName(ModuleFieldType::Import,
+                       import_module_sym_map_[module_->GetFunc(*var)->name]),
+            ");");
     } else {
       Write("(instance);");
     }
@@ -1929,8 +2095,9 @@ void CWriter::WriteInit() {
 }
 
 void CWriter::WriteGetFuncType() {
-  Write(Newline(), "wasm_rt_func_type_t ", module_prefix_,
-        "_get_func_type(uint32_t param_count, uint32_t result_count, ...) ",
+  Write(Newline(), "wasm_rt_func_type_t ", kAdminSymbolPrefix, module_prefix_,
+        "_get_func_type(uint32_t param_count, uint32_t result_count, "
+        "...) ",
         OpenBrace());
 
   Write("va_list args;", Newline());
@@ -1968,14 +2135,15 @@ void CWriter::WriteInitInstanceImport() {
   Write(Newline(), "static void init_instance_import(",
         ModuleInstanceTypeName(), "* instance");
   for (const auto& import_module_name : import_module_set_) {
-    Write(", struct ", MangleModuleInstanceTypeName(import_module_name), "* ",
-          MangleModuleInstanceName(import_module_name));
+    Write(", struct ", ModuleInstanceTypeName(import_module_name), "* ",
+          GlobalName(ModuleFieldType::Import, import_module_name));
   }
   Write(")", OpenBrace());
 
   for (const auto& import_module : import_func_module_set_) {
-    Write("instance->", MangleModuleInstanceName(import_module), " = ",
-          MangleModuleInstanceName(import_module), ";", Newline());
+    Write("instance->", GlobalName(ModuleFieldType::Import, import_module),
+          " = ", GlobalName(ModuleFieldType::Import, import_module), ";",
+          Newline());
   }
 
   for (const Import* import : unique_imports_) {
@@ -1987,11 +2155,9 @@ void CWriter::WriteInitInstanceImport() {
       case ExternalKind::Global:
       case ExternalKind::Memory:
       case ExternalKind::Table: {
-        Write("instance->",
-              MangleName(import->module_name) + MangleName(import->field_name),
-              " = ",
-              MangleName(import->module_name) + MangleName(import->field_name),
-              "(", MangleModuleInstanceName(import->module_name), ");",
+        Write("instance->", ExportName(import->module_name, import->field_name),
+              " = ", ExportName(import->module_name, import->field_name), "(",
+              GlobalName(ModuleFieldType::Import, import->module_name), ");",
               Newline());
         break;
       }
@@ -2000,7 +2166,7 @@ void CWriter::WriteInitInstanceImport() {
         WABT_UNREACHABLE;
     }
   }
-  Write(CloseBrace(), Newline());
+  Write(CloseBrace());
 }
 
 void CWriter::WriteImportProperties(CWriterPhase kind) {
@@ -2009,13 +2175,12 @@ void CWriter::WriteImportProperties(CWriterPhase kind) {
 
   auto write_import_prop = [&](const Import* import, std::string prop,
                                uint32_t value) {
-    Write(Newline());
     if (kind == CWriterPhase::Declarations) {
       Write("extern ");
     }
-    Write("const u32 " + module_prefix_ + "_",
-          prop + "_" + MangleName(import->module_name) +
-              MangleName(import->field_name));
+    Write("const u32 ", kAdminSymbolPrefix, module_prefix_, "_", prop, "_",
+          MangleModuleName(import->module_name), "_",
+          MangleName(import->field_name));
     if (kind == CWriterPhase::Definitions) {
       Write(" = ", value);
     }
@@ -2023,8 +2188,14 @@ void CWriter::WriteImportProperties(CWriterPhase kind) {
     Write(";", Newline());
   };
 
+  bool newline_written = false;
+
   for (const Import* import : unique_imports_) {
     if (import->kind() == ExternalKind::Memory) {
+      if (!newline_written) {
+        Write(Newline());
+        newline_written = true;
+      }
       const Limits* memory_limits =
           &(cast<MemoryImport>(import)->memory.page_limits);
       write_import_prop(import, "min", memory_limits->initial);
@@ -2037,7 +2208,7 @@ void CWriter::WriteImportProperties(CWriterPhase kind) {
 }
 
 void CWriter::WriteFree() {
-  Write(Newline(), "void " + module_prefix_ + "_free(",
+  Write(Newline(), "void ", kAdminSymbolPrefix, module_prefix_, "_free(",
         ModuleInstanceTypeName(), "* instance) ", OpenBrace());
 
   {
@@ -2505,8 +2676,8 @@ void CWriter::Write(const ExprList& exprs) {
         Write(ExternalRef(ModuleFieldType::Func, var.name()), "(");
         bool is_import = import_module_sym_map_.count(func.name) != 0;
         if (is_import) {
-          Write("instance->",
-                MangleModuleInstanceName(import_module_sym_map_[func.name]));
+          Write("instance->", GlobalName(ModuleFieldType::Import,
+                                         import_module_sym_map_[func.name]));
         } else {
           Write("instance");
         }
@@ -2836,8 +3007,8 @@ void CWriter::Write(const ExprList& exprs) {
 
         bool is_import = import_module_sym_map_.count(func->name) != 0;
         if (is_import) {
-          Write("instance->",
-                MangleModuleInstanceName(import_module_sym_map_[func->name]));
+          Write("instance->", GlobalName(ModuleFieldType::Import,
+                                         import_module_sym_map_[func->name]));
         } else {
           Write("instance");
         }
@@ -4623,6 +4794,12 @@ void CWriter::Write(const LoadZeroExpr& expr) {
   PushType(result_type);
 }
 
+void CWriter::ReserveExportNames() {
+  for (const Export* export_ : module_->exports) {
+    ReserveExportName(export_->name);
+  }
+}
+
 void CWriter::WriteCHeader() {
   stream_ = h_stream_;
   std::string guard = GenerateHeaderGuard();
@@ -4631,7 +4808,7 @@ void CWriter::WriteCHeader() {
   Write("#define ", guard, Newline());
   Write(Newline());
   Write(s_header_top);
-  Write(Newline());
+  ReserveExportNames();
   WriteModuleInstance();
   WriteInitDecl();
   WriteFreeDecl();

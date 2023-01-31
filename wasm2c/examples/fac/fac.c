@@ -724,11 +724,11 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-FUNC_TYPE_T(w2c_t0) = "\x07\x80\x96\x7a\x42\xf7\x3e\xe6\x70\x5c\x2f\xac\x83\xf5\x67\xd2\xa2\xa0\x69\x41\x5f\xf8\xe7\x96\x7f\x23\xab\x00\x03\x5f\x4a\x3c";
+FUNC_TYPE_T(w2c_fac_t0) = "\x07\x80\x96\x7a\x42\xf7\x3e\xe6\x70\x5c\x2f\xac\x83\xf5\x67\xd2\xa2\xa0\x69\x41\x5f\xf8\xe7\x96\x7f\x23\xab\x00\x03\x5f\x4a\x3c";
 
-static u32 w2c_fac(Z_fac_instance_t*, u32);
+static u32 w2c_fac_fac_0(w2c_fac*, u32);
 
-static u32 w2c_fac(Z_fac_instance_t* instance, u32 w2c_p0) {
+static u32 w2c_fac_fac_0(w2c_fac* instance, u32 w2c_p0) {
   FUNC_PROLOGUE;
   u32 w2c_i0, w2c_i1, w2c_i2;
   w2c_i0 = w2c_p0;
@@ -741,7 +741,7 @@ static u32 w2c_fac(Z_fac_instance_t* instance, u32 w2c_p0) {
     w2c_i1 = w2c_p0;
     w2c_i2 = 1u;
     w2c_i1 -= w2c_i2;
-    w2c_i1 = w2c_fac(instance, w2c_i1);
+    w2c_i1 = w2c_fac_fac_0(instance, w2c_i1);
     w2c_i0 *= w2c_i1;
   }
   FUNC_EPILOGUE;
@@ -749,25 +749,25 @@ static u32 w2c_fac(Z_fac_instance_t* instance, u32 w2c_p0) {
 }
 
 /* export: 'fac' */
-u32 Z_facZ_fac(Z_fac_instance_t* instance, u32 w2c_p0) {
-  return w2c_fac(instance, w2c_p0);
+u32 w2c_fac_fac(w2c_fac* instance, u32 w2c_p0) {
+  return w2c_fac_fac_0(instance, w2c_p0);
 }
 
-void Z_fac_instantiate(Z_fac_instance_t* instance) {
+void wasm2c_fac_instantiate(w2c_fac* instance) {
   assert(wasm_rt_is_initialized());
 }
 
-void Z_fac_free(Z_fac_instance_t* instance) {
+void wasm2c_fac_free(w2c_fac* instance) {
 }
 
-wasm_rt_func_type_t Z_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...) {
+wasm_rt_func_type_t wasm2c_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...) {
   va_list args;
   
   if (param_count == 1 && result_count == 1) {
     va_start(args, result_count);
     if (true && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_I32) {
       va_end(args);
-      return w2c_t0;
+      return w2c_fac_t0;
     }
     va_end(args);
   }

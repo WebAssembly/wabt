@@ -277,77 +277,73 @@ static bool is_arithmetic_nan_f64(u64 x) {
   return (x & 0x7ff8000000000000) == 0x7ff8000000000000;
 }
 
-typedef struct Z_spectest_instance_t {
+typedef struct w2c_spectest {
   wasm_rt_funcref_table_t spectest_table;
   wasm_rt_memory_t spectest_memory;
   uint32_t spectest_global_i32;
   uint64_t spectest_global_i64;
   float spectest_global_f32;
   double spectest_global_f64;
-} Z_spectest_instance_t;
+} w2c_spectest;
 
-static Z_spectest_instance_t Z_spectest_instance;
+static w2c_spectest spectest_instance;
 
 /*
  * spectest implementations
  */
-void Z_spectestZ_print(Z_spectest_instance_t* instance) {
+void w2c_spectest_print(w2c_spectest* instance) {
   printf("spectest.print()\n");
 }
 
-void Z_spectestZ_print_i32(Z_spectest_instance_t* instance, uint32_t i) {
+void w2c_spectest_print_i32(w2c_spectest* instance, uint32_t i) {
   printf("spectest.print_i32(%d)\n", i);
 }
 
-void Z_spectestZ_print_i64(Z_spectest_instance_t* instance, uint64_t i) {
+void w2c_spectest_print_i64(w2c_spectest* instance, uint64_t i) {
   printf("spectest.print_i64(%" PRIu64 ")\n", i);
 }
 
-void Z_spectestZ_print_f32(Z_spectest_instance_t* instance, float f) {
+void w2c_spectest_print_f32(w2c_spectest* instance, float f) {
   printf("spectest.print_f32(%g)\n", f);
 }
 
-void Z_spectestZ_print_i32_f32(Z_spectest_instance_t* instance,
-                               uint32_t i,
-                               float f) {
+void w2c_spectest_print_i32_f32(w2c_spectest* instance, uint32_t i, float f) {
   printf("spectest.print_i32_f32(%d %g)\n", i, f);
 }
 
-void Z_spectestZ_print_f64(Z_spectest_instance_t* instance, double d) {
+void w2c_spectest_print_f64(w2c_spectest* instance, double d) {
   printf("spectest.print_f64(%g)\n", d);
 }
 
-void Z_spectestZ_print_f64_f64(Z_spectest_instance_t* instance,
-                               double d1,
-                               double d2) {
+void w2c_spectest_print_f64_f64(w2c_spectest* instance, double d1, double d2) {
   printf("spectest.print_f64_f64(%g %g)\n", d1, d2);
 }
 
-wasm_rt_funcref_table_t* Z_spectestZ_table(Z_spectest_instance_t* instance) {
+wasm_rt_funcref_table_t* w2c_spectest_table(w2c_spectest* instance) {
   return &instance->spectest_table;
 }
 
-wasm_rt_memory_t* Z_spectestZ_memory(Z_spectest_instance_t* instance) {
+wasm_rt_memory_t* w2c_spectest_memory(w2c_spectest* instance) {
   return &instance->spectest_memory;
 }
 
-uint32_t* Z_spectestZ_global_i32(Z_spectest_instance_t* instance) {
+uint32_t* w2c_spectest_global_i32(w2c_spectest* instance) {
   return &instance->spectest_global_i32;
 }
 
-uint64_t* Z_spectestZ_global_i64(Z_spectest_instance_t* instance) {
+uint64_t* w2c_spectest_global_i64(w2c_spectest* instance) {
   return &instance->spectest_global_i64;
 }
 
-float* Z_spectestZ_global_f32(Z_spectest_instance_t* instance) {
+float* w2c_spectest_global_f32(w2c_spectest* instance) {
   return &instance->spectest_global_f32;
 }
 
-double* Z_spectestZ_global_f64(Z_spectest_instance_t* instance) {
+double* w2c_spectest_global_f64(w2c_spectest* instance) {
   return &instance->spectest_global_f64;
 }
 
-static void init_spectest_module(Z_spectest_instance_t* instance) {
+static void init_spectest_module(w2c_spectest* instance) {
   instance->spectest_global_i32 = 666;
   instance->spectest_global_i64 = 666l;
   wasm_rt_allocate_memory(&instance->spectest_memory, 1, 2, false);
@@ -356,7 +352,7 @@ static void init_spectest_module(Z_spectest_instance_t* instance) {
 
 int main(int argc, char** argv) {
   wasm_rt_init();
-  init_spectest_module(&Z_spectest_instance);
+  init_spectest_module(&spectest_instance);
   run_spec_tests();
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
   wasm_rt_free();

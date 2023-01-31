@@ -34,16 +34,16 @@ typedef simde_v128_t v128;
 extern "C" {
 #endif
 
-typedef struct Z_fac_instance_t {
+typedef struct w2c_fac {
   char dummy_member;
-} Z_fac_instance_t;
+} w2c_fac;
 
-void Z_fac_instantiate(Z_fac_instance_t*);
-void Z_fac_free(Z_fac_instance_t*);
-wasm_rt_func_type_t Z_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...);
+void wasm2c_fac_instantiate(w2c_fac*);
+void wasm2c_fac_free(w2c_fac*);
+wasm_rt_func_type_t wasm2c_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* export: 'fac' */
-u32 Z_facZ_fac(Z_fac_instance_t*, u32);
+u32 w2c_fac_fac(w2c_fac*, u32);
 
 #ifdef __cplusplus
 }

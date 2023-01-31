@@ -20,49 +20,33 @@
 #include "rot13.h"
 
 /* Define structure to hold the imports */
-struct Z_host_instance_t {
+typedef struct w2c_host {
   wasm_rt_memory_t memory;
   char* input;
-};
+} w2c_host;
 
 /* Accessor to access the memory member of the host */
-wasm_rt_memory_t* Z_hostZ_mem(struct Z_host_instance_t* instance) {
+wasm_rt_memory_t* w2c_host_mem(w2c_host* instance) {
   return &instance->memory;
-}
-
-/* Declare the implementations of the imports. */
-static u32 fill_buf(struct Z_host_instance_t* instance, u32 ptr, u32 size);
-static void buf_done(struct Z_host_instance_t* instance, u32 ptr, u32 size);
-
-/* Define host-provided functions under the names imported by the `rot13`
- * instance */
-u32 Z_hostZ_fill_buf(struct Z_host_instance_t* instance, u32 ptr, u32 size) {
-  return fill_buf(instance, ptr, size);
-}
-
-void Z_hostZ_buf_done(struct Z_host_instance_t* instance, u32 ptr, u32 size) {
-  return buf_done(instance, ptr, size);
 }
 
 int main(int argc, char** argv) {
   /* Make sure there is at least one command-line argument. */
   if (argc < 2) {
-    printf("Invalid argument. Expected '%s WORD'\n", argv[0]);
+    printf("Invalid argument. Expected '%s WORD...'\n", argv[0]);
     return 1;
   }
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
 
-  /* Declare an instance of the `rot13` module. */
-  Z_rot13_instance_t rot13_instance;
+  /* Create a structure to store the memory and current string, allocating 1
+     page of Wasm memory (64 KiB) that the rot13 module instance will import. */
+  w2c_host host;
+  wasm_rt_allocate_memory(&host.memory, 1, 1, false);
 
-  /* Create a `host` module instance to store the memory and current string */
-  struct Z_host_instance_t host_instance;
-  /* Allocate 1 page of wasm memory (64KiB). */
-  wasm_rt_allocate_memory(&host_instance.memory, 1, 1, false);
-
-  /* Construct the module instance */
-  Z_rot13_instantiate(&rot13_instance, &host_instance);
+  // Construct an instance of the `rot13` module, which imports from the host.
+  w2c_rot13 rot13;
+  wasm2c_rot13_instantiate(&rot13, &host);
 
   /* Call `rot13` on each argument. */
   while (argc > 1) {
@@ -70,12 +54,12 @@ int main(int argc, char** argv) {
     argc--;
     argv++;
 
-    host_instance.input = argv[0];
-    Z_rot13Z_rot13(&rot13_instance);
+    host.input = argv[0];
+    w2c_rot13_rot13(&rot13);
   }
 
   /* Free the rot13 module. */
-  Z_rot13_free(&rot13_instance);
+  wasm2c_rot13_free(&rot13);
 
   /* Free the Wasm runtime state. */
   wasm_rt_free();
@@ -86,12 +70,13 @@ int main(int argc, char** argv) {
 /* Fill the wasm buffer with the input to be rot13'd.
  *
  * params:
+ *   instance: An instance of the w2c_host structure
  *   ptr: The wasm memory address of the buffer to fill data.
  *   size: The size of the buffer in wasm memory.
  * result:
  *   The number of bytes filled into the buffer. (Must be <= size).
  */
-u32 fill_buf(struct Z_host_instance_t* instance, u32 ptr, u32 size) {
+u32 w2c_host_fill_buf(w2c_host* instance, u32 ptr, u32 size) {
   for (size_t i = 0; i < size; ++i) {
     if (instance->input[i] == 0) {
       return i;
@@ -104,10 +89,11 @@ u32 fill_buf(struct Z_host_instance_t* instance, u32 ptr, u32 size) {
 /* Called when the wasm buffer has been rot13'd.
  *
  * params:
+ *   w2c_host: An instance of the w2c_host structure
  *   ptr: The wasm memory address of the buffer.
  *   size: The size of the buffer in wasm memory.
  */
-void buf_done(struct Z_host_instance_t* instance, u32 ptr, u32 size) {
+void w2c_host_buf_done(w2c_host* instance, u32 ptr, u32 size) {
   /* The output buffer is not necessarily null-terminated, so use the %*.s
    * printf format to limit the number of characters printed. */
   printf("%s -> %.*s\n", instance->input, (int)size,

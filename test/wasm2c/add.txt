@@ -40,16 +40,16 @@ typedef simde_v128_t v128;
 extern "C" {
 #endif
 
-typedef struct Z_test_instance_t {
+typedef struct w2c_test {
   char dummy_member;
-} Z_test_instance_t;
+} w2c_test;
 
-void Z_test_instantiate(Z_test_instance_t*);
-void Z_test_free(Z_test_instance_t*);
-wasm_rt_func_type_t Z_test_get_func_type(uint32_t param_count, uint32_t result_count, ...);
+void wasm2c_test_instantiate(w2c_test*);
+void wasm2c_test_free(w2c_test*);
+wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* export: 'add' */
-u32 Z_testZ_add(Z_test_instance_t*, u32, u32);
+u32 w2c_test_add(w2c_test*, u32, u32);
 
 #ifdef __cplusplus
 }
@@ -782,11 +782,11 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-FUNC_TYPE_T(w2c_t0) = "\x92\xfb\x6a\xdf\x49\x07\x0a\x83\xbe\x08\x02\x68\xcd\xf6\x95\x27\x4a\xc2\xf3\xe5\xe4\x7d\x29\x49\xe8\xed\x42\x92\x6a\x9d\xda\xf0";
+FUNC_TYPE_T(w2c_test_t0) = "\x92\xfb\x6a\xdf\x49\x07\x0a\x83\xbe\x08\x02\x68\xcd\xf6\x95\x27\x4a\xc2\xf3\xe5\xe4\x7d\x29\x49\xe8\xed\x42\x92\x6a\x9d\xda\xf0";
 
-static u32 w2c_add(Z_test_instance_t*, u32, u32);
+static u32 w2c_test_add_0(w2c_test*, u32, u32);
 
-static u32 w2c_add(Z_test_instance_t* instance, u32 w2c_p0, u32 w2c_p1) {
+static u32 w2c_test_add_0(w2c_test* instance, u32 w2c_p0, u32 w2c_p1) {
   FUNC_PROLOGUE;
   u32 w2c_i0, w2c_i1;
   w2c_i0 = w2c_p0;
@@ -797,25 +797,25 @@ static u32 w2c_add(Z_test_instance_t* instance, u32 w2c_p0, u32 w2c_p1) {
 }
 
 /* export: 'add' */
-u32 Z_testZ_add(Z_test_instance_t* instance, u32 w2c_p0, u32 w2c_p1) {
-  return w2c_add(instance, w2c_p0, w2c_p1);
+u32 w2c_test_add(w2c_test* instance, u32 w2c_p0, u32 w2c_p1) {
+  return w2c_test_add_0(instance, w2c_p0, w2c_p1);
 }
 
-void Z_test_instantiate(Z_test_instance_t* instance) {
+void wasm2c_test_instantiate(w2c_test* instance) {
   assert(wasm_rt_is_initialized());
 }
 
-void Z_test_free(Z_test_instance_t* instance) {
+void wasm2c_test_free(w2c_test* instance) {
 }
 
-wasm_rt_func_type_t Z_test_get_func_type(uint32_t param_count, uint32_t result_count, ...) {
+wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t result_count, ...) {
   va_list args;
   
   if (param_count == 2 && result_count == 1) {
     va_start(args, result_count);
     if (true && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_I32) {
       va_end(args);
-      return w2c_t0;
+      return w2c_test_t0;
     }
     va_end(args);
   }

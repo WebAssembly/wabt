@@ -37,13 +37,13 @@ typedef simde_v128_t v128;
 extern "C" {
 #endif
 
-typedef struct Z_test_instance_t {
+typedef struct w2c_test {
   char dummy_member;
-} Z_test_instance_t;
+} w2c_test;
 
-void Z_test_instantiate(Z_test_instance_t*);
-void Z_test_free(Z_test_instance_t*);
-wasm_rt_func_type_t Z_test_get_func_type(uint32_t param_count, uint32_t result_count, ...);
+void wasm2c_test_instantiate(w2c_test*);
+void wasm2c_test_free(w2c_test*);
+wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 #ifdef __cplusplus
 }
@@ -776,14 +776,14 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-void Z_test_instantiate(Z_test_instance_t* instance) {
+void wasm2c_test_instantiate(w2c_test* instance) {
   assert(wasm_rt_is_initialized());
 }
 
-void Z_test_free(Z_test_instance_t* instance) {
+void wasm2c_test_free(w2c_test* instance) {
 }
 
-wasm_rt_func_type_t Z_test_get_func_type(uint32_t param_count, uint32_t result_count, ...) {
+wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t result_count, ...) {
   va_list args;
   
   return NULL;
