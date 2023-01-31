@@ -172,15 +172,22 @@ int GetShiftMask(Type type) {
 
 class CWriter {
  public:
-  CWriter(Stream* c_stream,
+  CWriter(std::vector<Stream*>&& c_streams,
           Stream* h_stream,
+          Stream* h_impl_stream,
           const char* header_name,
+          const char* header_impl_name,
           const WriteCOptions& options)
       : options_(options),
-        c_stream_(c_stream),
+        c_streams_(std::move(c_streams)),
         h_stream_(h_stream),
-        header_name_(header_name) {
+        h_impl_stream_(h_impl_stream),
+        header_name_(header_name),
+        header_impl_name_(header_impl_name) {
     module_prefix_ = MangleModuleName(options_.module_name);
+    if (c_streams_.empty()) {
+      c_streams_.push_back(h_stream);
+    }
   }
 
   Result WriteModule(const Module&);
@@ -297,8 +304,10 @@ class CWriter {
   void WriteSourceTop();
   void WriteMultivalueTypes();
   void WriteTagTypes();
+  void WriteFuncTypeDecls();
   void WriteFuncTypes();
   void Write(const FuncTypeExpr&);
+  void WriteTagDecls();
   void WriteTags();
   void ComputeUniqueImports();
   void BeginInstance();
@@ -324,7 +333,9 @@ class CWriter {
   void WriteDataInstances();
   void WriteElemInstances();
   void WriteGlobalInitializers();
+  void WriteDataInitializerDecls();
   void WriteDataInitializers();
+  void WriteElemInitializerDecls();
   void WriteElemInitializers();
   void WriteElemTableInit(bool, const ElemSegment*, const Table*);
   void WriteExports(CWriterPhase);
@@ -387,9 +398,11 @@ class CWriter {
   const Module* module_ = nullptr;
   const Func* func_ = nullptr;
   Stream* stream_ = nullptr;
-  Stream* c_stream_ = nullptr;
+  std::vector<Stream*> c_streams_;
   Stream* h_stream_ = nullptr;
+  Stream* h_impl_stream_ = nullptr;
   std::string header_name_;
+  std::string header_impl_name_;
   Result result_ = Result::Ok;
   int indent_ = 0;
   bool should_write_indent_next_ = false;
@@ -415,6 +428,8 @@ class CWriter {
   SymbolSet func_includes_;
 
   std::vector<std::string> unique_func_type_names_;
+  std::unordered_map<std::string, std::string> type_hash_;
+  std::vector<std::string> type_hash_insertion_order_;
 };
 
 // TODO: if WABT begins supporting debug names for labels,
@@ -1382,14 +1397,14 @@ void CWriter::WriteTagTypes() {
   }
 }
 
-void CWriter::WriteFuncTypes() {
+void CWriter::WriteFuncTypeDecls() {
   if (module_->types.empty()) {
     return;
   }
 
-  Write(Newline());
-
-  std::unordered_map<std::string, std::string> type_hash;
+  if (c_streams_.size() > 1) {
+    Write(Newline());
+  }
 
   std::string serialized_type;
   for (const TypeEntry* type : module_->types) {
@@ -1397,19 +1412,39 @@ void CWriter::WriteFuncTypes() {
         DefineGlobalScopeName(ModuleFieldType::Type, type->name);
     SerializeFuncType(*cast<FuncType>(type), serialized_type);
 
-    auto prior_type = type_hash.find(serialized_type);
-    if (prior_type != type_hash.end()) {
+    auto prior_type = type_hash_.find(serialized_type);
+    if (prior_type != type_hash_.end()) {
       /* duplicate function type */
       unique_func_type_names_.push_back(prior_type->second);
     } else {
       unique_func_type_names_.push_back(name);
-      type_hash.emplace(serialized_type, name);
-      Write("FUNC_TYPE_T(", name, ") = \"");
-      for (uint8_t x : serialized_type) {
-        Writef("\\x%02x", x);
+      type_hash_.emplace(serialized_type, name);
+      type_hash_insertion_order_.push_back(serialized_type);
+      if (c_streams_.size() > 1) {
+        Write("FUNC_TYPE_DECL_EXTERN_T(", name, ");", Newline());
       }
-      Write("\";", Newline());
     }
+  }
+}
+
+void CWriter::WriteFuncTypes() {
+  if (module_->types.empty()) {
+    return;
+  }
+
+  Write(Newline());
+
+  for (const auto& serialized_type : type_hash_insertion_order_) {
+    std::string name = type_hash_.at(serialized_type);
+    if (c_streams_.size() > 1) {
+      Write("FUNC_TYPE_EXTERN_T(", name, ") = \"");
+    } else {
+      Write("FUNC_TYPE_T(", name, ") = \"");
+    }
+    for (uint8_t x : serialized_type) {
+      Writef("\\x%02x", x);
+    }
+    Write("\";", Newline());
   }
 }
 
@@ -1445,7 +1480,7 @@ void CWriter::SerializeFuncType(const FuncType& func_type,
   sha256({mangled_signature, len}, serialized_type);
 }
 
-void CWriter::WriteTags() {
+void CWriter::WriteTagDecls() {
   Index tag_index = 0;
   for (const Tag* tag : module_->tags) {
     bool is_import = tag_index < module_->num_tag_imports;
@@ -1456,9 +1491,29 @@ void CWriter::WriteTags() {
         Write(Newline());
         Write("typedef char wasm_tag_placeholder_t;", Newline());
       }
-      Write("static const wasm_tag_placeholder_t ",
-            DefineGlobalScopeName(ModuleFieldType::Tag, tag->name), ";",
-            Newline());
+      DefineGlobalScopeName(ModuleFieldType::Tag, tag->name);
+      if (c_streams_.size() > 1) {
+        Write("extern const wasm_tag_placeholder_t ",
+              GlobalName(ModuleFieldType::Tag, tag->name), ";", Newline());
+      }
+    }
+    tag_index++;
+  }
+}
+
+void CWriter::WriteTags() {
+  Index tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      if (tag_index == module_->num_tag_imports) {
+        Write(Newline());
+      }
+      if (c_streams_.size() == 1) {
+        Write("static ");
+      }
+      Write("const wasm_tag_placeholder_t ",
+            GlobalName(ModuleFieldType::Tag, tag->name), ";", Newline());
     }
     tag_index++;
   }
@@ -1625,7 +1680,11 @@ void CWriter::WriteFuncDeclarations() {
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
-      Write("static ");
+      if (c_streams_.size() > 1) {
+        Write("extern ");
+      } else {
+        Write("static ");
+      }
       WriteFuncDeclaration(
           func->decl, DefineGlobalScopeName(ModuleFieldType::Func, func->name));
       Write(";", Newline());
@@ -1772,7 +1831,7 @@ void CWriter::WriteGlobalInitializers() {
     }
     ++global_index;
   }
-  Write(CloseBrace(), Newline(), Newline());
+  Write(CloseBrace(), Newline());
 }
 
 static inline bool is_droppable(const DataSegment* data_segment) {
@@ -1795,6 +1854,24 @@ void CWriter::WriteDataInstances() {
   }
 }
 
+void CWriter::WriteDataInitializerDecls() {
+  if (module_->memories.empty()) {
+    return;
+  }
+
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->data.empty()) {
+      continue;
+    }
+
+    if (c_streams_.size() > 1) {
+      Write(Newline(), "extern const u8 data_segment_data_",
+            GlobalName(ModuleFieldType::DataSegment, data_segment->name), "[];",
+            Newline());
+    }
+  }
+}
+
 void CWriter::WriteDataInitializers() {
   if (module_->memories.empty()) {
     return;
@@ -1804,7 +1881,12 @@ void CWriter::WriteDataInitializers() {
     if (data_segment->data.empty()) {
       continue;
     }
-    Write(Newline(), "static const u8 data_segment_data_",
+
+    Write(Newline());
+    if (c_streams_.size() == 1) {
+      Write("static ");
+    }
+    Write("const u8 data_segment_data_",
           GlobalName(ModuleFieldType::DataSegment, data_segment->name),
           "[] = ", OpenBrace());
     size_t i = 0;
@@ -1880,6 +1962,31 @@ void CWriter::WriteElemInstances() {
   }
 }
 
+void CWriter::WriteElemInitializerDecls() {
+  if (module_->tables.empty()) {
+    return;
+  }
+
+  for (const ElemSegment* elem_segment : module_->elem_segments) {
+    if (elem_segment->elem_exprs.empty()) {
+      continue;
+    }
+
+    if (elem_segment->elem_type == Type::ExternRef) {
+      // no need to store externref elem initializers because only
+      // ref.null is possible
+      continue;
+    }
+
+    if (c_streams_.size() > 1) {
+      Write(Newline(),
+            "extern const wasm_elem_segment_expr_t elem_segment_exprs_",
+            GlobalName(ModuleFieldType::ElemSegment, elem_segment->name), "[];",
+            Newline());
+    }
+  }
+}
+
 void CWriter::WriteElemInitializers() {
   if (module_->tables.empty()) {
     return;
@@ -1896,8 +2003,11 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    Write(Newline(),
-          "static const wasm_elem_segment_expr_t elem_segment_exprs_",
+    Write(Newline());
+    if (c_streams_.size() == 1) {
+      Write("static ");
+    }
+    Write("const wasm_elem_segment_expr_t elem_segment_exprs_",
           GlobalName(ModuleFieldType::ElemSegment, elem_segment->name),
           "[] = ", OpenBrace());
 
@@ -2367,7 +2477,8 @@ void CWriter::Write(const Func& func) {
   func_sections_.clear();
   func_includes_.clear();
 
-  Write("static ", ResultType(func.decl.sig.result_types), " ",
+  PushFuncSection();
+  Write(ResultType(func.decl.sig.result_types), " ",
         GlobalName(ModuleFieldType::Func, func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
@@ -2400,14 +2511,31 @@ void CWriter::Write(const Func& func) {
     Write(CloseBrace(), Newline());
   }
 
-  stream_ = c_stream_;
+  /*
+   * Choose the stream that this function goes in, based on its name.
+   * We need a hash function that's consistent across runs of
+   * wasm2c (which std::hash doesn't guarantee) because if only one function
+   * changes across runs, or one function is added or removed, we want only one
+   * stream to change and need to be recompiled. Here we use "SHA-256/64"
+   * because it's sufficient and already available in wasm2c.
+   */
+  std::string hashed_function_name;
+  sha256(func.name, hashed_function_name);
+  uint64_t hash_prefix;
+  assert(hashed_function_name.size() >= sizeof(hash_prefix));
+  memcpy(&hash_prefix, hashed_function_name.data(), sizeof(hash_prefix));
+  stream_ = c_streams_.at(hash_prefix % c_streams_.size());
 
-  WriteStackVarDeclarations();
-
-  for (auto& [condition, stream] : func_sections_) {
+  for (size_t i = 0; i < func_sections_.size(); ++i) {
+    auto& [condition, stream] = func_sections_.at(i);
     std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
     if (condition.empty() || func_includes_.count(condition)) {
       stream_->WriteData(buf->data.data(), buf->data.size());
+    }
+
+    if (i == 0) {
+      WriteStackVarDeclarations();  // these come immediately after section #0
+                                    // (return type/name/params/locals)
     }
   }
 
@@ -4927,23 +5055,45 @@ void CWriter::WriteCHeader() {
 }
 
 void CWriter::WriteCSource() {
-  stream_ = c_stream_;
+  /* Write the "top" to h_impl stream */
+  stream_ = h_impl_stream_;
   Write("/* Automatically generated by wasm2c */", Newline());
   WriteSourceTop();
-  WriteFuncTypes();
+
+  /* Write module-wide declarations to impl header */
+  WriteFuncTypeDecls();
   WriteTagTypes();
-  WriteTags();
+  WriteTagDecls();
   WriteFuncDeclarations();
+  WriteDataInitializerDecls();
+  WriteElemInitializerDecls();
+
+  /* Write #include impl header to every output stream if there are multiple .c
+   * outputs*/
+  if (c_streams_.size() > 1) {
+    assert(header_impl_name_.size() > 0);
+    for (auto& stream : c_streams_) {
+      stream_ = stream;
+      Write("#include \"", header_impl_name_, "\"", Newline());
+    }
+  }
+
+  /* Write the module-wide material to the first output stream */
+  stream_ = c_streams_.front();
+  WriteFuncTypes();
+  WriteTags();
   WriteGlobalInitializers();
   WriteDataInitializers();
   WriteElemInitializers();
-  WriteFuncs();
   WriteExports(CWriterPhase::Definitions);
   WriteInitInstanceImport();
   WriteImportProperties(CWriterPhase::Definitions);
   WriteInit();
   WriteFree();
   WriteGetFuncType();
+
+  /* Write function bodies across the different output streams */
+  WriteFuncs();
 }
 
 Result CWriter::WriteModule(const Module& module) {
@@ -4980,12 +5130,15 @@ const char* CWriter::GetReferenceNullValue(const Type& type) {
 
 }  // end anonymous namespace
 
-Result WriteC(Stream* c_stream,
+Result WriteC(std::vector<Stream*>&& c_streams,
               Stream* h_stream,
+              Stream* h_impl_stream,
               const char* header_name,
+              const char* header_impl_name,
               const Module* module,
               const WriteCOptions& options) {
-  CWriter c_writer(c_stream, h_stream, header_name, options);
+  CWriter c_writer(std::move(c_streams), h_stream, h_impl_stream, header_name,
+                   header_impl_name, options);
   return c_writer.WriteModule(*module);
 }
 

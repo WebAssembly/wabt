@@ -771,8 +771,12 @@ DEFINE_TABLE_FILL(funcref)
 DEFINE_TABLE_FILL(externref)
 
 #if defined(__GNUC__) || defined(__clang__)
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char* const x
+#define FUNC_TYPE_EXTERN_T(x) const char* const x
 #define FUNC_TYPE_T(x) static const char* const x
 #else
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
+#define FUNC_TYPE_EXTERN_T(x) const char x[]
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 

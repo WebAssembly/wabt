@@ -28,9 +28,11 @@ struct WriteCOptions {
   std::string_view module_name;
 };
 
-Result WriteC(Stream* c_stream,
+Result WriteC(std::vector<Stream*>&& c_streams,
               Stream* h_stream,
+              Stream* h_impl_stream,
               const char* header_name,
+              const char* header_impl_name,
               const Module*,
               const WriteCOptions&);
 

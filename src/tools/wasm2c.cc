@@ -28,6 +28,7 @@
 #include "wabt/generate-names.h"
 #include "wabt/ir.h"
 #include "wabt/option-parser.h"
+#include "wabt/result.h"
 #include "wabt/stream.h"
 #include "wabt/validator.h"
 #include "wabt/wast-lexer.h"
@@ -39,6 +40,7 @@ using namespace wabt;
 static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;
+static unsigned int s_num_outputs = 1;
 static Features s_features;
 static WriteCOptions s_write_c_options;
 static bool s_read_debug_names = true;
@@ -79,6 +81,9 @@ static void ParseOptions(int argc, char** argv) {
         s_outfile = argument;
         ConvertBackslashToSlash(&s_outfile);
       });
+  parser.AddOption(
+      'j', "multiple-outputs", "NUM", "Number of output files to write",
+      [](const char* argument) { s_num_outputs = atoi(argument); });
   parser.AddOption(
       'n', "module-name", "MODNAME",
       "Unique name for the module being generated. This name is prefixed to\n"
@@ -122,6 +127,11 @@ static std::string_view strip_extension(std::string_view s) {
 }
 
 Result Wasm2cMain(Errors& errors) {
+  if (s_num_outputs < 1 || s_num_outputs > 1024) {
+    fprintf(stderr, "Number of output files must be between 1 and 1024.\n");
+    exit(1);
+  }
+
   std::vector<uint8_t> file_data;
   CHECK_RESULT(ReadFile(s_infile.c_str(), &file_data));
 
@@ -141,7 +151,19 @@ Result Wasm2cMain(Errors& errors) {
   if (!s_outfile.empty()) {
     std::string header_name_full =
         std::string(strip_extension(s_outfile)) + ".h";
-    FileStream c_stream(s_outfile.c_str());
+    std::vector<FileStream> c_streams;
+    if (s_num_outputs == 1) {
+      c_streams.emplace_back(s_outfile.c_str());
+    } else {
+      std::string output_prefix{strip_extension(s_outfile)};
+      for (unsigned int i = 0; i < s_num_outputs; i++) {
+        c_streams.emplace_back(output_prefix + "_" + std::to_string(i) + ".c");
+      }
+    }
+    std::vector<Stream*> c_stream_ptrs;
+    for (auto& s : c_streams) {
+      c_stream_ptrs.emplace_back(&s);
+    }
     FileStream h_stream(header_name_full);
     std::string_view header_name = GetBasename(header_name_full);
     if (s_write_c_options.module_name.empty()) {
@@ -151,12 +173,24 @@ Result Wasm2cMain(Errors& errors) {
         s_write_c_options.module_name = StripExtension(GetBasename(s_infile));
       }
     }
-    CHECK_RESULT(WriteC(&c_stream, &h_stream, std::string(header_name).c_str(),
-                        &module, s_write_c_options));
+    if (s_num_outputs == 1) {
+      CHECK_RESULT(WriteC(std::move(c_stream_ptrs), &h_stream, c_stream_ptrs[0],
+                          std::string(header_name).c_str(), "", &module,
+                          s_write_c_options));
+    } else {
+      std::string header_impl_name_full =
+          std::string(strip_extension(s_outfile)) + "-impl.h";
+      FileStream h_impl_stream(header_impl_name_full);
+      std::string_view header_impl_name = GetBasename(header_impl_name_full);
+      CHECK_RESULT(WriteC(std::move(c_stream_ptrs), &h_stream, &h_impl_stream,
+                          std::string(header_name).c_str(),
+                          std::string(header_impl_name).c_str(), &module,
+                          s_write_c_options));
+    }
   } else {
     FileStream stream(stdout);
     CHECK_RESULT(
-        WriteC(&stream, &stream, "wasm.h", &module, s_write_c_options));
+        WriteC({}, &stream, &stream, "wasm.h", "", &module, s_write_c_options));
   }
 
   return Result::Ok;

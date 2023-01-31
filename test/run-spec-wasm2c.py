@@ -537,6 +537,9 @@ def main(args):
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
+    parser.add_argument('-j', '--num-outputs', metavar='COUNT',
+                        help='number of output c files for wasm2c', dest='num_outputs',
+                        default=1, type=int, action='store')
     options = parser.parse_args(args)
 
     with utils.TempDirectory(options.out_dir, 'run-spec-wasm2c-') as out_dir:
@@ -595,11 +598,18 @@ def main(args):
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
-            c_filename = utils.ChangeExt(wasm_filename, '.c')
-            args = ['-n', cwriter.GetModulePrefixUnmangled(i)]
-            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, *args)
+            c_filename_input = utils.ChangeExt(wasm_filename, '.c')
+            c_filenames = []
+            if options.num_outputs > 1:
+                for j in range(options.num_outputs):
+                    c_filenames.append(utils.ChangeExt(wasm_filename, '_' + str(j) + '.c'))
+            else:
+                c_filenames.append(utils.ChangeExt(wasm_filename, '.c'))
+            args = ['-n', cwriter.GetModulePrefixUnmangled(i), '-j', str(options.num_outputs)]
+            wasm2c.RunWithArgs(wasm_filename, '-o', c_filename_input, *args)
             if options.compile:
-                o_filenames.append(Compile(cc, c_filename, out_dir, *cflags))
+                for j, c_filename in enumerate(c_filenames):
+                    o_filenames.append(Compile(cc, c_filename, out_dir, *cflags))
 
         cwriter.Write()
         main_filename = utils.ChangeExt(json_file_path, '-main.c')
