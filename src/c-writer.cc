@@ -224,7 +224,7 @@ class CWriter {
                         std::string_view module_name,
                         std::string_view field_name);
   std::string DefineGlobalScopeName(ModuleFieldType, std::string_view);
-  std::string DefineLocalScopeName(std::string_view, bool);
+  std::string DefineLocalScopeName(std::string_view name, bool is_label);
   std::string DefineParamName(std::string_view);
   std::string DefineLabelName(std::string_view);
   std::string DefineStackVarName(Index, Type, std::string_view);
