@@ -113,6 +113,11 @@ if (NOT USE_INTERNAL_SHA256)
 endif()
 
 if (WIN32)
+  if(${CMAKE_GENERATOR_PLATFORM} MATCHES "ARM64")
+    # https://discourse.cmake.org/t/visual-studio-error-unable-to-deploy-local-file-c-x64-release-zero-check/2072
+    # Target ZERO_CHECK blocks remote debugger of ARM64 in Visual Studio
+    set(CMAKE_SUPPRESS_REGENERATION ON)
+  endif()
   check_symbol_exists(ENABLE_VIRTUAL_TERMINAL_PROCESSING "windows.h" HAVE_WIN32_VT100)
 endif ()
 
