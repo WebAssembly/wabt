@@ -74,6 +74,15 @@ struct LocalName {
   const std::string& name;
 };
 
+struct ParamName : LocalName {
+  using LocalName::LocalName;
+  ParamName(const Var& var) : LocalName(var.name()) {}
+};
+
+struct LabelName : LocalName {
+  using LocalName::LocalName;
+};
+
 struct GlobalName {
   GlobalName(ModuleFieldType type, const std::string& name)
       : type(type), name(name) {}
@@ -215,7 +224,9 @@ class CWriter {
                         std::string_view module_name,
                         std::string_view field_name);
   std::string DefineGlobalScopeName(ModuleFieldType, std::string_view);
-  std::string DefineLocalScopeName(std::string_view);
+  std::string DefineLocalScopeName(std::string_view name, bool is_label);
+  std::string DefineParamName(std::string_view);
+  std::string DefineLabelName(std::string_view);
   std::string DefineStackVarName(Index, Type, std::string_view);
 
   static void SerializeFuncType(const FuncType&, std::string&);
@@ -247,7 +258,8 @@ class CWriter {
   void Write(CloseBrace);
   void Write(Index);
   void Write(std::string_view);
-  void Write(const LocalName&);
+  void Write(const ParamName&);
+  void Write(const LabelName&);
   void Write(const GlobalName&);
   void Write(const ExternalPtr&);
   void Write(const ExternalRef&);
@@ -256,7 +268,6 @@ class CWriter {
   void Write(Type);
   void Write(SignedType);
   void Write(TypeEnum);
-  void Write(const Var&);
   void Write(const GotoLabel&);
   void Write(const LabelDecl&);
   void Write(const GlobalInstanceVar&);
@@ -387,7 +398,15 @@ class CWriter {
   std::vector<std::string> unique_func_type_names_;
 };
 
-constexpr std::string_view kImplicitFuncLabel = "$Bfunc";
+// TODO: if WABT begins supporting debug names for labels,
+// will need to avoid conflict between a label named "$Bfunc" and
+// the implicit func label
+static constexpr char kImplicitFuncLabel[] = "$Bfunc";
+
+// These should be greater than any ModuleFieldType (used for MangleField).
+static constexpr char kParamSuffix =
+    'a' + static_cast<char>(ModuleFieldType::Tag) + 1;
+static constexpr char kLabelSuffix = kParamSuffix + 1;
 
 size_t CWriter::MarkTypeStack() const {
   return type_stack_.size();
@@ -633,11 +652,23 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
   return unique;
 }
 
-std::string CWriter::DefineLocalScopeName(std::string_view name) {
+std::string CWriter::DefineLocalScopeName(std::string_view name,
+                                          bool is_label) {
+  std::string mangled =
+      std::string(name) + (is_label ? kLabelSuffix : kParamSuffix);
   std::string unique = DefineName(&local_syms_, StripLeadingDollar(name));
-  [[maybe_unused]] bool success = local_sym_map_.emplace(name, unique).second;
+  [[maybe_unused]] bool success =
+      local_sym_map_.emplace(mangled, unique).second;
   assert(success);
   return unique;
+}
+
+std::string CWriter::DefineParamName(std::string_view name) {
+  return DefineLocalScopeName(name, false);
+}
+
+std::string CWriter::DefineLabelName(std::string_view name) {
+  return DefineLocalScopeName(name, true);
 }
 
 std::string CWriter::DefineStackVarName(Index index,
@@ -712,9 +743,16 @@ void CWriter::Write(std::string_view s) {
   WriteData(s.data(), s.size());
 }
 
-void CWriter::Write(const LocalName& name) {
-  assert(local_sym_map_.count(name.name) == 1);
-  Write(local_sym_map_[name.name]);
+void CWriter::Write(const ParamName& name) {
+  std::string mangled = name.name + kParamSuffix;
+  assert(local_sym_map_.count(mangled) == 1);
+  Write(local_sym_map_[mangled]);
+}
+
+void CWriter::Write(const LabelName& name) {
+  std::string mangled = name.name + kLabelSuffix;
+  assert(local_sym_map_.count(mangled) == 1);
+  Write(local_sym_map_[mangled]);
 }
 
 void CWriter::Write(const GlobalName& name) {
@@ -757,11 +795,6 @@ void CWriter::Write(const ExternalInstanceRef& name) {
   }
 }
 
-void CWriter::Write(const Var& var) {
-  assert(var.is_name());
-  Write(LocalName(var.name()));
-}
-
 void CWriter::Write(const GotoLabel& goto_label) {
   const Label* label = FindLabel(goto_label.var);
   if (label->HasValue()) {
@@ -788,12 +821,12 @@ void CWriter::Write(const GotoLabel& goto_label) {
   }
 
   if (goto_label.var.is_name()) {
-    Write("goto ", goto_label.var, ";");
+    Write("goto ", LabelName(goto_label.var.name()), ";");
   } else {
     // We've generated names for all labels, so we should only be using an
     // index when branching to the implicit function label, which can't be
     // named.
-    Write("goto ", Var(kImplicitFuncLabel, {}), ";");
+    Write("goto ", LabelName(kImplicitFuncLabel), ";");
   }
 }
 
@@ -2068,7 +2101,7 @@ void CWriter::Write(const Func& func) {
 
   PushFuncSection();
 
-  std::string label = DefineLocalScopeName(kImplicitFuncLabel);
+  std::string label = DefineLabelName(kImplicitFuncLabel);
   ResetTypeStack(0);
   std::string empty;  // Must not be temporary, since address is taken by Label.
   PushLabel(LabelType::Func, empty, func.decl.sig);
@@ -2128,8 +2161,7 @@ void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
       if (i != 0 && (i % 8) == 0) {
         Write(Newline());
       }
-      Write(func_->GetParamType(i), " ",
-            DefineLocalScopeName(index_to_name[i]));
+      Write(func_->GetParamType(i), " ", DefineParamName(index_to_name[i]));
     }
     Dedent(4);
   }
@@ -2144,7 +2176,7 @@ void CWriter::WriteParamSymbols(const std::vector<std::string>& index_to_name) {
       if (i != 0 && (i % 8) == 0) {
         Write(Newline());
       }
-      Write(local_sym_map_[index_to_name[i]]);
+      Write(ParamName(index_to_name[i]));
     }
     Dedent(4);
   }
@@ -2177,8 +2209,7 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
             Write(Newline());
         }
 
-        Write(DefineLocalScopeName(index_to_name[num_params + local_index]),
-              " = ");
+        Write(DefineParamName(index_to_name[num_params + local_index]), " = ");
         if (local_type == Type::FuncRef || local_type == Type::ExternRef) {
           Write(GetReferenceNullValue(local_type));
         } else if (local_type == Type::V128) {
@@ -2226,7 +2257,7 @@ void CWriter::WriteStackVarDeclarations() {
 }
 
 void CWriter::Write(const Block& block) {
-  std::string label = DefineLocalScopeName(block.label);
+  std::string label = DefineLabelName(block.label);
   DropTypes(block.decl.GetNumParams());
   size_t mark = MarkTypeStack();
   PushLabel(LabelType::Block, block.label, block.decl.sig);
@@ -2239,7 +2270,7 @@ void CWriter::Write(const Block& block) {
 
 size_t CWriter::BeginTry(const TryExpr& tryexpr) {
   Write(OpenBrace()); /* beginning of try-catch */
-  const std::string tlabel = DefineLocalScopeName(tryexpr.block.label);
+  const std::string tlabel = DefineLabelName(tryexpr.block.label);
   Write("WASM_RT_UNWIND_TARGET *", tlabel,
         "_outer_target = wasm_rt_get_unwind_target();", Newline());
   Write("WASM_RT_UNWIND_TARGET ", tlabel, "_unwind_target;", Newline());
@@ -2271,14 +2302,13 @@ void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
 
   /* exception has been thrown -- do we catch it? */
 
-  assert(local_sym_map_.count(tryexpr.block.label) == 1);
-  const std::string& tlabel = local_sym_map_[tryexpr.block.label];
+  const LabelName tlabel = LabelName(tryexpr.block.label);
 
   Write("wasm_rt_set_unwind_target(", tlabel, "_outer_target);", Newline());
   PopTryCatch();
 
   /* save the thrown exception to the stack if it might be rethrown later */
-  PushFuncSection("rethrow_" + tlabel);
+  PushFuncSection(tryexpr.block.label);
   Write("/* save exception ", tlabel, " for rethrow */", Newline());
   Write("const wasm_rt_tag_t ", tlabel, "_tag = wasm_rt_exception_tag();",
         Newline());
@@ -2393,7 +2423,7 @@ void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
     assert(try_catch_stack_.size() >= label->try_catch_stack_size);
 
     if (label->label_type == LabelType::Try) {
-      Write("goto ", LocalName(label->name), "_catch;", Newline());
+      Write("goto ", LabelName(label->name), "_catch;", Newline());
       try_catch_stack_.at(label->try_catch_stack_size).used = true;
     } else if (label->try_catch_stack_size == 0) {
       assert(!try_catch_stack_.empty());
@@ -2586,7 +2616,7 @@ void CWriter::Write(const ExprList& exprs) {
         const IfExpr& if_ = *cast<IfExpr>(&expr);
         Write("if (", StackVar(0), ") ", OpenBrace());
         DropTypes(1);
-        std::string label = DefineLocalScopeName(if_.true_.label);
+        std::string label = DefineLabelName(if_.true_.label);
         DropTypes(if_.true_.decl.GetNumParams());
         size_t mark = MarkTypeStack();
         PushLabel(LabelType::If, if_.true_.label, if_.true_.decl.sig);
@@ -2631,7 +2661,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Loop: {
         const Block& block = cast<LoopExpr>(&expr)->block;
         if (!block.exprs.empty()) {
-          Write(DefineLocalScopeName(block.label), ": ");
+          Write(DefineLabelName(block.label), ": ");
           Indent();
           DropTypes(block.decl.GetNumParams());
           size_t mark = MarkTypeStack();
@@ -2959,9 +2989,8 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Rethrow: {
         const RethrowExpr* rethrow = cast<RethrowExpr>(&expr);
         assert(rethrow->var.is_name());
-        const LocalName ex{rethrow->var.name()};
-        assert(local_sym_map_.count(ex.name) == 1);
-        func_includes_.insert("rethrow_" + local_sym_map_[ex.name]);
+        const LabelName ex{rethrow->var.name()};
+        func_includes_.insert(rethrow->var.name());
         Write("wasm_rt_load_exception(", ex, "_tag, ", ex, "_size, ", ex, ");",
               Newline());
         WriteThrow();
