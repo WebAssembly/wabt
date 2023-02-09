@@ -1,5 +1,5 @@
 ;;; RUN: %(gen_wasm_py)s %(in_file)s -o %(temp_file)s.wasm
-;;; RUN: %(wasm-strip)s -k one %(temp_file)s.wasm -o %(temp_file)s_stripped.wasm
+;;; RUN: %(wasm-strip)s --keep-section one %(temp_file)s.wasm -o %(temp_file)s_stripped.wasm
 ;;; RUN: %(wasm-objdump)s -h %(temp_file)s_stripped.wasm
 magic
 version
