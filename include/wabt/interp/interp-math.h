@@ -22,7 +22,7 @@
 #include <string>
 #include <type_traits>
 
-#if COMPILER_IS_MSVC
+#if COMPILER_IS_MSVC && _M_X64
 #include <emmintrin.h>
 #include <immintrin.h>
 #endif
@@ -189,7 +189,7 @@ RunResult WABT_VECTORCALL IntRem(T lhs, T rhs, T* out, std::string* out_msg) {
   return RunResult::Ok;
 }
 
-#if COMPILER_IS_MSVC
+#if COMPILER_IS_MSVC && _M_X64
 template <typename T> T WABT_VECTORCALL FloatAbs(T val);
 template <typename T> T WABT_VECTORCALL FloatCopysign(T lhs, T rhs);
 
