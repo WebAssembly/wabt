@@ -26,6 +26,7 @@ using namespace wabt;
 
 static std::string s_filename;
 static std::string s_outfile;
+static bool b_keep_names = false;
 
 static const char s_description[] =
     R"(  Remove sections of a WebAssembly binary file.
@@ -45,12 +46,15 @@ static void ParseOptions(int argc, char** argv) {
                      });
   parser.AddOption('o', "output", "FILE", "output wasm binary file",
                    [](const char* argument) { s_outfile = argument; });
+  parser.AddOption("keep-names", "Keep the function names section",
+                   []() { b_keep_names = true; });
   parser.Parse(argc, argv);
 }
 
 class BinaryReaderStrip : public BinaryReaderNop {
  public:
-  explicit BinaryReaderStrip(Errors* errors) : errors_(errors) {
+  explicit BinaryReaderStrip(bool keep_names, Errors* errors)
+      : errors_(errors), keep_names_(keep_names), section_start_(0) {
     stream_.WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
     stream_.WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
   }
@@ -63,6 +67,7 @@ class BinaryReaderStrip : public BinaryReaderNop {
   Result BeginSection(Index section_index,
                       BinarySection section_type,
                       Offset size) override {
+    section_start_ = state->offset;
     if (section_type == BinarySection::Custom) {
       return Result::Ok;
     }
@@ -76,9 +81,21 @@ class BinaryReaderStrip : public BinaryReaderNop {
     return stream_.WriteToFile(filename);
   }
 
+  Result BeginNamesSection(Offset size) override {
+    if (!keep_names_) {
+      return Result::Ok;
+    }
+    stream_.WriteU8Enum(BinarySection::Custom, "section code");
+    WriteU32Leb128(&stream_, size, "section size");
+    stream_.WriteData(state->data + section_start_, size, "section data");
+    return Result::Ok;
+  }
+
  private:
   MemoryStream stream_;
   Errors* errors_;
+  bool keep_names_;
+  Offset section_start_;
 };
 
 int ProgramMain(int argc, char** argv) {
@@ -96,13 +113,13 @@ int ProgramMain(int argc, char** argv) {
   Errors errors;
   Features features;
   features.EnableAll();
-  const bool kReadDebugNames = false;
+  const bool kReadDebugNames = b_keep_names;
   const bool kStopOnFirstError = true;
   const bool kFailOnCustomSectionError = false;
   ReadBinaryOptions options(features, nullptr, kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
 
-  BinaryReaderStrip reader(&errors);
+  BinaryReaderStrip reader(b_keep_names, &errors);
   result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
   FormatErrorsToFile(errors, Location::Type::Binary);
   if (Failed(result)) {
