@@ -26,7 +26,7 @@ using namespace wabt;
 
 static std::string s_filename;
 static std::string s_outfile;
-static bool b_keep_names = false;
+static std::vector<std::string_view> v_names{};
 
 static const char s_description[] =
     R"(  Remove sections of a WebAssembly binary file.
@@ -46,14 +46,17 @@ static void ParseOptions(int argc, char** argv) {
                      });
   parser.AddOption('o', "output", "FILE", "output wasm binary file",
                    [](const char* argument) { s_outfile = argument; });
-  parser.AddOption("keep-names", "Keep the function names section",
-                   []() { b_keep_names = true; });
+  parser.AddOption(
+      'k', "keep-section", "SECTION NAME",
+      "Section name to keep in the final output",
+      [](const char* value) { v_names.push_back(std::string_view{value}); });
   parser.Parse(argc, argv);
 }
 
 class BinaryReaderStrip : public BinaryReaderNop {
  public:
-  explicit BinaryReaderStrip(bool keep_names, Errors* errors)
+  explicit BinaryReaderStrip(std::vector<std::string_view> keep_names,
+                             Errors* errors)
       : errors_(errors), keep_names_(keep_names), section_start_(0) {
     stream_.WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
     stream_.WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
@@ -81,10 +84,18 @@ class BinaryReaderStrip : public BinaryReaderNop {
     return stream_.WriteToFile(filename);
   }
 
+  bool shouldSectionBeKept(std::string_view section_name) {
+    for (auto guarded_section : keep_names_) {
+      if (section_name == guarded_section)
+        return true;
+    }
+    return false;
+  }
+
   Result BeginCustomSection(Index section_index,
                             Offset size,
                             std::string_view section_name) override {
-    if (section_name == "name" && keep_names_) {
+    if (shouldSectionBeKept(section_name)) {
       stream_.WriteU8Enum(BinarySection::Custom, "section code");
       WriteU32Leb128(&stream_, size, "section size");
       stream_.WriteData(state->data + section_start_, size, "section data");
@@ -95,7 +106,7 @@ class BinaryReaderStrip : public BinaryReaderNop {
  private:
   MemoryStream stream_;
   Errors* errors_;
-  bool keep_names_;
+  std::vector<std::string_view> keep_names_;
   Offset section_start_;
 };
 
@@ -120,7 +131,7 @@ int ProgramMain(int argc, char** argv) {
   ReadBinaryOptions options(features, nullptr, kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
 
-  BinaryReaderStrip reader(b_keep_names, &errors);
+  BinaryReaderStrip reader(v_names, &errors);
   result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
   FormatErrorsToFile(errors, Location::Type::Binary);
   if (Failed(result)) {
