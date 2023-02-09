@@ -158,7 +158,7 @@ inline int Clz(unsigned int mask) {
 }
 
 inline int Clz(unsigned __int64 mask) {
-#if _M_X64
+#if _M_X64 || _M_ARM64
   if (mask == 0)
     return 64;
 
@@ -190,7 +190,7 @@ inline int Ctz(unsigned int mask) {
 }
 
 inline int Ctz(unsigned __int64 mask) {
-#if _M_X64
+#if _M_X64 || _M_ARM64
   if (mask == 0)
     return 64;
 
@@ -208,12 +208,31 @@ inline int Ctz(unsigned __int64 mask) {
 #endif
 }
 
-inline int Popcount(uint8_t value) {
-  return __popcnt(value);
+#if _M_ARM64
+//https://stackoverflow.com/a/70012905
+template <typename T>
+int BrianKernighanPopcount(T value) {
+  int count;
+  for(count = 0; value; count++)
+  {
+    value &= value - 1;
+  }
+  return count;
 }
+#endif
 
 inline int Popcount(unsigned long value) {
+  #if _M_X64 || _M_IX86
   return __popcnt(value);
+#elif _M_ARM64
+  return BrianKernighanPopcount(value);
+#else
+#error unexpected architecture
+#endif
+}
+
+inline int Popcount(uint8_t value) {
+  return Popcount((unsigned long)value);
 }
 
 inline int Popcount(unsigned int value) {
@@ -225,6 +244,8 @@ inline int Popcount(unsigned __int64 value) {
   return __popcnt64(value);
 #elif _M_IX86
   return Popcount(HighDword(value)) + Popcount(LowDword(value));
+#elif _M_ARM64
+  return BrianKernighanPopcount(value);
 #else
 #error unexpected architecture
 #endif
