@@ -81,13 +81,14 @@ class BinaryReaderStrip : public BinaryReaderNop {
     return stream_.WriteToFile(filename);
   }
 
-  Result BeginNamesSection(Offset size) override {
-    if (!keep_names_) {
-      return Result::Ok;
+  Result BeginCustomSection(Index section_index,
+                            Offset size,
+                            std::string_view section_name) override {
+    if (section_name == "name" && keep_names_) {
+      stream_.WriteU8Enum(BinarySection::Custom, "section code");
+      WriteU32Leb128(&stream_, size, "section size");
+      stream_.WriteData(state->data + section_start_, size, "section data");
     }
-    stream_.WriteU8Enum(BinarySection::Custom, "section code");
-    WriteU32Leb128(&stream_, size, "section size");
-    stream_.WriteData(state->data + section_start_, size, "section data");
     return Result::Ok;
   }
 
@@ -113,7 +114,7 @@ int ProgramMain(int argc, char** argv) {
   Errors errors;
   Features features;
   features.EnableAll();
-  const bool kReadDebugNames = b_keep_names;
+  const bool kReadDebugNames = false;
   const bool kStopOnFirstError = true;
   const bool kFailOnCustomSectionError = false;
   ReadBinaryOptions options(features, nullptr, kReadDebugNames,
