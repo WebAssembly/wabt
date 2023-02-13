@@ -587,7 +587,10 @@ Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
   }
 
   if (last_opcode_end) {
-    if (state->offset != last_opcode_end + opcode.GetLength()) {
+    // Takes care of cases where opcode's bytes was a non-canonical leb128
+    // encoding. In this case, opcode.GetLength() under-reports the length,
+    // since it canonicalizes the opcode.
+    if (state->offset < last_opcode_end + opcode.GetLength()) {
       Opcode missing_opcode = Opcode::FromCode(data_[last_opcode_end]);
       const char* opcode_name = missing_opcode.GetName();
       fprintf(stderr,
