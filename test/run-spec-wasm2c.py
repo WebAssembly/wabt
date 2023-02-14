@@ -103,19 +103,19 @@ def MangleName(s):
         s = match.group(0)
         return b'0x%02X' % s[0]
 
+    # escape underscores at beginning and end
+    pattern = b'((^_)|(_$))'
+    s = re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
+
     # NOTE(keithw): forced escapes for '0x[hexdigit]' not implemented here
     pattern = b'([^_a-zA-Z0-9])'
     return re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
 
 
 def MangleModuleName(s):
-    def Mangle(match):
-        s = match.group(0)
-        return b'0x%02X' % s[0]
-
-    # NOTE(keithw): forced escapes for '0x[hexdigit]' not implemented here
-    pattern = b'([^a-zA-Z0-9])'
-    return re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
+    # double underscores
+    return MangleName(re.sub(b'(_)', b'__',
+                             s.encode('utf-8')).decode('utf-8'))
 
 
 def IsModuleCommand(command):

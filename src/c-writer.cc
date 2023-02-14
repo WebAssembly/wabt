@@ -213,7 +213,7 @@ class CWriter {
   static constexpr char MangleField(ModuleFieldType);
   static std::string MangleMultivalueTypes(const TypeVector&);
   static std::string MangleTagTypes(const TypeVector&);
-  static std::string Mangle(std::string_view name, bool allow_underscore);
+  static std::string Mangle(std::string_view name, bool double_underscores);
   static std::string MangleName(std::string_view);
   static std::string MangleModuleName(std::string_view);
   std::string ExportName(std::string_view module_name,
@@ -602,7 +602,7 @@ std::string CWriter::ModuleInstanceTypeName(std::string_view module_name) {
 }
 
 // static
-std::string CWriter::Mangle(std::string_view name, bool allow_underscore) {
+std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
   /*
    * Name mangling transforms arbitrary Wasm names into "safe" C names
    * in a deterministic way. To avoid collisions, distinct Wasm names must be
@@ -611,15 +611,18 @@ std::string CWriter::Mangle(std::string_view name, bool allow_underscore) {
    * The rules implemented here are:
    * 1) any hex digit ('A' through 'F') that follows the sequence "0x"
    *    is escaped
-   * 2) otherwise, any alphanumeric character (and optionally, the underscore)
-        is kept as-is
-   * 3) any other character is escaped
+   * 2) any underscore at the beginning, at the end, or following another
+   *    underscore, is escaped
+   * 3) if double_underscores is set, underscores are replaced with
+   *    two underscores.
+   * 4) otherwise, any alphanumeric character is kept as-is,
+   *    and any other character is escaped
    *
    * "Escaped" means the character is represented with the sequence "0xAB",
    * where A B are hex digits ('0'-'9' or 'A'-'F') representing the character's
    * numeric value.
    *
-   * Module names are mangled with allow_underscore=false to prevent
+   * Module names are mangled with double_underscores=true to prevent
    * collisions between, e.g., a module "alfa" with export
    * "bravo_charlie" vs. a module "alfa_bravo" with export "charlie".
    *
@@ -639,9 +642,22 @@ std::string CWriter::Mangle(std::string_view name, bool allow_underscore) {
   };
 
   enum State { Any, Zero, ZeroX, ZeroXHexDigit } state{Any};
+  bool last_was_underscore = false;
 
   std::string result;
-  for (const uint8_t ch : name) {
+  auto append_escaped = [&](const uint8_t ch) {
+    result += "0x" + StringPrintf("%02X", ch);
+    last_was_underscore = false;
+    state = Any;
+  };
+
+  auto append_verbatim = [&](const uint8_t ch) {
+    result += ch;
+    last_was_underscore = (ch == '_');
+  };
+
+  for (auto it = name.begin(); it != name.end(); ++it) {
+    const uint8_t ch = *it;
     switch (state) {
       case Any:
         state = (ch == '0') ? Zero : Any;
@@ -657,12 +673,31 @@ std::string CWriter::Mangle(std::string_view name, bool allow_underscore) {
         break;
     }
 
-    if ((state != ZeroXHexDigit) &&
-        (my_isalnum(ch) || (allow_underscore && ch == '_'))) {
-      result += ch;
+    /* rule 1 */
+    if (state == ZeroXHexDigit) {
+      append_escaped(ch);
+      continue;
+    }
+
+    /* rule 2 */
+    if ((ch == '_') && ((it == name.begin()) || (std::next(it) == name.end()) ||
+                        last_was_underscore)) {
+      append_escaped(ch);
+      continue;
+    }
+
+    /* rule 3 */
+    if (double_underscores && ch == '_') {
+      append_verbatim(ch);
+      append_verbatim(ch);
+      continue;
+    }
+
+    /* rule 4 */
+    if (my_isalnum(ch) || (ch == '_')) {
+      append_verbatim(ch);
     } else {
-      result += "0x" + StringPrintf("%02X", ch);
-      state = Any;
+      append_escaped(ch);
     }
   }
 
@@ -671,12 +706,12 @@ std::string CWriter::Mangle(std::string_view name, bool allow_underscore) {
 
 // static
 std::string CWriter::MangleName(std::string_view name) {
-  return Mangle(name, true);
+  return Mangle(name, false);
 }
 
 // static
 std::string CWriter::MangleModuleName(std::string_view name) {
-  return Mangle(name, false);
+  return Mangle(name, true);
 }
 
 /*
