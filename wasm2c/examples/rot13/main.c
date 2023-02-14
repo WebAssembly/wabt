@@ -20,13 +20,13 @@
 #include "rot13.h"
 
 /* Define structure to hold the imports */
-typedef struct w2c_host {
+struct w2c_host {
   wasm_rt_memory_t memory;
   char* input;
-} w2c_host;
+};
 
 /* Accessor to access the memory member of the host */
-wasm_rt_memory_t* w2c_host_mem(w2c_host* instance) {
+wasm_rt_memory_t* w2c_host_mem(struct w2c_host* instance) {
   return &instance->memory;
 }
 
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
   /* Create a structure to store the memory and current string, allocating 1
      page of Wasm memory (64 KiB) that the rot13 module instance will import. */
-  w2c_host host;
+  struct w2c_host host;
   wasm_rt_allocate_memory(&host.memory, 1, 1, false);
 
   // Construct an instance of the `rot13` module, which imports from the host.
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
  * result:
  *   The number of bytes filled into the buffer. (Must be <= size).
  */
-u32 w2c_host_fill_buf(w2c_host* instance, u32 ptr, u32 size) {
+u32 w2c_host_fill_buf(struct w2c_host* instance, u32 ptr, u32 size) {
   for (size_t i = 0; i < size; ++i) {
     if (instance->input[i] == 0) {
       return i;
@@ -93,7 +93,7 @@ u32 w2c_host_fill_buf(w2c_host* instance, u32 ptr, u32 size) {
  *   ptr: The wasm memory address of the buffer.
  *   size: The size of the buffer in wasm memory.
  */
-void w2c_host_buf_done(w2c_host* instance, u32 ptr, u32 size) {
+void w2c_host_buf_done(struct w2c_host* instance, u32 ptr, u32 size) {
   /* The output buffer is not necessarily null-terminated, so use the %*.s
    * printf format to limit the number of characters printed. */
   printf("%s -> %.*s\n", instance->input, (int)size,
