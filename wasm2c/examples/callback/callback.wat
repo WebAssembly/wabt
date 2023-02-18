@@ -1,7 +1,7 @@
 ;; Module demonstrating use of a host-installed callback function.
 
 ;; The type of the callback function. The type ID can be looked up outside the module by calling
-;; Z_[modname]_get_func_type(1, 0, WASM_RT_I32) (indicating 1 param, 0 results, param type is i32).
+;; wasm2c_[modname]_get_func_type(1, 0, WASM_RT_I32) (indicating 1 param, 0 results, param type is i32).
 (type $print_type (func (param i32)))
 
 ;; An indirect function table to hold the callback function
