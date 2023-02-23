@@ -254,6 +254,8 @@ class CWriter {
 
   static void SerializeFuncType(const FuncType&, std::string&);
 
+  std::string GetGlobalName(ModuleFieldType, const std::string&);
+
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
   void WriteIndent();
@@ -270,6 +272,9 @@ class CWriter {
   static const char* GetReferenceTypeName(const Type& type);
   static const char* GetReferenceNullValue(const Type& type);
   static const char* GetCTypeName(const Type& type);
+
+  const char* InternalSymbolScope();
+  const char* InternalSymbolDeclScope();
 
   enum class CWriterPhase {
     Declarations,
@@ -428,8 +433,6 @@ class CWriter {
   SymbolSet func_includes_;
 
   std::vector<std::string> unique_func_type_names_;
-  std::unordered_map<std::string, std::string> type_hash_;
-  std::vector<std::string> type_hash_insertion_order_;
 };
 
 // TODO: if WABT begins supporting debug names for labels,
@@ -841,6 +844,13 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
                                            std::string_view name) {
   return ClaimUniqueName(global_syms_, global_sym_map_, MangleField(type), name,
                          ExportName(StripLeadingDollar(name)));
+}
+
+std::string CWriter::GetGlobalName(ModuleFieldType type,
+                                   const std::string& name) {
+  std::string mangled = name + MangleField(type);
+  assert(global_sym_map_.count(mangled) == 1);
+  return global_sym_map_.at(mangled);
 }
 
 /* Names for params, locals, and stack vars are formatted as "var_" + name. */
@@ -1410,19 +1420,9 @@ void CWriter::WriteFuncTypeDecls() {
   for (const TypeEntry* type : module_->types) {
     const std::string name =
         DefineGlobalScopeName(ModuleFieldType::Type, type->name);
-    SerializeFuncType(*cast<FuncType>(type), serialized_type);
 
-    auto prior_type = type_hash_.find(serialized_type);
-    if (prior_type != type_hash_.end()) {
-      /* duplicate function type */
-      unique_func_type_names_.push_back(prior_type->second);
-    } else {
-      unique_func_type_names_.push_back(name);
-      type_hash_.emplace(serialized_type, name);
-      type_hash_insertion_order_.push_back(serialized_type);
-      if (c_streams_.size() > 1) {
-        Write("FUNC_TYPE_DECL_EXTERN_T(", name, ");", Newline());
-      }
+    if (c_streams_.size() > 1) {
+      Write("FUNC_TYPE_DECL_EXTERN_T(", name, ");", Newline());
     }
   }
 }
@@ -1434,17 +1434,31 @@ void CWriter::WriteFuncTypes() {
 
   Write(Newline());
 
-  for (const auto& serialized_type : type_hash_insertion_order_) {
-    std::string name = type_hash_.at(serialized_type);
-    if (c_streams_.size() > 1) {
-      Write("FUNC_TYPE_EXTERN_T(", name, ") = \"");
+  std::unordered_map<std::string, std::string> type_hash;
+
+  std::string serialized_type;
+  for (const TypeEntry* type : module_->types) {
+    const std::string name = GetGlobalName(ModuleFieldType::Type, type->name);
+    SerializeFuncType(*cast<FuncType>(type), serialized_type);
+
+    auto prior_type = type_hash.find(serialized_type);
+    if (prior_type != type_hash.end()) {
+      /* duplicate function type */
+      unique_func_type_names_.push_back(prior_type->second);
     } else {
-      Write("FUNC_TYPE_T(", name, ") = \"");
+      unique_func_type_names_.push_back(name);
+      type_hash.emplace(serialized_type, name);
+      if (c_streams_.size() > 1) {
+        Write("FUNC_TYPE_EXTERN_T(");
+      } else {
+        Write("FUNC_TYPE_T(");
+      }
+      Write(name, ") = \"");
+      for (uint8_t x : serialized_type) {
+        Writef("\\x%02x", x);
+      }
+      Write("\";", Newline());
     }
-    for (uint8_t x : serialized_type) {
-      Writef("\\x%02x", x);
-    }
-    Write("\";", Newline());
   }
 }
 
@@ -1509,9 +1523,7 @@ void CWriter::WriteTags() {
       if (tag_index == module_->num_tag_imports) {
         Write(Newline());
       }
-      if (c_streams_.size() == 1) {
-        Write("static ");
-      }
+      Write(InternalSymbolScope());
       Write("const wasm_tag_placeholder_t ",
             GlobalName(ModuleFieldType::Tag, tag->name), ";", Newline());
     }
@@ -1680,11 +1692,7 @@ void CWriter::WriteFuncDeclarations() {
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
-      if (c_streams_.size() > 1) {
-        Write("extern ");
-      } else {
-        Write("static ");
-      }
+      Write(InternalSymbolDeclScope());
       WriteFuncDeclaration(
           func->decl, DefineGlobalScopeName(ModuleFieldType::Func, func->name));
       Write(";", Newline());
@@ -1883,9 +1891,7 @@ void CWriter::WriteDataInitializers() {
     }
 
     Write(Newline());
-    if (c_streams_.size() == 1) {
-      Write("static ");
-    }
+    Write(InternalSymbolScope());
     Write("const u8 data_segment_data_",
           GlobalName(ModuleFieldType::DataSegment, data_segment->name),
           "[] = ", OpenBrace());
@@ -2004,9 +2010,7 @@ void CWriter::WriteElemInitializers() {
     }
 
     Write(Newline());
-    if (c_streams_.size() == 1) {
-      Write("static ");
-    }
+    Write(InternalSymbolScope());
     Write("const wasm_elem_segment_expr_t elem_segment_exprs_",
           GlobalName(ModuleFieldType::ElemSegment, elem_segment->name),
           "[] = ", OpenBrace());
@@ -5128,6 +5132,21 @@ const char* CWriter::GetReferenceNullValue(const Type& type) {
   }
 }
 
+const char* CWriter::InternalSymbolScope() {
+  if (c_streams_.size() == 1) {
+    return "static ";
+  } else {
+    return "";
+  }
+}
+
+const char* CWriter::InternalSymbolDeclScope() {
+  if (c_streams_.size() == 1) {
+    return "static ";
+  } else {
+    return "extern ";
+  }
+}
 }  // end anonymous namespace
 
 Result WriteC(std::vector<Stream*>&& c_streams,
