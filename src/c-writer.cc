@@ -570,6 +570,27 @@ std::string CWriter::ModuleInstanceTypeName(std::string_view module_name) {
   return kSymbolPrefix + MangleModuleName(module_name);
 }
 
+/*
+ * Hardcoded "C"-locale versions of isalpha/isdigit/isalnum/isxdigit for use
+ * in CWriter::Mangle(). We don't use the standard isalpha/isdigit/isalnum
+ * because the caller might have changed the current locale.
+ */
+static bool internal_isalpha(uint8_t ch) {
+  return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+}
+
+static bool internal_isdigit(uint8_t ch) {
+  return (ch >= '0' && ch <= '9');
+}
+
+static bool internal_isalnum(uint8_t ch) {
+  return internal_isalpha(ch) || internal_isdigit(ch);
+}
+
+static bool internal_ishexdigit(uint8_t ch) {
+  return internal_isdigit(ch) || (ch >= 'A' && ch <= 'F');  // capitals only
+}
+
 // static
 std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
   /*
@@ -594,21 +615,7 @@ std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
    * Module names are mangled with double_underscores=true to prevent
    * collisions between, e.g., a module "alfa" with export
    * "bravo_charlie" vs. a module "alfa_bravo" with export "charlie".
-   *
-   * In the implementation, we don't use the standard isalpha/isdigit/isalnum
-   * because the caller might have changed the current locale.
    */
-
-  auto my_isalpha = [](uint8_t ch) {
-    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
-  };
-  auto my_isdigit = [](uint8_t ch) { return (ch >= '0' && ch <= '9'); };
-  auto my_isalnum = [&](uint8_t ch) {
-    return my_isalpha(ch) || my_isdigit(ch);
-  };
-  auto my_ishexdigit = [&](uint8_t ch) {
-    return my_isdigit(ch) || (ch >= 'A' && ch <= 'F');
-  };
 
   enum State { Any, Zero, ZeroX, ZeroXHexDigit } state{Any};
   bool last_was_underscore = false;
@@ -635,7 +642,7 @@ std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
         state = (ch == 'x') ? ZeroX : Any;
         break;
       case ZeroX:
-        state = my_ishexdigit(ch) ? ZeroXHexDigit : Any;
+        state = internal_ishexdigit(ch) ? ZeroXHexDigit : Any;
         break;
       case ZeroXHexDigit:
         WABT_UNREACHABLE;
@@ -663,7 +670,7 @@ std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
     }
 
     /* rule 4 */
-    if (my_isalnum(ch) || (ch == '_')) {
+    if (internal_isalnum(ch) || (ch == '_')) {
       append_verbatim(ch);
     } else {
       append_escaped(ch);
