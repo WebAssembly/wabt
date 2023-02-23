@@ -18,19 +18,19 @@ int main(int argc, char** argv) {
   wasm_rt_init();
 
   /* Declare an instance of the `fac` module. */
-  Z_fac_instance_t instance;
+  w2c_fac fac;
 
   /* Construct the module instance. */
-  Z_fac_instantiate(&instance);
+  wasm2c_fac_instantiate(&fac);
 
   /* Call `fac`, using the mangled name. */
-  u32 result = Z_facZ_fac(&instance, x);
+  u32 result = w2c_fac_fac(&fac, x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
 
   /* Free the fac module. */
-  Z_fac_free(&instance);
+  wasm2c_fac_free(&fac);
 
   /* Free the Wasm runtime state. */
   wasm_rt_free();

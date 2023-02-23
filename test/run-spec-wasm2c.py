@@ -101,11 +101,19 @@ def MangleTypes(types):
 def MangleName(s):
     def Mangle(match):
         s = match.group(0)
-        return b'Z%02X' % s[0]
+        return b'0x%02X' % s[0]
 
-    # NOTE(binji): Z is not allowed.
-    pattern = b'([^_a-zA-Y0-9])'
-    return 'Z_' + re.sub(pattern, Mangle, s.encode('utf-8')).decode('utf-8')
+    # escape underscores at beginning and end
+    s = re.sub(b'((^_)|(_$))', Mangle, s.encode('utf-8'))
+
+    # NOTE(keithw): forced escapes for '0x[hexdigit]' not implemented here
+    pattern = b'([^_a-zA-Z0-9])'
+    return re.sub(pattern, Mangle, s).decode('utf-8')
+
+
+def MangleModuleName(s):
+    # double underscores
+    return MangleName(re.sub('(_)', '__', s))
 
 
 def IsModuleCommand(command):
@@ -169,7 +177,7 @@ class CWriter(object):
                 name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
                 name = os.path.splitext(name)[0]
                 self.unmangled_names[idx] = name
-                name = MangleName(name)
+                name = MangleModuleName(name)
 
                 self.module_prefix_map[idx] = name
 
@@ -180,7 +188,7 @@ class CWriter(object):
 
                 idx += 1
             elif command['type'] == 'register':
-                name = MangleName(command['as'])
+                name = MangleModuleName(command['as'])
                 if 'name' in command:
                     self.module_prefix_map[command['name']] = name
                     name_idx = self.module_name_to_idx[command['name']]
@@ -199,13 +207,13 @@ class CWriter(object):
             for line in f:
                 if 'import: ' in line:
                     line_split = line.split()
-                    import_module_name = MangleName(line_split[2][1:-1])
+                    import_module_name = MangleModuleName(line_split[2][1:-1])
                     imported_modules.add(import_module_name)
 
         if uninstantiable:
             self.out_file.write('ASSERT_TRAP(')
 
-        self.out_file.write('%s_instantiate(&%s_instance' % (self.GetModulePrefix(), self.GetModulePrefix()))
+        self.out_file.write('wasm2c_%s_instantiate(&%s_instance' % (self.GetModulePrefix(), self.GetModulePrefix()))
         for imported_module in sorted(imported_modules):
             self.out_file.write(', &%s_instance' % imported_module)
         self.out_file.write(')')
@@ -260,12 +268,12 @@ class CWriter(object):
         idx = 0
         for command in self.commands:
             if IsModuleCommand(command):
-                self.out_file.write('%s_instance_t %s;\n' % (self.GetModulePrefix(idx), self.GetModuleInstanceName(idx)))
+                self.out_file.write('w2c_%s %s;\n' % (self.GetModulePrefix(idx), self.GetModuleInstanceName(idx)))
                 idx += 1
 
     def _WriteModuleCleanUps(self):
         for idx in range(self.module_idx):
-            self.out_file.write("%s_free(&%s_instance);\n" % (self.GetModulePrefix(idx), self.GetModulePrefix(idx)))
+            self.out_file.write("wasm2c_%s_free(&%s);\n" % (self.GetModulePrefix(idx), self.GetModuleInstanceName(idx)))
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
@@ -422,7 +430,7 @@ class CWriter(object):
         action = command['action']
         type_ = action['type']
         mangled_module_name = self.GetModulePrefix(action.get('module'))
-        field = mangled_module_name + MangleName(action['field'])
+        field = "w2c_" + mangled_module_name + '_' + MangleName(action['field'])
         if type_ == 'invoke':
             args = self._ConstantList(action.get('args', []))
             if len(args) == 0:
