@@ -127,9 +127,9 @@ static std::string_view strip_extension(std::string_view s) {
 }
 
 Result Wasm2cMain(Errors& errors) {
-  if (s_num_outputs < 1 || s_num_outputs > 1024) {
-    fprintf(stderr, "Number of output files must be between 1 and 1024.\n");
-    exit(1);
+  if (s_num_outputs < 1) {
+    fprintf(stderr, "Number of output files must be positive.\n");
+    return Result::Error;
   }
 
   std::vector<uint8_t> file_data;
@@ -189,8 +189,8 @@ Result Wasm2cMain(Errors& errors) {
     }
   } else {
     FileStream stream(stdout);
-    CHECK_RESULT(
-        WriteC({}, &stream, &stream, "wasm.h", "", &module, s_write_c_options));
+    CHECK_RESULT(WriteC({&stream}, &stream, &stream, "wasm.h", "", &module,
+                        s_write_c_options));
   }
 
   return Result::Ok;

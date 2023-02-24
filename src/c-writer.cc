@@ -185,9 +185,6 @@ class CWriter {
         header_name_(header_name),
         header_impl_name_(header_impl_name) {
     module_prefix_ = MangleModuleName(options_.module_name);
-    if (c_streams_.empty()) {
-      c_streams_.push_back(h_stream);
-    }
   }
 
   Result WriteModule(const Module&);
