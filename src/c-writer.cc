@@ -274,7 +274,6 @@ class CWriter {
   static const char* GetCTypeName(const Type& type);
 
   const char* InternalSymbolScope();
-  const char* InternalSymbolDeclScope();
 
   enum class CWriterPhase {
     Declarations,
@@ -308,6 +307,7 @@ class CWriter {
   std::string GenerateHeaderGuard() const;
   void WriteSourceTop();
   void WriteMultiCTop();
+  void WriteMultiCTopEmpty();
   void WriteMultivalueTypes();
   void WriteTagTypes();
   void WriteFuncTypeDecls();
@@ -1371,6 +1371,18 @@ void CWriter::WriteMultiCTop() {
   }
 }
 
+void CWriter::WriteMultiCTopEmpty() {
+  if (c_streams_.size() > 1) {
+    for (auto& stream : c_streams_) {
+      if (stream->offset() == 0) {
+        stream_ = stream;
+        Write("/* Empty wasm2c generated file */\n");
+        Write("typedef int dummy_def;");
+      }
+    }
+  }
+}
+
 void CWriter::WriteMultivalueTypes() {
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
@@ -1525,15 +1537,12 @@ void CWriter::WriteTagDecls() {
 }
 
 void CWriter::WriteTags() {
+  Write(Newline());
   Index tag_index = 0;
   for (const Tag* tag : module_->tags) {
     bool is_import = tag_index < module_->num_tag_imports;
     if (!is_import) {
-      if (tag_index == module_->num_tag_imports) {
-        Write(Newline());
-      }
-      Write(InternalSymbolScope());
-      Write("const wasm_tag_placeholder_t ",
+      Write(InternalSymbolScope(), "const wasm_tag_placeholder_t ",
             GlobalName(ModuleFieldType::Tag, tag->name), ";", Newline());
     }
     tag_index++;
@@ -1701,7 +1710,7 @@ void CWriter::WriteFuncDeclarations() {
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
-      Write(InternalSymbolDeclScope());
+      Write(InternalSymbolScope());
       WriteFuncDeclaration(
           func->decl, DefineGlobalScopeName(ModuleFieldType::Func, func->name));
       Write(";", Newline());
@@ -1899,9 +1908,7 @@ void CWriter::WriteDataInitializers() {
       continue;
     }
 
-    Write(Newline());
-    Write(InternalSymbolScope());
-    Write("const u8 data_segment_data_",
+    Write(Newline(), InternalSymbolScope(), "const u8 data_segment_data_",
           GlobalName(ModuleFieldType::DataSegment, data_segment->name),
           "[] = ", OpenBrace());
     size_t i = 0;
@@ -2018,9 +2025,8 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    Write(Newline());
-    Write(InternalSymbolScope());
-    Write("const wasm_elem_segment_expr_t elem_segment_exprs_",
+    Write(Newline(), InternalSymbolScope(),
+          "const wasm_elem_segment_expr_t elem_segment_exprs_",
           GlobalName(ModuleFieldType::ElemSegment, elem_segment->name),
           "[] = ", OpenBrace());
 
@@ -5108,6 +5114,9 @@ void CWriter::WriteCSource() {
 
   /* Write function bodies across the different output streams */
   WriteFuncs();
+
+  /* For any empty .c output, write a dummy typedef to avoid gcc warning */
+  WriteMultiCTopEmpty();
 }
 
 Result CWriter::WriteModule(const Module& module) {
@@ -5150,13 +5159,6 @@ const char* CWriter::InternalSymbolScope() {
   }
 }
 
-const char* CWriter::InternalSymbolDeclScope() {
-  if (c_streams_.size() == 1) {
-    return "static ";
-  } else {
-    return "extern ";
-  }
-}
 }  // end anonymous namespace
 
 Result WriteC(std::vector<Stream*>&& c_streams,
