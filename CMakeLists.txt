@@ -563,7 +563,9 @@ if (BUILD_TOOLS)
 
     if (COMPILER_IS_GNU)
       target_compile_options(uv_a PRIVATE "-Wno-sign-compare")
-    endif ()
+    elseif (COMPILER_IS_CLANG)
+      target_compile_options(uv_a PRIVATE "-Wno-implicit-fallthrough")
+    endif()
   endif()
 
   # wasm-interp
