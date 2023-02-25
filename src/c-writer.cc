@@ -1594,7 +1594,7 @@ void CWriter::WriteModuleInstance() {
 
   // C forbids an empty struct
   if (module_->globals.empty() && module_->memories.empty() &&
-      module_->tables.empty()) {
+      module_->tables.empty() && import_func_module_set_.empty()) {
     Write("char dummy_member;", Newline());
   }
 
