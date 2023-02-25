@@ -250,7 +250,7 @@ class CWriter {
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
   void WriteIndent();
-  void WriteData(const void* src, size_t size);
+  void WriteData(const char* src, size_t size);
   void Writef(const char* format, ...);
 
   template <typename T, typename U, typename... Args>
@@ -391,6 +391,7 @@ class CWriter {
   Result result_ = Result::Ok;
   int indent_ = 0;
   bool should_write_indent_next_ = false;
+  int consecutive_newline_count_ = 0;
 
   SymbolMap global_sym_map_;
   SymbolMap local_sym_map_;
@@ -897,10 +898,13 @@ void CWriter::WriteIndent() {
   }
 }
 
-void CWriter::WriteData(const void* src, size_t size) {
+void CWriter::WriteData(const char* src, size_t size) {
   if (should_write_indent_next_) {
     WriteIndent();
     should_write_indent_next_ = false;
+  }
+  if (size > 0 && src[0] != '\n') {
+    consecutive_newline_count_ = 0;
   }
   stream_->WriteData(src, size);
 }
@@ -911,7 +915,11 @@ void WABT_PRINTF_FORMAT(2, 3) CWriter::Writef(const char* format, ...) {
 }
 
 void CWriter::Write(Newline) {
-  Write("\n");
+  // Allow maximum one blank line between sections
+  if (consecutive_newline_count_ < 2) {
+    Write("\n");
+    consecutive_newline_count_++;
+  }
   should_write_indent_next_ = true;
 }
 
@@ -1515,8 +1523,8 @@ void CWriter::WriteImports() {
 
   for (const Import* import : unique_imports_) {
     if (import->kind() == ExternalKind::Func) {
-      Write("/* import: '", SanitizeForComment(import->module_name), "' '",
-            SanitizeForComment(import->field_name), "' */", Newline());
+      Write(Newline(), "/* import: '", SanitizeForComment(import->module_name),
+            "' '", SanitizeForComment(import->field_name), "' */", Newline());
       const Func& func = cast<FuncImport>(import)->func;
       WriteImportFuncDeclaration(
           func.decl, import->module_name,
@@ -1524,8 +1532,8 @@ void CWriter::WriteImports() {
       Write(";");
       Write(Newline());
     } else if (import->kind() == ExternalKind::Tag) {
-      Write("/* import: '", SanitizeForComment(import->module_name), "' '",
-            SanitizeForComment(import->field_name), "' */", Newline());
+      Write(Newline(), "/* import: '", SanitizeForComment(import->module_name),
+            "' '", SanitizeForComment(import->field_name), "' */", Newline());
       Write("extern const wasm_rt_tag_t ",
             ExportName(import->module_name, import->field_name), ";",
             Newline());
@@ -1814,7 +1822,8 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    Write("static const wasm_elem_segment_expr_t elem_segment_exprs_",
+    Write(Newline(),
+          "static const wasm_elem_segment_expr_t elem_segment_exprs_",
           GlobalName(ModuleFieldType::ElemSegment, elem_segment->name),
           "[] = ", OpenBrace());
 
@@ -2197,9 +2206,10 @@ void CWriter::WriteImportProperties(CWriterPhase kind) {
   if (import_module_set_.empty())
     return;
 
+  Write(Newline());
+
   auto write_import_prop = [&](const Import* import, std::string prop,
                                uint32_t value) {
-    Write(Newline());
     if (kind == CWriterPhase::Declarations) {
       Write("extern ");
     }
@@ -4838,6 +4848,7 @@ void CWriter::WriteCHeader() {
   WriteImports();
   WriteImportProperties(CWriterPhase::Declarations);
   WriteExports(CWriterPhase::Declarations);
+  Write(Newline());
   Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
 }
