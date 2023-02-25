@@ -526,6 +526,22 @@ constexpr char CWriter::MangleField(ModuleFieldType type) {
   return 'a' + static_cast<char>(type);
 }
 
+// remove risky characters for pasting into a C-style comment
+static std::string SanitizeForComment(std::string_view str) {
+  std::string result;
+
+  for (const uint8_t ch : str) {
+    // escape control chars, DEL, >7-bit chars, trigraphs, and end of comment
+    if (ch < ' ' || ch > '~' || ch == '?' || ch == '/') {
+      result += "\\" + StringPrintf("%02X", ch);
+    } else {
+      result += ch;
+    }
+  }
+
+  return result;
+}
+
 // static
 std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
   assert(types.size() >= 2);
@@ -1460,8 +1476,8 @@ void CWriter::BeginInstance() {
       continue;
     }
 
-    Write("/* import: '", import->module_name, "' '", import->field_name,
-          "' */", Newline());
+    Write("/* import: '", SanitizeForComment(import->module_name), "' '",
+          SanitizeForComment(import->field_name), "' */", Newline());
 
     switch (import->kind()) {
       case ExternalKind::Global:
@@ -1499,8 +1515,8 @@ void CWriter::WriteImports() {
 
   for (const Import* import : unique_imports_) {
     if (import->kind() == ExternalKind::Func) {
-      Write("/* import: '", import->module_name, "' '", import->field_name,
-            "' */", Newline());
+      Write("/* import: '", SanitizeForComment(import->module_name), "' '",
+            SanitizeForComment(import->field_name), "' */", Newline());
       const Func& func = cast<FuncImport>(import)->func;
       WriteImportFuncDeclaration(
           func.decl, import->module_name,
@@ -1508,8 +1524,8 @@ void CWriter::WriteImports() {
       Write(";");
       Write(Newline());
     } else if (import->kind() == ExternalKind::Tag) {
-      Write("/* import: '", import->module_name, "' '", import->field_name,
-            "' */", Newline());
+      Write("/* import: '", SanitizeForComment(import->module_name), "' '",
+            SanitizeForComment(import->field_name), "' */", Newline());
       Write("extern const wasm_rt_tag_t ",
             ExportName(import->module_name, import->field_name), ";",
             Newline());
@@ -1924,7 +1940,8 @@ void CWriter::WriteExports(CWriterPhase kind) {
     return;
 
   for (const Export* export_ : module_->exports) {
-    Write(Newline(), "/* export: '", export_->name, "' */", Newline());
+    Write(Newline(), "/* export: '", SanitizeForComment(export_->name), "' */",
+          Newline());
 
     const std::string mangled_name = ExportName(export_->name);
     std::string internal_name;
