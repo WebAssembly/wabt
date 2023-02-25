@@ -70,7 +70,7 @@ Token WastLexer::GetToken() {
           }
           return BareToken(TokenType::Eof);
         } else if (MatchString("(@")) {
-          ReadReservedChars();
+          GetIdToken();
           // offset=2 to skip the "(@" prefix
           return TextToken(TokenType::LparAnn, 2);
         } else {
