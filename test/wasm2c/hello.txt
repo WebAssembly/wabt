@@ -72,6 +72,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 /* import: 'wasi_snapshot_preview1' 'fd_write' */
 u32 w2c_wasi__snapshot__preview1_fd_write(struct w2c_wasi__snapshot__preview1*, u32, u32, u32, u32);
+
 /* import: 'wasi_snapshot_preview1' 'proc_exit' */
 void w2c_wasi__snapshot__preview1_proc_exit(struct w2c_wasi__snapshot__preview1*, u32);
 
@@ -830,6 +831,7 @@ static void init_memories(w2c_test* instance) {
 
 static void init_data_instances(w2c_test *instance) {
 }
+
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
   {w2c_test_t0, (wasm_rt_function_ptr_t)w2c_wasi__snapshot__preview1_fd_write, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
 };
