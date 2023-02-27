@@ -17,7 +17,9 @@
 #ifndef WABT_C_WRITER_H_
 #define WABT_C_WRITER_H_
 
+#include <functional>
 #include "wabt/common.h"
+#include "wabt/ir.h"
 
 namespace wabt {
 
@@ -26,6 +28,13 @@ class Stream;
 
 struct WriteCOptions {
   std::string_view module_name;
+  /* name_to_index takes list of all functions in the module, number of imported
+   * functions, and number of .c outputs as argument, returns a vector where
+   * vector[i] the index of the .c output that funcs[i] goes into. */
+  std::function<std::vector<size_t>(const std::vector<Func*>&,
+                                    const size_t,
+                                    const size_t)>
+      name_to_index;
 };
 
 Result WriteC(std::vector<Stream*>&& c_streams,
