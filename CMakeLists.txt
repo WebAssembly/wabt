@@ -164,7 +164,7 @@ else ()
   #   interfaces, etc.
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
   add_definitions(
-    -Wall -Wextra -Wno-unused-parameter -Wpointer-arith -Wuninitialized
+    -Wall -Wextra -Wno-unused-parameter -Wpointer-arith -Wuninitialized -Wimplicit-fallthrough
   )
 
   set(CMAKE_CXX_EXTENSIONS OFF)
@@ -563,7 +563,9 @@ if (BUILD_TOOLS)
 
     if (COMPILER_IS_GNU)
       target_compile_options(uv_a PRIVATE "-Wno-sign-compare")
-    endif ()
+    elseif (COMPILER_IS_CLANG)
+      target_compile_options(uv_a PRIVATE "-Wno-implicit-fallthrough")
+    endif()
   endif()
 
   # wasm-interp
