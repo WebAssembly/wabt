@@ -96,55 +96,55 @@ Perfect_Hash::hash (const char *str, size_t len)
     {
       default:
         hval += asso_values[static_cast<unsigned char>(str[26])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 26:
       case 25:
       case 24:
       case 23:
         hval += asso_values[static_cast<unsigned char>(str[22])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 22:
       case 21:
       case 20:
       case 19:
         hval += asso_values[static_cast<unsigned char>(str[18])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 18:
         hval += asso_values[static_cast<unsigned char>(str[17])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 17:
         hval += asso_values[static_cast<unsigned char>(str[16])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 16:
       case 15:
         hval += asso_values[static_cast<unsigned char>(str[14])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 14:
       case 13:
       case 12:
         hval += asso_values[static_cast<unsigned char>(str[11])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 11:
       case 10:
         hval += asso_values[static_cast<unsigned char>(str[9])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 9:
       case 8:
         hval += asso_values[static_cast<unsigned char>(str[7])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 7:
         hval += asso_values[static_cast<unsigned char>(str[6])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 6:
         hval += asso_values[static_cast<unsigned char>(str[5])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 5:
         hval += asso_values[static_cast<unsigned char>(str[4])];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 4:
       case 3:
         hval += asso_values[static_cast<unsigned char>(str[2]+1)];
-      /*FALLTHROUGH*/
+        [[fallthrough]];
       case 2:
       case 1:
         hval += asso_values[static_cast<unsigned char>(str[0]+1)];

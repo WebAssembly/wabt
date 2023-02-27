@@ -1719,7 +1719,7 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       case Opcode::DataDrop:
         ERROR_IF(data_count_ == kInvalidIndex,
                  "data.drop requires data count section");
-        // Fallthrough.
+        [[fallthrough]];
       case Opcode::ElemDrop: {
         Index segment;
         CHECK_RESULT(ReadIndex(&segment, "segment index"));
