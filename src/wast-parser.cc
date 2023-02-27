@@ -20,7 +20,6 @@
 #include "wabt/binary-reader.h"
 #include "wabt/cast.h"
 #include "wabt/expr-visitor.h"
-#include "wabt/make-unique.h"
 #include "wabt/resolve-names.h"
 #include "wabt/stream.h"
 #include "wabt/utf8.h"
@@ -352,8 +351,8 @@ void ResolveImplicitlyDefinedFunctionType(const Location& loc,
   if (!decl.has_func_type) {
     Index func_type_index = module->GetFuncTypeIndex(decl.sig);
     if (func_type_index == kInvalidIndex) {
-      auto func_type_field = MakeUnique<TypeModuleField>(loc);
-      auto func_type = MakeUnique<FuncType>();
+      auto func_type_field = std::make_unique<TypeModuleField>(loc);
+      auto func_type = std::make_unique<FuncType>();
       func_type->sig = decl.sig;
       func_type_field->type = std::move(func_type);
       module->AppendField(std::move(func_type_field));
@@ -891,7 +890,7 @@ bool WastParser::ParseElemExprVarListOpt(ExprListVector* out_list) {
   Var var;
   ExprList init_expr;
   while (ParseVarOpt(&var)) {
-    init_expr.push_back(MakeUnique<RefFuncExpr>(var));
+    init_expr.push_back(std::make_unique<RefFuncExpr>(var));
     out_list->push_back(std::move(init_expr));
   }
   return !out_list->empty();
@@ -1152,7 +1151,7 @@ Result WastParser::ParseNat(uint64_t* out_nat, bool is_64) {
 
 Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
   WABT_TRACE(ParseModule);
-  auto module = MakeUnique<Module>();
+  auto module = std::make_unique<Module>();
 
   if (PeekMatchLpar(TokenType::Module)) {
     // Starts with "(module". Allow text and binary modules, but no quoted
@@ -1186,14 +1185,14 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
 
 Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   WABT_TRACE(ParseScript);
-  auto script = MakeUnique<Script>();
+  auto script = std::make_unique<Script>();
 
   // Don't consume the Lpar yet, even though it is required. This way the
   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
   // the parsing structure more regular.
   if (IsModuleField(PeekPair())) {
     // Parse an inline module (i.e. one with no surrounding (module)).
-    auto command = MakeUnique<ModuleCommand>();
+    auto command = std::make_unique<ModuleCommand>();
     command->module.loc = GetLocation();
     CHECK_RESULT(ParseModuleFieldList(&command->module));
     script->commands.emplace_back(std::move(command));
@@ -1253,7 +1252,7 @@ Result WastParser::ParseDataModuleField(Module* module) {
   EXPECT(Data);
   std::string name;
   ParseBindVarOpt(&name);
-  auto field = MakeUnique<DataSegmentModuleField>(loc, name);
+  auto field = std::make_unique<DataSegmentModuleField>(loc, name);
 
   if (PeekMatchLpar(TokenType::Memory)) {
     EXPECT(Lpar);
@@ -1296,7 +1295,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   if (!options_->features.bulk_memory_enabled()) {
     segment_name = "";
   }
-  auto field = MakeUnique<ElemSegmentModuleField>(loc, segment_name);
+  auto field = std::make_unique<ElemSegmentModuleField>(loc, segment_name);
   if (options_->features.reference_types_enabled() &&
       Match(TokenType::Declare)) {
     field->elem_segment.kind = SegmentKind::Declared;
@@ -1360,15 +1359,15 @@ Result WastParser::ParseTagModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto import = MakeUnique<TagImport>(name);
+    auto import = std::make_unique<TagImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
     CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
     auto field =
-        MakeUnique<ImportModuleField>(std::move(import), GetLocation());
+        std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else {
-    auto field = MakeUnique<TagModuleField>(GetLocation(), name);
+    auto field = std::make_unique<TagModuleField>(GetLocation(), name);
     CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
     CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
     module->AppendField(std::move(field));
@@ -1382,7 +1381,7 @@ Result WastParser::ParseTagModuleField(Module* module) {
 Result WastParser::ParseExportModuleField(Module* module) {
   WABT_TRACE(ParseExportModuleField);
   EXPECT(Lpar);
-  auto field = MakeUnique<ExportModuleField>(GetLocation());
+  auto field = std::make_unique<ExportModuleField>(GetLocation());
   EXPECT(Export);
   CHECK_RESULT(ParseQuotedText(&field->export_.name));
   CHECK_RESULT(ParseExportDesc(&field->export_));
@@ -1404,17 +1403,17 @@ Result WastParser::ParseFuncModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto import = MakeUnique<FuncImport>(name);
+    auto import = std::make_unique<FuncImport>(name);
     Func& func = import->func;
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
     CHECK_RESULT(ErrorIfLpar({"type", "param", "result"}));
     auto field =
-        MakeUnique<ImportModuleField>(std::move(import), GetLocation());
+        std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else {
-    auto field = MakeUnique<FuncModuleField>(loc, name);
+    auto field = std::make_unique<FuncModuleField>(loc, name);
     Func& func = field->func;
     func.loc = GetLocation();
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
@@ -1437,7 +1436,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
 Result WastParser::ParseTypeModuleField(Module* module) {
   WABT_TRACE(ParseTypeModuleField);
   EXPECT(Lpar);
-  auto field = MakeUnique<TypeModuleField>(GetLocation());
+  auto field = std::make_unique<TypeModuleField>(GetLocation());
   EXPECT(Type);
 
   std::string name;
@@ -1446,7 +1445,7 @@ Result WastParser::ParseTypeModuleField(Module* module) {
   Location loc = GetLocation();
 
   if (Match(TokenType::Func)) {
-    auto func_type = MakeUnique<FuncType>(name);
+    auto func_type = std::make_unique<FuncType>(name);
     BindingHash bindings;
     CHECK_RESULT(ParseFuncSignature(&func_type->sig, &bindings));
     CHECK_RESULT(ErrorIfLpar({"param", "result"}));
@@ -1456,14 +1455,14 @@ Result WastParser::ParseTypeModuleField(Module* module) {
       Error(loc, "struct not allowed");
       return Result::Error;
     }
-    auto struct_type = MakeUnique<StructType>(name);
+    auto struct_type = std::make_unique<StructType>(name);
     CHECK_RESULT(ParseFieldList(&struct_type->fields));
     field->type = std::move(struct_type);
   } else if (Match(TokenType::Array)) {
     if (!options_->features.gc_enabled()) {
       Error(loc, "array type not allowed");
     }
-    auto array_type = MakeUnique<ArrayType>(name);
+    auto array_type = std::make_unique<ArrayType>(name);
     CHECK_RESULT(ParseField(&array_type->field));
     field->type = std::move(array_type);
   } else {
@@ -1529,14 +1528,14 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto import = MakeUnique<GlobalImport>(name);
+    auto import = std::make_unique<GlobalImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseGlobalType(&import->global));
     auto field =
-        MakeUnique<ImportModuleField>(std::move(import), GetLocation());
+        std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else {
-    auto field = MakeUnique<GlobalModuleField>(loc, name);
+    auto field = std::make_unique<GlobalModuleField>(loc, name);
     CHECK_RESULT(ParseGlobalType(&field->global));
     CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr));
     module->AppendField(std::move(field));
@@ -1567,56 +1566,56 @@ Result WastParser::ParseImportModuleField(Module* module) {
     case TokenType::Func: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<FuncImport>(name);
+      auto import = std::make_unique<FuncImport>(name);
       CHECK_RESULT(ParseTypeUseOpt(&import->func.decl));
       CHECK_RESULT(
           ParseFuncSignature(&import->func.decl.sig, &import->func.bindings));
       CHECK_RESULT(ErrorIfLpar({"param", "result"}));
       EXPECT(Rpar);
-      field = MakeUnique<ImportModuleField>(std::move(import), loc);
+      field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
 
     case TokenType::Table: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<TableImport>(name);
+      auto import = std::make_unique<TableImport>(name);
       CHECK_RESULT(ParseLimits(&import->table.elem_limits));
       CHECK_RESULT(ParseRefType(&import->table.elem_type));
       EXPECT(Rpar);
-      field = MakeUnique<ImportModuleField>(std::move(import), loc);
+      field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
 
     case TokenType::Memory: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<MemoryImport>(name);
+      auto import = std::make_unique<MemoryImport>(name);
       CHECK_RESULT(ParseLimitsIndex(&import->memory.page_limits));
       CHECK_RESULT(ParseLimits(&import->memory.page_limits));
       EXPECT(Rpar);
-      field = MakeUnique<ImportModuleField>(std::move(import), loc);
+      field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
 
     case TokenType::Global: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<GlobalImport>(name);
+      auto import = std::make_unique<GlobalImport>(name);
       CHECK_RESULT(ParseGlobalType(&import->global));
       EXPECT(Rpar);
-      field = MakeUnique<ImportModuleField>(std::move(import), loc);
+      field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
 
     case TokenType::Tag: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<TagImport>(name);
+      auto import = std::make_unique<TagImport>(name);
       CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
       EXPECT(Rpar);
-      field = MakeUnique<ImportModuleField>(std::move(import), loc);
+      field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
 
@@ -1645,21 +1644,21 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto import = MakeUnique<MemoryImport>(name);
+    auto import = std::make_unique<MemoryImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseLimitsIndex(&import->memory.page_limits));
     CHECK_RESULT(ParseLimits(&import->memory.page_limits));
     auto field =
-        MakeUnique<ImportModuleField>(std::move(import), GetLocation());
+        std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else {
-    auto field = MakeUnique<MemoryModuleField>(loc, name);
+    auto field = std::make_unique<MemoryModuleField>(loc, name);
     CHECK_RESULT(ParseLimitsIndex(&field->memory.page_limits));
     if (MatchLpar(TokenType::Data)) {
-      auto data_segment_field = MakeUnique<DataSegmentModuleField>(loc);
+      auto data_segment_field = std::make_unique<DataSegmentModuleField>(loc);
       DataSegment& data_segment = data_segment_field->data_segment;
       data_segment.memory_var = Var(module->memories.size(), GetLocation());
-      data_segment.offset.push_back(MakeUnique<ConstExpr>(
+      data_segment.offset.push_back(std::make_unique<ConstExpr>(
           field->memory.page_limits.is_64 ? Const::I64(0) : Const::I32(0)));
       data_segment.offset.back().loc = loc;
       ParseTextListOpt(&data_segment.data);
@@ -1697,7 +1696,7 @@ Result WastParser::ParseStartModuleField(Module* module) {
   Var var;
   CHECK_RESULT(ParseVar(&var));
   EXPECT(Rpar);
-  module->AppendField(MakeUnique<StartModuleField>(var, loc));
+  module->AppendField(std::make_unique<StartModuleField>(var, loc));
   return Result::Ok;
 }
 
@@ -1714,12 +1713,12 @@ Result WastParser::ParseTableModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto import = MakeUnique<TableImport>(name);
+    auto import = std::make_unique<TableImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseLimits(&import->table.elem_limits));
     CHECK_RESULT(ParseRefType(&import->table.elem_type));
     auto field =
-        MakeUnique<ImportModuleField>(std::move(import), GetLocation());
+        std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else if (PeekMatch(TokenType::ValueType)) {
     Type elem_type;
@@ -1728,10 +1727,10 @@ Result WastParser::ParseTableModuleField(Module* module) {
     EXPECT(Lpar);
     EXPECT(Elem);
 
-    auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
+    auto elem_segment_field = std::make_unique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size(), GetLocation());
-    elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
+    elem_segment.offset.push_back(std::make_unique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     elem_segment.elem_type = elem_type;
     // Syntax is either an optional list of var (legacy), or a non-empty list
@@ -1746,7 +1745,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
     }
     EXPECT(Rpar);
 
-    auto table_field = MakeUnique<TableModuleField>(loc, name);
+    auto table_field = std::make_unique<TableModuleField>(loc, name);
     table_field->table.elem_limits.initial = elem_segment.elem_exprs.size();
     table_field->table.elem_limits.max = elem_segment.elem_exprs.size();
     table_field->table.elem_limits.has_max = true;
@@ -1754,7 +1753,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
     module->AppendField(std::move(table_field));
     module->AppendField(std::move(elem_segment_field));
   } else {
-    auto field = MakeUnique<TableModuleField>(loc, name);
+    auto field = std::make_unique<TableModuleField>(loc, name);
     CHECK_RESULT(ParseLimits(&field->table.elem_limits));
     CHECK_RESULT(ParseRefType(&field->table.elem_type));
     module->AppendField(std::move(field));
@@ -1789,7 +1788,7 @@ Result WastParser::ParseInlineExports(ModuleFieldList* fields,
   WABT_TRACE(ParseInlineExports);
   while (PeekMatchLpar(TokenType::Export)) {
     EXPECT(Lpar);
-    auto field = MakeUnique<ExportModuleField>(GetLocation());
+    auto field = std::make_unique<ExportModuleField>(GetLocation());
     field->export_.kind = kind;
     EXPECT(Export);
     CHECK_RESULT(ParseQuotedText(&field->export_.name));
@@ -1951,7 +1950,7 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   std::string data_text;
   CHECK_RESULT(ParseQuotedText(&data_text, false));
   std::vector<uint8_t> data(data_text.begin(), data_text.end());
-  exprs->push_back(MakeUnique<CodeMetadataExpr>(name, std::move(data)));
+  exprs->push_back(std::make_unique<CodeMetadataExpr>(name, std::move(data)));
   TokenType rpar = Peek();
   WABT_USE(rpar);
   assert(rpar == TokenType::Rpar);
@@ -2142,7 +2141,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::BrTable: {
       Consume();
-      auto expr = MakeUnique<BrTableExpr>(loc);
+      auto expr = std::make_unique<BrTableExpr>(loc);
       CHECK_RESULT(ParseVarList(&expr->targets));
       expr->default_target = expr->targets.back();
       expr->targets.pop_back();
@@ -2162,7 +2161,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::CallIndirect: {
       Consume();
-      auto expr = MakeUnique<CallIndirectExpr>(loc);
+      auto expr = std::make_unique<CallIndirectExpr>(loc);
       ParseVarOpt(&expr->table, Var(0, loc));
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
@@ -2183,7 +2182,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::ReturnCallIndirect: {
       ErrorUnlessOpcodeEnabled(Consume());
-      auto expr = MakeUnique<ReturnCallIndirectExpr>(loc);
+      auto expr = std::make_unique<ReturnCallIndirectExpr>(loc);
       ParseVarOpt(&expr->table, Var(0, loc));
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
@@ -2831,7 +2830,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
   switch (Peek()) {
     case TokenType::Block: {
       Consume();
-      auto expr = MakeUnique<BlockExpr>(loc);
+      auto expr = std::make_unique<BlockExpr>(loc);
       CHECK_RESULT(ParseLabelOpt(&expr->block.label));
       CHECK_RESULT(ParseBlock(&expr->block));
       EXPECT(End);
@@ -2842,7 +2841,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::Loop: {
       Consume();
-      auto expr = MakeUnique<LoopExpr>(loc);
+      auto expr = std::make_unique<LoopExpr>(loc);
       CHECK_RESULT(ParseLabelOpt(&expr->block.label));
       CHECK_RESULT(ParseBlock(&expr->block));
       EXPECT(End);
@@ -2853,7 +2852,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::If: {
       Consume();
-      auto expr = MakeUnique<IfExpr>(loc);
+      auto expr = std::make_unique<IfExpr>(loc);
       CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
       CHECK_RESULT(ParseBlock(&expr->true_));
       if (Match(TokenType::Else)) {
@@ -2869,7 +2868,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::Try: {
       ErrorUnlessOpcodeEnabled(Consume());
-      auto expr = MakeUnique<TryExpr>(loc);
+      auto expr = std::make_unique<TryExpr>(loc);
       CatchVector catches;
       CHECK_RESULT(ParseLabelOpt(&expr->block.label));
       CHECK_RESULT(ParseBlock(&expr->block));
@@ -2980,7 +2979,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       case TokenType::Block: {
         Consume();
         Consume();
-        auto expr = MakeUnique<BlockExpr>(loc);
+        auto expr = std::make_unique<BlockExpr>(loc);
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseBlock(&expr->block));
         exprs->push_back(std::move(expr));
@@ -2990,7 +2989,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       case TokenType::Loop: {
         Consume();
         Consume();
-        auto expr = MakeUnique<LoopExpr>(loc);
+        auto expr = std::make_unique<LoopExpr>(loc);
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseBlock(&expr->block));
         exprs->push_back(std::move(expr));
@@ -3000,7 +2999,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       case TokenType::If: {
         Consume();
         Consume();
-        auto expr = MakeUnique<IfExpr>(loc);
+        auto expr = std::make_unique<IfExpr>(loc);
 
         CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
         CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
@@ -3043,7 +3042,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         Consume();
         ErrorUnlessOpcodeEnabled(Consume());
 
-        auto expr = MakeUnique<TryExpr>(loc);
+        auto expr = std::make_unique<TryExpr>(loc);
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseBlockDeclaration(&expr->block.decl));
         EXPECT(Lpar);
@@ -3252,7 +3251,7 @@ Result WastParser::ParseAssertReturnCommand(CommandPtr* out_command) {
   WABT_TRACE(ParseAssertReturnCommand);
   EXPECT(Lpar);
   EXPECT(AssertReturn);
-  auto command = MakeUnique<AssertReturnCommand>();
+  auto command = std::make_unique<AssertReturnCommand>();
   CHECK_RESULT(ParseAction(&command->action));
   CHECK_RESULT(ParseExpectedValues(&command->expected));
   EXPECT(Rpar);
@@ -3265,12 +3264,12 @@ Result WastParser::ParseAssertTrapCommand(CommandPtr* out_command) {
   EXPECT(Lpar);
   EXPECT(AssertTrap);
   if (PeekMatchLpar(TokenType::Module)) {
-    auto command = MakeUnique<AssertUninstantiableCommand>();
+    auto command = std::make_unique<AssertUninstantiableCommand>();
     CHECK_RESULT(ParseScriptModule(&command->module));
     CHECK_RESULT(ParseQuotedText(&command->text));
     *out_command = std::move(command);
   } else {
-    auto command = MakeUnique<AssertTrapCommand>();
+    auto command = std::make_unique<AssertTrapCommand>();
     CHECK_RESULT(ParseAction(&command->action));
     CHECK_RESULT(ParseQuotedText(&command->text));
     *out_command = std::move(command);
@@ -3287,7 +3286,7 @@ Result WastParser::ParseAssertUnlinkableCommand(CommandPtr* out_command) {
 
 Result WastParser::ParseActionCommand(CommandPtr* out_command) {
   WABT_TRACE(ParseActionCommand);
-  auto command = MakeUnique<ActionCommand>();
+  auto command = std::make_unique<ActionCommand>();
   CHECK_RESULT(ParseAction(&command->action));
   *out_command = std::move(command);
   return Result::Ok;
@@ -3302,7 +3301,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
 
   switch (script_module->type()) {
     case ScriptModuleType::Text: {
-      auto command = MakeUnique<ModuleCommand>();
+      auto command = std::make_unique<ModuleCommand>();
       module = &command->module;
       *module = std::move(cast<TextScriptModule>(script_module.get())->module);
       *out_command = std::move(command);
@@ -3310,7 +3309,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
     }
 
     case ScriptModuleType::Binary: {
-      auto command = MakeUnique<ScriptModuleCommand>();
+      auto command = std::make_unique<ScriptModuleCommand>();
       module = &command->module;
       auto* bsm = cast<BinaryScriptModule>(script_module.get());
       ReadBinaryOptions options;
@@ -3415,7 +3414,7 @@ Result WastParser::ParseAction(ActionPtr* out_action) {
   switch (Peek()) {
     case TokenType::Invoke: {
       Consume();
-      auto action = MakeUnique<InvokeAction>(loc);
+      auto action = std::make_unique<InvokeAction>(loc);
       ParseVarOpt(&action->module_var, Var(last_module_index_, loc));
       CHECK_RESULT(ParseQuotedText(&action->name));
       CHECK_RESULT(ParseConstList(&action->args, ConstType::Normal));
@@ -3425,7 +3424,7 @@ Result WastParser::ParseAction(ActionPtr* out_action) {
 
     case TokenType::Get: {
       Consume();
-      auto action = MakeUnique<GetAction>(loc);
+      auto action = std::make_unique<GetAction>(loc);
       ParseVarOpt(&action->module_var, Var(last_module_index_, loc));
       CHECK_RESULT(ParseQuotedText(&action->name));
       *out_action = std::move(action);
@@ -3443,11 +3442,11 @@ Result WastParser::ParseExpectedValues(ExpectationPtr* expectation) {
   WABT_TRACE(ParseExpectedValues);
   Location loc = GetLocation();
   if (PeekMatchLpar(TokenType::Either)) {
-    auto either = MakeUnique<EitherExpectation>(loc);
+    auto either = std::make_unique<EitherExpectation>(loc);
     CHECK_RESULT(ParseEither(&either->expected));
     *expectation = std::move(either);
   } else {
-    auto values = MakeUnique<ValueExpectation>(loc);
+    auto values = std::make_unique<ValueExpectation>(loc);
     CHECK_RESULT(ParseConstList(&values->expected, ConstType::Expectation));
     *expectation = std::move(values);
   }
@@ -3479,7 +3478,7 @@ Result WastParser::ParseScriptModule(
       // ParseTextListOpt.
       CHECK_RESULT(ParseTextList(&data));
 
-      auto bsm = MakeUnique<BinaryScriptModule>();
+      auto bsm = std::make_unique<BinaryScriptModule>();
       bsm->name = name;
       bsm->loc = loc;
       bsm->data = std::move(data);
@@ -3494,7 +3493,7 @@ Result WastParser::ParseScriptModule(
       // ParseTextListOpt.
       CHECK_RESULT(ParseTextList(&data));
 
-      auto qsm = MakeUnique<QuotedScriptModule>();
+      auto qsm = std::make_unique<QuotedScriptModule>();
       qsm->name = name;
       qsm->loc = loc;
       qsm->data = std::move(data);
@@ -3503,7 +3502,7 @@ Result WastParser::ParseScriptModule(
     }
 
     default: {
-      auto tsm = MakeUnique<TextScriptModule>();
+      auto tsm = std::make_unique<TextScriptModule>();
       tsm->module.name = name;
       tsm->module.loc = loc;
       if (IsModuleField(PeekPair())) {
@@ -3527,7 +3526,7 @@ Result WastParser::ParseAssertActionCommand(TokenType token_type,
   WABT_TRACE(ParseAssertActionCommand);
   EXPECT(Lpar);
   CHECK_RESULT(Expect(token_type));
-  auto command = MakeUnique<T>();
+  auto command = std::make_unique<T>();
   CHECK_RESULT(ParseAction(&command->action));
   EXPECT(Rpar);
   *out_command = std::move(command);
@@ -3540,7 +3539,7 @@ Result WastParser::ParseAssertActionTextCommand(TokenType token_type,
   WABT_TRACE(ParseAssertActionTextCommand);
   EXPECT(Lpar);
   CHECK_RESULT(Expect(token_type));
-  auto command = MakeUnique<T>();
+  auto command = std::make_unique<T>();
   CHECK_RESULT(ParseAction(&command->action));
   CHECK_RESULT(ParseQuotedText(&command->text));
   EXPECT(Rpar);
@@ -3554,7 +3553,7 @@ Result WastParser::ParseAssertScriptModuleCommand(TokenType token_type,
   WABT_TRACE(ParseAssertScriptModuleCommand);
   EXPECT(Lpar);
   CHECK_RESULT(Expect(token_type));
-  auto command = MakeUnique<T>();
+  auto command = std::make_unique<T>();
   CHECK_RESULT(ParseScriptModule(&command->module));
   CHECK_RESULT(ParseQuotedText(&command->text));
   EXPECT(Rpar);

@@ -25,7 +25,6 @@
 #include "wabt/error.h"
 #include "wabt/lexer-source-line-finder.h"
 #include "wabt/literal.h"
-#include "wabt/make-unique.h"
 #include "wabt/opcode.h"
 #include "wabt/token.h"
 
@@ -52,7 +51,7 @@ class WastLexer {
 
   // TODO(binji): Move this out of the lexer.
   std::unique_ptr<LexerSourceLineFinder> MakeLineFinder() {
-    return MakeUnique<LexerSourceLineFinder>(source_->Clone());
+    return std::make_unique<LexerSourceLineFinder>(source_->Clone());
   }
 
  private:

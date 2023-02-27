@@ -1004,7 +1004,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
   EXPECT("{");
   EXPECT_KEY("type");
   if (Match("\"module\"")) {
-    auto command = MakeUnique<ModuleCommand>();
+    auto command = std::make_unique<ModuleCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1012,7 +1012,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseFilename(&command->filename));
     *out_command = std::move(command);
   } else if (Match("\"action\"")) {
-    auto command = MakeUnique<ActionCommand>();
+    auto command = std::make_unique<ActionCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1021,7 +1021,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else if (Match("\"register\"")) {
-    auto command = MakeUnique<RegisterCommand>();
+    auto command = std::make_unique<RegisterCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1029,7 +1029,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     PARSE_KEY_STRING_VALUE("as", &command->as);
     *out_command = std::move(command);
   } else if (Match("\"assert_malformed\"")) {
-    auto command = MakeUnique<AssertMalformedCommand>();
+    auto command = std::make_unique<AssertMalformedCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1040,7 +1040,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseModuleType(&command->type));
     *out_command = std::move(command);
   } else if (Match("\"assert_invalid\"")) {
-    auto command = MakeUnique<AssertInvalidCommand>();
+    auto command = std::make_unique<AssertInvalidCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1051,7 +1051,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseModuleType(&command->type));
     *out_command = std::move(command);
   } else if (Match("\"assert_unlinkable\"")) {
-    auto command = MakeUnique<AssertUnlinkableCommand>();
+    auto command = std::make_unique<AssertUnlinkableCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1062,7 +1062,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseModuleType(&command->type));
     *out_command = std::move(command);
   } else if (Match("\"assert_uninstantiable\"")) {
-    auto command = MakeUnique<AssertUninstantiableCommand>();
+    auto command = std::make_unique<AssertUninstantiableCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1073,7 +1073,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseModuleType(&command->type));
     *out_command = std::move(command);
   } else if (Match("\"assert_return\"")) {
-    auto command = MakeUnique<AssertReturnCommand>();
+    auto command = std::make_unique<AssertReturnCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1088,7 +1088,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseExpectedValues(&command->expected));
     *out_command = std::move(command);
   } else if (Match("\"assert_trap\"")) {
-    auto command = MakeUnique<AssertTrapCommand>();
+    auto command = std::make_unique<AssertTrapCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1099,7 +1099,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else if (Match("\"assert_exhaustion\"")) {
-    auto command = MakeUnique<AssertExhaustionCommand>();
+    auto command = std::make_unique<AssertExhaustionCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
@@ -1114,7 +1114,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
       PrintError("invalid command: exceptions not allowed");
       return wabt::Result::Error;
     }
-    auto command = MakeUnique<AssertExceptionCommand>();
+    auto command = std::make_unique<AssertExceptionCommand>();
     EXPECT(",");
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
