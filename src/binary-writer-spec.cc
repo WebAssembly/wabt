@@ -658,8 +658,8 @@ Result WriteBinarySpecScript(
     Stream* log_stream) {
   WriteBinarySpecStreamFactory module_stream_factory =
       [&](std::string_view filename) {
-        out_module_streams->emplace_back(filename,
-                                         MakeUnique<MemoryStream>(log_stream));
+        out_module_streams->emplace_back(
+            filename, std::make_unique<MemoryStream>(log_stream));
         return out_module_streams->back().stream.get();
       };
 

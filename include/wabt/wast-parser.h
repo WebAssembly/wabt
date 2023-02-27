@@ -18,6 +18,7 @@
 #define WABT_WAST_PARSER_H_
 
 #include <array>
+#include <memory>
 #include <unordered_map>
 
 #include "wabt/circular-array.h"

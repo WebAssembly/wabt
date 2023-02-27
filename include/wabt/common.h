@@ -34,7 +34,6 @@
 #include "wabt/config.h"
 
 #include "wabt/base-types.h"
-#include "wabt/make-unique.h"
 #include "wabt/result.h"
 #include "wabt/string-format.h"
 #include "wabt/type.h"

@@ -21,7 +21,6 @@
 #include <cinttypes>
 
 #include "wabt/interp/interp-math.h"
-#include "wabt/make-unique.h"
 
 namespace wabt {
 namespace interp {
@@ -84,7 +83,7 @@ Result Match(const Limits& expected,
 
 //// FuncType ////
 std::unique_ptr<ExternType> FuncType::Clone() const {
-  return MakeUnique<FuncType>(*this);
+  return std::make_unique<FuncType>(*this);
 }
 
 Result Match(const FuncType& expected,
@@ -101,7 +100,7 @@ Result Match(const FuncType& expected,
 
 //// TableType ////
 std::unique_ptr<ExternType> TableType::Clone() const {
-  return MakeUnique<TableType>(*this);
+  return std::make_unique<TableType>(*this);
 }
 
 Result Match(const TableType& expected,
@@ -123,7 +122,7 @@ Result Match(const TableType& expected,
 
 //// MemoryType ////
 std::unique_ptr<ExternType> MemoryType::Clone() const {
-  return MakeUnique<MemoryType>(*this);
+  return std::make_unique<MemoryType>(*this);
 }
 
 Result Match(const MemoryType& expected,
@@ -134,7 +133,7 @@ Result Match(const MemoryType& expected,
 
 //// GlobalType ////
 std::unique_ptr<ExternType> GlobalType::Clone() const {
-  return MakeUnique<GlobalType>(*this);
+  return std::make_unique<GlobalType>(*this);
 }
 
 Result Match(const GlobalType& expected,
@@ -161,7 +160,7 @@ Result Match(const GlobalType& expected,
 
 //// TagType ////
 std::unique_ptr<ExternType> TagType::Clone() const {
-  return MakeUnique<TagType>(*this);
+  return std::make_unique<TagType>(*this);
 }
 
 Result Match(const TagType& expected,
@@ -973,7 +972,7 @@ Thread::Thread(Store& store, Stream* trace_stream)
   frames_.reserve(options.call_stack_size);
   values_.reserve(options.value_stack_size);
   if (trace_stream) {
-    trace_source_ = MakeUnique<TraceSource>(this);
+    trace_source_ = std::make_unique<TraceSource>(this);
   }
 }
 

@@ -102,12 +102,14 @@ struct wasm_externtype_t {
 struct wasm_functype_t : wasm_externtype_t {
   wasm_functype_t(own wasm_valtype_vec_t* params,
                   own wasm_valtype_vec_t* results)
-      : wasm_externtype_t{MakeUnique<FuncType>(ToWabtValueTypes(params),
-                                               ToWabtValueTypes(results))},
+      : wasm_externtype_t{std::make_unique<FuncType>(
+            ToWabtValueTypes(params),
+            ToWabtValueTypes(results))},
         params(*params),
         results(*results) {}
 
-  wasm_functype_t(FuncType ft) : wasm_externtype_t{MakeUnique<FuncType>(ft)} {
+  wasm_functype_t(FuncType ft)
+      : wasm_externtype_t{std::make_unique<FuncType>(ft)} {
     FromWabtValueTypes(ft.params, &params);
     FromWabtValueTypes(ft.results, &results);
   }
@@ -124,14 +126,14 @@ struct wasm_functype_t : wasm_externtype_t {
 
 struct wasm_globaltype_t : wasm_externtype_t {
   wasm_globaltype_t(own wasm_valtype_t* type, wasm_mutability_t mut)
-      : wasm_externtype_t{MakeUnique<GlobalType>(type->I,
-                                                 ToWabtMutability(mut))},
+      : wasm_externtype_t{std::make_unique<GlobalType>(type->I,
+                                                       ToWabtMutability(mut))},
         valtype{*type} {
     wasm_valtype_delete(type);
   }
 
   wasm_globaltype_t(GlobalType gt)
-      : wasm_externtype_t{MakeUnique<GlobalType>(gt)}, valtype{gt.type} {}
+      : wasm_externtype_t{std::make_unique<GlobalType>(gt)}, valtype{gt.type} {}
 
   // Stored here because API requires returning pointers.
   wasm_valtype_t valtype;
@@ -139,15 +141,15 @@ struct wasm_globaltype_t : wasm_externtype_t {
 
 struct wasm_tabletype_t : wasm_externtype_t {
   wasm_tabletype_t(own wasm_valtype_t* type, const wasm_limits_t* limits)
-      : wasm_externtype_t{MakeUnique<TableType>(type->I,
-                                                ToWabtLimits(*limits))},
+      : wasm_externtype_t{std::make_unique<TableType>(type->I,
+                                                      ToWabtLimits(*limits))},
         elemtype(*type),
         limits(*limits) {
     wasm_valtype_delete(type);
   }
 
   wasm_tabletype_t(TableType tt)
-      : wasm_externtype_t{MakeUnique<TableType>(tt)},
+      : wasm_externtype_t{std::make_unique<TableType>(tt)},
         elemtype{tt.element},
         limits{FromWabtLimits(tt.limits)} {}
 
@@ -158,11 +160,11 @@ struct wasm_tabletype_t : wasm_externtype_t {
 
 struct wasm_memorytype_t : wasm_externtype_t {
   wasm_memorytype_t(const wasm_limits_t* limits)
-      : wasm_externtype_t{MakeUnique<MemoryType>(ToWabtLimits(*limits))},
+      : wasm_externtype_t{std::make_unique<MemoryType>(ToWabtLimits(*limits))},
         limits{*limits} {}
 
   wasm_memorytype_t(MemoryType mt)
-      : wasm_externtype_t{MakeUnique<MemoryType>(mt)},
+      : wasm_externtype_t{std::make_unique<MemoryType>(mt)},
         limits{FromWabtLimits(mt.limits)} {}
 
   // Stored here because API requires returning pointers.
@@ -174,16 +176,16 @@ std::unique_ptr<wasm_externtype_t> wasm_externtype_t::New(
     std::unique_ptr<ExternType> ptr) {
   switch (ptr->kind) {
     case ExternKind::Func:
-      return MakeUnique<wasm_functype_t>(*cast<FuncType>(ptr.get()));
+      return std::make_unique<wasm_functype_t>(*cast<FuncType>(ptr.get()));
 
     case ExternKind::Table:
-      return MakeUnique<wasm_tabletype_t>(*cast<TableType>(ptr.get()));
+      return std::make_unique<wasm_tabletype_t>(*cast<TableType>(ptr.get()));
 
     case ExternKind::Memory:
-      return MakeUnique<wasm_memorytype_t>(*cast<MemoryType>(ptr.get()));
+      return std::make_unique<wasm_memorytype_t>(*cast<MemoryType>(ptr.get()));
 
     case ExternKind::Global:
-      return MakeUnique<wasm_globaltype_t>(*cast<GlobalType>(ptr.get()));
+      return std::make_unique<wasm_globaltype_t>(*cast<GlobalType>(ptr.get()));
 
     case ExternKind::Tag:
       break;
