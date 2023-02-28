@@ -436,6 +436,7 @@ endif ()
 if (BUILD_FUZZ_TOOLS)
   set(FUZZ_FLAGS "-fsanitize=fuzzer,address")
   add_library(wabt-fuzz STATIC ${WABT_LIBRARY_SRC})
+  target_link_libraries(wabt-fuzz PUBLIC wabt)
   set_target_properties(wabt-fuzz
     PROPERTIES
     COMPILE_FLAGS "${FUZZ_FLAGS}"
