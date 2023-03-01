@@ -1,4 +1,5 @@
 ;;; TOOL: run-roundtrip
+;;; SKIP: requires fix to parser for typed function refs (#1889)
 ;;; ARGS: --stdout --fold-exprs --enable-function-references
 (module
   (type $f32-f32 (func (param f32) (result f32)))

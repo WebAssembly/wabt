@@ -1351,6 +1351,8 @@ Result WastParser::ParseTagModuleField(Module* module) {
   }
   EXPECT(Lpar);
   EXPECT(Tag);
+  Location loc = GetLocation();
+
   std::string name;
   ParseBindVarOpt(&name);
 
@@ -1360,20 +1362,23 @@ Result WastParser::ParseTagModuleField(Module* module) {
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
     auto import = std::make_unique<TagImport>(name);
+    Tag& tag = import->tag;
     CHECK_RESULT(ParseInlineImport(import.get()));
-    CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
-    CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
+    CHECK_RESULT(ParseTypeUseOpt(&tag.decl));
+    CHECK_RESULT(ParseUnboundFuncSignature(&tag.decl.sig));
+    CHECK_RESULT(ErrorIfLpar({"type", "param", "result"}));
     auto field =
         std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else {
-    auto field = std::make_unique<TagModuleField>(GetLocation(), name);
+    auto field = std::make_unique<TagModuleField>(loc, name);
     CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
     CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
     module->AppendField(std::move(field));
   }
 
   AppendInlineExportFields(module, &export_fields, module->tags.size() - 1);
+
   EXPECT(Rpar);
   return Result::Ok;
 }
