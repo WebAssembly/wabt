@@ -170,6 +170,12 @@ int GetShiftMask(Type type) {
   // clang-format on
 }
 
+/* This function is the default behavior for name_to_index_. For single .c
+ * output, this function returns a vector filled with 0. For multiple .c
+ * outputs, this function sorts all non-imported functions in the module by
+ * their names, and then divides all non-imported functions into equal-sized
+ * buckets (# of non-imported functions / # of .c outputs) based on the sorting.
+ */
 static std::vector<size_t> default_name_to_index(
     const std::vector<Func*>& funcs,
     const size_t num_imports,
@@ -215,9 +221,7 @@ class CWriter {
         header_name_(header_name),
         header_impl_name_(header_impl_name) {
     module_prefix_ = MangleModuleName(options_.module_name);
-    if (c_streams_.size() == 1)
-      assert(!options.name_to_index);
-    if (options.name_to_index) {
+    if (c_streams_.size() != 1 && options.name_to_index) {
       name_to_index_ = options.name_to_index;
     } else {
       name_to_index_ = std::bind(&default_name_to_index, std::placeholders::_1,
@@ -1412,13 +1416,11 @@ void CWriter::WriteMultiCTop() {
 }
 
 void CWriter::WriteMultiCTopEmpty() {
-  if (c_streams_.size() > 1) {
-    for (auto& stream : c_streams_) {
-      if (stream->offset() == 0) {
-        stream_ = stream;
-        Write("/* Empty wasm2c generated file */\n");
-        Write("typedef int dummy_def;");
-      }
+  for (auto& stream : c_streams_) {
+    if (stream->offset() == 0) {
+      stream_ = stream;
+      Write("/* Empty wasm2c generated file */\n");
+      Write("typedef int dummy_def;");
     }
   }
 }
@@ -1473,9 +1475,7 @@ void CWriter::WriteFuncTypeDecls() {
     return;
   }
 
-  if (c_streams_.size() > 1) {
-    Write(Newline());
-  }
+  Write(Newline());
 
   std::string serialized_type;
   for (const TypeEntry* type : module_->types) {
