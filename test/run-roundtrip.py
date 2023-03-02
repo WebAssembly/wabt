@@ -55,11 +55,11 @@ def FilesAreEqual(filename1, filename2, verbose=False):
     return (OK, '')
 
 
-def TwoRoundtrips(wat2wasm, wasm2wat, out_dir, filename, verbose):
+def DoRoundtrip(wat2wasm, wasm2wat, out_dir, filename, verbose, stdout):
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
     wasm1_file = os.path.join(out_dir, basename_noext + '-1.wasm')
-    wast2_file = os.path.join(out_dir, basename_noext + '-2.wast')
+    wat2_file = os.path.join(out_dir, basename_noext + '-2.wat')
     wasm3_file = os.path.join(out_dir, basename_noext + '-3.wasm')
     try:
         wat2wasm.RunWithArgs('-o', wasm1_file, filename)
@@ -68,28 +68,16 @@ def TwoRoundtrips(wat2wasm, wasm2wat, out_dir, filename, verbose):
         # test)
         return (SKIPPED, None)
     try:
-        wasm2wat.RunWithArgs('-o', wast2_file, wasm1_file)
-        wat2wasm.RunWithArgs('-o', wasm3_file, wast2_file)
+        wasm2wat.RunWithArgs('-o', wat2_file, wasm1_file)
+        wat2wasm.RunWithArgs('-o', wasm3_file, wat2_file)
     except Error as e:
         return (ERROR, str(e))
-    return FilesAreEqual(wasm1_file, wasm3_file, verbose)
-
-
-def OneRoundtripToStdout(wat2wasm, wasm2wat, out_dir, filename, verbose):
-    basename = os.path.basename(filename)
-    basename_noext = os.path.splitext(basename)[0]
-    wasm_file = os.path.join(out_dir, basename_noext + '.wasm')
-    try:
-        wat2wasm.RunWithArgs('-o', wasm_file, filename)
-    except Error:
-        # if the file doesn't parse properly, just skip it (it may be a "bad-*"
-        # test)
-        return (SKIPPED, None)
-    try:
-        wasm2wat.RunWithArgs(wasm_file)
-    except Error as e:
-        return (ERROR, str(e))
-    return (OK, '')
+    if stdout:
+        with open(wat2_file) as f:
+            sys.stdout.write(f.read())
+        return (OK, '')
+    else:
+        return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
 
 def main(args):
@@ -102,7 +90,7 @@ def main(args):
                         default=find_exe.GetDefaultPath(),
                         help='directory to search for all executables.')
     parser.add_argument('--stdout', action='store_true',
-                        help='do one roundtrip and write wast output to stdout')
+                        help='do one roundtrip and write wat output to stdout')
     parser.add_argument('--no-error-cmdline',
                         help='don\'t display the subprocess\'s commandline when '
                         'an error occurs', dest='error_cmdline',
@@ -188,12 +176,8 @@ def main(args):
         return ERROR
 
     with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
-        if options.stdout:
-            result, msg = OneRoundtripToStdout(wat2wasm, wasm2wat, out_dir,
-                                               filename, options.verbose)
-        else:
-            result, msg = TwoRoundtrips(wat2wasm, wasm2wat, out_dir, filename,
-                                        options.verbose)
+        result, msg = DoRoundtrip(wat2wasm, wasm2wat, out_dir, filename,
+                                  options.verbose, options.stdout)
         if result == ERROR:
             sys.stderr.write(msg)
         return result
