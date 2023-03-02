@@ -224,8 +224,7 @@ class CWriter {
     if (c_streams_.size() != 1 && options.name_to_index) {
       name_to_index_ = options.name_to_index;
     } else {
-      name_to_index_ = std::bind(&default_name_to_index, std::placeholders::_1,
-                                 std::placeholders::_2, std::placeholders::_3);
+      name_to_index_ = default_name_to_index;
     }
   }
 
