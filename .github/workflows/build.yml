@@ -88,7 +88,7 @@ jobs:
       WASM2C_CFLAGS: "-march=x86-64-v2" # currently required for SIMDe to pass some tests on x86-64
     strategy:
       matrix:
-        sanitizer: [asan, ubsan]
+        sanitizer: [asan, ubsan, fuzz]
         type: [debug, release]
     steps:
     - uses: actions/setup-python@v1
@@ -99,7 +99,9 @@ jobs:
         submodules: true
     - run: sudo apt-get install ninja-build
     - run: make clang-${{ matrix.type }}-${{ matrix.sanitizer }}
-    - run: make test-clang-${{ matrix.type }}-${{ matrix.sanitizer }}
+    - if: ${{ matrix.sanitizer }} != fuzz
+      run: make test-clang-${{ matrix.type }}-${{ matrix.sanitizer }}
+
 
   build-wasm2c-memchecked:
     name: wasm2c-memchecked
