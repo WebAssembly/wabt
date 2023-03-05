@@ -37,9 +37,11 @@ using namespace wabt;
 
 static const char* s_infile;
 static const char* s_outfile;
-static WriteWatOptions s_write_wat_options;
-static bool s_generate_names;
 static bool s_debug_parsing;
+static bool s_fold_exprs;
+static bool s_generate_names;
+static bool s_inline_import;
+static bool s_inline_export;
 static Features s_features;
 
 static const char s_description[] =
@@ -64,11 +66,11 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
                    []() { s_debug_parsing = true; });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
-                   []() { s_write_wat_options.fold_exprs = true; });
+                   []() { s_fold_exprs = true; });
   parser.AddOption("inline-exports", "Write all exports inline",
-                   []() { s_write_wat_options.inline_export = true; });
+                   []() { s_inline_export = true; });
   parser.AddOption("inline-imports", "Write all imports inline",
-                   []() { s_write_wat_options.inline_import = true; });
+                   []() { s_inline_import = true; });
   s_features.AddOptions(&parser);
   parser.AddOption(
       "generate-names",
@@ -115,8 +117,12 @@ int ProgramMain(int argc, char** argv) {
     }
 
     if (Succeeded(result)) {
+      WriteWatOptions wat_options(s_features);
+      wat_options.fold_exprs = s_fold_exprs;
+      wat_options.inline_import = s_inline_import;
+      wat_options.inline_export = s_inline_export;
       FileStream stream(s_outfile ? FileStream(s_outfile) : FileStream(stdout));
-      result = WriteWat(&stream, module, s_write_wat_options);
+      result = WriteWat(&stream, module, wat_options);
     }
   }
 
