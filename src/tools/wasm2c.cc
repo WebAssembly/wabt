@@ -57,7 +57,7 @@ examples:
 )";
 
 static const std::string supported_features[] = {
-    "multi-memory", "multi-value", "sign-extend", "saturating-float-to-int",
+    "multi-memory", "multi-value", "sign-extension", "saturating-float-to-int",
     "exceptions",   "memory64"};
 
 static bool IsFeatureSupported(const std::string& feature) {
