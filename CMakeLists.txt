@@ -488,10 +488,8 @@ function(wabt_executable)
   target_link_libraries(${EXE_NAME} ${EXE_LIBS})
 
   if (EMSCRIPTEN)
-    # build to JS for now, as node.js doesn't have code caching for wasm yet,
-    # and wasm startup times are slower
     set(EXTRA_LINK_FLAGS
-      "${EXTRA_LINK_FLAGS} -s NODERAWFS -s SINGLE_FILE -s WASM=0 -Oz -s ALLOW_MEMORY_GROWTH=1"
+      "${EXTRA_LINK_FLAGS} -sNODERAWFS -Oz -sALLOW_MEMORY_GROWTH"
     )
   endif ()
 
