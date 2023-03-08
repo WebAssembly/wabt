@@ -262,6 +262,7 @@ class CWriter {
 
   static const char* GetReferenceTypeName(const Type& type);
   static const char* GetReferenceNullValue(const Type& type);
+  static const char* GetCTypeName(const Type& type);
 
   enum class CWriterPhase {
     Declarations,
@@ -291,6 +292,7 @@ class CWriter {
   void Write(const ResultType&);
   void Write(const Const&);
   void WriteInitExpr(const ExprList&);
+  void WriteInitExprTerminal(const Expr*);
   std::string GenerateHeaderGuard() const;
   void WriteSourceTop();
   void WriteMultivalueTypes();
@@ -1057,20 +1059,25 @@ void CWriter::Write(const StackVar& sv) {
   }
 }
 
-void CWriter::Write(Type type) {
+// static
+const char* CWriter::GetCTypeName(const Type& type) {
   // clang-format off
   switch (type) {
-    case Type::I32: Write("u32"); break;
-    case Type::I64: Write("u64"); break;
-    case Type::F32: Write("f32"); break;
-    case Type::F64: Write("f64"); break;
-    case Type::V128: Write("v128"); break;
-    case Type::FuncRef: Write("wasm_rt_funcref_t"); break;
-    case Type::ExternRef: Write("wasm_rt_externref_t"); break;
+  case Type::I32: return "u32";
+  case Type::I64: return "u64";
+  case Type::F32: return "f32";
+  case Type::F64: return "f64";
+  case Type::V128: return "v128";
+  case Type::FuncRef: return "wasm_rt_funcref_t";
+  case Type::ExternRef: return "wasm_rt_externref_t";
     default:
       WABT_UNREACHABLE;
   }
   // clang-format on
+}
+
+void CWriter::Write(Type type) {
+  Write(GetCTypeName(type));
 }
 
 void CWriter::Write(TypeEnum type) {
@@ -1199,12 +1206,77 @@ void CWriter::WriteGetFuncTypeDecl() {
 }
 
 void CWriter::WriteInitExpr(const ExprList& expr_list) {
-  if (expr_list.empty())
-    return;
+  if (expr_list.empty()) {
+    WABT_UNREACHABLE;
+  }
 
-  assert(expr_list.size() == 1);
-  const Expr* expr = &expr_list.front();
-  switch (expr_list.front().type()) {
+  std::vector<std::string> mini_stack;
+
+  for (const auto& expr : expr_list) {
+    if (expr.type() == ExprType::Binary) {
+      // Extended const expressions include at least one binary op.
+      // This builds a C expression from the operands.
+      if (mini_stack.size() < 2) {
+        WABT_UNREACHABLE;
+      }
+
+      const auto binexpr = cast<BinaryExpr>(&expr);
+      char op;
+      switch (binexpr->opcode) {
+        case Opcode::I32Add:
+        case Opcode::I64Add:
+        case Opcode::F32Add:
+        case Opcode::F64Add:
+          op = '+';
+          break;
+
+        case Opcode::I32Sub:
+        case Opcode::I64Sub:
+        case Opcode::F32Sub:
+        case Opcode::F64Sub:
+          op = '-';
+          break;
+
+        case Opcode::I32Mul:
+        case Opcode::I64Mul:
+        case Opcode::F32Mul:
+        case Opcode::F64Mul:
+          op = '*';
+          break;
+
+        default:
+          WABT_UNREACHABLE;
+      }
+
+      std::string combination =
+          "((" + std::string(GetCTypeName(binexpr->opcode.GetParamType1())) +
+          ")" + mini_stack.at(mini_stack.size() - 2) + ")" + op + "((" +
+          std::string(GetCTypeName(binexpr->opcode.GetParamType2())) + ")" +
+          mini_stack.at(mini_stack.size() - 1) + ")";
+      mini_stack.resize(mini_stack.size() - 2);
+      mini_stack.push_back(move(combination));
+    } else {
+      // Leaf node (nullary const expression)
+      Stream* existing_stream = stream_;
+      MemoryStream terminal_stream;
+      stream_ = &terminal_stream;
+      WriteInitExprTerminal(&expr);
+      const auto& buf = terminal_stream.output_buffer();
+      mini_stack.emplace_back(reinterpret_cast<const char*>(buf.data.data()),
+                              buf.data.size());
+      stream_ = existing_stream;
+    }
+  }
+
+  if (mini_stack.size() != 1) {
+    WABT_UNREACHABLE;
+  }
+
+  Write(mini_stack.front());
+}
+
+void CWriter::WriteInitExprTerminal(const Expr* expr) {
+  switch (expr->type()) {
     case ExprType::Const:
       Write(cast<ConstExpr>(expr)->const_);
       break;

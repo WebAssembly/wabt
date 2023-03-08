@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/extended-const/data.wast
+;;; ARGS*: --enable-extended-const
+(;; STDOUT ;;;
+14/14 tests passed.
+;;; STDOUT ;;)
