@@ -18,6 +18,8 @@ docs/demo/third_party/codemirror/codemirror.js binary
 test/parse/bad-crlf.txt binary
 test/parse/bad-string-eof.txt binary
 test/regress/regress-31.txt binary
+test/regress/bad-annotation* binary
+test/regress/unterminated-annotation* binary
 
 # Highlight tests like .wast files when displayed on GitHub.
 test/**/*.txt linguist-language=WebAssembly

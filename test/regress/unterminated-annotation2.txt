@@ -1,0 +1,9 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-annotations
+;;; ERROR: 1
+(module
+   (func (@hello "this is a test"
+(;; STDERR ;;;
+out/test/regress/unterminated-annotation2.txt:6:1: error: unterminated annotation
+out/test/regress/unterminated-annotation2.txt:6:1: error: unexpected token EOF, expected ).
+;;; STDERR ;;)

@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-annotations --enable-code-metadata
+;;; ERROR: 1
+(module
+   (func (@metadata.code.data "this is a test"
+(;; STDERR ;;;
+out/test/regress/unterminated-annotation.txt:6:1: error: unexpected token EOF, expected ).
+;;; STDERR ;;)
