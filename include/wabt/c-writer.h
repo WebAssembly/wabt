@@ -28,12 +28,15 @@ class Stream;
 
 struct WriteCOptions {
   std::string_view module_name;
-  /* name_to_index takes list of all functions in the module, number of imported
-   * functions, and number of .c outputs as argument, returns a vector where
-   * vector[i] the index of the .c output that funcs[i] goes into. */
-  std::function<std::vector<size_t>(const std::vector<Func*>&,
-                                    const size_t,
-                                    const size_t)>
+  /* name_to_index takes const iterators to begin and end of a list of all
+   * functions in the module, number of imported functions, and number of .c
+   * outputs as argument, returns a vector where vector[i] the index of the .c
+   * output that funcs_begin + i goes into. */
+  std::function<std::vector<size_t>(
+      std::vector<Func*>::const_iterator funcs_begin,
+      std::vector<Func*>::const_iterator funcs_end,
+      const size_t,
+      const size_t)>
       name_to_index;
 };
 

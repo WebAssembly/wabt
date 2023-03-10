@@ -18,10 +18,12 @@
 
 #include <cctype>
 #include <cinttypes>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <set>
 #include <string_view>
+#include <vector>
 
 #include "wabt/cast.h"
 #include "wabt/common.h"
@@ -177,22 +179,23 @@ int GetShiftMask(Type type) {
  * buckets (# of non-imported functions / # of .c outputs) based on the sorting.
  */
 static std::vector<size_t> default_name_to_index(
-    const std::vector<Func*>& funcs,
+    std::vector<Func*>::const_iterator func_begin,
+    std::vector<Func*>::const_iterator func_end,
     const size_t num_imports,
     const size_t num_streams) {
   std::vector<size_t> result;
-  result.resize(funcs.size());
+  result.resize(std::distance(func_begin, func_end));
   if (num_streams == 1) {
     return result;
   }
 
   std::map<std::string, Index> sorted_functions;
-  size_t non_imported_funcs = funcs.size() - num_imports;
+  size_t non_imported_funcs = result.size() - num_imports;
   size_t bucket_size = non_imported_funcs / num_streams +
                        (non_imported_funcs % num_streams ? 1 : 0);
   Index func_index = 0;
-  for (const Func* func : funcs) {
-    sorted_functions.insert({func->name, func_index});
+  for (auto func = func_begin; func != func_end; func++) {
+    sorted_functions.insert({(*func)->name, func_index});
     ++func_index;
   }
   Index sorted_func_index = 0;
@@ -473,7 +476,8 @@ class CWriter {
 
   std::vector<std::string> unique_func_type_names_;
 
-  std::function<std::vector<size_t>(const std::vector<Func*>&,
+  std::function<std::vector<size_t>(std::vector<Func*>::const_iterator,
+                                    std::vector<Func*>::const_iterator,
                                     const size_t,
                                     const size_t)>
       name_to_index_;
@@ -2513,8 +2517,9 @@ void CWriter::WriteFree() {
 }
 
 void CWriter::WriteFuncs() {
-  std::vector<size_t> c_stream_assignment = name_to_index_(
-      module_->funcs, module_->num_func_imports, c_streams_.size());
+  std::vector<size_t> c_stream_assignment =
+      name_to_index_(module_->funcs.begin(), module_->funcs.end(),
+                     module_->num_func_imports, c_streams_.size());
   Index func_index = 0;
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
