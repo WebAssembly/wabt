@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (memory $mem 1)
+   (@_memory" (memory $mem))
+(;; STDERR ;;;
+out/test/regress/bad-annotation2.txt:4:29: error: newline in string
+   (@_memory" (memory $mem))
+                            ^
+out/test/regress/bad-annotation2.txt:5:1: error: annotations not enabled: 
+out/test/regress/bad-annotation2.txt:5:1: error: unexpected token Invalid, expected ).
+;;; STDERR ;;)

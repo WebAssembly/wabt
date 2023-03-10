@@ -623,6 +623,11 @@ TokenType WastParser::Peek(size_t n) {
             indent--;
             break;
 
+          case TokenType::Eof:
+            indent = 0;
+            Error(cur.loc, "unterminated annotation");
+            break;
+
           default:
             break;
         }
@@ -1956,10 +1961,7 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   CHECK_RESULT(ParseQuotedText(&data_text, false));
   std::vector<uint8_t> data(data_text.begin(), data_text.end());
   exprs->push_back(std::make_unique<CodeMetadataExpr>(name, std::move(data)));
-  TokenType rpar = Peek();
-  WABT_USE(rpar);
-  assert(rpar == TokenType::Rpar);
-  Consume();
+  EXPECT(Rpar);
   return Result::Ok;
 }
 

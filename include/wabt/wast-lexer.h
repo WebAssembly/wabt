@@ -95,7 +95,7 @@ class WastLexer {
   Token GetInfToken();
   Token GetNanToken();
   Token GetNameEqNumToken(std::string_view name, TokenType);
-  Token GetIdToken();
+  Token GetIdChars();
   Token GetKeywordToken();
   Token GetReservedToken();
 

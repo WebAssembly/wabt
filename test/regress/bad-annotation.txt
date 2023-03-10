@@ -3,10 +3,10 @@
 (@"annotation
 
 (;; STDERR ;;;
-out/test/regress/bad-annotation.txt:3:1: error: annotations not enabled: "annotation
+out/test/regress/bad-annotation.txt:3:14: error: newline in string
 (@"annotation
-^^^^^^^^^^^^^
-out/test/regress/bad-annotation.txt:3:1: error: unexpected token "Invalid", expected a module field or a module.
-(@"annotation
-^^^^^^^^^^^^^
+             ^
+out/test/regress/bad-annotation.txt:4:1: error: newline in string
+out/test/regress/bad-annotation.txt:5:1: error: annotations not enabled: 
+out/test/regress/bad-annotation.txt:5:1: error: unexpected token "Invalid", expected a module field or a module.
 ;;; STDERR ;;)

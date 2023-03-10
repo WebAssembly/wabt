@@ -70,7 +70,7 @@ Token WastLexer::GetToken() {
           }
           return BareToken(TokenType::Eof);
         } else if (MatchString("(@")) {
-          GetIdToken();
+          GetIdChars();
           // offset=2 to skip the "(@" prefix
           return TextToken(TokenType::LparAnn, 2);
         } else {
@@ -151,7 +151,7 @@ Token WastLexer::GetToken() {
         return GetNumberToken(TokenType::Nat);
 
       case '$':
-        return GetIdToken();
+        return GetIdChars();  // Initial $ is idchar, so this produces id token
 
       case 'a':
         return GetNameEqNumToken("align=", TokenType::AlignEqNat);
@@ -187,6 +187,16 @@ Location WastLexer::GetLocation() {
 }
 
 std::string_view WastLexer::GetText(size_t offset) {
+  // Bounds checks are necessary because token_start may have been moved
+  // (e.g. if GetStringToken found a newline and reset token_start to
+  // point at it).
+
+  if (token_start_ + offset >= buffer_end_)
+    return {};
+
+  if (cursor_ <= token_start_ + offset)
+    return {};
+
   return std::string_view(token_start_ + offset,
                           (cursor_ - token_start_) - offset);
 }
@@ -577,8 +587,7 @@ Token WastLexer::GetNameEqNumToken(std::string_view name,
   return GetKeywordToken();
 }
 
-Token WastLexer::GetIdToken() {
-  ReadChar();
+Token WastLexer::GetIdChars() {
   if (ReadReservedChars() == ReservedChars::Id) {
     return TextToken(TokenType::Var);
   }
