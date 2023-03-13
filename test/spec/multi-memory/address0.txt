@@ -1,0 +1,23 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/address0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/address0.wast:193: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/multi-memory/address0.wast:195: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
+out/test/spec/multi-memory/address0.wast:196: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
+out/test/spec/multi-memory/address0.wast:197: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
+out/test/spec/multi-memory/address0.wast:198: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
+out/test/spec/multi-memory/address0.wast:199: assert_trap passed: out of bounds memory access: access at 4294967296+4 >= max value 65536
+out/test/spec/multi-memory/address0.wast:200: assert_trap passed: out of bounds memory access: access at 4294967296+4 >= max value 65536
+out/test/spec/multi-memory/address0.wast:202: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/multi-memory/address0.wast:203: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/multi-memory/address0.wast:204: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/multi-memory/address0.wast:205: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/multi-memory/address0.wast:206: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/multi-memory/address0.wast:208: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
+out/test/spec/multi-memory/address0.wast:209: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
+out/test/spec/multi-memory/address0.wast:210: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
+out/test/spec/multi-memory/address0.wast:211: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
+out/test/spec/multi-memory/address0.wast:212: assert_trap passed: out of bounds memory access: access at 4294967296+4 >= max value 65536
+92/92 tests passed.
+;;; STDOUT ;;)

@@ -1,0 +1,11 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/float_exprs0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+init(i32:0, f64:15.100000) =>
+init(i32:8, f64:15.200000) =>
+init(i32:16, f64:15.300000) =>
+init(i32:24, f64:15.400000) =>
+run(i32:32, f64:3.000000) =>
+14/14 tests passed.
+;;; STDOUT ;;)

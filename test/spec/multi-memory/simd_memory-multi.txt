@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/simd_memory-multi.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)

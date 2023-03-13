@@ -1,0 +1,20 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/imports2.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/imports2.wast:20: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
+out/test/spec/multi-memory/imports2.wast:31: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
+out/test/spec/multi-memory/imports2.wast:49: assert_unlinkable passed:
+  error: invalid import "test.unknown"
+out/test/spec/multi-memory/imports2.wast:53: assert_unlinkable passed:
+  error: invalid import "spectest.unknown"
+out/test/spec/multi-memory/imports2.wast:58: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (3)
+out/test/spec/multi-memory/imports2.wast:62: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (3)
+out/test/spec/multi-memory/imports2.wast:66: assert_unlinkable passed:
+  error: actual size (1) smaller than declared (2)
+out/test/spec/multi-memory/imports2.wast:70: assert_unlinkable passed:
+  error: max size (2) larger than declared (1)
+19/19 tests passed.
+;;; STDOUT ;;)

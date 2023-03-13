@@ -880,10 +880,10 @@ static void init_instance_import(w2c_test* instance, struct w2c_wasi__snapshot__
 void wasm2c_test_instantiate(w2c_test* instance, struct w2c_wasi__snapshot__preview1* w2c_wasi__snapshot__preview1_instance) {
   assert(wasm_rt_is_initialized());
   init_instance_import(instance, w2c_wasi__snapshot__preview1_instance);
-  init_memories(instance);
   init_tables(instance);
-  init_data_instances(instance);
+  init_memories(instance);
   init_elem_instances(instance);
+  init_data_instances(instance);
 }
 
 void wasm2c_test_free(w2c_test* instance) {

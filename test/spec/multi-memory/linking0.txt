@@ -1,0 +1,9 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/linking0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/linking0.wast:17: assert_unlinkable passed:
+  error: invalid import "Mt.mem"
+out/test/spec/multi-memory/linking0.wast:27: assert_trap passed: uninitialized table element
+5/5 tests passed.
+;;; STDOUT ;;)

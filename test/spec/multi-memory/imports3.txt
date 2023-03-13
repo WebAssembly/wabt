@@ -1,0 +1,22 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/imports3.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/imports3.wast:20: assert_unlinkable passed:
+  error: expected import "test.func-i32" to have kind memory, not func
+out/test/spec/multi-memory/imports3.wast:27: assert_unlinkable passed:
+  error: expected import "test.global-i32" to have kind memory, not global
+out/test/spec/multi-memory/imports3.wast:34: assert_unlinkable passed:
+  error: expected import "test.table-10-inf" to have kind memory, not table
+out/test/spec/multi-memory/imports3.wast:41: assert_unlinkable passed:
+  error: expected import "spectest.print_i32" to have kind memory, not func
+out/test/spec/multi-memory/imports3.wast:48: assert_unlinkable passed:
+  error: expected import "spectest.global_i32" to have kind memory, not global
+out/test/spec/multi-memory/imports3.wast:55: assert_unlinkable passed:
+  error: expected import "spectest.table" to have kind memory, not table
+out/test/spec/multi-memory/imports3.wast:63: assert_unlinkable passed:
+  error: actual size (1) smaller than declared (2)
+out/test/spec/multi-memory/imports3.wast:70: assert_unlinkable passed:
+  error: max size (2) larger than declared (1)
+9/9 tests passed.
+;;; STDOUT ;;)

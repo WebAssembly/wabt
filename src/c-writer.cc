@@ -2169,17 +2169,17 @@ void CWriter::WriteInit() {
   if (!module_->globals.empty()) {
     Write("init_globals(instance);", Newline());
   }
-  if (!module_->memories.empty()) {
-    Write("init_memories(instance);", Newline());
-  }
   if (!module_->tables.empty()) {
     Write("init_tables(instance);", Newline());
   }
-  if (!module_->memories.empty() && !module_->data_segments.empty()) {
-    Write("init_data_instances(instance);", Newline());
+  if (!module_->memories.empty()) {
+    Write("init_memories(instance);", Newline());
   }
   if (!module_->tables.empty() && !module_->elem_segments.empty()) {
     Write("init_elem_instances(instance);", Newline());
+  }
+  if (!module_->memories.empty() && !module_->data_segments.empty()) {
+    Write("init_data_instances(instance);", Newline());
   }
 
   for (Var* var : module_->starts) {
