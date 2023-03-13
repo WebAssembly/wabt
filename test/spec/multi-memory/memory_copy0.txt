@@ -1,0 +1,15 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_copy0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+copy(i32:10, i32:0, i32:4) =>
+copy(i32:8, i32:10, i32:4) =>
+copy(i32:10, i32:7, i32:6) =>
+copy(i32:65280, i32:0, i32:256) =>
+copy(i32:65024, i32:65280, i32:256) =>
+copy(i32:65536, i32:0, i32:0) =>
+copy(i32:0, i32:65536, i32:0) =>
+out/test/spec/multi-memory/memory_copy0.wast:56: assert_trap passed: out of bounds memory access: memory.copy out of bound
+out/test/spec/multi-memory/memory_copy0.wast:58: assert_trap passed: out of bounds memory access: memory.copy out of bound
+29/29 tests passed.
+;;; STDOUT ;;)

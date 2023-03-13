@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_trap1.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+167/167 tests passed.
+;;; STDOUT ;;)

@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/linking2.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+10/10 tests passed.
+;;; STDOUT ;;)

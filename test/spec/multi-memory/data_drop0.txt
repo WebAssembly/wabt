@@ -1,0 +1,14 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/data_drop0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+init_passive(i32:1) =>
+drop_passive() =>
+drop_passive() =>
+out/test/spec/multi-memory/data_drop0.wast:22: assert_trap passed: out of bounds memory access: memory.init out of bounds
+init_passive(i32:0) =>
+drop_active() =>
+out/test/spec/multi-memory/data_drop0.wast:26: assert_trap passed: out of bounds memory access: memory.init out of bounds
+init_active(i32:0) =>
+11/11 tests passed.
+;;; STDOUT ;;)

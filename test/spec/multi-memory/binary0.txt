@@ -1,0 +1,10 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/binary0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/binary0.wast:48: assert_malformed passed:
+  000000e: error: unable to read u32 leb128: memory initial page count
+out/test/spec/multi-memory/binary0.wast:59: assert_malformed passed:
+  000000d: error: unable to read uint8_t: memory flags
+7/7 tests passed.
+;;; STDOUT ;;)

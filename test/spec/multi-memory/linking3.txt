@@ -1,0 +1,8 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/linking3.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/linking3.wast:15: assert_unlinkable passed:
+  error: invalid import "Mm.tab"
+12/12 tests passed.
+;;; STDOUT ;;)

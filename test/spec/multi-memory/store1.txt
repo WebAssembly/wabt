@@ -1,0 +1,10 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/store1.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+store(i32:0, i64:1) =>
+store(i32:0, i64:2) =>
+store1(i32:0, i64:1) =>
+store2(i32:0, i64:2) =>
+11/11 tests passed.
+;;; STDOUT ;;)

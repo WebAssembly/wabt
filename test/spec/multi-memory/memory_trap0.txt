@@ -1,0 +1,16 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_trap0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+out/test/spec/multi-memory/memory_trap0.wast:25: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:26: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:27: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:28: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:29: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:30: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:31: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:32: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:33: assert_trap passed: out of bounds memory access: access at 2147549184+4 >= max value 65536
+out/test/spec/multi-memory/memory_trap0.wast:34: assert_trap passed: out of bounds memory access: access at 2147549184+4 >= max value 65536
+14/14 tests passed.
+;;; STDOUT ;;)

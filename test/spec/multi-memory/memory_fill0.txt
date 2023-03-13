@@ -1,0 +1,12 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_fill0.wast
+;;; ARGS*: --enable-multi-memory
+(;; STDOUT ;;;
+fill(i32:1, i32:255, i32:3) =>
+fill(i32:0, i32:48042, i32:2) =>
+fill(i32:0, i32:0, i32:65536) =>
+out/test/spec/multi-memory/memory_fill0.wast:34: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+fill(i32:65536, i32:0, i32:0) =>
+out/test/spec/multi-memory/memory_fill0.wast:43: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+16/16 tests passed.
+;;; STDOUT ;;)
