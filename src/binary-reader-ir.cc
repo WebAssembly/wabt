@@ -91,6 +91,8 @@ class CodeMetadataExprQueue {
 };
 
 class BinaryReaderIR : public BinaryReaderNop {
+  static constexpr size_t kMaxNestingDepth = 1024;  // max depth of label stack
+
  public:
   BinaryReaderIR(Module* out_module, const char* filename, Errors* errors);
 
@@ -350,9 +352,9 @@ class BinaryReaderIR : public BinaryReaderNop {
  private:
   Location GetLocation() const;
   void PrintError(const char* format, ...);
-  void PushLabel(LabelType label_type,
-                 ExprList* first,
-                 Expr* context = nullptr);
+  Result PushLabel(LabelType label_type,
+                   ExprList* first,
+                   Expr* context = nullptr);
   Result BeginInitExpr(ExprList* init_expr);
   Result EndInitExpr();
   Result PopLabel();
@@ -404,10 +406,15 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReaderIR::PrintError(const char* format,
   errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset), buffer);
 }
 
-void BinaryReaderIR::PushLabel(LabelType label_type,
-                               ExprList* first,
-                               Expr* context) {
+Result BinaryReaderIR::PushLabel(LabelType label_type,
+                                 ExprList* first,
+                                 Expr* context) {
+  if (label_stack_.size() >= kMaxNestingDepth) {
+    PrintError("label stack exceeds max nesting depth");
+    return Result::Error;
+  }
   label_stack_.emplace_back(label_type, first, context);
+  return Result::Ok;
 }
 
 Result BinaryReaderIR::PopLabel() {
@@ -728,8 +735,7 @@ Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
 Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
   current_func_ = module_->funcs[index];
   current_func_->loc = GetLocation();
-  PushLabel(LabelType::Func, &current_func_->exprs);
-  return Result::Ok;
+  return PushLabel(LabelType::Func, &current_func_->exprs);
 }
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
@@ -807,8 +813,7 @@ Result BinaryReaderIR::OnBlockExpr(Type sig_type) {
   SetBlockDeclaration(&expr->block.decl, sig_type);
   ExprList* expr_list = &expr->block.exprs;
   CHECK_RESULT(AppendExpr(std::move(expr)));
-  PushLabel(LabelType::Block, expr_list);
-  return Result::Ok;
+  return PushLabel(LabelType::Block, expr_list);
 }
 
 Result BinaryReaderIR::OnBrExpr(Index depth) {
@@ -961,8 +966,7 @@ Result BinaryReaderIR::OnIfExpr(Type sig_type) {
   SetBlockDeclaration(&expr->true_.decl, sig_type);
   ExprList* expr_list = &expr->true_.exprs;
   CHECK_RESULT(AppendExpr(std::move(expr)));
-  PushLabel(LabelType::If, expr_list);
-  return Result::Ok;
+  return PushLabel(LabelType::If, expr_list);
 }
 
 Result BinaryReaderIR::OnLoadExpr(Opcode opcode,
@@ -978,8 +982,7 @@ Result BinaryReaderIR::OnLoopExpr(Type sig_type) {
   SetBlockDeclaration(&expr->block.decl, sig_type);
   ExprList* expr_list = &expr->block.exprs;
   CHECK_RESULT(AppendExpr(std::move(expr)));
-  PushLabel(LabelType::Loop, expr_list);
-  return Result::Ok;
+  return PushLabel(LabelType::Loop, expr_list);
 }
 
 Result BinaryReaderIR::OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) {
@@ -1117,8 +1120,7 @@ Result BinaryReaderIR::OnTryExpr(Type sig_type) {
   ExprList* expr_list = &expr->block.exprs;
   SetBlockDeclaration(&expr->block.decl, sig_type);
   CHECK_RESULT(AppendExpr(std::move(expr_ptr)));
-  PushLabel(LabelType::Try, expr_list, expr);
-  return Result::Ok;
+  return PushLabel(LabelType::Try, expr_list, expr);
 }
 
 Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
@@ -1266,8 +1268,7 @@ Result BinaryReaderIR::BeginElemSegment(Index index,
 }
 
 Result BinaryReaderIR::BeginInitExpr(ExprList* expr) {
-  PushLabel(LabelType::InitExpr, expr);
-  return Result::Ok;
+  return PushLabel(LabelType::InitExpr, expr);
 }
 
 Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
