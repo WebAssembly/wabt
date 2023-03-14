@@ -91,7 +91,7 @@ class CodeMetadataExprQueue {
 };
 
 class BinaryReaderIR : public BinaryReaderNop {
-  static constexpr size_t kMaxNestingDepth = 1024;  // max depth of label stack
+  static constexpr size_t kMaxNestingDepth = 16384;  // max depth of label stack
 
  public:
   BinaryReaderIR(Module* out_module, const char* filename, Errors* errors);
