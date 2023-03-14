@@ -458,24 +458,24 @@ module doesn't use any globals, memory or tables.
 The most interesting part is the definition of the function `fac`:
 
 ```c
-static u32 w2c_fac_fac_0(w2c_fac* instance, u32 w2c_p0) {
+static u32 w2c_fac_fac_0(w2c_fac* instance, u32 var_p0) {
   FUNC_PROLOGUE;
-  u32 w2c_i0, w2c_i1, w2c_i2;
-  w2c_i0 = w2c_p0;
-  w2c_i1 = 0u;
-  w2c_i0 = w2c_i0 == w2c_i1;
-  if (w2c_i0) {
-    w2c_i0 = 1u;
+  u32 var_i0, var_i1, var_i2;
+  var_i0 = var_p0;
+  var_i1 = 0u;
+  var_i0 = var_i0 == var_i1;
+  if (var_i0) {
+    var_i0 = 1u;
   } else {
-    w2c_i0 = w2c_p0;
-    w2c_i1 = w2c_p0;
-    w2c_i2 = 1u;
-    w2c_i1 -= w2c_i2;
-    w2c_i1 = w2c_fac_fac_0(instance, w2c_i1);
-    w2c_i0 *= w2c_i1;
+    var_i0 = var_p0;
+    var_i1 = var_p0;
+    var_i2 = 1u;
+    var_i1 -= var_i2;
+    var_i1 = w2c_fac_fac_0(instance, var_i1);
+    var_i0 *= var_i1;
   }
   FUNC_EPILOGUE;
-  return w2c_i0;
+  return var_i0;
 }
 ```
 

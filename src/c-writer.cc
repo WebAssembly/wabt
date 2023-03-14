@@ -428,6 +428,7 @@ static constexpr char kParamSuffix =
 static constexpr char kLabelSuffix = kParamSuffix + 1;
 
 static constexpr char kSymbolPrefix[] = "w2c_";
+static constexpr char kLocalSymbolPrefix[] = "var_";
 static constexpr char kAdminSymbolPrefix[] = "wasm2c_";
 
 size_t CWriter::MarkTypeStack() const {
@@ -830,9 +831,9 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
 /* Names for params, locals, and stack vars are formatted as "w2c_" + name. */
 std::string CWriter::DefineLocalScopeName(std::string_view name,
                                           bool is_label) {
-  return ClaimUniqueName(local_syms_, local_sym_map_,
-                         is_label ? kLabelSuffix : kParamSuffix, name,
-                         kSymbolPrefix + MangleName(StripLeadingDollar(name)));
+  return ClaimUniqueName(
+      local_syms_, local_sym_map_, is_label ? kLabelSuffix : kParamSuffix, name,
+      kLocalSymbolPrefix + MangleName(StripLeadingDollar(name)));
 }
 
 std::string CWriter::DefineParamName(std::string_view name) {
@@ -847,7 +848,7 @@ std::string CWriter::DefineStackVarName(Index index,
                                         Type type,
                                         std::string_view name) {
   std::string unique =
-      FindUniqueName(local_syms_, kSymbolPrefix + MangleName(name));
+      FindUniqueName(local_syms_, kLocalSymbolPrefix + MangleName(name));
   StackTypePair stp = {index, type};
   [[maybe_unused]] bool success =
       stack_var_sym_map_.emplace(stp, unique).second;
@@ -2360,7 +2361,7 @@ void CWriter::PushFuncSection(std::string_view include_condition) {
 void CWriter::Write(const Func& func) {
   func_ = &func;
   // Copy symbols from global symbol table so we don't shadow them.
-  local_syms_ = global_syms_;
+  local_syms_.clear();
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
   func_sections_.clear();

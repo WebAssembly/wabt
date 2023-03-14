@@ -786,19 +786,19 @@ FUNC_TYPE_T(w2c_test_t0) = "\x92\xfb\x6a\xdf\x49\x07\x0a\x83\xbe\x08\x02\x68\xcd
 
 static u32 w2c_test_add_0(w2c_test*, u32, u32);
 
-static u32 w2c_test_add_0(w2c_test* instance, u32 w2c_p0, u32 w2c_p1) {
+static u32 w2c_test_add_0(w2c_test* instance, u32 var_p0, u32 var_p1) {
   FUNC_PROLOGUE;
-  u32 w2c_i0, w2c_i1;
-  w2c_i0 = w2c_p0;
-  w2c_i1 = w2c_p1;
-  w2c_i0 += w2c_i1;
+  u32 var_i0, var_i1;
+  var_i0 = var_p0;
+  var_i1 = var_p1;
+  var_i0 += var_i1;
   FUNC_EPILOGUE;
-  return w2c_i0;
+  return var_i0;
 }
 
 /* export: 'add' */
-u32 w2c_test_add(w2c_test* instance, u32 w2c_p0, u32 w2c_p1) {
-  return w2c_test_add_0(instance, w2c_p0, w2c_p1);
+u32 w2c_test_add(w2c_test* instance, u32 var_p0, u32 var_p1) {
+  return w2c_test_add_0(instance, var_p0, var_p1);
 }
 
 void wasm2c_test_instantiate(w2c_test* instance) {
