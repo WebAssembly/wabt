@@ -828,7 +828,7 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
                          ExportName(StripLeadingDollar(name)));
 }
 
-/* Names for params, locals, and stack vars are formatted as "w2c_" + name. */
+/* Names for params, locals, and stack vars are formatted as "var_" + name. */
 std::string CWriter::DefineLocalScopeName(std::string_view name,
                                           bool is_label) {
   return ClaimUniqueName(
