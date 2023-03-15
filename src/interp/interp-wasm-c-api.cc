@@ -63,9 +63,9 @@ static wasm_limits_t FromWabtLimits(const Limits&);
 static TypedValue ToWabtValue(const wasm_val_t&);
 static wasm_val_t FromWabtValue(Store&, const TypedValue&);
 
-static Values ToWabtValues(const wasm_val_t values[], size_t count);
+static Values ToWabtValues(const wasm_val_vec_t* values);
 static void FromWabtValues(Store& store,
-                           wasm_val_t values[],
+                           wasm_val_vec_t* values,
                            const ValueTypes& types,
                            const Values& wabt_values);
 
@@ -480,21 +480,23 @@ static wasm_limits_t FromWabtLimits(const Limits& limits) {
   return wasm_limits_t{(uint32_t)limits.initial, (uint32_t)limits.max};
 }
 
-static Values ToWabtValues(const wasm_val_t values[], size_t count) {
+static Values ToWabtValues(const wasm_val_vec_t* values) {
   Values result;
-  for (size_t i = 0; i < count; ++i) {
-    result.push_back(ToWabtValue(values[i]).value);
+  for (size_t i = 0; i < values->size; ++i) {
+    result.push_back(ToWabtValue(values->data[i]).value);
   }
   return result;
 }
 
 static void FromWabtValues(Store& store,
-                           wasm_val_t values[],
+                           wasm_val_vec_t* values,
                            const ValueTypes& types,
                            const Values& wabt_values) {
   assert(types.size() == wabt_values.size());
+  assert(types.size() == values->size);
   for (size_t i = 0; i < types.size(); ++i) {
-    values[i] = FromWabtValue(store, TypedValue{types[i], wabt_values[i]});
+    values->data[i] =
+        FromWabtValue(store, TypedValue{types[i], wabt_values[i]});
   }
 }
 
@@ -728,7 +730,7 @@ const wasm_externtype_t* wasm_exporttype_type(const wasm_exporttype_t* ex) {
 
 own wasm_instance_t* wasm_instance_new(wasm_store_t* store,
                                        const wasm_module_t* module,
-                                       const wasm_extern_t* const imports[],
+                                       const wasm_extern_vec_t* imports,
                                        own wasm_trap_t** trap_out) {
   TRACE("%p %p", store, module);
   assert(module);
@@ -736,7 +738,7 @@ own wasm_instance_t* wasm_instance_new(wasm_store_t* store,
 
   RefVec import_refs;
   for (size_t i = 0; i < module->As<Module>()->import_types().size(); i++) {
-    import_refs.push_back(imports[i]->I->self());
+    import_refs.push_back(imports->data[i]->I->self());
   }
 
   Trap::Ptr trap;
@@ -792,8 +794,8 @@ own wasm_func_t* wasm_func_new(wasm_store_t* store,
     wasm_val_vec_t params, results;
     wasm_val_vec_new_uninitialized(&params, wabt_params.size());
     wasm_val_vec_new_uninitialized(&results, wabt_results.size());
-    FromWabtValues(store->I, params.data, wabt_type.params, wabt_params);
-    auto trap = callback(params.data, results.data);
+    FromWabtValues(store->I, &params, wabt_type.params, wabt_params);
+    auto trap = callback(&params, &results);
     wasm_val_vec_delete(&params);
     if (trap) {
       *out_trap = trap->I.As<Trap>();
@@ -802,7 +804,7 @@ own wasm_func_t* wasm_func_new(wasm_store_t* store,
       delete[] results.data;
       return Result::Error;
     }
-    wabt_results = ToWabtValues(results.data, results.size);
+    wabt_results = ToWabtValues(&results);
     wasm_val_vec_delete(&results);
     return Result::Ok;
   };
@@ -821,8 +823,8 @@ own wasm_func_t* wasm_func_new_with_env(wasm_store_t* store,
     wasm_val_vec_t params, results;
     wasm_val_vec_new_uninitialized(&params, wabt_params.size());
     wasm_val_vec_new_uninitialized(&results, wabt_results.size());
-    FromWabtValues(store->I, params.data, wabt_type.params, wabt_params);
-    auto trap = callback(env, params.data, results.data);
+    FromWabtValues(store->I, &params, wabt_type.params, wabt_params);
+    auto trap = callback(env, &params, &results);
     wasm_val_vec_delete(&params);
     if (trap) {
       *out_trap = trap->I.As<Trap>();
@@ -831,7 +833,7 @@ own wasm_func_t* wasm_func_new_with_env(wasm_store_t* store,
       delete[] results.data;
       return Result::Error;
     }
-    wabt_results = ToWabtValues(results.data, results.size);
+    wabt_results = ToWabtValues(&results);
     wasm_val_vec_delete(&results);
     return Result::Ok;
   };
@@ -854,13 +856,13 @@ size_t wasm_func_param_arity(const wasm_func_t* func) {
 }
 
 own wasm_trap_t* wasm_func_call(const wasm_func_t* f,
-                                const wasm_val_t args[],
-                                wasm_val_t results[]) {
+                                const wasm_val_vec_t* args,
+                                wasm_val_vec_t* results) {
   // TODO: get some information about the function; name/index
   // TRACE("%d", f->index);
 
   auto&& func_type = f->As<Func>()->type();
-  Values wabt_args = ToWabtValues(args, func_type.params.size());
+  Values wabt_args = ToWabtValues(args);
   Values wabt_results;
   Trap::Ptr trap;
   if (Failed(
@@ -1177,24 +1179,24 @@ void wasm_val_vec_delete(own wasm_val_vec_t* vec) {
 WASM_IMPL_VEC_OWN(frame);
 WASM_IMPL_VEC_OWN(extern);
 
-#define WASM_IMPL_TYPE(name)                                        \
-  WASM_IMPL_OWN(name)                                               \
-  WASM_IMPL_VEC_OWN(name)                                           \
-  own wasm_##name##_t* wasm_##name##_copy(wasm_##name##_t* other) { \
-    TRACE0();                                                       \
-    return new wasm_##name##_t(*other);                             \
+#define WASM_IMPL_TYPE(name)                                              \
+  WASM_IMPL_OWN(name)                                                     \
+  WASM_IMPL_VEC_OWN(name)                                                 \
+  own wasm_##name##_t* wasm_##name##_copy(const wasm_##name##_t* other) { \
+    TRACE0();                                                             \
+    return new wasm_##name##_t(*other);                                   \
   }
 
 WASM_IMPL_TYPE(valtype);
 WASM_IMPL_TYPE(importtype);
 WASM_IMPL_TYPE(exporttype);
 
-#define WASM_IMPL_TYPE_CLONE(name)                                  \
-  WASM_IMPL_OWN(name)                                               \
-  WASM_IMPL_VEC_OWN(name)                                           \
-  own wasm_##name##_t* wasm_##name##_copy(wasm_##name##_t* other) { \
-    TRACE0();                                                       \
-    return static_cast<wasm_##name##_t*>(other->Clone().release()); \
+#define WASM_IMPL_TYPE_CLONE(name)                                        \
+  WASM_IMPL_OWN(name)                                                     \
+  WASM_IMPL_VEC_OWN(name)                                                 \
+  own wasm_##name##_t* wasm_##name##_copy(const wasm_##name##_t* other) { \
+    TRACE0();                                                             \
+    return static_cast<wasm_##name##_t*>(other->Clone().release());       \
   }
 
 WASM_IMPL_TYPE_CLONE(functype);
