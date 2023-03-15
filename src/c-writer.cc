@@ -427,7 +427,8 @@ static constexpr char kParamSuffix =
     'a' + static_cast<char>(ModuleFieldType::Tag) + 1;
 static constexpr char kLabelSuffix = kParamSuffix + 1;
 
-static constexpr char kSymbolPrefix[] = "w2c_";
+static constexpr char kGlobalSymbolPrefix[] = "w2c_";
+static constexpr char kLocalSymbolPrefix[] = "var_";
 static constexpr char kAdminSymbolPrefix[] = "wasm2c_";
 
 size_t CWriter::MarkTypeStack() const {
@@ -567,26 +568,26 @@ std::string CWriter::MangleTagTypes(const TypeVector& types) {
 
 /* The C symbol for an export from this module. */
 std::string CWriter::ExportName(std::string_view export_name) {
-  return kSymbolPrefix + module_prefix_ + '_' + MangleName(export_name);
+  return kGlobalSymbolPrefix + module_prefix_ + '_' + MangleName(export_name);
 }
 
 /* The C symbol for an export from an arbitrary module. */
 // static
 std::string CWriter::ExportName(std::string_view module_name,
                                 std::string_view export_name) {
-  return kSymbolPrefix + MangleModuleName(module_name) + '_' +
+  return kGlobalSymbolPrefix + MangleModuleName(module_name) + '_' +
          MangleName(export_name);
 }
 
 /* The type name of an instance of this module. */
 std::string CWriter::ModuleInstanceTypeName() const {
-  return kSymbolPrefix + module_prefix_;
+  return kGlobalSymbolPrefix + module_prefix_;
 }
 
 /* The type name of an instance of an arbitrary module. */
 // static
 std::string CWriter::ModuleInstanceTypeName(std::string_view module_name) {
-  return kSymbolPrefix + MangleModuleName(module_name);
+  return kGlobalSymbolPrefix + MangleModuleName(module_name);
 }
 
 /*
@@ -827,12 +828,12 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
                          ExportName(StripLeadingDollar(name)));
 }
 
-/* Names for params, locals, and stack vars are formatted as "w2c_" + name. */
+/* Names for params, locals, and stack vars are formatted as "var_" + name. */
 std::string CWriter::DefineLocalScopeName(std::string_view name,
                                           bool is_label) {
-  return ClaimUniqueName(local_syms_, local_sym_map_,
-                         is_label ? kLabelSuffix : kParamSuffix, name,
-                         kSymbolPrefix + MangleName(StripLeadingDollar(name)));
+  return ClaimUniqueName(
+      local_syms_, local_sym_map_, is_label ? kLabelSuffix : kParamSuffix, name,
+      kLocalSymbolPrefix + MangleName(StripLeadingDollar(name)));
 }
 
 std::string CWriter::DefineParamName(std::string_view name) {
@@ -847,7 +848,7 @@ std::string CWriter::DefineStackVarName(Index index,
                                         Type type,
                                         std::string_view name) {
   std::string unique =
-      FindUniqueName(local_syms_, kSymbolPrefix + MangleName(name));
+      FindUniqueName(local_syms_, kLocalSymbolPrefix + MangleName(name));
   StackTypePair stp = {index, type};
   [[maybe_unused]] bool success =
       stack_var_sym_map_.emplace(stp, unique).second;
@@ -861,8 +862,9 @@ std::string CWriter::DefineStackVarName(Index index,
  */
 std::string CWriter::DefineInstanceMemberName(ModuleFieldType type,
                                               std::string_view name) {
-  return ClaimUniqueName(global_syms_, global_sym_map_, MangleField(type), name,
-                         kSymbolPrefix + MangleName(StripLeadingDollar(name)));
+  return ClaimUniqueName(
+      global_syms_, global_sym_map_, MangleField(type), name,
+      kGlobalSymbolPrefix + MangleName(StripLeadingDollar(name)));
 }
 
 /*
@@ -2359,8 +2361,7 @@ void CWriter::PushFuncSection(std::string_view include_condition) {
 
 void CWriter::Write(const Func& func) {
   func_ = &func;
-  // Copy symbols from global symbol table so we don't shadow them.
-  local_syms_ = global_syms_;
+  local_syms_.clear();
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
   func_sections_.clear();

@@ -728,29 +728,29 @@ FUNC_TYPE_T(w2c_fac_t0) = "\x07\x80\x96\x7a\x42\xf7\x3e\xe6\x70\x5c\x2f\xac\x83\
 
 static u32 w2c_fac_fac_0(w2c_fac*, u32);
 
-static u32 w2c_fac_fac_0(w2c_fac* instance, u32 w2c_p0) {
+static u32 w2c_fac_fac_0(w2c_fac* instance, u32 var_p0) {
   FUNC_PROLOGUE;
-  u32 w2c_i0, w2c_i1, w2c_i2;
-  w2c_i0 = w2c_p0;
-  w2c_i1 = 0u;
-  w2c_i0 = w2c_i0 == w2c_i1;
-  if (w2c_i0) {
-    w2c_i0 = 1u;
+  u32 var_i0, var_i1, var_i2;
+  var_i0 = var_p0;
+  var_i1 = 0u;
+  var_i0 = var_i0 == var_i1;
+  if (var_i0) {
+    var_i0 = 1u;
   } else {
-    w2c_i0 = w2c_p0;
-    w2c_i1 = w2c_p0;
-    w2c_i2 = 1u;
-    w2c_i1 -= w2c_i2;
-    w2c_i1 = w2c_fac_fac_0(instance, w2c_i1);
-    w2c_i0 *= w2c_i1;
+    var_i0 = var_p0;
+    var_i1 = var_p0;
+    var_i2 = 1u;
+    var_i1 -= var_i2;
+    var_i1 = w2c_fac_fac_0(instance, var_i1);
+    var_i0 *= var_i1;
   }
   FUNC_EPILOGUE;
-  return w2c_i0;
+  return var_i0;
 }
 
 /* export: 'fac' */
-u32 w2c_fac_fac(w2c_fac* instance, u32 w2c_p0) {
-  return w2c_fac_fac_0(instance, w2c_p0);
+u32 w2c_fac_fac(w2c_fac* instance, u32 var_p0) {
+  return w2c_fac_fac_0(instance, var_p0);
 }
 
 void wasm2c_fac_instantiate(w2c_fac* instance) {
