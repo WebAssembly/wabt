@@ -193,9 +193,9 @@ out/test/spec/exception-handling/binary.wast:1048: assert_malformed passed:
 out/test/spec/exception-handling/binary.wast:1065: assert_malformed passed:
   0000017: error: unable to read u32 leb128: local type count
 out/test/spec/exception-handling/binary.wast:1082: assert_malformed passed:
-  000001c: error: local count must be < 0x10000000
+  000001e: error: local count must be < 0x100000000
 out/test/spec/exception-handling/binary.wast:1098: assert_malformed passed:
-  0000030: error: local count must be < 0x10000000
+  0000030: error: local count must be < 0x100000000
 out/test/spec/exception-handling/binary.wast:1132: assert_malformed passed:
   0000013: error: function signature count != function body count
 out/test/spec/exception-handling/binary.wast:1142: assert_malformed passed:
