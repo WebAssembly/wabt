@@ -16,7 +16,7 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-000001c: error: local count must be < 0x10000000
+000001e: error: local count must be <= 0xffffffff
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -34,4 +34,5 @@ Code[1]:
 Code Disassembly:
 
 000016 func[0]:
+ 000017: ff ff ff ff 0f 7f          | local[0..4294967294] type=i32
 ;;; STDOUT ;;)
