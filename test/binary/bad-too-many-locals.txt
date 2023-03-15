@@ -16,7 +16,7 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-000001e: error: local count must be < 0x100000000
+000001e: error: local count must be <= 0xffffffff
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
