@@ -99,7 +99,7 @@ Result ParseArgument(std::string argument, Value& val) {
   Result result = Result::Ok;
 
   size_t cindex;
-  if (argument.empty() || (cindex = argument.find(':')) == -1u) {
+  if (argument.empty() || (cindex = argument.find(':')) == std::string::npos) {
     return wabt::Result::Error;
   }
 
@@ -110,14 +110,14 @@ Result ParseArgument(std::string argument, Value& val) {
 
   if (strcmp(ptype, "i32") == 0) {
     uint32_t parsed_value;
-    result |=
-        ParseInt32(pval, pval_end, &parsed_value, ParseIntType::UnsignedOnly);
+    result |= ParseInt32(pval, pval_end, &parsed_value,
+                         ParseIntType::SignedAndUnsigned);
     val.Set(parsed_value);
   }
   if (strcmp(ptype, "i64") == 0) {
     uint64_t parsed_value;
-    result |=
-        ParseInt64(pval, pval_end, &parsed_value, ParseIntType::UnsignedOnly);
+    result |= ParseInt64(pval, pval_end, &parsed_value,
+                         ParseIntType::SignedAndUnsigned);
     val.Set(parsed_value);
   }
   if (strcmp(ptype, "f32") == 0) {
