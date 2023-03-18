@@ -110,14 +110,14 @@ Result ParseArgument(std::string argument, Value& val) {
 
   if (strcmp(ptype, "i32") == 0) {
     uint32_t parsed_value;
-    result |= ParseInt32(pval, pval_end, &parsed_value,
-                         ParseIntType::SignedAndUnsigned);
+    result |=
+        ParseInt32(pval, pval_end, &parsed_value, ParseIntType::UnsignedOnly);
     val.Set(parsed_value);
   }
   if (strcmp(ptype, "i64") == 0) {
     uint64_t parsed_value;
-    result |= ParseInt64(pval, pval_end, &parsed_value,
-                         ParseIntType::SignedAndUnsigned);
+    result |=
+        ParseInt64(pval, pval_end, &parsed_value, ParseIntType::UnsignedOnly);
     val.Set(parsed_value);
   }
   if (strcmp(ptype, "f32") == 0) {
