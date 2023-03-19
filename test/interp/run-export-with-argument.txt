@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp
-;;; ARGS*: -r func_fac -a "i32:10"
+;;; ARGS1: --run-export=func_fac --argument=i32:10
 (module
   (func (export "func_fac") (param i32) (result i32)
     local.get 0
