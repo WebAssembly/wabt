@@ -217,11 +217,12 @@ Result RunSpecificExports(const Instance::Ptr& instance,
   auto&& module_desc = module->desc();
 
   for (auto&& export_ : module_desc.exports) {
-    if (export_.type.type->kind != ExternalKind::Func) {
-      continue;
-    }
     for (auto& call_ : calls) {
       if (export_.type.name == call_.name) {
+        ERROR_EXIT_UNLESS(export_.type.type->kind == ExternalKind::Func,
+                          "Export '%s' is not a function\n",
+                          export_.type.name.c_str());
+
         if (s_trace_stream) {
           s_trace_stream->Writef(">>> running export \"%s\":\n",
                                  call_.name.c_str());

@@ -1,0 +1,10 @@
+;;; TOOL: run-interp
+;;; ARGS1: --run-export=global_export --argument=i32:10
+;;; ERROR: 1
+(module
+  (global $my_global i32 (i32.const 0))
+  (export "global_export" (global $my_global))
+)
+(;; STDOUT ;;;
+Export 'global_export' is not a function
+;;; STDOUT ;;)
