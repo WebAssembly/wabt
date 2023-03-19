@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp
-;;; ARGS: -r func_fac -a "i32:10"
+;;; ARGS*: -r func_fac -a "i32:10"
 (module
   (func (export "func_fac") (param i32) (result i32)
     local.get 0
@@ -23,5 +23,5 @@
     end) 
 )
 (;; STDOUT ;;;
-fac10(i32:10) => i32:3628800
+func_fac(i32:10) => i32:3628800
 ;;; STDOUT ;;)
