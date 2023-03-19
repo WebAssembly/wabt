@@ -1,0 +1,34 @@
+;;; TOOL: run-interp
+;;; ARGS1: --run-export=func_sum --argument=i64:8 --argument=i64:5 --run-export=func_fac --argument=i32:10
+(module
+  (func (export "func_sum") (param i64) (param i64) (result i64)
+    local.get 0
+    local.get 1
+    i64.add
+    return)
+
+  (func (export "func_fac") (param i32) (result i32)
+    local.get 0
+    call $fac)
+
+  (func $fac (param i32) (result i32)
+    local.get 0
+    i32.const 0
+    i32.gt_s 
+    if (result i32)
+      local.get 0
+      local.get 0
+      i32.const 1
+      i32.sub
+      call $fac
+      i32.mul
+      return
+    else
+      i32.const 1
+      return
+    end) 
+)
+(;; STDOUT ;;;
+func_sum(i64:8, i64:5) => i64:13
+func_fac(i32:10) => i32:3628800
+;;; STDOUT ;;)

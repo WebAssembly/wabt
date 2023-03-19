@@ -20,6 +20,9 @@ examples:
   # value stack size to 100 elements
   $ wasm-interp test.wasm -V 100 --run-all-exports
 
+  # parse test.wasm, run specific exported function by name with argument
+  $ wasm-interp test.wasm -r "func_sum" -a "i32:8" -a "i32:5"
+
 options:
       --help                                   Print this help message
       --version                                Print version information
@@ -46,6 +49,8 @@ options:
   -V, --value-stack-size=SIZE                  Size in elements of the value stack
   -C, --call-stack-size=SIZE                   Size in elements of the call stack
   -t, --trace                                  Trace execution
+  -r, --run-export=FUNCTION                    Run exported function by name
+  -a, --argument=ARGUMENT                      Add argument to an exported function execution
       --wasi                                   Assume input module is WASI compliant (Export  WASI API the the module and invoke _start function)
   -e, --env=ENV                                Pass the given environment string in the WASI runtime
   -d, --dir=DIR                                Pass the given directory the the WASI runtime

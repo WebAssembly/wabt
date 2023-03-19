@@ -29,6 +29,7 @@
 #include "wabt/interp/interp-util.h"
 #include "wabt/interp/interp-wasi.h"
 #include "wabt/interp/interp.h"
+#include "wabt/literal.h"
 #include "wabt/option-parser.h"
 #include "wabt/stream.h"
 
@@ -39,6 +40,19 @@
 using namespace wabt;
 using namespace wabt::interp;
 
+struct FunctionCall {
+  std::string name;
+  Values args;
+};
+
+#define ERROR_EXIT_UNLESS(cond, ...) \
+  do {                               \
+    if (!(cond)) {                   \
+      printf(__VA_ARGS__);           \
+      exit(1);                       \
+    }                                \
+  } while (0);
+
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
@@ -48,6 +62,7 @@ static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
 static bool s_wasi;
+static std::vector<FunctionCall> s_run_exports;
 static std::vector<std::string> s_wasi_env;
 static std::vector<std::string> s_wasi_argv;
 static std::vector<std::string> s_wasi_dirs;
@@ -75,7 +90,48 @@ examples:
   # parse test.wasm and run all its exported functions, setting the
   # value stack size to 100 elements
   $ wasm-interp test.wasm -V 100 --run-all-exports
+
+  # parse test.wasm, run specific exported function by name with argument
+  $ wasm-interp test.wasm -r "func_sum" -a "i32:8" -a "i32:5"
 )";
+
+Result ParseWasmValue(std::string argument, Value& val) {
+  Result result = Result::Ok;
+
+  size_t cindex;
+  if (argument.empty() || (cindex = argument.find(':')) == std::string::npos) {
+    return wabt::Result::Error;
+  }
+
+  argument[cindex] = '\0';
+  const char* ptype = argument.c_str();
+  const char* pval = argument.c_str() + cindex + 1;
+  const char* pval_end = ptype + argument.length();
+
+  if (strcmp(ptype, "i32") == 0) {
+    uint32_t parsed_value;
+    result |=
+        ParseInt32(pval, pval_end, &parsed_value, ParseIntType::UnsignedOnly);
+    val.Set(parsed_value);
+  }
+  if (strcmp(ptype, "i64") == 0) {
+    uint64_t parsed_value;
+    result |=
+        ParseInt64(pval, pval_end, &parsed_value, ParseIntType::UnsignedOnly);
+    val.Set(parsed_value);
+  }
+  if (strcmp(ptype, "f32") == 0) {
+    uint32_t parsed_value;
+    result |= ParseFloat(LiteralType::Float, pval, pval_end, &parsed_value);
+    val.Set(parsed_value);
+  }
+  if (strcmp(ptype, "f64") == 0) {
+    uint64_t parsed_value;
+    result |= ParseDouble(LiteralType::Float, pval, pval_end, &parsed_value);
+    val.Set(parsed_value);
+  }
+  return result;
+}
 
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-interp", s_description);
@@ -99,6 +155,26 @@ static void ParseOptions(int argc, char** argv) {
                    });
   parser.AddOption('t', "trace", "Trace execution",
                    []() { s_trace_stream = s_stdout_stream.get(); });
+  parser.AddOption('r', "run-export", "FUNCTION",
+                   "Run exported function by name",
+                   [](const std::string& argument) {
+                     FunctionCall func;
+                     func.name = argument;
+                     s_run_exports.push_back(func);
+                   });
+  parser.AddOption('a', "argument", "ARGUMENT",
+                   "Add argument to an exported function execution",
+                   [](const std::string& argument) {
+                     Value val;
+                     ERROR_EXIT_UNLESS(
+                         !s_run_exports.empty(),
+                         "Cannot find a function execution for argument '%s'\n",
+                         argument.c_str());
+                     ERROR_EXIT_UNLESS(Succeeded(ParseWasmValue(argument, val)),
+                                       "Failed to parse argument '%s'\n",
+                                       argument.c_str());
+                     s_run_exports.back().args.push_back(val);
+                   });
   parser.AddOption("wasi",
                    "Assume input module is WASI compliant (Export "
                    " WASI API the the module and invoke _start function)",
@@ -130,6 +206,40 @@ static void ParseOptions(int argc, char** argv) {
       "arg", OptionParser::ArgumentCount::ZeroOrMore,
       [](const char* argument) { s_wasi_argv.push_back(argument); });
   parser.Parse(argc, argv);
+}
+
+Result RunSpecificExports(const Instance::Ptr& instance,
+                          Errors* errors,
+                          std::vector<FunctionCall>& calls) {
+  Result result = Result::Ok;
+
+  auto module = s_store.UnsafeGet<Module>(instance->module());
+  auto&& module_desc = module->desc();
+
+  for (auto&& export_ : module_desc.exports) {
+    for (auto& call_ : calls) {
+      if (export_.type.name == call_.name) {
+        ERROR_EXIT_UNLESS(export_.type.type->kind == ExternalKind::Func,
+                          "Export '%s' is not a function\n",
+                          export_.type.name.c_str());
+
+        if (s_trace_stream) {
+          s_trace_stream->Writef(">>> running export \"%s\":\n",
+                                 call_.name.c_str());
+        }
+        auto* func_type = cast<FuncType>(export_.type.type.get());
+        auto func = s_store.UnsafeGet<Func>(instance->funcs()[export_.index]);
+        Values results;
+        Trap::Ptr trap;
+        result |=
+            func->Call(s_store, call_.args, results, &trap, s_trace_stream);
+        WriteCall(s_stdout_stream.get(), export_.type.name, *func_type,
+                  call_.args, results, trap);
+      }
+    }
+  }
+
+  return result;
 }
 
 Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
@@ -307,6 +417,10 @@ static Result ReadAndRunModule(const char* module_filename) {
 
   if (s_run_all_exports) {
     RunAllExports(instance, &errors);
+  }
+
+  if (!s_run_exports.empty()) {
+    RunSpecificExports(instance, &errors, s_run_exports);
   }
 #ifdef WITH_WASI
   if (s_wasi) {
