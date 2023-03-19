@@ -40,7 +40,7 @@
 using namespace wabt;
 using namespace wabt::interp;
 
-struct FunctionCallee {
+struct FunctionCall {
   std::string name;
   Values args;
 };
@@ -62,7 +62,7 @@ static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
 static bool s_wasi;
-static std::vector<FunctionCallee> s_run_exports;
+static std::vector<FunctionCall> s_run_exports;
 static std::vector<std::string> s_wasi_env;
 static std::vector<std::string> s_wasi_argv;
 static std::vector<std::string> s_wasi_dirs;
@@ -95,7 +95,7 @@ examples:
   $ wasm-interp test.wasm -r "func_sum" -a "i32:8" -a "i32:5"
 )";
 
-Result ParseArgument(std::string argument, Value& val) {
+Result ParseWasmValue(std::string argument, Value& val) {
   Result result = Result::Ok;
 
   size_t cindex;
@@ -158,7 +158,7 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption('r', "run-export", "FUNCTION",
                    "Run exported function by name",
                    [](const std::string& argument) {
-                     FunctionCallee func;
+                     FunctionCall func;
                      func.name = argument;
                      s_run_exports.push_back(func);
                    });
@@ -170,7 +170,7 @@ static void ParseOptions(int argc, char** argv) {
                          !s_run_exports.empty(),
                          "Cannot find a function execution for argument '%s'\n",
                          argument.c_str());
-                     ERROR_EXIT_UNLESS(Succeeded(ParseArgument(argument, val)),
+                     ERROR_EXIT_UNLESS(Succeeded(ParseWasmValue(argument, val)),
                                        "Failed to parse argument '%s'\n",
                                        argument.c_str());
                      s_run_exports.back().args.push_back(val);
@@ -210,7 +210,7 @@ static void ParseOptions(int argc, char** argv) {
 
 Result RunSpecificExports(const Instance::Ptr& instance,
                           Errors* errors,
-                          std::vector<FunctionCallee>& callees) {
+                          std::vector<FunctionCall>& calls) {
   Result result = Result::Ok;
 
   auto module = s_store.UnsafeGet<Module>(instance->module());
@@ -220,20 +220,20 @@ Result RunSpecificExports(const Instance::Ptr& instance,
     if (export_.type.type->kind != ExternalKind::Func) {
       continue;
     }
-    for (auto& callee_ : callees) {
-      if (export_.type.name == callee_.name) {
+    for (auto& call_ : calls) {
+      if (export_.type.name == call_.name) {
         if (s_trace_stream) {
           s_trace_stream->Writef(">>> running export \"%s\":\n",
-                                 callee_.name.c_str());
+                                 call_.name.c_str());
         }
         auto* func_type = cast<FuncType>(export_.type.type.get());
         auto func = s_store.UnsafeGet<Func>(instance->funcs()[export_.index]);
         Values results;
         Trap::Ptr trap;
         result |=
-            func->Call(s_store, callee_.args, results, &trap, s_trace_stream);
+            func->Call(s_store, call_.args, results, &trap, s_trace_stream);
         WriteCall(s_stdout_stream.get(), export_.type.name, *func_type,
-                  callee_.args, results, trap);
+                  call_.args, results, trap);
       }
     }
   }
