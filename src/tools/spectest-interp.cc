@@ -189,9 +189,8 @@ int LaneCountFromType(Type type) {
 }
 
 ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
-  int lane_count = LaneCountFromType(ev.lane_type);
   assert(ev.value.type == Type::V128);
-  assert(lane < lane_count);
+  assert(lane < LaneCountFromType(ev.lane_type));
 
   ExpectedValue result;
   result.value.type = ev.lane_type;
@@ -236,9 +235,8 @@ ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
 }
 
 TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
-  int lane_count = LaneCountFromType(lane_type);
   assert(tv.type == Type::V128);
-  assert(lane < lane_count);
+  assert(lane < LaneCountFromType(lane_type));
 
   TypedValue result;
   result.type = lane_type;

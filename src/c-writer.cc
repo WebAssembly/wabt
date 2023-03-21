@@ -773,7 +773,7 @@ void CWriter::DefineImportName(const Import* import,
                                std::string_view module,
                                std::string_view field_name) {
   std::string name;
-  ModuleFieldType type;
+  ModuleFieldType type{};
 
   switch (import->kind()) {
     case ExternalKind::Func:

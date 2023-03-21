@@ -1722,7 +1722,7 @@ void WatWriter::WriteInlineExports(ExternalKind kind, Index index) {
 }
 
 bool WatWriter::IsInlineExport(const Export& export_) {
-  Index index;
+  Index index{};
   switch (export_.kind) {
     case ExternalKind::Func:
       index = module.GetFuncIndex(export_.var);
