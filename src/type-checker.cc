@@ -513,12 +513,11 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
 
 Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
   Type type;
-  Result result = PeekType(0, &type);
+  CHECK_RESULT(PeekType(0, &type));
+  Result result = Result::Ok;
   if (!(type == Type::Any || type.IsReferenceWithIndex())) {
     TypeVector actual;
-    if (Succeeded(result)) {
-      actual.push_back(type);
-    }
+    actual.push_back(type);
     std::string message =
         "type mismatch in call_ref, expected reference but got " +
         TypesToString(actual);
