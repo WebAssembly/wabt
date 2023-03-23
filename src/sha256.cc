@@ -16,8 +16,8 @@
 
 #include "wabt/sha256.h"
 
-#if HAVE_OPENSSL_SHA_H
-#include <openssl/sha.h>
+#if HAVE_CRYPTO_HASH_SHA256_H
+#include <sodium/crypto_hash_sha256.h>
 #else
 #include "picosha2.h"
 #endif
@@ -27,15 +27,16 @@ namespace wabt {
 /**
  * SHA-256 the "input" sv into the output "digest".
  *
- * Uses OpenSSL's libcrypto or vendored PicoSHA2.
+ * Uses libsodium or vendored PicoSHA2.
  */
 void sha256(std::string_view input, std::string& digest) {
   digest.clear();
 
-#if HAVE_OPENSSL_SHA_H
-  digest.resize(SHA256_DIGEST_LENGTH);
-  if (!SHA256(reinterpret_cast<const uint8_t*>(input.data()), input.size(),
-              reinterpret_cast<uint8_t*>(digest.data()))) {
+#if HAVE_CRYPTO_HASH_SHA256_H
+  digest.resize(crypto_hash_sha256_BYTES);
+  if (crypto_hash_sha256(reinterpret_cast<uint8_t*>(digest.data()),
+                         reinterpret_cast<const uint8_t*>(input.data()),
+                         input.size())) {
     // should not be possible to fail here, but check (and abort) just in case
     abort();
   }

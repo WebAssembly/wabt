@@ -98,6 +98,8 @@ jobs:
       with:
         submodules: true
     - run: sudo apt-get install ninja-build
+    - if: ${{ matrix.type }} == release
+      run: sudo apt-get install libsodium-dev
     - run: make clang-${{ matrix.type }}-${{ matrix.sanitizer }}
     - if: ${{ matrix.sanitizer }} != fuzz
       run: make test-clang-${{ matrix.type }}-${{ matrix.sanitizer }}

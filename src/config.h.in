@@ -47,8 +47,8 @@
 /* Whether the target architecture is big endian */
 #cmakedefine01 WABT_BIG_ENDIAN
 
-/* Whether <openssl/sha.h> is available */
-#cmakedefine01 HAVE_OPENSSL_SHA_H
+/* Whether <sodium/crypto_hash_sha256.h> is available */
+#cmakedefine01 HAVE_CRYPTO_HASH_SHA256_H
 
 #cmakedefine01 COMPILER_IS_CLANG
 #cmakedefine01 COMPILER_IS_GNU

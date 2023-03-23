@@ -69,7 +69,7 @@ option(WABT_INSTALL_RULES "Include WABT's install() rules" "${PROJECT_IS_TOP_LEV
 # WASI support is still a work in progress.
 # Only a handful of syscalls are supported at this point.
 option(WITH_WASI "Build WASI support via uvwasi" OFF)
-option(USE_INTERNAL_SHA256 "Use internal PicoSHA2 for SHA-256 support instead of OpenSSL libcrypto" OFF)
+option(USE_INTERNAL_SHA256 "Use internal PicoSHA2 for SHA-256 support instead of libsodium" OFF)
 
 if (MSVC)
   set(COMPILER_IS_CLANG 0)
@@ -101,13 +101,15 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(strcasecmp "strings.h" HAVE_STRCASECMP)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
+
 if (NOT USE_INTERNAL_SHA256)
-  find_package(OpenSSL QUIET)
-  if (OpenSSL_FOUND)
-    set(CMAKE_REQUIRED_INCLUDES ${OPENSSL_INCLUDE_DIR})
-    check_include_file("openssl/sha.h" HAVE_OPENSSL_SHA_H)
-    if (HAVE_OPENSSL_SHA_H)
-      find_package_message(OpenSSL "Using OpenSSL libcrypto for SHA-256" "${HAVE_OPENSSL_SHA_H}")
+  find_package(Sodium QUIET)
+  if (Sodium_FOUND)
+    set(CMAKE_REQUIRED_INCLUDES ${Sodium_INCLUDE_DIR})
+    check_include_file("sodium/crypto_hash_sha256.h" HAVE_CRYPTO_HASH_SHA256_H)
+    if (HAVE_CRYPTO_HASH_SHA256_H)
+      find_package_message(Sodium "Using libsodium for SHA-256" "${HAVE_CRYPTO_HASH_SHA256_H}")
     endif()
   endif()
 endif()
@@ -248,8 +250,6 @@ if (USE_UBSAN)
   endif ()
 endif ()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
-
 # CWriter code templates
 set(TEMPLATE_CMAKE ${WABT_SOURCE_DIR}/scripts/gen-wasm2c-templates.cmake)
 
@@ -381,8 +381,8 @@ set(WABT_LIBRARY_SRC ${WABT_LIBRARY_CC} ${WABT_LIBRARY_H})
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
 add_library(wabt::wabt ALIAS wabt)
 
-if (HAVE_OPENSSL_SHA_H)
-  target_link_libraries(wabt OpenSSL::Crypto)
+if (HAVE_CRYPTO_HASH_SHA256_H)
+  target_link_libraries(wabt ${sodium_LIBRARY_RELEASE})
 else()
   include_directories("${WABT_SOURCE_DIR}/third_party/picosha2")
 endif()
