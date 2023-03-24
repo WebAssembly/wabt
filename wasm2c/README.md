@@ -410,7 +410,7 @@ u32 w2c_fac_fac(w2c_fac*, u32);
 ## Handling other kinds of imports and exports of modules
 
 Exported functions are handled by declaring a prefixed equivalent
-function in the header. If a module is imports a function, `wasm2c`
+function in the header. If a module imports a function, `wasm2c`
 declares the function in the output header file, and the host function
 is responsible for defining the function.
 
