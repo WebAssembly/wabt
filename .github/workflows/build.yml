@@ -81,7 +81,7 @@ jobs:
 
   sanitize:
     name: sanitize
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
       CC: "clang"
@@ -101,11 +101,9 @@ jobs:
     - run: make clang-${{ matrix.type }}-${{ matrix.sanitizer }}
     - if: ${{ matrix.sanitizer }} != fuzz
       run: make test-clang-${{ matrix.type }}-${{ matrix.sanitizer }}
-
-
   build-wasm2c-memchecked:
     name: wasm2c-memchecked
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
       CC: "clang" # used by the wasm2c tests
