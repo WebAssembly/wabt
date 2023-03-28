@@ -1,6 +1,6 @@
-FROM debian:latest
+FROM ubuntu:latest
 
-WORKDIR /ws
+WORKDIR /wabt
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
