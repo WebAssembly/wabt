@@ -192,20 +192,27 @@ void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
 }
 
 void NameGenerator::GenerateAndBindLocalNames(Func* func) {
-  std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func->GetNumParamsAndLocals(), func->bindings,
-                                &index_to_name);
-  for (size_t i = 0; i < index_to_name.size(); ++i) {
-    const std::string& old_name = index_to_name[i];
-    if (!old_name.empty()) {
+  std::vector<bool> has_name(func->GetNumParamsAndLocals());
+  for (const auto& [name, binding] : func->bindings) {
+    has_name.at(binding.index) = true;
+  }
+  BindingHash generated_local_names;
+  for (size_t i = 0; i < has_name.size(); ++i) {
+    if (has_name[i]) {
       continue;
     }
-
     const char* prefix = i < func->GetNumParams() ? "p" : "l";
     std::string new_name;
-    GenerateAndBindName(&func->bindings, prefix, i, &new_name);
-    index_to_name[i] = new_name;
+    unsigned disambiguator = 0;
+    do {
+      GenerateName(prefix, i, disambiguator++, &new_name);
+    } while (func->bindings.find(new_name) != func->bindings.end());
+    // Because the generated local names each have a unique index, and the index
+    // is part of the generated name, we know they can't conflict with other
+    // generated local names.
+    generated_local_names.emplace(move(new_name), i);
   }
+  func->bindings.merge(generated_local_names);
 }
 
 Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
