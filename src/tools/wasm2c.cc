@@ -121,66 +121,57 @@ static std::string_view strip_extension(std::string_view s) {
   return result;
 }
 
+Result Wasm2cMain(Errors& errors) {
+  std::vector<uint8_t> file_data;
+  CHECK_RESULT(ReadFile(s_infile.c_str(), &file_data));
+
+  Module module;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), s_read_debug_names,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+  CHECK_RESULT(ReadBinaryIr(s_infile.c_str(), file_data.data(),
+                            file_data.size(), options, &errors, &module));
+  CHECK_RESULT(ValidateModule(&module, &errors, s_features));
+  CHECK_RESULT(GenerateNames(&module));
+  /* TODO(binji): This shouldn't fail; if a name can't be applied
+   * (because the index is invalid, say) it should just be skipped. */
+  ApplyNames(&module);
+
+  if (!s_outfile.empty()) {
+    std::string header_name_full =
+        std::string(strip_extension(s_outfile)) + ".h";
+    FileStream c_stream(s_outfile.c_str());
+    FileStream h_stream(header_name_full);
+    std::string_view header_name = GetBasename(header_name_full);
+    if (s_write_c_options.module_name.empty()) {
+      s_write_c_options.module_name = module.name;
+      if (s_write_c_options.module_name.empty()) {
+        // In the absence of module name in the names section use the filename.
+        s_write_c_options.module_name = StripExtension(GetBasename(s_infile));
+      }
+    }
+    CHECK_RESULT(WriteC(&c_stream, &h_stream, std::string(header_name).c_str(),
+                        &module, s_write_c_options));
+  } else {
+    FileStream stream(stdout);
+    CHECK_RESULT(
+        WriteC(&stream, &stream, "wasm.h", &module, s_write_c_options));
+  }
+
+  return Result::Ok;
+}
+
 int ProgramMain(int argc, char** argv) {
   Result result;
 
   InitStdio();
   ParseOptions(argc, argv);
 
-  std::vector<uint8_t> file_data;
-  result = ReadFile(s_infile.c_str(), &file_data);
-  if (Succeeded(result)) {
-    Errors errors;
-    Module module;
-    const bool kStopOnFirstError = true;
-    const bool kFailOnCustomSectionError = true;
-    ReadBinaryOptions options(s_features, s_log_stream.get(),
-                              s_read_debug_names, kStopOnFirstError,
-                              kFailOnCustomSectionError);
-    result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
-                          options, &errors, &module);
-    if (Succeeded(result)) {
-      if (Succeeded(result)) {
-        ValidateOptions options(s_features);
-        result = ValidateModule(&module, &errors, options);
-        result |= GenerateNames(&module);
-      }
+  Errors errors;
+  result = Wasm2cMain(errors);
+  FormatErrorsToFile(errors, Location::Type::Binary);
 
-      if (Succeeded(result)) {
-        /* TODO(binji): This shouldn't fail; if a name can't be applied
-         * (because the index is invalid, say) it should just be skipped. */
-        Result dummy_result = ApplyNames(&module);
-        WABT_USE(dummy_result);
-      }
-
-      if (Succeeded(result)) {
-        if (!s_outfile.empty()) {
-          std::string header_name_full =
-              std::string(strip_extension(s_outfile)) + ".h";
-          FileStream c_stream(s_outfile.c_str());
-          FileStream h_stream(header_name_full);
-          std::string_view header_name = GetBasename(header_name_full);
-          if (s_write_c_options.module_name.empty()) {
-            s_write_c_options.module_name = module.name;
-            if (s_write_c_options.module_name.empty()) {
-              // In the absence of module name in the names section use the
-              // filename.
-              s_write_c_options.module_name =
-                  StripExtension(GetBasename(s_infile));
-            }
-          }
-          result =
-              WriteC(&c_stream, &h_stream, std::string(header_name).c_str(),
-                     &module, s_write_c_options);
-        } else {
-          FileStream stream(stdout);
-          result =
-              WriteC(&stream, &stream, "wasm.h", &module, s_write_c_options);
-        }
-      }
-    }
-    FormatErrorsToFile(errors, Location::Type::Binary);
-  }
   return result != Result::Ok;
 }
 
