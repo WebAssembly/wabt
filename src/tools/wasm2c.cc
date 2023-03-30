@@ -121,7 +121,7 @@ static std::string_view strip_extension(std::string_view s) {
   return result;
 }
 
-Result wasm2c(Errors& errors) {
+Result Wasm2cMain(Errors& errors) {
   std::vector<uint8_t> file_data;
   CHECK_RESULT(ReadFile(s_infile.c_str(), &file_data));
 
@@ -169,7 +169,7 @@ int ProgramMain(int argc, char** argv) {
   ParseOptions(argc, argv);
 
   Errors errors;
-  result = wasm2c(errors);
+  result = Wasm2cMain(errors);
   FormatErrorsToFile(errors, Location::Type::Binary);
 
   return result != Result::Ok;
