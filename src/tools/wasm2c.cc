@@ -82,7 +82,7 @@ static void ParseOptions(int argc, char** argv) {
         ConvertBackslashToSlash(&s_outfile);
       });
   parser.AddOption(
-      'j', "multiple-outputs", "NUM", "Number of output files to write",
+      '\0', "num-outputs", "NUM", "Number of output files to write",
       [](const char* argument) { s_num_outputs = atoi(argument); });
   parser.AddOption(
       'n', "module-name", "MODNAME",

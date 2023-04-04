@@ -172,17 +172,18 @@ int GetShiftMask(Type type) {
   // clang-format on
 }
 
-/* This function is the default behavior for name_to_index_. For single .c
- * output, this function returns a vector filled with 0. For multiple .c
- * outputs, this function sorts all non-imported functions in the module by
+/*
+ * This function is the default behavior for name_to_output_file_index_. For
+ * single .c output, this function returns a vector filled with 0. For multiple
+ * .c outputs, this function sorts all non-imported functions in the module by
  * their names, and then divides all non-imported functions into equal-sized
  * buckets (# of non-imported functions / # of .c outputs) based on the sorting.
  */
-static std::vector<size_t> default_name_to_index(
+static std::vector<size_t> default_name_to_output_file_index(
     std::vector<Func*>::const_iterator func_begin,
     std::vector<Func*>::const_iterator func_end,
-    const size_t num_imports,
-    const size_t num_streams) {
+    size_t num_imports,
+    size_t num_streams) {
   std::vector<size_t> result;
   result.resize(std::distance(func_begin, func_end));
   if (num_streams == 1) {
@@ -224,10 +225,10 @@ class CWriter {
         header_name_(header_name),
         header_impl_name_(header_impl_name) {
     module_prefix_ = MangleModuleName(options_.module_name);
-    if (c_streams_.size() != 1 && options.name_to_index) {
-      name_to_index_ = options.name_to_index;
+    if (c_streams_.size() != 1 && options.name_to_output_file_index) {
+      name_to_output_file_index_ = options.name_to_output_file_index;
     } else {
-      name_to_index_ = default_name_to_index;
+      name_to_output_file_index_ = default_name_to_output_file_index;
     }
   }
 
@@ -478,9 +479,9 @@ class CWriter {
 
   std::function<std::vector<size_t>(std::vector<Func*>::const_iterator,
                                     std::vector<Func*>::const_iterator,
-                                    const size_t,
-                                    const size_t)>
-      name_to_index_;
+                                    size_t,
+                                    size_t)>
+      name_to_output_file_index_;
 };
 
 // TODO: if WABT begins supporting debug names for labels,
@@ -2518,8 +2519,8 @@ void CWriter::WriteFree() {
 
 void CWriter::WriteFuncs() {
   std::vector<size_t> c_stream_assignment =
-      name_to_index_(module_->funcs.begin(), module_->funcs.end(),
-                     module_->num_func_imports, c_streams_.size());
+      name_to_output_file_index_(module_->funcs.begin(), module_->funcs.end(),
+                                 module_->num_func_imports, c_streams_.size());
   Index func_index = 0;
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;

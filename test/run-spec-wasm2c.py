@@ -537,7 +537,7 @@ def main(args):
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
-    parser.add_argument('-j', '--num-outputs', metavar='COUNT',
+    parser.add_argument('--num-outputs', metavar='COUNT',
                         help='number of output c files for wasm2c', dest='num_outputs',
                         default=1, type=int, action='store')
     options = parser.parse_args(args)
@@ -601,11 +601,12 @@ def main(args):
             c_filename_input = utils.ChangeExt(wasm_filename, '.c')
             c_filenames = []
             if options.num_outputs > 1:
+                base = os.path.splitext(c_filename_input)[0]
                 for j in range(options.num_outputs):
-                    c_filenames.append(utils.ChangeExt(wasm_filename, '_' + str(j) + '.c'))
+                    c_filenames.append(base + '_' + str(j) + '.c')
             else:
                 c_filenames.append(utils.ChangeExt(wasm_filename, '.c'))
-            args = ['-n', cwriter.GetModulePrefixUnmangled(i), '-j', str(options.num_outputs)]
+            args = ['-n', cwriter.GetModulePrefixUnmangled(i), '--num-outputs', str(options.num_outputs)]
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename_input, *args)
             if options.compile:
                 for j, c_filename in enumerate(c_filenames):
