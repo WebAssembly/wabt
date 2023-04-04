@@ -92,6 +92,9 @@ class CodeMetadataExprQueue {
 
 class BinaryReaderIR : public BinaryReaderNop {
   static constexpr size_t kMaxNestingDepth = 16384;  // max depth of label stack
+  static constexpr size_t kMaxFunctionLocals = 50000;  // matches V8
+  static constexpr size_t kMaxFunctionParams = 1000;   // matches V8
+  static constexpr size_t kMaxFunctionResults = 1000;  // matches V8
 
  public:
   BinaryReaderIR(Module* out_module, const char* filename, Errors* errors);
@@ -505,6 +508,16 @@ Result BinaryReaderIR::OnFuncType(Index index,
                                   Type* param_types,
                                   Index result_count,
                                   Type* result_types) {
+  if (param_count > kMaxFunctionParams) {
+    PrintError("FuncType param count exceeds maximum value");
+    return Result::Error;
+  }
+
+  if (result_count > kMaxFunctionResults) {
+    PrintError("FuncType result count exceeds maximum value");
+    return Result::Error;
+  }
+
   auto field = std::make_unique<TypeModuleField>(GetLocation());
   auto func_type = std::make_unique<FuncType>();
   func_type->sig.param_types.assign(param_types, param_types + param_count);
@@ -740,6 +753,12 @@ Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   current_func_->local_types.AppendDecl(type, count);
+
+  if (current_func_->GetNumLocals() > kMaxFunctionLocals) {
+    PrintError("function local count exceeds maximum value");
+    return Result::Error;
+  }
+
   return Result::Ok;
 }
 
