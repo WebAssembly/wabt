@@ -296,7 +296,7 @@ class CWriter {
 
   static void SerializeFuncType(const FuncType&, std::string&);
 
-  std::string GetGlobalName(ModuleFieldType, const std::string&);
+  std::string GetGlobalName(ModuleFieldType, const std::string&) const;
 
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
@@ -315,7 +315,7 @@ class CWriter {
   static const char* GetReferenceNullValue(const Type& type);
   static const char* GetCTypeName(const Type& type);
 
-  const char* InternalSymbolScope();
+  const char* InternalSymbolScope() const;
 
   enum class CWriterPhase {
     Declarations,
@@ -896,7 +896,7 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
 }
 
 std::string CWriter::GetGlobalName(ModuleFieldType type,
-                                   const std::string& name) {
+                                   const std::string& name) const {
   std::string mangled = name + MangleField(type);
   assert(global_sym_map_.count(mangled) == 1);
   return global_sym_map_.at(mangled);
@@ -5188,7 +5188,7 @@ const char* CWriter::GetReferenceNullValue(const Type& type) {
   }
 }
 
-const char* CWriter::InternalSymbolScope() {
+const char* CWriter::InternalSymbolScope() const {
   if (c_streams_.size() == 1) {
     return "static ";
   } else {
