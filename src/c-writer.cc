@@ -18,10 +18,12 @@
 
 #include <cctype>
 #include <cinttypes>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <set>
 #include <string_view>
+#include <vector>
 
 #include "wabt/cast.h"
 #include "wabt/common.h"
@@ -170,17 +172,64 @@ int GetShiftMask(Type type) {
   // clang-format on
 }
 
+/*
+ * This function is the default behavior for name_to_output_file_index_. For
+ * single .c output, this function returns a vector filled with 0. For multiple
+ * .c outputs, this function sorts all non-imported functions in the module by
+ * their names, and then divides all non-imported functions into equal-sized
+ * buckets (# of non-imported functions / # of .c outputs) based on the sorting.
+ */
+static std::vector<size_t> default_name_to_output_file_index(
+    std::vector<Func*>::const_iterator func_begin,
+    std::vector<Func*>::const_iterator func_end,
+    size_t num_imports,
+    size_t num_streams) {
+  std::vector<size_t> result;
+  result.resize(std::distance(func_begin, func_end));
+  if (num_streams == 1) {
+    return result;
+  }
+
+  std::map<std::string, Index> sorted_functions;
+  size_t non_imported_funcs = result.size() - num_imports;
+  size_t bucket_size = non_imported_funcs / num_streams +
+                       (non_imported_funcs % num_streams ? 1 : 0);
+  Index func_index = 0;
+  for (auto func = func_begin; func != func_end; func++) {
+    sorted_functions.insert({(*func)->name, func_index});
+    ++func_index;
+  }
+  Index sorted_func_index = 0;
+  for (const auto& [func_name, index] : sorted_functions) {
+    bool is_import = index < num_imports;
+    if (!is_import) {
+      result.at(index) = sorted_func_index / bucket_size;
+      ++sorted_func_index;
+    }
+  }
+  return result;
+}
+
 class CWriter {
  public:
-  CWriter(Stream* c_stream,
+  CWriter(std::vector<Stream*>&& c_streams,
           Stream* h_stream,
+          Stream* h_impl_stream,
           const char* header_name,
+          const char* header_impl_name,
           const WriteCOptions& options)
       : options_(options),
-        c_stream_(c_stream),
+        c_streams_(std::move(c_streams)),
         h_stream_(h_stream),
-        header_name_(header_name) {
+        h_impl_stream_(h_impl_stream),
+        header_name_(header_name),
+        header_impl_name_(header_impl_name) {
     module_prefix_ = MangleModuleName(options_.module_name);
+    if (c_streams_.size() != 1 && options.name_to_output_file_index) {
+      name_to_output_file_index_ = options.name_to_output_file_index;
+    } else {
+      name_to_output_file_index_ = default_name_to_output_file_index;
+    }
   }
 
   Result WriteModule(const Module&);
@@ -247,6 +296,8 @@ class CWriter {
 
   static void SerializeFuncType(const FuncType&, std::string&);
 
+  std::string GetGlobalName(ModuleFieldType, const std::string&) const;
+
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
   void WriteIndent();
@@ -263,6 +314,8 @@ class CWriter {
   static const char* GetReferenceTypeName(const Type& type);
   static const char* GetReferenceNullValue(const Type& type);
   static const char* GetCTypeName(const Type& type);
+
+  const char* InternalSymbolScope() const;
 
   enum class CWriterPhase {
     Declarations,
@@ -295,10 +348,14 @@ class CWriter {
   void WriteInitExprTerminal(const Expr*);
   std::string GenerateHeaderGuard() const;
   void WriteSourceTop();
+  void WriteMultiCTop();
+  void WriteMultiCTopEmpty();
   void WriteMultivalueTypes();
   void WriteTagTypes();
+  void WriteFuncTypeDecls();
   void WriteFuncTypes();
   void Write(const FuncTypeExpr&);
+  void WriteTagDecls();
   void WriteTags();
   void ComputeUniqueImports();
   void BeginInstance();
@@ -324,7 +381,9 @@ class CWriter {
   void WriteDataInstances();
   void WriteElemInstances();
   void WriteGlobalInitializers();
+  void WriteDataInitializerDecls();
   void WriteDataInitializers();
+  void WriteElemInitializerDecls();
   void WriteElemInitializers();
   void WriteElemTableInit(bool, const ElemSegment*, const Table*);
   void WriteExports(CWriterPhase);
@@ -387,9 +446,11 @@ class CWriter {
   const Module* module_ = nullptr;
   const Func* func_ = nullptr;
   Stream* stream_ = nullptr;
-  Stream* c_stream_ = nullptr;
+  std::vector<Stream*> c_streams_;
   Stream* h_stream_ = nullptr;
+  Stream* h_impl_stream_ = nullptr;
   std::string header_name_;
+  std::string header_impl_name_;
   Result result_ = Result::Ok;
   int indent_ = 0;
   bool should_write_indent_next_ = false;
@@ -415,6 +476,12 @@ class CWriter {
   SymbolSet func_includes_;
 
   std::vector<std::string> unique_func_type_names_;
+
+  std::function<std::vector<size_t>(std::vector<Func*>::const_iterator,
+                                    std::vector<Func*>::const_iterator,
+                                    size_t,
+                                    size_t)>
+      name_to_output_file_index_;
 };
 
 // TODO: if WABT begins supporting debug names for labels,
@@ -826,6 +893,13 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
                                            std::string_view name) {
   return ClaimUniqueName(global_syms_, global_sym_map_, MangleField(type), name,
                          ExportName(StripLeadingDollar(name)));
+}
+
+std::string CWriter::GetGlobalName(ModuleFieldType type,
+                                   const std::string& name) const {
+  std::string mangled = name + MangleField(type);
+  assert(global_sym_map_.count(mangled) == 1);
+  return global_sym_map_.at(mangled);
 }
 
 /* Names for params, locals, and stack vars are formatted as "var_" + name. */
@@ -1337,6 +1411,24 @@ void CWriter::WriteSourceTop() {
   Write(s_source_declarations);
 }
 
+void CWriter::WriteMultiCTop() {
+  if (c_streams_.size() > 1) {
+    assert(header_impl_name_.size() > 0);
+    Write("/* Automatically generated by wasm2c */", Newline());
+    Write("#include \"", header_impl_name_, "\"", Newline());
+  }
+}
+
+void CWriter::WriteMultiCTopEmpty() {
+  for (auto& stream : c_streams_) {
+    if (stream->offset() == 0) {
+      stream_ = stream;
+      Write("/* Empty wasm2c generated file */\n");
+      Write("typedef int dummy_def;");
+    }
+  }
+}
+
 void CWriter::WriteMultivalueTypes() {
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
@@ -1382,6 +1474,24 @@ void CWriter::WriteTagTypes() {
   }
 }
 
+void CWriter::WriteFuncTypeDecls() {
+  if (module_->types.empty()) {
+    return;
+  }
+
+  Write(Newline());
+
+  std::string serialized_type;
+  for (const TypeEntry* type : module_->types) {
+    const std::string name =
+        DefineGlobalScopeName(ModuleFieldType::Type, type->name);
+
+    if (c_streams_.size() > 1) {
+      Write("FUNC_TYPE_DECL_EXTERN_T(", name, ");", Newline());
+    }
+  }
+}
+
 void CWriter::WriteFuncTypes() {
   if (module_->types.empty()) {
     return;
@@ -1393,8 +1503,7 @@ void CWriter::WriteFuncTypes() {
 
   std::string serialized_type;
   for (const TypeEntry* type : module_->types) {
-    const std::string name =
-        DefineGlobalScopeName(ModuleFieldType::Type, type->name);
+    const std::string name = GetGlobalName(ModuleFieldType::Type, type->name);
     SerializeFuncType(*cast<FuncType>(type), serialized_type);
 
     auto prior_type = type_hash.find(serialized_type);
@@ -1404,7 +1513,12 @@ void CWriter::WriteFuncTypes() {
     } else {
       unique_func_type_names_.push_back(name);
       type_hash.emplace(serialized_type, name);
-      Write("FUNC_TYPE_T(", name, ") = \"");
+      if (c_streams_.size() > 1) {
+        Write("FUNC_TYPE_EXTERN_T(");
+      } else {
+        Write("FUNC_TYPE_T(");
+      }
+      Write(name, ") = \"");
       for (uint8_t x : serialized_type) {
         Writef("\\x%02x", x);
       }
@@ -1445,7 +1559,7 @@ void CWriter::SerializeFuncType(const FuncType& func_type,
   sha256({mangled_signature, len}, serialized_type);
 }
 
-void CWriter::WriteTags() {
+void CWriter::WriteTagDecls() {
   Index tag_index = 0;
   for (const Tag* tag : module_->tags) {
     bool is_import = tag_index < module_->num_tag_imports;
@@ -1456,9 +1570,24 @@ void CWriter::WriteTags() {
         Write(Newline());
         Write("typedef char wasm_tag_placeholder_t;", Newline());
       }
-      Write("static const wasm_tag_placeholder_t ",
-            DefineGlobalScopeName(ModuleFieldType::Tag, tag->name), ";",
-            Newline());
+      DefineGlobalScopeName(ModuleFieldType::Tag, tag->name);
+      if (c_streams_.size() > 1) {
+        Write("extern const wasm_tag_placeholder_t ",
+              GlobalName(ModuleFieldType::Tag, tag->name), ";", Newline());
+      }
+    }
+    tag_index++;
+  }
+}
+
+void CWriter::WriteTags() {
+  Write(Newline());
+  Index tag_index = 0;
+  for (const Tag* tag : module_->tags) {
+    bool is_import = tag_index < module_->num_tag_imports;
+    if (!is_import) {
+      Write(InternalSymbolScope(), "const wasm_tag_placeholder_t ",
+            GlobalName(ModuleFieldType::Tag, tag->name), ";", Newline());
     }
     tag_index++;
   }
@@ -1625,7 +1754,7 @@ void CWriter::WriteFuncDeclarations() {
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
     if (!is_import) {
-      Write("static ");
+      Write(InternalSymbolScope());
       WriteFuncDeclaration(
           func->decl, DefineGlobalScopeName(ModuleFieldType::Func, func->name));
       Write(";", Newline());
@@ -1772,7 +1901,7 @@ void CWriter::WriteGlobalInitializers() {
     }
     ++global_index;
   }
-  Write(CloseBrace(), Newline(), Newline());
+  Write(CloseBrace(), Newline());
 }
 
 static inline bool is_droppable(const DataSegment* data_segment) {
@@ -1795,6 +1924,24 @@ void CWriter::WriteDataInstances() {
   }
 }
 
+void CWriter::WriteDataInitializerDecls() {
+  if (module_->memories.empty()) {
+    return;
+  }
+
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->data.empty()) {
+      continue;
+    }
+
+    if (c_streams_.size() > 1) {
+      Write(Newline(), "extern const u8 data_segment_data_",
+            GlobalName(ModuleFieldType::DataSegment, data_segment->name), "[];",
+            Newline());
+    }
+  }
+}
+
 void CWriter::WriteDataInitializers() {
   if (module_->memories.empty()) {
     return;
@@ -1804,7 +1951,8 @@ void CWriter::WriteDataInitializers() {
     if (data_segment->data.empty()) {
       continue;
     }
-    Write(Newline(), "static const u8 data_segment_data_",
+
+    Write(Newline(), InternalSymbolScope(), "const u8 data_segment_data_",
           GlobalName(ModuleFieldType::DataSegment, data_segment->name),
           "[] = ", OpenBrace());
     size_t i = 0;
@@ -1880,6 +2028,31 @@ void CWriter::WriteElemInstances() {
   }
 }
 
+void CWriter::WriteElemInitializerDecls() {
+  if (module_->tables.empty()) {
+    return;
+  }
+
+  for (const ElemSegment* elem_segment : module_->elem_segments) {
+    if (elem_segment->elem_exprs.empty()) {
+      continue;
+    }
+
+    if (elem_segment->elem_type == Type::ExternRef) {
+      // no need to store externref elem initializers because only
+      // ref.null is possible
+      continue;
+    }
+
+    if (c_streams_.size() > 1) {
+      Write(Newline(),
+            "extern const wasm_elem_segment_expr_t elem_segment_exprs_",
+            GlobalName(ModuleFieldType::ElemSegment, elem_segment->name), "[];",
+            Newline());
+    }
+  }
+}
+
 void CWriter::WriteElemInitializers() {
   if (module_->tables.empty()) {
     return;
@@ -1896,8 +2069,8 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    Write(Newline(),
-          "static const wasm_elem_segment_expr_t elem_segment_exprs_",
+    Write(Newline(), InternalSymbolScope(),
+          "const wasm_elem_segment_expr_t elem_segment_exprs_",
           GlobalName(ModuleFieldType::ElemSegment, elem_segment->name),
           "[] = ", OpenBrace());
 
@@ -2345,11 +2518,16 @@ void CWriter::WriteFree() {
 }
 
 void CWriter::WriteFuncs() {
+  std::vector<size_t> c_stream_assignment =
+      name_to_output_file_index_(module_->funcs.begin(), module_->funcs.end(),
+                                 module_->num_func_imports, c_streams_.size());
   Index func_index = 0;
   for (const Func* func : module_->funcs) {
     bool is_import = func_index < module_->num_func_imports;
-    if (!is_import)
-      Write(Newline(), *func, Newline());
+    if (!is_import) {
+      stream_ = c_streams_.at(c_stream_assignment.at(func_index));
+      Write(*func);
+    }
     ++func_index;
   }
 }
@@ -2367,7 +2545,19 @@ void CWriter::Write(const Func& func) {
   func_sections_.clear();
   func_includes_.clear();
 
-  Write("static ", ResultType(func.decl.sig.result_types), " ",
+  Stream* prev_stream = stream_;
+
+  /*
+   * If offset of stream_ is 0, this is the first time some function is written
+   * to this stream, then write multi c top.
+   */
+  if (stream_->offset() == 0) {
+    WriteMultiCTop();
+  }
+  Write(Newline());
+
+  PushFuncSection();
+  Write(ResultType(func.decl.sig.result_types), " ",
         GlobalName(ModuleFieldType::Func, func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
@@ -2400,18 +2590,22 @@ void CWriter::Write(const Func& func) {
     Write(CloseBrace(), Newline());
   }
 
-  stream_ = c_stream_;
+  stream_ = prev_stream;
 
-  WriteStackVarDeclarations();
-
-  for (auto& [condition, stream] : func_sections_) {
+  for (size_t i = 0; i < func_sections_.size(); ++i) {
+    auto& [condition, stream] = func_sections_.at(i);
     std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
     if (condition.empty() || func_includes_.count(condition)) {
       stream_->WriteData(buf->data.data(), buf->data.size());
     }
+
+    if (i == 0) {
+      WriteStackVarDeclarations();  // these come immediately after section #0
+                                    // (return type/name/params/locals)
+    }
   }
 
-  Write(CloseBrace());
+  Write(CloseBrace(), Newline());
 
   func_ = nullptr;
 }
@@ -4927,23 +5121,39 @@ void CWriter::WriteCHeader() {
 }
 
 void CWriter::WriteCSource() {
-  stream_ = c_stream_;
+  /* Write the "top" to h_impl stream */
+  stream_ = h_impl_stream_;
   Write("/* Automatically generated by wasm2c */", Newline());
   WriteSourceTop();
-  WriteFuncTypes();
+
+  /* Write module-wide declarations to impl header */
+  WriteFuncTypeDecls();
   WriteTagTypes();
-  WriteTags();
+  WriteTagDecls();
   WriteFuncDeclarations();
+  WriteDataInitializerDecls();
+  WriteElemInitializerDecls();
+
+  /* Write the module-wide material to the first output stream */
+  stream_ = c_streams_.front();
+  WriteMultiCTop();
+  WriteFuncTypes();
+  WriteTags();
   WriteGlobalInitializers();
   WriteDataInitializers();
   WriteElemInitializers();
-  WriteFuncs();
   WriteExports(CWriterPhase::Definitions);
   WriteInitInstanceImport();
   WriteImportProperties(CWriterPhase::Definitions);
   WriteInit();
   WriteFree();
   WriteGetFuncType();
+
+  /* Write function bodies across the different output streams */
+  WriteFuncs();
+
+  /* For any empty .c output, write a dummy typedef to avoid gcc warning */
+  WriteMultiCTopEmpty();
 }
 
 Result CWriter::WriteModule(const Module& module) {
@@ -4978,14 +5188,25 @@ const char* CWriter::GetReferenceNullValue(const Type& type) {
   }
 }
 
+const char* CWriter::InternalSymbolScope() const {
+  if (c_streams_.size() == 1) {
+    return "static ";
+  } else {
+    return "";
+  }
+}
+
 }  // end anonymous namespace
 
-Result WriteC(Stream* c_stream,
+Result WriteC(std::vector<Stream*>&& c_streams,
               Stream* h_stream,
+              Stream* h_impl_stream,
               const char* header_name,
+              const char* header_impl_name,
               const Module* module,
               const WriteCOptions& options) {
-  CWriter c_writer(c_stream, h_stream, header_name, options);
+  CWriter c_writer(std::move(c_streams), h_stream, h_impl_stream, header_name,
+                   header_impl_name, options);
   return c_writer.WriteModule(*module);
 }
 

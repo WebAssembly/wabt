@@ -808,16 +808,20 @@ DEFINE_TABLE_FILL(funcref)
 DEFINE_TABLE_FILL(externref)
 
 #if defined(__GNUC__) || defined(__clang__)
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char* const x
+#define FUNC_TYPE_EXTERN_T(x) const char* const x
 #define FUNC_TYPE_T(x) static const char* const x
 #else
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
+#define FUNC_TYPE_EXTERN_T(x) const char x[]
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
+
+static void w2c_test_0x5Fstart_0(w2c_test*);
 
 FUNC_TYPE_T(w2c_test_t0) = "\xf6\x98\x1b\xc6\x10\xda\xb7\xb2\x63\x37\xcd\xdc\x72\xca\xe9\x50\x00\x13\xba\x10\x6c\xde\x87\x27\x10\xf8\x86\x2f\xe3\xdb\x94\xe4";
 FUNC_TYPE_T(w2c_test_t1) = "\x89\x3a\x3d\x2c\x8f\x4d\x7f\x6d\x6c\x9d\x62\x67\x29\xaf\x3d\x44\x39\x8e\xc3\xf3\xe8\x51\xc1\x99\xb9\xdd\x9f\xd5\x3d\x1f\xd3\xe4";
 FUNC_TYPE_T(w2c_test_t2) = "\x36\xa9\xe7\xf1\xc9\x5b\x82\xff\xb9\x97\x43\xe0\xc5\xc4\xce\x95\xd8\x3c\x9a\x43\x0a\xac\x59\xf8\x4e\xf3\xcb\xfa\xb6\x14\x50\x68";
-
-static void w2c_test_0x5Fstart_0(w2c_test*);
 
 static const u8 data_segment_data_w2c_test_d0[] = {
   0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 
@@ -842,25 +846,6 @@ static void init_tables(w2c_test* instance) {
 }
 
 static void init_elem_instances(w2c_test *instance) {
-}
-
-static void w2c_test_0x5Fstart_0(w2c_test* instance) {
-  FUNC_PROLOGUE;
-  u32 var_i0, var_i1, var_i2, var_i3, var_i4;
-  var_i0 = 0u;
-  var_i1 = 8u;
-  i32_store(&instance->w2c_memory, (u64)(var_i0), var_i1);
-  var_i0 = 4u;
-  var_i1 = 14u;
-  i32_store(&instance->w2c_memory, (u64)(var_i0), var_i1);
-  var_i0 = 1u;
-  var_i1 = 0u;
-  var_i2 = 1u;
-  var_i3 = 0u;
-  var_i4 = 0u;
-  var_i0 = CALL_INDIRECT(instance->w2c_T0, u32 (*)(void*, u32, u32, u32, u32), w2c_test_t0, var_i4, instance->w2c_T0.data[var_i4].module_instance, var_i0, var_i1, var_i2, var_i3);
-  (*w2c_wasi__snapshot__preview1_proc_exit)(instance->w2c_wasi__snapshot__preview1_instance, var_i0);
-  FUNC_EPILOGUE;
 }
 
 /* export: 'memory' */
@@ -922,5 +907,24 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
   }
   
   return NULL;
+}
+
+void w2c_test_0x5Fstart_0(w2c_test* instance) {
+  FUNC_PROLOGUE;
+  u32 var_i0, var_i1, var_i2, var_i3, var_i4;
+  var_i0 = 0u;
+  var_i1 = 8u;
+  i32_store(&instance->w2c_memory, (u64)(var_i0), var_i1);
+  var_i0 = 4u;
+  var_i1 = 14u;
+  i32_store(&instance->w2c_memory, (u64)(var_i0), var_i1);
+  var_i0 = 1u;
+  var_i1 = 0u;
+  var_i2 = 1u;
+  var_i3 = 0u;
+  var_i4 = 0u;
+  var_i0 = CALL_INDIRECT(instance->w2c_T0, u32 (*)(void*, u32, u32, u32, u32), w2c_test_t0, var_i4, instance->w2c_T0.data[var_i4].module_instance, var_i0, var_i1, var_i2, var_i3);
+  (*w2c_wasi__snapshot__preview1_proc_exit)(instance->w2c_wasi__snapshot__preview1_instance, var_i0);
+  FUNC_EPILOGUE;
 }
 ;;; STDOUT ;;)

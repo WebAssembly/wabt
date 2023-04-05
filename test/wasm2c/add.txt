@@ -777,24 +777,18 @@ DEFINE_TABLE_FILL(funcref)
 DEFINE_TABLE_FILL(externref)
 
 #if defined(__GNUC__) || defined(__clang__)
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char* const x
+#define FUNC_TYPE_EXTERN_T(x) const char* const x
 #define FUNC_TYPE_T(x) static const char* const x
 #else
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
+#define FUNC_TYPE_EXTERN_T(x) const char x[]
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-FUNC_TYPE_T(w2c_test_t0) = "\x92\xfb\x6a\xdf\x49\x07\x0a\x83\xbe\x08\x02\x68\xcd\xf6\x95\x27\x4a\xc2\xf3\xe5\xe4\x7d\x29\x49\xe8\xed\x42\x92\x6a\x9d\xda\xf0";
-
 static u32 w2c_test_add_0(w2c_test*, u32, u32);
 
-static u32 w2c_test_add_0(w2c_test* instance, u32 var_p0, u32 var_p1) {
-  FUNC_PROLOGUE;
-  u32 var_i0, var_i1;
-  var_i0 = var_p0;
-  var_i1 = var_p1;
-  var_i0 += var_i1;
-  FUNC_EPILOGUE;
-  return var_i0;
-}
+FUNC_TYPE_T(w2c_test_t0) = "\x92\xfb\x6a\xdf\x49\x07\x0a\x83\xbe\x08\x02\x68\xcd\xf6\x95\x27\x4a\xc2\xf3\xe5\xe4\x7d\x29\x49\xe8\xed\x42\x92\x6a\x9d\xda\xf0";
 
 /* export: 'add' */
 u32 w2c_test_add(w2c_test* instance, u32 var_p0, u32 var_p1) {
@@ -821,5 +815,15 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
   }
   
   return NULL;
+}
+
+u32 w2c_test_add_0(w2c_test* instance, u32 var_p0, u32 var_p1) {
+  FUNC_PROLOGUE;
+  u32 var_i0, var_i1;
+  var_i0 = var_p0;
+  var_i1 = var_p1;
+  var_i0 += var_i1;
+  FUNC_EPILOGUE;
+  return var_i0;
 }
 ;;; STDOUT ;;)

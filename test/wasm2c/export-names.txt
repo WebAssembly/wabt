@@ -799,21 +799,20 @@ DEFINE_TABLE_FILL(funcref)
 DEFINE_TABLE_FILL(externref)
 
 #if defined(__GNUC__) || defined(__clang__)
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char* const x
+#define FUNC_TYPE_EXTERN_T(x) const char* const x
 #define FUNC_TYPE_T(x) static const char* const x
 #else
+#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
+#define FUNC_TYPE_EXTERN_T(x) const char x[]
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-FUNC_TYPE_T(w2c_test_t0) = "\x36\xa9\xe7\xf1\xc9\x5b\x82\xff\xb9\x97\x43\xe0\xc5\xc4\xce\x95\xd8\x3c\x9a\x43\x0a\xac\x59\xf8\x4e\xf3\xcb\xfa\xb6\x14\x50\x68";
-
 static void w2c_test__0(w2c_test*);
 
-static void init_memories(w2c_test* instance) {
-}
+FUNC_TYPE_T(w2c_test_t0) = "\x36\xa9\xe7\xf1\xc9\x5b\x82\xff\xb9\x97\x43\xe0\xc5\xc4\xce\x95\xd8\x3c\x9a\x43\x0a\xac\x59\xf8\x4e\xf3\xcb\xfa\xb6\x14\x50\x68";
 
-static void w2c_test__0(w2c_test* instance) {
-  FUNC_PROLOGUE;
-  FUNC_EPILOGUE;
+static void init_memories(w2c_test* instance) {
 }
 
 /* export: '' */
@@ -870,5 +869,10 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
   }
   
   return NULL;
+}
+
+void w2c_test__0(w2c_test* instance) {
+  FUNC_PROLOGUE;
+  FUNC_EPILOGUE;
 }
 ;;; STDOUT ;;)
