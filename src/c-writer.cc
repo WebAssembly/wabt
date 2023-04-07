@@ -2456,12 +2456,12 @@ void CWriter::WriteImportProperties(CWriterPhase kind) {
   Write(Newline());
 
   auto write_import_prop = [&](const Import* import, std::string prop,
-                               uint32_t value) {
+                               std::string type, uint64_t value) {
     if (kind == CWriterPhase::Declarations) {
       Write("extern ");
     }
-    Write("const u32 ", kAdminSymbolPrefix, module_prefix_, "_", prop, "_",
-          MangleModuleName(import->module_name), "_",
+    Write("const ", type, " ", kAdminSymbolPrefix, module_prefix_, "_", prop,
+          "_", MangleModuleName(import->module_name), "_",
           MangleName(import->field_name));
     if (kind == CWriterPhase::Definitions) {
       Write(" = ", value);
@@ -2472,13 +2472,23 @@ void CWriter::WriteImportProperties(CWriterPhase kind) {
 
   for (const Import* import : unique_imports_) {
     if (import->kind() == ExternalKind::Memory) {
-      const Limits* memory_limits =
-          &(cast<MemoryImport>(import)->memory.page_limits);
-      write_import_prop(import, "min", memory_limits->initial);
-      write_import_prop(import, "max",
-                        memory_limits->has_max
-                            ? memory_limits->max
-                            : std::numeric_limits<uint32_t>::max());
+      const Limits* limits = &(cast<MemoryImport>(import)->memory.page_limits);
+      // We use u64 so we can handle both 32-bit and 64-bit memories
+      const uint64_t default_max = limits->is_64
+                                       ? (static_cast<uint64_t>(1) << 48)
+                                       : (static_cast<uint64_t>(1) << 16);
+      write_import_prop(import, "min", "u64", limits->initial);
+      write_import_prop(import, "max", "u64",
+                        limits->has_max ? limits->max : default_max);
+      write_import_prop(import, "is64", "u8", limits->is_64);
+    } else if (import->kind() == ExternalKind::Table) {
+      const Limits* limits = &(cast<TableImport>(import)->table.elem_limits);
+      const uint64_t default_max = std::numeric_limits<uint32_t>::max();
+      write_import_prop(import, "min", "u32", limits->initial);
+      write_import_prop(import, "max", "u32",
+                        limits->has_max ? limits->max : default_max);
+    } else {
+      continue;
     }
   }
 }
