@@ -254,12 +254,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 set(TEMPLATE_CMAKE ${WABT_SOURCE_DIR}/scripts/gen-wasm2c-templates.cmake)
 
 add_custom_command(
-  OUTPUT wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc
+  OUTPUT gen-wasm2c-prebuilt
 
-  COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_top.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.top.h" -D symbol="s_header_top" -P ${TEMPLATE_CMAKE}
-  COMMAND ${CMAKE_COMMAND} -D out="wasm2c_header_bottom.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h" -D symbol="s_header_bottom" -P ${TEMPLATE_CMAKE}
-  COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_includes.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c" -D symbol="s_source_includes" -P ${TEMPLATE_CMAKE}
-  COMMAND ${CMAKE_COMMAND} -D out="wasm2c_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c" -D symbol="s_source_declarations" -P ${TEMPLATE_CMAKE}
+  COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_header_top.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.top.h" -D symbol="s_header_top" -P ${TEMPLATE_CMAKE}
+  COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_header_bottom.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h" -D symbol="s_header_bottom" -P ${TEMPLATE_CMAKE}
+  COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_includes.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c" -D symbol="s_source_includes" -P ${TEMPLATE_CMAKE}
+  COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c" -D symbol="s_source_declarations" -P ${TEMPLATE_CMAKE}
+  COMMAND ${CMAKE_COMMAND} -E touch gen-wasm2c-prebuilt
 
   DEPENDS ${WABT_SOURCE_DIR}/src/template/wasm2c.top.h
   ${WABT_SOURCE_DIR}/src/template/wasm2c.bottom.h
@@ -267,7 +268,12 @@ add_custom_command(
   ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c
 )
 
-set(CWRITER_TEMPLATE_SRC wasm2c_header_top.cc wasm2c_header_bottom.cc wasm2c_source_includes.cc wasm2c_source_declarations.cc)
+add_custom_target(gen-wasm2c-prebuilt-target DEPENDS gen-wasm2c-prebuilt)
+
+set(CWRITER_TEMPLATE_SRC ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_header_top.cc
+                         ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_header_bottom.cc
+                         ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_includes.cc
+                         ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_declarations.cc)
 
 add_custom_target(everything)
 
@@ -379,6 +385,7 @@ set(WABT_LIBRARY_H
 set(WABT_LIBRARY_SRC ${WABT_LIBRARY_CC} ${WABT_LIBRARY_H})
 
 add_library(wabt STATIC ${WABT_LIBRARY_SRC})
+add_dependencies(wabt gen-wasm2c-prebuilt-target)
 add_library(wabt::wabt ALIAS wabt)
 
 if (HAVE_OPENSSL_SHA_H)

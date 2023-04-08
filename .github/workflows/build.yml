@@ -59,6 +59,8 @@ jobs:
       if: matrix.os == 'windows-latest'
     - name: build
       run: cmake --build out
+    - name: check if generated files are up-to-date
+      run: python ./scripts/check_clean.py
     - name: unittests
       run: cmake --build out --target run-unittests
     - name: c-api-tests
