@@ -1330,7 +1330,7 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
           std::string(GetCTypeName(binexpr->opcode.GetParamType2())) + ")" +
           mini_stack.at(mini_stack.size() - 1) + ")";
       mini_stack.resize(mini_stack.size() - 2);
-      mini_stack.push_back(move(combination));
+      mini_stack.push_back(std::move(combination));
     } else {
       // Leaf node (nullary const expression)
       Stream* existing_stream = stream_;
