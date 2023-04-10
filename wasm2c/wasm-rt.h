@@ -60,52 +60,116 @@ extern "C" {
 #endif
 
 /**
- * Enable memory checking via a signal handler via the following definition:
+ * Backward compatibility: Convert the previously exposed
+ * WASM_RT_MEMCHECK_SIGNAL_HANDLER macro to the ALLOCATION and CHECK macros that
+ * are now used.
+ */
+#if defined(WASM_RT_MEMCHECK_SIGNAL_HANDLER)
+
+#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#define WASM_RT_USE_MMAP 1
+#define WASM_RT_MEMCHECK_GUARD_PAGES 1
+#else
+#define WASM_RT_USE_MMAP 0
+#define WASM_RT_MEMCHECK_BOUNDS_CHECK 1
+#endif
+
+#warning \
+    "WASM_RT_MEMCHECK_SIGNAL_HANDLER has been deprecated in favor of WASM_RT_USE_MMAP and WASM_RT_MEMORY_CHECK_* macros"
+#endif
+
+/**
+ * Specify if we use OR mmap/mprotect (+ Windows equivalents) OR malloc/realloc
+ * for the Wasm memory allocation and growth. mmap/mprotect guarantees memory
+ * will grow without being moved, while malloc ensures the virtual memory is
+ * consumed only as needed, but may relocate the memory to handle memory
+ * fragmentation.
  *
- * #define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
+ * This defaults to malloc on 32-bit platforms or if memory64 support is needed.
+ * It defaults to mmap on 64-bit platforms assuming memory64 support is not
+ * needed (so we can use the guard based range checks below).
+ */
+#ifndef WASM_RT_USE_MMAP
+#if UINTPTR_MAX > 0xffffffff && !SUPPORT_MEMORY64
+#define WASM_RT_USE_MMAP 1
+#else
+#define WASM_RT_USE_MMAP 0
+#endif
+#endif
+
+/**
+ * Set the range checking strategy for Wasm memories.
  *
- * This is usually 10%-25% faster, but requires OS-specific support.
+ * GUARD_PAGES:  memory accesses rely on unmapped pages/guard pages to trap
+ * out-of-bound accesses.
+ *
+ * BOUNDS_CHECK: memory accesses are checked with explicit bounds checks.
+ *
+ * This defaults to GUARD_PAGES as this is the fasest option, iff the
+ * requirements of GUARD_PAGES --- 64-bit platforms, MMAP allocation strategy,
+ * no 64-bit memories --- are met. This falls back to BOUNDS otherwise.
  */
 
+// Check if Guard checks are supported
+#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && !SUPPORT_MEMORY64
+#define WASM_RT_GUARD_PAGES_SUPPORTED 1
+#else
+#define WASM_RT_GUARD_PAGES_SUPPORTED 0
+#endif
+
+// Specify defaults for memory checks if unspecified
+#if !defined(WASM_RT_MEMCHECK_GUARD_PAGES) && \
+    !defined(WASM_RT_MEMCHECK_BOUNDS_CHECK)
+#if WASM_RT_GUARD_PAGES_SUPPORTED
+#define WASM_RT_MEMCHECK_GUARD_PAGES 1
+#else
+#define WASM_RT_MEMCHECK_BOUNDS_CHECK 1
+#endif
+#endif
+
+// Ensure the macros are defined
+#ifndef WASM_RT_MEMCHECK_GUARD_PAGES
+#define WASM_RT_MEMCHECK_GUARD_PAGES 0
+#endif
+#ifndef WASM_RT_MEMCHECK_BOUNDS_CHECK
+#define WASM_RT_MEMCHECK_BOUNDS_CHECK 0
+#endif
+
+// Sanity check the use of guard pages
+#if WASM_RT_MEMCHECK_GUARD_PAGES && !WASM_RT_GUARD_PAGES_SUPPORTED
+#error \
+    "WASM_RT_MEMCHECK_GUARD_PAGES not supported on this platform/configuration"
+#endif
+
+#if WASM_RT_MEMCHECK_GUARD_PAGES && WASM_RT_MEMCHECK_BOUNDS_CHECK
+#error \
+    "Cannot use both WASM_RT_MEMCHECK_GUARD_PAGES and WASM_RT_MEMCHECK_BOUNDS_CHECK"
+
+#elif !WASM_RT_MEMCHECK_GUARD_PAGES && !WASM_RT_MEMCHECK_BOUNDS_CHECK
+#error \
+    "Must choose at least one from WASM_RT_MEMCHECK_GUARD_PAGES and WASM_RT_MEMCHECK_BOUNDS_CHECK"
+#endif
+
+/**
+ * Some configurations above require the Wasm runtime to install a signal
+ * handler. However, this can be explicitly disallowed by the host using
+ * WASM_RT_SKIP_SIGNAL_RECOVERY. In this case, when the wasm code encounters an
+ * OOB access, it may either trap or abort.
+ */
 #ifndef WASM_RT_SKIP_SIGNAL_RECOVERY
 #define WASM_RT_SKIP_SIGNAL_RECOVERY 0
 #endif
 
-/** Signal handler not supported on 32-bit platforms. */
-#if UINTPTR_MAX > 0xffffffff
-
-#define WASM_RT_SIGNAL_RECOVERY_SUPPORTED 1
-
-/* Signal handler is supported. Use it by default. */
-#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#ifdef SUPPORT_MEMORY64
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
+#if WASM_RT_MEMCHECK_GUARD_PAGES && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#define WASM_RT_INSTALL_SIGNAL_HANDLER 1
 #else
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 1
-#endif
-#endif
-
-#else
-#define WASM_RT_SIGNAL_RECOVERY_SUPPORTED 0
-
-/* Signal handler is not supported. */
-#ifndef WASM_RT_MEMCHECK_SIGNAL_HANDLER
-#define WASM_RT_MEMCHECK_SIGNAL_HANDLER 0
-#endif
-
-#endif
-
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && \
-    (!WASM_RT_SKIP_SIGNAL_RECOVERY && !WASM_RT_SIGNAL_RECOVERY_SUPPORTED)
-/* The signal handler is not supported, error out if the user was trying to
- * enable it. */
-#error "Signal handler is not supported for this OS/Architecture!"
+#define WASM_RT_INSTALL_SIGNAL_HANDLER 0
 #endif
 
 #ifndef WASM_RT_USE_STACK_DEPTH_COUNT
 /* The signal handler on POSIX can detect call stack overflows. On windows, or
  * platforms without a signal handler, we use stack depth counting. */
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !defined(_WIN32)
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
 #define WASM_RT_USE_STACK_DEPTH_COUNT 0
 #else
 #define WASM_RT_USE_STACK_DEPTH_COUNT 1
@@ -138,7 +202,7 @@ extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 #define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
-#if defined(__APPLE__) && WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if defined(__APPLE__) && WASM_RT_INSTALL_SIGNAL_HANDLER
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 1
 #else
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 0
@@ -323,7 +387,7 @@ uint32_t wasm_rt_exception_size(void);
  */
 void* wasm_rt_exception(void);
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !defined(_WIN32)
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
 #define WASM_RT_SETJMP_SETBUF(buf) sigsetjmp(buf, 1)
 #else
 #define WASM_RT_SETJMP_SETBUF(buf) setjmp(buf)

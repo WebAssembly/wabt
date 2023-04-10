@@ -145,7 +145,7 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
     TRAP(OOB);
 #endif
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if WASM_RT_MEMCHECK_GUARD_PAGES
 #define MEMCHECK(mem, a, t)
 #else
 #define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
