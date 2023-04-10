@@ -25,8 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY && \
-    !defined(_WIN32)
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
 #include <signal.h>
 #include <unistd.h>
 #endif
@@ -45,7 +44,7 @@
 #define PAGE_SIZE 65536
 #define MAX_EXCEPTION_SIZE PAGE_SIZE
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
 static bool g_signal_handler_installed = false;
 #ifdef _WIN32
 static void* g_sig_handler_handle = 0;
@@ -167,7 +166,7 @@ static void os_print_last_error(const char* msg) {
   }
 }
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
 
 static LONG os_signal_handler(PEXCEPTION_POINTERS info) {
   if (info->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
@@ -211,7 +210,7 @@ static void os_print_last_error(const char* msg) {
   perror(msg);
 }
 
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
 static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
   if (si->si_code == SEGV_ACCERR) {
     wasm_rt_trap(WASM_RT_TRAP_OOB);
@@ -238,7 +237,7 @@ static void os_install_signal_handler(void) {
   }
 
   struct sigaction sa;
-  memset(&sa , '\0', sizeof(sa));
+  memset(&sa, '\0', sizeof(sa));
   sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = os_signal_handler;
@@ -253,7 +252,7 @@ static void os_install_signal_handler(void) {
 static void os_cleanup_signal_handler(void) {
   /* Undo what was done in os_install_signal_handler */
   struct sigaction sa;
-  memset(&sa , '\0', sizeof(sa));
+  memset(&sa, '\0', sizeof(sa));
   sa.sa_handler = SIG_DFL;
   if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
     perror("sigaction failed");
@@ -272,7 +271,7 @@ static void os_cleanup_signal_handler(void) {
 #endif
 
 void wasm_rt_init(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
     os_install_signal_handler();
@@ -281,7 +280,7 @@ void wasm_rt_init(void) {
 }
 
 bool wasm_rt_is_initialized(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
   return g_signal_handler_installed;
 #else
   return true;
@@ -289,23 +288,48 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER && !WASM_RT_SKIP_SIGNAL_RECOVERY
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
   os_cleanup_signal_handler();
 #endif
 }
+
+#if WASM_RT_USE_MMAP
+
+static uint64_t get_allocation_size_for_mmap(wasm_rt_memory_t* memory) {
+  /* Reserve 8GiB. */
+  assert(!memory->is64 &&
+         "memory64 is not yet compatible with WASM_RT_USE_MMAP");
+#if WASM_RT_MEMCHECK_GUARD_PAGES
+  /* Reserve 8GiB. */
+  const uint64_t max_size = 0x200000000ul;
+  return max_size;
+#else
+  if (memory->max_pages != 0) {
+    const uint64_t max_size = memory->max_pages * PAGE_SIZE;
+    return max_size;
+  }
+
+  /* Reserve 4GiB. */
+  const uint64_t max_size = 0x100000000ul;
+  return max_size;
+#endif
+}
+
+#endif
 
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint64_t initial_pages,
                              uint64_t max_pages,
                              bool is64) {
   uint64_t byte_length = initial_pages * PAGE_SIZE;
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-  /* Reserve 8GiB. */
-  assert(
-      !is64 &&
-      "memory64 is not yet compatible with WASM_RT_MEMCHECK_SIGNAL_HANDLER");
-  void* addr = os_mmap(0x200000000ul);
+  memory->size = byte_length;
+  memory->pages = initial_pages;
+  memory->max_pages = max_pages;
+  memory->is64 = is64;
 
+#if WASM_RT_USE_MMAP
+  const uint64_t mmap_size = get_allocation_size_for_mmap(memory);
+  void* addr = os_mmap(mmap_size);
   if (!addr) {
     os_print_last_error("os_mmap failed.");
     abort();
@@ -319,10 +343,6 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 #else
   memory->data = calloc(byte_length, 1);
 #endif
-  memory->size = byte_length;
-  memory->pages = initial_pages;
-  memory->max_pages = max_pages;
-  memory->is64 = is64;
 }
 
 uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
@@ -337,7 +357,7 @@ uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
   uint64_t old_size = old_pages * PAGE_SIZE;
   uint64_t new_size = new_pages * PAGE_SIZE;
   uint64_t delta_size = delta * PAGE_SIZE;
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if WASM_RT_USE_MMAP
   uint8_t* new_data = memory->data;
   int ret = os_mprotect(new_data + old_size, delta_size);
   if (ret != 0) {
@@ -363,8 +383,9 @@ uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
 }
 
 void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
-  os_munmap(memory->data, memory->size);  // ignore error?
+#if WASM_RT_USE_MMAP
+  const uint64_t mmap_size = get_allocation_size_for_mmap(memory);
+  os_munmap(memory->data, mmap_size);  // ignore error?
 #else
   free(memory->data);
 #endif

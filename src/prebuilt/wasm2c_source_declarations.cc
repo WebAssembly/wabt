@@ -75,7 +75,7 @@ R"w2c_template(    TRAP(OOB);
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-#if WASM_RT_MEMCHECK_SIGNAL_HANDLER
+#if WASM_RT_MEMCHECK_GUARD_PAGES
 )w2c_template"
 R"w2c_template(#define MEMCHECK(mem, a, t)
 )w2c_template"
