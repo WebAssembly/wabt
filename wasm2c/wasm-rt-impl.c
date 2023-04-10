@@ -67,6 +67,10 @@ static WASM_RT_THREAD_LOCAL uint32_t g_active_exception_size;
 
 static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
 
+#ifdef WASM_RT_TRAP_HANDLER
+extern void WASM_RT_TRAP_HANDLER(wasm_rt_trap_t code);
+#endif
+
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
 #if WASM_RT_USE_STACK_DEPTH_COUNT
