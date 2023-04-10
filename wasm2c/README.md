@@ -308,10 +308,10 @@ execution. The default runtime included in wasm2c unwinds the stack using
 `longjmp`. You can overide this call to `longjmp` from the embeder by defining a
 custom trap handler with the signature `void
 wasm2c_custom_trap_handler(wasm_rt_trap_t code)` and compiling the runtime with
-the with macro definition `#define WASM_RT_MEMCHECK_SIGNAL_HANDLER
-wasm2c_custom_trap_handler`. It is recommended that you add this macro
-definition via a compiler flag
-(`-DWASM_RT_MEMCHECK_SIGNAL_HANDLER=wasm2c_custom_trap_handler` on clang/gcc).
+the with macro definition
+`#define WASM_RT_TRAP_HANDLER wasm2c_custom_trap_handler`. It is recommended
+that you add this macro definition via a compiler flag
+(`-DWASM_RT_TRAP_HANDLER=wasm2c_custom_trap_handler` on clang/gcc).
 
 `wasm_rt_allocate_memory` initializes a memory instance, and allocates at least
 enough space for the given number of initial pages. The memory must be cleared
