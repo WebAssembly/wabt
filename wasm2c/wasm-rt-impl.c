@@ -70,6 +70,10 @@ static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
 extern void WASM_RT_TRAP_HANDLER(wasm_rt_trap_t code);
 #endif
 
+#ifdef WASM_RT_GROW_FAILED_HANDLER
+extern void WASM_RT_GROW_FAILED_HANDLER();
+#endif
+
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
 #if WASM_RT_USE_STACK_DEPTH_COUNT
@@ -345,7 +349,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 #endif
 }
 
-uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
+static uint64_t grow_memory_impl(wasm_rt_memory_t* memory, uint64_t delta) {
   uint64_t old_pages = memory->pages;
   uint64_t new_pages = memory->pages + delta;
   if (new_pages == 0) {
@@ -380,6 +384,16 @@ uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
   memory->size = new_size;
   memory->data = new_data;
   return old_pages;
+}
+
+uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
+  uint64_t ret = grow_memory_impl(memory, delta);
+#ifdef WASM_RT_GROW_FAILED_HANDLER
+  if (ret == -1) {
+    WASM_RT_GROW_FAILED_HANDLER();
+  }
+#endif
+  return ret;
 }
 
 void wasm_rt_free_memory(wasm_rt_memory_t* memory) {

@@ -322,7 +322,13 @@ an i32 or i64 address.
 of pages. If there isn't enough memory to do so, or the new page count would be
 greater than the maximum page count, the function must fail by returning
 `0xffffffff`. If the function succeeds, it must return the previous size of the
-memory instance, in pages.
+memory instance, in pages. The host can optionally be notified of failures by
+defining a function the signature `void wasm2c_grow_failed_handler()` and
+compiling the runtime with the with macro definition `#define
+WASM_RT_GROW_FAILED_HANDLER wasm2c_grow_failed_handler`. It is recommended that
+you add this macro definition via a compiler flag
+(`-WASM_RT_GROW_FAILED_HANDLER=wasm2c_grow_failed_handler` on clang/gcc).
+
 
 `wasm_rt_free_memory` frees the memory instance.
 
