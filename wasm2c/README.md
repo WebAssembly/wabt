@@ -305,30 +305,25 @@ runtime has been initialized.
 `wasm_rt_trap` is a function that is called when the module traps. Some possible
 implementations are to throw a C++ exception, or to just abort the program
 execution. The default runtime included in wasm2c unwinds the stack using
-`longjmp`. You can overide this call to `longjmp` from the embeder by defining a
-custom trap handler with the signature `void
-wasm2c_custom_trap_handler(wasm_rt_trap_t code)` and compiling the runtime with
-the with macro definition
-`#define WASM_RT_TRAP_HANDLER wasm2c_custom_trap_handler`. It is recommended
-that you add this macro definition via a compiler flag
-(`-DWASM_RT_TRAP_HANDLER=wasm2c_custom_trap_handler` on clang/gcc).
+`longjmp`. The host can overide this call to `longjmp` by compiling the runtime
+with `WASM_RT_TRAP_HANDLER` defined to the name of a trap handler function. The
+handler function should be a function taking a `wasm_rt_trap_t` as a parameter
+and returning `void`. e.g. `-DWASM_RT_TRAP_HANDLER=my_trap_handler`
 
 `wasm_rt_allocate_memory` initializes a memory instance, and allocates at least
 enough space for the given number of initial pages. The memory must be cleared
 to zero. The `is64` parameter indicates if the memory is indexed with
 an i32 or i64 address.
 
-`wasm_rt_grow_memory` must grow the given memory instance by the given number
-of pages. If there isn't enough memory to do so, or the new page count would be
+`wasm_rt_grow_memory` must grow the given memory instance by the given number of
+pages. If there isn't enough memory to do so, or the new page count would be
 greater than the maximum page count, the function must fail by returning
 `0xffffffff`. If the function succeeds, it must return the previous size of the
 memory instance, in pages. The host can optionally be notified of failures by
-defining a function the signature `void wasm2c_grow_failed_handler()` and
-compiling the runtime with the with macro definition `#define
-WASM_RT_GROW_FAILED_HANDLER wasm2c_grow_failed_handler`. It is recommended that
-you add this macro definition via a compiler flag
-(`-WASM_RT_GROW_FAILED_HANDLER=wasm2c_grow_failed_handler` on clang/gcc).
-
+compiling the runtime with `WASM_RT_GROW_FAILED_HANDLER` defined to the name of
+a handler function.  The handler function should be a function taking no
+arguments and returning `void` . e.g.
+`-DWASM_RT_GROW_FAILED_HANDLER=my_growfail_handler`
 
 `wasm_rt_free_memory` frees the memory instance.
 

@@ -300,7 +300,6 @@ void wasm_rt_free(void) {
 #if WASM_RT_USE_MMAP
 
 static uint64_t get_allocation_size_for_mmap(wasm_rt_memory_t* memory) {
-  /* Reserve 8GiB. */
   assert(!memory->is64 &&
          "memory64 is not yet compatible with WASM_RT_USE_MMAP");
 #if WASM_RT_MEMCHECK_GUARD_PAGES
@@ -399,7 +398,7 @@ uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
 void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
 #if WASM_RT_USE_MMAP
   const uint64_t mmap_size = get_allocation_size_for_mmap(memory);
-  os_munmap(memory->data, mmap_size);  // ignore error?
+  os_munmap(memory->data, mmap_size); // ignore error
 #else
   free(memory->data);
 #endif
