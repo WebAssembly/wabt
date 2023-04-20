@@ -1086,9 +1086,9 @@ void CWriter::Write(const GotoLabel& goto_label) {
               StackVar(amount - i - 1), "; ");
       }
     }
-
-    assert(try_catch_stack_.size() >= label->try_catch_stack_size);
   }
+
+  assert(try_catch_stack_.size() >= label->try_catch_stack_size);
 
   if (try_catch_stack_.size() != label->try_catch_stack_size) {
     const std::string& name =
