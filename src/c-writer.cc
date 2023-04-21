@@ -2837,7 +2837,9 @@ void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
   Write(CloseBrace(), Newline()); /* end of try-catch */
 
   ResetTypeStack(mark);
-  Write(LabelDecl(label_stack_.back().name));
+  assert(!label_stack_.empty());
+  assert(label_stack_.back().name == tryexpr.block.label);
+  Write(LabelDecl(GetLocalName(tryexpr.block.label, true)));
   PopLabel();
   PushTypes(tryexpr.block.decl.sig.result_types);
 }
@@ -2939,7 +2941,9 @@ void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
 
   PopTryCatch();
   ResetTypeStack(mark);
-  Write(LabelDecl(label_stack_.back().name));
+  assert(!label_stack_.empty());
+  assert(label_stack_.back().name == tryexpr.block.label);
+  Write(LabelDecl(GetLocalName(tryexpr.block.label, true)));
   PopLabel();
   PushTypes(tryexpr.block.decl.sig.result_types);
 }

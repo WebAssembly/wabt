@@ -1,0 +1,12 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS: --debug-names --enable-exceptions
+(module
+  (func (export "break-try")
+    (try (do (br 0)) (delegate 0))
+  )
+)
+
+(assert_return (invoke "break-try"))
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)
