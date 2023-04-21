@@ -1,0 +1,28 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --enable-exceptions
+(module
+  (tag $e0)
+  (func $throw (throw $e0))
+  (func (export "break-throw") (result i32)
+    (try $outer (result i32)
+      (do
+        (try (result i32)
+          (do
+            (block $a
+              (try (do (br $a)) (delegate $outer))
+            )
+            (call $throw)
+            (i32.const 0)
+          )
+          (catch $e0 (i32.const 1))
+        )
+      )
+      (catch $e0 (i32.const 2))
+    )
+  )
+)
+
+(assert_return (invoke "break-throw") (i32.const 1))
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)

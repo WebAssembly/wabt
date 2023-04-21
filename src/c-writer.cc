@@ -1086,15 +1086,15 @@ void CWriter::Write(const GotoLabel& goto_label) {
               StackVar(amount - i - 1), "; ");
       }
     }
+  }
 
-    assert(try_catch_stack_.size() >= label->try_catch_stack_size);
+  assert(try_catch_stack_.size() >= label->try_catch_stack_size);
 
-    if (try_catch_stack_.size() != label->try_catch_stack_size) {
-      const std::string& name =
-          try_catch_stack_.at(label->try_catch_stack_size).name;
+  if (try_catch_stack_.size() != label->try_catch_stack_size) {
+    const std::string& name =
+        try_catch_stack_.at(label->try_catch_stack_size).name;
 
-      Write("wasm_rt_set_unwind_target(", name, "_outer_target);", Newline());
-    }
+    Write("wasm_rt_set_unwind_target(", name, "_outer_target);", Newline());
   }
 
   if (goto_label.var.is_name()) {
