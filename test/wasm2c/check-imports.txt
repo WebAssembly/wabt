@@ -89,6 +89,8 @@ extern const u8 wasm2c_test_is64_env_0x5F_linear_memory;
 #include <intrin.h>
 #include <malloc.h>
 #define alloca _alloca
+#elif defined(__FreeBSD__)
+#include <stdlib.h>
 #else
 #include <alloca.h>
 #endif
