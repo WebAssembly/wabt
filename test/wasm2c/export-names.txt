@@ -89,6 +89,8 @@ void w2c_test_0xE20x9D0xA40xEF0xB80x8F(w2c_test*);
 #include <intrin.h>
 #include <malloc.h>
 #define alloca _alloca
+#elif defined(__FreeBSD__)
+#include <stdlib.h>
 #else
 #include <alloca.h>
 #endif

@@ -7,6 +7,8 @@
 #include <intrin.h>
 #include <malloc.h>
 #define alloca _alloca
+#elif defined(__FreeBSD__)
+#include <stdlib.h>
 #else
 #include <alloca.h>
 #endif

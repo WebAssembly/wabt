@@ -16,6 +16,10 @@ R"w2c_template(#include <malloc.h>
 )w2c_template"
 R"w2c_template(#define alloca _alloca
 )w2c_template"
+R"w2c_template(#elif defined(__FreeBSD__)
+)w2c_template"
+R"w2c_template(#include <stdlib.h>
+)w2c_template"
 R"w2c_template(#else
 )w2c_template"
 R"w2c_template(#include <alloca.h>
