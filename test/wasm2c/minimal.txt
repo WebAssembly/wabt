@@ -56,7 +56,9 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
-#if defined(_MSC_VER)
+#if defined(__MINGW32__)
+#include <malloc.h>
+#elif defined(_MSC_VER)
 #include <intrin.h>
 #include <malloc.h>
 #define alloca _alloca
