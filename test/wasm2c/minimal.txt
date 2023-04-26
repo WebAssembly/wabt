@@ -62,7 +62,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 #include <intrin.h>
 #include <malloc.h>
 #define alloca _alloca
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <stdlib.h>
 #else
 #include <alloca.h>
