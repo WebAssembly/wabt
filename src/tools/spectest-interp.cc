@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "wabt/binary-reader-ir.h"
 #include "wabt/binary-reader.h"
 #include "wabt/cast.h"
 #include "wabt/common.h"
@@ -272,6 +273,30 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
       WABT_UNREACHABLE;
   }
   return result;
+}
+
+bool ValidIR(const std::string& filename) {
+  std::vector<uint8_t> file_data;
+
+  if (Failed(ReadFile(filename, &file_data))) {
+    return false;
+  }
+
+  const bool kReadDebugNames = true;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+
+  Errors errors;
+  wabt::Module module;
+  if (Failed(ReadBinaryIr(filename.c_str(), file_data.data(), file_data.size(),
+                          options, &errors, &module))) {
+    return false;
+  }
+
+  return Succeeded(
+      ValidateModule(&module, &errors, ValidateOptions{s_features}));
 }
 
 class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
@@ -1498,6 +1523,12 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
     return wabt::Result::Error;
   }
 
+  if (!ValidIR(command->filename)) {
+    PrintError(command->line, "IR Validator thinks module is invalid: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
   RefVec imports;
   PopulateImports(module, &imports);
 
@@ -1541,6 +1572,12 @@ wabt::Result CommandRunner::OnAssertMalformedCommand(
     return wabt::Result::Error;
   }
 
+  if (ValidIR(command->filename)) {
+    PrintError(command->line, "IR Validator thinks module is valid: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
   return wabt::Result::Ok;
 }
 
@@ -1566,6 +1603,12 @@ wabt::Result CommandRunner::OnAssertUnlinkableCommand(
 
   if (!module) {
     PrintError(command->line, "unable to compile unlinkable module: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
+  if (!ValidIR(command->filename)) {
+    PrintError(command->line, "IR Validator thinks module is invalid: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
   }
@@ -1597,6 +1640,12 @@ wabt::Result CommandRunner::OnAssertInvalidCommand(
     return wabt::Result::Error;
   }
 
+  if (ValidIR(command->filename)) {
+    PrintError(command->line, "IR Validator thinks module is valid: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
   return wabt::Result::Ok;
 }
 
@@ -1607,6 +1656,12 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
 
   if (!module) {
     PrintError(command->line, "unable to compile uninstantiable module: \"%s\"",
+               command->filename.c_str());
+    return wabt::Result::Error;
+  }
+
+  if (!ValidIR(command->filename)) {
+    PrintError(command->line, "IR Validator thinks module is invalid: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
   }
