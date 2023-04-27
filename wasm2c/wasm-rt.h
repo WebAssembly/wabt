@@ -196,6 +196,10 @@ extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 
 #endif
 
+#ifndef WASM_RT_SKIP_EXCEPTION_HANDLING
+#define WASM_RT_SKIP_EXCEPTION_HANDLING 0
+#endif
+
 #if defined(_MSC_VER)
 #define WASM_RT_NO_RETURN __declspec(noreturn)
 #else
@@ -318,6 +322,25 @@ bool wasm_rt_is_initialized(void);
 void wasm_rt_free(void);
 
 /**
+ * A hardened jmp_buf that allows checking for initialization before use
+ */
+typedef struct {
+  /* Is the jmp buf intialized? */
+  bool initialized;
+  /* jmp_buf contents */
+  jmp_buf buffer;
+} wasm_rt_jmp_buf;
+
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
+#define WASM_RT_SETJMP_SETBUF(buf) sigsetjmp(buf, 1)
+#else
+#define WASM_RT_SETJMP_SETBUF(buf) setjmp(buf)
+#endif
+
+#define WASM_RT_SETJMP(buf) \
+  ((buf).initialized = true, WASM_RT_SETJMP_SETBUF((buf).buffer))
+
+/**
  * Stop execution immediately and jump back to the call to `wasm_rt_impl_try`.
  * The result of `wasm_rt_impl_try` will be the provided trap reason.
  *
@@ -329,6 +352,8 @@ WASM_RT_NO_RETURN void wasm_rt_trap(wasm_rt_trap_t);
  * Return a human readable error string based on a trap type.
  */
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
+
+#if !WASM_RT_SKIP_EXCEPTION_HANDLING
 
 /**
  * A tag is represented as an arbitrary pointer.
@@ -346,16 +371,6 @@ void wasm_rt_load_exception(const wasm_rt_tag_t tag,
  * Throw the active exception.
  */
 WASM_RT_NO_RETURN void wasm_rt_throw(void);
-
-/**
- * A hardened jmp_buf that allows us to checks if it is initialized before use
- */
-typedef struct {
-  /* Is the jmp buf intialized? */
-  bool initialized;
-  /* jmp_buf contents */
-  jmp_buf buffer;
-} wasm_rt_jmp_buf;
 
 /**
  * The type of an unwind target if an exception is thrown and caught.
@@ -387,14 +402,7 @@ uint32_t wasm_rt_exception_size(void);
  */
 void* wasm_rt_exception(void);
 
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
-#define WASM_RT_SETJMP_SETBUF(buf) sigsetjmp(buf, 1)
-#else
-#define WASM_RT_SETJMP_SETBUF(buf) setjmp(buf)
 #endif
-
-#define WASM_RT_SETJMP(buf) \
-  ((buf).initialized = true, WASM_RT_SETJMP_SETBUF((buf).buffer))
 
 #define wasm_rt_try(target) WASM_RT_SETJMP(target)
 

@@ -60,11 +60,13 @@ WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
 
 WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
+#if !WASM_RT_SKIP_EXCEPTION_HANDLING
 static WASM_RT_THREAD_LOCAL wasm_rt_tag_t g_active_exception_tag;
 static WASM_RT_THREAD_LOCAL uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
 static WASM_RT_THREAD_LOCAL uint32_t g_active_exception_size;
 
 static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
+#endif
 
 #ifdef WASM_RT_TRAP_HANDLER
 extern void WASM_RT_TRAP_HANDLER(wasm_rt_trap_t code);
@@ -87,6 +89,8 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
   WASM_RT_LONGJMP(g_wasm_rt_jmp_buf, code);
 #endif
 }
+
+#if !WASM_RT_SKIP_EXCEPTION_HANDLING
 
 void wasm_rt_load_exception(const wasm_rt_tag_t tag,
                             uint32_t size,
@@ -126,6 +130,8 @@ uint32_t wasm_rt_exception_size(void) {
 void* wasm_rt_exception(void) {
   return g_active_exception;
 }
+
+#endif
 
 #ifdef _WIN32
 static void* os_mmap(size_t size) {
