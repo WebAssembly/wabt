@@ -14,6 +14,6 @@ rot13.wasm: rot13.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm $< -o $@
 
 rot13.c: rot13.wasm ../../../bin/wasm2c
-	../../../bin/wasm2c $< -o $@
+	../../../bin/wasm2c $< -o $@ --disable-simd
 
 .PHONY: all clean

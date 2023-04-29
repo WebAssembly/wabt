@@ -415,7 +415,9 @@ if (WABT_INSTALL_RULES)
   )
 endif ()
 
-add_library(wasm-rt-impl STATIC wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-impl.h)
+set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c")
+
+add_library(wasm-rt-impl STATIC ${WASM_RT_FILES})
 add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
 if (WABT_BIG_ENDIAN)
   target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
@@ -429,12 +431,12 @@ if (WABT_INSTALL_RULES)
     INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   )
   install(
-    FILES "wasm2c/wasm-rt.h"
+    FILES "wasm2c/wasm-rt.h" "wasm2c/wasm-rt-exceptions.h"
     TYPE INCLUDE
     COMPONENT wabt-development
   )
   install(
-    FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c"
+    FILES ${WASM_RT_FILES}
     DESTINATION "${CMAKE_INSTALL_DATADIR}/wabt/wasm2c"
     COMPONENT wabt-development
   )

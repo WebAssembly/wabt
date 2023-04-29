@@ -11,6 +11,7 @@
 
 #include "wasm-rt.h"
 #include "wasm-rt-impl.h"
+#include "wasm-rt-exceptions.h"
 
 static int g_tests_run;
 static int g_tests_passed;

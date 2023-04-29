@@ -14,6 +14,6 @@ callback.wasm: callback.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm --debug-names $< -o $@
 
 callback.c: callback.wasm ../../../bin/wasm2c
-	../../../bin/wasm2c $< -o $@
+	../../../bin/wasm2c $< -o $@ --disable-simd
 
 .PHONY: all clean
