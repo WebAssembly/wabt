@@ -368,6 +368,7 @@ class CWriter {
                                   const std::string&);
   void WriteCallIndirectFuncDeclaration(const FuncDeclaration&,
                                         const std::string&);
+  void WriteFeatureMacros();
   void WriteModuleInstance();
   void WriteGlobals();
   void WriteGlobal(const Global&, const std::string&);
@@ -1787,6 +1788,15 @@ void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
   Write(ResultType(decl.sig.result_types), " ", name, "(void*");
   WriteParamTypes(decl);
   Write(")");
+}
+
+void CWriter::WriteFeatureMacros() {
+  if (options_.features->exceptions_enabled()) {
+    Write("#define WASM_RT_ENABLE_EXCEPTION_HANDLING", Newline(), Newline());
+  }
+  if (options_.features->simd_enabled()) {
+    Write("#define WASM_RT_ENABLE_SIMD", Newline(), Newline());
+  }
 }
 
 void CWriter::WriteModuleInstance() {
@@ -5122,6 +5132,7 @@ void CWriter::WriteCHeader() {
   Write("#ifndef ", guard, Newline());
   Write("#define ", guard, Newline());
   Write(Newline());
+  WriteFeatureMacros();
   Write(s_header_top);
   Write(Newline());
   WriteModuleInstance();

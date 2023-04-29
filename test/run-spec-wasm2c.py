@@ -452,15 +452,13 @@ def Compile(cc, c_filename, out_dir, *cflags):
     o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, ext), out_dir)
     args = list(cflags)
     if IS_WINDOWS:
-        args += ['/nologo', '/DWASM_RT_ENABLE_SIMD',
-                 '/MDd', '/c', c_filename, '/Fo' + o_filename]
+        args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
         # See "Compiling the wasm2c output" section of wasm2c/README.md
         # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
         # and '-frounding-math' to maintain conformance with the spec tests
         # (GCC also requires '-fsignaling-nans')
         args += ['-c', c_filename, '-o', o_filename, '-O2',
-                 '-DWASM_RT_ENABLE_SIMD',
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
@@ -621,6 +619,10 @@ def main(args):
             # Compile wasm-rt-impl.
             wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
             o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, *cflags))
+
+            # Compile wasm-rt-exceptions.
+            wasm_rt_exceptions_c = os.path.join(options.wasmrt_dir, 'wasm-rt-exceptions-impl.c')
+            o_filenames.append(Compile(cc, wasm_rt_exceptions_c, out_dir, *cflags))
 
             # Compile and link -main test run entry point
             o_filenames.append(Compile(cc, main_filename, out_dir, *cflags))

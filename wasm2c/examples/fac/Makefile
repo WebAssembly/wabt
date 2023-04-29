@@ -12,6 +12,6 @@ fac.wasm: fac.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm $< -o $@
 
 fac.c: fac.wasm ../../../bin/wasm2c
-	../../../bin/wasm2c $< -o $@
+	../../../bin/wasm2c $< -o $@ --disable-simd
 
 .PHONY: all clean
