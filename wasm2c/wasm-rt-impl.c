@@ -42,7 +42,7 @@
 #endif
 
 #define PAGE_SIZE 65536
-#define MAX_EXCEPTION_SIZE PAGE_SIZE
+#define MAX_EXCEPTION_SIZE 256
 
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 static bool g_signal_handler_installed = false;
