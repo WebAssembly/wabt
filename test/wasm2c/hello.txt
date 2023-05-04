@@ -26,8 +26,6 @@
 #ifndef WASM_H_GENERATED_
 #define WASM_H_GENERATED_
 
-#define WASM_RT_ENABLE_SIMD
-
 #include <stdint.h>
 
 #include "wasm-rt.h"
