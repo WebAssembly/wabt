@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(GLOBAL) { count[1] i32 mut[0] init_expr[] }
+section(CODE) { count[1] func { locals[0] } }
+(;; STDERR ;;;
+0000017: error: init expression must end with END opcode
+0000017: error: init expression must end with END opcode
+;;; STDERR ;;)

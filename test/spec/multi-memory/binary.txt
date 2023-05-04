@@ -246,7 +246,7 @@ out/test/spec/multi-memory/binary.wast:1462: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:1496: assert_malformed passed:
   0000021: error: unable to read u32 leb128: elem segment flags
 out/test/spec/multi-memory/binary.wast:1512: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: elem count
+  0000024: error: init expression must end with END opcode
 out/test/spec/multi-memory/binary.wast:1529: assert_malformed passed:
   0000021: error: unfinished section (expected end: 0x27)
 out/test/spec/multi-memory/binary.wast:1555: assert_malformed passed:
