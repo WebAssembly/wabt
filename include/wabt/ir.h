@@ -1245,6 +1245,12 @@ struct Module {
   BindingHash memory_bindings;
   BindingHash data_segment_bindings;
   BindingHash elem_segment_bindings;
+
+  // Feature tracking for a subset of supported features
+  struct {
+    bool simd = false;
+    bool exceptions = false;
+  } features;
 };
 
 enum class ScriptModuleType {
