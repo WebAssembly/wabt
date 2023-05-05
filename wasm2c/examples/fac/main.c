@@ -11,8 +11,8 @@ int main(int argc, char** argv) {
   }
 
   /* Convert the argument from a string to an int. We'll implicitly cast the int
-  to a `u32`, which is what `fac` expects. */
-  u32 x = atoi(argv[1]);
+  to a `uint32_t`, which is what `fac` expects. */
+  uint32_t x = atoi(argv[1]);
 
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   wasm2c_fac_instantiate(&fac);
 
   /* Call `fac`, using the mangled name. */
-  u32 result = w2c_fac_fac(&fac, x);
+  uint32_t result = w2c_fac_fac(&fac, x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);

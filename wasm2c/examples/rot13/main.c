@@ -76,7 +76,9 @@ int main(int argc, char** argv) {
  * result:
  *   The number of bytes filled into the buffer. (Must be <= size).
  */
-u32 w2c_host_fill_buf(struct w2c_host* instance, u32 ptr, u32 size) {
+uint32_t w2c_host_fill_buf(struct w2c_host* instance,
+                           uint32_t ptr,
+                           uint32_t size) {
   for (size_t i = 0; i < size; ++i) {
     if (instance->input[i] == 0) {
       return i;
@@ -93,7 +95,7 @@ u32 w2c_host_fill_buf(struct w2c_host* instance, u32 ptr, u32 size) {
  *   ptr: The wasm memory address of the buffer.
  *   size: The size of the buffer in wasm memory.
  */
-void w2c_host_buf_done(struct w2c_host* instance, u32 ptr, u32 size) {
+void w2c_host_buf_done(struct w2c_host* instance, uint32_t ptr, uint32_t size) {
   /* The output buffer is not necessarily null-terminated, so use the %*.s
    * printf format to limit the number of characters printed. */
   printf("%s -> %.*s\n", instance->input, (int)size,

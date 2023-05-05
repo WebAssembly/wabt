@@ -26,6 +26,27 @@ R"w2c_template(
 #define UNREACHABLE TRAP(UNREACHABLE)
 )w2c_template"
 R"w2c_template(
+typedef uint8_t u8;
+)w2c_template"
+R"w2c_template(typedef int8_t s8;
+)w2c_template"
+R"w2c_template(typedef uint16_t u16;
+)w2c_template"
+R"w2c_template(typedef int16_t s16;
+)w2c_template"
+R"w2c_template(typedef uint32_t u32;
+)w2c_template"
+R"w2c_template(typedef int32_t s32;
+)w2c_template"
+R"w2c_template(typedef uint64_t u64;
+)w2c_template"
+R"w2c_template(typedef int64_t s64;
+)w2c_template"
+R"w2c_template(typedef float f32;
+)w2c_template"
+R"w2c_template(typedef double f64;
+)w2c_template"
+R"w2c_template(
 static inline bool func_types_eq(const wasm_rt_func_type_t a,
 )w2c_template"
 R"w2c_template(                                 const wasm_rt_func_type_t b) {
@@ -272,6 +293,8 @@ R"w2c_template(DEFINE_STORE(i64_store32, u32, u64)
 )w2c_template"
 R"w2c_template(
 #if defined(WASM_RT_ENABLE_SIMD)
+)w2c_template"
+R"w2c_template(typedef simde_v128_t v128;
 )w2c_template"
 R"w2c_template(
 #ifdef __x86_64__

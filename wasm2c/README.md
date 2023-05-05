@@ -74,8 +74,8 @@ int main(int argc, char** argv) {
   }
 
   /* Convert the argument from a string to an int. We'll implicitly cast the int
-  to a `u32`, which is what `fac` expects. */
-  u32 x = atoi(argv[1]);
+  to a `uint32_t`, which is what `fac` expects. */
+  uint32_t x = atoi(argv[1]);
 
   /* Initialize the Wasm runtime. */
   wasm_rt_init();
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
   wasm2c_fac_instantiate(&fac);
 
   /* Call `fac`, using the mangled name. */
-  u32 result = w2c_fac_fac(&fac, x);
+  uint32_t result = w2c_fac_fac(&fac, x);
 
   /* Print the result. */
   printf("fac(%u) -> %u\n", x, result);
@@ -152,12 +152,6 @@ The generated header file looks something like this:
 #include "wasm-rt.h"
 
 ...
-#ifndef WASM_RT_CORE_TYPES_DEFINED
-#define WASM_RT_CORE_TYPES_DEFINED
-
-...
-
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -172,7 +166,7 @@ void wasm2c_fac_free(w2c_fac*);
 wasm_rt_func_type_t wasm2c_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* export: 'fac' */
-u32 w2c_fac_fac(w2c_fac*, u32);
+uint32_t w2c_fac_fac(w2c_fac*, uint32_t);
 
 #ifdef __cplusplus
 }
@@ -183,9 +177,7 @@ u32 w2c_fac_fac(w2c_fac*, u32);
 ```
 
 Let's look at each section. The outer `#ifndef` is standard C
-boilerplate for a header. This `WASM_RT_CORE_TYPES_DEFINED` section
-contains a number of definitions required for all WebAssembly
-modules. The `extern "C"` part makes sure to not mangle the symbols if
+boilerplate for a header. The `extern "C"` part makes sure to not mangle the symbols if
 using this header in C++.
 
 The included `wasm-rt.h` file also includes a number of relevant definitions.
@@ -231,7 +223,7 @@ Next is the definition for a function reference (in WebAssembly 1.0,
 this was the type of all table elements, but funcrefs can now also be
 used as ordinary values, and tables can alternately be declared as
 type externref). In this structure, `wasm_rt_func_type_t` is an opaque
-256-bit ID that can be looked up via the `Z_[modname]_get_func_type`
+256-bit ID that can be looked up via the `wasm2c_[modname]_get_func_type`
 function. (A demonstration of this can be found in the `callback`
 example.) `module_instance` is the pointer to the function's
 originating module instance, which will be passed in when the func is
@@ -406,7 +398,7 @@ void wasm2c_fac_free(w2c_fac*);
 wasm_rt_func_type_t wasm2c_fac_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* export: 'fac' */
-u32 w2c_fac_fac(w2c_fac*, u32);
+uint32_t w2c_fac_fac(w2c_fac*, uint32_t);
 ```
 
 ## Handling other kinds of imports and exports of modules
@@ -460,7 +452,7 @@ module doesn't use any globals, memory or tables.
 The most interesting part is the definition of the function `fac`:
 
 ```c
-static u32 w2c_fac_fac_0(w2c_fac* instance, u32 var_p0) {
+u32 w2c_fac_fac_0(w2c_fac* instance, u32 var_p0) {
   FUNC_PROLOGUE;
   u32 var_i0, var_i1, var_i2;
   var_i0 = var_p0;
@@ -606,7 +598,7 @@ int main(int argc, char** argv) {
  * result:
  *   The number of bytes filled into the buffer. (Must be <= size).
  */
-u32 w2c_host_fill_buf(w2c_host* instance, u32 ptr, u32 size) {
+uint32_t w2c_host_fill_buf(w2c_host* instance, uint32_t ptr, uint32_t size) {
   for (size_t i = 0; i < size; ++i) {
     if (instance->input[i] == 0) {
       return i;
@@ -623,7 +615,7 @@ u32 w2c_host_fill_buf(w2c_host* instance, u32 ptr, u32 size) {
  *   ptr: The wasm memory address of the buffer.
  *   size: The size of the buffer in wasm memory.
  */
-void w2c_host_buf_done(w2c_host* instance, u32 ptr, u32 size) {
+void w2c_host_buf_done(w2c_host* instance, uint32_t ptr, uint32_t size) {
   /* The output buffer is not necessarily null-terminated, so use the %*.s
    * printf format to limit the number of characters printed. */
   printf("%s -> %.*s\n", instance->input, (int)size, &instance->memory.data[ptr]);

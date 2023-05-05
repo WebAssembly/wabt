@@ -15,6 +15,17 @@
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef int16_t s16;
+typedef uint32_t u32;
+typedef int32_t s32;
+typedef uint64_t u64;
+typedef int64_t s64;
+typedef float f32;
+typedef double f64;
+
 static inline bool func_types_eq(const wasm_rt_func_type_t a,
                                  const wasm_rt_func_type_t b) {
   return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
@@ -143,6 +154,7 @@ DEFINE_STORE(i64_store16, u16, u64)
 DEFINE_STORE(i64_store32, u32, u64)
 
 #if defined(WASM_RT_ENABLE_SIMD)
+typedef simde_v128_t v128;
 
 #ifdef __x86_64__
 #define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));

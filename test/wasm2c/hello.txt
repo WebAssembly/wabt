@@ -26,8 +26,6 @@
 #ifndef WASM_H_GENERATED_
 #define WASM_H_GENERATED_
 
-#include <stdint.h>
-
 #include "wasm-rt.h"
 
 #if defined(WASM_RT_ENABLE_EXCEPTION_HANDLING)
@@ -36,26 +34,6 @@
 
 #if defined(WASM_RT_ENABLE_SIMD)
 #include "simde/wasm/simd128.h"
-#endif
-
-/* TODO(binji): only use stdint.h types in header */
-#ifndef WASM_RT_CORE_TYPES_DEFINED
-#define WASM_RT_CORE_TYPES_DEFINED
-typedef uint8_t u8;
-typedef int8_t s8;
-typedef uint16_t u16;
-typedef int16_t s16;
-typedef uint32_t u32;
-typedef int32_t s32;
-typedef uint64_t u64;
-typedef int64_t s64;
-typedef float f32;
-typedef double f64;
-
-#if defined(WASM_RT_ENABLE_SIMD)
-typedef simde_v128_t v128;
-#endif
-
 #endif
 
 #ifdef __cplusplus
@@ -75,10 +53,10 @@ void wasm2c_test_free(w2c_test*);
 wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* import: 'wasi_snapshot_preview1' 'fd_write' */
-u32 w2c_wasi__snapshot__preview1_fd_write(struct w2c_wasi__snapshot__preview1*, u32, u32, u32, u32);
+uint32_t w2c_wasi__snapshot__preview1_fd_write(struct w2c_wasi__snapshot__preview1*, uint32_t, uint32_t, uint32_t, uint32_t);
 
 /* import: 'wasi_snapshot_preview1' 'proc_exit' */
-void w2c_wasi__snapshot__preview1_proc_exit(struct w2c_wasi__snapshot__preview1*, u32);
+void w2c_wasi__snapshot__preview1_proc_exit(struct w2c_wasi__snapshot__preview1*, uint32_t);
 
 /* export: 'memory' */
 wasm_rt_memory_t* w2c_test_memory(w2c_test* instance);
@@ -126,6 +104,17 @@ void w2c_test_0x5Fstart(w2c_test*);
 #endif
 
 #define UNREACHABLE TRAP(UNREACHABLE)
+
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef int16_t s16;
+typedef uint32_t u32;
+typedef int32_t s32;
+typedef uint64_t u64;
+typedef int64_t s64;
+typedef float f32;
+typedef double f64;
 
 static inline bool func_types_eq(const wasm_rt_func_type_t a,
                                  const wasm_rt_func_type_t b) {
@@ -255,6 +244,7 @@ DEFINE_STORE(i64_store16, u16, u64)
 DEFINE_STORE(i64_store32, u32, u64)
 
 #if defined(WASM_RT_ENABLE_SIMD)
+typedef simde_v128_t v128;
 
 #ifdef __x86_64__
 #define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));
@@ -919,7 +909,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 void w2c_test_0x5Fstart_0(w2c_test* instance) {
   FUNC_PROLOGUE;
-  u32 var_i0, var_i1, var_i2, var_i3, var_i4;
+  uint32_t var_i0, var_i1, var_i2, var_i3, var_i4;
   var_i0 = 0u;
   var_i1 = 8u;
   i32_store(&instance->w2c_memory, (u64)(var_i0), var_i1);

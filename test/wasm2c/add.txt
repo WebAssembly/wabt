@@ -8,8 +8,6 @@
 #ifndef WASM_H_GENERATED_
 #define WASM_H_GENERATED_
 
-#include <stdint.h>
-
 #include "wasm-rt.h"
 
 #if defined(WASM_RT_ENABLE_EXCEPTION_HANDLING)
@@ -18,26 +16,6 @@
 
 #if defined(WASM_RT_ENABLE_SIMD)
 #include "simde/wasm/simd128.h"
-#endif
-
-/* TODO(binji): only use stdint.h types in header */
-#ifndef WASM_RT_CORE_TYPES_DEFINED
-#define WASM_RT_CORE_TYPES_DEFINED
-typedef uint8_t u8;
-typedef int8_t s8;
-typedef uint16_t u16;
-typedef int16_t s16;
-typedef uint32_t u32;
-typedef int32_t s32;
-typedef uint64_t u64;
-typedef int64_t s64;
-typedef float f32;
-typedef double f64;
-
-#if defined(WASM_RT_ENABLE_SIMD)
-typedef simde_v128_t v128;
-#endif
-
 #endif
 
 #ifdef __cplusplus
@@ -53,7 +31,7 @@ void wasm2c_test_free(w2c_test*);
 wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
 /* export: 'add' */
-u32 w2c_test_add(w2c_test*, u32, u32);
+uint32_t w2c_test_add(w2c_test*, uint32_t, uint32_t);
 
 #ifdef __cplusplus
 }
@@ -95,6 +73,17 @@ u32 w2c_test_add(w2c_test*, u32, u32);
 #endif
 
 #define UNREACHABLE TRAP(UNREACHABLE)
+
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef int16_t s16;
+typedef uint32_t u32;
+typedef int32_t s32;
+typedef uint64_t u64;
+typedef int64_t s64;
+typedef float f32;
+typedef double f64;
 
 static inline bool func_types_eq(const wasm_rt_func_type_t a,
                                  const wasm_rt_func_type_t b) {
@@ -224,6 +213,7 @@ DEFINE_STORE(i64_store16, u16, u64)
 DEFINE_STORE(i64_store32, u32, u64)
 
 #if defined(WASM_RT_ENABLE_SIMD)
+typedef simde_v128_t v128;
 
 #ifdef __x86_64__
 #define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));
@@ -794,12 +784,12 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-static u32 w2c_test_add_0(w2c_test*, u32, u32);
+static uint32_t w2c_test_add_0(w2c_test*, uint32_t, uint32_t);
 
 FUNC_TYPE_T(w2c_test_t0) = "\x92\xfb\x6a\xdf\x49\x07\x0a\x83\xbe\x08\x02\x68\xcd\xf6\x95\x27\x4a\xc2\xf3\xe5\xe4\x7d\x29\x49\xe8\xed\x42\x92\x6a\x9d\xda\xf0";
 
 /* export: 'add' */
-u32 w2c_test_add(w2c_test* instance, u32 var_p0, u32 var_p1) {
+uint32_t w2c_test_add(w2c_test* instance, uint32_t var_p0, uint32_t var_p1) {
   return w2c_test_add_0(instance, var_p0, var_p1);
 }
 
@@ -827,7 +817,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 u32 w2c_test_add_0(w2c_test* instance, u32 var_p0, u32 var_p1) {
   FUNC_PROLOGUE;
-  u32 var_i0, var_i1;
+  uint32_t var_i0, var_i1;
   var_i0 = var_p0;
   var_i1 = var_p1;
   var_i0 += var_i1;

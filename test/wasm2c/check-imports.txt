@@ -21,8 +21,6 @@
 #ifndef WASM_H_GENERATED_
 #define WASM_H_GENERATED_
 
-#include <stdint.h>
-
 #include "wasm-rt.h"
 
 #if defined(WASM_RT_ENABLE_EXCEPTION_HANDLING)
@@ -31,26 +29,6 @@
 
 #if defined(WASM_RT_ENABLE_SIMD)
 #include "simde/wasm/simd128.h"
-#endif
-
-/* TODO(binji): only use stdint.h types in header */
-#ifndef WASM_RT_CORE_TYPES_DEFINED
-#define WASM_RT_CORE_TYPES_DEFINED
-typedef uint8_t u8;
-typedef int8_t s8;
-typedef uint16_t u16;
-typedef int16_t s16;
-typedef uint32_t u32;
-typedef int32_t s32;
-typedef uint64_t u64;
-typedef int64_t s64;
-typedef float f32;
-typedef double f64;
-
-#if defined(WASM_RT_ENABLE_SIMD)
-typedef simde_v128_t v128;
-#endif
-
 #endif
 
 #ifdef __cplusplus
@@ -72,11 +50,11 @@ void wasm2c_test_instantiate(w2c_test*, struct w2c_env*);
 void wasm2c_test_free(w2c_test*);
 wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t result_count, ...);
 
-extern const u32 wasm2c_test_min_env_0x5F_indirect_function_table;
-extern const u32 wasm2c_test_max_env_0x5F_indirect_function_table;
-extern const u64 wasm2c_test_min_env_0x5F_linear_memory;
-extern const u64 wasm2c_test_max_env_0x5F_linear_memory;
-extern const u8 wasm2c_test_is64_env_0x5F_linear_memory;
+extern const uint32_t wasm2c_test_min_env_0x5F_indirect_function_table;
+extern const uint32_t wasm2c_test_max_env_0x5F_indirect_function_table;
+extern const uint64_t wasm2c_test_min_env_0x5F_linear_memory;
+extern const uint64_t wasm2c_test_max_env_0x5F_linear_memory;
+extern const bool wasm2c_test_is64_env_0x5F_linear_memory;
 
 #ifdef __cplusplus
 }
@@ -118,6 +96,17 @@ extern const u8 wasm2c_test_is64_env_0x5F_linear_memory;
 #endif
 
 #define UNREACHABLE TRAP(UNREACHABLE)
+
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint16_t u16;
+typedef int16_t s16;
+typedef uint32_t u32;
+typedef int32_t s32;
+typedef uint64_t u64;
+typedef int64_t s64;
+typedef float f32;
+typedef double f64;
 
 static inline bool func_types_eq(const wasm_rt_func_type_t a,
                                  const wasm_rt_func_type_t b) {
@@ -247,6 +236,7 @@ DEFINE_STORE(i64_store16, u16, u64)
 DEFINE_STORE(i64_store32, u32, u64)
 
 #if defined(WASM_RT_ENABLE_SIMD)
+typedef simde_v128_t v128;
 
 #ifdef __x86_64__
 #define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));
@@ -817,9 +807,9 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-static u32 w2c_test_f0(w2c_test*, u32);
-static u32 w2c_test_f1(w2c_test*);
-static u32 w2c_test_f2(w2c_test*, u32, u32);
+static uint32_t w2c_test_f0(w2c_test*, uint32_t);
+static uint32_t w2c_test_f1(w2c_test*);
+static uint32_t w2c_test_f2(w2c_test*, uint32_t, uint32_t);
 
 FUNC_TYPE_T(w2c_test_t0) = "\x07\x80\x96\x7a\x42\xf7\x3e\xe6\x70\x5c\x2f\xac\x83\xf5\x67\xd2\xa2\xa0\x69\x41\x5f\xf8\xe7\x96\x7f\x23\xab\x00\x03\x5f\x4a\x3c";
 FUNC_TYPE_T(w2c_test_t1) = "\x72\xab\x00\xdf\x20\x3d\xce\xa1\xf2\x29\xc7\x9d\x13\x40\x7e\x98\xac\x7d\x41\x4a\x53\x2e\x42\x42\x61\x55\x2e\xaa\xeb\xbe\xc6\x35";
@@ -844,11 +834,11 @@ static void init_instance_import(w2c_test* instance, struct w2c_env* w2c_env_ins
   instance->w2c_env_0x5F_linear_memory = w2c_env_0x5F_linear_memory(w2c_env_instance);
 }
 
-const u32 wasm2c_test_min_env_0x5F_indirect_function_table = 1;
-const u32 wasm2c_test_max_env_0x5F_indirect_function_table = 4294967295;
-const u64 wasm2c_test_min_env_0x5F_linear_memory = 0;
-const u64 wasm2c_test_max_env_0x5F_linear_memory = 65536;
-const u8 wasm2c_test_is64_env_0x5F_linear_memory = 0;
+const uint32_t wasm2c_test_min_env_0x5F_indirect_function_table = 1;
+const uint32_t wasm2c_test_max_env_0x5F_indirect_function_table = 4294967295;
+const uint64_t wasm2c_test_min_env_0x5F_linear_memory = 0;
+const uint64_t wasm2c_test_max_env_0x5F_linear_memory = 65536;
+const bool wasm2c_test_is64_env_0x5F_linear_memory = 0;
 
 void wasm2c_test_instantiate(w2c_test* instance, struct w2c_env* w2c_env_instance) {
   assert(wasm_rt_is_initialized());
@@ -896,7 +886,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 u32 w2c_test_f0(w2c_test* instance, u32 var_p0) {
   FUNC_PROLOGUE;
-  u32 var_i0;
+  uint32_t var_i0;
   var_i0 = var_p0;
   var_i0 = CALL_INDIRECT((*instance->w2c_env_0x5F_indirect_function_table), u32 (*)(void*), w2c_test_t1, var_i0, (*instance->w2c_env_0x5F_indirect_function_table).data[var_i0].module_instance);
   FUNC_EPILOGUE;
@@ -905,7 +895,7 @@ u32 w2c_test_f0(w2c_test* instance, u32 var_p0) {
 
 u32 w2c_test_f1(w2c_test* instance) {
   FUNC_PROLOGUE;
-  u32 var_i0;
+  uint32_t var_i0;
   var_i0 = 16u;
   var_i0 = i32_load(instance->w2c_env_0x5F_linear_memory, (u64)(var_i0));
   FUNC_EPILOGUE;
@@ -914,7 +904,7 @@ u32 w2c_test_f1(w2c_test* instance) {
 
 u32 w2c_test_f2(w2c_test* instance, u32 var_p0, u32 var_p1) {
   FUNC_PROLOGUE;
-  u32 var_i0;
+  uint32_t var_i0;
   var_i0 = 1u;
   var_i0 = w2c_test_f0(instance, var_i0);
   FUNC_EPILOGUE;

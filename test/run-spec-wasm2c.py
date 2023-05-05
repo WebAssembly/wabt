@@ -292,7 +292,7 @@ class CWriter(object):
                 lane_count = len(expected[0]['value'])
                 # type, fmt_expected, fmt_got, f, compare, expected, found
                 self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, %s, (%s), (%s));\n' %
-                                    ("v128",
+                                    ("simde_v128_t",
                                      " ".join("MULTI_" + ("str" if val in ('nan:canonical', 'nan:arithmetic') else lane_type) for val in value),
                                      " ".join("MULTI_" + lane_type for _ in value),
                                      self._Action(command),
