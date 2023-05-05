@@ -51,7 +51,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 | [mutable globals][]   | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [sign extension][]    | `--disable-sign-extension`  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [simd][]              | `--disable-simd`            | ✓ | ✓ | ✓ | ✓ | ✓ | 🚧 |
+| [simd][]              | `--disable-simd`            | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [threads][]           | `--enable-threads`          |   | ✓ | ✓ | ✓ | ✓ |   |
 | [multi-value][]       | `--disable-multi-value`     | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [tail-call][]         | `--enable-tail-call`        |   | ✓ | ✓ | ✓ | ✓ |   |
