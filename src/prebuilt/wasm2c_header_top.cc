@@ -4,20 +4,6 @@ R"w2c_template(
 #include "wasm-rt.h"
 )w2c_template"
 R"w2c_template(
-#if defined(WASM_RT_ENABLE_EXCEPTION_HANDLING)
-)w2c_template"
-R"w2c_template(#include "wasm-rt-exceptions.h"
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(
-#if defined(WASM_RT_ENABLE_SIMD)
-)w2c_template"
-R"w2c_template(#include "simde/wasm/simd128.h"
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(
 /* TODO(binji): only use stdint.h types in header */
 )w2c_template"
 R"w2c_template(#ifndef WASM_RT_CORE_TYPES_DEFINED
@@ -43,13 +29,6 @@ R"w2c_template(typedef int64_t s64;
 R"w2c_template(typedef float f32;
 )w2c_template"
 R"w2c_template(typedef double f64;
-)w2c_template"
-R"w2c_template(
-#if defined(WASM_RT_ENABLE_SIMD)
-)w2c_template"
-R"w2c_template(typedef simde_v128_t v128;
-)w2c_template"
-R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
 #endif

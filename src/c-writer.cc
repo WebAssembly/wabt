@@ -39,9 +39,11 @@
 
 // code to be inserted into the generated output
 extern const char* s_header_top;
+extern const char* s_simd_header_top;
 extern const char* s_header_bottom;
 extern const char* s_source_includes;
 extern const char* s_source_declarations;
+extern const char* s_simd_source_declarations;
 
 namespace wabt {
 
@@ -368,7 +370,6 @@ class CWriter {
                                   const std::string&);
   void WriteCallIndirectFuncDeclaration(const FuncDeclaration&,
                                         const std::string&);
-  void WriteFeatureMacros();
   void WriteModuleInstance();
   void WriteGlobals();
   void WriteGlobal(const Global&, const std::string&);
@@ -1412,6 +1413,9 @@ void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
   Write(s_source_declarations);
+  if (module_->features.simd) {
+    Write(s_simd_source_declarations);
+  }
 }
 
 void CWriter::WriteMultiCTop() {
@@ -1788,15 +1792,6 @@ void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
   Write(ResultType(decl.sig.result_types), " ", name, "(void*");
   WriteParamTypes(decl);
   Write(")");
-}
-
-void CWriter::WriteFeatureMacros() {
-  if (module_->features.exceptions) {
-    Write("#define WASM_RT_ENABLE_EXCEPTION_HANDLING", Newline(), Newline());
-  }
-  if (module_->features.simd) {
-    Write("#define WASM_RT_ENABLE_SIMD", Newline(), Newline());
-  }
 }
 
 void CWriter::WriteModuleInstance() {
@@ -5132,8 +5127,13 @@ void CWriter::WriteCHeader() {
   Write("#ifndef ", guard, Newline());
   Write("#define ", guard, Newline());
   Write(Newline());
-  WriteFeatureMacros();
   Write(s_header_top);
+  if (module_->features.simd) {
+    Write(s_simd_header_top);
+  }
+  if (module_->features.exceptions) {
+    Write("#include \"wasm-rt-exceptions.h\"");
+  }
   Write(Newline());
   WriteModuleInstance();
   WriteInitDecl();
