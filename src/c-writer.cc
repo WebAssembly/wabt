@@ -42,6 +42,7 @@ extern const char* s_header_top;
 extern const char* s_header_bottom;
 extern const char* s_source_includes;
 extern const char* s_source_declarations;
+extern const char* s_simd_source_declarations;
 
 namespace wabt {
 
@@ -1419,8 +1420,11 @@ void CWriter::WriteSourceTop() {
 
   if (module_->features_used.simd) {
     if (!simd_used_in_header_) {
+      Write(Newline());
       WriteV128Decl();
     }
+
+    Write(s_simd_source_declarations);
   }
 }
 
