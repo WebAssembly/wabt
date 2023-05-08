@@ -1791,10 +1791,10 @@ void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
 }
 
 void CWriter::WriteFeatureMacros() {
-  if (module_->features.exceptions) {
+  if (module_->features_used.exceptions) {
     Write("#define WASM_RT_ENABLE_EXCEPTION_HANDLING", Newline(), Newline());
   }
-  if (module_->features.simd) {
+  if (module_->features_used.simd) {
     Write("#define WASM_RT_ENABLE_SIMD", Newline(), Newline());
   }
 }

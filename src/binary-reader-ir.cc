@@ -527,7 +527,7 @@ Result BinaryReaderIR::OnFuncType(Index index,
   func_type->sig.param_types.assign(param_types, param_types + param_count);
   func_type->sig.result_types.assign(result_types, result_types + result_count);
 
-  module_->features.simd |=
+  module_->features_used.simd |=
       std::any_of(func_type->sig.param_types.begin(),
                   func_type->sig.param_types.end(),
                   [](auto x) { return x == Type::V128; }) |
@@ -549,7 +549,7 @@ Result BinaryReaderIR::OnStructType(Index index,
   for (Index i = 0; i < field_count; ++i) {
     struct_type->fields[i].type = fields[i].type;
     struct_type->fields[i].mutable_ = fields[i].mutable_;
-    module_->features.simd |= (fields[i].type == Type::V128);
+    module_->features_used.simd |= (fields[i].type == Type::V128);
   }
   field->type = std::move(struct_type);
   module_->AppendField(std::move(field));
@@ -561,7 +561,7 @@ Result BinaryReaderIR::OnArrayType(Index index, TypeMut type_mut) {
   auto array_type = std::make_unique<ArrayType>();
   array_type->field.type = type_mut.type;
   array_type->field.mutable_ = type_mut.mutable_;
-  module_->features.simd |= (type_mut.type == Type::V128);
+  module_->features_used.simd |= (type_mut.type == Type::V128);
   field->type = std::move(array_type);
   module_->AppendField(std::move(field));
   return Result::Ok;
@@ -631,7 +631,7 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   import->global.mutable_ = mutable_;
   module_->AppendField(
       std::make_unique<ImportModuleField>(std::move(import), GetLocation()));
-  module_->features.simd |= (type == Type::V128);
+  module_->features_used.simd |= (type == Type::V128);
   return Result::Ok;
 }
 
@@ -646,7 +646,7 @@ Result BinaryReaderIR::OnImportTag(Index import_index,
   SetFuncDeclaration(&import->tag.decl, Var(sig_index, GetLocation()));
   module_->AppendField(
       std::make_unique<ImportModuleField>(std::move(import), GetLocation()));
-  module_->features.exceptions = true;
+  module_->features_used.exceptions = true;
   return Result::Ok;
 }
 
@@ -711,7 +711,7 @@ Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
   global.type = type;
   global.mutable_ = mutable_;
   module_->AppendField(std::move(field));
-  module_->features.simd |= (type == Type::V128);
+  module_->features_used.simd |= (type == Type::V128);
   return Result::Ok;
 }
 
@@ -777,7 +777,7 @@ Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
     return Result::Error;
   }
 
-  module_->features.simd |= (type == Type::V128);
+  module_->features_used.simd |= (type == Type::V128);
   return Result::Ok;
 }
 
@@ -787,7 +787,7 @@ Result BinaryReaderIR::OnOpcode(Opcode opcode) {
   if (metadata) {
     return AppendExpr(std::move(metadata));
   }
-  module_->features.simd |= (opcode.GetResultType() == Type::V128);
+  module_->features_used.simd |= (opcode.GetResultType() == Type::V128);
   return Result::Ok;
 }
 
@@ -1159,7 +1159,7 @@ Result BinaryReaderIR::OnTryExpr(Type sig_type) {
   ExprList* expr_list = &expr->block.exprs;
   SetBlockDeclaration(&expr->block.decl, sig_type);
   CHECK_RESULT(AppendExpr(std::move(expr_ptr)));
-  module_->features.exceptions = true;
+  module_->features_used.exceptions = true;
   return PushLabel(LabelType::Try, expr_list, expr);
 }
 
@@ -1664,7 +1664,7 @@ Result BinaryReaderIR::OnTagType(Index index, Index sig_index) {
   Tag& tag = field->tag;
   SetFuncDeclaration(&tag.decl, Var(sig_index, GetLocation()));
   module_->AppendField(std::move(field));
-  module_->features.exceptions = true;
+  module_->features_used.exceptions = true;
   return Result::Ok;
 }
 

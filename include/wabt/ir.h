@@ -1246,11 +1246,13 @@ struct Module {
   BindingHash data_segment_bindings;
   BindingHash elem_segment_bindings;
 
-  // Feature tracking for a subset of supported features
+  // For a subset of features, the BinaryReaderIR tracks whether they are
+  // actually used by the module. wasm2c (CWriter) uses this information to
+  // limit its output in some cases.
   struct {
     bool simd = false;
     bool exceptions = false;
-  } features;
+  } features_used;
 };
 
 enum class ScriptModuleType {
