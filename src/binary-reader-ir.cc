@@ -530,7 +530,7 @@ Result BinaryReaderIR::OnFuncType(Index index,
   module_->features_used.simd |=
       std::any_of(func_type->sig.param_types.begin(),
                   func_type->sig.param_types.end(),
-                  [](auto x) { return x == Type::V128; }) |
+                  [](auto x) { return x == Type::V128; }) ||
       std::any_of(func_type->sig.result_types.begin(),
                   func_type->sig.result_types.end(),
                   [](auto x) { return x == Type::V128; });
