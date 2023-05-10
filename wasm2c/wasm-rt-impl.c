@@ -417,6 +417,8 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "Invalid call_indirect";
     case WASM_RT_TRAP_UNCAUGHT_EXCEPTION:
       return "Uncaught exception";
+    case WASM_RT_TRAP_UNALIGNED:
+      return "Unaligned atomic memory access";
   }
   return "invalid trap code";
 }

@@ -261,6 +261,7 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_includes.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c" -D symbol="s_source_includes" -P ${TEMPLATE_CMAKE}
   COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c" -D symbol="s_source_declarations" -P ${TEMPLATE_CMAKE}
   COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_simd_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c_simd.declarations.c" -D symbol="s_simd_source_declarations" -P ${TEMPLATE_CMAKE}
+  COMMAND ${CMAKE_COMMAND} -D out="${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_atomicops_source_declarations.cc" -D in="${WABT_SOURCE_DIR}/src/template/wasm2c_atomicops.declarations.c" -D symbol="s_atomicops_source_declarations" -P ${TEMPLATE_CMAKE}
   COMMAND ${CMAKE_COMMAND} -E touch gen-wasm2c-prebuilt
 
   DEPENDS ${WABT_SOURCE_DIR}/src/template/wasm2c.top.h
@@ -268,6 +269,7 @@ add_custom_command(
   ${WABT_SOURCE_DIR}/src/template/wasm2c.includes.c
   ${WABT_SOURCE_DIR}/src/template/wasm2c.declarations.c
   ${WABT_SOURCE_DIR}/src/template/wasm2c_simd.declarations.c
+  ${WABT_SOURCE_DIR}/src/template/wasm2c_atomicops.declarations.c
 )
 
 add_custom_target(gen-wasm2c-prebuilt-target DEPENDS gen-wasm2c-prebuilt)
@@ -276,7 +278,8 @@ set(CWRITER_TEMPLATE_SRC ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_header_top.cc
                          ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_header_bottom.cc
                          ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_includes.cc
                          ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_source_declarations.cc
-                         ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_simd_source_declarations.cc)
+                         ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_simd_source_declarations.cc
+                         ${WABT_SOURCE_DIR}/src/prebuilt/wasm2c_atomicops_source_declarations.cc)
 
 add_custom_target(everything)
 

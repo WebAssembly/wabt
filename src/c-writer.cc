@@ -43,6 +43,7 @@ extern const char* s_header_bottom;
 extern const char* s_source_includes;
 extern const char* s_source_declarations;
 extern const char* s_simd_source_declarations;
+extern const char* s_atomicops_source_declarations;
 
 namespace wabt {
 
@@ -435,6 +436,11 @@ class CWriter {
   void Write(const LoadSplatExpr&);
   void Write(const LoadZeroExpr&);
   void Write(const Block&);
+
+  void Write(const AtomicLoadExpr& expr);
+  void Write(const AtomicStoreExpr& expr);
+  void Write(const AtomicRmwExpr& expr);
+  void Write(const AtomicRmwCmpxchgExpr& expr);
 
   size_t BeginTry(const TryExpr& tryexpr);
   void WriteTryCatch(const TryExpr& tryexpr);
@@ -1423,6 +1429,10 @@ void CWriter::WriteSourceTop() {
       WriteV128Decl();
     }
     Write(s_simd_source_declarations);
+  }
+
+  if (module_->features_used.threads) {
+    Write(s_atomicops_source_declarations);
   }
 }
 
@@ -3558,12 +3568,32 @@ void CWriter::Write(const ExprList& exprs) {
         }
       } break;
 
-      case ExprType::AtomicLoad:
-      case ExprType::AtomicRmw:
-      case ExprType::AtomicRmwCmpxchg:
-      case ExprType::AtomicStore:
+      case ExprType::AtomicLoad: {
+        Write(*cast<AtomicLoadExpr>(&expr));
+        break;
+      }
+
+      case ExprType::AtomicStore: {
+        Write(*cast<AtomicStoreExpr>(&expr));
+        break;
+      }
+
+      case ExprType::AtomicRmw: {
+        Write(*cast<AtomicRmwExpr>(&expr));
+        break;
+      }
+
+      case ExprType::AtomicRmwCmpxchg: {
+        Write(*cast<AtomicRmwCmpxchgExpr>(&expr));
+        break;
+      }
+
+      case ExprType::AtomicFence: {
+        Write("atomic_fence();", Newline());
+        break;
+      }
+
       case ExprType::AtomicWait:
-      case ExprType::AtomicFence:
       case ExprType::AtomicNotify:
       case ExprType::ReturnCall:
       case ExprType::ReturnCallIndirect:
@@ -5167,6 +5197,156 @@ void CWriter::Write(const LoadZeroExpr& expr) {
   Write(");", Newline());
 
   DropTypes(1);
+  PushType(result_type);
+}
+
+void CWriter::Write(const AtomicLoadExpr& expr) {
+  const char* func = nullptr;
+  // clang-format off
+  switch (expr.opcode) {
+    case Opcode::I32AtomicLoad: func = "i32_atomic_load"; break;
+    case Opcode::I64AtomicLoad: func = "i64_atomic_load"; break;
+    case Opcode::I32AtomicLoad8U: func = "i32_atomic_load8_u"; break;
+    case Opcode::I64AtomicLoad8U: func = "i64_atomic_load8_u"; break;
+    case Opcode::I32AtomicLoad16U: func = "i32_atomic_load16_u"; break;
+    case Opcode::I64AtomicLoad16U: func = "i64_atomic_load16_u"; break;
+    case Opcode::I64AtomicLoad32U: func = "i64_atomic_load32_u"; break;
+
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+
+  Type result_type = expr.opcode.GetResultType();
+  Write(StackVar(0, result_type), " = ", func, "(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(0), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset, "u");
+  Write(");", Newline());
+  DropTypes(1);
+  PushType(result_type);
+}
+
+void CWriter::Write(const AtomicStoreExpr& expr) {
+  const char* func = nullptr;
+  // clang-format off
+  switch (expr.opcode) {
+    case Opcode::I32AtomicStore: func = "i32_atomic_store"; break;
+    case Opcode::I64AtomicStore: func = "i64_atomic_store"; break;
+    case Opcode::I32AtomicStore8: func = "i32_atomic_store8"; break;
+    case Opcode::I64AtomicStore8: func = "i64_atomic_store8"; break;
+    case Opcode::I32AtomicStore16: func = "i32_atomic_store16"; break;
+    case Opcode::I64AtomicStore16: func = "i64_atomic_store16"; break;
+    case Opcode::I64AtomicStore32: func = "i64_atomic_store32"; break;
+
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+
+  Write(func, "(", ExternalInstancePtr(ModuleFieldType::Memory, memory->name),
+        ", (u64)(", StackVar(1), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write(", ", StackVar(0), ");", Newline());
+  DropTypes(2);
+}
+
+void CWriter::Write(const AtomicRmwExpr& expr) {
+  const char* func = nullptr;
+  // clang-format off
+  switch (expr.opcode) {
+    case Opcode::I32AtomicRmwAdd: func = "i32_atomic_rmw_add"; break;
+    case Opcode::I64AtomicRmwAdd: func = "i64_atomic_rmw_add"; break;
+    case Opcode::I32AtomicRmw8AddU: func = "i32_atomic_rmw8_add_u"; break;
+    case Opcode::I32AtomicRmw16AddU: func = "i32_atomic_rmw16_add_u"; break;
+    case Opcode::I64AtomicRmw8AddU: func = "i64_atomic_rmw8_add_u"; break;
+    case Opcode::I64AtomicRmw16AddU: func = "i64_atomic_rmw16_add_u"; break;
+    case Opcode::I64AtomicRmw32AddU: func = "i64_atomic_rmw32_add_u"; break;
+    case Opcode::I32AtomicRmwSub: func = "i32_atomic_rmw_sub"; break;
+    case Opcode::I64AtomicRmwSub: func = "i64_atomic_rmw_sub"; break;
+    case Opcode::I32AtomicRmw8SubU: func = "i32_atomic_rmw8_sub_u"; break;
+    case Opcode::I32AtomicRmw16SubU: func = "i32_atomic_rmw16_sub_u"; break;
+    case Opcode::I64AtomicRmw8SubU: func = "i64_atomic_rmw8_sub_u"; break;
+    case Opcode::I64AtomicRmw16SubU: func = "i64_atomic_rmw16_sub_u"; break;
+    case Opcode::I64AtomicRmw32SubU: func = "i64_atomic_rmw32_sub_u"; break;
+    case Opcode::I32AtomicRmwAnd: func = "i32_atomic_rmw_and"; break;
+    case Opcode::I64AtomicRmwAnd: func = "i64_atomic_rmw_and"; break;
+    case Opcode::I32AtomicRmw8AndU: func = "i32_atomic_rmw8_and_u"; break;
+    case Opcode::I32AtomicRmw16AndU: func = "i32_atomic_rmw16_and_u"; break;
+    case Opcode::I64AtomicRmw8AndU: func = "i64_atomic_rmw8_and_u"; break;
+    case Opcode::I64AtomicRmw16AndU: func = "i64_atomic_rmw16_and_u"; break;
+    case Opcode::I64AtomicRmw32AndU: func = "i64_atomic_rmw32_and_u"; break;
+    case Opcode::I32AtomicRmwOr: func = "i32_atomic_rmw_or"; break;
+    case Opcode::I64AtomicRmwOr: func = "i64_atomic_rmw_or"; break;
+    case Opcode::I32AtomicRmw8OrU: func = "i32_atomic_rmw8_or_u"; break;
+    case Opcode::I32AtomicRmw16OrU: func = "i32_atomic_rmw16_or_u"; break;
+    case Opcode::I64AtomicRmw8OrU: func = "i64_atomic_rmw8_or_u"; break;
+    case Opcode::I64AtomicRmw16OrU: func = "i64_atomic_rmw16_or_u"; break;
+    case Opcode::I64AtomicRmw32OrU: func = "i64_atomic_rmw32_or_u"; break;
+    case Opcode::I32AtomicRmwXor: func = "i32_atomic_rmw_xor"; break;
+    case Opcode::I64AtomicRmwXor: func = "i64_atomic_rmw_xor"; break;
+    case Opcode::I32AtomicRmw8XorU: func = "i32_atomic_rmw8_xor_u"; break;
+    case Opcode::I32AtomicRmw16XorU: func = "i32_atomic_rmw16_xor_u"; break;
+    case Opcode::I64AtomicRmw8XorU: func = "i64_atomic_rmw8_xor_u"; break;
+    case Opcode::I64AtomicRmw16XorU: func = "i64_atomic_rmw16_xor_u"; break;
+    case Opcode::I64AtomicRmw32XorU: func = "i64_atomic_rmw32_xor_u"; break;
+    case Opcode::I32AtomicRmwXchg: func = "i32_atomic_rmw_xchg"; break;
+    case Opcode::I64AtomicRmwXchg: func = "i64_atomic_rmw_xchg"; break;
+    case Opcode::I32AtomicRmw8XchgU: func = "i32_atomic_rmw8_xchg_u"; break;
+    case Opcode::I32AtomicRmw16XchgU: func = "i32_atomic_rmw16_xchg_u"; break;
+    case Opcode::I64AtomicRmw8XchgU: func = "i64_atomic_rmw8_xchg_u"; break;
+    case Opcode::I64AtomicRmw16XchgU: func = "i64_atomic_rmw16_xchg_u"; break;
+    case Opcode::I64AtomicRmw32XchgU: func = "i64_atomic_rmw32_xchg_u"; break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+  Type result_type = expr.opcode.GetResultType();
+
+  Write(StackVar(1, result_type), " = ", func, "(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(1), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write(", ", StackVar(0), ");", Newline());
+  DropTypes(2);
+  PushType(result_type);
+}
+
+void CWriter::Write(const AtomicRmwCmpxchgExpr& expr) {
+  const char* func = nullptr;
+  // clang-format off
+  switch(expr.opcode) {
+    case Opcode::I32AtomicRmwCmpxchg: func = "i32_atomic_rmw_cmpxchg"; break;
+    case Opcode::I64AtomicRmwCmpxchg: func = "i64_atomic_rmw_cmpxchg"; break;
+    case Opcode::I32AtomicRmw8CmpxchgU: func = "i32_atomic_rmw8_cmpxchg_u"; break;
+    case Opcode::I32AtomicRmw16CmpxchgU: func = "i32_atomic_rmw16_cmpxchg_u"; break;
+    case Opcode::I64AtomicRmw8CmpxchgU: func = "i64_atomic_rmw8_cmpxchg_u"; break;
+    case Opcode::I64AtomicRmw16CmpxchgU: func = "i64_atomic_rmw16_cmpxchg_u"; break;
+    case Opcode::I64AtomicRmw32CmpxchgU: func = "i64_atomic_rmw32_cmpxchg_u"; break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+  Type result_type = expr.opcode.GetResultType();
+
+  Write(StackVar(2, result_type), " = ", func, "(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(2), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write(", ", StackVar(1), ", ", StackVar(0), ");", Newline());
+  DropTypes(3);
   PushType(result_type);
 }
 
