@@ -788,6 +788,7 @@ Result BinaryReaderIR::OnOpcode(Opcode opcode) {
     return AppendExpr(std::move(metadata));
   }
   module_->features_used.simd |= (opcode.GetResultType() == Type::V128);
+  module_->features_used.threads |= (opcode.GetPrefix() == 0xfe);
   return Result::Ok;
 }
 

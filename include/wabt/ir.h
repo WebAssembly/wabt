@@ -1252,6 +1252,7 @@ struct Module {
   struct {
     bool simd = false;
     bool exceptions = false;
+    bool threads = false;
   } features_used;
 };
 
