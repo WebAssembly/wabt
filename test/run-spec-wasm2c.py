@@ -550,7 +550,7 @@ def main(args):
             '-v': options.verbose,
             '--enable-exceptions': options.enable_exceptions,
             '--enable-memory64': options.enable_memory64,
-            '--enable-extended-const': options.enable_memory64,
+            '--enable-extended-const': options.enable_extended_const,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types,
