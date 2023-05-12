@@ -1836,6 +1836,8 @@ void CWriter::WriteHeaderIncludes() {
   if (simd_used_in_header_) {
     WriteV128Decl();
   }
+
+  Write(Newline());
 }
 
 void CWriter::WriteV128Decl() {
