@@ -1416,14 +1416,12 @@ std::string CWriter::GenerateHeaderGuard() const {
 void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
-  Write(s_source_declarations);
+  Write(s_source_declarations, Newline());
 
   if (module_->features_used.simd) {
     if (!simd_used_in_header_) {
-      Write(Newline());
       WriteV128Decl();
     }
-
     Write(s_simd_source_declarations);
   }
 }
@@ -1838,15 +1836,14 @@ void CWriter::WriteHeaderIncludes() {
   if (simd_used_in_header_) {
     WriteV128Decl();
   }
-
-  Write(Newline());
 }
 
 void CWriter::WriteV128Decl() {
   Write("#include <simde/wasm/simd128.h>", Newline(), Newline());
   Write("#ifndef WASM_RT_SIMD_TYPE_DEFINED", Newline(),
         "#define WASM_RT_SIMD_TYPE_DEFINED", Newline(),
-        "typedef simde_v128_t v128;", Newline(), "#endif", Newline());
+        "typedef simde_v128_t v128;", Newline(), "#endif", Newline(),
+        Newline());
 }
 
 void CWriter::WriteModuleInstance() {

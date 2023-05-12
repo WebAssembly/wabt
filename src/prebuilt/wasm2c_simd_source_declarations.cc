@@ -1,5 +1,4 @@
-const char* s_simd_source_declarations = R"w2c_template(
-#ifdef __x86_64__
+const char* s_simd_source_declarations = R"w2c_template(#ifdef __x86_64__
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));
 )w2c_template"

@@ -1,4 +1,3 @@
-
 #ifdef __x86_64__
 #define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));
 #else
