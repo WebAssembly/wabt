@@ -5,10 +5,8 @@ privately. **Do not disclose it as a public issue.** This gives us time to work 
 to fix the issue before public exposure, reducing the chance that the exploit will be
 used before a patch is released.
 
-You may submit the report in the following ways:
-
-- send an email to ???@???; and/or
-- send us a [private vulnerability report](https://github.com/WebAssembly/wabt/security/advisories/new)
+Please submit your report by filling out
+[this form](https://github.com/WebAssembly/wabt/security/advisories/new).
 
 Please provide the following information in your report:
 
