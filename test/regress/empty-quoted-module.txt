@@ -1,0 +1,6 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module quote "")
+(;; STDERR ;;;
+out/test/regress/empty-quoted-module.txt:4:1: error: unexpected token "EOF", expected a binary module or a text module.
+;;; STDERR ;;)
