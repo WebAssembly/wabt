@@ -252,6 +252,7 @@ class WastParser {
   Result ParseSimdV128Const(Const*, TokenType, ConstType);
 
   void CheckImportOrdering(Module*);
+  bool HasError() const;
 
   WastLexer* lexer_;
   Index last_module_index_ = kInvalidIndex;
