@@ -1174,13 +1174,15 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
   } else if (IsModuleField(PeekPair())) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     CHECK_RESULT(ParseModuleFieldList(module.get()));
+  } else if (PeekMatch(TokenType::Eof)) {
+    errors_->emplace_back(ErrorLevel::Warning, GetLocation(), "empty module");
   } else {
     ConsumeIfLpar();
     ErrorExpected({"a module field", "a module"});
   }
 
   EXPECT(Eof);
-  if (errors_->size() == 0) {
+  if (!HasError()) {
     *out_module = std::move(module);
     return Result::Ok;
   } else {
@@ -1203,13 +1205,15 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
     script->commands.emplace_back(std::move(command));
   } else if (IsCommand(PeekPair())) {
     CHECK_RESULT(ParseCommandList(script.get(), &script->commands));
+  } else if (PeekMatch(TokenType::Eof)) {
+    errors_->emplace_back(ErrorLevel::Warning, GetLocation(), "empty script");
   } else {
     ConsumeIfLpar();
     ErrorExpected({"a module field", "a command"});
   }
 
   EXPECT(Eof);
-  if (errors_->size() == 0) {
+  if (!HasError()) {
     *out_script = std::move(script);
     return Result::Ok;
   } else {
@@ -3343,7 +3347,6 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       module->name = bsm->name;
       module->loc = bsm->loc;
       for (const auto& error : errors) {
-        assert(error.error_level == ErrorLevel::Error);
         if (error.loc.offset == kInvalidOffset) {
           Error(bsm->loc, "error in binary module: %s", error.message.c_str());
         } else {
@@ -3588,6 +3591,12 @@ void WastParser::CheckImportOrdering(Module* module) {
     Error(GetLocation(),
           "imports must occur before all non-import definitions");
   }
+}
+
+bool WastParser::HasError() const {
+  return std::any_of(errors_->begin(), errors_->end(), [](const auto& x) {
+    return x.error_level == ErrorLevel::Error;
+  });
 }
 
 Result ParseWatModule(WastLexer* lexer,

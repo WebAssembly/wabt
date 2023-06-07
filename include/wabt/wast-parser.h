@@ -253,6 +253,8 @@ class WastParser {
 
   void CheckImportOrdering(Module*);
 
+  bool HasError() const;
+
   WastLexer* lexer_;
   Index last_module_index_ = kInvalidIndex;
   Errors* errors_;
