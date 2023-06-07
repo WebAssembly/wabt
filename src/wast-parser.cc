@@ -720,6 +720,7 @@ void WastParser::ErrorUnlessOpcodeEnabled(const Token& token) {
 
 Result WastParser::ErrorExpected(const std::vector<std::string>& expected,
                                  const char* example) {
+  GetToken();
   Token token = Consume();
   std::string expected_str;
   if (!expected.empty()) {
@@ -752,7 +753,6 @@ Result WastParser::ErrorExpected(const std::vector<std::string>& expected,
 Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
                                const char* example) {
   if (Match(TokenType::Lpar)) {
-    GetToken();
     return ErrorExpected(expected, example);
   }
   return Result::Ok;
