@@ -252,7 +252,6 @@ class WastParser {
   Result ParseSimdV128Const(Const*, TokenType, ConstType);
 
   void CheckImportOrdering(Module*);
-
   bool HasError() const;
 
   WastLexer* lexer_;
