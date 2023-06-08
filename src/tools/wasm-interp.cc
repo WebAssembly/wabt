@@ -228,6 +228,10 @@ Result RunSpecificExports(const Instance::Ptr& instance,
                                  call_.name.c_str());
         }
         auto* func_type = cast<FuncType>(export_.type.type.get());
+        ERROR_EXIT_UNLESS(func_type->params.size() == call_.args.size(),
+                          "The number of provided arguments does not match "
+                          "with the export parameters\n");
+
         auto func = s_store.UnsafeGet<Func>(instance->funcs()[export_.index]);
         Values results;
         Trap::Ptr trap;
