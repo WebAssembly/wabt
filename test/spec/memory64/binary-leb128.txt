@@ -33,13 +33,13 @@ out/test/spec/memory64/binary-leb128.wast:375: assert_malformed passed:
 out/test/spec/memory64/binary-leb128.wast:391: assert_malformed passed:
   0000014: error: unable to read u32 leb128: function body count
 out/test/spec/memory64/binary-leb128.wast:404: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  0000022: error: unable to read u64 leb128: load offset
 out/test/spec/memory64/binary-leb128.wast:423: assert_malformed passed:
   0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/memory64/binary-leb128.wast:442: assert_malformed passed:
   0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/memory64/binary-leb128.wast:461: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  0000024: error: unable to read u64 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:482: assert_malformed passed:
   000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:492: assert_malformed passed:
@@ -83,9 +83,9 @@ out/test/spec/memory64/binary-leb128.wast:701: assert_malformed passed:
 out/test/spec/memory64/binary-leb128.wast:717: assert_malformed passed:
   0000014: error: unable to read u32 leb128: function body count
 out/test/spec/memory64/binary-leb128.wast:730: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  0000022: error: unable to read u64 leb128: load offset
 out/test/spec/memory64/binary-leb128.wast:749: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  0000022: error: unable to read u64 leb128: load offset
 out/test/spec/memory64/binary-leb128.wast:768: assert_malformed passed:
   0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/memory64/binary-leb128.wast:786: assert_malformed passed:
@@ -95,9 +95,9 @@ out/test/spec/memory64/binary-leb128.wast:805: assert_malformed passed:
 out/test/spec/memory64/binary-leb128.wast:824: assert_malformed passed:
   0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/memory64/binary-leb128.wast:843: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  0000024: error: unable to read u64 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:862: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  0000024: error: unable to read u64 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:884: assert_malformed passed:
   000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:894: assert_malformed passed:

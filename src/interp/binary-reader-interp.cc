@@ -907,9 +907,9 @@ Result BinaryReaderInterp::OnSimdLoadLaneExpr(Opcode opcode,
                                               Address alignment_log2,
                                               Address offset,
                                               uint64_t value) {
-  CHECK_RESULT(validator_.OnSimdLoadLane(GetLocation(), opcode,
-                                         Var(memidx, GetLocation()),
-                                         GetAlignment(alignment_log2), value));
+  CHECK_RESULT(validator_.OnSimdLoadLane(
+      GetLocation(), opcode, Var(memidx, GetLocation()),
+      GetAlignment(alignment_log2), offset, value));
   istream_.Emit(opcode, memidx, offset, static_cast<u8>(value));
   return Result::Ok;
 }
@@ -919,9 +919,9 @@ Result BinaryReaderInterp::OnSimdStoreLaneExpr(Opcode opcode,
                                                Address alignment_log2,
                                                Address offset,
                                                uint64_t value) {
-  CHECK_RESULT(validator_.OnSimdStoreLane(GetLocation(), opcode,
-                                          Var(memidx, GetLocation()),
-                                          GetAlignment(alignment_log2), value));
+  CHECK_RESULT(validator_.OnSimdStoreLane(
+      GetLocation(), opcode, Var(memidx, GetLocation()),
+      GetAlignment(alignment_log2), offset, value));
   istream_.Emit(opcode, memidx, offset, static_cast<u8>(value));
   return Result::Ok;
 }
@@ -938,7 +938,7 @@ Result BinaryReaderInterp::OnLoadSplatExpr(Opcode opcode,
                                            Address offset) {
   CHECK_RESULT(validator_.OnLoadSplat(GetLocation(), opcode,
                                       Var(memidx, GetLocation()),
-                                      GetAlignment(align_log2)));
+                                      GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -949,7 +949,7 @@ Result BinaryReaderInterp::OnLoadZeroExpr(Opcode opcode,
                                           Address offset) {
   CHECK_RESULT(validator_.OnLoadZero(GetLocation(), opcode,
                                      Var(memidx, GetLocation()),
-                                     GetAlignment(align_log2)));
+                                     GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -960,7 +960,7 @@ Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicLoad(GetLocation(), opcode,
                                        Var(memidx, GetLocation()),
-                                       GetAlignment(align_log2)));
+                                       GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -971,7 +971,7 @@ Result BinaryReaderInterp::OnAtomicStoreExpr(Opcode opcode,
                                              Address offset) {
   CHECK_RESULT(validator_.OnAtomicStore(GetLocation(), opcode,
                                         Var(memidx, GetLocation()),
-                                        GetAlignment(align_log2)));
+                                        GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -982,7 +982,7 @@ Result BinaryReaderInterp::OnAtomicRmwExpr(Opcode opcode,
                                            Address offset) {
   CHECK_RESULT(validator_.OnAtomicRmw(GetLocation(), opcode,
                                       Var(memidx, GetLocation()),
-                                      GetAlignment(align_log2)));
+                                      GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -993,7 +993,7 @@ Result BinaryReaderInterp::OnAtomicRmwCmpxchgExpr(Opcode opcode,
                                                   Address offset) {
   CHECK_RESULT(validator_.OnAtomicRmwCmpxchg(GetLocation(), opcode,
                                              Var(memidx, GetLocation()),
-                                             GetAlignment(align_log2)));
+                                             GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -1294,7 +1294,7 @@ Result BinaryReaderInterp::OnLoadExpr(Opcode opcode,
                                       Address offset) {
   CHECK_RESULT(validator_.OnLoad(GetLocation(), opcode,
                                  Var(memidx, GetLocation()),
-                                 GetAlignment(align_log2)));
+                                 GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -1305,7 +1305,7 @@ Result BinaryReaderInterp::OnStoreExpr(Opcode opcode,
                                        Address offset) {
   CHECK_RESULT(validator_.OnStore(GetLocation(), opcode,
                                   Var(memidx, GetLocation()),
-                                  GetAlignment(align_log2)));
+                                  GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -1400,7 +1400,7 @@ Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
                                             Address offset) {
   CHECK_RESULT(validator_.OnAtomicWait(GetLocation(), opcode,
                                        Var(memidx, GetLocation()),
-                                       GetAlignment(align_log2)));
+                                       GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }
@@ -1417,7 +1417,7 @@ Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
                                               Address offset) {
   CHECK_RESULT(validator_.OnAtomicNotify(GetLocation(), opcode,
                                          Var(memidx, GetLocation()),
-                                         GetAlignment(align_log2)));
+                                         GetAlignment(align_log2), offset));
   istream_.Emit(opcode, memidx, offset);
   return Result::Ok;
 }

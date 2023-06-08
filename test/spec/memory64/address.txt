@@ -20,9 +20,9 @@ out/test/spec/memory64/address.wast:209: assert_trap passed: out of bounds memor
 out/test/spec/memory64/address.wast:210: assert_trap passed: out of bounds memory access: access at 4294967296+2 >= max value 65536
 out/test/spec/memory64/address.wast:211: assert_trap passed: out of bounds memory access: access at 4294967296+4 >= max value 65536
 out/test/spec/memory64/address.wast:214: assert_invalid passed:
-  out/test/spec/memory64/address/address.1.wat:1:33: error: offset must be less than or equal to 0xffffffff
+  out/test/spec/memory64/address/address.1.wat:1:24: error: offset must be less than or equal to 0xffffffff
   (memory 1)(func (drop (i32.load offset=4294967296 (i32.const 0))))
-                                  ^^^^^^^^^^^^^^^^^
+                         ^^^^^^^^
 out/test/spec/memory64/address.wast:486: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
 out/test/spec/memory64/address.wast:488: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
 out/test/spec/memory64/address.wast:489: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536
