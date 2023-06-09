@@ -5,5 +5,5 @@
   (func (export "id") (param i32) (result i32) (local.get 0))
 )
 (;; STDOUT ;;;
-The number of provided arguments does not match with the export parameters
+Exported function 'id' expects 1 arguments, but 2 were provided
 ;;; STDOUT ;;)

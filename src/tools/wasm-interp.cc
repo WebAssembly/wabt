@@ -228,9 +228,12 @@ Result RunSpecificExports(const Instance::Ptr& instance,
                                  call_.name.c_str());
         }
         auto* func_type = cast<FuncType>(export_.type.type.get());
-        ERROR_EXIT_UNLESS(func_type->params.size() == call_.args.size(),
-                          "The number of provided arguments does not match "
-                          "with the export parameters\n");
+        int params_size = func_type->params.size();
+        int args_size = call_.args.size();
+        ERROR_EXIT_UNLESS(params_size == args_size,
+                          "Exported function '%s' expects %d arguments, but %d "
+                          "were provided\n",
+                          export_.type.name.c_str(), params_size, args_size);
 
         auto func = s_store.UnsafeGet<Func>(instance->funcs()[export_.index]);
         Values results;
