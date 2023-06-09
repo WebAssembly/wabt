@@ -58,35 +58,9 @@ jobs:
       run: find bin/ -type f -perm -u=x -exec strip {} +
       if: matrix.os != 'windows-latest'
 
-    - name: archive
-      id: archive
-      run: |
-        OSNAME=$(echo ${{ matrix.os }} | sed 's/-latest//')
-        VERSION=${{ github.event.release.tag_name }}
-        PKGNAME="wabt-$VERSION-$OSNAME"
-        TARBALL=$PKGNAME.tar.gz
-        SHASUM=$PKGNAME.tar.gz.sha256
-        mv install wabt-$VERSION
-        tar -czf $TARBALL wabt-$VERSION
-        scripts/sha256sum.py $TARBALL > $SHASUM
-        echo "::set-output name=tarball::$TARBALL"
-        echo "::set-output name=shasum::$SHASUM"
-
-    - name: upload tarball
-      uses: svenstaro/upload-release-action@v2
+    - uses: ./.github/actions/upload-release-archive
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./${{ steps.archive.outputs.tarball }}
-        asset_name: ${{ steps.archive.outputs.tarball }}
-        tag: ${{ github.ref }}
-
-    - name: upload shasum
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./${{ steps.archive.outputs.shasum }}
-        asset_name: ${{ steps.archive.outputs.shasum }}
-        tag: ${{ github.ref }}
+        os: ${{ runner.os }}
 
   build-wasi:
     runs-on: ubuntu-latest
@@ -101,32 +75,6 @@ jobs:
         docker exec wasi-sdk cmake -S . -B out -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=0
         docker exec wasi-sdk cmake --build out --config Release --target install
 
-    - name: archive
-      id: archive
-      run: |
-        OSNAME=wasi
-        VERSION=${{ github.event.release.tag_name }}
-        PKGNAME="wabt-$VERSION-$OSNAME"
-        TARBALL=$PKGNAME.tar.gz
-        SHASUM=$PKGNAME.tar.gz.sha256
-        mv install wabt-$VERSION
-        tar -czf $TARBALL wabt-$VERSION
-        scripts/sha256sum.py $TARBALL > $SHASUM
-        echo "::set-output name=tarball::$TARBALL"
-        echo "::set-output name=shasum::$SHASUM"
-
-    - name: upload tarball
-      uses: svenstaro/upload-release-action@v2
+    - uses: ./.github/actions/upload-release-archive
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./${{ steps.archive.outputs.tarball }}
-        asset_name: ${{ steps.archive.outputs.tarball }}
-        tag: ${{ github.ref }}
-
-    - name: upload shasum
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./${{ steps.archive.outputs.shasum }}
-        asset_name: ${{ steps.archive.outputs.shasum }}
-        tag: ${{ github.ref }}
+        os: wasi

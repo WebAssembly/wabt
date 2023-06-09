@@ -1,0 +1,39 @@
+name: Upload release archive
+description: Bundles an of artifacts and uploads to a GitHub release. The artifacts must already have been built into the CMake install folder.
+inputs:
+  os:
+    description: The OS name being built, used in the archive name
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: archive
+      id: archive
+      shell: bash
+      run: |
+        OSNAME=$(echo ${{ inputs.os }} | awk '{print tolower($0)}')
+        VERSION=${{ github.event.release.tag_name }}
+        PKGNAME="wabt-$VERSION-$OSNAME"
+        TARBALL=$PKGNAME.tar.gz
+        SHASUM=$PKGNAME.tar.gz.sha256
+        mv install wabt-$VERSION
+        tar -czf $TARBALL wabt-$VERSION
+        scripts/sha256sum.py $TARBALL > $SHASUM
+        echo "::set-output name=tarball::$TARBALL"
+        echo "::set-output name=shasum::$SHASUM"
+
+    - name: upload tarball
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./${{ steps.archive.outputs.tarball }}
+        asset_name: ${{ steps.archive.outputs.tarball }}
+        tag: ${{ github.ref }}
+
+    - name: upload shasum
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./${{ steps.archive.outputs.shasum }}
+        asset_name: ${{ steps.archive.outputs.shasum }}
+        tag: ${{ github.ref }}
