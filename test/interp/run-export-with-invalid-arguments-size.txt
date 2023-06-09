@@ -1,0 +1,9 @@
+;;; TOOL: run-interp
+;;; ARGS1: --run-export=id --argument=i32:7 --argument=i32:8
+;;; ERROR: 1
+(module
+  (func (export "id") (param i32) (result i32) (local.get 0))
+)
+(;; STDOUT ;;;
+Exported function 'id' expects 1 arguments, but 2 were provided
+;;; STDOUT ;;)
