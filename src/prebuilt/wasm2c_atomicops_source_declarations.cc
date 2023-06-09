@@ -19,13 +19,13 @@ R"w2c_template(// https://stackoverflow.com/questions/42660091/atomic-load-in-c-
 )w2c_template"
 R"w2c_template(// We reuse other intrinsics to be cautious
 )w2c_template"
-R"w2c_template(#define atomic_load_u8(a, v) _InterlockedOr8(a, 0)
+R"w2c_template(#define atomic_load_u8(a) _InterlockedOr8(a, 0)
 )w2c_template"
-R"w2c_template(#define atomic_load_u16(a, v) _InterlockedOr16(a, 0)
+R"w2c_template(#define atomic_load_u16(a) _InterlockedOr16(a, 0)
 )w2c_template"
-R"w2c_template(#define atomic_load_u32(a, v) _InterlockedOr(a, 0)
+R"w2c_template(#define atomic_load_u32(a) _InterlockedOr(a, 0)
 )w2c_template"
-R"w2c_template(#define atomic_load_u64(a, v) _InterlockedOr64(a, 0)
+R"w2c_template(#define atomic_load_u64(a) _InterlockedOr64(a, 0)
 )w2c_template"
 R"w2c_template(
 #define atomic_store_u8(a, v) _InterlockedExchange8(a, v)

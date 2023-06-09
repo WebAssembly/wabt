@@ -10,10 +10,10 @@
 // or if we have to reuse other instrinsics
 // https://stackoverflow.com/questions/42660091/atomic-load-in-c-with-msvc
 // We reuse other intrinsics to be cautious
-#define atomic_load_u8(a, v) _InterlockedOr8(a, 0)
-#define atomic_load_u16(a, v) _InterlockedOr16(a, 0)
-#define atomic_load_u32(a, v) _InterlockedOr(a, 0)
-#define atomic_load_u64(a, v) _InterlockedOr64(a, 0)
+#define atomic_load_u8(a) _InterlockedOr8(a, 0)
+#define atomic_load_u16(a) _InterlockedOr16(a, 0)
+#define atomic_load_u32(a) _InterlockedOr(a, 0)
+#define atomic_load_u64(a) _InterlockedOr64(a, 0)
 
 #define atomic_store_u8(a, v) _InterlockedExchange8(a, v)
 #define atomic_store_u16(a, v) _InterlockedExchange16(a, v)
