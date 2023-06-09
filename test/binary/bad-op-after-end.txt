@@ -12,8 +12,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-error: accessing stack depth: 0 >= max: 0
-000001a: error: OnNopExpr callback failed
-error: accessing stack depth: 0 >= max: 0
-000001a: error: OnNopExpr callback failed
+0000019: error: function body shorter than given size
+0000019: error: function body shorter than given size
 ;;; STDERR ;;)

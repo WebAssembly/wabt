@@ -12,8 +12,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-error: popping empty label stack
-000001a: error: OnEndExpr callback failed
-error: popping empty label stack
-000001a: error: OnEndExpr callback failed
+0000019: error: function body shorter than given size
+0000019: error: function body shorter than given size
 ;;; STDERR ;;)
