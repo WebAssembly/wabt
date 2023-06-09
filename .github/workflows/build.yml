@@ -91,20 +91,7 @@ jobs:
         run: |
           docker run -di --name wasi-sdk -v $(pwd):/src --workdir /src ghcr.io/webassembly/wasi-sdk:wasi-sdk-20 bash
           docker exec wasi-sdk cmake -S . -B out -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=0
-          # We only build tools, not runtime, for WASI build
-          docker exec wasi-sdk cmake --build out --config Release \
-          --target wast2json-copy-to-bin \
-          --target wasm-decompile-copy-to-bin \
-          --target wasm-opcodecnt-copy-to-bin \
-          --target wasm-objdump-copy-to-bin \
-          --target wasm-interp-copy-to-bin \
-          --target wasm2wat-copy-to-bin \
-          --target wasm-strip-copy-to-bin \
-          --target wat-desugar-copy-to-bin \
-          --target wasm-validate-copy-to-bin \
-          --target spectest-interp-copy-to-bin \
-          --target wat2wasm-copy-to-bin \
-          --target wasm2c-copy-to-bin
+          docker exec wasi-sdk cmake --build out --config Release --target install
 
   sanitize:
     name: sanitize
