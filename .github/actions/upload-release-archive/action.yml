@@ -1,5 +1,5 @@
 name: Upload release archive
-description: Bundles an of artifacts and uploads to a GitHub release. The artifacts must already have been built into the CMake install folder.
+description: Bundles an archive artifacts and uploads to a GitHub release. The artifacts must already have been built into the folder "install".
 inputs:
   os:
     description: The OS name being built, used in the archive name
