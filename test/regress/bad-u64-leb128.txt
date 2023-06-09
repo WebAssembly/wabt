@@ -1,0 +1,25 @@
+;;; TOOL: run-interp-spec
+;;; ARGS: --enable-memory64
+(assert_malformed
+  (module binary
+    "\00asm" "\01\00\00\00"
+    "\01\04\01\60\00\00"             ;; Type section
+    "\03\02\01\00"                   ;; Function section
+    "\05\03\01\04\00"                ;; Memory section (flags: i64)
+    "\0a\13\01"                      ;; Code section
+    ;; function 0
+    "\11\00"                         ;; local type count
+    "\42\00"                         ;; i64.const 0
+    "\28"                            ;; i32.load
+    "\02"                            ;; alignment 2
+    "\ff\ff\ff\ff\ff\ff\ff\ff\ff\02" ;; 2^64 (invalid)
+    "\1a"                            ;; drop
+    "\0b"                            ;; end
+  )
+  "malformed u64 LEB128"
+)
+(;; STDOUT ;;;
+out/test/regress/bad-u64-leb128.txt:4: assert_malformed passed:
+  0000020: error: unable to read u64 leb128: load offset
+1/1 tests passed.
+;;; STDOUT ;;)
