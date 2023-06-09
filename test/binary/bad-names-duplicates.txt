@@ -18,6 +18,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-000002c: error: duplicate function name: 0
-000002c: error: duplicate function name: 0
+out/test/binary/bad-names-duplicates/bad-names-duplicates.wasm:000002c: error: duplicate function name: 0
+out/test/binary/bad-names-duplicates/bad-names-duplicates.wasm:000002c: error: duplicate function name: 0
 ;;; STDERR ;;)

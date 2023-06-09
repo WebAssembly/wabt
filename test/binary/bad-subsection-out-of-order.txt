@@ -20,6 +20,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-0000028: error: out-of-order sub-section
-0000028: error: out-of-order sub-section
+out/test/binary/bad-subsection-out-of-order/bad-subsection-out-of-order.wasm:0000028: error: out-of-order sub-section
+out/test/binary/bad-subsection-out-of-order/bad-subsection-out-of-order.wasm:0000028: error: out-of-order sub-section
 ;;; STDERR ;;)

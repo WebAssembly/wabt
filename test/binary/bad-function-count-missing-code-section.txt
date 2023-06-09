@@ -4,6 +4,6 @@ version
 section(TYPE) { count[1] function params[0] results[0] }
 section(FUNCTION) { count[2] func[0] func[0] }
 (;; STDERR ;;;
-0000013: error: function signature count != function body count
-0000013: error: function signature count != function body count
+out/test/binary/bad-function-count-missing-code-section/bad-function-count-missing-code-section.wasm:0000013: error: function signature count != function body count
+out/test/binary/bad-function-count-missing-code-section/bad-function-count-missing-code-section.wasm:0000013: error: function signature count != function body count
 ;;; STDERR ;;)

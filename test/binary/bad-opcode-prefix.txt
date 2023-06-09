@@ -11,6 +11,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-000001a: error: unexpected opcode: 0xfe 0x7f
-000001a: error: unexpected opcode: 0xfe 0x7f
+out/test/binary/bad-opcode-prefix/bad-opcode-prefix.wasm:000001a: error: unexpected opcode: 0xfe 0x7f
+out/test/binary/bad-opcode-prefix/bad-opcode-prefix.wasm:000001a: error: unexpected opcode: 0xfe 0x7f
 ;;; STDERR ;;)

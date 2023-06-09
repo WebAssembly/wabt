@@ -12,6 +12,6 @@ section(ELEM) {
   flags[8]
 }
 (;; STDERR ;;;
-0000012: error: invalid elem segment flags: 0x8
-0000012: error: invalid elem segment flags: 0x8
+out/test/binary/bad-elem-flags/bad-elem-flags.wasm:0000012: error: invalid elem segment flags: 0x8
+out/test/binary/bad-elem-flags/bad-elem-flags.wasm:0000012: error: invalid elem segment flags: 0x8
 ;;; STDERR ;;)

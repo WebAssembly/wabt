@@ -3,118 +3,118 @@
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/binary-leb128.wast:217: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/memory64/binary-leb128/binary-leb128.25.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/memory64/binary-leb128.wast:225: assert_malformed passed:
-  000000e: error: unable to read u32 leb128: memory max page count
+  out/test/spec/memory64/binary-leb128/binary-leb128.26.wasm:000000e: error: unable to read u32 leb128: memory max page count
 out/test/spec/memory64/binary-leb128.wast:234: assert_malformed passed:
-  0000010: error: unable to read u32 leb128: data segment flags
+  out/test/spec/memory64/binary-leb128/binary-leb128.27.wasm:0000010: error: unable to read u32 leb128: data segment flags
 out/test/spec/memory64/binary-leb128.wast:245: assert_malformed passed:
-  0000011: error: unable to read u32 leb128: elem segment flags
+  out/test/spec/memory64/binary-leb128/binary-leb128.28.wasm:0000011: error: unable to read u32 leb128: elem segment flags
 out/test/spec/memory64/binary-leb128.wast:256: assert_malformed passed:
-  0000009: error: unable to read u32 leb128: section size
+  out/test/spec/memory64/binary-leb128/binary-leb128.29.wasm:0000009: error: unable to read u32 leb128: section size
 out/test/spec/memory64/binary-leb128.wast:267: assert_malformed passed:
-  000000a: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.30.wasm:000000a: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:278: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: function param count
+  out/test/spec/memory64/binary-leb128/binary-leb128.31.wasm:000000c: error: unable to read u32 leb128: function param count
 out/test/spec/memory64/binary-leb128.wast:290: assert_malformed passed:
-  000000f: error: unable to read u32 leb128: function result count
+  out/test/spec/memory64/binary-leb128/binary-leb128.32.wasm:000000f: error: unable to read u32 leb128: function result count
 out/test/spec/memory64/binary-leb128.wast:302: assert_malformed passed:
-  0000012: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.33.wasm:0000012: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:317: assert_malformed passed:
-  000001b: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.34.wasm:000001b: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:332: assert_malformed passed:
-  0000026: error: unable to read u32 leb128: import signature index
+  out/test/spec/memory64/binary-leb128/binary-leb128.35.wasm:0000026: error: unable to read u32 leb128: import signature index
 out/test/spec/memory64/binary-leb128.wast:347: assert_malformed passed:
-  0000011: error: unable to read u32 leb128: function signature index
+  out/test/spec/memory64/binary-leb128/binary-leb128.36.wasm:0000011: error: unable to read u32 leb128: function signature index
 out/test/spec/memory64/binary-leb128.wast:359: assert_malformed passed:
-  0000015: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.37.wasm:0000015: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:375: assert_malformed passed:
-  0000019: error: unable to read u32 leb128: export item index
+  out/test/spec/memory64/binary-leb128/binary-leb128.38.wasm:0000019: error: unable to read u32 leb128: export item index
 out/test/spec/memory64/binary-leb128.wast:391: assert_malformed passed:
-  0000014: error: unable to read u32 leb128: function body count
+  out/test/spec/memory64/binary-leb128/binary-leb128.39.wasm:0000014: error: unable to read u32 leb128: function body count
 out/test/spec/memory64/binary-leb128.wast:404: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  out/test/spec/memory64/binary-leb128/binary-leb128.40.wasm:0000022: error: unable to read u32 leb128: load offset
 out/test/spec/memory64/binary-leb128.wast:423: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
+  out/test/spec/memory64/binary-leb128/binary-leb128.41.wasm:0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/memory64/binary-leb128.wast:442: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
+  out/test/spec/memory64/binary-leb128/binary-leb128.42.wasm:0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/memory64/binary-leb128.wast:461: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  out/test/spec/memory64/binary-leb128/binary-leb128.43.wasm:0000024: error: unable to read u32 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:482: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.44.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:492: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.45.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:503: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.46.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:513: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.47.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:525: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/memory64/binary-leb128/binary-leb128.48.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/memory64/binary-leb128.wast:533: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/memory64/binary-leb128/binary-leb128.49.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/memory64/binary-leb128.wast:541: assert_malformed passed:
-  000000e: error: unable to read u32 leb128: memory max page count
+  out/test/spec/memory64/binary-leb128/binary-leb128.50.wasm:000000e: error: unable to read u32 leb128: memory max page count
 out/test/spec/memory64/binary-leb128.wast:550: assert_malformed passed:
-  000000e: error: unable to read u32 leb128: memory max page count
+  out/test/spec/memory64/binary-leb128/binary-leb128.51.wasm:000000e: error: unable to read u32 leb128: memory max page count
 out/test/spec/memory64/binary-leb128.wast:559: assert_malformed passed:
-  0000010: error: unable to read u32 leb128: data segment flags
+  out/test/spec/memory64/binary-leb128/binary-leb128.52.wasm:0000010: error: unable to read u32 leb128: data segment flags
 out/test/spec/memory64/binary-leb128.wast:570: assert_malformed passed:
-  0000011: error: unable to read u32 leb128: elem segment flags
+  out/test/spec/memory64/binary-leb128/binary-leb128.53.wasm:0000011: error: unable to read u32 leb128: elem segment flags
 out/test/spec/memory64/binary-leb128.wast:581: assert_malformed passed:
-  0000009: error: unable to read u32 leb128: section size
+  out/test/spec/memory64/binary-leb128/binary-leb128.54.wasm:0000009: error: unable to read u32 leb128: section size
 out/test/spec/memory64/binary-leb128.wast:592: assert_malformed passed:
-  000000a: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.55.wasm:000000a: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:603: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: function param count
+  out/test/spec/memory64/binary-leb128/binary-leb128.56.wasm:000000c: error: unable to read u32 leb128: function param count
 out/test/spec/memory64/binary-leb128.wast:615: assert_malformed passed:
-  000000f: error: unable to read u32 leb128: function result count
+  out/test/spec/memory64/binary-leb128/binary-leb128.57.wasm:000000f: error: unable to read u32 leb128: function result count
 out/test/spec/memory64/binary-leb128.wast:627: assert_malformed passed:
-  0000012: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.58.wasm:0000012: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:642: assert_malformed passed:
-  000001b: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.59.wasm:000001b: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:657: assert_malformed passed:
-  0000026: error: unable to read u32 leb128: import signature index
+  out/test/spec/memory64/binary-leb128/binary-leb128.60.wasm:0000026: error: unable to read u32 leb128: import signature index
 out/test/spec/memory64/binary-leb128.wast:672: assert_malformed passed:
-  0000011: error: unable to read u32 leb128: function signature index
+  out/test/spec/memory64/binary-leb128/binary-leb128.61.wasm:0000011: error: unable to read u32 leb128: function signature index
 out/test/spec/memory64/binary-leb128.wast:685: assert_malformed passed:
-  0000015: error: unable to read u32 leb128: string length
+  out/test/spec/memory64/binary-leb128/binary-leb128.62.wasm:0000015: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary-leb128.wast:701: assert_malformed passed:
-  0000019: error: unable to read u32 leb128: export item index
+  out/test/spec/memory64/binary-leb128/binary-leb128.63.wasm:0000019: error: unable to read u32 leb128: export item index
 out/test/spec/memory64/binary-leb128.wast:717: assert_malformed passed:
-  0000014: error: unable to read u32 leb128: function body count
+  out/test/spec/memory64/binary-leb128/binary-leb128.64.wasm:0000014: error: unable to read u32 leb128: function body count
 out/test/spec/memory64/binary-leb128.wast:730: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  out/test/spec/memory64/binary-leb128/binary-leb128.65.wasm:0000022: error: unable to read u32 leb128: load offset
 out/test/spec/memory64/binary-leb128.wast:749: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  out/test/spec/memory64/binary-leb128/binary-leb128.66.wasm:0000022: error: unable to read u32 leb128: load offset
 out/test/spec/memory64/binary-leb128.wast:768: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
+  out/test/spec/memory64/binary-leb128/binary-leb128.67.wasm:0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/memory64/binary-leb128.wast:786: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
+  out/test/spec/memory64/binary-leb128/binary-leb128.68.wasm:0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/memory64/binary-leb128.wast:805: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
+  out/test/spec/memory64/binary-leb128/binary-leb128.69.wasm:0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/memory64/binary-leb128.wast:824: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
+  out/test/spec/memory64/binary-leb128/binary-leb128.70.wasm:0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/memory64/binary-leb128.wast:843: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  out/test/spec/memory64/binary-leb128/binary-leb128.71.wasm:0000024: error: unable to read u32 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:862: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  out/test/spec/memory64/binary-leb128/binary-leb128.72.wasm:0000024: error: unable to read u32 leb128: store offset
 out/test/spec/memory64/binary-leb128.wast:884: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.73.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:894: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.74.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:904: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.75.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:914: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.76.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary-leb128.wast:925: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.77.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:935: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.78.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:945: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.79.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:955: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/memory64/binary-leb128/binary-leb128.80.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:987: assert_malformed passed:
-  0000019: error: unable to read u32 leb128: opcode
+  out/test/spec/memory64/binary-leb128/binary-leb128.82.wasm:0000019: error: unable to read u32 leb128: opcode
 83/83 tests passed.
 ;;; STDOUT ;;)

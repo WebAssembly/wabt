@@ -6,6 +6,6 @@ section(TYPE) {
   0x20
 }
 (;; STDERR ;;;
-000000c: error: unexpected type form (got 0x20)
-000000c: error: unexpected type form (got 0x20)
+out/test/binary/bad-type-form/bad-type-form.wasm:000000c: error: unexpected type form (got 0x20)
+out/test/binary/bad-type-form/bad-type-form.wasm:000000c: error: unexpected type form (got 0x20)
 ;;; STDERR ;;)

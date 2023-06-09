@@ -31,6 +31,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-000003d: error: locals function index out of order: 0
-000003d: error: locals function index out of order: 0
+out/test/binary/bad-names-function-locals-out-of-order/bad-names-function-locals-out-of-order.wasm:000003d: error: locals function index out of order: 0
+out/test/binary/bad-names-function-locals-out-of-order/bad-names-function-locals-out-of-order.wasm:000003d: error: locals function index out of order: 0
 ;;; STDERR ;;)

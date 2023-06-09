@@ -479,7 +479,11 @@ u32 BinaryReaderInterp::GetFuncOffset(Index func_index) {
 }
 
 bool BinaryReaderInterp::OnError(const Error& error) {
-  errors_->push_back(error);
+  Error errorp{error};  // The BinaryReaderInterp has a richer notion of
+                        // location (including a filename) than the
+                        // BinaryReader, so use that for logging.
+  errorp.loc = GetLocation();
+  errors_->push_back(errorp);
   return true;
 }
 

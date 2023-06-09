@@ -24,7 +24,7 @@ section("linking") {
 }
 (;; STDERR ;;;
 error: invalid tag index: 1
-000002c: error: OnTagSymbol callback failed
+out/test/binary/bad-linking-tag-index/bad-linking-tag-index.wasm:000002c: error: OnTagSymbol callback failed
 error: invalid tag index: 1
-000002c: error: OnTagSymbol callback failed
+out/test/binary/bad-linking-tag-index/bad-linking-tag-index.wasm:000002c: error: OnTagSymbol callback failed
 ;;; STDERR ;;)

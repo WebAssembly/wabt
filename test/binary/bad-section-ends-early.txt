@@ -13,6 +13,6 @@ dummy[0]
 dummy[0]
 dummy[0]
 (;; STDERR ;;;
-000000b: error: unfinished section (expected end: 0xf)
-000000b: error: unfinished section (expected end: 0xf)
+out/test/binary/bad-section-ends-early/bad-section-ends-early.wasm:000000b: error: unfinished section (expected end: 0xf)
+out/test/binary/bad-section-ends-early/bad-section-ends-early.wasm:000000b: error: unfinished section (expected end: 0xf)
 ;;; STDERR ;;)

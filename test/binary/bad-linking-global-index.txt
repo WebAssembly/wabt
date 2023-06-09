@@ -20,7 +20,7 @@ section("linking") {
 }
 (;; STDERR ;;;
 error: invalid global index: 1
-000002c: error: OnGlobalSymbol callback failed
+out/test/binary/bad-linking-global-index/bad-linking-global-index.wasm:000002c: error: OnGlobalSymbol callback failed
 error: invalid global index: 1
-000002c: error: OnGlobalSymbol callback failed
+out/test/binary/bad-linking-global-index/bad-linking-global-index.wasm:000002c: error: OnGlobalSymbol callback failed
 ;;; STDERR ;;)

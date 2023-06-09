@@ -496,7 +496,11 @@ std::string BinaryReaderIR::GetUniqueName(BindingHash* bindings,
 }
 
 bool BinaryReaderIR::OnError(const Error& error) {
-  errors_->push_back(error);
+  Error errorp{error};  // The BinaryReaderIR has a richer notion of location
+                        // (including a filename) than the BinaryReader, so use
+                        // that for logging.
+  errorp.loc = GetLocation();
+  errors_->push_back(errorp);
   return true;
 }
 

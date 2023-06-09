@@ -16,6 +16,6 @@ section(DATA) {
   data[str("")]
 }
 (;; STDERR ;;;
-0000019: error: data.drop requires data count section
-0000019: error: data.drop requires data count section
+out/test/binary/bad-data-drop-no-data-count/bad-data-drop-no-data-count.wasm:0000019: error: data.drop requires data count section
+out/test/binary/bad-data-drop-no-data-count/bad-data-drop-no-data-count.wasm:0000019: error: data.drop requires data count section
 ;;; STDERR ;;)

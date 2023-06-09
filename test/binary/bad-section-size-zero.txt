@@ -5,6 +5,6 @@ section_code[1] section_size[0]
 ;; garbage after the section; shouldn't be read
 1 2 3 4 5
 (;; STDERR ;;;
-000000a: error: unable to read u32 leb128: type count
-000000a: error: unable to read u32 leb128: type count
+out/test/binary/bad-section-size-zero/bad-section-size-zero.wasm:000000a: error: unable to read u32 leb128: type count
+out/test/binary/bad-section-size-zero/bad-section-size-zero.wasm:000000a: error: unable to read u32 leb128: type count
 ;;; STDERR ;;)

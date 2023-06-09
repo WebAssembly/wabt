@@ -19,6 +19,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-000002c: error: function index out of order: 0
-000002c: error: function index out of order: 0
+out/test/binary/bad-names-out-of-order/bad-names-out-of-order.wasm:000002c: error: function index out of order: 0
+out/test/binary/bad-names-out-of-order/bad-names-out-of-order.wasm:000002c: error: function index out of order: 0
 ;;; STDERR ;;)

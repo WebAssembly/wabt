@@ -6,6 +6,6 @@ section(MEMORY) {
   flags[0x81 0]
 }
 (;; STDERR ;;;
-000000c: error: malformed memory limits flag: 129
-000000c: error: malformed memory limits flag: 129
+out/test/binary/bad-memory-limits-flag-leb128/bad-memory-limits-flag-leb128.wasm:000000c: error: malformed memory limits flag: 129
+out/test/binary/bad-memory-limits-flag-leb128/bad-memory-limits-flag-leb128.wasm:000000c: error: malformed memory limits flag: 129
 ;;; STDERR ;;)

@@ -13,6 +13,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-000001e: error: invalid load alignment: 65
-000001e: error: invalid load alignment: 65
+out/test/binary/bad-alignment/bad-alignment.wasm:000001e: error: invalid load alignment: 65
+out/test/binary/bad-alignment/bad-alignment.wasm:000001e: error: invalid load alignment: 65
 ;;; STDERR ;;)

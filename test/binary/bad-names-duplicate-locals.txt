@@ -27,6 +27,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-0000035: error: duplicate local index: 0
-0000035: error: duplicate local index: 0
+out/test/binary/bad-names-duplicate-locals/bad-names-duplicate-locals.wasm:0000035: error: duplicate local index: 0
+out/test/binary/bad-names-duplicate-locals/bad-names-duplicate-locals.wasm:0000035: error: duplicate local index: 0
 ;;; STDERR ;;)

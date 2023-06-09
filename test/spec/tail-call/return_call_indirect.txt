@@ -76,45 +76,45 @@ out/test/spec/tail-call/return_call_indirect.wast:384: assert_malformed passed:
                                 ^^^^^^^^^^^^^^^^^^^^
 out/test/spec/tail-call/return_call_indirect.wast:399: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.12.wasm:000001c: error: table variable out of range: 0 (max 0)
-  000001c: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.12.wasm:000001c: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:407: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.13.wasm:0000024: error: type mismatch at end of function, expected [] but got [i32]
-  0000024: error: EndFunctionBody callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.13.wasm:0000024: error: EndFunctionBody callback failed
 out/test/spec/tail-call/return_call_indirect.wast:415: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.14.wasm:0000026: error: return signatures have inconsistent types: expected [], got [i64]
-  0000026: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.14.wasm:0000026: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:424: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.15.wasm:0000026: error: type mismatch in return_call_indirect, expected [i32] but got []
-  0000026: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.15.wasm:0000026: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:432: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.16.wasm:0000027: error: type mismatch in return_call_indirect, expected [f64, i32] but got []
-  0000027: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.16.wasm:0000027: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:455: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.19.wasm:0000027: error: type mismatch in return_call_indirect, expected [i32] but got []
-  0000027: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.19.wasm:0000027: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:463: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.20.wasm:0000028: error: type mismatch in return_call_indirect, expected [i32] but got [... i64]
-  0000028: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.20.wasm:0000028: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:472: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.21.wasm:000002a: error: type mismatch in return_call_indirect, expected [i32, i32] but got [i32]
-  000002a: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.21.wasm:000002a: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:482: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.22.wasm:000002a: error: type mismatch in return_call_indirect, expected [i32, i32] but got [i32]
-  000002a: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.22.wasm:000002a: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:492: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.23.wasm:0000032: error: type mismatch in return_call_indirect, expected [i32, f64] but got [f64, i32]
-  0000032: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.23.wasm:0000032: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:502: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.24.wasm:0000032: error: type mismatch in return_call_indirect, expected [f64, i32] but got [i32, f64]
-  0000032: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.24.wasm:0000032: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:516: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.25.wasm:0000022: error: function type variable out of range: 1 (max 1)
-  0000022: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.25.wasm:0000022: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:523: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.26.wasm:0000026: error: function type variable out of range: 1012321300 (max 1)
-  0000026: error: OnReturnCallIndirectExpr callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.26.wasm:0000026: error: OnReturnCallIndirectExpr callback failed
 out/test/spec/tail-call/return_call_indirect.wast:534: assert_invalid passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.27.wasm:0000018: error: function variable out of range: 0 (max 0)
-  0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
+  out/test/spec/tail-call/return_call_indirect/return_call_indirect.27.wasm:0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
 75/75 tests passed.
 ;;; STDOUT ;;)

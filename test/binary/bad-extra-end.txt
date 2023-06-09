@@ -13,7 +13,7 @@ section(CODE) {
 }
 (;; STDERR ;;;
 error: popping empty label stack
-000001a: error: OnEndExpr callback failed
+out/test/binary/bad-extra-end/bad-extra-end.wasm:000001a: error: OnEndExpr callback failed
 error: popping empty label stack
-000001a: error: OnEndExpr callback failed
+out/test/binary/bad-extra-end/bad-extra-end.wasm:000001a: error: OnEndExpr callback failed
 ;;; STDERR ;;)

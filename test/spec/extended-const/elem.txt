@@ -4,86 +4,86 @@
 (;; STDOUT ;;;
 out/test/spec/extended-const/elem.wast:171: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.10.wasm:0000026: error: initializer expression can only reference an imported global
-  0000026: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/elem/elem.10.wasm:0000026: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/elem.wast:175: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.11.wasm:0000026: error: initializer expression can only reference an imported global
-  0000026: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/elem/elem.11.wasm:0000026: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/elem.wast:350: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/extended-const/elem.wast:360: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/extended-const/elem.wast:365: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.36.wasm:0000016: error: table variable out of range: 0 (max 0)
-  0000016: error: BeginElemSegment callback failed
+  out/test/spec/extended-const/elem/elem.36.wasm:0000016: error: BeginElemSegment callback failed
 out/test/spec/extended-const/elem.wast:375: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.37.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
-  0000015: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.37.wasm:0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/extended-const/elem.wast:383: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.38.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [funcref]
-  0000015: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.38.wasm:0000015: error: EndElemSegmentInitExpr callback failed
 out/test/spec/extended-const/elem.wast:391: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.39.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
-  0000013: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.39.wasm:0000013: error: EndElemSegmentInitExpr callback failed
 out/test/spec/extended-const/elem.wast:399: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.40.wasm:0000016: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000017: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.40.wasm:0000017: error: EndElemSegmentInitExpr callback failed
 out/test/spec/extended-const/elem.wast:407: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.41.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  000002d: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.41.wasm:000002d: error: EndElemSegmentInitExpr callback failed
 out/test/spec/extended-const/elem.wast:416: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.42.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  000002d: error: EndElemSegmentInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.42.wasm:000002d: error: EndElemSegmentInitExpr callback failed
 out/test/spec/extended-const/elem.wast:426: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.43.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
-  0000015: error: OnUnaryExpr callback failed
+  out/test/spec/extended-const/elem/elem.43.wasm:0000015: error: OnUnaryExpr callback failed
 out/test/spec/extended-const/elem.wast:434: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.44.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
-  0000013: error: OnNopExpr callback failed
+  out/test/spec/extended-const/elem/elem.44.wasm:0000013: error: OnNopExpr callback failed
 out/test/spec/extended-const/elem.wast:442: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.45.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
-  0000013: error: OnNopExpr callback failed
+  out/test/spec/extended-const/elem/elem.45.wasm:0000013: error: OnNopExpr callback failed
 out/test/spec/extended-const/elem.wast:450: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.46.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: nop
-  0000015: error: OnNopExpr callback failed
+  out/test/spec/extended-const/elem/elem.46.wasm:0000015: error: OnNopExpr callback failed
 out/test/spec/extended-const/elem.wast:458: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.47.wasm:0000021: error: initializer expression cannot reference a mutable global
-  0000021: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/elem/elem.47.wasm:0000021: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/elem.wast:467: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.48.wasm:0000014: error: global variable out of range: 0 (max 0)
-  0000014: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/elem/elem.48.wasm:0000014: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/elem.wast:475: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.49.wasm:000002a: error: global variable out of range: 1 (max 1)
-  000002a: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/elem/elem.49.wasm:000002a: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/elem.wast:484: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.50.wasm:000002e: error: initializer expression cannot reference a mutable global
-  000002e: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/elem/elem.50.wasm:000002e: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/elem.wast:495: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.51.wasm:0000018: error: type mismatch at elem expression. got externref, expected funcref
-  0000018: error: OnElemSegmentElemExpr_RefNull callback failed
+  out/test/spec/extended-const/elem/elem.51.wasm:0000018: error: OnElemSegmentElemExpr_RefNull callback failed
 out/test/spec/extended-const/elem.wast:503: assert_invalid passed:
-  0000019: error: expected END opcode after element expression
+  out/test/spec/extended-const/elem/elem.52.wasm:0000019: error: expected END opcode after element expression
 out/test/spec/extended-const/elem.wast:511: assert_invalid passed:
-  0000017: error: expected ref.null or ref.func in passive element segment
-  0000018: error: expected END opcode after element expression
+  out/test/spec/extended-const/elem/elem.53.wasm:0000017: error: expected ref.null or ref.func in passive element segment
+  out/test/spec/extended-const/elem/elem.53.wasm:0000018: error: expected END opcode after element expression
 out/test/spec/extended-const/elem.wast:519: assert_invalid passed:
-  0000017: error: expected ref.null or ref.func in passive element segment
-  0000018: error: expected END opcode after element expression
+  out/test/spec/extended-const/elem/elem.54.wasm:0000017: error: expected ref.null or ref.func in passive element segment
+  out/test/spec/extended-const/elem/elem.54.wasm:0000018: error: expected END opcode after element expression
 out/test/spec/extended-const/elem.wast:527: assert_invalid passed:
-  0000022: error: expected ref.null or ref.func in passive element segment
-  0000023: error: expected END opcode after element expression
+  out/test/spec/extended-const/elem/elem.55.wasm:0000022: error: expected ref.null or ref.func in passive element segment
+  out/test/spec/extended-const/elem/elem.55.wasm:0000023: error: expected END opcode after element expression
 out/test/spec/extended-const/elem.wast:536: assert_invalid passed:
-  0000022: error: expected ref.null or ref.func in passive element segment
-  0000023: error: expected END opcode after element expression
+  out/test/spec/extended-const/elem/elem.56.wasm:0000022: error: expected ref.null or ref.func in passive element segment
+  out/test/spec/extended-const/elem/elem.56.wasm:0000023: error: expected END opcode after element expression
 out/test/spec/extended-const/elem.wast:594: assert_trap passed: uninitialized table element
 out/test/spec/extended-const/elem.wast:627: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.62.wasm:000001f: error: type mismatch at elem segment. got externref, expected funcref
-  000001f: error: OnElemSegmentElemType callback failed
+  out/test/spec/extended-const/elem/elem.62.wasm:000001f: error: OnElemSegmentElemType callback failed
 out/test/spec/extended-const/elem.wast:632: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.63.wasm:0000017: error: type mismatch at elem segment. got funcref, expected externref
-  0000017: error: OnElemSegmentElemType callback failed
+  out/test/spec/extended-const/elem/elem.63.wasm:0000017: error: OnElemSegmentElemType callback failed
 out/test/spec/extended-const/elem.wast:637: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.64.wasm:0000032: error: type mismatch at table.init. got funcref, expected externref
-  0000032: error: OnTableInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.64.wasm:0000032: error: OnTableInitExpr callback failed
 out/test/spec/extended-const/elem.wast:646: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.65.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
-  0000030: error: OnTableInitExpr callback failed
+  out/test/spec/extended-const/elem/elem.65.wasm:0000030: error: OnTableInitExpr callback failed
 93/93 tests passed.
 ;;; STDOUT ;;)

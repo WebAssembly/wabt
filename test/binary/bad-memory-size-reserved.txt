@@ -15,6 +15,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-000001e: error: memory.size reserved value must be 0
-000001e: error: memory.size reserved value must be 0
+out/test/binary/bad-memory-size-reserved/bad-memory-size-reserved.wasm:000001e: error: memory.size reserved value must be 0
+out/test/binary/bad-memory-size-reserved/bad-memory-size-reserved.wasm:000001e: error: memory.size reserved value must be 0
 ;;; STDERR ;;)

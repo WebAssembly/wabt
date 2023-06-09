@@ -2,356 +2,356 @@
 ;;; STDIN_FILE: third_party/testsuite/utf8-import-module.wast
 (;; STDOUT ;;;
 out/test/spec/utf8-import-module.wast:7: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.0.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:22: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.1.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:37: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.2.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:52: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.3.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:67: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.4.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:82: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.5.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:99: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.6.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:114: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.7.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:129: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.8.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:146: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.9.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:161: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.10.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:176: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.11.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:191: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.12.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:206: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.13.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:221: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.14.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:236: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.15.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:251: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.16.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:266: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.17.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:281: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.18.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:296: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.19.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:311: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.20.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:328: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.21.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:343: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.22.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:358: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.23.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:373: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.24.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:388: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.25.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:405: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.26.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:420: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.27.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:435: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.28.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:450: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.29.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:465: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.30.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:480: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.31.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:495: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.32.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:510: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.33.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:525: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.34.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:540: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.35.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:555: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.36.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:570: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.37.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:585: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.38.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:600: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.39.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:615: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.40.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:630: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.41.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:645: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.42.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:660: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.43.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:675: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.44.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:690: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.45.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:705: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.46.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:720: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.47.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:735: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.48.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:750: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.49.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:765: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.50.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:780: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.51.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:795: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.52.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:810: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.53.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:825: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.54.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:840: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.55.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:855: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.56.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:870: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.57.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:887: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.58.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:902: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.59.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:917: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.60.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:932: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.61.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:947: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.62.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:962: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.63.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:977: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.64.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:992: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.65.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1007: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.66.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1022: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.67.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1037: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.68.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1052: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.69.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1067: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.70.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1082: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.71.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1097: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.72.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1112: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.73.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1127: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.74.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1142: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.75.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1157: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.76.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1172: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.77.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1187: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.78.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1202: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.79.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1217: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.80.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1232: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.81.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1249: assert_malformed passed:
-  0000016: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.82.wasm:0000016: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1264: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.83.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1279: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.84.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1294: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.85.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1309: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.86.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1324: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.87.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1339: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.88.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1356: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.89.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1371: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.90.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1386: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.91.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1401: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.92.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1416: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.93.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1431: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.94.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1446: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.95.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1461: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.96.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1476: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.97.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1491: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.98.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1506: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.99.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1521: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.100.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1536: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.101.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1551: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.102.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1566: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.103.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1581: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.104.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1596: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.105.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1611: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.106.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1626: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.107.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1641: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.108.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1656: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.109.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1671: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.110.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1686: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.111.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1701: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.112.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1716: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.113.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1733: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.114.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1748: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.115.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1763: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.116.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1778: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.117.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1793: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.118.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1808: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.119.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1823: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.120.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1838: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.121.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1853: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.122.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1868: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.123.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1883: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.124.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1898: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.125.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1913: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.126.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1928: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.127.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1943: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.128.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1958: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.129.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1975: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.130.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:1990: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.131.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2005: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.132.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2020: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.133.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2035: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.134.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2050: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.135.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2065: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.136.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2080: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.137.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2095: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.138.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2110: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.139.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2125: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.140.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2140: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.141.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2155: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.142.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2170: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.143.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2185: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.144.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2200: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.145.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2217: assert_malformed passed:
-  0000017: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.146.wasm:0000017: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2232: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.147.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2247: assert_malformed passed:
-  0000016: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.148.wasm:0000016: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2262: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.149.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2277: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.150.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2292: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.151.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2307: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.152.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2322: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.153.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2337: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.154.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2354: assert_malformed passed:
-  0000016: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.155.wasm:0000016: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2369: assert_malformed passed:
-  0000016: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.156.wasm:0000016: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2386: assert_malformed passed:
-  0000018: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.157.wasm:0000018: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2401: assert_malformed passed:
-  0000016: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.158.wasm:0000016: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2416: assert_malformed passed:
-  0000017: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.159.wasm:0000017: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2431: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.160.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2446: assert_malformed passed:
-  0000016: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.161.wasm:0000016: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2461: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.162.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2476: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.163.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2491: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.164.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2506: assert_malformed passed:
-  0000014: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.165.wasm:0000014: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2521: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.166.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2536: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.167.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2553: assert_malformed passed:
-  0000017: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.168.wasm:0000017: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2568: assert_malformed passed:
-  0000017: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.169.wasm:0000017: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2585: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.170.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2600: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.171.wasm:0000012: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2615: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.172.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2630: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.173.wasm:0000015: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2645: assert_malformed passed:
-  0000013: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.174.wasm:0000013: error: invalid utf-8 encoding: import field name
 out/test/spec/utf8-import-module.wast:2660: assert_malformed passed:
-  0000015: error: invalid utf-8 encoding: import field name
+  out/test/spec/utf8-import-module/utf8-import-module.175.wasm:0000015: error: invalid utf-8 encoding: import field name
 176/176 tests passed.
 ;;; STDOUT ;;)

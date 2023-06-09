@@ -16,6 +16,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000020: error: memory.grow reserved value must be 0
-0000020: error: memory.grow reserved value must be 0
+out/test/binary/bad-memory-grow-reserved/bad-memory-grow-reserved.wasm:0000020: error: memory.grow reserved value must be 0
+out/test/binary/bad-memory-grow-reserved/bad-memory-grow-reserved.wasm:0000020: error: memory.grow reserved value must be 0
 ;;; STDERR ;;)

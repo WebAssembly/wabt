@@ -6,6 +6,6 @@ section(MEMORY) {
   flags[4]
 }
 (;; STDERR ;;;
-000000c: error: memory64 not allowed
-000000c: error: memory64 not allowed
+out/test/binary/bad-memory-limits-flag-is64/bad-memory-limits-flag-is64.wasm:000000c: error: memory64 not allowed
+out/test/binary/bad-memory-limits-flag-is64/bad-memory-limits-flag-is64.wasm:000000c: error: memory64 not allowed
 ;;; STDERR ;;)

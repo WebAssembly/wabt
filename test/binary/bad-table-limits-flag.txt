@@ -7,6 +7,6 @@ section(TABLE) {
   flags[8]
 }
 (;; STDERR ;;;
-000000d: error: malformed table limits flag: 8
-000000d: error: malformed table limits flag: 8
+out/test/binary/bad-table-limits-flag/bad-table-limits-flag.wasm:000000d: error: malformed table limits flag: 8
+out/test/binary/bad-table-limits-flag/bad-table-limits-flag.wasm:000000d: error: malformed table limits flag: 8
 ;;; STDERR ;;)

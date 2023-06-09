@@ -3,15 +3,15 @@
 (;; STDOUT ;;;
 out/test/spec/nop.wast:412: assert_invalid passed:
   out/test/spec/nop/nop.1.wasm:000001a: error: type mismatch in implicit return, expected [i32] but got []
-  000001a: error: EndFunctionBody callback failed
+  out/test/spec/nop/nop.1.wasm:000001a: error: EndFunctionBody callback failed
 out/test/spec/nop.wast:416: assert_invalid passed:
   out/test/spec/nop/nop.2.wasm:000001a: error: type mismatch in implicit return, expected [i64] but got []
-  000001a: error: EndFunctionBody callback failed
+  out/test/spec/nop/nop.2.wasm:000001a: error: EndFunctionBody callback failed
 out/test/spec/nop.wast:420: assert_invalid passed:
   out/test/spec/nop/nop.3.wasm:000001a: error: type mismatch in implicit return, expected [f32] but got []
-  000001a: error: EndFunctionBody callback failed
+  out/test/spec/nop/nop.3.wasm:000001a: error: EndFunctionBody callback failed
 out/test/spec/nop.wast:424: assert_invalid passed:
   out/test/spec/nop/nop.4.wasm:000001a: error: type mismatch in implicit return, expected [f64] but got []
-  000001a: error: EndFunctionBody callback failed
+  out/test/spec/nop/nop.4.wasm:000001a: error: EndFunctionBody callback failed
 88/88 tests passed.
 ;;; STDOUT ;;)

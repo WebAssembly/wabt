@@ -20,6 +20,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-000002c: error: unfinished sub-section (expected end: 0x2d)
-000002c: error: unfinished sub-section (expected end: 0x2d)
+out/test/binary/bad-subsection-unfinished/bad-subsection-unfinished.wasm:000002c: error: unfinished sub-section (expected end: 0x2d)
+out/test/binary/bad-subsection-unfinished/bad-subsection-unfinished.wasm:000002c: error: unfinished sub-section (expected end: 0x2d)
 ;;; STDERR ;;)

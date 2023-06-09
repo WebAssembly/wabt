@@ -24,6 +24,6 @@ section(DATA) {
   data[str("")]
 }
 (;; STDERR ;;;
-0000024: error: memory.init requires data count section
-0000024: error: memory.init requires data count section
+out/test/binary/bad-memory-init-no-data-count/bad-memory-init-no-data-count.wasm:0000024: error: memory.init requires data count section
+out/test/binary/bad-memory-init-no-data-count/bad-memory-init-no-data-count.wasm:0000024: error: memory.init requires data count section
 ;;; STDERR ;;)

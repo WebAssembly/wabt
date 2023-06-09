@@ -8,6 +8,6 @@ section(CODE) {
   func { locals[0] }
 }
 (;; STDERR ;;;
-0000016: error: function signature count != function body count
-0000016: error: function signature count != function body count
+out/test/binary/bad-function-body-count/bad-function-body-count.wasm:0000016: error: function signature count != function body count
+out/test/binary/bad-function-body-count/bad-function-body-count.wasm:0000016: error: function signature count != function body count
 ;;; STDERR ;;)

@@ -19,6 +19,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-0000028: error: duplicate sub-section
-0000028: error: duplicate sub-section
+out/test/binary/bad-duplicate-subsection/bad-duplicate-subsection.wasm:0000028: error: duplicate sub-section
+out/test/binary/bad-duplicate-subsection/bad-duplicate-subsection.wasm:0000028: error: duplicate sub-section
 ;;; STDERR ;;)

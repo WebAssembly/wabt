@@ -15,6 +15,6 @@ section(DATA) {
   data[str("")]
 }
 (;; STDERR ;;;
-0000011: error: invalid memory index 1: bulk memory not allowed
-0000011: error: invalid memory index 1: bulk memory not allowed
+out/test/binary/bad-data-invalid-memidx/bad-data-invalid-memidx.wasm:0000011: error: invalid memory index 1: bulk memory not allowed
+out/test/binary/bad-data-invalid-memidx/bad-data-invalid-memidx.wasm:0000011: error: invalid memory index 1: bulk memory not allowed
 ;;; STDERR ;;)

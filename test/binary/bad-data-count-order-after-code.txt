@@ -4,6 +4,6 @@ version
 section(CODE) { count[0] }
 section(DATACOUNT) { count[0] }
 (;; STDERR ;;;
-000000d: error: section DataCount out of order
-000000d: error: section DataCount out of order
+out/test/binary/bad-data-count-order-after-code/bad-data-count-order-after-code.wasm:000000d: error: section DataCount out of order
+out/test/binary/bad-data-count-order-after-code/bad-data-count-order-after-code.wasm:000000d: error: section DataCount out of order
 ;;; STDERR ;;)

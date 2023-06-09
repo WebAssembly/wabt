@@ -28,6 +28,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-0000004: error: bad magic value
-0000004: error: bad magic value
+out/test/binary/bad-names-locals-out-of-order/bad-names-locals-out-of-order.wasm:0000004: error: bad magic value
+out/test/binary/bad-names-locals-out-of-order/bad-names-locals-out-of-order.wasm:0000004: error: bad magic value
 ;;; STDERR ;;)

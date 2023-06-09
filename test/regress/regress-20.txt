@@ -14,6 +14,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-000001e: error: expected valid local type
-000001e: error: expected valid local type
+out/test/regress/regress-20/regress-20.wasm:000001e: error: expected valid local type
+out/test/regress/regress-20/regress-20.wasm:000001e: error: expected valid local type
 ;;; STDERR ;;)

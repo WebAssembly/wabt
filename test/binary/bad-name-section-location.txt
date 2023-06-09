@@ -15,6 +15,6 @@ section(CODE) {
   func { locals[0] }
 }
 (;; STDERR ;;;
-0000022: error: Code section can not occur after Name section
-0000022: error: Code section can not occur after Name section
+out/test/binary/bad-name-section-location/bad-name-section-location.wasm:0000022: error: Code section can not occur after Name section
+out/test/binary/bad-name-section-location/bad-name-section-location.wasm:0000022: error: Code section can not occur after Name section
 ;;; STDERR ;;)

@@ -3,264 +3,264 @@
 ;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/multi-memory/binary.wast:6: assert_malformed passed:
-  0000000: error: unable to read uint32_t: magic
+  out/test/spec/multi-memory/binary/binary.4.wasm:0000000: error: unable to read uint32_t: magic
 out/test/spec/multi-memory/binary.wast:7: assert_malformed passed:
-  0000000: error: unable to read uint32_t: magic
+  out/test/spec/multi-memory/binary/binary.5.wasm:0000000: error: unable to read uint32_t: magic
 out/test/spec/multi-memory/binary.wast:8: assert_malformed passed:
-  0000000: error: unable to read uint32_t: magic
+  out/test/spec/multi-memory/binary/binary.6.wasm:0000000: error: unable to read uint32_t: magic
 out/test/spec/multi-memory/binary.wast:9: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.7.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:10: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.8.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:11: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.9.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:12: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.10.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:13: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.11.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:14: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.12.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:15: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.13.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:16: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.14.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:17: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.15.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:18: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.16.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:21: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.17.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:24: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.18.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:25: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.19.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:28: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.20.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:31: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.21.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:34: assert_malformed passed:
-  0000004: error: bad magic value
+  out/test/spec/multi-memory/binary/binary.22.wasm:0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:37: assert_malformed passed:
-  0000004: error: unable to read uint32_t: version
+  out/test/spec/multi-memory/binary/binary.23.wasm:0000004: error: unable to read uint32_t: version
 out/test/spec/multi-memory/binary.wast:38: assert_malformed passed:
-  0000004: error: unable to read uint32_t: version
+  out/test/spec/multi-memory/binary/binary.24.wasm:0000004: error: unable to read uint32_t: version
 out/test/spec/multi-memory/binary.wast:39: assert_malformed passed:
-  0000004: error: unable to read uint32_t: version
+  out/test/spec/multi-memory/binary/binary.25.wasm:0000004: error: unable to read uint32_t: version
 out/test/spec/multi-memory/binary.wast:40: assert_malformed passed:
-  0000008: error: bad wasm file version: 0 (expected 0x1)
+  out/test/spec/multi-memory/binary/binary.26.wasm:0000008: error: bad wasm file version: 0 (expected 0x1)
 out/test/spec/multi-memory/binary.wast:41: assert_malformed passed:
-  0000008: error: bad wasm file version: 0xd (expected 0x1)
+  out/test/spec/multi-memory/binary/binary.27.wasm:0000008: error: bad wasm file version: 0xd (expected 0x1)
 out/test/spec/multi-memory/binary.wast:42: assert_malformed passed:
-  0000008: error: bad wasm file version: 0xe (expected 0x1)
+  out/test/spec/multi-memory/binary/binary.28.wasm:0000008: error: bad wasm file version: 0xe (expected 0x1)
 out/test/spec/multi-memory/binary.wast:43: assert_malformed passed:
-  0000008: error: bad wasm file version: 0x100 (expected 0x1)
+  out/test/spec/multi-memory/binary/binary.29.wasm:0000008: error: bad wasm file version: 0x100 (expected 0x1)
 out/test/spec/multi-memory/binary.wast:44: assert_malformed passed:
-  0000008: error: bad wasm file version: 0x10000 (expected 0x1)
+  out/test/spec/multi-memory/binary/binary.30.wasm:0000008: error: bad wasm file version: 0x10000 (expected 0x1)
 out/test/spec/multi-memory/binary.wast:45: assert_malformed passed:
-  0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
+  out/test/spec/multi-memory/binary/binary.31.wasm:0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
 out/test/spec/multi-memory/binary.wast:48: assert_malformed passed:
-  000000a: error: invalid section code: 14
+  out/test/spec/multi-memory/binary/binary.32.wasm:000000a: error: invalid section code: 14
 out/test/spec/multi-memory/binary.wast:49: assert_malformed passed:
-  000000a: error: invalid section code: 127
+  out/test/spec/multi-memory/binary/binary.33.wasm:000000a: error: invalid section code: 127
 out/test/spec/multi-memory/binary.wast:50: assert_malformed passed:
-  000000a: error: invalid section code: 128
+  out/test/spec/multi-memory/binary/binary.34.wasm:000000a: error: invalid section code: 128
 out/test/spec/multi-memory/binary.wast:51: assert_malformed passed:
-  000000a: error: invalid section code: 129
+  out/test/spec/multi-memory/binary/binary.35.wasm:000000a: error: invalid section code: 129
 out/test/spec/multi-memory/binary.wast:52: assert_malformed passed:
-  000000a: error: invalid section code: 255
+  out/test/spec/multi-memory/binary/binary.36.wasm:000000a: error: invalid section code: 255
 out/test/spec/multi-memory/binary.wast:210: assert_malformed passed:
-  000000c: error: unexpected type form (got 0xe0)
+  out/test/spec/multi-memory/binary/binary.56.wasm:000000c: error: unexpected type form (got 0xe0)
 out/test/spec/multi-memory/binary.wast:223: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/multi-memory/binary/binary.57.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:233: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.58.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:243: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.59.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:254: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.60.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:264: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.61.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:276: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/multi-memory/binary/binary.62.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:284: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/multi-memory/binary/binary.63.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:294: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.64.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:304: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.65.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:314: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.66.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:324: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.67.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:335: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.68.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:345: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.69.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:355: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.70.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:365: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.71.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:376: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.72.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:386: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.73.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:396: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.74.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:406: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.75.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:418: assert_malformed passed:
-  000001b: error: function body must end with END opcode
+  out/test/spec/multi-memory/binary/binary.76.wasm:000001b: error: function body must end with END opcode
 out/test/spec/multi-memory/binary.wast:439: assert_malformed passed:
-  000001a: error: function body must end with END opcode
+  out/test/spec/multi-memory/binary/binary.77.wasm:000001a: error: function body must end with END opcode
 out/test/spec/multi-memory/binary.wast:455: assert_malformed passed:
-  000001a: error: function body must end with END opcode
+  out/test/spec/multi-memory/binary/binary.78.wasm:000001a: error: function body must end with END opcode
 out/test/spec/multi-memory/binary.wast:475: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/multi-memory/binary/binary.79.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:483: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  out/test/spec/multi-memory/binary/binary.80.wasm:0000022: error: unable to read u32 leb128: load offset
 out/test/spec/multi-memory/binary.wast:502: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
+  out/test/spec/multi-memory/binary/binary.81.wasm:0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/multi-memory/binary.wast:521: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
+  out/test/spec/multi-memory/binary/binary.82.wasm:0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/multi-memory/binary.wast:540: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  out/test/spec/multi-memory/binary/binary.83.wasm:0000024: error: unable to read u32 leb128: store offset
 out/test/spec/multi-memory/binary.wast:561: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.84.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:571: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.85.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:582: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.86.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:592: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.87.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:604: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/multi-memory/binary/binary.88.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:612: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  out/test/spec/multi-memory/binary/binary.89.wasm:000000c: error: unable to read u32 leb128: memory initial page count
 out/test/spec/multi-memory/binary.wast:620: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  out/test/spec/multi-memory/binary/binary.90.wasm:0000022: error: unable to read u32 leb128: load offset
 out/test/spec/multi-memory/binary.wast:639: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
+  out/test/spec/multi-memory/binary/binary.91.wasm:0000022: error: unable to read u32 leb128: load offset
 out/test/spec/multi-memory/binary.wast:658: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
+  out/test/spec/multi-memory/binary/binary.92.wasm:0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/multi-memory/binary.wast:676: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
+  out/test/spec/multi-memory/binary/binary.93.wasm:0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/multi-memory/binary.wast:695: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
+  out/test/spec/multi-memory/binary/binary.94.wasm:0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/multi-memory/binary.wast:714: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
+  out/test/spec/multi-memory/binary/binary.95.wasm:0000023: error: unable to read u32 leb128: store alignment
 out/test/spec/multi-memory/binary.wast:733: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  out/test/spec/multi-memory/binary/binary.96.wasm:0000024: error: unable to read u32 leb128: store offset
 out/test/spec/multi-memory/binary.wast:752: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
+  out/test/spec/multi-memory/binary/binary.97.wasm:0000024: error: unable to read u32 leb128: store offset
 out/test/spec/multi-memory/binary.wast:774: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.98.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:784: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.99.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:794: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.100.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:804: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: i32.const value
+  out/test/spec/multi-memory/binary/binary.101.wasm:000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/multi-memory/binary.wast:815: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.102.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:825: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.103.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:835: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.104.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:845: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: i64.const value
+  out/test/spec/multi-memory/binary/binary.105.wasm:000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/multi-memory/binary.wast:857: assert_malformed passed:
-  0000017: error: unable to read u32 leb128: local type count
+  out/test/spec/multi-memory/binary/binary.106.wasm:0000017: error: unable to read u32 leb128: local type count
 out/test/spec/multi-memory/binary.wast:874: assert_malformed passed:
-  0000017: error: unable to read u32 leb128: local type count
+  out/test/spec/multi-memory/binary/binary.107.wasm:0000017: error: unable to read u32 leb128: local type count
 out/test/spec/multi-memory/binary.wast:891: assert_malformed passed:
-  000001e: error: local count must be <= 0xffffffff
+  out/test/spec/multi-memory/binary/binary.108.wasm:000001e: error: local count must be <= 0xffffffff
 out/test/spec/multi-memory/binary.wast:907: assert_malformed passed:
-  0000030: error: local count must be <= 0xffffffff
+  out/test/spec/multi-memory/binary/binary.109.wasm:0000030: error: local count must be <= 0xffffffff
 out/test/spec/multi-memory/binary.wast:941: assert_malformed passed:
-  0000013: error: function signature count != function body count
+  out/test/spec/multi-memory/binary/binary.111.wasm:0000013: error: function signature count != function body count
 out/test/spec/multi-memory/binary.wast:951: assert_malformed passed:
-  000000b: error: function signature count != function body count
+  out/test/spec/multi-memory/binary/binary.112.wasm:000000b: error: function signature count != function body count
 out/test/spec/multi-memory/binary.wast:960: assert_malformed passed:
-  0000016: error: function signature count != function body count
+  out/test/spec/multi-memory/binary/binary.113.wasm:0000016: error: function signature count != function body count
 out/test/spec/multi-memory/binary.wast:971: assert_malformed passed:
-  0000015: error: function signature count != function body count
+  out/test/spec/multi-memory/binary/binary.114.wasm:0000015: error: function signature count != function body count
 out/test/spec/multi-memory/binary.wast:994: assert_malformed passed:
-  000000e: error: data segment count does not equal count in DataCount section
+  out/test/spec/multi-memory/binary/binary.117.wasm:000000e: error: data segment count does not equal count in DataCount section
 out/test/spec/multi-memory/binary.wast:1004: assert_malformed passed:
-  000000e: error: data segment count does not equal count in DataCount section
+  out/test/spec/multi-memory/binary/binary.118.wasm:000000e: error: data segment count does not equal count in DataCount section
 out/test/spec/multi-memory/binary.wast:1014: assert_malformed passed:
-  0000024: error: memory.init requires data count section
+  out/test/spec/multi-memory/binary/binary.119.wasm:0000024: error: memory.init requires data count section
 out/test/spec/multi-memory/binary.wast:1036: assert_malformed passed:
-  000001e: error: data.drop requires data count section
+  out/test/spec/multi-memory/binary/binary.120.wasm:000001e: error: data.drop requires data count section
 out/test/spec/multi-memory/binary.wast:1055: assert_malformed passed:
-  0000024: error: expected ref.null or ref.func in passive element segment
-  0000025: error: expected END opcode after element expression
+  out/test/spec/multi-memory/binary/binary.121.wasm:0000024: error: expected ref.null or ref.func in passive element segment
+  out/test/spec/multi-memory/binary/binary.121.wasm:0000025: error: expected END opcode after element expression
 out/test/spec/multi-memory/binary.wast:1081: assert_malformed passed:
-  0000022: error: table elem type must be a reference type
+  out/test/spec/multi-memory/binary/binary.122.wasm:0000022: error: table elem type must be a reference type
 out/test/spec/multi-memory/binary.wast:1162: assert_malformed passed:
-  000000a: error: invalid section size: extends past end
+  out/test/spec/multi-memory/binary/binary.126.wasm:000000a: error: invalid section size: extends past end
 out/test/spec/multi-memory/binary.wast:1173: assert_malformed passed:
-  000000e: error: unfinished section (expected end: 0x11)
+  out/test/spec/multi-memory/binary/binary.127.wasm:000000e: error: unfinished section (expected end: 0x11)
 out/test/spec/multi-memory/binary.wast:1192: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
+  out/test/spec/multi-memory/binary/binary.129.wasm:000000e: error: invalid import tag kind: exceptions not allowed
 out/test/spec/multi-memory/binary.wast:1202: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
+  out/test/spec/multi-memory/binary/binary.130.wasm:000000e: error: invalid import tag kind: exceptions not allowed
 out/test/spec/multi-memory/binary.wast:1213: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  out/test/spec/multi-memory/binary/binary.131.wasm:000000e: error: malformed import kind: 5
 out/test/spec/multi-memory/binary.wast:1223: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  out/test/spec/multi-memory/binary/binary.132.wasm:000000e: error: malformed import kind: 5
 out/test/spec/multi-memory/binary.wast:1234: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  out/test/spec/multi-memory/binary/binary.133.wasm:000000e: error: malformed import kind: 128
 out/test/spec/multi-memory/binary.wast:1244: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  out/test/spec/multi-memory/binary/binary.134.wasm:000000e: error: malformed import kind: 128
 out/test/spec/multi-memory/binary.wast:1257: assert_malformed passed:
-  0000027: error: unable to read u32 leb128: string length
+  out/test/spec/multi-memory/binary/binary.135.wasm:0000027: error: unable to read u32 leb128: string length
 out/test/spec/multi-memory/binary.wast:1276: assert_malformed passed:
-  000002b: error: unfinished section (expected end: 0x40)
+  out/test/spec/multi-memory/binary/binary.136.wasm:000002b: error: unfinished section (expected end: 0x40)
 out/test/spec/multi-memory/binary.wast:1307: assert_malformed passed:
-  000000b: error: invalid table count 1, only 0 bytes left in section
+  out/test/spec/multi-memory/binary/binary.138.wasm:000000b: error: invalid table count 1, only 0 bytes left in section
 out/test/spec/multi-memory/binary.wast:1317: assert_malformed passed:
-  000000d: error: tables may not be shared
+  out/test/spec/multi-memory/binary/binary.139.wasm:000000d: error: tables may not be shared
 out/test/spec/multi-memory/binary.wast:1326: assert_malformed passed:
-  000000d: error: tables may not be shared
+  out/test/spec/multi-memory/binary/binary.140.wasm:000000d: error: tables may not be shared
 out/test/spec/multi-memory/binary.wast:1336: assert_malformed passed:
-  000000d: error: malformed table limits flag: 129
+  out/test/spec/multi-memory/binary/binary.141.wasm:000000d: error: malformed table limits flag: 129
 out/test/spec/multi-memory/binary.wast:1354: assert_malformed passed:
-  000000b: error: invalid memory count 1, only 0 bytes left in section
+  out/test/spec/multi-memory/binary/binary.143.wasm:000000b: error: invalid memory count 1, only 0 bytes left in section
 out/test/spec/multi-memory/binary.wast:1364: assert_malformed passed:
-  000000c: error: memory may not be shared: threads not allowed
+  out/test/spec/multi-memory/binary/binary.144.wasm:000000c: error: memory may not be shared: threads not allowed
 out/test/spec/multi-memory/binary.wast:1372: assert_malformed passed:
-  000000c: error: memory may not be shared: threads not allowed
+  out/test/spec/multi-memory/binary/binary.145.wasm:000000c: error: memory may not be shared: threads not allowed
 out/test/spec/multi-memory/binary.wast:1381: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 129
+  out/test/spec/multi-memory/binary/binary.146.wasm:000000c: error: malformed memory limits flag: 129
 out/test/spec/multi-memory/binary.wast:1390: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 129
+  out/test/spec/multi-memory/binary/binary.147.wasm:000000c: error: malformed memory limits flag: 129
 out/test/spec/multi-memory/binary.wast:1407: assert_malformed passed:
-  0000010: error: unable to read i32 leb128: global type
+  out/test/spec/multi-memory/binary/binary.149.wasm:0000010: error: unable to read i32 leb128: global type
 out/test/spec/multi-memory/binary.wast:1418: assert_malformed passed:
-  0000010: error: unfinished section (expected end: 0x15)
+  out/test/spec/multi-memory/binary/binary.150.wasm:0000010: error: unfinished section (expected end: 0x15)
 out/test/spec/multi-memory/binary.wast:1441: assert_malformed passed:
-  000001b: error: unable to read u32 leb128: string length
+  out/test/spec/multi-memory/binary/binary.152.wasm:000001b: error: unable to read u32 leb128: string length
 out/test/spec/multi-memory/binary.wast:1462: assert_malformed passed:
-  000001b: error: unfinished section (expected end: 0x20)
+  out/test/spec/multi-memory/binary/binary.153.wasm:000001b: error: unfinished section (expected end: 0x20)
 out/test/spec/multi-memory/binary.wast:1496: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: elem segment flags
+  out/test/spec/multi-memory/binary/binary.155.wasm:0000021: error: unable to read u32 leb128: elem segment flags
 out/test/spec/multi-memory/binary.wast:1512: assert_malformed passed:
-  0000024: error: init expression must end with END opcode
+  out/test/spec/multi-memory/binary/binary.156.wasm:0000024: error: init expression must end with END opcode
 out/test/spec/multi-memory/binary.wast:1529: assert_malformed passed:
-  0000021: error: unfinished section (expected end: 0x27)
+  out/test/spec/multi-memory/binary/binary.157.wasm:0000021: error: unfinished section (expected end: 0x27)
 out/test/spec/multi-memory/binary.wast:1555: assert_malformed passed:
-  0000016: error: unable to read u32 leb128: data segment flags
+  out/test/spec/multi-memory/binary/binary.159.wasm:0000016: error: unable to read u32 leb128: data segment flags
 out/test/spec/multi-memory/binary.wast:1568: assert_malformed passed:
-  0000016: error: unfinished section (expected end: 0x1c)
+  out/test/spec/multi-memory/binary/binary.160.wasm:0000016: error: unfinished section (expected end: 0x1c)
 out/test/spec/multi-memory/binary.wast:1581: assert_malformed passed:
-  0000015: error: unable to read data: data segment data
+  out/test/spec/multi-memory/binary/binary.161.wasm:0000015: error: unable to read data: data segment data
 out/test/spec/multi-memory/binary.wast:1595: assert_malformed passed:
-  000001a: error: unfinished section (expected end: 0x1b)
+  out/test/spec/multi-memory/binary/binary.162.wasm:000001a: error: unfinished section (expected end: 0x1b)
 out/test/spec/multi-memory/binary.wast:1626: assert_malformed passed:
   out/test/spec/multi-memory/binary/binary.164.wasm:0000025: error: function type variable out of range: 11 (max 1)
-  0000025: error: OnBlockExpr callback failed
+  out/test/spec/multi-memory/binary/binary.164.wasm:0000025: error: OnBlockExpr callback failed
 out/test/spec/multi-memory/binary.wast:1661: assert_malformed passed:
-  0000017: error: multiple Start sections
+  out/test/spec/multi-memory/binary/binary.166.wasm:0000017: error: multiple Start sections
 167/167 tests passed.
 ;;; STDOUT ;;)

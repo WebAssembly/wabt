@@ -13,7 +13,7 @@ section(CODE) {
 }
 (;; STDERR ;;;
 error: accessing stack depth: 0 >= max: 0
-000001a: error: OnNopExpr callback failed
+out/test/binary/bad-op-after-end/bad-op-after-end.wasm:000001a: error: OnNopExpr callback failed
 error: accessing stack depth: 0 >= max: 0
-000001a: error: OnNopExpr callback failed
+out/test/binary/bad-op-after-end/bad-op-after-end.wasm:000001a: error: OnNopExpr callback failed
 ;;; STDERR ;;)

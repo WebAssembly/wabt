@@ -19,7 +19,7 @@ section("linking") {
 }
 (;; STDERR ;;;
 error: invalid function index: 1
-0000032: error: OnFunctionSymbol callback failed
+out/test/binary/bad-linking-function-index/bad-linking-function-index.wasm:0000032: error: OnFunctionSymbol callback failed
 error: invalid function index: 1
-0000032: error: OnFunctionSymbol callback failed
+out/test/binary/bad-linking-function-index/bad-linking-function-index.wasm:0000032: error: OnFunctionSymbol callback failed
 ;;; STDERR ;;)

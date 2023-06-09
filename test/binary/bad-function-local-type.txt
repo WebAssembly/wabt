@@ -11,6 +11,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000019: error: expected valid local type
-0000019: error: expected valid local type
+out/test/binary/bad-function-local-type/bad-function-local-type.wasm:0000019: error: expected valid local type
+out/test/binary/bad-function-local-type/bad-function-local-type.wasm:0000019: error: expected valid local type
 ;;; STDERR ;;)

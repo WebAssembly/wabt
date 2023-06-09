@@ -18,6 +18,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-0000028: error: invalid function index: 8
-0000028: error: invalid function index: 8
+out/test/binary/bad-name-section-invalid-index/bad-name-section-invalid-index.wasm:0000028: error: invalid function index: 8
+out/test/binary/bad-name-section-invalid-index/bad-name-section-invalid-index.wasm:0000028: error: invalid function index: 8
 ;;; STDERR ;;)

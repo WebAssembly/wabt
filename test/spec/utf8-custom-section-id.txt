@@ -2,356 +2,356 @@
 ;;; STDIN_FILE: third_party/testsuite/utf8-custom-section-id.wast
 (;; STDOUT ;;;
 out/test/spec/utf8-custom-section-id.wast:7: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.0.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:17: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.1.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:27: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.2.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:37: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.3.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:47: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.4.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:57: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.5.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:69: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.6.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:79: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.7.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:89: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.8.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:101: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.9.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:111: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.10.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:121: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.11.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:131: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.12.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:141: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.13.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:151: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.14.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:161: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.15.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:171: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.16.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:181: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.17.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:191: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.18.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:201: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.19.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:211: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.20.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:223: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.21.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:233: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.22.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:243: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.23.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:253: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.24.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:263: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.25.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:275: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.26.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:285: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.27.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:295: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.28.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:305: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.29.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:315: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.30.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:325: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.31.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:335: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.32.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:345: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.33.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:355: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.34.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:365: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.35.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:375: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.36.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:385: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.37.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:395: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.38.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:405: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.39.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:415: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.40.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:425: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.41.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:435: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.42.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:445: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.43.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:455: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.44.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:465: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.45.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:475: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.46.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:485: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.47.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:495: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.48.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:505: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.49.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:515: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.50.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:525: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.51.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:535: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.52.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:545: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.53.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:555: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.54.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:565: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.55.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:575: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.56.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:585: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.57.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:597: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.58.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:607: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.59.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:617: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.60.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:627: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.61.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:637: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.62.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:647: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.63.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:657: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.64.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:667: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.65.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:677: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.66.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:687: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.67.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:697: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.68.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:707: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.69.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:717: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.70.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:727: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.71.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:737: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.72.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:747: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.73.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:757: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.74.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:767: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.75.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:777: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.76.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:787: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.77.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:797: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.78.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:807: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.79.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:817: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.80.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:827: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.81.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:839: assert_malformed passed:
-  0000010: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.82.wasm:0000010: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:849: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.83.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:859: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.84.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:869: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.85.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:879: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.86.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:889: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.87.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:899: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.88.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:911: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.89.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:921: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.90.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:931: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.91.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:941: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.92.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:951: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.93.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:961: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.94.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:971: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.95.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:981: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.96.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:991: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.97.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1001: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.98.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1011: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.99.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1021: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.100.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1031: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.101.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1041: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.102.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1051: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.103.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1061: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.104.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1071: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.105.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1081: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.106.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1091: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.107.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1101: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.108.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1111: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.109.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1121: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.110.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1131: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.111.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1141: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.112.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1151: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.113.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1163: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.114.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1173: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.115.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1183: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.116.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1193: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.117.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1203: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.118.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1213: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.119.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1223: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.120.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1233: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.121.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1243: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.122.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1253: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.123.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1263: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.124.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1273: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.125.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1283: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.126.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1293: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.127.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1303: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.128.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1313: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.129.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1325: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.130.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1335: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.131.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1345: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.132.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1355: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.133.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1365: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.134.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1375: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.135.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1385: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.136.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1395: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.137.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1405: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.138.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1415: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.139.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1425: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.140.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1435: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.141.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1445: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.142.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1455: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.143.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1465: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.144.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1475: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.145.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1487: assert_malformed passed:
-  0000011: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.146.wasm:0000011: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1497: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.147.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1507: assert_malformed passed:
-  0000010: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.148.wasm:0000010: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1517: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.149.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1527: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.150.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1537: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.151.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1547: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.152.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1557: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.153.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1567: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.154.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1579: assert_malformed passed:
-  0000010: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.155.wasm:0000010: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1589: assert_malformed passed:
-  0000010: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.156.wasm:0000010: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1601: assert_malformed passed:
-  0000012: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.157.wasm:0000012: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1611: assert_malformed passed:
-  0000010: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.158.wasm:0000010: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1621: assert_malformed passed:
-  0000011: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.159.wasm:0000011: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1631: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.160.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1641: assert_malformed passed:
-  0000010: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.161.wasm:0000010: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1651: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.162.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1661: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.163.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1671: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.164.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1681: assert_malformed passed:
-  000000e: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.165.wasm:000000e: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1691: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.166.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1701: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.167.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1713: assert_malformed passed:
-  0000011: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.168.wasm:0000011: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1723: assert_malformed passed:
-  0000011: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.169.wasm:0000011: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1735: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.170.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1745: assert_malformed passed:
-  000000c: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.171.wasm:000000c: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1755: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.172.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1765: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.173.wasm:000000f: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1775: assert_malformed passed:
-  000000d: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.174.wasm:000000d: error: invalid utf-8 encoding: section name
 out/test/spec/utf8-custom-section-id.wast:1785: assert_malformed passed:
-  000000f: error: invalid utf-8 encoding: section name
+  out/test/spec/utf8-custom-section-id/utf8-custom-section-id.175.wasm:000000f: error: invalid utf-8 encoding: section name
 176/176 tests passed.
 ;;; STDOUT ;;)

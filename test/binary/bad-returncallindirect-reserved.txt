@@ -19,6 +19,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000022: error: return_call_indirect reserved value must be 0
-0000022: error: return_call_indirect reserved value must be 0
+out/test/binary/bad-returncallindirect-reserved/bad-returncallindirect-reserved.wasm:0000022: error: return_call_indirect reserved value must be 0
+out/test/binary/bad-returncallindirect-reserved/bad-returncallindirect-reserved.wasm:0000022: error: return_call_indirect reserved value must be 0
 ;;; STDERR ;;)

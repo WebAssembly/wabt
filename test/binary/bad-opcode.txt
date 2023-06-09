@@ -11,6 +11,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000019: error: unexpected opcode: 0xff
-0000019: error: unexpected opcode: 0xff
+out/test/binary/bad-opcode/bad-opcode.wasm:0000019: error: unexpected opcode: 0xff
+out/test/binary/bad-opcode/bad-opcode.wasm:0000019: error: unexpected opcode: 0xff
 ;;; STDERR ;;)

@@ -20,8 +20,8 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000019: warning: unable to read u32 leb128: subsection size
-0000019: warning: unable to read u32 leb128: subsection size
+out/test/binary/ignore-custom-section-error-wasm2wat/ignore-custom-section-error-wasm2wat.wasm:0000019: warning: unable to read u32 leb128: subsection size
+out/test/binary/ignore-custom-section-error-wasm2wat/ignore-custom-section-error-wasm2wat.wasm:0000019: warning: unable to read u32 leb128: subsection size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 (module

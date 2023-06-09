@@ -5,132 +5,132 @@
 out/test/spec/extended-const/global.wast:263: assert_trap passed: undefined table index
 out/test/spec/extended-const/global.wast:285: assert_invalid passed:
   out/test/spec/extended-const/global/global.1.wasm:0000029: error: can't global.set on immutable global at index 0.
-  0000029: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.1.wasm:0000029: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:290: assert_invalid passed:
   out/test/spec/extended-const/global/global.2.wasm:0000035: error: can't global.set on immutable global at index 0.
-  0000035: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.2.wasm:0000035: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:299: assert_invalid passed:
   out/test/spec/extended-const/global/global.5.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: f32.neg
-  0000013: error: OnUnaryExpr callback failed
+  out/test/spec/extended-const/global/global.5.wasm:0000013: error: OnUnaryExpr callback failed
 out/test/spec/extended-const/global.wast:304: assert_invalid passed:
   out/test/spec/extended-const/global/global.6.wasm:000000f: error: invalid initializer: instruction not valid in initializer expression: local.get
-  000000f: error: OnLocalGetExpr callback failed
+  out/test/spec/extended-const/global/global.6.wasm:000000f: error: OnLocalGetExpr callback failed
 out/test/spec/extended-const/global.wast:309: assert_invalid passed:
   out/test/spec/extended-const/global/global.7.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: f32.neg
-  0000013: error: OnUnaryExpr callback failed
+  out/test/spec/extended-const/global/global.7.wasm:0000013: error: OnUnaryExpr callback failed
 out/test/spec/extended-const/global.wast:314: assert_invalid passed:
   out/test/spec/extended-const/global/global.8.wasm:0000010: error: invalid initializer: instruction not valid in initializer expression: nop
-  0000010: error: OnNopExpr callback failed
+  out/test/spec/extended-const/global/global.8.wasm:0000010: error: OnNopExpr callback failed
 out/test/spec/extended-const/global.wast:319: assert_invalid passed:
   out/test/spec/extended-const/global/global.9.wasm:0000010: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
-  0000010: error: OnUnaryExpr callback failed
+  out/test/spec/extended-const/global/global.9.wasm:0000010: error: OnUnaryExpr callback failed
 out/test/spec/extended-const/global.wast:324: assert_invalid passed:
   out/test/spec/extended-const/global/global.10.wasm:000000e: error: invalid initializer: instruction not valid in initializer expression: nop
-  000000e: error: OnNopExpr callback failed
+  out/test/spec/extended-const/global/global.10.wasm:000000e: error: OnNopExpr callback failed
 out/test/spec/extended-const/global.wast:329: assert_invalid passed:
   out/test/spec/extended-const/global/global.11.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got [f32]
-  0000013: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.11.wasm:0000013: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:334: assert_invalid passed:
   out/test/spec/extended-const/global/global.12.wasm:0000011: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000012: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.12.wasm:0000012: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:339: assert_invalid passed:
   out/test/spec/extended-const/global/global.13.wasm:000000d: error: type mismatch in initializer expression, expected [i32] but got []
-  000000e: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.13.wasm:000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:344: assert_invalid passed:
   out/test/spec/extended-const/global/global.14.wasm:0000017: error: type mismatch in initializer expression, expected [funcref] but got [externref]
-  0000018: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.14.wasm:0000018: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:349: assert_invalid passed:
   out/test/spec/extended-const/global/global.15.wasm:0000027: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000028: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.15.wasm:0000028: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:354: assert_invalid passed:
   out/test/spec/extended-const/global/global.16.wasm:0000027: error: type mismatch at end of initializer expression, expected [] but got [i32]
-  0000028: error: EndGlobalInitExpr callback failed
+  out/test/spec/extended-const/global/global.16.wasm:0000028: error: EndGlobalInitExpr callback failed
 out/test/spec/extended-const/global.wast:359: assert_invalid passed:
   out/test/spec/extended-const/global/global.17.wasm:000000f: error: initializer expression can only reference an imported global
-  000000f: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.17.wasm:000000f: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:364: assert_invalid passed:
   out/test/spec/extended-const/global/global.18.wasm:0000014: error: initializer expression can only reference an imported global
-  0000014: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.18.wasm:0000014: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:368: assert_invalid passed:
   out/test/spec/extended-const/global/global.19.wasm:0000014: error: initializer expression can only reference an imported global
-  0000014: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.19.wasm:0000014: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:373: assert_invalid passed:
   out/test/spec/extended-const/global/global.20.wasm:000000f: error: global variable out of range: 1 (max 1)
-  000000f: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.20.wasm:000000f: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:378: assert_invalid passed:
   out/test/spec/extended-const/global/global.21.wasm:0000025: error: global variable out of range: 2 (max 2)
-  0000025: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.21.wasm:0000025: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:383: assert_invalid passed:
   out/test/spec/extended-const/global/global.22.wasm:0000029: error: initializer expression cannot reference a mutable global
-  0000029: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.22.wasm:0000029: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:391: assert_malformed passed:
-  0000026: error: global mutability must be 0 or 1
+  out/test/spec/extended-const/global/global.24.wasm:0000026: error: global mutability must be 0 or 1
 out/test/spec/extended-const/global.wast:404: assert_malformed passed:
-  0000026: error: global mutability must be 0 or 1
+  out/test/spec/extended-const/global/global.25.wasm:0000026: error: global mutability must be 0 or 1
 out/test/spec/extended-const/global.wast:421: assert_malformed passed:
-  0000011: error: global mutability must be 0 or 1
+  out/test/spec/extended-const/global/global.27.wasm:0000011: error: global mutability must be 0 or 1
 out/test/spec/extended-const/global.wast:433: assert_malformed passed:
-  0000011: error: global mutability must be 0 or 1
+  out/test/spec/extended-const/global/global.28.wasm:0000011: error: global mutability must be 0 or 1
 out/test/spec/extended-const/global.wast:447: assert_invalid passed:
   out/test/spec/extended-const/global/global.29.wasm:000001a: error: global variable out of range: 0 (max 0)
-  000001a: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.29.wasm:000001a: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:452: assert_invalid passed:
   out/test/spec/extended-const/global/global.30.wasm:0000022: error: global variable out of range: 1 (max 1)
-  0000022: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.30.wasm:0000022: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:460: assert_invalid passed:
   out/test/spec/extended-const/global/global.31.wasm:0000034: error: global variable out of range: 1 (max 1)
-  0000034: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.31.wasm:0000034: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:468: assert_invalid passed:
   out/test/spec/extended-const/global/global.32.wasm:000003c: error: global variable out of range: 2 (max 2)
-  000003c: error: OnGlobalGetExpr callback failed
+  out/test/spec/extended-const/global/global.32.wasm:000003c: error: OnGlobalGetExpr callback failed
 out/test/spec/extended-const/global.wast:478: assert_invalid passed:
   out/test/spec/extended-const/global/global.33.wasm:000001b: error: global variable out of range: 0 (max 0)
-  000001b: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.33.wasm:000001b: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:483: assert_invalid passed:
   out/test/spec/extended-const/global/global.34.wasm:0000023: error: global variable out of range: 1 (max 1)
-  0000023: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.34.wasm:0000023: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:491: assert_invalid passed:
   out/test/spec/extended-const/global/global.35.wasm:0000035: error: global variable out of range: 1 (max 1)
-  0000035: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.35.wasm:0000035: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:499: assert_invalid passed:
   out/test/spec/extended-const/global/global.36.wasm:000003d: error: global variable out of range: 2 (max 2)
-  000003d: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.36.wasm:000003d: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:509: assert_invalid passed:
   out/test/spec/extended-const/global/global.37.wasm:0000021: error: type mismatch in global.set, expected [i32] but got []
-  0000021: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.37.wasm:0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:518: assert_invalid passed:
   out/test/spec/extended-const/global/global.38.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
-  0000025: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.38.wasm:0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:528: assert_invalid passed:
   out/test/spec/extended-const/global/global.39.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
-  0000025: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.39.wasm:0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:538: assert_invalid passed:
   out/test/spec/extended-const/global/global.40.wasm:0000027: error: type mismatch in global.set, expected [i32] but got []
-  0000027: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.40.wasm:0000027: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:548: assert_invalid passed:
   out/test/spec/extended-const/global/global.41.wasm:000002a: error: type mismatch in global.set, expected [i32] but got []
-  000002a: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.41.wasm:000002a: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:558: assert_invalid passed:
   out/test/spec/extended-const/global/global.42.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
-  0000025: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.42.wasm:0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:568: assert_invalid passed:
   out/test/spec/extended-const/global/global.43.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
-  0000025: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.43.wasm:0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:578: assert_invalid passed:
   out/test/spec/extended-const/global/global.44.wasm:0000025: error: type mismatch in global.set, expected [i32] but got []
-  0000025: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.44.wasm:0000025: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:588: assert_invalid passed:
   out/test/spec/extended-const/global/global.45.wasm:0000021: error: type mismatch in global.set, expected [i32] but got []
-  0000021: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.45.wasm:0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:597: assert_invalid passed:
   out/test/spec/extended-const/global/global.46.wasm:0000021: error: type mismatch in global.set, expected [i32] but got []
-  0000021: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.46.wasm:0000021: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:606: assert_invalid passed:
   out/test/spec/extended-const/global/global.47.wasm:0000027: error: type mismatch in global.set, expected [i32] but got []
-  0000027: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.47.wasm:0000027: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:616: assert_invalid passed:
   out/test/spec/extended-const/global/global.48.wasm:000003e: error: type mismatch in global.set, expected [i32] but got []
-  000003e: error: OnGlobalSetExpr callback failed
+  out/test/spec/extended-const/global/global.48.wasm:000003e: error: OnGlobalSetExpr callback failed
 out/test/spec/extended-const/global.wast:634: assert_malformed passed:
   out/test/spec/extended-const/global/global.49.wat:1:33: error: redefinition of global "$foo"
   (global $foo i32 (i32.const 0))(global $foo i32 (i32.const 0))

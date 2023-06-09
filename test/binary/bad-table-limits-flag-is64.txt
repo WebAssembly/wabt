@@ -7,6 +7,6 @@ section(TABLE) {
   flags[4]
 }
 (;; STDERR ;;;
-000000d: error: tables may not be 64-bit
-000000d: error: tables may not be 64-bit
+out/test/binary/bad-table-limits-flag-is64/bad-table-limits-flag-is64.wasm:000000d: error: tables may not be 64-bit
+out/test/binary/bad-table-limits-flag-is64/bad-table-limits-flag-is64.wasm:000000d: error: tables may not be 64-bit
 ;;; STDERR ;;)

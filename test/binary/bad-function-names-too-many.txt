@@ -15,7 +15,7 @@ section("name") {
 }
 (;; STDERR ;;;
 error: expected function name count (2) <= function count (1)
-0000023: error: OnFunctionNamesCount callback failed
+out/test/binary/bad-function-names-too-many/bad-function-names-too-many.wasm:0000023: error: OnFunctionNamesCount callback failed
 error: expected function name count (2) <= function count (1)
-0000023: error: OnFunctionNamesCount callback failed
+out/test/binary/bad-function-names-too-many/bad-function-names-too-many.wasm:0000023: error: OnFunctionNamesCount callback failed
 ;;; STDERR ;;)

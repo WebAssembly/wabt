@@ -15,7 +15,7 @@ called host spectest.print_f64(f64:24.000000) =>
 called host spectest.print_f64(f64:24.000000) =>
 out/test/spec/imports.wast:89: assert_invalid passed:
   out/test/spec/imports/imports.2.wasm:000001e: error: function type variable out of range: 1 (max 1)
-  000001e: error: OnImportFunc callback failed
+  out/test/spec/imports/imports.2.wasm:000001e: error: OnImportFunc callback failed
 called host spectest.print_i32(i32:13) =>
 out/test/spec/imports.wast:125: assert_unlinkable passed:
   error: invalid import "test.unknown"
@@ -139,13 +139,13 @@ out/test/spec/imports.wast:469: assert_trap passed: out of bounds memory access:
 out/test/spec/imports.wast:480: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
 out/test/spec/imports.wast:483: assert_invalid passed:
   out/test/spec/imports/imports.97.wasm:0000015: error: only one memory block allowed
-  0000015: error: OnImportMemory callback failed
+  out/test/spec/imports/imports.97.wasm:0000015: error: OnImportMemory callback failed
 out/test/spec/imports.wast:487: assert_invalid passed:
   out/test/spec/imports/imports.98.wasm:0000015: error: only one memory block allowed
-  0000015: error: OnMemory callback failed
+  out/test/spec/imports/imports.98.wasm:0000015: error: OnMemory callback failed
 out/test/spec/imports.wast:491: assert_invalid passed:
   out/test/spec/imports/imports.99.wasm:000000f: error: only one memory block allowed
-  000000f: error: OnMemory callback failed
+  out/test/spec/imports/imports.99.wasm:000000f: error: OnMemory callback failed
 out/test/spec/imports.wast:506: assert_unlinkable passed:
   error: invalid import "test.unknown"
 out/test/spec/imports.wast:510: assert_unlinkable passed:

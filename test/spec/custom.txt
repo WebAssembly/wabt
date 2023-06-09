@@ -2,20 +2,20 @@
 ;;; STDIN_FILE: third_party/testsuite/custom.wast
 (;; STDOUT ;;;
 out/test/spec/custom.wast:61: assert_malformed passed:
-  0000009: error: unable to read u32 leb128: section size
+  out/test/spec/custom/custom.3.wasm:0000009: error: unable to read u32 leb128: section size
 out/test/spec/custom.wast:69: assert_malformed passed:
-  000000a: error: unable to read u32 leb128: string length
+  out/test/spec/custom/custom.4.wasm:000000a: error: unable to read u32 leb128: string length
 out/test/spec/custom.wast:77: assert_malformed passed:
-  000000a: error: unable to read u32 leb128: string length
+  out/test/spec/custom/custom.5.wasm:000000a: error: unable to read u32 leb128: string length
 out/test/spec/custom.wast:85: assert_malformed passed:
-  000000a: error: invalid section size: extends past end
+  out/test/spec/custom/custom.6.wasm:000000a: error: invalid section size: extends past end
 out/test/spec/custom.wast:93: assert_malformed passed:
-  0000031: error: invalid section code: 36
+  out/test/spec/custom/custom.7.wasm:0000031: error: invalid section code: 36
 out/test/spec/custom.wast:102: assert_malformed passed:
-  000003e: error: function signature count != function body count
+  out/test/spec/custom/custom.8.wasm:000003e: error: function signature count != function body count
 out/test/spec/custom.wast:115: assert_malformed passed:
-  000000a: error: invalid section size: extends past end
+  out/test/spec/custom/custom.9.wasm:000000a: error: invalid section size: extends past end
 out/test/spec/custom.wast:123: assert_malformed passed:
-  0000013: error: data segment count does not equal count in DataCount section
+  out/test/spec/custom/custom.10.wasm:0000013: error: data segment count does not equal count in DataCount section
 11/11 tests passed.
 ;;; STDOUT ;;)

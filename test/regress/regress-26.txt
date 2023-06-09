@@ -15,5 +15,5 @@ section(ELEM) {
 }
 (;; STDERR ;;;
 out/test/regress/regress-26/regress-26.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
-0000013: error: EndElemSegmentInitExpr callback failed
+out/test/regress/regress-26/regress-26.wasm:0000013: error: EndElemSegmentInitExpr callback failed
 ;;; STDERR ;;)

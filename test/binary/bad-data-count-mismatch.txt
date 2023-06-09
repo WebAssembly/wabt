@@ -16,6 +16,6 @@ section(DATA) {
   data[str("whoops")]
 }
 (;; STDERR ;;;
-0000013: error: data segment count does not equal count in DataCount section
-0000013: error: data segment count does not equal count in DataCount section
+out/test/binary/bad-data-count-mismatch/bad-data-count-mismatch.wasm:0000013: error: data segment count does not equal count in DataCount section
+out/test/binary/bad-data-count-mismatch/bad-data-count-mismatch.wasm:0000013: error: data segment count does not equal count in DataCount section
 ;;; STDERR ;;)

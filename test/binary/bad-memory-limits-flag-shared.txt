@@ -6,6 +6,6 @@ section(MEMORY) {
   flags[2]
 }
 (;; STDERR ;;;
-000000c: error: memory may not be shared: threads not allowed
-000000c: error: memory may not be shared: threads not allowed
+out/test/binary/bad-memory-limits-flag-shared/bad-memory-limits-flag-shared.wasm:000000c: error: memory may not be shared: threads not allowed
+out/test/binary/bad-memory-limits-flag-shared/bad-memory-limits-flag-shared.wasm:000000c: error: memory may not be shared: threads not allowed
 ;;; STDERR ;;)

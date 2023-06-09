@@ -4,6 +4,6 @@ version
 section(TYPE) { count[0] }
 section(TYPE) { count[0] }
 (;; STDERR ;;;
-000000d: error: multiple Type sections
-000000d: error: multiple Type sections
+out/test/binary/bad-duplicate-section/bad-duplicate-section.wasm:000000d: error: multiple Type sections
+out/test/binary/bad-duplicate-section/bad-duplicate-section.wasm:000000d: error: multiple Type sections
 ;;; STDERR ;;)

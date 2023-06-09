@@ -1,6 +1,6 @@
 ;;; TOOL: run-gen-wasm-bad
 version
 (;; STDERR ;;;
-0000004: error: bad magic value
-0000004: error: bad magic value
+out/test/binary/bad-magic/bad-magic.wasm:0000004: error: bad magic value
+out/test/binary/bad-magic/bad-magic.wasm:0000004: error: bad magic value
 ;;; STDERR ;;)

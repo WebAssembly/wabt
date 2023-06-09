@@ -12,6 +12,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-000001d: error: invalid br_table target count 4294967295, only 4 bytes left in section
-000001d: error: invalid br_table target count 4294967295, only 4 bytes left in section
+out/test/binary/bad-brtable-too-big/bad-brtable-too-big.wasm:000001d: error: invalid br_table target count 4294967295, only 4 bytes left in section
+out/test/binary/bad-brtable-too-big/bad-brtable-too-big.wasm:000001d: error: invalid br_table target count 4294967295, only 4 bytes left in section
 ;;; STDERR ;;)

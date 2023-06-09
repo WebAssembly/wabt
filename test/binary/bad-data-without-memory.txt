@@ -9,6 +9,6 @@ section(DATA) {
 }
 section(DATACOUNT) { count[1] }
 (;; STDERR ;;;
-000000c: error: no memory to copy data to
-000000c: error: no memory to copy data to
+out/test/binary/bad-data-without-memory/bad-data-without-memory.wasm:000000c: error: no memory to copy data to
+out/test/binary/bad-data-without-memory/bad-data-without-memory.wasm:000000c: error: no memory to copy data to
 ;;; STDERR ;;)
