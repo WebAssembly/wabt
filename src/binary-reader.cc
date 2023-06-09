@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <stack>
 #include <vector>
 
 #include "wabt/config.h"
@@ -147,11 +148,8 @@ class BinaryReader {
                                    Index memory,
                                    const char* desc);
   [[nodiscard]] Result ReadFunctionBody(Offset end_offset);
-  // ReadInstructions either until and END instruction, or until
-  // the given end_offset.
-  [[nodiscard]] Result ReadInstructions(bool stop_on_end,
-                                        Offset end_offset,
-                                        Opcode* final_opcode);
+  // ReadInstructions reads until end_offset or the nesting depth reaches zero.
+  [[nodiscard]] Result ReadInstructions(Offset end_offset, const char* context);
   [[nodiscard]] Result ReadNameSection(Offset section_size);
   [[nodiscard]] Result ReadRelocSection(Offset section_size);
   [[nodiscard]] Result ReadDylinkSection(Offset section_size);
@@ -559,14 +557,8 @@ Index BinaryReader::NumTotalFuncs() {
 }
 
 Result BinaryReader::ReadInitExpr(Index index) {
-  // Read instructions until END opcode is reached.
-  Opcode final_opcode(Opcode::Invalid);
-  CHECK_RESULT(
-      ReadInstructions(/*stop_on_end=*/true, read_end_, &final_opcode));
-  ERROR_UNLESS(state_.offset <= read_end_,
-               "init expression longer than given size");
-  ERROR_UNLESS(final_opcode == Opcode::End,
-               "init expression must end with END opcode");
+  CHECK_RESULT(ReadInstructions(read_end_, "init expression"));
+  assert(state_.offset <= read_end_);
   return Result::Ok;
 }
 
@@ -668,27 +660,19 @@ Result BinaryReader::ReadAddress(Address* out_value,
 }
 
 Result BinaryReader::ReadFunctionBody(Offset end_offset) {
-  Opcode final_opcode(Opcode::Invalid);
-  CHECK_RESULT(
-      ReadInstructions(/*stop_on_end=*/false, end_offset, &final_opcode));
+  CHECK_RESULT(ReadInstructions(end_offset, "function body"));
   ERROR_UNLESS(state_.offset == end_offset,
-               "function body longer than given size");
-  ERROR_UNLESS(final_opcode == Opcode::End,
-               "function body must end with END opcode");
+               "function body shorter than given size");
   return Result::Ok;
 }
 
-Result BinaryReader::ReadInstructions(bool stop_on_end,
-                                      Offset end_offset,
-                                      Opcode* final_opcode) {
+Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
+  std::stack<Opcode> nested_blocks;
   while (state_.offset < end_offset) {
     Opcode opcode;
     CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
     CALLBACK(OnOpcode, opcode);
     ERROR_UNLESS_OPCODE_ENABLED(opcode);
-    if (final_opcode) {
-      *final_opcode = opcode;
-    }
 
     switch (opcode) {
       case Opcode::Unreachable:
@@ -697,6 +681,7 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
         break;
 
       case Opcode::Block: {
+        nested_blocks.push(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "block signature type"));
         ERROR_UNLESS(IsBlockType(sig_type),
@@ -707,6 +692,7 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       }
 
       case Opcode::Loop: {
+        nested_blocks.push(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "loop signature type"));
         ERROR_UNLESS(IsBlockType(sig_type),
@@ -717,6 +703,7 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       }
 
       case Opcode::If: {
+        nested_blocks.push(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "if signature type"));
         ERROR_UNLESS(IsBlockType(sig_type),
@@ -727,6 +714,8 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       }
 
       case Opcode::Else:
+        ERROR_IF(nested_blocks.empty() || (nested_blocks.top() != Opcode::If),
+                 "else outside if block");
         CALLBACK0(OnElseExpr);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -816,9 +805,10 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
 
       case Opcode::End:
         CALLBACK0(OnEndExpr);
-        if (stop_on_end) {
+        if (nested_blocks.empty()) {
           return Result::Ok;
         }
+        nested_blocks.pop();
         break;
 
       case Opcode::I32Const: {
@@ -1484,6 +1474,7 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
         break;
 
       case Opcode::Try: {
+        nested_blocks.push(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "try signature type"));
         ERROR_UNLESS(IsBlockType(sig_type),
@@ -1508,6 +1499,9 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
       }
 
       case Opcode::Delegate: {
+        ERROR_IF(nested_blocks.empty() || (nested_blocks.top() != Opcode::Try),
+                 "delegate outside try block");
+        nested_blocks.pop();
         Index index;
         CHECK_RESULT(ReadIndex(&index, "depth"));
         CALLBACK(OnDelegateExpr, index);
@@ -1851,7 +1845,9 @@ Result BinaryReader::ReadInstructions(bool stop_on_end,
         return ReportUnexpectedOpcode(opcode);
     }
   }
-  return Result::Ok;
+
+  PrintError("%s must end with END opcode", context);
+  return Result::Error;
 }
 
 Result BinaryReader::ReadNameSection(Offset section_size) {
