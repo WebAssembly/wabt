@@ -1050,8 +1050,9 @@ bool WastParser::ParseOffsetOpt(Address* out_offset) {
       Error(token.loc, "invalid offset \"" PRIstringview "\"",
             WABT_PRINTF_STRING_VIEW_ARG(sv));
     }
-    // FIXME: make this depend on the current memory.
-    if (offset64 > UINT32_MAX) {
+    // With memory64, offsets > UINT32_MAX for i32 memories are no longer
+    // malformed (just invalid)
+    if ((!options_->features.memory64_enabled()) && (offset64 > UINT32_MAX)) {
       Error(token.loc, "offset must be less than or equal to 0xffffffff");
     }
     *out_offset = offset64;

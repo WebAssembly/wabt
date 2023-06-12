@@ -196,7 +196,6 @@ class BinaryReader {
   Index num_function_signatures_ = 0;
   Index num_function_bodies_ = 0;
   Index data_count_ = kInvalidIndex;
-  std::vector<Limits> memories;
 
   using ReadEndRestoreGuard =
       ValueRestoreGuard<size_t, &BinaryReader::read_end_>;
@@ -433,8 +432,6 @@ Result BinaryReader::ReadAlignment(Address* alignment_log2, const char* desc) {
 
 Result BinaryReader::ReadMemidx(Index* memidx, const char* desc) {
   CHECK_RESULT(ReadIndex(memidx, desc));
-  ERROR_UNLESS(*memidx < memories.size(), "memory index %u out of range",
-               *memidx);
   return Result::Ok;
 }
 
@@ -623,8 +620,6 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   out_page_limits->initial = initial;
   out_page_limits->max = max;
 
-  // Have to keep a copy of these, to know how to interpret load/stores.
-  memories.push_back(*out_page_limits);
   return Result::Ok;
 }
 
@@ -646,10 +641,7 @@ Result BinaryReader::ReadGlobalHeader(Type* out_type, bool* out_mutable) {
 Result BinaryReader::ReadAddress(Address* out_value,
                                  Index memory,
                                  const char* desc) {
-  ERROR_UNLESS(memory < memories.size(),
-               "load/store memory %u out of range %zu", memory,
-               memories.size());
-  if (memories[memory].is_64) {
+  if (options_.features.memory64_enabled()) {
     return ReadU64Leb128(out_value, desc);
   } else {
     uint32_t val;
@@ -2813,7 +2805,6 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     }
     CALLBACK(BeginDataSegment, i, memory_index, flags);
     if (!(flags & SegPassive)) {
-      ERROR_UNLESS(memories.size() > 0, "no memory to copy data to");
       CALLBACK(BeginDataSegmentInitExpr, i);
       CHECK_RESULT(ReadInitExpr(i));
       CALLBACK(EndDataSegmentInitExpr, i);

@@ -9,6 +9,6 @@ section(DATA) {
 }
 section(DATACOUNT) { count[1] }
 (;; STDERR ;;;
-000000c: error: no memory to copy data to
-000000c: error: no memory to copy data to
+0000012: error: section DataCount out of order
+0000012: error: section DataCount out of order
 ;;; STDERR ;;)
