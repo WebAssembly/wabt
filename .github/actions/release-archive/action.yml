@@ -1,0 +1,47 @@
+name: Upload release archive
+description: Bundles an archive of artifacts and uploads to a GitHub release. The artifacts must already have been built into the folder "install".
+inputs:
+  os:
+    description: The OS runner name being built, used in the archive name
+    required: true
+  upload_to_release:
+    description: Whether to upload the archives to the release
+runs:
+  using: composite
+  steps:
+    - name: archive
+      id: archive
+      shell: bash
+      run: |
+        OSNAME=$(echo ${{ inputs.os }} | sed 's/-latest//')
+        VERSION=${{ github.ref_name }}
+        PKGNAME="wabt-$VERSION-$OSNAME"
+        TARBALL=$PKGNAME.tar.gz
+        SHASUM=$PKGNAME.tar.gz.sha256
+        mv install wabt-$VERSION
+        tar -czf $TARBALL wabt-$VERSION
+        scripts/sha256sum.py $TARBALL > $SHASUM
+        echo "::set-output name=tarball::$TARBALL"
+        echo "::set-output name=shasum::$SHASUM"
+
+    - name: upload tarball to CI
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.archive.outputs.tarball }}
+        path: ./${{ steps.archive.outputs.tarball }}
+
+    - name: upload tarball to release
+      uses: svenstaro/upload-release-action@v2
+      if: ${{ inputs.upload_to_release }}
+      with:
+        file: ./${{ steps.archive.outputs.tarball }}
+        asset_name: ${{ steps.archive.outputs.tarball }}
+        tag: ${{ github.ref }}
+
+    - name: upload shasum
+      uses: svenstaro/upload-release-action@v2
+      if: ${{ inputs.upload_to_release }}
+      with:
+        file: ./${{ steps.archive.outputs.shasum }}
+        asset_name: ${{ steps.archive.outputs.shasum }}
+        tag: ${{ github.ref }}

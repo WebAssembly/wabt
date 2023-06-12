@@ -98,6 +98,7 @@ include(CheckSymbolExists)
 
 check_include_file("alloca.h" HAVE_ALLOCA_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
+check_include_file("setjmp.h" HAVE_SETJMP_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(strcasecmp "strings.h" HAVE_STRCASECMP)
 
@@ -421,31 +422,33 @@ if (WABT_INSTALL_RULES)
   )
 endif ()
 
-set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c")
+if (HAVE_SETJMP_H)
+  set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c")
 
-add_library(wasm-rt-impl STATIC ${WASM_RT_FILES})
-add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
-if (WABT_BIG_ENDIAN)
-  target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
-endif ()
+  add_library(wasm-rt-impl STATIC ${WASM_RT_FILES})
+  add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
+  if (WABT_BIG_ENDIAN)
+    target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
+  endif ()
 
-if (WABT_INSTALL_RULES)
-  install(
-    TARGETS wasm-rt-impl
-    EXPORT wabt-targets
-    COMPONENT wabt-development
-    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-  )
-  install(
-    FILES "wasm2c/wasm-rt.h" "wasm2c/wasm-rt-exceptions.h"
-    TYPE INCLUDE
-    COMPONENT wabt-development
-  )
-  install(
-    FILES ${WASM_RT_FILES}
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/wabt/wasm2c"
-    COMPONENT wabt-development
-  )
+  if (WABT_INSTALL_RULES)
+    install(
+      TARGETS wasm-rt-impl
+      EXPORT wabt-targets
+      COMPONENT wabt-development
+      INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    )
+    install(
+      FILES "wasm2c/wasm-rt.h" "wasm2c/wasm-rt-exceptions.h"
+      TYPE INCLUDE
+      COMPONENT wabt-development
+    )
+    install(
+      FILES ${WASM_RT_FILES}
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/wabt/wasm2c"
+      COMPONENT wabt-development
+    )
+  endif ()
 endif ()
 
 if (BUILD_FUZZ_TOOLS)
