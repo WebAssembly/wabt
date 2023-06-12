@@ -1,8 +1,8 @@
 name: Upload release archive
-description: Bundles an archive artifacts and uploads to a GitHub release. The artifacts must already have been built into the folder "install".
+description: Bundles an archive of artifacts and uploads to a GitHub release. The artifacts must already have been built into the folder "install".
 inputs:
   os:
-    description: The OS name being built, used in the archive name
+    description: The OS runner name being built, used in the archive name
     required: true
 runs:
   using: composite
@@ -11,7 +11,7 @@ runs:
       id: archive
       shell: bash
       run: |
-        OSNAME=$(echo ${{ inputs.os }} | awk '{print tolower($0)}')
+        OSNAME=$(echo ${{ inputs.os }} | sed 's/-latest//')
         VERSION=${{ github.event.release.tag_name }}
         PKGNAME="wabt-$VERSION-$OSNAME"
         TARBALL=$PKGNAME.tar.gz
