@@ -58,9 +58,10 @@ jobs:
       run: find bin/ -type f -perm -u=x -exec strip {} +
       if: matrix.os != 'windows-latest'
 
-    - uses: ./.github/actions/upload-release-archive
+    - uses: ./.github/actions/release-archive
       with:
         os: ${{ matrix.os }}
+        upload_to_release: true
 
   build-wasi:
     runs-on: ubuntu-latest
@@ -75,6 +76,7 @@ jobs:
         docker exec wasi-sdk cmake -S . -B out -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install -DBUILD_TESTS=0 -DBUILD_LIBWASM=0
         docker exec wasi-sdk cmake --build out --config Release --target install
 
-    - uses: ./.github/actions/upload-release-archive
+    - uses: ./.github/actions/release-archive
       with:
         os: wasi
+        upload_to_release: true

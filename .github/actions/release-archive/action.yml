@@ -4,6 +4,8 @@ inputs:
   os:
     description: The OS runner name being built, used in the archive name
     required: true
+  upload_to_release:
+    description: Whether to upload the archives to the release
 runs:
   using: composite
   steps:
@@ -22,8 +24,15 @@ runs:
         echo "::set-output name=tarball::$TARBALL"
         echo "::set-output name=shasum::$SHASUM"
 
-    - name: upload tarball
+    - name: upload tarball to CI
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-archive
+        path: ./${{ steps.archive.outputs.tarball }}
+
+    - name: upload tarball to release
       uses: svenstaro/upload-release-action@v2
+      if: ${{ inputs.upload_to_release }}
       with:
         file: ./${{ steps.archive.outputs.tarball }}
         asset_name: ${{ steps.archive.outputs.tarball }}
@@ -31,6 +40,7 @@ runs:
 
     - name: upload shasum
       uses: svenstaro/upload-release-action@v2
+      if: ${{ inputs.upload_to_release }}
       with:
         file: ./${{ steps.archive.outputs.shasum }}
         asset_name: ${{ steps.archive.outputs.shasum }}
