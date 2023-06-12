@@ -521,13 +521,12 @@ Result SharedValidator::CheckAlign(const Location& loc,
 Result SharedValidator::CheckOffset(const Location& loc,
                                     Address offset,
                                     const Limits& limits) {
-  if (limits.is_64 || (offset <= UINT32_MAX)) {
-    return Result::Ok;
+  if ((!limits.is_64) && (offset > UINT32_MAX)) {
+    PrintError(loc, "offset must be less than or equal to 0xffffffff");
+    return Result::Error;
   }
 
-  PrintError(loc, "offset must be less than or equal to 0xffffffff");
-
-  return Result::Error;
+  return Result::Ok;
 }
 
 Result SharedValidator::CheckAtomicAlign(const Location& loc,
