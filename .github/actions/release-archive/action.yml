@@ -27,7 +27,7 @@ runs:
     - name: upload tarball to CI
       uses: actions/upload-artifact@v3
       with:
-        name: release-archive
+        name: ${{ steps.archive.outputs.tarball }}
         path: ./${{ steps.archive.outputs.tarball }}
 
     - name: upload tarball to release
