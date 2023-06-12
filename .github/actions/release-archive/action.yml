@@ -14,7 +14,7 @@ runs:
       shell: bash
       run: |
         OSNAME=$(echo ${{ inputs.os }} | sed 's/-latest//')
-        VERSION=${{ github.ref_name }}
+        VERSION=${{ github.event.release.tag_name || github.sha }}
         PKGNAME="wabt-$VERSION-$OSNAME"
         TARBALL=$PKGNAME.tar.gz
         SHASUM=$PKGNAME.tar.gz.sha256
