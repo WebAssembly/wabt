@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "wabt/binary-reader-ir.h"
+#include "wabt/binary-reader-nop.h"
 #include "wabt/binary-reader.h"
 #include "wabt/cast.h"
 #include "wabt/common.h"
@@ -275,7 +276,7 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
   return result;
 }
 
-bool ValidIR(const std::string& filename) {
+bool CheckIR(const std::string& filename, bool validate) {
   std::vector<uint8_t> file_data;
 
   if (Failed(ReadFile(filename, &file_data))) {
@@ -295,8 +296,20 @@ bool ValidIR(const std::string& filename) {
     return false;
   }
 
+  if (!validate) {
+    return true;
+  }
+
   return Succeeded(
       ValidateModule(&module, &errors, ValidateOptions{s_features}));
+}
+
+bool WellformedIR(const std::string& filename) {
+  return CheckIR(filename, false);
+}
+
+bool ValidIR(const std::string& filename) {
+  return CheckIR(filename, true);
 }
 
 class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
@@ -1224,8 +1237,15 @@ class CommandRunner {
 
   void TallyCommand(wabt::Result);
 
-  wabt::Result ReadInvalidTextModule(std::string_view module_filename,
-                                     const std::string& header);
+  wabt::Result ReadTextModule(std::string_view module_filename,
+                              const std::string& header,
+                              bool validate);
+  wabt::Result ReadMalformedBinaryModule(std::string_view module_filename,
+                                         Errors* errors);
+  wabt::Result ReadMalformedModule(int line_number,
+                                   std::string_view module_filename,
+                                   ModuleType module_type,
+                                   const char* desc);
   wabt::Result ReadInvalidModule(int line_number,
                                  std::string_view module_filename,
                                  ModuleType module_type,
@@ -1407,9 +1427,9 @@ ActionResult CommandRunner::RunAction(int line_number,
   return result;
 }
 
-wabt::Result CommandRunner::ReadInvalidTextModule(
-    std::string_view module_filename,
-    const std::string& header) {
+wabt::Result CommandRunner::ReadTextModule(std::string_view module_filename,
+                                           const std::string& header,
+                                           bool validate) {
   std::vector<uint8_t> file_data;
   wabt::Result result = ReadFile(module_filename, &file_data);
   Errors errors;
@@ -1419,6 +1439,11 @@ wabt::Result CommandRunner::ReadInvalidTextModule(
     std::unique_ptr<wabt::Module> module;
     WastParseOptions options(s_features);
     result = ParseWatModule(lexer.get(), &module, &errors, &options);
+
+    if (validate && Succeeded(result)) {
+      result =
+          ValidateModule(module.get(), &errors, ValidateOptions{s_features});
+    }
   }
 
   auto line_finder = lexer->MakeLineFinder();
@@ -1463,7 +1488,7 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
 
   switch (module_type) {
     case ModuleType::Text: {
-      return ReadInvalidTextModule(module_filename, header);
+      return ReadTextModule(module_filename, header, true);
     }
 
     case ModuleType::Binary: {
@@ -1476,6 +1501,61 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
       } else {
         return wabt::Result::Ok;
       }
+    }
+  }
+
+  WABT_UNREACHABLE;
+}
+
+wabt::Result CommandRunner::ReadMalformedBinaryModule(
+    std::string_view module_filename,
+    Errors* errors) {
+  std::vector<uint8_t> file_data;
+
+  CHECK_RESULT(ReadFile(module_filename, &file_data));
+
+  const bool kReadDebugNames = true;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+
+  class BinaryReaderErrorLogging : public BinaryReaderNop {
+    Errors* errors_;
+
+   public:
+    BinaryReaderErrorLogging(Errors* errors) : errors_(errors) {}
+
+    bool OnError(const Error& error) override {
+      errors_->push_back(error);
+      return true;
+    }
+  };
+
+  BinaryReaderErrorLogging reader_delegate{errors};
+  return ReadBinary(file_data.data(), file_data.size(), &reader_delegate,
+                    options);
+}
+
+wabt::Result CommandRunner::ReadMalformedModule(
+    int line_number,
+    std::string_view module_filename,
+    ModuleType module_type,
+    const char* desc) {
+  std::string header = StringPrintf(
+      "%s:%d: %s passed", source_filename_.c_str(), line_number, desc);
+
+  switch (module_type) {
+    case ModuleType::Text: {
+      return ReadTextModule(module_filename, header, false);
+    }
+
+    case ModuleType::Binary: {
+      Errors errors;
+      wabt::Result result = ReadMalformedBinaryModule(module_filename, &errors);
+      FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
+                         PrintHeader::Once);
+      return result;
     }
   }
 
@@ -1564,16 +1644,17 @@ wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
 
 wabt::Result CommandRunner::OnAssertMalformedCommand(
     const AssertMalformedCommand* command) {
-  wabt::Result result = ReadInvalidModule(command->line, command->filename,
-                                          command->type, "assert_malformed");
+  wabt::Result result = ReadMalformedModule(command->line, command->filename,
+                                            command->type, "assert_malformed");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be malformed: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
   }
 
-  if (ValidIR(command->filename)) {
-    PrintError(command->line, "IR Validator thinks module is valid: \"%s\"",
+  if (WellformedIR(command->filename)) {
+    PrintError(command->line,
+               "BinaryReaderIR thinks module is well-formed: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
   }
