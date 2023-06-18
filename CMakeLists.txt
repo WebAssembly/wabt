@@ -391,7 +391,7 @@ set(WABT_LIBRARY_H
 
 set(WABT_LIBRARY_SRC ${WABT_LIBRARY_CC} ${WABT_LIBRARY_H})
 
-add_library(wabt STATIC ${WABT_LIBRARY_SRC})
+add_library(wabt ${WABT_LIBRARY_SRC})
 add_dependencies(wabt gen-wasm2c-prebuilt-target)
 add_library(wabt::wabt ALIAS wabt)
 
@@ -463,7 +463,7 @@ endif ()
 
 # libwasm, which implenents the wasm C API
 if (BUILD_LIBWASM)
-  add_library(wasm SHARED ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
+  add_library(wasm ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
   target_link_libraries(wasm PUBLIC wabt)
   target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
   if (COMPILER_IS_MSVC)
