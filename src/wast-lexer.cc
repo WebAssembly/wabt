@@ -180,7 +180,7 @@ Token WastLexer::GetToken() {
 }
 
 Location WastLexer::GetLocation() {
-  auto column = [=](const char* p) {
+  auto column = [this](const char* p) {
     return std::max(1, static_cast<int>(p - line_start_ + 1));
   };
   return Location(filename_, line_, column(token_start_), column(cursor_));

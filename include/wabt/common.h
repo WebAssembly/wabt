@@ -166,7 +166,7 @@ Dst WABT_VECTORCALL Bitcast(Src&& value) {
 
 template <typename T>
 void ZeroMemory(T& v) {
-  WABT_STATIC_ASSERT(std::is_pod<T>::value);
+  WABT_STATIC_ASSERT(std::is_trivial<T>::value);
   memset(&v, 0, sizeof(v));
 }
 
