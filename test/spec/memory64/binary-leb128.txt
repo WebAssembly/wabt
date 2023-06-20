@@ -3,9 +3,9 @@
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/binary-leb128.wast:217: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  000000c: error: unable to read u64 leb128: memory initial page count
 out/test/spec/memory64/binary-leb128.wast:225: assert_malformed passed:
-  000000e: error: unable to read u32 leb128: memory max page count
+  000000e: error: unable to read u64 leb128: memory max page count
 out/test/spec/memory64/binary-leb128.wast:234: assert_malformed passed:
   0000010: error: unable to read u32 leb128: data segment flags
 out/test/spec/memory64/binary-leb128.wast:245: assert_malformed passed:
@@ -49,13 +49,13 @@ out/test/spec/memory64/binary-leb128.wast:503: assert_malformed passed:
 out/test/spec/memory64/binary-leb128.wast:513: assert_malformed passed:
   000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary-leb128.wast:525: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  000000c: error: unable to read u64 leb128: memory initial page count
 out/test/spec/memory64/binary-leb128.wast:533: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
+  000000c: error: unable to read u64 leb128: memory initial page count
 out/test/spec/memory64/binary-leb128.wast:541: assert_malformed passed:
-  000000e: error: unable to read u32 leb128: memory max page count
+  000000e: error: unable to read u64 leb128: memory max page count
 out/test/spec/memory64/binary-leb128.wast:550: assert_malformed passed:
-  000000e: error: unable to read u32 leb128: memory max page count
+  000000e: error: unable to read u64 leb128: memory max page count
 out/test/spec/memory64/binary-leb128.wast:559: assert_malformed passed:
   0000010: error: unable to read u32 leb128: data segment flags
 out/test/spec/memory64/binary-leb128.wast:570: assert_malformed passed:

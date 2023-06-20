@@ -694,7 +694,7 @@ void BinaryWriter::WriteLoadStoreExpr(const Func* func,
   } else {
     stream_->WriteU8(log2_u32(align), "alignment");
   }
-  WriteU32Leb128(stream_, typed_expr->offset, desc);
+  WriteU64Leb128(stream_, typed_expr->offset, desc);
 }
 
 template <typename T>
