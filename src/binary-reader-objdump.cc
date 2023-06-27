@@ -953,7 +953,8 @@ Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
   last_opcode_end = 0;
   in_function_body = true;
   current_function_index = index;
-  local_index_ = objdump_state_->function_param_counts[index];
+  auto type_index = objdump_state_->function_types[index];
+  local_index_ = objdump_state_->function_param_counts[type_index];
   return Result::Ok;
 }
 
@@ -1452,6 +1453,7 @@ Result BinaryReaderObjdump::OnFunction(Index index, Index sig_index) {
     PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   PrintDetails("\n");
+  objdump_state_->function_types[index] = sig_index;
   return Result::Ok;
 }
 

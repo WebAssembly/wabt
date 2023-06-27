@@ -1,0 +1,19 @@
+;;; TOOL: run-objdump
+(module
+  (func (param i32)
+    (local i32))
+  (func (param i32)
+    (local i32)))
+(;; STDOUT ;;;
+
+local-indices.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000018 func[0]:
+ 000019: 01 7f                      | local[1] type=i32
+ 00001b: 0b                         | end
+00001d func[1]:
+ 00001e: 01 7f                      | local[1] type=i32
+ 000020: 0b                         | end
+;;; STDOUT ;;)
