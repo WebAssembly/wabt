@@ -1,5 +1,5 @@
-#ifdef __x86_64__
-#define SIMD_FORCE_READ(var) wasm_asm("" ::"x"(var));
+#if defined(__GNUC__) && defined(__x86_64__)
+#define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
 #else
 #define SIMD_FORCE_READ(var)
 #endif

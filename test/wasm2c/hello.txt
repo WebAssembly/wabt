@@ -145,11 +145,12 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 #define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
 #endif
 
-#ifdef __GNUC__
-#define wasm_asm __asm__
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__aarch64__))
+#define FORCE_READ(var) __asm__("" ::"r"(var));
 #else
-#define wasm_asm(X)
+#define FORCE_READ(var)
 #endif
+// TODO: handle MIPS and other architectures
 
 #if WABT_BIG_ENDIAN
 static inline void load_data(void* dest, const void* src, size_t n) {
@@ -176,7 +177,7 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     t1 result;                                                         \
     wasm_rt_memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], \
                    sizeof(t1));                                        \
-    wasm_asm("" ::"r"(result));                                        \
+    FORCE_READ(result);                                                \
     return (t3)(t2)result;                                             \
   }
 
@@ -204,7 +205,7 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     MEMCHECK(mem, addr, t1);                               \
     t1 result;                                             \
     wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
-    wasm_asm("" ::"r"(result));                            \
+    FORCE_READ(result);                                    \
     return (t3)(t2)result;                                 \
   }
 

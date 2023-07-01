@@ -86,15 +86,17 @@ R"w2c_template(#define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-#ifdef __GNUC__
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__aarch64__))
 )w2c_template"
-R"w2c_template(#define wasm_asm __asm__
+R"w2c_template(#define FORCE_READ(var) __asm__("" ::"r"(var));
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
-R"w2c_template(#define wasm_asm(X)
+R"w2c_template(#define FORCE_READ(var)
 )w2c_template"
 R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(// TODO: handle MIPS and other architectures
 )w2c_template"
 R"w2c_template(
 #if WABT_BIG_ENDIAN
@@ -147,7 +149,7 @@ R"w2c_template(    wasm_rt_memcpy(&result, &mem->data[mem->size - addr - sizeof(
 )w2c_template"
 R"w2c_template(                   sizeof(t1));                                        \
 )w2c_template"
-R"w2c_template(    wasm_asm("" ::"r"(result));                                        \
+R"w2c_template(    FORCE_READ(result);                                                \
 )w2c_template"
 R"w2c_template(    return (t3)(t2)result;                                             \
 )w2c_template"
@@ -202,7 +204,7 @@ R"w2c_template(    t1 result;                                             \
 )w2c_template"
 R"w2c_template(    wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
 )w2c_template"
-R"w2c_template(    wasm_asm("" ::"r"(result));                            \
+R"w2c_template(    FORCE_READ(result);                                    \
 )w2c_template"
 R"w2c_template(    return (t3)(t2)result;                                 \
 )w2c_template"

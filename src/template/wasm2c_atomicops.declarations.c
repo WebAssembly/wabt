@@ -132,7 +132,7 @@
     t1 result;                                             \
     wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
     result = atomic_load_##t1(&mem->data[addr]);           \
-    wasm_asm("" ::"r"(result));                            \
+    FORCE_READ(result);                                    \
     return (t3)(t2)result;                                 \
   }
 

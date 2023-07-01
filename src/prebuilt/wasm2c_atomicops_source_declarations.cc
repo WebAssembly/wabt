@@ -239,7 +239,7 @@ R"w2c_template(    wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
 )w2c_template"
 R"w2c_template(    result = atomic_load_##t1(&mem->data[addr]);           \
 )w2c_template"
-R"w2c_template(    wasm_asm("" ::"r"(result));                            \
+R"w2c_template(    FORCE_READ(result);                                    \
 )w2c_template"
 R"w2c_template(    return (t3)(t2)result;                                 \
 )w2c_template"
