@@ -419,6 +419,8 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "Uncaught exception";
     case WASM_RT_TRAP_UNALIGNED:
       return "Unaligned atomic memory access";
+    case WASM_RT_TRAP_MAX_WAITERS:
+      return "Reached the maximum number of wait objects";
   }
   return "invalid trap code";
 }

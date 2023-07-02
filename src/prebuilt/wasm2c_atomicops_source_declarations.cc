@@ -1,4 +1,7 @@
-const char* s_atomicops_source_declarations = R"w2c_template(#if defined(_MSC_VER)
+const char* s_atomicops_source_declarations = R"w2c_template(#include "wasm-rt-threads.h"
+)w2c_template"
+R"w2c_template(
+#if defined(_MSC_VER)
 )w2c_template"
 R"w2c_template(
 #include <intrin.h>
@@ -434,5 +437,98 @@ R"w2c_template(DEFINE_ATOMIC_CMP_XCHG(i64_atomic_rmw16_cmpxchg_u, u64, u16);
 R"w2c_template(DEFINE_ATOMIC_CMP_XCHG(i64_atomic_rmw32_cmpxchg_u, u64, u32);
 )w2c_template"
 R"w2c_template(DEFINE_ATOMIC_CMP_XCHG(i64_atomic_rmw_cmpxchg, u64, u64);
+)w2c_template"
+R"w2c_template(
+/** total number of instances that are waiting on a notify. */
+)w2c_template"
+R"w2c_template(static uint32_t wait_instances = 0;
+)w2c_template"
+R"w2c_template(
+static u32 memory_atomic_wait_helper(wasm_rt_memory_t* mem,
+)w2c_template"
+R"w2c_template(                                     u64 addr,
+)w2c_template"
+R"w2c_template(                                     s64 timeout) {
+)w2c_template"
+R"w2c_template(  uint32_t prev_wait_instances = atomic_add_u32(&wait_instances, 1);
+)w2c_template"
+R"w2c_template(  if (prev_wait_instances == UINT32_MAX - 1) {
+)w2c_template"
+R"w2c_template(    TRAP(MAX_WAITERS);
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(
+  uint32_t ret = wasm_rt_wait_on_address((uintptr_t)&mem->data[addr], timeout);
+)w2c_template"
+R"w2c_template(  atomic_sub_u32(&wait_instances, 1);
+)w2c_template"
+R"w2c_template(  return ret;
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(
+static u32 memory_atomic_wait32(wasm_rt_memory_t* mem,
+)w2c_template"
+R"w2c_template(                                u64 addr,
+)w2c_template"
+R"w2c_template(                                u32 initial,
+)w2c_template"
+R"w2c_template(                                s64 timeout) {
+)w2c_template"
+R"w2c_template(  ATOMIC_ALIGNMENT_CHECK(addr, u32);
+)w2c_template"
+R"w2c_template(  MEMCHECK(mem, addr, u32);
+)w2c_template"
+R"w2c_template(
+  if (i32_atomic_load(mem, addr) != initial) {
+)w2c_template"
+R"w2c_template(    return 1;  // initial value did not match
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(
+  return memory_atomic_wait_helper(mem, addr, timeout);
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(
+static u32 memory_atomic_wait64(wasm_rt_memory_t* mem,
+)w2c_template"
+R"w2c_template(                                u64 addr,
+)w2c_template"
+R"w2c_template(                                u64 initial,
+)w2c_template"
+R"w2c_template(                                s64 timeout) {
+)w2c_template"
+R"w2c_template(  ATOMIC_ALIGNMENT_CHECK(addr, u64);
+)w2c_template"
+R"w2c_template(  MEMCHECK(mem, addr, u64);
+)w2c_template"
+R"w2c_template(
+  if (i32_atomic_load(mem, addr) != initial) {
+)w2c_template"
+R"w2c_template(    return 1;  // initial value did not match
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(
+  return memory_atomic_wait_helper(mem, addr, timeout);
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(
+static u32 memory_atomic_notify(wasm_rt_memory_t* mem, u64 addr, u32 count) {
+)w2c_template"
+R"w2c_template(  ATOMIC_ALIGNMENT_CHECK(addr, u32);
+)w2c_template"
+R"w2c_template(  MEMCHECK(mem, addr, u32);
+)w2c_template"
+R"w2c_template(
+  uint32_t ret = wasm_rt_notify_at_address((uintptr_t)&mem->data[addr], count);
+)w2c_template"
+R"w2c_template(  return ret;
+)w2c_template"
+R"w2c_template(}
 )w2c_template"
 ;

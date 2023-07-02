@@ -124,7 +124,9 @@ jobs:
     env:
       USE_NINJA: "1"
       CC: "clang" # used by the wasm2c tests
+      CXX: "clang++" # used by the wasm2c wait/notify runtime
       WASM2C_CFLAGS: "-march=x86-64-v2 -fsanitize=address -DWASM_RT_USE_MMAP=0"
+      WASM2C_CXXFLAGS: "-march=x86-64-v2 -fsanitize=address -DWASM_RT_USE_MMAP=0"
     steps:
     - uses: actions/setup-python@v1
       with:

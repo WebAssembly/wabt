@@ -19,7 +19,13 @@ project(WABT LANGUAGES C CXX VERSION 1.0.33)
 
 include(GNUInstallDirs)
 
+option(BUILD_WASM2C_THREAD_WAIT_NOTIFY "Include wasm2c runtime support for wasm2c's thread wait/notify API (Requires C++ 20)." OFF)
+
+if (BUILD_WASM2C_THREAD_WAIT_NOTIFY)
+set(CMAKE_CXX_STANDARD 20)
+else()
 set(CMAKE_CXX_STANDARD 17)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -224,6 +230,7 @@ function(sanitizer NAME FLAGS)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAGS}" PARENT_SCOPE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAGS}" PARENT_SCOPE)
     set(WASM2C_CFLAGS "${WASM2C_CFLAGS} ${FLAGS}" PARENT_SCOPE)
+    set(WASM2C_CXXFLAGS "${WASM2C_CXXFLAGS} ${FLAGS}" PARENT_SCOPE)
   endif ()
 endfunction()
 sanitizer(USE_ASAN "-fsanitize=address")
@@ -424,6 +431,11 @@ endif ()
 
 if (HAVE_SETJMP_H)
   set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c")
+  if (BUILD_WASM2C_THREAD_WAIT_NOTIFY)
+    set(WASM_RT_FILES ${WASM_RT_FILES} "wasm2c/wasm-rt-threads-impl.cpp")
+  else()
+    set(WASM_RT_FILES ${WASM_RT_FILES} "wasm2c/wasm-rt-threads-dummy-impl.c")
+  endif()
 
   add_library(wasm-rt-impl STATIC ${WASM_RT_FILES})
   add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
@@ -439,7 +451,7 @@ if (HAVE_SETJMP_H)
       INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     )
     install(
-      FILES "wasm2c/wasm-rt.h" "wasm2c/wasm-rt-exceptions.h"
+      FILES "wasm2c/wasm-rt.h" "wasm2c/wasm-rt-threads.h" "wasm2c/wasm-rt-exceptions.h"
       TYPE INCLUDE
       COMPONENT wabt-development
     )
@@ -651,8 +663,15 @@ if (BUILD_TESTS)
     set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
   endif ()
 
+  set(WASM2C_CXXFLAGS "${WASM2C_CFLAGS}")
+
   if (DEFINED ENV{WASM2C_CFLAGS})
     set(WASM2C_CFLAGS "${WASM2C_CFLAGS} $ENV{WASM2C_CFLAGS}")
+  endif ()
+
+
+  if (DEFINED ENV{WASM2C_CXXFLAGS})
+    set(WASM2C_CXXFLAGS "${WASM2C_CXXFLAGS} $ENV{WASM2C_CXXFLAGS}")
   endif ()
 
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -718,7 +737,8 @@ if (BUILD_TESTS)
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
   add_custom_target(run-tests
-    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
+
+    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CXX=${CMAKE_CXX_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} WASM2C_CXXFLAGS=${WASM2C_CXXFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
     USES_TERMINAL

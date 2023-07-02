@@ -441,6 +441,8 @@ class CWriter {
   void Write(const AtomicStoreExpr& expr);
   void Write(const AtomicRmwExpr& expr);
   void Write(const AtomicRmwCmpxchgExpr& expr);
+  void Write(const AtomicWaitExpr& expr);
+  void Write(const AtomicNotifyExpr& expr);
 
   size_t BeginTry(const TryExpr& tryexpr);
   void WriteTryCatch(const TryExpr& tryexpr);
@@ -3593,8 +3595,14 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::AtomicWait:
-      case ExprType::AtomicNotify:
+      case ExprType::AtomicWait: {
+        Write(*cast<AtomicWaitExpr>(&expr));
+        break;
+      }
+      case ExprType::AtomicNotify: {
+        Write(*cast<AtomicNotifyExpr>(&expr));
+        break;
+      }
       case ExprType::ReturnCall:
       case ExprType::ReturnCallIndirect:
       case ExprType::CallRef:
@@ -5347,6 +5355,44 @@ void CWriter::Write(const AtomicRmwCmpxchgExpr& expr) {
     Write(" + ", expr.offset);
   Write(", ", StackVar(1), ", ", StackVar(0), ");", Newline());
   DropTypes(3);
+  PushType(result_type);
+}
+
+void CWriter::Write(const AtomicWaitExpr& expr) {
+  const char* func = nullptr;
+  // clang-format off
+  switch(expr.opcode) {
+    case Opcode::MemoryAtomicWait32: func = "memory_atomic_wait32"; break;
+    case Opcode::MemoryAtomicWait64: func = "memory_atomic_wait64"; break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
+
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+  Type result_type = expr.opcode.GetResultType();
+
+  Write(StackVar(2, result_type), " = ", func, "(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(2), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write(", ", StackVar(1), ", ", StackVar(0), ");", Newline());
+  DropTypes(3);
+  PushType(result_type);
+}
+
+void CWriter::Write(const AtomicNotifyExpr& expr) {
+  Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
+  Type result_type = expr.opcode.GetResultType();
+
+  Write(StackVar(1, result_type), " = memory_atomic_notify(",
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
+        StackVar(1), ")");
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write(", ", StackVar(0), ");", Newline());
+  DropTypes(2);
   PushType(result_type);
 }
 

@@ -123,12 +123,13 @@ def IsModuleCommand(command):
 
 class CWriter(object):
 
-    def __init__(self, spec_json, prefix, out_file, out_dir):
+    def __init__(self, spec_json, prefix, concurrent_tests, out_file, out_dir):
         self.source_filename = os.path.basename(spec_json['source_filename'])
         self.commands = spec_json['commands']
         self.out_file = out_file
         self.out_dir = out_dir
         self.prefix = prefix
+        self.concurrent_tests = concurrent_tests
         self.module_idx = 0
         self.module_name_to_idx = {}
         self.module_prefix_map = {}
@@ -137,10 +138,7 @@ class CWriter(object):
         self._MaybeWriteDummyModule()
         self._CacheModulePrefixes()
 
-    def Write(self):
-        self._WriteIncludes()
-        self.out_file.write(self.prefix)
-        self._WriteModuleInstances()
+    def WriteSerialTests(self):
         test_function_num = 0
         self.out_file.write('\nvoid run_spec_tests_0(void) {\n\n')
         for i, command in enumerate(self.commands):
@@ -154,6 +152,38 @@ class CWriter(object):
             self.out_file.write('run_spec_tests_%d();\n' % i)
         self._WriteModuleCleanUps()
         self.out_file.write('\n}\n')
+
+    # Write each modules tests in a separate function which can then be called in separate threads
+    def WriteConcurrentTests(self):
+        test_function_num = 0
+        for i, command in enumerate(self.commands):
+            if command['type'] == 'module':
+                if test_function_num != 0:
+                    self.out_file.write('\nreturn 0;\n}\n')
+                self.out_file.write('\nTHREAD_FUNC_RET run_spec_tests_%d(void* unused) {\n\n(void) unused;\n' % test_function_num)
+                test_function_num += 1
+            self._WriteCommand(command)
+
+        self.out_file.write('\nreturn 0;\n}\n\nvoid run_spec_tests(void) {\n\n')
+        self.out_file.write('THREAD_ID threadId[%d];\n' % test_function_num)
+        for i in range(test_function_num):
+            self.out_file.write('SLEEP_FOR_SEC(2);\n')
+            self.out_file.write('THREAD_CREATE(&(threadId[%d]), run_spec_tests_%d, NULL);\n' % (i, i))
+        for i in range(test_function_num):
+            self.out_file.write('THREAD_JOIN(&(threadId[%d]));\n' % i)
+        self._WriteModuleCleanUps()
+        self.out_file.write('\n}\n')
+
+    def Write(self):
+        self._WriteIncludes()
+        if self.concurrent_tests:
+            self.out_file.write('\n#define CONCURRENT_SPEC_TEST\n')
+        self.out_file.write(self.prefix)
+        self._WriteModuleInstances()
+        if self.concurrent_tests:
+            self.WriteConcurrentTests()
+        else:
+            self.WriteSerialTests()
 
     def GetModuleFilenames(self):
         return [c['filename'] for c in self.commands if IsModuleCommand(c)]
@@ -444,7 +474,7 @@ class CWriter(object):
             raise Error('Unexpected action type: %s' % type_)
 
 
-def Compile(cc, c_filename, out_dir, *cflags):
+def Compile(cc, cxx, is_c, c_filename, out_dir, *cflags):
     if IS_WINDOWS:
         ext = '.obj'
     else:
@@ -453,6 +483,8 @@ def Compile(cc, c_filename, out_dir, *cflags):
     args = list(cflags)
     if IS_WINDOWS:
         args += ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
+        if not is_c:
+            args += ['/std:c++20']
     else:
         # See "Compiling the wasm2c output" section of wasm2c/README.md
         # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
@@ -465,11 +497,18 @@ def Compile(cc, c_filename, out_dir, *cflags):
                  '-Wno-infinite-recursion',
                  '-fno-optimize-sibling-calls',
                  '-frounding-math', '-fsignaling-nans',
-                 '-std=c99', '-D_DEFAULT_SOURCE']
+                 '-D_DEFAULT_SOURCE']
+        if is_c:
+            args += ['-std=c99']
+        else:
+            args += ['-std=c++20']
     # Use RunWithArgsForStdout and discard stdout because cl.exe
     # unconditionally prints the name of input files on stdout
     # and we don't want that to be part of our stdout.
-    cc.RunWithArgsForStdout(*args)
+    if is_c:
+        cc.RunWithArgsForStdout(*args)
+    else:
+        cxx.RunWithArgsForStdout(*args)
     return o_filename
 
 
@@ -478,9 +517,9 @@ def Link(cc, o_filenames, main_exe, *extra_args):
     if IS_WINDOWS:
         # Windows default to 1Mb of stack but `spec/skip-stack-guard-page.wast`
         # uses more than this.  Set to 8Mb for parity with linux.
-        args += ['/nologo', '/MDd', '/link', '/stack:8388608', '/out:' + main_exe]
+        args += ['/std:c++20', '/nologo', '/MDd', '/link', '/stack:8388608', '/out:' + main_exe]
     else:
-        args += ['-o', main_exe]
+        args += ['-std=c++20', '-o', main_exe]
     args += list(extra_args)
     # Use RunWithArgsForStdout and discard stdout because cl.exe
     # unconditionally prints the name of input files on stdout
@@ -490,9 +529,12 @@ def Link(cc, o_filenames, main_exe, *extra_args):
 
 def main(args):
     default_compiler = 'cc'
+    default_cxx_compiler = 'c++'
     if IS_WINDOWS:
         default_compiler = 'cl.exe'
+        default_cxx_compiler = 'cl.exe'
     default_compiler = os.getenv('WASM2C_CC', os.getenv('CC', default_compiler))
+    default_cxx_compiler = os.getenv('WASM2C_CXX', os.getenv('CXX', default_cxx_compiler))
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--out-dir', metavar='PATH',
                         help='output directory for files.')
@@ -510,6 +552,12 @@ def main(args):
                         default=default_compiler)
     parser.add_argument('--cflags', metavar='FLAGS',
                         help='additional flags for C compiler.',
+                        action='append', default=[])
+    parser.add_argument('--cxx', metavar='PATH',
+                        help='the path to the C++ compiler',
+                        default=default_cxx_compiler)
+    parser.add_argument('--cxxflags', metavar='CXXFLAGS',
+                        help='additional flags for C++ compiler.',
                         action='append', default=[])
     parser.add_argument('--compile', help='compile the C code (default)',
                         dest='compile', action='store_true')
@@ -533,6 +581,8 @@ def main(args):
     parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--enable-extended-const', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
+    parser.add_argument('--concurrent-tests', help='run each module\'s tests concurrently',
+                        action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
@@ -578,6 +628,11 @@ def main(args):
                               forward_stdout=False)
         cc.verbose = options.print_cmd
 
+        options.cxxflags += shlex.split(os.environ.get('WASM2C_CXXFLAGS', ''))
+        cxx = utils.Executable(options.cxx, *options.cxxflags, forward_stderr=True,
+                               forward_stdout=False)
+        cxx.verbose = options.print_cmd
+
         with open(json_file_path, encoding='utf-8') as json_file:
             spec_json = json.load(json_file)
 
@@ -587,7 +642,7 @@ def main(args):
                 prefix = prefix_file.read() + '\n'
 
         output = io.StringIO()
-        cwriter = CWriter(spec_json, prefix, output, out_dir)
+        cwriter = CWriter(spec_json, prefix, options.concurrent_tests, output, out_dir)
 
         o_filenames = []
         cflags = ['-I%s' % options.wasmrt_dir, '-I%s' % options.simde_dir]
@@ -596,6 +651,8 @@ def main(args):
                 sys.stderr.write('skipping: wasm2c+memory64 is not yet supported under msvc\n')
                 return SKIPPED
             cflags.append('-DSUPPORT_MEMORY64=1')
+
+        cxxflags = cflags
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
             wasm_filename = os.path.join(out_dir, wasm_filename)
@@ -611,7 +668,7 @@ def main(args):
             wasm2c.RunWithArgs(wasm_filename, '-o', c_filename_input, *args)
             if options.compile:
                 for j, c_filename in enumerate(c_filenames):
-                    o_filenames.append(Compile(cc, c_filename, out_dir, *cflags))
+                    o_filenames.append(Compile(cc, cxx, True, c_filename, out_dir, *cflags))
 
         cwriter.Write()
         main_filename = utils.ChangeExt(json_file_path, '-main.c')
@@ -621,14 +678,18 @@ def main(args):
         if options.compile:
             # Compile wasm-rt-impl.
             wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
-            o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, *cflags))
+            o_filenames.append(Compile(cc, cxx, True, wasm_rt_impl_c, out_dir, *cflags))
 
             # Compile wasm-rt-exceptions.
             wasm_rt_exceptions_c = os.path.join(options.wasmrt_dir, 'wasm-rt-exceptions-impl.c')
-            o_filenames.append(Compile(cc, wasm_rt_exceptions_c, out_dir, *cflags))
+            o_filenames.append(Compile(cc, cxx, True, wasm_rt_exceptions_c, out_dir, *cflags))
+
+            # Compile wasm-rt-threads.
+            wasm_rt_threads_cpp = os.path.join(options.wasmrt_dir, 'wasm-rt-threads-impl.cpp')
+            o_filenames.append(Compile(cc, cxx, False, wasm_rt_threads_cpp, out_dir, *cxxflags))
 
             # Compile and link -main test run entry point
-            o_filenames.append(Compile(cc, main_filename, out_dir, *cflags))
+            o_filenames.append(Compile(cc, cxx, True, main_filename, out_dir, *cflags))
             if IS_WINDOWS:
                 exe_ext = '.exe'
                 libs = []
@@ -636,7 +697,7 @@ def main(args):
                 exe_ext = ''
                 libs = ['-lm']
             main_exe = utils.ChangeExt(json_file_path, exe_ext)
-            Link(cc, o_filenames, main_exe, *libs)
+            Link(cxx, o_filenames, main_exe, *libs)
 
             # Run the resulting binary
             if options.run:

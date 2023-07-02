@@ -1,0 +1,48 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --enable-threads --concurrent-tests
+;; Adhoc tests for wait/notify not covered by the spec suite. Test basic wait/notify behavior for multiple waiters.
+
+(module
+  ;; Import 1 page (64Kib) of shared memory.
+  (import "spectest" "memory" (memory 10 100 shared))
+
+  (func (export "test_wait") (result i32)
+    (memory.atomic.wait32
+          (i32.const 4)            ;; atomic address
+          (i32.const 0)            ;; expected value
+          (i64.const -1))          ;; infinite timeout
+  )
+)
+
+(assert_return (invoke "test_wait") (i32.const 0)) ;; woken by a notify
+
+(module
+  ;; Import 1 page (64Kib) of shared memory.
+  (import "spectest" "memory" (memory 10 100 shared))
+
+  (func (export "test_wait") (result i32)
+    (memory.atomic.wait32
+          (i32.const 4)            ;; atomic address
+          (i32.const 0)            ;; expected value
+          (i64.const -1))          ;; infinite timeout
+  )
+)
+
+(assert_return (invoke "test_wait") (i32.const 0)) ;; woken by a notify
+
+(module
+  ;; Import 1 page (64Kib) of shared memory.
+  (import "spectest" "memory" (memory 10 100 shared))
+
+  (func (export "test_notify") (result i32)
+    (memory.atomic.notify
+          (i32.const 4)          ;; atomic address
+          (i32.const 5))         ;; notify upto 5 waiters
+  )
+)
+
+(assert_return (invoke "test_notify") (i32.const 2)) ;; notified one waiter
+
+(;; STDOUT ;;;
+3/3 tests passed.
+;;; STDOUT ;;)
