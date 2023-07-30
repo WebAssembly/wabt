@@ -125,24 +125,24 @@
     TRAP(UNALIGNED);                     \
   }
 
-#define DEFINE_ATOMIC_LOAD(name, t1, t2, t3)               \
+#define DEFINE_ATOMIC_LOAD(name, t1, t2, t3, force_read)   \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
     MEMCHECK(mem, addr, t1);                               \
     ATOMIC_ALIGNMENT_CHECK(addr, t1);                      \
     t1 result;                                             \
     wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
     result = atomic_load_##t1(&mem->data[addr]);           \
-    wasm_asm("" ::"r"(result));                            \
+    force_read(result);                                    \
     return (t3)(t2)result;                                 \
   }
 
-DEFINE_ATOMIC_LOAD(i32_atomic_load, u32, u32, u32)
-DEFINE_ATOMIC_LOAD(i64_atomic_load, u64, u64, u64)
-DEFINE_ATOMIC_LOAD(i32_atomic_load8_u, u8, u32, u32)
-DEFINE_ATOMIC_LOAD(i64_atomic_load8_u, u8, u64, u64)
-DEFINE_ATOMIC_LOAD(i32_atomic_load16_u, u16, u32, u32)
-DEFINE_ATOMIC_LOAD(i64_atomic_load16_u, u16, u64, u64)
-DEFINE_ATOMIC_LOAD(i64_atomic_load32_u, u32, u64, u64)
+DEFINE_ATOMIC_LOAD(i32_atomic_load, u32, u32, u32, FORCE_READ_INT)
+DEFINE_ATOMIC_LOAD(i64_atomic_load, u64, u64, u64, FORCE_READ_INT)
+DEFINE_ATOMIC_LOAD(i32_atomic_load8_u, u8, u32, u32, FORCE_READ_INT)
+DEFINE_ATOMIC_LOAD(i64_atomic_load8_u, u8, u64, u64, FORCE_READ_INT)
+DEFINE_ATOMIC_LOAD(i32_atomic_load16_u, u16, u32, u32, FORCE_READ_INT)
+DEFINE_ATOMIC_LOAD(i64_atomic_load16_u, u16, u64, u64, FORCE_READ_INT)
+DEFINE_ATOMIC_LOAD(i64_atomic_load32_u, u32, u64, u64, FORCE_READ_INT)
 
 #define DEFINE_ATOMIC_STORE(name, t1, t2)                              \
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \

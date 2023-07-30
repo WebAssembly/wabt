@@ -138,9 +138,17 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 #endif
 
 #ifdef __GNUC__
-#define wasm_asm __asm__
+#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
+// Clang on Mips requires "f" constraints on floats
+#if defined(__clang__) && \
+    (defined(mips) || defined(__mips__) || defined(__mips))
+#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
 #else
-#define wasm_asm(X)
+#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+#endif
+#else
+#define FORCE_READ_INT(var)
+#define FORCE_READ_FLOAT(var)
 #endif
 
 #if WABT_BIG_ENDIAN
@@ -162,13 +170,13 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     RANGE_CHECK((&m), m.size - o - s, s);       \
     load_data(&(m.data[m.size - o - s]), i, s); \
   } while (0)
-#define DEFINE_LOAD(name, t1, t2, t3)                                  \
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)                      \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {             \
     MEMCHECK(mem, addr, t1);                                           \
     t1 result;                                                         \
     wasm_rt_memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], \
                    sizeof(t1));                                        \
-    wasm_asm("" ::"r"(result));                                        \
+    force_read(result);                                                \
     return (t3)(t2)result;                                             \
   }
 
@@ -191,12 +199,12 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     RANGE_CHECK((&m), o, s);       \
     load_data(&(m.data[o]), i, s); \
   } while (0)
-#define DEFINE_LOAD(name, t1, t2, t3)                      \
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)          \
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
     MEMCHECK(mem, addr, t1);                               \
     t1 result;                                             \
     wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
-    wasm_asm("" ::"r"(result));                            \
+    force_read(result);                                    \
     return (t3)(t2)result;                                 \
   }
 
@@ -208,20 +216,20 @@ static inline void load_data(void* dest, const void* src, size_t n) {
   }
 #endif
 
-DEFINE_LOAD(i32_load, u32, u32, u32)
-DEFINE_LOAD(i64_load, u64, u64, u64)
-DEFINE_LOAD(f32_load, f32, f32, f32)
-DEFINE_LOAD(f64_load, f64, f64, f64)
-DEFINE_LOAD(i32_load8_s, s8, s32, u32)
-DEFINE_LOAD(i64_load8_s, s8, s64, u64)
-DEFINE_LOAD(i32_load8_u, u8, u32, u32)
-DEFINE_LOAD(i64_load8_u, u8, u64, u64)
-DEFINE_LOAD(i32_load16_s, s16, s32, u32)
-DEFINE_LOAD(i64_load16_s, s16, s64, u64)
-DEFINE_LOAD(i32_load16_u, u16, u32, u32)
-DEFINE_LOAD(i64_load16_u, u16, u64, u64)
-DEFINE_LOAD(i64_load32_s, s32, s64, u64)
-DEFINE_LOAD(i64_load32_u, u32, u64, u64)
+DEFINE_LOAD(i32_load, u32, u32, u32, FORCE_READ_INT)
+DEFINE_LOAD(i64_load, u64, u64, u64, FORCE_READ_INT)
+DEFINE_LOAD(f32_load, f32, f32, f32, FORCE_READ_FLOAT)
+DEFINE_LOAD(f64_load, f64, f64, f64, FORCE_READ_FLOAT)
+DEFINE_LOAD(i32_load8_s, s8, s32, u32, FORCE_READ_INT)
+DEFINE_LOAD(i64_load8_s, s8, s64, u64, FORCE_READ_INT)
+DEFINE_LOAD(i32_load8_u, u8, u32, u32, FORCE_READ_INT)
+DEFINE_LOAD(i64_load8_u, u8, u64, u64, FORCE_READ_INT)
+DEFINE_LOAD(i32_load16_s, s16, s32, u32, FORCE_READ_INT)
+DEFINE_LOAD(i64_load16_s, s16, s64, u64, FORCE_READ_INT)
+DEFINE_LOAD(i32_load16_u, u16, u32, u32, FORCE_READ_INT)
+DEFINE_LOAD(i64_load16_u, u16, u64, u64, FORCE_READ_INT)
+DEFINE_LOAD(i64_load32_s, s32, s64, u64, FORCE_READ_INT)
+DEFINE_LOAD(i64_load32_u, u32, u64, u64, FORCE_READ_INT)
 DEFINE_STORE(i32_store, u32, u32)
 DEFINE_STORE(i64_store, u64, u64)
 DEFINE_STORE(f32_store, f32, f32)
