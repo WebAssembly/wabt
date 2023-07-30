@@ -659,7 +659,7 @@ if (BUILD_TESTS)
   find_package(Threads REQUIRED)
 
   # Python 3.5 is the version shipped in Ubuntu Xenial
-  find_package(PythonInterp 3.5 REQUIRED)
+  find_package(Python3 3.5 REQUIRED COMPONENTS Interpreter)
 
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
@@ -718,7 +718,7 @@ if (BUILD_TESTS)
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
   add_custom_target(run-tests
-    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
+    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
     USES_TERMINAL
@@ -732,7 +732,7 @@ if (BUILD_TESTS)
   )
 
   add_custom_target(run-c-api-tests
-    COMMAND ${PYTHON_EXECUTABLE} ${WABT_SOURCE_DIR}/test/run-c-api-examples.py --bindir $<TARGET_FILE_DIR:wat2wasm>
+    COMMAND ${Python3_EXECUTABLE} ${WABT_SOURCE_DIR}/test/run-c-api-examples.py --bindir $<TARGET_FILE_DIR:wat2wasm>
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
     USES_TERMINAL
   )
