@@ -1,0 +1,9 @@
+;;; TOOL: run-wasm-decompile
+(memory 1)
+(data $p "x")
+(;; STDOUT ;;;
+memory M_a(initial: 1, max: 0);
+
+data d_a(passive) = "x";
+
+;;; STDOUT ;;)

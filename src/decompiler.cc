@@ -770,7 +770,11 @@ struct Decompiler {
 
     // Data.
     for (auto dat : mc.module.data_segments) {
-      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset), ") =");
+      s += cat("data ", dat->name,
+               dat->kind != SegmentKind::Passive
+                   ? cat("(offset: ", InitExp(dat->offset))
+                   : "(passive",
+               ") =");
       auto ds = BinaryToString(dat->data);
       if (ds.size() > target_exp_width / 2) {
         s += "\n";
