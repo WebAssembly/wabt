@@ -94,8 +94,9 @@ struct GlobalName {
   const std::string& name;
 };
 
-struct ExternalPtr : GlobalName {
-  using GlobalName::GlobalName;
+struct TagSymbol : GlobalName {
+  explicit TagSymbol(const std::string& name)
+      : GlobalName(ModuleFieldType::Tag, name) {}
 };
 
 struct ExternalRef : GlobalName {
@@ -140,11 +141,6 @@ struct TypeEnum {
 struct SignedType {
   explicit SignedType(Type type) : type(type) {}
   Type type;
-};
-
-struct ResultType {
-  explicit ResultType(const TypeVector& types) : types(types) {}
-  const TypeVector& types;
 };
 
 struct TryCatchLabel {
@@ -267,9 +263,9 @@ class CWriter {
   static std::string Mangle(std::string_view name, bool double_underscores);
   static std::string MangleName(std::string_view);
   static std::string MangleModuleName(std::string_view);
-  std::string ExportName(std::string_view module_name,
-                         std::string_view export_name);
-  std::string ExportName(std::string_view export_name);
+  static std::string ExportName(std::string_view module_name,
+                                std::string_view export_name);
+  std::string ExportName(std::string_view export_name) const;
   std::string ModuleInstanceTypeName() const;
   static std::string ModuleInstanceTypeName(std::string_view module_name);
   void ClaimName(SymbolSet& set,
@@ -277,7 +273,8 @@ class CWriter {
                  char type_suffix,
                  std::string_view wasm_name,
                  const std::string& c_name);
-  std::string FindUniqueName(SymbolSet& set, std::string_view proposed_name);
+  std::string FindUniqueName(SymbolSet& set,
+                             std::string_view proposed_name) const;
   std::string ClaimUniqueName(SymbolSet& set,
                               SymbolMap& map,
                               char type_suffix,
@@ -334,7 +331,7 @@ class CWriter {
   void Write(const ParamName&);
   void Write(const LabelName&);
   void Write(const GlobalName&);
-  void Write(const ExternalPtr&);
+  void Write(const TagSymbol&);
   void Write(const ExternalRef&);
   void Write(const ExternalInstancePtr&);
   void Write(const ExternalInstanceRef&);
@@ -345,7 +342,7 @@ class CWriter {
   void Write(const LabelDecl&);
   void Write(const GlobalInstanceVar&);
   void Write(const StackVar&);
-  void Write(const ResultType&);
+  void Write(const TypeVector&);
   void Write(const Const&);
   void WriteInitExpr(const ExprList&);
   void WriteInitExprTerminal(const Expr*);
@@ -648,7 +645,7 @@ std::string CWriter::MangleTagTypes(const TypeVector& types) {
 }
 
 /* The C symbol for an export from this module. */
-std::string CWriter::ExportName(std::string_view export_name) {
+std::string CWriter::ExportName(std::string_view export_name) const {
   return kGlobalSymbolPrefix + module_prefix_ + '_' + MangleName(export_name);
 }
 
@@ -817,7 +814,7 @@ void CWriter::ClaimName(SymbolSet& set,
  * an integer to the symbol if necessary.
  */
 std::string CWriter::FindUniqueName(SymbolSet& set,
-                                    std::string_view proposed_name) {
+                                    std::string_view proposed_name) const {
   std::string unique{proposed_name};
   if (set.find(unique) != set.end()) {
     std::string base = unique + "_";
@@ -1052,7 +1049,7 @@ void CWriter::Write(const GlobalName& name) {
   Write(GetGlobalName(name.type, name.name));
 }
 
-void CWriter::Write(const ExternalPtr& name) {
+void CWriter::Write(const TagSymbol& name) {
   if (!IsImport(name.name)) {
     Write("&");
   }
@@ -1067,10 +1064,10 @@ void CWriter::Write(const ExternalInstancePtr& name) {
 }
 
 void CWriter::Write(const ExternalRef& name) {
-  if (IsImport(name.name)) {
-    Write("(*", GlobalName(name), ")");
-  } else {
+  if (name.type == ModuleFieldType::Func || !IsImport(name.name)) {
     Write(GlobalName(name));
+  } else {
+    Write("(*", GlobalName(name), ")");
   }
 }
 
@@ -1193,13 +1190,13 @@ void CWriter::Write(SignedType type) {
   // clang-format on
 }
 
-void CWriter::Write(const ResultType& rt) {
-  if (rt.types.empty()) {
+void CWriter::Write(const TypeVector& types) {
+  if (types.empty()) {
     Write("void");
-  } else if (rt.types.size() == 1) {
-    Write(rt.types[0]);
+  } else if (types.size() == 1) {
+    Write(types[0]);
   } else {
-    Write("struct ", MangleMultivalueTypes(rt.types));
+    Write("struct ", MangleMultivalueTypes(types));
   }
 }
 
@@ -1380,7 +1377,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
 
       Write("(wasm_rt_funcref_t){", FuncTypeExpr(func_type), ", ",
             "(wasm_rt_function_ptr_t)",
-            ExternalPtr(ModuleFieldType::Func, func->name), ", ");
+            ExternalRef(ModuleFieldType::Func, func->name), ", ");
 
       if (IsImport(func->name)) {
         Write("instance->", GlobalName(ModuleFieldType::Import,
@@ -1388,8 +1385,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
       } else {
         Write("instance");
       }
-
-      Write("};", Newline());
+      Write("}");
     } break;
 
     case ExprType::RefNull:
@@ -1785,7 +1781,7 @@ void CWriter::WriteFuncDeclarations() {
 
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name) {
-  Write(ResultType(decl.sig.result_types), " ", name, "(");
+  Write(decl.sig.result_types, " ", name, "(");
   Write(ModuleInstanceTypeName(), "*");
   WriteParamTypes(decl);
   Write(")");
@@ -1794,7 +1790,7 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
 void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
                                          const std::string& module_name,
                                          const std::string& name) {
-  Write(ResultType(decl.sig.result_types), " ", name, "(");
+  Write(decl.sig.result_types, " ", name, "(");
   Write("struct ", ModuleInstanceTypeName(module_name), "*");
   WriteParamTypes(decl);
   Write(")");
@@ -1802,7 +1798,7 @@ void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
 
 void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
                                                const std::string& name) {
-  Write(ResultType(decl.sig.result_types), " ", name, "(void*");
+  Write(decl.sig.result_types, " ", name, "(void*");
   WriteParamTypes(decl);
   Write(")");
 }
@@ -2153,7 +2149,7 @@ void CWriter::WriteElemInitializers() {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
           const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
           Write("{", FuncTypeExpr(func_type), ", (wasm_rt_function_ptr_t)",
-                ExternalPtr(ModuleFieldType::Func, func->name), ", ");
+                ExternalRef(ModuleFieldType::Func, func->name), ", ");
           if (IsImport(func->name)) {
             Write("offsetof(", ModuleInstanceTypeName(), ", ",
                   GlobalName(ModuleFieldType::Import,
@@ -2284,8 +2280,7 @@ void CWriter::WriteExports(CWriterPhase kind) {
           local_syms_ = global_syms_;
           local_sym_map_.clear();
           stack_var_sym_map_.clear();
-          Write(ResultType(func_->decl.sig.result_types), " ", mangled_name,
-                "(");
+          Write(func_->decl.sig.result_types, " ", mangled_name, "(");
           MakeTypeBindingReverseMapping(func_->GetNumParamsAndLocals(),
                                         func_->bindings, &index_to_name);
           WriteParams(index_to_name);
@@ -2337,8 +2332,10 @@ void CWriter::WriteExports(CWriterPhase kind) {
     switch (export_->kind) {
       case ExternalKind::Func: {
         Write(OpenBrace());
-        Write("return ", ExternalRef(ModuleFieldType::Func, internal_name),
-              "(");
+        if (func_->GetNumResults() > 0) {
+          Write("return ");
+        }
+        Write(ExternalRef(ModuleFieldType::Func, internal_name), "(");
 
         if (IsImport(internal_name)) {
           Write("instance->",
@@ -2381,8 +2378,7 @@ void CWriter::WriteExports(CWriterPhase kind) {
         break;
 
       case ExternalKind::Tag:
-        Write("= ", ExternalPtr(ModuleFieldType::Tag, internal_name), ";",
-              Newline());
+        Write("= ", TagSymbol(internal_name), ";", Newline());
         break;
 
       default:
@@ -2485,7 +2481,7 @@ void CWriter::WriteInitInstanceImport() {
     Write(", struct ", ModuleInstanceTypeName(import_module_name), "* ",
           GlobalName(ModuleFieldType::Import, import_module_name));
   }
-  Write(")", OpenBrace());
+  Write(") ", OpenBrace());
 
   for (const auto& import_module : import_func_module_set_) {
     Write("instance->", GlobalName(ModuleFieldType::Import, import_module),
@@ -2638,7 +2634,7 @@ void CWriter::Write(const Func& func) {
   Write(Newline());
 
   PushFuncSection();
-  Write(ResultType(func.decl.sig.result_types), " ",
+  Write(func.decl.sig.result_types, " ",
         GlobalName(ModuleFieldType::Func, func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
@@ -2661,7 +2657,7 @@ void CWriter::Write(const Func& func) {
     Write("return ", StackVar(0), ";", Newline());
   } else if (num_results >= 2) {
     Write(OpenBrace());
-    Write(ResultType(func.decl.sig.result_types), " tmp;", Newline());
+    Write(func.decl.sig.result_types, " tmp;", Newline());
     for (Index i = 0; i < num_results; ++i) {
       Type type = func.GetResultType(i);
       Writef("tmp.%c%d = ", MangleType(type), i);
@@ -2905,8 +2901,7 @@ void CWriter::Write(const Catch& c) {
   }
 
   Write("if (wasm_rt_exception_tag() == ",
-        ExternalPtr(ModuleFieldType::Tag, module_->GetTag(c.var)->name), ") ",
-        OpenBrace());
+        TagSymbol(module_->GetTag(c.var)->name), ") ", OpenBrace());
 
   const Tag* tag = module_->GetTag(c.var);
   const FuncDeclaration& tag_type = tag->decl;
@@ -3383,7 +3378,7 @@ void CWriter::Write(const ExprList& exprs) {
 
         Write(StackVar(0), " = (wasm_rt_funcref_t){", FuncTypeExpr(func_type),
               ", (wasm_rt_function_ptr_t)",
-              ExternalPtr(ModuleFieldType::Func, func->name), ", ");
+              ExternalRef(ModuleFieldType::Func, func->name), ", ");
 
         if (IsImport(func->name)) {
           Write("instance->", GlobalName(ModuleFieldType::Import,
@@ -3511,12 +3506,10 @@ void CWriter::Write(const ExprList& exprs) {
 
         Index num_params = tag->decl.GetNumParams();
         if (num_params == 0) {
-          Write("wasm_rt_load_exception(",
-                ExternalPtr(ModuleFieldType::Tag, tag->name), ", 0, NULL);",
+          Write("wasm_rt_load_exception(", TagSymbol(tag->name), ", 0, NULL);",
                 Newline());
         } else if (num_params == 1) {
-          Write("wasm_rt_load_exception(",
-                ExternalPtr(ModuleFieldType::Tag, tag->name), ", sizeof(",
+          Write("wasm_rt_load_exception(", TagSymbol(tag->name), ", sizeof(",
                 tag->decl.GetParamType(0), "), &", StackVar(0), ");",
                 Newline());
         } else {
@@ -3527,8 +3520,7 @@ void CWriter::Write(const ExprList& exprs) {
             Write(StackVar(i), ", ");
           }
           Write("};", Newline());
-          Write("wasm_rt_load_exception(",
-                ExternalPtr(ModuleFieldType::Tag, tag->name),
+          Write("wasm_rt_load_exception(", TagSymbol(tag->name),
                 ", sizeof(tmp), &tmp);", Newline());
           Write(CloseBrace(), Newline());
         }

@@ -703,7 +703,7 @@ static void init_memories(w2c_test* instance) {
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {w2c_test_t1, (wasm_rt_function_ptr_t)&w2c_test_f1, 0},
+  {w2c_test_t1, (wasm_rt_function_ptr_t)w2c_test_f1, 0},
 };
 
 static void init_tables(w2c_test* instance) {
@@ -713,7 +713,7 @@ static void init_tables(w2c_test* instance) {
 static void init_elem_instances(w2c_test *instance) {
 }
 
-static void init_instance_import(w2c_test* instance, struct w2c_env* w2c_env_instance){
+static void init_instance_import(w2c_test* instance, struct w2c_env* w2c_env_instance) {
   instance->w2c_env_0x5F_indirect_function_table = w2c_env_0x5F_indirect_function_table(w2c_env_instance);
   instance->w2c_env_0x5F_linear_memory = w2c_env_0x5F_linear_memory(w2c_env_instance);
 }
