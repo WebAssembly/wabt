@@ -659,7 +659,7 @@ if (BUILD_TESTS)
   find_package(Threads REQUIRED)
 
   # Python 3.5 is the version shipped in Ubuntu Xenial
-  find_package(PythonInterp 3.5 REQUIRED)
+  find_package(Python3 3.5 REQUIRED COMPONENTS Interpreter)
 
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
