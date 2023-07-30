@@ -88,11 +88,27 @@ R"w2c_template(#endif
 R"w2c_template(
 #ifdef __GNUC__
 )w2c_template"
-R"w2c_template(#define wasm_asm __asm__
+R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
+)w2c_template"
+R"w2c_template(// Clang on Mips requires "f" constraints on floats
+)w2c_template"
+R"w2c_template(#if defined(__clang__) && \
+)w2c_template"
+R"w2c_template(    (defined(mips) || defined(__mips__) || defined(__mips))
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
-R"w2c_template(#define wasm_asm(X)
+R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define FORCE_READ_INT(var)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT(var)
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
@@ -135,7 +151,7 @@ R"w2c_template(    load_data(&(m.data[m.size - o - s]), i, s); \
 )w2c_template"
 R"w2c_template(  } while (0)
 )w2c_template"
-R"w2c_template(#define DEFINE_LOAD(name, t1, t2, t3)                                  \
+R"w2c_template(#define DEFINE_LOAD(name, t1, t2, t3, force_read)                      \
 )w2c_template"
 R"w2c_template(  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {             \
 )w2c_template"
@@ -147,7 +163,7 @@ R"w2c_template(    wasm_rt_memcpy(&result, &mem->data[mem->size - addr - sizeof(
 )w2c_template"
 R"w2c_template(                   sizeof(t1));                                        \
 )w2c_template"
-R"w2c_template(    wasm_asm("" ::"r"(result));                                        \
+R"w2c_template(    force_read(result);                                                \
 )w2c_template"
 R"w2c_template(    return (t3)(t2)result;                                             \
 )w2c_template"
@@ -192,7 +208,7 @@ R"w2c_template(    load_data(&(m.data[o]), i, s); \
 )w2c_template"
 R"w2c_template(  } while (0)
 )w2c_template"
-R"w2c_template(#define DEFINE_LOAD(name, t1, t2, t3)                      \
+R"w2c_template(#define DEFINE_LOAD(name, t1, t2, t3, force_read)          \
 )w2c_template"
 R"w2c_template(  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
 )w2c_template"
@@ -202,7 +218,7 @@ R"w2c_template(    t1 result;                                             \
 )w2c_template"
 R"w2c_template(    wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
 )w2c_template"
-R"w2c_template(    wasm_asm("" ::"r"(result));                            \
+R"w2c_template(    force_read(result);                                    \
 )w2c_template"
 R"w2c_template(    return (t3)(t2)result;                                 \
 )w2c_template"
@@ -224,33 +240,33 @@ R"w2c_template(  }
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-DEFINE_LOAD(i32_load, u32, u32, u32)
+DEFINE_LOAD(i32_load, u32, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i64_load, u64, u64, u64)
+R"w2c_template(DEFINE_LOAD(i64_load, u64, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(f32_load, f32, f32, f32)
+R"w2c_template(DEFINE_LOAD(f32_load, f32, f32, f32, FORCE_READ_FLOAT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(f64_load, f64, f64, f64)
+R"w2c_template(DEFINE_LOAD(f64_load, f64, f64, f64, FORCE_READ_FLOAT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i32_load8_s, s8, s32, u32)
+R"w2c_template(DEFINE_LOAD(i32_load8_s, s8, s32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i64_load8_s, s8, s64, u64)
+R"w2c_template(DEFINE_LOAD(i64_load8_s, s8, s64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i32_load8_u, u8, u32, u32)
+R"w2c_template(DEFINE_LOAD(i32_load8_u, u8, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i64_load8_u, u8, u64, u64)
+R"w2c_template(DEFINE_LOAD(i64_load8_u, u8, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i32_load16_s, s16, s32, u32)
+R"w2c_template(DEFINE_LOAD(i32_load16_s, s16, s32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i64_load16_s, s16, s64, u64)
+R"w2c_template(DEFINE_LOAD(i64_load16_s, s16, s64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i32_load16_u, u16, u32, u32)
+R"w2c_template(DEFINE_LOAD(i32_load16_u, u16, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i64_load16_u, u16, u64, u64)
+R"w2c_template(DEFINE_LOAD(i64_load16_u, u16, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i64_load32_s, s32, s64, u64)
+R"w2c_template(DEFINE_LOAD(i64_load32_s, s32, s64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_LOAD(i64_load32_u, u32, u64, u64)
+R"w2c_template(DEFINE_LOAD(i64_load32_u, u32, u64, u64, FORCE_READ_INT)
 )w2c_template"
 R"w2c_template(DEFINE_STORE(i32_store, u32, u32)
 )w2c_template"

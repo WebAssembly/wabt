@@ -225,7 +225,7 @@ R"w2c_template(    TRAP(UNALIGNED);                     \
 R"w2c_template(  }
 )w2c_template"
 R"w2c_template(
-#define DEFINE_ATOMIC_LOAD(name, t1, t2, t3)               \
+#define DEFINE_ATOMIC_LOAD(name, t1, t2, t3, force_read)   \
 )w2c_template"
 R"w2c_template(  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
 )w2c_template"
@@ -239,26 +239,26 @@ R"w2c_template(    wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
 )w2c_template"
 R"w2c_template(    result = atomic_load_##t1(&mem->data[addr]);           \
 )w2c_template"
-R"w2c_template(    wasm_asm("" ::"r"(result));                            \
+R"w2c_template(    force_read(result);                                    \
 )w2c_template"
 R"w2c_template(    return (t3)(t2)result;                                 \
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
 R"w2c_template(
-DEFINE_ATOMIC_LOAD(i32_atomic_load, u32, u32, u32)
+DEFINE_ATOMIC_LOAD(i32_atomic_load, u32, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load, u64, u64, u64)
+R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load, u64, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_ATOMIC_LOAD(i32_atomic_load8_u, u8, u32, u32)
+R"w2c_template(DEFINE_ATOMIC_LOAD(i32_atomic_load8_u, u8, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load8_u, u8, u64, u64)
+R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load8_u, u8, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_ATOMIC_LOAD(i32_atomic_load16_u, u16, u32, u32)
+R"w2c_template(DEFINE_ATOMIC_LOAD(i32_atomic_load16_u, u16, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load16_u, u16, u64, u64)
+R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load16_u, u16, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load32_u, u32, u64, u64)
+R"w2c_template(DEFINE_ATOMIC_LOAD(i64_atomic_load32_u, u32, u64, u64, FORCE_READ_INT)
 )w2c_template"
 R"w2c_template(
 #define DEFINE_ATOMIC_STORE(name, t1, t2)                              \
