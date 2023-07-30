@@ -148,6 +148,7 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 #ifdef __GNUC__
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 // Clang on Mips requires "f" constraints on floats
+// See https://github.com/llvm/llvm-project/issues/64241
 #if defined(__clang__) && \
     (defined(mips) || defined(__mips__) || defined(__mips))
 #define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));

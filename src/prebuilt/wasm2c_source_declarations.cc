@@ -92,6 +92,8 @@ R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 )w2c_template"
 R"w2c_template(// Clang on Mips requires "f" constraints on floats
 )w2c_template"
+R"w2c_template(// See https://github.com/llvm/llvm-project/issues/64241
+)w2c_template"
 R"w2c_template(#if defined(__clang__) && \
 )w2c_template"
 R"w2c_template(    (defined(mips) || defined(__mips__) || defined(__mips))
