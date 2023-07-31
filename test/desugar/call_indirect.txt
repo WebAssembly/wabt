@@ -1,0 +1,24 @@
+;;; TOOL: wat-desugar
+(table 0 funcref)
+(func
+ i32.const 0
+ i32.const 0
+ i32.const 0
+ i32.const 0
+ call_indirect (type 0)
+ call_indirect
+ call_indirect (param i32))
+(;; STDOUT ;;;
+(module
+  (table (;0;) 0 funcref)
+  (func (;0;)
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    call_indirect (type 0)
+    call_indirect (type 0)
+    call_indirect (type 1))
+  (type (;0;) (func))
+  (type (;1;) (func (param i32))))
+;;; STDOUT ;;)

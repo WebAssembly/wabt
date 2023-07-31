@@ -671,7 +671,11 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
   writer_->WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
   writer_->WriteVarUnlessZero(expr->table, NextChar::Space);
   writer_->WriteOpenSpace("type");
-  writer_->WriteVar(expr->decl.type_var, NextChar::Newline);
+  const auto type_var =
+      expr->decl.has_func_type
+          ? expr->decl.type_var
+          : Var{writer_->module.GetFuncTypeIndex(expr->decl), expr->loc};
+  writer_->WriteVar(type_var, NextChar::Newline);
   writer_->WriteCloseNewline();
   return Result::Ok;
 }
@@ -911,7 +915,11 @@ Result WatWriter::ExprVisitorDelegate::OnReturnCallIndirectExpr(
     ReturnCallIndirectExpr* expr) {
   writer_->WritePutsSpace(Opcode::ReturnCallIndirect_Opcode.GetName());
   writer_->WriteOpenSpace("type");
-  writer_->WriteVar(expr->decl.type_var, NextChar::Space);
+  const auto type_var =
+      expr->decl.has_func_type
+          ? expr->decl.type_var
+          : Var{writer_->module.GetFuncTypeIndex(expr->decl), expr->loc};
+  writer_->WriteVar(type_var, NextChar::Space);
   writer_->WriteCloseNewline();
   return Result::Ok;
 }
