@@ -453,6 +453,8 @@ class CWriter {
 
   void PushFuncSection(std::string_view include_condition = "");
 
+  bool IsImport(const std::string& name) const;
+
   const WriteCOptions& options_;
   const Module* module_ = nullptr;
   const Func* func_ = nullptr;
@@ -473,7 +475,6 @@ class CWriter {
   StackVarSymbolMap stack_var_sym_map_;
   SymbolSet global_syms_;
   SymbolSet local_syms_;
-  SymbolSet import_syms_;
   TypeVector type_stack_;
   std::vector<Label> label_stack_;
   std::vector<TryCatchLabel> try_catch_stack_;
@@ -878,7 +879,6 @@ void CWriter::DefineImportName(const Import* import,
       break;
   }
 
-  import_syms_.insert(name);
   import_module_sym_map_.emplace(name, import->module_name);
 
   const std::string mangled = ExportName(module, field_name);
@@ -1053,24 +1053,21 @@ void CWriter::Write(const GlobalName& name) {
 }
 
 void CWriter::Write(const ExternalPtr& name) {
-  bool is_import = import_syms_.count(name.name) != 0;
-  if (!is_import) {
+  if (!IsImport(name.name)) {
     Write("&");
   }
   Write(GlobalName(name));
 }
 
 void CWriter::Write(const ExternalInstancePtr& name) {
-  bool is_import = import_syms_.count(name.name) != 0;
-  if (!is_import) {
+  if (!IsImport(name.name)) {
     Write("&");
   }
   Write("instance->", GlobalName(name));
 }
 
 void CWriter::Write(const ExternalRef& name) {
-  bool is_import = import_syms_.count(name.name) != 0;
-  if (is_import) {
+  if (IsImport(name.name)) {
     Write("(*", GlobalName(name), ")");
   } else {
     Write(GlobalName(name));
@@ -1078,8 +1075,7 @@ void CWriter::Write(const ExternalRef& name) {
 }
 
 void CWriter::Write(const ExternalInstanceRef& name) {
-  bool is_import = import_syms_.count(name.name) != 0;
-  if (is_import) {
+  if (IsImport(name.name)) {
     Write("(*instance->", GlobalName(name), ")");
   } else {
     Write("instance->", GlobalName(name));
@@ -1386,8 +1382,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
             "(wasm_rt_function_ptr_t)",
             ExternalPtr(ModuleFieldType::Func, func->name), ", ");
 
-      bool is_import = import_module_sym_map_.count(func->name) != 0;
-      if (is_import) {
+      if (IsImport(func->name)) {
         Write("instance->", GlobalName(ModuleFieldType::Import,
                                        import_module_sym_map_[func->name]));
       } else {
@@ -2159,8 +2154,7 @@ void CWriter::WriteElemInitializers() {
           const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
           Write("{", FuncTypeExpr(func_type), ", (wasm_rt_function_ptr_t)",
                 ExternalPtr(ModuleFieldType::Func, func->name), ", ");
-          const bool is_import = import_module_sym_map_.count(func->name) != 0;
-          if (is_import) {
+          if (IsImport(func->name)) {
             Write("offsetof(", ModuleInstanceTypeName(), ", ",
                   GlobalName(ModuleFieldType::Import,
                              import_module_sym_map_[func->name]),
@@ -2346,8 +2340,7 @@ void CWriter::WriteExports(CWriterPhase kind) {
         Write("return ", ExternalRef(ModuleFieldType::Func, internal_name),
               "(");
 
-        bool is_import = import_module_sym_map_.count(internal_name) != 0;
-        if (is_import) {
+        if (IsImport(internal_name)) {
           Write("instance->",
                 GlobalName(ModuleFieldType::Import,
                            import_module_sym_map_[internal_name]));
@@ -2435,9 +2428,7 @@ void CWriter::WriteInit() {
 
   for (Var* var : module_->starts) {
     Write(ExternalRef(ModuleFieldType::Func, module_->GetFunc(*var)->name));
-    bool is_import =
-        import_module_sym_map_.count(module_->GetFunc(*var)->name) != 0;
-    if (is_import) {
+    if (IsImport(module_->GetFunc(*var)->name)) {
       Write("(instance->",
             GlobalName(ModuleFieldType::Import,
                        import_module_sym_map_[module_->GetFunc(*var)->name]),
@@ -2621,6 +2612,10 @@ void CWriter::WriteFuncs() {
 void CWriter::PushFuncSection(std::string_view include_condition) {
   func_sections_.emplace_back(include_condition, MemoryStream{});
   stream_ = &func_sections_.back().second;
+}
+
+bool CWriter::IsImport(const std::string& name) const {
+  return import_module_sym_map_.count(name);
 }
 
 void CWriter::Write(const Func& func) {
@@ -3060,8 +3055,7 @@ void CWriter::Write(const ExprList& exprs) {
 
         assert(var.is_name());
         Write(ExternalRef(ModuleFieldType::Func, var.name()), "(");
-        bool is_import = import_module_sym_map_.count(func.name) != 0;
-        if (is_import) {
+        if (IsImport(func.name)) {
           Write("instance->", GlobalName(ModuleFieldType::Import,
                                          import_module_sym_map_[func.name]));
         } else {
@@ -3391,8 +3385,7 @@ void CWriter::Write(const ExprList& exprs) {
               ", (wasm_rt_function_ptr_t)",
               ExternalPtr(ModuleFieldType::Func, func->name), ", ");
 
-        bool is_import = import_module_sym_map_.count(func->name) != 0;
-        if (is_import) {
+        if (IsImport(func->name)) {
           Write("instance->", GlobalName(ModuleFieldType::Import,
                                          import_module_sym_map_[func->name]));
         } else {
