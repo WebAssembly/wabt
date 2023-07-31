@@ -700,30 +700,30 @@ static void init_memories(w2c_test* instance) {
 
 /* export: '' */
 void w2c_test_(w2c_test* instance) {
-  return w2c_test__0(instance);
+  w2c_test__0(instance);
 }
 
 /* export: '*\2F' */
 void w2c_test_0x2A0x2F(w2c_test* instance) {
-  return w2c_test__0(instance);
+  w2c_test__0(instance);
 }
 
 /* export: '\3F\3F\2F' */
 void w2c_test_0x3F0x3F0x2F(w2c_test* instance) {
-  return w2c_test__0(instance);
+  w2c_test__0(instance);
 }
 
 /* export: '\0A' */
 void w2c_test_0x0A(w2c_test* instance) {
-  return w2c_test__0(instance);
+  w2c_test__0(instance);
 }
 
 /* export: '\E2\9D\A4\EF\B8\8F' */
 void w2c_test_0xE20x9D0xA40xEF0xB80x8F(w2c_test* instance) {
-  return w2c_test__0(instance);
+  w2c_test__0(instance);
 }
 
-static void init_instance_import(w2c_test* instance, struct w2c_0x5Cmodule* w2c_0x5Cmodule_instance){
+static void init_instance_import(w2c_test* instance, struct w2c_0x5Cmodule* w2c_0x5Cmodule_instance) {
   instance->w2c_0x5Cmodule_import0x200x2A0x2F = w2c_0x5Cmodule_import0x200x2A0x2F(w2c_0x5Cmodule_instance);
 }
 
