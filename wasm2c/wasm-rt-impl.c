@@ -145,6 +145,11 @@ static void os_cleanup_signal_handler(void) {
 static void* os_mmap(size_t size) {
   int map_prot = PROT_NONE;
   int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
+#ifdef PROT_MPROTECT
+  /* NetBSD's MPROTECT hardening requries declaring that the memory will
+     later change protections to W/X. */
+  map_prot |= PROT_MPROTECT(PROT_READ | PROT_WRITE | PROT_EXEC);
+#endif
   uint8_t* addr = mmap(NULL, size, map_prot, map_flags, -1, 0);
   if (addr == MAP_FAILED)
     return NULL;
