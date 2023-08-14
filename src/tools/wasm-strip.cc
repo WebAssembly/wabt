@@ -28,7 +28,7 @@ using namespace wabt;
 static std::string s_filename;
 static std::string s_outfile;
 static std::set<std::string_view> v_sections_to_keep{};
-static std::set<std::string_view> v_sections_to_exclude{};
+static std::set<std::string_view> v_sections_to_remove{};
 
 static const char s_description[] =
     R"(  Remove sections of a WebAssembly binary file.
@@ -53,10 +53,10 @@ static void ParseOptions(int argc, char** argv) {
                    [](const char* value) {
                      v_sections_to_keep.insert(std::string_view{value});
                    });
-  parser.AddOption('x', "exclude-section", "SECTION NAME",
-                   "Section to specifically exclude, including all the rest",
+  parser.AddOption('R', "remove-section", "SECTION NAME",
+                   "Section to specifically remove, including all the rest",
                    [](const char* value) {
-                     v_sections_to_exclude.insert(std::string_view{value});
+                     v_sections_to_remove.insert(std::string_view{value});
                    });
   parser.Parse(argc, argv);
 }
@@ -148,7 +148,7 @@ int ProgramMain(int argc, char** argv) {
   ReadBinaryOptions options(features, nullptr, kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
 
-  BinaryReaderStrip reader(v_sections_to_keep, v_sections_to_exclude, &errors);
+  BinaryReaderStrip reader(v_sections_to_keep, v_sections_to_remove, &errors);
   result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
   FormatErrorsToFile(errors, Location::Type::Binary);
   if (Failed(result)) {
