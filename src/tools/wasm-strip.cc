@@ -64,11 +64,11 @@ static void ParseOptions(int argc, char** argv) {
 class BinaryReaderStrip : public BinaryReaderNop {
  public:
   explicit BinaryReaderStrip(std::set<std::string_view> sections_to_keep,
-                             std::set<std::string_view> sections_to_exclude,
+                             std::set<std::string_view> sections_to_remove,
                              Errors* errors)
       : errors_(errors),
         sections_to_keep_(sections_to_keep),
-        sections_to_exclude_(sections_to_exclude),
+        sections_to_remove_(sections_to_remove),
         section_start_(0) {
     stream_.WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
     stream_.WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
@@ -99,16 +99,16 @@ class BinaryReaderStrip : public BinaryReaderNop {
   Result BeginCustomSection(Index section_index,
                             Offset size,
                             std::string_view section_name) override {
-    if (!sections_to_exclude_.empty() &&
-        sections_to_exclude_.count(section_name) > 0) {
-      return Result::Ok;
-    } else if (!sections_to_exclude_.empty()) {
-      WriteCustom(size);
+    if (!sections_to_remove_.empty() &&
+        sections_to_remove_.count(section_name) > 0) {
       return Result::Ok;
     }
 
-    if (sections_to_keep_.count(section_name) > 0) {
-      WriteCustom(size);
+    if (sections_to_keep_.count(section_name) > 0 ||
+        !sections_to_remove_.empty()) {
+      stream_.WriteU8Enum(BinarySection::Custom, "section code");
+      WriteU32Leb128(&stream_, size, "section size");
+      stream_.WriteData(state->data + section_start_, size, "section data");
     }
     return Result::Ok;
   }
@@ -117,14 +117,8 @@ class BinaryReaderStrip : public BinaryReaderNop {
   MemoryStream stream_;
   Errors* errors_;
   std::set<std::string_view> sections_to_keep_;
-  std::set<std::string_view> sections_to_exclude_;
+  std::set<std::string_view> sections_to_remove_;
   Offset section_start_;
-
-  void WriteCustom(wabt::Offset& size) {
-    stream_.WriteU8Enum(BinarySection::Custom, "section code");
-    WriteU32Leb128(&stream_, size, "section size");
-    stream_.WriteData(state->data + section_start_, size, "section data");
-  }
 };
 
 int ProgramMain(int argc, char** argv) {
