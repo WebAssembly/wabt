@@ -99,8 +99,7 @@ class BinaryReaderStrip : public BinaryReaderNop {
   Result BeginCustomSection(Index section_index,
                             Offset size,
                             std::string_view section_name) override {
-    if (!sections_to_remove_.empty() &&
-        sections_to_remove_.count(section_name) > 0) {
+    if (sections_to_remove_.count(section_name) > 0) {
       return Result::Ok;
     }
 
