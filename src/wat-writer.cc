@@ -164,6 +164,7 @@ class WatWriter : ModuleContext {
   void WriteTypeEntry(const TypeEntry& type);
   void WriteField(const Field& field);
   void WriteStartFunction(const Var& start);
+  void WriteCustom(const Custom& custom);
 
   class ExprVisitorDelegate;
 
@@ -1613,6 +1614,13 @@ void WatWriter::WriteStartFunction(const Var& start) {
   WriteCloseNewline();
 }
 
+void WatWriter::WriteCustom(const Custom& custom) {
+  WriteOpenSpace("@custom");
+  WriteQuotedString(custom.name, NextChar::Space);
+  WriteQuotedData(custom.data.data(), custom.data.size());
+  WriteCloseNewline();
+}
+
 Result WatWriter::WriteModule() {
   BuildInlineExportMap();
   BuildInlineImportMap();
@@ -1658,6 +1666,9 @@ Result WatWriter::WriteModule() {
         WriteStartFunction(cast<StartModuleField>(&field)->start);
         break;
     }
+  }
+  for (const Custom& custom : module.customs) {
+    WriteCustom(custom);
   }
   WriteCloseNewline();
   /* force the newline to be written */

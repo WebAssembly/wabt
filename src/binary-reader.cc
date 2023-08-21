@@ -116,6 +116,9 @@ class BinaryReader {
   [[nodiscard]] Result ReadBytes(const void** out_data,
                                  Address* out_data_size,
                                  const char* desc);
+  [[nodiscard]] Result ReadBytesWithSize(const void** out_data,
+                                         Offset size,
+                                         const char* desc);
   [[nodiscard]] Result ReadIndex(Index* index, const char* desc);
   [[nodiscard]] Result ReadOffset(Offset* offset, const char* desc);
   [[nodiscard]] Result ReadAlignment(Address* align_log2, const char* desc);
@@ -153,6 +156,8 @@ class BinaryReader {
   [[nodiscard]] Result ReadNameSection(Offset section_size);
   [[nodiscard]] Result ReadRelocSection(Offset section_size);
   [[nodiscard]] Result ReadDylinkSection(Offset section_size);
+  [[nodiscard]] Result ReadGenericCustomSection(std::string_view name,
+                                                Offset section_size);
   [[nodiscard]] Result ReadDylink0Section(Offset section_size);
   [[nodiscard]] Result ReadTargetFeaturesSections(Offset section_size);
   [[nodiscard]] Result ReadLinkingSection(Offset section_size);
@@ -401,6 +406,17 @@ Result BinaryReader::ReadBytes(const void** out_data,
   *out_data = static_cast<const uint8_t*>(state_.data) + state_.offset;
   *out_data_size = data_size;
   state_.offset += data_size;
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadBytesWithSize(const void** out_data,
+                                       Offset size,
+                                       const char* desc) {
+  ERROR_UNLESS(state_.offset + size <= read_end_, "unable to read bytes: %s",
+               desc);
+
+  *out_data = static_cast<const uint8_t*>(state_.data) + state_.offset;
+  state_.offset += size;
   return Result::Ok;
 }
 
@@ -2155,6 +2171,20 @@ Result BinaryReader::ReadTargetFeaturesSections(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadGenericCustomSection(std::string_view name,
+                                              Offset section_size) {
+  CALLBACK(BeginGenericCustomSection, section_size);
+  const void* data;
+  // Subtract name.size() and 1 because of the single section id byte and the
+  // section name. The rest should be the actual custom section data
+  Offset custom_data_size = section_size - name.size() - 1;
+  CHECK_RESULT(
+      ReadBytesWithSize(&data, custom_data_size, "custom section data"));
+  CALLBACK(OnGenericCustomSection, name, data, custom_data_size);
+  CALLBACK0(EndGenericCustomSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadLinkingSection(Offset section_size) {
   CALLBACK(BeginLinkingSection, section_size);
   uint32_t version;
@@ -2395,8 +2425,7 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) - 1);
     CHECK_RESULT(ReadCodeMetadataSection(metadata_name, section_size));
   } else {
-    // This is an unknown custom section, skip it.
-    state_.offset = read_end_;
+    CHECK_RESULT(ReadGenericCustomSection(section_name, section_size));
   }
   CALLBACK0(EndCustomSection);
   return Result::Ok;

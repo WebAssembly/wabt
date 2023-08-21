@@ -1164,6 +1164,17 @@ class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
   Var start;
 };
 
+struct Custom {
+  explicit Custom(const Location& loc = Location(),
+                  std::string_view name = std::string_view(),
+                  std::vector<uint8_t> data = std::vector<uint8_t>())
+      : name(name), data(data), loc(loc) {}
+
+  std::string name;
+  std::vector<uint8_t> data;
+  Location loc;
+};
+
 struct Module {
   Index GetFuncTypeIndex(const Var&) const;
   Index GetFuncTypeIndex(const FuncDeclaration&) const;
@@ -1235,6 +1246,7 @@ struct Module {
   std::vector<Memory*> memories;
   std::vector<DataSegment*> data_segments;
   std::vector<Var*> starts;
+  std::vector<Custom> customs;
 
   BindingHash tag_bindings;
   BindingHash func_bindings;

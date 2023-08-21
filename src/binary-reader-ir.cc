@@ -314,6 +314,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index index,
                      std::string_view name) override;
 
+  Result OnGenericCustomSection(std::string_view name,
+                                const void* data,
+                                Offset size) override;
+
   Result BeginTagSection(Offset size) override { return Result::Ok; }
   Result OnTagCount(Index count) override { return Result::Ok; }
   Result OnTagType(Index index, Index sig_index) override;
@@ -1748,6 +1752,18 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
                                      std::string_view name,
                                      Index table_index) {
   return SetTableName(table_index, name);
+}
+
+Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
+                                              const void* data,
+                                              Offset size) {
+  Custom custom = Custom(GetLocation(), name);
+  custom.data.resize(size);
+  if (size > 0) {
+    memcpy(custom.data.data(), data, size);
+  }
+  module_->customs.push_back(std::move(custom));
+  return Result::Ok;
 }
 
 }  // end anonymous namespace

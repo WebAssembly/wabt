@@ -519,6 +519,15 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndTargetFeaturesSection() override { return Result::Ok; }
 
+  /* Generic custom section */
+  Result BeginGenericCustomSection(Offset size) override { return Result::Ok; }
+  Result OnGenericCustomSection(std::string_view name,
+                                const void* data,
+                                Offset size) override {
+    return Result::Ok;
+  };
+  Result EndGenericCustomSection() override { return Result::Ok; }
+
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnSymbolCount(Index count) override { return Result::Ok; }
