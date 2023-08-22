@@ -2405,6 +2405,11 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   ValueRestoreGuard<bool, &BinaryReader::reading_custom_section_> guard(this);
   reading_custom_section_ = true;
 
+  Offset pre_read_offset = state_.offset;
+  CHECK_RESULT(ReadGenericCustomSection(section_name, section_size));
+  // Backtrack parser to old state
+  state_.offset = pre_read_offset;
+
   if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
     did_read_names_section_ = true;
@@ -2425,7 +2430,8 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) - 1);
     CHECK_RESULT(ReadCodeMetadataSection(metadata_name, section_size));
   } else {
-    CHECK_RESULT(ReadGenericCustomSection(section_name, section_size));
+    // Skip. This is a generic custom section, and is handled above.
+    state_.offset = read_end_;
   }
   CALLBACK0(EndCustomSection);
   return Result::Ok;
