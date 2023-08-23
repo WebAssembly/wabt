@@ -1670,6 +1670,12 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
+  for (const Custom& custom : module_->customs) {
+    BeginCustomSection(custom.name.data());
+    stream_->WriteData(custom.data, "custom data");
+    EndSection();
+  }
+
   if (options_.write_debug_names) {
     std::vector<std::string> index_to_name;
 
