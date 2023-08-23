@@ -524,12 +524,7 @@ Result Validator::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
 Result Validator::OnSelectExpr(SelectExpr* expr) {
   result_ |= validator_.OnSelect(expr->loc, expr->result_type.size(),
                                  expr->result_type.data());
-  // TODO: Existing behavior fails when select fails.
-#if 0
   return Result::Ok;
-#else
-  return result_;
-#endif
 }
 
 Result Validator::OnStoreExpr(StoreExpr* expr) {
