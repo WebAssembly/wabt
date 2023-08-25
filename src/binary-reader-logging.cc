@@ -811,7 +811,7 @@ DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
 DEFINE_INDEX_DESC(OnLocalGetExpr, "index")
 DEFINE_INDEX_DESC(OnLocalSetExpr, "index")
 DEFINE_INDEX_DESC(OnLocalTeeExpr, "index")
-DEFINE_INDEX_INDEX(OnMemoryCopyExpr, "src_memory_index", "dest_memory_index")
+DEFINE_INDEX_INDEX(OnMemoryCopyExpr, "dest_memory_index", "src_memory_index")
 DEFINE_INDEX(OnDataDropExpr)
 DEFINE_INDEX(OnMemoryFillExpr)
 DEFINE_INDEX(OnMemoryGrowExpr)

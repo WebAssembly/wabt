@@ -493,15 +493,15 @@ class MemoryExpr : public ExprMixin<TypeEnum> {
 template <ExprType TypeEnum>
 class MemoryBinaryExpr : public ExprMixin<TypeEnum> {
  public:
-  MemoryBinaryExpr(Var srcmemidx,
-                   Var destmemidx,
+  MemoryBinaryExpr(Var destmemidx,
+                   Var srcmemidx,
                    const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc),
-        srcmemidx(srcmemidx),
-        destmemidx(destmemidx) {}
+        destmemidx(destmemidx),
+        srcmemidx(srcmemidx) {}
 
-  Var srcmemidx;
   Var destmemidx;
+  Var srcmemidx;
 };
 
 using DropExpr = ExprMixin<ExprType::Drop>;

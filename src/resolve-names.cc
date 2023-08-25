@@ -348,8 +348,8 @@ Result NameResolver::OnLocalTeeExpr(LocalTeeExpr* expr) {
 }
 
 Result NameResolver::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
-  ResolveMemoryVar(&expr->srcmemidx);
   ResolveMemoryVar(&expr->destmemidx);
+  ResolveMemoryVar(&expr->srcmemidx);
   return Result::Ok;
 }
 

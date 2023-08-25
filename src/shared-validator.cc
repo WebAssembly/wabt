@@ -928,14 +928,14 @@ Result SharedValidator::OnLoop(const Location& loc, Type sig_type) {
 }
 
 Result SharedValidator::OnMemoryCopy(const Location& loc,
-                                     Var srcmemidx,
-                                     Var destmemidx) {
+                                     Var destmemidx,
+                                     Var srcmemidx) {
   Result result = CheckInstr(Opcode::MemoryCopy, loc);
   MemoryType srcmt;
   MemoryType dstmt;
-  result |= CheckMemoryIndex(srcmemidx, &srcmt);
   result |= CheckMemoryIndex(destmemidx, &dstmt);
-  result |= typechecker_.OnMemoryCopy(srcmt.limits, dstmt.limits);
+  result |= CheckMemoryIndex(srcmemidx, &srcmt);
+  result |= typechecker_.OnMemoryCopy(dstmt.limits, srcmt.limits);
   return result;
 }
 

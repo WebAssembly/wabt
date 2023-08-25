@@ -209,7 +209,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnLocalSetExpr(Index local_index) override;
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
-  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override;
+  Result OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) override;
   Result OnDataDropExpr(Index segment_index) override;
   Result OnMemoryGrowExpr(Index memidx) override;
   Result OnMemoryFillExpr(Index memidx) override;
@@ -1417,11 +1417,11 @@ Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) {
+Result BinaryReaderInterp::OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) {
   CHECK_RESULT(validator_.OnMemoryCopy(GetLocation(),
-                                       Var(srcmemidx, GetLocation()),
-                                       Var(destmemidx, GetLocation())));
-  istream_.Emit(Opcode::MemoryCopy, srcmemidx, destmemidx);
+                                       Var(destmemidx, GetLocation()),
+                                       Var(srcmemidx, GetLocation())));
+  istream_.Emit(Opcode::MemoryCopy, destmemidx, srcmemidx);
   return Result::Ok;
 }
 
