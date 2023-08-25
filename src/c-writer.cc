@@ -259,7 +259,6 @@ class CWriter {
   static constexpr char MangleType(Type);
   static constexpr char MangleField(ModuleFieldType);
   static std::string MangleMultivalueTypes(const TypeVector&);
-  static std::string MangleTagTypes(const TypeVector&);
   static std::string Mangle(std::string_view name, bool double_underscores);
   static std::string MangleName(std::string_view);
   static std::string MangleModuleName(std::string_view);
@@ -350,7 +349,8 @@ class CWriter {
   void WriteSourceTop();
   void WriteMultiCTop();
   void WriteMultiCTopEmpty();
-  void WriteMultivalueTypes();
+  void WriteMultivalueType(const TypeVector&);
+  void WriteMultivalueResultTypes();
   void WriteTagTypes();
   void WriteFuncTypeDecls();
   void WriteFuncTypes();
@@ -407,6 +407,14 @@ class CWriter {
   void WriteLocals(const std::vector<std::string>& index_to_name);
   void WriteStackVarDeclarations();
   void Write(const ExprList&);
+  void WriteUnwindTryCatchStack(const Label*);
+  void Spill(const TypeVector&, bool);
+  void Unspill(const TypeVector&, bool);
+
+  template <typename sources>
+  void Spill(const TypeVector&, bool, const sources& src);
+  template <typename targets>
+  void Unspill(const TypeVector&, bool, const targets& tgt);
 
   enum class AssignOp {
     Disallowed,
@@ -628,16 +636,6 @@ static std::string SanitizeForComment(std::string_view str) {
 std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
   assert(types.size() >= 2);
   std::string result = "wasm_multi_";
-  for (auto type : types) {
-    result += MangleType(type);
-  }
-  return result;
-}
-
-// static
-std::string CWriter::MangleTagTypes(const TypeVector& types) {
-  assert(types.size() >= 2);
-  std::string result = "wasm_tag_";
   for (auto type : types) {
     result += MangleType(type);
   }
@@ -1095,14 +1093,7 @@ void CWriter::Write(const GotoLabel& goto_label) {
     }
   }
 
-  assert(try_catch_stack_.size() >= label->try_catch_stack_size);
-
-  if (try_catch_stack_.size() != label->try_catch_stack_size) {
-    const std::string& name =
-        try_catch_stack_.at(label->try_catch_stack_size).name;
-
-    Write("wasm_rt_set_unwind_target(", name, "_outer_target);", Newline());
-  }
+  WriteUnwindTryCatchStack(label);
 
   if (goto_label.var.is_name()) {
     Write("goto ", LabelName(goto_label.var.name()), ";");
@@ -1445,26 +1436,28 @@ void CWriter::WriteMultiCTopEmpty() {
   }
 }
 
-void CWriter::WriteMultivalueTypes() {
+void CWriter::WriteMultivalueType(const TypeVector& types) {
+  const std::string name = MangleMultivalueTypes(types);
+  // these ifndefs are actually to support importing multiple modules
+  // incidentally they also mean we don't have to bother with deduplication
+  Write(Newline(), "#ifndef ", name, Newline());
+  Write("#define ", name, " ", name, Newline());
+  Write("struct ", name, " ", OpenBrace());
+  for (Index i = 0; i < types.size(); ++i) {
+    const Type type = types[i];
+    Write(type);
+    Writef(" %c%d;", MangleType(type), i);
+    Write(Newline());
+  }
+  Write(CloseBrace(), ";", Newline(), "#endif  /* ", name, " */", Newline());
+}
+
+void CWriter::WriteMultivalueResultTypes() {
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
-    Index num_results = func_type->GetNumResults();
-    if (num_results <= 1) {
-      continue;
+    if (func_type->GetNumResults() > 1) {
+      WriteMultivalueType(func_type->sig.result_types);
     }
-    std::string name = MangleMultivalueTypes(func_type->sig.result_types);
-    // these ifndefs are actually to support importing multiple modules
-    // incidentally they also mean we don't have to bother with deduplication
-    Write("#ifndef ", name, Newline());
-    Write("#define ", name, " ", name, Newline());
-    Write("struct ", name, " ", OpenBrace());
-    for (Index i = 0; i < num_results; ++i) {
-      Type type = func_type->GetResultType(i);
-      Write(type);
-      Writef(" %c%d;", MangleType(type), i);
-      Write(Newline());
-    }
-    Write(CloseBrace(), ";", Newline(), "#endif  /* ", name, " */", Newline());
   }
 }
 
@@ -1475,18 +1468,7 @@ void CWriter::WriteTagTypes() {
     if (num_params <= 1) {
       continue;
     }
-    const std::string name = MangleTagTypes(tag_type.sig.param_types);
-    // use same method as WriteMultivalueTypes
-    Write("#ifndef ", name, Newline());
-    Write("#define ", name, " ", name, Newline());
-    Write("struct ", name, " ", OpenBrace());
-    for (Index i = 0; i < num_params; ++i) {
-      Type type = tag_type.GetParamType(i);
-      Write(type);
-      Writef(" %c%d;", MangleType(type), i);
-      Write(Newline());
-    }
-    Write(CloseBrace(), ";", Newline(), "#endif  /* ", name, " */", Newline());
+    WriteMultivalueType(tag_type.sig.param_types);
   }
 }
 
@@ -2614,6 +2596,43 @@ bool CWriter::IsImport(const std::string& name) const {
   return import_module_sym_map_.count(name);
 }
 
+template <typename sources>
+void CWriter::Spill(const TypeVector& types, bool ptr, const sources& src) {
+  for (Index i = 0; i < types.size(); ++i) {
+    Write("tmp", ptr ? "->" : ".");
+    Writef("%c%d = ", MangleType(types.at(i)), i);
+    Write(src(i), ";", Newline());
+  }
+}
+
+void CWriter::Spill(const TypeVector& types, bool ptr) {
+  Spill(types, ptr, [&](auto i) { return StackVar(types.size() - i - 1); });
+}
+
+template <typename targets>
+void CWriter::Unspill(const TypeVector& types, bool ptr, const targets& tgt) {
+  for (Index i = 0; i < types.size(); ++i) {
+    Write(tgt(i), " = tmp", ptr ? "->" : ".");
+    Writef("%c%d;", MangleType(types.at(i)), i);
+    Write(Newline());
+  }
+}
+
+void CWriter::Unspill(const TypeVector& types, bool ptr) {
+  Unspill(types, ptr, [&](auto i) { return StackVar(types.size() - i - 1); });
+}
+
+void CWriter::WriteUnwindTryCatchStack(const Label* label) {
+  assert(try_catch_stack_.size() >= label->try_catch_stack_size);
+
+  if (try_catch_stack_.size() != label->try_catch_stack_size) {
+    const std::string& name =
+        try_catch_stack_.at(label->try_catch_stack_size).name;
+
+    Write("wasm_rt_set_unwind_target(", name, "_outer_target);", Newline());
+  }
+}
+
 void CWriter::Write(const Func& func) {
   func_ = &func;
   local_syms_.clear();
@@ -2656,15 +2675,9 @@ void CWriter::Write(const Func& func) {
   if (num_results == 1) {
     Write("return ", StackVar(0), ";", Newline());
   } else if (num_results >= 2) {
-    Write(OpenBrace());
-    Write(func.decl.sig.result_types, " tmp;", Newline());
-    for (Index i = 0; i < num_results; ++i) {
-      Type type = func.GetResultType(i);
-      Writef("tmp.%c%d = ", MangleType(type), i);
-      Write(StackVar(num_results - i - 1), ";", Newline());
-    }
-    Write("return tmp;", Newline());
-    Write(CloseBrace(), Newline());
+    Write(OpenBrace(), func.decl.sig.result_types, " tmp;", Newline());
+    Spill(func.decl.sig.result_types, false);
+    Write("return tmp;", CloseBrace(), Newline());
   }
 
   stream_ = prev_stream;
@@ -2906,24 +2919,14 @@ void CWriter::Write(const Catch& c) {
   const Tag* tag = module_->GetTag(c.var);
   const FuncDeclaration& tag_type = tag->decl;
   const Index num_params = tag_type.GetNumParams();
+  PushTypes(tag_type.sig.param_types);
   if (num_params == 1) {
-    PushType(tag_type.GetParamType(0));
     Write("wasm_rt_memcpy(&", StackVar(0), ", wasm_rt_exception(), sizeof(",
           tag_type.GetParamType(0), "));", Newline());
   } else if (num_params > 1) {
-    for (const auto& type : tag_type.sig.param_types) {
-      PushType(type);
-    }
-    Write(OpenBrace());
-    Write("struct ", MangleTagTypes(tag_type.sig.param_types), " tmp;",
-          Newline());
+    Write(OpenBrace(), tag_type.sig.param_types, " tmp;", Newline());
     Write("wasm_rt_memcpy(&tmp, wasm_rt_exception(), sizeof(tmp));", Newline());
-    for (unsigned int i = 0; i < tag_type.sig.param_types.size(); ++i) {
-      Write(StackVar(i));
-      Writef(" = tmp.%c%d;", MangleType(tag_type.sig.param_types.at(i)), i);
-      Write(Newline());
-    }
-
+    Unspill(tag_type.sig.param_types, false);
     Write(CloseBrace(), Newline());
   }
 
@@ -3041,9 +3044,7 @@ void CWriter::Write(const ExprList& exprs) {
         Index num_results = func.GetNumResults();
         assert(type_stack_.size() >= num_params);
         if (num_results > 1) {
-          Write(OpenBrace());
-          Write("struct ", MangleMultivalueTypes(func.decl.sig.result_types));
-          Write(" tmp = ");
+          Write(OpenBrace(), func.decl.sig.result_types, " tmp = ");
         } else if (num_results == 1) {
           Write(StackVar(num_params - 1, func.GetResultType(0)), " = ");
         }
@@ -3062,17 +3063,10 @@ void CWriter::Write(const ExprList& exprs) {
         }
         Write(");", Newline());
         DropTypes(num_params);
+        PushTypes(func.decl.sig.result_types);
         if (num_results > 1) {
-          for (Index i = 0; i < num_results; ++i) {
-            Type type = func.GetResultType(i);
-            PushType(type);
-            Write(StackVar(0));
-            Writef(" = tmp.%c%d;", MangleType(type), i);
-            Write(Newline());
-          }
+          Unspill(func.decl.sig.result_types, false);
           Write(CloseBrace(), Newline());
-        } else {
-          PushTypes(func.decl.sig.result_types);
         }
         break;
       }
@@ -3083,9 +3077,7 @@ void CWriter::Write(const ExprList& exprs) {
         Index num_results = decl.GetNumResults();
         assert(type_stack_.size() > num_params);
         if (num_results > 1) {
-          Write(OpenBrace());
-          Write("struct ", MangleMultivalueTypes(decl.sig.result_types));
-          Write(" tmp = ");
+          Write(OpenBrace(), decl.sig.result_types, " tmp = ");
         } else if (num_results == 1) {
           Write(StackVar(num_params, decl.GetResultType(0)), " = ");
         }
@@ -3107,17 +3099,10 @@ void CWriter::Write(const ExprList& exprs) {
         }
         Write(");", Newline());
         DropTypes(num_params + 1);
+        PushTypes(decl.sig.result_types);
         if (num_results > 1) {
-          for (Index i = 0; i < num_results; ++i) {
-            Type type = decl.GetResultType(i);
-            PushType(type);
-            Write(StackVar(0));
-            Writef(" = tmp.%c%d;", MangleType(type), i);
-            Write(Newline());
-          }
+          Unspill(decl.sig.result_types, false);
           Write(CloseBrace(), Newline());
-        } else {
-          PushTypes(decl.sig.result_types);
         }
         break;
       }
@@ -3513,16 +3498,10 @@ void CWriter::Write(const ExprList& exprs) {
                 tag->decl.GetParamType(0), "), &", StackVar(0), ");",
                 Newline());
         } else {
-          Write(OpenBrace());
-          Write("struct ", MangleTagTypes(tag->decl.sig.param_types));
-          Write(" tmp = {");
-          for (Index i = 0; i < num_params; ++i) {
-            Write(StackVar(i), ", ");
-          }
-          Write("};", Newline());
+          Write(OpenBrace(), tag->decl.sig.param_types, " tmp;", Newline());
+          Spill(tag->decl.sig.param_types, false);
           Write("wasm_rt_load_exception(", TagSymbol(tag->name),
-                ", sizeof(tmp), &tmp);", Newline());
-          Write(CloseBrace(), Newline());
+                ", sizeof(tmp), &tmp);", Newline(), CloseBrace(), Newline());
         }
 
         WriteThrow();
@@ -5358,7 +5337,7 @@ void CWriter::WriteCHeader() {
   WriteInitDecl();
   WriteFreeDecl();
   WriteGetFuncTypeDecl();
-  WriteMultivalueTypes();
+  WriteMultivalueResultTypes();
   WriteImports();
   WriteImportProperties(CWriterPhase::Declarations);
   WriteExports(CWriterPhase::Declarations);
