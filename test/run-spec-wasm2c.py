@@ -534,6 +534,7 @@ def main(args):
     parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--enable-extended-const', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
+    parser.add_argument('--enable-tail-call', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
@@ -554,6 +555,7 @@ def main(args):
             '--enable-memory64': options.enable_memory64,
             '--enable-extended-const': options.enable_extended_const,
             '--enable-threads': options.enable_threads,
+            '--enable-tail-call': options.enable_tail_call,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types,
@@ -572,6 +574,7 @@ def main(args):
             '--enable-memory64': options.enable_memory64,
             '--enable-extended-const': options.enable_extended_const,
             '--enable-threads': options.enable_threads,
+            '--enable-tail-call': options.enable_tail_call,
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))

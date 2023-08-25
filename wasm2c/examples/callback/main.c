@@ -26,7 +26,8 @@ int main(int argc, char** argv) {
    */
   wasm_rt_func_type_t fn_type =
       wasm2c_callback_get_func_type(1, 0, WASM_RT_I32);
-  wasm_rt_funcref_t fn_ref = {fn_type, (wasm_rt_function_ptr_t)print, &inst};
+  wasm_rt_funcref_t fn_ref = {
+      fn_type, (wasm_rt_function_ptr_t)print, {NULL}, &inst};
   w2c_callback_set_print_function(&inst, fn_ref);
 
   /* "say_hello" uses the previously installed callback. */

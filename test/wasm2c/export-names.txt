@@ -110,11 +110,16 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
   return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
 }
 
-#define CALL_INDIRECT(table, t, ft, x, ...)              \
+#define CHECK_CALL_INDIRECT(table, ft, x)                \
   (LIKELY((x) < table.size && table.data[x].func &&      \
           func_types_eq(ft, table.data[x].func_type)) || \
-       TRAP(CALL_INDIRECT),                              \
-   ((t)table.data[x].func)(__VA_ARGS__))
+   TRAP(CALL_INDIRECT))
+
+#define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
+
+#define CALL_INDIRECT(table, t, ft, x, ...) \
+  (CHECK_CALL_INDIRECT(table, ft, x),       \
+   DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 
 #ifdef SUPPORT_MEMORY64
 #define RANGE_CHECK(mem, offset, len)              \
@@ -593,6 +598,7 @@ typedef struct {
   enum { RefFunc, RefNull, GlobalGet } expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
+  wasm_rt_tailcallee_t func_tailcallee;
   size_t module_offset;
 } wasm_elem_segment_expr_t;
 
@@ -613,7 +619,7 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
     switch (src_expr->expr_type) {
       case RefFunc:
         *dest_val = (wasm_rt_funcref_t){
-            src_expr->type, src_expr->func,
+            src_expr->type, src_expr->func, src_expr->func_tailcallee,
             (char*)module_instance + src_expr->module_offset};
         break;
       case RefNull:
@@ -702,6 +708,13 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
 #define FUNC_TYPE_EXTERN_T(x) const char x[]
 #define FUNC_TYPE_T(x) static const char x[]
+#endif
+
+#if (__STDC_VERSION__ >= 201112L) || defined(_Static_assert)
+#define wasm_static_assert(X) _Static_assert(X, "assertion failure")
+#else
+#define wasm_static_assert(X) \
+  extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
 #endif
 
 static void w2c_test__0(w2c_test*);

@@ -310,6 +310,13 @@ class FuncType : public TypeEntry {
   Type GetResultType(Index index) const { return sig.GetResultType(index); }
 
   FuncSignature sig;
+
+  // The BinaryReaderIR tracks whether a FuncType is the target of a tailcall
+  // (via a return_call_indirect). wasm2c (CWriter) uses this information to
+  // limit its output in some cases.
+  struct {
+    bool tailcall = false;
+  } features_used;
 };
 
 struct Field {
@@ -893,6 +900,13 @@ struct Func {
   BindingHash bindings;
   ExprList exprs;
   Location loc;
+
+  // For a subset of features, the BinaryReaderIR tracks whether they are
+  // actually used by the function. wasm2c (CWriter) uses this information to
+  // limit its output in some cases.
+  struct {
+    bool tailcall = false;
+  } features_used;
 };
 
 struct Global {
