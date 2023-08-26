@@ -1,0 +1,9 @@
+;;; TOOL: run-gen-wasm
+;;; ARGS: --enable-annotations
+magic
+version
+section("foo") { "hello" }
+(;; STDOUT ;;;
+(module
+  (@custom "foo" "hello"))
+;;; STDOUT ;;)

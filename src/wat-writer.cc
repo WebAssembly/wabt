@@ -1667,8 +1667,10 @@ Result WatWriter::WriteModule() {
         break;
     }
   }
-  for (const Custom& custom : module.customs) {
-    WriteCustom(custom);
+  if (options_.features.annotations_enabled()) {
+    for (const Custom& custom : module.customs) {
+      WriteCustom(custom);
+    }
   }
   WriteCloseNewline();
   /* force the newline to be written */

@@ -2175,9 +2175,7 @@ Result BinaryReader::ReadGenericCustomSection(std::string_view name,
                                               Offset section_size) {
   CALLBACK(BeginGenericCustomSection, section_size);
   const void* data;
-  // Subtract name.size() and 1 because of the single section id byte and the
-  // section name. The rest should be the actual custom section data
-  Offset custom_data_size = section_size - name.size() - 1;
+  Offset custom_data_size = read_end_ - state_.offset;
   CHECK_RESULT(
       ReadBytesWithSize(&data, custom_data_size, "custom section data"));
   CALLBACK(OnGenericCustomSection, name, data, custom_data_size);
