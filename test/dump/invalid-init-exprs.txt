@@ -1,0 +1,25 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS1: -x
+;; TODO: wasm-objdump should handle the "<INVALID>" case more gracefully
+magic
+version
+section(ELEM) {
+  count[1]
+  flags[4]
+  offset[nop end]
+  elemcount[1]
+  end
+}
+(;; STDOUT ;;;
+
+invalid-init-exprs.wasm:	file format wasm 0x1
+
+Section Details:
+
+Elem[1]:
+ - segment[0] flags=4 table=0 count=1 - init <INVALID>
+  - elem[0] = <EMPTY>
+
+Code Disassembly:
+
+;;; STDOUT ;;)

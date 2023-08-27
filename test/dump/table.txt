@@ -116,13 +116,13 @@ Table[1]:
  - table[0] type=funcref initial=6 max=6
 Elem[2]:
  - segment[0] flags=0 table=0 count=2 - init i32=0
-  - elem[0] = func[1]
-  - elem[1] = func[1]
+  - elem[0] = ref.func:1
+  - elem[1] = ref.func:1
  - segment[1] flags=0 table=0 count=4 - init i32=2
-  - elem[2] = func[0]
-  - elem[3] = func[0]
-  - elem[4] = func[1]
-  - elem[5] = func[2]
+  - elem[2] = ref.func:0
+  - elem[3] = ref.func:0
+  - elem[4] = ref.func:1
+  - elem[5] = ref.func:2
 Code[3]:
  - func[0] size=2
  - func[1] size=2

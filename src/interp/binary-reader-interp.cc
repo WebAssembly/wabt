@@ -269,9 +269,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
-  Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                       Index func_index) override;
+  Result BeginElemExpr(Index elem_index, Index expr_index) override;
+  Result EndElemExpr(Index elem_index, Index expr_index) override;
 
   Result OnDataCount(Index count) override;
   Result BeginDataSegmentInitExpr(Index index) override;
@@ -739,21 +738,17 @@ Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(Index segment_index,
-                                                         Type type) {
-  CHECK_RESULT(validator_.OnElemSegmentElemExpr_RefNull(GetLocation(), type));
+Result BinaryReaderInterp::BeginElemExpr(Index elem_index, Index expr_index) {
+  assert(elem_index == module_.elems.size() - 1);
   ElemDesc& elem = module_.elems.back();
-  elem.elements.push_back(ElemExpr{ElemKind::RefNull, 0});
-  return Result::Ok;
+  elem.elements.push_back(
+      {FuncType{{}, {elem.type}}, {}, Istream::kInvalidOffset, {}});
+  assert(expr_index == elem.elements.size() - 1);
+  return BeginInitExpr(elem.type, &elem.elements.back());
 }
 
-Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                                         Index func_index) {
-  CHECK_RESULT(validator_.OnElemSegmentElemExpr_RefFunc(
-      GetLocation(), Var(func_index, GetLocation())));
-  ElemDesc& elem = module_.elems.back();
-  elem.elements.push_back(ElemExpr{ElemKind::RefFunc, func_index});
-  return Result::Ok;
+Result BinaryReaderInterp::EndElemExpr(Index elem_index, Index expr_index) {
+  return EndInitExpr();
 }
 
 Result BinaryReaderInterp::OnDataCount(Index count) {

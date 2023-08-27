@@ -978,6 +978,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Type sig_type) {
 }
 
 enum class InitExprType {
+  Invalid,
   I32,
   F32,
   I64,
@@ -1093,9 +1094,6 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                           uint8_t flags) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
-  Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                       Index func_index) override;
 
   void BeginInitExpr() { current_init_expr_.insts.clear(); }
 
@@ -1122,6 +1120,18 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   }
 
   Result EndGlobalInitExpr(Index index) override { return EndInitExpr(); }
+
+  Result BeginElemExpr(Index elem_index, Index expr_index) override {
+    reading_elem_expr_ = true;
+    elem_index_ = expr_index;
+    BeginInitExpr();
+    return Result::Ok;
+  }
+
+  Result EndElemExpr(Index elem_index, Index expr_index) override {
+    assert(expr_index == elem_index_);
+    return EndInitExpr();
+  }
 
   Result OnDataSegmentCount(Index count) override;
   Result BeginDataSegment(Index index,
@@ -1209,6 +1219,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnF32ConstExpr(uint32_t value) override;
   Result OnF64ConstExpr(uint64_t value) override;
+  Result OnRefFuncExpr(Index func_index) override;
+  Result OnRefNullExpr(Type type) override;
   Result OnGlobalGetExpr(Index global_index) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
   Result OnCodeMetadata(Offset code_offset,
@@ -1221,7 +1233,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   void PrintDetails(const char* fmt, ...);
   Result PrintSymbolFlags(uint32_t flags);
   Result PrintSegmentFlags(uint32_t flags);
-  void PrintInitExpr(const InitExpr& expr, bool as_unsigned = false);
+  void PrintInitExpr(const InitExpr& expr,
+                     bool as_unsigned = false,
+                     bool with_prefix = true);
   Result OnCount(Index count);
 
   std::unique_ptr<FileStream> out_stream_;
@@ -1231,7 +1245,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   bool reading_elem_init_expr_ = false;
   bool reading_data_init_expr_ = false;
   bool reading_global_init_expr_ = false;
-  InitExpr current_init_expr_;
+  bool reading_elem_expr_ = false;
+  InitExpr current_init_expr_{};
   uint8_t data_flags_ = 0;
   uint8_t elem_flags_ = 0;
   Index data_mem_index_ = 0;
@@ -1240,7 +1255,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   bool ReadingInitExpr() {
     return reading_elem_init_expr_ || reading_data_init_expr_ ||
-           reading_global_init_expr_;
+           reading_global_init_expr_ || reading_elem_expr_;
   }
 };
 
@@ -1644,27 +1659,6 @@ Result BinaryReaderObjdump::OnExport(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index,
-                                                          Type type) {
-  PrintDetails("  - elem[%" PRIu64 "] = ref.null %s\n",
-               elem_offset_ + elem_index_, type.GetName().c_str());
-  elem_index_++;
-  return Result::Ok;
-}
-
-Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                                          Index func_index) {
-  PrintDetails("  - elem[%" PRIu64 "] = func[%" PRIindex "]",
-               elem_offset_ + elem_index_, func_index);
-  auto name = GetFunctionName(func_index);
-  if (!name.empty()) {
-    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
-  }
-  PrintDetails("\n");
-  elem_index_++;
-  return Result::Ok;
-}
-
 Result BinaryReaderObjdump::OnElemSegmentCount(Index count) {
   return OnCount(count);
 }
@@ -1711,14 +1705,22 @@ Result BinaryReaderObjdump::BeginGlobal(Index index, Type type, bool mutable_) {
 }
 
 void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr,
-                                        bool as_unsigned) {
-  assert(expr.insts.size() > 0);
+                                        bool as_unsigned,
+                                        bool with_prefix) {
+  if (with_prefix) {
+    PrintDetails(" - init ");
+  }
+
+  if (expr.insts.empty()) {
+    PrintDetails("<EMPTY>\n");
+    return;
+  }
 
   // We have two different way to print init expressions.  One for
   // extended expressions involving more than one instruction, and
   // a short form for the more traditional single instruction form.
   if (expr.insts.size() > 1) {
-    PrintDetails(" - init (");
+    PrintDetails("(");
     bool first = true;
     for (auto& inst : expr.insts) {
       if (!first) {
@@ -1765,39 +1767,39 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr,
   switch (expr.type) {
     case InitExprType::I32:
       if (as_unsigned) {
-        PrintDetails(" - init i32=%u\n", expr.insts[0].imm.i32);
+        PrintDetails("i32=%u\n", expr.insts[0].imm.i32);
       } else {
-        PrintDetails(" - init i32=%d\n", expr.insts[0].imm.i32);
+        PrintDetails("i32=%d\n", expr.insts[0].imm.i32);
       }
       break;
     case InitExprType::I64:
       if (as_unsigned) {
-        PrintDetails(" - init i64=%" PRIu64 "\n", expr.insts[0].imm.i64);
+        PrintDetails("i64=%" PRIu64 "\n", expr.insts[0].imm.i64);
       } else {
-        PrintDetails(" - init i64=%" PRId64 "\n", expr.insts[0].imm.i64);
+        PrintDetails("i64=%" PRId64 "\n", expr.insts[0].imm.i64);
       }
       break;
     case InitExprType::F64: {
       char buffer[WABT_MAX_DOUBLE_HEX];
       WriteDoubleHex(buffer, sizeof(buffer), expr.insts[0].imm.f64);
-      PrintDetails(" - init f64=%s\n", buffer);
+      PrintDetails("f64=%s\n", buffer);
       break;
     }
     case InitExprType::F32: {
       char buffer[WABT_MAX_FLOAT_HEX];
       WriteFloatHex(buffer, sizeof(buffer), expr.insts[0].imm.f32);
-      PrintDetails(" - init f32=%s\n", buffer);
+      PrintDetails("f32=%s\n", buffer);
       break;
     }
     case InitExprType::V128: {
       PrintDetails(
-          " - init v128=0x%08x 0x%08x 0x%08x 0x%08x \n",
+          "v128=0x%08x 0x%08x 0x%08x 0x%08x \n",
           expr.insts[0].imm.v128_v.u32(0), expr.insts[0].imm.v128_v.u32(1),
           expr.insts[0].imm.v128_v.u32(2), expr.insts[0].imm.v128_v.u32(3));
       break;
     }
     case InitExprType::Global: {
-      PrintDetails(" - init global=%" PRIindex, expr.insts[0].imm.index);
+      PrintDetails("global=%" PRIindex, expr.insts[0].imm.index);
       std::string_view name = GetGlobalName(expr.insts[0].imm.index);
       if (!name.empty()) {
         PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
@@ -1806,7 +1808,7 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr,
       break;
     }
     case InitExprType::FuncRef: {
-      PrintDetails(" - init ref.func:%" PRIindex, expr.insts[0].imm.index);
+      PrintDetails("ref.func:%" PRIindex, expr.insts[0].imm.index);
       std::string_view name = GetFunctionName(expr.insts[0].imm.index);
       if (!name.empty()) {
         PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
@@ -1815,8 +1817,10 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr,
       break;
     }
     case InitExprType::NullRef:
-      PrintDetails(" - init null\n");
+      PrintDetails("ref.null %s\n", expr.insts[0].imm.type.GetName().c_str());
       break;
+    case InitExprType::Invalid:
+      PrintDetails("<INVALID>\n");
       break;
   }
 }
@@ -1846,6 +1850,11 @@ Result BinaryReaderObjdump::EndInitExpr() {
   } else if (reading_global_init_expr_) {
     reading_global_init_expr_ = false;
     PrintInitExpr(current_init_expr_);
+  } else if (reading_elem_expr_) {
+    reading_elem_expr_ = false;
+    PrintDetails("  - elem[%" PRIu64 "] = ", elem_offset_ + elem_index_);
+    PrintInitExpr(current_init_expr_, /*as_unsigned=*/false,
+                  /*with_prefix=*/false);
   } else {
     WABT_UNREACHABLE;
   }
@@ -1880,6 +1889,22 @@ Result BinaryReaderObjdump::OnF64ConstExpr(uint64_t value) {
   if (ReadingInitExpr()) {
     current_init_expr_.type = InitExprType::F64;
     current_init_expr_.insts.back().imm.f64 = value;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnRefFuncExpr(Index func_index) {
+  if (ReadingInitExpr()) {
+    current_init_expr_.type = InitExprType::FuncRef;
+    current_init_expr_.insts.back().imm.index = func_index;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnRefNullExpr(Type type) {
+  if (ReadingInitExpr()) {
+    current_init_expr_.type = InitExprType::NullRef;
+    current_init_expr_.insts.back().imm.type = type;
   }
   return Result::Ok;
 }

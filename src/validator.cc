@@ -834,24 +834,11 @@ Result Validator::CheckModule() {
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        if (elem_expr.size() == 1) {
-          const Expr* expr = &elem_expr.front();
-          switch (expr->type()) {
-            case ExprType::RefNull:
-              result_ |= validator_.OnElemSegmentElemExpr_RefNull(
-                  expr->loc, cast<RefNullExpr>(expr)->type);
-              break;
-            case ExprType::RefFunc:
-              result_ |= validator_.OnElemSegmentElemExpr_RefFunc(
-                  expr->loc, cast<RefFuncExpr>(expr)->var);
-              break;
-            default:
-              result_ |= validator_.OnElemSegmentElemExpr_Other(expr->loc);
-              break;
-          }
-        } else if (elem_expr.size() > 1) {
-          result_ |= validator_.OnElemSegmentElemExpr_Other(field.loc);
-        }
+        result_ |= validator_.BeginInitExpr(elem_expr.front().loc,
+                                            f->elem_segment.elem_type);
+        ExprVisitor visitor(this);
+        result_ |= visitor.VisitExprList(const_cast<ExprList&>(elem_expr));
+        result_ |= validator_.EndInitExpr();
       }
     }
   }

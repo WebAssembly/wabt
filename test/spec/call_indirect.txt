@@ -149,6 +149,6 @@ out/test/spec/call_indirect.wast:1004: assert_invalid passed:
   0000026: error: OnCallIndirectExpr callback failed
 out/test/spec/call_indirect.wast:1015: assert_invalid passed:
   out/test/spec/call_indirect/call_indirect.34.wasm:0000018: error: function variable out of range: 0 (max 0)
-  0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
+  0000018: error: OnRefFuncExpr callback failed
 170/170 tests passed.
 ;;; STDOUT ;;)

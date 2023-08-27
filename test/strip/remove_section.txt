@@ -25,6 +25,7 @@ section("five") { "Ut enim ad minim veniam," }
 remove_section_stripped.wasm:	file format wasm 0x1
 
 Sections:
+
    Custom start=0x0000000a end=0x0000002a (size=0x00000020) "two"
    Custom start=0x0000002c end=0x00000052 (size=0x00000026) "three"
    Custom start=0x00000054 end=0x0000007a (size=0x00000026) "four"

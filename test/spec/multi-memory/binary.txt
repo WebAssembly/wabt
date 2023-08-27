@@ -193,8 +193,7 @@ out/test/spec/multi-memory/binary.wast:1014: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:1036: assert_malformed passed:
   000001e: error: data.drop requires data count section
 out/test/spec/multi-memory/binary.wast:1055: assert_malformed passed:
-  0000024: error: expected ref.null or ref.func in passive element segment
-  0000025: error: expected END opcode after element expression
+  0000024: error: unexpected opcode: 0xf3
 out/test/spec/multi-memory/binary.wast:1081: assert_malformed passed:
   0000022: error: table elem type must be a reference type
 out/test/spec/multi-memory/binary.wast:1162: assert_malformed passed:
