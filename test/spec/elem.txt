@@ -55,22 +55,23 @@ out/test/spec/elem.wast:484: assert_invalid passed:
   out/test/spec/elem/elem.50.wasm:000002e: error: initializer expression cannot reference a mutable global
   000002e: error: OnGlobalGetExpr callback failed
 out/test/spec/elem.wast:495: assert_invalid passed:
-  out/test/spec/elem/elem.51.wasm:0000018: error: type mismatch at elem expression. got externref, expected funcref
-  0000018: error: OnElemSegmentElemExpr_RefNull callback failed
+  out/test/spec/elem/elem.51.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [externref]
+  0000019: error: EndElemExpr callback failed
 out/test/spec/elem.wast:503: assert_invalid passed:
-  0000019: error: expected END opcode after element expression
+  out/test/spec/elem/elem.52.wasm:000001a: error: type mismatch at end of initializer expression, expected [] but got [funcref]
+  000001b: error: EndElemExpr callback failed
 out/test/spec/elem.wast:511: assert_invalid passed:
-  0000017: error: expected ref.null or ref.func in passive element segment
-  0000018: error: expected END opcode after element expression
+  out/test/spec/elem/elem.53.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  0000019: error: EndElemExpr callback failed
 out/test/spec/elem.wast:519: assert_invalid passed:
-  0000017: error: expected ref.null or ref.func in passive element segment
-  0000018: error: expected END opcode after element expression
+  out/test/spec/elem/elem.54.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  0000019: error: EndElemExpr callback failed
 out/test/spec/elem.wast:527: assert_invalid passed:
-  0000022: error: expected ref.null or ref.func in passive element segment
-  0000023: error: expected END opcode after element expression
+  out/test/spec/elem/elem.55.wasm:0000023: error: invalid initializer: instruction not valid in initializer expression: call
+  0000023: error: OnCallExpr callback failed
 out/test/spec/elem.wast:536: assert_invalid passed:
-  0000017: error: expected ref.null or ref.func in passive element segment
-  0000018: error: expected END opcode after element expression
+  out/test/spec/elem/elem.56.wasm:000001b: error: invalid initializer: instruction not valid in initializer expression: i32.add
+  000001b: error: OnBinaryExpr callback failed
 out/test/spec/elem.wast:593: assert_trap passed: uninitialized table element
 out/test/spec/elem.wast:626: assert_invalid passed:
   out/test/spec/elem/elem.62.wasm:000001f: error: type mismatch at elem segment. got externref, expected funcref

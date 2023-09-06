@@ -273,9 +273,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
-  Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                       Index func_index) override;
+  Result BeginElemExpr(Index elem_index, Index expr_index) override;
+  Result EndElemExpr(Index elem_index, Index expr_index) override;
   Result EndElemSegment(Index index) override;
   Result EndElemSection() override;
 

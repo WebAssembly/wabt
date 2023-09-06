@@ -89,9 +89,6 @@ class SharedValidator {
 
   Result OnElemSegment(const Location&, Var table_var, SegmentKind);
   Result OnElemSegmentElemType(const Location&, Type elem_type);
-  Result OnElemSegmentElemExpr_RefNull(const Location&, Type type);
-  Result OnElemSegmentElemExpr_RefFunc(const Location&, Var func_var);
-  Result OnElemSegmentElemExpr_Other(const Location&);
 
   void OnDataCount(Index count);
   Result OnDataSegment(const Location&, Var memory_var, SegmentKind);

@@ -51,7 +51,7 @@ Export[1]:
  - func[2] <f> -> "f"
 Elem[1]:
  - segment[0] flags=0 table=0 count=1 - init i32=0
-  - elem[0] = func[1] <__extern.bar>
+  - elem[0] = ref.func:1 <__extern.bar>
 Code[1]:
  - func[2] size=36 <f>
 Custom:

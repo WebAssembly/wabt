@@ -77,7 +77,6 @@ using ExternKind = ExternalKind;
 enum class Mutability { Const, Var };
 enum class TagAttr { Exception };
 using SegmentMode = SegmentKind;
-enum class ElemKind { RefNull, RefFunc };
 
 enum class ObjectKind {
   Null,
@@ -359,13 +358,8 @@ struct DataDesc {
   FuncDesc init_func;
 };
 
-struct ElemExpr {
-  ElemKind kind;
-  Index index;
-};
-
 struct ElemDesc {
-  std::vector<ElemExpr> elements;
+  std::vector<FuncDesc> elements;
   ValueType type;
   SegmentMode mode;
   Index table_index;
@@ -972,7 +966,7 @@ class Tag : public Extern {
 
 class ElemSegment {
  public:
-  explicit ElemSegment(const ElemDesc*, RefPtr<Instance>&);
+  explicit ElemSegment(Store& store, const ElemDesc*, RefPtr<Instance>&);
 
   bool IsValidRange(u32 offset, u32 size) const;
   void Drop();

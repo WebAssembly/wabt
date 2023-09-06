@@ -8,4 +8,5 @@
 out/test/parse/module/bad-table-invalid-function.txt:6:26: error: function variable out of range: 1 (max 1)
   (elem (i32.const 0) $f 1))
                          ^
+0:0: error: type mismatch in initializer expression, expected [funcref] but got []
 ;;; STDERR ;;)

@@ -705,19 +705,19 @@ Result Tag::Match(Store& store,
 }
 
 //// ElemSegment ////
-ElemSegment::ElemSegment(const ElemDesc* desc, Instance::Ptr& inst)
+ElemSegment::ElemSegment(Store& store,
+                         const ElemDesc* desc,
+                         Instance::Ptr& inst)
     : desc_(desc) {
+  Trap::Ptr out_trap;
   elements_.reserve(desc->elements.size());
   for (auto&& elem_expr : desc->elements) {
-    switch (elem_expr.kind) {
-      case ElemKind::RefNull:
-        elements_.emplace_back(Ref::Null);
-        break;
-
-      case ElemKind::RefFunc:
-        elements_.emplace_back(inst->funcs_[elem_expr.index]);
-        break;
+    Value value;
+    Ref func_ref = DefinedFunc::New(store, inst.ref(), elem_expr).ref();
+    if (Failed(inst->CallInitFunc(store, func_ref, &value, &out_trap))) {
+      WABT_UNREACHABLE;  // valid const expression cannot trap
     }
+    elements_.push_back(value.Get<Ref>());
   }
 }
 
@@ -845,7 +845,7 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
   // Elems.
   for (auto&& desc : mod->desc().elems) {
-    inst->elems_.emplace_back(&desc, inst);
+    inst->elems_.emplace_back(store, &desc, inst);
   }
 
   // Datas.

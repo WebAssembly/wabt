@@ -777,8 +777,14 @@ Result TypeChecker::OnTableFill(Type elem_type) {
   return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
 }
 
-Result TypeChecker::OnRefFuncExpr(Index func_type) {
-  if (features_.function_references_enabled()) {
+Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
+  /*
+   * In a const expression, treat ref.func as producing a generic funcref.
+   * This avoids having to implement funcref subtyping (for now) and matches
+   * the previous behavior where SharedValidator::OnElemSegmentElemExpr_RefFunc
+   * examined only the validity of the function index.
+   */
+  if (features_.function_references_enabled() && !force_generic_funcref) {
     PushType(Type(Type::Reference, func_type));
   } else {
     PushType(Type::FuncRef);

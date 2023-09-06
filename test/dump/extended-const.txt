@@ -179,7 +179,7 @@ Global[2]:
  - global[2] i32 mutable=0 - init i32=45
 Elem[1]:
  - segment[0] flags=0 table=0 count=1 - init (i32.const 4, global.get 0 <g_import>, i32.mul)
-  - elem[0] = func[0]
+  - elem[0] = ref.func:0
 Code[1]:
  - func[0] size=2
 Data[1]:

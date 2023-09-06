@@ -289,9 +289,8 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemType(Index index, Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
-  Result OnElemSegmentElemExpr_RefNull(Index segment_index, Type type) override;
-  Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                       Index func_index) override;
+  Result BeginElemExpr(Index elem_index, Index expr_index) override;
+  Result EndElemExpr(Index elem_index, Index expr_index) override;
 
   Result OnDataSegmentCount(Index count) override;
   Result BeginDataSegment(Index index,
@@ -1350,26 +1349,16 @@ Result BinaryReaderIR::OnElemSegmentElemExprCount(Index index, Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnElemSegmentElemExpr_RefNull(Index segment_index,
-                                                     Type type) {
-  assert(segment_index == module_->elem_segments.size() - 1);
-  ElemSegment* segment = module_->elem_segments[segment_index];
-  Location loc = GetLocation();
-  ExprList init_expr;
-  init_expr.push_back(std::make_unique<RefNullExpr>(type, loc));
-  segment->elem_exprs.push_back(std::move(init_expr));
-  return Result::Ok;
+Result BinaryReaderIR::BeginElemExpr(Index elem_index, Index expr_index) {
+  assert(elem_index == module_->elem_segments.size() - 1);
+  ElemSegment* segment = module_->elem_segments[elem_index];
+  assert(expr_index == segment->elem_exprs.size());
+  segment->elem_exprs.emplace_back();
+  return BeginInitExpr(&segment->elem_exprs.back());
 }
 
-Result BinaryReaderIR::OnElemSegmentElemExpr_RefFunc(Index segment_index,
-                                                     Index func_index) {
-  assert(segment_index == module_->elem_segments.size() - 1);
-  ElemSegment* segment = module_->elem_segments[segment_index];
-  Location loc = GetLocation();
-  ExprList init_expr;
-  init_expr.push_back(std::make_unique<RefFuncExpr>(Var(func_index, loc), loc));
-  segment->elem_exprs.push_back(std::move(init_expr));
-  return Result::Ok;
+Result BinaryReaderIR::EndElemExpr(Index elem_index, Index expr_index) {
+  return EndInitExpr();
 }
 
 Result BinaryReaderIR::OnDataSegmentCount(Index count) {

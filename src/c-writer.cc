@@ -2130,7 +2130,8 @@ void CWriter::WriteElemInitializers() {
         case ExprType::RefFunc: {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
           const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
-          Write("{", FuncTypeExpr(func_type), ", (wasm_rt_function_ptr_t)",
+          Write("{RefFunc, ", FuncTypeExpr(func_type),
+                ", (wasm_rt_function_ptr_t)",
                 ExternalRef(ModuleFieldType::Func, func->name), ", ");
           if (IsImport(func->name)) {
             Write("offsetof(", ModuleInstanceTypeName(), ", ",
@@ -2143,8 +2144,16 @@ void CWriter::WriteElemInitializers() {
           Write("},", Newline());
         } break;
         case ExprType::RefNull:
-          Write("{NULL, NULL, 0},", Newline());
+          Write("{RefNull, NULL, NULL, 0},", Newline());
           break;
+        case ExprType::GlobalGet: {
+          const Global* global =
+              module_->GetGlobal(cast<GlobalGetExpr>(&expr)->var);
+          assert(IsImport(global->name));
+          Write("{GlobalGet, NULL, NULL, offsetof(", ModuleInstanceTypeName(),
+                ", ", GlobalName(ModuleFieldType::Global, global->name), ")},",
+                Newline());
+        } break;
         default:
           WABT_UNREACHABLE;
       }

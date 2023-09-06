@@ -519,6 +519,7 @@ static inline void memory_init(wasm_rt_memory_t* dest,
 }
 
 typedef struct {
+  enum { RefFunc, RefNull, GlobalGet } expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
   size_t module_offset;
@@ -536,14 +537,26 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
   if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
     TRAP(OOB);
   for (u32 i = 0; i < n; i++) {
-    const wasm_elem_segment_expr_t* src_expr = &src[src_addr + i];
-    dest->data[dest_addr + i] =
-        (wasm_rt_funcref_t){src_expr->type, src_expr->func,
-                            (char*)module_instance + src_expr->module_offset};
+    const wasm_elem_segment_expr_t* const src_expr = &src[src_addr + i];
+    wasm_rt_funcref_t* const dest_val = &(dest->data[dest_addr + i]);
+    switch (src_expr->expr_type) {
+      case RefFunc:
+        *dest_val = (wasm_rt_funcref_t){
+            src_expr->type, src_expr->func,
+            (char*)module_instance + src_expr->module_offset};
+        break;
+      case RefNull:
+        *dest_val = wasm_rt_funcref_null_value;
+        break;
+      case GlobalGet:
+        *dest_val = **(wasm_rt_funcref_t**)((char*)module_instance +
+                                            src_expr->module_offset);
+        break;
+    }
   }
 }
 
-// Currently Wasm only supports initializing externref tables with ref.null.
+// Currently wasm2c only supports initializing externref tables with ref.null.
 static inline void externref_table_init(wasm_rt_externref_table_t* dest,
                                         u32 src_size,
                                         u32 dest_addr,

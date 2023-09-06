@@ -936,6 +936,8 @@ R"w2c_template(}
 R"w2c_template(
 typedef struct {
 )w2c_template"
+R"w2c_template(  enum { RefFunc, RefNull, GlobalGet } expr_type;
+)w2c_template"
 R"w2c_template(  wasm_rt_func_type_t type;
 )w2c_template"
 R"w2c_template(  wasm_rt_function_ptr_t func;
@@ -969,20 +971,44 @@ R"w2c_template(    TRAP(OOB);
 )w2c_template"
 R"w2c_template(  for (u32 i = 0; i < n; i++) {
 )w2c_template"
-R"w2c_template(    const wasm_elem_segment_expr_t* src_expr = &src[src_addr + i];
+R"w2c_template(    const wasm_elem_segment_expr_t* const src_expr = &src[src_addr + i];
 )w2c_template"
-R"w2c_template(    dest->data[dest_addr + i] =
+R"w2c_template(    wasm_rt_funcref_t* const dest_val = &(dest->data[dest_addr + i]);
 )w2c_template"
-R"w2c_template(        (wasm_rt_funcref_t){src_expr->type, src_expr->func,
+R"w2c_template(    switch (src_expr->expr_type) {
 )w2c_template"
-R"w2c_template(                            (char*)module_instance + src_expr->module_offset};
+R"w2c_template(      case RefFunc:
+)w2c_template"
+R"w2c_template(        *dest_val = (wasm_rt_funcref_t){
+)w2c_template"
+R"w2c_template(            src_expr->type, src_expr->func,
+)w2c_template"
+R"w2c_template(            (char*)module_instance + src_expr->module_offset};
+)w2c_template"
+R"w2c_template(        break;
+)w2c_template"
+R"w2c_template(      case RefNull:
+)w2c_template"
+R"w2c_template(        *dest_val = wasm_rt_funcref_null_value;
+)w2c_template"
+R"w2c_template(        break;
+)w2c_template"
+R"w2c_template(      case GlobalGet:
+)w2c_template"
+R"w2c_template(        *dest_val = **(wasm_rt_funcref_t**)((char*)module_instance +
+)w2c_template"
+R"w2c_template(                                            src_expr->module_offset);
+)w2c_template"
+R"w2c_template(        break;
+)w2c_template"
+R"w2c_template(    }
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
 R"w2c_template(}
 )w2c_template"
 R"w2c_template(
-// Currently Wasm only supports initializing externref tables with ref.null.
+// Currently wasm2c only supports initializing externref tables with ref.null.
 )w2c_template"
 R"w2c_template(static inline void externref_table_init(wasm_rt_externref_table_t* dest,
 )w2c_template"

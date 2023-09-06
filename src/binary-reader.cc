@@ -2711,29 +2711,18 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
 
     CALLBACK(OnElemSegmentElemExprCount, i, num_elem_exprs);
     for (Index j = 0; j < num_elem_exprs; ++j) {
+      CALLBACK(BeginElemExpr, i, j);
       if (flags & SegUseElemExprs) {
-        Opcode opcode;
-        CHECK_RESULT(ReadOpcode(&opcode, "elem expr opcode"));
-        if (opcode == Opcode::RefNull) {
-          Type type;
-          CHECK_RESULT(ReadRefType(&type, "elem expr ref.null type"));
-          CALLBACK(OnElemSegmentElemExpr_RefNull, i, type);
-        } else if (opcode == Opcode::RefFunc) {
-          Index func_index;
-          CHECK_RESULT(ReadIndex(&func_index, "elem expr func index"));
-          CALLBACK(OnElemSegmentElemExpr_RefFunc, i, func_index);
-        } else {
-          PrintError(
-              "expected ref.null or ref.func in passive element segment");
-        }
-        CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
-        ERROR_UNLESS(opcode == Opcode::End,
-                     "expected END opcode after element expression");
+        CHECK_RESULT(ReadInitExpr(j));
       } else {
         Index func_index;
         CHECK_RESULT(ReadIndex(&func_index, "elem expr func index"));
-        CALLBACK(OnElemSegmentElemExpr_RefFunc, i, func_index);
+        CALLBACK(OnOpcode, Opcode::RefFunc);
+        CALLBACK(OnRefFuncExpr, func_index);
+        CALLBACK(OnOpcodeUint32, func_index);
+        CALLBACK0(OnEndExpr);
       }
+      CALLBACK(EndElemExpr, i, j);
     }
     CALLBACK(EndElemSegment, i);
   }

@@ -379,7 +379,7 @@ Global[2]:
  - global[1] i32 mutable=0 <g2> - init i32=2
 Elem[1]:
  - segment[0] flags=1 table=0 count=1
-  - elem[0] = func[0]
+  - elem[0] = ref.func:0
 DataCount:
  - data count: 1
 Code[4]:

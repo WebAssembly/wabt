@@ -276,27 +276,6 @@ Result SharedValidator::OnElemSegmentElemType(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnElemSegmentElemExpr_RefNull(const Location& loc,
-                                                      Type type) {
-  return CheckType(loc, type, elems_.back().element, "elem expression");
-}
-
-Result SharedValidator::OnElemSegmentElemExpr_RefFunc(const Location& loc,
-                                                      Var func_var) {
-  Result result = Result::Ok;
-  result |=
-      CheckType(loc, Type::FuncRef, elems_.back().element, "elem expression");
-  result |= CheckFuncIndex(func_var);
-  declared_funcs_.insert(func_var.index());
-  return result;
-}
-
-Result SharedValidator::OnElemSegmentElemExpr_Other(const Location& loc) {
-  return PrintError(loc,
-                    "invalid elem expression expression; must be either "
-                    "ref.null or ref.func.");
-}
-
 void SharedValidator::OnDataCount(Index count) {
   data_segments_ = count;
 }
@@ -1012,7 +991,7 @@ Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
       check_declared_funcs_.push_back(func_var);
     }
     Index func_type = GetFunctionTypeIndex(func_var.index());
-    result |= typechecker_.OnRefFuncExpr(func_type);
+    result |= typechecker_.OnRefFuncExpr(func_type, in_init_expr_);
   }
   return result;
 }
