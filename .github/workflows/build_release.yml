@@ -20,10 +20,10 @@ jobs:
       run:
         shell: bash
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # v4.7.0
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       with:
         submodules: true
 
@@ -66,7 +66,7 @@ jobs:
   build-wasi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       with:
         submodules: true
 

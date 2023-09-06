@@ -25,13 +25,13 @@ runs:
         echo "::set-output name=shasum::$SHASUM"
 
     - name: upload tarball to CI
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         name: ${{ steps.archive.outputs.tarball }}
         path: ./${{ steps.archive.outputs.tarball }}
 
     - name: upload tarball to release
-      uses: svenstaro/upload-release-action@v2
+      uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df # v2.7.0
       if: ${{ inputs.upload_to_release }}
       with:
         file: ./${{ steps.archive.outputs.tarball }}
@@ -39,7 +39,7 @@ runs:
         tag: ${{ github.ref }}
 
     - name: upload shasum
-      uses: svenstaro/upload-release-action@v2
+      uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df # v2.7.0
       if: ${{ inputs.upload_to_release }}
       with:
         file: ./${{ steps.archive.outputs.shasum }}

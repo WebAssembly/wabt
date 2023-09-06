@@ -13,10 +13,10 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # v4.7.0
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
     - name: install tools
       run: |
         pip3 install flake8==3.7.8
@@ -32,10 +32,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-12, windows-latest]
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # v4.7.0
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       with:
         submodules: true
     - name: install ninja (linux)
@@ -71,7 +71,7 @@ jobs:
     name: emscripten
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       with:
         submodules: true
     - name: build
@@ -84,7 +84,7 @@ jobs:
     name: wasi
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
         with:
           submodules: true
       - name: build-tools
@@ -108,10 +108,10 @@ jobs:
         sanitizer: [asan, ubsan, fuzz]
         type: [debug, release]
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # v4.7.0
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       with:
         submodules: true
     - run: sudo apt-get install ninja-build
@@ -126,10 +126,10 @@ jobs:
       CC: "clang" # used by the wasm2c tests
       WASM2C_CFLAGS: "-march=x86-64-v2 -fsanitize=address -DWASM_RT_USE_MMAP=0"
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # v4.7.0
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       with:
         submodules: true
     - run: sudo apt-get install ninja-build
@@ -140,10 +140,10 @@ jobs:
     name: min-cmake
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       with:
         submodules: true
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # v4.7.0
       with:
         python-version: '3.x'
     - name: Install Ninja
