@@ -164,7 +164,7 @@ class WastParser {
   Result ParseTableModuleField(Module*);
 
   Result ParseCustomSectionAnnotation(Module*);
-  bool PeekIsAnnotation(const char* name);
+  bool PeekIsCustom();
 
   Result ParseExportDesc(Export*);
   Result ParseInlineExports(ModuleFieldList*, ExternalKind);

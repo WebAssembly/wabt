@@ -164,7 +164,6 @@ class WatWriter : ModuleContext {
   void WriteTypeEntry(const TypeEntry& type);
   void WriteField(const Field& field);
   void WriteStartFunction(const Var& start);
-  void WriteOpenAnnotation(const char* name);
   void WriteCustom(const Custom& custom);
 
   class ExprVisitorDelegate;
@@ -285,11 +284,6 @@ void WatWriter::WriteOpen(const char* name, NextChar next_char) {
   Indent();
 }
 
-void WatWriter::WriteOpenAnnotation(const char* name) {
-  WriteOpen("@", NextChar::None);
-  WritePutsSpace(name);
-}
-
 void WatWriter::WriteOpenNewline(const char* name) {
   WriteOpen(name, NextChar::Newline);
 }
@@ -325,9 +319,10 @@ void WatWriter::WriteName(std::string_view str, NextChar next_char) {
       str.begin(), str.end(), [](uint8_t c) { return !s_valid_name_chars[c]; });
 
   if (has_invalid_chars) {
-    WriteOpenAnnotation("name");
-    WriteQuotedData(str.data(), str.length());
-    WriteCloseSpace();
+    std::string valid_str;
+    std::transform(str.begin(), str.end(), std::back_inserter(valid_str),
+                   [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });
+    WriteDataWithNextChar(valid_str.data(), valid_str.length());
   } else {
     WriteDataWithNextChar(str.data(), str.length());
   }
@@ -1620,7 +1615,7 @@ void WatWriter::WriteStartFunction(const Var& start) {
 }
 
 void WatWriter::WriteCustom(const Custom& custom) {
-  WriteOpenAnnotation("custom");
+  WriteOpenSpace("@custom");
   WriteQuotedString(custom.name, NextChar::Space);
   WriteQuotedData(custom.data.data(), custom.data.size());
   WriteCloseNewline();
