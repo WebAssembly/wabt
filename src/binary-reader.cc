@@ -2400,7 +2400,8 @@ Result BinaryReader::ReadCustomSection(Index section_index,
 
   {
     // Backtrack parser when scope ends
-    ValueRestoreGuard<BinaryReaderDelegate::State, &BinaryReader::state_> guard(this);
+    ValueRestoreGuard<BinaryReaderDelegate::State, &BinaryReader::state_> guard(
+        this);
     CHECK_RESULT(ReadGenericCustomSection(section_name, section_size));
   }
 
