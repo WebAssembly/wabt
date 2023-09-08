@@ -460,6 +460,7 @@ def Compile(cc, c_filename, out_dir, *cflags):
         # (GCC also requires '-fsignaling-nans')
         args += ['-c', c_filename, '-o', o_filename, '-O2',
                  '-Wall', '-Werror', '-Wno-unused',
+                 '-Wno-array-bounds',
                  '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
                  '-Wno-infinite-recursion',
