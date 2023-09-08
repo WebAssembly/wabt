@@ -69,7 +69,7 @@ static inline void load_data(void* dest, const void* src, size_t n) {
   }
   size_t i = 0;
   u8* dest_chars = dest;
-  memcpy(dest, src, n);
+  wasm_rt_memcpy(dest, src, n);
   for (i = 0; i < (n >> 1); i++) {
     u8 cursor = dest_chars[i];
     dest_chars[i] = dest_chars[n - i - 1];
@@ -103,7 +103,7 @@ static inline void load_data(void* dest, const void* src, size_t n) {
   if (!n) {
     return;
   }
-  memcpy(dest, src, n);
+  wasm_rt_memcpy(dest, src, n);
 }
 #define LOAD_DATA(m, o, i, s)      \
   do {                             \
@@ -339,11 +339,11 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #define I64_TRUNC_SAT_U_F64(x) \
   TRUNC_SAT_U(u64, f64, (f64)UINT64_MAX, UINT64_MAX, x)
 
-#define DEFINE_REINTERPRET(name, t1, t2) \
-  static inline t2 name(t1 x) {          \
-    t2 result;                           \
-    memcpy(&result, &x, sizeof(result)); \
-    return result;                       \
+#define DEFINE_REINTERPRET(name, t1, t2)         \
+  static inline t2 name(t1 x) {                  \
+    t2 result;                                   \
+    wasm_rt_memcpy(&result, &x, sizeof(result)); \
+    return result;                               \
   }
 
 DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
@@ -353,17 +353,17 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
 
 static float quiet_nanf(float x) {
   uint32_t tmp;
-  memcpy(&tmp, &x, 4);
+  wasm_rt_memcpy(&tmp, &x, 4);
   tmp |= 0x7fc00000lu;
-  memcpy(&x, &tmp, 4);
+  wasm_rt_memcpy(&x, &tmp, 4);
   return x;
 }
 
 static double quiet_nan(double x) {
   uint64_t tmp;
-  memcpy(&tmp, &x, 8);
+  wasm_rt_memcpy(&tmp, &x, 8);
   tmp |= 0x7ff8000000000000llu;
-  memcpy(&x, &tmp, 8);
+  wasm_rt_memcpy(&x, &tmp, 8);
   return x;
 }
 
@@ -440,9 +440,9 @@ static double wasm_nearbyint(double x) {
 static float wasm_fabsf(float x) {
   if (UNLIKELY(isnan(x))) {
     uint32_t tmp;
-    memcpy(&tmp, &x, 4);
+    wasm_rt_memcpy(&tmp, &x, 4);
     tmp = tmp & ~(1UL << 31);
-    memcpy(&x, &tmp, 4);
+    wasm_rt_memcpy(&x, &tmp, 4);
     return x;
   }
   return fabsf(x);
@@ -451,9 +451,9 @@ static float wasm_fabsf(float x) {
 static double wasm_fabs(double x) {
   if (UNLIKELY(isnan(x))) {
     uint64_t tmp;
-    memcpy(&tmp, &x, 8);
+    wasm_rt_memcpy(&tmp, &x, 8);
     tmp = tmp & ~(1ULL << 63);
-    memcpy(&x, &tmp, 8);
+    wasm_rt_memcpy(&x, &tmp, 8);
     return x;
   }
   return fabs(x);
