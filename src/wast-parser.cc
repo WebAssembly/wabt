@@ -1276,7 +1276,8 @@ Result WastParser::ParseCustomSectionAnnotation(Module* module) {
 bool WastParser::PeekIsCustom() {
   // If IsLparAnn succeeds, tokens_.front() must have text, as it is an LparAnn
   // token.
-  return IsLparAnn(PeekPair()) && tokens_.front().text() == "custom";
+  return options_->features.annotations_enabled() && IsLparAnn(PeekPair()) &&
+         tokens_.front().text() == "custom";
 }
 
 Result WastParser::ParseModuleFieldList(Module* module) {

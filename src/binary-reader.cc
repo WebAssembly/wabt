@@ -399,20 +399,15 @@ Result BinaryReader::ReadBytes(const void** out_data,
                                const char* desc) {
   uint32_t data_size = 0;
   CHECK_RESULT(ReadU32Leb128(&data_size, "data size"));
-
-  ERROR_UNLESS(state_.offset + data_size <= read_end_,
-               "unable to read data: %s", desc);
-
-  *out_data = static_cast<const uint8_t*>(state_.data) + state_.offset;
+  CHECK_RESULT(ReadBytesWithSize(out_data, data_size, desc));
   *out_data_size = data_size;
-  state_.offset += data_size;
   return Result::Ok;
 }
 
 Result BinaryReader::ReadBytesWithSize(const void** out_data,
                                        Offset size,
                                        const char* desc) {
-  ERROR_UNLESS(state_.offset + size <= read_end_, "unable to read bytes: %s",
+  ERROR_UNLESS(state_.offset + size <= read_end_, "unable to read data: %s",
                desc);
 
   *out_data = static_cast<const uint8_t*>(state_.data) + state_.offset;
@@ -2403,10 +2398,11 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   ValueRestoreGuard<bool, &BinaryReader::reading_custom_section_> guard(this);
   reading_custom_section_ = true;
 
-  Offset pre_read_offset = state_.offset;
-  CHECK_RESULT(ReadGenericCustomSection(section_name, section_size));
-  // Backtrack parser to old state
-  state_.offset = pre_read_offset;
+  {
+    // Backtrack parser when scope ends
+    ValueRestoreGuard<BinaryReaderDelegate::State, &BinaryReader::state_> guard(this);
+    CHECK_RESULT(ReadGenericCustomSection(section_name, section_size));
+  }
 
   if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
