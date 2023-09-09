@@ -129,7 +129,7 @@ R"w2c_template(  size_t i = 0;
 )w2c_template"
 R"w2c_template(  u8* dest_chars = dest;
 )w2c_template"
-R"w2c_template(  memcpy(dest, src, n);
+R"w2c_template(  wasm_rt_memcpy(dest, src, n);
 )w2c_template"
 R"w2c_template(  for (i = 0; i < (n >> 1); i++) {
 )w2c_template"
@@ -196,7 +196,7 @@ R"w2c_template(    return;
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
-R"w2c_template(  memcpy(dest, src, n);
+R"w2c_template(  wasm_rt_memcpy(dest, src, n);
 )w2c_template"
 R"w2c_template(}
 )w2c_template"
@@ -635,15 +635,15 @@ R"w2c_template(#define I64_TRUNC_SAT_U_F64(x) \
 R"w2c_template(  TRUNC_SAT_U(u64, f64, (f64)UINT64_MAX, UINT64_MAX, x)
 )w2c_template"
 R"w2c_template(
-#define DEFINE_REINTERPRET(name, t1, t2) \
+#define DEFINE_REINTERPRET(name, t1, t2)         \
 )w2c_template"
-R"w2c_template(  static inline t2 name(t1 x) {          \
+R"w2c_template(  static inline t2 name(t1 x) {                  \
 )w2c_template"
-R"w2c_template(    t2 result;                           \
+R"w2c_template(    t2 result;                                   \
 )w2c_template"
-R"w2c_template(    memcpy(&result, &x, sizeof(result)); \
+R"w2c_template(    wasm_rt_memcpy(&result, &x, sizeof(result)); \
 )w2c_template"
-R"w2c_template(    return result;                       \
+R"w2c_template(    return result;                               \
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
@@ -661,11 +661,11 @@ static float quiet_nanf(float x) {
 )w2c_template"
 R"w2c_template(  uint32_t tmp;
 )w2c_template"
-R"w2c_template(  memcpy(&tmp, &x, 4);
+R"w2c_template(  wasm_rt_memcpy(&tmp, &x, 4);
 )w2c_template"
 R"w2c_template(  tmp |= 0x7fc00000lu;
 )w2c_template"
-R"w2c_template(  memcpy(&x, &tmp, 4);
+R"w2c_template(  wasm_rt_memcpy(&x, &tmp, 4);
 )w2c_template"
 R"w2c_template(  return x;
 )w2c_template"
@@ -676,11 +676,11 @@ static double quiet_nan(double x) {
 )w2c_template"
 R"w2c_template(  uint64_t tmp;
 )w2c_template"
-R"w2c_template(  memcpy(&tmp, &x, 8);
+R"w2c_template(  wasm_rt_memcpy(&tmp, &x, 8);
 )w2c_template"
 R"w2c_template(  tmp |= 0x7ff8000000000000llu;
 )w2c_template"
-R"w2c_template(  memcpy(&x, &tmp, 8);
+R"w2c_template(  wasm_rt_memcpy(&x, &tmp, 8);
 )w2c_template"
 R"w2c_template(  return x;
 )w2c_template"
@@ -823,11 +823,11 @@ R"w2c_template(  if (UNLIKELY(isnan(x))) {
 )w2c_template"
 R"w2c_template(    uint32_t tmp;
 )w2c_template"
-R"w2c_template(    memcpy(&tmp, &x, 4);
+R"w2c_template(    wasm_rt_memcpy(&tmp, &x, 4);
 )w2c_template"
 R"w2c_template(    tmp = tmp & ~(1UL << 31);
 )w2c_template"
-R"w2c_template(    memcpy(&x, &tmp, 4);
+R"w2c_template(    wasm_rt_memcpy(&x, &tmp, 4);
 )w2c_template"
 R"w2c_template(    return x;
 )w2c_template"
@@ -844,11 +844,11 @@ R"w2c_template(  if (UNLIKELY(isnan(x))) {
 )w2c_template"
 R"w2c_template(    uint64_t tmp;
 )w2c_template"
-R"w2c_template(    memcpy(&tmp, &x, 8);
+R"w2c_template(    wasm_rt_memcpy(&tmp, &x, 8);
 )w2c_template"
 R"w2c_template(    tmp = tmp & ~(1ULL << 63);
 )w2c_template"
-R"w2c_template(    memcpy(&x, &tmp, 8);
+R"w2c_template(    wasm_rt_memcpy(&x, &tmp, 8);
 )w2c_template"
 R"w2c_template(    return x;
 )w2c_template"
