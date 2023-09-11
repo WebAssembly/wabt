@@ -1740,8 +1740,8 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       }
 
       case Opcode::MemoryCopy: {
-        Index srcmemidx = 0;
         Index destmemidx = 0;
+        Index srcmemidx = 0;
         if (!options_.features.multi_memory_enabled()) {
           uint8_t reserved;
           CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
@@ -1749,11 +1749,11 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
           CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
           ERROR_UNLESS(reserved == 0, "reserved value must be 0");
         } else {
-          CHECK_RESULT(ReadMemidx(&srcmemidx, "memory.copy srcmemidx"));
           CHECK_RESULT(ReadMemidx(&destmemidx, "memory.copy destmemindex"));
+          CHECK_RESULT(ReadMemidx(&srcmemidx, "memory.copy srcmemidx"));
         }
-        CALLBACK(OnMemoryCopyExpr, srcmemidx, destmemidx);
-        CALLBACK(OnOpcodeUint32Uint32, srcmemidx, destmemidx);
+        CALLBACK(OnMemoryCopyExpr, destmemidx, srcmemidx);
+        CALLBACK(OnOpcodeUint32Uint32, destmemidx, srcmemidx);
         break;
       }
 

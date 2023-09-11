@@ -99,7 +99,7 @@ class TypeChecker {
   Result OnLocalSet(Type);
   Result OnLocalTee(Type);
   Result OnLoop(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnMemoryCopy(const Limits& srclimits, const Limits& dstlimits);
+  Result OnMemoryCopy(const Limits& dstlimits, const Limits& srclimits);
   Result OnDataDrop(Index);
   Result OnMemoryFill(const Limits& limits);
   Result OnMemoryGrow(const Limits& limits);

@@ -2076,11 +2076,11 @@ Result WastParser::ParseMemoryExpr(Location loc,
 template <typename T>
 Result WastParser::ParseMemoryBinaryExpr(Location loc,
                                          std::unique_ptr<Expr>* out_expr) {
-  Var srcmemidx;
   Var destmemidx;
-  CHECK_RESULT(ParseMemidx(loc, &srcmemidx));
+  Var srcmemidx;
   CHECK_RESULT(ParseMemidx(loc, &destmemidx));
-  out_expr->reset(new T(srcmemidx, destmemidx, loc));
+  CHECK_RESULT(ParseMemidx(loc, &srcmemidx));
+  out_expr->reset(new T(destmemidx, srcmemidx, loc));
   return Result::Ok;
 }
 

@@ -414,7 +414,7 @@ Result Validator::EndLoopExpr(LoopExpr* expr) {
 
 Result Validator::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
   result_ |=
-      validator_.OnMemoryCopy(expr->loc, expr->srcmemidx, expr->destmemidx);
+      validator_.OnMemoryCopy(expr->loc, expr->destmemidx, expr->srcmemidx);
   return Result::Ok;
 }
 

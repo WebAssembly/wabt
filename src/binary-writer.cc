@@ -893,13 +893,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::End);
       break;
     case ExprType::MemoryCopy: {
-      Index srcmemidx =
-          module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->srcmemidx);
       Index destmemidx =
           module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->destmemidx);
+      Index srcmemidx =
+          module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->srcmemidx);
       WriteOpcode(stream_, Opcode::MemoryCopy);
-      WriteU32Leb128(stream_, srcmemidx, "memory.copy srcmemidx");
       WriteU32Leb128(stream_, destmemidx, "memory.copy destmemidx");
+      WriteU32Leb128(stream_, srcmemidx, "memory.copy srcmemidx");
       break;
     }
     case ExprType::DataDrop: {

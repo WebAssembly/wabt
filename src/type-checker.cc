@@ -705,15 +705,15 @@ Result TypeChecker::OnLoop(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnMemoryCopy(const Limits& src_limits,
-                                 const Limits& dst_limits) {
+Result TypeChecker::OnMemoryCopy(const Limits& dst_limits,
+                                 const Limits& src_limits) {
   Limits size_limits = src_limits;
   // The memory64 proposal specifies that the type of the size argument should
   // be the mimimum of the two memory types.
   if (src_limits.is_64 && !dst_limits.is_64) {
     size_limits = dst_limits;
   }
-  return CheckOpcode3(Opcode::MemoryCopy, &src_limits, &dst_limits,
+  return CheckOpcode3(Opcode::MemoryCopy, &dst_limits, &src_limits,
                       &size_limits);
 }
 

@@ -784,7 +784,7 @@ Result WatWriter::ExprVisitorDelegate::EndLoopExpr(LoopExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
   writer_->WritePutsSpace(Opcode::MemoryCopy_Opcode.GetName());
-  writer_->WriteTwoMemoryVarsUnlessBothZero(expr->srcmemidx, expr->destmemidx,
+  writer_->WriteTwoMemoryVarsUnlessBothZero(expr->destmemidx, expr->srcmemidx,
                                             NextChar::Space);
   writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;

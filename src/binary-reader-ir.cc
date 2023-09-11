@@ -229,7 +229,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLocalSetExpr(Index local_index) override;
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
-  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override;
+  Result OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) override;
   Result OnDataDropExpr(Index segment_index) override;
   Result OnMemoryFillExpr(Index memidx) override;
   Result OnMemoryGrowExpr(Index memidx) override;
@@ -1024,9 +1024,9 @@ Result BinaryReaderIR::OnLoopExpr(Type sig_type) {
   return PushLabel(LabelType::Loop, expr_list);
 }
 
-Result BinaryReaderIR::OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) {
+Result BinaryReaderIR::OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) {
   return AppendExpr(std::make_unique<MemoryCopyExpr>(
-      Var(srcmemidx, GetLocation()), Var(destmemidx, GetLocation())));
+      Var(destmemidx, GetLocation()), Var(srcmemidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnDataDropExpr(Index segment) {

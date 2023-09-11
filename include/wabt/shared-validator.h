@@ -169,7 +169,7 @@ class SharedValidator {
   Result OnLocalSet(const Location&, Var);
   Result OnLocalTee(const Location&, Var);
   Result OnLoop(const Location&, Type sig_type);
-  Result OnMemoryCopy(const Location&, Var srcmemidx, Var destmemidx);
+  Result OnMemoryCopy(const Location&, Var destmemidx, Var srcmemidx);
   Result OnMemoryFill(const Location&, Var memidx);
   Result OnMemoryGrow(const Location&, Var memidx);
   Result OnMemoryInit(const Location&, Var segment_var, Var memidx);

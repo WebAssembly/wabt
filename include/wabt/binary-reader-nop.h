@@ -273,7 +273,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnLocalSetExpr(Index local_index) override { return Result::Ok; }
   Result OnLocalTeeExpr(Index local_index) override { return Result::Ok; }
   Result OnLoopExpr(Type sig_type) override { return Result::Ok; }
-  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override {
+  Result OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) override {
     return Result::Ok;
   }
   Result OnDataDropExpr(Index segment_index) override { return Result::Ok; }
