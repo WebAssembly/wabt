@@ -258,7 +258,7 @@ class CWriter {
 
   static constexpr char MangleType(Type);
   static constexpr char MangleField(ModuleFieldType);
-  static std::string MangleMultivalueTypes(const TypeVector&);
+  static std::string MangleTypes(const TypeVector&);
   static std::string Mangle(std::string_view name, bool double_underscores);
   static std::string MangleName(std::string_view);
   static std::string MangleModuleName(std::string_view);
@@ -349,7 +349,7 @@ class CWriter {
   void WriteSourceTop();
   void WriteMultiCTop();
   void WriteMultiCTopEmpty();
-  void WriteMultivalueType(const TypeVector&);
+  void DeclareStruct(const TypeVector&);
   void WriteMultivalueResultTypes();
   void WriteTagTypes();
   void WriteFuncTypeDecls();
@@ -484,6 +484,7 @@ class CWriter {
   std::vector<Label> label_stack_;
   std::vector<TryCatchLabel> try_catch_stack_;
   std::string module_prefix_;
+  SymbolSet typevector_structs_;
 
   std::vector<const Import*> unique_imports_;
   SymbolSet import_module_set_;       // modules that are imported from
@@ -633,7 +634,7 @@ static std::string SanitizeForComment(std::string_view str) {
 }
 
 // static
-std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
+std::string CWriter::MangleTypes(const TypeVector& types) {
   assert(types.size() >= 2);
   std::string result = "wasm_multi_";
   for (auto type : types) {
@@ -1187,7 +1188,7 @@ void CWriter::Write(const TypeVector& types) {
   } else if (types.size() == 1) {
     Write(types[0]);
   } else {
-    Write("struct ", MangleMultivalueTypes(types));
+    Write("struct ", MangleTypes(types));
   }
 }
 
@@ -1436,10 +1437,12 @@ void CWriter::WriteMultiCTopEmpty() {
   }
 }
 
-void CWriter::WriteMultivalueType(const TypeVector& types) {
-  const std::string name = MangleMultivalueTypes(types);
-  // these ifndefs are actually to support importing multiple modules
-  // incidentally they also mean we don't have to bother with deduplication
+void CWriter::DeclareStruct(const TypeVector& types) {
+  const std::string name = MangleTypes(types);
+  if (!typevector_structs_.insert(name).second) {
+    return;
+  }
+
   Write(Newline(), "#ifndef ", name, Newline());
   Write("#define ", name, " ", name, Newline());
   Write("struct ", name, " ", OpenBrace());
@@ -1456,7 +1459,7 @@ void CWriter::WriteMultivalueResultTypes() {
   for (TypeEntry* type : module_->types) {
     FuncType* func_type = cast<FuncType>(type);
     if (func_type->GetNumResults() > 1) {
-      WriteMultivalueType(func_type->sig.result_types);
+      DeclareStruct(func_type->sig.result_types);
     }
   }
 }
@@ -1468,7 +1471,7 @@ void CWriter::WriteTagTypes() {
     if (num_params <= 1) {
       continue;
     }
-    WriteMultivalueType(tag_type.sig.param_types);
+    DeclareStruct(tag_type.sig.param_types);
   }
 }
 
