@@ -1,0 +1,13 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --enable-annotations --stdout
+(module
+  (@custom "stuff" (before import) "hello")
+  (import "a" "b" (func (result i32)))
+  (@custom "section" "nice"))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (import "a" "b" (func (;0;) (type 0)))
+  (@custom "stuff" "hello")
+  (@custom "section" "nice"))
+;;; STDOUT ;;)

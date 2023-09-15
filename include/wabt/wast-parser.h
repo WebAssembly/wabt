@@ -163,6 +163,9 @@ class WastParser {
   Result ParseStartModuleField(Module*);
   Result ParseTableModuleField(Module*);
 
+  Result ParseCustomSectionAnnotation(Module*);
+  bool PeekIsCustom();
+
   Result ParseExportDesc(Export*);
   Result ParseInlineExports(ModuleFieldList*, ExternalKind);
   Result ParseInlineImport(Import*);

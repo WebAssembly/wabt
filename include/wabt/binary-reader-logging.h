@@ -346,6 +346,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnDylinkExport(std::string_view name, uint32_t flags) override;
   Result EndDylinkSection() override;
 
+  Result BeginGenericCustomSection(Offset size) override;
+  Result OnGenericCustomSection(std::string_view name,
+                                const void* data,
+                                Offset size) override;
+  Result EndGenericCustomSection() override;
+
   Result BeginTargetFeaturesSection(Offset size) override;
   Result OnFeatureCount(Index count) override;
   Result OnFeature(uint8_t prefix, std::string_view name) override;

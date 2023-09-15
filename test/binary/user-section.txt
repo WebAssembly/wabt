@@ -9,14 +9,23 @@ section("foo") { count[6] }
 (;; STDERR ;;;
 BeginModule(version: 1)
   BeginCustomSection('foo', size: 5)
+    BeginGenericCustomSection(5)
+      OnGenericCustomSection(name: "foo", size: 1)
+    EndGenericCustomSection
   EndCustomSection
   BeginTypeSection(5)
     OnTypeCount(1)
     OnFuncType(index: 0, params: [], results: [i32])
   EndTypeSection
   BeginCustomSection('bar', size: 5)
+    BeginGenericCustomSection(5)
+      OnGenericCustomSection(name: "bar", size: 1)
+    EndGenericCustomSection
   EndCustomSection
   BeginCustomSection('foo', size: 5)
+    BeginGenericCustomSection(5)
+      OnGenericCustomSection(name: "foo", size: 1)
+    EndGenericCustomSection
   EndCustomSection
 EndModule
 ;;; STDERR ;;)

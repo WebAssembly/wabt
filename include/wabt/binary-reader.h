@@ -424,6 +424,13 @@ class BinaryReaderDelegate {
   virtual Result OnFeature(uint8_t prefix, std::string_view name) = 0;
   virtual Result EndTargetFeaturesSection() = 0;
 
+  /* Generic custom section */
+  virtual Result BeginGenericCustomSection(Offset size) = 0;
+  virtual Result OnGenericCustomSection(std::string_view name,
+                                        const void* data,
+                                        Offset size) = 0;
+  virtual Result EndGenericCustomSection() = 0;
+
   /* Linking section */
   virtual Result BeginLinkingSection(Offset size) = 0;
   virtual Result OnSymbolCount(Index count) = 0;
