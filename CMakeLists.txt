@@ -704,7 +704,6 @@ if (BUILD_TESTS)
   set(UNITTESTS_SRCS
     src/test-binary-reader.cc
     src/test-interp.cc
-    src/test-intrusive-list.cc
     src/test-literal.cc
     src/test-option-parser.cc
     src/test-filenames.cc

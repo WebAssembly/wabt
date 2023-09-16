@@ -1124,8 +1124,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
 }
 
 void BinaryWriter::WriteExprList(const Func* func, const ExprList& exprs) {
-  for (const Expr& expr : exprs) {
-    WriteExpr(func, &expr);
+  for (const auto& expr : exprs) {
+    WriteExpr(func, expr.get());
   }
 }
 
@@ -1562,7 +1562,7 @@ Result BinaryWriter::WriteModule() {
       } else {
         for (const ExprList& elem_expr : segment->elem_exprs) {
           assert(elem_expr.size() == 1);
-          const Expr* expr = &elem_expr.front();
+          const Expr* expr = elem_expr.front().get();
           assert(expr->type() == ExprType::RefFunc);
           WriteU32Leb128(stream_,
                          module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var),

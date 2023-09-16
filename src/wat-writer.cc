@@ -1124,8 +1124,8 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
 
 void WatWriter::WriteFoldedExprList(const ExprList& exprs) {
   WABT_TRACE(WriteFoldedExprList);
-  for (const Expr& expr : exprs) {
-    WriteFoldedExpr(&expr);
+  for (const auto& expr : exprs) {
+    WriteFoldedExpr(expr.get());
   }
 }
 
@@ -1482,8 +1482,9 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
       WriteInitExpr(expr);
     } else {
       assert(expr.size() == 1);
-      assert(expr.front().type() == ExprType::RefFunc);
-      WriteVar(cast<const RefFuncExpr>(&expr.front())->var, NextChar::Space);
+      assert(expr.front()->type() == ExprType::RefFunc);
+      WriteVar(cast<const RefFuncExpr>(expr.front().get())->var,
+               NextChar::Space);
     }
   }
   WriteCloseNewline();
@@ -1630,40 +1631,42 @@ Result WatWriter::WriteModule() {
   } else {
     WriteName(module.name, NextChar::Newline);
   }
-  for (const ModuleField& field : module.fields) {
-    switch (field.type()) {
+  for (const auto& field : module.fields) {
+    switch (field->type()) {
       case ModuleFieldType::Func:
-        WriteFunc(cast<FuncModuleField>(&field)->func);
+        WriteFunc(cast<FuncModuleField>(field.get())->func);
         break;
       case ModuleFieldType::Global:
-        WriteGlobal(cast<GlobalModuleField>(&field)->global);
+        WriteGlobal(cast<GlobalModuleField>(field.get())->global);
         break;
       case ModuleFieldType::Import:
-        WriteImport(*cast<ImportModuleField>(&field)->import);
+        WriteImport(*cast<ImportModuleField>(field.get())->import);
         break;
       case ModuleFieldType::Tag:
-        WriteTag(cast<TagModuleField>(&field)->tag);
+        WriteTag(cast<TagModuleField>(field.get())->tag);
         break;
       case ModuleFieldType::Export:
-        WriteExport(cast<ExportModuleField>(&field)->export_);
+        WriteExport(cast<ExportModuleField>(field.get())->export_);
         break;
       case ModuleFieldType::Table:
-        WriteTable(cast<TableModuleField>(&field)->table);
+        WriteTable(cast<TableModuleField>(field.get())->table);
         break;
       case ModuleFieldType::ElemSegment:
-        WriteElemSegment(cast<ElemSegmentModuleField>(&field)->elem_segment);
+        WriteElemSegment(
+            cast<ElemSegmentModuleField>(field.get())->elem_segment);
         break;
       case ModuleFieldType::Memory:
-        WriteMemory(cast<MemoryModuleField>(&field)->memory);
+        WriteMemory(cast<MemoryModuleField>(field.get())->memory);
         break;
       case ModuleFieldType::DataSegment:
-        WriteDataSegment(cast<DataSegmentModuleField>(&field)->data_segment);
+        WriteDataSegment(
+            cast<DataSegmentModuleField>(field.get())->data_segment);
         break;
       case ModuleFieldType::Type:
-        WriteTypeEntry(*cast<TypeModuleField>(&field)->type);
+        WriteTypeEntry(*cast<TypeModuleField>(field.get())->type);
         break;
       case ModuleFieldType::Start:
-        WriteStartFunction(cast<StartModuleField>(&field)->start);
+        WriteStartFunction(cast<StartModuleField>(field.get())->start);
         break;
     }
   }

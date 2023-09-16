@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <list>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -28,7 +29,6 @@
 
 #include "wabt/binding-hash.h"
 #include "wabt/common.h"
-#include "wabt/intrusive-list.h"
 #include "wabt/opcode.h"
 
 namespace wabt {
@@ -432,7 +432,20 @@ enum class ExprType {
 const char* GetExprTypeName(ExprType type);
 
 class Expr;
-using ExprList = intrusive_list<Expr>;
+
+// Workaround for MSVC where std::list move constructor isn't noexcept,
+// which prevents use of vector<list<unique_ptr<T>>> (e.g. in ExprListVector)
+// (https://stackoverflow.com/questions/57299324/why-is-stdmaps-move-constructor-not-noexcept)
+template <typename T>
+class move_only_list : public std::list<T> {
+ public:
+  using std::list<T>::list;
+  WABT_DISALLOW_COPY_AND_ASSIGN(move_only_list);
+  move_only_list(move_only_list&&) = default;
+  move_only_list& operator=(move_only_list&&) = default;
+};
+
+using ExprList = move_only_list<std::unique_ptr<Expr>>;
 
 using BlockDeclaration = FuncDeclaration;
 
@@ -461,7 +474,7 @@ using CatchVector = std::vector<Catch>;
 
 enum class TryKind { Plain, Catch, Delegate };
 
-class Expr : public intrusive_list_base<Expr> {
+class Expr {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Expr);
   Expr() = delete;
@@ -1046,7 +1059,7 @@ enum class ModuleFieldType {
   Tag
 };
 
-class ModuleField : public intrusive_list_base<ModuleField> {
+class ModuleField {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(ModuleField);
   ModuleField() = delete;
@@ -1063,7 +1076,7 @@ class ModuleField : public intrusive_list_base<ModuleField> {
   ModuleFieldType type_;
 };
 
-using ModuleFieldList = intrusive_list<ModuleField>;
+using ModuleFieldList = std::list<std::unique_ptr<ModuleField>>;
 
 template <ModuleFieldType TypeEnum>
 class ModuleFieldMixin : public ModuleField {

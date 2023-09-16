@@ -1336,14 +1336,14 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
   std::vector<std::string> mini_stack;
 
   for (const auto& expr : expr_list) {
-    if (expr.type() == ExprType::Binary) {
+    if (expr->type() == ExprType::Binary) {
       // Extended const expressions include at least one binary op.
       // This builds a C expression from the operands.
       if (mini_stack.size() < 2) {
         WABT_UNREACHABLE;
       }
 
-      const auto binexpr = cast<BinaryExpr>(&expr);
+      const auto binexpr = cast<BinaryExpr>(expr.get());
       char op;
       switch (binexpr->opcode) {
         case Opcode::I32Add:
@@ -1383,7 +1383,7 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
       Stream* existing_stream = stream_;
       MemoryStream terminal_stream;
       stream_ = &terminal_stream;
-      WriteInitExprTerminal(&expr);
+      WriteInitExprTerminal(expr.get());
       const auto& buf = terminal_stream.output_buffer();
       mini_stack.emplace_back(reinterpret_cast<const char*>(buf.data.data()),
                               buf.data.size());
@@ -2271,7 +2271,7 @@ void CWriter::WriteElemInitializers() {
 
     for (const ExprList& elem_expr : elem_segment->elem_exprs) {
       assert(elem_expr.size() == 1);
-      const Expr& expr = elem_expr.front();
+      const Expr& expr = *elem_expr.front();
       switch (expr.type()) {
         case ExprType::RefFunc: {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
@@ -3295,7 +3295,8 @@ void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
 }
 
 void CWriter::Write(const ExprList& exprs) {
-  for (const Expr& expr : exprs) {
+  for (const auto& expr_ptr : exprs) {
+    const Expr& expr = *expr_ptr;
     switch (expr.type()) {
       case ExprType::Binary:
         Write(*cast<BinaryExpr>(&expr));

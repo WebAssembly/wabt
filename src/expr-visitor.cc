@@ -45,7 +45,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         auto block_expr = cast<BlockExpr>(expr);
         auto& iter = expr_iter_stack_.back();
         if (iter != block_expr->block.exprs.end()) {
-          PushDefault(&*iter++);
+          PushDefault(iter->get());
+          ++iter;
         } else {
           CHECK_RESULT(delegate_->EndBlockExpr(block_expr));
           PopExprlist();
@@ -57,7 +58,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         auto if_expr = cast<IfExpr>(expr);
         auto& iter = expr_iter_stack_.back();
         if (iter != if_expr->true_.exprs.end()) {
-          PushDefault(&*iter++);
+          PushDefault(iter->get());
+          ++iter;
         } else {
           CHECK_RESULT(delegate_->AfterIfTrueExpr(if_expr));
           PopExprlist();
@@ -70,7 +72,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         auto if_expr = cast<IfExpr>(expr);
         auto& iter = expr_iter_stack_.back();
         if (iter != if_expr->false_.end()) {
-          PushDefault(&*iter++);
+          PushDefault(iter->get());
+          ++iter;
         } else {
           CHECK_RESULT(delegate_->EndIfExpr(if_expr));
           PopExprlist();
@@ -82,7 +85,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         auto loop_expr = cast<LoopExpr>(expr);
         auto& iter = expr_iter_stack_.back();
         if (iter != loop_expr->block.exprs.end()) {
-          PushDefault(&*iter++);
+          PushDefault(iter->get());
+          ++iter;
         } else {
           CHECK_RESULT(delegate_->EndLoopExpr(loop_expr));
           PopExprlist();
@@ -94,7 +98,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         auto try_expr = cast<TryExpr>(expr);
         auto& iter = expr_iter_stack_.back();
         if (iter != try_expr->block.exprs.end()) {
-          PushDefault(&*iter++);
+          PushDefault(iter->get());
+          ++iter;
         } else {
           PopExprlist();
           switch (try_expr->kind) {
@@ -123,7 +128,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         Index catch_index = catch_index_stack_.back();
         auto& iter = expr_iter_stack_.back();
         if (iter != try_expr->catches[catch_index].exprs.end()) {
-          PushDefault(&*iter++);
+          PushDefault(iter->get());
+          ++iter;
         } else {
           PopCatch();
           catch_index++;
@@ -144,8 +150,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
 }
 
 Result ExprVisitor::VisitExprList(ExprList& exprs) {
-  for (Expr& expr : exprs)
-    CHECK_RESULT(VisitExpr(&expr));
+  for (auto& expr : exprs)
+    CHECK_RESULT(VisitExpr(expr.get()));
   return Result::Ok;
 }
 

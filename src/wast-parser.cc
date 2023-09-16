@@ -16,6 +16,8 @@
 
 #include "wabt/wast-parser.h"
 
+#include <iterator>
+
 #include "wabt/binary-reader-ir.h"
 #include "wabt/binary-reader.h"
 #include "wabt/cast.h"
@@ -501,15 +503,15 @@ class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
 
 Result ResolveFuncTypes(Module* module, Errors* errors) {
   Result result = Result::Ok;
-  for (ModuleField& field : module->fields) {
+  for (auto& field : module->fields) {
     Func* func = nullptr;
     FuncDeclaration* decl = nullptr;
-    if (auto* func_field = dyn_cast<FuncModuleField>(&field)) {
+    if (auto* func_field = dyn_cast<FuncModuleField>(field.get())) {
       func = &func_field->func;
       decl = &func->decl;
-    } else if (auto* tag_field = dyn_cast<TagModuleField>(&field)) {
+    } else if (auto* tag_field = dyn_cast<TagModuleField>(field.get())) {
       decl = &tag_field->tag.decl;
-    } else if (auto* import_field = dyn_cast<ImportModuleField>(&field)) {
+    } else if (auto* import_field = dyn_cast<ImportModuleField>(field.get())) {
       if (auto* func_import =
               dyn_cast<FuncImport>(import_field->import.get())) {
         // Only check the declaration, not the function itself, since it is an
@@ -531,9 +533,9 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
       ResolveTypeNames(*module, decl);
       has_func_type_and_empty_signature =
           ResolveFuncTypeWithEmptySignature(*module, decl);
-      ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
+      ResolveImplicitlyDefinedFunctionType(field->loc, module, *decl);
       result |=
-          CheckFuncTypeVarMatchesExplicit(field.loc, *module, *decl, errors);
+          CheckFuncTypeVarMatchesExplicit(field->loc, *module, *decl, errors);
     }
 
     if (func) {
@@ -559,10 +561,10 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
 void AppendInlineExportFields(Module* module,
                               ModuleFieldList* fields,
                               Index index) {
-  Location last_field_loc = module->fields.back().loc;
+  Location last_field_loc = module->fields.back()->loc;
 
-  for (ModuleField& field : *fields) {
-    auto* export_field = cast<ExportModuleField>(&field);
+  for (auto& field : *fields) {
+    auto* export_field = cast<ExportModuleField>(field.get());
     export_field->export_.var = Var(index, last_field_loc);
   }
 
@@ -1738,7 +1740,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
       data_segment.memory_var = Var(module->memories.size(), GetLocation());
       data_segment.offset.push_back(std::make_unique<ConstExpr>(
           field->memory.page_limits.is_64 ? Const::I64(0) : Const::I32(0)));
-      data_segment.offset.back().loc = loc;
+      data_segment.offset.back()->loc = loc;
       ParseTextListOpt(&data_segment.data);
       EXPECT(Rpar);
 
@@ -1809,7 +1811,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size(), GetLocation());
     elem_segment.offset.push_back(std::make_unique<ConstExpr>(Const::I32(0)));
-    elem_segment.offset.back().loc = loc;
+    elem_segment.offset.back()->loc = loc;
     elem_segment.elem_type = elem_type;
     // Syntax is either an optional list of var (legacy), or a non-empty list
     // of elem expr.
