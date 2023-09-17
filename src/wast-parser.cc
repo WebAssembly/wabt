@@ -593,6 +593,7 @@ Location WastParser::GetLocation() {
 }
 
 TokenType WastParser::Peek(size_t n) {
+  assert(n <= 1);
   while (tokens_.size() <= n) {
     Token cur = lexer_->GetToken();
     if (cur.token_type() != TokenType::LparAnn) {

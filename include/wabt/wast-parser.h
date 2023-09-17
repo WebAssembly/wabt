@@ -19,9 +19,9 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
-#include "wabt/circular-array.h"
 #include "wabt/error.h"
 #include "wabt/feature.h"
 #include "wabt/intrusive-list.h"
@@ -262,7 +262,28 @@ class WastParser {
   Errors* errors_;
   WastParseOptions* options_;
 
-  CircularArray<Token, 2> tokens_;
+  // two-element queue of upcoming tokens
+  class {
+    std::array<std::optional<Token>, 2> tokens{};
+    bool i{};
+
+   public:
+    void push_back(Token t) {
+      assert(!tokens[!i]);
+      tokens[!i] = t;
+      if (empty())
+        i = !i;
+    }
+    void pop_front() {
+      assert(tokens[i]);
+      tokens[i].reset();
+      i = !i;
+    }
+    const Token& at(bool n) const { return tokens[i ^ n].value(); }
+    const Token& front() const { return at(0); }
+    bool empty() const { return !tokens[i]; }
+    size_t size() const { return empty() ? 0 : 1 + tokens[!i].has_value(); }
+  } tokens_{};
 };
 
 Result ParseWatModule(WastLexer* lexer,
