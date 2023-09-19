@@ -3869,7 +3869,10 @@ void CWriter::Write(const ExprList& exprs) {
 
         if (!IsImport(func.name) && !func.features_used.tailcall) {
           // make normal call, then return
-          Write(ExprList{std::make_unique<CallExpr>(inst->var, inst->loc)});
+          auto expr = std::make_unique<CallExpr>(inst->var, inst->loc);
+          ExprList expr_list;
+          expr_list.push_back(std::move(expr));
+          Write(expr_list);
           Write("goto ", LabelName(kImplicitFuncLabel), ";", Newline());
           return;
         }
@@ -3919,7 +3922,9 @@ void CWriter::Write(const ExprList& exprs) {
               ".data[", StackVar(0), "].func_tailcallee.fn) ", OpenBrace());
         auto ci = std::make_unique<CallIndirectExpr>(inst->loc);
         std::tie(ci->decl, ci->table) = std::make_pair(inst->decl, inst->table);
-        Write(ExprList{std::move(ci)});
+        ExprList expr_list;
+        expr_list.push_back(std::move(ci));
+        Write(expr_list);
         if (in_tail_callee_) {
           Write("next->fn = NULL;", Newline());
         }

@@ -433,19 +433,7 @@ const char* GetExprTypeName(ExprType type);
 
 class Expr;
 
-// Workaround for MSVC where std::list move constructor isn't noexcept,
-// which prevents use of vector<list<unique_ptr<T>>> (e.g. in ExprListVector)
-// (https://stackoverflow.com/questions/57299324/why-is-stdmaps-move-constructor-not-noexcept)
-template <typename T>
-class move_only_list : public std::list<T> {
- public:
-  using std::list<T>::list;
-  WABT_DISALLOW_COPY_AND_ASSIGN(move_only_list);
-  move_only_list(move_only_list&&) = default;
-  move_only_list& operator=(move_only_list&&) = default;
-};
-
-using ExprList = move_only_list<std::unique_ptr<Expr>>;
+using ExprList = std::vector<std::unique_ptr<Expr>>;
 
 using BlockDeclaration = FuncDeclaration;
 
@@ -469,6 +457,8 @@ struct Catch {
   bool IsCatchAll() const {
     return var.is_index() && var.index() == kInvalidIndex;
   }
+  Catch(Catch&&) = default;
+  Catch& operator=(Catch&&) = default;
 };
 using CatchVector = std::vector<Catch>;
 

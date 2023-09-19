@@ -1970,19 +1970,14 @@ Result WastParser::ParseResultList(
 
 Result WastParser::ParseInstrList(ExprList* exprs) {
   WABT_TRACE(ParseInstrList);
-  ExprList new_exprs;
   while (true) {
     auto pair = PeekPair();
     if (IsInstr(pair)) {
-      if (Succeeded(ParseInstr(&new_exprs))) {
-        exprs->splice(exprs->end(), new_exprs);
-      } else {
+      if (Failed(ParseInstr(exprs))) {
         CHECK_RESULT(Synchronize(IsInstr));
       }
     } else if (IsLparAnn(pair)) {
-      if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
-        exprs->splice(exprs->end(), new_exprs);
-      } else {
+      if (Failed(ParseCodeMetadataAnnotation(exprs))) {
         CHECK_RESULT(Synchronize(IsLparAnn));
       }
     } else {
@@ -3036,11 +3031,8 @@ Result WastParser::ParseBlock(Block* block) {
 
 Result WastParser::ParseExprList(ExprList* exprs) {
   WABT_TRACE(ParseExprList);
-  ExprList new_exprs;
   while (PeekMatchExpr()) {
-    if (Succeeded(ParseExpr(&new_exprs))) {
-      exprs->splice(exprs->end(), new_exprs);
-    } else {
+    if (Failed(ParseExpr(exprs))) {
       CHECK_RESULT(Synchronize(IsExpr));
     }
   }
@@ -3093,9 +3085,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
 
         if (PeekMatchExpr()) {
-          ExprList cond;
-          CHECK_RESULT(ParseExpr(&cond));
-          exprs->splice(exprs->end(), cond);
+          CHECK_RESULT(ParseExpr(exprs));
         }
 
         if (MatchLpar(TokenType::Then)) {
