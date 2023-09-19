@@ -133,9 +133,9 @@ TOOLS = {
         ('RUN', '%(wasm-decompile)s %(temp_file)s.wasm'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
-    'run-opcodecnt': [
+    'run-stats': [
         ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
-        ('RUN', '%(wasm-opcodecnt)s %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-stats)s %(temp_file)s.wasm'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-gen-spec-js': [

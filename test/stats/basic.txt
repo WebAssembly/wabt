@@ -1,4 +1,4 @@
-;;; TOOL: run-opcodecnt
+;;; TOOL: run-stats
 (module
   (memory (data "hello, world"))
   (func

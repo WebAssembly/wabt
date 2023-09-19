@@ -27,22 +27,22 @@
 <div class="manual-text">
 <section class="Sh">
 <h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
-<code class="Nm">wasm-opcodecnt</code> &#x2014;
-<div class="Nd">count opcode usage for instructions</div>
+<code class="Nm">wasm-stats</code> &#x2014;
+<div class="Nd">show stats for a module</div>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
 <table class="Nm">
   <tr>
-    <td><code class="Nm">wasm-opcodecnt</code></td>
+    <td><code class="Nm">wasm-stats</code></td>
     <td>[options] <var class="Ar">file ...</var></td>
   </tr>
 </table>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
-<code class="Nm">wasm-opcodecnt</code> reads a file in the wasm binary format,
-  and counts opcode usage for instructions.
+<code class="Nm">wasm-stats</code> reads a file in the wasm binary format,
+  and shows stats.
 <p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
   <dt><a class="permalink" href="#v"><code class="Fl" id="v">-v</code></a>,
@@ -64,9 +64,9 @@
 </section>
 <section class="Sh">
 <h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-Parse binary file test.wasm and write pcode dist file test.dist
+Parse binary file test.wasm and write opcode dist file test.dist
 <p class="Pp"></p>
-<div class="Bd Bd-indent"><code class="Li">$ wasm-opcodecnt test.wasm -o
+<div class="Bd Bd-indent"><code class="Li">$ wasm-stats test.wasm -o
   test.dist</code></div>
 </section>
 <section class="Sh">
