@@ -593,6 +593,7 @@ Location WastParser::GetLocation() {
 }
 
 TokenType WastParser::Peek(size_t n) {
+  assert(n <= 1);
   while (tokens_.size() <= n) {
     Token cur = lexer_->GetToken();
     if (cur.token_type() != TokenType::LparAnn) {
@@ -3660,6 +3661,37 @@ bool WastParser::HasError() const {
   return std::any_of(errors_->begin(), errors_->end(), [](const auto& x) {
     return x.error_level == ErrorLevel::Error;
   });
+}
+
+void WastParser::TokenQueue::push_back(Token t) {
+  assert(!tokens[!i]);
+  tokens[!i] = t;
+  if (empty()) {
+    i = !i;
+  }
+}
+
+void WastParser::TokenQueue::pop_front() {
+  assert(tokens[i]);
+  tokens[i].reset();
+  i = !i;
+}
+
+const Token& WastParser::TokenQueue::at(size_t n) const {
+  assert(n <= 1);
+  return tokens[i ^ static_cast<bool>(n)].value();
+}
+
+const Token& WastParser::TokenQueue::front() const {
+  return at(0);
+}
+
+bool WastParser::TokenQueue::empty() const {
+  return !tokens[i];
+}
+
+size_t WastParser::TokenQueue::size() const {
+  return empty() ? 0 : 1 + tokens[!i].has_value();
 }
 
 Result ParseWatModule(WastLexer* lexer,
