@@ -263,27 +263,20 @@ class WastParser {
   WastParseOptions* options_;
 
   // two-element queue of upcoming tokens
-  class {
+  class TokenQueue {
     std::array<std::optional<Token>, 2> tokens{};
     bool i{};
 
    public:
-    void push_back(Token t) {
-      assert(!tokens[!i]);
-      tokens[!i] = t;
-      if (empty())
-        i = !i;
-    }
-    void pop_front() {
-      assert(tokens[i]);
-      tokens[i].reset();
-      i = !i;
-    }
-    const Token& at(bool n) const { return tokens[i ^ n].value(); }
-    const Token& front() const { return at(0); }
-    bool empty() const { return !tokens[i]; }
-    size_t size() const { return empty() ? 0 : 1 + tokens[!i].has_value(); }
-  } tokens_{};
+    void push_back(Token t);
+    void pop_front();
+    const Token& at(size_t n) const;
+    const Token& front() const;
+    bool empty() const;
+    size_t size() const;
+  };
+
+  TokenQueue tokens_{};
 };
 
 Result ParseWatModule(WastLexer* lexer,
