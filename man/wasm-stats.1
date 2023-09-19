@@ -2,15 +2,15 @@
 .Dt WABT 1
 .Os
 .Sh NAME
-.Nm wasm-opcodecnt
-.Nd count opcode usage for instructions
+.Nm wasm-stats
+.Nd show stats for a module
 .Sh SYNOPSIS
-.Nm wasm-opcodecnt
+.Nm wasm-stats
 .Op options
 .Ar
 .Sh DESCRIPTION
 .Nm
-Read a file in the wasm binary format, and count opcode usage for instructions.
+Read a file in the wasm binary format, and show stats.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -64,9 +64,9 @@ Cutoff for reporting counts less than N
 Separator text between element and count when reporting counts
 .El
 .Sh EXAMPLES
-Parse binary file test.wasm and write pcode dist file test.dist
+Parse binary file test.wasm and write opcode dist file test.dist
 .Pp
-.Dl $ wasm-opcodecnt test.wasm -o test.dist
+.Dl $ wasm-stats test.wasm -o test.dist
 .Sh SEE ALSO
 .Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,

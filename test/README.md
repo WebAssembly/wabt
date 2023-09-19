@@ -145,8 +145,8 @@ The currently supported list of tools (see
   interpreter.
 - `run-gen-wasm-decompile`: parse a "gen-wasm" text file (which can describe
   invalid binary files), then parse via `wasm-decompile` and display the result.
-- `run-opcodecnt`: parse a wasm text file, convert it to binary, then display
-  opcode usage counts.
+- `run-stats`: parse a wasm text file, convert it to binary, then display
+  stats.
 - `run-gen-spec-js`: parse wasm spec test text file, convert it to a JSON file
   and a collection of `.wasm` and `.wast` files, then take all of these files
   and generate a JavaScript file that will execute the same tests.
@@ -177,7 +177,7 @@ subdirectory:
   JavaScript file.
 - `help`: Tests the output of running with the `--help` flag on each tool.
 - `interp`: Tests the `wasm-interp` tool.
-- `opcodecnt`: Tests the `wasm-opcodecnt` tool.
+- `stats`: Tests the `wasm-stats` tool.
 - `parse`: Tests parsing via the `wat2wasm` tool.
 - `regress`: Various regression tests that are irregular and don't fit
   naturally in the other directories.

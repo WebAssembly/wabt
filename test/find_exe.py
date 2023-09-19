@@ -25,7 +25,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 EXECUTABLES = [
     'wat2wasm', 'wast2json', 'wasm2wat', 'wasm-objdump', 'wasm-interp',
-    'wasm-opcodecnt', 'wat-desugar', 'spectest-interp', 'wasm-validate',
+    'wasm-stats', 'wat-desugar', 'spectest-interp', 'wasm-validate',
     'wasm2c', 'wasm-strip', 'wasm-decompile'
 ]
 
@@ -89,8 +89,8 @@ def GetSpectestInterpExecutable(override=None):
     return FindExecutable('spectest-interp', override)
 
 
-def GetWasmOpcodeCntExecutable(override=None):
-    return FindExecutable('wasm-opcodecnt', override)
+def GetWasmStatsExecutable(override=None):
+    return FindExecutable('wasm-stats', override)
 
 
 def GetWatDesugarExecutable(override=None):

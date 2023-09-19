@@ -557,10 +557,10 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
-  # wasm-opcodecnt
+  # wasm-stats
   wabt_executable(
-    NAME wasm-opcodecnt
-    SOURCES src/tools/wasm-opcodecnt.cc src/binary-reader-opcnt.cc
+    NAME wasm-stats
+    SOURCES src/tools/wasm-stats.cc src/binary-reader-stats.cc
     INSTALL
   )
 

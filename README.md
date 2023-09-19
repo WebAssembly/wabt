@@ -14,7 +14,7 @@ WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
  - [**wasm-strip**](https://webassembly.github.io/wabt/doc/wasm-strip.1.html): remove sections of a WebAssembly binary file
  - [**wasm-validate**](https://webassembly.github.io/wabt/doc/wasm-validate.1.html): validate a file in the WebAssembly binary format
  - [**wast2json**](https://webassembly.github.io/wabt/doc/wast2json.1.html): convert a file in the wasm spec test format to a JSON file and associated wasm binary files
- - [**wasm-opcodecnt**](https://webassembly.github.io/wabt/doc/wasm-opcodecnt.1.html): count opcode usage for instructions
+ - [**wasm-stats**](https://webassembly.github.io/wabt/doc/wasm-stats.1.html): output stats for a module
  - [**spectest-interp**](https://webassembly.github.io/wabt/doc/spectest-interp.1.html): read a Spectest JSON file, and run its tests in the interpreter
 
 These tools are intended for use in (or for development of) toolchains or other
