@@ -20,6 +20,7 @@ import difflib
 import fnmatch
 import multiprocessing
 import os
+import platform
 import re
 import shlex
 import shutil
@@ -505,6 +506,8 @@ class TestInfo(object):
         elif key == 'ENV':
             # Pattern: FOO=1 BAR=stuff
             self.env = dict(x.split('=') for x in value.split())
+        elif key == 'PLATFORMS':
+            self.skip = platform.system() not in value.split()
         else:
             raise Error('Unknown directive: %s' % key)
 
