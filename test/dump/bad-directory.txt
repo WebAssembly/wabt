@@ -1,5 +1,5 @@
 ;;; RUN: %(wasm-objdump)s -d third_party/
 ;;; ERROR: 1
 (;; STDERR ;;;
-third_party/: not a regular file
+third_party/: is a directory
 ;;; STDERR ;;)

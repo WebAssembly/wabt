@@ -59,14 +59,16 @@ const char* g_reloc_type_name[] = {
 };
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 
-static Result ReadStdin(std::vector<uint8_t>* out_data) {
+static Result ReadAll(FILE* stream,
+                      const char* name,
+                      std::vector<uint8_t>* out_data) {
   out_data->resize(0);
   uint8_t buffer[4096];
   while (true) {
-    size_t bytes_read = fread(buffer, 1, sizeof(buffer), stdin);
+    size_t bytes_read = fread(buffer, 1, sizeof(buffer), stream);
     if (bytes_read == 0) {
-      if (ferror(stdin)) {
-        fprintf(stderr, "error reading from stdin: %s\n", strerror(errno));
+      if (ferror(stream)) {
+        fprintf(stderr, "error reading from %s: %s\n", name, strerror(errno));
         return Result::Error;
       }
       return Result::Ok;
@@ -82,7 +84,7 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
   const char* filename_cstr = filename_str.c_str();
 
   if (filename == "-") {
-    return ReadStdin(out_data);
+    return ReadAll(stdin, "stdin", out_data);
   }
 
   struct stat statbuf;
@@ -91,8 +93,8 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
     return Result::Error;
   }
 
-  if (!(statbuf.st_mode & S_IFREG)) {
-    fprintf(stderr, "%s: not a regular file\n", filename_cstr);
+  if (statbuf.st_mode & S_IFDIR) {
+    fprintf(stderr, "%s: is a directory\n", filename_cstr);
     return Result::Error;
   }
 
@@ -103,9 +105,11 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
   }
 
   if (fseek(infile, 0, SEEK_END) < 0) {
-    perror("fseek to end failed");
+    // not seekable, so we can't pre-allocate out_data, but let's try and read
+    // it anyway (for pipes, sockets, etc.)
+    auto res = ReadAll(infile, filename_cstr, out_data);
     fclose(infile);
-    return Result::Error;
+    return res;
   }
 
   long size = ftell(infile);
