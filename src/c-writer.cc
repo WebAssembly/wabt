@@ -5803,7 +5803,9 @@ void CWriter::WriteCSource() {
   WriteFuncDeclarations();
   WriteDataInitializerDecls();
   WriteElemInitializerDecls();
-  WriteTailcalleeParamTypes();
+  if (options_.features.tail_call_enabled()) {
+    WriteTailcalleeParamTypes();
+  }
 
   /* Write the module-wide material to the first output stream */
   stream_ = c_streams_.front();
