@@ -1162,15 +1162,11 @@ R"w2c_template(#define FUNC_TYPE_T(x) static const char x[]
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-#if (__STDC_VERSION__ >= 201112L) || defined(_Static_assert)
+#if (__STDC_VERSION__ < 201112L) && !defined(static_assert)
 )w2c_template"
-R"w2c_template(#define wasm_static_assert(X) _Static_assert(X, "assertion failure")
+R"w2c_template(#define static_assert(X) \
 )w2c_template"
-R"w2c_template(#else
-)w2c_template"
-R"w2c_template(#define wasm_static_assert(X) \
-)w2c_template"
-R"w2c_template(  extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
+R"w2c_template(  extern int(*assertion(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"

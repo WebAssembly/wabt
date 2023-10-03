@@ -720,11 +720,9 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-#if (__STDC_VERSION__ >= 201112L) || defined(_Static_assert)
-#define wasm_static_assert(X) _Static_assert(X, "assertion failure")
-#else
-#define wasm_static_assert(X) \
-  extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
+#if (__STDC_VERSION__ < 201112L) && !defined(static_assert)
+#define static_assert(X) \
+  extern int(*assertion(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
 #endif
 
 #ifdef _MSC_VER

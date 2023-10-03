@@ -2815,11 +2815,11 @@ void CWriter::Unspill(const TypeVector& types, bool ptr) {
 
 void CWriter::WriteTailCallAsserts(const FuncSignature& sig) {
   if (sig.param_types.size()) {
-    Write("wasm_static_assert(sizeof(", sig.param_types,
-          ") <= ", kTailCallStackSize, ");", Newline());
+    Write("static_assert(sizeof(", sig.param_types, ") <= ", kTailCallStackSize,
+          ");", Newline());
   }
   if (sig.result_types.size() && sig.result_types != sig.param_types) {
-    Write("wasm_static_assert(sizeof(", sig.result_types,
+    Write("static_assert(sizeof(", sig.result_types,
           ") <= ", kTailCallStackSize, ");", Newline());
   }
 }

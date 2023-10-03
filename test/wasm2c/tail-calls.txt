@@ -701,11 +701,9 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
-#if (__STDC_VERSION__ >= 201112L) || defined(_Static_assert)
-#define wasm_static_assert(X) _Static_assert(X, "assertion failure")
-#else
-#define wasm_static_assert(X) \
-  extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
+#if (__STDC_VERSION__ < 201112L) && !defined(static_assert)
+#define static_assert(X) \
+  extern int(*assertion(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
 #endif
 
 #ifdef _MSC_VER
@@ -811,7 +809,7 @@ void w2c_test_tailcaller_0(w2c_test* instance) {
   var_i0 = 1u;
   var_f1 = 2;
   var_i2 = 0u;
-  wasm_static_assert(sizeof(struct wasm_multi_if) <= 1024);
+  static_assert(sizeof(struct wasm_multi_if) <= 1024);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
   if (!instance->w2c_tab.data[var_i2].func_tailcallee.fn) {
     CALL_INDIRECT(instance->w2c_tab, void (*)(void*, u32, f32), w2c_test_i32_f32, var_i2, instance->w2c_tab.data[var_i2].module_instance, var_i0, var_f1);
@@ -842,7 +840,7 @@ void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_st
   var_i0 = 1u;
   var_f1 = 2;
   var_i2 = 0u;
-  wasm_static_assert(sizeof(struct wasm_multi_if) <= 1024);
+  static_assert(sizeof(struct wasm_multi_if) <= 1024);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
   if (!instance->w2c_tab.data[var_i2].func_tailcallee.fn) {
     CALL_INDIRECT(instance->w2c_tab, void (*)(void*, u32, f32), w2c_test_i32_f32, var_i2, instance->w2c_tab.data[var_i2].module_instance, var_i0, var_f1);
