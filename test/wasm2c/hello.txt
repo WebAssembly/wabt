@@ -62,11 +62,9 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 /* import: 'wasi_snapshot_preview1' 'fd_write' */
 u32 w2c_wasi__snapshot__preview1_fd_write(struct w2c_wasi__snapshot__preview1*, u32, u32, u32, u32);
-void wasm_tailcall_w2c_wasi__snapshot__preview1_fd_write(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
 
 /* import: 'wasi_snapshot_preview1' 'proc_exit' */
 void w2c_wasi__snapshot__preview1_proc_exit(struct w2c_wasi__snapshot__preview1*, u32);
-void wasm_tailcall_w2c_wasi__snapshot__preview1_proc_exit(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
 
 /* export: 'memory' */
 wasm_rt_memory_t* w2c_test_memory(w2c_test* instance);
@@ -768,7 +766,7 @@ static void init_data_instances(w2c_test *instance) {
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)w2c_wasi__snapshot__preview1_fd_write, {wasm_tailcall_w2c_wasi__snapshot__preview1_fd_write}, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
+  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)w2c_wasi__snapshot__preview1_fd_write, {NULL}, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
 };
 
 static void init_tables(w2c_test* instance) {
@@ -787,23 +785,6 @@ wasm_rt_memory_t* w2c_test_memory(w2c_test* instance) {
 /* export: '_start' */
 void w2c_test_0x5Fstart(w2c_test* instance) {
   w2c_test_0x5Fstart_0(instance);
-}
-
-/* handler for missing tail-call on import: 'wasi_snapshot_preview1' 'fd_write' */
-WEAK_FUNC_DECL(wasm_tailcall_w2c_wasi__snapshot__preview1_fd_write, wasm_fallback_test_w2c_wasi__snapshot__preview1_fd_write)
-{
-  next->fn = NULL;
-  struct wasm_multi_iiii *params = tail_call_stack;
-  u32 result = w2c_wasi__snapshot__preview1_fd_write(*instance_ptr, params->i0, params->i1, params->i2, params->i3);
-  wasm_rt_memcpy(tail_call_stack, &result, sizeof(result));
-}
-
-/* handler for missing tail-call on import: 'wasi_snapshot_preview1' 'proc_exit' */
-WEAK_FUNC_DECL(wasm_tailcall_w2c_wasi__snapshot__preview1_proc_exit, wasm_fallback_test_w2c_wasi__snapshot__preview1_proc_exit)
-{
-  next->fn = NULL;
-  u32 param = *(u32*)tail_call_stack;
-  w2c_wasi__snapshot__preview1_proc_exit(*instance_ptr, param);
 }
 
 static void init_instance_import(w2c_test* instance, struct w2c_wasi__snapshot__preview1* w2c_wasi__snapshot__preview1_instance) {

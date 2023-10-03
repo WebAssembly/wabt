@@ -1414,7 +1414,8 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
       Write("(wasm_rt_funcref_t){", FuncTypeExpr(func_type), ", ",
             "(wasm_rt_function_ptr_t)",
             ExternalRef(ModuleFieldType::Func, func->name), ", {");
-      if (IsImport(func->name) || func->features_used.tailcall) {
+      if (options_.features.tail_call_enabled() &&
+          (IsImport(func->name) || func->features_used.tailcall)) {
         Write(TailCallRef(func->name));
       } else {
         Write("NULL");
@@ -1807,10 +1808,11 @@ void CWriter::WriteImports() {
       WriteImportFuncDeclaration(
           func.decl, import->module_name,
           ExportName(import->module_name, import->field_name));
-      Write(";");
-      Write(Newline());
-      WriteTailCallFuncDeclaration(GetTailCallRef(func.name));
       Write(";", Newline());
+      if (options_.features.tail_call_enabled()) {
+        WriteTailCallFuncDeclaration(GetTailCallRef(func.name));
+        Write(";", Newline());
+      }
     } else if (import->kind() == ExternalKind::Tag) {
       Write(Newline(), "/* import: '", SanitizeForComment(import->module_name),
             "' '", SanitizeForComment(import->field_name), "' */", Newline());
@@ -2275,7 +2277,8 @@ void CWriter::WriteElemInitializers() {
           Write("{RefFunc, ", FuncTypeExpr(func_type),
                 ", (wasm_rt_function_ptr_t)",
                 ExternalRef(ModuleFieldType::Func, func->name), ", {");
-          if (IsImport(func->name) || func->features_used.tailcall) {
+          if (options_.features.tail_call_enabled() &&
+              (IsImport(func->name) || func->features_used.tailcall)) {
             Write(TailCallRef(func->name));
           } else {
             Write("NULL");
@@ -2536,7 +2539,7 @@ void CWriter::WriteTailCallExports(CWriterPhase kind) {
 
     const Func* func = module_->GetFunc(export_->var);
 
-    if (!func->features_used.tailcall) {
+    if (!IsImport(func->name) && !func->features_used.tailcall) {
       continue;
     }
 
@@ -3696,7 +3699,8 @@ void CWriter::Write(const ExprList& exprs) {
         Write(StackVar(0), " = (wasm_rt_funcref_t){", FuncTypeExpr(func_type),
               ", (wasm_rt_function_ptr_t)",
               ExternalRef(ModuleFieldType::Func, func->name), ", {");
-        if (IsImport(func->name) || func->features_used.tailcall) {
+        if (options_.features.tail_call_enabled() &&
+            (IsImport(func->name) || func->features_used.tailcall)) {
           Write(TailCallRef(func->name));
         } else {
           Write("NULL");
@@ -5778,7 +5782,9 @@ void CWriter::WriteCHeader() {
   WriteImports();
   WriteImportProperties(CWriterPhase::Declarations);
   WriteExports(CWriterPhase::Declarations);
-  WriteTailCallExports(CWriterPhase::Declarations);
+  if (options_.features.tail_call_enabled()) {
+    WriteTailCallExports(CWriterPhase::Declarations);
+  }
   Write(Newline());
   Write(s_header_bottom);
   Write(Newline(), "#endif  /* ", guard, " */", Newline());
@@ -5808,8 +5814,10 @@ void CWriter::WriteCSource() {
   WriteDataInitializers();
   WriteElemInitializers();
   WriteExports(CWriterPhase::Definitions);
-  WriteTailCallExports(CWriterPhase::Definitions);
-  WriteTailCallWeakImports();
+  if (options_.features.tail_call_enabled()) {
+    WriteTailCallExports(CWriterPhase::Definitions);
+    WriteTailCallWeakImports();
+  }
   WriteInitInstanceImport();
   WriteImportProperties(CWriterPhase::Definitions);
   WriteInit();
