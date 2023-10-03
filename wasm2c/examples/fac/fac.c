@@ -646,6 +646,19 @@ DEFINE_TABLE_FILL(externref)
   extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
 #endif
 
+#ifdef _MSC_VER
+#define WEAK_FUNC_DECL(func, fallback)                             \
+  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+                                                                   \
+      void                                                         \
+      fallback(void** instance_ptr, void* tail_call_stack,         \
+               wasm_rt_tailcallee_t* next)
+#else
+#define WEAK_FUNC_DECL(func, fallback)                                        \
+  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+                                  wasm_rt_tailcallee_t* next)
+#endif
+
 static u32 w2c_fac_fac_0(w2c_fac*, u32);
 
 FUNC_TYPE_T(w2c_fac_t0) = "\x07\x80\x96\x7a\x42\xf7\x3e\xe6\x70\x5c\x2f\xac\x83\xf5\x67\xd2\xa2\xa0\x69\x41\x5f\xf8\xe7\x96\x7f\x23\xab\x00\x03\x5f\x4a\x3c";

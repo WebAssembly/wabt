@@ -251,7 +251,9 @@ typedef void (*wasm_rt_function_ptr_t)(void);
  * single-member struct to allow a recursive definition.)
  */
 typedef struct wasm_rt_tailcallee_t {
-  void (*fn)(void**, void*, struct wasm_rt_tailcallee_t*);
+  void (*fn)(void** instance_ptr,
+             void* tail_call_stack,
+             struct wasm_rt_tailcallee_t* next);
 } wasm_rt_tailcallee_t;
 
 /**
@@ -277,10 +279,7 @@ typedef struct {
 } wasm_rt_funcref_t;
 
 /** Default (null) value of a funcref */
-static const wasm_rt_funcref_t wasm_rt_funcref_null_value = {NULL,
-                                                             NULL,
-                                                             {NULL},
-                                                             NULL};
+static const wasm_rt_funcref_t wasm_rt_funcref_null_value;
 
 /** The type of an external reference (opaque to WebAssembly). */
 typedef void* wasm_rt_externref_t;

@@ -626,3 +626,16 @@ DEFINE_TABLE_FILL(externref)
 #define wasm_static_assert(X) \
   extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
 #endif
+
+#ifdef _MSC_VER
+#define WEAK_FUNC_DECL(func, fallback)                             \
+  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+                                                                   \
+      void                                                         \
+      fallback(void** instance_ptr, void* tail_call_stack,         \
+               wasm_rt_tailcallee_t* next)
+#else
+#define WEAK_FUNC_DECL(func, fallback)                                        \
+  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+                                  wasm_rt_tailcallee_t* next)
+#endif

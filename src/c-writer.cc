@@ -413,6 +413,7 @@ class CWriter {
   void WriteInitInstanceImport();
   void WriteImportProperties(CWriterPhase);
   void WriteFuncs();
+  void BeginFunction(const Func&);
   void Write(const Func&);
   void WriteTailCallee(const Func&);
   void WriteParamsAndLocals();
@@ -537,8 +538,8 @@ static constexpr char kLabelSuffix = kParamSuffix + 1;
 static constexpr char kGlobalSymbolPrefix[] = "w2c_";
 static constexpr char kLocalSymbolPrefix[] = "var_";
 static constexpr char kAdminSymbolPrefix[] = "wasm2c_";
-static constexpr char kTailCallSymbolPrefix[] = "wasm2c_tailcall_";
-static constexpr char kTailCallFallbackPrefix[] = "wasm2c_fallback_";
+static constexpr char kTailCallSymbolPrefix[] = "wasm_tailcall_";
+static constexpr char kTailCallFallbackPrefix[] = "wasm_fallback_";
 static constexpr unsigned int kTailCallStackSize = 1024;
 
 size_t CWriter::MarkTypeStack() const {
@@ -1829,21 +1830,11 @@ void CWriter::WriteTailCallWeakImports() {
     Write(Newline(), "/* handler for missing tail-call on import: '",
           SanitizeForComment(import->module_name), "' '",
           SanitizeForComment(import->field_name), "' */", Newline());
-    Write("#ifdef _MSC_VER", Newline(),
-          "#pragma comment(linker, \"/alternatename:",
-          TailCallExportName(import->module_name, import->field_name), "=",
+    Write("WEAK_FUNC_DECL(",
+          TailCallExportName(import->module_name, import->field_name), ", ",
           kTailCallFallbackPrefix, module_prefix_, "_",
-          ExportName(import->module_name, import->field_name), "\")",
-          Newline());
-    WriteTailCallFuncDeclaration(
-        kTailCallFallbackPrefix + module_prefix_ + '_' +
-        ExportName(import->module_name, import->field_name));
-    Write(Newline(), "#else", Newline());
-    Write("__attribute__((weak)) ");
-    WriteTailCallFuncDeclaration(
-        TailCallExportName(import->module_name, import->field_name));
-    Write(Newline(), "#endif", Newline(), OpenBrace());
-    Write("next->fn = NULL;", Newline());
+          ExportName(import->module_name, import->field_name), ")", Newline());
+    Write(OpenBrace(), "next->fn = NULL;", Newline());
 
     Index num_params = func.GetNumParams();
     Index num_results = func.GetNumResults();
@@ -2855,7 +2846,7 @@ void CWriter::WriteUnwindTryCatchStack(const Label* label) {
 
 void CWriter::FinishReturnCall() {
   if (in_tail_callee_) {
-    Write("return;", Newline());
+    Write(CloseBrace(), Newline(), "return;", Newline());
     return;
   }
 
@@ -2872,10 +2863,11 @@ void CWriter::FinishReturnCall() {
     Write(CloseBrace(), Newline());
   }
 
-  Write("goto ", LabelName(kImplicitFuncLabel), ";", Newline());
+  Write(CloseBrace(), Newline(), "goto ", LabelName(kImplicitFuncLabel), ";",
+        Newline());
 }
 
-void CWriter::Write(const Func& func) {
+void CWriter::BeginFunction(const Func& func) {
   func_ = &func;
   in_tail_callee_ = false;
   local_syms_.clear();
@@ -2883,8 +2875,6 @@ void CWriter::Write(const Func& func) {
   stack_var_sym_map_.clear();
   func_sections_.clear();
   func_includes_.clear();
-
-  Stream* prev_stream = stream_;
 
   /*
    * If offset of stream_ is 0, this is the first time some function is written
@@ -2894,7 +2884,11 @@ void CWriter::Write(const Func& func) {
     WriteMultiCTop();
   }
   Write(Newline());
+}
 
+void CWriter::Write(const Func& func) {
+  Stream* prev_stream = stream_;
+  BeginFunction(func);
   PushFuncSection();
   Write(func.decl.sig.result_types, " ",
         GlobalName(ModuleFieldType::Func, func.name), "(");
@@ -2944,18 +2938,9 @@ void CWriter::Write(const Func& func) {
 }
 
 void CWriter::WriteTailCallee(const Func& func) {
-  func_ = &func;
-  in_tail_callee_ = true;
-  local_syms_.clear();
-  local_sym_map_.clear();
-  stack_var_sym_map_.clear();
-  func_sections_.clear();
-  func_includes_.clear();
-
   Stream* prev_stream = stream_;
-
-  Write(Newline());
-
+  BeginFunction(func);
+  in_tail_callee_ = true;
   PushFuncSection();
   WriteTailCallFuncDeclaration(GetTailCallRef(func.name));
   Write(" ", OpenBrace());
@@ -3951,7 +3936,6 @@ void CWriter::Write(const ExprList& exprs) {
         }
         DropTypes(num_params);
         FinishReturnCall();
-        Write(CloseBrace(), Newline());
         return;
       }
 
@@ -3974,14 +3958,15 @@ void CWriter::Write(const ExprList& exprs) {
         auto ci = std::make_unique<CallIndirectExpr>(inst->loc);
         std::tie(ci->decl, ci->table) = std::make_pair(inst->decl, inst->table);
         Write(ExprList{std::move(ci)});
-        Write("goto ", LabelName(kImplicitFuncLabel), ";", Newline());
-        Write(CloseBrace(), Newline());
+        if (in_tail_callee_) {
+          Write("next->fn = NULL;", Newline());
+        }
+        Write(CloseBrace(), " else ", OpenBrace());
 
         DropTypes(decl.GetNumResults());
         PushTypes(decl.sig.param_types);
         PushType(Type::I32);
 
-        Write(OpenBrace());
         if (!in_tail_callee_) {
           WriteTailCallStack();
         }
@@ -4008,7 +3993,6 @@ void CWriter::Write(const ExprList& exprs) {
 
         DropTypes(num_params + 1);
         FinishReturnCall();
-        Write(CloseBrace(), Newline());
         return;
       }
 

@@ -1174,4 +1174,29 @@ R"w2c_template(  extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) 
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
+R"w2c_template(
+#ifdef _MSC_VER
+)w2c_template"
+R"w2c_template(#define WEAK_FUNC_DECL(func, fallback)                             \
+)w2c_template"
+R"w2c_template(  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+)w2c_template"
+R"w2c_template(                                                                   \
+)w2c_template"
+R"w2c_template(      void                                                         \
+)w2c_template"
+R"w2c_template(      fallback(void** instance_ptr, void* tail_call_stack,         \
+)w2c_template"
+R"w2c_template(               wasm_rt_tailcallee_t* next)
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define WEAK_FUNC_DECL(func, fallback)                                        \
+)w2c_template"
+R"w2c_template(  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+)w2c_template"
+R"w2c_template(                                  wasm_rt_tailcallee_t* next)
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
 ;

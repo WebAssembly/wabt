@@ -47,13 +47,13 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 /* import: 'spectest' 'print_i32_f32' */
 void w2c_spectest_print_i32_f32(struct w2c_spectest*, u32, f32);
-void wasm2c_tailcall_w2c_spectest_print_i32_f32(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
+void wasm_tailcall_w2c_spectest_print_i32_f32(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
 
 /* export: 'tailcaller' */
 void w2c_test_tailcaller(w2c_test*);
 
 /* export for tail-call of 'tailcaller' */
-void wasm2c_tailcall_w2c_test_tailcaller(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
+void wasm_tailcall_w2c_test_tailcaller(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
 
 #ifdef __cplusplus
 }
@@ -708,8 +708,21 @@ DEFINE_TABLE_FILL(externref)
   extern int(*wasm2c_assert(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
 #endif
 
+#ifdef _MSC_VER
+#define WEAK_FUNC_DECL(func, fallback)                             \
+  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+                                                                   \
+      void                                                         \
+      fallback(void** instance_ptr, void* tail_call_stack,         \
+               wasm_rt_tailcallee_t* next)
+#else
+#define WEAK_FUNC_DECL(func, fallback)                                        \
+  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+                                  wasm_rt_tailcallee_t* next)
+#endif
+
 static void w2c_test_tailcaller_0(w2c_test*);
-static void wasm2c_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
+static void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
 
 #ifndef wasm_multi_if
 #define wasm_multi_if wasm_multi_if
@@ -723,7 +736,7 @@ FUNC_TYPE_T(w2c_test_i32_f32) = "\x98\x89\x5c\xbd\x28\xfd\x0e\x4d\xc5\xdc\x68\x2
 FUNC_TYPE_T(w2c_test_t1) = "\x36\xa9\xe7\xf1\xc9\x5b\x82\xff\xb9\x97\x43\xe0\xc5\xc4\xce\x95\xd8\x3c\x9a\x43\x0a\xac\x59\xf8\x4e\xf3\xcb\xfa\xb6\x14\x50\x68";
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_i32_f32, (wasm_rt_function_ptr_t)w2c_spectest_print_i32_f32, {wasm2c_tailcall_w2c_spectest_print_i32_f32}, offsetof(w2c_test, w2c_spectest_instance)},
+  {RefFunc, w2c_test_i32_f32, (wasm_rt_function_ptr_t)w2c_spectest_print_i32_f32, {wasm_tailcall_w2c_spectest_print_i32_f32}, offsetof(w2c_test, w2c_spectest_instance)},
 };
 
 static void init_tables(w2c_test* instance) {
@@ -740,17 +753,12 @@ void w2c_test_tailcaller(w2c_test* instance) {
 }
 
 /* export for tail-call of 'tailcaller' */
-void wasm2c_tailcall_w2c_test_tailcaller(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next) {
-  wasm2c_tailcall_w2c_test_tailcaller_0(instance_ptr, tail_call_stack, next);
+void wasm_tailcall_w2c_test_tailcaller(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next) {
+  wasm_tailcall_w2c_test_tailcaller_0(instance_ptr, tail_call_stack, next);
 }
 
 /* handler for missing tail-call on import: 'spectest' 'print_i32_f32' */
-#ifdef _MSC_VER
-#pragma comment(linker, "/alternatename:wasm2c_tailcall_w2c_spectest_print_i32_f32=wasm2c_fallback_test_w2c_spectest_print_i32_f32")
-void wasm2c_fallback_test_w2c_spectest_print_i32_f32(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next)
-#else
-__attribute__((weak)) void wasm2c_tailcall_w2c_spectest_print_i32_f32(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next)
-#endif
+WEAK_FUNC_DECL(wasm_tailcall_w2c_spectest_print_i32_f32, wasm_fallback_test_w2c_spectest_print_i32_f32)
 {
   next->fn = NULL;
   struct wasm_multi_if *params = tail_call_stack;
@@ -807,9 +815,7 @@ void w2c_test_tailcaller_0(w2c_test* instance) {
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
   if (!instance->w2c_tab.data[var_i2].func_tailcallee.fn) {
     CALL_INDIRECT(instance->w2c_tab, void (*)(void*, u32, f32), w2c_test_i32_f32, var_i2, instance->w2c_tab.data[var_i2].module_instance, var_i0, var_f1);
-    goto var_Bfunc;
-  }
-  {
+  } else {
     void *instance_ptr_storage;
     void **instance_ptr = &instance_ptr_storage;
     char tail_call_stack[1024];
@@ -823,13 +829,13 @@ void w2c_test_tailcaller_0(w2c_test* instance) {
     next->fn = instance->w2c_tab.data[var_i2].func_tailcallee.fn;
     *instance_ptr = instance->w2c_tab.data[var_i2].module_instance;
     while (next->fn) { next->fn(instance_ptr, tail_call_stack, next); }
-    goto var_Bfunc;
   }
+  goto var_Bfunc;
   var_Bfunc:;
   FUNC_EPILOGUE;
 }
 
-void wasm2c_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next) {
+void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next) {
   w2c_test* instance = *instance_ptr;
   u32 var_i0, var_i2;
   f32 var_f1;
@@ -840,9 +846,8 @@ void wasm2c_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
   if (!instance->w2c_tab.data[var_i2].func_tailcallee.fn) {
     CALL_INDIRECT(instance->w2c_tab, void (*)(void*, u32, f32), w2c_test_i32_f32, var_i2, instance->w2c_tab.data[var_i2].module_instance, var_i0, var_f1);
-    goto var_Bfunc;
-  }
-  {
+    next->fn = NULL;
+  } else {
     {
       struct wasm_multi_if *tmp = (struct wasm_multi_if *)tail_call_stack;
       tmp->i0 = var_i0;
@@ -850,8 +855,8 @@ void wasm2c_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_
     }
     next->fn = instance->w2c_tab.data[var_i2].func_tailcallee.fn;
     *instance_ptr = instance->w2c_tab.data[var_i2].module_instance;
-    return;
   }
+  return;
   var_Bfunc:;
   next->fn = NULL;
 }
