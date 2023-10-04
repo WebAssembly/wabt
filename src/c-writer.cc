@@ -2917,7 +2917,7 @@ void CWriter::Write(const Func& func) {
   } else if (num_results >= 2) {
     Write(OpenBrace(), func.decl.sig.result_types, " tmp;", Newline());
     Spill(func.decl.sig.result_types, false);
-    Write("return tmp;", CloseBrace(), Newline());
+    Write("return tmp;", Newline(), CloseBrace(), Newline());
   }
 
   stream_ = prev_stream;
