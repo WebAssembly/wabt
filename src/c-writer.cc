@@ -430,6 +430,9 @@ class CWriter {
   void Spill(const TypeVector&, bool);
   void Unspill(const TypeVector&, bool);
 
+  template <typename Vars, typename TypeOf, typename ToDo>
+  void WriteVarsByType(const Vars&, const TypeOf&, const ToDo&);
+
   template <typename sources>
   void Spill(const TypeVector&, bool, const sources& src);
   template <typename targets>
@@ -2940,6 +2943,37 @@ void CWriter::Write(const Func& func) {
   func_ = nullptr;
 }
 
+template <typename Vars, typename TypeOf, typename ToDo>
+void CWriter::WriteVarsByType(const Vars& vars,
+                              const TypeOf& typeof,
+                              const ToDo& todo) {
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
+                    Type::FuncRef, Type::ExternRef}) {
+    Index var_index = 0;
+    size_t count = 0;
+    for (const auto& var : vars) {
+      if (typeof(var) == type) {
+        if (count == 0) {
+          Write(type, " ");
+          Indent(4);
+        } else {
+          Write(", ");
+          if ((count % 8) == 0)
+            Write(Newline());
+        }
+
+        todo(var_index, var);
+        ++count;
+      }
+      ++var_index;
+    }
+    if (count != 0) {
+      Dedent(4);
+      Write(";", Newline());
+    }
+  }
+}
+
 void CWriter::WriteTailCallee(const Func& func) {
   Stream* prev_stream = stream_;
   BeginFunction(func);
@@ -2957,31 +2991,9 @@ void CWriter::WriteTailCallee(const Func& func) {
     Write(func.GetParamType(0), " ", DefineParamName(index_to_name[0]), " = *(",
           func.GetParamType(0), "*)tail_call_stack;", Newline());
   } else if (func.GetNumParams() > 1) {
-    for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
-                      Type::FuncRef, Type::ExternRef}) {
-      Index param_index = 0;
-      size_t count = 0;
-      for (Type param_type : func.decl.sig.param_types) {
-        if (param_type == type) {
-          if (count == 0) {
-            Write(type, " ");
-            Indent(4);
-          } else {
-            Write(", ");
-            if ((count % 8) == 0)
-              Write(Newline());
-          }
-
-          Write(DefineParamName(index_to_name[param_index]));
-          ++count;
-        }
-        ++param_index;
-      }
-      if (count != 0) {
-        Dedent(4);
-        Write(";", Newline());
-      }
-    }
+    WriteVarsByType(
+        func.decl.sig.param_types, [](auto x) { return x; },
+        [&](Index i, Type) { Write(DefineParamName(index_to_name[i])); });
     Write(OpenBrace(), func.decl.sig.param_types, " *tmp = tail_call_stack;",
           Newline());
     Unspill(func.decl.sig.param_types, true,
@@ -3086,21 +3098,9 @@ void CWriter::WriteParamTypes(const FuncDeclaration& decl) {
 
 void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
   Index num_params = func_->GetNumParams();
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
-                    Type::FuncRef, Type::ExternRef}) {
-    Index local_index = 0;
-    size_t count = 0;
-    for (Type local_type : func_->local_types) {
-      if (local_type == type) {
-        if (count == 0) {
-          Write(type, " ");
-          Indent(4);
-        } else {
-          Write(", ");
-          if ((count % 8) == 0)
-            Write(Newline());
-        }
-
+  WriteVarsByType(
+      func_->local_types, [](auto x) { return x; },
+      [&](Index local_index, Type local_type) {
         Write(DefineParamName(index_to_name[num_params + local_index]), " = ");
         if (local_type == Type::FuncRef || local_type == Type::ExternRef) {
           Write(GetReferenceNullValue(local_type));
@@ -3109,43 +3109,13 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
         } else {
           Write("0");
         }
-        ++count;
-      }
-      ++local_index;
-    }
-    if (count != 0) {
-      Dedent(4);
-      Write(";", Newline());
-    }
-  }
+      });
 }
 
 void CWriter::WriteStackVarDeclarations() {
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
-                    Type::FuncRef, Type::ExternRef}) {
-    size_t count = 0;
-    for (const auto& [pair, name] : stack_var_sym_map_) {
-      Type stp_type = pair.second;
-
-      if (stp_type == type) {
-        if (count == 0) {
-          Write(type, " ");
-          Indent(4);
-        } else {
-          Write(", ");
-          if ((count % 8) == 0)
-            Write(Newline());
-        }
-
-        Write(name);
-        ++count;
-      }
-    }
-    if (count != 0) {
-      Dedent(4);
-      Write(";", Newline());
-    }
-  }
+  WriteVarsByType(
+      stack_var_sym_map_, [](auto stp_name) { return stp_name.first.second; },
+      [&](Index, auto& stp_name) { Write(stp_name.second); });
 }
 
 void CWriter::Write(const Block& block) {
