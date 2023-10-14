@@ -2951,17 +2951,17 @@ void CWriter::WriteTailCallee(const Func& func) {
   Write(ModuleInstanceTypeName(), "* instance = *instance_ptr;", Newline());
 
   std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func_->GetNumParamsAndLocals(), func_->bindings,
+  MakeTypeBindingReverseMapping(func.GetNumParamsAndLocals(), func.bindings,
                                 &index_to_name);
-  if (func_->GetNumParams() == 1) {
-    Write(func_->GetParamType(0), " ", DefineParamName(index_to_name[0]),
-          " = *(", func_->GetParamType(0), "*)tail_call_stack;", Newline());
-  } else if (func_->GetNumParams() > 1) {
+  if (func.GetNumParams() == 1) {
+    Write(func.GetParamType(0), " ", DefineParamName(index_to_name[0]), " = *(",
+          func.GetParamType(0), "*)tail_call_stack;", Newline());
+  } else if (func.GetNumParams() > 1) {
     for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
                       Type::FuncRef, Type::ExternRef}) {
       Index param_index = 0;
       size_t count = 0;
-      for (Type param_type : func_->decl.sig.param_types) {
+      for (Type param_type : func.decl.sig.param_types) {
         if (param_type == type) {
           if (count == 0) {
             Write(type, " ");
@@ -2982,9 +2982,9 @@ void CWriter::WriteTailCallee(const Func& func) {
         Write(";", Newline());
       }
     }
-    Write(OpenBrace(), func_->decl.sig.param_types, " *tmp = tail_call_stack;",
+    Write(OpenBrace(), func.decl.sig.param_types, " *tmp = tail_call_stack;",
           Newline());
-    Unspill(func_->decl.sig.param_types, true,
+    Unspill(func.decl.sig.param_types, true,
             [&](auto i) { return ParamName(index_to_name[i]); });
     Write(CloseBrace(), Newline());
   }
