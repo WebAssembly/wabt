@@ -414,6 +414,7 @@ class CWriter {
   void WriteImportProperties(CWriterPhase);
   void WriteFuncs();
   void BeginFunction(const Func&);
+  void FinishFunction();
   void Write(const Func&);
   void WriteTailCallee(const Func&);
   void WriteParamsAndLocals();
@@ -2892,6 +2893,25 @@ void CWriter::BeginFunction(const Func& func) {
   Write(Newline());
 }
 
+void CWriter::FinishFunction() {
+  for (size_t i = 0; i < func_sections_.size(); ++i) {
+    auto& [condition, stream] = func_sections_.at(i);
+    std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
+    if (condition.empty() || func_includes_.count(condition)) {
+      stream_->WriteData(buf->data.data(), buf->data.size());
+    }
+
+    if (i == 0) {
+      WriteStackVarDeclarations();  // these come immediately after section #0
+                                    // (return type/name/params/locals)
+    }
+  }
+
+  Write(CloseBrace(), Newline());
+
+  func_ = nullptr;
+}
+
 void CWriter::Write(const Func& func) {
   Stream* prev_stream = stream_;
   BeginFunction(func);
@@ -2924,23 +2944,7 @@ void CWriter::Write(const Func& func) {
   }
 
   stream_ = prev_stream;
-
-  for (size_t i = 0; i < func_sections_.size(); ++i) {
-    auto& [condition, stream] = func_sections_.at(i);
-    std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
-    if (condition.empty() || func_includes_.count(condition)) {
-      stream_->WriteData(buf->data.data(), buf->data.size());
-    }
-
-    if (i == 0) {
-      WriteStackVarDeclarations();  // these come immediately after section #0
-                                    // (return type/name/params/locals)
-    }
-  }
-
-  Write(CloseBrace(), Newline());
-
-  func_ = nullptr;
+  FinishFunction();
 }
 
 template <typename Vars, typename TypeOf, typename ToDo>
@@ -3028,23 +3032,7 @@ void CWriter::WriteTailCallee(const Func& func) {
   Write("next->fn = NULL;", Newline());
 
   stream_ = prev_stream;
-
-  for (size_t i = 0; i < func_sections_.size(); ++i) {
-    auto& [condition, stream] = func_sections_.at(i);
-    std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
-    if (condition.empty() || func_includes_.count(condition)) {
-      stream_->WriteData(buf->data.data(), buf->data.size());
-    }
-
-    if (i == 0) {
-      WriteStackVarDeclarations();  // these come immediately after section #0
-                                    // (return type/name/params/locals)
-    }
-  }
-
-  Write(CloseBrace(), Newline());
-
-  func_ = nullptr;
+  FinishFunction();
 }
 
 void CWriter::WriteParamsAndLocals() {
