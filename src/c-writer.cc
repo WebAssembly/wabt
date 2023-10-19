@@ -428,16 +428,16 @@ class CWriter {
   void WriteTailCallStack();
   void WriteUnwindTryCatchStack(const Label*);
   void FinishReturnCall();
-  void Spill(const TypeVector&, bool);
-  void Unspill(const TypeVector&, bool);
+  void Spill(const TypeVector&);
+  void Unspill(const TypeVector&);
 
   template <typename Vars, typename TypeOf, typename ToDo>
   void WriteVarsByType(const Vars&, const TypeOf&, const ToDo&);
 
   template <typename sources>
-  void Spill(const TypeVector&, bool, const sources& src);
+  void Spill(const TypeVector&, const sources& src);
   template <typename targets>
-  void Unspill(const TypeVector&, bool, const targets& tgt);
+  void Unspill(const TypeVector&, const targets& tgt);
 
   enum class AssignOp {
     Disallowed,
@@ -1844,11 +1844,9 @@ void CWriter::WriteTailCallWeakImports() {
 
     Index num_params = func.GetNumParams();
     Index num_results = func.GetNumResults();
-    if (num_params == 1) {
-      Write(func.GetParamType(0), " ", "param", " = *(", func.GetParamType(0),
-            "*)tail_call_stack;", Newline());
-    } else if (num_params > 1) {
-      Write(func.decl.sig.param_types, " *params = tail_call_stack;",
+    if (num_params >= 1) {
+      Write(func.decl.sig.param_types, " params;", Newline());
+      Write("wasm_rt_memcpy(params, tail_call_stack, sizeof(params);",
             Newline());
     }
 
@@ -1860,10 +1858,10 @@ void CWriter::WriteTailCallWeakImports() {
           "(*instance_ptr");
 
     if (num_params == 1) {
-      Write(", param");
-    } else if (num_params > 1) {
+      Write(", params");
+    } else {
       for (Index i = 0; i < num_params; ++i) {
-        Writef(", params->%c%d", MangleType(func.GetParamType(i)), i);
+        Writef(", params.%c%d", MangleType(func.GetParamType(i)), i);
       }
     }
 
@@ -2795,29 +2793,42 @@ bool CWriter::IsImport(const std::string& name) const {
 }
 
 template <typename sources>
-void CWriter::Spill(const TypeVector& types, bool ptr, const sources& src) {
+void CWriter::Spill(const TypeVector& types, const sources& src) {
+  assert(types.size() > 0);
+
+  if (types.size() == 1) {
+    Write("tmp = ", src(0), ";", Newline());
+    return;
+  }
+
   for (Index i = 0; i < types.size(); ++i) {
-    Write("tmp", ptr ? "->" : ".");
-    Writef("%c%d = ", MangleType(types.at(i)), i);
+    Writef("tmp.%c%d = ", MangleType(types.at(i)), i);
     Write(src(i), ";", Newline());
   }
 }
 
-void CWriter::Spill(const TypeVector& types, bool ptr) {
-  Spill(types, ptr, [&](auto i) { return StackVar(types.size() - i - 1); });
+void CWriter::Spill(const TypeVector& types) {
+  Spill(types, [&](auto i) { return StackVar(types.size() - i - 1); });
 }
 
 template <typename targets>
-void CWriter::Unspill(const TypeVector& types, bool ptr, const targets& tgt) {
+void CWriter::Unspill(const TypeVector& types, const targets& tgt) {
+  assert(types.size() > 0);
+
+  if (types.size() == 1) {
+    Write(tgt(0), " = tmp;", Newline());
+    return;
+  }
+
   for (Index i = 0; i < types.size(); ++i) {
-    Write(tgt(i), " = tmp", ptr ? "->" : ".");
-    Writef("%c%d;", MangleType(types.at(i)), i);
+    Write(tgt(i));
+    Writef(" = tmp.%c%d;", MangleType(types.at(i)), i);
     Write(Newline());
   }
 }
 
-void CWriter::Unspill(const TypeVector& types, bool ptr) {
-  Unspill(types, ptr, [&](auto i) { return StackVar(types.size() - i - 1); });
+void CWriter::Unspill(const TypeVector& types) {
+  Unspill(types, [&](auto i) { return StackVar(types.size() - i - 1); });
 }
 
 void CWriter::WriteTailCallAsserts(const FuncSignature& sig) {
@@ -2860,13 +2871,10 @@ void CWriter::FinishReturnCall() {
   Write("while (next->fn) { next->fn(instance_ptr, tail_call_stack, next); }",
         Newline());
   PushTypes(func_->decl.sig.result_types);
-  const Index num_results = func_->decl.sig.result_types.size();
-  if (num_results == 1) {
-    Write(StackVar(0), " = *(", StackType(0), "*)tail_call_stack;", Newline());
-  } else if (num_results > 1) {
-    Write(OpenBrace(), func_->decl.sig.result_types, " *tmp = tail_call_stack;",
-          Newline());
-    Unspill(func_->decl.sig.result_types, true);
+  if (!func_->decl.sig.result_types.empty()) {
+    Write(OpenBrace(), func_->decl.sig.result_types, " tmp;", Newline(),
+          "wasm_rt_memcpy(&tmp, tail_call_stack, sizeof(tmp));", Newline());
+    Unspill(func_->decl.sig.result_types);
     Write(CloseBrace(), Newline());
   }
 
@@ -2939,7 +2947,7 @@ void CWriter::Write(const Func& func) {
     Write("return ", StackVar(0), ";", Newline());
   } else if (num_results >= 2) {
     Write(OpenBrace(), func.decl.sig.result_types, " tmp;", Newline());
-    Spill(func.decl.sig.result_types, false);
+    Spill(func.decl.sig.result_types);
     Write("return tmp;", Newline(), CloseBrace(), Newline());
   }
 
@@ -2991,16 +2999,13 @@ void CWriter::WriteTailCallee(const Func& func) {
   std::vector<std::string> index_to_name;
   MakeTypeBindingReverseMapping(func.GetNumParamsAndLocals(), func.bindings,
                                 &index_to_name);
-  if (func.GetNumParams() == 1) {
-    Write(func.GetParamType(0), " ", DefineParamName(index_to_name[0]), " = *(",
-          func.GetParamType(0), "*)tail_call_stack;", Newline());
-  } else if (func.GetNumParams() > 1) {
+  if (func.GetNumParams()) {
     WriteVarsByType(
         func.decl.sig.param_types, [](auto x) { return x; },
         [&](Index i, Type) { Write(DefineParamName(index_to_name[i])); });
-    Write(OpenBrace(), func.decl.sig.param_types, " *tmp = tail_call_stack;",
-          Newline());
-    Unspill(func.decl.sig.param_types, true,
+    Write(OpenBrace(), func.decl.sig.param_types, " tmp;", Newline(),
+          "wasm_rt_memcpy(&tmp, tail_call_stack, sizeof(tmp));", Newline());
+    Unspill(func.decl.sig.param_types,
             [&](auto i) { return ParamName(index_to_name[i]); });
     Write(CloseBrace(), Newline());
   }
@@ -3019,14 +3024,10 @@ void CWriter::WriteTailCallee(const Func& func) {
   PushTypes(func.decl.sig.result_types);
 
   // Return the top of the stack implicitly.
-  Index num_results = func.GetNumResults();
-  if (num_results == 1) {
-    Write("wasm_rt_memcpy(tail_call_stack, &", StackVar(0), ", sizeof(",
-          StackVar(0), "));", Newline());
-  } else if (num_results > 1) {
-    Write(OpenBrace(), func.decl.sig.result_types, " *tmp = tail_call_stack;",
-          Newline());
-    Spill(func.decl.sig.result_types, true);
+  if (func.GetNumResults()) {
+    Write(OpenBrace(), func.decl.sig.result_types, " tmp;", Newline());
+    Spill(func.decl.sig.result_types);
+    Write("wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));", Newline());
     Write(CloseBrace(), Newline());
   }
   Write("next->fn = NULL;", Newline());
@@ -3219,7 +3220,7 @@ void CWriter::Write(const Catch& c) {
   } else if (num_params > 1) {
     Write(OpenBrace(), tag_type.sig.param_types, " tmp;", Newline());
     Write("wasm_rt_memcpy(&tmp, wasm_rt_exception(), sizeof(tmp));", Newline());
-    Unspill(tag_type.sig.param_types, false);
+    Unspill(tag_type.sig.param_types);
     Write(CloseBrace(), Newline());
   }
 
@@ -3358,7 +3359,7 @@ void CWriter::Write(const ExprList& exprs) {
         DropTypes(num_params);
         PushTypes(func.decl.sig.result_types);
         if (num_results > 1) {
-          Unspill(func.decl.sig.result_types, false);
+          Unspill(func.decl.sig.result_types);
           Write(CloseBrace(), Newline());
         }
         break;
@@ -3394,7 +3395,7 @@ void CWriter::Write(const ExprList& exprs) {
         DropTypes(num_params + 1);
         PushTypes(decl.sig.result_types);
         if (num_results > 1) {
-          Unspill(decl.sig.result_types, false);
+          Unspill(decl.sig.result_types);
           Write(CloseBrace(), Newline());
         }
         break;
@@ -3799,7 +3800,7 @@ void CWriter::Write(const ExprList& exprs) {
                 Newline());
         } else {
           Write(OpenBrace(), tag->decl.sig.param_types, " tmp;", Newline());
-          Spill(tag->decl.sig.param_types, false);
+          Spill(tag->decl.sig.param_types);
           Write("wasm_rt_load_exception(", TagSymbol(tag->name),
                 ", sizeof(tmp), &tmp);", Newline(), CloseBrace(), Newline());
         }
@@ -3879,13 +3880,11 @@ void CWriter::Write(const ExprList& exprs) {
         }
 
         const Index num_params = decl.GetNumParams();
-        if (num_params == 1) {
-          Write("wasm_rt_memcpy(tail_call_stack, &", StackVar(0), ", sizeof(",
-                StackVar(0), "));", Newline());
-        } else if (num_params > 1) {
-          Write(OpenBrace(), decl.sig.param_types, " *tmp = (",
-                decl.sig.param_types, " *)tail_call_stack;", Newline());
-          Spill(decl.sig.param_types, true);
+        if (decl.GetNumParams()) {
+          Write(OpenBrace(), decl.sig.param_types, " tmp;", Newline());
+          Spill(decl.sig.param_types);
+          Write("wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));",
+                Newline());
           Write(CloseBrace(), Newline());
         }
 
@@ -3933,15 +3932,12 @@ void CWriter::Write(const ExprList& exprs) {
           WriteTailCallStack();
         }
 
-        if (num_params == 1) {
-          Write("wasm_rt_memcpy(tail_call_stack, &",
-                StackVar(num_params, decl.GetResultType(0)), ", sizeof(",
-                decl.GetResultType(0), "));", Newline());
-        } else if (num_params > 1) {
-          Write(OpenBrace(), decl.sig.param_types, " *tmp = (",
-                decl.sig.param_types, " *)tail_call_stack;", Newline());
-          Spill(decl.sig.param_types, true,
+        if (num_params) {
+          Write(OpenBrace(), decl.sig.param_types, " tmp;", Newline());
+          Spill(decl.sig.param_types,
                 [&](auto i) { return StackVar(num_params - i); });
+          Write("wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));",
+                Newline());
           Write(CloseBrace(), Newline());
         }
 

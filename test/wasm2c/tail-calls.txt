@@ -772,8 +772,9 @@ void wasm_tailcall_w2c_test_tailcaller(void **instance_ptr, void *tail_call_stac
 WEAK_FUNC_DECL(wasm_tailcall_w2c_spectest_print_i32_f32, wasm_fallback_test_w2c_spectest_print_i32_f32)
 {
   next->fn = NULL;
-  struct wasm_multi_if *params = tail_call_stack;
-  w2c_spectest_print_i32_f32(*instance_ptr, params->i0, params->f1);
+  struct wasm_multi_if params;
+  wasm_rt_memcpy(params, tail_call_stack, sizeof(params);
+  w2c_spectest_print_i32_f32(*instance_ptr, params.i0, params.f1);
 }
 
 static void init_instance_import(w2c_test* instance, struct w2c_spectest* w2c_spectest_instance) {
@@ -842,9 +843,10 @@ void w2c_test_tailcaller_0(w2c_test* instance) {
     wasm_rt_tailcallee_t next_storage;
     wasm_rt_tailcallee_t *next = &next_storage;
     {
-      struct wasm_multi_if *tmp = (struct wasm_multi_if *)tail_call_stack;
-      tmp->i0 = var_i0;
-      tmp->f1 = var_f1;
+      struct wasm_multi_if tmp;
+      tmp.i0 = var_i0;
+      tmp.f1 = var_f1;
+      wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));
     }
     next->fn = instance->w2c_tab.data[var_i2].func_tailcallee.fn;
     *instance_ptr = instance->w2c_tab.data[var_i2].module_instance;
@@ -869,9 +871,10 @@ void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_st
     next->fn = NULL;
   } else {
     {
-      struct wasm_multi_if *tmp = (struct wasm_multi_if *)tail_call_stack;
-      tmp->i0 = var_i0;
-      tmp->f1 = var_f1;
+      struct wasm_multi_if tmp;
+      tmp.i0 = var_i0;
+      tmp.f1 = var_f1;
+      wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));
     }
     next->fn = instance->w2c_tab.data[var_i2].func_tailcallee.fn;
     *instance_ptr = instance->w2c_tab.data[var_i2].module_instance;
@@ -895,16 +898,18 @@ struct wasm_multi_id w2c_test_infiniteloop(w2c_test* instance, u32 var_p0, f64 v
     wasm_rt_tailcallee_t next_storage;
     wasm_rt_tailcallee_t *next = &next_storage;
     {
-      struct wasm_multi_id *tmp = (struct wasm_multi_id *)tail_call_stack;
-      tmp->i0 = var_i0;
-      tmp->d1 = var_d1;
+      struct wasm_multi_id tmp;
+      tmp.i0 = var_i0;
+      tmp.d1 = var_d1;
+      wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));
     }
     next->fn = wasm_tailcall_w2c_test_infiniteloop;
     while (next->fn) { next->fn(instance_ptr, tail_call_stack, next); }
     {
-      struct wasm_multi_id *tmp = tail_call_stack;
-      var_i0 = tmp->i0;
-      var_d1 = tmp->d1;
+      struct wasm_multi_id tmp;
+      wasm_rt_memcpy(&tmp, tail_call_stack, sizeof(tmp));
+      var_i0 = tmp.i0;
+      var_d1 = tmp.d1;
     }
   }
   goto var_Bfunc;
@@ -924,9 +929,10 @@ void wasm_tailcall_w2c_test_infiniteloop(void **instance_ptr, void *tail_call_st
   u32 var_p0;
   f64 var_p1;
   {
-    struct wasm_multi_id *tmp = tail_call_stack;
-    var_p0 = tmp->i0;
-    var_p1 = tmp->d1;
+    struct wasm_multi_id tmp;
+    wasm_rt_memcpy(&tmp, tail_call_stack, sizeof(tmp));
+    var_p0 = tmp.i0;
+    var_p1 = tmp.d1;
   }
   u32 var_i0;
   f64 var_d1;
@@ -935,18 +941,20 @@ void wasm_tailcall_w2c_test_infiniteloop(void **instance_ptr, void *tail_call_st
   static_assert(sizeof(struct wasm_multi_id) <= 1024);
   {
     {
-      struct wasm_multi_id *tmp = (struct wasm_multi_id *)tail_call_stack;
-      tmp->i0 = var_i0;
-      tmp->d1 = var_d1;
+      struct wasm_multi_id tmp;
+      tmp.i0 = var_i0;
+      tmp.d1 = var_d1;
+      wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));
     }
     next->fn = wasm_tailcall_w2c_test_infiniteloop;
   }
   return;
   var_Bfunc:;
   {
-    struct wasm_multi_id *tmp = tail_call_stack;
-    tmp->i0 = var_i0;
-    tmp->d1 = var_d1;
+    struct wasm_multi_id tmp;
+    tmp.i0 = var_i0;
+    tmp.d1 = var_d1;
+    wasm_rt_memcpy(tail_call_stack, &tmp, sizeof(tmp));
   }
   next->fn = NULL;
 }
