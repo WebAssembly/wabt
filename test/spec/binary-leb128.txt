@@ -83,37 +83,39 @@ out/test/spec/binary-leb128.wast:718: assert_malformed passed:
   0000014: error: unable to read u32 leb128: function body count
 out/test/spec/binary-leb128.wast:731: assert_malformed passed:
   0000022: error: unable to read u32 leb128: load offset
-out/test/spec/binary-leb128.wast:750: assert_malformed passed:
+out/test/spec/binary-leb128.wast:751: assert_malformed passed:
   0000022: error: unable to read u32 leb128: load offset
-out/test/spec/binary-leb128.wast:769: assert_malformed passed:
+out/test/spec/binary-leb128.wast:771: assert_malformed passed:
   0000021: error: unable to read u32 leb128: load alignment
-out/test/spec/binary-leb128.wast:787: assert_malformed passed:
+out/test/spec/binary-leb128.wast:789: assert_malformed passed:
   0000021: error: unable to read u32 leb128: load alignment
-out/test/spec/binary-leb128.wast:806: assert_malformed passed:
+out/test/spec/binary-leb128.wast:808: assert_malformed passed:
   0000023: error: unable to read u32 leb128: store alignment
-out/test/spec/binary-leb128.wast:825: assert_malformed passed:
+out/test/spec/binary-leb128.wast:827: assert_malformed passed:
   0000023: error: unable to read u32 leb128: store alignment
-out/test/spec/binary-leb128.wast:844: assert_malformed passed:
+out/test/spec/binary-leb128.wast:846: assert_malformed passed:
   0000024: error: unable to read u32 leb128: store offset
-out/test/spec/binary-leb128.wast:863: assert_malformed passed:
+out/test/spec/binary-leb128.wast:866: assert_malformed passed:
   0000024: error: unable to read u32 leb128: store offset
-out/test/spec/binary-leb128.wast:885: assert_malformed passed:
+out/test/spec/binary-leb128.wast:888: assert_malformed passed:
   000000e: error: unable to read i32 leb128: i32.const value
-out/test/spec/binary-leb128.wast:895: assert_malformed passed:
+out/test/spec/binary-leb128.wast:898: assert_malformed passed:
   000000e: error: unable to read i32 leb128: i32.const value
-out/test/spec/binary-leb128.wast:905: assert_malformed passed:
+out/test/spec/binary-leb128.wast:908: assert_malformed passed:
   000000e: error: unable to read i32 leb128: i32.const value
-out/test/spec/binary-leb128.wast:915: assert_malformed passed:
+out/test/spec/binary-leb128.wast:918: assert_malformed passed:
   000000e: error: unable to read i32 leb128: i32.const value
-out/test/spec/binary-leb128.wast:926: assert_malformed passed:
+out/test/spec/binary-leb128.wast:929: assert_malformed passed:
   000000e: error: unable to read i64 leb128: i64.const value
-out/test/spec/binary-leb128.wast:936: assert_malformed passed:
+out/test/spec/binary-leb128.wast:939: assert_malformed passed:
   000000e: error: unable to read i64 leb128: i64.const value
-out/test/spec/binary-leb128.wast:946: assert_malformed passed:
+out/test/spec/binary-leb128.wast:949: assert_malformed passed:
   000000e: error: unable to read i64 leb128: i64.const value
-out/test/spec/binary-leb128.wast:956: assert_malformed passed:
+out/test/spec/binary-leb128.wast:959: assert_malformed passed:
   000000e: error: unable to read i64 leb128: i64.const value
-out/test/spec/binary-leb128.wast:988: assert_malformed passed:
+out/test/spec/binary-leb128.wast:990: assert_malformed passed:
   0000019: error: unable to read u32 leb128: opcode
-83/83 tests passed.
+out/test/spec/binary-leb128.wast:1073: assert_malformed passed:
+  000000c: error: unexpected type form (got 0xe0)
+91/91 tests passed.
 ;;; STDOUT ;;)

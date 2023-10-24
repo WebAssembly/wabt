@@ -85,5 +85,5 @@ out/test/spec/elem.wast:636: assert_invalid passed:
 out/test/spec/elem.wast:645: assert_invalid passed:
   out/test/spec/elem/elem.65.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
   0000030: error: OnTableInitExpr callback failed
-93/93 tests passed.
+96/96 tests passed.
 ;;; STDOUT ;;)
