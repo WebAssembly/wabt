@@ -35,15 +35,23 @@ R"w2c_template(  return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
 R"w2c_template(}
 )w2c_template"
 R"w2c_template(
-#define CALL_INDIRECT(table, t, ft, x, ...)              \
+#define CHECK_CALL_INDIRECT(table, ft, x)                \
 )w2c_template"
 R"w2c_template(  (LIKELY((x) < table.size && table.data[x].func &&      \
 )w2c_template"
 R"w2c_template(          func_types_eq(ft, table.data[x].func_type)) || \
 )w2c_template"
-R"w2c_template(       TRAP(CALL_INDIRECT),                              \
+R"w2c_template(   TRAP(CALL_INDIRECT))
 )w2c_template"
-R"w2c_template(   ((t)table.data[x].func)(__VA_ARGS__))
+R"w2c_template(
+#define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
+)w2c_template"
+R"w2c_template(
+#define CALL_INDIRECT(table, t, ft, x, ...) \
+)w2c_template"
+R"w2c_template(  (CHECK_CALL_INDIRECT(table, ft, x),       \
+)w2c_template"
+R"w2c_template(   DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 )w2c_template"
 R"w2c_template(
 #ifdef SUPPORT_MEMORY64
@@ -942,6 +950,8 @@ R"w2c_template(  wasm_rt_func_type_t type;
 )w2c_template"
 R"w2c_template(  wasm_rt_function_ptr_t func;
 )w2c_template"
+R"w2c_template(  wasm_rt_tailcallee_t func_tailcallee;
+)w2c_template"
 R"w2c_template(  size_t module_offset;
 )w2c_template"
 R"w2c_template(} wasm_elem_segment_expr_t;
@@ -981,7 +991,7 @@ R"w2c_template(      case RefFunc:
 )w2c_template"
 R"w2c_template(        *dest_val = (wasm_rt_funcref_t){
 )w2c_template"
-R"w2c_template(            src_expr->type, src_expr->func,
+R"w2c_template(            src_expr->type, src_expr->func, src_expr->func_tailcallee,
 )w2c_template"
 R"w2c_template(            (char*)module_instance + src_expr->module_offset};
 )w2c_template"
@@ -1148,6 +1158,40 @@ R"w2c_template(#define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
 R"w2c_template(#define FUNC_TYPE_EXTERN_T(x) const char x[]
 )w2c_template"
 R"w2c_template(#define FUNC_TYPE_T(x) static const char x[]
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+#if (__STDC_VERSION__ < 201112L) && !defined(static_assert)
+)w2c_template"
+R"w2c_template(#define static_assert(X) \
+)w2c_template"
+R"w2c_template(  extern int(*assertion(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+#ifdef _MSC_VER
+)w2c_template"
+R"w2c_template(#define WEAK_FUNC_DECL(func, fallback)                             \
+)w2c_template"
+R"w2c_template(  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+)w2c_template"
+R"w2c_template(                                                                   \
+)w2c_template"
+R"w2c_template(      void                                                         \
+)w2c_template"
+R"w2c_template(      fallback(void** instance_ptr, void* tail_call_stack,         \
+)w2c_template"
+R"w2c_template(               wasm_rt_tailcallee_t* next)
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define WEAK_FUNC_DECL(func, fallback)                                        \
+)w2c_template"
+R"w2c_template(  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+)w2c_template"
+R"w2c_template(                                  wasm_rt_tailcallee_t* next)
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"

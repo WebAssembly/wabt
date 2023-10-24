@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/proposals/tail-call/return_call.wast
+;;; ARGS*: --enable-tail-call
+(;; STDOUT ;;;
+31/31 tests passed.
+;;; STDOUT ;;)

@@ -414,7 +414,7 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
     case WASM_RT_TRAP_UNREACHABLE:
       return "Unreachable instruction executed";
     case WASM_RT_TRAP_CALL_INDIRECT:
-      return "Invalid call_indirect";
+      return "Invalid call_indirect or return_call_indirect";
     case WASM_RT_TRAP_UNCAUGHT_EXCEPTION:
       return "Uncaught exception";
     case WASM_RT_TRAP_UNALIGNED:

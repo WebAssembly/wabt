@@ -118,11 +118,16 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
   return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
 }
 
-#define CALL_INDIRECT(table, t, ft, x, ...)              \
+#define CHECK_CALL_INDIRECT(table, ft, x)                \
   (LIKELY((x) < table.size && table.data[x].func &&      \
           func_types_eq(ft, table.data[x].func_type)) || \
-       TRAP(CALL_INDIRECT),                              \
-   ((t)table.data[x].func)(__VA_ARGS__))
+   TRAP(CALL_INDIRECT))
+
+#define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
+
+#define CALL_INDIRECT(table, t, ft, x, ...) \
+  (CHECK_CALL_INDIRECT(table, ft, x),       \
+   DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 
 #ifdef SUPPORT_MEMORY64
 #define RANGE_CHECK(mem, offset, len)              \
@@ -601,6 +606,7 @@ typedef struct {
   enum { RefFunc, RefNull, GlobalGet } expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
+  wasm_rt_tailcallee_t func_tailcallee;
   size_t module_offset;
 } wasm_elem_segment_expr_t;
 
@@ -621,7 +627,7 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
     switch (src_expr->expr_type) {
       case RefFunc:
         *dest_val = (wasm_rt_funcref_t){
-            src_expr->type, src_expr->func,
+            src_expr->type, src_expr->func, src_expr->func_tailcallee,
             (char*)module_instance + src_expr->module_offset};
         break;
       case RefNull:
@@ -712,6 +718,24 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_T(x) static const char x[]
 #endif
 
+#if (__STDC_VERSION__ < 201112L) && !defined(static_assert)
+#define static_assert(X) \
+  extern int(*assertion(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
+#endif
+
+#ifdef _MSC_VER
+#define WEAK_FUNC_DECL(func, fallback)                             \
+  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+                                                                   \
+      void                                                         \
+      fallback(void** instance_ptr, void* tail_call_stack,         \
+               wasm_rt_tailcallee_t* next)
+#else
+#define WEAK_FUNC_DECL(func, fallback)                                        \
+  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+                                  wasm_rt_tailcallee_t* next)
+#endif
+
 static void w2c_test_0x5Fstart_0(w2c_test*);
 
 FUNC_TYPE_T(w2c_test_t0) = "\xf6\x98\x1b\xc6\x10\xda\xb7\xb2\x63\x37\xcd\xdc\x72\xca\xe9\x50\x00\x13\xba\x10\x6c\xde\x87\x27\x10\xf8\x86\x2f\xe3\xdb\x94\xe4";
@@ -732,7 +756,7 @@ static void init_data_instances(w2c_test *instance) {
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)w2c_wasi__snapshot__preview1_fd_write, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
+  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)w2c_wasi__snapshot__preview1_fd_write, {NULL}, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
 };
 
 static void init_tables(w2c_test* instance) {

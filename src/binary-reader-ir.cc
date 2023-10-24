@@ -895,15 +895,29 @@ Result BinaryReaderIR::OnCallRefExpr() {
 }
 
 Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
+  if (current_func_) {
+    // syntactically, a return_call expr can occur in an init expression
+    // (outside a function)
+    current_func_->features_used.tailcall = true;
+  }
   return AppendExpr(
       std::make_unique<ReturnCallExpr>(Var(func_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index,
                                                 Index table_index) {
+  if (current_func_) {
+    // syntactically, a return_call_indirect expr can occur in an init
+    // expression (outside a function)
+    current_func_->features_used.tailcall = true;
+  }
   auto expr = std::make_unique<ReturnCallIndirectExpr>();
   SetFuncDeclaration(&expr->decl, Var(sig_index, GetLocation()));
   expr->table = Var(table_index, GetLocation());
+  FuncType* type = module_->GetFuncType(Var(sig_index, GetLocation()));
+  if (type) {
+    type->features_used.tailcall = true;
+  }
   return AppendExpr(std::move(expr));
 }
 
