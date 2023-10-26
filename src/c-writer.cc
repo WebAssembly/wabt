@@ -2957,14 +2957,14 @@ void CWriter::Write(const Func& func) {
 
 template <typename Vars, typename TypeOf, typename ToDo>
 void CWriter::WriteVarsByType(const Vars& vars,
-                              const TypeOf& typeof,
+                              const TypeOf& typeoffunc,
                               const ToDo& todo) {
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
                     Type::FuncRef, Type::ExternRef}) {
     Index var_index = 0;
     size_t count = 0;
     for (const auto& var : vars) {
-      if (typeof(var) == type) {
+      if (typeoffunc(var) == type) {
         if (count == 0) {
           Write(type, " ");
           Indent(4);
