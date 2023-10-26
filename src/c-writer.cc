@@ -431,8 +431,8 @@ class CWriter {
   void Spill(const TypeVector&);
   void Unspill(const TypeVector&);
 
-  template <typename Vars, typename TypeOfFunc, typename ToDo>
-  void WriteVarsByType(const Vars&, const TypeOfFunc&, const ToDo&);
+  template <typename Vars, typename TypeOf, typename ToDo>
+  void WriteVarsByType(const Vars&, const TypeOf&, const ToDo&);
 
   template <typename sources>
   void Spill(const TypeVector&, const sources& src);
@@ -2955,9 +2955,9 @@ void CWriter::Write(const Func& func) {
   FinishFunction();
 }
 
-template <typename Vars, typename TypeOfFunc, typename ToDo>
+template <typename Vars, typename TypeOf, typename ToDo>
 void CWriter::WriteVarsByType(const Vars& vars,
-                              const TypeOfFunc& typeoffunc,
+                              const TypeOf& typeoffunc,
                               const ToDo& todo) {
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
                     Type::FuncRef, Type::ExternRef}) {
