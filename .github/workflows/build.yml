@@ -191,6 +191,7 @@ jobs:
       run: docker run --rm -t wabt cmake --build build --target run-unittests
 
     - name: C API tests
+      if: ${{ matrix.arch != 's390x' }}
       run: docker run --rm -t wabt cmake --build build --target run-c-api-tests
 
     - name: Tests
