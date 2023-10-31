@@ -279,7 +279,7 @@ typedef struct {
 } wasm_rt_funcref_t;
 
 /** Default (null) value of a funcref */
-static const wasm_rt_funcref_t wasm_rt_funcref_null_value;
+static const wasm_rt_funcref_t wasm_rt_funcref_null_value = {NULL, NULL, NULL};
 
 /** The type of an external reference (opaque to WebAssembly). */
 typedef void* wasm_rt_externref_t;
