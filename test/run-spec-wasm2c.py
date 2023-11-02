@@ -373,7 +373,7 @@ class CWriter(object):
                 return '"(f64 %s)"' % value
             return F64ToC(int(value))
         elif type_ == 'v128':
-            return 'simde_wasm_' + const['lane_type'] + 'x' + str(len(const['value'])) + '_make(' + ','.join([self._Constant({'type': const['lane_type'], 'value': x}) for x in value]) + ')'
+            return 'v128_' + const['lane_type'] + 'x' + str(len(const['value'])) + '_make(' + ','.join([self._Constant({'type': const['lane_type'], 'value': x}) for x in value]) + ')'
         elif type_ == 'externref':
             if value == 'null':
                 return 'wasm_rt_externref_null_value'
@@ -408,7 +408,7 @@ class CWriter(object):
         return ', '.join(self._Constant({'type': const['lane_type'], 'value': val}) for val in const['value'])
 
     def _SIMDFound(self, num, lane_type, lane_count):
-        return 'simde_wasm_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
+        return 'v128_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
 
     def _SIMDFoundList(self, lane_type, lane_count):
         return ', '.join(self._SIMDFound(num, lane_type, lane_count) for num in range(lane_count))
