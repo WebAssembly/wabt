@@ -166,7 +166,7 @@ R"w2c_template(#define LOAD_DATA(m, o, i, s)                       \
 )w2c_template"
 R"w2c_template(  do {                                              \
 )w2c_template"
-R"w2c_template(    RANGE_CHECK((&m), m.size - (o) - (s), s);       \
+R"w2c_template(    RANGE_CHECK((&m), o, s);                        \
 )w2c_template"
 R"w2c_template(    load_data(&(m.data[m.size - (o) - (s)]), i, s); \
 )w2c_template"

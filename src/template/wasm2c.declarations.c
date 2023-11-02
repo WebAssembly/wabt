@@ -89,7 +89,7 @@ static inline void load_data(void* dest, const void* src, size_t n) {
 }
 #define LOAD_DATA(m, o, i, s)                       \
   do {                                              \
-    RANGE_CHECK((&m), m.size - (o) - (s), s);       \
+    RANGE_CHECK((&m), o, s);                        \
     load_data(&(m.data[m.size - (o) - (s)]), i, s); \
   } while (0)
 #else
