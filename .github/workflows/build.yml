@@ -184,15 +184,34 @@ jobs:
       with:
         platforms: ${{matrix.arch}}
 
-    - name: Build image
-      run: docker build --platform linux/${{matrix.arch}} -t wabt -f scripts/Dockerfile .
+    - name: Install distcc
+      run: sudo apt-get install distcc
+
+    - name: Install cross-compiler (s390x)
+      run: sudo apt-get install g++-s390x-linux-gnu
+      if: ${{ matrix.arch == 's390x' }}
+
+    - name: Install cross-compiler (i686)
+      run: sudo apt-get install g++-i686-linux-gnu
+      if: ${{ matrix.arch == 'i386' }}
+
+    - name: Start distcc
+      run: distccd --daemon --log-stderr
+
+    - name: Build image (s390x)
+      run: docker build --platform linux/${{matrix.arch}} --network host --build-arg COMPILER_ARCH=s390x-linux-gnu -t wabt -f scripts/Dockerfile .
+      if: ${{ matrix.arch == 's390x' }}
+
+    - name: Build image (i386)
+      run: docker build --platform linux/${{matrix.arch}} --network host --build-arg COMPILER_ARCH=i686-linux-gnu -t wabt -f scripts/Dockerfile .
+      if: ${{ matrix.arch == 'i386' }}
 
     - name: Unit tests
-      run: docker run --rm -t wabt cmake --build build --target run-unittests
+      run: docker run --rm --network host -t wabt cmake --build build --target run-unittests
 
     - name: C API tests
       if: ${{ matrix.arch != 's390x' }}
-      run: docker run --rm -t wabt cmake --build build --target run-c-api-tests
+      run: docker run --rm --network host -t wabt cmake --build build --target run-c-api-tests
 
     - name: Tests
-      run: docker run --rm -t wabt cmake --build build --target run-tests
+      run: docker run --rm --network host -t wabt cmake --build build --target run-tests
