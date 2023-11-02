@@ -647,6 +647,10 @@ if (BUILD_TESTS)
     set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -g -O0")
   endif ()
 
+  if (WABT_BIG_ENDIAN)
+    set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -DWABT_BIG_ENDIAN=1")
+  endif ()
+
   if (DEFINED CMAKE_OSX_SYSROOT)
     set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
   endif ()
