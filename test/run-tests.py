@@ -39,11 +39,6 @@ OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
 DEFAULT_TIMEOUT = 120    # seconds
 SLOW_TIMEOUT_MULTIPLIER = 3
 
-if sys.byteorder == 'big':
-    wasm2c_args = ['--cflags=-DWABT_BIG_ENDIAN=1']
-else:
-    wasm2c_args = []
-
 # default configurations for tests
 TOOLS = {
     'wat2wasm': [
@@ -152,7 +147,7 @@ TOOLS = {
             '--no-error-cmdline',
             '-o',
             '%(out_dir)s',
-        ] + wasm2c_args),
+        ]),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-wasm2c': [
