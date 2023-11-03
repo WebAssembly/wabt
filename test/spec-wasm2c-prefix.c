@@ -191,8 +191,8 @@ static void error(const char* file, int line, const char* format, ...) {
 
 #define MULTI_T_UNPACK_(...) __VA_ARGS__
 #define MULTI_T_UNPACK(arg) MULTI_T_UNPACK_ arg
-#define MULTI_i8 "%su "
-#define MULTI_i16 "%su "
+#define MULTI_i8 "%" PRIu8 " "
+#define MULTI_i16 "%" PRIu16 " "
 #define MULTI_i32 "%u "
 #define MULTI_i64 "%" PRIu64 " "
 #define MULTI_f32 "%.9g "
