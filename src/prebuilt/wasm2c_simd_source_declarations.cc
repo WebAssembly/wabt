@@ -351,6 +351,81 @@ R"w2c_template(DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store6
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
+R"w2c_template(
+#if WABT_BIG_ENDIAN
+)w2c_template"
+R"w2c_template(#define v128_const(a,b,c,d) simde_wasm_i32x4_const(d,c,b,a)
+)w2c_template"
+R"w2c_template(#define v128_i8x16_extract_lane(v, l) simde_wasm_i8x16_extract_lane(v, 15-(l))
+)w2c_template"
+R"w2c_template(#define v128_u8x16_extract_lane(v, l) simde_wasm_u8x16_extract_lane(v, 15-(l))
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extract_lane(v, l) simde_wasm_i16x8_extract_lane(v, 7-(l))
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extract_lane(v, l) simde_wasm_u16x8_extract_lane(v, 7-(l))
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extract_lane(v, l) simde_wasm_i32x4_extract_lane(v, 3-(l))
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extract_lane(v, l) simde_wasm_i64x2_extract_lane(v, 1-(l))
+)w2c_template"
+R"w2c_template(#define v128_f32x4_extract_lane(v, l) simde_wasm_f32x4_extract_lane(v, 3-(l))
+)w2c_template"
+R"w2c_template(#define v128_f64x2_extract_lane(v, l) simde_wasm_f64x2_extract_lane(v, 1-(l))
+)w2c_template"
+R"w2c_template(#define v128_i8x16_replace_lane(v, l, x) simde_wasm_i8x16_replace_lane(v, 15-(l), x)
+)w2c_template"
+R"w2c_template(#define v128_u8x16_replace_lane(v, l, x) simde_wasm_u8x16_replace_lane(v, 15-(l), x)
+)w2c_template"
+R"w2c_template(#define v128_i16x8_replace_lane(v, l, x) simde_wasm_i16x8_replace_lane(v, 7-(l), x)
+)w2c_template"
+R"w2c_template(#define v128_u16x8_replace_lane(v, l, x) simde_wasm_u16x8_replace_lane(v, 7-(l), x)
+)w2c_template"
+R"w2c_template(#define v128_i32x4_replace_lane(v, l, x) simde_wasm_i32x4_replace_lane(v, 3-(l), x)
+)w2c_template"
+R"w2c_template(#define v128_i64x2_replace_lane(v, l, x) simde_wasm_i64x2_replace_lane(v, 1-(l), x)
+)w2c_template"
+R"w2c_template(#define v128_f32x4_replace_lane(v, l, x) simde_wasm_f32x4_replace_lane(v, 3-(l), x)
+)w2c_template"
+R"w2c_template(#define v128_f64x2_replace_lane(v, l, x) simde_wasm_f64x2_replace_lane(v, 1-(l), x)
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define v128_const simde_wasm_i32x4_const
+)w2c_template"
+R"w2c_template(#define v128_i8x16_extract_lane simde_wasm_i8x16_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_u8x16_extract_lane simde_wasm_u8x16_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extract_lane simde_wasm_i16x8_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extract_lane simde_wasm_u16x8_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extract_lane simde_wasm_i32x4_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extract_lane simde_wasm_i64x2_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_f32x4_extract_lane simde_wasm_f32x4_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_f64x2_extract_lane simde_wasm_f64x2_extract_lane
+)w2c_template"
+R"w2c_template(#define v128_i8x16_replace_lane simde_wasm_i8x16_replace_lane
+)w2c_template"
+R"w2c_template(#define v128_u8x16_replace_lane simde_wasm_u8x16_replace_lane
+)w2c_template"
+R"w2c_template(#define v128_i16x8_replace_lane simde_wasm_i16x8_replace_lane
+)w2c_template"
+R"w2c_template(#define v128_u16x8_replace_lane simde_wasm_u16x8_replace_lane
+)w2c_template"
+R"w2c_template(#define v128_i32x4_replace_lane simde_wasm_i32x4_replace_lane
+)w2c_template"
+R"w2c_template(#define v128_i64x2_replace_lane simde_wasm_i64x2_replace_lane
+)w2c_template"
+R"w2c_template(#define v128_f32x4_replace_lane simde_wasm_f32x4_replace_lane
+)w2c_template"
+R"w2c_template(#define v128_f64x2_replace_lane simde_wasm_f64x2_replace_lane
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
 R"w2c_template(// clang-format on
 )w2c_template"
 ;

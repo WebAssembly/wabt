@@ -1297,7 +1297,7 @@ void CWriter::Write(const Const& const_) {
       break;
     }
     case Type::V128: {
-      Writef("simde_wasm_i32x4_const(0x%08x, 0x%08x, 0x%08x, 0x%08x)",
+      Writef("v128_const(0x%08x, 0x%08x, 0x%08x, 0x%08x)",
              const_.vec128().u32(0), const_.vec128().u32(1),
              const_.vec128().u32(2), const_.vec128().u32(3));
       break;
@@ -5344,85 +5344,85 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
 
   switch (expr.opcode) {
     case Opcode::I8X16ExtractLaneS: {
-      Write(StackVar(0, result_type), " = simde_wasm_i8x16_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_i8x16_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::I8X16ExtractLaneU: {
-      Write(StackVar(0, result_type), " = simde_wasm_u8x16_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_u8x16_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::I16X8ExtractLaneS: {
-      Write(StackVar(0, result_type), " = simde_wasm_i16x8_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_i16x8_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::I16X8ExtractLaneU: {
-      Write(StackVar(0, result_type), " = simde_wasm_u16x8_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_u16x8_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::I32X4ExtractLane: {
-      Write(StackVar(0, result_type), " = simde_wasm_i32x4_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_i32x4_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::I64X2ExtractLane: {
-      Write(StackVar(0, result_type), " = simde_wasm_i64x2_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_i64x2_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::F32X4ExtractLane: {
-      Write(StackVar(0, result_type), " = simde_wasm_f32x4_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_f32x4_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::F64X2ExtractLane: {
-      Write(StackVar(0, result_type), " = simde_wasm_f64x2_extract_lane(",
+      Write(StackVar(0, result_type), " = v128_f64x2_extract_lane(",
             StackVar(0), ", ", expr.val, ");", Newline());
       DropTypes(1);
       break;
     }
     case Opcode::I8X16ReplaceLane: {
-      Write(StackVar(1, result_type), " = simde_wasm_i8x16_replace_lane(",
+      Write(StackVar(1, result_type), " = v128_i8x16_replace_lane(",
             StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
       DropTypes(2);
       break;
     }
     case Opcode::I16X8ReplaceLane: {
-      Write(StackVar(1, result_type), " = simde_wasm_i16x8_replace_lane(",
+      Write(StackVar(1, result_type), " = v128_i16x8_replace_lane(",
             StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
       DropTypes(2);
       break;
     }
     case Opcode::I32X4ReplaceLane: {
-      Write(StackVar(1, result_type), " = simde_wasm_i32x4_replace_lane(",
+      Write(StackVar(1, result_type), " = v128_i32x4_replace_lane(",
             StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
       DropTypes(2);
       break;
     }
     case Opcode::I64X2ReplaceLane: {
-      Write(StackVar(1, result_type), " = simde_wasm_i64x2_replace_lane(",
+      Write(StackVar(1, result_type), " = v128_i64x2_replace_lane(",
             StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
       DropTypes(2);
       break;
     }
     case Opcode::F32X4ReplaceLane: {
-      Write(StackVar(1, result_type), " = simde_wasm_f32x4_replace_lane(",
+      Write(StackVar(1, result_type), " = v128_f32x4_replace_lane(",
             StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
       DropTypes(2);
       break;
     }
     case Opcode::F64X2ReplaceLane: {
-      Write(StackVar(1, result_type), " = simde_wasm_f64x2_replace_lane(",
+      Write(StackVar(1, result_type), " = v128_f64x2_replace_lane(",
             StackVar(1), ", ", expr.val, ", ", StackVar(0), ");", Newline());
       DropTypes(2);
       break;

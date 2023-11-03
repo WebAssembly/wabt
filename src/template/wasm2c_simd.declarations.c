@@ -180,4 +180,42 @@ DEFINE_SIMD_STORE_LANE(v128_store32_lane3, simde_wasm_v128_store32_lane, u32, 3)
 DEFINE_SIMD_STORE_LANE(v128_store64_lane0, simde_wasm_v128_store64_lane, u64, 0)
 DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #endif
+
+#if WABT_BIG_ENDIAN
+#define v128_const(a,b,c,d) simde_wasm_i32x4_const(d,c,b,a)
+#define v128_i8x16_extract_lane(v, l) simde_wasm_i8x16_extract_lane(v, 15-(l))
+#define v128_u8x16_extract_lane(v, l) simde_wasm_u8x16_extract_lane(v, 15-(l))
+#define v128_i16x8_extract_lane(v, l) simde_wasm_i16x8_extract_lane(v, 7-(l))
+#define v128_u16x8_extract_lane(v, l) simde_wasm_u16x8_extract_lane(v, 7-(l))
+#define v128_i32x4_extract_lane(v, l) simde_wasm_i32x4_extract_lane(v, 3-(l))
+#define v128_i64x2_extract_lane(v, l) simde_wasm_i64x2_extract_lane(v, 1-(l))
+#define v128_f32x4_extract_lane(v, l) simde_wasm_f32x4_extract_lane(v, 3-(l))
+#define v128_f64x2_extract_lane(v, l) simde_wasm_f64x2_extract_lane(v, 1-(l))
+#define v128_i8x16_replace_lane(v, l, x) simde_wasm_i8x16_replace_lane(v, 15-(l), x)
+#define v128_u8x16_replace_lane(v, l, x) simde_wasm_u8x16_replace_lane(v, 15-(l), x)
+#define v128_i16x8_replace_lane(v, l, x) simde_wasm_i16x8_replace_lane(v, 7-(l), x)
+#define v128_u16x8_replace_lane(v, l, x) simde_wasm_u16x8_replace_lane(v, 7-(l), x)
+#define v128_i32x4_replace_lane(v, l, x) simde_wasm_i32x4_replace_lane(v, 3-(l), x)
+#define v128_i64x2_replace_lane(v, l, x) simde_wasm_i64x2_replace_lane(v, 1-(l), x)
+#define v128_f32x4_replace_lane(v, l, x) simde_wasm_f32x4_replace_lane(v, 3-(l), x)
+#define v128_f64x2_replace_lane(v, l, x) simde_wasm_f64x2_replace_lane(v, 1-(l), x)
+#else
+#define v128_const simde_wasm_i32x4_const
+#define v128_i8x16_extract_lane simde_wasm_i8x16_extract_lane
+#define v128_u8x16_extract_lane simde_wasm_u8x16_extract_lane
+#define v128_i16x8_extract_lane simde_wasm_i16x8_extract_lane
+#define v128_u16x8_extract_lane simde_wasm_u16x8_extract_lane
+#define v128_i32x4_extract_lane simde_wasm_i32x4_extract_lane
+#define v128_i64x2_extract_lane simde_wasm_i64x2_extract_lane
+#define v128_f32x4_extract_lane simde_wasm_f32x4_extract_lane
+#define v128_f64x2_extract_lane simde_wasm_f64x2_extract_lane
+#define v128_i8x16_replace_lane simde_wasm_i8x16_replace_lane
+#define v128_u8x16_replace_lane simde_wasm_u8x16_replace_lane
+#define v128_i16x8_replace_lane simde_wasm_i16x8_replace_lane
+#define v128_u16x8_replace_lane simde_wasm_u16x8_replace_lane
+#define v128_i32x4_replace_lane simde_wasm_i32x4_replace_lane
+#define v128_i64x2_replace_lane simde_wasm_i64x2_replace_lane
+#define v128_f32x4_replace_lane simde_wasm_f32x4_replace_lane
+#define v128_f64x2_replace_lane simde_wasm_f64x2_replace_lane
+#endif
 // clang-format on
