@@ -183,6 +183,7 @@ jobs:
       uses: docker/setup-qemu-action@v2
       with:
         platforms: ${{matrix.arch}}
+        image: "tonistiigi/binfmt:master"
 
     - name: Install distcc
       run: sudo apt-get install distcc
