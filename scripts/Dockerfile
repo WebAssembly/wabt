@@ -6,6 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG COMPILER_ARCH
 ENV TZ=UTC
 ENV DISTCC_HOSTS=127.0.0.1
+ENV DISTCC_IO_TIMEOUT=480
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone && \
