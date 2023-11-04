@@ -4885,12 +4885,12 @@ void CWriter::Write(const ConvertExpr& expr) {
 
     case Opcode::I32X4TruncSatF64X2SZero:
       WriteSimpleUnaryExpr(expr.opcode,
-                           "simde_wasm_i32x4_trunc_sat_f64x2_zero");
+                           "v128_i32x4_trunc_sat_f64x2_zero");
       break;
 
     case Opcode::I32X4TruncSatF64X2UZero:
       WriteSimpleUnaryExpr(expr.opcode,
-                           "simde_wasm_u32x4_trunc_sat_f64x2_zero");
+                           "v128_u32x4_trunc_sat_f64x2_zero");
       break;
 
     case Opcode::F32X4ConvertI32X4S:

@@ -245,6 +245,14 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #define v128_u64x2_extend_high_u32x4 simde_wasm_u64x2_extend_low_u32x4
 #define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_high_i32x4
 #define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_high_u32x4
+#define v128_i32x4_trunc_sat_f64x2_zero(a)      \
+  simde_wasm_i8x16_swizzle(                     \
+      simde_wasm_i32x4_trunc_sat_f64x2_zero(a), \
+      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203))
+#define v128_u32x4_trunc_sat_f64x2_zero(a)      \
+  simde_wasm_i8x16_swizzle(                     \
+      simde_wasm_u32x4_trunc_sat_f64x2_zero(a), \
+      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203))
 #else
 #define v128_const simde_wasm_i32x4_const
 #define v128_i8x16_extract_lane simde_wasm_i8x16_extract_lane
@@ -293,5 +301,7 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #define v128_u64x2_extend_high_u32x4 simde_wasm_u64x2_extend_high_u32x4
 #define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_low_i32x4
 #define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_low_u32x4
+#define v128_i32x4_trunc_sat_f64x2_zero simde_wasm_i32x4_trunc_sat_f64x2_zero
+#define v128_u32x4_trunc_sat_f64x2_zero simde_wasm_u32x4_trunc_sat_f64x2_zero
 #endif
 // clang-format on

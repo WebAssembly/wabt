@@ -479,6 +479,22 @@ R"w2c_template(#define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_high
 )w2c_template"
 R"w2c_template(#define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_high_u32x4
 )w2c_template"
+R"w2c_template(#define v128_i32x4_trunc_sat_f64x2_zero(a)      \
+)w2c_template"
+R"w2c_template(  simde_wasm_i8x16_swizzle(                     \
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_trunc_sat_f64x2_zero(a), \
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203))
+)w2c_template"
+R"w2c_template(#define v128_u32x4_trunc_sat_f64x2_zero(a)      \
+)w2c_template"
+R"w2c_template(  simde_wasm_i8x16_swizzle(                     \
+)w2c_template"
+R"w2c_template(      simde_wasm_u32x4_trunc_sat_f64x2_zero(a), \
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203))
+)w2c_template"
 R"w2c_template(#else
 )w2c_template"
 R"w2c_template(#define v128_const simde_wasm_i32x4_const
@@ -574,6 +590,10 @@ R"w2c_template(#define v128_u64x2_extend_high_u32x4 simde_wasm_u64x2_extend_high
 R"w2c_template(#define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_low_i32x4
 )w2c_template"
 R"w2c_template(#define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_low_u32x4
+)w2c_template"
+R"w2c_template(#define v128_i32x4_trunc_sat_f64x2_zero simde_wasm_i32x4_trunc_sat_f64x2_zero
+)w2c_template"
+R"w2c_template(#define v128_u32x4_trunc_sat_f64x2_zero simde_wasm_u32x4_trunc_sat_f64x2_zero
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
