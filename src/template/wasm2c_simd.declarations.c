@@ -33,6 +33,22 @@
     func(&LEADDR(mem, addr, t), value, lane);                            \
   }
 
+#if WABT_BIG_ENDIAN
+static inline v128 v128_impl_load32_zero(const void* a) {
+  return simde_wasm_i8x16_swizzle(
+      simde_wasm_v128_load32_zero(a),
+      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203));
+}
+static inline v128 v128_impl_load64_zero(const void* a) {
+  return simde_wasm_i8x16_swizzle(
+      simde_wasm_v128_load64_zero(a),
+      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607));
+}
+#else
+#define v128_impl_load32_zero simde_wasm_v128_load32_zero
+#define v128_impl_load64_zero simde_wasm_v128_load64_zero
+#endif
+
 // clang-format off
 DEFINE_SIMD_LOAD_FUNC(v128_load, simde_wasm_v128_load, v128)
 
@@ -48,8 +64,8 @@ DEFINE_SIMD_LOAD_FUNC(u32x4_load16x4, simde_wasm_u32x4_load16x4, u64)
 DEFINE_SIMD_LOAD_FUNC(i64x2_load32x2, simde_wasm_i64x2_load32x2, u64)
 DEFINE_SIMD_LOAD_FUNC(u64x2_load32x2, simde_wasm_u64x2_load32x2, u64)
 
-DEFINE_SIMD_LOAD_FUNC(v128_load32_zero, simde_wasm_v128_load32_zero, u32)
-DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, simde_wasm_v128_load64_zero, u64)
+DEFINE_SIMD_LOAD_FUNC(v128_load32_zero, v128_impl_load32_zero, u32)
+DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, v128_impl_load64_zero, u64)
 
 #if WABT_BIG_ENDIAN
 DEFINE_SIMD_LOAD_LANE(v128_load8_lane0, simde_wasm_v128_load8_lane, u8, 15)

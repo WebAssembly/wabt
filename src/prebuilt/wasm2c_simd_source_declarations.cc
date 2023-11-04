@@ -63,6 +63,37 @@ R"w2c_template(    func(&LEADDR(mem, addr, t), value, lane);                    
 R"w2c_template(  }
 )w2c_template"
 R"w2c_template(
+#if WABT_BIG_ENDIAN
+)w2c_template"
+R"w2c_template(static inline v128 v128_impl_load32_zero(const void* a) {
+)w2c_template"
+R"w2c_template(  return simde_wasm_i8x16_swizzle(
+)w2c_template"
+R"w2c_template(      simde_wasm_v128_load32_zero(a),
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203));
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(static inline v128 v128_impl_load64_zero(const void* a) {
+)w2c_template"
+R"w2c_template(  return simde_wasm_i8x16_swizzle(
+)w2c_template"
+R"w2c_template(      simde_wasm_v128_load64_zero(a),
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607));
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define v128_impl_load32_zero simde_wasm_v128_load32_zero
+)w2c_template"
+R"w2c_template(#define v128_impl_load64_zero simde_wasm_v128_load64_zero
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
 // clang-format off
 )w2c_template"
 R"w2c_template(DEFINE_SIMD_LOAD_FUNC(v128_load, simde_wasm_v128_load, v128)
@@ -90,9 +121,9 @@ R"w2c_template(DEFINE_SIMD_LOAD_FUNC(i64x2_load32x2, simde_wasm_i64x2_load32x2, 
 R"w2c_template(DEFINE_SIMD_LOAD_FUNC(u64x2_load32x2, simde_wasm_u64x2_load32x2, u64)
 )w2c_template"
 R"w2c_template(
-DEFINE_SIMD_LOAD_FUNC(v128_load32_zero, simde_wasm_v128_load32_zero, u32)
+DEFINE_SIMD_LOAD_FUNC(v128_load32_zero, v128_impl_load32_zero, u32)
 )w2c_template"
-R"w2c_template(DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, simde_wasm_v128_load64_zero, u64)
+R"w2c_template(DEFINE_SIMD_LOAD_FUNC(v128_load64_zero, v128_impl_load64_zero, u64)
 )w2c_template"
 R"w2c_template(
 #if WABT_BIG_ENDIAN
