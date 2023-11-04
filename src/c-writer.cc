@@ -5104,7 +5104,7 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I8X16Bitmask:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i8x16_bitmask");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i8x16_bitmask");
       break;
 
     case Opcode::I8X16Neg:
@@ -5128,7 +5128,7 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I16X8Bitmask:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_bitmask");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i16x8_bitmask");
       break;
 
     case Opcode::I16X8ExtaddPairwiseI8X16S:
@@ -5174,7 +5174,7 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I32X4Bitmask:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_bitmask");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i32x4_bitmask");
       break;
 
     case Opcode::I32X4ExtaddPairwiseI16X8S:
@@ -5220,7 +5220,7 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I64X2Bitmask:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_bitmask");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i64x2_bitmask");
       break;
 
     case Opcode::I64X2ExtendHighI32X4S:

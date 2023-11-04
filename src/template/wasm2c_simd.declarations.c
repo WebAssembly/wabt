@@ -199,6 +199,10 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #define v128_i64x2_replace_lane(v, l, x) simde_wasm_i64x2_replace_lane(v, 1-(l), x)
 #define v128_f32x4_replace_lane(v, l, x) simde_wasm_f32x4_replace_lane(v, 3-(l), x)
 #define v128_f64x2_replace_lane(v, l, x) simde_wasm_f64x2_replace_lane(v, 1-(l), x)
+#define v128_i8x16_bitmask(v) simde_wasm_i8x16_bitmask(simde_wasm_i8x16_swizzle(v, simde_wasm_i32x4_const(0x0F0E0D0C, 0x0B0A0908, 0x07060504, 0x03020100)))
+#define v128_i16x8_bitmask(v) simde_wasm_i16x8_bitmask(simde_wasm_i8x16_swizzle(v, simde_wasm_i32x4_const(0x0E0F0C0D, 0x0A0B0809, 0x06070405, 0x02030001)))
+#define v128_i32x4_bitmask(v) simde_wasm_i32x4_bitmask(simde_wasm_i8x16_swizzle(v, simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203)))
+#define v128_i64x2_bitmask(v) simde_wasm_i64x2_bitmask(simde_wasm_i8x16_swizzle(v, simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
 #else
 #define v128_const simde_wasm_i32x4_const
 #define v128_i8x16_extract_lane simde_wasm_i8x16_extract_lane
@@ -217,5 +221,9 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #define v128_i64x2_replace_lane simde_wasm_i64x2_replace_lane
 #define v128_f32x4_replace_lane simde_wasm_f32x4_replace_lane
 #define v128_f64x2_replace_lane simde_wasm_f64x2_replace_lane
+#define v128_i8x16_bitmask simde_wasm_i8x16_bitmask
+#define v128_i16x8_bitmask simde_wasm_i16x8_bitmask
+#define v128_i32x4_bitmask simde_wasm_i32x4_bitmask
+#define v128_i64x2_bitmask simde_wasm_i64x2_bitmask
 #endif
 // clang-format on
