@@ -4196,7 +4196,7 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I8X16Swizzle:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_swizzle");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i8x16_swizzle");
       break;
 
     case Opcode::I16X8Add:
@@ -5491,7 +5491,7 @@ void CWriter::Write(const SimdShuffleOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   switch (expr.opcode) {
     case Opcode::I8X16Shuffle: {
-      Write(StackVar(1, result_type), " = simde_wasm_i8x16_shuffle(",
+      Write(StackVar(1, result_type), " = v128_i8x16_shuffle(",
             StackVar(1), ", ", StackVar(0), ", ", expr.val.u8(0), ", ",
             expr.val.u8(1), ", ", expr.val.u8(2), ", ", expr.val.u8(3), ", ",
             expr.val.u8(4), ", ", expr.val.u8(5), ", ", expr.val.u8(6), ", ",

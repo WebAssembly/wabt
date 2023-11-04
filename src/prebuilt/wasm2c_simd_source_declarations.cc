@@ -396,6 +396,10 @@ R"w2c_template(#define v128_i32x4_bitmask(v) simde_wasm_i32x4_bitmask(simde_wasm
 )w2c_template"
 R"w2c_template(#define v128_i64x2_bitmask(v) simde_wasm_i64x2_bitmask(simde_wasm_i8x16_swizzle(v, simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
 )w2c_template"
+R"w2c_template(#define v128_i8x16_swizzle(v1, v2) simde_wasm_i8x16_swizzle(v1, simde_wasm_v128_xor(v2, simde_wasm_i8x16_splat(15)))
+)w2c_template"
+R"w2c_template(#define v128_i8x16_shuffle(v1,v2,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) simde_wasm_i8x16_shuffle(v2,v1,31-(p),31-(o),31-(n),31-(m),31-(l),31-(k),31-(j),31-(i),31-(h),31-(g),31-(f),31-(e),31-(d),31-(c),31-(b),31-(a))
+)w2c_template"
 R"w2c_template(#else
 )w2c_template"
 R"w2c_template(#define v128_const simde_wasm_i32x4_const
@@ -439,6 +443,10 @@ R"w2c_template(#define v128_i16x8_bitmask simde_wasm_i16x8_bitmask
 R"w2c_template(#define v128_i32x4_bitmask simde_wasm_i32x4_bitmask
 )w2c_template"
 R"w2c_template(#define v128_i64x2_bitmask simde_wasm_i64x2_bitmask
+)w2c_template"
+R"w2c_template(#define v128_i8x16_swizzle simde_wasm_i8x16_swizzle
+)w2c_template"
+R"w2c_template(#define v128_i8x16_shuffle simde_wasm_i8x16_shuffle
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
