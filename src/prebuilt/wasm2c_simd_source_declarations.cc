@@ -400,6 +400,54 @@ R"w2c_template(#define v128_i8x16_swizzle(v1, v2) simde_wasm_i8x16_swizzle(v1, s
 )w2c_template"
 R"w2c_template(#define v128_i8x16_shuffle(v1,v2,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) simde_wasm_i8x16_shuffle(v2,v1,31-(p),31-(o),31-(n),31-(m),31-(l),31-(k),31-(j),31-(i),31-(h),31-(g),31-(f),31-(e),31-(d),31-(c),31-(b),31-(a))
 )w2c_template"
+R"w2c_template(#define v128_i16x8_extmul_high_i8x16 simde_wasm_i16x8_extmul_low_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extmul_high_u8x16 simde_wasm_u16x8_extmul_low_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extmul_low_i8x16  simde_wasm_i16x8_extmul_high_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extmul_low_u8x16  simde_wasm_u16x8_extmul_high_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extmul_high_i16x8 simde_wasm_i32x4_extmul_low_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extmul_high_u16x8 simde_wasm_u32x4_extmul_low_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extmul_low_i16x8  simde_wasm_i32x4_extmul_high_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extmul_low_u16x8  simde_wasm_u32x4_extmul_high_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extmul_high_i32x4 simde_wasm_i64x2_extmul_low_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extmul_high_u32x4 simde_wasm_u64x2_extmul_low_u32x4
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extmul_low_i32x4  simde_wasm_i64x2_extmul_high_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extmul_low_u32x4  simde_wasm_u64x2_extmul_high_u32x4
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extend_high_i8x16 simde_wasm_i16x8_extend_low_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extend_high_u8x16 simde_wasm_u16x8_extend_low_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extend_low_i8x16  simde_wasm_i16x8_extend_high_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extend_low_u8x16  simde_wasm_u16x8_extend_high_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extend_high_i16x8 simde_wasm_i32x4_extend_low_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extend_high_u16x8 simde_wasm_u32x4_extend_low_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extend_low_i16x8  simde_wasm_i32x4_extend_high_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extend_low_u16x8  simde_wasm_u32x4_extend_high_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extend_high_i32x4 simde_wasm_i64x2_extend_low_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extend_high_u32x4 simde_wasm_u64x2_extend_low_u32x4
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_high_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_high_u32x4
+)w2c_template"
 R"w2c_template(#else
 )w2c_template"
 R"w2c_template(#define v128_const simde_wasm_i32x4_const
@@ -447,6 +495,54 @@ R"w2c_template(#define v128_i64x2_bitmask simde_wasm_i64x2_bitmask
 R"w2c_template(#define v128_i8x16_swizzle simde_wasm_i8x16_swizzle
 )w2c_template"
 R"w2c_template(#define v128_i8x16_shuffle simde_wasm_i8x16_shuffle
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extmul_high_i8x16 simde_wasm_i16x8_extmul_high_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extmul_high_u8x16 simde_wasm_u16x8_extmul_high_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extmul_low_i8x16  simde_wasm_i16x8_extmul_low_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extmul_low_u8x16  simde_wasm_u16x8_extmul_low_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extmul_high_i16x8 simde_wasm_i32x4_extmul_high_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extmul_high_u16x8 simde_wasm_u32x4_extmul_high_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extmul_low_i16x8  simde_wasm_i32x4_extmul_low_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extmul_low_u16x8  simde_wasm_u32x4_extmul_low_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extmul_high_i32x4 simde_wasm_i64x2_extmul_high_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extmul_high_u32x4 simde_wasm_u64x2_extmul_high_u32x4
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extmul_low_i32x4  simde_wasm_i64x2_extmul_low_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extmul_low_u32x4  simde_wasm_u64x2_extmul_low_u32x4
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extend_high_i8x16 simde_wasm_i16x8_extend_high_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extend_high_u8x16 simde_wasm_u16x8_extend_high_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i16x8_extend_low_i8x16  simde_wasm_i16x8_extend_low_i8x16
+)w2c_template"
+R"w2c_template(#define v128_u16x8_extend_low_u8x16  simde_wasm_u16x8_extend_low_u8x16
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extend_high_i16x8 simde_wasm_i32x4_extend_high_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extend_high_u16x8 simde_wasm_u32x4_extend_high_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i32x4_extend_low_i16x8  simde_wasm_i32x4_extend_low_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u32x4_extend_low_u16x8  simde_wasm_u32x4_extend_low_u16x8
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extend_high_i32x4 simde_wasm_i64x2_extend_high_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extend_high_u32x4 simde_wasm_u64x2_extend_high_u32x4
+)w2c_template"
+R"w2c_template(#define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_low_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_low_u32x4
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"

@@ -205,6 +205,30 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #define v128_i64x2_bitmask(v) simde_wasm_i64x2_bitmask(simde_wasm_i8x16_swizzle(v, simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
 #define v128_i8x16_swizzle(v1, v2) simde_wasm_i8x16_swizzle(v1, simde_wasm_v128_xor(v2, simde_wasm_i8x16_splat(15)))
 #define v128_i8x16_shuffle(v1,v2,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) simde_wasm_i8x16_shuffle(v2,v1,31-(p),31-(o),31-(n),31-(m),31-(l),31-(k),31-(j),31-(i),31-(h),31-(g),31-(f),31-(e),31-(d),31-(c),31-(b),31-(a))
+#define v128_i16x8_extmul_high_i8x16 simde_wasm_i16x8_extmul_low_i8x16
+#define v128_u16x8_extmul_high_u8x16 simde_wasm_u16x8_extmul_low_u8x16
+#define v128_i16x8_extmul_low_i8x16  simde_wasm_i16x8_extmul_high_i8x16
+#define v128_u16x8_extmul_low_u8x16  simde_wasm_u16x8_extmul_high_u8x16
+#define v128_i32x4_extmul_high_i16x8 simde_wasm_i32x4_extmul_low_i16x8
+#define v128_u32x4_extmul_high_u16x8 simde_wasm_u32x4_extmul_low_u16x8
+#define v128_i32x4_extmul_low_i16x8  simde_wasm_i32x4_extmul_high_i16x8
+#define v128_u32x4_extmul_low_u16x8  simde_wasm_u32x4_extmul_high_u16x8
+#define v128_i64x2_extmul_high_i32x4 simde_wasm_i64x2_extmul_low_i32x4
+#define v128_u64x2_extmul_high_u32x4 simde_wasm_u64x2_extmul_low_u32x4
+#define v128_i64x2_extmul_low_i32x4  simde_wasm_i64x2_extmul_high_i32x4
+#define v128_u64x2_extmul_low_u32x4  simde_wasm_u64x2_extmul_high_u32x4
+#define v128_i16x8_extend_high_i8x16 simde_wasm_i16x8_extend_low_i8x16
+#define v128_u16x8_extend_high_u8x16 simde_wasm_u16x8_extend_low_u8x16
+#define v128_i16x8_extend_low_i8x16  simde_wasm_i16x8_extend_high_i8x16
+#define v128_u16x8_extend_low_u8x16  simde_wasm_u16x8_extend_high_u8x16
+#define v128_i32x4_extend_high_i16x8 simde_wasm_i32x4_extend_low_i16x8
+#define v128_u32x4_extend_high_u16x8 simde_wasm_u32x4_extend_low_u16x8
+#define v128_i32x4_extend_low_i16x8  simde_wasm_i32x4_extend_high_i16x8
+#define v128_u32x4_extend_low_u16x8  simde_wasm_u32x4_extend_high_u16x8
+#define v128_i64x2_extend_high_i32x4 simde_wasm_i64x2_extend_low_i32x4
+#define v128_u64x2_extend_high_u32x4 simde_wasm_u64x2_extend_low_u32x4
+#define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_high_i32x4
+#define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_high_u32x4
 #else
 #define v128_const simde_wasm_i32x4_const
 #define v128_i8x16_extract_lane simde_wasm_i8x16_extract_lane
@@ -229,5 +253,29 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #define v128_i64x2_bitmask simde_wasm_i64x2_bitmask
 #define v128_i8x16_swizzle simde_wasm_i8x16_swizzle
 #define v128_i8x16_shuffle simde_wasm_i8x16_shuffle
+#define v128_i16x8_extmul_high_i8x16 simde_wasm_i16x8_extmul_high_i8x16
+#define v128_u16x8_extmul_high_u8x16 simde_wasm_u16x8_extmul_high_u8x16
+#define v128_i16x8_extmul_low_i8x16  simde_wasm_i16x8_extmul_low_i8x16
+#define v128_u16x8_extmul_low_u8x16  simde_wasm_u16x8_extmul_low_u8x16
+#define v128_i32x4_extmul_high_i16x8 simde_wasm_i32x4_extmul_high_i16x8
+#define v128_u32x4_extmul_high_u16x8 simde_wasm_u32x4_extmul_high_u16x8
+#define v128_i32x4_extmul_low_i16x8  simde_wasm_i32x4_extmul_low_i16x8
+#define v128_u32x4_extmul_low_u16x8  simde_wasm_u32x4_extmul_low_u16x8
+#define v128_i64x2_extmul_high_i32x4 simde_wasm_i64x2_extmul_high_i32x4
+#define v128_u64x2_extmul_high_u32x4 simde_wasm_u64x2_extmul_high_u32x4
+#define v128_i64x2_extmul_low_i32x4  simde_wasm_i64x2_extmul_low_i32x4
+#define v128_u64x2_extmul_low_u32x4  simde_wasm_u64x2_extmul_low_u32x4
+#define v128_i16x8_extend_high_i8x16 simde_wasm_i16x8_extend_high_i8x16
+#define v128_u16x8_extend_high_u8x16 simde_wasm_u16x8_extend_high_u8x16
+#define v128_i16x8_extend_low_i8x16  simde_wasm_i16x8_extend_low_i8x16
+#define v128_u16x8_extend_low_u8x16  simde_wasm_u16x8_extend_low_u8x16
+#define v128_i32x4_extend_high_i16x8 simde_wasm_i32x4_extend_high_i16x8
+#define v128_u32x4_extend_high_u16x8 simde_wasm_u32x4_extend_high_u16x8
+#define v128_i32x4_extend_low_i16x8  simde_wasm_i32x4_extend_low_i16x8
+#define v128_u32x4_extend_low_u16x8  simde_wasm_u32x4_extend_low_u16x8
+#define v128_i64x2_extend_high_i32x4 simde_wasm_i64x2_extend_high_i32x4
+#define v128_u64x2_extend_high_u32x4 simde_wasm_u64x2_extend_high_u32x4
+#define v128_i64x2_extend_low_i32x4  simde_wasm_i64x2_extend_low_i32x4
+#define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_low_u32x4
 #endif
 // clang-format on

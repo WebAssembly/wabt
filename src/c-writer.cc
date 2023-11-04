@@ -4216,19 +4216,19 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I16X8ExtmulHighI8X16S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_extmul_high_i8x16");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i16x8_extmul_high_i8x16");
       break;
 
     case Opcode::I16X8ExtmulHighI8X16U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_extmul_high_u8x16");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u16x8_extmul_high_u8x16");
       break;
 
     case Opcode::I16X8ExtmulLowI8X16S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_extmul_low_i8x16");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i16x8_extmul_low_i8x16");
       break;
 
     case Opcode::I16X8ExtmulLowI8X16U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_extmul_low_u8x16");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u16x8_extmul_low_u8x16");
       break;
 
     case Opcode::I16X8MaxS:
@@ -4296,19 +4296,19 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I32X4ExtmulHighI16X8S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_extmul_high_i16x8");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i32x4_extmul_high_i16x8");
       break;
 
     case Opcode::I32X4ExtmulHighI16X8U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_extmul_high_u16x8");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u32x4_extmul_high_u16x8");
       break;
 
     case Opcode::I32X4ExtmulLowI16X8S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i32x4_extmul_low_i16x8");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i32x4_extmul_low_i16x8");
       break;
 
     case Opcode::I32X4ExtmulLowI16X8U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u32x4_extmul_low_u16x8");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u32x4_extmul_low_u16x8");
       break;
 
     case Opcode::I32X4MaxS:
@@ -4352,19 +4352,19 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I64X2ExtmulHighI32X4S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_extmul_high_i32x4");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i64x2_extmul_high_i32x4");
       break;
 
     case Opcode::I64X2ExtmulHighI32X4U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u64x2_extmul_high_u32x4");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u64x2_extmul_high_u32x4");
       break;
 
     case Opcode::I64X2ExtmulLowI32X4S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i64x2_extmul_low_i32x4");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i64x2_extmul_low_i32x4");
       break;
 
     case Opcode::I64X2ExtmulLowI32X4U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u64x2_extmul_low_u32x4");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u64x2_extmul_low_u32x4");
       break;
 
     case Opcode::I64X2Mul:
@@ -5142,19 +5142,19 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I16X8ExtendHighI8X16S:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_extend_high_i8x16");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i16x8_extend_high_i8x16");
       break;
 
     case Opcode::I16X8ExtendHighI8X16U:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u16x8_extend_high_u8x16");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_u16x8_extend_high_u8x16");
       break;
 
     case Opcode::I16X8ExtendLowI8X16S:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i16x8_extend_low_i8x16");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i16x8_extend_low_i8x16");
       break;
 
     case Opcode::I16X8ExtendLowI8X16U:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u16x8_extend_low_u8x16");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_u16x8_extend_low_u8x16");
       break;
 
     case Opcode::I16X8Neg:
@@ -5188,19 +5188,19 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I32X4ExtendHighI16X8S:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_extend_high_i16x8");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i32x4_extend_high_i16x8");
       break;
 
     case Opcode::I32X4ExtendHighI16X8U:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u32x4_extend_high_u16x8");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_u32x4_extend_high_u16x8");
       break;
 
     case Opcode::I32X4ExtendLowI16X8S:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i32x4_extend_low_i16x8");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i32x4_extend_low_i16x8");
       break;
 
     case Opcode::I32X4ExtendLowI16X8U:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u32x4_extend_low_u16x8");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_u32x4_extend_low_u16x8");
       break;
 
     case Opcode::I32X4Neg:
@@ -5224,19 +5224,19 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I64X2ExtendHighI32X4S:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_extend_high_i32x4");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i64x2_extend_high_i32x4");
       break;
 
     case Opcode::I64X2ExtendHighI32X4U:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u64x2_extend_high_u32x4");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_u64x2_extend_high_u32x4");
       break;
 
     case Opcode::I64X2ExtendLowI32X4S:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_i64x2_extend_low_i32x4");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i64x2_extend_low_i32x4");
       break;
 
     case Opcode::I64X2ExtendLowI32X4U:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_u64x2_extend_low_u32x4");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_u64x2_extend_low_u32x4");
       break;
 
     case Opcode::I64X2Neg:
