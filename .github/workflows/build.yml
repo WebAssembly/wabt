@@ -174,6 +174,13 @@ jobs:
       fail-fast: false
       matrix:
         arch: [s390x, i386]
+
+    services:
+      distcc:
+        image: debian:latest
+        options: --health-cmd distccmon-text --health-interval 5s --health-start-period 5m debian:latest bash -c "apt-get update && apt-get install -y g++-s390x-linux-gnu g++-i686-linux-gnu distcc && distccd --daemon --no-detach"
+        ports:
+          - 3632:3632
     steps:
     - uses: actions/checkout@v1
       with:
@@ -185,20 +192,6 @@ jobs:
       with:
         platforms: ${{matrix.arch}}
         image: "tonistiigi/binfmt:master"
-
-    - name: Setup cross-compiler (s390x)
-      uses: JarvusInnovations/background-action@v1.0.3
-      with:
-        run: docker run --network host -e TZ=UTC -d debian:latest apt-get update && apt-get install g++-s390x-linux-gnu distcc && distccd --daemon
-        wait-on: tcp:localhost:3632
-      if: ${{ matrix.arch == 's390x' }}
-
-    - name: Setup cross-compiler (i686)
-      uses: JarvusInnovations/background-action@v1.0.3
-      with:
-        run: docker run --network host -e TZ=UTC -d debian:latest apt-get update && apt-get install g++-i686-linux-gnu distcc && distccd --daemon
-        wait-on: tcp:localhost:3632
-      if: ${{ matrix.arch == 'i386' }}
 
     - name: Build image (s390x)
       run: docker build --platform linux/${{matrix.arch}} --network host --build-arg COMPILER_ARCH=s390x-linux-gnu -t wabt -f scripts/Dockerfile .
