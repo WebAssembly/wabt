@@ -720,12 +720,21 @@ if (BUILD_TESTS)
   # test running
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
+  if (DEFINED TEST_TIMEOUT)
+  add_custom_target(run-tests
+    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} -t ${TEST_TIMEOUT} --bindir $<TARGET_FILE_DIR:wat2wasm>
+    DEPENDS ${WABT_EXECUTABLES}
+    WORKING_DIRECTORY ${WABT_SOURCE_DIR}
+    USES_TERMINAL
+  )
+  else()
   add_custom_target(run-tests
     COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
     USES_TERMINAL
   )
+  endif()
 
   add_custom_target(run-unittests
     COMMAND $<TARGET_FILE:wabt-unittests>
