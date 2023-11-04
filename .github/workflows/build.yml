@@ -180,24 +180,25 @@ jobs:
         submodules: true
 
     - name: Set up QEMU
+      if: ${{ matrix.arch != 'i386' }}
       uses: docker/setup-qemu-action@v2
       with:
         platforms: ${{matrix.arch}}
         image: "tonistiigi/binfmt:master"
 
-    - name: Install distcc
-      run: sudo apt-get install distcc
-
-    - name: Install cross-compiler (s390x)
-      run: sudo apt-get install g++-s390x-linux-gnu
+    - name: Setup cross-compiler (s390x)
+      uses: JarvusInnovations/background-action@v1.0.3
+      with:
+        run: docker run --network host -e TZ=UTC -d debian:latest apt-get update && apt-get install g++-s390x-linux-gnu distcc && distccd --daemon
+        wait-on: tcp:localhost:3632
       if: ${{ matrix.arch == 's390x' }}
 
-    - name: Install cross-compiler (i686)
-      run: sudo apt-get install g++-i686-linux-gnu
+    - name: Setup cross-compiler (i686)
+      uses: JarvusInnovations/background-action@v1.0.3
+      with:
+        run: docker run --network host -e TZ=UTC -d debian:latest apt-get update && apt-get install g++-i686-linux-gnu distcc && distccd --daemon
+        wait-on: tcp:localhost:3632
       if: ${{ matrix.arch == 'i386' }}
-
-    - name: Start distcc
-      run: distccd --daemon --log-stderr
 
     - name: Build image (s390x)
       run: docker build --platform linux/${{matrix.arch}} --network host --build-arg COMPILER_ARCH=s390x-linux-gnu -t wabt -f scripts/Dockerfile .
