@@ -8,7 +8,7 @@
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t)                 \
   static inline v128 name(wasm_rt_memory_t* mem, u64 addr) { \
     MEMCHECK(mem, addr, t);                                  \
-    v128 result = func((v128*)&LEADDR(mem, addr, v128));     \
+    v128 result = func(&LEADDR(mem, addr, t));               \
     SIMD_FORCE_READ(result);                                 \
     return result;                                           \
   }
@@ -16,7 +16,7 @@
 #define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                     \
   static inline v128 name(wasm_rt_memory_t* mem, u64 addr, v128 vec) { \
     MEMCHECK(mem, addr, t);                                            \
-    v128 result = func((v128*)&LEADDR(mem, addr, v128), vec, lane);    \
+    v128 result = func(&LEADDR(mem, addr, t), vec, lane);              \
     SIMD_FORCE_READ(result);                                           \
     return result;                                                     \
   }
@@ -24,13 +24,13 @@
 #define DEFINE_SIMD_STORE(name, t)                                       \
   static inline void name(wasm_rt_memory_t* mem, u64 addr, v128 value) { \
     MEMCHECK(mem, addr, t);                                              \
-    simde_wasm_v128_store((v128*)&LEADDR(mem, addr, v128), value);       \
+    simde_wasm_v128_store(&LEADDR(mem, addr, t), value);                 \
   }
 
 #define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                      \
   static inline void name(wasm_rt_memory_t* mem, u64 addr, v128 value) { \
     MEMCHECK(mem, addr, t);                                              \
-    func((v128*)&LEADDR(mem, addr, v128), value, lane);                  \
+    func(&LEADDR(mem, addr, t), value, lane);                            \
   }
 
 // clang-format off
