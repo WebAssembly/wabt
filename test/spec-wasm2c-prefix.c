@@ -33,13 +33,13 @@ static void run_spec_tests(void);
 #define v128_u64x2_make(a,b) simde_wasm_u64x2_make(b,a)
 #define v128_f32x4_make(a,b,c,d) simde_wasm_f32x4_make(d,c,b,a)
 #define v128_f64x2_make(a,b) simde_wasm_f64x2_make(b,a)
-#define v128_i8x16_extract_lane(a,n) simde_wasm_i8x16_extract_lane(a,15-(n))
+#define v128_i8x16_extract_lane(a,n) simde_wasm_u8x16_extract_lane(a,15-(n))
 #define v128_u8x16_extract_lane(a,n) simde_wasm_u8x16_extract_lane(a,15-(n))
-#define v128_i16x8_extract_lane(a,n) simde_wasm_i16x8_extract_lane(a,7-(n))
+#define v128_i16x8_extract_lane(a,n) simde_wasm_u16x8_extract_lane(a,7-(n))
 #define v128_u16x8_extract_lane(a,n) simde_wasm_u16x8_extract_lane(a,7-(n))
-#define v128_i32x4_extract_lane(a,n) simde_wasm_i32x4_extract_lane(a,3-(n))
+#define v128_i32x4_extract_lane(a,n) simde_wasm_u32x4_extract_lane(a,3-(n))
 #define v128_u32x4_extract_lane(a,n) simde_wasm_u32x4_extract_lane(a,3-(n))
-#define v128_i64x2_extract_lane(a,n) simde_wasm_i64x2_extract_lane(a,1-(n))
+#define v128_i64x2_extract_lane(a,n) simde_wasm_u64x2_extract_lane(a,1-(n))
 #define v128_u64x2_extract_lane(a,n) simde_wasm_u64x2_extract_lane(a,1-(n))
 #define v128_f32x4_extract_lane(a,n) simde_wasm_f32x4_extract_lane(a,3-(n))
 #define v128_f64x2_extract_lane(a,n) simde_wasm_f64x2_extract_lane(a,1-(n))
@@ -54,13 +54,14 @@ static void run_spec_tests(void);
 #define v128_u64x2_make simde_wasm_u64x2_make
 #define v128_f32x4_make simde_wasm_f32x4_make
 #define v128_f64x2_make simde_wasm_f64x2_make
-#define v128_i8x16_extract_lane simde_wasm_i8x16_extract_lane
+// used for printing; always use unsigned for these
+#define v128_i8x16_extract_lane simde_wasm_u8x16_extract_lane
 #define v128_u8x16_extract_lane simde_wasm_u8x16_extract_lane
-#define v128_i16x8_extract_lane simde_wasm_i16x8_extract_lane
+#define v128_i16x8_extract_lane simde_wasm_u16x8_extract_lane
 #define v128_u16x8_extract_lane simde_wasm_u16x8_extract_lane
-#define v128_i32x4_extract_lane simde_wasm_i32x4_extract_lane
+#define v128_i32x4_extract_lane simde_wasm_u32x4_extract_lane
 #define v128_u32x4_extract_lane simde_wasm_u32x4_extract_lane
-#define v128_i64x2_extract_lane simde_wasm_i64x2_extract_lane
+#define v128_i64x2_extract_lane simde_wasm_u64x2_extract_lane
 #define v128_u64x2_extract_lane simde_wasm_u64x2_extract_lane
 #define v128_f32x4_extract_lane simde_wasm_f32x4_extract_lane
 #define v128_f64x2_extract_lane simde_wasm_f64x2_extract_lane
