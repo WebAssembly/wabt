@@ -519,7 +519,7 @@ R"w2c_template(      simde_wasm_f32x4_demote_f64x2_zero(a), \
 )w2c_template"
 R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607))
 )w2c_template"
-R"w2c_template(#define v128_f64x2_convert_low_i32x4                           \
+R"w2c_template(#define v128_f64x2_convert_low_i32x4(a)                        \
 )w2c_template"
 R"w2c_template(  simde_wasm_f64x2_convert_low_i32x4(simde_wasm_i8x16_swizzle( \
 )w2c_template"
@@ -527,7 +527,7 @@ R"w2c_template(      a,                                                       \
 )w2c_template"
 R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
 )w2c_template"
-R"w2c_template(#define v128_f64x2_convert_low_u32x4                           \
+R"w2c_template(#define v128_f64x2_convert_low_u32x4(a)                        \
 )w2c_template"
 R"w2c_template(  simde_wasm_f64x2_convert_low_u32x4(simde_wasm_i8x16_swizzle( \
 )w2c_template"

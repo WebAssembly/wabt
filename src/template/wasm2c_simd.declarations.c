@@ -265,11 +265,11 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
   simde_wasm_i8x16_swizzle(                  \
       simde_wasm_f32x4_demote_f64x2_zero(a), \
       simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607))
-#define v128_f64x2_convert_low_i32x4                           \
+#define v128_f64x2_convert_low_i32x4(a)                        \
   simde_wasm_f64x2_convert_low_i32x4(simde_wasm_i8x16_swizzle( \
       a,                                                       \
       simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
-#define v128_f64x2_convert_low_u32x4                           \
+#define v128_f64x2_convert_low_u32x4(a)                        \
   simde_wasm_f64x2_convert_low_u32x4(simde_wasm_i8x16_swizzle( \
       a,                                                       \
       simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
