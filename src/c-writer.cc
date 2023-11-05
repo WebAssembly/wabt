@@ -4884,13 +4884,11 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::I32X4TruncSatF64X2SZero:
-      WriteSimpleUnaryExpr(expr.opcode,
-                           "v128_i32x4_trunc_sat_f64x2_zero");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_i32x4_trunc_sat_f64x2_zero");
       break;
 
     case Opcode::I32X4TruncSatF64X2UZero:
-      WriteSimpleUnaryExpr(expr.opcode,
-                           "v128_u32x4_trunc_sat_f64x2_zero");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_u32x4_trunc_sat_f64x2_zero");
       break;
 
     case Opcode::F32X4ConvertI32X4S:
@@ -5491,14 +5489,13 @@ void CWriter::Write(const SimdShuffleOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   switch (expr.opcode) {
     case Opcode::I8X16Shuffle: {
-      Write(StackVar(1, result_type), " = v128_i8x16_shuffle(",
-            StackVar(1), ", ", StackVar(0), ", ", expr.val.u8(0), ", ",
-            expr.val.u8(1), ", ", expr.val.u8(2), ", ", expr.val.u8(3), ", ",
-            expr.val.u8(4), ", ", expr.val.u8(5), ", ", expr.val.u8(6), ", ",
-            expr.val.u8(7), ", ", expr.val.u8(8), ", ", expr.val.u8(9), ", ",
-            expr.val.u8(10), ", ", expr.val.u8(11), ", ", expr.val.u8(12), ", ",
-            expr.val.u8(13), ", ", expr.val.u8(14), ", ", expr.val.u8(15), ");",
-            Newline());
+      Write(StackVar(1, result_type), " = v128_i8x16_shuffle(", StackVar(1),
+            ", ", StackVar(0), ", ", expr.val.u8(0), ", ", expr.val.u8(1), ", ",
+            expr.val.u8(2), ", ", expr.val.u8(3), ", ", expr.val.u8(4), ", ",
+            expr.val.u8(5), ", ", expr.val.u8(6), ", ", expr.val.u8(7), ", ",
+            expr.val.u8(8), ", ", expr.val.u8(9), ", ", expr.val.u8(10), ", ",
+            expr.val.u8(11), ", ", expr.val.u8(12), ", ", expr.val.u8(13), ", ",
+            expr.val.u8(14), ", ", expr.val.u8(15), ");", Newline());
       DropTypes(2);
       break;
     }
