@@ -4164,11 +4164,11 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I8X16NarrowI16X8S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i8x16_narrow_i16x8");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i8x16_narrow_i16x8");
       break;
 
     case Opcode::I8X16NarrowI16X8U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u8x16_narrow_i16x8");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u8x16_narrow_i16x8");
       break;
 
     case Opcode::I8X16Shl:
@@ -4252,11 +4252,11 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I16X8NarrowI32X4S:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_i16x8_narrow_i32x4");
+      WritePrefixBinaryExpr(expr.opcode, "v128_i16x8_narrow_i32x4");
       break;
 
     case Opcode::I16X8NarrowI32X4U:
-      WritePrefixBinaryExpr(expr.opcode, "simde_wasm_u16x8_narrow_i32x4");
+      WritePrefixBinaryExpr(expr.opcode, "v128_u16x8_narrow_i32x4");
       break;
 
     case Opcode::I16X8Q15mulrSatS:
@@ -4902,19 +4902,19 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::F32X4DemoteF64X2Zero:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f32x4_demote_f64x2_zero");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_f32x4_demote_f64x2_zero");
       break;
 
     case Opcode::F64X2ConvertLowI32X4S:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_convert_low_i32x4");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_f64x2_convert_low_i32x4");
       break;
 
     case Opcode::F64X2ConvertLowI32X4U:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_convert_low_u32x4");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_f64x2_convert_low_u32x4");
       break;
 
     case Opcode::F64X2PromoteLowF32X4:
-      WriteSimpleUnaryExpr(expr.opcode, "simde_wasm_f64x2_promote_low_f32x4");
+      WriteSimpleUnaryExpr(expr.opcode, "v128_f64x2_promote_low_f32x4");
       break;
 
     default:

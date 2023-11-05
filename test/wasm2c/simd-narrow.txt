@@ -1,0 +1,27 @@
+;;; TOOL: run-spec-wasm2c
+(module
+  ;; Integer to integer narrowing
+  (func (export "i8x16.narrow_i16x8_s") (param v128 v128) (result v128)
+    (i8x16.narrow_i16x8_s (local.get 0) (local.get 1)))
+  (func (export "i8x16.narrow_i16x8_u") (param v128 v128) (result v128)
+    (i8x16.narrow_i16x8_u (local.get 0) (local.get 1)))
+  (func (export "i16x8.narrow_i32x4_s") (param v128 v128) (result v128)
+    (i16x8.narrow_i32x4_s (local.get 0) (local.get 1)))
+  (func (export "i16x8.narrow_i32x4_u") (param v128 v128) (result v128)
+    (i16x8.narrow_i32x4_u (local.get 0)(local.get 1)))
+)
+(assert_return (invoke "i8x16.narrow_i16x8_s" (v128.const i16x8 0 1 2 3 4 5 6 7)
+                                              (v128.const i16x8 8 9 10 11 12 13 14 15))
+                                              (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i8x16.narrow_i16x8_u" (v128.const i16x8 0 1 2 3 4 5 6 7)
+                                              (v128.const i16x8 8 9 10 11 12 13 14 15))
+                                              (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(assert_return (invoke "i16x8.narrow_i32x4_s" (v128.const i32x4 1 2 3 4)
+                                              (v128.const i32x4 5 6 7 8))
+                                              (v128.const i16x8 1 2 3 4 5 6 7 8))
+(assert_return (invoke "i16x8.narrow_i32x4_u" (v128.const i32x4 1 2 3 4)
+                                              (v128.const i32x4 5 6 7 8))
+                                              (v128.const i16x8 1 2 3 4 5 6 7 8))
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)

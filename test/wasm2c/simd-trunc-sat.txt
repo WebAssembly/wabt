@@ -1,0 +1,12 @@
+;;; TOOL: run-spec-wasm2c
+(module
+  (func (export "i32x4.trunc_sat_f64x2_s_zero") (param v128) (result v128) (i32x4.trunc_sat_f64x2_s_zero (local.get 0)))
+  (func (export "i32x4.trunc_sat_f64x2_u_zero") (param v128) (result v128) (i32x4.trunc_sat_f64x2_u_zero (local.get 0)))
+)
+(assert_return (invoke "i32x4.trunc_sat_f64x2_s_zero" (v128.const f64x2 1.0 2.0))
+                                                      (v128.const i32x4 1 2 0 0))
+(assert_return (invoke "i32x4.trunc_sat_f64x2_u_zero" (v128.const f64x2 1.0 2.0))
+                                                      (v128.const i32x4 1 2 0 0))
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)

@@ -485,7 +485,7 @@ R"w2c_template(  simde_wasm_i8x16_swizzle(                     \
 )w2c_template"
 R"w2c_template(      simde_wasm_i32x4_trunc_sat_f64x2_zero(a), \
 )w2c_template"
-R"w2c_template(      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203))
+R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607))
 )w2c_template"
 R"w2c_template(#define v128_u32x4_trunc_sat_f64x2_zero(a)      \
 )w2c_template"
@@ -493,7 +493,47 @@ R"w2c_template(  simde_wasm_i8x16_swizzle(                     \
 )w2c_template"
 R"w2c_template(      simde_wasm_u32x4_trunc_sat_f64x2_zero(a), \
 )w2c_template"
-R"w2c_template(      simde_wasm_i32x4_const(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203))
+R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607))
+)w2c_template"
+R"w2c_template(#define v128_i16x8_narrow_i32x4(a,b) simde_wasm_i16x8_narrow_i32x4(b,a)
+)w2c_template"
+R"w2c_template(#define v128_u16x8_narrow_i32x4(a,b) simde_wasm_u16x8_narrow_i32x4(b,a)
+)w2c_template"
+R"w2c_template(#define v128_i8x16_narrow_i16x8(a,b) simde_wasm_i8x16_narrow_i16x8(b,a)
+)w2c_template"
+R"w2c_template(#define v128_u8x16_narrow_i16x8(a,b) simde_wasm_u8x16_narrow_i16x8(b,a)
+)w2c_template"
+R"w2c_template(#define v128_f64x2_promote_low_f32x4(a)                        \
+)w2c_template"
+R"w2c_template(  simde_wasm_f64x2_promote_low_f32x4(simde_wasm_i8x16_swizzle( \
+)w2c_template"
+R"w2c_template(      a,                                                       \
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
+)w2c_template"
+R"w2c_template(#define v128_f32x4_demote_f64x2_zero(a)      \
+)w2c_template"
+R"w2c_template(  simde_wasm_i8x16_swizzle(                  \
+)w2c_template"
+R"w2c_template(      simde_wasm_f32x4_demote_f64x2_zero(a), \
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607))
+)w2c_template"
+R"w2c_template(#define v128_f64x2_convert_low_i32x4                           \
+)w2c_template"
+R"w2c_template(  simde_wasm_f64x2_convert_low_i32x4(simde_wasm_i8x16_swizzle( \
+)w2c_template"
+R"w2c_template(      a,                                                       \
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
+)w2c_template"
+R"w2c_template(#define v128_f64x2_convert_low_u32x4                           \
+)w2c_template"
+R"w2c_template(  simde_wasm_f64x2_convert_low_u32x4(simde_wasm_i8x16_swizzle( \
+)w2c_template"
+R"w2c_template(      a,                                                       \
+)w2c_template"
+R"w2c_template(      simde_wasm_i32x4_const(0x08090A0B, 0x0C0D0E0F, 0x00010203, 0x04050607)))
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
@@ -594,6 +634,22 @@ R"w2c_template(#define v128_u64x2_extend_low_u32x4  simde_wasm_u64x2_extend_low_
 R"w2c_template(#define v128_i32x4_trunc_sat_f64x2_zero simde_wasm_i32x4_trunc_sat_f64x2_zero
 )w2c_template"
 R"w2c_template(#define v128_u32x4_trunc_sat_f64x2_zero simde_wasm_u32x4_trunc_sat_f64x2_zero
+)w2c_template"
+R"w2c_template(#define v128_i16x8_narrow_i32x4 simde_wasm_i16x8_narrow_i32x4
+)w2c_template"
+R"w2c_template(#define v128_u16x8_narrow_i32x4 simde_wasm_u16x8_narrow_i32x4
+)w2c_template"
+R"w2c_template(#define v128_i8x16_narrow_i16x8 simde_wasm_i8x16_narrow_i16x8
+)w2c_template"
+R"w2c_template(#define v128_u8x16_narrow_i16x8 simde_wasm_u8x16_narrow_i16x8
+)w2c_template"
+R"w2c_template(#define v128_f64x2_promote_low_f32x4 simde_wasm_f64x2_promote_low_f32x4
+)w2c_template"
+R"w2c_template(#define v128_f32x4_demote_f64x2_zero simde_wasm_f32x4_demote_f64x2_zero
+)w2c_template"
+R"w2c_template(#define v128_f64x2_convert_low_i32x4 simde_wasm_f64x2_convert_low_i32x4
+)w2c_template"
+R"w2c_template(#define v128_f64x2_convert_low_u32x4 simde_wasm_f64x2_convert_low_u32x4
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
