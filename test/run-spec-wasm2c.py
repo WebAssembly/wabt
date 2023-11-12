@@ -408,7 +408,7 @@ class CWriter(object):
         return ', '.join(self._Constant({'type': const['lane_type'], 'value': val}) for val in const['value'])
 
     def _SIMDFound(self, num, lane_type, lane_count):
-        return 'simde_wasm_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
+        return 'v128_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
 
     def _SIMDFoundList(self, lane_type, lane_count):
         return ', '.join(self._SIMDFound(num, lane_type, lane_count) for num in range(lane_count))
@@ -644,7 +644,10 @@ def main(args):
 
             # Run the resulting binary
             if options.run:
-                utils.Executable(main_exe, forward_stdout=True).RunWithArgs()
+                error = utils.Executable(main_exe).RunWithArgsForError()
+                if error:
+                    print(error, file=sys.stderr)
+                    return 1
 
     return 0
 
