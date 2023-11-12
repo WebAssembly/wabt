@@ -94,6 +94,12 @@ class Executable(object):
         if error:
             raise error
 
+    def RunWithArgsForError(self, *args, **kwargs):
+        stdout, stderr, error = self._RunWithArgsInternal(*args, **kwargs)
+        if stdout:
+            sys.stdout.write(stdout)
+        return error
+
     def AppendArg(self, arg):
         self.after_args.append(arg)
 

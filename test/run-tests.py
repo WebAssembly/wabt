@@ -503,6 +503,8 @@ class TestInfo(object):
             self.env = dict(x.split('=') for x in value.split())
         elif key == 'PLATFORMS':
             self.skip = platform.system() not in value.split()
+        elif key == 'NOT-PLATFORMS':
+            self.skip = platform.system() in value.split()
         else:
             raise Error('Unknown directive: %s' % key)
 
