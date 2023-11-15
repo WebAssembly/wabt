@@ -279,13 +279,13 @@ typedef struct {
 } wasm_rt_funcref_t;
 
 /** Default (null) value of a funcref */
-static const wasm_rt_funcref_t wasm_rt_funcref_null_value;
+#define wasm_rt_funcref_null_value ((wasm_rt_funcref_t){NULL, NULL, {NULL}, NULL})
 
 /** The type of an external reference (opaque to WebAssembly). */
 typedef void* wasm_rt_externref_t;
 
 /** Default (null) value of an externref */
-static const wasm_rt_externref_t wasm_rt_externref_null_value = NULL;
+#define wasm_rt_externref_null_value ((wasm_rt_externref_t){NULL})
 
 /** A Memory object. */
 typedef struct {
