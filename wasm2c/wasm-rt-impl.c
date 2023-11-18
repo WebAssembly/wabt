@@ -280,12 +280,10 @@ static void os_cleanup_signal_handler(void) {
 #endif
 
 void wasm_rt_init(void) {
+  wasm_rt_init_thread();
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
-#if !WASM_RT_USE_STACK_DEPTH_COUNT
-    os_allocate_and_install_altstack();
-#endif
     os_install_signal_handler();
   }
 #endif
@@ -309,10 +307,20 @@ void wasm_rt_free(void) {
   assert(wasm_rt_is_initialized());
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   os_cleanup_signal_handler();
-#if !WASM_RT_USE_STACK_DEPTH_COUNT
-  os_disable_and_deallocate_altstack();
-#endif
   g_signal_handler_installed = false;
+#endif
+  wasm_rt_free_thread();
+}
+
+void wasm_rt_init_thread(void) {
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !WASM_RT_USE_STACK_DEPTH_COUNT
+  os_allocate_and_install_altstack();
+#endif
+}
+
+void wasm_rt_free_thread(void) {
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !WASM_RT_USE_STACK_DEPTH_COUNT
+  os_disable_and_deallocate_altstack();
 #endif
 }
 
