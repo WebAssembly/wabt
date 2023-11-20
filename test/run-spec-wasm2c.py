@@ -84,7 +84,7 @@ def F64ToC(f64_bits):
     elif f64_bits == F64_SIGN_BIT:
         return '-0.0'
     else:
-        return '%#.17gL' % ReinterpretF64(f64_bits)
+        return '%#.17g' % ReinterpretF64(f64_bits)
 
 
 def MangleType(t):
