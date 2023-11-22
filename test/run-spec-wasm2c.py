@@ -24,6 +24,7 @@ import re
 import struct
 import sys
 import shlex
+import subprocess
 
 import find_exe
 import utils
@@ -234,7 +235,7 @@ class CWriter(object):
             self.commands.insert(0, dummy_command)
 
     def _WriteFileAndLine(self, command):
-        self.out_file.write('// %s:%d\n' % (self.source_filename, command['line']))
+        self.out_file.write('#line {line:d} "{name:s}"\n'.format(name=self.source_filename, line=command['line']))
 
     def _WriteIncludes(self):
         idx = 0
@@ -644,11 +645,7 @@ def main(args):
 
             # Run the resulting binary
             if options.run:
-                error = utils.Executable(main_exe).RunWithArgsForError()
-                if error:
-                    print(error, file=sys.stderr)
-                    return 1
-
+                return subprocess.run([main_exe]).returncode
     return 0
 
 
