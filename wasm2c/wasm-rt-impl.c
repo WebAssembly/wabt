@@ -251,10 +251,9 @@ static void os_disable_and_deallocate_altstack(void) {
 static void os_install_signal_handler(void) {
   struct sigaction sa;
   memset(&sa, '\0', sizeof(sa));
-#if WASM_RT_USE_STACK_DEPTH_COUNT
   sa.sa_flags = SA_SIGINFO;
-#else
-  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+#if !WASM_RT_USE_STACK_DEPTH_COUNT
+  sa.sa_flags |= SA_ONSTACK;
 #endif
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = os_signal_handler;
