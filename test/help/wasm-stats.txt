@@ -1,14 +1,13 @@
-;;; RUN: %(wasm-opcodecnt)s
+;;; RUN: %(wasm-stats)s
 ;;; ARGS: --help
 (;; STDOUT ;;;
-usage: wasm-opcodecnt [options] filename+
+usage: wasm-stats [options] filename+
 
-  Read a file in the wasm binary format, and count opcode usage for
-  instructions.
+  Read a file in the wasm binary format, and output stats.
 
 examples:
-  # parse binary file test.wasm and write pcode dist file test.dist
-  $ wasm-opcodecnt test.wasm -o test.dist
+  # parse binary file test.wasm and write opcode dist file test.dist
+  $ wasm-stats test.wasm -o test.dist
 
 options:
       --help                                   Print this help message
@@ -33,7 +32,7 @@ options:
       --enable-extended-const                  Enable Extended constant expressions
       --enable-relaxed-simd                    Enable Relaxed SIMD
       --enable-all                             Enable all features
-  -o, --output=FILENAME                        Output file for the opcode counts, by default use stdout
+  -o, --output=FILENAME                        Output file for the stats, by default use stdout
   -c, --cutoff=N                               Cutoff for reporting counts less than N
   -s, --separator=SEPARATOR                    Separator text between element and count when reporting counts
 ;;; STDOUT ;;)

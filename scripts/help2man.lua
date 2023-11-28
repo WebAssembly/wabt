@@ -2,7 +2,7 @@
 
 local format_br = '\n.br\n'
 local tools = {
-	"wasm-decompile",	"wasm-interp",	"wasm-objdump",	"wasm-opcodecnt",
+	"wasm-decompile",	"wasm-interp",	"wasm-objdump",	"wasm-stats",
 	"wasm-strip",	"wasm-validate",	"wasm2c",	"wasm2wat",
 	"wast2json",	"wat-desugar",	"wat2wasm",	"spectest-interp"
 }

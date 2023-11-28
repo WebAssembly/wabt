@@ -18,6 +18,7 @@ struct TokenInfo {
 };
 %%
 array, Type::Array, TokenType::Array
+after, TokenType::After
 assert_exception, TokenType::AssertException
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
@@ -26,6 +27,7 @@ assert_return, TokenType::AssertReturn
 assert_trap, TokenType::AssertTrap
 assert_unlinkable, TokenType::AssertUnlinkable
 atomic.fence, TokenType::AtomicFence, Opcode::AtomicFence
+before, TokenType::Before
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
 br_if, TokenType::BrIf, Opcode::BrIf
@@ -36,6 +38,7 @@ call_ref, TokenType::CallRef, Opcode::CallRef
 call, TokenType::Call, Opcode::Call
 catch, TokenType::Catch, Opcode::Catch
 catch_all, TokenType::CatchAll, Opcode::CatchAll
+code, TokenType::Code
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data
 declare, TokenType::Declare
@@ -178,6 +181,7 @@ f64x2, TokenType::F64X2
 field, TokenType::Field
 funcref, Type::FuncRef
 func, Type::FuncRef, TokenType::Func
+function, TokenType::Function
 get, TokenType::Get
 global.get, TokenType::GlobalGet, Opcode::GlobalGet
 global.set, TokenType::GlobalSet, Opcode::GlobalSet

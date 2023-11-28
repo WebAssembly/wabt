@@ -24,6 +24,7 @@ import re
 import struct
 import sys
 import shlex
+import subprocess
 
 import find_exe
 import utils
@@ -84,7 +85,7 @@ def F64ToC(f64_bits):
     elif f64_bits == F64_SIGN_BIT:
         return '-0.0'
     else:
-        return '%#.17gL' % ReinterpretF64(f64_bits)
+        return '%#.17g' % ReinterpretF64(f64_bits)
 
 
 def MangleType(t):
@@ -234,7 +235,7 @@ class CWriter(object):
             self.commands.insert(0, dummy_command)
 
     def _WriteFileAndLine(self, command):
-        self.out_file.write('// %s:%d\n' % (self.source_filename, command['line']))
+        self.out_file.write('#line {line:d} "{name:s}"\n'.format(name=self.source_filename, line=command['line']))
 
     def _WriteIncludes(self):
         idx = 0
@@ -408,7 +409,7 @@ class CWriter(object):
         return ', '.join(self._Constant({'type': const['lane_type'], 'value': val}) for val in const['value'])
 
     def _SIMDFound(self, num, lane_type, lane_count):
-        return 'simde_wasm_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
+        return 'v128_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
 
     def _SIMDFoundList(self, lane_type, lane_count):
         return ', '.join(self._SIMDFound(num, lane_type, lane_count) for num in range(lane_count))
@@ -534,6 +535,7 @@ def main(args):
     parser.add_argument('--enable-memory64', action='store_true')
     parser.add_argument('--enable-extended-const', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
+    parser.add_argument('--enable-tail-call', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
@@ -554,6 +556,7 @@ def main(args):
             '--enable-memory64': options.enable_memory64,
             '--enable-extended-const': options.enable_extended_const,
             '--enable-threads': options.enable_threads,
+            '--enable-tail-call': options.enable_tail_call,
             '--enable-multi-memory': options.enable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types,
@@ -572,6 +575,7 @@ def main(args):
             '--enable-memory64': options.enable_memory64,
             '--enable-extended-const': options.enable_extended_const,
             '--enable-threads': options.enable_threads,
+            '--enable-tail-call': options.enable_tail_call,
             '--enable-multi-memory': options.enable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
@@ -641,8 +645,7 @@ def main(args):
 
             # Run the resulting binary
             if options.run:
-                utils.Executable(main_exe, forward_stdout=True).RunWithArgs()
-
+                return subprocess.run([main_exe]).returncode
     return 0
 
 

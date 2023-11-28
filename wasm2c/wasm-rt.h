@@ -246,6 +246,17 @@ typedef enum {
 typedef void (*wasm_rt_function_ptr_t)(void);
 
 /**
+ * A pointer to a "tail-callee" function, called by a tail-call
+ * trampoline or by another tail-callee function. (The definition uses a
+ * single-member struct to allow a recursive definition.)
+ */
+typedef struct wasm_rt_tailcallee_t {
+  void (*fn)(void** instance_ptr,
+             void* tail_call_stack,
+             struct wasm_rt_tailcallee_t* next);
+} wasm_rt_tailcallee_t;
+
+/**
  * The type of a function (an arbitrary number of param and result types).
  * This is represented as an opaque 256-bit ID.
  */
@@ -259,6 +270,8 @@ typedef struct {
   /** The function. The embedder must know the actual C signature of the
    * function and cast to it before calling. */
   wasm_rt_function_ptr_t func;
+  /** An alternate version of the function to be used when tail-called. */
+  wasm_rt_tailcallee_t func_tailcallee;
   /** A function instance is a closure of the function over an instance
    * of the originating module. The module_instance element will be passed into
    * the function at runtime. */
@@ -266,13 +279,13 @@ typedef struct {
 } wasm_rt_funcref_t;
 
 /** Default (null) value of a funcref */
-static const wasm_rt_funcref_t wasm_rt_funcref_null_value = {NULL, NULL, NULL};
+#define wasm_rt_funcref_null_value ((wasm_rt_funcref_t){NULL, NULL, {NULL}, NULL})
 
 /** The type of an external reference (opaque to WebAssembly). */
 typedef void* wasm_rt_externref_t;
 
 /** Default (null) value of an externref */
-static const wasm_rt_externref_t wasm_rt_externref_null_value = NULL;
+#define wasm_rt_externref_null_value ((wasm_rt_externref_t){NULL})
 
 /** A Memory object. */
 typedef struct {

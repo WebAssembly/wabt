@@ -41,7 +41,6 @@ static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;
 static unsigned int s_num_outputs = 1;
-static Features s_features;
 static WriteCOptions s_write_c_options;
 static bool s_read_debug_names = true;
 static std::unique_ptr<FileStream> s_log_stream;
@@ -61,7 +60,7 @@ examples:
 static const std::string supported_features[] = {
     "multi-memory", "multi-value", "sign-extension", "saturating-float-to-int",
     "exceptions",   "memory64",    "extended-const", "simd",
-    "threads"};
+    "threads",      "tail-call"};
 
 static bool IsFeatureSupported(const std::string& feature) {
   return std::find(std::begin(supported_features), std::end(supported_features),
@@ -92,7 +91,7 @@ static void ParseOptions(int argc, char** argv) {
       "names section is used. If that is not present the name of the input\n"
       "file is used as the default.\n",
       [](const char* argument) { s_write_c_options.module_name = argument; });
-  s_features.AddOptions(&parser);
+  s_write_c_options.features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
@@ -103,10 +102,11 @@ static void ParseOptions(int argc, char** argv) {
   parser.Parse(argc, argv);
 
   bool any_non_supported_feature = false;
-#define WABT_FEATURE(variable, flag, default_, help)   \
-  any_non_supported_feature |=                         \
-      (s_features.variable##_enabled() != default_) && \
-      s_features.variable##_enabled() && !IsFeatureSupported(flag);
+#define WABT_FEATURE(variable, flag, default_, help)                   \
+  any_non_supported_feature |=                                         \
+      (s_write_c_options.features.variable##_enabled() != default_) && \
+      s_write_c_options.features.variable##_enabled() &&               \
+      !IsFeatureSupported(flag);
 #include "wabt/feature.def"
 #undef WABT_FEATURE
 
@@ -139,11 +139,12 @@ Result Wasm2cMain(Errors& errors) {
   Module module;
   const bool kStopOnFirstError = true;
   const bool kFailOnCustomSectionError = true;
-  ReadBinaryOptions options(s_features, s_log_stream.get(), s_read_debug_names,
-                            kStopOnFirstError, kFailOnCustomSectionError);
+  ReadBinaryOptions options(s_write_c_options.features, s_log_stream.get(),
+                            s_read_debug_names, kStopOnFirstError,
+                            kFailOnCustomSectionError);
   CHECK_RESULT(ReadBinaryIr(s_infile.c_str(), file_data.data(),
                             file_data.size(), options, &errors, &module));
-  CHECK_RESULT(ValidateModule(&module, &errors, s_features));
+  CHECK_RESULT(ValidateModule(&module, &errors, s_write_c_options.features));
   CHECK_RESULT(GenerateNames(&module));
   /* TODO(binji): This shouldn't fail; if a name can't be applied
    * (because the index is invalid, say) it should just be skipped. */

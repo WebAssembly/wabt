@@ -39,11 +39,16 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
   return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
 }
 
-#define CALL_INDIRECT(table, t, ft, x, ...)              \
+#define CHECK_CALL_INDIRECT(table, ft, x)                \
   (LIKELY((x) < table.size && table.data[x].func &&      \
           func_types_eq(ft, table.data[x].func_type)) || \
-       TRAP(CALL_INDIRECT),                              \
-   ((t)table.data[x].func)(__VA_ARGS__))
+   TRAP(CALL_INDIRECT))
+
+#define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
+
+#define CALL_INDIRECT(table, t, ft, x, ...) \
+  (CHECK_CALL_INDIRECT(table, ft, x),       \
+   DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 
 #ifdef SUPPORT_MEMORY64
 #define RANGE_CHECK(mem, offset, len)              \
@@ -88,7 +93,7 @@ static inline void load_data(void* dest, const void* src, size_t n) {
   }
   size_t i = 0;
   u8* dest_chars = dest;
-  memcpy(dest, src, n);
+  wasm_rt_memcpy(dest, src, n);
   for (i = 0; i < (n >> 1); i++) {
     u8 cursor = dest_chars[i];
     dest_chars[i] = dest_chars[n - i - 1];
@@ -122,7 +127,7 @@ static inline void load_data(void* dest, const void* src, size_t n) {
   if (!n) {
     return;
   }
-  memcpy(dest, src, n);
+  wasm_rt_memcpy(dest, src, n);
 }
 #define LOAD_DATA(m, o, i, s)      \
   do {                             \
@@ -358,11 +363,11 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #define I64_TRUNC_SAT_U_F64(x) \
   TRUNC_SAT_U(u64, f64, (f64)UINT64_MAX, UINT64_MAX, x)
 
-#define DEFINE_REINTERPRET(name, t1, t2) \
-  static inline t2 name(t1 x) {          \
-    t2 result;                           \
-    memcpy(&result, &x, sizeof(result)); \
-    return result;                       \
+#define DEFINE_REINTERPRET(name, t1, t2)         \
+  static inline t2 name(t1 x) {                  \
+    t2 result;                                   \
+    wasm_rt_memcpy(&result, &x, sizeof(result)); \
+    return result;                               \
   }
 
 DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
@@ -372,17 +377,17 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
 
 static float quiet_nanf(float x) {
   uint32_t tmp;
-  memcpy(&tmp, &x, 4);
+  wasm_rt_memcpy(&tmp, &x, 4);
   tmp |= 0x7fc00000lu;
-  memcpy(&x, &tmp, 4);
+  wasm_rt_memcpy(&x, &tmp, 4);
   return x;
 }
 
 static double quiet_nan(double x) {
   uint64_t tmp;
-  memcpy(&tmp, &x, 8);
+  wasm_rt_memcpy(&tmp, &x, 8);
   tmp |= 0x7ff8000000000000llu;
-  memcpy(&x, &tmp, 8);
+  wasm_rt_memcpy(&x, &tmp, 8);
   return x;
 }
 
@@ -459,9 +464,9 @@ static double wasm_nearbyint(double x) {
 static float wasm_fabsf(float x) {
   if (UNLIKELY(isnan(x))) {
     uint32_t tmp;
-    memcpy(&tmp, &x, 4);
+    wasm_rt_memcpy(&tmp, &x, 4);
     tmp = tmp & ~(1UL << 31);
-    memcpy(&x, &tmp, 4);
+    wasm_rt_memcpy(&x, &tmp, 4);
     return x;
   }
   return fabsf(x);
@@ -470,9 +475,9 @@ static float wasm_fabsf(float x) {
 static double wasm_fabs(double x) {
   if (UNLIKELY(isnan(x))) {
     uint64_t tmp;
-    memcpy(&tmp, &x, 8);
+    wasm_rt_memcpy(&tmp, &x, 8);
     tmp = tmp & ~(1ULL << 63);
-    memcpy(&x, &tmp, 8);
+    wasm_rt_memcpy(&x, &tmp, 8);
     return x;
   }
   return fabs(x);
@@ -522,6 +527,7 @@ typedef struct {
   enum { RefFunc, RefNull, GlobalGet } expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
+  wasm_rt_tailcallee_t func_tailcallee;
   size_t module_offset;
 } wasm_elem_segment_expr_t;
 
@@ -542,7 +548,7 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
     switch (src_expr->expr_type) {
       case RefFunc:
         *dest_val = (wasm_rt_funcref_t){
-            src_expr->type, src_expr->func,
+            src_expr->type, src_expr->func, src_expr->func_tailcallee,
             (char*)module_instance + src_expr->module_offset};
         break;
       case RefNull:
@@ -631,6 +637,24 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
 #define FUNC_TYPE_EXTERN_T(x) const char x[]
 #define FUNC_TYPE_T(x) static const char x[]
+#endif
+
+#if (__STDC_VERSION__ < 201112L) && !defined(static_assert)
+#define static_assert(X) \
+  extern int(*assertion(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
+#endif
+
+#ifdef _MSC_VER
+#define WEAK_FUNC_DECL(func, fallback)                             \
+  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+                                                                   \
+      void                                                         \
+      fallback(void** instance_ptr, void* tail_call_stack,         \
+               wasm_rt_tailcallee_t* next)
+#else
+#define WEAK_FUNC_DECL(func, fallback)                                        \
+  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+                                  wasm_rt_tailcallee_t* next)
 #endif
 
 static u32 w2c_fac_fac_0(w2c_fac*, u32);

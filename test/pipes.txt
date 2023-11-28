@@ -1,0 +1,9 @@
+;;; PLATFORMS: Linux Darwin
+;;; RUN: bash -c '%(wasm-stats)s <(%(wat2wasm)s /dev/stdin <<<"(module)" -o /dev/stdout)'
+(;; STDOUT ;;;
+Total opcodes: 0
+
+Opcode counts:
+
+Opcode counts with immediates:
+;;; STDOUT ;;)

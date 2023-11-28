@@ -1,4 +1,25 @@
 
+// Computes a pointer to an object of the given size in a little-endian memory.
+//
+// On a little-endian host, this is just &mem->data[addr] - the object's size is
+// unused. On a big-endian host, it's &mem->data[mem->size - addr - n], where n
+// is the object's size.
+//
+// Note that mem may be evaluated multiple times.
+//
+// Parameters:
+// mem - The memory.
+// addr - The address.
+// n - The size of the object.
+//
+// Result:
+// A pointer for an object of size n.
+#if WABT_BIG_ENDIAN
+#define MEM_ADDR(mem, addr, n) &(mem)->data[(mem)->size - (addr) - (n)]
+#else
+#define MEM_ADDR(mem, addr, n) &(mem)->data[addr]
+#endif
+
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
 #if WASM_RT_USE_STACK_DEPTH_COUNT
@@ -20,11 +41,16 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
   return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
 }
 
-#define CALL_INDIRECT(table, t, ft, x, ...)              \
+#define CHECK_CALL_INDIRECT(table, ft, x)                \
   (LIKELY((x) < table.size && table.data[x].func &&      \
           func_types_eq(ft, table.data[x].func_type)) || \
-       TRAP(CALL_INDIRECT),                              \
-   ((t)table.data[x].func)(__VA_ARGS__))
+   TRAP(CALL_INDIRECT))
+
+#define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
+
+#define CALL_INDIRECT(table, t, ft, x, ...) \
+  (CHECK_CALL_INDIRECT(table, ft, x),       \
+   DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 
 #ifdef SUPPORT_MEMORY64
 #define RANGE_CHECK(mem, offset, len)              \
@@ -62,70 +88,42 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 #define FORCE_READ_FLOAT(var)
 #endif
 
-#if WABT_BIG_ENDIAN
 static inline void load_data(void* dest, const void* src, size_t n) {
   if (!n) {
     return;
   }
-  size_t i = 0;
+  wasm_rt_memcpy(dest, src, n);
+#if WABT_BIG_ENDIAN
   u8* dest_chars = dest;
-  memcpy(dest, src, n);
-  for (i = 0; i < (n >> 1); i++) {
+  for (size_t i = 0; i < (n >> 1); i++) {
     u8 cursor = dest_chars[i];
     dest_chars[i] = dest_chars[n - i - 1];
     dest_chars[n - i - 1] = cursor;
   }
-}
-#define LOAD_DATA(m, o, i, s)                   \
-  do {                                          \
-    RANGE_CHECK((&m), m.size - o - s, s);       \
-    load_data(&(m.data[m.size - o - s]), i, s); \
-  } while (0)
-#define DEFINE_LOAD(name, t1, t2, t3, force_read)                      \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {             \
-    MEMCHECK(mem, addr, t1);                                           \
-    t1 result;                                                         \
-    wasm_rt_memcpy(&result, &mem->data[mem->size - addr - sizeof(t1)], \
-                   sizeof(t1));                                        \
-    force_read(result);                                                \
-    return (t3)(t2)result;                                             \
-  }
-
-#define DEFINE_STORE(name, t1, t2)                                      \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {  \
-    MEMCHECK(mem, addr, t1);                                            \
-    t1 wrapped = (t1)value;                                             \
-    wasm_rt_memcpy(&mem->data[mem->size - addr - sizeof(t1)], &wrapped, \
-                   sizeof(t1));                                         \
-  }
-#else
-static inline void load_data(void* dest, const void* src, size_t n) {
-  if (!n) {
-    return;
-  }
-  memcpy(dest, src, n);
-}
-#define LOAD_DATA(m, o, i, s)      \
-  do {                             \
-    RANGE_CHECK((&m), o, s);       \
-    load_data(&(m.data[o]), i, s); \
-  } while (0)
-#define DEFINE_LOAD(name, t1, t2, t3, force_read)          \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
-    MEMCHECK(mem, addr, t1);                               \
-    t1 result;                                             \
-    wasm_rt_memcpy(&result, &mem->data[addr], sizeof(t1)); \
-    force_read(result);                                    \
-    return (t3)(t2)result;                                 \
-  }
-
-#define DEFINE_STORE(name, t1, t2)                                     \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    MEMCHECK(mem, addr, t1);                                           \
-    t1 wrapped = (t1)value;                                            \
-    wasm_rt_memcpy(&mem->data[addr], &wrapped, sizeof(t1));            \
-  }
 #endif
+}
+
+#define LOAD_DATA(m, o, i, s)            \
+  do {                                   \
+    RANGE_CHECK((&m), o, s);             \
+    load_data(MEM_ADDR(&m, o, s), i, s); \
+  } while (0)
+
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)                         \
+  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                \
+    MEMCHECK(mem, addr, t1);                                              \
+    t1 result;                                                            \
+    wasm_rt_memcpy(&result, MEM_ADDR(mem, addr, sizeof(t1)), sizeof(t1)); \
+    force_read(result);                                                   \
+    return (t3)(t2)result;                                                \
+  }
+
+#define DEFINE_STORE(name, t1, t2)                                         \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {     \
+    MEMCHECK(mem, addr, t1);                                               \
+    t1 wrapped = (t1)value;                                                \
+    wasm_rt_memcpy(MEM_ADDR(mem, addr, sizeof(t1)), &wrapped, sizeof(t1)); \
+  }
 
 DEFINE_LOAD(i32_load, u32, u32, u32, FORCE_READ_INT)
 DEFINE_LOAD(i64_load, u64, u64, u64, FORCE_READ_INT)
@@ -339,11 +337,11 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #define I64_TRUNC_SAT_U_F64(x) \
   TRUNC_SAT_U(u64, f64, (f64)UINT64_MAX, UINT64_MAX, x)
 
-#define DEFINE_REINTERPRET(name, t1, t2) \
-  static inline t2 name(t1 x) {          \
-    t2 result;                           \
-    memcpy(&result, &x, sizeof(result)); \
-    return result;                       \
+#define DEFINE_REINTERPRET(name, t1, t2)         \
+  static inline t2 name(t1 x) {                  \
+    t2 result;                                   \
+    wasm_rt_memcpy(&result, &x, sizeof(result)); \
+    return result;                               \
   }
 
 DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
@@ -353,17 +351,17 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
 
 static float quiet_nanf(float x) {
   uint32_t tmp;
-  memcpy(&tmp, &x, 4);
+  wasm_rt_memcpy(&tmp, &x, 4);
   tmp |= 0x7fc00000lu;
-  memcpy(&x, &tmp, 4);
+  wasm_rt_memcpy(&x, &tmp, 4);
   return x;
 }
 
 static double quiet_nan(double x) {
   uint64_t tmp;
-  memcpy(&tmp, &x, 8);
+  wasm_rt_memcpy(&tmp, &x, 8);
   tmp |= 0x7ff8000000000000llu;
-  memcpy(&x, &tmp, 8);
+  wasm_rt_memcpy(&x, &tmp, 8);
   return x;
 }
 
@@ -440,9 +438,9 @@ static double wasm_nearbyint(double x) {
 static float wasm_fabsf(float x) {
   if (UNLIKELY(isnan(x))) {
     uint32_t tmp;
-    memcpy(&tmp, &x, 4);
+    wasm_rt_memcpy(&tmp, &x, 4);
     tmp = tmp & ~(1UL << 31);
-    memcpy(&x, &tmp, 4);
+    wasm_rt_memcpy(&x, &tmp, 4);
     return x;
   }
   return fabsf(x);
@@ -451,9 +449,9 @@ static float wasm_fabsf(float x) {
 static double wasm_fabs(double x) {
   if (UNLIKELY(isnan(x))) {
     uint64_t tmp;
-    memcpy(&tmp, &x, 8);
+    wasm_rt_memcpy(&tmp, &x, 8);
     tmp = tmp & ~(1ULL << 63);
-    memcpy(&x, &tmp, 8);
+    wasm_rt_memcpy(&x, &tmp, 8);
     return x;
   }
   return fabs(x);
@@ -475,7 +473,7 @@ static float wasm_sqrtf(float x) {
 
 static inline void memory_fill(wasm_rt_memory_t* mem, u32 d, u32 val, u32 n) {
   RANGE_CHECK(mem, d, n);
-  memset(mem->data + d, val, n);
+  memset(MEM_ADDR(mem, d, n), val, n);
 }
 
 static inline void memory_copy(wasm_rt_memory_t* dest,
@@ -485,7 +483,7 @@ static inline void memory_copy(wasm_rt_memory_t* dest,
                                u32 n) {
   RANGE_CHECK(dest, dest_addr, n);
   RANGE_CHECK(src, src_addr, n);
-  memmove(dest->data + dest_addr, src->data + src_addr, n);
+  memmove(MEM_ADDR(dest, dest_addr, n), MEM_ADDR(src, src_addr, n), n);
 }
 
 static inline void memory_init(wasm_rt_memory_t* dest,
@@ -503,6 +501,7 @@ typedef struct {
   enum { RefFunc, RefNull, GlobalGet } expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
+  wasm_rt_tailcallee_t func_tailcallee;
   size_t module_offset;
 } wasm_elem_segment_expr_t;
 
@@ -523,7 +522,7 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
     switch (src_expr->expr_type) {
       case RefFunc:
         *dest_val = (wasm_rt_funcref_t){
-            src_expr->type, src_expr->func,
+            src_expr->type, src_expr->func, src_expr->func_tailcallee,
             (char*)module_instance + src_expr->module_offset};
         break;
       case RefNull:
@@ -612,4 +611,22 @@ DEFINE_TABLE_FILL(externref)
 #define FUNC_TYPE_DECL_EXTERN_T(x) extern const char x[]
 #define FUNC_TYPE_EXTERN_T(x) const char x[]
 #define FUNC_TYPE_T(x) static const char x[]
+#endif
+
+#if (__STDC_VERSION__ < 201112L) && !defined(static_assert)
+#define static_assert(X) \
+  extern int(*assertion(void))[!!sizeof(struct { int x : (X) ? 2 : -1; })];
+#endif
+
+#ifdef _MSC_VER
+#define WEAK_FUNC_DECL(func, fallback)                             \
+  __pragma(comment(linker, "/alternatename:" #func "=" #fallback)) \
+                                                                   \
+      void                                                         \
+      fallback(void** instance_ptr, void* tail_call_stack,         \
+               wasm_rt_tailcallee_t* next)
+#else
+#define WEAK_FUNC_DECL(func, fallback)                                        \
+  __attribute__((weak)) void func(void** instance_ptr, void* tail_call_stack, \
+                                  wasm_rt_tailcallee_t* next)
 #endif

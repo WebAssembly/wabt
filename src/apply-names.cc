@@ -263,8 +263,8 @@ Result NameApplier::OnDataDropExpr(DataDropExpr* expr) {
 }
 
 Result NameApplier::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
-  CHECK_RESULT(UseNameForMemoryVar(&expr->srcmemidx));
   CHECK_RESULT(UseNameForMemoryVar(&expr->destmemidx));
+  CHECK_RESULT(UseNameForMemoryVar(&expr->srcmemidx));
   return Result::Ok;
 }
 

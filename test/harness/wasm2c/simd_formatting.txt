@@ -1,0 +1,13 @@
+;;; TOOL: run-spec-wasm2c
+;;; ERROR: 1
+(module
+  (func (export "x") (param $x v128) (result v128) (local.get $x))
+)
+(assert_return (invoke "x" (v128.const i8x16 0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0A 0x0B 0x0C 0x0D 0x0E 0x0F))
+                           (v128.const i8x16 0xFF 0xFE 0xFD 0xFC 0xFB 0xFA 0xF9 0xF8 0xF7 0xF6 0xF5 0xF4 0xF3 0xF2 0xF1 0xF0))
+(;; STDERR ;;;
+simd_formatting.txt:6: assertion failed: in w2c_simd__formatting__0__wasm_x(&simd__formatting__0__wasm_instance, simde_wasm_i8x16_make(0u,1u,2u,3u,4u,5u,6u,7u,8u,9u,10u,11u,12u,13u,14u,15u)): expected <255 254 253 252 251 250 249 248 247 246 245 244 243 242 241 240 >, got <0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 >.
+;;; STDERR ;;)
+(;; STDOUT ;;;
+0/1 tests passed.
+;;; STDOUT ;;)

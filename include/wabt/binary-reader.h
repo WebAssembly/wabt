@@ -269,7 +269,7 @@ class BinaryReaderDelegate {
   virtual Result OnLocalSetExpr(Index local_index) = 0;
   virtual Result OnLocalTeeExpr(Index local_index) = 0;
   virtual Result OnLoopExpr(Type sig_type) = 0;
-  virtual Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) = 0;
+  virtual Result OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) = 0;
   virtual Result OnDataDropExpr(Index segment_index) = 0;
   virtual Result OnMemoryFillExpr(Index memidx) = 0;
   virtual Result OnMemoryGrowExpr(Index memidx) = 0;
@@ -423,6 +423,13 @@ class BinaryReaderDelegate {
   virtual Result OnFeatureCount(Index count) = 0;
   virtual Result OnFeature(uint8_t prefix, std::string_view name) = 0;
   virtual Result EndTargetFeaturesSection() = 0;
+
+  /* Generic custom section */
+  virtual Result BeginGenericCustomSection(Offset size) = 0;
+  virtual Result OnGenericCustomSection(std::string_view name,
+                                        const void* data,
+                                        Offset size) = 0;
+  virtual Result EndGenericCustomSection() = 0;
 
   /* Linking section */
   virtual Result BeginLinkingSection(Offset size) = 0;

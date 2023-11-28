@@ -593,20 +593,23 @@ Location WastParser::GetLocation() {
 }
 
 TokenType WastParser::Peek(size_t n) {
+  assert(n <= 1);
   while (tokens_.size() <= n) {
     Token cur = lexer_->GetToken();
     if (cur.token_type() != TokenType::LparAnn) {
       tokens_.push_back(cur);
     } else {
       // Custom annotation. For now, discard until matching Rpar, unless it is
-      // a code metadata annotation. In that case, we know how to parse it.
+      // a code metadata annotation or custom section. In those cases, we know
+      // how to parse it.
       if (!options_->features.annotations_enabled()) {
         Error(cur.loc, "annotations not enabled: %s", cur.to_string().c_str());
         tokens_.push_back(Token(cur.loc, TokenType::Invalid));
         continue;
       }
-      if (options_->features.code_metadata_enabled() &&
-          cur.text().find("metadata.code.") == 0) {
+      if ((options_->features.code_metadata_enabled() &&
+           cur.text().find("metadata.code.") == 0) ||
+          cur.text() == "custom") {
         tokens_.push_back(cur);
         continue;
       }
@@ -1172,7 +1175,7 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
       auto module_command = cast<ScriptModuleCommand>(std::move(command));
       *module = std::move(module_command->module);
     }
-  } else if (IsModuleField(PeekPair())) {
+  } else if (IsModuleField(PeekPair()) || PeekIsCustom()) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     CHECK_RESULT(ParseModuleFieldList(module.get()));
   } else if (PeekMatch(TokenType::Eof)) {
@@ -1198,7 +1201,7 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   // Don't consume the Lpar yet, even though it is required. This way the
   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
   // the parsing structure more regular.
-  if (IsModuleField(PeekPair())) {
+  if (IsModuleField(PeekPair()) || PeekIsCustom()) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     auto command = std::make_unique<ModuleCommand>();
     command->module.loc = GetLocation();
@@ -1222,9 +1225,69 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   }
 }
 
+Result WastParser::ParseCustomSectionAnnotation(Module* module) {
+  WABT_TRACE(ParseCustomSectionAnnotation);
+  Location loc = GetLocation();
+  Token token = Consume();
+  if (token.text() != "custom") {
+    assert(
+        !"ParseCustomSectionAnnotation should only be called if PeekIsCustom() is true");
+    return Result::Error;
+  }
+  std::string section_name;
+  CHECK_RESULT(ParseQuotedText(&section_name));
+  if (Match(TokenType::Lpar)) {
+    if (!PeekMatch(TokenType::After) && !PeekMatch(TokenType::Before)) {
+      return ErrorExpected({"before", "after"});
+    }
+    Consume();
+    switch (Peek()) {
+      case TokenType::Function:
+      case TokenType::Type:
+      case TokenType::Import:
+      case TokenType::Export:
+      case TokenType::Table:
+      case TokenType::Global:
+      case TokenType::Elem:
+      case TokenType::Data:
+      case TokenType::Memory:
+      case TokenType::Code:
+      case TokenType::Start: {
+        Consume();
+        break;
+      }
+      default: {
+        return ErrorExpected({"type", "import", "function", "table", "memory",
+                              "global", "export", "start", "elem", "code",
+                              "data"});
+      }
+    }
+    EXPECT(Rpar);
+  }
+  std::vector<uint8_t> data;
+  CHECK_RESULT(ParseTextList(&data));
+  EXPECT(Rpar);
+
+  Custom custom = Custom(loc, section_name, data);
+  module->customs.push_back(custom);
+
+  return Result::Ok;
+}
+
+bool WastParser::PeekIsCustom() {
+  // If IsLparAnn succeeds, tokens_.front() must have text, as it is an LparAnn
+  // token.
+  return options_->features.annotations_enabled() && IsLparAnn(PeekPair()) &&
+         tokens_.front().text() == "custom";
+}
+
 Result WastParser::ParseModuleFieldList(Module* module) {
   WABT_TRACE(ParseModuleFieldList);
-  while (IsModuleField(PeekPair())) {
+  while (IsModuleField(PeekPair()) || PeekIsCustom()) {
+    if (PeekIsCustom()) {
+      CHECK_RESULT(ParseCustomSectionAnnotation(module));
+      continue;
+    }
     if (Failed(ParseModuleField(module))) {
       CHECK_RESULT(Synchronize(IsModuleField));
     }
@@ -2076,11 +2139,11 @@ Result WastParser::ParseMemoryExpr(Location loc,
 template <typename T>
 Result WastParser::ParseMemoryBinaryExpr(Location loc,
                                          std::unique_ptr<Expr>* out_expr) {
-  Var srcmemidx;
   Var destmemidx;
-  CHECK_RESULT(ParseMemidx(loc, &srcmemidx));
+  Var srcmemidx;
   CHECK_RESULT(ParseMemidx(loc, &destmemidx));
-  out_expr->reset(new T(srcmemidx, destmemidx, loc));
+  CHECK_RESULT(ParseMemidx(loc, &srcmemidx));
+  out_expr->reset(new T(destmemidx, srcmemidx, loc));
   return Result::Ok;
 }
 
@@ -3527,7 +3590,7 @@ Result WastParser::ParseScriptModule(
       auto tsm = std::make_unique<TextScriptModule>();
       tsm->module.name = name;
       tsm->module.loc = loc;
-      if (IsModuleField(PeekPair())) {
+      if (IsModuleField(PeekPair()) || PeekIsCustom()) {
         CHECK_RESULT(ParseModuleFieldList(&tsm->module));
       } else if (!PeekMatch(TokenType::Rpar)) {
         ConsumeIfLpar();
@@ -3598,6 +3661,37 @@ bool WastParser::HasError() const {
   return std::any_of(errors_->begin(), errors_->end(), [](const auto& x) {
     return x.error_level == ErrorLevel::Error;
   });
+}
+
+void WastParser::TokenQueue::push_back(Token t) {
+  assert(!tokens[!i]);
+  tokens[!i] = t;
+  if (empty()) {
+    i = !i;
+  }
+}
+
+void WastParser::TokenQueue::pop_front() {
+  assert(tokens[i]);
+  tokens[i].reset();
+  i = !i;
+}
+
+const Token& WastParser::TokenQueue::at(size_t n) const {
+  assert(n <= 1);
+  return tokens[i ^ static_cast<bool>(n)].value();
+}
+
+const Token& WastParser::TokenQueue::front() const {
+  return at(0);
+}
+
+bool WastParser::TokenQueue::empty() const {
+  return !tokens[i];
+}
+
+size_t WastParser::TokenQueue::size() const {
+  return empty() ? 0 : 1 + tokens[!i].has_value();
 }
 
 Result ParseWatModule(WastLexer* lexer,

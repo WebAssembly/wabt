@@ -229,7 +229,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLocalSetExpr(Index local_index) override;
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
-  Result OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) override;
+  Result OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) override;
   Result OnDataDropExpr(Index segment_index) override;
   Result OnMemoryFillExpr(Index memidx) override;
   Result OnMemoryGrowExpr(Index memidx) override;
@@ -313,6 +313,10 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnNameEntry(NameSectionSubsection type,
                      Index index,
                      std::string_view name) override;
+
+  Result OnGenericCustomSection(std::string_view name,
+                                const void* data,
+                                Offset size) override;
 
   Result BeginTagSection(Offset size) override { return Result::Ok; }
   Result OnTagCount(Index count) override { return Result::Ok; }
@@ -891,15 +895,29 @@ Result BinaryReaderIR::OnCallRefExpr() {
 }
 
 Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
+  if (current_func_) {
+    // syntactically, a return_call expr can occur in an init expression
+    // (outside a function)
+    current_func_->features_used.tailcall = true;
+  }
   return AppendExpr(
       std::make_unique<ReturnCallExpr>(Var(func_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index,
                                                 Index table_index) {
+  if (current_func_) {
+    // syntactically, a return_call_indirect expr can occur in an init
+    // expression (outside a function)
+    current_func_->features_used.tailcall = true;
+  }
   auto expr = std::make_unique<ReturnCallIndirectExpr>();
   SetFuncDeclaration(&expr->decl, Var(sig_index, GetLocation()));
   expr->table = Var(table_index, GetLocation());
+  FuncType* type = module_->GetFuncType(Var(sig_index, GetLocation()));
+  if (type) {
+    type->features_used.tailcall = true;
+  }
   return AppendExpr(std::move(expr));
 }
 
@@ -1024,9 +1042,9 @@ Result BinaryReaderIR::OnLoopExpr(Type sig_type) {
   return PushLabel(LabelType::Loop, expr_list);
 }
 
-Result BinaryReaderIR::OnMemoryCopyExpr(Index srcmemidx, Index destmemidx) {
+Result BinaryReaderIR::OnMemoryCopyExpr(Index destmemidx, Index srcmemidx) {
   return AppendExpr(std::make_unique<MemoryCopyExpr>(
-      Var(srcmemidx, GetLocation()), Var(destmemidx, GetLocation())));
+      Var(destmemidx, GetLocation()), Var(srcmemidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnDataDropExpr(Index segment) {
@@ -1570,6 +1588,7 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Local:
     case NameSectionSubsection::Module:
     case NameSectionSubsection::Label:
+    case NameSectionSubsection::Field:
       break;
     case NameSectionSubsection::Type:
       SetTypeName(index, name);
@@ -1748,6 +1767,18 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
                                      std::string_view name,
                                      Index table_index) {
   return SetTableName(table_index, name);
+}
+
+Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
+                                              const void* data,
+                                              Offset size) {
+  Custom custom = Custom(GetLocation(), name);
+  custom.data.resize(size);
+  if (size > 0) {
+    memcpy(custom.data.data(), data, size);
+  }
+  module_->customs.push_back(std::move(custom));
+  return Result::Ok;
 }
 
 }  // end anonymous namespace

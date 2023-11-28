@@ -24,7 +24,7 @@
 #include <map>
 #include <vector>
 
-#include "wabt/binary-reader-opcnt.h"
+#include "wabt/binary-reader-stats.h"
 #include "wabt/binary-reader.h"
 #include "wabt/option-parser.h"
 #include "wabt/stream.h"
@@ -45,16 +45,15 @@ static std::unique_ptr<FileStream> s_log_stream;
 static Features s_features;
 
 static const char s_description[] =
-    R"(  Read a file in the wasm binary format, and count opcode usage for
-  instructions.
+    R"(  Read a file in the wasm binary format, and output stats.
 
 examples:
-  # parse binary file test.wasm and write pcode dist file test.dist
-  $ wasm-opcodecnt test.wasm -o test.dist
+  # parse binary file test.wasm and write opcode dist file test.dist
+  $ wasm-stats test.wasm -o test.dist
 )";
 
 static void ParseOptions(int argc, char** argv) {
-  OptionParser parser("wasm-opcodecnt", s_description);
+  OptionParser parser("wasm-stats", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
@@ -63,7 +62,7 @@ static void ParseOptions(int argc, char** argv) {
   });
   s_features.AddOptions(&parser);
   parser.AddOption('o', "output", "FILENAME",
-                   "Output file for the opcode counts, by default use stdout",
+                   "Output file for the stats, by default use stdout",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption(
       'c', "cutoff", "N", "Cutoff for reporting counts less than N",

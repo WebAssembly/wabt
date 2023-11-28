@@ -15,7 +15,7 @@
 #
 
 cmake_minimum_required(VERSION 3.16)
-project(WABT LANGUAGES C CXX VERSION 1.0.33)
+project(WABT LANGUAGES C CXX VERSION 1.0.34)
 
 include(GNUInstallDirs)
 
@@ -557,10 +557,10 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
-  # wasm-opcodecnt
+  # wasm-stats
   wabt_executable(
-    NAME wasm-opcodecnt
-    SOURCES src/tools/wasm-opcodecnt.cc src/binary-reader-opcnt.cc
+    NAME wasm-stats
+    SOURCES src/tools/wasm-stats.cc src/binary-reader-stats.cc
     INSTALL
   )
 
@@ -647,6 +647,10 @@ if (BUILD_TESTS)
     set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -g -O0")
   endif ()
 
+  if (WABT_BIG_ENDIAN)
+    set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -DWABT_BIG_ENDIAN=1")
+  endif ()
+
   if (DEFINED CMAKE_OSX_SYSROOT)
     set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
   endif ()
@@ -699,7 +703,6 @@ if (BUILD_TESTS)
   # wabt-unittests
   set(UNITTESTS_SRCS
     src/test-binary-reader.cc
-    src/test-circular-array.cc
     src/test-interp.cc
     src/test-intrusive-list.cc
     src/test-literal.cc

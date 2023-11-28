@@ -164,6 +164,7 @@ class WatWriter : ModuleContext {
   void WriteTypeEntry(const TypeEntry& type);
   void WriteField(const Field& field);
   void WriteStartFunction(const Var& start);
+  void WriteCustom(const Custom& custom);
 
   class ExprVisitorDelegate;
 
@@ -784,7 +785,7 @@ Result WatWriter::ExprVisitorDelegate::EndLoopExpr(LoopExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
   writer_->WritePutsSpace(Opcode::MemoryCopy_Opcode.GetName());
-  writer_->WriteTwoMemoryVarsUnlessBothZero(expr->srcmemidx, expr->destmemidx,
+  writer_->WriteTwoMemoryVarsUnlessBothZero(expr->destmemidx, expr->srcmemidx,
                                             NextChar::Space);
   writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
@@ -1613,6 +1614,13 @@ void WatWriter::WriteStartFunction(const Var& start) {
   WriteCloseNewline();
 }
 
+void WatWriter::WriteCustom(const Custom& custom) {
+  WriteOpenSpace("@custom");
+  WriteQuotedString(custom.name, NextChar::Space);
+  WriteQuotedData(custom.data.data(), custom.data.size());
+  WriteCloseNewline();
+}
+
 Result WatWriter::WriteModule() {
   BuildInlineExportMap();
   BuildInlineImportMap();
@@ -1657,6 +1665,11 @@ Result WatWriter::WriteModule() {
       case ModuleFieldType::Start:
         WriteStartFunction(cast<StartModuleField>(&field)->start);
         break;
+    }
+  }
+  if (options_.features.annotations_enabled()) {
+    for (const Custom& custom : module.customs) {
+      WriteCustom(custom);
     }
   }
   WriteCloseNewline();

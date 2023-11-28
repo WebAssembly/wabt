@@ -893,13 +893,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::End);
       break;
     case ExprType::MemoryCopy: {
-      Index srcmemidx =
-          module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->srcmemidx);
       Index destmemidx =
           module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->destmemidx);
+      Index srcmemidx =
+          module_->GetMemoryIndex(cast<MemoryCopyExpr>(expr)->srcmemidx);
       WriteOpcode(stream_, Opcode::MemoryCopy);
-      WriteU32Leb128(stream_, srcmemidx, "memory.copy srcmemidx");
       WriteU32Leb128(stream_, destmemidx, "memory.copy destmemidx");
+      WriteU32Leb128(stream_, srcmemidx, "memory.copy srcmemidx");
       break;
     }
     case ExprType::DataDrop: {
@@ -1667,6 +1667,23 @@ Result BinaryWriter::WriteModule() {
       WriteHeader("data segment data", i);
       stream_->WriteData(segment->data, "data segment data");
     }
+    EndSection();
+  }
+
+  for (const Custom& custom : module_->customs) {
+    // These custom sections are already specially handled by BinaryWriter, so
+    // we don't want to double-write.
+    if ((custom.name == WABT_BINARY_SECTION_NAME &&
+         options_.write_debug_names) ||
+        (custom.name.rfind(WABT_BINARY_SECTION_RELOC) == 0 &&
+         options_.relocatable) ||
+        (custom.name == WABT_BINARY_SECTION_LINKING && options_.relocatable) ||
+        (custom.name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0 &&
+         options_.features.code_metadata_enabled())) {
+      continue;
+    }
+    BeginCustomSection(custom.name.data());
+    stream_->WriteData(custom.data, "custom data");
     EndSection();
   }
 

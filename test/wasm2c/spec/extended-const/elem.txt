@@ -2,5 +2,5 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/extended-const/elem.wast
 ;;; ARGS*: --enable-extended-const
 (;; STDOUT ;;;
-37/37 tests passed.
+38/38 tests passed.
 ;;; STDOUT ;;)
