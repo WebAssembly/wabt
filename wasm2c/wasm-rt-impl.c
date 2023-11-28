@@ -172,6 +172,8 @@ static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
   }
 }
 
+#if !WASM_RT_USE_STACK_DEPTH_COUNT
+/* These routines set up an altstack to handle SIGSEGV from stack overflow. */
 static bool os_has_altstack_installed() {
   /* check for altstack already in place */
   stack_t ss;
@@ -183,21 +185,14 @@ static bool os_has_altstack_installed() {
   return !(ss.ss_flags & SS_DISABLE);
 }
 
-/* Use alt stack to handle SIGSEGV from stack overflow */
 static void os_allocate_and_install_altstack(void) {
   /* verify altstack not already allocated */
-#ifndef NDEBUG
-  if (g_alt_stack) {
-    fprintf(
-        stderr,
-        "wasm-rt error: tried to re-allocate thread-local alternate stack\n");
-    abort();
-  }
+  assert(!g_alt_stack &&
+         "wasm-rt error: tried to re-allocate thread-local alternate stack\n");
 
   /* We could check and warn if an altstack is already installed, but some
    * sanitizers install their own altstack, so this warning would fire
    * spuriously and break the test outputs. */
-#endif
 
   /* allocate altstack */
   g_alt_stack = malloc(SIGSTKSZ);
@@ -213,24 +208,6 @@ static void os_allocate_and_install_altstack(void) {
   ss.ss_size = SIGSTKSZ;
   if (sigaltstack(&ss, NULL) != 0) {
     perror("sigaltstack failed");
-    abort();
-  }
-}
-
-static void os_install_signal_handler(void) {
-  struct sigaction sa;
-  memset(&sa, '\0', sizeof(sa));
-#if WASM_RT_USE_STACK_DEPTH_COUNT
-  sa.sa_flags = SA_SIGINFO;
-#else
-  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
-#endif
-  sigemptyset(&sa.sa_mask);
-  sa.sa_sigaction = os_signal_handler;
-
-  /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
-  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
-    perror("sigaction failed");
     abort();
   }
 }
@@ -268,6 +245,25 @@ static void os_disable_and_deallocate_altstack(void) {
   }
   assert(!os_has_altstack_installed());
   free(g_alt_stack);
+}
+#endif
+
+static void os_install_signal_handler(void) {
+  struct sigaction sa;
+  memset(&sa, '\0', sizeof(sa));
+#if WASM_RT_USE_STACK_DEPTH_COUNT
+  sa.sa_flags = SA_SIGINFO;
+#else
+  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+#endif
+  sigemptyset(&sa.sa_mask);
+  sa.sa_sigaction = os_signal_handler;
+
+  /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
+    perror("sigaction failed");
+    abort();
+  }
 }
 
 static void os_cleanup_signal_handler(void) {
@@ -311,10 +307,7 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
-  if (!wasm_rt_is_initialized()) {
-    fprintf(stderr, "wasm_rt_free: wasm runtime not initialized.\n");
-    return;
-  }
+  assert(wasm_rt_is_initialized());
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   os_cleanup_signal_handler();
 #if !WASM_RT_USE_STACK_DEPTH_COUNT
