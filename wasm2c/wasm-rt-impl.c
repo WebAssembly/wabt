@@ -293,12 +293,12 @@ void wasm_rt_init(void) {
 }
 
 bool wasm_rt_is_initialized(void) {
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
 #if !WASM_RT_USE_STACK_DEPTH_COUNT
   if (!os_has_altstack_installed()) {
     return false;
   }
 #endif
-#if WASM_RT_INSTALL_SIGNAL_HANDLER
   return g_signal_handler_installed;
 #else
   return true;
