@@ -538,8 +538,8 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
   visitor_.VisitExprList(segment->offset);
   for (ExprList& elem_expr : segment->elem_exprs) {
     if (elem_expr.size() == 1 &&
-        elem_expr.front().type() == ExprType::RefFunc) {
-      ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
+        elem_expr.front()->type() == ExprType::RefFunc) {
+      ResolveFuncVar(&cast<RefFuncExpr>(elem_expr.front().get())->var);
     }
   }
 }

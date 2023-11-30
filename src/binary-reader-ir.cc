@@ -456,7 +456,7 @@ Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
     PrintError("TopLabelExpr: parent label has empty expr list");
     return Result::Error;
   }
-  *expr = &parent_label->exprs->back();
+  *expr = parent_label->exprs->back().get();
   return Result::Ok;
 }
 

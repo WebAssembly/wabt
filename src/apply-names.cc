@@ -531,7 +531,7 @@ Result NameApplier::VisitElemSegment(Index elem_segment_index,
   CHECK_RESULT(UseNameForTableVar(&segment->table_var));
   CHECK_RESULT(visitor_.VisitExprList(segment->offset));
   for (ExprList& elem_expr : segment->elem_exprs) {
-    Expr* expr = &elem_expr.front();
+    Expr* expr = elem_expr.front().get();
     if (expr->type() == ExprType::RefFunc) {
       CHECK_RESULT(UseNameForFuncVar(&cast<RefFuncExpr>(expr)->var));
     }

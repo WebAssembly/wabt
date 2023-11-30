@@ -24,7 +24,6 @@
 
 #include "wabt/error.h"
 #include "wabt/feature.h"
-#include "wabt/intrusive-list.h"
 #include "wabt/ir.h"
 #include "wabt/wast-lexer.h"
 

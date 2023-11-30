@@ -288,7 +288,7 @@ struct Decompiler {
       for (auto dat : mc.module.data_segments) {
         uint64_t dat_base;
         if (dat->offset.size() == 1 &&
-            ConstIntVal(&dat->offset.front(), dat_base) &&
+            ConstIntVal(dat->offset.front().get(), dat_base) &&
             abs_base >= dat_base && abs_base < dat_base + dat->data.size()) {
           // We are inside the range of this data segment!
           // Turn expression into data_name[index]

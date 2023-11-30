@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <list>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -28,7 +29,6 @@
 
 #include "wabt/binding-hash.h"
 #include "wabt/common.h"
-#include "wabt/intrusive-list.h"
 #include "wabt/opcode.h"
 
 namespace wabt {
@@ -432,7 +432,8 @@ enum class ExprType {
 const char* GetExprTypeName(ExprType type);
 
 class Expr;
-using ExprList = intrusive_list<Expr>;
+
+using ExprList = std::vector<std::unique_ptr<Expr>>;
 
 using BlockDeclaration = FuncDeclaration;
 
@@ -456,12 +457,14 @@ struct Catch {
   bool IsCatchAll() const {
     return var.is_index() && var.index() == kInvalidIndex;
   }
+  Catch(Catch&&) = default;
+  Catch& operator=(Catch&&) = default;
 };
 using CatchVector = std::vector<Catch>;
 
 enum class TryKind { Plain, Catch, Delegate };
 
-class Expr : public intrusive_list_base<Expr> {
+class Expr {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Expr);
   Expr() = delete;
@@ -1046,7 +1049,7 @@ enum class ModuleFieldType {
   Tag
 };
 
-class ModuleField : public intrusive_list_base<ModuleField> {
+class ModuleField {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(ModuleField);
   ModuleField() = delete;
@@ -1063,7 +1066,7 @@ class ModuleField : public intrusive_list_base<ModuleField> {
   ModuleFieldType type_;
 };
 
-using ModuleFieldList = intrusive_list<ModuleField>;
+using ModuleFieldList = std::list<std::unique_ptr<ModuleField>>;
 
 template <ModuleFieldType TypeEnum>
 class ModuleFieldMixin : public ModuleField {

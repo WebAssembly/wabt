@@ -22,6 +22,7 @@
 #include "wabt/ir-util.h"
 #include "wabt/ir.h"
 
+#include <iterator>
 #include <map>
 
 namespace wabt {
@@ -250,8 +251,8 @@ struct AST {
     auto value_stack_in_variables = value_stack_depth;
     bool unreachable = false;
     for (auto& e : es) {
-      Construct(e);
-      auto arity = mc.GetExprArity(e);
+      Construct(*e);
+      auto arity = mc.GetExprArity(*e);
       value_stack_depth -= arity.nargs;
       value_stack_in_variables =
           std::min(value_stack_in_variables, value_stack_depth);
@@ -337,7 +338,7 @@ struct AST {
         // TODO: this would be nice to also do for local.get and maybe others,
         // though that needs a way to ensure there's no local.set in between
         // when they get lifted, so complicates matters a bit.
-        if (e.type() == ExprType::Const &&
+        if (e->type() == ExprType::Const &&
             value_stack_in_variables == value_stack_depth - 1) {
           value_stack_in_variables++;
         }

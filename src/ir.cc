@@ -543,8 +543,9 @@ void Module::AppendField(std::unique_ptr<ModuleField> field) {
 }
 
 void Module::AppendFields(ModuleFieldList* fields) {
-  while (!fields->empty())
-    AppendField(std::unique_ptr<ModuleField>(fields->extract_front()));
+  for (auto& field : *fields) {
+    AppendField(std::move(field));
+  }
 }
 
 const Module* Script::GetFirstModule() const {
@@ -673,7 +674,7 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
       elem_type == Type::FuncRef &&
       std::all_of(elem_exprs.begin(), elem_exprs.end(),
                   [](const ExprList& elem_expr) {
-                    return elem_expr.front().type() == ExprType::RefFunc;
+                    return elem_expr.front()->type() == ExprType::RefFunc;
                   });
 
   if (!all_ref_func) {

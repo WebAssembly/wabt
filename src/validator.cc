@@ -676,13 +676,13 @@ Result Validator::CheckModule() {
   const Module* module = current_module_;
 
   // Type section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<TypeModuleField>(&field)) {
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<TypeModuleField>(field.get())) {
       switch (f->type->kind()) {
         case TypeEntryKind::Func: {
           FuncType* func_type = cast<FuncType>(f->type.get());
           result_ |= validator_.OnFuncType(
-              field.loc, func_type->sig.param_types.size(),
+              field->loc, func_type->sig.param_types.size(),
               func_type->sig.param_types.data(),
               func_type->sig.result_types.size(),
               func_type->sig.result_types.data(),
@@ -696,7 +696,7 @@ Result Validator::CheckModule() {
           for (auto&& field : struct_type->fields) {
             type_muts.push_back(TypeMut{field.type, field.mutable_});
           }
-          result_ |= validator_.OnStructType(field.loc, type_muts.size(),
+          result_ |= validator_.OnStructType(field->loc, type_muts.size(),
                                              type_muts.data());
           break;
         }
@@ -704,7 +704,7 @@ Result Validator::CheckModule() {
         case TypeEntryKind::Array: {
           ArrayType* array_type = cast<ArrayType>(f->type.get());
           result_ |= validator_.OnArrayType(
-              field.loc,
+              field->loc,
               TypeMut{array_type->field.type, array_type->field.mutable_});
           break;
         }
@@ -713,40 +713,40 @@ Result Validator::CheckModule() {
   }
 
   // Import section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<ImportModuleField>(&field)) {
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<ImportModuleField>(field.get())) {
       switch (f->import->kind()) {
         case ExternalKind::Func: {
           auto&& func = cast<FuncImport>(f->import.get())->func;
           result_ |= validator_.OnFunction(
-              field.loc, GetFuncTypeIndex(field.loc, func.decl));
+              field->loc, GetFuncTypeIndex(field->loc, func.decl));
           break;
         }
 
         case ExternalKind::Table: {
           auto&& table = cast<TableImport>(f->import.get())->table;
-          result_ |=
-              validator_.OnTable(field.loc, table.elem_type, table.elem_limits);
+          result_ |= validator_.OnTable(field->loc, table.elem_type,
+                                        table.elem_limits);
           break;
         }
 
         case ExternalKind::Memory: {
           auto&& memory = cast<MemoryImport>(f->import.get())->memory;
-          result_ |= validator_.OnMemory(field.loc, memory.page_limits);
+          result_ |= validator_.OnMemory(field->loc, memory.page_limits);
           break;
         }
 
         case ExternalKind::Global: {
           auto&& global = cast<GlobalImport>(f->import.get())->global;
-          result_ |= validator_.OnGlobalImport(field.loc, global.type,
+          result_ |= validator_.OnGlobalImport(field->loc, global.type,
                                                global.mutable_);
           break;
         }
 
         case ExternalKind::Tag: {
           auto&& tag = cast<TagImport>(f->import.get())->tag;
-          result_ |= validator_.OnTag(field.loc,
-                                      GetFuncTypeIndex(field.loc, tag.decl));
+          result_ |= validator_.OnTag(field->loc,
+                                      GetFuncTypeIndex(field->loc, tag.decl));
           break;
         }
       }
@@ -754,36 +754,36 @@ Result Validator::CheckModule() {
   }
 
   // Func section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<FuncModuleField>(&field)) {
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<FuncModuleField>(field.get())) {
       result_ |= validator_.OnFunction(
-          field.loc, GetFuncTypeIndex(field.loc, f->func.decl));
+          field->loc, GetFuncTypeIndex(field->loc, f->func.decl));
     }
   }
 
   // Table section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<TableModuleField>(&field)) {
-      result_ |= validator_.OnTable(field.loc, f->table.elem_type,
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<TableModuleField>(field.get())) {
+      result_ |= validator_.OnTable(field->loc, f->table.elem_type,
                                     f->table.elem_limits);
     }
   }
 
   // Memory section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<MemoryModuleField>(&field)) {
-      result_ |= validator_.OnMemory(field.loc, f->memory.page_limits);
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<MemoryModuleField>(field.get())) {
+      result_ |= validator_.OnMemory(field->loc, f->memory.page_limits);
     }
   }
 
   // Global section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<GlobalModuleField>(&field)) {
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<GlobalModuleField>(field.get())) {
       result_ |=
-          validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
+          validator_.OnGlobal(field->loc, f->global.type, f->global.mutable_);
 
       // Init expr.
-      result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
+      result_ |= validator_.BeginInitExpr(field->loc, f->global.type);
       ExprVisitor visitor(this);
       result_ |=
           visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
@@ -792,40 +792,40 @@ Result Validator::CheckModule() {
   }
 
   // Tag section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<TagModuleField>(&field)) {
-      result_ |=
-          validator_.OnTag(field.loc, GetFuncTypeIndex(field.loc, f->tag.decl));
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<TagModuleField>(field.get())) {
+      result_ |= validator_.OnTag(field->loc,
+                                  GetFuncTypeIndex(field->loc, f->tag.decl));
     }
   }
 
   // Export section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<ExportModuleField>(&field)) {
-      result_ |= validator_.OnExport(field.loc, f->export_.kind, f->export_.var,
-                                     f->export_.name);
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<ExportModuleField>(field.get())) {
+      result_ |= validator_.OnExport(field->loc, f->export_.kind,
+                                     f->export_.var, f->export_.name);
     }
   }
 
   // Start section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<StartModuleField>(&field)) {
-      result_ |= validator_.OnStart(field.loc, f->start);
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<StartModuleField>(field.get())) {
+      result_ |= validator_.OnStart(field->loc, f->start);
     }
   }
 
   // Elem segment section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<ElemSegmentModuleField>(&field)) {
-      result_ |= validator_.OnElemSegment(field.loc, f->elem_segment.table_var,
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<ElemSegmentModuleField>(field.get())) {
+      result_ |= validator_.OnElemSegment(field->loc, f->elem_segment.table_var,
                                           f->elem_segment.kind);
 
-      result_ |= validator_.OnElemSegmentElemType(field.loc,
+      result_ |= validator_.OnElemSegmentElemType(field->loc,
                                                   f->elem_segment.elem_type);
 
       // Init expr.
       if (f->elem_segment.kind == SegmentKind::Active) {
-        result_ |= validator_.BeginInitExpr(field.loc, Type::I32);
+        result_ |= validator_.BeginInitExpr(field->loc, Type::I32);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(
             const_cast<ExprList&>(f->elem_segment.offset));
@@ -834,7 +834,7 @@ Result Validator::CheckModule() {
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        result_ |= validator_.BeginInitExpr(elem_expr.front().loc,
+        result_ |= validator_.BeginInitExpr(elem_expr.front()->loc,
                                             f->elem_segment.elem_type);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(const_cast<ExprList&>(elem_expr));
@@ -848,11 +848,11 @@ Result Validator::CheckModule() {
 
   // Code section.
   Index func_index = module->num_func_imports;
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<FuncModuleField>(&field)) {
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<FuncModuleField>(field.get())) {
       const Location& body_start = f->func.loc;
       const Location& body_end =
-          f->func.exprs.empty() ? body_start : f->func.exprs.back().loc;
+          f->func.exprs.empty() ? body_start : f->func.exprs.back()->loc;
       result_ |= validator_.BeginFunctionBody(body_start, func_index++);
 
       for (auto&& decl : f->func.local_types.decls()) {
@@ -866,10 +866,10 @@ Result Validator::CheckModule() {
   }
 
   // Data segment section.
-  for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<DataSegmentModuleField>(&field)) {
-      result_ |= validator_.OnDataSegment(field.loc, f->data_segment.memory_var,
-                                          f->data_segment.kind);
+  for (const auto& field : module->fields) {
+    if (auto* f = dyn_cast<DataSegmentModuleField>(field.get())) {
+      result_ |= validator_.OnDataSegment(
+          field->loc, f->data_segment.memory_var, f->data_segment.kind);
 
       // Init expr.
       if (f->data_segment.kind == SegmentKind::Active) {
@@ -879,7 +879,7 @@ Result Validator::CheckModule() {
             module->memories[memory_index]->page_limits.is_64) {
           offset_type = Type::I64;
         }
-        result_ |= validator_.BeginInitExpr(field.loc, offset_type);
+        result_ |= validator_.BeginInitExpr(field->loc, offset_type);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(
             const_cast<ExprList&>(f->data_segment.offset));
