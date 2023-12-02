@@ -853,7 +853,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint64(uint64_t value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  LogOpcode("%" PRId64, value);
+  LogOpcode("%" PRIu64, value);
   return Result::Ok;
 }
 
