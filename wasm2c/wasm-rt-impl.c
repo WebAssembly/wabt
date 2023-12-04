@@ -25,7 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
+#if (WASM_RT_INSTALL_SIGNAL_HANDLER || !WASM_RT_USE_STACK_DEPTH_COUNT) && \
+    !defined(_WIN32)
 #include <signal.h>
 #include <unistd.h>
 #endif
@@ -163,6 +164,19 @@ static void os_print_last_error(const char* msg) {
   perror(msg);
 }
 
+#if !WASM_RT_USE_STACK_DEPTH_COUNT
+static bool os_has_altstack_installed() {
+  /* check for altstack already in place */
+  stack_t ss;
+  if (sigaltstack(NULL, &ss) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+
+  return !(ss.ss_flags & SS_DISABLE);
+}
+#endif
+
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
   if (si->si_code == SEGV_ACCERR) {
@@ -174,17 +188,6 @@ static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
 
 #if !WASM_RT_USE_STACK_DEPTH_COUNT
 /* These routines set up an altstack to handle SIGSEGV from stack overflow. */
-static bool os_has_altstack_installed() {
-  /* check for altstack already in place */
-  stack_t ss;
-  if (sigaltstack(NULL, &ss) != 0) {
-    perror("sigaltstack failed");
-    abort();
-  }
-
-  return !(ss.ss_flags & SS_DISABLE);
-}
-
 static void os_allocate_and_install_altstack(void) {
   /* verify altstack not already allocated */
   assert(!g_alt_stack &&
