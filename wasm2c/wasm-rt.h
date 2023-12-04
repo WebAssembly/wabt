@@ -331,6 +331,19 @@ bool wasm_rt_is_initialized(void);
 /** Free the runtime's state. */
 void wasm_rt_free(void);
 
+/*
+ * Initialize the multithreaded runtime for a given thread. Must be
+ * called by each thread (other than the one that called wasm_rt_init)
+ * before initializing a Wasm module or calling an exported
+ * function.
+ */
+void wasm_rt_init_thread(void);
+
+/*
+ * Free the individual thread's state.
+ */
+void wasm_rt_free_thread(void);
+
 /**
  * A hardened jmp_buf that allows checking for initialization before use
  */
