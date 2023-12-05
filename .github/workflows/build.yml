@@ -167,3 +167,19 @@ jobs:
       run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
+  build-rlbox:
+    name: rlbox
+    runs-on: ubuntu-latest
+    env:
+      USE_NINJA: "1"
+      WASM2C_CFLAGS: "-DWASM_RT_USE_MMAP=1 -DWASM_RT_SKIP_SIGNAL_RECOVERY=1 -DWASM_RT_USE_STACK_DEPTH_COUNT=0 -DWASM2C_TEST_EMBEDDER_SIGNAL_HANDLING"
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - run: sudo apt-get install ninja-build
+    - run: make clang-debug
+    - run: make test-clang-debug
