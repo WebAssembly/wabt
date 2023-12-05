@@ -3090,35 +3090,26 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
         CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
 
-        if (PeekMatchExpr()) {
+        while (PeekMatchExpr()) {
           ExprList cond;
           CHECK_RESULT(ParseExpr(&cond));
           exprs->splice(exprs->end(), cond);
         }
 
-        if (MatchLpar(TokenType::Then)) {
-          CHECK_RESULT(ParseTerminatingInstrList(&expr->true_.exprs));
-          expr->true_.end_loc = GetLocation();
-          EXPECT(Rpar);
-
-          if (MatchLpar(TokenType::Else)) {
-            CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
-            EXPECT(Rpar);
-          } else if (PeekMatchExpr()) {
-            CHECK_RESULT(ParseExpr(&expr->false_));
-          }
-          expr->false_end_loc = GetLocation();
-        } else if (PeekMatchExpr()) {
-          CHECK_RESULT(ParseExpr(&expr->true_.exprs));
-          expr->true_.end_loc = GetLocation();
-          if (PeekMatchExpr()) {
-            CHECK_RESULT(ParseExpr(&expr->false_));
-            expr->false_end_loc = GetLocation();
-          }
-        } else {
-          ConsumeIfLpar();
+        EXPECT(Lpar);
+        if (!Match(TokenType::Then)) {
           return ErrorExpected({"then block"}, "(then ...)");
         }
+
+        CHECK_RESULT(ParseTerminatingInstrList(&expr->true_.exprs));
+        expr->true_.end_loc = GetLocation();
+        EXPECT(Rpar);
+
+        if (MatchLpar(TokenType::Else)) {
+          CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
+          EXPECT(Rpar);
+        }
+        expr->false_end_loc = GetLocation();
 
         exprs->push_back(std::move(expr));
         break;
