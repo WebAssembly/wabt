@@ -4,9 +4,9 @@
   (func
     (block $exit (loop $cont
       (if (i32.const 1)
-        (br $exit))
+        (then (br $exit)))
       (if (i32.const 2)
-        (br $cont))))))
+        (then (br $cont)))))))
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
