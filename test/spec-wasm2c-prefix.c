@@ -363,7 +363,43 @@ static void init_spectest_module(w2c_spectest* instance) {
   wasm_rt_allocate_funcref_table(&instance->spectest_table, 10, 20);
 }
 
+// POSIX-only test config where embedder handles signals instead of w2c runtime
+#ifdef WASM2C_TEST_EMBEDDER_SIGNAL_HANDLING
+#include <signal.h>
+
+static void posix_signal_handler(int sig, siginfo_t* si, void* unused) {
+  wasm_rt_trap((si->si_code == SEGV_ACCERR) ? WASM_RT_TRAP_OOB
+                                            : WASM_RT_TRAP_EXHAUSTION);
+}
+
+static void posix_install_signal_handler(void) {
+  /* install altstack */
+  stack_t ss;
+  ss.ss_sp = malloc(SIGSTKSZ);
+  ss.ss_flags = 0;
+  ss.ss_size = SIGSTKSZ;
+  if (sigaltstack(&ss, NULL) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+
+  /* install signal handler */
+  struct sigaction sa;
+  memset(&sa, '\0', sizeof(sa));
+  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_sigaction = posix_signal_handler;
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
+    perror("sigaction failed");
+    abort();
+  }
+}
+#endif
+
 int main(int argc, char** argv) {
+#ifdef WASM2C_TEST_EMBEDDER_SIGNAL_HANDLING
+  posix_install_signal_handler();
+#endif
   wasm_rt_init();
   init_spectest_module(&spectest_instance);
   run_spec_tests();
