@@ -394,6 +394,26 @@ static void posix_install_signal_handler(void) {
     abort();
   }
 }
+
+static void posix_cleanup_signal_handler(void) {
+  /* remove signal handler */
+  struct sigaction sa;
+  memset(&sa, '\0', sizeof(sa));
+  sa.sa_handler = SIG_DFL;
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
+    perror("sigaction failed");
+    abort();
+  }
+
+  /* disable and free altstack */
+  stack_t ss;
+  ss.ss_flags = SS_DISABLE;
+  if (sigaltstack(&ss, NULL) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+  free(ss.ss_sp);
+}
 #endif
 
 int main(int argc, char** argv) {
@@ -405,5 +425,8 @@ int main(int argc, char** argv) {
   run_spec_tests();
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
   wasm_rt_free();
+#ifdef WASM2C_TEST_EMBEDDER_SIGNAL_HANDLING
+  posix_cleanup_signal_handler();
+#endif
   return g_tests_passed != g_tests_run;
 }
