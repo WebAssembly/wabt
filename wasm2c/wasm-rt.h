@@ -202,7 +202,7 @@ extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 #define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
-#if defined(__APPLE__) && WASM_RT_INSTALL_SIGNAL_HANDLER
+#if defined(__APPLE__) && !WASM_RT_USE_STACK_DEPTH_COUNT
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 1
 #else
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 0
@@ -218,7 +218,7 @@ typedef enum {
   WASM_RT_TRAP_UNREACHABLE,        /** Unreachable instruction executed. */
   WASM_RT_TRAP_CALL_INDIRECT,      /** Invalid call_indirect, for any reason. */
   WASM_RT_TRAP_UNCAUGHT_EXCEPTION, /* Exception thrown and not caught. */
-  WASM_RT_TRAP_UNALIGNED, /** Unaligned atomic instruction executed. */
+  WASM_RT_TRAP_UNALIGNED,          /** Unaligned atomic instruction executed. */
 #if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
   WASM_RT_TRAP_EXHAUSTION = WASM_RT_TRAP_OOB,
 #else
@@ -354,7 +354,8 @@ typedef struct {
   jmp_buf buffer;
 } wasm_rt_jmp_buf;
 
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
+#if (WASM_RT_INSTALL_SIGNAL_HANDLER || (!WASM_RT_USE_STACK_DEPTH_COUNT)) && \
+    !defined(_WIN32)
 #define WASM_RT_SETJMP_SETBUF(buf) sigsetjmp(buf, 1)
 #else
 #define WASM_RT_SETJMP_SETBUF(buf) setjmp(buf)
@@ -363,7 +364,8 @@ typedef struct {
 #define WASM_RT_SETJMP(buf) \
   ((buf).initialized = true, WASM_RT_SETJMP_SETBUF((buf).buffer))
 
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
+#if (WASM_RT_INSTALL_SIGNAL_HANDLER || (!WASM_RT_USE_STACK_DEPTH_COUNT)) && \
+    !defined(_WIN32)
 #define WASM_RT_LONGJMP_UNCHECKED(buf, val) siglongjmp(buf, val)
 #else
 #define WASM_RT_LONGJMP_UNCHECKED(buf, val) longjmp(buf, val)
