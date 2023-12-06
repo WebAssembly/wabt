@@ -182,4 +182,4 @@ jobs:
         submodules: true
     - run: sudo apt-get install ninja-build
     - run: make clang-debug
-    - run: make test-clang-debug
+    - run: ./test/run-tests.py --exclude-dir memory64

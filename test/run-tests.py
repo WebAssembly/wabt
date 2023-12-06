@@ -928,7 +928,10 @@ def main(args):
                         action='store_true')
     parser.add_argument('patterns', metavar='pattern', nargs='*',
                         help='test patterns.')
+    parser.add_argument('--exclude-dir', action='append', default=[],
+                        help='directory to exclude.')
     options = parser.parse_args(args)
+    exclude_dirs = options.exclude_dir
 
     if options.jobs != 1:
         if options.fail_fast:
@@ -937,7 +940,6 @@ def main(args):
             parser.error('--stop-interactive only works with -j1')
 
     if options.patterns:
-        exclude_dirs = []
         pattern_re = '|'.join(
             fnmatch.translate('*%s*' % p) for p in options.patterns)
     else:
@@ -945,7 +947,7 @@ def main(args):
         # By default, exclude wasi tests because WASI support is not include
         # by int the build by default.
         # TODO(sbc): Find some way to detect the WASI support.
-        exclude_dirs = ['wasi']
+        exclude_dirs += ['wasi']
 
     test_names = FindTestFiles('.txt', pattern_re, exclude_dirs)
 
