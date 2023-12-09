@@ -1,0 +1,9 @@
+;;; TOOL: run-spec-wasm2c
+;;; ERROR: 1
+;;; STDIN_FILE: test/harness/wasm2c/stdin_file.wast
+(;; STDERR ;;;
+stdin_file.wast:4: assertion failed: w2c_stdin__file__0__wasm_x(&stdin__file__0__wasm_instance, 1u) trapped (Unreachable instruction executed).
+;;; STDERR ;;)
+(;; STDOUT ;;;
+0/1 tests passed.
+;;; STDOUT ;;)

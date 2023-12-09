@@ -1,0 +1,19 @@
+;;; TOOL: run-spec-wasm2c
+;;; ERROR: 1
+(module
+  (func (export "f32") (param $x f32) (result f32) (local.get $x))
+  (func (export "f64") (param $x f64) (result f64) (local.get $x))
+)
+(assert_return (invoke "f32" (f32.const 0.0)) (f32.const 123.4))
+(assert_return (invoke "f32" (f32.const 123.4)) (f32.const 0.0))
+(assert_return (invoke "f64" (f64.const 0.0)) (f64.const 123.4))
+(assert_return (invoke "f64" (f64.const 123.4)) (f64.const 0.0))
+(;; STDERR ;;;
+floating_point.txt:7: assertion failed: in w2c_floating__point__0__wasm_f32(&floating__point__0__wasm_instance, 0.f): expected 123.400002, got 0.
+floating_point.txt:8: assertion failed: in w2c_floating__point__0__wasm_f32(&floating__point__0__wasm_instance, 123.400002f): expected 0, got 123.400002.
+floating_point.txt:9: assertion failed: in w2c_floating__point__0__wasm_f64(&floating__point__0__wasm_instance, 0.0000000000000000): expected 123.40000000000001, got 0.
+floating_point.txt:10: assertion failed: in w2c_floating__point__0__wasm_f64(&floating__point__0__wasm_instance, 123.40000000000001): expected 0, got 123.40000000000001.
+;;; STDERR ;;)
+(;; STDOUT ;;;
+0/4 tests passed.
+;;; STDOUT ;;)

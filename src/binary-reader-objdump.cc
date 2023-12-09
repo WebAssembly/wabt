@@ -853,7 +853,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint64(uint64_t value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  LogOpcode("%" PRId64, value);
+  LogOpcode("%" PRIu64, value);
   return Result::Ok;
 }
 
@@ -2171,6 +2171,10 @@ Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
     PrintDetails(" tls");
     flags &= ~WABT_SYMBOL_FLAG_TLS;
   }
+  if (flags & WABT_SYMBOL_FLAG_ABS) {
+    PrintDetails(" abs");
+    flags &= ~WABT_SYMBOL_FLAG_ABS;
+  }
   if (flags != 0) {
     PrintDetails(" unknown_flags=%#x", flags);
   }
@@ -2207,9 +2211,14 @@ Result BinaryReaderObjdump::OnDataSymbol(Index index,
                                          uint32_t size) {
   PrintDetails("   - %d: D <" PRIstringview ">", index,
                WABT_PRINTF_STRING_VIEW_ARG(name));
-  if (!(flags & WABT_SYMBOL_FLAG_UNDEFINED))
-    PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
-                 size);
+  if (!(flags & WABT_SYMBOL_FLAG_UNDEFINED)) {
+    if (flags & WABT_SYMBOL_FLAG_ABS) {
+      PrintDetails(" address=%d size=%d", offset, size);
+    } else {
+      PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
+                   size);
+    }
+  }
   return PrintSymbolFlags(flags);
 }
 
