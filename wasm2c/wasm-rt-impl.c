@@ -414,7 +414,7 @@ static uint64_t grow_memory_impl(wasm_rt_memory_t* memory, uint64_t delta) {
 uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
   uint64_t ret = grow_memory_impl(memory, delta);
 #ifdef WASM_RT_GROW_FAILED_HANDLER
-  if (ret == -1) {
+  if (ret == (uint64_t)-1) {
     WASM_RT_GROW_FAILED_HANDLER();
   }
 #endif
