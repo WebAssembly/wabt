@@ -519,6 +519,8 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
   std::string BlockSigToString(Type type) const;
 
+  Result OnFunction(Index index, Index sig_index) override;
+
   Result BeginFunctionBody(Index index, Offset size) override;
   Result EndFunctionBody(Index index) override;
 
@@ -937,6 +939,12 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
     indent_level--;
   }
   LogOpcode(0, nullptr);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnFunction(Index index,
+                                                  Index sig_index) {
+  objdump_state_->function_types[index] = sig_index;
   return Result::Ok;
 }
 

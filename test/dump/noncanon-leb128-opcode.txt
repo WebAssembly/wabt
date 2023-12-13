@@ -19,7 +19,7 @@ noncanon-leb128-opcode.0.wasm:	file format wasm 0x1
 Code Disassembly:
 
 00002d func[0] <main>:
- 00002e: 03 7e                      | local[0..2] type=i64
+ 00002e: 03 7e                      | local[1..3] type=i64
  000030: 20 00                      | local.get 0
  000032: 41 d6 49                   | i32.const 4294960342
  000035: 02 7f                      | block i32
