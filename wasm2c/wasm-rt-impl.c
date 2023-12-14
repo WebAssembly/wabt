@@ -25,8 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if (WASM_RT_INSTALL_SIGNAL_HANDLER || !WASM_RT_USE_STACK_DEPTH_COUNT) && \
-    !defined(_WIN32)
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
 #include <signal.h>
 #include <unistd.h>
 #endif
@@ -39,6 +38,12 @@
 
 #define PAGE_SIZE 65536
 
+#ifndef NDEBUG
+#define DEBUG_PRINTF(...) fprintf(stderr, __VA_ARGS__);
+#else
+#define DEBUG_PRINTF(...)
+#endif
+
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 static bool g_signal_handler_installed = false;
 #ifdef _WIN32
@@ -46,10 +51,10 @@ static void* g_sig_handler_handle = 0;
 #endif
 #endif
 
-#if WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_STACK_DEPTH_COUNT
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
-#elif WASM_RT_INSTALL_SIGNAL_HANDLER
+#elif WASM_RT_STACK_EXHAUSTION_HANDLER
 static WASM_RT_THREAD_LOCAL void* g_alt_stack = NULL;
 #endif
 
@@ -65,7 +70,7 @@ extern void WASM_RT_GROW_FAILED_HANDLER();
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
-#if WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_STACK_DEPTH_COUNT
   wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
 #endif
 
@@ -164,7 +169,45 @@ static void os_print_last_error(const char* msg) {
   perror(msg);
 }
 
-#if !WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
+static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
+  if (si->si_code == SEGV_ACCERR) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+}
+
+static void os_install_signal_handler(void) {
+  struct sigaction sa;
+  memset(&sa, '\0', sizeof(sa));
+  sa.sa_flags = SA_SIGINFO;
+#if WASM_RT_STACK_EXHAUSTION_HANDLER
+  sa.sa_flags |= SA_ONSTACK;
+#endif
+  sigemptyset(&sa.sa_mask);
+  sa.sa_sigaction = os_signal_handler;
+
+  /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
+    perror("sigaction failed");
+    abort();
+  }
+}
+
+static void os_cleanup_signal_handler(void) {
+  /* Undo what was done in os_install_signal_handler */
+  struct sigaction sa;
+  memset(&sa, '\0', sizeof(sa));
+  sa.sa_handler = SIG_DFL;
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
+    perror("sigaction failed");
+    abort();
+  }
+}
+#endif
+
+#if WASM_RT_STACK_EXHAUSTION_HANDLER
 static bool os_has_altstack_installed() {
   /* check for altstack already in place */
   stack_t ss;
@@ -175,18 +218,7 @@ static bool os_has_altstack_installed() {
 
   return !(ss.ss_flags & SS_DISABLE);
 }
-#endif
 
-#if WASM_RT_INSTALL_SIGNAL_HANDLER
-static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
-  if (si->si_code == SEGV_ACCERR) {
-    wasm_rt_trap(WASM_RT_TRAP_OOB);
-  } else {
-    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
-  }
-}
-
-#if !WASM_RT_USE_STACK_DEPTH_COUNT
 /* These routines set up an altstack to handle SIGSEGV from stack overflow. */
 static void os_allocate_and_install_altstack(void) {
   /* verify altstack not already allocated */
@@ -229,10 +261,8 @@ static void os_disable_and_deallocate_altstack(void) {
 
   if ((!g_alt_stack) || (ss.ss_flags & SS_DISABLE) ||
       (ss.ss_sp != g_alt_stack) || (ss.ss_size != SIGSTKSZ)) {
-#ifndef NDEBUG
-    fprintf(stderr,
-            "wasm-rt warning: alternate stack was modified unexpectedly\n");
-#endif
+    DEBUG_PRINTF(
+        "wasm-rt warning: alternate stack was modified unexpectedly\n");
     return;
   }
 
@@ -244,35 +274,6 @@ static void os_disable_and_deallocate_altstack(void) {
   }
   assert(!os_has_altstack_installed());
   free(g_alt_stack);
-}
-#endif
-
-static void os_install_signal_handler(void) {
-  struct sigaction sa;
-  memset(&sa, '\0', sizeof(sa));
-  sa.sa_flags = SA_SIGINFO;
-#if !WASM_RT_USE_STACK_DEPTH_COUNT
-  sa.sa_flags |= SA_ONSTACK;
-#endif
-  sigemptyset(&sa.sa_mask);
-  sa.sa_sigaction = os_signal_handler;
-
-  /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
-  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
-    perror("sigaction failed");
-    abort();
-  }
-}
-
-static void os_cleanup_signal_handler(void) {
-  /* Undo what was done in os_install_signal_handler */
-  struct sigaction sa;
-  memset(&sa, '\0', sizeof(sa));
-  sa.sa_handler = SIG_DFL;
-  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
-    perror("sigaction failed");
-    abort();
-  }
 }
 #endif
 
@@ -290,7 +291,7 @@ void wasm_rt_init(void) {
 }
 
 bool wasm_rt_is_initialized(void) {
-#if !WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_STACK_EXHAUSTION_HANDLER
   if (!os_has_altstack_installed()) {
     return false;
   }
@@ -312,13 +313,13 @@ void wasm_rt_free(void) {
 }
 
 void wasm_rt_init_thread(void) {
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_STACK_EXHAUSTION_HANDLER
   os_allocate_and_install_altstack();
 #endif
 }
 
 void wasm_rt_free_thread(void) {
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_STACK_EXHAUSTION_HANDLER
   os_disable_and_deallocate_altstack();
 #endif
 }
