@@ -166,17 +166,42 @@ extern "C" {
 #define WASM_RT_INSTALL_SIGNAL_HANDLER 0
 #endif
 
-#ifndef WASM_RT_USE_STACK_DEPTH_COUNT
-/* The signal handler on POSIX can detect call stack overflows. On windows, or
- * platforms without a signal handler, we use stack depth counting. */
+/* We need to detect and trap stack overflows. If we use a signal handler on
+ * POSIX systems, this can detect call stack overflows. On windows, or platforms
+ * without a signal handler, we use stack depth counting. */
+#if !defined(WASM_RT_STACK_DEPTH_COUNT) && \
+    !defined(WASM_RT_STACK_EXHAUSTION_HANDLER)
+
 #if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
-#define WASM_RT_USE_STACK_DEPTH_COUNT 0
+#define WASM_RT_STACK_EXHAUSTION_HANDLER 1
 #else
-#define WASM_RT_USE_STACK_DEPTH_COUNT 1
-#endif
+#define WASM_RT_STACK_DEPTH_COUNT 1
 #endif
 
-#if WASM_RT_USE_STACK_DEPTH_COUNT
+#endif
+
+// Ensure the stack macros are defined
+#ifndef WASM_RT_STACK_DEPTH_COUNT
+#define WASM_RT_STACK_DEPTH_COUNT 0
+#endif
+#ifndef WASM_RT_STACK_EXHAUSTION_HANDLER
+#define WASM_RT_STACK_EXHAUSTION_HANDLER 0
+#endif
+
+#if (WASM_RT_STACK_EXHAUSTION_HANDLER + WASM_RT_STACK_DEPTH_COUNT) > 1
+#error \
+    "Cannot specify multiple options from WASM_RT_STACK_EXHAUSTION_HANDLER , WASM_RT_STACK_DEPTH_COUNT"
+#elif (WASM_RT_STACK_EXHAUSTION_HANDLER + WASM_RT_STACK_DEPTH_COUNT) == 0
+#error \
+    "Must specify one of WASM_RT_STACK_EXHAUSTION_HANDLER , WASM_RT_STACK_DEPTH_COUNT"
+#endif
+
+#if WASM_RT_STACK_EXHAUSTION_HANDLER && !WASM_RT_INSTALL_SIGNAL_HANDLER
+#error \
+    "WASM_RT_STACK_EXHAUSTION_HANDLER  can only be used if WASM_RT_INSTALL_SIGNAL_HANDLER is enabled"
+#endif
+
+#if WASM_RT_STACK_DEPTH_COUNT
 /**
  * When the signal handler cannot be used to detect stack overflows, stack depth
  * is limited explicitly. The maximum stack depth before trapping can be
@@ -202,7 +227,7 @@ extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 #define WASM_RT_NO_RETURN __attribute__((noreturn))
 #endif
 
-#if defined(__APPLE__) && !WASM_RT_USE_STACK_DEPTH_COUNT
+#if defined(__APPLE__) && WASM_RT_STACK_EXHAUSTION_HANDLER
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 1
 #else
 #define WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS 0
@@ -279,7 +304,8 @@ typedef struct {
 } wasm_rt_funcref_t;
 
 /** Default (null) value of a funcref */
-#define wasm_rt_funcref_null_value ((wasm_rt_funcref_t){NULL, NULL, {NULL}, NULL})
+#define wasm_rt_funcref_null_value \
+  ((wasm_rt_funcref_t){NULL, NULL, {NULL}, NULL})
 
 /** The type of an external reference (opaque to WebAssembly). */
 typedef void* wasm_rt_externref_t;
@@ -354,8 +380,7 @@ typedef struct {
   jmp_buf buffer;
 } wasm_rt_jmp_buf;
 
-#if (WASM_RT_INSTALL_SIGNAL_HANDLER || (!WASM_RT_USE_STACK_DEPTH_COUNT)) && \
-    !defined(_WIN32)
+#ifndef _WIN32
 #define WASM_RT_SETJMP_SETBUF(buf) sigsetjmp(buf, 1)
 #else
 #define WASM_RT_SETJMP_SETBUF(buf) setjmp(buf)
@@ -364,8 +389,7 @@ typedef struct {
 #define WASM_RT_SETJMP(buf) \
   ((buf).initialized = true, WASM_RT_SETJMP_SETBUF((buf).buffer))
 
-#if (WASM_RT_INSTALL_SIGNAL_HANDLER || (!WASM_RT_USE_STACK_DEPTH_COUNT)) && \
-    !defined(_WIN32)
+#ifndef _WIN32
 #define WASM_RT_LONGJMP_UNCHECKED(buf, val) siglongjmp(buf, val)
 #else
 #define WASM_RT_LONGJMP_UNCHECKED(buf, val) longjmp(buf, val)

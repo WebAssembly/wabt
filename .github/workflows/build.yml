@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
-      WASM2C_CFLAGS: "-DWASM_RT_USE_MMAP=1 -DWASM_RT_SKIP_SIGNAL_RECOVERY=1 -DWASM_RT_USE_STACK_DEPTH_COUNT=0 -DWASM2C_TEST_EMBEDDER_SIGNAL_HANDLING"
+      WASM2C_CFLAGS: "-DWASM_RT_USE_MMAP=1 -DWASM_RT_SKIP_SIGNAL_RECOVERY=1 -DWASM2C_TEST_EMBEDDER_SIGNAL_HANDLING"
     steps:
     - uses: actions/setup-python@v1
       with:
@@ -182,4 +182,5 @@ jobs:
         submodules: true
     - run: sudo apt-get install ninja-build
     - run: make clang-debug
-    - run: ./test/run-tests.py --exclude-dir memory64
+    - name: tests (excluding memory64)
+      run: ./test/run-tests.py --exclude-dir memory64

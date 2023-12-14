@@ -43,7 +43,7 @@ R"w2c_template(
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 )w2c_template"
 R"w2c_template(
-#if WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_STACK_DEPTH_COUNT
 )w2c_template"
 R"w2c_template(#define FUNC_PROLOGUE                                            \
 )w2c_template"

@@ -22,7 +22,7 @@
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
-#if WASM_RT_USE_STACK_DEPTH_COUNT
+#if WASM_RT_STACK_DEPTH_COUNT
 #define FUNC_PROLOGUE                                            \
   if (++wasm_rt_call_stack_depth > WASM_RT_MAX_CALL_STACK_DEPTH) \
     TRAP(EXHAUSTION);
