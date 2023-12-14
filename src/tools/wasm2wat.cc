@@ -46,6 +46,8 @@ static bool s_read_debug_names = true;
 static bool s_fail_on_custom_section_error = true;
 static std::unique_ptr<FileStream> s_log_stream;
 static bool s_validate = true;
+static const char* s_binfile;
+static std::string s_custom_name;
 
 static const char s_description[] =
     R"(  Read a file in the WebAssembly binary format, and convert it to
@@ -85,6 +87,12 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption("ignore-custom-section-errors",
                    "Ignore errors in custom sections",
                    []() { s_fail_on_custom_section_error = false; });
+  parser.AddOption('p', "inputfile", "PATHFILE",
+                   "Output binary file. Use \"-\" to get data..",
+                   [](const char* argument) { s_binfile = argument; });
+  parser.AddOption('c', "customname", "CUSTOM",
+                   "Input custom section name. Use \"-\" to write custom section.",
+                   [](const char* argument) { s_custom_name = argument; });
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",

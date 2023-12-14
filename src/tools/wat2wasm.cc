@@ -20,6 +20,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <fstream>
+#include <iterator>
 
 #include "wabt/config.h"
 
@@ -47,6 +49,9 @@ static bool s_debug_parsing;
 static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
+static const char* s_binfile;
+static std::string s_custom_name;
+static bool s_read_binfile = false;
 
 static const char s_description[] =
     R"(  read a file in the wasm text format, check it for errors, and
@@ -80,6 +85,12 @@ static void ParseOptions(int argc, char* argv[]) {
   parser.AddOption('o', "output", "FILE",
                    "Output wasm binary file. Use \"-\" to write to stdout.",
                    [](const char* argument) { s_outfile = argument; });
+  parser.AddOption('p', "inputfile", "PATHFILE",
+                   "Input binary file. Use \"-\" to get data.",
+                   [](const char* argument) { s_binfile = argument; s_read_binfile = true; });
+  parser.AddOption('c', "customname", "CUSTOM",
+                   "Input custom section name. Use \"-\" to write custom section.",
+                   [](const char* argument) { s_custom_name = argument; });
   parser.AddOption(
       'r', "relocatable",
       "Create a relocatable wasm binary (suitable for linking with e.g. lld)",
@@ -139,7 +150,6 @@ int ProgramMain(int argc, char** argv) {
   if (Failed(result)) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
   }
-
   std::unique_ptr<Module> module;
   WastParseOptions parse_wast_options(s_features);
   result = ParseWatModule(lexer.get(), &module, &errors, &parse_wast_options);
@@ -150,6 +160,17 @@ int ProgramMain(int argc, char** argv) {
   }
 
   if (Succeeded(result)) {
+    if (s_read_binfile) {
+        std::ifstream file(s_binfile, std::ios::binary);
+        if (file) {
+          std::vector<uint8_t> custom_data(std::istreambuf_iterator<char>(file), {});
+          module->customs.emplace_back(Location(0), s_custom_name, custom_data);
+        }
+        else {
+          WABT_FATAL("unable to read binary file\n");
+        }
+    } 
+
     MemoryStream stream(s_log_stream.get());
     s_write_binary_options.features = s_features;
     result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
