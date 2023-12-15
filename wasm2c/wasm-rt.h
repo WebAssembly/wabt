@@ -166,11 +166,20 @@ extern "C" {
 #define WASM_RT_INSTALL_SIGNAL_HANDLER 0
 #endif
 
+/* This macro, if defined, allows the embedder to disable all stack exhaustion
+ * checks. This a non conformant configuration, i.e., this does not respect
+ * Wasm's specification, and may compromise security. Use with caution.
+ */
+#ifndef WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION
+#define WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION 0
+#endif
+
 /* We need to detect and trap stack overflows. If we use a signal handler on
  * POSIX systems, this can detect call stack overflows. On windows, or platforms
  * without a signal handler, we use stack depth counting. */
-#if !defined(WASM_RT_STACK_DEPTH_COUNT) && \
-    !defined(WASM_RT_STACK_EXHAUSTION_HANDLER)
+#if !defined(WASM_RT_STACK_DEPTH_COUNT) &&        \
+    !defined(WASM_RT_STACK_EXHAUSTION_HANDLER) && \
+    !WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION
 
 #if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
 #define WASM_RT_STACK_EXHAUSTION_HANDLER 1
@@ -188,12 +197,23 @@ extern "C" {
 #define WASM_RT_STACK_EXHAUSTION_HANDLER 0
 #endif
 
+#if WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION
+
+#if (WASM_RT_STACK_EXHAUSTION_HANDLER + WASM_RT_STACK_DEPTH_COUNT) != 0
+#error \
+    "Cannot specify WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION along with WASM_RT_STACK_EXHAUSTION_HANDLER or WASM_RT_STACK_DEPTH_COUNT"
+#endif
+
+#else
+
 #if (WASM_RT_STACK_EXHAUSTION_HANDLER + WASM_RT_STACK_DEPTH_COUNT) > 1
 #error \
     "Cannot specify multiple options from WASM_RT_STACK_EXHAUSTION_HANDLER , WASM_RT_STACK_DEPTH_COUNT"
 #elif (WASM_RT_STACK_EXHAUSTION_HANDLER + WASM_RT_STACK_DEPTH_COUNT) == 0
 #error \
     "Must specify one of WASM_RT_STACK_EXHAUSTION_HANDLER , WASM_RT_STACK_DEPTH_COUNT"
+#endif
+
 #endif
 
 #if WASM_RT_STACK_EXHAUSTION_HANDLER && !WASM_RT_INSTALL_SIGNAL_HANDLER
