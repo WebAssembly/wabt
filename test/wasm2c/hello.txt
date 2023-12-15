@@ -171,7 +171,7 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 #define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !WASM2C_NONCONFORMING_LOAD_ELISION
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 // Clang on Mips requires "f" constraints on floats
 // See https://github.com/llvm/llvm-project/issues/64241

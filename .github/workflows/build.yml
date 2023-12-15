@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USE_NINJA: "1"
-      WASM2C_CFLAGS: "-DWASM_RT_USE_MMAP=1 -DWASM_RT_SKIP_SIGNAL_RECOVERY=1 -DWASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION=1 -DWASM2C_TEST_EMBEDDER_SIGNAL_HANDLING"
+      WASM2C_CFLAGS: "-DWASM_RT_USE_MMAP=1 -DWASM_RT_SKIP_SIGNAL_RECOVERY=1 -DWASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION=1 -DWASM2C_NONCONFORMING_LOAD_ELISION=1 -DWASM2C_TEST_EMBEDDER_SIGNAL_HANDLING"
     steps:
     - uses: actions/setup-python@v1
       with:
@@ -182,5 +182,5 @@ jobs:
         submodules: true
     - run: sudo apt-get install ninja-build
     - run: make clang-debug
-    - name: tests (wasm2c tests excluding memory64)
-      run: ./test/run-tests.py *wasm2c* --exclude-dir memory64
+    - name: tests (wasm2c tests excluding memory64 and unobserved read elimination)
+      run: ./test/run-tests.py *wasm2c* --exclude memory64 --exclude address-overflow.txt --exclude address.txt --exclude address0.txt --exclude address1.txt --exclude traps.txt --exclude traps0.txt --exclude simd_address.txt

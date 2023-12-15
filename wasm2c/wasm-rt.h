@@ -174,6 +174,16 @@ extern "C" {
 #define WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION 0
 #endif
 
+/* This macro, if defined, allows the embedder to specify that wasm2c can remove
+ * linear memory reads which are unused. Normally, Wasm requires does not allow
+ * reads to be eliminated when using guard pages, as OOB reads must still trap.
+ * This a non conformant configuration, i.e., this does not respect Wasm's
+ * specification. Use with caution.
+ */
+#ifndef WASM2C_NONCONFORMING_LOAD_ELISION
+#define WASM2C_NONCONFORMING_LOAD_ELISION 0
+#endif
+
 /* We need to detect and trap stack overflows. If we use a signal handler on
  * POSIX systems, this can detect call stack overflows. On windows, or platforms
  * without a signal handler, we use stack depth counting. */
