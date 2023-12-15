@@ -135,7 +135,7 @@ R"w2c_template(#define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-#ifdef __GNUC__
+#if defined(__GNUC__) && !WASM2C_NONCONFORMING_LOAD_ELISION
 )w2c_template"
 R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 )w2c_template"

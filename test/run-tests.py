@@ -684,17 +684,18 @@ class Status(object):
         sys.stderr.write('\r%s\r' % (' ' * self.last_length))
 
 
-def FindTestFiles(ext, filter_pattern_re, exclude_dirs):
+def FindTestFiles(ext, filter_pattern_re, excludes):
     tests = []
     for root, dirs, files in os.walk(TEST_DIR):
-        for ex in exclude_dirs:
+        for ex in excludes:
             if ex in dirs:
                 # Filtering out dirs here causes os.walk not to descend into them
                 dirs.remove(ex)
         for f in files:
-            path = os.path.join(root, f)
-            if os.path.splitext(f)[1] == ext:
-                tests.append(os.path.relpath(path, REPO_ROOT_DIR))
+            if f not in excludes:
+                path = os.path.join(root, f)
+                if os.path.splitext(f)[1] == ext:
+                    tests.append(os.path.relpath(path, REPO_ROOT_DIR))
     tests.sort()
     return [test for test in tests if re.match(filter_pattern_re, test)]
 
@@ -928,10 +929,10 @@ def main(args):
                         action='store_true')
     parser.add_argument('patterns', metavar='pattern', nargs='*',
                         help='test patterns.')
-    parser.add_argument('--exclude-dir', action='append', default=[],
-                        help='directory to exclude.')
+    parser.add_argument('--exclude', action='append', default=[],
+                        help='file or directory names to exclude.')
     options = parser.parse_args(args)
-    exclude_dirs = options.exclude_dir
+    excludes = options.exclude
 
     if options.jobs != 1:
         if options.fail_fast:
@@ -947,9 +948,9 @@ def main(args):
         # By default, exclude wasi tests because WASI support is not include
         # by int the build by default.
         # TODO(sbc): Find some way to detect the WASI support.
-        exclude_dirs += ['wasi']
+        excludes += ['wasi']
 
-    test_names = FindTestFiles('.txt', pattern_re, exclude_dirs)
+    test_names = FindTestFiles('.txt', pattern_re, excludes)
 
     if options.list:
         for test_name in test_names:

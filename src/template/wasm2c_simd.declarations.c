@@ -1,4 +1,5 @@
-#if defined(__GNUC__) && defined(__x86_64__)
+#if defined(__GNUC__) && defined(__x86_64__) && \
+    !WASM2C_NONCONFORMING_LOAD_ELISION
 #define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
 #else
 #define SIMD_FORCE_READ(var)
