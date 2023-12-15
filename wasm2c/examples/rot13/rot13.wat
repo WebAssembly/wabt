@@ -7,18 +7,18 @@
 
   ;; No change if < 'A'.
   (if (i32.lt_u (local.get $c) (i32.const 65))
-    (return (local.get $c)))
+    (then (return (local.get $c))))
 
   ;; Clear 5th bit of c, to force uppercase. 0xdf = 0b11011111
   (local.set $uc (i32.and (local.get $c) (i32.const 0xdf)))
 
   ;; In range ['A', 'M'] return |c| + 13.
   (if (i32.le_u (local.get $uc) (i32.const 77))
-    (return (i32.add (local.get $c) (i32.const 13))))
+    (then (return (i32.add (local.get $c) (i32.const 13)))))
 
   ;; In range ['N', 'Z'] return |c| - 13.
   (if (i32.le_u (local.get $uc) (i32.const 90))
-    (return (i32.sub (local.get $c) (i32.const 13))))
+    (then (return (i32.sub (local.get $c) (i32.const 13)))))
 
   ;; No change for everything else.
   (return (local.get $c))
@@ -38,7 +38,7 @@
   (block $exit
     (loop $top
       ;; if (i >= size) break
-      (if (i32.ge_u (local.get $i) (local.get $size)) (br $exit))
+      (if (i32.ge_u (local.get $i) (local.get $size)) (then (br $exit)))
 
       ;; mem[i] = rot13c(mem[i])
       (i32.store8
