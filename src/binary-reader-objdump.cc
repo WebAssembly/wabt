@@ -635,13 +635,15 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
   for (size_t i = data_size; i < IMMEDIATE_OCTET_COUNT; i++) {
     printf("   ");
   }
-  printf(" | local[%" PRIindex, local_index_);
+  printf(" | local[");
+  if (count > 0) {
+    printf("%" PRIindex, local_index_);
 
-  if (count != 1) {
-    printf("..%" PRIindex "", local_index_ + count - 1);
+    if (count != 1) {
+      printf("..%" PRIindex "", local_index_ + count - 1);
+    }
+    local_index_ += count;
   }
-  local_index_ += count;
-
   printf("] type=%s\n", type.GetName().c_str());
 
   last_opcode_end = current_opcode_offset + data_size;
