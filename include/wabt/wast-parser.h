@@ -125,7 +125,6 @@ class WastParser {
 
   bool ParseBindVarOpt(std::string* name);
   Result ParseVar(Var* out_var);
-  Result ParseVarRef(Var* out_var);
   bool ParseVarOpt(Var* out_var, Var default_var = Var());
   Result ParseOffsetExpr(ExprList* out_expr_list);
   bool ParseOffsetExprOpt(ExprList* out_expr_list);
@@ -157,9 +156,7 @@ class WastParser {
   Result ParseTagModuleField(Module*);
   Result ParseExportModuleField(Module*);
   Result ParseFuncModuleField(Module*);
-  Result ParseRecModuleField(Module*);
   Result ParseTypeModuleField(Module*);
-  Result ParseSubType(std::unique_ptr<TypeEntry>& typeEntry);
   Result ParseGlobalModuleField(Module*);
   Result ParseImportModuleField(Module*);
   Result ParseMemoryModuleField(Module*);
@@ -207,20 +204,12 @@ class WastParser {
   Result ParseExpr(ExprList*);
   Result ParseCatchInstrList(CatchVector* catches);
   Result ParseCatchExprList(CatchVector* catches);
-  Result ParseGlobalType(Global*, Module* m = nullptr);
-  Result ParseField(std::vector<Field*>& fields);
+  Result ParseGlobalType(Global*);
+  Result ParseField(Field*);
   Result ParseFieldList(std::vector<Field>*);
 
   template <typename T>
   Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
-  template <typename T>
-  Result ParsePlainStructGetInstrVar(Location, std::unique_ptr<Expr>*);
-  template <typename T>
-  Result ParsePlainInstrVar2(Location, std::unique_ptr<Expr>*);
-  template <typename T>
-  Result ParsePlainInstrVar3(Location, std::unique_ptr<Expr>*);
-  template <typename T>
-  Result ParsePlainInstrVarRef(Location, std::unique_ptr<Expr>*);
   template <typename T>
   Result ParseMemoryInstrVar(Location, std::unique_ptr<Expr>*);
   template <typename T>

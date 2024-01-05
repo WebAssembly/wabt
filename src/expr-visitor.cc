@@ -41,7 +41,6 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         CHECK_RESULT(HandleDefaultState(expr));
         break;
 
-      // 未涉及到逻辑处理的指令
       case State::Block: {
         auto block_expr = cast<BlockExpr>(expr);
         auto& iter = expr_iter_stack_.back();
@@ -271,111 +270,6 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnLocalGetExpr(cast<LocalGetExpr>(expr)));
       break;
 
-    case ExprType::StructNew:
-      CHECK_RESULT(delegate_->OnStructNewExpr(cast<StructNewExpr>(expr)));
-      break;
-
-    case ExprType::StructNewDefault:
-      CHECK_RESULT(
-          delegate_->OnStructNewDefaultExpr(cast<StructNewDefaultExpr>(expr)));
-      break;
-
-    case ExprType::StructGet:
-      CHECK_RESULT(delegate_->OnStructGetExpr(cast<StructGetExpr>(expr)));
-      break;
-
-    case ExprType::StructGetU:
-      CHECK_RESULT(delegate_->OnStructGetUExpr(cast<StructGetUExpr>(expr)));
-      break;
-
-    case ExprType::StructGetS:
-      CHECK_RESULT(delegate_->OnStructGetSExpr(cast<StructGetSExpr>(expr)));
-      break;
-
-    case ExprType::StructSet:
-      CHECK_RESULT(delegate_->OnStructSetExpr(cast<StructSetExpr>(expr)));
-      break;
-
-    case ExprType::ArrayNew:
-      CHECK_RESULT(delegate_->OnArrayNewExpr(cast<ArrayNewExpr>(expr)));
-      break;
-
-    case ExprType::ArrayNewDefault:
-      CHECK_RESULT(
-          delegate_->OnArrayNewDefaultExpr(cast<ArrayNewDefaultExpr>(expr)));
-      break;
-
-    case ExprType::ArrayNewFixed:
-      CHECK_RESULT(
-          delegate_->OnArrayNewFixedExpr(cast<ArrayNewFixedExpr>(expr)));
-      break;
-
-    case ExprType::ArrayNewData:
-      CHECK_RESULT(delegate_->OnArrayNewDataExpr(cast<ArrayNewDataExpr>(expr)));
-      break;
-
-    case ExprType::ArrayNewElem:
-      CHECK_RESULT(delegate_->OnArrayNewElemExpr(cast<ArrayNewElemExpr>(expr)));
-      break;
-    case ExprType::ArrayGet:
-      CHECK_RESULT(delegate_->OnArrayGetExpr(cast<ArrayGetExpr>(expr)));
-      break;
-    case ExprType::ArrayGetU:
-      CHECK_RESULT(delegate_->OnArrayGetUExpr(cast<ArrayGetUExpr>(expr)));
-      break;
-    case ExprType::ArrayGetS:
-      CHECK_RESULT(delegate_->OnArrayGetSExpr(cast<ArrayGetSExpr>(expr)));
-      break;
-    case ExprType::ArraySet:
-      CHECK_RESULT(delegate_->OnArraySetExpr(cast<ArraySetExpr>(expr)));
-      break;
-    case ExprType::ArrayLen:
-      CHECK_RESULT(delegate_->OnArrayLenExpr(cast<ArrayLenExpr>(expr)));
-      break;
-    case ExprType::ArrayFill:
-      CHECK_RESULT(delegate_->OnArrayFillExpr(cast<ArrayFillExpr>(expr)));
-      break;
-    case ExprType::ArrayCopy:
-      CHECK_RESULT(delegate_->OnArrayCopyExpr(cast<ArrayCopyExpr>(expr)));
-      break;
-    case ExprType::ArrayInitData:
-      CHECK_RESULT(
-          delegate_->OnArrayInitDataExpr(cast<ArrayInitDataExpr>(expr)));
-      break;
-    case ExprType::ArrayInitElem:
-      CHECK_RESULT(
-          delegate_->OnArrayInitElemExpr(cast<ArrayInitElemExpr>(expr)));
-      break;
-    case ExprType::RefTest:
-      CHECK_RESULT(delegate_->OnRefTestExpr(cast<RefTestExpr>(expr)));
-      break;
-    case ExprType::RefCast:
-      CHECK_RESULT(delegate_->OnRefCastExpr(cast<RefCastExpr>(expr)));
-      break;
-    case ExprType::BrOnCast:
-      CHECK_RESULT(delegate_->OnBrOnCastExpr(cast<BrOnCastExpr>(expr)));
-      break;
-    case ExprType::BrOnCastFail:
-      CHECK_RESULT(delegate_->OnBrOnCastFailExpr(cast<BrOnCastFailExpr>(expr)));
-      break;
-    case ExprType::AnyConvertExtern:
-      CHECK_RESULT(
-          delegate_->OnAnyConvertExternExpr(cast<AnyConvertExternExpr>(expr)));
-      break;
-    case ExprType::ExternConvertAny:
-      CHECK_RESULT(
-          delegate_->OnExternConvertAnyExpr(cast<ExternConvertAnyExpr>(expr)));
-      break;
-    case ExprType::RefI31:
-      CHECK_RESULT(delegate_->OnRefI31Expr(cast<RefI31Expr>(expr)));
-      break;
-    case ExprType::I31GetU:
-      CHECK_RESULT(delegate_->OnI31GetUExpr(cast<I31GetUExpr>(expr)));
-      break;
-    case ExprType::I31GetS:
-      CHECK_RESULT(delegate_->OnI31GetSExpr(cast<I31GetSExpr>(expr)));
-      break;
-
     case ExprType::LocalSet:
       CHECK_RESULT(delegate_->OnLocalSetExpr(cast<LocalSetExpr>(expr)));
       break;
@@ -447,9 +341,6 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnTableFillExpr(cast<TableFillExpr>(expr)));
       break;
 
-    case ExprType::RefEq:
-      CHECK_RESULT(delegate_->OnRefEqExpr(cast<RefEqExpr>(expr)));
-      break;
     case ExprType::RefFunc:
       CHECK_RESULT(delegate_->OnRefFuncExpr(cast<RefFuncExpr>(expr)));
       break;

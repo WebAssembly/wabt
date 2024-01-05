@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 WebAssembly Community Group participants
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "wabt/wast-lexer.h"
 
 #include <cassert>
@@ -6,8 +22,6 @@
 #include "wabt/config.h"
 
 #include "wabt/lexer-source.h"
-
-#include<iostream>
 
 #define ERROR(...) Error(GetLocation(), __VA_ARGS__)
 
@@ -429,24 +443,14 @@ bool WastLexer::IsCharClass(int c, CharClass bit) {
   //       (1 if IsIdChar(c) else 0)
   //       for c in map(chr, range(0, 127))
   //   ])
-
-  //Ò»¹²128¸ö ¡¾0-127¡¿
   static const char kCharClasses[257] = {
-      0,  0,  0, 0, 0, 0, 0, 0, 0, 0,
-      0,  0,  0, 0, 0, 0, 0, 0, 0, 0,  
-      0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 
-      0,  0,  0, 0, 1, 0, 1, 1, 1, 1,
-      1,  0,  0, 1, 1, 0, 1, 1, 1, 13, 
-
-      13, 13, 13,13,13,13,13,13,13,1, 
-      0,  1,  1, 1, 1, 1, 5, 5, 5, 5,
-      5,  5,  1, 1, 1, 1, 1, 1, 1, 1,
-      1,  1,  1, 1, 1, 1, 1, 1, 1, 1,
-      1,  1,  0, 1, 0, 1, 1, 1, 7, 7,
-
-      7,  7,  7, 7, 3, 3, 3, 3, 3, 3,
-      3,  3,  3, 3, 3, 3, 3, 3, 3, 3,
-      3,  3,  3, 3, 0, 1, 0, 1,
+      0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,
+      0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  1,  0,  1,  1,
+      1,  1,  1, 0, 0, 1, 1, 0, 1, 1, 1, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 1, 0, 1, 1, 1, 1, 1, 5, 5, 5,  5,  5,  5,  1,  1,  1,  1,
+      1,  1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  0,  1,  0,
+      1,  1,  1, 7, 7, 7, 7, 7, 7, 3, 3, 3,  3,  3,  3,  3,  3,  3,  3,
+      3,  3,  3, 3, 3, 3, 3, 3, 3, 3, 0, 1,  0,  1,
   };
 
   assert(c >= -1 && c < 256);
@@ -593,7 +597,8 @@ Token WastLexer::GetIdChars() {
 
 Token WastLexer::GetKeywordToken() {
   ReadReservedChars();
-  TokenInfo* info =Perfect_Hash::InWordSet(token_start_, cursor_ - token_start_);
+  TokenInfo* info =
+      Perfect_Hash::InWordSet(token_start_, cursor_ - token_start_);
   if (!info) {
     return TextToken(TokenType::Reserved);
   }

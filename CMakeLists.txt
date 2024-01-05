@@ -535,6 +535,144 @@ if (BUILD_TOOLS)
     SOURCES src/tools/wat2wasm.cc
     INSTALL
   )
+  
+endif ()
+
+if (BUILD_TESTS)
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -g -O0")
+  endif ()
+
+  if (WABT_BIG_ENDIAN)
+    set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -DWABT_BIG_ENDIAN=1")
+  endif ()
+
+  if (DEFINED CMAKE_OSX_SYSROOT)
+    set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
+  endif ()
+
+  if (DEFINED ENV{WASM2C_CFLAGS})
+    set(WASM2C_CFLAGS "${WASM2C_CFLAGS} $ENV{WASM2C_CFLAGS}")
+  endif ()
+
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+
+  # Python 3.5 is the version shipped in Ubuntu Xenial
+  find_package(Python3 3.5 REQUIRED COMPONENTS Interpreter)
+
+  if (NOT USE_SYSTEM_GTEST)
+    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
+      message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
+    endif ()
+
+    include_directories(
+      third_party/gtest/googletest
+      third_party/gtest/googletest/include
+    )
+
+    # gtest
+    add_library(gtest STATIC
+      third_party/gtest/googletest/src/gtest-all.cc
+    )
+
+    add_library(gtest_main STATIC
+      third_party/gtest/googletest/src/gtest_main.cc
+    )
+
+    if (COMPILER_IS_GNU)
+      target_compile_options(gtest PRIVATE "-Wno-maybe-uninitialized")
+    endif ()
+  endif ()
+
+  # hexfloat-test
+  set(HEXFLOAT_TEST_SRCS
+    src/literal.cc
+    src/test-hexfloat.cc
+  )
+  wabt_executable(
+    NAME hexfloat_test
+    SOURCES ${HEXFLOAT_TEST_SRCS}
+    LIBS gtest_main gtest ${CMAKE_THREAD_LIBS_INIT}
+  )
+
+  # wabt-unittests
+  set(UNITTESTS_SRCS
+    src/test-binary-reader.cc
+    src/test-interp.cc
+    src/test-intrusive-list.cc
+    src/test-literal.cc
+    src/test-option-parser.cc
+    src/test-filenames.cc
+    src/test-utf8.cc
+    src/test-wast-parser.cc
+  )
+  wabt_executable(
+    NAME wabt-unittests
+    SOURCES ${UNITTESTS_SRCS}
+    LIBS gtest_main gtest ${CMAKE_THREAD_LIBS_INIT}
+  )
+
+  # test running
+  set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
+
+  add_custom_target(run-tests
+    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
+    DEPENDS ${WABT_EXECUTABLES}
+    WORKING_DIRECTORY ${WABT_SOURCE_DIR}
+    USES_TERMINAL
+  )
+
+  add_custom_target(run-unittests
+    COMMAND $<TARGET_FILE:wabt-unittests>
+    DEPENDS wabt-unittests
+    WORKING_DIRECTORY ${WABT_SOURCE_DIR}
+    USES_TERMINAL
+  )
+
+  add_custom_target(run-c-api-tests
+    COMMAND ${Python3_EXECUTABLE} ${WABT_SOURCE_DIR}/test/run-c-api-examples.py --bindir $<TARGET_FILE_DIR:wat2wasm>
+    WORKING_DIRECTORY ${WABT_SOURCE_DIR}
+    USES_TERMINAL
+  )
+
+  add_custom_target(check DEPENDS run-unittests run-tests run-c-api-tests)
+
+  function(c_api_example NAME)
+    set(EXENAME wasm-c-api-${NAME})
+    add_executable(${EXENAME} third_party/wasm-c-api/example/${NAME}.c)
+    if (COMPILER_IS_MSVC)
+      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-wd4311")
+    else ()
+      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-pointer-to-int-cast")
+    endif ()
+
+    target_link_libraries(${EXENAME} wasm Threads::Threads)
+    add_custom_target(${EXENAME}-copy-to-bin ALL
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXENAME}> ${WABT_SOURCE_DIR}/bin/
+      COMMAND ${CMAKE_COMMAND} -E copy ${WABT_SOURCE_DIR}/third_party/wasm-c-api/example/${NAME}.wasm $<TARGET_FILE_DIR:${EXENAME}>/
+      COMMAND ${CMAKE_COMMAND} -E copy ${WABT_SOURCE_DIR}/third_party/wasm-c-api/example/${NAME}.wasm ${WABT_SOURCE_DIR}/bin/
+      DEPENDS ${EXENAME}
+    )
+    add_dependencies(run-c-api-tests ${EXENAME})
+  endfunction()
+
+  c_api_example(callback)
+  c_api_example(finalize)
+  c_api_example(global)
+  c_api_example(hello)
+  c_api_example(hostref)
+  c_api_example(multi)
+  c_api_example(memory)
+  c_api_example(reflect)
+  c_api_example(serialize)
+  c_api_example(start)
+  c_api_example(table)
+  c_api_example(trap)
+  if (CMAKE_USE_PTHREADS_INIT)
+    c_api_example(threads)
+  endif ()
 endif ()
 
 # install

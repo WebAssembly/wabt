@@ -20,12 +20,6 @@
 #include <cinttypes>
 #include <limits>
 
-extern std::vector<wabt::TypeEntry*> moduletypes;
-extern std::unordered_map<std::string, int> moduletypesname;
-extern std::vector<wabt::DataSegment*> moduledatas;
-extern std::vector<wabt::ElemSegment*> moduleelems;
-
-
 namespace wabt {
 
 TypeVector SharedValidator::ToTypeVector(Index count, const Type* types) {
@@ -79,11 +73,6 @@ Result SharedValidator::OnStructType(const Location&,
 
 Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
   array_types_.emplace(num_types_++, ArrayType{field});
-  return Result::Ok;
-}
-
-Result SharedValidator::OnSubType(const Location& loc) {
-  num_types_++;
   return Result::Ok;
 }
 
@@ -540,10 +529,7 @@ bool SharedValidator::ValidInitOpcode(Opcode opcode) const {
   if (opcode == Opcode::GlobalGet || opcode == Opcode::I32Const ||
       opcode == Opcode::I64Const || opcode == Opcode::F32Const ||
       opcode == Opcode::F64Const || opcode == Opcode::RefFunc ||
-      opcode == Opcode::RefNull || opcode == Opcode::StructNew ||
-      opcode == Opcode::StructNewDefault || opcode == Opcode::ArrayNew ||
-      opcode == Opcode::ArrayNewDefault || opcode == Opcode::ArrayNewFixed ||
-      opcode == Opcode::ArrayNewData || opcode == Opcode::ArrayNewElem) {
+      opcode == Opcode::RefNull) {
     return true;
   }
   if (options_.features.extended_const_enabled()) {
@@ -557,14 +543,14 @@ bool SharedValidator::ValidInitOpcode(Opcode opcode) const {
 }
 
 Result SharedValidator::CheckInstr(Opcode opcode, const Location& loc) {
-  // expr_loc_ = loc;
-  // if (in_init_expr_ && !ValidInitOpcode(opcode)) {
-  //   PrintError(loc,
-  //              "invalid initializer: instruction not valid in initializer "
-  //              "expression: %s",
-  //              opcode.GetName());
-  //   return Result::Error;
-  // }
+  expr_loc_ = loc;
+  if (in_init_expr_ && !ValidInitOpcode(opcode)) {
+    PrintError(loc,
+               "invalid initializer: instruction not valid in initializer "
+               "expression: %s",
+               opcode.GetName());
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
@@ -667,293 +653,6 @@ Result SharedValidator::OnAtomicWait(const Location& loc,
 Result SharedValidator::OnBinary(const Location& loc, Opcode opcode) {
   Result result = CheckInstr(opcode, loc);
   result |= typechecker_.OnBinary(opcode);
-  return result;
-}
-
-Result SharedValidator::OnStructNew(const Location& loc, Var type_var) {
-  CHECK_RESULT(CheckInstr(Opcode::StructNew, loc));
-  Result result = Result::Ok;
-  result |= typechecker_.OnStructNew(type_var.index());
-  return result;
-}
-Result SharedValidator::OnStructNewDefault(const Location& loc, Var local_var) {
-  CHECK_RESULT(CheckInstr(Opcode::StructNewDefault, loc));
-  Result result = Result::Ok;
-  result |= typechecker_.OnStructNewDefault();
-  return result;
-}
-Result SharedValidator::OnStructGet(const Location& loc, Var var1, Var var2) {
-  Result result = Result::Ok;
-  if (var1.index() >= moduletypes.size()) {
-    PrintError(loc, "invalid struct type index: %u", var1.index());
-    return Result::Error;
-  }
-  wabt::StructType* a =
-      static_cast<wabt::StructType*>(moduletypes[var1.index()]);
-  if (var2.index() >= a->fields.size()) {
-    PrintError(loc, "invalid struct field index: %u", var2.index());
-    return Result::Error;
-  }
-  auto field = a->fields[var2.index()];
-  result |= typechecker_.OnStructGet(var1.index(), field.type);
-  return result;
-}
-Result SharedValidator::OnStructGetU(const Location& loc, Var var1, Var var2) {
-  Result result = Result::Ok;
-  if (var1.index() >= moduletypes.size()) {
-    PrintError(loc, "invalid struct type index: %u", var1.index());
-    return Result::Error;
-  }
-  result |= typechecker_.OnStructGet(var1.index(), Type::I32);
-  return result;
-}
-Result SharedValidator::OnStructGetS(const Location& loc, Var var1, Var var2) {
-  Result result = Result::Ok;
-  if (var1.index() >= moduletypes.size()) {
-    PrintError(loc, "invalid struct type index: %u", var1.index());
-    return Result::Error;
-  }
-  result |= typechecker_.OnStructGet(var1.index(), Type::I32);
-  return result;
-}
-Result SharedValidator::OnStructSet(const Location& loc, Var var1, Var var2) {
-  CHECK_RESULT(CheckInstr(Opcode::StructSet, loc));
-  Result result = Result::Ok;
-  if (var1.index() >= struct_types_.size()) {
-    PrintError(loc, "invalid struct type index: %u", var1.index());
-    return Result::Error;
-  }
-  wabt::StructType* a =
-      static_cast<wabt::StructType*>(moduletypes[var1.index()]);
-  if (var2.index() >= a->fields.size()) {
-    PrintError(loc, "invalid struct field index: %u", var2.index());
-    return Result::Error;
-  }
-  auto field = a->fields[var2.index()];
-  result |= typechecker_.OnStructSet(var1.index(), field.type);
-  return result;
-}
-Result SharedValidator::OnArrayNew(const Location& loc, Var type_var) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayNew, loc));
-  Result result = Result::Ok;
-  result |= typechecker_.OnArrayNew(type_var.index());
-  return result;
-}
-Result SharedValidator::OnArrayNewDefault(const Location& loc, Var local_var) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayNewDefault, loc));
-  Result result = Result::Ok;
-  result |= typechecker_.OnArrayNewDefault();
-  return result;
-}
-Result SharedValidator::OnArrayNewFixed(const Location& loc,
-                                        Var var,
-                                        Var size_var) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayNewFixed, loc));
-  Result result = Result::Ok;
-  wabt::ArrayType* a;
-  if (var.index() >= array_types_.size()) {
-    PrintError(loc, "invalid array type index: %u", var.index());
-    return Result::Error;
-  }
-  a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
-  result |= typechecker_.OnArrayNewFixed(a->field.type, size_var.index());
-  return result;
-}
-
-Result SharedValidator::OnArrayNewData(const Location& loc,
-                                       Var var1,
-                                       Var var2) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayNewData, loc));
-  Result result = Result::Ok;
-  wabt::ArrayType* a;
-  if (var1.index() >= array_types_.size()) {
-    PrintError(loc, "invalid array type index: %u", var1.index());
-    return Result::Error;
-  }
-  a = static_cast<wabt::ArrayType*>(moduletypes[var1.index()]);
-  wabt::DataSegment* d;
-  if (var2.is_name()) {
-    int j = 0;
-    for (j = 0; j < moduledatas.size(); j++) {
-      if (moduledatas[j]->name == var2.name()) {
-        d = moduledatas[j];
-        break;
-      }
-    }
-    if (j == moduledatas.size()) {
-      PrintError(loc, "invalid data segment name: %s", var2.name().c_str());
-      return Result::Error;
-    }
-  } else {
-    if (var2.index() >= moduledatas.size()) {
-      PrintError(loc, "invalid data segment index: %u", var2.index());
-      return Result::Error;
-    }
-    d = moduledatas[var2.index()];
-  }
-  result |= typechecker_.OnArrayNewData();
-  return result;
-}
-Result SharedValidator::OnArrayNewElem(const Location& loc,
-                                       Var var1,
-                                       Var var2) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayNewElem, loc));
-  Result result = Result::Ok;
-  wabt::ArrayType* a;
-  if (var1.index() >= array_types_.size()) {
-    PrintError(loc, "invalid array type index: %u", var1.index());
-    return Result::Error;
-  }
-  a = static_cast<wabt::ArrayType*>(moduletypes[var1.index()]);  
-  wabt::ElemSegment* d;
-  if (var2.is_name()) {
-    int j = 0;
-    for (j = 0; j < moduleelems.size(); j++) {
-      if (moduleelems[j]->name == var2.name()) {
-        d = moduleelems[j];
-        break;
-      }
-    }
-    if (j == moduleelems.size()) {
-      PrintError(loc, "invalid data segment name: %s", var2.name().c_str());
-      return Result::Error;
-    }
-  } else {
-    if (var2.index() >= moduleelems.size()) {
-      PrintError(loc, "invalid data segment index: %u", var2.index());
-      return Result::Error;
-    }
-    d = moduleelems[var2.index()];
-  }
-  result |= typechecker_.OnArrayNewElem();
-  return result;
-}
-Result SharedValidator::OnArrayGet(const Location& loc, Var var) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayGet, loc));
-  Result result = Result::Ok;
-  if (var.index() >= moduletypes.size()) {
-    PrintError(loc, "invalid array type index: %u", var.index());
-    return Result::Error;
-  }
-  wabt::ArrayType* a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
-  result |= typechecker_.OnArrayGet(var.index(), a->field.type);
-  return result;
-}
-Result SharedValidator::OnArrayGetS(const Location& loc, Var var) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayGetS, loc));
-  Result result = Result::Ok;
-  if (var.index() >= moduletypes.size()) {
-    PrintError(loc, "invalid array type index: %u", var.index());
-    return Result::Error;
-  }
-  result |= typechecker_.OnArrayGet(var.index(), Type::I32);
-  return result;
-}
-Result SharedValidator::OnArrayGetU(const Location& loc, Var var) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayGetU, loc));
-  Result result = Result::Ok;
-  if (var.index() >= moduletypes.size()) {
-    PrintError(loc, "invalid array type index: %u", var.index());
-    return Result::Error;
-  }
-  result |= typechecker_.OnArrayGet(var.index(), Type::I32);
-  return result;
-}
-Result SharedValidator::OnArraySet(const Location& loc, Var var) {
-  CHECK_RESULT(CheckInstr(Opcode::ArraySet, loc));
-  Result result = Result::Ok;
-  if (var.index() >= array_types_.size()) {
-    PrintError(loc, "invalid array type index: %u", var.index());
-    return Result::Error;
-  }
-  wabt::ArrayType* a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
-  result |= typechecker_.OnArraySet(var.index(), a->field.type);
-  return result;
-}
-Result SharedValidator::OnArrayLen(const Location& loc) {
-  CHECK_RESULT(CheckInstr(Opcode::ArrayLen, loc));
-  Result result = Result::Ok;
-  result |= typechecker_.OnArrayLen();
-  return result;
-}
-Result SharedValidator::OnArrayFill(const Location& loc, Var var) {
-  Result result = Result::Ok;
-  wabt::ArrayType* a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
-  result |=
-      typechecker_.OnArrayFill(Type(Type::RefNull, var.index()), a->field.type);
-  return result;
-}
-Result SharedValidator::OnArrayCopy(const Location& loc, Var var, Var var2) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnArrayCopy(Type(Type::RefNull, var.index()),
-                                     Type(Type::RefNull, var2.index()));
-  return result;
-}
-Result SharedValidator::OnArrayInitData(const Location& loc,
-                                        Var var,
-                                        Var var2) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnArrayInitData(Type(Type::RefNull, var.index()));
-  return result;
-}
-Result SharedValidator::OnArrayInitElem(const Location& loc,
-                                        Var var,
-                                        Var var2) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnArrayInitData(Type(Type::RefNull, var.index()));
-  return result;
-}
-
-Result SharedValidator::OnRefTest(const Location& loc, Var var) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnRefTest(var.ParseRefType());
-  return result;
-}
-Result SharedValidator::OnRefCast(const Location& loc, Var var) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnRefCast(var.ParseRefType());
-  return result;
-}
-Result SharedValidator::OnBrOnCast(const Location& loc,
-                                   Var var1,
-                                   Var var2,
-                                   Var var3) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnBrOnCast(var2.ParseRefType(), var3.ParseRefType());
-  return result;
-}
-Result SharedValidator::OnBrOnCastFail(const Location& loc,
-                                       Var var1,
-                                       Var var2,
-                                       Var var3) {
-  Result result = Result::Ok;
-  result |=
-      typechecker_.OnBrOnCastFail(var2.ParseRefType(), var3.ParseRefType());
-  return result;
-}
-Result SharedValidator::OnAnyConvertExtern(const Location& loc) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnAnyConvertExtern();
-  return result;
-}
-Result SharedValidator::OnExternConvertAny(const Location& loc) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnExternConvertAny();
-  return result;
-}
-Result SharedValidator::OnRefI31(const Location& loc) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnRefI31();
-  return result;
-}
-Result SharedValidator::OnI31GetS(const Location& loc) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnI31Get();
-  return result;
-}
-Result SharedValidator::OnI31GetU(const Location& loc) {
-  Result result = Result::Ok;
-  result |= typechecker_.OnI31Get();
   return result;
 }
 
@@ -1277,12 +976,6 @@ Result SharedValidator::OnMemorySize(const Location& loc, Var memidx) {
 
 Result SharedValidator::OnNop(const Location& loc) {
   Result result = CheckInstr(Opcode::Nop, loc);
-  return result;
-}
-
-Result SharedValidator::OnRefEq(const Location& loc) {
-  Result result = CheckInstr(Opcode::RefEq, loc);
-  result |= typechecker_.OnRefEq();
   return result;
 }
 

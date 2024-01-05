@@ -24,7 +24,6 @@
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
 
-
 namespace wabt {
 
 class TypeChecker {
@@ -70,29 +69,6 @@ class TypeChecker {
   Result OnAtomicRmwCmpxchg(Opcode, const Limits& limits);
   Result OnAtomicWait(Opcode, const Limits& limits);
   Result OnBinary(Opcode);
-  Result OnStructNew(Index);
-  Result OnStructNewDefault();
-  Result OnStructGet(Index, Type);
-  Result OnStructSet(Index, Type);
-  Result OnArrayNew(Index);
-  Result OnArrayNewDefault();
-  Result OnArrayNewFixed(Type, Index);
-  Result OnArrayNewData();
-  Result OnArrayNewElem();
-  Result OnArrayGet(Index, Type);
-  Result OnArraySet(Index, Type);
-  Result OnArrayLen();
-  Result OnArrayFill(Type, Type);
-  Result OnArrayCopy(Type, Type);
-  Result OnArrayInitData(Type);
-  Result OnRefTest(Type type);
-  Result OnRefCast(Type type);
-  Result OnBrOnCast(Type type1, Type type2);
-  Result OnBrOnCastFail(Type type1, Type type2);
-  Result OnAnyConvertExtern();
-  Result OnExternConvertAny();
-  Result OnRefI31();
-  Result OnI31Get();
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
@@ -137,7 +113,6 @@ class TypeChecker {
   Result OnTableGrow(Type elem_type);
   Result OnTableSize();
   Result OnTableFill(Type elem_type);
-  Result OnRefEq();
   Result OnRefFuncExpr(Index func_type, bool force_generic_funcref);
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
@@ -161,6 +136,7 @@ class TypeChecker {
 
   static Result CheckType(Type actual, Type expected);
 
+ private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* fmt, ...);
   Result TopLabel(Label** out_label);
   void ResetTypeStackToLabel(Label* label);
@@ -197,7 +173,6 @@ class TypeChecker {
                            const char* desc);
   Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
-  Result CheckStructNew(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode3(Opcode opcode,
                       const Limits* limits1 = nullptr,
                       const Limits* limits2 = nullptr,
