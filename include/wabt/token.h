@@ -73,7 +73,7 @@ inline bool IsTokenTypeLiteral(TokenType token_type) {
 
 inline bool IsTokenTypeRefKind(TokenType token_type) {
   return token_type >= TokenType::First_RefKind &&
-         token_type <= TokenType::Last_RefKind;
+         token_type <= TokenType::Last_RefKind || token_type == TokenType::Var;
 }
 
 struct Token {

@@ -17,7 +17,10 @@
 #include "wabt/type-checker.h"
 
 #include <cinttypes>
+#include <wabt/ir.h>
+#include <wabt/binary-reader.h>
 
+extern std::vector<wabt::TypeEntry*> moduletypes;
 namespace wabt {
 
 namespace {
@@ -222,6 +225,24 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
+  if (expected == Type::I8 || expected == Type::I16) {
+    return Result::Ok;
+  }
+  if (expected == Type(Type::RefNull,Type::Any)) {
+    return actual.IsRef() ? Result::Ok : Result::Error;
+  }
+
+  if (actual == Type::Ref && expected == Type::RefNull) {
+    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+               ? Result::Ok
+               : Result::Error;
+  }
+  if (actual == Type::RefNull && expected == Type::Ref) {
+	return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+			   ? Result::Ok
+			   : Result::Error;
+  }
+
   if (expected == Type::Any || actual == Type::Any) {
     return Result::Ok;
   }
@@ -331,9 +352,10 @@ Result TypeChecker::CheckOpcode1(Opcode opcode, const Limits* limits) {
 }
 
 Result TypeChecker::CheckOpcode2(Opcode opcode, const Limits* limits) {
-  Result result =
-      PopAndCheck2Types(GetMemoryParam(opcode.GetParamType1(), limits),
-                        opcode.GetParamType2(), opcode.GetName());
+  Result result = PopAndCheck2Types(
+                        GetMemoryParam(opcode.GetParamType1(), limits),
+                        opcode.GetParamType2(), 
+                        opcode.GetName());
   PushType(opcode.GetResultType());
   return result;
 }
@@ -441,6 +463,167 @@ Result TypeChecker::OnBinary(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
 
+Result TypeChecker::OnStructNew(Index index) {
+  Result result = Result::Ok;
+  auto fields = dynamic_cast<StructType*>(moduletypes[index])->fields;
+  int n = fields.size();
+  for (int i = n - 1; i >= 0; i--) {
+    result |= PopAndCheck1Type(fields[i].type, "struct.new");
+  }
+  PushType(Type(Type::Ref, index));
+  return result;
+}
+
+Result TypeChecker::OnStructNewDefault() {
+  PushType(Type::Ref);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnStructGet(Index index, Type type) {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, index), "struct.get");
+  PushType(type);
+  return result;
+}
+
+Result TypeChecker::OnStructSet(Index index, Type type) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type, "struct.set");
+  result |= PopAndCheck1Type(Type(Type::RefNull, index), "struct.set");
+  return result;
+}
+
+Result TypeChecker::OnArrayNew(Index index) {
+  auto type = dynamic_cast<ArrayType*>(moduletypes[index])->field.type;
+  Result result = PopAndCheck1Type(Type::I32, "array.new");
+  result |= PopAndCheck1Type(type, "array.new");
+  PushType(Type(Type::Ref, index));
+  return Result::Ok;
+}
+
+Result TypeChecker::OnArrayNewDefault() {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_default");
+  PushType(Type::Ref);
+  return result;
+}
+
+Result TypeChecker::OnArrayNewFixed(Type type, Index index) {
+  Result result = Result::Ok;
+  for (int i = 0; i < index; i++) {
+    result |= PopAndCheck1Type(type, "array.new_fixed");
+  }
+  PushType(Type::Ref);
+  return result;
+}
+
+Result TypeChecker::OnArrayNewData() {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_data");
+  result |= PopAndCheck1Type(Type::I32, "array.new_data");
+  PushType(Type::Ref);
+  return result;
+}
+
+Result TypeChecker::OnArrayNewElem() {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_elem");
+  result |= PopAndCheck1Type(Type::I32, "array.new_elem");
+  PushType(Type::Ref);
+  return result;
+}
+
+Result TypeChecker::OnArrayGet(Index index, Type type) {
+  Result result = PopAndCheck1Type(Type::I32, "array.get");
+  result |= PopAndCheck1Type(Type(Type::RefNull, index), "array.get");
+  PushType(type);
+  return result;
+}
+Result TypeChecker::OnArraySet(Index index, Type type) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type, "array.set");
+  result |= PopAndCheck1Type(Type::I32, "array.set");
+  result |= PopAndCheck1Type(Type(Type::RefNull, index), "array.set");
+  return result;
+}
+Result TypeChecker::OnArrayLen() {
+  Result result = PopAndCheck1Type(Type::Ref, "array.len");
+  PushType(Type::I32);
+  return result;
+}
+Result TypeChecker::OnArrayFill(Type type1,Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type::I32, "array.fill");
+  result |= PopAndCheck1Type(type2, "array.fill");
+  result |= PopAndCheck1Type(Type::I32, "array.fill");
+  result |= PopAndCheck1Type(type1, "array.fill");
+  return result;
+}
+Result TypeChecker::OnArrayCopy(Type type1,Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type::I32, "array.copy");
+  result |= PopAndCheck1Type(Type::I32, "array.copy");
+  result |= PopAndCheck1Type(type2, "array.copy");
+  result |= PopAndCheck1Type(Type::I32, "array.copy");
+  result |= PopAndCheck1Type(type1, "array.copy");
+  return result;
+}
+Result TypeChecker::OnArrayInitData(Type type) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type::I32, "array.init_data");
+  result |= PopAndCheck1Type(Type::I32, "array.init_data");
+  result |= PopAndCheck1Type(Type::I32, "array.init_data");
+  result |= PopAndCheck1Type(type, "array.init_data");
+  return result;
+}
+
+Result TypeChecker::OnRefTest(Type type) {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::Any), "ref.test");
+  PushType(Type::I32);
+  return result;
+}
+Result TypeChecker::OnRefCast(Type type) {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::Any), "ref.test");
+  PushType(type);
+  return result;
+}
+Result TypeChecker::OnBrOnCast(Type type1, Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type1, "br_on_cast_fail");
+  if (type2.isRefNull()) {
+        PushType(Type(Type::Ref, type1.type_index_));
+  } else {
+        PushType(type1);
+  }
+  return result;
+}
+
+Result TypeChecker::OnBrOnCastFail(Type type1, Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type1, "br_on_cast_fail");
+  PushType(type2);
+  return result;
+}
+Result TypeChecker::OnAnyConvertExtern() {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type(Type::RefNull,Type::ExternRef), "array.init_elem");
+  PushType(Type(Type::RefNull, Type::Any));
+  return result;
+}
+Result TypeChecker::OnExternConvertAny() {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type(Type::RefNull,Type::Any), "array.init_elem");
+  PushType(Type(Type::RefNull, Type::ExternRef));
+  return result;
+}
+
+
+Result TypeChecker::OnRefI31() {
+  Result result = PopAndCheck1Type(Type::I32, "ref.i31");
+  PushType(Type(Type::Ref, Type::I31));
+  return result;
+}
+Result TypeChecker::OnI31Get() {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::I31), "i31.get");
+  PushType(Type::I32);
+  return result;
+}
 Result TypeChecker::OnBlock(const TypeVector& param_types,
                             const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "block");
@@ -777,6 +960,12 @@ Result TypeChecker::OnTableFill(Type elem_type) {
   return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
 }
 
+Result TypeChecker::OnRefEq() {
+  Result result = DropTypes(2);
+  PushType(Type::I32);
+  return result;
+}
+
 Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
   /*
    * In a const expression, treat ref.func as producing a generic funcref.
@@ -785,7 +974,8 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
    * examined only the validity of the function index.
    */
   if (features_.function_references_enabled() && !force_generic_funcref) {
-    PushType(Type(Type::Reference, func_type));
+    //PushType(Type(Type::Reference, func_type));
+    PushType(Type(Type::Ref, func_type));
   } else {
     PushType(Type::FuncRef);
   }
@@ -793,7 +983,8 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
 }
 
 Result TypeChecker::OnRefNullExpr(Type type) {
-  PushType(type);
+  PushType(Type(Type::RefNull, type));
+  //PushType(type);
   return Result::Ok;
 }
 

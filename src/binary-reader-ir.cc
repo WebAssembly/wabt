@@ -1588,7 +1588,6 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Local:
     case NameSectionSubsection::Module:
     case NameSectionSubsection::Label:
-    case NameSectionSubsection::Field:
       break;
     case NameSectionSubsection::Type:
       SetTypeName(index, name);
