@@ -535,7 +535,111 @@ if (BUILD_TOOLS)
     SOURCES src/tools/wat2wasm.cc
     INSTALL
   )
+
+  # wast2json
+  wabt_executable(
+    NAME wast2json
+    SOURCES src/tools/wast2json.cc
+    INSTALL
+  )
   
+  # wasm2wat
+  wabt_executable(
+    NAME wasm2wat
+    SOURCES src/tools/wasm2wat.cc
+    INSTALL
+  )
+
+  # wasm2c
+  wabt_executable(
+    NAME wasm2c
+    SOURCES src/tools/wasm2c.cc
+    INSTALL
+  )
+
+  # wasm-stats
+  wabt_executable(
+    NAME wasm-stats
+    SOURCES src/tools/wasm-stats.cc src/binary-reader-stats.cc
+    INSTALL
+  )
+
+  # wasm-objdump
+  wabt_executable(
+    NAME wasm-objdump
+    SOURCES src/tools/wasm-objdump.cc src/binary-reader-objdump.cc
+    INSTALL
+  )
+
+  if(WITH_WASI)
+    add_subdirectory("third_party/uvwasi" EXCLUDE_FROM_ALL)
+    include_directories(third_party/uvwasi/include)
+    add_definitions(-DWITH_WASI)
+    set(INTERP_LIBS uvwasi_a)
+    set(EXTRA_INTERP_SRC src/interp/interp-wasi.cc)
+
+    if (COMPILER_IS_GNU)
+      target_compile_options(uv_a PRIVATE "-Wno-sign-compare")
+    elseif (COMPILER_IS_CLANG)
+      target_compile_options(uv_a PRIVATE "-Wno-implicit-fallthrough")
+    endif()
+  endif()
+
+  # wasm-interp
+
+  wabt_executable(
+    NAME wasm-interp
+    SOURCES src/tools/wasm-interp.cc ${EXTRA_INTERP_SRC}
+    LIBS ${INTERP_LIBS}
+    WITH_LIBM
+    INSTALL
+  )
+
+  # spectest-interp
+  wabt_executable(
+    NAME spectest-interp
+    SOURCES src/tools/spectest-interp.cc
+    WITH_LIBM
+    INSTALL
+  )
+
+  # wat-desugar
+  wabt_executable(
+    NAME wat-desugar
+    SOURCES src/tools/wat-desugar.cc
+    INSTALL
+  )
+
+  # wasm-validate
+  wabt_executable(
+    NAME wasm-validate
+    SOURCES src/tools/wasm-validate.cc
+    INSTALL
+  )
+
+  # wasm-strip
+  wabt_executable(
+    NAME wasm-strip
+    SOURCES src/tools/wasm-strip.cc
+    INSTALL
+  )
+
+  # wasm-decompile
+  wabt_executable(
+    NAME wasm-decompile
+    SOURCES src/tools/wasm-decompile.cc
+    INSTALL
+  )
+
+  if(BUILD_FUZZ_TOOLS)
+    # wasm2wat-fuzz
+    wabt_executable(
+      NAME wasm2wat-fuzz
+      SOURCES src/tools/wasm2wat-fuzz.cc
+      FUZZ
+      INSTALL
+    )
+  endif ()
 endif ()
 
 if (BUILD_TESTS)
