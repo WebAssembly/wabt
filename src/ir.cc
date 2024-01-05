@@ -50,6 +50,36 @@ const char* ExprTypeName[] = {
     "If",
     "Load",
     "LocalGet",
+    "StructNew",
+    "StructNewDefault",
+    "StructGet",
+    "StructGetU",
+    "StructGetS",
+    "StructSet",
+    "ArrayNew",
+    "ArrayNewDefault",
+    "ArrayNewFixed",
+    "ArrayNewData",
+    "ArrayNewElem",
+    "ArrayGet",
+    "ArrayGetS",
+    "ArrayGetU",
+    "ArraySet",
+    "ArrayLen",
+    "ArrayFill",
+    "ArrayCopy",
+    "ArrayInitData",
+    "ArrayInitElem",
+
+    "RefTest",
+    "RefCast",
+    "BrOnCast",
+    "BrOnCastFail",
+    "AnyConvertExtern",
+    "ExternConvertAny",
+    "RefI31",
+    "I31GetS",
+    "I31GetU",
     "LocalSet",
     "LocalTee",
     "Loop",
@@ -61,6 +91,7 @@ const char* ExprTypeName[] = {
     "MemorySize",
     "Nop",
     "RefIsNull",
+    "RefEq",
     "RefFunc",
     "RefNull",
     "Rethrow",
@@ -105,7 +136,36 @@ const char* GetExprTypeName(const Expr& expr) {
 }
 
 bool FuncSignature::operator==(const FuncSignature& rhs) const {
-  return param_types == rhs.param_types && result_types == rhs.result_types;
+  // param_types == rhs.param_types
+  if (param_types.size() != rhs.param_types.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < param_types.size(); ++i) {
+    if (param_types[i].enum_ != rhs.param_types[i].enum_) {
+      return false;
+    }
+    if (param_types[i].IsReferenceWithIndex()) {
+      if (param_types[i].type_index_ != rhs.param_types[i].type_index_) {
+        return false;
+      }
+    }
+  }
+  // result_types == rhs.result_types
+  if (result_types.size() != rhs.result_types.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < result_types.size(); ++i) {
+    if (result_types[i].enum_ != rhs.result_types[i].enum_) {
+      return false;
+    }
+    if (result_types[i].IsReferenceWithIndex()) {
+      if (result_types[i].type_index_ != rhs.result_types[i].type_index_) {
+        return false;
+      }
+    }
+  }
+  return true;
+   //return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
 const Export* Module::GetExport(std::string_view name) const {
@@ -323,11 +383,17 @@ FuncType* Module::GetFuncType(const Var& var) {
 }
 
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
+  size_t index = 0;
   for (size_t i = 0; i < types.size(); ++i) {
     if (auto* func_type = dyn_cast<FuncType>(types[i])) {
       if (func_type->sig == sig) {
-        return i;
+        return index;
       }
+      ++index;
+    } else if (auto* rec_type = dyn_cast<RecType>(types[i])) {
+      index += rec_type->fields.size();
+    } else {
+      ++index;
     }
   }
   return kInvalidIndex;
@@ -391,6 +457,19 @@ void Module::AppendField(std::unique_ptr<TypeModuleField> field) {
   TypeEntry& type = *field->type;
   if (!type.name.empty()) {
     type_bindings.emplace(type.name, Binding(field->loc, types.size()));
+  }
+  types.push_back(&type);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendFieldRec(std::unique_ptr<TypeModuleField> field) {
+  TypeEntry& type = *field->type;
+  RecType& rec_type = dynamic_cast<RecType&>(type);
+  std::vector<std::unique_ptr<TypeEntry>>& items = rec_type.fields;
+  for (auto& item : items) {
+    if (!item->name.empty()) {
+      type_bindings.emplace(item->name, Binding(field->loc, types.size()));
+    }
   }
   types.push_back(&type);
   fields.push_back(std::move(field));

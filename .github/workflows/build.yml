@@ -167,20 +167,3 @@ jobs:
       run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
-  build-rlbox:
-    name: rlbox
-    runs-on: ubuntu-latest
-    env:
-      USE_NINJA: "1"
-      WASM2C_CFLAGS: "-DWASM_RT_USE_MMAP=1 -DWASM_RT_SKIP_SIGNAL_RECOVERY=1 -DWASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION=1 -DWASM2C_TEST_EMBEDDER_SIGNAL_HANDLING"
-    steps:
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - uses: actions/checkout@v1
-      with:
-        submodules: true
-    - run: sudo apt-get install ninja-build
-    - run: make clang-debug
-    - name: tests (wasm2c tests excluding memory64)
-      run: ./test/run-tests.py wasm2c --exclude-dir memory64

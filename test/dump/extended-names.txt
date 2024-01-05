@@ -338,7 +338,7 @@
 0000128: 05                                        ; string length
 0000129: 6461 7461 31                             data1  ; elem name 0
 0000125: 08                                        ; FIXUP subsection size
-000012e: 0b                                        ; name subsection type
+000012e: 0a                                        ; name subsection type
 000012f: 00                                        ; subsection size (guess)
 0000130: 02                                        ; num names
 0000131: 00                                        ; elem index

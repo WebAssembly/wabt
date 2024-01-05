@@ -295,8 +295,6 @@ void wasm_rt_allocate_externref_table(wasm_rt_externref_table_t*, uint32_t eleme
 void wasm_rt_free_funcref_table(wasm_rt_table_t*);
 void wasm_rt_free_externref_table(wasm_rt_table_t*);
 uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
-void wasm_rt_init_thread(void);
-void wasm_rt_free_thread(void);
 ```
 
 `wasm_rt_init` must be called by the embedder before anything else, to
@@ -340,11 +338,6 @@ must be cleared to zero.
 shared between modules, it must be defined only once, by the embedder.
 It is only used on platforms that don't use the signal handler to detect
 exhaustion.
-
-`wasm_rt_init_thread` and `wasm_rt_free_thread` are used to initialize
-and free the runtime state for a given thread (other than the one that
-called `wasm_rt_init`). An example can be found in
-`wasm2c/examples/threads`.
 
 ### Runtime support for exception handling
 

@@ -38,24 +38,18 @@
 
 #define PAGE_SIZE 65536
 
-#ifndef NDEBUG
-#define DEBUG_PRINTF(...) fprintf(stderr, __VA_ARGS__);
-#else
-#define DEBUG_PRINTF(...)
-#endif
-
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 static bool g_signal_handler_installed = false;
 #ifdef _WIN32
 static void* g_sig_handler_handle = 0;
+#else
+static char* g_alt_stack = 0;
 #endif
 #endif
 
-#if WASM_RT_STACK_DEPTH_COUNT
+#if WASM_RT_USE_STACK_DEPTH_COUNT
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
-#elif WASM_RT_STACK_EXHAUSTION_HANDLER
-static WASM_RT_THREAD_LOCAL void* g_alt_stack = NULL;
 #endif
 
 WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
@@ -70,7 +64,7 @@ extern void WASM_RT_GROW_FAILED_HANDLER();
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
-#if WASM_RT_STACK_DEPTH_COUNT
+#if WASM_RT_USE_STACK_DEPTH_COUNT
   wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
 #endif
 
@@ -179,12 +173,25 @@ static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
 }
 
 static void os_install_signal_handler(void) {
+  /* Use alt stack to handle SIGSEGV from stack overflow */
+  g_alt_stack = malloc(SIGSTKSZ);
+  if (g_alt_stack == NULL) {
+    perror("malloc failed");
+    abort();
+  }
+
+  stack_t ss;
+  ss.ss_sp = g_alt_stack;
+  ss.ss_flags = 0;
+  ss.ss_size = SIGSTKSZ;
+  if (sigaltstack(&ss, NULL) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+
   struct sigaction sa;
   memset(&sa, '\0', sizeof(sa));
-  sa.sa_flags = SA_SIGINFO;
-#if WASM_RT_STACK_EXHAUSTION_HANDLER
-  sa.sa_flags |= SA_ONSTACK;
-#endif
+  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = os_signal_handler;
 
@@ -204,75 +211,12 @@ static void os_cleanup_signal_handler(void) {
     perror("sigaction failed");
     abort();
   }
-}
-#endif
 
-#if WASM_RT_STACK_EXHAUSTION_HANDLER
-static bool os_has_altstack_installed() {
-  /* check for altstack already in place */
-  stack_t ss;
-  if (sigaltstack(NULL, &ss) != 0) {
+  if (sigaltstack(NULL, NULL) != 0) {
     perror("sigaltstack failed");
     abort();
   }
 
-  return !(ss.ss_flags & SS_DISABLE);
-}
-
-/* These routines set up an altstack to handle SIGSEGV from stack overflow. */
-static void os_allocate_and_install_altstack(void) {
-  /* verify altstack not already allocated */
-  assert(!g_alt_stack &&
-         "wasm-rt error: tried to re-allocate thread-local alternate stack");
-
-  /* We could check and warn if an altstack is already installed, but some
-   * sanitizers install their own altstack, so this warning would fire
-   * spuriously and break the test outputs. */
-
-  /* allocate altstack */
-  g_alt_stack = malloc(SIGSTKSZ);
-  if (g_alt_stack == NULL) {
-    perror("malloc failed");
-    abort();
-  }
-
-  /* install altstack */
-  stack_t ss;
-  ss.ss_sp = g_alt_stack;
-  ss.ss_flags = 0;
-  ss.ss_size = SIGSTKSZ;
-  if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
-    abort();
-  }
-}
-
-static void os_disable_and_deallocate_altstack(void) {
-  /* in debug build, verify altstack allocated */
-  assert(g_alt_stack &&
-         "wasm-rt error: thread-local alternate stack not allocated");
-
-  /* verify altstack was still in place */
-  stack_t ss;
-  if (sigaltstack(NULL, &ss) != 0) {
-    perror("sigaltstack failed");
-    abort();
-  }
-
-  if ((!g_alt_stack) || (ss.ss_flags & SS_DISABLE) ||
-      (ss.ss_sp != g_alt_stack) || (ss.ss_size != SIGSTKSZ)) {
-    DEBUG_PRINTF(
-        "wasm-rt warning: alternate stack was modified unexpectedly\n");
-    return;
-  }
-
-  /* disable and free */
-  ss.ss_flags = SS_DISABLE;
-  if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
-    abort();
-  }
-  assert(!os_has_altstack_installed());
   free(g_alt_stack);
 }
 #endif
@@ -280,22 +224,15 @@ static void os_disable_and_deallocate_altstack(void) {
 #endif
 
 void wasm_rt_init(void) {
-  wasm_rt_init_thread();
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   if (!g_signal_handler_installed) {
     g_signal_handler_installed = true;
     os_install_signal_handler();
   }
 #endif
-  assert(wasm_rt_is_initialized());
 }
 
 bool wasm_rt_is_initialized(void) {
-#if WASM_RT_STACK_EXHAUSTION_HANDLER
-  if (!os_has_altstack_installed()) {
-    return false;
-  }
-#endif
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   return g_signal_handler_installed;
 #else
@@ -304,23 +241,9 @@ bool wasm_rt_is_initialized(void) {
 }
 
 void wasm_rt_free(void) {
-  assert(wasm_rt_is_initialized());
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   os_cleanup_signal_handler();
   g_signal_handler_installed = false;
-#endif
-  wasm_rt_free_thread();
-}
-
-void wasm_rt_init_thread(void) {
-#if WASM_RT_STACK_EXHAUSTION_HANDLER
-  os_allocate_and_install_altstack();
-#endif
-}
-
-void wasm_rt_free_thread(void) {
-#if WASM_RT_STACK_EXHAUSTION_HANDLER
-  os_disable_and_deallocate_altstack();
 #endif
 }
 

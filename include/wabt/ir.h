@@ -31,6 +31,8 @@
 #include "wabt/intrusive-list.h"
 #include "wabt/opcode.h"
 
+extern std::unordered_map<std::string, int> moduletypesname;
+
 namespace wabt {
 
 struct Module;
@@ -68,6 +70,53 @@ struct Var {
   void set_name(std::string_view);
 
   Location loc;
+
+  bool isNumber(const std::string& str) {
+    for (char const& c : str) {
+      if (std::isdigit(c) == 0)
+        return false;
+    }
+    return true;
+  }
+  Type ParseRefType() {
+    std::string name;
+    Type ans;
+    if (this->name().substr(0, 7) == "RefNull") {
+      ans = Type::RefNull;
+      name = this->name().substr(7);
+    } else {
+      ans = Type::Ref;
+      name = this->name();
+    }
+    if (isNumber(name)) {
+      ans.type_index_ = std::stoi(name);
+    } else if (name == "NoFunc") {
+      ans.type_index_ = Type::NoFunc;
+    } else if (name == "NoExtern") {
+      ans.type_index_ = Type::NoExtern;
+    } else if (name == "None") {
+      ans.type_index_ = Type::NoneRef;
+    } else if (name == "Func") {
+      ans.type_index_ = Type::FuncRef;
+    } else if (name == "Extern") {
+      ans.type_index_ = Type::ExternRef;
+    } else if (name == "Any") {
+      ans.type_index_ = Type::Any;
+    } else if (name == "Eq") {
+      ans.type_index_ = Type::Eq;
+    } else if (name == "I31") {
+      ans.type_index_ = Type::I31;
+    } else if (name == "Struct") {
+      ans.type_index_ = Type::StructRef;
+    } else if (name == "Array") {
+      ans.type_index_ = Type::ArrayRef;
+    } else {
+      if (moduletypesname.find(name) != moduletypesname.end()) {
+        ans.type_index_ = moduletypesname[name];
+      }
+    }
+    return ans;
+  }
 
  private:
   void Destroy();
@@ -109,13 +158,20 @@ struct Const {
 
   int lane_count() const {
     switch (lane_type()) {
-      case Type::I8:  return 16;
-      case Type::I16: return 8;
-      case Type::I32: return 4;
-      case Type::I64: return 2;
-      case Type::F32: return 4;
-      case Type::F64: return 2;
-      default: WABT_UNREACHABLE;
+      case Type::I8:
+        return 16;
+      case Type::I16:
+        return 8;
+      case Type::I32:
+        return 4;
+      case Type::I64:
+        return 2;
+      case Type::F32:
+        return 4;
+      case Type::F64:
+        return 2;
+      default:
+        WABT_UNREACHABLE;
     }
   }
 
@@ -269,10 +325,12 @@ struct FuncSignature {
   bool operator==(const FuncSignature&) const;
 };
 
-enum class TypeEntryKind {
-  Func,
-  Struct,
-  Array,
+enum class TypeEntryKind { Func, Struct, Array, Sub, Rec };
+
+struct Field {
+  std::string name;
+  Type type = Type::Void;
+  bool mutable_ = false;
 };
 
 class TypeEntry {
@@ -280,6 +338,8 @@ class TypeEntry {
   WABT_DISALLOW_COPY_AND_ASSIGN(TypeEntry);
 
   virtual ~TypeEntry() = default;
+
+  virtual void someFunction() {}
 
   TypeEntryKind kind() const { return kind_; }
 
@@ -319,20 +379,18 @@ class FuncType : public TypeEntry {
   } features_used;
 };
 
-struct Field {
-  std::string name;
-  Type type = Type::Void;
-  bool mutable_ = false;
-};
-
 class StructType : public TypeEntry {
  public:
   static bool classof(const TypeEntry* entry) {
     return entry->kind() == TypeEntryKind::Struct;
   }
 
+  // 原来的 没有name
+  // explicit StructType(std::string_view name = std::string_view())
+  //    : TypeEntry(TypeEntryKind::Struct) {}
+
   explicit StructType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Struct) {}
+      : TypeEntry(TypeEntryKind::Struct, name) {}
 
   std::vector<Field> fields;
 };
@@ -343,10 +401,34 @@ class ArrayType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Array;
   }
 
-  explicit ArrayType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Array) {}
+  /*explicit ArrayType(std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Array) {}*/
 
+  explicit ArrayType(std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Array, name) {}
   Field field;
+};
+
+class SubType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Sub;
+  }
+
+  explicit SubType(std::string name = std::string())
+      : TypeEntry(TypeEntryKind::Sub, name) {}
+  std::unique_ptr<TypeEntry> typeEntry;
+};
+
+class RecType : public TypeEntry {
+ public:
+  static bool classof(const TypeEntry* entry) {
+    return entry->kind() == TypeEntryKind::Rec;
+  }
+
+  explicit RecType(std::string name = std::string())
+      : TypeEntry(TypeEntryKind::Rec, name) {}
+  std::vector<std::unique_ptr<TypeEntry>> fields;
 };
 
 struct FuncDeclaration {
@@ -386,6 +468,36 @@ enum class ExprType {
   If,
   Load,
   LocalGet,
+  StructNew,
+  StructNewDefault,
+  StructGet,
+  StructGetU,
+  StructGetS,
+  StructSet,
+  ArrayNew,
+  ArrayNewDefault,
+  ArrayNewFixed,
+  ArrayNewData,
+  ArrayNewElem,
+  ArrayGet,
+  ArrayGetS,
+  ArrayGetU,
+  ArraySet,
+  ArrayLen,
+  ArrayFill,
+  ArrayCopy,
+  ArrayInitData,
+  ArrayInitElem,
+
+  RefTest,
+  RefCast,
+  BrOnCast,
+  BrOnCastFail,
+  AnyConvertExtern,
+  ExternConvertAny,
+  RefI31,
+  I31GetS,
+  I31GetU,
   LocalSet,
   LocalTee,
   Loop,
@@ -397,6 +509,7 @@ enum class ExprType {
   MemorySize,
   Nop,
   RefIsNull,
+  RefEq,
   RefFunc,
   RefNull,
   Rethrow,
@@ -617,6 +730,42 @@ class VarExpr : public ExprMixin<TypeEnum> {
 };
 
 template <ExprType TypeEnum>
+class StructGetVarExpr : public ExprMixin<TypeEnum> {
+ public:
+  StructGetVarExpr(const Var& var1,
+                   const Var& var2,
+                   const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), var1(var1), var2(var2) {}
+
+  Var var1;
+  Var var2;
+};
+
+template <ExprType TypeEnum>
+class Var2Expr : public ExprMixin<TypeEnum> {
+ public:
+  Var2Expr(const Var& var1, const Var& var2, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), var1(var1), var2(var2) {}
+
+  Var var1;
+  Var var2;
+};
+
+template <ExprType TypeEnum>
+class Var3Expr : public ExprMixin<TypeEnum> {
+ public:
+  Var3Expr(const Var& var1,
+           const Var& var2,
+           const Var& var3,
+           const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), var1(var1), var2(var2), var3(var3) {}
+
+  Var var1;
+  Var var2;
+  Var var3;
+};
+
+template <ExprType TypeEnum>
 class MemoryVarExpr : public MemoryExpr<TypeEnum> {
  public:
   MemoryVarExpr(const Var& var, Var memidx, const Location& loc = Location())
@@ -628,10 +777,42 @@ class MemoryVarExpr : public MemoryExpr<TypeEnum> {
 using BrExpr = VarExpr<ExprType::Br>;
 using BrIfExpr = VarExpr<ExprType::BrIf>;
 using CallExpr = VarExpr<ExprType::Call>;
+using RefEqExpr = ExprMixin<ExprType::RefEq>;
 using RefFuncExpr = VarExpr<ExprType::RefFunc>;
 using GlobalGetExpr = VarExpr<ExprType::GlobalGet>;
 using GlobalSetExpr = VarExpr<ExprType::GlobalSet>;
 using LocalGetExpr = VarExpr<ExprType::LocalGet>;
+using StructNewExpr = VarExpr<ExprType::StructNew>;
+using StructNewDefaultExpr = VarExpr<ExprType::StructNewDefault>;
+using StructGetExpr = StructGetVarExpr<ExprType::StructGet>;
+using StructGetUExpr = StructGetVarExpr<ExprType::StructGetU>;
+using StructGetSExpr = StructGetVarExpr<ExprType::StructGetS>;
+using StructSetExpr = StructGetVarExpr<ExprType::StructSet>;
+using ArrayNewExpr = VarExpr<ExprType::ArrayNew>;
+using ArrayNewDefaultExpr = VarExpr<ExprType::ArrayNewDefault>;
+using ArrayNewFixedExpr = Var2Expr<ExprType::ArrayNewFixed>;
+using ArrayNewDataExpr = Var2Expr<ExprType::ArrayNewData>;
+using ArrayNewElemExpr = Var2Expr<ExprType::ArrayNewElem>;
+using ArrayGetExpr = VarExpr<ExprType::ArrayGet>;
+using ArrayGetUExpr = VarExpr<ExprType::ArrayGetU>;
+using ArrayGetSExpr = VarExpr<ExprType::ArrayGetS>;
+using ArraySetExpr = VarExpr<ExprType::ArraySet>;
+using ArrayLenExpr = ExprMixin<ExprType::ArrayLen>;
+using ArrayFillExpr = VarExpr<ExprType::ArrayFill>;
+using ArrayCopyExpr = Var2Expr<ExprType::ArrayCopy>;
+using ArrayInitDataExpr = Var2Expr<ExprType::ArrayInitData>;
+using ArrayInitElemExpr = Var2Expr<ExprType::ArrayInitElem>;
+
+using RefTestExpr = VarExpr<ExprType::RefTest>;
+using RefCastExpr = VarExpr<ExprType::RefCast>;
+using BrOnCastExpr = Var3Expr<ExprType::BrOnCast>;
+using BrOnCastFailExpr = Var3Expr<ExprType::BrOnCastFail>;
+using AnyConvertExternExpr = ExprMixin<ExprType::AnyConvertExtern>;
+using ExternConvertAnyExpr = ExprMixin<ExprType::ExternConvertAny>;
+using RefI31Expr = ExprMixin<ExprType::RefI31>;
+using I31GetSExpr = ExprMixin<ExprType::I31GetS>;
+using I31GetUExpr = ExprMixin<ExprType::I31GetU>;
+
 using LocalSetExpr = VarExpr<ExprType::LocalSet>;
 using LocalTeeExpr = VarExpr<ExprType::LocalTee>;
 using ReturnCallExpr = VarExpr<ExprType::ReturnCall>;
@@ -1229,6 +1410,7 @@ struct Module {
   void AppendField(std::unique_ptr<ExportModuleField>);
   void AppendField(std::unique_ptr<FuncModuleField>);
   void AppendField(std::unique_ptr<TypeModuleField>);
+  void AppendFieldRec(std::unique_ptr<TypeModuleField>);
   void AppendField(std::unique_ptr<GlobalModuleField>);
   void AppendField(std::unique_ptr<ImportModuleField>);
   void AppendField(std::unique_ptr<MemoryModuleField>);

@@ -24,6 +24,8 @@
 #include "wabt/ir.h"
 #include "wabt/wast-lexer.h"
 
+extern std::unordered_map<std::string, int> moduletypesname;
+
 namespace wabt {
 
 namespace {
@@ -53,6 +55,28 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result EndIfExpr(IfExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructGetExpr(StructGetExpr* expr) override;
+  Result OnStructGetSExpr(StructGetSExpr* expr) override;
+  Result OnStructGetUExpr(StructGetUExpr* expr) override;
+  Result OnStructSetExpr(StructSetExpr* expr) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr* expr) override;
+  Result OnArrayGetSExpr(ArrayGetSExpr* expr) override;
+  Result OnArrayGetUExpr(ArrayGetUExpr* expr) override;
+  Result OnArraySetExpr(ArraySetExpr* expr) override;
+  Result OnArrayFillExpr(ArrayFillExpr* expr) override;
+  Result OnArrayCopyExpr(ArrayCopyExpr* expr) override;
+  Result OnArrayInitDataExpr(ArrayInitDataExpr* expr) override;
+  Result OnArrayInitElemExpr(ArrayInitElemExpr* expr) override;
+  Result OnBrOnCastExpr(BrOnCastExpr*) override;
+  Result OnBrOnCastFailExpr(BrOnCastFailExpr*) override;
+
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
@@ -90,6 +114,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
                                    const char* desc);
   void ResolveLabelVar(Var* var);
   void ResolveVar(const BindingHash* bindings, Var* var, const char* desc);
+  void ResolveVar2(const BindingHash* bindings, Var* var, const char* desc);
   void ResolveFuncVar(Var* var);
   void ResolveGlobalVar(Var* var);
   void ResolveFuncTypeVar(Var* var);
@@ -99,6 +124,13 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveDataSegmentVar(Var* var);
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
+  void ResolveStructVar(Var* var);
+  void ResolveStructGetVar(Var* var, Var* var2);
+  void ResolveArrayVar(Var* var);
+  void ResolveArray2Var(Var* var, Var* var2);
+  void ResolveArrayNewDataVar(Var* var, Var* var2);
+  void ResolveArrayNewElemVar(Var* var, Var* var2);
+  void ResolveArrayCopyVar(Var* var, Var* var2);
   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
@@ -181,8 +213,17 @@ void NameResolver::ResolveVar(const BindingHash* bindings,
                  var->name().c_str());
       return;
     }
-
     var->set_index(index);
+  }
+}
+void NameResolver::ResolveVar2(const BindingHash* bindings,
+                               Var* var,
+                               const char* desc) {
+  if (var->is_name()) {
+    if (moduletypesname.find(var->name()) != moduletypesname.end()) {
+      var->set_index(moduletypesname[var->name()]);
+      return;
+    }
   }
 }
 
@@ -195,7 +236,7 @@ void NameResolver::ResolveGlobalVar(Var* var) {
 }
 
 void NameResolver::ResolveFuncTypeVar(Var* var) {
-  ResolveVar(&current_module_->type_bindings, var, "type");
+  ResolveVar2(&current_module_->type_bindings, var, "type");
 }
 
 void NameResolver::ResolveTableVar(Var* var) {
@@ -232,6 +273,271 @@ void NameResolver::ResolveLocalVar(Var* var) {
     }
 
     var->set_index(index);
+  }
+}
+
+void NameResolver::ResolveStructVar(Var* var) {
+  if (var->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+
+    var->set_index(kInvalidIndex);
+  }
+}
+
+void NameResolver::ResolveStructGetVar(Var* var, Var* var2) {
+  // 首先判断struct
+  if (var->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+
+    var->set_index(kInvalidIndex);
+  }
+
+help:;
+  // 再判断struct的成员
+  if (var2->is_name()) {
+    wabt::StructType* a =
+        static_cast<wabt::StructType*>(current_module_->types[var->index()]);
+    auto items = a->fields;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i].name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var2->loc, "undefined struct variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
+
+    var2->set_index(kInvalidIndex);
+  }
+}
+
+void NameResolver::ResolveArrayVar(Var* var) {
+  if (var->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined array variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+
+    var->set_index(kInvalidIndex);
+  }
+}
+
+void NameResolver::ResolveArray2Var(Var* var, Var* var2) {
+  if (var->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined array variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+
+    var->set_index(kInvalidIndex);
+  }
+}
+
+void NameResolver::ResolveArrayNewDataVar(Var* var, Var* var2) {
+  if (var->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+        // return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined array variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+
+    var->set_index(kInvalidIndex);
+  }
+
+help:;
+  if (var2->is_name()) {
+    auto items = current_module_->data_segments;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var2->loc, "undefined data variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
+
+    var2->set_index(kInvalidIndex);
+  }
+}
+
+void NameResolver::ResolveArrayNewElemVar(Var* var, Var* var2) {
+  if (var->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+        // return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined array variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+
+    var->set_index(kInvalidIndex);
+  }
+
+help:;
+  if (var2->is_name()) {
+    auto items = current_module_->elem_segments;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var2->loc, "undefined data variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
+
+    var2->set_index(kInvalidIndex);
+  }
+}
+void NameResolver::ResolveArrayCopyVar(Var* var, Var* var2) {
+  if (var->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+        // return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined array variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+
+    var->set_index(kInvalidIndex);
+  }
+help:;
+  if (var2->is_name()) {
+    auto items = current_module_->types;
+    if (items.size() == 0) {
+      return;
+    }
+    int i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+
+    if (i == items.size()) {
+      PrintError(&var2->loc, "undefined data variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
+
+    var2->set_index(kInvalidIndex);
   }
 }
 
@@ -334,6 +640,95 @@ Result NameResolver::OnLoadExpr(LoadExpr* expr) {
 
 Result NameResolver::OnLocalGetExpr(LocalGetExpr* expr) {
   ResolveLocalVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewExpr(StructNewExpr* expr) {
+  ResolveStructVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewDefaultExpr(StructNewDefaultExpr* expr) {
+  ResolveStructVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructGetExpr(StructGetExpr* expr) {
+  ResolveStructGetVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnStructGetSExpr(StructGetSExpr* expr) {
+  ResolveStructGetVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnStructGetUExpr(StructGetUExpr* expr) {
+  ResolveStructGetVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnStructSetExpr(StructSetExpr* expr) {
+  ResolveStructGetVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewExpr(ArrayNewExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewDefaultExpr(ArrayNewDefaultExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewFixedExpr(ArrayNewFixedExpr* expr) {
+  ResolveArray2Var(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewDataExpr(ArrayNewDataExpr* expr) {
+  ResolveArrayNewDataVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewElemExpr(ArrayNewElemExpr* expr) {
+  ResolveArrayNewElemVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayGetExpr(ArrayGetExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayGetSExpr(ArrayGetSExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayGetUExpr(ArrayGetUExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArraySetExpr(ArraySetExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayFillExpr(ArrayFillExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayCopyExpr(ArrayCopyExpr* expr) {
+  ResolveArrayCopyVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayInitDataExpr(ArrayInitDataExpr* expr) {
+  ResolveArrayNewDataVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayInitElemExpr(ArrayInitElemExpr* expr) {
+  ResolveArrayNewElemVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+
+Result NameResolver::OnBrOnCastExpr(BrOnCastExpr* expr) {
+  ResolveLabelVar(&expr->var1);
+  return Result::Ok;
+}
+Result NameResolver::OnBrOnCastFailExpr(BrOnCastFailExpr* expr) {
+  ResolveLabelVar(&expr->var1);
   return Result::Ok;
 }
 
@@ -537,10 +932,11 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
   for (ExprList& elem_expr : segment->elem_exprs) {
-    if (elem_expr.size() == 1 &&
+    visitor_.VisitExprList(elem_expr);
+    /*if (elem_expr.size() == 1 &&
         elem_expr.front().type() == ExprType::RefFunc) {
       ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
-    }
+    }*/
   }
 }
 

@@ -105,10 +105,6 @@
     i32.const 0  ;; fi
     call_indirect
     i32.const 0
-    if
-    else
-    end
-    i32.const 0
   )
   (func $g (param) (result) (local i32)
     ;; This is rare, but requires special handling: uses of local outside scope
@@ -187,7 +183,6 @@ export function f(a:int, b:int):int {
   nop;
   is_null(null);
   call_indirect(0);
-  if (0) {}
   return 0;
 }
 

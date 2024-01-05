@@ -69,7 +69,7 @@ section("linking") {
   }
 
   section(LINKING_SYMBOL_TABLE) {
-    num_symbols[6]
+    num_symbols[5]
 
     type[0]
     flags[1]
@@ -87,13 +87,6 @@ section("linking") {
     segment[1]
     offset[2]
     size[1]
-
-    type[1]
-    flags[leb_i32(512)]
-    str("absolute_data_sym")
-    segment[0]
-    offset[leb_i32(1024)]
-    size[0]
 
     type[0]
     flags[0x10]
@@ -159,13 +152,12 @@ Custom:
   - init functions [count=2]
    - 1: priority=5 <global_sym>
    - 0: priority=6 <func_sym>
-  - symbol table [count=6]
+  - symbol table [count=5]
    - 0: F <func_sym> func=0 [ binding=weak vis=default ]
    - 1: G <global_sym> global=0 [ binding=local vis=default ]
    - 2: D <data_sym> segment=1 offset=2 size=1 [ tls binding=global vis=hidden ]
-   - 3: D <absolute_data_sym> address=1024 size=0 [ abs binding=global vis=default ]
-   - 4: F <func_sym> func=0 [ undefined binding=global vis=default ]
-   - 5: T <table_sym> table=0 [ binding=weak vis=default ]
+   - 3: F <func_sym> func=0 [ undefined binding=global vis=default ]
+   - 4: T <table_sym> table=0 [ binding=weak vis=default ]
   - comdat groups [count=2]
    - comdat1: [count=1]
     - segment[1] <data2>

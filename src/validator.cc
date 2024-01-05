@@ -29,6 +29,8 @@
 #include "wabt/ir.h"
 #include "wabt/shared-validator.h"
 
+extern std::unordered_map<std::string, int> moduletypesname;
+
 namespace wabt {
 
 namespace {
@@ -114,6 +116,36 @@ class Validator : public ExprVisitor::Delegate {
   Result EndIfExpr(IfExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
+  Result OnStructGetUExpr(StructGetUExpr*) override;
+  Result OnStructGetSExpr(StructGetSExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayGetSExpr(ArrayGetSExpr*) override;
+  Result OnArrayGetUExpr(ArrayGetUExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
+  Result OnArrayLenExpr(ArrayLenExpr*) override;
+  Result OnArrayFillExpr(ArrayFillExpr*) override;
+  Result OnArrayCopyExpr(ArrayCopyExpr*) override;
+  Result OnArrayInitDataExpr(ArrayInitDataExpr*) override;
+  Result OnArrayInitElemExpr(ArrayInitElemExpr*) override;
+
+  Result OnRefTestExpr(RefTestExpr*) override;
+  Result OnRefCastExpr(RefCastExpr*) override;
+  Result OnBrOnCastExpr(BrOnCastExpr*) override;
+  Result OnBrOnCastFailExpr(BrOnCastFailExpr*) override;
+  Result OnAnyConvertExternExpr(AnyConvertExternExpr*) override;
+  Result OnExternConvertAnyExpr(ExternConvertAnyExpr*) override;
+  Result OnRefI31Expr(RefI31Expr*) override;
+  Result OnI31GetSExpr(I31GetSExpr*) override;
+  Result OnI31GetUExpr(I31GetUExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
@@ -132,6 +164,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
+  Result OnRefEqExpr(RefEqExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
@@ -392,6 +425,131 @@ Result Validator::OnLocalGetExpr(LocalGetExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnStructNewExpr(StructNewExpr* expr) {
+  result_ |= validator_.OnStructNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructNewDefaultExpr(StructNewDefaultExpr* expr) {
+  result_ |= validator_.OnStructNewDefault(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructGetExpr(StructGetExpr* expr) {
+  result_ |= validator_.OnStructGet(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+
+Result Validator::OnStructGetUExpr(StructGetUExpr* expr) {
+  result_ |= validator_.OnStructGetU(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+
+Result Validator::OnStructGetSExpr(StructGetSExpr* expr) {
+  result_ |= validator_.OnStructGetS(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+
+Result Validator::OnStructSetExpr(StructSetExpr* expr) {
+  result_ |= validator_.OnStructSet(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewExpr(ArrayNewExpr* expr) {
+  result_ |= validator_.OnArrayNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewDefaultExpr(ArrayNewDefaultExpr* expr) {
+  result_ |= validator_.OnArrayNewDefault(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnArrayNewFixedExpr(ArrayNewFixedExpr* expr) {
+  result_ |= validator_.OnArrayNewFixed(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+Result Validator::OnArrayNewDataExpr(ArrayNewDataExpr* expr) {
+  result_ |= validator_.OnArrayNewData(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+Result Validator::OnArrayNewElemExpr(ArrayNewElemExpr* expr) {
+  result_ |= validator_.OnArrayNewElem(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+Result Validator::OnArrayGetExpr(ArrayGetExpr* expr) {
+  result_ |= validator_.OnArrayGet(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnArrayGetSExpr(ArrayGetSExpr* expr) {
+  result_ |= validator_.OnArrayGetS(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnArrayGetUExpr(ArrayGetUExpr* expr) {
+  result_ |= validator_.OnArrayGetU(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnArraySetExpr(ArraySetExpr* expr) {
+  result_ |= validator_.OnArraySet(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnArrayLenExpr(ArrayLenExpr* expr) {
+  result_ |= validator_.OnArrayLen(expr->loc);
+  return Result::Ok;
+}
+Result Validator::OnArrayFillExpr(ArrayFillExpr* expr) {
+  result_ |= validator_.OnArrayFill(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnArrayCopyExpr(ArrayCopyExpr* expr) {
+  result_ |= validator_.OnArrayCopy(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+Result Validator::OnArrayInitDataExpr(ArrayInitDataExpr* expr) {
+  result_ |= validator_.OnArrayInitData(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+Result Validator::OnArrayInitElemExpr(ArrayInitElemExpr* expr) {
+  result_ |= validator_.OnArrayInitElem(expr->loc, expr->var1, expr->var2);
+  return Result::Ok;
+}
+Result Validator::OnRefCastExpr(RefCastExpr* expr) {
+  result_ |= validator_.OnRefCast(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnRefTestExpr(RefTestExpr* expr) {
+  result_ |= validator_.OnRefTest(expr->loc, expr->var);
+  return Result::Ok;
+}
+Result Validator::OnBrOnCastExpr(BrOnCastExpr* expr) {
+  result_ |=
+      validator_.OnBrOnCast(expr->loc, expr->var1, expr->var2, expr->var3);
+  return Result::Ok;
+}
+Result Validator::OnBrOnCastFailExpr(BrOnCastFailExpr* expr) {
+  result_ |=
+      validator_.OnBrOnCastFail(expr->loc, expr->var1, expr->var2, expr->var3);
+  return Result::Ok;
+}
+Result Validator::OnAnyConvertExternExpr(AnyConvertExternExpr* expr) {
+  result_ |= validator_.OnAnyConvertExtern(expr->loc);
+  return Result::Ok;
+}
+Result Validator::OnExternConvertAnyExpr(ExternConvertAnyExpr* expr) {
+  result_ |= validator_.OnExternConvertAny(expr->loc);
+  return Result::Ok;
+}
+Result Validator::OnRefI31Expr(RefI31Expr* expr) {
+  result_ |= validator_.OnRefI31(expr->loc);
+  return Result::Ok;
+}
+Result Validator::OnI31GetSExpr(I31GetSExpr* expr) {
+  result_ |= validator_.OnI31GetS(expr->loc);
+  return Result::Ok;
+}
+Result Validator::OnI31GetUExpr(I31GetUExpr* expr) {
+  result_ |= validator_.OnI31GetU(expr->loc);
+  return Result::Ok;
+}
 Result Validator::OnLocalSetExpr(LocalSetExpr* expr) {
   result_ |= validator_.OnLocalSet(expr->loc, expr->var);
   return Result::Ok;
@@ -482,6 +640,11 @@ Result Validator::OnTableSizeExpr(TableSizeExpr* expr) {
 
 Result Validator::OnTableFillExpr(TableFillExpr* expr) {
   result_ |= validator_.OnTableFill(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnRefEqExpr(RefEqExpr* expr) {
+  result_ |= validator_.OnRefEq(expr->loc);
   return Result::Ok;
 }
 
@@ -675,6 +838,9 @@ Validator::Validator(Errors* errors,
 Result Validator::CheckModule() {
   const Module* module = current_module_;
 
+  // 每一次都遍历所有的module的fields
+  // 然后再看是不是自己的部分
+
   // Type section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<TypeModuleField>(&field)) {
@@ -707,6 +873,131 @@ Result Validator::CheckModule() {
               field.loc,
               TypeMut{array_type->field.type, array_type->field.mutable_});
           break;
+        }
+
+        case TypeEntryKind::Sub: {
+          SubType* sub_type = cast<SubType>(f->type.get());
+          std::string str = sub_type->typeEntry->name;
+          if (str != "") {
+            int j = 0;
+            if (moduletypesname.find(str) != moduletypesname.end()) {
+              j = moduletypesname[str];
+            }
+          }
+          const TypeEntry* type = sub_type->typeEntry.get();
+          switch (type->kind()) {
+            case TypeEntryKind::Func: {
+              const FuncType* func_type = cast<FuncType>(type);
+              result_ |= validator_.OnFuncType(
+                  field.loc, func_type->sig.param_types.size(),
+                  func_type->sig.param_types.data(),
+                  func_type->sig.result_types.size(),
+                  func_type->sig.result_types.data(),
+                  module->GetFuncTypeIndex(func_type->sig));
+              break;
+            }
+
+            case TypeEntryKind::Struct: {
+              const StructType* struct_type = cast<StructType>(type);
+              TypeMutVector type_muts;
+              for (auto&& field : struct_type->fields) {
+                type_muts.push_back(TypeMut{field.type, field.mutable_});
+              }
+              result_ |= validator_.OnStructType(field.loc, type_muts.size(),
+                                                 type_muts.data());
+              break;
+            }
+
+            case TypeEntryKind::Array: {
+              const ArrayType* array_type = cast<ArrayType>(type);
+              result_ |= validator_.OnArrayType(
+                  field.loc,
+                  TypeMut{array_type->field.type, array_type->field.mutable_});
+              break;
+            }
+          }
+          break;
+        }
+
+        case TypeEntryKind::Rec: {
+          RecType* rec_type = cast<RecType>(f->type.get());
+          for (auto& type : rec_type->fields) {
+            switch (type->kind()) {
+              case TypeEntryKind::Func: {
+                const FuncType* func_type = cast<FuncType>(type.get());
+                result_ |= validator_.OnFuncType(
+                    field.loc, func_type->sig.param_types.size(),
+                    func_type->sig.param_types.data(),
+                    func_type->sig.result_types.size(),
+                    func_type->sig.result_types.data(),
+                    module->GetFuncTypeIndex(func_type->sig));
+                break;
+              }
+
+              case TypeEntryKind::Struct: {
+                StructType* struct_type = cast<StructType>(type.get());
+                TypeMutVector type_muts;
+                for (auto&& field : struct_type->fields) {
+                  type_muts.push_back(TypeMut{field.type, field.mutable_});
+                }
+                result_ |= validator_.OnStructType(field.loc, type_muts.size(),
+                                                   type_muts.data());
+                break;
+              }
+
+              case TypeEntryKind::Array: {
+                ArrayType* array_type = cast<ArrayType>(type.get());
+                result_ |= validator_.OnArrayType(
+                    field.loc, TypeMut{array_type->field.type,
+                                       array_type->field.mutable_});
+                break;
+              }
+
+              case TypeEntryKind::Sub: {
+                SubType* sub_type = cast<SubType>(type.get());
+                std::string str = sub_type->typeEntry->name;
+                if (str != "") {
+                  int j = 0;
+                  if (moduletypesname.find(str) != moduletypesname.end()) {
+                    j = moduletypesname[str];
+                  }
+                }
+                const TypeEntry* type = sub_type->typeEntry.get();
+                switch (type->kind()) {
+                  case TypeEntryKind::Func: {
+                    const FuncType* func_type = cast<FuncType>(type);
+                    result_ |= validator_.OnFuncType(
+                        field.loc, func_type->sig.param_types.size(),
+                        func_type->sig.param_types.data(),
+                        func_type->sig.result_types.size(),
+                        func_type->sig.result_types.data(),
+                        module->GetFuncTypeIndex(func_type->sig));
+                    break;
+                  }
+
+                  case TypeEntryKind::Struct: {
+                    const StructType* struct_type = cast<StructType>(type);
+                    TypeMutVector type_muts;
+                    for (auto&& field : struct_type->fields) {
+                      type_muts.push_back(TypeMut{field.type, field.mutable_});
+                    }
+                    result_ |= validator_.OnStructType(
+                        field.loc, type_muts.size(), type_muts.data());
+                    break;
+                  }
+
+                  case TypeEntryKind::Array: {
+                    const ArrayType* array_type = cast<ArrayType>(type);
+                    result_ |= validator_.OnArrayType(
+                        field.loc, TypeMut{array_type->field.type,
+                                           array_type->field.mutable_});
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+          }
         }
       }
     }
@@ -754,6 +1045,7 @@ Result Validator::CheckModule() {
   }
 
   // Func section.
+  // 拿到函数类型 然后在type section中找到对应的函数类型
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<FuncModuleField>(&field)) {
       result_ |= validator_.OnFunction(
@@ -787,6 +1079,7 @@ Result Validator::CheckModule() {
       ExprVisitor visitor(this);
       result_ |=
           visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
+      // 初始化语句验证 rec类型没处理 但不影响翻译结果
       result_ |= validator_.EndInitExpr();
     }
   }
@@ -847,6 +1140,7 @@ Result Validator::CheckModule() {
   validator_.OnDataCount(module->data_segments.size());
 
   // Code section.
+  // 函数逻辑
   Index func_index = module->num_func_imports;
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<FuncModuleField>(&field)) {

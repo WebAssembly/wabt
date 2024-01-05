@@ -13,18 +13,6 @@
 #include "wasm-rt-impl.h"
 #include "wasm-rt-exceptions.h"
 
-// like is_equal_TYPE below, always use unsigned for these
-#define v128_i8x16_extract_lane simde_wasm_u8x16_extract_lane
-#define v128_u8x16_extract_lane simde_wasm_u8x16_extract_lane
-#define v128_i16x8_extract_lane simde_wasm_u16x8_extract_lane
-#define v128_u16x8_extract_lane simde_wasm_u16x8_extract_lane
-#define v128_i32x4_extract_lane simde_wasm_u32x4_extract_lane
-#define v128_u32x4_extract_lane simde_wasm_u32x4_extract_lane
-#define v128_i64x2_extract_lane simde_wasm_u64x2_extract_lane
-#define v128_u64x2_extract_lane simde_wasm_u64x2_extract_lane
-#define v128_f32x4_extract_lane simde_wasm_f32x4_extract_lane
-#define v128_f64x2_extract_lane simde_wasm_f64x2_extract_lane
-
 static int g_tests_run;
 static int g_tests_passed;
 
@@ -155,8 +143,8 @@ static void error(const char* file, int line, const char* format, ...) {
 
 #define MULTI_T_UNPACK_(...) __VA_ARGS__
 #define MULTI_T_UNPACK(arg) MULTI_T_UNPACK_ arg
-#define MULTI_i8 "%" PRIu8 " "
-#define MULTI_i16 "%" PRIu16 " "
+#define MULTI_i8 "%su "
+#define MULTI_i16 "%su "
 #define MULTI_i32 "%u "
 #define MULTI_i64 "%" PRIu64 " "
 #define MULTI_f32 "%.9g "
@@ -363,70 +351,11 @@ static void init_spectest_module(w2c_spectest* instance) {
   wasm_rt_allocate_funcref_table(&instance->spectest_table, 10, 20);
 }
 
-// POSIX-only test config where embedder handles signals instead of w2c runtime
-#ifdef WASM2C_TEST_EMBEDDER_SIGNAL_HANDLING
-#include <signal.h>
-
-static void posix_signal_handler(int sig, siginfo_t* si, void* unused) {
-  wasm_rt_trap((si->si_code == SEGV_ACCERR) ? WASM_RT_TRAP_OOB
-                                            : WASM_RT_TRAP_EXHAUSTION);
-}
-
-static void posix_install_signal_handler(void) {
-  /* install altstack */
-  stack_t ss;
-  ss.ss_sp = malloc(SIGSTKSZ);
-  ss.ss_flags = 0;
-  ss.ss_size = SIGSTKSZ;
-  if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
-    abort();
-  }
-
-  /* install signal handler */
-  struct sigaction sa;
-  memset(&sa, '\0', sizeof(sa));
-  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_sigaction = posix_signal_handler;
-  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
-    perror("sigaction failed");
-    abort();
-  }
-}
-
-static void posix_cleanup_signal_handler(void) {
-  /* remove signal handler */
-  struct sigaction sa;
-  memset(&sa, '\0', sizeof(sa));
-  sa.sa_handler = SIG_DFL;
-  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
-    perror("sigaction failed");
-    abort();
-  }
-
-  /* disable and free altstack */
-  stack_t ss;
-  ss.ss_flags = SS_DISABLE;
-  if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
-    abort();
-  }
-  free(ss.ss_sp);
-}
-#endif
-
 int main(int argc, char** argv) {
-#ifdef WASM2C_TEST_EMBEDDER_SIGNAL_HANDLING
-  posix_install_signal_handler();
-#endif
   wasm_rt_init();
   init_spectest_module(&spectest_instance);
   run_spec_tests();
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
   wasm_rt_free();
-#ifdef WASM2C_TEST_EMBEDDER_SIGNAL_HANDLING
-  posix_cleanup_signal_handler();
-#endif
   return g_tests_passed != g_tests_run;
 }
