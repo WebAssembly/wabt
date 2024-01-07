@@ -54,7 +54,6 @@ const char* NameSubsectionName[] = {
     "global",
     "elemseg",
     "dataseg",
-    "field",
     "tag",
 };
 // clang-format on

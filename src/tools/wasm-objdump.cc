@@ -25,7 +25,6 @@
 #include "wabt/stream.h"
 
 using namespace wabt;
-
 static const char s_description[] =
     R"(  Print information about the contents of wasm binaries.
 

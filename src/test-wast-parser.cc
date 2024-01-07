@@ -22,7 +22,6 @@
 #include "wabt/wast-parser.h"
 
 using namespace wabt;
-
 namespace {
 
 std::string repeat(std::string s, size_t count) {

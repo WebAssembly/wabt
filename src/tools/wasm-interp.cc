@@ -39,7 +39,6 @@
 
 using namespace wabt;
 using namespace wabt::interp;
-
 struct FunctionCall {
   std::string name;
   Values args;

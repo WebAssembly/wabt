@@ -24,7 +24,6 @@
 
 using namespace wabt;
 using namespace wabt::interp;
-
 class InterpTest : public ::testing::Test {
  public:
   void ReadModule(const std::vector<u8>& data) {

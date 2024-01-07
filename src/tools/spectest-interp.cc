@@ -44,7 +44,6 @@
 
 using namespace wabt;
 using namespace wabt::interp;
-
 static int s_verbose;
 static std::string s_infile;
 static Thread::Options s_thread_options;

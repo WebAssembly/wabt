@@ -24,7 +24,6 @@
 #include "wabt/literal.h"
 
 using namespace wabt;
-
 namespace {
 
 enum ParseIntTypeCombo {

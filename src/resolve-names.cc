@@ -53,6 +53,27 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result EndIfExpr(IfExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructGetExpr(StructGetExpr* expr) override;
+  Result OnStructGetSExpr(StructGetSExpr* expr) override;
+  Result OnStructGetUExpr(StructGetUExpr* expr) override;
+  Result OnStructSetExpr(StructSetExpr* expr) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr* expr) override;
+  Result OnArrayGetSExpr(ArrayGetSExpr* expr) override;
+  Result OnArrayGetUExpr(ArrayGetUExpr* expr) override;
+  Result OnArraySetExpr(ArraySetExpr* expr) override;
+  Result OnArrayFillExpr(ArrayFillExpr* expr) override;
+  Result OnArrayCopyExpr(ArrayCopyExpr* expr) override;
+  Result OnArrayInitDataExpr(ArrayInitDataExpr* expr) override;
+  Result OnArrayInitElemExpr(ArrayInitElemExpr* expr) override;
+  Result OnBrOnCastExpr(BrOnCastExpr*) override;
+  Result OnBrOnCastFailExpr(BrOnCastFailExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
@@ -99,6 +120,12 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveDataSegmentVar(Var* var);
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
+  void ResolveStructVar(Var* var);
+  void ResolveStructVar2(Var* var, Var* var2);
+  void ResolveArrayVar(Var* var);
+  void ResolveArrayNewDataVar(Var* var, Var* var2);
+  void ResolveArrayNewElemVar(Var* var, Var* var2);
+  void ResolveArrayCopyVar(Var* var, Var* var2);
   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
@@ -181,7 +208,6 @@ void NameResolver::ResolveVar(const BindingHash* bindings,
                  var->name().c_str());
       return;
     }
-
     var->set_index(index);
   }
 }
@@ -232,6 +258,196 @@ void NameResolver::ResolveLocalVar(Var* var) {
     }
 
     var->set_index(index);
+  }
+}
+
+void NameResolver::ResolveStructVar(Var* var) {
+  if (var->is_name()) {
+    std::vector<TypeEntry*> items = current_module_->types;
+    std::vector<TypeEntry*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        return;
+      }
+    }
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+    var->set_index(kInvalidIndex);
+  }
+}
+
+void NameResolver::ResolveStructVar2(Var* var, Var* var2) {
+  // 首先判断struct
+  if (var->is_name()) {
+    std::vector<TypeEntry*> items = current_module_->types;
+    std::vector<TypeEntry*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+      }
+    }
+    if (i == items.size()) {
+      var->set_index(kInvalidIndex);
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+  }
+
+help:;
+  // 再判断struct的成员
+  if (var2->is_name()) {
+    wabt::StructType* a =
+        static_cast<wabt::StructType*>(current_module_->types[var->index()]);
+    std::vector<Field> items = a->fields;
+    std::vector<Field>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i].name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+    if (i == items.size()) {
+      var2->set_index(kInvalidIndex);
+      PrintError(&var2->loc, "undefined struct variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
+  }
+}
+
+void NameResolver::ResolveArrayVar(Var* var) {
+  if (var->is_name()) {
+    std::vector<TypeEntry*> items = current_module_->types;
+    std::vector<TypeEntry*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        return;
+      }
+    }
+    if (i == items.size()) {
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+    var->set_index(kInvalidIndex);
+  }
+}
+
+void NameResolver::ResolveArrayNewDataVar(Var* var, Var* var2) {
+  if (var->is_name()) {
+    std::vector<TypeEntry*> items = current_module_->types;
+    std::vector<TypeEntry*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+      }
+    }
+    if (i == items.size()) {
+      var->set_index(kInvalidIndex);
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+  }
+
+help:;
+  if (var2->is_name()) {
+    std::vector<DataSegment*> items = current_module_->data_segments;
+    std::vector<DataSegment*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+    if (i == items.size()) {
+      var2->set_index(kInvalidIndex);
+      PrintError(&var2->loc, "undefined data variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
+  }
+}
+
+void NameResolver::ResolveArrayNewElemVar(Var* var, Var* var2) {
+  if (var->is_name()) {
+    std::vector<TypeEntry*> items = current_module_->types;
+    std::vector<TypeEntry*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+      }
+    }
+    if (i == items.size()) {
+      var->set_index(kInvalidIndex);
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+  }
+
+help:;
+  if (var2->is_name()) {
+    std::vector<ElemSegment*> items = current_module_->elem_segments;
+    std::vector<ElemSegment*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+    if (i == items.size()) {
+      var2->set_index(kInvalidIndex);
+      PrintError(&var2->loc, "undefined data variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
+  }
+}
+
+void NameResolver::ResolveArrayCopyVar(Var* var, Var* var2) {
+  if (var->is_name()) {
+    std::vector<TypeEntry*> items = current_module_->types;
+    std::vector<TypeEntry*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var->name().c_str()) == 0) {
+        var->set_index(i);
+        goto help;
+      }
+    }
+    if (i == items.size()) {
+      var->set_index(kInvalidIndex);
+      PrintError(&var->loc, "undefined struct variable \"%s\"",
+                 var->name().c_str());
+      return;
+    }
+  }
+
+help:;
+  if (var2->is_name()) {
+    std::vector<TypeEntry*> items = current_module_->types;
+    std::vector<TypeEntry*>::size_type i = 0;
+    for (i = 0; i < items.size(); i++) {
+      if (strcmp(items[i]->name.c_str(), var2->name().c_str()) == 0) {
+        var2->set_index(i);
+        return;
+      }
+    }
+    if (i == items.size()) {
+      var2->set_index(kInvalidIndex);
+      PrintError(&var2->loc, "undefined data variable \"%s\"",
+                 var2->name().c_str());
+      return;
+    }
   }
 }
 
@@ -334,6 +550,95 @@ Result NameResolver::OnLoadExpr(LoadExpr* expr) {
 
 Result NameResolver::OnLocalGetExpr(LocalGetExpr* expr) {
   ResolveLocalVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewExpr(StructNewExpr* expr) {
+  ResolveStructVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewDefaultExpr(StructNewDefaultExpr* expr) {
+  ResolveStructVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructGetExpr(StructGetExpr* expr) {
+  ResolveStructVar2(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnStructGetSExpr(StructGetSExpr* expr) {
+  ResolveStructVar2(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnStructGetUExpr(StructGetUExpr* expr) {
+  ResolveStructVar2(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnStructSetExpr(StructSetExpr* expr) {
+  ResolveStructVar2(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewExpr(ArrayNewExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewDefaultExpr(ArrayNewDefaultExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewFixedExpr(ArrayNewFixedExpr* expr) {
+  ResolveArrayVar(&expr->var1);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewDataExpr(ArrayNewDataExpr* expr) {
+  ResolveArrayNewDataVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayNewElemExpr(ArrayNewElemExpr* expr) {
+  ResolveArrayNewElemVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayGetExpr(ArrayGetExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayGetSExpr(ArrayGetSExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayGetUExpr(ArrayGetUExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArraySetExpr(ArraySetExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayFillExpr(ArrayFillExpr* expr) {
+  ResolveArrayVar(&expr->var);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayCopyExpr(ArrayCopyExpr* expr) {
+  ResolveArrayCopyVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayInitDataExpr(ArrayInitDataExpr* expr) {
+  ResolveArrayNewDataVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+Result NameResolver::OnArrayInitElemExpr(ArrayInitElemExpr* expr) {
+  ResolveArrayNewElemVar(&expr->var1, &expr->var2);
+  return Result::Ok;
+}
+
+Result NameResolver::OnBrOnCastExpr(BrOnCastExpr* expr) {
+  ResolveLabelVar(&expr->var1);
+  return Result::Ok;
+}
+Result NameResolver::OnBrOnCastFailExpr(BrOnCastFailExpr* expr) {
+  ResolveLabelVar(&expr->var1);
   return Result::Ok;
 }
 
@@ -537,10 +842,11 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
   for (ExprList& elem_expr : segment->elem_exprs) {
-    if (elem_expr.size() == 1 &&
+    visitor_.VisitExprList(elem_expr);
+    /*if (elem_expr.size() == 1 &&
         elem_expr.front().type() == ExprType::RefFunc) {
       ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
-    }
+    }*/
   }
 }
 

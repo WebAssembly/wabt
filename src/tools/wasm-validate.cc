@@ -29,7 +29,6 @@
 #include "wabt/wast-lexer.h"
 
 using namespace wabt;
-
 static int s_verbose;
 static std::string s_infile;
 static Features s_features;

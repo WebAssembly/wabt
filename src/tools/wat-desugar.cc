@@ -34,7 +34,6 @@
 #include "wabt/wat-writer.h"
 
 using namespace wabt;
-
 static const char* s_infile;
 static const char* s_outfile;
 static bool s_debug_parsing;

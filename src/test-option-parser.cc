@@ -19,7 +19,6 @@
 #include "wabt/option-parser.h"
 
 using namespace wabt;
-
 #define ERROR_ENDING "\nTry '--help' for more information."
 
 TEST(OptionParser, LongFlag) {

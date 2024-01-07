@@ -19,7 +19,6 @@
 #include "wabt/filenames.h"
 
 using namespace wabt;
-
 namespace {
 
 void assert_string_view_eq(const char* s, std::string_view sv) {

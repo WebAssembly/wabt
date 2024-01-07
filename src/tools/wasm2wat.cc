@@ -33,7 +33,6 @@
 #include "wabt/wat-writer.h"
 
 using namespace wabt;
-
 static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;

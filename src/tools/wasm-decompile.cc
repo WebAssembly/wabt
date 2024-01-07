@@ -33,7 +33,6 @@
 #include "wabt/wast-lexer.h"
 
 using namespace wabt;
-
 int ProgramMain(int argc, char** argv) {
   InitStdio();
 

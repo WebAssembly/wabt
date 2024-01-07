@@ -17,7 +17,7 @@ R"w2c_template(  static inline v128 name(wasm_rt_memory_t* mem, u64 addr) { \
 )w2c_template"
 R"w2c_template(    MEMCHECK(mem, addr, t);                                  \
 )w2c_template"
-R"w2c_template(    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)));      \
+R"w2c_template(    v128 result = func((v128*)&mem->data[addr]);             \
 )w2c_template"
 R"w2c_template(    SIMD_FORCE_READ(result);                                 \
 )w2c_template"
@@ -32,7 +32,7 @@ R"w2c_template(  static inline v128 name(wasm_rt_memory_t* mem, u64 addr, v128 v
 )w2c_template"
 R"w2c_template(    MEMCHECK(mem, addr, t);                                            \
 )w2c_template"
-R"w2c_template(    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)), vec, lane);     \
+R"w2c_template(    v128 result = func((v128*)&mem->data[addr], vec, lane);            \
 )w2c_template"
 R"w2c_template(    SIMD_FORCE_READ(result);                                           \
 )w2c_template"
@@ -47,7 +47,7 @@ R"w2c_template(  static inline void name(wasm_rt_memory_t* mem, u64 addr, v128 v
 )w2c_template"
 R"w2c_template(    MEMCHECK(mem, addr, t);                                              \
 )w2c_template"
-R"w2c_template(    simde_wasm_v128_store(MEM_ADDR(mem, addr, sizeof(t)), value);        \
+R"w2c_template(    simde_wasm_v128_store((v128*)&mem->data[addr], value);               \
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
@@ -58,7 +58,7 @@ R"w2c_template(  static inline void name(wasm_rt_memory_t* mem, u64 addr, v128 v
 )w2c_template"
 R"w2c_template(    MEMCHECK(mem, addr, t);                                              \
 )w2c_template"
-R"w2c_template(    func(MEM_ADDR(mem, addr, sizeof(t)), value, lane);                   \
+R"w2c_template(    func((v128*)&mem->data[addr], value, lane);                          \
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"

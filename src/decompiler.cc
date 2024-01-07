@@ -527,10 +527,7 @@ struct Decompiler {
           ifs.precedence = Precedence::If;
           return std::move(ifs);
         } else {
-          auto s = cat("if (", ifs.v[0], ") {");
-          if (!thenp.v.empty())
-            s += cat(" ", thenp.v[0], " ");
-          s += "}";
+          auto s = cat("if (", ifs.v[0], ") { ", thenp.v[0], " }");
           if (elsep)
             s += cat(" else { ", elsep->v[0], " }");
           return Value{{std::move(s)}, Precedence::If};
