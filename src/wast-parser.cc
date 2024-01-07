@@ -260,7 +260,7 @@ bool IsPlainOrBlockInstr(TokenType token_type) {
   return IsPlainInstr(token_type) || IsBlockInstr(token_type);
 }
 
-// (¹Ø¼ü×Ö
+// (ï¿½Ø¼ï¿½ï¿½ï¿½
 bool IsExpr(TokenTypePair pair) {
   return pair[0] == TokenType::Lpar && IsPlainOrBlockInstr(pair[1]);
 }
@@ -355,8 +355,8 @@ void ResolveTypeName(
 
   const auto name_iterator = bindings.find(index);
   assert(name_iterator != bindings.cend());
-  // ²»ÖªµÀÎªÊ²Ã´ type_bindings ÊÇ¿ÕµÄ
-  // 2023-11-16 ÒÑ¾­ÕýÈ·
+  // ï¿½ï¿½Öªï¿½ï¿½ÎªÊ²Ã´ type_bindings ï¿½Ç¿Õµï¿½
+  // 2023-11-16 ï¿½Ñ¾ï¿½ï¿½ï¿½È·
   const auto type_index = module.type_bindings.FindIndex(name_iterator->second);
   assert(type_index != kInvalidIndex);
   // type = Type(Type::Reference, 0);
@@ -564,11 +564,11 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
     bool has_func_type_and_empty_signature = false;
 
     if (decl) {
-      // ³öÏÖÎÊÌâ
+      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
       ResolveTypeNames(*module, decl);
       has_func_type_and_empty_signature =
           ResolveFuncTypeWithEmptySignature(*module, decl);
-      // ³öÏÖÎÊÌâ 2023-12-09
+      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 2023-12-09
       ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
       result |=
           CheckFuncTypeVarMatchesExplicit(field.loc, *module, *decl, errors);
@@ -631,15 +631,15 @@ Location WastParser::GetLocation() {
 }
 
 TokenType WastParser::Peek(size_t n) {
-  // º¯ÊýµÄ×÷ÓÃÊÇ·µ»Øtokens_ÖÐµÄµÚn¸öÔªËØµÄÀàÐÍ
-  // Í¬Ê±Èç¹ûtokens_ÖÐµÄÔªËØ²»×ãn¸ö£¬ÄÇÃ´¾Í´Ólexer_ÖÐ»ñÈ¡
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½tokens_ï¿½ÐµÄµï¿½nï¿½ï¿½Ôªï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
+  // Í¬Ê±ï¿½ï¿½ï¿½tokens_ï¿½Ðµï¿½Ôªï¿½Ø²ï¿½ï¿½ï¿½nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´ï¿½Í´ï¿½lexer_ï¿½Ð»ï¿½È¡
   assert(n <= 1);
   while (tokens_.size() <= n) {
     Token cur = lexer_->GetToken();
-    // LparAnnÊÇ×¢ÊÍ£¬Ã»Ê¹ÓÃ¹ýÕâ¸ö¹Ø¼ü×Ö
+    // LparAnnï¿½ï¿½×¢ï¿½Í£ï¿½Ã»Ê¹ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½
     if (cur.token_type() != TokenType::LparAnn) {
-      // Ò»°ãÇé¿ö½øÈëÕâÀï
-      // ÄÇÃ´¾ÍÖ±½Ó½«cur·ÅÈëtokens_ÖÐ
+      // Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+      // ï¿½ï¿½Ã´ï¿½ï¿½Ö±ï¿½Ó½ï¿½curï¿½ï¿½ï¿½ï¿½tokens_ï¿½ï¿½
       tokens_.push_back(cur);
     } else {
       // Custom annotation. For now, discard until matching Rpar, unless it is
@@ -1191,7 +1191,7 @@ bool WastParser::ParseElemExprVarListOpt(ExprListVector* out_list) {
   return !out_list->empty();
 }
 
-// »ù±¾ÀàÐÍ
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 Result WastParser::ParseValueType(Var* out_type) {
   WABT_TRACE(ParseValueType);
 
@@ -1284,7 +1284,7 @@ Type ParseVar2RefType(Var var) {
 }
 
 
-// ´¦Àí »ù±¾ÀàÐÍµÄÁÐ±í
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ð±ï¿½
 Result WastParser::ParseValueTypeList(
     TypeVector* out_type_list,
     std::unordered_map<uint32_t, std::string>* type_names) {
@@ -1309,7 +1309,7 @@ Result WastParser::ParseValueTypeList(
   return Result::Ok;
 }
 
-// ½âÎöÒýÓÃÀàÐÍ
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 Result WastParser::ParseRefKind(Type* out_type) {
   WABT_TRACE(ParseRefKind);
   if (!IsTokenTypeRefKind(Peek())) {
@@ -1675,10 +1675,10 @@ Result WastParser::ParseModuleFieldList(Module* module) {
     }
   }
   CHECK_RESULT(ResolveFuncTypes(module, errors_));
-  // Èç¹ûÊ¹ÓÃµÄ²ÎÊýÃû³öÏÖÎÊÌâ
-  // var nameÀàÐÍµÄ ×ª³Éindex
-  // Ö»ÄÜ´¦Àílocal.get $a
-  // ²»ÄÜ´¦Àíº¯ÊýÉùÃ÷
+  // ï¿½ï¿½ï¿½Ê¹ï¿½ÃµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  // var nameï¿½ï¿½ï¿½Íµï¿½ ×ªï¿½ï¿½index
+  // Ö»ï¿½Ü´ï¿½ï¿½ï¿½local.get $a
+  // ï¿½ï¿½ï¿½Ü´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   CHECK_RESULT(ResolveNamesModule(module, errors_));
   return Result::Ok;
 }
@@ -1813,7 +1813,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
           name = type.name();
         }
       }
-      // ´¦ÀírefÀàÐÍ
+      // ï¿½ï¿½ï¿½ï¿½refï¿½ï¿½ï¿½ï¿½
       if (name != "hello world") {
         if (name == "Any") {
           field->elem_segment.elem_type = Type(Type::Ref, Type::Any);
@@ -1831,7 +1831,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
       ParseElemExprListOpt(&field->elem_segment.elem_exprs);
     }
 
-    // Ô­À´µÄ
+    // Ô­ï¿½ï¿½ï¿½ï¿½
     // ParseElemExprVarListOpt(&field->elem_segment.elem_exprs);
   }
   EXPECT(Rpar);
@@ -1918,15 +1918,15 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     Func& func = field->func;
     func.loc = GetLocation();
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
-    // ´¦ÀíÊäÈëºÍÊä³ö
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
-    // ´¦ÀílocalÊäÈë
+    // ï¿½ï¿½ï¿½ï¿½localï¿½ï¿½ï¿½ï¿½
     TypeVector local_types;
     CHECK_RESULT(ParseBoundValueTypeList(
         TokenType::Local, &local_types, &func.bindings,
         &func.decl.sig.param_type_names, func.GetNumParams()));
     func.local_types.Set(local_types);
-    // ´¦Àíº¯ÊýÌå
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     CHECK_RESULT(ParseTerminatingInstrList(&func.exprs));
     module->AppendField(std::move(field));
   }
@@ -1950,7 +1950,7 @@ Result WastParser::ParseSubType(std::unique_ptr<TypeEntry>& typeEntry) {
     CHECK_RESULT(ErrorIfLpar({"param", "result"}));
     typeEntry = std::move(func_type);
   }
-  // struct ²¿·Ö
+  // struct ï¿½ï¿½ï¿½ï¿½
   else if (Match(TokenType::Struct)) {
     if (!options_->features.gc_enabled()) {
       Error(loc, "struct not allowed");
@@ -1960,7 +1960,7 @@ Result WastParser::ParseSubType(std::unique_ptr<TypeEntry>& typeEntry) {
     CHECK_RESULT(ParseFieldList(&struct_type->fields));
     typeEntry = std::move(struct_type);
   }
-  // array ²¿·Ö
+  // array ï¿½ï¿½ï¿½ï¿½
   else if (Match(TokenType::Array)) {
     if (!options_->features.gc_enabled()) {
       Error(loc, "array type not allowed");
@@ -1974,7 +1974,7 @@ Result WastParser::ParseSubType(std::unique_ptr<TypeEntry>& typeEntry) {
     return ErrorExpected({"func", "struct", "array"});
   }
 
-  // func µÄÀ¨ºÅ
+  // func ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   EXPECT(Rpar);
   return Result::Ok;
 }
@@ -2060,7 +2060,7 @@ Result WastParser::ParseTypeModuleField(Module* module) {
     }
     auto struct_type = std::make_unique<StructType>(name);
     CHECK_RESULT(ParseFieldList(&struct_type->fields));
-    // ¼ì²éfieldsµÄnameÊÇ·ñÈßÓà
+    // ï¿½ï¿½ï¿½fieldsï¿½ï¿½nameï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½
     int n = struct_type->fields.size();
     for (int i = 0; i < n; i++) {
       if (struct_type->fields[i].name == "")
@@ -2090,16 +2090,16 @@ Result WastParser::ParseTypeModuleField(Module* module) {
     return ErrorExpected({"func", "struct", "array", "sub"});
   }
 
-  // func µÄÀ¨ºÅ
+  // func ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   EXPECT(Rpar);
-  // type µÄÀ¨ºÅ
+  // type ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
 }
 
 /*
- £¨field ...£©
+ ï¿½ï¿½field ...ï¿½ï¿½
 */
 Result WastParser::ParseField(std::vector<Field*>& fields) {
   WABT_TRACE(ParseField);
@@ -2153,7 +2153,7 @@ Result WastParser::ParseField(std::vector<Field*>& fields) {
   };
 
   if (MatchLpar(TokenType::Field)) {
-    // ´¦ÀífieldµÄÃû×Ö
+    // ï¿½ï¿½ï¿½ï¿½fieldï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     std::string name;
     ParseBindVarOpt(&name);
     CHECK_RESULT(parse_mut_valuetype());
@@ -2168,7 +2168,7 @@ Result WastParser::ParseField(std::vector<Field*>& fields) {
 }
 
 Result WastParser::ParseFieldList(std::vector<Field>* fields) {
-  // ½âÎöfieldÁÐ±í
+  // ï¿½ï¿½ï¿½ï¿½fieldï¿½Ð±ï¿½
   // (type(struct(field i32 i32)))
   WABT_TRACE(ParseFieldList);
   while (PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar)) {
@@ -2202,9 +2202,9 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<GlobalModuleField>(loc, name);
-    // ´¦ÀíglobalµÄÀàÐÍ
+    // ï¿½ï¿½ï¿½ï¿½globalï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     CHECK_RESULT(ParseGlobalType(&field->global, module));
-    // ´¦ÀíglobalµÄ³õÊ¼»¯
+    // ï¿½ï¿½ï¿½ï¿½globalï¿½Ä³ï¿½Ê¼ï¿½ï¿½
     CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr));
     module->AppendField(std::move(field));
   }
@@ -2501,10 +2501,10 @@ Result WastParser::ParseTypeUseOpt(FuncDeclaration* decl) {
 Result WastParser::ParseFuncSignature(FuncSignature* sig,
                                       BindingHash* param_bindings) {
   WABT_TRACE(ParseFuncSignature);
-  // º¯ÊýÊäÈë
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   CHECK_RESULT(ParseBoundValueTypeList(TokenType::Param, &sig->param_types,
                                        param_bindings, &sig->param_type_names));
-  // º¯ÊýÊä³ö
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   CHECK_RESULT(ParseResultList(&sig->result_types, &sig->result_type_names));
   return Result::Ok;
 }
@@ -2517,7 +2517,7 @@ Result WastParser::ParseUnboundFuncSignature(FuncSignature* sig) {
   return Result::Ok;
 }
 
-// ´¦Àíº¯ÊýÊäÈë
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 Result WastParser::ParseBoundValueTypeList(
     TokenType token,
     TypeVector* types,
@@ -2550,7 +2550,7 @@ Result WastParser::ParseBoundValueTypeList(
   return Result::Ok;
 }
 
-// ´¦Àíº¯ÊýÊä³öÖ÷ÒªÄÚÈÝ
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½
 Result WastParser::ParseUnboundValueTypeList(
     TokenType token,
     TypeVector* types,
@@ -2563,7 +2563,7 @@ Result WastParser::ParseUnboundValueTypeList(
   return Result::Ok;
 }
 
-// ´¦Àíº¯ÊýÊä³ö
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 Result WastParser::ParseResultList(
     TypeVector* result_types,
     std::unordered_map<uint32_t, std::string>* type_names) {
@@ -2571,17 +2571,17 @@ Result WastParser::ParseResultList(
   return ParseUnboundValueTypeList(TokenType::Result, result_types, type_names);
 }
 
-// ´¦Àíº¯ÊýÌåÖ÷ÒªÄÚÈÝ
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½
 Result WastParser::ParseInstrList(ExprList* exprs) {
   WABT_TRACE(ParseInstrList);
   ExprList new_exprs;
   while (true) {
-    // Ã¿Ò»´Î¶ÁÈ¡Ò»ÌõÓï¾ä
+    // Ã¿Ò»ï¿½Î¶ï¿½È¡Ò»ï¿½ï¿½ï¿½ï¿½ï¿½
     auto pair = PeekPair();
     if (IsInstr(pair)) {
-      // ÊÇÓï¾ä or £¨Óï¾ä ¶¼¿ÉÒÔÊ¶±ð
+      // ï¿½ï¿½ï¿½ï¿½ï¿½ or ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½
       if (Succeeded(ParseInstr(&new_exprs))) {
-        // splice¼Óµ½exprsµÄÄ©Î²
+        // spliceï¿½Óµï¿½exprsï¿½ï¿½Ä©Î²
         exprs->splice(exprs->end(), new_exprs);
       } else {
         CHECK_RESULT(Synchronize(IsInstr));
@@ -2599,10 +2599,10 @@ Result WastParser::ParseInstrList(ExprList* exprs) {
   return Result::Ok;
 }
 
-// ´¦Àíº¯ÊýÌå
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 Result WastParser::ParseTerminatingInstrList(ExprList* exprs) {
   WABT_TRACE(ParseTerminatingInstrList);
-  // ´¦Àíº¯ÊýÌå
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   Result result = ParseInstrList(exprs);
   // An InstrList often has no further Lpar following it, because it would have
   // gobbled it up. So if there is a following Lpar it is an error. If we
@@ -2614,19 +2614,19 @@ Result WastParser::ParseTerminatingInstrList(ExprList* exprs) {
 Result WastParser::ParseInstr(ExprList* exprs) {
   WABT_TRACE(ParseInstr);
   if (IsPlainInstr(Peek())) {
-    // Ò»°ã½øÈëÕâÀï
+    // Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParsePlainInstr(&expr));
     exprs->push_back(std::move(expr));
     return Result::Ok;
   } else if (IsBlockInstr(Peek())) {
-    // Ñ­»·½á¹¹¡£¡£¡£
+    // Ñ­ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParseBlockInstr(&expr));
     exprs->push_back(std::move(expr));
     return Result::Ok;
   } else if (PeekMatchExpr()) {
-    // (i32.add ½øÈëÕâÀï
+    // (i32.add ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     return ParseExpr(exprs);
   } else {
     assert(!"ParseInstr should only be called when IsInstr() is true");
@@ -2833,7 +2833,7 @@ Result WastParser::ParseSimdLane(Location loc, uint64_t* lane_idx) {
   return Result::Ok;
 }
 
-// ½âÎö¼òµ¥Ö¸Áî
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
 Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   WABT_TRACE(ParsePlainInstr);
   Location loc = GetLocation();
@@ -3101,7 +3101,7 @@ case TokenType::RefCast:
     // i32.add i32.sub
     case TokenType::Binary: {
       Token token = Consume();
-      // ¼ì²éopcodeÊÇ·ñºÏ·¨ £¿ ´æÔÚ£¿
+      // ï¿½ï¿½ï¿½opcodeï¿½Ç·ï¿½Ï·ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ú£ï¿½
       ErrorUnlessOpcodeEnabled(token);
       out_expr->reset(new BinaryExpr(token.opcode(), loc));
       break;
@@ -3845,7 +3845,7 @@ Result WastParser::ParseBlock(Block* block) {
   return Result::Ok;
 }
 
-// ½âÎöÖ¸ÁîÁÐ±í
+// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ð±ï¿½
 Result WastParser::ParseExprList(ExprList* exprs) {
   WABT_TRACE(ParseExprList);
   ExprList new_exprs;
@@ -3859,7 +3859,7 @@ Result WastParser::ParseExprList(ExprList* exprs) {
   return Result::Ok;
 }
 
-// ½âÎö±í´ïÊ½ ·Ç¼òµ¥Ö¸Áî £¨+keywords
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ ï¿½Ç¼ï¿½Ö¸ï¿½ï¿½ ï¿½ï¿½+keywords
 Result WastParser::ParseExpr(ExprList* exprs) {
   WABT_TRACE(ParseExpr);
   if (!PeekMatch(TokenType::Lpar)) {
@@ -3867,17 +3867,17 @@ Result WastParser::ParseExpr(ExprList* exprs) {
   }
 
   if (IsPlainInstr(Peek(1))) {
-    // ¼òµ¥Ö¸Áî
+    // ï¿½ï¿½Ö¸ï¿½ï¿½
     Consume();
     std::unique_ptr<Expr> expr;
-    // ½âÎö¼òµ¥Ö¸Áî
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
     CHECK_RESULT(ParsePlainInstr(&expr));
-    // ½âÎö²ÎÊýÁÐ±í
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½
     CHECK_RESULT(ParseExprList(exprs));
     CHECK_RESULT(ErrorIfLpar({"an expr"}));
     exprs->push_back(std::move(expr));
   } else {
-    // ¸´ÔÓÖ¸Áî
+    // ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
     Location loc = GetLocation();
 
     switch (Peek(1)) {
@@ -4528,7 +4528,7 @@ Result ParseWatModule(WastLexer* lexer,
                       WastParseOptions* options) {
   assert(out_module != nullptr);
   assert(options != nullptr);
-  if ((*out_module)->moduletypesname.size() > 0) {
+  if (*out_module != NULL) {
     moduletypesname1 = (*out_module)->moduletypesname;
   }
   WastParser parser(lexer, errors, options);
