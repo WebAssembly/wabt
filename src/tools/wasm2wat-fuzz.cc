@@ -20,7 +20,7 @@
 #include "wabt/binary-reader.h"
 #include "wabt/common.h"
 #include "wabt/ir.h"
-std::unordered_map<std::string, int> moduletypesname;
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   wabt::ReadBinaryOptions options;
   wabt::Errors errors;

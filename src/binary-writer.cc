@@ -61,7 +61,6 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 void WriteType(Stream* stream, Type type, const char* desc) {
   WriteS32Leb128(stream, type, desc ? desc : type.GetName().c_str());
   if (type.IsReferenceWithIndex()) {
-    // WriteS32Leb128(stream, 0, "heap type");
     WriteS32Leb128(stream, type.GetReferenceIndex(),
                    desc ? desc : type.GetName().c_str());
   }
@@ -738,7 +737,7 @@ Type ParseVar2RefType(Var var) {
   } else if (name == "Extern") {
     ans.type_index_ = Type::ExternRef;
   } else if (name == "Any") {
-    ans.type_index_ = Type::Any;
+    ans.type_index_ = Type::AnyRef;
   } else if (name == "Eq") {
     ans.type_index_ = Type::Eq;
   } else if (name == "I31") {

@@ -208,7 +208,8 @@ class WastParser {
   Result ParseCatchInstrList(CatchVector* catches);
   Result ParseCatchExprList(CatchVector* catches);
   Result ParseGlobalType(Global*, Module* m = nullptr);
-  Result ParseField(std::vector<Field*>& fields);
+  Result ParseField(Field*);
+  Result ParseStructField(std::vector<Field*>& fields);
   Result ParseFieldList(std::vector<Field>*);
 
   template <typename T>

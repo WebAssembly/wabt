@@ -24,6 +24,7 @@
 #include "wabt/stream.h"
 
 using namespace wabt;
+
 static std::string s_filename;
 static std::string s_outfile;
 static std::set<std::string_view> v_sections_to_keep{};

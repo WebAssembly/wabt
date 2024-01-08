@@ -519,6 +519,8 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
   std::string BlockSigToString(Type type) const;
 
+  Result OnFunction(Index index, Index sig_index) override;
+
   Result BeginFunctionBody(Index index, Offset size) override;
   Result EndFunctionBody(Index index) override;
 
@@ -633,13 +635,15 @@ Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
   for (size_t i = data_size; i < IMMEDIATE_OCTET_COUNT; i++) {
     printf("   ");
   }
-  printf(" | local[%" PRIindex, local_index_);
+  printf(" | local[");
+  if (count > 0) {
+    printf("%" PRIindex, local_index_);
 
-  if (count != 1) {
-    printf("..%" PRIindex "", local_index_ + count - 1);
+    if (count != 1) {
+      printf("..%" PRIindex "", local_index_ + count - 1);
+    }
+    local_index_ += count;
   }
-  local_index_ += count;
-
   printf("] type=%s\n", type.GetName().c_str());
 
   last_opcode_end = current_opcode_offset + data_size;
@@ -853,7 +857,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint64(uint64_t value) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  LogOpcode("%" PRId64, value);
+  LogOpcode("%" PRIu64, value);
   return Result::Ok;
 }
 
@@ -937,6 +941,12 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
     indent_level--;
   }
   LogOpcode(0, nullptr);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnFunction(Index index,
+                                                  Index sig_index) {
+  objdump_state_->function_types[index] = sig_index;
   return Result::Ok;
 }
 
@@ -2171,6 +2181,10 @@ Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
     PrintDetails(" tls");
     flags &= ~WABT_SYMBOL_FLAG_TLS;
   }
+  if (flags & WABT_SYMBOL_FLAG_ABS) {
+    PrintDetails(" abs");
+    flags &= ~WABT_SYMBOL_FLAG_ABS;
+  }
   if (flags != 0) {
     PrintDetails(" unknown_flags=%#x", flags);
   }
@@ -2207,9 +2221,14 @@ Result BinaryReaderObjdump::OnDataSymbol(Index index,
                                          uint32_t size) {
   PrintDetails("   - %d: D <" PRIstringview ">", index,
                WABT_PRINTF_STRING_VIEW_ARG(name));
-  if (!(flags & WABT_SYMBOL_FLAG_UNDEFINED))
-    PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
-                 size);
+  if (!(flags & WABT_SYMBOL_FLAG_UNDEFINED)) {
+    if (flags & WABT_SYMBOL_FLAG_ABS) {
+      PrintDetails(" address=%d size=%d", offset, size);
+    } else {
+      PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
+                   size);
+    }
+  }
   return PrintSymbolFlags(flags);
 }
 

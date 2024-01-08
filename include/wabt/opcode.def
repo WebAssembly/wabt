@@ -284,7 +284,7 @@ WABT_OPCODE(I64,  F64,  ___,  ___,  0,  0xfc, 0x07, I64TruncSatF64U, "i64.trunc_
 /* Bulk-memory */
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x08, MemoryInit, "memory.init", "")
 WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x09, DataDrop, "data.drop", "")
-WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0a, MemoryCopy,"memory.copy", "")
+WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0a, MemoryCopy, "memory.copy", "")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0b, MemoryFill, "memory.fill", "")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0c, TableInit, "table.init", "")
 WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x0d, ElemDrop, "elem.drop", "")
@@ -299,7 +299,7 @@ WABT_OPCODE(___,  I32,  ___,  I32,  0,  0xfc, 0x11, TableFill, "table.fill", "")
 
 
 /* Simd opcodes */
-WABT_OPCODE(V128, I32,  ___,  ___,  16, 0xfd, 0x00, V128Load,  "v128.load", "")
+WABT_OPCODE(V128, I32,  ___,  ___,  16, 0xfd, 0x00, V128Load, "v128.load", "")
 WABT_OPCODE(V128, I32,   ___, ___,  8,  0xfd, 0x01, V128Load8X8S, "v128.load8x8_s", "")
 WABT_OPCODE(V128, I32,   ___, ___,  8,  0xfd, 0x02, V128Load8X8U, "v128.load8x8_u", "")
 WABT_OPCODE(V128, I32,   ___, ___,  8,  0xfd, 0x03, V128Load16X4S, "v128.load16x4_s", "")
@@ -527,8 +527,8 @@ WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0xf4, F64X2Min, "f64x2.min", "")
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0xf5, F64X2Max, "f64x2.max", "")
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0xf6, F64X2PMin, "f64x2.pmin", "")
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0xf7, F64X2PMax, "f64x2.pmax", "")
-WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xf8, I32X4TruncSatF32X4S,"i32x4.trunc_sat_f32x4_s", "")
-WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xf9, I32X4TruncSatF32X4U,"i32x4.trunc_sat_f32x4_u", "")
+WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xf8, I32X4TruncSatF32X4S, "i32x4.trunc_sat_f32x4_s", "")
+WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xf9, I32X4TruncSatF32X4U, "i32x4.trunc_sat_f32x4_u", "")
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xfa, F32X4ConvertI32X4S, "f32x4.convert_i32x4_s", "")
 WABT_OPCODE(V128, V128, ___,  ___,  0,  0xfd, 0xfb, F32X4ConvertI32X4U, "f32x4.convert_i32x4_u", "")
 WABT_OPCODE(V128, V128,  ___, ___,  0,  0xfd, 0xfc, I32X4TruncSatF64X2SZero, "i32x4.trunc_sat_f64x2_s_zero", "")

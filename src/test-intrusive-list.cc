@@ -21,6 +21,7 @@
 #include "wabt/intrusive-list.h"
 
 using namespace wabt;
+
 namespace {
 
 struct TestObject : intrusive_list_base<TestObject> {

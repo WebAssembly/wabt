@@ -222,28 +222,48 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
+  if (expected == Type::Any || actual == Type::Any) {
+    return Result::Ok;
+  }
+
   if (expected == Type::I8 || expected == Type::I16) {
     return Result::Ok;
   }
-  if (expected == Type(Type::RefNull,Type::Any)) {
+  if (expected == Type::FuncRef) {
+	return actual.IsRef() ? Result::Ok : Result::Error;
+  }
+  if (actual == Type::FuncRef) {
+      return expected.IsRef() ? Result::Ok : Result::Error;
+  }
+  if (expected == Type::ExternRef) {
+      return actual.IsRef() ? Result::Ok : Result::Error;
+  }
+  if (actual == Type::ExternRef) {
+      return expected.IsRef() ? Result::Ok : Result::Error;
+  }
+  if (expected == Type(Type::RefNull, Type::AnyRef)) {
     return actual.IsRef() ? Result::Ok : Result::Error;
   }
-
   if (actual == Type::Ref && expected == Type::RefNull) {
     return expected.GetReferenceIndex() == actual.GetReferenceIndex()
                ? Result::Ok
                : Result::Error;
   }
   if (actual == Type::RefNull && expected == Type::Ref) {
-	return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-			   ? Result::Ok
-			   : Result::Error;
+    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+               ? Result::Ok
+               : Result::Error;
   }
-
-  if (expected == Type::Any || actual == Type::Any) {
-    return Result::Ok;
+  if (expected == Type::Ref && actual == Type::Ref) {
+    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+               ? Result::Ok
+               : Result::Error;
   }
-
+  if (expected == Type::RefNull && actual == Type::RefNull) {
+    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+               ? Result::Ok
+               : Result::Error;
+  }
   if (expected == Type::Reference && actual == Type::Reference) {
     return expected.GetReferenceIndex() == actual.GetReferenceIndex()
                ? Result::Ok
@@ -562,12 +582,12 @@ Result TypeChecker::OnArrayInitData(Type type) {
 }
 
 Result TypeChecker::OnRefTest(Type type) {
-  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::Any), "ref.test");
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::AnyRef), "ref.test");
   PushType(Type::I32);
   return result;
 }
 Result TypeChecker::OnRefCast(Type type) {
-  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::Any), "ref.test");
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::AnyRef), "ref.test");
   PushType(type);
   return result;
 }
@@ -591,12 +611,12 @@ Result TypeChecker::OnBrOnCastFail(Type type1, Type type2) {
 Result TypeChecker::OnAnyConvertExtern() {
   Result result = Result::Ok;
   result |= PopAndCheck1Type(Type(Type::RefNull,Type::ExternRef), "array.init_elem");
-  PushType(Type(Type::RefNull, Type::Any));
+  PushType(Type(Type::RefNull, Type::AnyRef));
   return result;
 }
 Result TypeChecker::OnExternConvertAny() {
   Result result = Result::Ok;
-  result |= PopAndCheck1Type(Type(Type::RefNull,Type::Any), "array.init_elem");
+  result |= PopAndCheck1Type(Type(Type::RefNull,Type::AnyRef), "array.init_elem");
   PushType(Type(Type::RefNull, Type::ExternRef));
   return result;
 }
@@ -962,7 +982,6 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
    * examined only the validity of the function index.
    */
   if (features_.function_references_enabled() && !force_generic_funcref) {
-    //PushType(Type(Type::Reference, func_type));
     PushType(Type(Type::Ref, func_type));
   } else {
     PushType(Type::FuncRef);
@@ -971,8 +990,7 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
 }
 
 Result TypeChecker::OnRefNullExpr(Type type) {
-  PushType(Type(Type::RefNull, type));
-  //PushType(type);
+  PushType(type);
   return Result::Ok;
 }
 

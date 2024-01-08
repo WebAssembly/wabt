@@ -109,20 +109,13 @@ struct Const {
 
   int lane_count() const {
     switch (lane_type()) {
-      case Type::I8:
-        return 16;
-      case Type::I16:
-        return 8;
-      case Type::I32:
-        return 4;
-      case Type::I64:
-        return 2;
-      case Type::F32:
-        return 4;
-      case Type::F64:
-        return 2;
-      default:
-        WABT_UNREACHABLE;
+      case Type::I8:  return 16;
+      case Type::I16: return 8;
+      case Type::I32: return 4;
+      case Type::I64: return 2;
+      case Type::F32: return 4;
+      case Type::F64: return 2;
+      default: WABT_UNREACHABLE;
     }
   }
 
@@ -345,7 +338,6 @@ class ArrayType : public TypeEntry {
   static bool classof(const TypeEntry* entry) {
     return entry->kind() == TypeEntryKind::Array;
   }
-
 
   explicit ArrayType(std::string_view name = std::string_view())
       : TypeEntry(TypeEntryKind::Array, name) {}

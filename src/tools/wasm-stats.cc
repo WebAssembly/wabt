@@ -33,6 +33,7 @@
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
 
 using namespace wabt;
+
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;

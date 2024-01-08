@@ -19,6 +19,7 @@
 #include "wabt/utf8.h"
 
 using namespace wabt;
+
 namespace {
 
 void assert_is_valid_utf8(bool expected,

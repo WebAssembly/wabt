@@ -828,7 +828,7 @@ Type SharedValidator::ParseVar2RefType(Var var) {
   } else if (name == "Extern") {
     ans.type_index_ = Type::ExternRef;
   } else if (name == "Any") {
-    ans.type_index_ = Type::Any;
+    ans.type_index_ = Type::AnyRef;
   } else if (name == "Eq") {
     ans.type_index_ = Type::Eq;
   } else if (name == "I31") {

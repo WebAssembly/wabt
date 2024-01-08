@@ -22,6 +22,7 @@
 #include "wabt/opcode.h"
 
 using namespace wabt;
+
 namespace {
 
 struct BinaryReaderError : BinaryReaderNop {

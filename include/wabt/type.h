@@ -40,7 +40,6 @@ class Type {
     F32 = -0x03,   // 0x7d
     F64 = -0x04,   // 0x7c
     V128 = -0x05,  // 0x7b
-
     I8 = -0x08,
     I16 = -0x09,
     Reference = -0x44,
@@ -50,7 +49,7 @@ class Type {
     NoneRef = -0x0F,
     FuncRef = -0x10,
     ExternRef = -0x11,
-    Any = -0x12,
+    AnyRef = -0x12,
     Eq = -0x13,
     I31 = -0x14,
     StructRef = -0x15,
@@ -70,6 +69,7 @@ class Type {
 
     Void = -0x40,
     ___ = Void,
+    Any = 0,
     I8U = 4,
     I16U = 6,
     I32U = 7,
@@ -124,8 +124,12 @@ class Type {
         return "func";
       case Type::Void:
         return "void";
+      case Type::Any:
+        return "any";
       case Type::ExternRef:
         return "externref";
+      case Type::Ref:
+      case Type::RefNull:
       case Type::Reference:
         return StringPrintf("(ref %d)", type_index_);
       default:
@@ -173,8 +177,6 @@ class Type {
   }
 
   Index GetReferenceIndex() const {
-    assert(enum_ == Enum::Reference || enum_ == Type::Ref ||
-           enum_ == Type::RefNull);
     return type_index_;
   }
 

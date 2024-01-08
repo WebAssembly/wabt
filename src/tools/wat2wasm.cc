@@ -120,6 +120,54 @@ int ProgramMain(int argc, char** argv) {
   Errors errors;
   // 处理filedata 里面的缩写
   for (size_t i = 0; i < file_data.size(); ++i) {
+    // 处理（table
+    if (i + 6 < file_data.size() &&
+        (file_data[i] == ' ' || file_data[i] == '(' || file_data[i] == '\n' ||
+         file_data[i] == '\r' || file_data[i] == '\t') &&
+        file_data[i + 1] == 't' && file_data[i + 2] == 'a' &&
+        file_data[i + 3] == 'b' && file_data[i + 4] == 'l' &&
+        file_data[i + 5] == 'e' &&
+        (file_data[i + 6] == ' ' || file_data[i + 6] == '\n' ||
+         file_data[i + 6] == '\r' || file_data[i + 6] == '\t')) {
+      i++;
+      int lpar = 1;
+      while (i < file_data.size()) {
+        if (file_data[i] == '(') {
+          lpar++;
+        } else if (file_data[i] == ')') {
+          lpar--;
+          if (lpar == 0) {
+            break;
+          }
+        }
+        i++;
+      }
+      continue;
+    }
+    // 处理(elem
+    if (i + 5 < file_data.size() &&
+        (file_data[i] == ' ' || file_data[i] == '(' || file_data[i] == '\n' ||
+         file_data[i] == '\r' || file_data[i] == '\t') &&
+        file_data[i + 1] == 'e' && file_data[i + 2] == 'l' &&
+        file_data[i + 3] == 'e' && file_data[i + 4] == 'm' &&
+        (file_data[i + 5] == ' ' || file_data[i + 5] == '\n' ||
+         file_data[i + 5] == '\r' || file_data[i + 5] == '\t')) {
+      i++;
+      int lpar = 1;
+      while (i < file_data.size()) {
+        if (file_data[i] == '(') {
+          lpar++;
+        } else if (file_data[i] == ')') {
+          lpar--;
+          if (lpar == 0) {
+            break;
+          }
+        }
+        i++;
+      }
+      continue;
+    }
+
     // 前面应该至少有一个空格
     // 后面应该是空格/换行/回车/制表符/)
     // anyref
@@ -263,67 +311,6 @@ int ProgramMain(int argc, char** argv) {
       i += 15;
     }
 
-    // funcref -> (ref null func)
-    if (file_data[i] == ' ' && file_data[i + 1] == 'f' &&
-        file_data[i + 2] == 'u' && file_data[i + 3] == 'n' &&
-        file_data[i + 4] == 'c' && file_data[i + 5] == 'r' &&
-        file_data[i + 6] == 'e' && file_data[i + 7] == 'f' &&
-        (file_data[i + 8] == ')' || file_data[i + 8] == ' ' ||
-         file_data[i + 8] == '\n' || file_data[i + 8] == '\r' ||
-         file_data[i + 8] == '\t')) {
-      // 删除原来的funcref
-      file_data.erase(file_data.begin() + i, file_data.begin() + i + 8);
-      // 不可以使用赋值，使用insert
-      file_data.insert(file_data.begin() + i, '(');
-      file_data.insert(file_data.begin() + i + 1, 'r');
-      file_data.insert(file_data.begin() + i + 2, 'e');
-      file_data.insert(file_data.begin() + i + 3, 'f');
-      file_data.insert(file_data.begin() + i + 4, ' ');
-      file_data.insert(file_data.begin() + i + 5, 'n');
-      file_data.insert(file_data.begin() + i + 6, 'u');
-      file_data.insert(file_data.begin() + i + 7, 'l');
-      file_data.insert(file_data.begin() + i + 8, 'l');
-      file_data.insert(file_data.begin() + i + 9, ' ');
-      file_data.insert(file_data.begin() + i + 10, 'f');
-      file_data.insert(file_data.begin() + i + 11, 'u');
-      file_data.insert(file_data.begin() + i + 12, 'n');
-      file_data.insert(file_data.begin() + i + 13, 'c');
-      file_data.insert(file_data.begin() + i + 14, ')');
-      i += 14;
-    }
-
-    // externref -> (ref null extern)
-    if (file_data[i] == ' ' && file_data[i + 1] == 'e' &&
-        file_data[i + 2] == 'x' && file_data[i + 3] == 't' &&
-        file_data[i + 4] == 'e' && file_data[i + 5] == 'r' &&
-        file_data[i + 6] == 'n' && file_data[i + 7] == 'r' &&
-        file_data[i + 8] == 'e' && file_data[i + 9] == 'f' &&
-        (file_data[i + 10] == ')' || file_data[i + 10] == ' ' ||
-         file_data[i + 10] == '\n' || file_data[i + 10] == '\r' ||
-         file_data[i + 10] == '\t')) {
-      // 删除原来的externref
-      file_data.erase(file_data.begin() + i, file_data.begin() + i + 10);
-      // 不可以使用赋值，使用insert
-      file_data.insert(file_data.begin() + i, '(');
-      file_data.insert(file_data.begin() + i + 1, 'r');
-      file_data.insert(file_data.begin() + i + 2, 'e');
-      file_data.insert(file_data.begin() + i + 3, 'f');
-      file_data.insert(file_data.begin() + i + 4, ' ');
-      file_data.insert(file_data.begin() + i + 5, 'n');
-      file_data.insert(file_data.begin() + i + 6, 'u');
-      file_data.insert(file_data.begin() + i + 7, 'l');
-      file_data.insert(file_data.begin() + i + 8, 'l');
-      file_data.insert(file_data.begin() + i + 9, ' ');
-      file_data.insert(file_data.begin() + i + 10, 'e');
-      file_data.insert(file_data.begin() + i + 11, 'x');
-      file_data.insert(file_data.begin() + i + 12, 't');
-      file_data.insert(file_data.begin() + i + 13, 'e');
-      file_data.insert(file_data.begin() + i + 14, 'r');
-      file_data.insert(file_data.begin() + i + 15, 'n');
-      file_data.insert(file_data.begin() + i + 16, ')');
-      i += 16;
-    }
-
     // nullref -> (ref null none)
     if (file_data[i] == ' ' && file_data[i + 1] == 'n' &&
         file_data[i + 2] == 'u' && file_data[i + 3] == 'l' &&
@@ -431,7 +418,6 @@ int ProgramMain(int argc, char** argv) {
       while (i < m && file_data[i] != '\n' && file_data[i] != '\r')
         i++;
     }
-
     if (lparsize == 2) {
       // 判断是不是（type）
       std::string str;
@@ -507,13 +493,10 @@ int ProgramMain(int argc, char** argv) {
         }
       }
     }
-
     if (file_data[i] == '(')
       lparsize++;
-
     if (file_data[i] == ')')
       lparsize--;
-
     i++;
   }
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
