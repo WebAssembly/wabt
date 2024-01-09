@@ -1684,6 +1684,7 @@ void WatWriter::WriteTypeEntry(const TypeEntry& type) {
       WriteCloseSpace();
       break;
     }
+    default:;
   }
   WriteCloseNewline();
 }

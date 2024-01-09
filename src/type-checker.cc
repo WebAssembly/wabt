@@ -17,7 +17,8 @@
 #include "wabt/type-checker.h"
 
 #include <cinttypes>
-
+#include <wabt/ir.h>
+extern std::vector<wabt::TypeEntry*> moduletypes;
 namespace wabt {
 
 namespace {
@@ -131,148 +132,161 @@ bool TypeChecker::IsUnreachable() {
 }
 
 void TypeChecker::ResetTypeStackToLabel(Label* label) {
-  type_stack_.resize(label->type_stack_limit);
+    type_stack_.resize(label->type_stack_limit);
 }
 
 Result TypeChecker::SetUnreachable() {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  label->unreachable = true;
-  ResetTypeStackToLabel(label);
-  return Result::Ok;
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
+    label->unreachable = true;
+    ResetTypeStackToLabel(label);
+    return Result::Ok;
 }
 
 void TypeChecker::PushLabel(LabelType label_type,
-                            const TypeVector& param_types,
-                            const TypeVector& result_types) {
-  label_stack_.emplace_back(label_type, param_types, result_types,
-                            type_stack_.size());
+    const TypeVector& param_types,
+    const TypeVector& result_types) {
+    label_stack_.emplace_back(label_type, param_types, result_types,
+        type_stack_.size());
 }
 
 Result TypeChecker::PopLabel() {
-  label_stack_.pop_back();
-  return Result::Ok;
+    label_stack_.pop_back();
+    return Result::Ok;
 }
 
 Result TypeChecker::CheckLabelType(Label* label, LabelType label_type) {
-  return label->label_type == label_type ? Result::Ok : Result::Error;
+    return label->label_type == label_type ? Result::Ok : Result::Error;
 }
 
 Result TypeChecker::Check2LabelTypes(Label* label,
-                                     LabelType label_type1,
-                                     LabelType label_type2) {
-  return label->label_type == label_type1 || label->label_type == label_type2
-             ? Result::Ok
-             : Result::Error;
+    LabelType label_type1,
+    LabelType label_type2) {
+    return label->label_type == label_type1 || label->label_type == label_type2
+        ? Result::Ok
+        : Result::Error;
 }
 
 Result TypeChecker::GetThisFunctionLabel(Label** label) {
-  return GetLabel(label_stack_.size() - 1, label);
+    return GetLabel(label_stack_.size() - 1, label);
 }
 
 Result TypeChecker::PeekType(Index depth, Type* out_type) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
 
-  if (label->type_stack_limit + depth >= type_stack_.size()) {
-    *out_type = Type::Any;
-    return label->unreachable ? Result::Ok : Result::Error;
-  }
-  *out_type = type_stack_[type_stack_.size() - depth - 1];
-  return Result::Ok;
+    if (label->type_stack_limit + depth >= type_stack_.size()) {
+        *out_type = Type::Any;
+        return label->unreachable ? Result::Ok : Result::Error;
+    }
+    *out_type = type_stack_[type_stack_.size() - depth - 1];
+    return Result::Ok;
 }
 
 Result TypeChecker::PeekAndCheckType(Index depth, Type expected) {
-  Type actual = Type::Any;
-  Result result = PeekType(depth, &actual);
-  return result | CheckType(actual, expected);
+    Type actual = Type::Any;
+    Result result = PeekType(depth, &actual);
+    return result | CheckType(actual, expected);
 }
 
 Result TypeChecker::DropTypes(size_t drop_count) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  if (label->type_stack_limit + drop_count > type_stack_.size()) {
-    ResetTypeStackToLabel(label);
-    return label->unreachable ? Result::Ok : Result::Error;
-  }
-  type_stack_.erase(type_stack_.end() - drop_count, type_stack_.end());
-  return Result::Ok;
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
+    if (label->type_stack_limit + drop_count > type_stack_.size()) {
+        ResetTypeStackToLabel(label);
+        return label->unreachable ? Result::Ok : Result::Error;
+    }
+    type_stack_.erase(type_stack_.end() - drop_count, type_stack_.end());
+    return Result::Ok;
 }
 
 void TypeChecker::PushType(Type type) {
-  if (type != Type::Void) {
-    type_stack_.push_back(type);
-  }
+    if (type != Type::Void) {
+        type_stack_.push_back(type);
+    }
 }
 
 void TypeChecker::PushTypes(const TypeVector& types) {
-  for (Type type : types) {
-    PushType(type);
-  }
+    for (Type type : types) {
+        PushType(type);
+    }
 }
 
 Result TypeChecker::CheckTypeStackEnd(const char* desc) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  Result result = (type_stack_.size() == label->type_stack_limit)
-                      ? Result::Ok
-                      : Result::Error;
-  PrintStackIfFailedV(result, desc, {}, /*is_end=*/true);
-  return result;
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
+    Result result = (type_stack_.size() == label->type_stack_limit)
+        ? Result::Ok
+        : Result::Error;
+    PrintStackIfFailedV(result, desc, {}, /*is_end=*/true);
+    return result;
+}
+
+Type UpCastType(Type& type) {
+    wabt::Index i = type.GetReferenceIndex();
+    if (i < 0x3f3f3f3f && moduletypes.size() > i) {
+        if (moduletypes[i]->kind() == TypeEntryKind::Struct)      return Type(Type::Ref, Type::AnyRef);
+        else if (moduletypes[i]->kind() == TypeEntryKind::Array)      return Type(Type::Ref, Type::AnyRef);
+        else if (moduletypes[i]->kind() == TypeEntryKind::Sub) {
+            wabt::SubType* subtype = dynamic_cast<wabt::SubType*>(moduletypes[i]);
+            if (subtype->typeEntry->kind() == TypeEntryKind::Struct)
+              return Type(Type::Ref, Type::AnyRef);
+            else if (subtype->typeEntry->kind() == TypeEntryKind::Array)
+              return Type(Type::Ref, Type::AnyRef);
+        }
+    } else if (Type(i) == Type::I31)
+                return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::StructRef)
+                return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::ArrayRef)
+               return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::Eq)
+               return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::NoneRef)
+                return Type(Type::Ref, Type::AnyRef);
+    return type;
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
-  if (expected == Type::Any || actual == Type::Any) {
+    if (expected == Type::Any || actual == Type::Any) {
+        return Result::Ok;
+    }
+    if (expected == Type::I8 || expected == Type::I16)
+        return Result::Ok;
+    if (actual == Type::I8 || actual == Type::I16)
+		return Result::Ok;
+    if (expected == Type::Reference && actual == Type::Reference) {
+        return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+                   ? Result::Ok
+                   : Result::Error;
+    }
+    if (actual == Type::FuncRef && (expected == Type(Type::Ref,Type::NoFunc)|| expected == Type(Type::RefNull,Type::NoFunc)))		return Result::Ok;
+    if (expected == Type::FuncRef && (actual == Type(Type::Ref,Type::NoFunc)|| actual == Type(Type::RefNull,Type::NoFunc)))  return Result::Ok;
+    if (actual == Type::ExternRef && (expected == Type(Type::Ref,Type::NoExtern)|| expected == Type(Type::RefNull,Type::NoExtern)))		return Result::Ok;
+    if (expected == Type::ExternRef && (actual == Type(Type::Ref,Type::NoExtern)|| actual == Type(Type::RefNull,Type::NoExtern)))  return Result::Ok;
+    if (actual == Type::FuncRef && expected.IsNewReferenceWithIndex()) {
+        auto i = expected.GetReferenceIndex();
+        if (i < 0x3f3f3f3f && moduletypes.size() < i &&
+            moduletypes[i]->kind() == TypeEntryKind::Func)
+      return Result::Ok;
+    }
+    if (expected == Type::FuncRef && actual.IsNewReferenceWithIndex()) {
+        auto i = actual.GetReferenceIndex();
+        if (i < 0x3f3f3f3f && moduletypes.size() < i &&
+            moduletypes[i]->kind() == TypeEntryKind::Func)
+      return Result::Ok;
+    }
+    if (actual.IsNewReferenceWithIndex()) actual = UpCastType(actual);
+    if (expected.IsNewReferenceWithIndex()) expected = UpCastType(expected);
+    if (actual.IsNewReferenceWithIndex()&& expected.IsNewReferenceWithIndex()) {
+        return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+                          ? Result::Ok
+                          : Result::Error;
+	}
+    if (actual != expected) {
+        return Result::Error;
+    }
     return Result::Ok;
-  }
-
-  if (expected == Type::I8 || expected == Type::I16) {
-    return Result::Ok;
-  }
-  if (expected == Type::FuncRef) {
-	return actual.IsRef() ? Result::Ok : Result::Error;
-  }
-  if (actual == Type::FuncRef) {
-      return expected.IsRef() ? Result::Ok : Result::Error;
-  }
-  if (expected == Type::ExternRef) {
-      return actual.IsRef() ? Result::Ok : Result::Error;
-  }
-  if (actual == Type::ExternRef) {
-      return expected.IsRef() ? Result::Ok : Result::Error;
-  }
-  if (expected == Type(Type::RefNull, Type::AnyRef)) {
-    return actual.IsRef() ? Result::Ok : Result::Error;
-  }
-  if (actual == Type::Ref && expected == Type::RefNull) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
-  if (actual == Type::RefNull && expected == Type::Ref) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
-  if (expected == Type::Ref && actual == Type::Ref) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
-  if (expected == Type::RefNull && actual == Type::RefNull) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
-  if (expected == Type::Reference && actual == Type::Reference) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
-  if (actual != expected) {
-    return Result::Error;
-  }
-  return Result::Ok;
 }
 
 Result TypeChecker::CheckTypes(const TypeVector& actual,
@@ -518,7 +532,7 @@ Result TypeChecker::OnArrayNewDefault(Index index) {
 }
 Result TypeChecker::OnArrayNewFixed(Index index, Type type, Index size) {
   Result result = Result::Ok;
-  for (int i = 0; i < size; i++) {
+  for (Index i = 0; i < size; i++) {
     result |= PopAndCheck1Type(type, "array.new_fixed");
   }
   PushType(Type(Type::Ref, index));
@@ -990,7 +1004,24 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
 }
 
 Result TypeChecker::OnRefNullExpr(Type type) {
-  PushType(type);
+  if (type == Type::Struct)
+    PushType(Type(Type::RefNull, Type::StructRef));
+  else if (type == Type::Array)
+	PushType(Type(Type::RefNull, Type::ArrayRef));
+  else if (type == Type::I31)
+    PushType(Type(Type::RefNull, Type::I31));
+  else if (type == Type::Eq)
+    PushType(Type(Type::RefNull, Type::Eq));
+  else if (type == Type::Any)
+    PushType(Type(Type::RefNull, Type::AnyRef));
+  else if (type == Type::NoneRef)
+    PushType(Type(Type::RefNull, Type::NoneRef));
+  else if (type == Type::NoExtern)
+    PushType(Type(Type::RefNull, Type::NoExtern));
+  else if (type == Type::NoFunc)
+    PushType(Type(Type::RefNull, Type::NoFunc));
+  else
+    PushType(type);
   return Result::Ok;
 }
 

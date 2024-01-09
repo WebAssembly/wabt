@@ -95,6 +95,10 @@ class Type {
            enum_ == Type::RefNull;
   }
 
+  bool IsNewReferenceWithIndex() const {
+    return enum_ == Type::Ref || enum_ == Type::RefNull;
+  }
+
   bool IsNullableRef() const {
     // Currently all reftypes are nullable
     return IsRef();
@@ -169,7 +173,13 @@ class Type {
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
   bool isRef() const { return enum_ == Type::Ref; }
-  bool isRefNull() const { return enum_ == Type::RefNull; }
+  bool isRefNull() const {
+    return enum_ == Type::RefNull || enum_ == Type::FuncRef ||
+           enum_ == Type::ExternRef;
+  }
+  bool isOldRef() const {
+    return enum_ == Type::FuncRef || enum_ == Type::ExternRef;
+  }
 
   Index GetIndex() const {
     assert(IsIndex());

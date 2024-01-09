@@ -564,11 +564,9 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
     bool has_func_type_and_empty_signature = false;
 
     if (decl) {
-      // 出现问题
       ResolveTypeNames(*module, decl);
       has_func_type_and_empty_signature =
           ResolveFuncTypeWithEmptySignature(*module, decl);
-      // 出现问题 2023-12-09
       ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
       result |=
           CheckFuncTypeVarMatchesExplicit(field.loc, *module, *decl, errors);
@@ -940,6 +938,7 @@ Result WastParser::ParseVarRef(Var* out_var) {
   else {
     return ErrorExpected({"a numeric index", "a name"}, "12 or $foo");
   }
+  return Result::Ok;
 }
 
 Result WastParser::ParseVar(Var* out_var) {
@@ -1074,6 +1073,7 @@ Result WastParser::ParseVar(Var* out_var) {
   else {
     return ErrorExpected({"a numeric index", "a name"}, "12 or $foo");
   }
+  return Result::Ok;
 }
 
 bool WastParser::ParseVarOpt(Var* out_var, Var default_var) {
@@ -1239,6 +1239,8 @@ bool isNumber(const std::string& str) {
   return true;
 }
 Type ParseVar2RefType(Var var) {
+  if (var.is_index())
+    return Type(var.index());
   std::string name;
   Type ans;
   if (var.name().substr(0, 7) == "RefNull") {
@@ -1258,6 +1260,10 @@ Type ParseVar2RefType(Var var) {
     ans.type_index_ = Type::NoneRef;
   } else if (name == "Any") {
     ans.type_index_ = Type::AnyRef;
+  } else if (name == "Func") {
+    return Type::FuncRef;
+  } else if (name == "Extern") {
+    return Type::ExternRef;
   } else if (name == "Eq") {
     ans.type_index_ = Type::Eq;
   } else if (name == "I31") {
@@ -1328,19 +1334,31 @@ Result WastParser::ParseRefKind(Type* out_type) {
 
 Result WastParser::ParseRefType(Type* out_type) {
   WABT_TRACE(ParseRefType);
-  if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"funcref", "externref"});
-  }
+  if (PeekMatch(TokenType::Lpar)) {
+    Var type;
+    CHECK_RESULT(ParseValueType(&type));
+    if (type.is_index())
+      *out_type = Type(type.index());
+    else {
+      *out_type = ParseVar2RefType(type);
+    }
+    return Result::Ok;
+  } else {
+    if (!PeekMatch(TokenType::ValueType)) {
+      return ErrorExpected({"funcref", "externref"});
+    }
 
-  Token token = Consume();
-  Type type = token.type();
-  if (type == Type::ExternRef &&
-      !options_->features.reference_types_enabled()) {
-    Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
-    return Result::Error;
-  }
+    Token token = Consume();
+    Type type = token.type();
+    if (type == Type::ExternRef &&
+        !options_->features.reference_types_enabled()) {
+      Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
+      return Result::Error;
+    }
 
-  *out_type = type;
+    *out_type = type;
+    return Result::Ok;
+  }
   return Result::Ok;
 }
 
@@ -1629,6 +1647,7 @@ Result WastParser::ParseModuleFieldList(Module* module) {
   // var name类型的 转成index
   // 只能处理local.get $a
   // 不能处理函数声明
+  // 也能处理(func $g (type $g2))
   CHECK_RESULT(ResolveNamesModule(module, errors_));
   return Result::Ok;
 }
@@ -1739,7 +1758,17 @@ Result WastParser::ParseElemModuleField(Module* module) {
     CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
   }
 
-  if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
+  if (PeekMatchLpar(TokenType::Ref)) {
+    Var type;
+    CHECK_RESULT(ParseValueType(&type));
+    if (type.is_index())
+      field->elem_segment.elem_type = Type(type.index());
+    else {
+      field->elem_segment.elem_type = ParseVar2RefType(type);
+    }
+    ParseElemExprListOpt(&field->elem_segment.elem_exprs);
+  }
+  else if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
     field->elem_segment.elem_type = Type::FuncRef;
@@ -1921,6 +1950,18 @@ Result WastParser::ParseRecModuleField(Module* module) {
       }
       auto struct_type = std::make_unique<StructType>(name);
       CHECK_RESULT(ParseFieldList(&struct_type->fields));
+      // 检查fields的name是否冗余
+      int n = struct_type->fields.size();
+      for (int i = 0; i < n; i++) {
+        if (struct_type->fields[i].name == "")
+          continue;
+        for (int j = i + 1; j < n; j++) {
+          if (struct_type->fields[i].name == struct_type->fields[j].name) {
+            Error(loc, "struct field is duplicate");
+            return Result::Error;
+          }
+        }
+      }
       rec_type->fields.push_back(std::move(struct_type));
     } else if (Match(TokenType::Array)) {
       if (!options_->features.gc_enabled()) {
@@ -2065,7 +2106,7 @@ Result WastParser::ParseStructField(std::vector<Field*>& fields) {
       }
       EXPECT(Rpar);
     } else {
-      while (!PeekMatch(TokenType::Rpar) && !PeekMatch(TokenType::Lpar)) {
+      while (!PeekMatch(TokenType::Rpar)) {
         if (PeekMatchLpar(TokenType::Mut)) {
           Consume();
           Consume();
@@ -2118,10 +2159,16 @@ Result WastParser::ParseFieldList(std::vector<Field>* fields) {
   // (type(struct(field i32 i32)))
   WABT_TRACE(ParseFieldList);
   while (PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar)) {
-    std::vector<Field*> field;
-    CHECK_RESULT(ParseStructField(field));
-    for (int i = 0; i < field.size(); i++) {
-      fields->push_back(*field[i]);
+    if (PeekMatch(TokenType::ValueType)) {
+	  Field field;
+	  CHECK_RESULT(ParseField(&field));
+	  fields->push_back(field);
+    } else {
+      std::vector<Field*> field;
+      CHECK_RESULT(ParseStructField(field));
+      for (std::vector<Field*>::size_type i = 0; i < field.size(); i++) {
+        fields->push_back(*field[i]);
+      }
     }
   }
   return Result::Ok;
@@ -3183,6 +3230,14 @@ case TokenType::RefCast:
       ErrorUnlessOpcodeEnabled(Consume());
       Type type;
       CHECK_RESULT(ParseRefKind(&type));
+      if (type == Type::Struct)            type = Type(Type::RefNull, Type::StructRef);
+      else if (type == Type::Array)        type = Type(Type::RefNull, Type::ArrayRef);
+      else if (type == Type::I31)          type = Type(Type::RefNull, Type::I31);
+      else if (type == Type::Eq)           type = Type(Type::RefNull, Type::Eq);
+      else if (type == Type::Any)          type = Type(Type::RefNull, Type::AnyRef);
+      else if (type == Type::NoneRef)      type = Type(Type::RefNull, Type::NoneRef);
+      else if (type == Type::NoExtern)     type = Type(Type::RefNull, Type::NoExtern);
+      else if (type == Type::NoFunc)       type = Type(Type::RefNull, Type::NoFunc);
       out_expr->reset(new RefNullExpr(type, loc));
       break;
     }
@@ -4469,6 +4524,7 @@ Result ParseWatModule(WastLexer* lexer,
     moduletypesname1 = (*out_module)->moduletypesname;
   WastParser parser(lexer, errors, options);
   CHECK_RESULT(parser.ParseModule(out_module));
+  (*out_module)->moduletypesname = moduletypesname1;
   return Result::Ok;
 }
 

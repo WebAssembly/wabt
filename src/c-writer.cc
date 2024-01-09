@@ -3959,6 +3959,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::CallRef:
         UNIMPLEMENTED("...");
         break;
+      default:;
     }
   }
 }

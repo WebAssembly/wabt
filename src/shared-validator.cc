@@ -79,11 +79,6 @@ Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
   return Result::Ok;
 }
 
-Result SharedValidator::OnSubType(const Location& loc) {
-  num_types_++;
-  return Result::Ok;
-}
-
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
   Result result = Result::Ok;
   FuncType type;
@@ -806,6 +801,8 @@ bool SharedValidator::isNumber(const std::string& str) {
   return true;
 }
 Type SharedValidator::ParseVar2RefType(Var var) {
+  if (var.is_index())
+    return Type(var.index());
   std::string name;
   Type ans;
   if (var.name().substr(0, 7) == "RefNull") {
@@ -824,9 +821,9 @@ Type SharedValidator::ParseVar2RefType(Var var) {
   } else if (name == "None") {
     ans.type_index_ = Type::NoneRef;
   } else if (name == "Func") {
-    ans.type_index_ = Type::FuncRef;
+    return Type::FuncRef;
   } else if (name == "Extern") {
-    ans.type_index_ = Type::ExternRef;
+    return Type::ExternRef;
   } else if (name == "Any") {
     ans.type_index_ = Type::AnyRef;
   } else if (name == "Eq") {

@@ -120,54 +120,6 @@ int ProgramMain(int argc, char** argv) {
   Errors errors;
   // 处理filedata 里面的缩写
   for (size_t i = 0; i < file_data.size(); ++i) {
-    // 处理（table
-    if (i + 6 < file_data.size() &&
-        (file_data[i] == ' ' || file_data[i] == '(' || file_data[i] == '\n' ||
-         file_data[i] == '\r' || file_data[i] == '\t') &&
-        file_data[i + 1] == 't' && file_data[i + 2] == 'a' &&
-        file_data[i + 3] == 'b' && file_data[i + 4] == 'l' &&
-        file_data[i + 5] == 'e' &&
-        (file_data[i + 6] == ' ' || file_data[i + 6] == '\n' ||
-         file_data[i + 6] == '\r' || file_data[i + 6] == '\t')) {
-      i++;
-      int lpar = 1;
-      while (i < file_data.size()) {
-        if (file_data[i] == '(') {
-          lpar++;
-        } else if (file_data[i] == ')') {
-          lpar--;
-          if (lpar == 0) {
-            break;
-          }
-        }
-        i++;
-      }
-      continue;
-    }
-    // 处理(elem
-    if (i + 5 < file_data.size() &&
-        (file_data[i] == ' ' || file_data[i] == '(' || file_data[i] == '\n' ||
-         file_data[i] == '\r' || file_data[i] == '\t') &&
-        file_data[i + 1] == 'e' && file_data[i + 2] == 'l' &&
-        file_data[i + 3] == 'e' && file_data[i + 4] == 'm' &&
-        (file_data[i + 5] == ' ' || file_data[i + 5] == '\n' ||
-         file_data[i + 5] == '\r' || file_data[i + 5] == '\t')) {
-      i++;
-      int lpar = 1;
-      while (i < file_data.size()) {
-        if (file_data[i] == '(') {
-          lpar++;
-        } else if (file_data[i] == ')') {
-          lpar--;
-          if (lpar == 0) {
-            break;
-          }
-        }
-        i++;
-      }
-      continue;
-    }
-
     // 前面应该至少有一个空格
     // 后面应该是空格/换行/回车/制表符/)
     // anyref

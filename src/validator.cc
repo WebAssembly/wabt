@@ -902,6 +902,8 @@ Result Validator::CheckModule() {
                   TypeMut{array_type->field.type, array_type->field.mutable_});
               break;
             }
+
+            default:;
           }
           break;
         }
@@ -974,9 +976,11 @@ Result Validator::CheckModule() {
                                            array_type->field.mutable_});
                     break;
                   }
+                  default:;
                 }
                 break;
               }
+              default:;
             }
           }
         }

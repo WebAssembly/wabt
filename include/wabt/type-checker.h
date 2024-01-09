@@ -197,7 +197,6 @@ class TypeChecker {
                            const char* desc);
   Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
-  Result CheckStructNew(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode3(Opcode opcode,
                       const Limits* limits1 = nullptr,
                       const Limits* limits2 = nullptr,

@@ -796,6 +796,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::ReturnCall:
       // Not used.
       break;
+    default:;
   }
   return instr;
 }

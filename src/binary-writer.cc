@@ -715,6 +715,8 @@ bool isNumber(const std::string& str) {
   return true;
 }
 Type ParseVar2RefType(Var var) {
+  if (var.is_index())
+    return Type(var.index());
   std::string name;
   Type ans;
   if (var.name().substr(0, 7) == "RefNull") {
@@ -738,6 +740,10 @@ Type ParseVar2RefType(Var var) {
     ans.type_index_ = Type::ExternRef;
   } else if (name == "Any") {
     ans.type_index_ = Type::AnyRef;
+  } else if (name == "Func") {
+    return Type::FuncRef;
+  } else if (name == "Extern") {
+    return Type::ExternRef;
   } else if (name == "Eq") {
     ans.type_index_ = Type::Eq;
   } else if (name == "I31") {
@@ -1072,12 +1078,16 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::RefCast: {
       Var var = cast<RefCastExpr>(expr)->var;
       Type type = ParseVar2RefType(var);
-      if (type.isRef()) {
-        WriteOpcode(stream_, Opcode::RefCastRef);
+      if (type.isOldRef()) {
+        WriteType(stream_, type);
       } else {
-        WriteOpcode(stream_, Opcode::RefCastRefNull);
+        if (type.isRef()) {
+          WriteOpcode(stream_, Opcode::RefCastRef);
+        } else {
+          WriteOpcode(stream_, Opcode::RefCastRefNull);
+        }
+        WriteS32Leb128(stream_, type.type_index_, "type index");
       }
-      WriteS32Leb128(stream_, type.type_index_, "type index");
       break;
     }
     case ExprType::RefTest: {
@@ -1088,7 +1098,11 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       } else {
         WriteOpcode(stream_, Opcode::RefTestRefNull);
       }
-      WriteS32Leb128(stream_, type.type_index_, "type index");
+      if (type.isOldRef()) {
+        WriteType(stream_, type);
+      } else {
+        WriteS32Leb128(stream_, type.type_index_, "type index");
+      }
       break;
     }
     case ExprType::BrOnCast: {
@@ -1112,8 +1126,14 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
         }
       }
       WriteU32Leb128(stream_, index, "br_on_cast index");
-      WriteS32Leb128(stream_, type2.type_index_, "type index 2");
-      WriteS32Leb128(stream_, type3.type_index_, "type index 3");
+      if (!type2.isOldRef())
+        WriteS32Leb128(stream_, type2.type_index_, "type index 2");
+      else
+        WriteType(stream_, type2);
+      if (!type3.isOldRef())
+        WriteS32Leb128(stream_, type3.type_index_, "type index 3");
+	  else
+        WriteType(stream_, type3);
       break;
     }
     case ExprType::BrOnCastFail: {
@@ -1138,8 +1158,14 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       }
       WriteU32Leb128(stream_, index, "br_on_cast index");
 
-      WriteS32Leb128(stream_, type2.type_index_, "type index 2");
-      WriteS32Leb128(stream_, type3.type_index_, "type index 3");
+      if (!type2.isOldRef())
+        WriteS32Leb128(stream_, type2.type_index_, "type index 2");
+      else
+        WriteType(stream_, type2);
+      if (!type3.isOldRef())
+        WriteS32Leb128(stream_, type3.type_index_, "type index 3");
+      else
+        WriteType(stream_, type3);
       break;
     }
     case ExprType::AnyConvertExtern: {

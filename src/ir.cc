@@ -466,10 +466,20 @@ void Module::AppendFieldRec(std::unique_ptr<TypeModuleField> field) {
   TypeEntry& type = *field->type;
   RecType& rec_type = dynamic_cast<RecType&>(type);
   std::vector<std::unique_ptr<TypeEntry>>& items = rec_type.fields;
+  std::vector<TypeEntry*>::size_type s = 0;
+  for (auto& i : types) {
+    if (i->kind() == TypeEntryKind::Rec) {
+	  s += dynamic_cast<RecType*>(i)->fields.size();
+	} else {
+	  s++;
+	}
+  }
+  wabt::Index j = 0;
   for (auto& item : items) {
     if (!item->name.empty()) {
-      type_bindings.emplace(item->name, Binding(field->loc, types.size()));
+      type_bindings.emplace(item->name, Binding(field->loc, s + j));
     }
+    j++;
   }
   types.push_back(&type);
   fields.push_back(std::move(field));
