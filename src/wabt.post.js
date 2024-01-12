@@ -95,7 +95,7 @@ function allocateCString(s) {
 /// Features
 function Features(obj) {
   this.addr = Module._wabt_new_features();
-  for ([f, v] of Object.entries(FEATURES)) {
+  for (var [f, v] of Object.entries(FEATURES)) {
     this[f] = booleanOrDefault(obj[f], v);
   }
 }
