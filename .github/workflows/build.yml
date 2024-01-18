@@ -25,6 +25,7 @@ jobs:
     - run: ./scripts/clang-format-diff.sh
       env:
         GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+
   build:
     name: build
     runs-on: ${{ matrix.os }}
@@ -67,6 +68,21 @@ jobs:
       run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
+
+  build-i686:
+    name: build-i686
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: install ninja (linux)
+      run: sudo apt-get install ninja-build
+    - run: make clang-i686-debug
+
   emscripten:
     name: emscripten
     runs-on: ubuntu-latest
@@ -80,6 +96,7 @@ jobs:
         docker exec emscripten emcc -v
         docker exec emscripten emcmake cmake .
         docker exec emscripten make -j 2 VERBOSE=1
+
   wasi:
     name: wasi
     runs-on: ubuntu-latest
@@ -118,6 +135,7 @@ jobs:
     - run: make clang-${{ matrix.type }}-${{ matrix.sanitizer }}
     - if: ${{ matrix.sanitizer }} != fuzz
       run: make test-clang-${{ matrix.type }}-${{ matrix.sanitizer }}
+
   build-wasm2c-memchecked:
     name: wasm2c-memchecked
     runs-on: ubuntu-latest
@@ -167,6 +185,7 @@ jobs:
       run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
+
   build-rlbox:
     name: rlbox
     runs-on: ubuntu-latest
