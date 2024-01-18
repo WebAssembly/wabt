@@ -148,6 +148,7 @@ static void os_cleanup_signal_handler(void) {
 #endif
 
 #else
+#if WASM_RT_USE_MMAP
 static void* os_mmap(size_t size) {
   int map_prot = PROT_NONE;
   int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
@@ -168,6 +169,7 @@ static int os_mprotect(void* addr, size_t size) {
 static void os_print_last_error(const char* msg) {
   perror(msg);
 }
+#endif
 
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
