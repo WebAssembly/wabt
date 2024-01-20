@@ -78,7 +78,7 @@ jobs:
       run: |
         docker run -di --name emscripten -v $(pwd):/src emscripten/emsdk:latest bash
         docker exec emscripten emcc -v
-        docker exec emscripten emcmake cmake -B emscripten -DWERROR=ON -DBUILD_TESTS=OFF
+        docker exec emscripten emcmake cmake -B emscripten -DWERROR=ON
         docker exec -w /src/emscripten emscripten make -j $(nproc)
         
   wasi:
