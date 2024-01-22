@@ -1633,7 +1633,7 @@ void CWriter::SerializeFuncType(const FuncType& func_type,
     *next_byte++ = MangleType(func_type.GetResultType(i));
   }
 
-  assert(next_byte - mangled_signature == len);
+  assert(next_byte - mangled_signature == static_cast<ptrdiff_t>(len));
 
   // step 4: SHA-256 the whole string
   sha256({mangled_signature, len}, serialized_type);
