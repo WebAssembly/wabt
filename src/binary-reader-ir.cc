@@ -616,6 +616,9 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
   import->module_name = module_name;
   import->field_name = field_name;
   import->memory.page_limits = *page_limits;
+  if (import->memory.page_limits.is_shared) {
+    module_->features_used.threads = true;
+  }
   module_->AppendField(
       std::make_unique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
@@ -697,6 +700,9 @@ Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
   auto field = std::make_unique<MemoryModuleField>(GetLocation());
   Memory& memory = field->memory;
   memory.page_limits = *page_limits;
+  if (memory.page_limits.is_shared) {
+    module_->features_used.threads = true;
+  }
   module_->AppendField(std::move(field));
   return Result::Ok;
 }

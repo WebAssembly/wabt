@@ -51,9 +51,37 @@ extern "C" {
 #define wasm_rt_unreachable abort
 #endif
 
+#ifdef __STDC_VERSION__
+#if __STDC_VERSION__ >= 201112L
+#define WASM_RT_C11_AVAILABLE
+#endif
+#endif
+
+/**
+ * Apple and Windows devices don't implement the C11 threads.h. We use pthreads
+ * on Apple devices, and CriticalSection APIs for Windows.
+ */
+#ifdef WASM_RT_C11_AVAILABLE
+
+#ifdef __APPLE__
+#include <pthread.h>
+#define WASM_RT_MUTEX pthread_mutex_t
+#define WASM_RT_USE_PTHREADS 1
+#elif defined(_WIN32)
+#include <windows.h>
+#define WASM_RT_MUTEX CRITICAL_SECTION
+#define WASM_RT_USE_CRITICALSECTION 1
+#else
+#include <threads.h>
+#define WASM_RT_MUTEX mtx_t
+#define WASM_RT_USE_C11THREADS 1
+#endif
+
+#endif
+
 #ifdef _MSC_VER
 #define WASM_RT_THREAD_LOCAL __declspec(thread)
-#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+#elif defined(WASM_RT_C11_AVAILABLE)
 #define WASM_RT_THREAD_LOCAL _Thread_local
 #else
 #define WASM_RT_THREAD_LOCAL
@@ -346,6 +374,33 @@ typedef struct {
   bool is64;
 } wasm_rt_memory_t;
 
+#ifdef WASM_RT_C11_AVAILABLE
+/** A shared Memory object. */
+typedef struct {
+  /**
+   * The linear memory data, with a byte length of `size`. The memory is marked
+   * atomic as it is shared and may have to be accessed with different memory
+   * orders --- sequential when being accessed atomically, relaxed otherwise.
+   * Unfortunately, the C standard does not state what happens if there are
+   * overlaps in two memory accesses which have a memory order, e.g., an
+   * atomic32 being read from the same location an atomic64 is read. One way to
+   * prevent optimizations from assuming non-overlapping behavior as typically
+   * done in C is to mark the memory as volatile. Thus the memory is atomic and
+   * volatile. */
+  _Atomic volatile uint8_t* data;
+  /**
+   * The current and maximum page count for this Memory object. If there is no
+   * maximum, `max_pages` is 0xffffffffu (i.e. UINT32_MAX). */
+  uint64_t pages, max_pages;
+  /** The current size of the linear memory, in bytes. */
+  uint64_t size;
+  /** Is this memory indexed by u64 (as opposed to default u32) */
+  bool is64;
+  /** Lock used to ensure operations such as memory grow are threadsafe */
+  WASM_RT_MUTEX mem_lock;
+} wasm_rt_shared_memory_t;
+#endif
+
 /** A Table of type funcref. */
 typedef struct {
   /** The table element data, with an element count of `size`. */
@@ -474,6 +529,26 @@ uint64_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint64_t pages);
  * Free a Memory object.
  */
 void wasm_rt_free_memory(wasm_rt_memory_t*);
+
+#ifdef WASM_RT_C11_AVAILABLE
+/**
+ * Shared memory version of wasm_rt_allocate_memory
+ */
+void wasm_rt_allocate_memory_shared(wasm_rt_shared_memory_t*,
+                                    uint64_t initial_pages,
+                                    uint64_t max_pages,
+                                    bool is64);
+
+/**
+ * Shared memory version of wasm_rt_grow_memory
+ */
+uint64_t wasm_rt_grow_memory_shared(wasm_rt_shared_memory_t*, uint64_t pages);
+
+/**
+ * Shared memory version of wasm_rt_free_memory
+ */
+void wasm_rt_free_memory_shared(wasm_rt_shared_memory_t*);
+#endif
 
 /**
  * Initialize a funcref Table object with an element count of `elements` and a
