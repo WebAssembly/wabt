@@ -1,9 +1,5 @@
 #include <stdatomic.h>
 
-#if WABT_BIG_ENDIAN
-#error "wasm2c atomics not supported on big endian"
-#endif
-
 #ifndef WASM_RT_C11_AVAILABLE
 #error "C11 is required for Wasm threads and shared memory support"
 #endif
@@ -170,23 +166,24 @@ DEFINE_ATOMIC_RMW(i64_atomic_rmw16_xor_u, fetch_xor, ^, u16, u64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw32_xor_u, fetch_xor, ^, u32, u64)
 DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, fetch_xor, ^, u64, u64)
 
-#define DEFINE_ATOMIC_XCHG(name, opname, t1, t2)                               \
-  static inline t2 name(wasm_rt_memory_t* mem, u64 addr, t2 value) {           \
-    MEMCHECK(mem, addr, t1);                                                   \
-    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                          \
-    t1 wrapped = (t1)value;                                                    \
-    t1 ret;                                                                    \
-    wasm_rt_memcpy(&ret, &mem->data[addr], sizeof(t1));                        \
-    wasm_rt_memcpy(&mem->data[addr], &wrapped, sizeof(t1));                    \
-    return (t2)ret;                                                            \
-  }                                                                            \
-  static inline t2 name##_shared(wasm_rt_shared_memory_t* mem, u64 addr,       \
-                                 t2 value) {                                   \
-    MEMCHECK(mem, addr, t1);                                                   \
-    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                          \
-    t1 wrapped = (t1)value;                                                    \
-    t1 ret = atomic_##opname((_Atomic volatile t1*)&mem->data[addr], wrapped); \
-    return (t2)ret;                                                            \
+#define DEFINE_ATOMIC_XCHG(name, opname, t1, t2)                           \
+  static inline t2 name(wasm_rt_memory_t* mem, u64 addr, t2 value) {       \
+    MEMCHECK(mem, addr, t1);                                               \
+    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                      \
+    t1 wrapped = (t1)value;                                                \
+    t1 ret;                                                                \
+    wasm_rt_memcpy(&ret, MEM_ADDR(mem, addr, sizeof(t1)), sizeof(t1));     \
+    wasm_rt_memcpy(MEM_ADDR(mem, addr, sizeof(t1)), &wrapped, sizeof(t1)); \
+    return (t2)ret;                                                        \
+  }                                                                        \
+  static inline t2 name##_shared(wasm_rt_shared_memory_t* mem, u64 addr,   \
+                                 t2 value) {                               \
+    MEMCHECK(mem, addr, t1);                                               \
+    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                      \
+    t1 wrapped = (t1)value;                                                \
+    t1 ret = atomic_##opname(                                              \
+        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)), wrapped);   \
+    return (t2)ret;                                                        \
   }
 
 DEFINE_ATOMIC_XCHG(i32_atomic_rmw8_xchg_u, exchange, u8, u32)

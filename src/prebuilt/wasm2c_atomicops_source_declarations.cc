@@ -1,13 +1,6 @@
 const char* s_atomicops_source_declarations = R"w2c_template(#include <stdatomic.h>
 )w2c_template"
 R"w2c_template(
-#if WABT_BIG_ENDIAN
-)w2c_template"
-R"w2c_template(#error "wasm2c atomics not supported on big endian"
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(
 #ifndef WASM_RT_C11_AVAILABLE
 )w2c_template"
 R"w2c_template(#error "C11 is required for Wasm threads and shared memory support"
@@ -324,39 +317,41 @@ R"w2c_template(DEFINE_ATOMIC_RMW(i64_atomic_rmw32_xor_u, fetch_xor, ^, u32, u64)
 R"w2c_template(DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, fetch_xor, ^, u64, u64)
 )w2c_template"
 R"w2c_template(
-#define DEFINE_ATOMIC_XCHG(name, opname, t1, t2)                               \
+#define DEFINE_ATOMIC_XCHG(name, opname, t1, t2)                           \
 )w2c_template"
-R"w2c_template(  static inline t2 name(wasm_rt_memory_t* mem, u64 addr, t2 value) {           \
+R"w2c_template(  static inline t2 name(wasm_rt_memory_t* mem, u64 addr, t2 value) {       \
 )w2c_template"
-R"w2c_template(    MEMCHECK(mem, addr, t1);                                                   \
+R"w2c_template(    MEMCHECK(mem, addr, t1);                                               \
 )w2c_template"
-R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                          \
+R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                      \
 )w2c_template"
-R"w2c_template(    t1 wrapped = (t1)value;                                                    \
+R"w2c_template(    t1 wrapped = (t1)value;                                                \
 )w2c_template"
-R"w2c_template(    t1 ret;                                                                    \
+R"w2c_template(    t1 ret;                                                                \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&ret, &mem->data[addr], sizeof(t1));                        \
+R"w2c_template(    wasm_rt_memcpy(&ret, MEM_ADDR(mem, addr, sizeof(t1)), sizeof(t1));     \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&mem->data[addr], &wrapped, sizeof(t1));                    \
+R"w2c_template(    wasm_rt_memcpy(MEM_ADDR(mem, addr, sizeof(t1)), &wrapped, sizeof(t1)); \
 )w2c_template"
-R"w2c_template(    return (t2)ret;                                                            \
+R"w2c_template(    return (t2)ret;                                                        \
 )w2c_template"
-R"w2c_template(  }                                                                            \
+R"w2c_template(  }                                                                        \
 )w2c_template"
-R"w2c_template(  static inline t2 name##_shared(wasm_rt_shared_memory_t* mem, u64 addr,       \
+R"w2c_template(  static inline t2 name##_shared(wasm_rt_shared_memory_t* mem, u64 addr,   \
 )w2c_template"
-R"w2c_template(                                 t2 value) {                                   \
+R"w2c_template(                                 t2 value) {                               \
 )w2c_template"
-R"w2c_template(    MEMCHECK(mem, addr, t1);                                                   \
+R"w2c_template(    MEMCHECK(mem, addr, t1);                                               \
 )w2c_template"
-R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                          \
+R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                      \
 )w2c_template"
-R"w2c_template(    t1 wrapped = (t1)value;                                                    \
+R"w2c_template(    t1 wrapped = (t1)value;                                                \
 )w2c_template"
-R"w2c_template(    t1 ret = atomic_##opname((_Atomic volatile t1*)&mem->data[addr], wrapped); \
+R"w2c_template(    t1 ret = atomic_##opname(                                              \
 )w2c_template"
-R"w2c_template(    return (t2)ret;                                                            \
+R"w2c_template(        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)), wrapped);   \
+)w2c_template"
+R"w2c_template(    return (t2)ret;                                                        \
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
