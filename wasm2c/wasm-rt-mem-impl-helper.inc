@@ -122,8 +122,8 @@ static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
 #endif
 #endif
 #if WABT_BIG_ENDIAN
-  memmove(new_data + new_size - old_size, new_data, old_size);
-  memset(new_data, 0, delta_size);
+  memmove((void*)(new_data + new_size - old_size), (void*)new_data, old_size);
+  memset((void*)new_data, 0, delta_size);
 #endif
   memory->pages = new_pages;
   memory->size = new_size;
