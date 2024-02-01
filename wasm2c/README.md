@@ -11,6 +11,9 @@ $ wasm2c test.wasm -o test.c
 $ wasm2c test.wasm --no-debug-names -o test.c
 ```
 
+The C code produced targets the C99 standard. If, however, the Wasm module uses
+Wasm threads/atomics, the code produced targets the C11 standard.
+
 ## Tutorial: .wat -> .wasm -> .c
 
 Let's look at a simple example of a factorial function.
@@ -255,9 +258,26 @@ specified by the module, or `0xffffffff` if there is no limit.
 ```c
 typedef struct {
   uint8_t* data;
-  uint32_t pages, max_pages;
-  uint32_t size;
+  uint64_t pages, max_pages;
+  uint64_t size;
+  bool is64;
 } wasm_rt_memory_t;
+```
+
+This is followed by the definition of a shared memory instance. This is similar
+to a regular memory instance, but represents memory that can be used by multiple
+Wasm instances, and thus enforces a minimum amount of memory order on
+operations. The Shared memory definition has one additional member, `mem_lock`,
+which is a lock that is used during memory grow operations for thread safety.
+
+```c
+typedef struct {
+  _Atomic volatile uint8_t* data;
+  uint64_t pages, max_pages;
+  uint64_t size;
+  bool is64;
+  mtx_t mem_lock;
+} wasm_rt_shared_memory_t;
 ```
 
 Next is the definition of a table instance. The `data` field is a pointer to
@@ -290,6 +310,9 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap);
 void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64);
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
 void wasm_rt_free_memory(wasm_rt_memory_t*);
+void wasm_rt_allocate_memory_shared(wasm_rt_shared_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64);
+uint32_t wasm_rt_grow_memory_shared(wasm_rt_shared_memory_t*, uint32_t pages);
+void wasm_rt_free_memory_shared(wasm_rt_shared_memory_t*);
 void wasm_rt_allocate_funcref_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
 void wasm_rt_allocate_externref_table(wasm_rt_externref_table_t*, uint32_t elements, uint32_t max_elements);
 void wasm_rt_free_funcref_table(wasm_rt_table_t*);
@@ -328,6 +351,16 @@ arguments and returning `void` . e.g.
 `-DWASM_RT_GROW_FAILED_HANDLER=my_growfail_handler`
 
 `wasm_rt_free_memory` frees the memory instance.
+
+`wasm_rt_allocate_memory_shared` initializes a memory instance that can be
+shared by different Wasm threads. It's operation is otherwise similar to
+`wasm_rt_allocate_memory`.
+
+`wasm_rt_grow_memory_shared` must grow the given shared memory instance by the
+given number of pages. It's operation is otherwise similar to
+`wasm_rt_grow_memory`.
+
+`wasm_rt_free_memory_shared` frees the shared memory instance.
 
 `wasm_rt_allocate_funcref_table` and the similar `..._externref_table`
 initialize a table instance of the given type, and allocate at least

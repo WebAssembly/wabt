@@ -423,9 +423,10 @@ if (WABT_INSTALL_RULES)
 endif ()
 
 if (HAVE_SETJMP_H)
-  set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c")
+  set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c" "wasm2c/wasm-rt-mem-impl.c")
 
   add_library(wasm-rt-impl STATIC ${WASM_RT_FILES})
+  target_link_libraries(wasm-rt-impl ${CMAKE_THREAD_LIBS_INIT})
   add_library(wabt::wasm-rt-impl ALIAS wasm-rt-impl)
   if (WABT_BIG_ENDIAN)
     target_compile_definitions(wasm-rt-impl PUBLIC WABT_BIG_ENDIAN=1)
