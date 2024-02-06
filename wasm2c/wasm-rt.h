@@ -59,7 +59,7 @@ extern "C" {
 
 /**
  * Many devices don't implement the C11 threads.h. We use CriticalSection APIs
- * for Windows and pthreads everywhere else.
+ * for Windows and pthreads on other platforms where threads are not available.
  */
 #ifdef WASM_RT_C11_AVAILABLE
 
@@ -67,10 +67,14 @@ extern "C" {
 #include <windows.h>
 #define WASM_RT_MUTEX CRITICAL_SECTION
 #define WASM_RT_USE_CRITICALSECTION 1
-#else
+#elif defined(__STDC_NO_THREADS__)
 #include <pthread.h>
 #define WASM_RT_MUTEX pthread_mutex_t
 #define WASM_RT_USE_PTHREADS 1
+#else
+#include <threads.h>
+#define WASM_RT_MUTEX mtx_t
+#define WASM_RT_USE_C11THREADS 1
 #endif
 
 #endif
