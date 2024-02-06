@@ -58,19 +58,19 @@ extern "C" {
 #endif
 
 /**
- * Apple and Windows devices don't implement the C11 threads.h. We use pthreads
- * on Apple devices, and CriticalSection APIs for Windows.
+ * Many devices don't implement the C11 threads.h. We use CriticalSection APIs
+ * for Windows and pthreads on other platforms where threads are not available.
  */
 #ifdef WASM_RT_C11_AVAILABLE
 
-#ifdef __APPLE__
-#include <pthread.h>
-#define WASM_RT_MUTEX pthread_mutex_t
-#define WASM_RT_USE_PTHREADS 1
-#elif defined(_WIN32)
+#if defined(_WIN32)
 #include <windows.h>
 #define WASM_RT_MUTEX CRITICAL_SECTION
 #define WASM_RT_USE_CRITICALSECTION 1
+#elif defined(__APPLE__) || defined(__STDC_NO_THREADS__)
+#include <pthread.h>
+#define WASM_RT_MUTEX pthread_mutex_t
+#define WASM_RT_USE_PTHREADS 1
 #else
 #include <threads.h>
 #define WASM_RT_MUTEX mtx_t
