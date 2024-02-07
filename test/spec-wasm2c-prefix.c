@@ -13,6 +13,42 @@
 #include "wasm-rt-impl.h"
 #include "wasm-rt-exceptions.h"
 
+/* NOTE: function argument evaluation order is implementation-defined in C,
+   so it SHOULD NOT be relied on by tests. */
+#if WABT_BIG_ENDIAN
+#define v128_i8x16_make(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) \
+	simde_wasm_i8x16_make(p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a)
+#define v128_u8x16_make(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) \
+	simde_wasm_u8x16_make(p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a)
+#define v128_i16x8_make(a,b,c,d,e,f,g,h) simde_wasm_i16x8_make(h,g,f,e,d,c,b,a)
+#define v128_u16x8_make(a,b,c,d,e,f,g,h) simde_wasm_u16x8_make(h,g,f,e,d,c,b,a)
+#define v128_i32x4_make(a,b,c,d) simde_wasm_i32x4_make(d,c,b,a)
+#define v128_u32x4_make(a,b,c,d) simde_wasm_u32x4_make(d,c,b,a)
+#define v128_i64x2_make(a,b) simde_wasm_i64x2_make(b,a)
+#define v128_u64x2_make(a,b) simde_wasm_u64x2_make(b,a)
+#define v128_f32x4_make(a,b,c,d) simde_wasm_f32x4_make(d,c,b,a)
+#define v128_f64x2_make(a,b) simde_wasm_f64x2_make(b,a)
+#define v128_i8x16_extract_lane(a,n) simde_wasm_u8x16_extract_lane(a,15-(n))
+#define v128_u8x16_extract_lane(a,n) simde_wasm_u8x16_extract_lane(a,15-(n))
+#define v128_i16x8_extract_lane(a,n) simde_wasm_u16x8_extract_lane(a,7-(n))
+#define v128_u16x8_extract_lane(a,n) simde_wasm_u16x8_extract_lane(a,7-(n))
+#define v128_i32x4_extract_lane(a,n) simde_wasm_u32x4_extract_lane(a,3-(n))
+#define v128_u32x4_extract_lane(a,n) simde_wasm_u32x4_extract_lane(a,3-(n))
+#define v128_i64x2_extract_lane(a,n) simde_wasm_u64x2_extract_lane(a,1-(n))
+#define v128_u64x2_extract_lane(a,n) simde_wasm_u64x2_extract_lane(a,1-(n))
+#define v128_f32x4_extract_lane(a,n) simde_wasm_f32x4_extract_lane(a,3-(n))
+#define v128_f64x2_extract_lane(a,n) simde_wasm_f64x2_extract_lane(a,1-(n))
+#else
+#define v128_i8x16_make simde_wasm_i8x16_make
+#define v128_u8x16_make simde_wasm_u8x16_make
+#define v128_i16x8_make simde_wasm_i16x8_make
+#define v128_u16x8_make simde_wasm_u16x8_make
+#define v128_i32x4_make simde_wasm_i32x4_make
+#define v128_u32x4_make simde_wasm_u32x4_make
+#define v128_i64x2_make simde_wasm_i64x2_make
+#define v128_u64x2_make simde_wasm_u64x2_make
+#define v128_f32x4_make simde_wasm_f32x4_make
+#define v128_f64x2_make simde_wasm_f64x2_make
 // like is_equal_TYPE below, always use unsigned for these
 #define v128_i8x16_extract_lane simde_wasm_u8x16_extract_lane
 #define v128_u8x16_extract_lane simde_wasm_u8x16_extract_lane
@@ -24,6 +60,7 @@
 #define v128_u64x2_extract_lane simde_wasm_u64x2_extract_lane
 #define v128_f32x4_extract_lane simde_wasm_f32x4_extract_lane
 #define v128_f64x2_extract_lane simde_wasm_f64x2_extract_lane
+#endif
 
 static int g_tests_run;
 static int g_tests_passed;
