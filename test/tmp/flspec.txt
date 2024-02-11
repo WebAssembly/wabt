@@ -1,0 +1,317 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: test/tmp/fl1.wast
+(;; STDOUT ;;;
+out/test/tmp/fl1.wast:236: assert_malformed passed:
+  out/test/tmp/fl1/fl1.2.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const _100))
+                         ^^^^
+out/test/tmp/fl1.wast:240: assert_malformed passed:
+  out/test/tmp/fl1/fl1.3.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const +_100))
+                         ^^^^^
+out/test/tmp/fl1.wast:244: assert_malformed passed:
+  out/test/tmp/fl1/fl1.4.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const -_100))
+                         ^^^^^
+out/test/tmp/fl1.wast:248: assert_malformed passed:
+  out/test/tmp/fl1/fl1.5.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 99_))
+                         ^^^
+out/test/tmp/fl1.wast:252: assert_malformed passed:
+  out/test/tmp/fl1/fl1.6.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1__000))
+                         ^^^^^^
+out/test/tmp/fl1.wast:256: assert_malformed passed:
+  out/test/tmp/fl1/fl1.7.wat:1:24: error: unexpected token "_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const _1.0))
+                         ^^^^
+out/test/tmp/fl1.wast:260: assert_malformed passed:
+  out/test/tmp/fl1/fl1.8.wat:1:24: error: unexpected token "1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1.0_))
+                         ^^^^
+out/test/tmp/fl1.wast:264: assert_malformed passed:
+  out/test/tmp/fl1/fl1.9.wat:1:24: error: unexpected token "1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1_.0))
+                         ^^^^
+out/test/tmp/fl1.wast:268: assert_malformed passed:
+  out/test/tmp/fl1/fl1.10.wat:1:24: error: unexpected token "1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1._0))
+                         ^^^^
+out/test/tmp/fl1.wast:272: assert_malformed passed:
+  out/test/tmp/fl1/fl1.11.wat:1:24: error: unexpected token "_1e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const _1e1))
+                         ^^^^
+out/test/tmp/fl1.wast:276: assert_malformed passed:
+  out/test/tmp/fl1/fl1.12.wat:1:24: error: unexpected token "1e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1e1_))
+                         ^^^^
+out/test/tmp/fl1.wast:280: assert_malformed passed:
+  out/test/tmp/fl1/fl1.13.wat:1:24: error: unexpected token "1_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1_e1))
+                         ^^^^
+out/test/tmp/fl1.wast:284: assert_malformed passed:
+  out/test/tmp/fl1/fl1.14.wat:1:24: error: unexpected token "1e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1e_1))
+                         ^^^^
+out/test/tmp/fl1.wast:288: assert_malformed passed:
+  out/test/tmp/fl1/fl1.15.wat:1:24: error: unexpected token "_1.0e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const _1.0e1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:292: assert_malformed passed:
+  out/test/tmp/fl1/fl1.16.wat:1:24: error: unexpected token "1.0e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1.0e1_))
+                         ^^^^^^
+out/test/tmp/fl1.wast:296: assert_malformed passed:
+  out/test/tmp/fl1/fl1.17.wat:1:24: error: unexpected token "1.0_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1.0_e1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:300: assert_malformed passed:
+  out/test/tmp/fl1/fl1.18.wat:1:24: error: unexpected token "1.0e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1.0e_1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:304: assert_malformed passed:
+  out/test/tmp/fl1/fl1.19.wat:1:24: error: unexpected token "1.0e+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1.0e+_1))
+                         ^^^^^^^
+out/test/tmp/fl1.wast:308: assert_malformed passed:
+  out/test/tmp/fl1/fl1.20.wat:1:24: error: unexpected token "1.0e_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 1.0e_+1))
+                         ^^^^^^^
+out/test/tmp/fl1.wast:312: assert_malformed passed:
+  out/test/tmp/fl1/fl1.21.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const _0x100))
+                         ^^^^^^
+out/test/tmp/fl1.wast:316: assert_malformed passed:
+  out/test/tmp/fl1/fl1.22.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0_x100))
+                         ^^^^^^
+out/test/tmp/fl1.wast:320: assert_malformed passed:
+  out/test/tmp/fl1/fl1.23.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x_100))
+                         ^^^^^^
+out/test/tmp/fl1.wast:324: assert_malformed passed:
+  out/test/tmp/fl1/fl1.24.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x00_))
+                         ^^^^^
+out/test/tmp/fl1.wast:328: assert_malformed passed:
+  out/test/tmp/fl1/fl1.25.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0xff__ffff))
+                         ^^^^^^^^^^
+out/test/tmp/fl1.wast:332: assert_malformed passed:
+  out/test/tmp/fl1/fl1.26.wat:1:24: error: unexpected token "0x_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x_1.0))
+                         ^^^^^^
+out/test/tmp/fl1.wast:336: assert_malformed passed:
+  out/test/tmp/fl1/fl1.27.wat:1:24: error: unexpected token "0x1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1.0_))
+                         ^^^^^^
+out/test/tmp/fl1.wast:340: assert_malformed passed:
+  out/test/tmp/fl1/fl1.28.wat:1:24: error: unexpected token "0x1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1_.0))
+                         ^^^^^^
+out/test/tmp/fl1.wast:344: assert_malformed passed:
+  out/test/tmp/fl1/fl1.29.wat:1:24: error: unexpected token "0x1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1._0))
+                         ^^^^^^
+out/test/tmp/fl1.wast:348: assert_malformed passed:
+  out/test/tmp/fl1/fl1.30.wat:1:24: error: unexpected token "0x_1p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x_1p1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:352: assert_malformed passed:
+  out/test/tmp/fl1/fl1.31.wat:1:24: error: unexpected token "0x1p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1p1_))
+                         ^^^^^^
+out/test/tmp/fl1.wast:356: assert_malformed passed:
+  out/test/tmp/fl1/fl1.32.wat:1:24: error: unexpected token "0x1_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1_p1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:360: assert_malformed passed:
+  out/test/tmp/fl1/fl1.33.wat:1:24: error: unexpected token "0x1p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1p_1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:364: assert_malformed passed:
+  out/test/tmp/fl1/fl1.34.wat:1:24: error: unexpected token "0x_1.0p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x_1.0p1))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:368: assert_malformed passed:
+  out/test/tmp/fl1/fl1.35.wat:1:24: error: unexpected token "0x1.0p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1.0p1_))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:372: assert_malformed passed:
+  out/test/tmp/fl1/fl1.36.wat:1:24: error: unexpected token "0x1.0_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1.0_p1))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:376: assert_malformed passed:
+  out/test/tmp/fl1/fl1.37.wat:1:24: error: unexpected token "0x1.0p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1.0p_1))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:380: assert_malformed passed:
+  out/test/tmp/fl1/fl1.38.wat:1:24: error: unexpected token "0x1.0p+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1.0p+_1))
+                         ^^^^^^^^^
+out/test/tmp/fl1.wast:384: assert_malformed passed:
+  out/test/tmp/fl1/fl1.39.wat:1:24: error: unexpected token "0x1.0p_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f32 (f32.const 0x1.0p_+1))
+                         ^^^^^^^^^
+out/test/tmp/fl1.wast:388: assert_malformed passed:
+  out/test/tmp/fl1/fl1.40.wat:1:24: error: invalid literal "nan:0x80_0000"
+  (global f32 (f32.const nan:0x80_0000))
+                         ^^^^^^^^^^^^^
+out/test/tmp/fl1.wast:393: assert_malformed passed:
+  out/test/tmp/fl1/fl1.41.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const _100))
+                         ^^^^
+out/test/tmp/fl1.wast:397: assert_malformed passed:
+  out/test/tmp/fl1/fl1.42.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const +_100))
+                         ^^^^^
+out/test/tmp/fl1.wast:401: assert_malformed passed:
+  out/test/tmp/fl1/fl1.43.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const -_100))
+                         ^^^^^
+out/test/tmp/fl1.wast:405: assert_malformed passed:
+  out/test/tmp/fl1/fl1.44.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 99_))
+                         ^^^
+out/test/tmp/fl1.wast:409: assert_malformed passed:
+  out/test/tmp/fl1/fl1.45.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1__000))
+                         ^^^^^^
+out/test/tmp/fl1.wast:413: assert_malformed passed:
+  out/test/tmp/fl1/fl1.46.wat:1:24: error: unexpected token "_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const _1.0))
+                         ^^^^
+out/test/tmp/fl1.wast:417: assert_malformed passed:
+  out/test/tmp/fl1/fl1.47.wat:1:24: error: unexpected token "1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1.0_))
+                         ^^^^
+out/test/tmp/fl1.wast:421: assert_malformed passed:
+  out/test/tmp/fl1/fl1.48.wat:1:24: error: unexpected token "1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1_.0))
+                         ^^^^
+out/test/tmp/fl1.wast:425: assert_malformed passed:
+  out/test/tmp/fl1/fl1.49.wat:1:24: error: unexpected token "1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1._0))
+                         ^^^^
+out/test/tmp/fl1.wast:429: assert_malformed passed:
+  out/test/tmp/fl1/fl1.50.wat:1:24: error: unexpected token "_1e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const _1e1))
+                         ^^^^
+out/test/tmp/fl1.wast:433: assert_malformed passed:
+  out/test/tmp/fl1/fl1.51.wat:1:24: error: unexpected token "1e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1e1_))
+                         ^^^^
+out/test/tmp/fl1.wast:437: assert_malformed passed:
+  out/test/tmp/fl1/fl1.52.wat:1:24: error: unexpected token "1_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1_e1))
+                         ^^^^
+out/test/tmp/fl1.wast:441: assert_malformed passed:
+  out/test/tmp/fl1/fl1.53.wat:1:24: error: unexpected token "1e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1e_1))
+                         ^^^^
+out/test/tmp/fl1.wast:445: assert_malformed passed:
+  out/test/tmp/fl1/fl1.54.wat:1:24: error: unexpected token "_1.0e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const _1.0e1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:449: assert_malformed passed:
+  out/test/tmp/fl1/fl1.55.wat:1:24: error: unexpected token "1.0e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1.0e1_))
+                         ^^^^^^
+out/test/tmp/fl1.wast:453: assert_malformed passed:
+  out/test/tmp/fl1/fl1.56.wat:1:24: error: unexpected token "1.0_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1.0_e1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:457: assert_malformed passed:
+  out/test/tmp/fl1/fl1.57.wat:1:24: error: unexpected token "1.0e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1.0e_1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:461: assert_malformed passed:
+  out/test/tmp/fl1/fl1.58.wat:1:24: error: unexpected token "1.0e+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1.0e+_1))
+                         ^^^^^^^
+out/test/tmp/fl1.wast:465: assert_malformed passed:
+  out/test/tmp/fl1/fl1.59.wat:1:24: error: unexpected token "1.0e_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 1.0e_+1))
+                         ^^^^^^^
+out/test/tmp/fl1.wast:469: assert_malformed passed:
+  out/test/tmp/fl1/fl1.60.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const _0x100))
+                         ^^^^^^
+out/test/tmp/fl1.wast:473: assert_malformed passed:
+  out/test/tmp/fl1/fl1.61.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0_x100))
+                         ^^^^^^
+out/test/tmp/fl1.wast:477: assert_malformed passed:
+  out/test/tmp/fl1/fl1.62.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x_100))
+                         ^^^^^^
+out/test/tmp/fl1.wast:481: assert_malformed passed:
+  out/test/tmp/fl1/fl1.63.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x00_))
+                         ^^^^^
+out/test/tmp/fl1.wast:485: assert_malformed passed:
+  out/test/tmp/fl1/fl1.64.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0xff__ffff))
+                         ^^^^^^^^^^
+out/test/tmp/fl1.wast:489: assert_malformed passed:
+  out/test/tmp/fl1/fl1.65.wat:1:24: error: unexpected token "0x_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x_1.0))
+                         ^^^^^^
+out/test/tmp/fl1.wast:493: assert_malformed passed:
+  out/test/tmp/fl1/fl1.66.wat:1:24: error: unexpected token "0x1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1.0_))
+                         ^^^^^^
+out/test/tmp/fl1.wast:497: assert_malformed passed:
+  out/test/tmp/fl1/fl1.67.wat:1:24: error: unexpected token "0x1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1_.0))
+                         ^^^^^^
+out/test/tmp/fl1.wast:501: assert_malformed passed:
+  out/test/tmp/fl1/fl1.68.wat:1:24: error: unexpected token "0x1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1._0))
+                         ^^^^^^
+out/test/tmp/fl1.wast:505: assert_malformed passed:
+  out/test/tmp/fl1/fl1.69.wat:1:24: error: unexpected token "0x_1p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x_1p1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:509: assert_malformed passed:
+  out/test/tmp/fl1/fl1.70.wat:1:24: error: unexpected token "0x1p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1p1_))
+                         ^^^^^^
+out/test/tmp/fl1.wast:513: assert_malformed passed:
+  out/test/tmp/fl1/fl1.71.wat:1:24: error: unexpected token "0x1_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1_p1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:517: assert_malformed passed:
+  out/test/tmp/fl1/fl1.72.wat:1:24: error: unexpected token "0x1p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1p_1))
+                         ^^^^^^
+out/test/tmp/fl1.wast:521: assert_malformed passed:
+  out/test/tmp/fl1/fl1.73.wat:1:24: error: unexpected token "0x_1.0p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x_1.0p1))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:525: assert_malformed passed:
+  out/test/tmp/fl1/fl1.74.wat:1:24: error: unexpected token "0x1.0p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1.0p1_))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:529: assert_malformed passed:
+  out/test/tmp/fl1/fl1.75.wat:1:24: error: unexpected token "0x1.0_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1.0_p1))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:533: assert_malformed passed:
+  out/test/tmp/fl1/fl1.76.wat:1:24: error: unexpected token "0x1.0p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1.0p_1))
+                         ^^^^^^^^
+out/test/tmp/fl1.wast:537: assert_malformed passed:
+  out/test/tmp/fl1/fl1.77.wat:1:24: error: unexpected token "0x1.0p+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1.0p+_1))
+                         ^^^^^^^^^
+out/test/tmp/fl1.wast:541: assert_malformed passed:
+  out/test/tmp/fl1/fl1.78.wat:1:24: error: unexpected token "0x1.0p_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (global f64 (f64.const 0x1.0p_+1))
+                         ^^^^^^^^^
+out/test/tmp/fl1.wast:545: assert_malformed passed:
+  out/test/tmp/fl1/fl1.79.wat:1:24: error: invalid literal "nan:0x10_0000_0000_0000"
+  (global f64 (f64.const nan:0x10_0000_0000_0000))
+                         ^^^^^^^^^^^^^^^^^^^^^^^
+179/179 tests passed.
+;;; STDOUT ;;)
