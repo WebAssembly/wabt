@@ -1251,11 +1251,13 @@ void CWriter::Write(const Const& const_) {
       break;
 
     case Type::F32:
-      Writef("f32_reinterpret_i32(0x%" PRIx32 ")", const_.f32_bits());
+      Writef("f32_reinterpret_i32(0x%" PRIx32 " /* %.9g */)", const_.f32_bits(),
+             Bitcast<float>(const_.f32_bits()));
       break;
 
     case Type::F64:
-      Writef("f64_reinterpret_i64(0x%" PRIx64 ")", const_.f64_bits());
+      Writef("f64_reinterpret_i64(0x%" PRIx64 " /* %.17g */)",
+             const_.f64_bits(), Bitcast<double>(const_.f64_bits()));
       break;
 
     case Type::V128: {

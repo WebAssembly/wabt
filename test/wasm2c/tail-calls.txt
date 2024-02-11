@@ -823,7 +823,7 @@ void w2c_test_tailcaller_0(w2c_test* instance) {
   u32 var_i0, var_i2;
   f32 var_f1;
   var_i0 = 1u;
-  var_f1 = f32_reinterpret_i32(0x40000000);
+  var_f1 = f32_reinterpret_i32(0x40000000 /* 2 */);
   var_i2 = 0u;
   static_assert(sizeof(struct wasm_multi_if) <= 1024);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
@@ -855,7 +855,7 @@ void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_st
   u32 var_i0, var_i2;
   f32 var_f1;
   var_i0 = 1u;
-  var_f1 = f32_reinterpret_i32(0x40000000);
+  var_f1 = f32_reinterpret_i32(0x40000000 /* 2 */);
   var_i2 = 0u;
   static_assert(sizeof(struct wasm_multi_if) <= 1024);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
