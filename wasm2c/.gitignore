@@ -1,4 +1,5 @@
 wasm-rt-impl.o
+wasm-rt-mem-impl.o
 wasm-rt-exceptions-impl.o
 examples/**/*.o
 examples/fac/fac
