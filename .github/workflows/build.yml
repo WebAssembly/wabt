@@ -185,3 +185,50 @@ jobs:
     - run: make clang-debug
     - name: tests (wasm2c tests excluding memory64)
       run: ./test/run-tests.py wasm2c --exclude-dir memory64
+
+  build-cross:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [s390x]
+    services: # still faster on debian...
+      distcc:
+        image: debian:latest
+        options: --health-cmd distccmon-text --health-interval 5s --health-start-period 5m debian:latest bash -c "apt-get update && apt-get install -y g++-s390x-linux-gnu distcc && distccd --daemon --no-detach"
+        ports:
+          - 3632:3632
+    env:
+      QEMU_LD_PREFIX: /usr/${{matrix.arch}}-linux-gnu/
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: ${{matrix.arch}}
+        image: "tonistiigi/binfmt:master"
+    - name: install ninja
+      run: sudo apt-get install ninja-build
+    - name: install the toolchain
+      run: sudo apt-get install g++-${{matrix.arch}}-linux-gnu
+    - name: install distcc
+      run: sudo apt-get install distcc
+    - name: mkdir distcc symlinks
+      run: sudo mkdir -p /opt/bin/distcc_symlinks
+    - name: distcc symlink
+      run: sudo ln -s /usr/bin/distcc /opt/bin/distcc_symlinks/${{matrix.arch}}-linux-gnu-gcc # only CC is needed
+    - name: cmake
+      run: cmake -S . -B out -G Ninja -DCMAKE_TOOLCHAIN_FILE=../scripts/TC-${{matrix.arch}}.cmake -DWITH_WASI=ON -DWERROR=OFF -Werror=dev -Wno-deprecated
+    - name: build
+      run: cmake --build out
+    - name: check if generated files are up-to-date
+      run: python ./scripts/check_clean.py
+    - name: unittests
+      run: cmake --build out --target run-unittests
+    - name: tests
+      run: cmake --build out --target run-tests

@@ -109,11 +109,11 @@ int main(int argc, char** argv) {
 ## Compiling the wasm2c output
 
 To compile the executable, we need to use `main.c` and the generated `fac.c`.
-We'll also include `wasm-rt-impl.c` which has implementations of the various
+We'll also include `wasm-rt-impl.c` and `wasm-rt-mem-impl.c`, which have implementations of the various
 `wasm_rt_*` functions used by `fac.c` and `fac.h`.
 
 ```sh
-$ cc -o fac main.c fac.c wasm-rt-impl.c
+$ cc -o fac main.c fac.c wasm2c/wasm-rt-impl.c wasm2c/wasm-rt-mem-impl.c -Iwasm2c -lm
 ```
 
 A note on compiling with optimization: wasm2c relies on certain

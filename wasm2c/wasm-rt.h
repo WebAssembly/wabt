@@ -58,19 +58,19 @@ extern "C" {
 #endif
 
 /**
- * Apple and Windows devices don't implement the C11 threads.h. We use pthreads
- * on Apple devices, and CriticalSection APIs for Windows.
+ * Many devices don't implement the C11 threads.h. We use CriticalSection APIs
+ * for Windows and pthreads on other platforms where threads are not available.
  */
 #ifdef WASM_RT_C11_AVAILABLE
 
-#ifdef __APPLE__
-#include <pthread.h>
-#define WASM_RT_MUTEX pthread_mutex_t
-#define WASM_RT_USE_PTHREADS 1
-#elif defined(_WIN32)
+#if defined(_WIN32)
 #include <windows.h>
 #define WASM_RT_MUTEX CRITICAL_SECTION
 #define WASM_RT_USE_CRITICALSECTION 1
+#elif defined(__APPLE__) || defined(__STDC_NO_THREADS__)
+#include <pthread.h>
+#define WASM_RT_MUTEX pthread_mutex_t
+#define WASM_RT_USE_PTHREADS 1
 #else
 #include <threads.h>
 #define WASM_RT_MUTEX mtx_t
@@ -135,11 +135,13 @@ extern "C" {
  *
  * This defaults to GUARD_PAGES as this is the fasest option, iff the
  * requirements of GUARD_PAGES --- 64-bit platforms, MMAP allocation strategy,
- * no 64-bit memories --- are met. This falls back to BOUNDS otherwise.
+ * no 64-bit memories, no big-endian --- are met. This falls back to BOUNDS
+ * otherwise.
  */
 
 /** Check if Guard checks are supported */
-#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && !SUPPORT_MEMORY64
+#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && !SUPPORT_MEMORY64 && \
+    !WABT_BIG_ENDIAN
 #define WASM_RT_GUARD_PAGES_SUPPORTED 1
 #else
 #define WASM_RT_GUARD_PAGES_SUPPORTED 0
