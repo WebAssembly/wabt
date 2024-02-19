@@ -197,6 +197,18 @@ extern "C" {
 #endif
 
 /**
+ * This macro, if defined to 1 (i.e., allows the "segue" optimization), allows
+ * Wasm2c to use segment registers to speedup access to the linear heap. Note
+ * that even if allowed in this way, the segment registers would only be used if
+ * Wasm2c output is compiled for a suitable architecture and OS and the produces
+ * C file is compiled by supported compilers. The extact restrictions are listed
+ * in detail in src/template/wasm2c.declarations.c
+ */
+#ifndef WASM_RT_ALLOW_SEGUE
+#define WASM_RT_ALLOW_SEGUE 0
+#endif
+
+/**
  * This macro, if defined, allows the embedder to disable all stack exhaustion
  * checks. This a non conformant configuration, i.e., this does not respect
  * Wasm's specification, and may compromise security. Use with caution.
