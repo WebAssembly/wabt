@@ -51,13 +51,16 @@ section("linking") {
   metadata_version[2]
 
   section(LINKING_SEGMENT_INFO) {
-    count[2]
+    count[3]
     str("data1")
     p2align[2]
     flags[1]
     str("data2")
     p2align[3]
     flags[10]
+    str("data3")
+    p2align[2]
+    flags[4]
   }
 
   section(LINKING_INIT_FUNCTIONS) {
@@ -153,9 +156,10 @@ Data[2]:
   - 000000a: 6261 72                                  bar
 Custom:
  - name: "linking"
-  - segment info [count=2]
+  - segment info [count=3]
    - 0: data1 p2align=2 [ STRINGS ]
    - 1: data2 p2align=3 [ TLS unknown_flags=0x8 ]
+   - 2: data3 p2align=2 [ RETAIN ]
   - init functions [count=2]
    - 1: priority=5 <global_sym>
    - 0: priority=6 <func_sym>

@@ -2206,6 +2206,10 @@ Result BinaryReaderObjdump::PrintSegmentFlags(uint32_t flags) {
     PrintDetails(" TLS");
     flags &= ~WABT_SEGMENT_FLAG_TLS;
   }
+  if (flags & WASM_SEGMENT_FLAG_RETAIN) {
+    PrintDetails(" RETAIN");
+    flags &= ~WASM_SEGMENT_FLAG_RETAIN;
+  }
   if (flags != 0) {
     PrintDetails(" unknown_flags=%#x", flags);
   }
