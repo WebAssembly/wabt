@@ -80,6 +80,14 @@ jobs:
         docker exec emscripten emcc -v
         docker exec emscripten emcmake cmake -B emscripten -DWERROR=ON
         docker exec -w /src/emscripten emscripten make -j $(nproc)
+    - uses: actions/setup-node@v3
+      with:
+          node-version: "^18.15.0"
+    - name: test
+      run: |
+        cd ./test/wabtjs
+        npm ci
+        npm run test
         
   wasi:
     name: wasi
