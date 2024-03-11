@@ -333,6 +333,7 @@ enum class ComdatType {
 
 #define WABT_SEGMENT_FLAG_STRINGS 0x1
 #define WABT_SEGMENT_FLAG_TLS 0x2
+#define WASM_SEGMENT_FLAG_RETAIN 0x4
 #define WABT_SEGMENT_FLAG_MAX 0xff
 
 enum class SymbolVisibility {
