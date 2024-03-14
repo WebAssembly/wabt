@@ -137,7 +137,7 @@ uint64_t MEMORY_API_NAME(wasm_rt_grow_memory)(MEMORY_TYPE* memory,
   uint64_t ret = MEMORY_API_NAME(grow_memory_impl)(memory, delta);
   MEMORY_LOCK_RELEASE(memory->mem_lock);
 #ifdef WASM_RT_GROW_FAILED_HANDLER
-  if (ret == -1) {
+  if (ret == (uint64_t)-1) {
     WASM_RT_GROW_FAILED_HANDLER();
   }
 #endif
