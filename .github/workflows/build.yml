@@ -116,6 +116,8 @@ jobs:
       with:
         submodules: true
     - run: sudo apt-get install ninja-build
+    - name: workaround for ASLR+ASAN compatibility # See https://github.com/actions/runner/issues/3207
+      run: sudo sysctl -w vm.mmap_rnd_bits=28
     - run: make clang-${{ matrix.type }}-${{ matrix.sanitizer }}
     - if: ${{ matrix.sanitizer }} != fuzz
       run: make test-clang-${{ matrix.type }}-${{ matrix.sanitizer }}
@@ -134,6 +136,8 @@ jobs:
       with:
         submodules: true
     - run: sudo apt-get install ninja-build
+    - name: workaround for ASLR+ASAN compatibility # See https://github.com/actions/runner/issues/3207
+      run: sudo sysctl -w vm.mmap_rnd_bits=28
     - run: make clang-debug-asan
     - run: make test-clang-debug-asan
 
