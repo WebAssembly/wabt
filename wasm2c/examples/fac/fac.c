@@ -39,6 +39,48 @@
 #define MEM_ADDR(mem, addr, n) &(mem)->data[addr]
 #endif
 
+#ifndef WASM_RT_USE_SEGUE
+// Memory functions can use the segue optimization if allowed. The segue
+// optimization uses x86 segments to point to a linear memory. We use this
+// optimization when:
+//
+// (1) Segue is allowed using WASM_RT_ALLOW_SEGUE
+// (2) on x86_64 without WABT_BIG_ENDIAN enabled
+// (3) the Wasm module uses a single unshared imported or exported memory
+// (4) the compiler supports: intrinsics for (rd|wr)(fs|gs)base, "address
+//     namespaces" for accessing pointers, and supports memcpy on pointers with
+//     custom "address namespaces". GCC does not support the memcpy requirement,
+//     so this leaves only clang for now.
+#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&               \
+    (defined(__x86_64__) || defined(_M_X64)) &&              \
+    WASM_RT_MODULE_IS_SINGLE_UNSHARED_MEMORY && __clang__ && \
+    __has_builtin(__builtin_ia32_wrgsbase64)
+#define WASM_RT_USE_SEGUE 1
+#else
+#define WASM_RT_USE_SEGUE 0
+#endif
+#endif
+
+#if WASM_RT_USE_SEGUE
+// Different segments are free on different platforms
+// Windows uses GS for TLS, FS is free
+// Linux uses FS for TLS, GS is free
+#if defined(__WIN32)
+#define WASM_RT_SEGUE_READ_BASE() __builtin_ia32_rdfsbase64()
+#define WASM_RT_SEGUE_WRITE_BASE(base) \
+  __builtin_ia32_wrfsbase64((uintptr_t)base)
+#define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_fs*)(uintptr_t)addr)
+#else
+// POSIX style OS
+#define WASM_RT_SEGUE_READ_BASE() __builtin_ia32_rdgsbase64()
+#define WASM_RT_SEGUE_WRITE_BASE(base) \
+  __builtin_ia32_wrgsbase64((uintptr_t)base)
+#define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
+#endif
+#else
+#define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
+#endif
+
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
 #if WASM_RT_STACK_DEPTH_COUNT
@@ -128,20 +170,22 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     load_data(MEM_ADDR(&m, o, s), i, s); \
   } while (0)
 
-#define DEFINE_LOAD(name, t1, t2, t3, force_read)                         \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {                \
-    MEMCHECK(mem, addr, t1);                                              \
-    t1 result;                                                            \
-    wasm_rt_memcpy(&result, MEM_ADDR(mem, addr, sizeof(t1)), sizeof(t1)); \
-    force_read(result);                                                   \
-    return (t3)(t2)result;                                                \
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)                  \
+  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {         \
+    MEMCHECK(mem, addr, t1);                                       \
+    t1 result;                                                     \
+    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), \
+                   sizeof(t1));                                    \
+    force_read(result);                                            \
+    return (t3)(t2)result;                                         \
   }
 
-#define DEFINE_STORE(name, t1, t2)                                         \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) {     \
-    MEMCHECK(mem, addr, t1);                                               \
-    t1 wrapped = (t1)value;                                                \
-    wasm_rt_memcpy(MEM_ADDR(mem, addr, sizeof(t1)), &wrapped, sizeof(t1)); \
+#define DEFINE_STORE(name, t1, t2)                                     \
+  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
+    MEMCHECK(mem, addr, t1);                                           \
+    t1 wrapped = (t1)value;                                            \
+    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,    \
+                   sizeof(t1));                                        \
   }
 
 DEFINE_LOAD(i32_load, u32, u32, u32, FORCE_READ_INT)
@@ -656,7 +700,8 @@ FUNC_TYPE_T(w2c_fac_t0) = "\x07\x80\x96\x7a\x42\xf7\x3e\xe6\x70\x5c\x2f\xac\x83\
 
 /* export: 'fac' */
 u32 w2c_fac_fac(w2c_fac* instance, u32 var_p0) {
-  return w2c_fac_fac_0(instance, var_p0);
+  u32 ret = w2c_fac_fac_0(instance, var_p0);
+  return ret;
 }
 
 void wasm2c_fac_instantiate(w2c_fac* instance) {
