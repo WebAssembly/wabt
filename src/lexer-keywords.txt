@@ -18,6 +18,8 @@ struct TokenInfo {
 };
 %%
 array, Type::Array, TokenType::Array
+sub, TokenType::Sub
+rec, TokenType::Rec
 after, TokenType::After
 assert_exception, TokenType::AssertException
 assert_exhaustion, TokenType::AssertExhaustion
@@ -180,7 +182,9 @@ f64x2.promote_low_f32x4, TokenType::Unary, Opcode::F64X2PromoteLowF32X4
 f64x2, TokenType::F64X2
 field, TokenType::Field
 funcref, Type::FuncRef
+anyref,Type::Any
 func, Type::FuncRef, TokenType::Func
+none, Type::NoneRef, TokenType::None
 function, TokenType::Function
 get, TokenType::Get
 global.get, TokenType::GlobalGet, Opcode::GlobalGet
@@ -314,6 +318,12 @@ i32.trunc_sat_f32_u, TokenType::Convert, Opcode::I32TruncSatF32U
 i32.trunc_sat_f64_s, TokenType::Convert, Opcode::I32TruncSatF64S
 i32.trunc_sat_f64_u, TokenType::Convert, Opcode::I32TruncSatF64U
 i32, Type::I32
+i8, Type::I8
+i16, Type::I16
+i31, Type::I31, TokenType::I31
+eq, Type::Eq, TokenType::Eq
+nofunc, Type::NoFunc, TokenType::NoFunc
+noextern, Type::NoExtern, TokenType::NoExtern
 i32.wrap_i64, TokenType::Convert, Opcode::I32WrapI64
 i32x4.abs, TokenType::Unary, Opcode::I32X4Abs
 i32x4.add, TokenType::Binary, Opcode::I32X4Add
@@ -555,10 +565,13 @@ nop, TokenType::Nop, Opcode::Nop
 offset, TokenType::Offset
 output, TokenType::Output
 param, TokenType::Param
-ref, TokenType::Ref
+ref, Type::Ref, TokenType::Ref
+null, Type::Null, TokenType::Null
+any, Type::Any, TokenType::Any
 quote, TokenType::Quote
 ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc
+ref.eq, TokenType::RefEq, Opcode::RefEq
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
 ref.null, TokenType::RefNull, Opcode::RefNull
 register, TokenType::Register
@@ -571,6 +584,35 @@ select, TokenType::Select, Opcode::Select
 shared, TokenType::Shared
 start, TokenType::Start
 struct, Type::Struct, TokenType::Struct
+struct.new, TokenType::StructNew, Opcode::StructNew
+struct.new_default, TokenType::StructNewDefault, Opcode::StructNewDefault
+struct.get, TokenType::StructGet, Opcode::StructGet
+struct.get_s,TokenType::StructGetS, Opcode::StructGetS
+struct.get_u,TokenType::StructGetU, Opcode::StructGetU
+struct.set, TokenType::StructSet, Opcode::StructSet                           
+array.new, TokenType::ArrayNew, Opcode::ArrayNew                                                                          
+array.new_default, TokenType::ArrayNewDefault, Opcode::ArrayNewDefault                                                            
+array.new_fixed, TokenType::ArrayNewFixed, Opcode::ArrayNewFixed                                                                
+array.new_data, TokenType::ArrayNewData, Opcode::ArrayNewData                                                                  
+array.new_elem, TokenType::ArrayNewElem, Opcode::ArrayNewElem                                                                  
+array.get, TokenType::ArrayGet, Opcode::ArrayGet                                                                          
+array.get_s, TokenType::ArrayGetS, Opcode::ArrayGetS                                                                        
+array.get_u, TokenType::ArrayGetU, Opcode::ArrayGetU                                                                        
+array.set, TokenType::ArraySet, Opcode::ArraySet                                                                          
+array.len, TokenType::ArrayLen, Opcode::ArrayLen                                                                          
+array.fill, TokenType::ArrayFill, Opcode::ArrayFill                                                                        
+array.copy, TokenType::ArrayCopy, Opcode::ArrayCopy                                                                        
+array.init_data, TokenType::ArrayInitData, Opcode::ArrayInitData                                                                
+array.init_elem, TokenType::ArrayInitElem, Opcode::ArrayInitElem  
+ref.cast, TokenType::RefCast
+ref.test, TokenType::RefTest
+br_on_cast, TokenType::BrOnCast, Opcode::BrOnCast
+br_on_cast_fail, TokenType::BrOnCastFail, Opcode::BrOnCastFail
+any.convert_extern, TokenType::AnyConvertExtern, Opcode::AnyConvertExtern
+extern.convert_any, TokenType::ExternConvertAny, Opcode::ExternConvertAny
+ref.i31, TokenType::RefI31, Opcode::RefI31
+i31.get_s, TokenType::I31GetS, Opcode::I31GetS
+i31.get_u, TokenType::I31GetU, Opcode::I31GetU
 table.copy, TokenType::TableCopy, Opcode::TableCopy
 table.fill, TokenType::TableFill, Opcode::TableFill
 table.get, TokenType::TableGet, Opcode::TableGet

@@ -265,6 +265,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
 
     case ExprType::SimdShuffleOp:
       return {2, 1};
+    default:;
   }
 
   WABT_UNREACHABLE;
