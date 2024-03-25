@@ -471,6 +471,9 @@ def Compile(cc, c_filename, out_dir, use_c11, *cflags):
                  '-Wno-ignored-optimization-argument',
                  '-Wno-tautological-constant-out-of-range-compare',
                  '-Wno-infinite-recursion',
+                 # simde calls for pragma clang loop vectorize(enable),
+                 # which can generate warnings if the optimization pass fails.
+                 '-Wno-pass-failed',
                  '-fno-optimize-sibling-calls',
                  '-frounding-math', '-fsignaling-nans',
                  '-D_DEFAULT_SOURCE']
