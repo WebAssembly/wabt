@@ -69,21 +69,18 @@ out/test/spec/elem.wast:519: assert_invalid passed:
 out/test/spec/elem.wast:527: assert_invalid passed:
   out/test/spec/elem/elem.55.wasm:0000023: error: invalid initializer: instruction not valid in initializer expression: call
   0000023: error: OnCallExpr callback failed
-out/test/spec/elem.wast:536: assert_invalid passed:
-  out/test/spec/elem/elem.56.wasm:000001b: error: invalid initializer: instruction not valid in initializer expression: i32.add
-  000001b: error: OnBinaryExpr callback failed
-out/test/spec/elem.wast:593: assert_trap passed: uninitialized table element
-out/test/spec/elem.wast:626: assert_invalid passed:
-  out/test/spec/elem/elem.62.wasm:000001f: error: type mismatch at elem segment. got externref, expected funcref
+out/test/spec/elem.wast:585: assert_trap passed: uninitialized table element
+out/test/spec/elem.wast:618: assert_invalid passed:
+  out/test/spec/elem/elem.61.wasm:000001f: error: type mismatch at elem segment. got externref, expected funcref
   000001f: error: OnElemSegmentElemType callback failed
-out/test/spec/elem.wast:631: assert_invalid passed:
-  out/test/spec/elem/elem.63.wasm:0000017: error: type mismatch at elem segment. got funcref, expected externref
+out/test/spec/elem.wast:623: assert_invalid passed:
+  out/test/spec/elem/elem.62.wasm:0000017: error: type mismatch at elem segment. got funcref, expected externref
   0000017: error: OnElemSegmentElemType callback failed
-out/test/spec/elem.wast:636: assert_invalid passed:
-  out/test/spec/elem/elem.64.wasm:0000032: error: type mismatch at table.init. got funcref, expected externref
+out/test/spec/elem.wast:628: assert_invalid passed:
+  out/test/spec/elem/elem.63.wasm:0000032: error: type mismatch at table.init. got funcref, expected externref
   0000032: error: OnTableInitExpr callback failed
-out/test/spec/elem.wast:645: assert_invalid passed:
-  out/test/spec/elem/elem.65.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
+out/test/spec/elem.wast:637: assert_invalid passed:
+  out/test/spec/elem/elem.64.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
   0000030: error: OnTableInitExpr callback failed
-96/96 tests passed.
+95/95 tests passed.
 ;;; STDOUT ;;)

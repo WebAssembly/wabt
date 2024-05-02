@@ -505,8 +505,10 @@ Result TypeChecker::OnCall(const TypeVector& param_types,
 }
 
 Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
-                                   const TypeVector& result_types) {
-  Result result = PopAndCheck1Type(Type::I32, "call_indirect");
+                                   const TypeVector& result_types,
+                                   const Limits& table_limits) {
+  Result result = PopAndCheck1Type(table_limits.is_64 ? Type::I64 : Type::I32,
+                                   "call_indirect");
   result |= PopAndCheckCall(param_types, result_types, "call_indirect");
   return result;
 }
@@ -740,41 +742,51 @@ Result TypeChecker::OnMemorySize(const Limits& limits) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnTableCopy() {
-  return CheckOpcode3(Opcode::TableCopy);
+Result TypeChecker::OnTableCopy(const Limits& dst_limits,
+                                const Limits& src_limits) {
+  Limits size_limits = src_limits;
+  // The memory64 proposal specifies that the type of the size argument should
+  // be the mimimum of the two table types.
+  if (src_limits.is_64 && !dst_limits.is_64) {
+    size_limits = dst_limits;
+  }
+  return CheckOpcode3(Opcode::TableCopy, &dst_limits, &src_limits,
+                      &size_limits);
 }
 
 Result TypeChecker::OnElemDrop(uint32_t segment) {
   return Result::Ok;
 }
 
-Result TypeChecker::OnTableInit(uint32_t table, uint32_t segment) {
-  return CheckOpcode3(Opcode::TableInit);
+Result TypeChecker::OnTableInit(uint32_t segment, const Limits& limits) {
+  return CheckOpcode3(Opcode::TableInit, &limits);
 }
 
-Result TypeChecker::OnTableGet(Type elem_type) {
-  Result result = PopAndCheck1Type(Type::I32, "table.get");
+Result TypeChecker::OnTableGet(Type elem_type, const Limits& limits) {
+  Result result = CheckOpcode1(Opcode::TableGet, &limits);
   PushType(elem_type);
   return result;
 }
 
-Result TypeChecker::OnTableSet(Type elem_type) {
-  return PopAndCheck2Types(Type::I32, elem_type, "table.set");
+Result TypeChecker::OnTableSet(Type elem_type, const Limits& limits) {
+  return PopAndCheck2Types(limits.IndexType(), elem_type, "table.set");
 }
 
-Result TypeChecker::OnTableGrow(Type elem_type) {
-  Result result = PopAndCheck2Types(elem_type, Type::I32, "table.grow");
-  PushType(Type::I32);
+Result TypeChecker::OnTableGrow(Type elem_type, const Limits& limits) {
+  Result result =
+      PopAndCheck2Types(elem_type, limits.IndexType(), "table.grow");
+  PushType(limits.IndexType());
   return result;
 }
 
-Result TypeChecker::OnTableSize() {
-  PushType(Type::I32);
+Result TypeChecker::OnTableSize(const Limits& limits) {
+  PushType(limits.IndexType());
   return Result::Ok;
 }
 
-Result TypeChecker::OnTableFill(Type elem_type) {
-  return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
+Result TypeChecker::OnTableFill(Type elem_type, const Limits& limits) {
+  return PopAndCheck3Types(limits.IndexType(), elem_type, limits.IndexType(),
+                           "table.fill");
 }
 
 Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {

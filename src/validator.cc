@@ -825,7 +825,13 @@ Result Validator::CheckModule() {
 
       // Init expr.
       if (f->elem_segment.kind == SegmentKind::Active) {
-        result_ |= validator_.BeginInitExpr(field.loc, Type::I32);
+        Type offset_type = Type::I32;
+        Index table_index = module->GetTableIndex(f->elem_segment.table_var);
+        if (table_index < module->tables.size() &&
+            module->tables[table_index]->elem_limits.is_64) {
+          offset_type = Type::I64;
+        }
+        result_ |= validator_.BeginInitExpr(field.loc, offset_type);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(
             const_cast<ExprList&>(f->elem_segment.offset));

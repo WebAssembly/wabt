@@ -77,7 +77,8 @@ class TypeChecker {
   Result EndBrTable();
   Result OnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCallIndirect(const TypeVector& param_types,
-                        const TypeVector& result_types);
+                        const TypeVector& result_types,
+                        const Limits& table_limits);
   Result OnIndexedFuncRef(Index* out_index);
   Result OnReturnCall(const TypeVector& param_types,
                       const TypeVector& result_types);
@@ -99,20 +100,20 @@ class TypeChecker {
   Result OnLocalSet(Type);
   Result OnLocalTee(Type);
   Result OnLoop(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnMemoryCopy(const Limits& dstlimits, const Limits& srclimits);
+  Result OnMemoryCopy(const Limits& dst_limits, const Limits& src_limits);
   Result OnDataDrop(Index);
   Result OnMemoryFill(const Limits& limits);
   Result OnMemoryGrow(const Limits& limits);
   Result OnMemoryInit(Index, const Limits& limits);
   Result OnMemorySize(const Limits& limits);
-  Result OnTableCopy();
+  Result OnTableCopy(const Limits& dst_limits, const Limits& src_limits);
   Result OnElemDrop(Index);
-  Result OnTableInit(Index, Index);
-  Result OnTableGet(Type elem_type);
-  Result OnTableSet(Type elem_type);
-  Result OnTableGrow(Type elem_type);
-  Result OnTableSize();
-  Result OnTableFill(Type elem_type);
+  Result OnTableInit(Index, const Limits& limits);
+  Result OnTableGet(Type elem_type, const Limits& limits);
+  Result OnTableSet(Type elem_type, const Limits& limits);
+  Result OnTableGrow(Type elem_type, const Limits& limits);
+  Result OnTableSize(const Limits& limits);
+  Result OnTableFill(Type elem_type, const Limits& limits);
   Result OnRefFuncExpr(Index func_type, bool force_generic_funcref);
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();

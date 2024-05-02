@@ -1298,6 +1298,9 @@ CommandRunner::CommandRunner() : store_(s_features) {
   spectest["table"] =
       interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
 
+  spectest["table64"] = interp::Table::New(
+      store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}});
+
   spectest["memory"] = interp::Memory::New(store_, MemoryType{Limits{1, 2}});
 
   spectest["global_i32"] =

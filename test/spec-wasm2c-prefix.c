@@ -329,6 +329,7 @@ static bool is_arithmetic_nan_f64(u64 x) {
 
 typedef struct w2c_spectest {
   wasm_rt_funcref_table_t spectest_table;
+  wasm_rt_funcref_table_t spectest_table64;
   wasm_rt_memory_t spectest_memory;
   uint32_t spectest_global_i32;
   uint64_t spectest_global_i64;
@@ -373,6 +374,10 @@ wasm_rt_funcref_table_t* w2c_spectest_table(w2c_spectest* instance) {
   return &instance->spectest_table;
 }
 
+wasm_rt_funcref_table_t* w2c_spectest_table64(w2c_spectest* instance) {
+  return &instance->spectest_table64;
+}
+
 wasm_rt_memory_t* w2c_spectest_memory(w2c_spectest* instance) {
   return &instance->spectest_memory;
 }
@@ -400,6 +405,7 @@ static void init_spectest_module(w2c_spectest* instance) {
   instance->spectest_global_f64 = 666.6;
   wasm_rt_allocate_memory(&instance->spectest_memory, 1, 2, false);
   wasm_rt_allocate_funcref_table(&instance->spectest_table, 10, 20);
+  wasm_rt_allocate_funcref_table(&instance->spectest_table64, 10, 20);
 }
 
 // POSIX-only test config where embedder handles signals instead of w2c runtime

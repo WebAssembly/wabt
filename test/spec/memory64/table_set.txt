@@ -1,0 +1,35 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_set.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64/table_set.wast:51: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
+out/test/spec/memory64/table_set.wast:52: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
+out/test/spec/memory64/table_set.wast:53: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 1
+out/test/spec/memory64/table_set.wast:54: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 2
+out/test/spec/memory64/table_set.wast:56: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
+out/test/spec/memory64/table_set.wast:57: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
+out/test/spec/memory64/table_set.wast:58: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 1
+out/test/spec/memory64/table_set.wast:59: assert_trap passed: out of bounds table access: table.set at 4294967295 >= max value 2
+out/test/spec/memory64/table_set.wast:65: assert_invalid passed:
+  out/test/spec/memory64/table_set/table_set.1.wasm:000001f: error: type mismatch in table.set, expected [i32, externref] but got []
+  000001f: error: OnTableSetExpr callback failed
+out/test/spec/memory64/table_set.wast:74: assert_invalid passed:
+  out/test/spec/memory64/table_set/table_set.2.wasm:0000021: error: type mismatch in table.set, expected [i32, externref] but got [externref]
+  0000021: error: OnTableSetExpr callback failed
+out/test/spec/memory64/table_set.wast:83: assert_invalid passed:
+  out/test/spec/memory64/table_set/table_set.3.wasm:0000021: error: type mismatch in table.set, expected [i32, externref] but got [i32]
+  0000021: error: OnTableSetExpr callback failed
+out/test/spec/memory64/table_set.wast:92: assert_invalid passed:
+  out/test/spec/memory64/table_set/table_set.4.wasm:0000026: error: type mismatch in table.set, expected [i32, externref] but got [f32, externref]
+  0000026: error: OnTableSetExpr callback failed
+out/test/spec/memory64/table_set.wast:101: assert_invalid passed:
+  out/test/spec/memory64/table_set/table_set.5.wasm:0000024: error: type mismatch in table.set, expected [i32, funcref] but got [i32, externref]
+  0000024: error: OnTableSetExpr callback failed
+out/test/spec/memory64/table_set.wast:111: assert_invalid passed:
+  out/test/spec/memory64/table_set/table_set.6.wasm:0000027: error: type mismatch in table.set, expected [i32, funcref] but got [i32, externref]
+  0000027: error: OnTableSetExpr callback failed
+out/test/spec/memory64/table_set.wast:122: assert_invalid passed:
+  out/test/spec/memory64/table_set/table_set.7.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got []
+  0000025: error: EndFunctionBody callback failed
+28/28 tests passed.
+;;; STDOUT ;;)

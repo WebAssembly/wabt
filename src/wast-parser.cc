@@ -1658,6 +1658,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = std::make_unique<TableImport>(name);
+      CHECK_RESULT(ParseLimitsIndex(&import->table.elem_limits));
       CHECK_RESULT(ParseLimits(&import->table.elem_limits));
       CHECK_RESULT(ParseRefType(&import->table.elem_type));
       EXPECT(Rpar);
@@ -1793,48 +1794,53 @@ Result WastParser::ParseTableModuleField(Module* module) {
     CheckImportOrdering(module);
     auto import = std::make_unique<TableImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
+    CHECK_RESULT(ParseLimitsIndex(&import->table.elem_limits));
     CHECK_RESULT(ParseLimits(&import->table.elem_limits));
     CHECK_RESULT(ParseRefType(&import->table.elem_type));
     auto field =
         std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
-  } else if (PeekMatch(TokenType::ValueType)) {
-    Type elem_type;
-    CHECK_RESULT(ParseRefType(&elem_type));
-
-    EXPECT(Lpar);
-    EXPECT(Elem);
-
-    auto elem_segment_field = std::make_unique<ElemSegmentModuleField>(loc);
-    ElemSegment& elem_segment = elem_segment_field->elem_segment;
-    elem_segment.table_var = Var(module->tables.size(), GetLocation());
-    elem_segment.offset.push_back(std::make_unique<ConstExpr>(Const::I32(0)));
-    elem_segment.offset.back().loc = loc;
-    elem_segment.elem_type = elem_type;
-    // Syntax is either an optional list of var (legacy), or a non-empty list
-    // of elem expr.
-    ExprList elem_expr;
-    if (ParseElemExprOpt(&elem_expr)) {
-      elem_segment.elem_exprs.push_back(std::move(elem_expr));
-      // Parse the rest.
-      ParseElemExprListOpt(&elem_segment.elem_exprs);
-    } else {
-      ParseElemExprVarListOpt(&elem_segment.elem_exprs);
-    }
-    EXPECT(Rpar);
-
-    auto table_field = std::make_unique<TableModuleField>(loc, name);
-    table_field->table.elem_limits.initial = elem_segment.elem_exprs.size();
-    table_field->table.elem_limits.max = elem_segment.elem_exprs.size();
-    table_field->table.elem_limits.has_max = true;
-    table_field->table.elem_type = elem_type;
-    module->AppendField(std::move(table_field));
-    module->AppendField(std::move(elem_segment_field));
   } else {
     auto field = std::make_unique<TableModuleField>(loc, name);
-    CHECK_RESULT(ParseLimits(&field->table.elem_limits));
-    CHECK_RESULT(ParseRefType(&field->table.elem_type));
-    module->AppendField(std::move(field));
+    auto& table = field->table;
+    CHECK_RESULT(ParseLimitsIndex(&table.elem_limits));
+    if (PeekMatch(TokenType::ValueType)) {
+      Type elem_type;
+      CHECK_RESULT(ParseRefType(&elem_type));
+
+      EXPECT(Lpar);
+      EXPECT(Elem);
+
+      auto elem_segment_field = std::make_unique<ElemSegmentModuleField>(loc);
+      ElemSegment& elem_segment = elem_segment_field->elem_segment;
+      elem_segment.table_var = Var(module->tables.size(), GetLocation());
+      auto offset = table.elem_limits.is_64 ? Const::I64(0) : Const::I32(0);
+      elem_segment.offset.push_back(std::make_unique<ConstExpr>(offset));
+      elem_segment.offset.back().loc = loc;
+      elem_segment.elem_type = elem_type;
+      // Syntax is either an optional list of var (legacy), or a non-empty list
+      // of elem expr.
+      ExprList elem_expr;
+      if (ParseElemExprOpt(&elem_expr)) {
+        elem_segment.elem_exprs.push_back(std::move(elem_expr));
+        // Parse the rest.
+        ParseElemExprListOpt(&elem_segment.elem_exprs);
+      } else {
+        ParseElemExprVarListOpt(&elem_segment.elem_exprs);
+      }
+      EXPECT(Rpar);
+
+      table.elem_limits.initial = elem_segment.elem_exprs.size();
+      table.elem_limits.max = elem_segment.elem_exprs.size();
+      table.elem_limits.has_max = true;
+      table.elem_type = elem_type;
+      module->AppendField(std::move(field));
+      module->AppendField(std::move(elem_segment_field));
+    } else {
+      CHECK_RESULT(ParseLimits(&table.elem_limits));
+      CHECK_RESULT(ParseRefType(&table.elem_type));
+      module->AppendField(std::move(field));
+    }
   }
 
   AppendInlineExportFields(module, &export_fields, module->tables.size() - 1);

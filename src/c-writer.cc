@@ -1292,7 +1292,15 @@ void CWriter::Write(const Const& const_) {
         // Negative zero. Special-cased so it isn't written as -0 below.
         Writef("-0.0");
       } else {
-        Writef("%.17g", Bitcast<double>(f64_bits));
+        char buf[128];
+        snprintf(buf, sizeof(buf), "%.17g", Bitcast<double>(f64_bits));
+        // Append .0 if sprint didn't include a decimal point or use the
+        // exponent ('e') form.  This is a workaround for an MSVC parsing
+        // issue: https://github.com/WebAssembly/wabt/issues/2422
+        if (!strchr(buf, '.') && !strchr(buf, 'e')) {
+          strcat(buf, ".0");
+        }
+        Writef("%s", buf);
       }
       break;
     }
@@ -3636,18 +3644,18 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::TableGrow: {
         const Table* table = module_->GetTable(cast<TableGrowExpr>(&expr)->var);
-        Write(StackVar(1, Type::I32), " = wasm_rt_grow_",
+        Write(StackVar(1, table->elem_limits.IndexType()), " = wasm_rt_grow_",
               GetReferenceTypeName(table->elem_type), "_table(",
               ExternalInstancePtr(ModuleFieldType::Table, table->name), ", ",
               StackVar(0), ", ", StackVar(1), ");", Newline());
         DropTypes(2);
-        PushType(Type::I32);
+        PushType(table->elem_limits.IndexType());
       } break;
 
       case ExprType::TableSize: {
         const Table* table = module_->GetTable(cast<TableSizeExpr>(&expr)->var);
 
-        PushType(Type::I32);
+        PushType(table->elem_limits.IndexType());
         Write(StackVar(0), " = ",
               ExternalInstanceRef(ModuleFieldType::Table, table->name),
               ".size;", Newline());

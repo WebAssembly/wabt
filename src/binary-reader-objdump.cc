@@ -1644,6 +1644,9 @@ Result BinaryReaderObjdump::OnTable(Index index,
   if (!name.empty()) {
     PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
+  if (elem_limits->is_64) {
+    PrintDetails(" i64");
+  }
   PrintDetails("\n");
   return Result::Ok;
 }

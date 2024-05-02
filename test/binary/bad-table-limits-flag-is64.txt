@@ -7,6 +7,6 @@ section(TABLE) {
   flags[4]
 }
 (;; STDERR ;;;
-000000d: error: tables may not be 64-bit
-000000d: error: tables may not be 64-bit
+000000d: error: memory64 not allowed
+000000d: error: memory64 not allowed
 ;;; STDERR ;;)
