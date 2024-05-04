@@ -29,7 +29,14 @@ namespace wabt {
 
 namespace {
 
+#if __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+#endif
 #include "prebuilt/lexer-keywords.cc"
+#if __clang__
+#pragma clang diagnostic pop
+#endif
 
 }  // namespace
 
