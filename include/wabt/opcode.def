@@ -520,8 +520,8 @@ WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x10e, F32X4RelaxedMax, "f32x4.rel
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x10f, F64X2RelaxedMin, "f64x2.relaxed_min", "")
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x110, F64X2RelaxedMax, "f64x2.relaxed_max", "")
 WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x111, I16X8RelaxedQ15mulrS, "i16x8.relaxed_q15mulr_s", "")
-WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x112, I16X8DotI8X16I7X16S, "i16x8.dot_i8x16_i7x16_s", "")
-WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x113, I32X4DotI8X16I7X16AddS, "i32x4.dot_i8x16_i7x16_add_s", "")
+WABT_OPCODE(V128, V128, V128, ___,  0,  0xfd, 0x112, I16X8DotI8X16I7X16S, "i16x8.relaxed_dot_i8x16_i7x16_s", "")
+WABT_OPCODE(V128, V128, V128, V128, 0,  0xfd, 0x113, I32X4DotI8X16I7X16AddS, "i32x4.relaxed_dot_i8x16_i7x16_add_s", "")
 
 /* Thread opcodes (--enable-threads) */
 WABT_OPCODE(I32,  I32,  I32,  ___,  4,  0xfe, 0x00, MemoryAtomicNotify, "memory.atomic.notify", "")

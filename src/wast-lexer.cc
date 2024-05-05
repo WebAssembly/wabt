@@ -285,6 +285,13 @@ bool WastLexer::ReadLineComment() {
       case kEof:
         return false;
 
+      case '\r':
+        if (PeekChar() == '\n') {
+          ReadChar();
+        }
+        Newline();
+        return true;
+
       case '\n':
         Newline();
         return true;

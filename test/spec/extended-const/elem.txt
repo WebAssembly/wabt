@@ -86,5 +86,9 @@ out/test/spec/extended-const/elem.wast:637: assert_invalid passed:
 out/test/spec/extended-const/elem.wast:646: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.65.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
   0000030: error: OnTableInitExpr callback failed
-96/96 tests passed.
+out/test/spec/extended-const/elem.wast:714: assert_trap passed: uninitialized table element
+out/test/spec/extended-const/elem.wast:725: assert_trap passed: uninitialized table element
+out/test/spec/extended-const/elem.wast:736: assert_trap passed: uninitialized table element
+out/test/spec/extended-const/elem.wast:758: assert_trap passed: uninitialized table element
+108/108 tests passed.
 ;;; STDOUT ;;)

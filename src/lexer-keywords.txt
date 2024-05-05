@@ -193,7 +193,7 @@ i16x8.add, TokenType::Binary, Opcode::I16X8Add
 i16x8.all_true, TokenType::Unary, Opcode::I16X8AllTrue
 i16x8.avgr_u, TokenType::Binary, Opcode::I16X8AvgrU
 i16x8.bitmask, TokenType::Unary, Opcode::I16X8Bitmask
-i16x8.dot_i8x16_i7x16_s, TokenType::Binary, Opcode::I16X8DotI8X16I7X16S
+i16x8.relaxed_dot_i8x16_i7x16_s, TokenType::Binary, Opcode::I16X8DotI8X16I7X16S
 i16x8.eq, TokenType::Compare, Opcode::I16X8Eq
 i16x8.extract_lane_s, TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneS
 i16x8.extract_lane_u, TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneU
@@ -319,7 +319,7 @@ i32x4.abs, TokenType::Unary, Opcode::I32X4Abs
 i32x4.add, TokenType::Binary, Opcode::I32X4Add
 i32x4.all_true, TokenType::Unary, Opcode::I32X4AllTrue
 i32x4.bitmask, TokenType::Unary, Opcode::I32X4Bitmask
-i32x4.dot_i8x16_i7x16_add_s, TokenType::Ternary, Opcode::I32X4DotI8X16I7X16AddS
+i32x4.relaxed_dot_i8x16_i7x16_add_s, TokenType::Ternary, Opcode::I32X4DotI8X16I7X16AddS
 i32x4.eq, TokenType::Compare, Opcode::I32X4Eq
 i32x4.extract_lane, TokenType::SimdLaneOp, Opcode::I32X4ExtractLane
 i32x4.ge_s, TokenType::Compare, Opcode::I32X4GeS

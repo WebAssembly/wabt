@@ -9,5 +9,116 @@ out/test/spec/token.wast:8: assert_malformed passed:
   out/test/spec/token/token.1.wat:1:10: error: unexpected token "0drop", expected a numeric index or a name (e.g. 12 or $foo).
   (func br 0drop)
            ^^^^^
-2/2 tests passed.
+out/test/spec/token.wast:86: assert_malformed passed:
+  out/test/spec/token/token.19.wat:1:41: error: unexpected token "0$l", expected a var (e.g. 12 or $foo).
+  (func (block $l (i32.const 0) (br_table 0$l)))
+                                          ^^^
+out/test/spec/token.wast:96: assert_malformed passed:
+  out/test/spec/token/token.21.wat:1:41: error: undefined label variable "$l0"
+  (func (block $l (i32.const 0) (br_table $l0)))
+                                          ^^^
+out/test/spec/token.wast:106: assert_malformed passed:
+  out/test/spec/token/token.23.wat:1:41: error: undefined label variable "$l$l"
+  (func (block $l (i32.const 0) (br_table $l$l)))
+                                          ^^^^
+out/test/spec/token.wast:126: assert_malformed passed:
+  out/test/spec/token/token.27.wat:1:2: error: unexpected token "data"a"", expected a module field or a module.
+  (data"a")
+   ^^^^^^^
+  out/test/spec/token/token.27.wat:1:9: error: unexpected token ), expected EOF.
+  (data"a")
+          ^
+out/test/spec/token.wast:136: assert_malformed passed:
+  out/test/spec/token/token.29.wat:1:7: error: unexpected token $l"a", expected ).
+  (data $l"a")
+        ^^^^^
+out/test/spec/token.wast:146: assert_malformed passed:
+  out/test/spec/token/token.31.wat:1:7: error: unexpected token $l" a", expected ).
+  (data $l" a")
+        ^^^^^^
+out/test/spec/token.wast:156: assert_malformed passed:
+  out/test/spec/token/token.33.wat:1:7: error: unexpected token $l"a ", expected ).
+  (data $l"a ")
+        ^^^^^^
+out/test/spec/token.wast:166: assert_malformed passed:
+  out/test/spec/token/token.35.wat:1:7: error: invalid string token
+  (data $l"a ""b")
+        ^^^^^^
+  out/test/spec/token/token.35.wat:1:7: error: unexpected token $l"a ""b", expected ).
+  (data $l"a ""b")
+        ^^^^^^^^^
+out/test/spec/token.wast:176: assert_malformed passed:
+  out/test/spec/token/token.37.wat:1:7: error: unexpected token $l"", expected ).
+  (data $l"")
+        ^^^^^^^^^^
+out/test/spec/token.wast:186: assert_malformed passed:
+  out/test/spec/token/token.39.wat:1:7: error: unexpected token $l" ", expected ).
+  (data $l" ")
+        ^^^^^^^^^^^
+out/test/spec/token.wast:196: assert_malformed passed:
+  out/test/spec/token/token.41.wat:1:7: error: unexpected token $l" ", expected ).
+  (data $l" ")
+        ^^^^^^^^^^^
+out/test/spec/token.wast:206: assert_malformed passed:
+  out/test/spec/token/token.43.wat:1:7: error: invalid string token
+  (data "a""b")
+        ^^^
+  out/test/spec/token/token.43.wat:1:7: error: unexpected token Invalid, expected ).
+  (data "a""b")
+        ^^^
+out/test/spec/token.wast:216: assert_malformed passed:
+  out/test/spec/token/token.45.wat:1:7: error: invalid string token
+  (data "a"" b")
+        ^^^
+  out/test/spec/token/token.45.wat:1:7: error: unexpected token Invalid, expected ).
+  (data "a"" b")
+        ^^^
+out/test/spec/token.wast:226: assert_malformed passed:
+  out/test/spec/token/token.47.wat:1:7: error: invalid string token
+  (data "a ""b")
+        ^^^^
+  out/test/spec/token/token.47.wat:1:7: error: unexpected token Invalid, expected ).
+  (data "a ""b")
+        ^^^^
+out/test/spec/token.wast:236: assert_malformed passed:
+  out/test/spec/token/token.49.wat:1:7: error: invalid string token
+  (data """")
+        ^^^^^^^^
+  out/test/spec/token/token.49.wat:1:7: error: unexpected token Invalid, expected ).
+  (data """")
+        ^^^^^^^^
+out/test/spec/token.wast:246: assert_malformed passed:
+  out/test/spec/token/token.51.wat:1:7: error: invalid string token
+  (data """ ")
+        ^^^^^^^^
+  out/test/spec/token/token.51.wat:1:7: error: unexpected token Invalid, expected ).
+  (data """ ")
+        ^^^^^^^^
+out/test/spec/token.wast:256: assert_malformed passed:
+  out/test/spec/token/token.53.wat:1:7: error: invalid string token
+  (data " """)
+        ^^^^^^^^^
+  out/test/spec/token/token.53.wat:1:7: error: unexpected token Invalid, expected ).
+  (data " """)
+        ^^^^^^^^^
+out/test/spec/token.wast:264: assert_malformed passed:
+  out/test/spec/token/token.54.wat:1:7: error: unexpected token "a", expected ).
+  (func "a"x)
+        ^^^
+  out/test/spec/token/token.54.wat:1:10: error: unexpected token x.
+  (func "a"x)
+           ^
+out/test/spec/token.wast:270: assert_malformed passed:
+  out/test/spec/token/token.55.wat:1:7: error: unexpected token "a", expected ).
+  (func "a"0)
+        ^^^
+out/test/spec/token.wast:276: assert_malformed passed:
+  out/test/spec/token/token.56.wat:1:7: error: unexpected token 0"a", expected ).
+  (func 0"a")
+        ^^^^
+out/test/spec/token.wast:282: assert_malformed passed:
+  out/test/spec/token/token.57.wat:1:7: error: unexpected token "a", expected ).
+  (func "a"$x)
+        ^^^
+58/58 tests passed.
 ;;; STDOUT ;;)

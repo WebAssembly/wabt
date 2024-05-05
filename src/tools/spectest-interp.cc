@@ -1308,10 +1308,10 @@ CommandRunner::CommandRunner() : store_(s_features) {
                           Value::Make(u64{666}));
   spectest["global_f32"] =
       interp::Global::New(store_, GlobalType{ValueType::F32, Mutability::Const},
-                          Value::Make(f32{666}));
+                          Value::Make(f32{666.6}));
   spectest["global_f64"] =
       interp::Global::New(store_, GlobalType{ValueType::F64, Mutability::Const},
-                          Value::Make(f64{666}));
+                          Value::Make(f64{666.6}));
 }
 
 wabt::Result CommandRunner::Run(const Script& script) {
