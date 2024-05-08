@@ -8,11 +8,12 @@ section(CODE) {
   count[1]
   func {
     locals[0]
+    i32.const leb_i32(0)
     i32.load align[65] offset[0]
     drop
   }
 }
 (;; STDERR ;;;
-000001e: error: multi_memory not allowed
-000001e: error: multi_memory not allowed
+0000020: error: multi_memory not allowed
+0000020: error: multi_memory not allowed
 ;;; STDERR ;;)
