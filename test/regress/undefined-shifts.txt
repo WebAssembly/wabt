@@ -10,11 +10,12 @@ section(CODE) {
   count[1]
   func {
     locals[0]
+    i32.const leb_u32(0)
     i32.load align[63] offset[0]
     drop
   }
 }
 (;; STDERR ;;;
-000001e: error: invalid load alignment: 63
-000001e: error: invalid load alignment: 63
+0000020: error: invalid load alignment: 63
+0000020: error: invalid load alignment: 63
 ;;; STDERR ;;)
