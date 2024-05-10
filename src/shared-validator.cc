@@ -20,6 +20,9 @@
 #include <cinttypes>
 #include <limits>
 
+extern std::vector<wabt::TypeEntry*> moduletypes;
+std::unordered_map<std::string, int> moduletypesname3;
+
 namespace wabt {
 
 TypeVector SharedValidator::ToTypeVector(Index count, const Type* types) {
@@ -656,6 +659,256 @@ Result SharedValidator::OnBinary(const Location& loc, Opcode opcode) {
   return result;
 }
 
+Result SharedValidator::OnStructNew(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  wabt::StructType* a =
+      static_cast<wabt::StructType*>(moduletypes[var.index()]);
+  TypeVector typeVector;
+  for (auto field : a->fields)
+    typeVector.push_back(field.type);
+  assert(var.is_index());
+  result |= typechecker_.OnStructNew(var.index(), typeVector);
+  return result;
+}
+Result SharedValidator::OnStructNewDefault(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  assert(var.is_index());
+  result |= typechecker_.OnStructNewDefault(var.index());
+  return result;
+}
+Result SharedValidator::OnStructGet(const Location& loc, Var var1, Var var2) {
+  Result result = Result::Ok;
+  wabt::StructType* a =
+      static_cast<wabt::StructType*>(moduletypes[var1.index()]);
+  Field field = a->fields[var2.index()];
+  result |= typechecker_.OnStructGet(var1.index(), field.type);
+  return result;
+}
+Result SharedValidator::OnStructGetU(const Location& loc, Var var1, Var var2) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnStructGet(var1.index(), Type::I32);
+  return result;
+}
+Result SharedValidator::OnStructGetS(const Location& loc, Var var1, Var var2) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnStructGet(var1.index(), Type::I32);
+  return result;
+}
+Result SharedValidator::OnStructSet(const Location& loc, Var var1, Var var2) {
+  Result result = Result::Ok;
+  wabt::StructType* a =
+      static_cast<wabt::StructType*>(moduletypes[var1.index()]);
+  Field field = a->fields[var2.index()];
+  result |= typechecker_.OnStructSet(var1.index(), field.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayNew(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  wabt::ArrayType* a =
+	  static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
+  Type type = a->field.type;
+  result |= typechecker_.OnArrayNew(var.index(), type);
+  return result;
+}
+Result SharedValidator::OnArrayNewDefault(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayNewDefault(var.index());
+  return result;
+}
+Result SharedValidator::OnArrayNewFixed(const Location& loc,
+                                        Var var,
+                                        Var size_var) {
+  Result result = Result::Ok;
+  wabt::ArrayType* a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
+  result |= typechecker_.OnArrayNewFixed(var.index(), a->field.type,
+                                         size_var.index());
+  return result;
+}
+Result SharedValidator::OnArrayNewData(const Location& loc,
+                                       Var var1,
+                                       Var var2) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayNewData(var1.index());
+  return result;
+}
+Result SharedValidator::OnArrayNewElem(const Location& loc,
+                                       Var var1,
+                                       Var var2) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayNewElem(var1.index());
+  return result;
+}
+Result SharedValidator::OnArrayGet(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  wabt::ArrayType* a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
+  result |= typechecker_.OnArrayGet(var.index(), a->field.type);
+  return result;
+}
+Result SharedValidator::OnArrayGetS(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayGet(var.index(), Type::I32);
+  return result;
+}
+Result SharedValidator::OnArrayGetU(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayGet(var.index(), Type::I32);
+  return result;
+}
+Result SharedValidator::OnArraySet(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  wabt::ArrayType* a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
+  result |= typechecker_.OnArraySet(var.index(), a->field.type);
+  return result;
+}
+Result SharedValidator::OnArrayLen(const Location& loc) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayLen();
+  return result;
+}
+Result SharedValidator::OnArrayFill(const Location& loc, Var var) {
+  Result result = Result::Ok;
+  wabt::ArrayType* a = static_cast<wabt::ArrayType*>(moduletypes[var.index()]);
+  result |=
+      typechecker_.OnArrayFill(Type(Type::RefNull, var.index()), a->field.type);
+  return result;
+}
+Result SharedValidator::OnArrayCopy(const Location& loc, Var var, Var var2) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayCopy(Type(Type::RefNull, var.index()),
+                                     Type(Type::RefNull, var2.index()));
+  return result;
+}
+Result SharedValidator::OnArrayInitData(const Location& loc,
+                                        Var var,
+                                        Var var2) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayInitData(Type(Type::RefNull, var.index()));
+  return result;
+}
+Result SharedValidator::OnArrayInitElem(const Location& loc,
+                                        Var var,
+                                        Var var2) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnArrayInitData(Type(Type::RefNull, var.index()));
+  return result;
+}
+bool SharedValidator::isNumber(const std::string& str) {
+  for (char const& c : str) {
+    if (std::isdigit(c) == 0)
+      return false;
+  }
+  return true;
+}
+Type SharedValidator::ParseVar2RefType(Var var) {
+  if (var.is_index())
+    return Type(var.index());
+  std::string name;
+  Type ans;
+  if (var.name().substr(0, 7) == "RefNull") {
+    ans = Type::RefNull;
+    name = var.name().substr(7);
+  } else {
+    ans = Type::Ref;
+    name = var.name();
+  }
+  if (isNumber(name)) {
+    ans.type_index_ = std::stoi(name);
+  } else if (name == "NoFunc") {
+    ans.type_index_ = Type::NoFunc;
+  } else if (name == "NoExtern") {
+    ans.type_index_ = Type::NoExtern;
+  } else if (name == "None") {
+    ans.type_index_ = Type::NoneRef;
+  } else if (name == "Func") {
+    return Type::FuncRef;
+  } else if (name == "Extern") {
+    return Type::ExternRef;
+  } else if (name == "Any") {
+    ans.type_index_ = Type::AnyRef;
+  } else if (name == "Eq") {
+    ans.type_index_ = Type::Eq;
+  } else if (name == "I31") {
+    ans.type_index_ = Type::I31;
+  } else if (name == "Struct") {
+    ans.type_index_ = Type::StructRef;
+  } else if (name == "Array") {
+    ans.type_index_ = Type::ArrayRef;
+  } else {
+    if (moduletypesname3.find(name) != moduletypesname3.end()) {
+      ans.type_index_ = moduletypesname3[name];
+    }
+  }
+  return ans;
+}
+Result SharedValidator::OnRefTest(
+    const Location& loc,
+    Var var,
+    std::unordered_map<std::string, int>& typenames) {
+  Result result = Result::Ok;
+  moduletypesname3 = typenames;
+  result |= typechecker_.OnRefTest(ParseVar2RefType(var));
+  return result;
+}
+Result SharedValidator::OnRefCast(
+    const Location& loc,
+    Var var,
+    std::unordered_map<std::string, int>& typenames) {
+  Result result = Result::Ok;
+  moduletypesname3 = typenames;
+  result |= typechecker_.OnRefCast(ParseVar2RefType(var));
+  return result;
+}
+Result SharedValidator::OnBrOnCast(
+    const Location& loc,
+    Var var1,
+    Var var2,
+    Var var3,
+    std::unordered_map<std::string, int>& typenames) {
+  moduletypesname3 = typenames;
+  Result result = Result::Ok;
+  result |=
+      typechecker_.OnBrOnCast(ParseVar2RefType(var2), ParseVar2RefType(var3));
+  return result;
+}
+Result SharedValidator::OnBrOnCastFail(
+    const Location& loc,
+    Var var1,
+    Var var2,
+    Var var3,
+    std::unordered_map<std::string, int>& typenames) {
+  moduletypesname3 = typenames;
+  Result result = Result::Ok;
+  result |= typechecker_.OnBrOnCastFail(ParseVar2RefType(var2),
+                                        ParseVar2RefType(var3));
+  return result;
+}
+Result SharedValidator::OnAnyConvertExtern(const Location& loc) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnAnyConvertExtern();
+  return result;
+}
+Result SharedValidator::OnExternConvertAny(const Location& loc) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnExternConvertAny();
+  return result;
+}
+Result SharedValidator::OnRefI31(const Location& loc) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnRefI31();
+  return result;
+}
+Result SharedValidator::OnI31GetS(const Location& loc) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnI31Get();
+  return result;
+}
+Result SharedValidator::OnI31GetU(const Location& loc) {
+  Result result = Result::Ok;
+  result |= typechecker_.OnI31Get();
+  return result;
+}
+
 Result SharedValidator::OnBlock(const Location& loc, Type sig_type) {
   Result result = CheckInstr(Opcode::Block, loc);
   TypeVector param_types, result_types;
@@ -976,6 +1229,12 @@ Result SharedValidator::OnMemorySize(const Location& loc, Var memidx) {
 
 Result SharedValidator::OnNop(const Location& loc) {
   Result result = CheckInstr(Opcode::Nop, loc);
+  return result;
+}
+
+Result SharedValidator::OnRefEq(const Location& loc) {
+  Result result = CheckInstr(Opcode::RefEq, loc);
+  result |= typechecker_.OnRefEq();
   return result;
 }
 

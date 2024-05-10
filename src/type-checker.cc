@@ -17,7 +17,8 @@
 #include "wabt/type-checker.h"
 
 #include <cinttypes>
-
+#include <wabt/ir.h>
+extern std::vector<wabt::TypeEntry*> moduletypes;
 namespace wabt {
 
 namespace {
@@ -131,110 +132,161 @@ bool TypeChecker::IsUnreachable() {
 }
 
 void TypeChecker::ResetTypeStackToLabel(Label* label) {
-  type_stack_.resize(label->type_stack_limit);
+    type_stack_.resize(label->type_stack_limit);
 }
 
 Result TypeChecker::SetUnreachable() {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  label->unreachable = true;
-  ResetTypeStackToLabel(label);
-  return Result::Ok;
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
+    label->unreachable = true;
+    ResetTypeStackToLabel(label);
+    return Result::Ok;
 }
 
 void TypeChecker::PushLabel(LabelType label_type,
-                            const TypeVector& param_types,
-                            const TypeVector& result_types) {
-  label_stack_.emplace_back(label_type, param_types, result_types,
-                            type_stack_.size());
+    const TypeVector& param_types,
+    const TypeVector& result_types) {
+    label_stack_.emplace_back(label_type, param_types, result_types,
+        type_stack_.size());
 }
 
 Result TypeChecker::PopLabel() {
-  label_stack_.pop_back();
-  return Result::Ok;
+    label_stack_.pop_back();
+    return Result::Ok;
 }
 
 Result TypeChecker::CheckLabelType(Label* label, LabelType label_type) {
-  return label->label_type == label_type ? Result::Ok : Result::Error;
+    return label->label_type == label_type ? Result::Ok : Result::Error;
 }
 
 Result TypeChecker::Check2LabelTypes(Label* label,
-                                     LabelType label_type1,
-                                     LabelType label_type2) {
-  return label->label_type == label_type1 || label->label_type == label_type2
-             ? Result::Ok
-             : Result::Error;
+    LabelType label_type1,
+    LabelType label_type2) {
+    return label->label_type == label_type1 || label->label_type == label_type2
+        ? Result::Ok
+        : Result::Error;
 }
 
 Result TypeChecker::GetThisFunctionLabel(Label** label) {
-  return GetLabel(label_stack_.size() - 1, label);
+    return GetLabel(label_stack_.size() - 1, label);
 }
 
 Result TypeChecker::PeekType(Index depth, Type* out_type) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
 
-  if (label->type_stack_limit + depth >= type_stack_.size()) {
-    *out_type = Type::Any;
-    return label->unreachable ? Result::Ok : Result::Error;
-  }
-  *out_type = type_stack_[type_stack_.size() - depth - 1];
-  return Result::Ok;
+    if (label->type_stack_limit + depth >= type_stack_.size()) {
+        *out_type = Type::Any;
+        return label->unreachable ? Result::Ok : Result::Error;
+    }
+    *out_type = type_stack_[type_stack_.size() - depth - 1];
+    return Result::Ok;
 }
 
 Result TypeChecker::PeekAndCheckType(Index depth, Type expected) {
-  Type actual = Type::Any;
-  Result result = PeekType(depth, &actual);
-  return result | CheckType(actual, expected);
+    Type actual = Type::Any;
+    Result result = PeekType(depth, &actual);
+    return result | CheckType(actual, expected);
 }
 
 Result TypeChecker::DropTypes(size_t drop_count) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  if (label->type_stack_limit + drop_count > type_stack_.size()) {
-    ResetTypeStackToLabel(label);
-    return label->unreachable ? Result::Ok : Result::Error;
-  }
-  type_stack_.erase(type_stack_.end() - drop_count, type_stack_.end());
-  return Result::Ok;
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
+    if (label->type_stack_limit + drop_count > type_stack_.size()) {
+        ResetTypeStackToLabel(label);
+        return label->unreachable ? Result::Ok : Result::Error;
+    }
+    type_stack_.erase(type_stack_.end() - drop_count, type_stack_.end());
+    return Result::Ok;
 }
 
 void TypeChecker::PushType(Type type) {
-  if (type != Type::Void) {
-    type_stack_.push_back(type);
-  }
+    if (type != Type::Void) {
+        type_stack_.push_back(type);
+    }
 }
 
 void TypeChecker::PushTypes(const TypeVector& types) {
-  for (Type type : types) {
-    PushType(type);
-  }
+    for (Type type : types) {
+        PushType(type);
+    }
 }
 
 Result TypeChecker::CheckTypeStackEnd(const char* desc) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  Result result = (type_stack_.size() == label->type_stack_limit)
-                      ? Result::Ok
-                      : Result::Error;
-  PrintStackIfFailedV(result, desc, {}, /*is_end=*/true);
-  return result;
+    Label* label;
+    CHECK_RESULT(TopLabel(&label));
+    Result result = (type_stack_.size() == label->type_stack_limit)
+        ? Result::Ok
+        : Result::Error;
+    PrintStackIfFailedV(result, desc, {}, /*is_end=*/true);
+    return result;
+}
+
+Type UpCastType(Type& type) {
+    wabt::Index i = type.GetReferenceIndex();
+    if (i < 0x3f3f3f3f && moduletypes.size() > i) {
+        if (moduletypes[i]->kind() == TypeEntryKind::Struct)      return Type(Type::Ref, Type::AnyRef);
+        else if (moduletypes[i]->kind() == TypeEntryKind::Array)      return Type(Type::Ref, Type::AnyRef);
+        else if (moduletypes[i]->kind() == TypeEntryKind::Sub) {
+            wabt::SubType* subtype = dynamic_cast<wabt::SubType*>(moduletypes[i]);
+            if (subtype->typeEntry->kind() == TypeEntryKind::Struct)
+              return Type(Type::Ref, Type::AnyRef);
+            else if (subtype->typeEntry->kind() == TypeEntryKind::Array)
+              return Type(Type::Ref, Type::AnyRef);
+        }
+    } else if (Type(i) == Type::I31)
+                return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::StructRef)
+                return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::ArrayRef)
+               return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::Eq)
+               return Type(Type::Ref, Type::AnyRef);
+    else if (Type(i) == Type::NoneRef)
+                return Type(Type::Ref, Type::AnyRef);
+    return type;
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
-  if (expected == Type::Any || actual == Type::Any) {
+    if (expected == Type::Any || actual == Type::Any) {
+        return Result::Ok;
+    }
+    if (expected == Type::I8 || expected == Type::I16)
+        return Result::Ok;
+    if (actual == Type::I8 || actual == Type::I16)
+		return Result::Ok;
+    if (expected == Type::Reference && actual == Type::Reference) {
+        return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+                   ? Result::Ok
+                   : Result::Error;
+    }
+    if (actual == Type::FuncRef && (expected == Type(Type::Ref,Type::NoFunc)|| expected == Type(Type::RefNull,Type::NoFunc)))		return Result::Ok;
+    if (expected == Type::FuncRef && (actual == Type(Type::Ref,Type::NoFunc)|| actual == Type(Type::RefNull,Type::NoFunc)))  return Result::Ok;
+    if (actual == Type::ExternRef && (expected == Type(Type::Ref,Type::NoExtern)|| expected == Type(Type::RefNull,Type::NoExtern)))		return Result::Ok;
+    if (expected == Type::ExternRef && (actual == Type(Type::Ref,Type::NoExtern)|| actual == Type(Type::RefNull,Type::NoExtern)))  return Result::Ok;
+    if (actual == Type::FuncRef && expected.IsNewReferenceWithIndex()) {
+        auto i = expected.GetReferenceIndex();
+        if (i < 0x3f3f3f3f && moduletypes.size() < i &&
+            moduletypes[i]->kind() == TypeEntryKind::Func)
+      return Result::Ok;
+    }
+    if (expected == Type::FuncRef && actual.IsNewReferenceWithIndex()) {
+        auto i = actual.GetReferenceIndex();
+        if (i < 0x3f3f3f3f && moduletypes.size() < i &&
+            moduletypes[i]->kind() == TypeEntryKind::Func)
+      return Result::Ok;
+    }
+    if (actual.IsNewReferenceWithIndex()) actual = UpCastType(actual);
+    if (expected.IsNewReferenceWithIndex()) expected = UpCastType(expected);
+    if (actual.IsNewReferenceWithIndex()&& expected.IsNewReferenceWithIndex()) {
+        return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+                          ? Result::Ok
+                          : Result::Error;
+	}
+    if (actual != expected) {
+        return Result::Error;
+    }
     return Result::Ok;
-  }
-
-  if (expected == Type::Reference && actual == Type::Reference) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
-  if (actual != expected) {
-    return Result::Error;
-  }
-  return Result::Ok;
 }
 
 Result TypeChecker::CheckTypes(const TypeVector& actual,
@@ -441,6 +493,159 @@ Result TypeChecker::OnBinary(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
 
+Result TypeChecker::OnStructNew(Index index , const TypeVector& typeVector) {
+  Result result = Result::Ok;
+  const TypeVector fields = typeVector;
+  int n = fields.size();
+  for (int i = n - 1; i >= 0; i--) {
+    result |= PopAndCheck1Type(fields[i], "struct.new");
+  }
+  PushType(Type(Type::RefNull, index));
+  return result;
+}
+Result TypeChecker::OnStructNewDefault(Index index) {
+  PushType(Type(Type::RefNull, index));
+  return Result::Ok;
+}
+Result TypeChecker::OnStructGet(Index index, Type type) {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, index), "struct.get");
+  PushType(type);
+  return result;
+}
+Result TypeChecker::OnStructSet(Index index, Type type) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type, "struct.set");
+  result |= PopAndCheck1Type(Type(Type::RefNull, index), "struct.set");
+  return result;
+}
+
+Result TypeChecker::OnArrayNew(Index index, Type type) {
+  Result result = PopAndCheck1Type(Type::I32, "array.new");
+  result |= PopAndCheck1Type(type, "array.new");
+  PushType(Type(Type::Ref, index));
+  return Result::Ok;
+}
+Result TypeChecker::OnArrayNewDefault(Index index) {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_default");
+  PushType(Type(Type::Ref, index));
+  return result;
+}
+Result TypeChecker::OnArrayNewFixed(Index index, Type type, Index size) {
+  Result result = Result::Ok;
+  for (Index i = 0; i < size; i++) {
+    result |= PopAndCheck1Type(type, "array.new_fixed");
+  }
+  PushType(Type(Type::Ref, index));
+  return result;
+}
+Result TypeChecker::OnArrayNewData(Index index) {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_data");
+  result |= PopAndCheck1Type(Type::I32, "array.new_data");
+  PushType(Type(Type::Ref, index));
+  return result;
+}
+Result TypeChecker::OnArrayNewElem(Index index) {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_elem");
+  result |= PopAndCheck1Type(Type::I32, "array.new_elem");
+  PushType(Type(Type::Ref, index));
+  return result;
+}
+Result TypeChecker::OnArrayGet(Index index, Type type) {
+  Result result = PopAndCheck1Type(Type::I32, "array.get");
+  result |= PopAndCheck1Type(Type(Type::RefNull, index), "array.get");
+  PushType(type);
+  return result;
+}
+Result TypeChecker::OnArraySet(Index index, Type type) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type, "array.set");
+  result |= PopAndCheck1Type(Type::I32, "array.set");
+  result |= PopAndCheck1Type(Type(Type::RefNull, index), "array.set");
+  return result;
+}
+Result TypeChecker::OnArrayLen() {
+  Result result =
+      PopAndCheck1Type(Type(Type::RefNull, Type::ArrayRef), "array.len");
+  PushType(Type::I32);
+  return result;
+}
+Result TypeChecker::OnArrayFill(Type type1,Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type::I32, "array.fill");
+  result |= PopAndCheck1Type(type2, "array.fill");
+  result |= PopAndCheck1Type(Type::I32, "array.fill");
+  result |= PopAndCheck1Type(type1, "array.fill");
+  return result;
+}
+Result TypeChecker::OnArrayCopy(Type type1,Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type::I32, "array.copy");
+  result |= PopAndCheck1Type(Type::I32, "array.copy");
+  result |= PopAndCheck1Type(type2, "array.copy");
+  result |= PopAndCheck1Type(Type::I32, "array.copy");
+  result |= PopAndCheck1Type(type1, "array.copy");
+  return result;
+}
+Result TypeChecker::OnArrayInitData(Type type) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type::I32, "array.init_data");
+  result |= PopAndCheck1Type(Type::I32, "array.init_data");
+  result |= PopAndCheck1Type(Type::I32, "array.init_data");
+  result |= PopAndCheck1Type(type, "array.init_data");
+  return result;
+}
+
+Result TypeChecker::OnRefTest(Type type) {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::AnyRef), "ref.test");
+  PushType(Type::I32);
+  return result;
+}
+Result TypeChecker::OnRefCast(Type type) {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::AnyRef), "ref.test");
+  PushType(type);
+  return result;
+}
+Result TypeChecker::OnBrOnCast(Type type1, Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type1, "br_on_cast_fail");
+  if (type2.isRefNull()) {
+        PushType(Type(Type::Ref, type1.type_index_));
+  } else {
+        PushType(type1);
+  }
+  return result;
+}
+
+Result TypeChecker::OnBrOnCastFail(Type type1, Type type2) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type1, "br_on_cast_fail");
+  PushType(type2);
+  return result;
+}
+Result TypeChecker::OnAnyConvertExtern() {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type(Type::RefNull,Type::ExternRef), "array.init_elem");
+  PushType(Type(Type::RefNull, Type::AnyRef));
+  return result;
+}
+Result TypeChecker::OnExternConvertAny() {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type(Type::RefNull,Type::AnyRef), "array.init_elem");
+  PushType(Type(Type::RefNull, Type::ExternRef));
+  return result;
+}
+
+
+Result TypeChecker::OnRefI31() {
+  Result result = PopAndCheck1Type(Type::I32, "ref.i31");
+  PushType(Type(Type::Ref, Type::I31));
+  return result;
+}
+Result TypeChecker::OnI31Get() {
+  Result result = PopAndCheck1Type(Type(Type::RefNull, Type::I31), "i31.get");
+  PushType(Type::I32);
+  return result;
+}
 Result TypeChecker::OnBlock(const TypeVector& param_types,
                             const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "block");
@@ -777,6 +982,12 @@ Result TypeChecker::OnTableFill(Type elem_type) {
   return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
 }
 
+Result TypeChecker::OnRefEq() {
+  Result result = DropTypes(2);
+  PushType(Type::I32);
+  return result;
+}
+
 Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
   /*
    * In a const expression, treat ref.func as producing a generic funcref.
@@ -785,7 +996,7 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
    * examined only the validity of the function index.
    */
   if (features_.function_references_enabled() && !force_generic_funcref) {
-    PushType(Type(Type::Reference, func_type));
+    PushType(Type(Type::Ref, func_type));
   } else {
     PushType(Type::FuncRef);
   }
@@ -793,7 +1004,24 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
 }
 
 Result TypeChecker::OnRefNullExpr(Type type) {
-  PushType(type);
+  if (type == Type::Struct)
+    PushType(Type(Type::RefNull, Type::StructRef));
+  else if (type == Type::Array)
+	PushType(Type(Type::RefNull, Type::ArrayRef));
+  else if (type == Type::I31)
+    PushType(Type(Type::RefNull, Type::I31));
+  else if (type == Type::Eq)
+    PushType(Type(Type::RefNull, Type::Eq));
+  else if (type == Type::Any)
+    PushType(Type(Type::RefNull, Type::AnyRef));
+  else if (type == Type::NoneRef)
+    PushType(Type(Type::RefNull, Type::NoneRef));
+  else if (type == Type::NoExtern)
+    PushType(Type(Type::RefNull, Type::NoExtern));
+  else if (type == Type::NoFunc)
+    PushType(Type(Type::RefNull, Type::NoFunc));
+  else
+    PushType(type);
   return Result::Ok;
 }
 

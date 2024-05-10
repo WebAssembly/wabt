@@ -1948,7 +1948,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::Invalid:
       WABT_UNREACHABLE;
       break;
-  }
+    default:;  
+}
   // clang-format on
 
   return RunResult::Ok;

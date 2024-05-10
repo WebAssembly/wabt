@@ -21,8 +21,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "wabt/config.h"
 #include "wabt/base-types.h"
+#include "wabt/config.h"
 #include "wabt/string-format.h"
 
 namespace wabt {
@@ -35,26 +35,44 @@ class Type {
  public:
   // Matches binary format, do not change.
   enum Enum : int32_t {
-    I32 = -0x01,        // 0x7f
-    I64 = -0x02,        // 0x7e
-    F32 = -0x03,        // 0x7d
-    F64 = -0x04,        // 0x7c
-    V128 = -0x05,       // 0x7b
-    I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
-    I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
-    FuncRef = -0x10,    // 0x70
-    ExternRef = -0x11,  // 0x6f
-    Reference = -0x15,  // 0x6b
-    Func = -0x20,       // 0x60
-    Struct = -0x21,     // 0x5f
-    Array = -0x22,      // 0x5e
-    Void = -0x40,       // 0x40
-    ___ = Void,         // Convenient for the opcode table in opcode.h
+    I32 = -0x01,   // 0x7f
+    I64 = -0x02,   // 0x7e
+    F32 = -0x03,   // 0x7d
+    F64 = -0x04,   // 0x7c
+    V128 = -0x05,  // 0x7b
+    I8 = -0x08,
+    I16 = -0x09,
+    Reference = -0x44,
+    // Heap type
+    NoFunc = -0x0D,
+    NoExtern = -0x0E,
+    NoneRef = -0x0F,
+    FuncRef = -0x10,
+    ExternRef = -0x11,
+    AnyRef = -0x12,
+    Eq = -0x13,
+    I31 = -0x14,
+    StructRef = -0x15,
+    ArrayRef = -0x16,
+    // reference type
+    Null = -0x1b,
+    Ref = -0x1c,
+    RefNull = -0x1d,
+    // composite type
+    Func = -0x20,
+    Struct = -0x21,
+    Array = -0x22,
+    // sub type and recursive type
+    Sub = -0x30,
+    SubFinal = -0x31,
+    Rec = -0x32,
 
-    Any = 0,   // Not actually specified, but useful for type-checking
-    I8U = 4,   // Not actually specified, but used internally with load/store
-    I16U = 6,  // Not actually specified, but used internally with load/store
-    I32U = 7,  // Not actually specified, but used internally with load/store
+    Void = -0x40,
+    ___ = Void,
+    Any = 0,
+    I8U = 4,
+    I16U = 6,
+    I32U = 7,
   };
 
   Type() = default;  // Provided so Type can be member of a union.
@@ -62,16 +80,24 @@ class Type {
       : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
   Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
   Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
-    assert(e == Enum::Reference);
+    // assert(e == Enum::Reference);
   }
   constexpr operator Enum() const { return enum_; }
 
   bool IsRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
-           enum_ == Type::Reference;
+           enum_ == Type::Reference || enum_ == Type::Ref ||
+           enum_ == Type::RefNull;
   }
 
-  bool IsReferenceWithIndex() const { return enum_ == Type::Reference; }
+  bool IsReferenceWithIndex() const {
+    return enum_ == Type::Reference || enum_ == Type::Ref ||
+           enum_ == Type::RefNull;
+  }
+
+  bool IsNewReferenceWithIndex() const {
+    return enum_ == Type::Ref || enum_ == Type::RefNull;
+  }
 
   bool IsNullableRef() const {
     // Currently all reftypes are nullable
@@ -80,18 +106,34 @@ class Type {
 
   std::string GetName() const {
     switch (enum_) {
-      case Type::I32:       return "i32";
-      case Type::I64:       return "i64";
-      case Type::F32:       return "f32";
-      case Type::F64:       return "f64";
-      case Type::V128:      return "v128";
-      case Type::I8:        return "i8";
-      case Type::I16:       return "i16";
-      case Type::FuncRef:   return "funcref";
-      case Type::Func:      return "func";
-      case Type::Void:      return "void";
-      case Type::Any:       return "any";
-      case Type::ExternRef: return "externref";
+      case Type::I32:
+        return "i32";
+      case Type::I64:
+        return "i64";
+      case Type::F32:
+        return "f32";
+      case Type::F64:
+        return "f64";
+      case Type::V128:
+        return "v128";
+      case Type::I8:
+        return "i8";
+      case Type::I16:
+        return "i16";
+      case Type::NoneRef:
+        return "noneref";
+      case Type::FuncRef:
+        return "funcref";
+      case Type::Func:
+        return "func";
+      case Type::Void:
+        return "void";
+      case Type::Any:
+        return "any";
+      case Type::ExternRef:
+        return "externref";
+      case Type::Ref:
+      case Type::RefNull:
       case Type::Reference:
         return StringPrintf("(ref %d)", type_index_);
       default:
@@ -101,11 +143,18 @@ class Type {
 
   const char* GetRefKindName() const {
     switch (enum_) {
-      case Type::FuncRef:   return "func";
-      case Type::ExternRef: return "extern";
-      case Type::Struct:    return "struct";
-      case Type::Array:     return "array";
-      default:              return "<invalid>";
+      case Type::NoneRef:
+        return "none";
+      case Type::FuncRef:
+        return "func";
+      case Type::ExternRef:
+        return "extern";
+      case Type::Struct:
+        return "struct";
+      case Type::Array:
+        return "array";
+      default:
+        return "<invalid>";
     }
   }
 
@@ -123,13 +172,21 @@ class Type {
   //
   bool IsIndex() const { return static_cast<int32_t>(enum_) >= 0; }
 
+  bool isRef() const { return enum_ == Type::Ref; }
+  bool isRefNull() const {
+    return enum_ == Type::RefNull || enum_ == Type::FuncRef ||
+           enum_ == Type::ExternRef;
+  }
+  bool isOldRef() const {
+    return enum_ == Type::FuncRef || enum_ == Type::ExternRef;
+  }
+
   Index GetIndex() const {
     assert(IsIndex());
     return static_cast<Index>(enum_);
   }
 
   Index GetReferenceIndex() const {
-    assert(enum_ == Enum::Reference);
     return type_index_;
   }
 
@@ -144,6 +201,9 @@ class Type {
       case Type::F32:
       case Type::F64:
       case Type::V128:
+      case Type::Ref:
+      case Type::RefNull:
+      case Type::NoneRef:
       case Type::FuncRef:
       case Type::ExternRef:
       case Type::Reference:
@@ -154,7 +214,6 @@ class Type {
     }
   }
 
- private:
   Enum enum_;
   Index type_index_;  // Only used for for Type::Reference
 };

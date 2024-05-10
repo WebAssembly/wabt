@@ -72,6 +72,7 @@ class SharedValidator {
                     Index type_index);
   Result OnStructType(const Location&, Index field_count, TypeMut* fields);
   Result OnArrayType(const Location&, TypeMut field);
+  Result OnSubType(const Location&);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&);
@@ -166,6 +167,45 @@ class SharedValidator {
                     Address align,
                     Address offset);
   Result OnLocalGet(const Location&, Var);
+  Result OnStructNew(const Location&, Var);
+  Result OnStructNewDefault(const Location&, Var);
+  Result OnStructGet(const Location&, Var, Var);
+  Result OnStructGetU(const Location&, Var, Var);
+  Result OnStructGetS(const Location&, Var, Var);
+  Result OnStructSet(const Location&, Var, Var);
+  Result OnArrayNew(const Location&, Var);
+  Result OnArrayNewDefault(const Location&, Var);
+  Result OnArrayNewFixed(const Location&, Var, Var);
+  Result OnArrayNewData(const Location&, Var, Var);
+  Result OnArrayNewElem(const Location&, Var, Var);
+  Result OnArrayGet(const Location&, Var);
+  Result OnArrayGetS(const Location&, Var);
+  Result OnArrayGetU(const Location&, Var);
+  Result OnArraySet(const Location&, Var);
+  Result OnArrayLen(const Location&);
+  Result OnArrayFill(const Location&, Var);
+  Result OnArrayCopy(const Location&, Var, Var);
+  Result OnArrayInitData(const Location&, Var, Var);
+  Result OnArrayInitElem(const Location&, Var, Var);
+  bool isNumber(const std::string& str);
+  Type ParseVar2RefType(Var var);
+  Result OnRefTest(const Location&, Var, std::unordered_map<std::string, int>&);
+  Result OnRefCast(const Location&, Var, std::unordered_map<std::string, int>&);
+  Result OnBrOnCast(const Location&,
+                    Var,
+                    Var,
+                    Var,
+                    std::unordered_map<std::string, int>&);
+  Result OnBrOnCastFail(const Location&,
+                        Var,
+                        Var,
+                        Var,
+                        std::unordered_map<std::string, int>&);
+  Result OnAnyConvertExtern(const Location&);
+  Result OnExternConvertAny(const Location&);
+  Result OnRefI31(const Location&);
+  Result OnI31GetU(const Location&);
+  Result OnI31GetS(const Location&);
   Result OnLocalSet(const Location&, Var);
   Result OnLocalTee(const Location&, Var);
   Result OnLoop(const Location&, Type sig_type);
@@ -175,6 +215,7 @@ class SharedValidator {
   Result OnMemoryInit(const Location&, Var segment_var, Var memidx);
   Result OnMemorySize(const Location&, Var memidx);
   Result OnNop(const Location&);
+  Result OnRefEq(const Location&);
   Result OnRefFunc(const Location&, Var func_var);
   Result OnRefIsNull(const Location&);
   Result OnRefNull(const Location&, Type type);
@@ -215,7 +256,6 @@ class SharedValidator {
   Result OnUnary(const Location&, Opcode);
   Result OnUnreachable(const Location&);
 
- private:
   struct FuncType {
     FuncType() = default;
     FuncType(const TypeVector& params,
