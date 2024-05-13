@@ -184,8 +184,8 @@ out/test/spec/binary.wast:1041: assert_malformed passed:
 out/test/spec/binary.wast:1055: assert_malformed passed:
   000001a: error: unfinished section (expected end: 0x1b)
 out/test/spec/binary.wast:1086: assert_malformed passed:
-  0000027: error: function body must end with END opcode
-out/test/spec/binary.wast:1121: assert_malformed passed:
+  0000048: error: function body must end with END opcode
+out/test/spec/binary.wast:1133: assert_malformed passed:
   0000017: error: multiple Start sections
 112/112 tests passed.
 ;;; STDOUT ;;)

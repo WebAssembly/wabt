@@ -1,6 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/memory64/binary.wast
-;;; ARGS*: --enable-memory64 --disable-reference-types
+;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/binary.wast:6: assert_malformed passed:
   0000000: error: unable to read uint32_t: magic
@@ -59,7 +59,7 @@ out/test/spec/memory64/binary.wast:44: assert_malformed passed:
 out/test/spec/memory64/binary.wast:45: assert_malformed passed:
   0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
 out/test/spec/memory64/binary.wast:48: assert_malformed passed:
-  000000a: error: unable to read u32 leb128: data count
+  000000a: error: invalid section code: 13
 out/test/spec/memory64/binary.wast:49: assert_malformed passed:
   000000a: error: invalid section code: 127
 out/test/spec/memory64/binary.wast:50: assert_malformed passed:
@@ -68,115 +68,217 @@ out/test/spec/memory64/binary.wast:51: assert_malformed passed:
   000000a: error: invalid section code: 129
 out/test/spec/memory64/binary.wast:52: assert_malformed passed:
   000000a: error: invalid section code: 255
-out/test/spec/memory64/binary.wast:57: assert_malformed passed:
+out/test/spec/memory64/binary.wast:210: assert_malformed passed:
   000000c: error: unexpected type form (got 0xe0)
-out/test/spec/memory64/binary.wast:71: assert_malformed passed:
-  0000022: error: call_indirect reserved value must be 0
-out/test/spec/memory64/binary.wast:90: assert_malformed passed:
-  0000022: error: call_indirect reserved value must be 0
-out/test/spec/memory64/binary.wast:109: assert_malformed passed:
-  0000022: error: call_indirect reserved value must be 0
-out/test/spec/memory64/binary.wast:127: assert_malformed passed:
-  0000022: error: call_indirect reserved value must be 0
-out/test/spec/memory64/binary.wast:145: assert_malformed passed:
-  0000022: error: call_indirect reserved value must be 0
-out/test/spec/memory64/binary.wast:164: assert_malformed passed:
-  0000020: error: memory.grow reserved value must be 0
-out/test/spec/memory64/binary.wast:184: assert_malformed passed:
-  0000020: error: memory.grow reserved value must be 0
-out/test/spec/memory64/binary.wast:204: assert_malformed passed:
-  0000020: error: memory.grow reserved value must be 0
 out/test/spec/memory64/binary.wast:223: assert_malformed passed:
-  0000020: error: memory.grow reserved value must be 0
-out/test/spec/memory64/binary.wast:242: assert_malformed passed:
-  0000020: error: memory.grow reserved value must be 0
-out/test/spec/memory64/binary.wast:262: assert_malformed passed:
-  000001e: error: memory.size reserved value must be 0
-out/test/spec/memory64/binary.wast:281: assert_malformed passed:
-  000001e: error: memory.size reserved value must be 0
-out/test/spec/memory64/binary.wast:300: assert_malformed passed:
-  000001e: error: memory.size reserved value must be 0
-out/test/spec/memory64/binary.wast:318: assert_malformed passed:
-  000001e: error: memory.size reserved value must be 0
-out/test/spec/memory64/binary.wast:336: assert_malformed passed:
-  000001e: error: memory.size reserved value must be 0
+  000000c: error: unable to read u64 leb128: memory initial page count
+out/test/spec/memory64/binary.wast:233: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:243: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:254: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:264: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:276: assert_malformed passed:
+  000000c: error: unable to read u64 leb128: memory initial page count
+out/test/spec/memory64/binary.wast:284: assert_malformed passed:
+  000000c: error: unable to read u64 leb128: memory initial page count
+out/test/spec/memory64/binary.wast:294: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:304: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:314: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:324: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:335: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:345: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
 out/test/spec/memory64/binary.wast:355: assert_malformed passed:
-  0000017: error: unable to read u32 leb128: local type count
-out/test/spec/memory64/binary.wast:372: assert_malformed passed:
-  000001e: error: local count must be <= 0xffffffff
-out/test/spec/memory64/binary.wast:388: assert_malformed passed:
-  0000030: error: local count must be <= 0xffffffff
-out/test/spec/memory64/binary.wast:422: assert_malformed passed:
-  0000013: error: function signature count != function body count
-out/test/spec/memory64/binary.wast:432: assert_malformed passed:
-  000000b: error: function signature count != function body count
-out/test/spec/memory64/binary.wast:441: assert_malformed passed:
-  0000016: error: function signature count != function body count
-out/test/spec/memory64/binary.wast:452: assert_malformed passed:
-  0000015: error: function signature count != function body count
-out/test/spec/memory64/binary.wast:481: assert_malformed passed:
-  000000a: error: invalid section size: extends past end
-out/test/spec/memory64/binary.wast:492: assert_malformed passed:
-  000000e: error: unfinished section (expected end: 0x11)
-out/test/spec/memory64/binary.wast:511: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:365: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:376: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:386: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:396: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:406: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:418: assert_malformed passed:
+  000001b: error: function body must end with END opcode
+out/test/spec/memory64/binary.wast:439: assert_malformed passed:
+  000001a: error: function body must end with END opcode
+out/test/spec/memory64/binary.wast:455: assert_malformed passed:
+  000001a: error: function body must end with END opcode
+out/test/spec/memory64/binary.wast:475: assert_malformed passed:
+  000000c: error: unable to read u64 leb128: memory initial page count
+out/test/spec/memory64/binary.wast:483: assert_malformed passed:
+  0000022: error: unable to read u64 leb128: load offset
+out/test/spec/memory64/binary.wast:502: assert_malformed passed:
+  0000021: error: unable to read u32 leb128: load alignment
 out/test/spec/memory64/binary.wast:521: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
-out/test/spec/memory64/binary.wast:532: assert_malformed passed:
-  000000e: error: malformed import kind: 5
-out/test/spec/memory64/binary.wast:542: assert_malformed passed:
-  000000e: error: malformed import kind: 5
-out/test/spec/memory64/binary.wast:553: assert_malformed passed:
-  000000e: error: malformed import kind: 128
-out/test/spec/memory64/binary.wast:563: assert_malformed passed:
-  000000e: error: malformed import kind: 128
-out/test/spec/memory64/binary.wast:576: assert_malformed passed:
-  0000027: error: unable to read u32 leb128: string length
-out/test/spec/memory64/binary.wast:595: assert_malformed passed:
-  000002b: error: unfinished section (expected end: 0x40)
-out/test/spec/memory64/binary.wast:626: assert_malformed passed:
-  000000b: error: invalid table count 1, only 0 bytes left in section
-out/test/spec/memory64/binary.wast:636: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 112
-out/test/spec/memory64/binary.wast:645: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 112
-out/test/spec/memory64/binary.wast:655: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 112
-out/test/spec/memory64/binary.wast:673: assert_malformed passed:
-  000000b: error: invalid memory count 1, only 0 bytes left in section
-out/test/spec/memory64/binary.wast:683: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 8
-out/test/spec/memory64/binary.wast:691: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 8
-out/test/spec/memory64/binary.wast:700: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 129
-out/test/spec/memory64/binary.wast:709: assert_malformed passed:
-  000000c: error: malformed memory limits flag: 129
-out/test/spec/memory64/binary.wast:726: assert_malformed passed:
-  0000010: error: unable to read i32 leb128: global type
-out/test/spec/memory64/binary.wast:737: assert_malformed passed:
-  0000010: error: unfinished section (expected end: 0x15)
-out/test/spec/memory64/binary.wast:760: assert_malformed passed:
-  000001b: error: unable to read u32 leb128: string length
-out/test/spec/memory64/binary.wast:781: assert_malformed passed:
-  000001b: error: unfinished section (expected end: 0x20)
+  0000023: error: unable to read u32 leb128: store alignment
+out/test/spec/memory64/binary.wast:540: assert_malformed passed:
+  0000024: error: unable to read u64 leb128: store offset
+out/test/spec/memory64/binary.wast:561: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:571: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:582: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:592: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:604: assert_malformed passed:
+  000000c: error: unable to read u64 leb128: memory initial page count
+out/test/spec/memory64/binary.wast:612: assert_malformed passed:
+  000000c: error: unable to read u64 leb128: memory initial page count
+out/test/spec/memory64/binary.wast:620: assert_malformed passed:
+  0000022: error: unable to read u64 leb128: load offset
+out/test/spec/memory64/binary.wast:639: assert_malformed passed:
+  0000022: error: unable to read u64 leb128: load offset
+out/test/spec/memory64/binary.wast:658: assert_malformed passed:
+  0000021: error: unable to read u32 leb128: load alignment
+out/test/spec/memory64/binary.wast:676: assert_malformed passed:
+  0000021: error: unable to read u32 leb128: load alignment
+out/test/spec/memory64/binary.wast:695: assert_malformed passed:
+  0000023: error: unable to read u32 leb128: store alignment
+out/test/spec/memory64/binary.wast:714: assert_malformed passed:
+  0000023: error: unable to read u32 leb128: store alignment
+out/test/spec/memory64/binary.wast:733: assert_malformed passed:
+  0000024: error: unable to read u64 leb128: store offset
+out/test/spec/memory64/binary.wast:752: assert_malformed passed:
+  0000024: error: unable to read u64 leb128: store offset
+out/test/spec/memory64/binary.wast:774: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:784: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:794: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
+out/test/spec/memory64/binary.wast:804: assert_malformed passed:
+  000000e: error: unable to read i32 leb128: i32.const value
 out/test/spec/memory64/binary.wast:815: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:825: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:835: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:845: assert_malformed passed:
+  000000e: error: unable to read i64 leb128: i64.const value
+out/test/spec/memory64/binary.wast:857: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/memory64/binary.wast:877: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/memory64/binary.wast:897: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/memory64/binary.wast:916: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/memory64/binary.wast:935: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/memory64/binary.wast:955: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/memory64/binary.wast:974: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/memory64/binary.wast:993: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/memory64/binary.wast:1011: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/memory64/binary.wast:1029: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/memory64/binary.wast:1048: assert_malformed passed:
+  0000017: error: unable to read u32 leb128: local type count
+out/test/spec/memory64/binary.wast:1065: assert_malformed passed:
+  0000017: error: unable to read u32 leb128: local type count
+out/test/spec/memory64/binary.wast:1082: assert_malformed passed:
+  000001e: error: local count must be <= 0xffffffff
+out/test/spec/memory64/binary.wast:1098: assert_malformed passed:
+  0000030: error: local count must be <= 0xffffffff
+out/test/spec/memory64/binary.wast:1132: assert_malformed passed:
+  0000013: error: function signature count != function body count
+out/test/spec/memory64/binary.wast:1142: assert_malformed passed:
+  000000b: error: function signature count != function body count
+out/test/spec/memory64/binary.wast:1151: assert_malformed passed:
+  0000016: error: function signature count != function body count
+out/test/spec/memory64/binary.wast:1162: assert_malformed passed:
+  0000015: error: function signature count != function body count
+out/test/spec/memory64/binary.wast:1185: assert_malformed passed:
+  000000e: error: data segment count does not equal count in DataCount section
+out/test/spec/memory64/binary.wast:1195: assert_malformed passed:
+  000000e: error: data segment count does not equal count in DataCount section
+out/test/spec/memory64/binary.wast:1205: assert_malformed passed:
+  0000024: error: memory.init requires data count section
+out/test/spec/memory64/binary.wast:1227: assert_malformed passed:
+  000001e: error: data.drop requires data count section
+out/test/spec/memory64/binary.wast:1246: assert_malformed passed:
+  0000024: error: unexpected opcode: 0xf3
+out/test/spec/memory64/binary.wast:1272: assert_malformed passed:
+  0000022: error: table elem type must be a reference type
+out/test/spec/memory64/binary.wast:1353: assert_malformed passed:
+  000000a: error: invalid section size: extends past end
+out/test/spec/memory64/binary.wast:1364: assert_malformed passed:
+  000000e: error: unfinished section (expected end: 0x11)
+out/test/spec/memory64/binary.wast:1383: assert_malformed passed:
+  000000e: error: invalid import tag kind: exceptions not allowed
+out/test/spec/memory64/binary.wast:1393: assert_malformed passed:
+  000000e: error: invalid import tag kind: exceptions not allowed
+out/test/spec/memory64/binary.wast:1404: assert_malformed passed:
+  000000e: error: malformed import kind: 5
+out/test/spec/memory64/binary.wast:1414: assert_malformed passed:
+  000000e: error: malformed import kind: 5
+out/test/spec/memory64/binary.wast:1425: assert_malformed passed:
+  000000e: error: malformed import kind: 128
+out/test/spec/memory64/binary.wast:1435: assert_malformed passed:
+  000000e: error: malformed import kind: 128
+out/test/spec/memory64/binary.wast:1448: assert_malformed passed:
+  0000027: error: unable to read u32 leb128: string length
+out/test/spec/memory64/binary.wast:1467: assert_malformed passed:
+  000002b: error: unfinished section (expected end: 0x40)
+out/test/spec/memory64/binary.wast:1498: assert_malformed passed:
+  000000b: error: invalid table count 1, only 0 bytes left in section
+out/test/spec/memory64/binary.wast:1508: assert_malformed passed:
+  000000d: error: malformed table limits flag: 8
+out/test/spec/memory64/binary.wast:1517: assert_malformed passed:
+  000000d: error: malformed table limits flag: 8
+out/test/spec/memory64/binary.wast:1527: assert_malformed passed:
+  000000d: error: malformed table limits flag: 129
+out/test/spec/memory64/binary.wast:1545: assert_malformed passed:
+  000000b: error: invalid memory count 1, only 0 bytes left in section
+out/test/spec/memory64/binary.wast:1555: assert_malformed passed:
+  000000c: error: malformed memory limits flag: 8
+out/test/spec/memory64/binary.wast:1563: assert_malformed passed:
+  000000c: error: malformed memory limits flag: 8
+out/test/spec/memory64/binary.wast:1572: assert_malformed passed:
+  000000c: error: malformed memory limits flag: 129
+out/test/spec/memory64/binary.wast:1581: assert_malformed passed:
+  000000c: error: malformed memory limits flag: 129
+out/test/spec/memory64/binary.wast:1598: assert_malformed passed:
+  0000010: error: unable to read i32 leb128: global type
+out/test/spec/memory64/binary.wast:1609: assert_malformed passed:
+  0000010: error: unfinished section (expected end: 0x15)
+out/test/spec/memory64/binary.wast:1632: assert_malformed passed:
+  000001b: error: unable to read u32 leb128: string length
+out/test/spec/memory64/binary.wast:1653: assert_malformed passed:
+  000001b: error: unfinished section (expected end: 0x20)
+out/test/spec/memory64/binary.wast:1687: assert_malformed passed:
   0000021: error: unable to read u32 leb128: elem segment flags
-out/test/spec/memory64/binary.wast:831: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: elem segment flags
-out/test/spec/memory64/binary.wast:848: assert_malformed passed:
+out/test/spec/memory64/binary.wast:1703: assert_malformed passed:
+  0000024: error: init expression must end with END opcode
+out/test/spec/memory64/binary.wast:1720: assert_malformed passed:
   0000021: error: unfinished section (expected end: 0x27)
-out/test/spec/memory64/binary.wast:874: assert_malformed passed:
+out/test/spec/memory64/binary.wast:1746: assert_malformed passed:
   0000016: error: unable to read u32 leb128: data segment flags
-out/test/spec/memory64/binary.wast:887: assert_malformed passed:
+out/test/spec/memory64/binary.wast:1759: assert_malformed passed:
   0000016: error: unfinished section (expected end: 0x1c)
-out/test/spec/memory64/binary.wast:900: assert_malformed passed:
+out/test/spec/memory64/binary.wast:1772: assert_malformed passed:
   0000015: error: unable to read data: data segment data
-out/test/spec/memory64/binary.wast:914: assert_malformed passed:
+out/test/spec/memory64/binary.wast:1786: assert_malformed passed:
   000001a: error: unfinished section (expected end: 0x1b)
-out/test/spec/memory64/binary.wast:945: assert_malformed passed:
-  0000026: error: unable to read uint8_t: opcode
-out/test/spec/memory64/binary.wast:980: assert_malformed passed:
+out/test/spec/memory64/binary.wast:1817: assert_malformed passed:
+  0000048: error: function body must end with END opcode
+out/test/spec/memory64/binary.wast:1864: assert_malformed passed:
   0000017: error: multiple Start sections
-105/105 tests passed.
+177/177 tests passed.
 ;;; STDOUT ;;)

@@ -3416,7 +3416,26 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
     }
 
     case ScriptModuleType::Quoted:
-      return ErrorExpected({"a binary module", "a text module"});
+      auto command = std::make_unique<ModuleCommand>();
+      module = &command->module;
+      auto* qsm = cast<QuotedScriptModule>(script_module.get());
+      Errors errors;
+      const char* filename = "<text>";
+      std::unique_ptr<Module> m;
+      std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
+          filename, qsm->data.data(), qsm->data.size(), &errors);
+      ParseWatModule(lexer.get(), &m, &errors, options_);
+      for (const auto& error : errors) {
+        if (error.loc.offset == kInvalidOffset) {
+          Error(qsm->loc, "error in quoted module: %s", error.message.c_str());
+        } else {
+          Error(qsm->loc, "error in quoted module: @0x%08" PRIzx ": %s",
+                error.loc.offset, error.message.c_str());
+        }
+      }
+      *module = std::move(*m.get());
+      *out_command = std::move(command);
+      break;
   }
 
   // script is nullptr when ParseModuleCommand is called from ParseModule.

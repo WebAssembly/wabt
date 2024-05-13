@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/try_delegate.wast
+;;; STDIN_FILE: third_party/testsuite_legacy/try_delegate.wast
 ;;; ARGS*: --enable-exceptions --enable-tail-call
 (;; STDOUT ;;;
 out/test/spec/exception-handling/try_delegate.wast:155: assert_exception passed

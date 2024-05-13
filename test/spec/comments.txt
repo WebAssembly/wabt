@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/comments.wast
 (;; STDOUT ;;;
-4/4 tests passed.
+8/8 tests passed.
 ;;; STDOUT ;;)

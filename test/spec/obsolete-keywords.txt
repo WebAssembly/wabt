@@ -1,0 +1,64 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/obsolete-keywords.wast
+(;; STDOUT ;;;
+out/test/spec/obsolete-keywords.wast:3: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.0.wat:1:24: error: unexpected token "current_memory", expected an expr.
+  (memory 1)(func (drop (current_memory)))
+                         ^^^^^^^^^^^^^^
+out/test/spec/obsolete-keywords.wast:11: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.1.wat:1:24: error: unexpected token "grow_memory", expected an expr.
+  (memory 1)(func (drop (grow_memory (i32.const 0))))
+                         ^^^^^^^^^^^
+  out/test/spec/obsolete-keywords/obsolete-keywords.1.wat:1:50: error: unexpected token ), expected EOF.
+  (memory 1)(func (drop (grow_memory (i32.const 0))))
+                                                   ^
+out/test/spec/obsolete-keywords.wast:20: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.2.wat:1:29: error: unexpected token "get_local", expected an expr.
+  (func (local $i i32) (drop (get_local $i)))
+                              ^^^^^^^^^
+out/test/spec/obsolete-keywords.wast:27: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.3.wat:1:23: error: unexpected token "set_local", expected an instr.
+  (func (local $i i32) (set_local $i (i32.const 0)))
+                        ^^^^^^^^^
+out/test/spec/obsolete-keywords.wast:34: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.4.wat:1:29: error: unexpected token "tee_local", expected an expr.
+  (func (local $i i32) (drop (tee_local $i (i32.const 0))))
+                              ^^^^^^^^^
+  out/test/spec/obsolete-keywords/obsolete-keywords.4.wat:1:56: error: unexpected token ), expected EOF.
+  (func (local $i i32) (drop (tee_local $i (i32.const 0))))
+                                                         ^
+out/test/spec/obsolete-keywords.wast:41: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.5.wat:1:12: error: unexpected token "anyfunc", expected i32, i64, f32, f64, v128, externref or funcref.
+  (global $g anyfunc (ref.null func))
+             ^^^^^^^
+out/test/spec/obsolete-keywords.wast:48: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.6.wat:1:43: error: unexpected token "get_global", expected an expr.
+  (global $g i32 (i32.const 0))(func (drop (get_global $g)))
+                                            ^^^^^^^^^^
+out/test/spec/obsolete-keywords.wast:56: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.7.wat:1:43: error: unexpected token "set_global", expected an instr.
+  (global $g (mut i32) (i32.const 0))(func (set_global $g (i32.const 0)))
+                                            ^^^^^^^^^^
+out/test/spec/obsolete-keywords.wast:64: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.8.wat:1:14: error: unexpected token "i32.wrap/i64", expected an expr.
+  (func (drop (i32.wrap/i64 (i64.const 0))))
+               ^^^^^^^^^^^^
+  out/test/spec/obsolete-keywords/obsolete-keywords.8.wat:1:41: error: unexpected token ), expected EOF.
+  (func (drop (i32.wrap/i64 (i64.const 0))))
+                                          ^
+out/test/spec/obsolete-keywords.wast:71: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.9.wat:1:14: error: unexpected token "i32.trunc_s:sat/f32", expected an expr.
+  (func (drop (i32.trunc_s:sat/f32 (f32.const 0))))
+               ^^^^^^^^^^^^^^^^^^^
+  out/test/spec/obsolete-keywords/obsolete-keywords.9.wat:1:48: error: unexpected token ), expected EOF.
+  (func (drop (i32.trunc_s:sat/f32 (f32.const 0))))
+                                                 ^
+out/test/spec/obsolete-keywords.wast:78: assert_malformed passed:
+  out/test/spec/obsolete-keywords/obsolete-keywords.10.wat:1:14: error: unexpected token "f32x4.convert_s/i32x4", expected an expr.
+  (func (drop (f32x4.convert_s/i32x4 (v128.const i64x2 0 0))))
+               ^^^^^^^^^^^^^^^^^^^^^
+  out/test/spec/obsolete-keywords/obsolete-keywords.10.wat:1:59: error: unexpected token ), expected EOF.
+  (func (drop (f32x4.convert_s/i32x4 (v128.const i64x2 0 0))))
+                                                            ^
+11/11 tests passed.
+;;; STDOUT ;;)
