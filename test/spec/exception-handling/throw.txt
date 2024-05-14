@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/throw.wast
+;;; STDIN_FILE: third_party/testsuite_legacy/throw.wast
 ;;; ARGS*: --enable-exceptions
 (;; STDOUT ;;;
 out/test/spec/exception-handling/throw.wast:38: assert_exception passed

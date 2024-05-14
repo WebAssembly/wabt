@@ -2469,8 +2469,8 @@ RunResult Thread::DoSimdDot() {
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
     u8 laneidx = i * 2;
-    SL lo = SL(lhs[laneidx]) * SL(rhs[laneidx]);
-    SL hi = SL(lhs[laneidx + 1]) * SL(rhs[laneidx + 1]);
+    SL lo = SL(lhs[laneidx] * rhs[laneidx]);
+    SL hi = SL(lhs[laneidx + 1] * rhs[laneidx + 1]);
     result[i] = Add(lo, hi);
   }
   Push(result);
@@ -2486,8 +2486,8 @@ RunResult Thread::DoSimdDotAdd() {
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
     u8 laneidx = i * 2;
-    SL lo = SL(lhs[laneidx]) * SL(rhs[laneidx]);
-    SL hi = SL(lhs[laneidx + 1]) * SL(rhs[laneidx + 1]);
+    SL lo = SL(lhs[laneidx] * rhs[laneidx]);
+    SL hi = SL(lhs[laneidx + 1] * rhs[laneidx + 1]);
     result[i] = Add(lo, hi);
     result[i] = Add(result[i], acc[i]);
   }

@@ -2,5 +2,7 @@
 ;;; ERROR: 1
 (module quote "")
 (;; STDERR ;;;
-out/test/regress/empty-quoted-module.txt:4:1: error: unexpected token "EOF", expected a binary module or a text module.
+out/test/regress/empty-quoted-module.txt:3:2: error: error in quoted module: @0x100000001: empty module
+(module quote "")
+ ^^^^^^
 ;;; STDERR ;;)
