@@ -1250,52 +1250,16 @@ void CWriter::Write(const Const& const_) {
       Writef("%" PRIu64 "ull", static_cast<int64_t>(const_.u64()));
       break;
 
-    case Type::F32: {
-      uint32_t f32_bits = const_.f32_bits();
-      // TODO(binji): Share with similar float info in interp.cc and literal.cc
-      if ((f32_bits & 0x7f800000u) == 0x7f800000u) {
-        const char* sign = (f32_bits & 0x80000000) ? "-" : "";
-        uint32_t significand = f32_bits & 0x7fffffu;
-        if (significand == 0) {
-          // Infinity.
-          Writef("%sINFINITY", sign);
-        } else {
-          // Nan.
-          Writef("f32_reinterpret_i32(0x%08x) /* %snan:0x%06x */", f32_bits,
-                 sign, significand);
-        }
-      } else if (f32_bits == 0x80000000) {
-        // Negative zero. Special-cased so it isn't written as -0 below.
-        Writef("-0.f");
-      } else {
-        Writef("%.9g", Bitcast<float>(f32_bits));
-      }
+    case Type::F32:
+      Writef("f32_reinterpret_i32(0x%" PRIx32 " /* %.9g */)", const_.f32_bits(),
+             Bitcast<float>(const_.f32_bits()));
       break;
-    }
 
-    case Type::F64: {
-      uint64_t f64_bits = const_.f64_bits();
-      // TODO(binji): Share with similar float info in interp.cc and literal.cc
-      if ((f64_bits & 0x7ff0000000000000ull) == 0x7ff0000000000000ull) {
-        const char* sign = (f64_bits & 0x8000000000000000ull) ? "-" : "";
-        uint64_t significand = f64_bits & 0xfffffffffffffull;
-        if (significand == 0) {
-          // Infinity.
-          Writef("%sINFINITY", sign);
-        } else {
-          // Nan.
-          Writef("f64_reinterpret_i64(0x%016" PRIx64 ") /* %snan:0x%013" PRIx64
-                 " */",
-                 f64_bits, sign, significand);
-        }
-      } else if (f64_bits == 0x8000000000000000ull) {
-        // Negative zero. Special-cased so it isn't written as -0 below.
-        Writef("-0.0");
-      } else {
-        Writef("%.17g", Bitcast<double>(f64_bits));
-      }
+    case Type::F64:
+      Writef("f64_reinterpret_i64(0x%" PRIx64 " /* %.17g */)",
+             const_.f64_bits(), Bitcast<double>(const_.f64_bits()));
       break;
-    }
+
     case Type::V128: {
       Writef("v128_const(0x%02x", const_.vec128().u8(0));
       for (int i = 1; i < 16; i++) {
