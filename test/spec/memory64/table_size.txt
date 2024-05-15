@@ -1,0 +1,12 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_size.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64/table_size.wast:73: assert_invalid passed:
+  out/test/spec/memory64/table_size/table_size.1.wasm:0000021: error: type mismatch at end of function, expected [] but got [i32]
+  0000021: error: EndFunctionBody callback failed
+out/test/spec/memory64/table_size.wast:82: assert_invalid passed:
+  out/test/spec/memory64/table_size/table_size.2.wasm:0000022: error: type mismatch in implicit return, expected [f32] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+40/40 tests passed.
+;;; STDOUT ;;)

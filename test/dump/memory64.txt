@@ -3,6 +3,7 @@
 
 (module
   (memory i64 1)
+  (table i64 1 funcref)
   (data (i64.const 1) "a")
 )
 (;; STDOUT ;;;
@@ -11,11 +12,14 @@ memory64.wasm:	file format wasm 0x1
 
 Sections:
 
-   Memory start=0x0000000a end=0x0000000d (size=0x00000003) count: 1
-     Data start=0x0000000f end=0x00000016 (size=0x00000007) count: 1
+    Table start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
+   Memory start=0x00000010 end=0x00000013 (size=0x00000003) count: 1
+     Data start=0x00000015 end=0x0000001c (size=0x00000007) count: 1
 
 Section Details:
 
+Table[1]:
+ - table[0] type=funcref initial=1 i64
 Memory[1]:
  - memory[0] pages: initial=1 i64
 Data[1]:

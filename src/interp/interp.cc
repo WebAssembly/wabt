@@ -873,7 +873,14 @@ Instance::Ptr Instance::Instantiate(Store& store,
         if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
           return {};
         }
-        u32 offset = value.Get<u32>();
+
+        u64 offset;
+        if (table->type().limits.is_64) {
+          offset = value.Get<u64>();
+        } else {
+          offset = value.Get<u32>();
+        }
+
         if (pass == Check) {
           result = table->IsValidRange(offset, segment.size()) ? Result::Ok
                                                                : Result::Error;
@@ -886,10 +893,11 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
         if (Failed(result)) {
           *out_trap = Trap::New(
-              store, StringPrintf(
-                         "out of bounds table access: elem segment is "
-                         "out of bounds: [%u, %" PRIu64 ") >= max value %u",
-                         offset, u64{offset} + segment.size(), table->size()));
+              store,
+              StringPrintf("out of bounds table access: elem segment is "
+                           "out of bounds: [%" PRIu64 ", %" PRIu64
+                           ") >= max value %u",
+                           offset, offset + segment.size(), table->size()));
           return {};
         }
       } else if (desc.mode == SegmentMode::Declared) {
@@ -1119,6 +1127,26 @@ u64 Thread::PopPtr(const Memory::Ptr& memory) {
   return memory->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
 }
 
+u64 Thread::PopPtr(const Table::Ptr& table) {
+  return table->type().limits.is_64 ? Pop<u64>() : Pop<u32>();
+}
+
+void Thread::PushPtr(const Memory::Ptr& memory, u64 value) {
+  if (memory->type().limits.is_64) {
+    Push<u64>(value);
+  } else {
+    Push<u32>(value);
+  }
+}
+
+void Thread::PushPtr(const Table::Ptr& table, u64 value) {
+  if (table->type().limits.is_64) {
+    Push<u64>(value);
+  } else {
+    Push<u32>(value);
+  }
+}
+
 template <typename T>
 void WABT_VECTORCALL Thread::Push(T value) {
   Push(Value::Make(value));
@@ -1190,7 +1218,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::ReturnCallIndirect: {
       Table::Ptr table{store_, inst_->tables()[instr.imm_u32x2.fst]};
       auto&& func_type = mod_->desc().func_types[instr.imm_u32x2.snd];
-      auto entry = Pop<u32>();
+      u64 entry = PopPtr(table);
       TRAP_IF(entry >= table->elements().size(), "undefined table index");
       auto new_func_ref = table->elements()[entry];
       TRAP_IF(new_func_ref == Ref::Null, "uninitialized table element");
@@ -1273,29 +1301,17 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::MemorySize: {
       Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32]};
-      if (memory->type().limits.is_64) {
-        Push<u64>(memory->PageSize());
-      } else {
-        Push<u32>(static_cast<u32>(memory->PageSize()));
-      }
+      PushPtr(memory, memory->PageSize());
       break;
     }
 
     case O::MemoryGrow: {
       Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32]};
       u64 old_size = memory->PageSize();
-      if (memory->type().limits.is_64) {
-        if (Failed(memory->Grow(Pop<u64>()))) {
-          Push<s64>(-1);
-        } else {
-          Push<u64>(old_size);
-        }
+      if (Failed(memory->Grow(PopPtr(memory)))) {
+        PushPtr(memory, -1);
       } else {
-        if (Failed(memory->Grow(Pop<u32>()))) {
-          Push<s32>(-1);
-        } else {
-          Push<u32>(old_size);
-        }
+        PushPtr(memory, old_size);
       }
       break;
     }
@@ -2071,7 +2087,7 @@ RunResult Thread::DoMemoryInit(Instr instr, Trap::Ptr* out_trap) {
   auto&& data = inst_->datas()[instr.imm_u32x2.snd];
   auto size = Pop<u32>();
   auto src = Pop<u32>();
-  auto dst = PopPtr(memory);
+  u64 dst = PopPtr(memory);
   TRAP_IF(Failed(memory->Init(dst, data, src, size)),
           "out of bounds memory access: memory.init out of bounds");
   return RunResult::Ok;
@@ -2085,9 +2101,9 @@ RunResult Thread::DoDataDrop(Instr instr) {
 RunResult Thread::DoMemoryCopy(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr mem_dst{store_, inst_->memories()[instr.imm_u32x2.fst]};
   Memory::Ptr mem_src{store_, inst_->memories()[instr.imm_u32x2.snd]};
-  auto size = PopPtr(mem_src);
-  auto src = PopPtr(mem_src);
-  auto dst = PopPtr(mem_dst);
+  u64 size = PopPtr(mem_src);
+  u64 src = PopPtr(mem_src);
+  u64 dst = PopPtr(mem_dst);
   // TODO: change to "out of bounds"
   TRAP_IF(Failed(Memory::Copy(*mem_dst, dst, *mem_src, src, size)),
           "out of bounds memory access: memory.copy out of bound");
@@ -2096,9 +2112,9 @@ RunResult Thread::DoMemoryCopy(Instr instr, Trap::Ptr* out_trap) {
 
 RunResult Thread::DoMemoryFill(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32]};
-  auto size = PopPtr(memory);
+  u64 size = PopPtr(memory);
   auto value = Pop<u32>();
-  auto dst = PopPtr(memory);
+  u64 dst = PopPtr(memory);
   TRAP_IF(Failed(memory->Fill(dst, value, size)),
           "out of bounds memory access: memory.fill out of bounds");
   return RunResult::Ok;
@@ -2109,7 +2125,7 @@ RunResult Thread::DoTableInit(Instr instr, Trap::Ptr* out_trap) {
   auto&& elem = inst_->elems()[instr.imm_u32x2.snd];
   auto size = Pop<u32>();
   auto src = Pop<u32>();
-  auto dst = Pop<u32>();
+  u64 dst = PopPtr(table);
   TRAP_IF(Failed(table->Init(store_, dst, elem, src, size)),
           "out of bounds table access: table.init out of bounds");
   return RunResult::Ok;
@@ -2123,9 +2139,9 @@ RunResult Thread::DoElemDrop(Instr instr) {
 RunResult Thread::DoTableCopy(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table_dst{store_, inst_->tables()[instr.imm_u32x2.fst]};
   Table::Ptr table_src{store_, inst_->tables()[instr.imm_u32x2.snd]};
-  auto size = Pop<u32>();
-  auto src = Pop<u32>();
-  auto dst = Pop<u32>();
+  u64 size = PopPtr(table_src);
+  u64 src = PopPtr(table_src);
+  u64 dst = PopPtr(table_dst);
   TRAP_IF(Failed(Table::Copy(store_, *table_dst, dst, *table_src, src, size)),
           "out of bounds table access: table.copy out of bounds");
   return RunResult::Ok;
@@ -2133,12 +2149,12 @@ RunResult Thread::DoTableCopy(Instr instr, Trap::Ptr* out_trap) {
 
 RunResult Thread::DoTableGet(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table{store_, inst_->tables()[instr.imm_u32]};
-  auto index = Pop<u32>();
+  u64 index = PopPtr(table);
   Ref ref;
   TRAP_IF(Failed(table->Get(index, &ref)),
-          StringPrintf(
-              "out of bounds table access: table.get at %u >= max value %u",
-              index, table->size()));
+          StringPrintf("out of bounds table access: table.get at %" PRIu64
+                       " >= max value %u",
+                       index, table->size()));
   Push(ref);
   return RunResult::Ok;
 }
@@ -2146,38 +2162,38 @@ RunResult Thread::DoTableGet(Instr instr, Trap::Ptr* out_trap) {
 RunResult Thread::DoTableSet(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table{store_, inst_->tables()[instr.imm_u32]};
   auto ref = Pop<Ref>();
-  auto index = Pop<u32>();
+  u64 index = PopPtr(table);
   TRAP_IF(Failed(table->Set(store_, index, ref)),
-          StringPrintf(
-              "out of bounds table access: table.set at %u >= max value %u",
-              index, table->size()));
+          StringPrintf("out of bounds table access: table.set at %" PRIu64
+                       " >= max value %u",
+                       index, table->size()));
   return RunResult::Ok;
 }
 
 RunResult Thread::DoTableGrow(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table{store_, inst_->tables()[instr.imm_u32]};
   u32 old_size = table->size();
-  auto delta = Pop<u32>();
+  auto delta = PopPtr(table);
   auto ref = Pop<Ref>();
   if (Failed(table->Grow(store_, delta, ref))) {
-    Push<s32>(-1);
+    PushPtr(table, -1);
   } else {
-    Push<u32>(old_size);
+    PushPtr(table, old_size);
   }
   return RunResult::Ok;
 }
 
 RunResult Thread::DoTableSize(Instr instr) {
   Table::Ptr table{store_, inst_->tables()[instr.imm_u32]};
-  Push<u32>(table->size());
+  PushPtr(table, table->size());
   return RunResult::Ok;
 }
 
 RunResult Thread::DoTableFill(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table{store_, inst_->tables()[instr.imm_u32]};
-  auto size = Pop<u32>();
+  u64 size = PopPtr(table);
   auto value = Pop<Ref>();
-  auto dst = Pop<u32>();
+  u64 dst = PopPtr(table);
   TRAP_IF(Failed(table->Fill(store_, dst, value, size)),
           "out of bounds table access: table.fill out of bounds");
   return RunResult::Ok;

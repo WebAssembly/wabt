@@ -709,9 +709,11 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
                                        Var table_var) {
   Result result = CheckInstr(Opcode::CallIndirect, loc);
   FuncType func_type;
+  TableType table_type;
   result |= CheckFuncTypeIndex(sig_var, &func_type);
-  result |= CheckTableIndex(table_var);
-  result |= typechecker_.OnCallIndirect(func_type.params, func_type.results);
+  result |= CheckTableIndex(table_var, &table_type);
+  result |= typechecker_.OnCallIndirect(func_type.params, func_type.results,
+                                        table_type.limits);
   return result;
 }
 
@@ -1122,7 +1124,7 @@ Result SharedValidator::OnTableCopy(const Location& loc,
   TableType src_table;
   result |= CheckTableIndex(dst_var, &dst_table);
   result |= CheckTableIndex(src_var, &src_table);
-  result |= typechecker_.OnTableCopy();
+  result |= typechecker_.OnTableCopy(dst_table.limits, src_table.limits);
   result |= CheckType(loc, src_table.element, dst_table.element, "table.copy");
   return result;
 }
@@ -1131,7 +1133,7 @@ Result SharedValidator::OnTableFill(const Location& loc, Var table_var) {
   Result result = CheckInstr(Opcode::TableFill, loc);
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
-  result |= typechecker_.OnTableFill(table_type.element);
+  result |= typechecker_.OnTableFill(table_type.element, table_type.limits);
   return result;
 }
 
@@ -1139,7 +1141,7 @@ Result SharedValidator::OnTableGet(const Location& loc, Var table_var) {
   Result result = CheckInstr(Opcode::TableGet, loc);
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
-  result |= typechecker_.OnTableGet(table_type.element);
+  result |= typechecker_.OnTableGet(table_type.element, table_type.limits);
   return result;
 }
 
@@ -1147,7 +1149,7 @@ Result SharedValidator::OnTableGrow(const Location& loc, Var table_var) {
   Result result = CheckInstr(Opcode::TableGrow, loc);
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
-  result |= typechecker_.OnTableGrow(table_type.element);
+  result |= typechecker_.OnTableGrow(table_type.element, table_type.limits);
   return result;
 }
 
@@ -1159,7 +1161,7 @@ Result SharedValidator::OnTableInit(const Location& loc,
   ElemType elem_type;
   result |= CheckTableIndex(table_var, &table_type);
   result |= CheckElemSegmentIndex(segment_var, &elem_type);
-  result |= typechecker_.OnTableInit(table_var.index(), segment_var.index());
+  result |= typechecker_.OnTableInit(segment_var.index(), table_type.limits);
   result |= CheckType(loc, elem_type.element, table_type.element, "table.init");
   return result;
 }
@@ -1168,14 +1170,15 @@ Result SharedValidator::OnTableSet(const Location& loc, Var table_var) {
   Result result = CheckInstr(Opcode::TableSet, loc);
   TableType table_type;
   result |= CheckTableIndex(table_var, &table_type);
-  result |= typechecker_.OnTableSet(table_type.element);
+  result |= typechecker_.OnTableSet(table_type.element, table_type.limits);
   return result;
 }
 
 Result SharedValidator::OnTableSize(const Location& loc, Var table_var) {
   Result result = CheckInstr(Opcode::TableSize, loc);
-  result |= CheckTableIndex(table_var);
-  result |= typechecker_.OnTableSize();
+  TableType tt;
+  result |= CheckTableIndex(table_var, &tt);
+  result |= typechecker_.OnTableSize(tt.limits);
   return result;
 }
 

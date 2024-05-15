@@ -1,0 +1,26 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_get.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+init(externref:2) =>
+out/test/spec/memory64/table_get.wast:38: assert_trap passed: out of bounds table access: table.get at 2 >= max value 2
+out/test/spec/memory64/table_get.wast:39: assert_trap passed: out of bounds table access: table.get at 3 >= max value 3
+out/test/spec/memory64/table_get.wast:40: assert_trap passed: out of bounds table access: table.get at 4294967295 >= max value 2
+out/test/spec/memory64/table_get.wast:41: assert_trap passed: out of bounds table access: table.get at 4294967295 >= max value 3
+out/test/spec/memory64/table_get.wast:47: assert_invalid passed:
+  out/test/spec/memory64/table_get/table_get.1.wasm:0000020: error: type mismatch in table.get, expected [i32] but got []
+  0000020: error: OnTableGetExpr callback failed
+out/test/spec/memory64/table_get.wast:56: assert_invalid passed:
+  out/test/spec/memory64/table_get/table_get.2.wasm:0000025: error: type mismatch in table.get, expected [i32] but got [f32]
+  0000025: error: OnTableGetExpr callback failed
+out/test/spec/memory64/table_get.wast:66: assert_invalid passed:
+  out/test/spec/memory64/table_get/table_get.3.wasm:0000022: error: type mismatch at end of function, expected [] but got [externref]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/memory64/table_get.wast:75: assert_invalid passed:
+  out/test/spec/memory64/table_get/table_get.4.wasm:0000023: error: type mismatch in implicit return, expected [funcref] but got [externref]
+  0000023: error: EndFunctionBody callback failed
+out/test/spec/memory64/table_get.wast:85: assert_invalid passed:
+  out/test/spec/memory64/table_get/table_get.5.wasm:0000026: error: type mismatch in implicit return, expected [funcref] but got [externref]
+  0000026: error: EndFunctionBody callback failed
+17/17 tests passed.
+;;; STDOUT ;;)

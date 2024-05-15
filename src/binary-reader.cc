@@ -582,7 +582,8 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   bool is_64 = flags & WABT_BINARY_LIMITS_IS_64_FLAG;
   const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
   ERROR_IF(is_shared, "tables may not be shared");
-  ERROR_IF(is_64, "tables may not be 64-bit");
+  ERROR_IF(is_64 && !options_.features.memory64_enabled(),
+           "memory64 not allowed");
   ERROR_UNLESS(unknown_flags == 0, "malformed table limits flag: %d", flags);
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
   if (has_max) {
@@ -590,6 +591,7 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   }
 
   out_elem_limits->has_max = has_max;
+  out_elem_limits->is_64 = is_64;
   out_elem_limits->initial = initial;
   out_elem_limits->max = max;
   return Result::Ok;

@@ -306,7 +306,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                     Index keep_extra,
                                     Index* out_drop_count,
                                     Index* out_keep_count);
-  Result BeginInitExpr(Type type, FuncDesc* init_func);
+  Result BeginInitExpr(FuncDesc* init_func);
   Result EndInitExpr();
 
   void EmitBr(Index depth,
@@ -631,7 +631,7 @@ Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
 
 Result BinaryReaderInterp::BeginGlobalInitExpr(Index index) {
   GlobalDesc& global = module_.globals.back();
-  return BeginInitExpr(global.type.type, &global.init_func);
+  return BeginInitExpr(&global.init_func);
 }
 
 Result BinaryReaderInterp::EndInitExpr() {
@@ -642,10 +642,11 @@ Result BinaryReaderInterp::EndInitExpr() {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::BeginInitExpr(Type type, FuncDesc* func) {
+Result BinaryReaderInterp::BeginInitExpr(FuncDesc* func) {
   label_stack_.clear();
   func_ = func;
   func_->code_offset = istream_.end();
+  Type type = func->type.results[0];
   CHECK_RESULT(validator_.BeginInitExpr(GetLocation(), type));
   // Push implicit init func label (equivalent to return).
   PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset);
@@ -709,8 +710,13 @@ Result BinaryReaderInterp::BeginElemSegment(Index index,
   CHECK_RESULT(validator_.OnElemSegment(GetLocation(),
                                         Var(table_index, GetLocation()), mode));
 
+  ValueType offset_type = ValueType::I32;
+  if (table_index < table_types_.size() &&
+      table_types_[table_index].limits.is_64) {
+    offset_type = ValueType::I64;
+  }
   FuncDesc init_func{
-      FuncType{{}, {ValueType::I32}}, {}, Istream::kInvalidOffset, {}};
+      FuncType{{}, {offset_type}}, {}, Istream::kInvalidOffset, {}};
   ElemDesc desc{{}, ValueType::Void, mode, table_index, init_func};
   module_.elems.push_back(desc);
   return Result::Ok;
@@ -718,7 +724,7 @@ Result BinaryReaderInterp::BeginElemSegment(Index index,
 
 Result BinaryReaderInterp::BeginElemSegmentInitExpr(Index index) {
   ElemDesc& elem = module_.elems.back();
-  return BeginInitExpr(Type::I32, &elem.init_func);
+  return BeginInitExpr(&elem.init_func);
 }
 
 Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
@@ -744,7 +750,7 @@ Result BinaryReaderInterp::BeginElemExpr(Index elem_index, Index expr_index) {
   elem.elements.push_back(
       {FuncType{{}, {elem.type}}, {}, Istream::kInvalidOffset, {}});
   assert(expr_index == elem.elements.size() - 1);
-  return BeginInitExpr(elem.type, &elem.elements.back());
+  return BeginInitExpr(&elem.elements.back());
 }
 
 Result BinaryReaderInterp::EndElemExpr(Index elem_index, Index expr_index) {
@@ -758,9 +764,8 @@ Result BinaryReaderInterp::OnDataCount(Index count) {
 }
 
 Result BinaryReaderInterp::BeginDataSegmentInitExpr(Index index) {
-  MemoryType t = memory_types_[0];
   DataDesc& data = module_.datas.back();
-  return BeginInitExpr(t.limits.is_64 ? Type::I64 : Type::I32, &data.init_func);
+  return BeginInitExpr(&data.init_func);
 }
 
 Result BinaryReaderInterp::EndDataSegmentInitExpr(Index index) {
@@ -774,8 +779,13 @@ Result BinaryReaderInterp::BeginDataSegment(Index index,
   CHECK_RESULT(validator_.OnDataSegment(
       GetLocation(), Var(memory_index, GetLocation()), mode));
 
+  ValueType offset_type = ValueType::I32;
+  if (memory_index < memory_types_.size() &&
+      memory_types_[memory_index].limits.is_64) {
+    offset_type = ValueType::I64;
+  }
   FuncDesc init_func{
-      FuncType{{}, {ValueType::I32}}, {}, Istream::kInvalidOffset, {}};
+      FuncType{{}, {offset_type}}, {}, Istream::kInvalidOffset, {}};
   DataDesc desc{{}, mode, memory_index, init_func};
   module_.datas.push_back(desc);
   return Result::Ok;

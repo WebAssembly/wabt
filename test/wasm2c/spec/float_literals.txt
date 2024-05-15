@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/float_literals.wast
 (;; STDOUT ;;;
-83/83 tests passed.
+99/99 tests passed.
 ;;; STDOUT ;;)
