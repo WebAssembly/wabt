@@ -141,6 +141,45 @@ fac(10) -> 3628800
 You can take a look at the all of these files in
 [wasm2c/examples/fac](/wasm2c/examples/fac).
 
+### Enabling extra sanity checks
+
+Wasm2c provides a macro `WASM_RT_SANITY_CHECKS` that if defined enables
+additional sanity checks in the produced Wasm2c code. Note that this may have a
+high performance overhead, and is thus only recommended for debug builds.
+
+### Enabling Segue (a Linux x86_64 target specific optimization)
+
+Wasm2c can use the "Segue" optimization if allowed. The segue optimization uses
+an x86 segment register to store the location of Wasm's linear memory, when
+compiling a Wasm module with clang, running on x86_64 Linux, and the macro
+`WASM_RT_ALLOW_SEGUE` is defined. Segue is not used if
+
+1. The Wasm module uses a more than a single unshared imported or exported
+   memory
+2. The wasm2c code is compiled with GCC. Segue requires intrinsics for
+   (rd|wr)gsbase, "address namespaces" for accessing pointers, and support for
+   memcpy on pointers with custom "address namespaces". GCC does not support the
+   memcpy requirement.
+3. The code is compiled for Windows as Windows doesn't restore the segment
+   register on context switch.
+
+The wasm2c generated code automatically sets the unused segment register (the
+`%gs` register on x86_64 Linux) during the function calls into wasm2c generated
+module, restores it after calls to external modules etc. Any host function
+written in C would continue to work without changes as C code does not modify
+the unused segment register `%gs` (See
+[here](https://www.kernel.org/doc/html/next/x86/x86_64/fsgs.html) for details).
+However, any host functions written in assembly that clobber the free segment
+register must restore the value of this register prior to executing or returning
+control to wasm2c generated code.
+
+You can test the performance of the Segue optimization by running Dhrystone with
+and without Segue:
+
+```bash
+cd wasm2c/benchmarks/segue && make
+```
+
 ## Looking at the generated header, `fac.h`
 
 The generated header file looks something like this:
