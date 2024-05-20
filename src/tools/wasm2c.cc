@@ -117,16 +117,6 @@ static void ParseOptions(int argc, char** argv) {
   }
 }
 
-// TODO(binji): copied from binary-writer-spec.cc, probably should share.
-static std::string_view strip_extension(std::string_view s) {
-  std::string_view ext = s.substr(s.find_last_of('.'));
-  std::string_view result = s;
-
-  if (ext == ".c")
-    result.remove_suffix(ext.length());
-  return result;
-}
-
 Result Wasm2cMain(Errors& errors) {
   if (s_num_outputs < 1) {
     fprintf(stderr, "Number of output files must be positive.\n");
@@ -152,12 +142,12 @@ Result Wasm2cMain(Errors& errors) {
 
   if (!s_outfile.empty()) {
     std::string header_name_full =
-        std::string(strip_extension(s_outfile)) + ".h";
+        std::string(wabt::StripExtension(s_outfile)) + ".h";
     std::vector<FileStream> c_streams;
     if (s_num_outputs == 1) {
       c_streams.emplace_back(s_outfile.c_str());
     } else {
-      std::string output_prefix{strip_extension(s_outfile)};
+      std::string output_prefix{wabt::StripExtension(s_outfile)};
       for (unsigned int i = 0; i < s_num_outputs; i++) {
         c_streams.emplace_back(output_prefix + "_" + std::to_string(i) + ".c");
       }
@@ -181,7 +171,7 @@ Result Wasm2cMain(Errors& errors) {
                           s_write_c_options));
     } else {
       std::string header_impl_name_full =
-          std::string(strip_extension(s_outfile)) + "-impl.h";
+          std::string(wabt::StripExtension(s_outfile)) + "-impl.h";
       FileStream h_impl_stream(header_impl_name_full);
       std::string_view header_impl_name = GetBasename(header_impl_name_full);
       CHECK_RESULT(WriteC(std::move(c_stream_ptrs), &h_stream, &h_impl_stream,
