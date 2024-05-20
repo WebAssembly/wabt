@@ -1,0 +1,3 @@
+;;; TOOL: run-wasm2c
+;;; ARGS: -o %(out_dir)s/out
+(module $empty)
