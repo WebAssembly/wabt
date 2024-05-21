@@ -1,5 +1,6 @@
 # Use implicit rules for compiling C files.
 CFLAGS=-I../..
+LDFLAGS=-lm
 
 all: callback
 
@@ -7,7 +8,7 @@ clean:
 	rm -rf callback callback.wasm callback.c callback.h *.o
 
 callback: main.o callback.o ../../wasm-rt-impl.o ../../wasm-rt-mem-impl.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lm
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 callback.wasm: callback.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm --debug-names $< -o $@
