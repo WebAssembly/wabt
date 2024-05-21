@@ -9,12 +9,12 @@ clean:
 rot13: main.o rot13.o ../../wasm-rt-impl.o ../../wasm-rt-mem-impl.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lm
 
-main.o: rot13.c
+main.o: rot13.h
 
 rot13.wasm: rot13.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm $< -o $@
 
-rot13.c: rot13.wasm ../../../bin/wasm2c
-	../../../bin/wasm2c $< -o $@ --disable-simd
+rot13.c rot13.h: rot13.wasm ../../../bin/wasm2c
+	../../../bin/wasm2c $< -o rot13.c --disable-simd
 
 .PHONY: all clean
