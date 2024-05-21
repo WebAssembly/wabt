@@ -4,9 +4,12 @@ CFLAGS=-I../..
 all: rot13
 
 clean:
-	rm -rf rot13 rot13.wasm rot13.c *.o
+	rm -rf rot13 rot13.wasm rot13.c rot13.h *.o
 
-rot13: main.o rot13.o ../../wasm-rt-impl.o ../../wasm-rt-mem-impl.o -lm
+rot13: main.o rot13.o ../../wasm-rt-impl.o ../../wasm-rt-mem-impl.o
+	$(CC) $(LDFLAGS) -o $@ $^ -lm
+
+main.o: rot13.c
 
 rot13.wasm: rot13.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm $< -o $@

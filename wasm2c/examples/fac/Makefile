@@ -6,7 +6,8 @@ all: fac
 clean:
 	rm -rf fac fac.wasm fac.c *.o
 
-fac: main.o fac.o ../../wasm-rt-impl.o -lm
+fac: main.o fac.o ../../wasm-rt-impl.o
+	$(CC) $(LDFLAGS) -o $@ $^ -lm
 
 fac.wasm: fac.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm $< -o $@

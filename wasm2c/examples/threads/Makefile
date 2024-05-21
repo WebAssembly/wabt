@@ -4,10 +4,11 @@ LDFLAGS=${SANITIZERS} -pthread
 
 all: threads
 
-threads: threads.o sample.o ../../wasm-rt-impl.o ../../wasm-rt-exceptions-impl.o -lm
-
 clean:
 	rm -rf threads sample.wasm sample.c sample.h *.o ../../*.o
+
+threads: threads.o sample.o ../../wasm-rt-impl.o ../../wasm-rt-exceptions-impl.o
+	$(CC) $(LDFLAGS) -o $@ $^ -lm
 
 sample.wasm: sample.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm --debug-names $< -o $@
