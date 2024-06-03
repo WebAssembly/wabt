@@ -1,7 +1,10 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -h -x
+;;; ARGS0: --enable-all
+;;; ARGS1: -h -x
 
 (module
+  (import "env" "table" (table i64 42 funcref))
+  (import "env" "memory" (memory i64 2))
   (memory i64 1)
   (table i64 1 funcref)
   (data (i64.const 1) "a")
@@ -12,16 +15,20 @@ memory64.wasm:	file format wasm 0x1
 
 Sections:
 
-    Table start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
-   Memory start=0x00000010 end=0x00000013 (size=0x00000003) count: 1
-     Data start=0x00000015 end=0x0000001c (size=0x00000007) count: 1
+   Import start=0x0000000a end=0x00000027 (size=0x0000001d) count: 2
+    Table start=0x00000029 end=0x0000002d (size=0x00000004) count: 1
+   Memory start=0x0000002f end=0x00000032 (size=0x00000003) count: 1
+     Data start=0x00000034 end=0x0000003b (size=0x00000007) count: 1
 
 Section Details:
 
+Import[2]:
+ - table[0] type=funcref initial=42 i64 <- env.table
+ - memory[0] pages: initial=2 i64 <- env.memory
 Table[1]:
- - table[0] type=funcref initial=1 i64
+ - table[1] type=funcref initial=1 i64
 Memory[1]:
- - memory[0] pages: initial=1 i64
+ - memory[1] pages: initial=1 i64
 Data[1]:
  - segment[0] memory=0 size=1 - init i64=1
   - 0000001: 61                                       a
