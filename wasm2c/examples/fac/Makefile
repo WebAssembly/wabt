@@ -1,6 +1,6 @@
 # Use implicit rules for compiling C files.
 CFLAGS=-I../..
-LDFLAGS=-lm
+LDLIBS=-lm
 
 all: fac
 
@@ -8,7 +8,6 @@ clean:
 	rm -rf fac fac.wasm fac.c *.o
 
 fac: main.o fac.o ../../wasm-rt-impl.o
-	$(CC) -o $@ $^ $(LDFLAGS)
 
 fac.wasm: fac.wat ../../../bin/wat2wasm
 	../../../bin/wat2wasm $< -o $@
