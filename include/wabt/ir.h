@@ -156,6 +156,16 @@ struct Const {
   void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
   void set_null(Type type) { From<uintptr_t>(type, kRefNullBits); }
 
+  bool is_negative(int lane = 0) const {
+    return lane < 16 && is_negative_[lane];
+  }
+
+  void set_is_negative(int lane, bool is_negative) {
+    if (lane < 16) {
+      is_negative_[lane] = is_negative;
+    }
+  }
+
   bool is_expected_nan(int lane = 0) const {
     return expected_nan(lane) != ExpectedNan::None;
   }
@@ -198,6 +208,9 @@ struct Const {
   Type type_;
   Type lane_type_;  // Only valid if type_ == Type::V128.
   v128 data_;
+  // Used for wast2json, we need to know if a number is negative to prefix it
+  // properly.
+  bool is_negative_[16];
   ExpectedNan nan_[4];
 };
 using ConstVector = std::vector<Const>;

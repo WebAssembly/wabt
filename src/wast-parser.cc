@@ -2644,6 +2644,8 @@ Result WastParser::ParseSimdV128Const(Const* const_,
     if (integer) {
       std::string_view sv = Consume().literal().text;
 
+      const_->set_is_negative(lane, sv[0] == '-');
+
       switch (lane_count) {
         case 16: {
           uint8_t value = 0;

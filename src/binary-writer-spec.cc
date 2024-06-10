@@ -216,7 +216,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("i32");
       WriteSeparator();
       WriteKey("value");
-      json_stream_->Writef("\"%u\"", const_.u32());
+      json_stream_->Writef("\"%" PRIu32 "\"", const_.u32());
       break;
 
     case Type::I64:
@@ -266,22 +266,50 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       json_stream_->Writef("[");
 
       for (int lane = 0; lane < const_.lane_count(); ++lane) {
+        auto negative_char = const_.is_negative(lane) ? "-" : "";
         switch (const_.lane_type()) {
           case Type::I8:
-            json_stream_->Writef("\"%u\"", const_.v128_lane<uint8_t>(lane));
+            if (const_.is_negative(lane)) {
+              auto converted = UINT8_MAX - const_.v128_lane<uint8_t>(lane) + 1;
+              json_stream_->Writef("\"-%" PRIu8 "\"", converted);
+
+            } else {
+              json_stream_->Writef("\"%s%" PRIu8 "\"", negative_char,
+                                   const_.v128_lane<uint8_t>(lane));
+            }
             break;
 
           case Type::I16:
-            json_stream_->Writef("\"%u\"", const_.v128_lane<uint16_t>(lane));
+            if (const_.is_negative(lane)) {
+              auto converted =
+                  UINT16_MAX - const_.v128_lane<uint16_t>(lane) + 1;
+              json_stream_->Writef("\"-%" PRIu16 "\"", converted);
+            } else {
+              json_stream_->Writef("\"%" PRIu16 "\"",
+                                   const_.v128_lane<uint16_t>(lane));
+            }
             break;
 
           case Type::I32:
-            json_stream_->Writef("\"%u\"", const_.v128_lane<uint32_t>(lane));
+            if (const_.is_negative(lane)) {
+              auto converted =
+                  UINT32_MAX - const_.v128_lane<uint32_t>(lane) + 1;
+              json_stream_->Writef("\"-%" PRIu32 "\"", converted);
+            } else {
+              json_stream_->Writef("\"%s%" PRIu32 "\"", negative_char,
+                                   const_.v128_lane<uint32_t>(lane));
+            }
             break;
 
           case Type::I64:
-            json_stream_->Writef("\"%" PRIu64 "\"",
-                                 const_.v128_lane<uint64_t>(lane));
+            if (const_.is_negative(lane)) {
+              auto converted =
+                  UINT64_MAX - const_.v128_lane<uint64_t>(lane) + 1;
+              json_stream_->Writef("\"-%" PRIu64 "\"", converted);
+            } else {
+              json_stream_->Writef("\"%s%" PRIu64 "\"", negative_char,
+                                   const_.v128_lane<uint64_t>(lane));
+            }
             break;
 
           case Type::F32:
