@@ -18,6 +18,7 @@
 #define WABT_TYPE_CHECKER_H_
 
 #include <functional>
+#include <type_traits>
 #include <vector>
 
 #include "wabt/common.h"
@@ -182,6 +183,9 @@ class TypeChecker {
 
   template <typename... Args>
   void PrintStackIfFailed(Result result, const char* desc, Args... args) {
+    // Assert all args are Type or Type::Enum. If it's a TypeVector then
+    // PrintStackIfFailedV() should be used instead.
+    static_assert((std::is_constructible_v<Type, Args> && ...));
     // Minor optimization, check result before constructing the vector to pass
     // to the other overload of PrintStackIfFailed.
     if (Failed(result)) {
