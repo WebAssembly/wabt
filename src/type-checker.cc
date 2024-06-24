@@ -254,7 +254,7 @@ Result TypeChecker::CheckSignature(const TypeVector& sig, const char* desc) {
   for (size_t i = 0; i < sig.size(); ++i) {
     result |= PeekAndCheckType(sig.size() - i - 1, sig[i]);
   }
-  PrintStackIfFailed(result, desc, sig);
+  PrintStackIfFailedV(result, desc, sig, /*is_end=*/false);
   return result;
 }
 
