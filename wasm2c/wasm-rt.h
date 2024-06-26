@@ -88,6 +88,14 @@ extern "C" {
 #endif
 
 /**
+ * If enabled, perform additional sanity checks in the generated wasm2c code and
+ * wasm2c runtime. This is useful to enable on debug builds.
+ */
+#ifndef WASM_RT_SANITY_CHECKS
+#define WASM_RT_SANITY_CHECKS 0
+#endif
+
+/**
  * Backward compatibility: Convert the previously exposed
  * WASM_RT_MEMCHECK_SIGNAL_HANDLER macro to the ALLOCATION and CHECK macros that
  * are now used.
@@ -194,6 +202,18 @@ extern "C" {
 #define WASM_RT_INSTALL_SIGNAL_HANDLER 1
 #else
 #define WASM_RT_INSTALL_SIGNAL_HANDLER 0
+#endif
+
+/**
+ * This macro, if defined to 1 (i.e., allows the "segue" optimization), allows
+ * Wasm2c to use segment registers to speedup access to the linear heap. Note
+ * that even if allowed in this way, the segment registers would only be used if
+ * Wasm2c output is compiled for a suitable architecture and OS and the produces
+ * C file is compiled by supported compilers. The extact restrictions are listed
+ * in detail in src/template/wasm2c.declarations.c
+ */
+#ifndef WASM_RT_ALLOW_SEGUE
+#define WASM_RT_ALLOW_SEGUE 0
 #endif
 
 /**
