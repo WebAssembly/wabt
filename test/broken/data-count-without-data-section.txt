@@ -1,0 +1,20 @@
+;;; TOOL: run-gen-wasm-interp
+;;; SKIP:
+;; see issue 2431
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(MEMORY) { count[1] flags[0] min[1] }
+section(START) { start_function[0] }
+section(DATACOUNT) { count[1] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.const value[0]
+    i32.const value[0]
+    i32.const value[0]
+    memory.init dataidx[0] memidx[0]
+  }
+}
