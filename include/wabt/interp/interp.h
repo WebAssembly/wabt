@@ -1163,12 +1163,12 @@ class Thread {
   RunResult DoStore(Instr, Trap::Ptr* out_trap);
 
   RunResult DoMemoryInit(Instr, Trap::Ptr* out_trap);
-  RunResult DoDataDrop(Instr);
+  RunResult DoDataDrop(Instr, Trap::Ptr* out_trap);
   RunResult DoMemoryCopy(Instr, Trap::Ptr* out_trap);
   RunResult DoMemoryFill(Instr, Trap::Ptr* out_trap);
 
   RunResult DoTableInit(Instr, Trap::Ptr* out_trap);
-  RunResult DoElemDrop(Instr);
+  RunResult DoElemDrop(Instr, Trap::Ptr* out_trap);
   RunResult DoTableCopy(Instr, Trap::Ptr* out_trap);
   RunResult DoTableGet(Instr, Trap::Ptr* out_trap);
   RunResult DoTableSet(Instr, Trap::Ptr* out_trap);

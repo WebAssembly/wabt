@@ -1524,12 +1524,12 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I64TruncSatF64U: return DoUnop(IntTruncSat<u64, f64>);
 
     case O::MemoryInit: return DoMemoryInit(instr, out_trap);
-    case O::DataDrop:   return DoDataDrop(instr);
+    case O::DataDrop:   return DoDataDrop(instr, out_trap);
     case O::MemoryCopy: return DoMemoryCopy(instr, out_trap);
     case O::MemoryFill: return DoMemoryFill(instr, out_trap);
 
     case O::TableInit: return DoTableInit(instr, out_trap);
-    case O::ElemDrop:  return DoElemDrop(instr);
+    case O::ElemDrop:  return DoElemDrop(instr, out_trap);
     case O::TableCopy: return DoTableCopy(instr, out_trap);
     case O::TableGet:  return DoTableGet(instr, out_trap);
     case O::TableSet:  return DoTableSet(instr, out_trap);
@@ -2084,6 +2084,11 @@ RunResult Thread::DoReinterpret() {
 
 RunResult Thread::DoMemoryInit(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  TRAP_IF(inst_->datas().size() <= instr.imm_u32x2.snd,
+      StringPrintf("out of bounds data access: access at %u "
+                    ">= max value %" PRIu64,
+                    instr.imm_u32x2.snd,
+                    inst_->datas().size()));
   auto&& data = inst_->datas()[instr.imm_u32x2.snd];
   auto size = Pop<u32>();
   auto src = Pop<u32>();
@@ -2093,7 +2098,12 @@ RunResult Thread::DoMemoryInit(Instr instr, Trap::Ptr* out_trap) {
   return RunResult::Ok;
 }
 
-RunResult Thread::DoDataDrop(Instr instr) {
+RunResult Thread::DoDataDrop(Instr instr, Trap::Ptr* out_trap) {
+  TRAP_IF(inst_->datas().size() <= instr.imm_u32,
+      StringPrintf("out of bounds data access: access at %u "
+                    ">= max value %" PRIu64,
+                    instr.imm_u32,
+                    inst_->datas().size()));
   inst_->datas()[instr.imm_u32].Drop();
   return RunResult::Ok;
 }
@@ -2122,6 +2132,11 @@ RunResult Thread::DoMemoryFill(Instr instr, Trap::Ptr* out_trap) {
 
 RunResult Thread::DoTableInit(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table{store_, inst_->tables()[instr.imm_u32x2.fst]};
+  TRAP_IF(inst_->elems().size() <= instr.imm_u32x2.snd,
+    StringPrintf("out of bounds elem access: access at %u "
+                  ">= max value %" PRIu64,
+                  instr.imm_u32x2.snd,
+                  inst_->elems().size()));
   auto&& elem = inst_->elems()[instr.imm_u32x2.snd];
   auto size = Pop<u32>();
   auto src = Pop<u32>();
@@ -2131,7 +2146,12 @@ RunResult Thread::DoTableInit(Instr instr, Trap::Ptr* out_trap) {
   return RunResult::Ok;
 }
 
-RunResult Thread::DoElemDrop(Instr instr) {
+RunResult Thread::DoElemDrop(Instr instr, Trap::Ptr* out_trap) {
+  TRAP_IF(inst_->elems().size() <= instr.imm_u32,
+    StringPrintf("out of bounds elem access: access at %u "
+                  ">= max value %" PRIu64,
+                  instr.imm_u32,
+                  inst_->elems().size()));
   inst_->elems()[instr.imm_u32].Drop();
   return RunResult::Ok;
 }
