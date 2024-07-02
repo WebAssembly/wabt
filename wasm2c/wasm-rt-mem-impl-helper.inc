@@ -67,7 +67,7 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
                                               uint64_t initial_pages,
                                               uint64_t max_pages,
                                               bool is64) {
-  uint64_t byte_length = initial_pages * PAGE_SIZE;
+  uint64_t byte_length = initial_pages * WASM_PAGE_SIZE;
   memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
@@ -103,9 +103,9 @@ static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint64_t)-1;
   }
-  uint64_t old_size = old_pages * PAGE_SIZE;
-  uint64_t new_size = new_pages * PAGE_SIZE;
-  uint64_t delta_size = delta * PAGE_SIZE;
+  uint64_t old_size = old_pages * WASM_PAGE_SIZE;
+  uint64_t new_size = new_pages * WASM_PAGE_SIZE;
+  uint64_t delta_size = delta * WASM_PAGE_SIZE;
 #if WASM_RT_USE_MMAP
   MEMORY_CELL_TYPE new_data = memory->data;
   int ret = os_mprotect((void*)(new_data + old_size), delta_size);

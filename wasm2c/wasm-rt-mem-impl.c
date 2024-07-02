@@ -25,7 +25,7 @@
 #include <sys/mman.h>
 #endif
 
-#define PAGE_SIZE 65536
+#define WASM_PAGE_SIZE 65536
 
 #ifdef WASM_RT_GROW_FAILED_HANDLER
 extern void WASM_RT_GROW_FAILED_HANDLER();
@@ -144,7 +144,7 @@ static uint64_t get_alloc_size_for_mmap(uint64_t max_pages, bool is64) {
   return max_size;
 #else
   if (max_pages != 0) {
-    const uint64_t max_size = max_pages * PAGE_SIZE;
+    const uint64_t max_size = max_pages * WASM_PAGE_SIZE;
     return max_size;
   }
 
@@ -175,4 +175,4 @@ static uint64_t get_alloc_size_for_mmap(uint64_t max_pages, bool is64) {
 #undef WIN_MEMORY_LOCK_VAR_INIT
 #undef WIN_MEMORY_LOCK_AQUIRE
 #undef WIN_MEMORY_LOCK_RELEASE
-#undef PAGE_SIZE
+#undef WASM_PAGE_SIZE
