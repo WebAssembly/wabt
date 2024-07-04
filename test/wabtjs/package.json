@@ -1,0 +1,14 @@
+{
+  "name": "test-wabtjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --use_strict ./index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "tape": "^5.7.3"
+  }
+}
