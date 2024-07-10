@@ -874,7 +874,7 @@ bool WastParser::ParseElemExprOpt(ExprList* out_elem_expr) {
     }
     EXPECT(Rpar);
   } else {
-    if (IsExpr(PeekPair()) && ParseExpr(&exprs) != Result::Ok) {
+    if (!IsExpr(PeekPair()) || ParseExpr(&exprs) != Result::Ok) {
       return false;
     }
   }
