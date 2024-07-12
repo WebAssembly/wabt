@@ -573,6 +573,7 @@ if (BUILD_TOOLS)
   )
 
   if(WITH_WASI)
+    # uvwasi uses the deprecated FetchContent_Populate function, disable it to avoid build error
     set(CMAKE_POLICY_DEFAULT_CMP0169_BACK ${CMAKE_POLICY_DEFAULT_CMP0169})
     set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
     add_subdirectory("third_party/uvwasi" EXCLUDE_FROM_ALL)
