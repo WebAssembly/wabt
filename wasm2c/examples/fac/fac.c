@@ -47,14 +47,15 @@
 // (1) Segue is allowed using WASM_RT_ALLOW_SEGUE
 // (2) on x86_64 without WABT_BIG_ENDIAN enabled
 // (3) the Wasm module uses a single unshared imported or exported memory
-// (4) the compiler supports: intrinsics for (rd|wr)(fs|gs)base, "address
-//     namespaces" for accessing pointers, and supports memcpy on pointers with
-//     custom "address namespaces". GCC does not support the memcpy requirement,
-//     so this leaves only clang for now.
-#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&               \
-    (defined(__x86_64__) || defined(_M_X64)) &&              \
-    WASM_RT_MODULE_IS_SINGLE_UNSHARED_MEMORY && __clang__ && \
-    __has_builtin(__builtin_ia32_wrgsbase64)
+// (4) the compiler supports: intrinsics for (rd|wr)gsbase, "address namespaces"
+//     for accessing pointers, and supports memcpy on pointers with custom
+//     "address namespaces". GCC does not support the memcpy requirement, so
+//     this leaves only clang for now.
+// (5) The OS doesn't replace the segment register on context switch which
+//     eliminates windows for now
+#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                               \
+    (defined(__x86_64__) || defined(_M_X64)) && IS_SINGLE_UNSHARED_MEMORY && \
+    __clang__ && __has_builtin(__builtin_ia32_wrgsbase64) && !defined(_WIN32)
 #define WASM_RT_USE_SEGUE 1
 #else
 #define WASM_RT_USE_SEGUE 0
@@ -62,21 +63,35 @@
 #endif
 
 #if WASM_RT_USE_SEGUE
-// Different segments are free on different platforms
-// Windows uses GS for TLS, FS is free
-// Linux uses FS for TLS, GS is free
-#if defined(__WIN32)
-#define WASM_RT_SEGUE_READ_BASE() __builtin_ia32_rdfsbase64()
-#define WASM_RT_SEGUE_WRITE_BASE(base) \
-  __builtin_ia32_wrfsbase64((uintptr_t)base)
-#define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_fs*)(uintptr_t)addr)
-#else
-// POSIX style OS
-#define WASM_RT_SEGUE_READ_BASE() __builtin_ia32_rdgsbase64()
-#define WASM_RT_SEGUE_WRITE_BASE(base) \
-  __builtin_ia32_wrgsbase64((uintptr_t)base)
+// POSIX uses FS for TLS, GS is free
+#include <asm/prctl.h>
+#include <stdio.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+
+static inline void* wasm_rt_segue_read_base() {
+  if (wasm_rt_fsgsbase_inst_supported) {
+    return (void*)__builtin_ia32_rdgsbase64();
+  } else {
+    void* base;
+    if (syscall(SYS_arch_prctl, ARCH_GET_GS, &base) != 0) {
+      perror("Syscall SYS_arch_prctl error");
+      abort();
+    }
+    return base;
+  }
+}
+static inline void wasm_rt_segue_write_base(void* base) {
+  if (wasm_rt_fsgsbase_inst_supported) {
+    __builtin_ia32_wrgsbase64((uintptr_t)base);
+  } else {
+    if (syscall(SYS_arch_prctl, ARCH_SET_GS, (uintptr_t)base) != 0) {
+      perror("Syscall SYS_arch_prctl error");
+      abort();
+    }
+  }
+}
 #define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
-#endif
 #else
 #define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
 #endif
@@ -128,10 +143,23 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
     TRAP(OOB);
 #endif
 
-#if WASM_RT_MEMCHECK_GUARD_PAGES
-#define MEMCHECK(mem, a, t)
+#if WASM_RT_USE_SEGUE && WASM_RT_SANITY_CHECKS
+#include <stdio.h>
+#define WASM_RT_CHECK_BASE(mem)                                               \
+  if (((uintptr_t)((mem)->data)) != ((uintptr_t)wasm_rt_segue_read_base())) { \
+    puts("Segment register mismatch\n");                                      \
+    abort();                                                                  \
+  }
 #else
-#define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
+#define WASM_RT_CHECK_BASE(mem)
+#endif
+
+#if WASM_RT_MEMCHECK_GUARD_PAGES
+#define MEMCHECK(mem, a, t) WASM_RT_CHECK_BASE(mem);
+#else
+#define MEMCHECK(mem, a, t) \
+  WASM_RT_CHECK_BASE(mem);  \
+  RANGE_CHECK(mem, a, sizeof(t))
 #endif
 
 #ifdef __GNUC__

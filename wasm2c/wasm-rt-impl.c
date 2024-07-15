@@ -49,6 +49,19 @@ static void* g_sig_handler_handle = 0;
 #endif
 #endif
 
+#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+// Currently Segue is used only for linux
+#include <sys/auxv.h>
+#ifdef __GLIBC__
+#include <gnu/libc-version.h>
+#endif
+bool wasm_rt_fsgsbase_inst_supported = false;
+
+#include <asm/prctl.h>    // For ARCH_SET_GS
+#include <sys/syscall.h>  // For SYS_arch_prctl
+#include <unistd.h>       // For syscall
+#endif
+
 #if WASM_RT_STACK_DEPTH_COUNT
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
@@ -220,6 +233,15 @@ void wasm_rt_init(void) {
     os_install_signal_handler();
   }
 #endif
+
+#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+#if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 18
+  // Check for support for userspace wrgsbase instructions
+  unsigned long val = getauxval(AT_HWCAP2);
+  wasm_rt_fsgsbase_inst_supported = val & (1 << 1);
+#endif
+#endif
+
   assert(wasm_rt_is_initialized());
 }
 
@@ -256,6 +278,23 @@ void wasm_rt_free_thread(void) {
   os_disable_and_deallocate_altstack();
 #endif
 }
+
+#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+void wasm_rt_syscall_set_segue_base(void* base) {
+  if (syscall(SYS_arch_prctl, ARCH_SET_GS, base) != 0) {
+    perror("wasm_rt_syscall_set_segue_base error");
+    abort();
+  }
+}
+void* wasm_rt_syscall_get_segue_base() {
+  void* base;
+  if (syscall(SYS_arch_prctl, ARCH_GET_GS, &base) != 0) {
+    perror("wasm_rt_syscall_get_segue_base error");
+    abort();
+  }
+  return base;
+}
+#endif
 
 // Include table operations for funcref
 #define WASM_RT_TABLE_OPS_FUNCREF
