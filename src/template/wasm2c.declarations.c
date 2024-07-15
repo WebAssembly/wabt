@@ -32,11 +32,16 @@
 //     for accessing pointers, and supports memcpy on pointers with custom
 //     "address namespaces". GCC does not support the memcpy requirement, so
 //     this leaves only clang for now.
-// (5) The OS doesn't replace the segment register on context switch which
+// (5) The OS provides a way to query if (rd|wr)gsbase is allowed by the kernel
+// or the implementation has to use a syscall for this.
+// (6) The OS doesn't replace the segment register on context switch which
 //     eliminates windows for now
+//
+// While more OS can be supported in the future, we only support linux for now
 #if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                               \
     (defined(__x86_64__) || defined(_M_X64)) && IS_SINGLE_UNSHARED_MEMORY && \
-    __clang__ && __has_builtin(__builtin_ia32_wrgsbase64) && !defined(_WIN32)
+    __clang__ && __has_builtin(__builtin_ia32_wrgsbase64) &&                 \
+    !defined(_WIN32) && defined(__linux__)
 #define WASM_RT_USE_SEGUE 1
 #else
 #define WASM_RT_USE_SEGUE 0
@@ -45,9 +50,20 @@
 
 #if WASM_RT_USE_SEGUE
 // POSIX uses FS for TLS, GS is free
-#define WASM_RT_SEGUE_READ_BASE() __builtin_ia32_rdgsbase64()
-#define WASM_RT_SEGUE_WRITE_BASE(base) \
-  __builtin_ia32_wrgsbase64((uintptr_t)base)
+static inline void* wasm_rt_segue_read_base() {
+  if (wasm_rt_fsgsbase_inst_supported) {
+    return (void*)__builtin_ia32_rdgsbase64();
+  } else {
+    return wasm_rt_syscall_get_segue_base();
+  }
+}
+static inline void wasm_rt_segue_write_base(void* base) {
+  if (wasm_rt_fsgsbase_inst_supported) {
+    __builtin_ia32_wrgsbase64((uintptr_t)base);
+  } else {
+    wasm_rt_syscall_set_segue_base(base);
+  }
+}
 #define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
 #else
 #define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
@@ -103,7 +119,7 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 #if WASM_RT_USE_SEGUE && WASM_RT_SANITY_CHECKS
 #include <stdio.h>
 #define WASM_RT_CHECK_BASE(mem)                                               \
-  if (((uintptr_t)((mem)->data)) != ((uintptr_t)WASM_RT_SEGUE_READ_BASE())) { \
+  if (((uintptr_t)((mem)->data)) != ((uintptr_t)wasm_rt_segue_read_base())) { \
     puts("Segment register mismatch\n");                                      \
     abort();                                                                  \
   }

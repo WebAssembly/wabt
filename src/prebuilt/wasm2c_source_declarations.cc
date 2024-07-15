@@ -64,15 +64,25 @@ R"w2c_template(//     "address namespaces". GCC does not support the memcpy requ
 )w2c_template"
 R"w2c_template(//     this leaves only clang for now.
 )w2c_template"
-R"w2c_template(// (5) The OS doesn't replace the segment register on context switch which
+R"w2c_template(// (5) The OS provides a way to query if (rd|wr)gsbase is allowed by the kernel
+)w2c_template"
+R"w2c_template(// or the implementation has to use a syscall for this.
+)w2c_template"
+R"w2c_template(// (6) The OS doesn't replace the segment register on context switch which
 )w2c_template"
 R"w2c_template(//     eliminates windows for now
+)w2c_template"
+R"w2c_template(//
+)w2c_template"
+R"w2c_template(// While more OS can be supported in the future, we only support linux for now
 )w2c_template"
 R"w2c_template(#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                               \
 )w2c_template"
 R"w2c_template(    (defined(__x86_64__) || defined(_M_X64)) && IS_SINGLE_UNSHARED_MEMORY && \
 )w2c_template"
-R"w2c_template(    __clang__ && __has_builtin(__builtin_ia32_wrgsbase64) && !defined(_WIN32)
+R"w2c_template(    __clang__ && __has_builtin(__builtin_ia32_wrgsbase64) &&                 \
+)w2c_template"
+R"w2c_template(    !defined(_WIN32) && defined(__linux__)
 )w2c_template"
 R"w2c_template(#define WASM_RT_USE_SEGUE 1
 )w2c_template"
@@ -89,11 +99,33 @@ R"w2c_template(
 )w2c_template"
 R"w2c_template(// POSIX uses FS for TLS, GS is free
 )w2c_template"
-R"w2c_template(#define WASM_RT_SEGUE_READ_BASE() __builtin_ia32_rdgsbase64()
+R"w2c_template(static inline void* wasm_rt_segue_read_base() {
 )w2c_template"
-R"w2c_template(#define WASM_RT_SEGUE_WRITE_BASE(base) \
+R"w2c_template(  if (wasm_rt_fsgsbase_inst_supported) {
 )w2c_template"
-R"w2c_template(  __builtin_ia32_wrgsbase64((uintptr_t)base)
+R"w2c_template(    return (void*)__builtin_ia32_rdgsbase64();
+)w2c_template"
+R"w2c_template(  } else {
+)w2c_template"
+R"w2c_template(    return wasm_rt_syscall_get_segue_base();
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(static inline void wasm_rt_segue_write_base(void* base) {
+)w2c_template"
+R"w2c_template(  if (wasm_rt_fsgsbase_inst_supported) {
+)w2c_template"
+R"w2c_template(    __builtin_ia32_wrgsbase64((uintptr_t)base);
+)w2c_template"
+R"w2c_template(  } else {
+)w2c_template"
+R"w2c_template(    wasm_rt_syscall_set_segue_base(base);
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(}
 )w2c_template"
 R"w2c_template(#define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
 )w2c_template"
@@ -194,7 +226,7 @@ R"w2c_template(#include <stdio.h>
 )w2c_template"
 R"w2c_template(#define WASM_RT_CHECK_BASE(mem)                                               \
 )w2c_template"
-R"w2c_template(  if (((uintptr_t)((mem)->data)) != ((uintptr_t)WASM_RT_SEGUE_READ_BASE())) { \
+R"w2c_template(  if (((uintptr_t)((mem)->data)) != ((uintptr_t)wasm_rt_segue_read_base())) { \
 )w2c_template"
 R"w2c_template(    puts("Segment register mismatch\n");                                      \
 )w2c_template"
