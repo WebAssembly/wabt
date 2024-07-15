@@ -2449,17 +2449,17 @@ bool CWriter::IsSingleUnsharedMemory() {
 void CWriter::InstallSegueBase(Memory* memory, bool save_old_value) {
   NonIndented([&] { Write("#if WASM_RT_USE_SEGUE", Newline()); });
   if (save_old_value) {
-    Write("uintptr_t segue_saved_base = WASM_RT_SEGUE_READ_BASE();", Newline());
+    Write("void* segue_saved_base = wasm_rt_segue_read_base();", Newline());
   }
   auto primary_memory =
       ExternalInstanceRef(ModuleFieldType::Memory, memory->name);
-  Write("WASM_RT_SEGUE_WRITE_BASE(", primary_memory, ".data);", Newline());
+  Write("wasm_rt_segue_write_base(", primary_memory, ".data);", Newline());
   NonIndented([&] { Write("#endif", Newline()); });
 }
 
 void CWriter::RestoreSegueBase() {
   NonIndented([&] { Write("#if WASM_RT_USE_SEGUE", Newline()); });
-  Write("WASM_RT_SEGUE_WRITE_BASE(segue_saved_base);", Newline());
+  Write("wasm_rt_segue_write_base(segue_saved_base);", Newline());
   NonIndented([&] { Write("#endif", Newline()); });
 }
 

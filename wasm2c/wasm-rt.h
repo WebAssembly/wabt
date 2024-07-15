@@ -294,6 +294,27 @@ extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 
 #endif
 
+#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+/**
+ * The segue optimization uses x86 segments to point to a linear memory. If
+ * used, the runtime must query whether it can use the fast userspace wrgsbase
+ * instructions or whether it must invoke syscalls to set the segment base,
+ * depending on the supported CPU features. The result of this query is saved in
+ * this variable.
+ */
+extern bool wasm_rt_fsgsbase_inst_supported;
+/**
+ * If fast userspace wrgsbase instructions don't exist, the runtime most provide
+ * a function that invokes the OS' underlying syscall to set the segment base.
+ */
+void wasm_rt_syscall_set_segue_base(void* base);
+/**
+ * If fast userspace rdgsbase instructions don't exist, the runtime most provide
+ * a function that invokes the OS' underlying syscall to get the segment base.
+ */
+void* wasm_rt_syscall_get_segue_base();
+#endif
+
 #if defined(_MSC_VER)
 #define WASM_RT_NO_RETURN __declspec(noreturn)
 #else
