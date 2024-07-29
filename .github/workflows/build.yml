@@ -162,36 +162,41 @@ jobs:
         python -m pip install -U setuptools wheel pip
         python -m pip install "cmake==${WABT_CMAKE_VER}.*"
         cmake --version
-    - name: Configure WABT with OpenSSL
+
+    - name: configure (OpenSSL)
       run: cmake -G Ninja -S . -B out -DCMAKE_BUILD_TYPE=Release
-    - name: build
+    - name: build (OpenSSL)
       run: cmake --build out
+    - name: install (OpenSSL)
+      run: cmake --install out --prefix _opt/wabt-openssl
+
+    - name: configure (PicoSHA2)
+      run: cmake -G Ninja -S . -B out-picosha -DCMAKE_BUILD_TYPE=Release -DUSE_INTERNAL_SHA256=ON
+    - name: build (PicoSHA2)
+      run: cmake --build out-picosha
+    - name: install (PicoSHA2)
+      run: cmake --install out-picosha --prefix _opt/wabt-picosha
+
+    - name: test CMake package (OpenSSL)
+      run: >
+        ctest --build-and-test scripts/example-project example-openssl
+        --build-generator Ninja
+        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_opt/wabt-openssl
+        --test-command ctest
+
+    - name: test CMake package (PicoSHA2)
+      run: >
+        ctest --build-and-test scripts/example-project example-picosha
+        --build-generator Ninja
+        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_opt/wabt-picosha
+        --test-command ctest
+
     - name: unittests
       run: cmake --build out --target run-unittests
     - name: c-api-tests
       run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
-    - name: install
-      run: cmake --install out --prefix _local
-    - name: test CMake package (OpenSSL)
-      run: >
-        ctest --build-and-test scripts/example-project example-openssl
-        --build-generator Ninja
-        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_local
-        --test-command ctest
-    - name: Configure WABT with PicoSHA2
-      run: cmake -G Ninja -S . -B out -DCMAKE_BUILD_TYPE=Release -DUSE_INTERNAL_SHA256=ON --fresh
-    - name: build (PicoSHA2)
-      run: cmake --build out
-    - name: install (PicoSHA2)
-      run: cmake --install out --prefix _local
-    - name: test CMake package (PicoSHA2)
-      run: >
-        ctest --build-and-test scripts/example-project example-picosha
-        --build-generator Ninja
-        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_local
-        --test-command ctest
   build-rlbox:
     name: rlbox
     runs-on: ubuntu-latest
