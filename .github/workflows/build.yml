@@ -176,7 +176,7 @@ jobs:
       run: cmake --install out --prefix _local
     - name: test CMake package (OpenSSL)
       run: >
-        ctest --build-and-test example example-openssl
+        ctest --build-and-test scripts/example-project example-openssl
         --build-generator Ninja
         --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_local
         --test-command ctest
@@ -188,7 +188,7 @@ jobs:
       run: cmake --install out --prefix _local
     - name: test CMake package (PicoSHA2)
       run: >
-        ctest --build-and-test example example-picosha
+        ctest --build-and-test scripts/example-project example-picosha
         --build-generator Ninja
         --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_local
         --test-command ctest
