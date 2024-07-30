@@ -80,7 +80,7 @@ jobs:
         docker exec emscripten emcc -v
         docker exec emscripten emcmake cmake -B emscripten -DWERROR=ON
         docker exec -w /src/emscripten emscripten make -j $(nproc)
-        
+
   wasi:
     name: wasi
     runs-on: ubuntu-latest
@@ -168,27 +168,27 @@ jobs:
     - name: build (OpenSSL)
       run: cmake --build out
     - name: install (OpenSSL)
-      run: cmake --install out --prefix _opt/wabt-openssl
+      run: cmake --install out --prefix install
 
     - name: configure (PicoSHA2)
       run: cmake -G Ninja -S . -B out-picosha -DCMAKE_BUILD_TYPE=Release -DUSE_INTERNAL_SHA256=ON
     - name: build (PicoSHA2)
       run: cmake --build out-picosha
     - name: install (PicoSHA2)
-      run: cmake --install out-picosha --prefix _opt/wabt-picosha
+      run: cmake --install out-picosha --prefix install-picosha
 
     - name: test CMake package (OpenSSL)
       run: >
         ctest --build-and-test scripts/example-project example-openssl
         --build-generator Ninja
-        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_opt/wabt-openssl
+        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/install
         --test-command ctest
 
     - name: test CMake package (PicoSHA2)
       run: >
         ctest --build-and-test scripts/example-project example-picosha
         --build-generator Ninja
-        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/_opt/wabt-picosha
+        --build-options -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/install-picosha
         --test-command ctest
 
     - name: unittests
