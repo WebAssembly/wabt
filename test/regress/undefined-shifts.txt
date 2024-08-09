@@ -1,4 +1,6 @@
 ;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-multi-memory
+;;; ARGS2: --enable-multi-memory
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }
@@ -8,12 +10,12 @@ section(CODE) {
   count[1]
   func {
     locals[0]
-    i32.const leb_i32(0)
-    i32.load align[65] offset[0]
+    i32.const leb_u32(0)
+    i32.load align[63] offset[0]
     drop
   }
 }
 (;; STDERR ;;;
-0000020: error: multi_memory not allowed
-0000020: error: multi_memory not allowed
+0000020: error: invalid load alignment: 63
+0000020: error: invalid load alignment: 63
 ;;; STDERR ;;)
