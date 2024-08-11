@@ -423,7 +423,7 @@ if (WABT_INSTALL_RULES)
 endif ()
 
 if (HAVE_SETJMP_H)
-  set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c" "wasm2c/wasm-rt-mem-impl.c")
+  set(WASM_RT_FILES "wasm2c/wasm-rt-impl.h" "wasm2c/wasm-rt-impl.c" "wasm2c/wasm-rt-exceptions-impl.c" "wasm2c/wasm-rt-mem-impl.c" "wasm2c/wasm-rt-impl-tableops.inc" "wasm2c/wasm-rt-mem-impl-helper.inc")
 
   add_library(wasm-rt-impl STATIC ${WASM_RT_FILES})
   target_link_libraries(wasm-rt-impl ${CMAKE_THREAD_LIBS_INIT})
