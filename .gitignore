@@ -1,7 +1,5 @@
 /bin
 /build
-/build-debug
-/build-release
 /out
 /fuzz-out
 /emscripten
