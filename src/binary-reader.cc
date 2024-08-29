@@ -2036,14 +2036,17 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::MemoryAddressRelSLEB64:
       case RelocType::MemoryAddressI32:
       case RelocType::MemoryAddressI64:
+      case RelocType::MemoryAddressLocRelI32:
       case RelocType::FunctionOffsetI32:
+      case RelocType::FunctionOffsetI64:
       case RelocType::SectionOffsetI32:
       case RelocType::MemoryAddressTLSSLEB:
-      case RelocType::MemoryAddressTLSI32:
+      case RelocType::MemoryAddressTLSSLEB64:
         CHECK_RESULT(ReadS32Leb128(&addend, "addend"));
         break;
 
       case RelocType::FuncIndexLEB:
+      case RelocType::FuncIndexI32:
       case RelocType::TableIndexSLEB:
       case RelocType::TableIndexSLEB64:
       case RelocType::TableIndexI32:
@@ -2053,6 +2056,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::GlobalIndexI32:
       case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
+      case RelocType::TableIndexRelSLEB64:
       case RelocType::TableNumberLEB:
         break;
 

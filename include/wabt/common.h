@@ -277,10 +277,14 @@ enum class RelocType {
   TableIndexI64 = 19,           // Memory64: Like TableIndexI32
   TableNumberLEB = 20,          // e.g. Immediate of table.get
   MemoryAddressTLSSLEB = 21,    // Address relative to __tls_base
-  MemoryAddressTLSI32 = 22,     // Address relative to __tls_base
+  FunctionOffsetI64 = 22,       // Memory64: Like FunctionOffsetI32
+  MemoryAddressLocRelI32 = 23,  // Address relative to the relocation's location
+  TableIndexRelSLEB64 = 24,     // Memory64: TableIndexRelSLEB
+  MemoryAddressTLSSLEB64 = 25,  // Memory64: MemoryAddressTLSSLEB
+  FuncIndexI32 = 26,            // Function index as an I32
 
   First = FuncIndexLEB,
-  Last = MemoryAddressTLSI32,
+  Last = FuncIndexI32,
 };
 constexpr int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
