@@ -1197,12 +1197,16 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
       case RelocType::MemoryAddressRelSLEB64:
       case RelocType::MemoryAddressI32:
       case RelocType::MemoryAddressI64:
+      case RelocType::MemoryAddressLocRelI32:
       case RelocType::FunctionOffsetI32:
+      case RelocType::FunctionOffsetI64:
       case RelocType::SectionOffsetI32:
       case RelocType::MemoryAddressTLSSLEB:
+      case RelocType::MemoryAddressTLSSLEB64:
         WriteU32Leb128(stream_, reloc.addend, "reloc addend");
         break;
       case RelocType::FuncIndexLEB:
+      case RelocType::FuncIndexI32:
       case RelocType::TableIndexSLEB:
       case RelocType::TableIndexSLEB64:
       case RelocType::TableIndexI32:
@@ -1211,6 +1215,7 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
       case RelocType::GlobalIndexLEB:
       case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
+      case RelocType::TableIndexRelSLEB64:
       case RelocType::TableNumberLEB:
         break;
       default:
