@@ -157,6 +157,14 @@ static inline void* wasm_rt_segue_read_base() {
   }
 }
 static inline void wasm_rt_segue_write_base(void* base) {
+#if WASM_RT_SEGUE_FREE_SEGMENT
+  if (wasm_rt_last_segment_val == base) {
+    return;
+  }
+
+  wasm_rt_last_segment_val = base;
+#endif
+
   if (wasm_rt_fsgsbase_inst_supported) {
     __builtin_ia32_wrgsbase64((uintptr_t)base);
   } else {
@@ -833,11 +841,13 @@ wasm_rt_memory_t* w2c_test_memory(w2c_test* instance) {
 /* export: '_start' */
 void w2c_test_0x5Fstart(w2c_test* instance) {
 #if WASM_RT_USE_SEGUE
+#if !WASM_RT_SEGUE_FREE_SEGMENT
   void* segue_saved_base = wasm_rt_segue_read_base();
+#endif
   wasm_rt_segue_write_base(instance->w2c_memory.data);
 #endif
   w2c_test_0x5Fstart_0(instance);
-#if WASM_RT_USE_SEGUE
+#if WASM_RT_USE_SEGUE && !WASM_RT_SEGUE_FREE_SEGMENT
   wasm_rt_segue_write_base(segue_saved_base);
 #endif
 }
@@ -852,12 +862,14 @@ void wasm2c_test_instantiate(w2c_test* instance, struct w2c_wasi__snapshot__prev
   init_tables(instance);
   init_memories(instance);
 #if WASM_RT_USE_SEGUE
+#if !WASM_RT_SEGUE_FREE_SEGMENT
   void* segue_saved_base = wasm_rt_segue_read_base();
+#endif
   wasm_rt_segue_write_base(instance->w2c_memory.data);
 #endif
   init_elem_instances(instance);
   init_data_instances(instance);
-#if WASM_RT_USE_SEGUE
+#if WASM_RT_USE_SEGUE && !WASM_RT_SEGUE_FREE_SEGMENT
   wasm_rt_segue_write_base(segue_saved_base);
 #endif
 }

@@ -115,7 +115,21 @@ R"w2c_template(}
 )w2c_template"
 R"w2c_template(static inline void wasm_rt_segue_write_base(void* base) {
 )w2c_template"
-R"w2c_template(  if (wasm_rt_fsgsbase_inst_supported) {
+R"w2c_template(#if WASM_RT_SEGUE_FREE_SEGMENT
+)w2c_template"
+R"w2c_template(  if (wasm_rt_last_segment_val == base) {
+)w2c_template"
+R"w2c_template(    return;
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(
+  wasm_rt_last_segment_val = base;
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+  if (wasm_rt_fsgsbase_inst_supported) {
 )w2c_template"
 R"w2c_template(    __builtin_ia32_wrgsbase64((uintptr_t)base);
 )w2c_template"

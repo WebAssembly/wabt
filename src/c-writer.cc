@@ -2449,7 +2449,9 @@ bool CWriter::IsSingleUnsharedMemory() {
 void CWriter::InstallSegueBase(Memory* memory, bool save_old_value) {
   NonIndented([&] { Write("#if WASM_RT_USE_SEGUE", Newline()); });
   if (save_old_value) {
+    NonIndented([&] { Write("#if !WASM_RT_SEGUE_FREE_SEGMENT", Newline()); });
     Write("void* segue_saved_base = wasm_rt_segue_read_base();", Newline());
+    NonIndented([&] { Write("#endif", Newline()); });
   }
   auto primary_memory =
       ExternalInstanceRef(ModuleFieldType::Memory, memory->name);
@@ -2458,7 +2460,9 @@ void CWriter::InstallSegueBase(Memory* memory, bool save_old_value) {
 }
 
 void CWriter::RestoreSegueBase() {
-  NonIndented([&] { Write("#if WASM_RT_USE_SEGUE", Newline()); });
+  NonIndented([&] {
+    Write("#if WASM_RT_USE_SEGUE && !WASM_RT_SEGUE_FREE_SEGMENT", Newline());
+  });
   Write("wasm_rt_segue_write_base(segue_saved_base);", Newline());
   NonIndented([&] { Write("#endif", Newline()); });
 }
