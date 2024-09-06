@@ -58,6 +58,14 @@ static inline void* wasm_rt_segue_read_base() {
   }
 }
 static inline void wasm_rt_segue_write_base(void* base) {
+#if WASM_RT_SEGUE_FREE_SEGMENT
+  if (wasm_rt_last_segment_val == base) {
+    return;
+  }
+
+  wasm_rt_last_segment_val = base;
+#endif
+
   if (wasm_rt_fsgsbase_inst_supported) {
     __builtin_ia32_wrgsbase64((uintptr_t)base);
   } else {
