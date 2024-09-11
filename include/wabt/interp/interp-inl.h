@@ -177,7 +177,7 @@ inline void FreeList<Ref>::Delete(Index index) {
 
 template <typename T>
 bool FreeList<T>::IsUsed(Index index) const {
-  return (reinterpret_cast<uintptr_t>(list_[index]) & ptrFreeBit) == 0;
+  return index < list_.size() && (reinterpret_cast<uintptr_t>(list_[index]) & ptrFreeBit) == 0;
 }
 
 template <typename T>
