@@ -3439,7 +3439,11 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
                 error.loc.offset, error.message.c_str());
         }
       }
-      *module = std::move(*m.get());
+      if (m) {
+        *module = std::move(*m.get());
+      } else {
+        return Result::Error; // Handle the null case appropriately
+      }
       *out_command = std::move(command);
       break;
   }
