@@ -202,6 +202,7 @@ class BinaryReader {
   Index num_tag_imports_ = 0;
   Index num_function_signatures_ = 0;
   Index num_function_bodies_ = 0;
+  Index num_data_segments_ = 0;
   Index data_count_ = kInvalidIndex;
 
   using ReadEndRestoreGuard =
@@ -2829,13 +2830,13 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
 
 Result BinaryReader::ReadDataSection(Offset section_size) {
   CALLBACK(BeginDataSection, section_size);
-  Index num_data_segments;
-  CHECK_RESULT(ReadCount(&num_data_segments, "data segment count"));
-  CALLBACK(OnDataSegmentCount, num_data_segments);
+  CHECK_RESULT(ReadCount(&num_data_segments_, "data segment count"));
+  CALLBACK(OnDataSegmentCount, num_data_segments_);
   // If the DataCount section is not present, then data_count_ will be invalid.
-  ERROR_UNLESS(data_count_ == kInvalidIndex || data_count_ == num_data_segments,
-               "data segment count does not equal count in DataCount section");
-  for (Index i = 0; i < num_data_segments; ++i) {
+  ERROR_UNLESS(
+      data_count_ == kInvalidIndex || data_count_ == num_data_segments_,
+      "data segment count does not equal count in DataCount section");
+  for (Index i = 0; i < num_data_segments_; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
     ERROR_IF(flags != 0 && !options_.features.bulk_memory_enabled(),
@@ -3037,6 +3038,11 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   // in case the code section was omitted.
   ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
                "function signature count != function body count");
+  // This is checked in ReadDataSection, but it must be checked at the end too,
+  // in case the data section was omitted.
+  ERROR_UNLESS(
+      data_count_ == kInvalidIndex || data_count_ == num_data_segments_,
+      "data segment count does not equal count in DataCount section");
   CALLBACK0(EndModule);
 
   return Result::Ok;
