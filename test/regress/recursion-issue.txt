@@ -18,4 +18,6 @@
 )
 
 (assert_exhaustion (invoke "runaway-with-return") "call stack exhausted")
-
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)
