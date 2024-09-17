@@ -220,6 +220,7 @@ static void os_disable_and_deallocate_altstack(void) {
   }
   assert(!os_has_altstack_installed());
   free(g_alt_stack);
+  g_alt_stack = NULL;
 }
 #endif
 
