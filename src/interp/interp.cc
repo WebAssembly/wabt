@@ -1989,7 +1989,7 @@ RunResult Thread::DoCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
     PushValues(func_type.results, results);
   } else {
     if (PushCall(*cast<DefinedFunc>(func.get()), out_trap) == RunResult::Trap) {
-      return RunResult::Ok;
+      return RunResult::Trap;
     }
   }
   return RunResult::Ok;

@@ -1,0 +1,20 @@
+;;; TOOL: run-interp-spec
+;;; NOTE: ref: issue-2398
+(module
+  (type $out-i32 (func (result i32)))
+
+  (table funcref
+    (elem
+      $runaway-with-return
+    )
+  )
+
+  (func $runaway-with-return (export "runaway-with-return") (type $out-i32)
+    (call_indirect (type $out-i32) (i32.const 0))
+  )
+)
+
+(assert_exhaustion (invoke "runaway-with-return") "call stack exhausted")
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)
