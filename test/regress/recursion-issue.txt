@@ -9,11 +9,8 @@
     )
   )
 
-  (func $runaway-with-return (export "runaway-with-return") (type $out-i32) (result i32)
-    i32.const 0
-    call_indirect (type $out-i32)
-    i32.const 3
-    return
+  (func $runaway-with-return (export "runaway-with-return") (type $out-i32)
+    (call_indirect (type $out-i32) (i32.const 0))
   )
 )
 
