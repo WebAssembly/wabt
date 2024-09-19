@@ -1282,7 +1282,9 @@ struct Module {
     bool threads = false;
   } features_used;
 
-  // wasm2c uses this information to limit its output.
+  // The BinaryReaderIR tracks function references used by the module, whether
+  // in element segment initializers, global initializers, or functions. wasm2c
+  // uses this information to limit its output in WriteFuncRefWrappers.
   std::set<Index> used_func_refs;
 };
 
