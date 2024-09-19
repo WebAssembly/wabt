@@ -1459,8 +1459,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
       const FuncType* func_type = module_->GetFuncType(decl.type_var);
 
       Write("(wasm_rt_funcref_t){", FuncTypeExpr(func_type), ", ",
-            "(wasm_rt_function_ptr_t)",
-            WrapperRef(func->name), ", {");
+            "(wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
       if (options_.features.tail_call_enabled() &&
           (IsImport(func->name) || func->features_used.tailcall)) {
         Write(TailCallRef(func->name));
@@ -2375,8 +2374,7 @@ void CWriter::WriteElemInitializers() {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
           const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
           Write("{RefFunc, ", FuncTypeExpr(func_type),
-                ", (wasm_rt_function_ptr_t)",
-                WrapperRef(func->name), ", {");
+                ", (wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
           if (options_.features.tail_call_enabled() &&
               (IsImport(func->name) || func->features_used.tailcall)) {
             Write(TailCallRef(func->name));
@@ -3800,8 +3798,7 @@ void CWriter::Write(const ExprList& exprs) {
         const FuncType* func_type = module_->GetFuncType(decl.type_var);
 
         Write(StackVar(0), " = (wasm_rt_funcref_t){", FuncTypeExpr(func_type),
-              ", (wasm_rt_function_ptr_t)",
-              WrapperRef(func->name), ", {");
+              ", (wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
         if (options_.features.tail_call_enabled() &&
             (IsImport(func->name) || func->features_used.tailcall)) {
           Write(TailCallRef(func->name));
