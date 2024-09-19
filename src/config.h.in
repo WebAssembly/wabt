@@ -208,24 +208,11 @@ inline int Ctz(unsigned __int64 mask) {
 #endif
 }
 
-#if _M_ARM64
-//https://stackoverflow.com/a/70012905
-template <typename T>
-int BrianKernighanPopcount(T value) {
-  int count;
-  for(count = 0; value; count++)
-  {
-    value &= value - 1;
-  }
-  return count;
-}
-#endif
-
 inline int Popcount(unsigned long value) {
   #if _M_X64 || _M_IX86
   return __popcnt(value);
 #elif _M_ARM64
-  return BrianKernighanPopcount(value);
+  return _CountOneBits(value);
 #else
 #error unexpected architecture
 #endif
@@ -245,7 +232,7 @@ inline int Popcount(unsigned __int64 value) {
 #elif _M_IX86
   return Popcount(HighDword(value)) + Popcount(LowDword(value));
 #elif _M_ARM64
-  return BrianKernighanPopcount(value);
+  return _CountOneBits64(value);
 #else
 #error unexpected architecture
 #endif
