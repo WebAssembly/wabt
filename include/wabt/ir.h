@@ -1284,7 +1284,8 @@ struct Module {
 
   // The BinaryReaderIR tracks function references used by the module, whether
   // in element segment initializers, global initializers, or functions. wasm2c
-  // uses this information to limit its output in WriteFuncRefWrappers.
+  // needs to emit wrappers for any functions that might get used as function
+  // references, and uses this information to limit its output.
   std::set<Index> used_func_refs;
 };
 
