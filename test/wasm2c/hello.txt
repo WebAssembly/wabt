@@ -808,6 +808,10 @@ FUNC_TYPE_T(w2c_test_t0) = "\xf6\x98\x1b\xc6\x10\xda\xb7\xb2\x63\x37\xcd\xdc\x72
 FUNC_TYPE_T(w2c_test_t1) = "\x89\x3a\x3d\x2c\x8f\x4d\x7f\x6d\x6c\x9d\x62\x67\x29\xaf\x3d\x44\x39\x8e\xc3\xf3\xe8\x51\xc1\x99\xb9\xdd\x9f\xd5\x3d\x1f\xd3\xe4";
 FUNC_TYPE_T(w2c_test_t2) = "\x36\xa9\xe7\xf1\xc9\x5b\x82\xff\xb9\x97\x43\xe0\xc5\xc4\xce\x95\xd8\x3c\x9a\x43\x0a\xac\x59\xf8\x4e\xf3\xcb\xfa\xb6\x14\x50\x68";
 
+static u32 w2cw_w2c_wasi__snapshot__preview1_fd_write(void *instance, u32 var_0, u32 var_1, u32 var_2, u32 var_3) {
+  return w2c_wasi__snapshot__preview1_fd_write(instance, var_0, var_1, var_2, var_3);
+}
+
 static const u8 data_segment_data_w2c_test_d0[] = {
   0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 
   0x2e, 0x0a, 
@@ -822,7 +826,7 @@ static void init_data_instances(w2c_test *instance) {
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)w2c_wasi__snapshot__preview1_fd_write, {NULL}, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
+  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)w2cw_w2c_wasi__snapshot__preview1_fd_write, {NULL}, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
 };
 
 static void init_tables(w2c_test* instance) {

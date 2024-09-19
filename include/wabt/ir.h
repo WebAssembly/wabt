@@ -25,6 +25,7 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#include <set>
 
 #include "wabt/binding-hash.h"
 #include "wabt/common.h"
@@ -1280,6 +1281,9 @@ struct Module {
     bool exceptions = false;
     bool threads = false;
   } features_used;
+
+  // wasm2c uses this information to limit its output.
+  std::set<Index> used_func_refs;
 };
 
 enum class ScriptModuleType {

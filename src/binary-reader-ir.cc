@@ -1119,6 +1119,7 @@ Result BinaryReaderIR::OnTableFillExpr(Index table_index) {
 }
 
 Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
+  module_->used_func_refs.insert(func_index);
   return AppendExpr(
       std::make_unique<RefFuncExpr>(Var(func_index, GetLocation())));
 }
