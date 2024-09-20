@@ -62,6 +62,10 @@ bool wasm_rt_fsgsbase_inst_supported = false;
 #include <unistd.h>       // For syscall
 #endif
 
+#if WASM_RT_SEGUE_FREE_SEGMENT
+WASM_RT_THREAD_LOCAL void* wasm_rt_last_segment_val = NULL;
+#endif
+
 #if WASM_RT_STACK_DEPTH_COUNT
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;

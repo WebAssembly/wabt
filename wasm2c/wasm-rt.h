@@ -217,6 +217,18 @@ extern "C" {
 #endif
 
 /**
+ * The segue optimization restores x86 segments to their old values when exiting
+ * wasm2c code. If WASM_RT_SEGUE_FREE_SEGMENT is defined, wasm2c assumes it has
+ * exclusive use of the segment and optimizes performance in two ways. First, it
+ * does not restore the "old" value of the segment during exits. Second, wasm2c
+ * only sets the segment register if the value has changed since the last time
+ * it was set.
+ */
+#ifndef WASM_RT_SEGUE_FREE_SEGMENT
+#define WASM_RT_SEGUE_FREE_SEGMENT 0
+#endif
+
+/**
  * This macro, if defined, allows the embedder to disable all stack exhaustion
  * checks. This a non conformant configuration, i.e., this does not respect
  * Wasm's specification, and may compromise security. Use with caution.
@@ -313,6 +325,14 @@ void wasm_rt_syscall_set_segue_base(void* base);
  * a function that invokes the OS' underlying syscall to get the segment base.
  */
 void* wasm_rt_syscall_get_segue_base();
+/**
+ * If WASM_RT_SEGUE_FREE_SEGMENT is defined, we must only set the segment
+ * register if it was changed since the last time it was set. The last value set
+ * on the segment register is stored in this variable.
+ */
+#if WASM_RT_SEGUE_FREE_SEGMENT
+extern WASM_RT_THREAD_LOCAL void* wasm_rt_last_segment_val;
+#endif
 #endif
 
 #if defined(_MSC_VER)

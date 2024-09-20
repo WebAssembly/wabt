@@ -1406,8 +1406,9 @@ ActionResult CommandRunner::RunAction(int line_number,
   switch (action->type) {
     case ActionType::Invoke: {
       auto* func = cast<interp::Func>(extern_.get());
-      func->Call(store_, action->args, result.values, &result.trap,
-                 s_trace_stream);
+      auto ok = func->Call(store_, action->args, result.values, &result.trap,
+                           s_trace_stream);
+      assert((ok == Result::Ok) == (!result.trap));
       result.types = func->type().results;
       if (verbose == RunVerbosity::Verbose) {
         WriteCall(s_stdout_stream.get(), action->field_name, func->type(),

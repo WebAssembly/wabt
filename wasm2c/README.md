@@ -151,8 +151,9 @@ high performance overhead, and is thus only recommended for debug builds.
 
 Wasm2c can use the "Segue" optimization if allowed. The segue optimization uses
 an x86 segment register to store the location of Wasm's linear memory, when
-compiling a Wasm module with clang, running on x86_64 Linux, and the macro
-`WASM_RT_ALLOW_SEGUE` is defined. Segue is not used if
+compiling a Wasm module with clang, running on x86_64 Linux, the macro
+`WASM_RT_ALLOW_SEGUE` is defined, and the flag `-mfsgsbase` is passed to clang.
+Segue is not used if
 
 1. The Wasm module uses a more than a single unshared imported or exported
    memory
@@ -172,6 +173,12 @@ the unused segment register `%gs` (See
 However, any host functions written in assembly that clobber the free segment
 register must restore the value of this register prior to executing or returning
 control to wasm2c generated code.
+
+As an additional optimization, if the host program does not use the `%gs`
+segment register for any other purpose (which is typically the case in most
+programs), you can additionally allow wasm2c to unconditionally overwrite the
+value of the `%gs` register without restoring the old value. This can be done
+defining the macro `WASM_RT_SEGUE_FREE_SEGMENT`.
 
 You can test the performance of the Segue optimization by running Dhrystone with
 and without Segue:
