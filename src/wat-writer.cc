@@ -1043,7 +1043,6 @@ Result WatWriter::ExprVisitorDelegate::OnThrowRefExpr(ThrowRefExpr* expr) {
   return Result::Ok;
 }
 
-
 Result WatWriter::ExprVisitorDelegate::OnRethrowExpr(RethrowExpr* expr) {
   writer_->WritePutsSpace(Opcode::Rethrow_Opcode.GetName());
   writer_->WriteBrVar(expr->var, NextChar::Newline);
@@ -1350,13 +1349,14 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
             WritePutsSpace("catch_all_ref");
             break;
         }
-        if (catch_.kind == CatchKind::Catch || catch_.kind == CatchKind::CatchRef) {
+        if (catch_.kind == CatchKind::Catch ||
+            catch_.kind == CatchKind::CatchRef) {
           WriteVar(catch_.tag, NextChar::Space);
         }
         WriteBrVar(catch_.target, NextChar::None);
         WritePuts(")", NextChar::Newline);
       }
-  
+
       BeginBlock(LabelType::TryTable, try_table_expr->block);
 
       WriteFoldedExprList(try_table_expr->block.exprs);

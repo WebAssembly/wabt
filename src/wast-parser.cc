@@ -248,9 +248,9 @@ bool IsCatch(TokenType token_type) {
 }
 
 bool IsTryTableCatch(TokenTypePair pair) {
-  return pair[0] == TokenType::Lpar && (pair[1] == TokenType::Catch || pair[1] == TokenType::CatchAll
-         || pair[1] == TokenType::CatchRef
-	 || pair[1] == TokenType::CatchAllRef);
+  return pair[0] == TokenType::Lpar &&
+         (pair[1] == TokenType::Catch || pair[1] == TokenType::CatchAll ||
+          pair[1] == TokenType::CatchRef || pair[1] == TokenType::CatchAllRef);
 }
 
 bool IsModuleField(TokenTypePair pair) {
@@ -3351,7 +3351,6 @@ Result WastParser::ParseTryTableCatches(TryTableVector* catches) {
 
   return Result::Ok;
 }
-
 
 Result WastParser::ParseGlobalType(Global* global) {
   WABT_TRACE(ParseGlobalType);

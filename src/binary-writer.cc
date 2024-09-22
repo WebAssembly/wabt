@@ -1088,12 +1088,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteBlockDecl(try_table_expr->block.decl);
       WriteU32Leb128(stream_, try_table_expr->catches.size(), "num catches");
       for (const TableCatch& catch_ : try_table_expr->catches) {
-        uint8_t catch_type = (catch_.IsCatchAll() ? 2 : 0) | (catch_.IsRef() ? 1 : 0);
+        uint8_t catch_type =
+            (catch_.IsCatchAll() ? 2 : 0) | (catch_.IsRef() ? 1 : 0);
         stream_->WriteU8(catch_type, "catch handler");
         if (!catch_.IsCatchAll()) {
           Index tag = GetTagVarDepth(&catch_.tag);
           WriteU32Leb128(stream_, tag, "catch tag");
-	}
+        }
         Index depth = GetLabelVarDepth(&catch_.target);
         WriteU32Leb128(stream_, depth, "catch depth");
       }

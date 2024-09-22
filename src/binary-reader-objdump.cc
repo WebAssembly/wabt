@@ -904,7 +904,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisassemble::OnTryTableExpr(Type sig_type, const RawCatchVector& catches) {
+Result BinaryReaderObjdumpDisassemble::OnTryTableExpr(
+    Type sig_type,
+    const RawCatchVector& catches) {
   if (!in_function_body) {
     return Result::Ok;
   }

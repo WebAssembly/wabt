@@ -1257,7 +1257,8 @@ Result BinaryReaderIR::OnCatchAllExpr() {
   return AppendCatch(Catch(GetLocation()));
 }
 
-Result BinaryReaderIR::OnTryTableExpr(Type sig_type, const RawCatchVector& catches) {
+Result BinaryReaderIR::OnTryTableExpr(Type sig_type,
+                                      const RawCatchVector& catches) {
   auto expr_ptr = std::make_unique<TryTableExpr>();
   TryTableExpr* expr = expr_ptr.get();
   expr->catches.reserve(catches.size());

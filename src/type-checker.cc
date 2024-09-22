@@ -644,7 +644,8 @@ Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {
       "function", "initializer expression", "block", "loop",
-      "if",       "`if false` branch",      "try",   "try table", "try catch"};
+      "if",       "`if false` branch",      "try",   "try table",
+      "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -889,7 +890,7 @@ Result TypeChecker::OnTry(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnTryTableCatch(const TypeVector &sig, Index depth) {
+Result TypeChecker::OnTryTableCatch(const TypeVector& sig, Index depth) {
   Result result = Result::Ok;
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));

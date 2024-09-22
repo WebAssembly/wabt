@@ -394,7 +394,8 @@ Result BinaryReaderLogging::OnTryExpr(Type sig_type) {
   return reader_->OnTryExpr(sig_type);
 }
 
-Result BinaryReaderLogging::OnTryTableExpr(Type sig_type, const RawCatchVector& catches) {
+Result BinaryReaderLogging::OnTryTableExpr(Type sig_type,
+                                           const RawCatchVector& catches) {
   LOGF("OnTryTableExpr(sig: ");
   LogType(sig_type);
   Index count = catches.size();
