@@ -211,7 +211,11 @@ class SharedValidator {
   Result OnTableSize(const Location&, Var table_var);
   Result OnTernary(const Location&, Opcode);
   Result OnThrow(const Location&, Var tag_var);
+  Result OnThrowRef(const Location&);
   Result OnTry(const Location&, Type sig_type);
+  Result BeginTryTable(const Location&);
+  Result OnTryTableCatch(const Location&, const TableCatch&);
+  Result EndTryTable(const Location&, Type sig_type);
   Result OnUnary(const Location&, Opcode);
   Result OnUnreachable(const Location&);
 

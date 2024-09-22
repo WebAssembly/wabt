@@ -319,7 +319,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnThrowExpr(Index depth) override { return Result::Ok; }
+  Result OnThrowRefExpr() override { return Result::Ok; }
   Result OnTryExpr(Type sig_type) override { return Result::Ok; }
+  Result OnTryTableExpr(Type sig_type, const RawCatchVector& catches) override {
+    return Result::Ok;
+  }
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnTernaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }

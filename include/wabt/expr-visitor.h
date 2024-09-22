@@ -41,6 +41,7 @@ class ExprVisitor {
     IfFalse,
     Loop,
     Try,
+    TryTable,
     Catch,
   };
 
@@ -73,6 +74,8 @@ class ExprVisitor::Delegate {
   virtual Result OnBrExpr(BrExpr*) = 0;
   virtual Result OnBrIfExpr(BrIfExpr*) = 0;
   virtual Result OnBrTableExpr(BrTableExpr*) = 0;
+  virtual Result BeginTryTableExpr(TryTableExpr*) = 0;
+  virtual Result EndTryTableExpr(TryTableExpr*) = 0;
   virtual Result OnCallExpr(CallExpr*) = 0;
   virtual Result OnCallIndirectExpr(CallIndirectExpr*) = 0;
   virtual Result OnCallRefExpr(CallRefExpr*) = 0;
@@ -122,6 +125,7 @@ class ExprVisitor::Delegate {
   virtual Result OnDelegateExpr(TryExpr*) = 0;
   virtual Result EndTryExpr(TryExpr*) = 0;
   virtual Result OnThrowExpr(ThrowExpr*) = 0;
+  virtual Result OnThrowRefExpr(ThrowRefExpr*) = 0;
   virtual Result OnRethrowExpr(RethrowExpr*) = 0;
   virtual Result OnAtomicWaitExpr(AtomicWaitExpr*) = 0;
   virtual Result OnAtomicFenceExpr(AtomicFenceExpr*) = 0;
@@ -147,6 +151,8 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnBrExpr(BrExpr*) override { return Result::Ok; }
   Result OnBrIfExpr(BrIfExpr*) override { return Result::Ok; }
   Result OnBrTableExpr(BrTableExpr*) override { return Result::Ok; }
+  Result BeginTryTableExpr(TryTableExpr*) override { return Result::Ok; }
+  Result EndTryTableExpr(TryTableExpr*) override { return Result::Ok; }
   Result OnCallExpr(CallExpr*) override { return Result::Ok; }
   Result OnCallIndirectExpr(CallIndirectExpr*) override { return Result::Ok; }
   Result OnCallRefExpr(CallRefExpr*) override { return Result::Ok; }
@@ -198,6 +204,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnDelegateExpr(TryExpr*) override { return Result::Ok; }
   Result EndTryExpr(TryExpr*) override { return Result::Ok; }
   Result OnThrowExpr(ThrowExpr*) override { return Result::Ok; }
+  Result OnThrowRefExpr(ThrowRefExpr*) override { return Result::Ok; }
   Result OnRethrowExpr(RethrowExpr*) override { return Result::Ok; }
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override { return Result::Ok; }
   Result OnAtomicFenceExpr(AtomicFenceExpr*) override { return Result::Ok; }

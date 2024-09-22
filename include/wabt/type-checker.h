@@ -128,7 +128,10 @@ class TypeChecker {
   Result OnStore(Opcode, const Limits& limits);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
+  Result OnThrowRef();
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);
+  Result OnTryTableCatch(const TypeVector& sig, Index);
+  Result OnTryTable(const TypeVector& param_types, const TypeVector& result_types);
   Result OnUnary(Opcode);
   Result OnUnreachable();
   Result EndFunction();

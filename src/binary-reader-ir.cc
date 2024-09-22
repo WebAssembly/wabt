@@ -258,7 +258,9 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Address alignment_log2,
                      Address offset) override;
   Result OnThrowExpr(Index tag_index) override;
+  Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
+  Result OnTryTableExpr(Type sig_type, const RawCatchVector& catches) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
@@ -999,6 +1001,9 @@ Result BinaryReaderIR::OnEndExpr() {
       case LabelType::Try:
         cast<TryExpr>(expr)->block.end_loc = GetLocation();
         break;
+      case LabelType::TryTable:
+        cast<TryTableExpr>(expr)->block.end_loc = GetLocation();
+        break;
 
       case LabelType::InitExpr:
       case LabelType::Func:
@@ -1195,6 +1200,10 @@ Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
   return AppendExpr(std::make_unique<ThrowExpr>(Var(tag_index, GetLocation())));
 }
 
+Result BinaryReaderIR::OnThrowRefExpr() {
+  return AppendExpr(std::make_unique<ThrowRefExpr>());
+}
+
 Result BinaryReaderIR::OnLocalTeeExpr(Index local_index) {
   return AppendExpr(
       std::make_unique<LocalTeeExpr>(Var(local_index, GetLocation())));
@@ -1246,6 +1255,26 @@ Result BinaryReaderIR::OnCatchExpr(Index except_index) {
 
 Result BinaryReaderIR::OnCatchAllExpr() {
   return AppendCatch(Catch(GetLocation()));
+}
+
+Result BinaryReaderIR::OnTryTableExpr(Type sig_type, const RawCatchVector& catches) {
+  auto expr_ptr = std::make_unique<TryTableExpr>();
+  TryTableExpr* expr = expr_ptr.get();
+  expr->catches.reserve(catches.size());
+  SetBlockDeclaration(&expr->block.decl, sig_type);
+  ExprList* expr_list = &expr->block.exprs;
+
+  for (auto& raw_catch : catches) {
+    TableCatch catch_;
+    catch_.kind = raw_catch.kind;
+    catch_.tag = Var(raw_catch.tag, GetLocation());
+    catch_.target = Var(raw_catch.depth, GetLocation());
+    expr->catches.push_back(std::move(catch_));
+  }
+
+  CHECK_RESULT(AppendExpr(std::move(expr_ptr)));
+  module_->features_used.exceptions = true;
+  return PushLabel(LabelType::TryTable, expr_list, expr);
 }
 
 Result BinaryReaderIR::OnDelegateExpr(Index depth) {

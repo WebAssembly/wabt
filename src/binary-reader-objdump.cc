@@ -548,6 +548,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnOpcodeType(Type type) override;
 
+  Result OnTryTableExpr(Type sig_type, const RawCatchVector& catches) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
@@ -900,6 +901,48 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
   } else {
     LogOpcode(type.GetRefKindName());
   }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnTryTableExpr(Type sig_type, const RawCatchVector& catches) {
+  if (!in_function_body) {
+    return Result::Ok;
+  }
+
+  std::string buffer = std::string();
+
+  if (sig_type != Type::Void) {
+    buffer.append(BlockSigToString(sig_type).c_str()).append(" ");
+  }
+
+  for (auto& catch_ : catches) {
+    switch (catch_.kind) {
+      case CatchKind::Catch:
+        buffer.append("catch ");
+        break;
+      case CatchKind::CatchRef:
+        buffer.append("catch_ref ");
+        break;
+      case CatchKind::CatchAll:
+        buffer.append("catch_all ");
+        break;
+      case CatchKind::CatchAllRef:
+        buffer.append("catch_all_ref ");
+        break;
+    }
+    if (catch_.kind == CatchKind::Catch || catch_.kind == CatchKind::CatchRef) {
+      buffer.append(std::to_string(catch_.tag));
+    }
+    buffer.append(" ").append(std::to_string(catch_.depth)).append(" ");
+  }
+
+  if (!buffer.empty()) {
+    // remove trailing space
+    buffer.pop_back();
+  }
+
+  LogOpcode("%s", buffer.c_str());
+  indent_level++;
   return Result::Ok;
 }
 

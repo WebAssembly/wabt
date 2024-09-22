@@ -1050,6 +1050,9 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, GetTagVarDepth(&cast<ThrowExpr>(expr)->var),
                      "throw tag");
       break;
+    case ExprType::ThrowRef:
+      WriteOpcode(stream_, Opcode::ThrowRef);
+      break;
     case ExprType::Try: {
       auto* try_expr = cast<TryExpr>(expr);
       WriteOpcode(stream_, Opcode::Try);
@@ -1077,6 +1080,25 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
           WriteOpcode(stream_, Opcode::End);
           break;
       }
+      break;
+    }
+    case ExprType::TryTable: {
+      auto* try_table_expr = cast<TryTableExpr>(expr);
+      WriteOpcode(stream_, Opcode::TryTable);
+      WriteBlockDecl(try_table_expr->block.decl);
+      WriteU32Leb128(stream_, try_table_expr->catches.size(), "num catches");
+      for (const TableCatch& catch_ : try_table_expr->catches) {
+        uint8_t catch_type = (catch_.IsCatchAll() ? 2 : 0) | (catch_.IsRef() ? 1 : 0);
+        stream_->WriteU8(catch_type, "catch handler");
+        if (!catch_.IsCatchAll()) {
+          Index tag = GetTagVarDepth(&catch_.tag);
+          WriteU32Leb128(stream_, tag, "catch tag");
+	}
+        Index depth = GetLabelVarDepth(&catch_.target);
+        WriteU32Leb128(stream_, depth, "catch depth");
+      }
+      WriteExprList(func, try_table_expr->block.exprs);
+      WriteOpcode(stream_, Opcode::End);
       break;
     }
     case ExprType::Unary:

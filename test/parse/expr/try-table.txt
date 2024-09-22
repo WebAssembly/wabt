@@ -1,0 +1,21 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (tag $e1 (param i32))
+  (tag $e2 (param i32 i32))
+
+  (func $func
+    block $a
+      block $b (result i32)
+        block $c (result i32 i32)
+          try_table (catch $e1 $b) (catch $e2 $c) (catch_all $a)
+            nop
+          end
+          i32.const 0
+          i32.const 0
+        end
+        drop
+      end
+      drop
+    end)
+)
