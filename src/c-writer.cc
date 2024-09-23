@@ -103,6 +103,11 @@ struct ExternalRef : GlobalName {
   using GlobalName::GlobalName;
 };
 
+struct WrapperRef : GlobalName {
+  explicit WrapperRef(const std::string& name)
+      : GlobalName(ModuleFieldType::Func, name) {}
+};
+
 struct TailCallRef : GlobalName {
   explicit TailCallRef(const std::string& name)
       : GlobalName(ModuleFieldType::Func, name) {}
@@ -342,6 +347,7 @@ class CWriter {
   void Write(const GlobalName&);
   void Write(const TagSymbol&);
   void Write(const ExternalRef&);
+  void Write(const WrapperRef&);
   void Write(const TailCallRef&);
   void Write(const ExternalInstancePtr&);
   void Write(const ExternalInstanceRef&);
@@ -379,6 +385,7 @@ class CWriter {
   void WriteImportFuncDeclaration(const FuncDeclaration&,
                                   const std::string& module_name,
                                   const std::string&);
+  void WriteFuncRefWrapper(const Func* func);
   void WriteCallIndirectFuncDeclaration(const FuncDeclaration&,
                                         const std::string&);
   void ComputeSimdScope();
@@ -402,6 +409,7 @@ class CWriter {
   void WriteDataInitializers();
   void WriteElemInitializerDecls();
   void WriteElemInitializers();
+  void WriteFuncRefWrappers();
   void WriteElemTableInit(bool, const ElemSegment*, const Table*);
   bool IsSingleUnsharedMemory();
   void InstallSegueBase(Memory* memory, bool save_old_value);
@@ -544,6 +552,7 @@ static constexpr char kParamSuffix =
 static constexpr char kLabelSuffix = kParamSuffix + 1;
 
 static constexpr char kGlobalSymbolPrefix[] = "w2c_";
+static constexpr char kWrapperSymbolPrefix[] = "wrap_";
 static constexpr char kLocalSymbolPrefix[] = "var_";
 static constexpr char kAdminSymbolPrefix[] = "wasm2c_";
 static constexpr char kTailCallSymbolPrefix[] = "wasm_tailcall_";
@@ -1125,6 +1134,10 @@ void CWriter::Write(const ExternalRef& name) {
   }
 }
 
+void CWriter::Write(const WrapperRef& name) {
+  Write(kWrapperSymbolPrefix, GlobalName(name));
+}
+
 void CWriter::Write(const TailCallRef& name) {
   Write(GetTailCallRef(name.name));
 }
@@ -1446,8 +1459,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
       const FuncType* func_type = module_->GetFuncType(decl.type_var);
 
       Write("(wasm_rt_funcref_t){", FuncTypeExpr(func_type), ", ",
-            "(wasm_rt_function_ptr_t)",
-            ExternalRef(ModuleFieldType::Func, func->name), ", {");
+            "(wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
       if (options_.features.tail_call_enabled() &&
           (IsImport(func->name) || func->features_used.tailcall)) {
         Write(TailCallRef(func->name));
@@ -2286,6 +2298,53 @@ void CWriter::WriteElemInitializerDecls() {
   }
 }
 
+void CWriter::WriteFuncRefWrapper(const Func* func) {
+  Write("static ", func->decl.sig.result_types, " ", WrapperRef(func->name));
+  Write("(void *instance");
+  if (func->GetNumParams() != 0) {
+    Indent(4);
+    for (Index i = 0; i < func->GetNumParams(); ++i) {
+      Write(", ");
+      if (i != 0 && (i % 8) == 0) {
+        Write(Newline());
+      }
+      Write(func->GetParamType(i), " ", kLocalSymbolPrefix);
+      Writef("%d", i);
+    }
+    Dedent(4);
+  }
+  Write(") ", OpenBrace());
+  Write("return ");
+  Write(ExternalRef(ModuleFieldType::Func, func->name));
+  Write("(instance");
+  if (func->GetNumParams() != 0) {
+    Indent(4);
+    for (Index i = 0; i < func->GetNumParams(); ++i) {
+      Write(", ");
+      if (i != 0 && (i % 8) == 0) {
+        Write(Newline());
+      }
+      Write(kLocalSymbolPrefix);
+      Writef("%d", i);
+    }
+    Dedent(4);
+  }
+  Write(");", Newline(), CloseBrace(), Newline());
+}
+
+void CWriter::WriteFuncRefWrappers() {
+  std::set<std::string> unique_func_wrappers;
+
+  for (Index index : module_->used_func_refs) {
+    assert(index < module_->funcs.size());
+    const Func* func = module_->funcs[index];
+    if (unique_func_wrappers.count(func->name) == 0) {
+      WriteFuncRefWrapper(func);
+      unique_func_wrappers.insert(func->name);
+    }
+  }
+}
+
 void CWriter::WriteElemInitializers() {
   if (module_->tables.empty()) {
     return;
@@ -2315,8 +2374,7 @@ void CWriter::WriteElemInitializers() {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
           const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
           Write("{RefFunc, ", FuncTypeExpr(func_type),
-                ", (wasm_rt_function_ptr_t)",
-                ExternalRef(ModuleFieldType::Func, func->name), ", {");
+                ", (wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
           if (options_.features.tail_call_enabled() &&
               (IsImport(func->name) || func->features_used.tailcall)) {
             Write(TailCallRef(func->name));
@@ -3740,8 +3798,7 @@ void CWriter::Write(const ExprList& exprs) {
         const FuncType* func_type = module_->GetFuncType(decl.type_var);
 
         Write(StackVar(0), " = (wasm_rt_funcref_t){", FuncTypeExpr(func_type),
-              ", (wasm_rt_function_ptr_t)",
-              ExternalRef(ModuleFieldType::Func, func->name), ", {");
+              ", (wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
         if (options_.features.tail_call_enabled() &&
             (IsImport(func->name) || func->features_used.tailcall)) {
           Write(TailCallRef(func->name));
@@ -5858,6 +5915,7 @@ void CWriter::WriteCSource() {
   WriteMultiCTop();
   WriteFuncTypes();
   WriteTags();
+  WriteFuncRefWrappers();
   WriteGlobalInitializers();
   WriteDataInitializers();
   WriteElemInitializers();

@@ -25,6 +25,7 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#include <set>
 
 #include "wabt/binding-hash.h"
 #include "wabt/common.h"
@@ -1280,6 +1281,12 @@ struct Module {
     bool exceptions = false;
     bool threads = false;
   } features_used;
+
+  // The BinaryReaderIR tracks function references used by the module, whether
+  // in element segment initializers, global initializers, or functions. wasm2c
+  // needs to emit wrappers for any functions that might get used as function
+  // references, and uses this information to limit its output.
+  std::set<Index> used_func_refs;
 };
 
 enum class ScriptModuleType {
