@@ -9,7 +9,7 @@
   )
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-callref-int32.txt:6:6: error: type mismatch in call_ref, expected reference but got [i32]
+out/test/typecheck/bad-callref-int32.txt:6:6: error: type mismatch in call_ref, expected [reference] but got [... i32]
     (call_ref (i32.const 10)
      ^^^^^^^^
 ;;; STDERR ;;)
