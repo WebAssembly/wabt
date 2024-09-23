@@ -811,12 +811,12 @@ FUNC_TYPE_T(w2c_test_i32_f32) = "\x98\x89\x5c\xbd\x28\xfd\x0e\x4d\xc5\xdc\x68\x2
 FUNC_TYPE_T(w2c_test_t1) = "\x36\xa9\xe7\xf1\xc9\x5b\x82\xff\xb9\x97\x43\xe0\xc5\xc4\xce\x95\xd8\x3c\x9a\x43\x0a\xac\x59\xf8\x4e\xf3\xcb\xfa\xb6\x14\x50\x68";
 FUNC_TYPE_T(w2c_test_t2) = "\xe5\x11\x86\xc7\x24\xdb\x44\x80\xbe\xd1\xe0\x89\xbc\xc0\x20\xea\xfb\x1c\x9a\x27\xa5\xc3\xdb\xca\x5d\xb0\x05\x0f\x7c\x03\x74\x0a";
 
-static void w2cw_w2c_spectest_print_i32_f32(void *instance, u32 var_0, f32 var_1) {
+static void wrap_w2c_spectest_print_i32_f32(void *instance, u32 var_0, f32 var_1) {
   return w2c_spectest_print_i32_f32(instance, var_0, var_1);
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_i32_f32, (wasm_rt_function_ptr_t)w2cw_w2c_spectest_print_i32_f32, {wasm_tailcall_w2c_spectest_print_i32_f32}, offsetof(w2c_test, w2c_spectest_instance)},
+  {RefFunc, w2c_test_i32_f32, (wasm_rt_function_ptr_t)wrap_w2c_spectest_print_i32_f32, {wasm_tailcall_w2c_spectest_print_i32_f32}, offsetof(w2c_test, w2c_spectest_instance)},
 };
 
 static void init_tables(w2c_test* instance) {

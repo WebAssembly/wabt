@@ -802,7 +802,7 @@ FUNC_TYPE_T(w2c_test_t0) = "\x07\x80\x96\x7a\x42\xf7\x3e\xe6\x70\x5c\x2f\xac\x83
 FUNC_TYPE_T(w2c_test_t1) = "\x72\xab\x00\xdf\x20\x3d\xce\xa1\xf2\x29\xc7\x9d\x13\x40\x7e\x98\xac\x7d\x41\x4a\x53\x2e\x42\x42\x61\x55\x2e\xaa\xeb\xbe\xc6\x35";
 FUNC_TYPE_T(w2c_test_t2) = "\x92\xfb\x6a\xdf\x49\x07\x0a\x83\xbe\x08\x02\x68\xcd\xf6\x95\x27\x4a\xc2\xf3\xe5\xe4\x7d\x29\x49\xe8\xed\x42\x92\x6a\x9d\xda\xf0";
 
-static u32 w2cw_w2c_test_f1(void *instance) {
+static u32 wrap_w2c_test_f1(void *instance) {
   return w2c_test_f1(instance);
 }
 
@@ -810,7 +810,7 @@ static void init_memories(w2c_test* instance) {
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_t1, (wasm_rt_function_ptr_t)w2cw_w2c_test_f1, {NULL}, 0},
+  {RefFunc, w2c_test_t1, (wasm_rt_function_ptr_t)wrap_w2c_test_f1, {NULL}, 0},
 };
 
 static void init_tables(w2c_test* instance) {

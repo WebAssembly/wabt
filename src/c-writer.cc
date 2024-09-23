@@ -552,7 +552,7 @@ static constexpr char kParamSuffix =
 static constexpr char kLabelSuffix = kParamSuffix + 1;
 
 static constexpr char kGlobalSymbolPrefix[] = "w2c_";
-static constexpr char kWrapperSymbolPrefix[] = "w2cw_";
+static constexpr char kWrapperSymbolPrefix[] = "wrap_";
 static constexpr char kLocalSymbolPrefix[] = "var_";
 static constexpr char kAdminSymbolPrefix[] = "wasm2c_";
 static constexpr char kTailCallSymbolPrefix[] = "wasm_tailcall_";
