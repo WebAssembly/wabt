@@ -812,18 +812,10 @@ Result TypeChecker::OnRefNullExpr(Type type) {
 Result TypeChecker::OnRefIsNullExpr() {
   Type type;
   Result result = PeekType(0, &type);
-  if (!(type == Type::Any || type.IsRef())) {
-    TypeVector actual;
-    if (Succeeded(result)) {
-      actual.push_back(type);
-    }
-    std::string message =
-        "type mismatch in ref.is_null, expected reference but got " +
-        TypesToString(actual);
-    PrintError("%s", message.c_str());
-    result = Result::Error;
+  if (!type.IsRef()) {
+    type = Type::Reference;
   }
-  result |= DropTypes(1);
+  result |= PopAndCheck1Type(type, "ref.is_null");
   PushType(Type::I32);
   return result;
 }
