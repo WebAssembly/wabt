@@ -2832,10 +2832,6 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   CALLBACK(BeginDataSection, section_size);
   CHECK_RESULT(ReadCount(&num_data_segments_, "data segment count"));
   CALLBACK(OnDataSegmentCount, num_data_segments_);
-  // If the DataCount section is not present, then data_count_ will be invalid.
-  ERROR_UNLESS(
-      data_count_ == kInvalidIndex || data_count_ == num_data_segments_,
-      "data segment count does not equal count in DataCount section");
   for (Index i = 0; i < num_data_segments_; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
@@ -3038,8 +3034,7 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   // in case the code section was omitted.
   ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
                "function signature count != function body count");
-  // This is checked in ReadDataSection, but it must be checked at the end too,
-  // in case the data section was omitted.
+  // This must be checked at the end, in case the data section was omitted.
   ERROR_UNLESS(
       data_count_ == kInvalidIndex || data_count_ == num_data_segments_,
       "data segment count does not equal count in DataCount section");
