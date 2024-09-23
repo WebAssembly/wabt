@@ -30,7 +30,14 @@ std::string TypesToString(const TypeVector& types,
   }
 
   for (size_t i = 0; i < types.size(); ++i) {
-    result += types[i].GetName();
+    Type ty = types[i];
+    // NOTE: Reference (and GetName) is also used by (e.g.) objdump, which does
+    // not apply validation. do this here so as to not break that.
+    if (ty == Type::Reference && ty.GetReferenceIndex() == kInvalidIndex) {
+      result += "reference";
+    } else {
+      result += types[i].GetName();
+    }
     if (i < types.size() - 1) {
       result += ", ";
     }
