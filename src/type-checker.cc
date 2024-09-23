@@ -30,7 +30,14 @@ std::string TypesToString(const TypeVector& types,
   }
 
   for (size_t i = 0; i < types.size(); ++i) {
-    result += types[i].GetName();
+    Type ty = types[i];
+    // NOTE: Reference (and GetName) is also used by (e.g.) objdump, which does
+    // not apply validation. do this here so as to not break that.
+    if (ty == Type::Reference && ty.GetReferenceIndex() == kInvalidIndex) {
+      result += "reference";
+    } else {
+      result += types[i].GetName();
+    }
     if (i < types.size() - 1) {
       result += ", ";
     }
@@ -812,18 +819,10 @@ Result TypeChecker::OnRefNullExpr(Type type) {
 Result TypeChecker::OnRefIsNullExpr() {
   Type type;
   Result result = PeekType(0, &type);
-  if (!(type == Type::Any || type.IsRef())) {
-    TypeVector actual;
-    if (Succeeded(result)) {
-      actual.push_back(type);
-    }
-    std::string message =
-        "type mismatch in ref.is_null, expected reference but got " +
-        TypesToString(actual);
-    PrintError("%s", message.c_str());
-    result = Result::Error;
+  if (!type.IsRef()) {
+    type = Type::Reference;
   }
-  result |= DropTypes(1);
+  result |= PopAndCheck1Type(type, "ref.is_null");
   PushType(Type::I32);
   return result;
 }
