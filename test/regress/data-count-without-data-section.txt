@@ -9,6 +9,6 @@
 )
 (;; STDOUT ;;;
 out/test/regress/data-count-without-data-section.txt:3: assert_malformed passed:
-  0000010: error: data segment count does not equal count in DataCount section
+  0000010: error: Data section missing but DataCount non-zero
 1/1 tests passed.
 ;;; STDOUT ;;)
