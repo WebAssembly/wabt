@@ -1,0 +1,14 @@
+;;; TOOL: run-interp-spec
+(assert_malformed
+  (module binary
+    "\00asm" "\01\00\00\00"
+    "\05\03\01\00\01"          ;; Memory section with one entry
+    "\0c\01\01"                ;; Data count section with value 1
+  )
+  "data count and data section have inconsistent lengths"
+)
+(;; STDOUT ;;;
+out/test/regress/data-count-without-data-section.txt:3: assert_malformed passed:
+  0000010: error: Data section missing but DataCount non-zero
+1/1 tests passed.
+;;; STDOUT ;;)
