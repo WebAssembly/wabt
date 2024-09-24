@@ -93,6 +93,8 @@ class BinaryReader {
     bool stop_on_first_error;
   };
 
+  class SectionReader;
+
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
   [[nodiscard]] Result ReadOpcode(Opcode* out_value, const char* desc);
   template <typename T>
@@ -279,7 +281,9 @@ Result BinaryReader::ReadT(T* out_value,
                            const char* type_name,
                            const char* desc) {
   if (state_.offset + sizeof(T) > read_end_) {
-    PrintError("unable to read %s: %s", type_name, desc);
+    if (desc) {
+      PrintError("unable to read %s: %s", type_name, desc);
+    }
     return Result::Error;
   }
 #if WABT_BIG_ENDIAN
@@ -318,7 +322,12 @@ Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
   size_t bytes_read = wabt::ReadU32Leb128(p, end, out_value);
-  ERROR_UNLESS(bytes_read > 0, "unable to read u32 leb128: %s", desc);
+  if (bytes_read == 0) {
+    if (desc) {
+      PrintError("unable to read u32 leb128: %s", desc);
+    }
+    return Result::Error;
+  }
   state_.offset += bytes_read;
   return Result::Ok;
 }
@@ -327,7 +336,12 @@ Result BinaryReader::ReadU64Leb128(uint64_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
   size_t bytes_read = wabt::ReadU64Leb128(p, end, out_value);
-  ERROR_UNLESS(bytes_read > 0, "unable to read u64 leb128: %s", desc);
+  if (bytes_read == 0) {
+    if (desc) {
+      PrintError("unable to read u64 leb128: %s", desc);
+    }
+    return Result::Error;
+  }
   state_.offset += bytes_read;
   return Result::Ok;
 }
@@ -336,7 +350,12 @@ Result BinaryReader::ReadS32Leb128(uint32_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
   size_t bytes_read = wabt::ReadS32Leb128(p, end, out_value);
-  ERROR_UNLESS(bytes_read > 0, "unable to read i32 leb128: %s", desc);
+  if (bytes_read == 0) {
+    if (desc) {
+      PrintError("unable to read i32 leb128: %s", desc);
+    }
+    return Result::Error;
+  }
   state_.offset += bytes_read;
   return Result::Ok;
 }
@@ -345,7 +364,12 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
   size_t bytes_read = wabt::ReadS64Leb128(p, end, out_value);
-  ERROR_UNLESS(bytes_read > 0, "unable to read i64 leb128: %s", desc);
+  if (bytes_read == 0) {
+    if (desc) {
+      PrintError("unable to read i64 leb128: %s", desc);
+    }
+    return Result::Error;
+  }
   state_.offset += bytes_read;
   return Result::Ok;
 }
@@ -2873,150 +2897,273 @@ Result BinaryReader::ReadDataCountSection(Offset section_size) {
   return Result::Ok;
 }
 
+class BinaryReader::SectionReader {
+ public:
+  explicit SectionReader(BinaryReader* this_,
+                         const ReadSectionsOptions& options_)
+      : this_(this_), options_(options_), delegate_(this_->delegate_) {}
+
+  [[nodiscard]] Result PeekAndCheckSection(BinarySection section);
+  [[nodiscard]] Result ReadSection();
+  [[nodiscard]] Result ReadCustomOrInvalidSections();
+
+ private:
+  // FIXME is there a way to *not* duplicate PrintError?
+  void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
+
+  BinaryReader* this_;
+  Index section_index_ = kInvalidIndex;
+  bool seen_section_code_[static_cast<int>(BinarySection::Last) + 1] = {false};
+  const ReadSectionsOptions& options_;
+  // this lets us use CALLBACK
+  BinaryReaderDelegate* delegate_;
+};
+
+// FIXME is there a way to *not* duplicate this?
+void WABT_PRINTF_FORMAT(2, 3)
+    BinaryReader::SectionReader::PrintError(const char* format, ...) {
+  ErrorLevel error_level = this_->reading_custom_section_ &&
+                                   !this_->options_.fail_on_custom_section_error
+                               ? ErrorLevel::Warning
+                               : ErrorLevel::Error;
+
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  Error error(error_level, Location(this_->state_.offset), buffer);
+  bool handled = delegate_->OnError(error);
+
+  if (!handled) {
+    // Not great to just print, but we don't want to eat the error either.
+    fprintf(stderr, "%07" PRIzx ": %s: %s\n", this_->state_.offset,
+            GetErrorLevelName(error_level), buffer);
+  }
+}
+
+Result BinaryReader::SectionReader::PeekAndCheckSection(BinarySection section) {
+  // reset parser state on return
+  ValueRestoreGuard<BinaryReaderDelegate::State, &BinaryReader::state_> guard(
+      this_);
+  uint8_t section_code;
+  Offset section_size;
+  CHECK_RESULT(this_->ReadU8(&section_code, nullptr));
+  CHECK_RESULT(this_->ReadOffset(&section_size, nullptr));
+
+  if (section_code >= kBinarySectionCount) {
+    // allow peeking invalid sections
+    if (section == BinarySection::Invalid) {
+      return Result::Ok;
+    }
+    return Result::Error;
+  }
+  BinarySection found_section = static_cast<BinarySection>(section_code);
+  // allow peeking duplicate sections
+  if (found_section != BinarySection::Custom &&
+      seen_section_code_[section_code] && section == BinarySection::Invalid) {
+    return Result::Ok;
+  }
+  if (section != found_section) {
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::SectionReader::ReadCustomOrInvalidSections() {
+  while (Succeeded(PeekAndCheckSection(BinarySection::Custom)) ||
+         Succeeded(PeekAndCheckSection(BinarySection::Invalid))) {
+    CHECK_RESULT(ReadSection());
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::SectionReader::ReadSection() {
+  // NOTE: unsigned overflow
+  ++section_index_;
+
+  Result result = Result::Ok;
+  uint8_t section_code;
+  Offset section_size;
+  CHECK_RESULT(this_->ReadU8(&section_code, "section code"));
+  CHECK_RESULT(this_->ReadOffset(&section_size, "section size"));
+  ReadEndRestoreGuard guard(this_);
+  this_->read_end_ = this_->state_.offset + section_size;
+  if (section_code >= kBinarySectionCount) {
+    PrintError("invalid section code: %u", section_code);
+    if (options_.stop_on_first_error) {
+      return Result::Error;
+    }
+    // If we don't have to stop on first error, continue reading
+    // sections, because although we could not understand the
+    // current section, we can continue and correctly parse
+    // subsequent sections, so we can give back as much information
+    // as we can understand.
+    result = Result::Error;
+    this_->state_.offset = this_->read_end_;
+    return Result::Ok;
+  }
+
+  BinarySection section = static_cast<BinarySection>(section_code);
+  if (section != BinarySection::Custom) {
+    if (seen_section_code_[section_code]) {
+      PrintError("multiple %s sections", GetSectionName(section));
+      return Result::Error;
+    }
+    seen_section_code_[section_code] = true;
+  }
+
+  ERROR_UNLESS(this_->read_end_ <= this_->state_.size,
+               "invalid section size: extends past end");
+
+  ERROR_UNLESS(this_->last_known_section_ == BinarySection::Invalid ||
+                   section == BinarySection::Custom ||
+                   GetSectionOrder(section) >
+                       GetSectionOrder(this_->last_known_section_),
+               "section %s out of order", GetSectionName(section));
+
+  ERROR_UNLESS(
+      !this_->did_read_names_section_ || section == BinarySection::Custom,
+      "%s section can not occur after Name section", GetSectionName(section));
+
+  CALLBACK(BeginSection, section_index_, section, section_size);
+
+  bool stop_on_first_error = options_.stop_on_first_error;
+  Result section_result = Result::Error;
+  switch (section) {
+    case BinarySection::Custom:
+      section_result = this_->ReadCustomSection(section_index_, section_size);
+      if (this_->options_.fail_on_custom_section_error) {
+        result |= section_result;
+      } else {
+        stop_on_first_error = false;
+      }
+      break;
+    case BinarySection::Type:
+      section_result = this_->ReadTypeSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Import:
+      section_result = this_->ReadImportSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Function:
+      section_result = this_->ReadFunctionSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Table:
+      section_result = this_->ReadTableSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Memory:
+      section_result = this_->ReadMemorySection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Global:
+      section_result = this_->ReadGlobalSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Export:
+      section_result = this_->ReadExportSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Start:
+      section_result = this_->ReadStartSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Elem:
+      section_result = this_->ReadElemSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Code:
+      section_result = this_->ReadCodeSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Data:
+      section_result = this_->ReadDataSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Tag:
+      ERROR_UNLESS(this_->options_.features.exceptions_enabled(),
+                   "invalid section code: %u",
+                   static_cast<unsigned int>(section));
+      section_result = this_->ReadTagSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::DataCount:
+      ERROR_UNLESS(this_->options_.features.bulk_memory_enabled(),
+                   "invalid section code: %u",
+                   static_cast<unsigned int>(section));
+      section_result = this_->ReadDataCountSection(section_size);
+      result |= section_result;
+      break;
+    case BinarySection::Invalid:
+      WABT_UNREACHABLE;
+  }
+
+  if (Succeeded(section_result) && this_->state_.offset != this_->read_end_) {
+    PrintError("unfinished section (expected end: 0x%" PRIzx ")",
+               this_->read_end_);
+    section_result = Result::Error;
+    result |= section_result;
+  }
+
+  if (Failed(section_result)) {
+    if (stop_on_first_error) {
+      return Result::Error;
+    }
+
+    // If we're continuing after failing to read this section, move the
+    // offset to the expected section end. This way we may be able to read
+    // further sections.
+    this_->state_.offset = this_->read_end_;
+  }
+
+  if (section != BinarySection::Custom) {
+    this_->last_known_section_ = section;
+  }
+
+  return result;
+}
+
+#define DO_SECTION(name)                                      \
+  CHECK_RESULT(section_reader.ReadCustomOrInvalidSections()); \
+  if (Succeeded(section_reader.PeekAndCheckSection(name))) {  \
+    result |= section_reader.ReadSection();                   \
+    if (options.stop_on_first_error) {                        \
+      CHECK_RESULT(result);                                   \
+    }                                                         \
+  }
+
 Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
   Result result = Result::Ok;
-  Index section_index = 0;
-  bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
+  SectionReader section_reader(this, options);
 
-  for (; state_.offset < state_.size; ++section_index) {
-    uint8_t section_code;
-    Offset section_size;
-    CHECK_RESULT(ReadU8(&section_code, "section code"));
-    CHECK_RESULT(ReadOffset(&section_size, "section size"));
-    ReadEndRestoreGuard guard(this);
-    read_end_ = state_.offset + section_size;
-    if (section_code >= kBinarySectionCount) {
-      PrintError("invalid section code: %u", section_code);
-      if (options.stop_on_first_error) {
-        return Result::Error;
-      }
-      // If we don't have to stop on first error, continue reading
-      // sections, because although we could not understand the
-      // current section, we can continue and correctly parse
-      // subsequent sections, so we can give back as much information
-      // as we can understand.
-      result = Result::Error;
-      state_.offset = read_end_;
-      continue;
-    }
+  DO_SECTION(BinarySection::Type)
+  DO_SECTION(BinarySection::Import)
+  DO_SECTION(BinarySection::Function)
+  DO_SECTION(BinarySection::Table)
+  DO_SECTION(BinarySection::Memory)
+  DO_SECTION(BinarySection::Tag)
+  DO_SECTION(BinarySection::Global)
+  DO_SECTION(BinarySection::Export)
+  DO_SECTION(BinarySection::Start)
+  DO_SECTION(BinarySection::Elem)
+  DO_SECTION(BinarySection::DataCount)
+  DO_SECTION(BinarySection::Code)
+  else {
+    ERROR_IF(num_function_signatures_ != 0,
+             //"Code section missing but Function section not empty");
+             "function signature count != function body count");
+  }
+  DO_SECTION(BinarySection::Data)
+  else {
+    ERROR_UNLESS(data_count_ == kInvalidIndex || data_count_ == 0,
+                 "Data section missing but DataCount non-zero");
+  }
 
-    BinarySection section = static_cast<BinarySection>(section_code);
-    if (section != BinarySection::Custom) {
-      if (seen_section_code[section_code]) {
-        PrintError("multiple %s sections", GetSectionName(section));
-        return Result::Error;
-      }
-      seen_section_code[section_code] = true;
-    }
+  CHECK_RESULT(section_reader.ReadCustomOrInvalidSections());
 
-    ERROR_UNLESS(read_end_ <= state_.size,
-                 "invalid section size: extends past end");
-
-    ERROR_UNLESS(
-        last_known_section_ == BinarySection::Invalid ||
-            section == BinarySection::Custom ||
-            GetSectionOrder(section) > GetSectionOrder(last_known_section_),
-        "section %s out of order", GetSectionName(section));
-
-    ERROR_UNLESS(!did_read_names_section_ || section == BinarySection::Custom,
-                 "%s section can not occur after Name section",
-                 GetSectionName(section));
-
-    CALLBACK(BeginSection, section_index, section, section_size);
-
-    bool stop_on_first_error = options_.stop_on_first_error;
-    Result section_result = Result::Error;
-    switch (section) {
-      case BinarySection::Custom:
-        section_result = ReadCustomSection(section_index, section_size);
-        if (options_.fail_on_custom_section_error) {
-          result |= section_result;
-        } else {
-          stop_on_first_error = false;
-        }
-        break;
-      case BinarySection::Type:
-        section_result = ReadTypeSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Import:
-        section_result = ReadImportSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Function:
-        section_result = ReadFunctionSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Table:
-        section_result = ReadTableSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Memory:
-        section_result = ReadMemorySection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Global:
-        section_result = ReadGlobalSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Export:
-        section_result = ReadExportSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Start:
-        section_result = ReadStartSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Elem:
-        section_result = ReadElemSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Code:
-        section_result = ReadCodeSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Data:
-        section_result = ReadDataSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Tag:
-        ERROR_UNLESS(options_.features.exceptions_enabled(),
-                     "invalid section code: %u",
-                     static_cast<unsigned int>(section));
-        section_result = ReadTagSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::DataCount:
-        ERROR_UNLESS(options_.features.bulk_memory_enabled(),
-                     "invalid section code: %u",
-                     static_cast<unsigned int>(section));
-        section_result = ReadDataCountSection(section_size);
-        result |= section_result;
-        break;
-      case BinarySection::Invalid:
-        WABT_UNREACHABLE;
-    }
-
-    if (Succeeded(section_result) && state_.offset != read_end_) {
-      PrintError("unfinished section (expected end: 0x%" PRIzx ")", read_end_);
-      section_result = Result::Error;
-      result |= section_result;
-    }
-
-    if (Failed(section_result)) {
-      if (stop_on_first_error) {
-        return Result::Error;
-      }
-
-      // If we're continuing after failing to read this section, move the
-      // offset to the expected section end. This way we may be able to read
-      // further sections.
-      state_.offset = read_end_;
-    }
-
-    if (section != BinarySection::Custom) {
-      last_known_section_ = section;
-    }
+  if (state_.offset < state_.size) {
+    // emit errors about incorrect section order or invalid sections, as needed
+    result |= section_reader.ReadSection();
+    assert(result == Result::Error);
   }
 
   return result;
@@ -3034,14 +3181,6 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
 
   CALLBACK(BeginModule, version);
   CHECK_RESULT(ReadSections(ReadSectionsOptions{options.stop_on_first_error}));
-  // This is checked in ReadCodeSection, but it must be checked at the end too,
-  // in case the code section was omitted.
-  ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
-               "function signature count != function body count");
-  // This is checked in ReadDataSection, but it must be checked at the end too,
-  // in case the data section was omitted.
-  ERROR_IF(num_data_segments_ == 0 && data_count_ != kInvalidIndex,
-           "Data section missing but DataCount non-zero");
   CALLBACK0(EndModule);
 
   return Result::Ok;
