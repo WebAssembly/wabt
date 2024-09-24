@@ -1,0 +1,14 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(module
+  (func (export "main")
+    (call_ref
+    )
+  )
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-callref-empty.txt:6:6: error: type mismatch in call_ref, expected [reference] but got []
+    (call_ref
+     ^^^^^^^^
+;;; STDERR ;;)

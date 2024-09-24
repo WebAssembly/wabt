@@ -522,21 +522,14 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
 
 Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
   Type type;
-  CHECK_RESULT(PeekType(0, &type));
-  Result result = Result::Ok;
-  if (!(type == Type::Any || type.IsReferenceWithIndex())) {
-    TypeVector actual;
-    actual.push_back(type);
-    std::string message =
-        "type mismatch in call_ref, expected reference but got " +
-        TypesToString(actual);
-    PrintError("%s", message.c_str());
-    result = Result::Error;
+  Result result = PeekType(0, &type);
+  if (!type.IsReferenceWithIndex()) {
+    type = Type::Reference;
   }
+  result |= PopAndCheck1Type(type, "call_ref");
   if (Succeeded(result)) {
     *out_index = type.GetReferenceIndex();
   }
-  result |= DropTypes(1);
   return result;
 }
 
