@@ -70,6 +70,8 @@ uint32_t wasm_rt_exception_size(void);
  */
 void* wasm_rt_exception(void);
 
+#define WASM_EXN_MAX_SIZE 256
+
 #ifdef __cplusplus
 }
 #endif

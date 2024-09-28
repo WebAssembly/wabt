@@ -20,10 +20,8 @@
 
 #include <string.h>
 
-#define MAX_EXCEPTION_SIZE 256
-
 static WASM_RT_THREAD_LOCAL wasm_rt_tag_t g_active_exception_tag;
-static WASM_RT_THREAD_LOCAL uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
+static WASM_RT_THREAD_LOCAL uint8_t g_active_exception[WASM_EXN_MAX_SIZE];
 static WASM_RT_THREAD_LOCAL uint32_t g_active_exception_size;
 
 static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
@@ -31,7 +29,7 @@ static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
 void wasm_rt_load_exception(const wasm_rt_tag_t tag,
                             uint32_t size,
                             const void* values) {
-  if (size > MAX_EXCEPTION_SIZE) {
+  if (size > WASM_EXN_MAX_SIZE) {
     wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
   }
 

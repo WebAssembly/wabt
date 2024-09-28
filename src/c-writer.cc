@@ -3327,7 +3327,13 @@ void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
   Write("const wasm_rt_tag_t ", tlabel, "_tag = wasm_rt_exception_tag();",
         Newline());
   Write("uint32_t ", tlabel, "_size = wasm_rt_exception_size();", Newline());
-  Write("void *", tlabel, " = alloca(", tlabel, "_size);", Newline());
+  // check size for exhaustion
+  // this is done here to allow the runtime to store exceptions in malloc, even
+  // if it does not currently do so. also, it is possible to compile different
+  // modules with different exception sizes and still link them together.
+  // (whether you'll run into issues will heavily depend on the use-case.)
+  Write("if (", tlabel, "_size > WASM_EXN_MAX_SIZE) { TRAP(EXHAUSTION); }");
+  Write("char ", tlabel, "[WASM_EXN_MAX_SIZE] = {0};", Newline());
   Write("wasm_rt_memcpy(", tlabel, ", wasm_rt_exception(), ", tlabel, "_size);",
         Newline());
   PushFuncSection();
