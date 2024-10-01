@@ -1,0 +1,22 @@
+;;; TOOL: run-interp-spec
+;;; ARGS*: --enable-exceptions
+;;; NOTE: ref: issue-2476
+(module
+  (tag $e0)
+  (func (export "broken-local") (result i32)
+    (local $value i32)
+    (try $try
+      (do
+        (local.set $value (i32.const 1))
+        (throw $e0)
+      )
+      (catch $e0)
+    )
+    (local.get $value)
+  )
+)
+
+(assert_return (invoke "broken-local") (i32.const 1))
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)

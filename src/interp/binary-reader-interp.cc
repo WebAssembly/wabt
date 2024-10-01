@@ -831,13 +831,6 @@ Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
   // try-delegate instruction.
   PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset,
             func_->handlers.size());
-  func_->handlers.push_back(HandlerDesc{HandlerKind::Catch,
-                                        istream_.end(),
-                                        Istream::kInvalidOffset,
-                                        {},
-                                        {Istream::kInvalidOffset},
-                                        static_cast<u32>(func_->locals.size()),
-                                        0});
   return Result::Ok;
 }
 
@@ -856,6 +849,17 @@ Result BinaryReaderInterp::EndFunctionBody(Index index) {
 Result BinaryReaderInterp::OnLocalDeclCount(Index count) {
   local_decl_count_ = count;
   local_count_ = 0;
+  // Continuation of the implicit func label, used for exception handling. (See
+  // BeginFunctionBody.)
+  // We need the local count for this, so we must do it here.
+  // NOTE: we don't count the parameters, as they're not part of the frame.
+  func_->handlers.push_back(HandlerDesc{HandlerKind::Catch,
+                                        istream_.end(),
+                                        Istream::kInvalidOffset,
+                                        {},
+                                        {Istream::kInvalidOffset},
+                                        static_cast<u32>(local_decl_count_),
+                                        0});
   return Result::Ok;
 }
 
@@ -1516,7 +1520,9 @@ Result BinaryReaderInterp::OnTryExpr(Type sig_type) {
   u32 exn_stack_height;
   CHECK_RESULT(
       validator_.GetCatchCount(label_stack_.size() - 1, &exn_stack_height));
-  u32 value_stack_height = validator_.type_stack_size();
+  // NOTE: *NOT* GetLocalCount. we don't count the parameters, as they're not
+  // part of the frame.
+  u32 value_stack_height = validator_.type_stack_size() + local_decl_count_;
   CHECK_RESULT(validator_.OnTry(GetLocation(), sig_type));
   // Push a label that tracks mapping of exn -> catch
   PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset,
