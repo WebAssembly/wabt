@@ -88,8 +88,7 @@ class Type {
       case Type::V128:      return "v128";
       case Type::I8:        return "i8";
       case Type::I16:       return "i16";
-      case Type::ExnRef:
-        return "exnref";
+      case Type::ExnRef:    return "exnref";
       case Type::FuncRef:   return "funcref";
       case Type::Func:      return "func";
       case Type::Void:      return "void";
@@ -106,8 +105,7 @@ class Type {
     switch (enum_) {
       case Type::FuncRef:   return "func";
       case Type::ExternRef: return "extern";
-      case Type::ExnRef:
-        return "exn";
+      case Type::ExnRef:    return "exn";
       case Type::Struct:    return "struct";
       case Type::Array:     return "array";
       default:              return "<invalid>";
