@@ -849,8 +849,9 @@ Result BinaryReaderInterp::EndFunctionBody(Index index) {
 Result BinaryReaderInterp::OnLocalDeclCount(Index count) {
   local_decl_count_ = count;
   local_count_ = 0;
-  // FIXME(Soni): does the value of `values` even matter here? it used to be
-  // always 0 when this call was in BeginFunctionBody.
+  // Continuation of the implicit func label, used for exception handling. (See
+  // BeginFunctionBody.)
+  // We need the local count for this, so we must do it here.
   // NOTE: we don't count the parameters, as they're not part of the frame.
   func_->handlers.push_back(HandlerDesc{HandlerKind::Catch,
                                         istream_.end(),
