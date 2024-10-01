@@ -2523,7 +2523,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::ThrowRef:
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new UnreachableExpr(loc));
+      out_expr->reset(new ThrowRefExpr(loc));
       break;
 
     case TokenType::Rethrow:

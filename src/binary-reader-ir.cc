@@ -1201,6 +1201,7 @@ Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
 }
 
 Result BinaryReaderIR::OnThrowRefExpr() {
+  module_->features_used.exceptions = true;
   return AppendExpr(std::make_unique<ThrowRefExpr>());
 }
 
