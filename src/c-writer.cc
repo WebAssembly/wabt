@@ -1600,6 +1600,17 @@ void CWriter::WriteTagTypes() {
     }
     DeclareStruct(tag_type.sig.param_types);
   }
+
+  for (const Tag* tag : module_->tags) {
+    const FuncDeclaration& tag_type = tag->decl;
+    Index num_params = tag_type.GetNumParams();
+    if (num_params == 0) {
+      continue;
+    }
+    Write("/* tag: ", SanitizeForComment(tag->name), " */", Newline());
+    Write("static_assert(sizeof(", tag_type.sig.param_types,
+          ") <= WASM_EXN_MAX_SIZE);", Newline());
+  }
 }
 
 void CWriter::WriteFuncTypeDecls() {
@@ -3327,12 +3338,7 @@ void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
   Write("const wasm_rt_tag_t ", tlabel, "_tag = wasm_rt_exception_tag();",
         Newline());
   Write("uint32_t ", tlabel, "_size = wasm_rt_exception_size();", Newline());
-  // check size for exhaustion
-  // this is done here to allow the runtime to store exceptions in malloc, even
-  // if it does not currently do so. also, it is possible to compile different
-  // modules with different exception sizes and still link them together.
-  // (whether you'll run into issues will heavily depend on the use-case.)
-  Write("if (", tlabel, "_size > WASM_EXN_MAX_SIZE) { TRAP(EXHAUSTION); }");
+  Write("assert(", tlabel, "_size <= WASM_EXN_MAX_SIZE);");
   Write("char ", tlabel, "[WASM_EXN_MAX_SIZE] = {0};", Newline());
   Write("wasm_rt_memcpy(", tlabel, ", wasm_rt_exception(), ", tlabel, "_size);",
         Newline());
