@@ -426,11 +426,12 @@ class CWriter {
   void WriteImportProperties(CWriterPhase);
   void WriteFuncs();
   void BeginFunction(const Func&);
-  void FinishFunction();
+  void FinishFunction(size_t);
   void Write(const Func&);
   void WriteTailCallee(const Func&);
   void WriteParamsAndLocals();
-  void WriteParams(const std::vector<std::string>& index_to_name);
+  void WriteParams(const std::vector<std::string>& index_to_name,
+                   bool setjmp_safe = false);
   void WriteParamSymbols(const std::vector<std::string>& index_to_name);
   void WriteParamTypes(const FuncDeclaration& decl);
   void WriteLocals(const std::vector<std::string>& index_to_name);
@@ -444,7 +445,7 @@ class CWriter {
   void Unspill(const TypeVector&);
 
   template <typename Vars, typename TypeOf, typename ToDo>
-  void WriteVarsByType(const Vars&, const TypeOf&, const ToDo&);
+  void WriteVarsByType(const Vars&, const TypeOf&, const ToDo&, bool);
 
   template <typename sources>
   void Spill(const TypeVector&, const sources& src);
@@ -3043,7 +3044,7 @@ void CWriter::BeginFunction(const Func& func) {
   Write(Newline());
 }
 
-void CWriter::FinishFunction() {
+void CWriter::FinishFunction(size_t stack_var_section) {
   for (size_t i = 0; i < func_sections_.size(); ++i) {
     auto& [condition, stream] = func_sections_.at(i);
     std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
@@ -3051,7 +3052,7 @@ void CWriter::FinishFunction() {
       stream_->WriteData(buf->data.data(), buf->data.size());
     }
 
-    if (i == 0) {
+    if (i == stack_var_section) {
       WriteStackVarDeclarations();  // these come immediately after section #0
                                     // (return type/name/params/locals)
     }
@@ -3071,6 +3072,7 @@ void CWriter::Write(const Func& func) {
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
 
+  size_t stack_vars_section = func_sections_.size() - 1;
   PushFuncSection();
 
   std::string label = DefineLabelName(kImplicitFuncLabel);
@@ -3094,13 +3096,14 @@ void CWriter::Write(const Func& func) {
   }
 
   stream_ = prev_stream;
-  FinishFunction();
+  FinishFunction(stack_vars_section);
 }
 
 template <typename Vars, typename TypeOf, typename ToDo>
 void CWriter::WriteVarsByType(const Vars& vars,
                               const TypeOf& typeoffunc,
-                              const ToDo& todo) {
+                              const ToDo& todo,
+                              bool setjmp_safe) {
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
                     Type::FuncRef, Type::ExternRef}) {
     Index var_index = 0;
@@ -3109,6 +3112,11 @@ void CWriter::WriteVarsByType(const Vars& vars,
       if (typeoffunc(var) == type) {
         if (count == 0) {
           Write(type, " ");
+          if (setjmp_safe) {
+            PushFuncSection("exceptions");
+            Write("volatile ");
+            PushFuncSection();
+          }
           Indent(4);
         } else {
           Write(", ");
@@ -3144,7 +3152,7 @@ void CWriter::WriteTailCallee(const Func& func) {
   if (func.GetNumParams()) {
     WriteVarsByType(
         func.decl.sig.param_types, [](auto x) { return x; },
-        [&](Index i, Type) { Write(DefineParamName(index_to_name[i])); });
+        [&](Index i, Type) { Write(DefineParamName(index_to_name[i])); }, true);
     Write(OpenBrace(), func.decl.sig.param_types, " tmp;", Newline(),
           "wasm_rt_memcpy(&tmp, tail_call_stack, sizeof(tmp));", Newline());
     Unspill(func.decl.sig.param_types,
@@ -3152,6 +3160,7 @@ void CWriter::WriteTailCallee(const Func& func) {
     Write(CloseBrace(), Newline());
   }
 
+  size_t stack_vars_section = func_sections_.size() - 1;
   WriteLocals(index_to_name);
 
   PushFuncSection();
@@ -3175,19 +3184,20 @@ void CWriter::WriteTailCallee(const Func& func) {
   Write("next->fn = NULL;", Newline());
 
   stream_ = prev_stream;
-  FinishFunction();
+  FinishFunction(stack_vars_section);
 }
 
 void CWriter::WriteParamsAndLocals() {
   std::vector<std::string> index_to_name;
   MakeTypeBindingReverseMapping(func_->GetNumParamsAndLocals(), func_->bindings,
                                 &index_to_name);
-  WriteParams(index_to_name);
+  WriteParams(index_to_name, true);
   Write(" ", OpenBrace());
   WriteLocals(index_to_name);
 }
 
-void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
+void CWriter::WriteParams(const std::vector<std::string>& index_to_name,
+                          bool setjmp_safe) {
   Write(ModuleInstanceTypeName(), "* instance");
   if (func_->GetNumParams() != 0) {
     Indent(4);
@@ -3196,7 +3206,13 @@ void CWriter::WriteParams(const std::vector<std::string>& index_to_name) {
       if (i != 0 && (i % 8) == 0) {
         Write(Newline());
       }
-      Write(func_->GetParamType(i), " ", DefineParamName(index_to_name[i]));
+      Write(func_->GetParamType(i), " ");
+      if (setjmp_safe) {
+        PushFuncSection("exceptions");
+        Write("volatile ");
+        PushFuncSection();
+      }
+      Write(DefineParamName(index_to_name[i]));
     }
     Dedent(4);
   }
@@ -3240,13 +3256,17 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
         } else {
           Write("0");
         }
-      });
+      },
+      true);
 }
 
 void CWriter::WriteStackVarDeclarations() {
+  // NOTE: setjmp_safe must be false, can't push func sections in here because
+  // this is called from FinishFunction.
+  // (luckily, we don't need setjmp_safe for these.)
   WriteVarsByType(
       stack_var_sym_map_, [](auto stp_name) { return stp_name.first.second; },
-      [&](Index, auto& stp_name) { Write(stp_name.second); });
+      [&](Index, auto& stp_name) { Write(stp_name.second); }, false);
 }
 
 void CWriter::Write(const Block& block) {
@@ -3262,6 +3282,7 @@ void CWriter::Write(const Block& block) {
 }
 
 size_t CWriter::BeginTry(const TryExpr& tryexpr) {
+  func_includes_.insert("exceptions");
   Write(OpenBrace()); /* beginning of try-catch */
   const std::string tlabel = DefineLabelName(tryexpr.block.label);
   Write("WASM_RT_UNWIND_TARGET *", tlabel,
