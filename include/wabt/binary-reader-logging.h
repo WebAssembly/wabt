@@ -130,6 +130,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDeclCount(Index count) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
+  Result EndLocalDecls() override;
 
   Result OnOpcode(Opcode opcode) override;
   Result OnOpcodeBare() override;

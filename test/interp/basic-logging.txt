@@ -62,6 +62,7 @@ BeginModule(version: 1)
     OnFunctionBodyCount(1)
     BeginFunctionBody(0, size:5)
     OnLocalDeclCount(0)
+    EndLocalDecls
     OnI32ConstExpr(42 (0x2a))
     OnReturnExpr
     OnEndExpr
