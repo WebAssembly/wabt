@@ -1,0 +1,22 @@
+;;; TOOL: run-interp-spec
+;;; ARGS*: --enable-exceptions
+;;; NOTE: ref: issue-2476
+(module
+  (tag $e0)
+  (func (export "test") (result i32)
+    (local $a i32)
+    (local $b i32)
+    (try $try
+      (do
+        (throw $e0)
+      )
+      (catch $e0)
+    )
+    (local.get $a)
+  )
+)
+
+(assert_return (invoke "test") (i32.const 0))
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)
