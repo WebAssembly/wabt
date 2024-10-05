@@ -1254,16 +1254,24 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       break;
 
     case O::Select: {
-      // TODO: need to mark whether this is a ref.
       auto cond = Pop<u32>();
+      auto ref = false;
+      // check if either is a ref
+      ref |= !refs_.empty() && refs_.back() == values_.size();
       Value false_ = Pop();
+      ref |= !refs_.empty() && refs_.back() == values_.size();
       Value true_ = Pop();
+      if (ref) {
+        refs_.push_back(values_.size());
+      }
       Push(cond ? true_ : false_);
       break;
     }
 
+    case O::InterpLocalGetRef:
+      refs_.push_back(values_.size());
+      [[fallthrough]];
     case O::LocalGet:
-      // TODO: need to mark whether this is a ref.
       Push(Pick(instr.imm_u32));
       break;
 
@@ -1277,8 +1285,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       Pick(instr.imm_u32) = Pick(1);
       break;
 
+    case O::InterpMarkRef:
+      refs_.push_back(values_.size() - instr.imm_u32);
+      break;
+
+    case O::InterpGlobalGetRef:
+      refs_.push_back(values_.size());
+      [[fallthrough]];
     case O::GlobalGet: {
-      // TODO: need to mark whether this is a ref.
       Global::Ptr global{store_, inst_->globals()[instr.imm_u32]};
       Push(global->Get());
       break;

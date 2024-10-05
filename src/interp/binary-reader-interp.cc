@@ -875,6 +875,11 @@ Result BinaryReaderInterp::OnLocalDecl(Index decl_index,
 Result BinaryReaderInterp::EndLocalDecls() {
   if (local_count_ != 0) {
     istream_.Emit(Opcode::InterpAlloca, local_count_);
+    for (Index i = 0; i < local_count_; i++) {
+      if (func_->GetLocalType(func_->type.params.size() + i).IsRef()) {
+        istream_.Emit(Opcode::InterpMarkRef, local_count_ - i);
+      }
+    }
   }
   // Continuation of the implicit func label, used for exception handling. (See
   // BeginFunctionBody.)
@@ -1274,7 +1279,13 @@ Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
   CHECK_RESULT(
       validator_.OnGlobalGet(GetLocation(), Var(global_index, GetLocation())));
-  istream_.Emit(Opcode::GlobalGet, global_index);
+
+  Type type = global_types_.at(global_index).type;
+  if (type.IsRef()) {
+    istream_.Emit(Opcode::InterpGlobalGetRef, global_index);
+  } else {
+    istream_.Emit(Opcode::GlobalGet, global_index);
+  }
   return Result::Ok;
 }
 
@@ -1297,7 +1308,13 @@ Result BinaryReaderInterp::OnLocalGetExpr(Index local_index) {
   Index translated_local_index = TranslateLocalIndex(local_index);
   CHECK_RESULT(
       validator_.OnLocalGet(GetLocation(), Var(local_index, GetLocation())));
-  istream_.Emit(Opcode::LocalGet, translated_local_index);
+
+  Type type = func_->GetLocalType(local_index);
+  if (type.IsRef()) {
+    istream_.Emit(Opcode::InterpLocalGetRef, translated_local_index);
+  } else {
+    istream_.Emit(Opcode::LocalGet, translated_local_index);
+  }
   return Result::Ok;
 }
 
@@ -1306,6 +1323,7 @@ Result BinaryReaderInterp::OnLocalSetExpr(Index local_index) {
   Index translated_local_index = TranslateLocalIndex(local_index);
   CHECK_RESULT(
       validator_.OnLocalSet(GetLocation(), Var(local_index, GetLocation())));
+
   istream_.Emit(Opcode::LocalSet, translated_local_index);
   return Result::Ok;
 }
@@ -1313,6 +1331,7 @@ Result BinaryReaderInterp::OnLocalSetExpr(Index local_index) {
 Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
   CHECK_RESULT(
       validator_.OnLocalTee(GetLocation(), Var(local_index, GetLocation())));
+
   istream_.Emit(Opcode::LocalTee, TranslateLocalIndex(local_index));
   return Result::Ok;
 }
