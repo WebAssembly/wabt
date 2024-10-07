@@ -3,7 +3,7 @@
 ;;; NOTE: ref: issue-2476
 (module
   (tag $e0)
-  (func (export "broken-local") (result i32)
+  (func (export "set-local") (result i32)
     (local $value i32)
     (try $try
       (do
@@ -14,9 +14,21 @@
     )
     (local.get $value)
   )
+  (func (export "multiple-locals") (result i32)
+    (local $a i32)
+    (local $b i32)
+    (try $try
+      (do
+        (throw $e0)
+      )
+      (catch $e0)
+    )
+    (local.get $a)
+  )
 )
 
-(assert_return (invoke "broken-local") (i32.const 1))
+(assert_return (invoke "set-local") (i32.const 1))
+(assert_return (invoke "multiple-locals") (i32.const 0))
 (;; STDOUT ;;;
-2/2 tests passed.
+3/3 tests passed.
 ;;; STDOUT ;;)

@@ -795,6 +795,7 @@ DEFINE_BEGIN(BeginCodeSection)
 DEFINE_INDEX(OnFunctionBodyCount)
 DEFINE_INDEX(EndFunctionBody)
 DEFINE_INDEX(OnLocalDeclCount)
+DEFINE0(EndLocalDecls)
 DEFINE_LOAD_STORE_OPCODE(OnAtomicLoadExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwCmpxchgExpr);

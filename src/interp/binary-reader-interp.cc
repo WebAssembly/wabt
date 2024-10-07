@@ -147,6 +147,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDeclCount(Index count) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
+  Result EndLocalDecls() override;
 
   Result OnOpcode(Opcode Opcode) override;
   Result OnAtomicLoadExpr(Opcode opcode,
@@ -849,17 +850,6 @@ Result BinaryReaderInterp::EndFunctionBody(Index index) {
 Result BinaryReaderInterp::OnLocalDeclCount(Index count) {
   local_decl_count_ = count;
   local_count_ = 0;
-  // Continuation of the implicit func label, used for exception handling. (See
-  // BeginFunctionBody.)
-  // We need the local count for this, so we must do it here.
-  // NOTE: we don't count the parameters, as they're not part of the frame.
-  func_->handlers.push_back(HandlerDesc{HandlerKind::Catch,
-                                        istream_.end(),
-                                        Istream::kInvalidOffset,
-                                        {},
-                                        {Istream::kInvalidOffset},
-                                        static_cast<u32>(local_decl_count_),
-                                        0});
   return Result::Ok;
 }
 
@@ -870,10 +860,26 @@ Result BinaryReaderInterp::OnLocalDecl(Index decl_index,
 
   local_count_ += count;
   func_->locals.push_back(LocalDesc{type, count, local_count_});
+  return Result::Ok;
+}
 
-  if (decl_index == local_decl_count_ - 1) {
+Result BinaryReaderInterp::EndLocalDecls() {
+  if (local_count_ != 0) {
     istream_.Emit(Opcode::InterpAlloca, local_count_);
   }
+  // Continuation of the implicit func label, used for exception handling. (See
+  // BeginFunctionBody.)
+  // We need the local count for this, which is only available after processing
+  // all local decls.
+  // NOTE: we don't count the parameters, as they're not part of the frame.
+  func_->handlers.push_back(HandlerDesc{HandlerKind::Catch,
+                                        istream_.end(),
+                                        Istream::kInvalidOffset,
+                                        {},
+                                        {Istream::kInvalidOffset},
+                                        static_cast<u32>(local_count_),
+                                        0});
+
   return Result::Ok;
 }
 
@@ -1522,7 +1528,7 @@ Result BinaryReaderInterp::OnTryExpr(Type sig_type) {
       validator_.GetCatchCount(label_stack_.size() - 1, &exn_stack_height));
   // NOTE: *NOT* GetLocalCount. we don't count the parameters, as they're not
   // part of the frame.
-  u32 value_stack_height = validator_.type_stack_size() + local_decl_count_;
+  u32 value_stack_height = validator_.type_stack_size() + local_count_;
   CHECK_RESULT(validator_.OnTry(GetLocation(), sig_type));
   // Push a label that tracks mapping of exn -> catch
   PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset,

@@ -2815,6 +2815,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
       ERROR_UNLESS(IsConcreteType(local_type), "expected valid local type");
       CALLBACK(OnLocalDecl, k, num_local_types, local_type);
     }
+    CALLBACK(EndLocalDecls);
 
     if (options_.skip_function_bodies) {
       state_.offset = end_offset;

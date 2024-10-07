@@ -172,6 +172,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnLocalDecl(Index decl_index, Index count, Type type) override {
     return Result::Ok;
   }
+  Result EndLocalDecls() override { return Result::Ok; }
 
   /* Function expressions; called between BeginFunctionBody and
    EndFunctionBody */
