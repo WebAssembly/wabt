@@ -2781,7 +2781,8 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
     case Opcode::I32Const: {
       auto token = Consume();
       if (!token.HasLiteral()) {
-        return Result::Error;
+        result = Result::Error;
+        break;
       }
       auto sv = token.literal().text;
       uint32_t u32;
@@ -2793,7 +2794,8 @@ Result WastParser::ParseConst(Const* const_, ConstType const_type) {
     case Opcode::I64Const: {
       auto token = Consume();
       if (!token.HasLiteral()) {
-        return Result::Error;
+        result = Result::Error;
+        break;
       }
       auto sv = token.literal().text;
       uint64_t u64;
