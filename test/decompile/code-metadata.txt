@@ -8,7 +8,7 @@
     return))
 
 (;; STDOUT ;;;
-function f_a(a:int):int {
+function f_a(a:int):int { // func0
   let t0 = a;
   // @metadata.code.test "aa\01a";
   return 1234 + t0;

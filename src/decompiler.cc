@@ -826,9 +826,9 @@ struct Decompiler {
         }
       }
       if (is_import) {
-        s += ";";
+        s += cat("; // func", std::to_string(func_index));
       } else {
-        s += " {\n";
+        s += cat(" { // func", std::to_string(func_index), "\n");
         auto val = DecompileExpr(ast.exp_stack[0], nullptr);
         IndentValue(val, indent_amount, {});
         for (auto& stat : val.v) {
