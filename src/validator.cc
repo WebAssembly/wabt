@@ -568,7 +568,8 @@ Result Validator::EndTryExpr(TryExpr* expr) {
 }
 
 Result Validator::BeginTryTableExpr(TryTableExpr* expr) {
-  result_ |= validator_.BeginTryTable(expr->loc, GetDeclarationType(expr->block.decl));
+  result_ |=
+      validator_.BeginTryTable(expr->loc, GetDeclarationType(expr->block.decl));
   for (const TableCatch& catch_ : expr->catches) {
     result_ |= validator_.OnTryTableCatch(expr->loc, catch_);
   }
