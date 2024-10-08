@@ -110,7 +110,7 @@ memory M_a(initial: 1, max: 0);
 
 data d_HelloWorld(offset: 10) = "Hello, World!\0a\00";
 
-export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
+export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) { // func0
   var c:{ a:float, b:float }
   var d:{ a:ushort, b:long }
   var e:int;

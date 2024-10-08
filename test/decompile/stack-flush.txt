@@ -50,7 +50,7 @@
 (;; STDOUT ;;;
 memory M_a(initial: 1, max: 0);
 
-export function f(a:int, b:int):int {
+export function f(a:int, b:int):int { // func0
   let t0 = s();
   s();
   let t1, t2 = s(), s();
@@ -70,11 +70,11 @@ export function f(a:int, b:int):int {
   return t7 == t8;
 }
 
-export function s():int {
+export function s():int { // func1
   return 1
 }
 
-export function mv():(int, int) {
+export function mv():(int, int) { // func2
   return 1, 2
 }
 

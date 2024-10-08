@@ -99,18 +99,18 @@ export global G1_EXPORT:int = 0;
 data D0_SYM(offset: 0) = "Hello, World!";
 data D1_SYM(offset: 10) = "bar";
 
-function F0():int {
+function F0():int { // func0
   var L0:int;
   return L0;
 }
 
-function F1_NS() {
+function F1_NS() { // func1
 }
 
-function F2_SYM() {
+function F2_SYM() { // func2
 }
 
-export function F3_EXPORT() {
+export function F3_EXPORT() { // func3
 }
 
 ;;; STDOUT ;;)

@@ -9,7 +9,7 @@
 (;; STDOUT ;;;
 export global __empty:long = 8L;
 
-function f_a():long {
+function f_a():long { // func0
   return __empty
 }
 

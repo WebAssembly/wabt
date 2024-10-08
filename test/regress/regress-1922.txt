@@ -9,7 +9,7 @@
       i32.add
     end))
 (;; STDOUT ;;;
-function f_a(a:int, b:int):int {
+function f_a(a:int, b:int):int { // func0
   a + br_table[L_a, ..L_a](unreachable);
   return loop L_a {
          }
