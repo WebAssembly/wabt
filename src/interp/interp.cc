@@ -2615,7 +2615,8 @@ RunResult Thread::DoThrow(Exception::Ptr exn) {
     auto iter = handlers.rbegin();
     while (iter != handlers.rend()) {
       const HandlerDesc& handler = *iter;
-      if (pc >= handler.try_start_offset && pc < handler.try_end_offset) {
+      // pc points to the *next* instruction by the time we're in DoThrow.
+      if (pc > handler.try_start_offset && pc <= handler.try_end_offset) {
         // For a try-delegate, skip part of the traversal by directly going
         // up to an outer handler specified by the delegate depth.
         if (handler.kind == HandlerKind::Delegate) {
