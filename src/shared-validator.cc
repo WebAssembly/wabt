@@ -1234,8 +1234,12 @@ Result SharedValidator::OnTry(const Location& loc, Type sig_type) {
   return result;
 }
 
-Result SharedValidator::BeginTryTable(const Location& loc) {
+Result SharedValidator::BeginTryTable(const Location& loc, Type sig_type) {
   Result result = CheckInstr(Opcode::TryTable, loc);
+  TypeVector param_types, result_types;
+  result |= CheckBlockSignature(loc, Opcode::TryTable, sig_type, &param_types,
+                                &result_types);
+  result |= typechecker_.BeginTryTable(param_types);
   return result;
 }
 
@@ -1260,7 +1264,7 @@ Result SharedValidator::EndTryTable(const Location& loc, Type sig_type) {
   TypeVector param_types, result_types;
   result |= CheckBlockSignature(loc, Opcode::TryTable, sig_type, &param_types,
                                 &result_types);
-  result |= typechecker_.OnTryTable(param_types, result_types);
+  result |= typechecker_.EndTryTable(param_types, result_types);
   return result;
 }
 

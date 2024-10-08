@@ -890,6 +890,11 @@ Result TypeChecker::OnTry(const TypeVector& param_types,
   return result;
 }
 
+Result TypeChecker::BeginTryTable(const TypeVector& param_types) {
+  Result result = PopAndCheckSignature(param_types, "try_table");
+  return result;
+}
+
 Result TypeChecker::OnTryTableCatch(const TypeVector& sig, Index depth) {
   Result result = Result::Ok;
   Label* label;
@@ -903,12 +908,11 @@ Result TypeChecker::OnTryTableCatch(const TypeVector& sig, Index depth) {
   return result;
 }
 
-Result TypeChecker::OnTryTable(const TypeVector& param_types,
-                               const TypeVector& result_types) {
-  Result result = PopAndCheckSignature(param_types, "try_table");
+Result TypeChecker::EndTryTable(const TypeVector& param_types,
+                                const TypeVector& result_types) {
   PushLabel(LabelType::TryTable, param_types, result_types);
   PushTypes(param_types);
-  return result;
+  return Result::Ok;
 }
 
 Result TypeChecker::OnUnary(Opcode opcode) {
