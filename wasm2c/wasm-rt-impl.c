@@ -49,7 +49,7 @@ static void* g_sig_handler_handle = 0;
 #endif
 #endif
 
-#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+#if WASM_RT_USE_SEGUE
 // Currently Segue is used only for linux
 #include <sys/auxv.h>
 #ifdef __GLIBC__
@@ -239,7 +239,7 @@ void wasm_rt_init(void) {
   }
 #endif
 
-#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+#if WASM_RT_USE_SEGUE
 #if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 18
   // Check for support for userspace wrgsbase instructions
   unsigned long val = getauxval(AT_HWCAP2);
@@ -284,7 +284,7 @@ void wasm_rt_free_thread(void) {
 #endif
 }
 
-#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+#if WASM_RT_USE_SEGUE
 void wasm_rt_syscall_set_segue_base(void* base) {
   if (syscall(SYS_arch_prctl, ARCH_SET_GS, base) != 0) {
     perror("wasm_rt_syscall_set_segue_base error");

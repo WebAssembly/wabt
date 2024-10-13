@@ -228,6 +228,33 @@ extern "C" {
 #define WASM_RT_SEGUE_FREE_SEGMENT 0
 #endif
 
+#ifndef WASM_RT_USE_SEGUE
+// Memory functions can use the segue optimization if allowed. The segue
+// optimization uses x86 segments to point to a linear memory. We use this
+// optimization when:
+//
+// (1) Segue is allowed using WASM_RT_ALLOW_SEGUE
+// (2) on x86_64 without WABT_BIG_ENDIAN enabled
+// (3) the compiler supports: intrinsics for (rd|wr)gsbase, "address namespaces"
+//     for accessing pointers, and supports memcpy on pointers with custom
+//     "address namespaces". GCC does not support the memcpy requirement, so
+//     this leaves only clang for now.
+// (4) The OS provides a way to query if (rd|wr)gsbase is allowed by the kernel
+// or the implementation has to use a syscall for this.
+// (5) The OS doesn't replace the segment register on context switch which
+//     eliminates windows for now
+//
+// While more OS can be supported in the future, we only support linux for now
+#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                      \
+    (defined(__x86_64__) || defined(_M_X64)) && __clang__ &&        \
+    __has_builtin(__builtin_ia32_wrgsbase64) && !defined(_WIN32) && \
+    defined(__linux__)
+#define WASM_RT_USE_SEGUE 1
+#else
+#define WASM_RT_USE_SEGUE 0
+#endif
+#endif
+
 /**
  * This macro, if defined, allows the embedder to disable all stack exhaustion
  * checks. This a non conformant configuration, i.e., this does not respect
@@ -306,7 +333,7 @@ extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
 
 #endif
 
-#if WASM_RT_USE_SEGUE || WASM_RT_ALLOW_SEGUE
+#if WASM_RT_USE_SEGUE
 /**
  * The segue optimization uses x86 segments to point to a linear memory. If
  * used, the runtime must query whether it can use the fast userspace wrgsbase

@@ -111,35 +111,15 @@ extern const u8 wasm2c_test_is64_env_0x5F_linear_memory;
 #define MEM_ADDR(mem, addr, n) &(mem)->data[addr]
 #endif
 
-#ifndef WASM_RT_USE_SEGUE
-// Memory functions can use the segue optimization if allowed. The segue
-// optimization uses x86 segments to point to a linear memory. We use this
-// optimization when:
-//
-// (1) Segue is allowed using WASM_RT_ALLOW_SEGUE
-// (2) on x86_64 without WABT_BIG_ENDIAN enabled
-// (3) the Wasm module uses a single unshared imported or exported memory
-// (4) the compiler supports: intrinsics for (rd|wr)gsbase, "address namespaces"
-//     for accessing pointers, and supports memcpy on pointers with custom
-//     "address namespaces". GCC does not support the memcpy requirement, so
-//     this leaves only clang for now.
-// (5) The OS provides a way to query if (rd|wr)gsbase is allowed by the kernel
-// or the implementation has to use a syscall for this.
-// (6) The OS doesn't replace the segment register on context switch which
-//     eliminates windows for now
-//
-// While more OS can be supported in the future, we only support linux for now
-#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                               \
-    (defined(__x86_64__) || defined(_M_X64)) && IS_SINGLE_UNSHARED_MEMORY && \
-    __clang__ && __has_builtin(__builtin_ia32_wrgsbase64) &&                 \
-    !defined(_WIN32) && defined(__linux__)
-#define WASM_RT_USE_SEGUE 1
+// We can only use Segue for this module if it uses a single unshared imported
+// or exported memory
+#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_MEMORY
+#define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 1
 #else
-#define WASM_RT_USE_SEGUE 0
-#endif
+#define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 0
 #endif
 
-#if WASM_RT_USE_SEGUE
+#if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
 // POSIX uses FS for TLS, GS is free
 static inline void* wasm_rt_segue_read_base() {
   if (wasm_rt_fsgsbase_inst_supported) {
@@ -215,7 +195,7 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
     TRAP(OOB);
 #endif
 
-#if WASM_RT_USE_SEGUE && WASM_RT_SANITY_CHECKS
+#if WASM_RT_USE_SEGUE_FOR_THIS_MODULE && WASM_RT_SANITY_CHECKS
 #include <stdio.h>
 #define WASM_RT_CHECK_BASE(mem)                                               \
   if (((uintptr_t)((mem)->data)) != ((uintptr_t)wasm_rt_segue_read_base())) { \
@@ -836,14 +816,14 @@ void wasm2c_test_instantiate(w2c_test* instance, struct w2c_env* w2c_env_instanc
   init_instance_import(instance, w2c_env_instance);
   init_tables(instance);
   init_memories(instance);
-#if WASM_RT_USE_SEGUE
+#if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
 #if !WASM_RT_SEGUE_FREE_SEGMENT
   void* segue_saved_base = wasm_rt_segue_read_base();
 #endif
   wasm_rt_segue_write_base((*instance->w2c_env_0x5F_linear_memory).data);
 #endif
   init_elem_instances(instance);
-#if WASM_RT_USE_SEGUE && !WASM_RT_SEGUE_FREE_SEGMENT
+#if WASM_RT_USE_SEGUE_FOR_THIS_MODULE && !WASM_RT_SEGUE_FREE_SEGMENT
   wasm_rt_segue_write_base(segue_saved_base);
 #endif
 }
