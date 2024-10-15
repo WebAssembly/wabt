@@ -73,7 +73,9 @@ WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
 static WASM_RT_THREAD_LOCAL void* g_alt_stack = NULL;
 #endif
 
+#ifndef WASM_RT_TRAP_HANDLER
 WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
+#endif
 
 #ifdef WASM_RT_TRAP_HANDLER
 extern void WASM_RT_TRAP_HANDLER(wasm_rt_trap_t code);

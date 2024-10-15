@@ -27,8 +27,10 @@
 extern "C" {
 #endif
 
+#ifndef WASM_RT_TRAP_HANDLER
 /** A setjmp buffer used for handling traps. */
 extern WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
+#endif
 
 #if WASM_RT_STACK_DEPTH_COUNT
 /** Saved call stack depth that will be restored in case a trap occurs. */
