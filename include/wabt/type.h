@@ -42,6 +42,7 @@ class Type {
     V128 = -0x05,       // 0x7b
     I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
     I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
+    ExnRef = -0x0c,     // 0x74
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
     Reference = -0x15,  // 0x6b
@@ -68,7 +69,7 @@ class Type {
 
   bool IsRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
-           enum_ == Type::Reference;
+           enum_ == Type::Reference || enum_ == Type::ExnRef;
   }
 
   bool IsReferenceWithIndex() const { return enum_ == Type::Reference; }
@@ -87,6 +88,7 @@ class Type {
       case Type::V128:      return "v128";
       case Type::I8:        return "i8";
       case Type::I16:       return "i16";
+      case Type::ExnRef:    return "exnref";
       case Type::FuncRef:   return "funcref";
       case Type::Func:      return "func";
       case Type::Void:      return "void";
@@ -103,6 +105,7 @@ class Type {
     switch (enum_) {
       case Type::FuncRef:   return "func";
       case Type::ExternRef: return "extern";
+      case Type::ExnRef:    return "exn";
       case Type::Struct:    return "struct";
       case Type::Array:     return "array";
       default:              return "<invalid>";
@@ -145,6 +148,7 @@ class Type {
       case Type::F64:
       case Type::V128:
       case Type::FuncRef:
+      case Type::ExnRef:
       case Type::ExternRef:
       case Type::Reference:
         return TypeVector(this, this + 1);
