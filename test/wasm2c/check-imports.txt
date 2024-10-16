@@ -869,6 +869,9 @@ u32 w2c_test_f0(w2c_test* instance, u32 var_p0) {
   u32 var_i0;
   var_i0 = var_p0;
   var_i0 = CALL_INDIRECT((*instance->w2c_env_0x5F_indirect_function_table), u32 (*)(void*), w2c_test_t1, var_i0, (*instance->w2c_env_0x5F_indirect_function_table).data[var_i0].module_instance);
+#if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
+  wasm_rt_segue_write_base((*instance->w2c_env_0x5F_linear_memory).data);
+#endif
   FUNC_EPILOGUE;
   return var_i0;
 }

@@ -3558,6 +3558,9 @@ void CWriter::Write(const ExprList& exprs) {
           Write(", ", StackVar(num_params - i));
         }
         Write(");", Newline());
+        if (IsSingleUnsharedMemory()) {
+          InstallSegueBase(module_->memories[0], false /* save_old_value */);
+        }
         DropTypes(num_params + 1);
         PushTypes(decl.sig.result_types);
         if (num_results > 1) {
