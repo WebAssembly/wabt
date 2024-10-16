@@ -911,6 +911,9 @@ void w2c_test_0x5Fstart_0(w2c_test* instance) {
   var_i3 = 0u;
   var_i4 = 0u;
   var_i0 = CALL_INDIRECT(instance->w2c_T0, u32 (*)(void*, u32, u32, u32, u32), w2c_test_t0, var_i4, instance->w2c_T0.data[var_i4].module_instance, var_i0, var_i1, var_i2, var_i3);
+#if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
+  wasm_rt_segue_write_base(instance->w2c_memory.data);
+#endif
   w2c_wasi__snapshot__preview1_proc_exit(instance->w2c_wasi__snapshot__preview1_instance, var_i0);
   FUNC_EPILOGUE;
 }
