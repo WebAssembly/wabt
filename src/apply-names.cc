@@ -73,6 +73,8 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
+  Result BeginTryTableExpr(TryTableExpr*) override;
+  Result EndTryTableExpr(TryTableExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -365,6 +367,23 @@ Result NameApplier::BeginTryExpr(TryExpr* expr) {
 }
 
 Result NameApplier::EndTryExpr(TryExpr*) {
+  PopLabel();
+  return Result::Ok;
+}
+
+Result NameApplier::BeginTryTableExpr(TryTableExpr* expr) {
+  for (TableCatch& catch_ : expr->catches) {
+    if (!catch_.IsCatchAll()) {
+      CHECK_RESULT(UseNameForTagVar(&catch_.tag));
+    }
+    std::string_view label = FindLabelByVar(&catch_.target);
+    UseNameForVar(label, &catch_.target);
+  }
+  PushLabel(expr->block.label);
+  return Result::Ok;
+}
+
+Result NameApplier::EndTryTableExpr(TryTableExpr*) {
   PopLabel();
   return Result::Ok;
 }

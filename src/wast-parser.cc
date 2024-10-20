@@ -191,6 +191,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::TableSize:
     case TokenType::TableFill:
     case TokenType::Throw:
+    case TokenType::ThrowRef:
     case TokenType::Rethrow:
     case TokenType::RefFunc:
     case TokenType::RefNull:
@@ -219,6 +220,7 @@ bool IsBlockInstr(TokenType token_type) {
     case TokenType::Loop:
     case TokenType::If:
     case TokenType::Try:
+    case TokenType::TryTable:
       return true;
     default:
       return false;
@@ -243,6 +245,12 @@ bool IsLparAnn(TokenTypePair pair) {
 
 bool IsCatch(TokenType token_type) {
   return token_type == TokenType::Catch || token_type == TokenType::CatchAll;
+}
+
+bool IsTryTableCatch(TokenTypePair pair) {
+  return pair[0] == TokenType::Lpar &&
+         (pair[1] == TokenType::Catch || pair[1] == TokenType::CatchAll ||
+          pair[1] == TokenType::CatchRef || pair[1] == TokenType::CatchAllRef);
 }
 
 bool IsModuleField(TokenTypePair pair) {
@@ -657,8 +665,10 @@ bool WastParser::PeekMatchExpr() {
 }
 
 bool WastParser::PeekMatchRefType() {
-  return options_->features.function_references_enabled() &&
-         PeekMatchLpar(TokenType::Ref);
+  return (options_->features.function_references_enabled() &&
+          PeekMatchLpar(TokenType::Ref)) ||
+         (options_->features.exceptions_enabled() &&
+          PeekMatchLpar(TokenType::Ref));
 }
 
 bool WastParser::Match(TokenType type) {
@@ -912,7 +922,7 @@ Result WastParser::ParseValueType(Var* out_type) {
 
   if (!is_value_type && !is_ref_type) {
     return ErrorExpected(
-        {"i32", "i64", "f32", "f64", "v128", "externref", "funcref"});
+        {"i32", "i64", "f32", "f64", "v128", "externref", "exnref", "funcref"});
   }
 
   if (is_ref_type) {
@@ -933,6 +943,9 @@ Result WastParser::ParseValueType(Var* out_type) {
     case Type::FuncRef:
     case Type::ExternRef:
       is_enabled = options_->features.reference_types_enabled();
+      break;
+    case Type::ExnRef:
+      is_enabled = options_->features.exceptions_enabled();
       break;
     default:
       is_enabled = true;
@@ -997,7 +1010,7 @@ Result WastParser::ParseRefKind(Type* out_type) {
 Result WastParser::ParseRefType(Type* out_type) {
   WABT_TRACE(ParseRefType);
   if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"funcref", "externref"});
+    return ErrorExpected({"funcref", "externref", "exnref"});
   }
 
   Token token = Consume();
@@ -2464,6 +2477,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParsePlainInstrVar<ThrowExpr>(loc, out_expr));
       break;
 
+    case TokenType::ThrowRef:
+      ErrorUnlessOpcodeEnabled(Consume());
+      out_expr->reset(new ThrowRefExpr(loc));
+      break;
+
     case TokenType::Rethrow:
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<RethrowExpr>(loc, out_expr));
@@ -2986,6 +3004,19 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
+    case TokenType::TryTable: {
+      ErrorUnlessOpcodeEnabled(Consume());
+      auto expr = std::make_unique<TryTableExpr>(loc);
+      CHECK_RESULT(ParseLabelOpt(&expr->block.label));
+      CHECK_RESULT(ParseBlockDeclaration(&expr->block.decl));
+      CHECK_RESULT(ParseTryTableCatches(&expr->catches));
+      CHECK_RESULT(ParseInstrList(&expr->block.exprs));
+      EXPECT(End);
+      CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
+      *out_expr = std::move(expr);
+      break;
+    }
+
     default:
       assert(
           !"ParseBlockInstr should only be called when IsBlockInstr() is true");
@@ -3163,6 +3194,19 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         break;
       }
 
+      case TokenType::TryTable: {
+        Consume();
+        ErrorUnlessOpcodeEnabled(Consume());
+        auto expr = std::make_unique<TryTableExpr>(loc);
+        CHECK_RESULT(ParseLabelOpt(&expr->block.label));
+        CHECK_RESULT(ParseBlockDeclaration(&expr->block.decl));
+        CHECK_RESULT(ParseTryTableCatches(&expr->catches));
+        CHECK_RESULT(ParseInstrList(&expr->block.exprs));
+        expr->block.end_loc = GetLocation();
+        exprs->push_back(std::move(expr));
+        break;
+      }
+
       default:
         assert(!"ParseExpr should only be called when IsExpr() is true");
         return Result::Error;
@@ -3226,6 +3270,40 @@ Result WastParser::ParseCatchExprList(CatchVector* catches) {
     EXPECT(Rpar);
     catches->push_back(std::move(catch_));
   } while (Match(TokenType::Lpar) && IsCatch(Peek()));
+
+  return Result::Ok;
+}
+
+Result WastParser::ParseTryTableCatches(TryTableVector* catches) {
+  WABT_TRACE(ParseTryTableCatches);
+
+  while (IsTryTableCatch(PeekPair())) {
+    Consume();
+    TableCatch catch_(GetLocation());
+    auto token = Consume();
+    switch (token.token_type()) {
+      case TokenType::Catch:
+        catch_.kind = CatchKind::Catch;
+        break;
+      case TokenType::CatchRef:
+        catch_.kind = CatchKind::CatchRef;
+        break;
+      case TokenType::CatchAll:
+        catch_.kind = CatchKind::CatchAll;
+        break;
+      case TokenType::CatchAllRef:
+        catch_.kind = CatchKind::CatchAllRef;
+        break;
+      default:
+        WABT_UNREACHABLE;
+    }
+    if (catch_.kind == CatchKind::Catch || catch_.kind == CatchKind::CatchRef) {
+      CHECK_RESULT(ParseVar(&catch_.tag));
+    }
+    CHECK_RESULT(ParseVar(&catch_.target));
+    EXPECT(Rpar);
+    catches->push_back(std::move(catch_));
+  }
 
   return Result::Ok;
 }

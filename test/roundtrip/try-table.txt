@@ -1,0 +1,38 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-exceptions --debug-names
+(module
+  (func (result i32)
+    try_table (result i32)
+      i32.const 6
+    end
+    drop
+    block
+      try_table (result i32) (catch_all 0)
+        nop
+        i32.const 7
+        br 2
+      end
+      drop
+    end
+    i32.const 8
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (func (;0;) (type 0) (result i32)
+    try_table (result i32)  ;; label = @1
+      i32.const 6
+    end
+    drop
+    block  ;; label = @1
+      try_table (result i32)  ;; label = @2
+        (catch_all 0 (;@1;))
+        nop
+        i32.const 7
+        br 2 (;@0;)
+      end
+      drop
+    end
+    i32.const 8))
+;;; STDOUT ;;)

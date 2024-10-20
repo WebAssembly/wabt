@@ -190,6 +190,7 @@ enum class LabelType {
   If,
   Else,
   Try,
+  TryTable,
   Catch,
 
   First = Func,
@@ -233,6 +234,13 @@ enum class SegmentKind {
   Active,
   Passive,
   Declared,
+};
+
+enum class CatchKind {
+  Catch,
+  CatchRef,
+  CatchAll,
+  CatchAllRef,
 };
 
 // Used in test asserts for special expected values "nan:canonical" and

@@ -38,6 +38,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   // Implementation of ExprVisitor::DelegateNop.
   Result BeginBlockExpr(BlockExpr* expr) override;
   Result BeginTryExpr(TryExpr* expr) override;
+  Result BeginTryTableExpr(TryTableExpr* expr) override;
   Result BeginLoopExpr(LoopExpr* expr) override;
   Result BeginIfExpr(IfExpr* expr) override;
 
@@ -214,6 +215,11 @@ Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
 }
 
 Result NameGenerator::BeginTryExpr(TryExpr* expr) {
+  MaybeGenerateName("T", label_count_++, &expr->block.label);
+  return Result::Ok;
+}
+
+Result NameGenerator::BeginTryTableExpr(TryTableExpr* expr) {
   MaybeGenerateName("T", label_count_++, &expr->block.label);
   return Result::Ok;
 }

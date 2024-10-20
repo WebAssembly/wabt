@@ -633,6 +633,8 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
     *out_type = Type::FuncRef;
   } else if (type_str == "externref") {
     *out_type = Type::ExternRef;
+  } else if (type_str == "exnref") {
+    *out_type = Type::ExnRef;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -860,6 +862,16 @@ wabt::Result JSONParser::ParseConstValue(Type type,
         // TODO: hack, just whatever ref is at this index; but skip null (which
         // is always 0).
         out_value->Set(Ref{value + 1});
+      }
+      break;
+
+    case Type::ExnRef:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        // FIXME?
+        PrintError("NYI");
+        return wabt::Result::Error;
       }
       break;
 
@@ -1912,6 +1924,11 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
 
     case Type::ExternRef:
       ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
+      break;
+
+    case Type::ExnRef:
+      // FIXME is this correct?
+      ok = (actual.type == Type::ExnRef);
       break;
 
     default:

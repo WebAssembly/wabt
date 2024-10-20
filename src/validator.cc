@@ -147,7 +147,10 @@ class Validator : public ExprVisitor::Delegate {
   Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
+  Result BeginTryTableExpr(TryTableExpr*) override;
+  Result EndTryTableExpr(TryTableExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
+  Result OnThrowRefExpr(ThrowRefExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
   Result OnAtomicFenceExpr(AtomicFenceExpr*) override;
@@ -564,8 +567,29 @@ Result Validator::EndTryExpr(TryExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::BeginTryTableExpr(TryTableExpr* expr) {
+  result_ |=
+      validator_.BeginTryTable(expr->loc, GetDeclarationType(expr->block.decl));
+  for (const TableCatch& catch_ : expr->catches) {
+    result_ |= validator_.OnTryTableCatch(expr->loc, catch_);
+  }
+  result_ |=
+      validator_.EndTryTable(expr->loc, GetDeclarationType(expr->block.decl));
+  return Result::Ok;
+}
+
+Result Validator::EndTryTableExpr(TryTableExpr* expr) {
+  result_ |= validator_.OnEnd(expr->block.end_loc);
+  return Result::Ok;
+}
+
 Result Validator::OnThrowExpr(ThrowExpr* expr) {
   result_ |= validator_.OnThrow(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnThrowRefExpr(ThrowRefExpr* expr) {
+  result_ |= validator_.OnThrowRef(expr->loc);
   return Result::Ok;
 }
 

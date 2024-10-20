@@ -28,7 +28,7 @@ out/test/spec/obsolete-keywords.wast:34: assert_malformed passed:
   (func (local $i i32) (drop (tee_local $i (i32.const 0))))
                                                          ^
 out/test/spec/obsolete-keywords.wast:41: assert_malformed passed:
-  out/test/spec/obsolete-keywords/obsolete-keywords.5.wat:1:12: error: unexpected token "anyfunc", expected i32, i64, f32, f64, v128, externref or funcref.
+  out/test/spec/obsolete-keywords/obsolete-keywords.5.wat:1:12: error: unexpected token "anyfunc", expected i32, i64, f32, f64, v128, externref, exnref or funcref.
   (global $g anyfunc (ref.null func))
              ^^^^^^^
 out/test/spec/obsolete-keywords.wast:48: assert_malformed passed:

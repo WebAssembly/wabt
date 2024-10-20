@@ -21,11 +21,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
-#include <set>
 
 #include "wabt/binding-hash.h"
 #include "wabt/common.h"
@@ -422,7 +422,9 @@ enum class ExprType {
   TableFill,
   Ternary,
   Throw,
+  ThrowRef,
   Try,
+  TryTable,
   Unary,
   Unreachable,
 
@@ -459,6 +461,21 @@ struct Catch {
   }
 };
 using CatchVector = std::vector<Catch>;
+
+struct TableCatch {
+  explicit TableCatch(const Location& loc = Location()) : loc(loc) {}
+  Location loc;
+  Var tag;
+  Var target;
+  CatchKind kind;
+  bool IsCatchAll() const {
+    return kind == CatchKind::CatchAll || kind == CatchKind::CatchAllRef;
+  }
+  bool IsRef() const {
+    return kind == CatchKind::CatchRef || kind == CatchKind::CatchAllRef;
+  }
+};
+using TryTableVector = std::vector<TableCatch>;
 
 enum class TryKind { Plain, Catch, Delegate };
 
@@ -516,6 +533,7 @@ using DropExpr = ExprMixin<ExprType::Drop>;
 using NopExpr = ExprMixin<ExprType::Nop>;
 using ReturnExpr = ExprMixin<ExprType::Return>;
 using UnreachableExpr = ExprMixin<ExprType::Unreachable>;
+using ThrowRefExpr = ExprMixin<ExprType::ThrowRef>;
 
 using MemoryGrowExpr = MemoryExpr<ExprType::MemoryGrow>;
 using MemorySizeExpr = MemoryExpr<ExprType::MemorySize>;
@@ -741,6 +759,15 @@ class IfExpr : public ExprMixin<ExprType::If> {
   Block true_;
   ExprList false_;
   Location false_end_loc;
+};
+
+class TryTableExpr : public ExprMixin<ExprType::TryTable> {
+ public:
+  explicit TryTableExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::TryTable>(loc) {}
+
+  Block block;
+  TryTableVector catches;
 };
 
 class TryExpr : public ExprMixin<ExprType::Try> {

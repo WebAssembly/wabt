@@ -191,6 +191,7 @@ class BinaryReader {
   TypeVector result_types_;
   TypeMutVector fields_;
   std::vector<Index> target_depths_;
+  RawCatchVector catches_;
   const ReadBinaryOptions& options_;
   BinarySection last_known_section_ = BinarySection::Invalid;
   bool did_read_names_section_ = false;
@@ -556,6 +557,9 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::FuncRef:
     case Type::ExternRef:
       return options_.features.reference_types_enabled();
+
+    case Type::ExnRef:
+      return options_.features.exceptions_enabled();
 
     case Type::Reference:
       return options_.features.function_references_enabled();
@@ -1506,6 +1510,38 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         break;
       }
 
+      case Opcode::TryTable: {
+        nested_blocks.push(opcode);
+        Type sig_type;
+        CHECK_RESULT(ReadType(&sig_type, "try_table signature type"));
+        ERROR_UNLESS(IsBlockType(sig_type),
+                     "expected valid block signature type");
+        Index count;
+        CHECK_RESULT(ReadCount(&count, "catch count"));
+
+        catches_.resize(count);
+        for (Index i = 0; i < count; i++) {
+          uint8_t handler;
+          CHECK_RESULT(ReadU8(&handler, "catch handler"));
+          ERROR_UNLESS(handler < 4, "expected valid catch handler");
+          bool is_catch_all = handler & 2;
+          Index tag = kInvalidIndex;
+          if (!(is_catch_all)) {
+            CHECK_RESULT(ReadIndex(&tag, "catch tag"));
+          }
+          Index depth;
+          CHECK_RESULT(ReadIndex(&depth, "catch depth"));
+          RawCatch catch_;
+          catch_.kind = CatchKind(handler);
+          catch_.tag = tag;
+          catch_.depth = depth;
+          catches_[i] = catch_;
+        }
+
+        CALLBACK(OnTryTableExpr, sig_type, catches_);
+        break;
+      }
+
       case Opcode::Catch: {
         Index index;
         CHECK_RESULT(ReadIndex(&index, "tag index"));
@@ -1544,6 +1580,12 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         CHECK_RESULT(ReadIndex(&index, "tag index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
+      case Opcode::ThrowRef: {
+        CALLBACK(OnThrowRefExpr);
+        CALLBACK(OnOpcodeBare);
         break;
       }
 

@@ -223,8 +223,15 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       return {operand_count, 0, true};
     }
 
+    case ExprType::ThrowRef: {
+      return {1, 1, true};
+    }
+
     case ExprType::Try:
       return {0, cast<TryExpr>(&expr)->block.decl.sig.GetNumResults()};
+
+    case ExprType::TryTable:
+      return {0, cast<TryTableExpr>(&expr)->block.decl.sig.GetNumResults()};
 
     case ExprType::Ternary:
       return {3, 1};
