@@ -715,3 +715,13 @@ void w2c_host_buf_done(w2c_host* instance, u32 ptr, u32 size) {
   printf("%s -> %.*s\n", instance->input, (int)size, &instance->memory.data[ptr]);
 }
 ```
+## Troubleshooting
+
+- Compile error `Could not find a thread_local impl. Enable C11 or define
+WASM_RT_ASSUME_SINGLE_THREADED_APP to proceed`: the wasm2c runtime requires
+support for thread_local: this is done with compiler specific intrinsics in
+MSVC, GCC, clang, and ICC or through `thread_local` from C11 as a fallback. If
+none of these are possible, the wasm2c instance can only be run in an
+application that is single threaded, and must define
+`WASM_RT_ASSUME_SINGLE_THREADED_APP` to let the wasm2c runtime know that it can
+assume a single threaded host application.

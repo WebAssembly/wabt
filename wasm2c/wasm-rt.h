@@ -81,10 +81,17 @@ extern "C" {
 
 #ifdef _MSC_VER
 #define WASM_RT_THREAD_LOCAL __declspec(thread)
+#elif defined(__GNUC__) || defined(__clang__)
+#define WASM_RT_THREAD_LOCAL __thread
 #elif defined(WASM_RT_C11_AVAILABLE)
 #define WASM_RT_THREAD_LOCAL _Thread_local
 #else
+#ifdef WASM_RT_ASSUME_SINGLE_THREADED_APP
 #define WASM_RT_THREAD_LOCAL
+#else
+#error \
+    "Could not find a thread_local impl. Enable C11 or define WASM_RT_ASSUME_SINGLE_THREADED_APP to proceed."
+#endif
 #endif
 
 /**
