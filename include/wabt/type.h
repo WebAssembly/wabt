@@ -42,7 +42,7 @@ class Type {
     V128 = -0x05,       // 0x7b
     I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
     I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
-    ExnRef = -0x0c,     // 0x74
+    ExnRef = -0x17,     // 0x69
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
     Reference = -0x15,  // 0x6b
