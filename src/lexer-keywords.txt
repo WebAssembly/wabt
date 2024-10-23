@@ -53,6 +53,8 @@ end, TokenType::End, Opcode::End
 tag, TokenType::Tag
 extern, Type::ExternRef, TokenType::Extern
 externref, Type::ExternRef
+exn, Type::ExnRef, TokenType::Exn
+exnref, Type::ExnRef
 export, TokenType::Export
 f32.abs, TokenType::Unary, Opcode::F32Abs
 f32.add, TokenType::Binary, Opcode::F32Add
