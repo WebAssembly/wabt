@@ -83,8 +83,7 @@ extern "C" {
 #define WASM_RT_THREAD_LOCAL _Thread_local
 #elif defined(_MSC_VER)
 #define WASM_RT_THREAD_LOCAL __declspec(thread)
-#elif (defined(__GNUC__) || defined(__clang__)) && !defined(__APPLE__)
-// Disabled on Apple systems due to sporadic test failures.
+#elif defined(__GNUC__) || defined(__clang__)
 #define WASM_RT_THREAD_LOCAL __thread
 #else
 #define WASM_RT_THREAD_LOCAL
