@@ -163,7 +163,9 @@ static void os_cleanup_signal_handler(void) {
 static bool os_has_altstack_installed() {
   /* check for altstack already in place */
   stack_t ss;
-  if (sigaltstack(NULL, &ss) != 0) {
+  int tmp = sigaltstack(NULL, &ss);
+  printf("sigaltstack os_has_altstack_installed: %p, %d, %lu\n", ss.ss_sp, ss.ss_flags, (long unsigned) ss.ss_size);
+  if (tmp != 0) {
     perror("sigaltstack failed");
     abort();
   }
@@ -193,6 +195,7 @@ static void os_allocate_and_install_altstack(void) {
   ss.ss_sp = g_alt_stack;
   ss.ss_flags = 0;
   ss.ss_size = SIGSTKSZ;
+  printf("sigaltstack os_allocate_and_install_altstack: %p, %d, %lu\n", ss.ss_sp, ss.ss_flags, (long unsigned) ss.ss_size);
   if (sigaltstack(&ss, NULL) != 0) {
     perror("sigaltstack failed");
     abort();
@@ -206,7 +209,9 @@ static void os_disable_and_deallocate_altstack(void) {
 
   /* verify altstack was still in place */
   stack_t ss;
-  if (sigaltstack(NULL, &ss) != 0) {
+  int tmp = sigaltstack(NULL, &ss);
+  printf("sigaltstack os_disable_and_deallocate_altstack 1: %p, %d, %lu\n", ss.ss_sp, ss.ss_flags, (long unsigned) ss.ss_size);
+  if (tmp!= 0) {
     perror("sigaltstack failed");
     abort();
   }
@@ -220,6 +225,7 @@ static void os_disable_and_deallocate_altstack(void) {
 
   /* disable and free */
   ss.ss_flags = SS_DISABLE;
+  printf("sigaltstack os_disable_and_deallocate_altstack 2: %p, %d, %lu\n", ss.ss_sp, ss.ss_flags, (long unsigned) ss.ss_size);
   if (sigaltstack(&ss, NULL) != 0) {
     perror("sigaltstack failed");
     abort();
