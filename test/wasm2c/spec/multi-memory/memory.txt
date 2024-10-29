@@ -2,5 +2,5 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory.wast
 ;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
-45/45 tests passed.
+53/53 tests passed.
 ;;; STDOUT ;;)

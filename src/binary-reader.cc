@@ -3044,7 +3044,8 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
                "function signature count != function body count");
   // This is checked in ReadDataSection, but it must be checked at the end too,
   // in case the data section was omitted.
-  ERROR_IF(num_data_segments_ == 0 && data_count_ != kInvalidIndex,
+  ERROR_IF(num_data_segments_ == 0 && data_count_ != kInvalidIndex &&
+               data_count_ != 0,
            "Data section missing but DataCount non-zero");
   CALLBACK0(EndModule);
 
