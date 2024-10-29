@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/ref_null.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)

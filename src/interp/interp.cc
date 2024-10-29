@@ -225,6 +225,8 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
     case ValueType::FuncRef:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
+    case ValueType::ExnRef:
+      return obj->kind() == ObjectKind::Exception;
     default:
       return false;
   }
@@ -2733,8 +2735,11 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
                           v.u32(2), v.u32(3));
     }
 
+      // clang-format off
     case ValueType::FuncRef:    reftype = "funcref"; break;
     case ValueType::ExternRef:  reftype = "externref"; break;
+    case ValueType::ExnRef:     reftype = "exnref"; break;
+      // clang-format on
 
     default:
       WABT_UNREACHABLE;

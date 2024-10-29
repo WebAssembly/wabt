@@ -657,7 +657,8 @@ bool WastParser::PeekMatchExpr() {
 }
 
 bool WastParser::PeekMatchRefType() {
-  return options_->features.function_references_enabled() &&
+  return (options_->features.function_references_enabled() ||
+          options_->features.exceptions_enabled()) &&
          PeekMatchLpar(TokenType::Ref);
 }
 
@@ -933,6 +934,9 @@ Result WastParser::ParseValueType(Var* out_type) {
     case Type::FuncRef:
     case Type::ExternRef:
       is_enabled = options_->features.reference_types_enabled();
+      break;
+    case Type::ExnRef:
+      is_enabled = options_->features.exceptions_enabled();
       break;
     default:
       is_enabled = true;

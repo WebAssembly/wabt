@@ -256,6 +256,14 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       break;
     }
 
+    case Type::ExnRef: {
+      WriteString("exnref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
     case Type::V128: {
       WriteString("v128");
       WriteSeparator();

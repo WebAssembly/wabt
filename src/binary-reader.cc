@@ -557,6 +557,9 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::ExternRef:
       return options_.features.reference_types_enabled();
 
+    case Type::ExnRef:
+      return options_.features.exceptions_enabled();
+
     case Type::Reference:
       return options_.features.function_references_enabled();
 
