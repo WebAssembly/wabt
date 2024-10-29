@@ -537,6 +537,13 @@ Result BinaryReaderIR::OnFuncType(Index index,
       std::any_of(func_type->sig.result_types.begin(),
                   func_type->sig.result_types.end(),
                   [](auto x) { return x == Type::V128; });
+  module_->features_used.exceptions |=
+      std::any_of(func_type->sig.param_types.begin(),
+                  func_type->sig.param_types.end(),
+                  [](auto x) { return x == Type::ExnRef; }) ||
+      std::any_of(func_type->sig.result_types.begin(),
+                  func_type->sig.result_types.end(),
+                  [](auto x) { return x == Type::ExnRef; });
 
   field->type = std::move(func_type);
   module_->AppendField(std::move(field));
@@ -553,6 +560,7 @@ Result BinaryReaderIR::OnStructType(Index index,
     struct_type->fields[i].type = fields[i].type;
     struct_type->fields[i].mutable_ = fields[i].mutable_;
     module_->features_used.simd |= (fields[i].type == Type::V128);
+    module_->features_used.exceptions |= (fields[i].type == Type::ExnRef);
   }
   field->type = std::move(struct_type);
   module_->AppendField(std::move(field));
@@ -565,6 +573,7 @@ Result BinaryReaderIR::OnArrayType(Index index, TypeMut type_mut) {
   array_type->field.type = type_mut.type;
   array_type->field.mutable_ = type_mut.mutable_;
   module_->features_used.simd |= (type_mut.type == Type::V128);
+  module_->features_used.exceptions |= (type_mut.type == Type::ExnRef);
   field->type = std::move(array_type);
   module_->AppendField(std::move(field));
   return Result::Ok;
@@ -638,6 +647,7 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   module_->AppendField(
       std::make_unique<ImportModuleField>(std::move(import), GetLocation()));
   module_->features_used.simd |= (type == Type::V128);
+  module_->features_used.exceptions |= (type == Type::ExnRef);
   return Result::Ok;
 }
 
@@ -685,6 +695,7 @@ Result BinaryReaderIR::OnTable(Index index,
   Table& table = field->table;
   table.elem_limits = *elem_limits;
   table.elem_type = elem_type;
+  module_->features_used.exceptions |= (elem_type == Type::ExnRef);
   module_->AppendField(std::move(field));
   return Result::Ok;
 }
@@ -721,6 +732,7 @@ Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
   global.mutable_ = mutable_;
   module_->AppendField(std::move(field));
   module_->features_used.simd |= (type == Type::V128);
+  module_->features_used.exceptions |= (type == Type::ExnRef);
   return Result::Ok;
 }
 
@@ -787,6 +799,7 @@ Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   }
 
   module_->features_used.simd |= (type == Type::V128);
+  module_->features_used.exceptions |= (type == Type::ExnRef);
   return Result::Ok;
 }
 
@@ -1125,6 +1138,7 @@ Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
 }
 
 Result BinaryReaderIR::OnRefNullExpr(Type type) {
+  module_->features_used.exceptions |= (type == Type::ExnRef);
   return AppendExpr(std::make_unique<RefNullExpr>(type));
 }
 
@@ -1169,6 +1183,7 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
 }
 
 Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
+  module_->features_used.exceptions = true;
   return AppendExpr(std::make_unique<ThrowExpr>(Var(tag_index, GetLocation())));
 }
 
