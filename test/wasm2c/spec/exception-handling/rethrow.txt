@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite_legacy/rethrow.wast
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/legacy/rethrow.wast
 ;;; ARGS*: --enable-exceptions
 (;; STDOUT ;;;
 12/12 tests passed.
