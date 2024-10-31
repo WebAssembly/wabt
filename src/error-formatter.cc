@@ -62,7 +62,10 @@ std::string FormatError(const Error& error,
     result += '\n';
     result += indent_str;
 
-    size_t num_spaces = (loc.first_column - 1) - source_line.column_offset;
+    size_t num_spaces = 0;
+    if (loc.first_column > source_line.column_offset) {
+      num_spaces = (loc.first_column - 1) - source_line.column_offset;
+    }
     size_t num_carets = loc.last_column - loc.first_column;
     num_carets = std::min(num_carets, source_line.line.size() - num_spaces);
     num_carets = std::max<size_t>(num_carets, 1);

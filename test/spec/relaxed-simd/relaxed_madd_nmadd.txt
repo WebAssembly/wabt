@@ -2,5 +2,5 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/relaxed-simd/relaxed_madd_nmadd.wast
 ;;; ARGS*: --enable-relaxed-simd
 (;; STDOUT ;;;
-17/17 tests passed.
+19/19 tests passed.
 ;;; STDOUT ;;)

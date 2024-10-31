@@ -712,6 +712,11 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   TableType table_type;
   result |= CheckFuncTypeIndex(sig_var, &func_type);
   result |= CheckTableIndex(table_var, &table_type);
+  if (table_type.element != Type::FuncRef) {
+    result |= PrintError(
+        loc,
+        "type mismatch: call_indirect must reference table of funcref type");
+  }
   result |= typechecker_.OnCallIndirect(func_type.params, func_type.results,
                                         table_type.limits);
   return result;
@@ -1028,9 +1033,15 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
                                              Var sig_var,
                                              Var table_var) {
   Result result = CheckInstr(Opcode::CallIndirect, loc);
-  result |= CheckTableIndex(table_var);
   FuncType func_type;
+  TableType table_type;
   result |= CheckFuncTypeIndex(sig_var, &func_type);
+  result |= CheckTableIndex(table_var, &table_type);
+  if (table_type.element != Type::FuncRef) {
+    result |= PrintError(loc,
+                         "type mismatch: return_call_indirect must reference "
+                         "table of funcref type");
+  }
   result |=
       typechecker_.OnReturnCallIndirect(func_type.params, func_type.results);
   return result;

@@ -297,5 +297,18 @@ out/test/spec/align.wast:452: assert_invalid passed:
   out/test/spec/align/align.105.wasm:000002a: error: alignment must not be larger than natural alignment (8)
   000002a: error: OnStoreExpr callback failed
 out/test/spec/align.wast:864: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
-156/156 tests passed.
+out/test/spec/align.wast:873: assert_invalid passed:
+  out/test/spec/align/align.108.wasm:0000021: error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:892: assert_malformed passed:
+  0000020: error: invalid load alignment: 32
+out/test/spec/align.wast:911: assert_malformed passed:
+  0000020: error: invalid load alignment: 33
+out/test/spec/align.wast:930: assert_malformed passed:
+  0000020: error: invalid load alignment: 63
+out/test/spec/align.wast:949: assert_malformed passed:
+  0000020: error: multi_memory not allowed
+out/test/spec/align.wast:968: assert_malformed passed:
+  0000020: error: multi_memory not allowed
+162/162 tests passed.
 ;;; STDOUT ;;)
