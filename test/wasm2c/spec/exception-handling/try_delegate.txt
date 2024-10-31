@@ -1,6 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite_legacy/try_delegate.wast
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/legacy/try_delegate.wast
 ;;; ARGS*: --enable-exceptions --enable-tail-call
 (;; STDOUT ;;;
-17/17 tests passed.
+20/20 tests passed.
 ;;; STDOUT ;;)
