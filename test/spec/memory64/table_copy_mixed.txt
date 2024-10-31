@@ -1,0 +1,15 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_copy_mixed.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64/table_copy_mixed.wast:20: assert_invalid passed:
+  out/test/spec/memory64/table_copy_mixed/table_copy_mixed.1.wasm:000003e: error: type mismatch in table.copy, expected [i32, i64, i32] but got [i32, i64, i64]
+  000003e: error: OnTableCopyExpr callback failed
+out/test/spec/memory64/table_copy_mixed.wast:30: assert_invalid passed:
+  out/test/spec/memory64/table_copy_mixed/table_copy_mixed.2.wasm:000003d: error: type mismatch in table.copy, expected [i32, i64, i32] but got [i32, i32, i32]
+  000003d: error: OnTableCopyExpr callback failed
+out/test/spec/memory64/table_copy_mixed.wast:40: assert_invalid passed:
+  out/test/spec/memory64/table_copy_mixed/table_copy_mixed.3.wasm:000003d: error: type mismatch in table.copy, expected [i32, i64, i32] but got [i64, i64, i32]
+  000003d: error: OnTableCopyExpr callback failed
+4/4 tests passed.
+;;; STDOUT ;;)

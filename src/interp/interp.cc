@@ -78,6 +78,14 @@ Result Match(const Limits& expected,
     }
   }
 
+  if (expected.is_64 and not actual.is_64) {
+    *out_msg = StringPrintf("expected i64 memory, but i32 memory provided");
+    return Result::Error;
+  } else if (actual.is_64 and not expected.is_64) {
+    *out_msg = StringPrintf("expected i32 memory, but i64 memory provided");
+    return Result::Error;
+  }
+
   return Result::Ok;
 }
 
