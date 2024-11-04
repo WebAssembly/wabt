@@ -702,7 +702,7 @@ struct Decompiler {
     size_t line_start = 0;
     static const char s_hexdigits[] = "0123456789abcdef";
     for (auto c : in) {
-      if (c >= ' ' && c <= '~') {
+      if (c >= ' ' && c <= '~' && c != '"' && c != '\\') {
         s += c;
       } else {
         s += '\\';
