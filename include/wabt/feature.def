@@ -40,3 +40,4 @@ WABT_FEATURE(memory64,            "memory64",                false,   "64-bit me
 WABT_FEATURE(multi_memory,        "multi-memory",            false,   "Multi-memory")
 WABT_FEATURE(extended_const,      "extended-const",          false,   "Extended constant expressions")
 WABT_FEATURE(relaxed_simd,        "relaxed-simd",            false,   "Relaxed SIMD")
+WABT_FEATURE(custom_page_sizes,   "custom-page-sizes",       false,   "Custom page sizes")

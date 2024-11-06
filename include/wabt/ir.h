@@ -947,6 +947,7 @@ struct Memory {
 
   std::string name;
   Limits page_limits;
+  uint32_t page_size;
 };
 
 struct DataSegment {

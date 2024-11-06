@@ -126,7 +126,8 @@ class BinaryReaderIR : public BinaryReaderNop {
                         std::string_view module_name,
                         std::string_view field_name,
                         Index memory_index,
-                        const Limits* page_limits) override;
+                        const Limits* page_limits,
+                        uint32_t page_size) override;
   Result OnImportGlobal(Index import_index,
                         std::string_view module_name,
                         std::string_view field_name,
@@ -148,7 +149,9 @@ class BinaryReaderIR : public BinaryReaderNop {
                  const Limits* elem_limits) override;
 
   Result OnMemoryCount(Index count) override;
-  Result OnMemory(Index index, const Limits* limits) override;
+  Result OnMemory(Index index,
+                  const Limits* limits,
+                  uint32_t page_size) override;
 
   Result OnGlobalCount(Index count) override;
   Result BeginGlobal(Index index, Type type, bool mutable_) override;
@@ -620,11 +623,13 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
                                       std::string_view module_name,
                                       std::string_view field_name,
                                       Index memory_index,
-                                      const Limits* page_limits) {
+                                      const Limits* page_limits,
+                                      uint32_t page_size) {
   auto import = std::make_unique<MemoryImport>();
   import->module_name = module_name;
   import->field_name = field_name;
   import->memory.page_limits = *page_limits;
+  import->memory.page_size = page_size;
   if (import->memory.page_limits.is_shared) {
     module_->features_used.threads = true;
   }
@@ -707,10 +712,13 @@ Result BinaryReaderIR::OnMemoryCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
+Result BinaryReaderIR::OnMemory(Index index,
+                                const Limits* page_limits,
+                                uint32_t page_size) {
   auto field = std::make_unique<MemoryModuleField>(GetLocation());
   Memory& memory = field->memory;
   memory.page_limits = *page_limits;
+  memory.page_size = page_size;
   if (memory.page_limits.is_shared) {
     module_->features_used.threads = true;
   }

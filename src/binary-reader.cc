@@ -146,7 +146,8 @@ class BinaryReader {
 
   [[nodiscard]] Result ReadInitExpr(Index index);
   [[nodiscard]] Result ReadTable(Type* out_elem_type, Limits* out_elem_limits);
-  [[nodiscard]] Result ReadMemory(Limits* out_page_limits);
+  [[nodiscard]] Result ReadMemory(Limits* out_page_limits,
+                                  uint32_t* out_page_size);
   [[nodiscard]] Result ReadGlobalHeader(Type* out_type, bool* out_mutable);
   [[nodiscard]] Result ReadTagType(Index* out_sig_index);
   [[nodiscard]] Result ReadAddress(Address* out_value,
@@ -600,7 +601,7 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
   bool is_64 = flags & WABT_BINARY_LIMITS_IS_64_FLAG;
-  const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
+  const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_TABLE_FLAGS;
   ERROR_IF(is_shared, "tables may not be shared");
   ERROR_IF(is_64 && !options_.features.memory64_enabled(),
            "memory64 not allowed");
@@ -617,7 +618,8 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadMemory(Limits* out_page_limits) {
+Result BinaryReader::ReadMemory(Limits* out_page_limits,
+                                uint32_t* out_page_size) {
   uint8_t flags;
   uint64_t initial;
   uint64_t max = 0;
@@ -625,12 +627,17 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
   bool is_64 = flags & WABT_BINARY_LIMITS_IS_64_FLAG;
-  const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_FLAGS;
+  bool has_custom_page_size =
+      flags & WABT_BINARY_LIMITS_HAS_CUSTOM_PAGE_SIZE_FLAG;
+  const uint8_t unknown_flags = flags & ~WABT_BINARY_LIMITS_ALL_MEMORY_FLAGS;
   ERROR_UNLESS(unknown_flags == 0, "malformed memory limits flag: %d", flags);
   ERROR_IF(is_shared && !options_.features.threads_enabled(),
            "memory may not be shared: threads not allowed");
   ERROR_IF(is_64 && !options_.features.memory64_enabled(),
            "memory64 not allowed");
+  ERROR_IF(
+      has_custom_page_size && !options_.features.custom_page_sizes_enabled(),
+      "custom page sizes not allowed");
   if (options_.features.memory64_enabled()) {
     CHECK_RESULT(ReadU64Leb128(&initial, "memory initial page count"));
     if (has_max) {
@@ -645,6 +652,14 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
       CHECK_RESULT(ReadU32Leb128(&max32, "memory max page count"));
       max = max32;
     }
+  }
+  if (has_custom_page_size) {
+    uint32_t page_size_log2;
+    CHECK_RESULT(ReadU32Leb128(&page_size_log2, "memory page size"));
+    ERROR_IF(page_size_log2 > 16, "malformed memory page size");
+    *out_page_size = 1 << page_size_log2;
+  } else {
+    *out_page_size = WABT_DEFAULT_PAGE_SIZE;
   }
 
   out_page_limits->has_max = has_max;
@@ -2586,9 +2601,10 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
 
       case ExternalKind::Memory: {
         Limits page_limits;
-        CHECK_RESULT(ReadMemory(&page_limits));
+        uint32_t page_size;
+        CHECK_RESULT(ReadMemory(&page_limits, &page_size));
         CALLBACK(OnImportMemory, i, module_name, field_name,
-                 num_memory_imports_, &page_limits);
+                 num_memory_imports_, &page_limits, page_size);
         num_memory_imports_++;
         break;
       }
@@ -2663,8 +2679,9 @@ Result BinaryReader::ReadMemorySection(Offset section_size) {
   for (Index i = 0; i < num_memories; ++i) {
     Index memory_index = num_memory_imports_ + i;
     Limits page_limits;
-    CHECK_RESULT(ReadMemory(&page_limits));
-    CALLBACK(OnMemory, memory_index, &page_limits);
+    uint32_t page_size;
+    CHECK_RESULT(ReadMemory(&page_limits, &page_size));
+    CALLBACK(OnMemory, memory_index, &page_limits, page_size);
   }
   CALLBACK0(EndMemorySection);
   return Result::Ok;

@@ -160,7 +160,10 @@ struct wasm_tabletype_t : wasm_externtype_t {
 
 struct wasm_memorytype_t : wasm_externtype_t {
   wasm_memorytype_t(const wasm_limits_t* limits)
-      : wasm_externtype_t{std::make_unique<MemoryType>(ToWabtLimits(*limits))},
+      : wasm_externtype_t{std::make_unique<MemoryType>(
+            ToWabtLimits(*limits),
+            WABT_DEFAULT_PAGE_SIZE)},  // wasm-c-api doesn't support
+                                       // custom-page-sizes yet
         limits{*limits} {}
 
   wasm_memorytype_t(MemoryType mt)

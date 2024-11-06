@@ -1146,6 +1146,36 @@ Result WastParser::ParseLimits(Limits* out_limits) {
   return Result::Ok;
 }
 
+Result WastParser::ParsePageSize(uint32_t* out_page_size) {
+  WABT_TRACE(ParsePageSize);
+
+  Result result = Result::Ok;
+
+  if (PeekMatchLpar(TokenType::PageSize)) {
+    if (!options_->features.custom_page_sizes_enabled()) {
+      Error(GetLocation(), "Specifying memory page size is not allowed");
+      return Result::Error;
+    }
+    EXPECT(Lpar);
+    EXPECT(PageSize);
+    auto token = GetToken();
+    if (!token.HasLiteral()) {
+      Error(GetLocation(), "malformed custom page size");
+      return Result::Error;
+    }
+    auto sv = token.literal().text;
+    result |= ParseInt32(sv, out_page_size, ParseIntType::UnsignedOnly);
+    if (*out_page_size > UINT32_MAX || *out_page_size <= 0 ||
+        (*out_page_size & (*out_page_size - 1))) {
+      Error(GetLocation(), "malformed custom page size");
+    }
+    Consume();
+    EXPECT(Rpar);
+  }
+
+  return result;
+}
+
 Result WastParser::ParseNat(uint64_t* out_nat, bool is_64) {
   WABT_TRACE(ParseNat);
   if (!PeekMatch(TokenType::Nat)) {
@@ -1674,8 +1704,10 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = std::make_unique<MemoryImport>(name);
+      import->memory.page_size = WABT_DEFAULT_PAGE_SIZE;
       CHECK_RESULT(ParseLimitsIndex(&import->memory.page_limits));
       CHECK_RESULT(ParseLimits(&import->memory.page_limits));
+      CHECK_RESULT(ParsePageSize(&import->memory.page_size));
       EXPECT(Rpar);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
@@ -1728,15 +1760,26 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
     auto import = std::make_unique<MemoryImport>(name);
+    import->memory.page_size = WABT_DEFAULT_PAGE_SIZE;
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseLimitsIndex(&import->memory.page_limits));
     CHECK_RESULT(ParseLimits(&import->memory.page_limits));
+    CHECK_RESULT(ParsePageSize(&import->memory.page_size));
     auto field =
         std::make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<MemoryModuleField>(loc, name);
+    field->memory.page_size = WABT_DEFAULT_PAGE_SIZE;
     CHECK_RESULT(ParseLimitsIndex(&field->memory.page_limits));
+    if (PeekMatchLpar(TokenType::PageSize)) {
+      // this is the data abbreviation (no limits)
+      CHECK_RESULT(ParsePageSize(&field->memory.page_size));
+      if (!PeekMatchLpar(TokenType::Data)) {
+        Error(loc, "Expected inline data segment");
+        return Result::Error;
+      }
+    }
     if (MatchLpar(TokenType::Data)) {
       auto data_segment_field = std::make_unique<DataSegmentModuleField>(loc);
       DataSegment& data_segment = data_segment_field->data_segment;
@@ -1747,8 +1790,12 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
       ParseTextListOpt(&data_segment.data);
       EXPECT(Rpar);
 
-      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment.data.size());
-      uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
+      bool byte_pages = field->memory.page_size == 1;
+      uint32_t byte_size =
+          byte_pages ? data_segment.data.size()
+                     : WABT_ALIGN_UP_TO_DEFAULT_PAGE(data_segment.data.size());
+      uint32_t page_size =
+          byte_pages ? byte_size : WABT_BYTES_TO_DEFAULT_PAGES(byte_size);
       field->memory.page_limits.initial = page_size;
       field->memory.page_limits.max = page_size;
       field->memory.page_limits.has_max = true;
@@ -1757,6 +1804,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
       module->AppendField(std::move(data_segment_field));
     } else {
       CHECK_RESULT(ParseLimits(&field->memory.page_limits));
+      CHECK_RESULT(ParsePageSize(&field->memory.page_size));
       module->AppendField(std::move(field));
     }
   }

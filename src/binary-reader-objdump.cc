@@ -1059,7 +1059,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         std::string_view module_name,
                         std::string_view field_name,
                         Index memory_index,
-                        const Limits* page_limits) override;
+                        const Limits* page_limits,
+                        uint32_t page_size) override;
   Result OnImportGlobal(Index import_index,
                         std::string_view module_name,
                         std::string_view field_name,
@@ -1081,7 +1082,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                  const Limits* elem_limits) override;
 
   Result OnMemoryCount(Index count) override;
-  Result OnMemory(Index index, const Limits* limits) override;
+  Result OnMemory(Index index,
+                  const Limits* limits,
+                  uint32_t page_size) override;
 
   Result OnGlobalCount(Index count) override;
   Result BeginGlobal(Index index, Type type, bool mutable_) override;
@@ -1563,7 +1566,8 @@ Result BinaryReaderObjdump::OnImportMemory(Index import_index,
                                            std::string_view module_name,
                                            std::string_view field_name,
                                            Index memory_index,
-                                           const Limits* page_limits) {
+                                           const Limits* page_limits,
+                                           uint32_t page_size) {
   PrintDetails(" - memory[%" PRIindex "] pages: initial=%" PRId64, memory_index,
                page_limits->initial);
   if (page_limits->has_max) {
@@ -1574,6 +1578,9 @@ Result BinaryReaderObjdump::OnImportMemory(Index import_index,
   }
   if (page_limits->is_64) {
     PrintDetails(" i64");
+  }
+  if (page_size != WABT_DEFAULT_PAGE_SIZE) {
+    PrintDetails(" (pagesize %u)", page_size);
   }
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
@@ -1615,7 +1622,9 @@ Result BinaryReaderObjdump::OnMemoryCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::OnMemory(Index index, const Limits* page_limits) {
+Result BinaryReaderObjdump::OnMemory(Index index,
+                                     const Limits* page_limits,
+                                     uint32_t page_size) {
   PrintDetails(" - memory[%" PRIindex "] pages: initial=%" PRId64, index,
                page_limits->initial);
   if (page_limits->has_max) {
@@ -1626,6 +1635,9 @@ Result BinaryReaderObjdump::OnMemory(Index index, const Limits* page_limits) {
   }
   if (page_limits->is_64) {
     PrintDetails(" i64");
+  }
+  if (page_size != WABT_DEFAULT_PAGE_SIZE) {
+    PrintDetails(" (pagesize %u)", page_size);
   }
   PrintDetails("\n");
   return Result::Ok;

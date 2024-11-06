@@ -31,6 +31,7 @@ options:
       --enable-multi-memory                    Enable Multi-memory
       --enable-extended-const                  Enable Extended constant expressions
       --enable-relaxed-simd                    Enable Relaxed SIMD
+      --enable-custom-page-sizes               Enable Custom page sizes
       --enable-all                             Enable all features
   -o, --output=FILENAME                        Output file for the stats, by default use stdout
   -c, --cutoff=N                               Cutoff for reporting counts less than N

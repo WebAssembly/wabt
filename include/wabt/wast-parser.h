@@ -147,6 +147,7 @@ class WastParser {
   Result ParseMemidx(Location loc, Var* memidx);
   Result ParseLimitsIndex(Limits*);
   Result ParseLimits(Limits*);
+  Result ParsePageSize(uint32_t*);
   Result ParseNat(uint64_t*, bool is_64);
 
   Result ParseModuleFieldList(Module*);
