@@ -1,0 +1,12 @@
+;;; TOOL: run-roundtrip
+;;; ARGS*: --stdout --enable-multi-memory --enable-memory64 --debug-names
+(module
+  (memory 0)
+  (memory $k i64 (data))
+)
+(;; STDOUT ;;;
+(module
+  (memory (;0;) 0)
+  (memory $k i64 0 0)
+  (data (;0;) (memory $k) (i64.const 0) ""))
+;;; STDOUT ;;)
