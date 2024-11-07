@@ -1504,7 +1504,11 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
   WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
   if (segment.kind != SegmentKind::Passive) {
-    WriteMemoryVarUnlessZero(segment.memory_var, NextChar::Space);
+    if (module.GetMemoryIndex(segment.memory_var) != 0) {
+      WriteOpenSpace("memory");
+      WriteVar(segment.memory_var, NextChar::Space);
+      WriteCloseSpace();
+    }
     WriteInitExpr(segment.offset);
   }
   WriteQuotedData(segment.data.data(), segment.data.size());

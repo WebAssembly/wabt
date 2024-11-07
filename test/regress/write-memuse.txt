@@ -1,0 +1,4 @@
+;;; TOOL: run-roundtrip
+;;; ARGS*: --enable-multi-memory --debug-names
+(memory 0)
+(memory $k (data))
