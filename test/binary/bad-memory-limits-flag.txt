@@ -3,9 +3,9 @@ magic
 version
 section(MEMORY) {
   count[1]
-  flags[8]
+  flags[16]
 }
 (;; STDERR ;;;
-000000c: error: malformed memory limits flag: 8
-000000c: error: malformed memory limits flag: 8
+000000c: error: malformed memory limits flag: 16
+000000c: error: malformed memory limits flag: 16
 ;;; STDERR ;;)

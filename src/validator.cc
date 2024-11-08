@@ -732,7 +732,8 @@ Result Validator::CheckModule() {
 
         case ExternalKind::Memory: {
           auto&& memory = cast<MemoryImport>(f->import.get())->memory;
-          result_ |= validator_.OnMemory(field.loc, memory.page_limits);
+          result_ |= validator_.OnMemory(field.loc, memory.page_limits,
+                                         memory.page_size);
           break;
         }
 
@@ -772,7 +773,8 @@ Result Validator::CheckModule() {
   // Memory section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<MemoryModuleField>(&field)) {
-      result_ |= validator_.OnMemory(field.loc, f->memory.page_limits);
+      result_ |= validator_.OnMemory(field.loc, f->memory.page_limits,
+                                     f->memory.page_size);
     }
   }
 

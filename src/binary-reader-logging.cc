@@ -217,14 +217,15 @@ Result BinaryReaderLogging::OnImportMemory(Index import_index,
                                            std::string_view module_name,
                                            std::string_view field_name,
                                            Index memory_index,
-                                           const Limits* page_limits) {
+                                           const Limits* page_limits,
+                                           uint32_t page_size) {
   char buf[100];
   SPrintLimits(buf, sizeof(buf), page_limits);
   LOGF("OnImportMemory(import_index: %" PRIindex ", memory_index: %" PRIindex
        ", %s)\n",
        import_index, memory_index, buf);
   return reader_->OnImportMemory(import_index, module_name, field_name,
-                                 memory_index, page_limits);
+                                 memory_index, page_limits, page_size);
 }
 
 Result BinaryReaderLogging::OnImportGlobal(Index import_index,
@@ -264,11 +265,13 @@ Result BinaryReaderLogging::OnTable(Index index,
   return reader_->OnTable(index, elem_type, elem_limits);
 }
 
-Result BinaryReaderLogging::OnMemory(Index index, const Limits* page_limits) {
+Result BinaryReaderLogging::OnMemory(Index index,
+                                     const Limits* page_limits,
+                                     uint32_t page_size) {
   char buf[100];
   SPrintLimits(buf, sizeof(buf), page_limits);
   LOGF("OnMemory(index: %" PRIindex ", %s)\n", index, buf);
-  return reader_->OnMemory(index, page_limits);
+  return reader_->OnMemory(index, page_limits, page_size);
 }
 
 Result BinaryReaderLogging::BeginGlobal(Index index, Type type, bool mutable_) {

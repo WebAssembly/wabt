@@ -134,13 +134,25 @@ Result SharedValidator::OnTable(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnMemory(const Location& loc, const Limits& limits) {
+Result SharedValidator::OnMemory(const Location& loc,
+                                 const Limits& limits,
+                                 uint32_t page_size) {
   Result result = Result::Ok;
   if (memories_.size() > 0 && !options_.features.multi_memory_enabled()) {
     result |= PrintError(loc, "only one memory block allowed");
   }
-  result |= CheckLimits(
-      loc, limits, limits.is_64 ? WABT_MAX_PAGES64 : WABT_MAX_PAGES32, "pages");
+
+  if (page_size != WABT_DEFAULT_PAGE_SIZE) {
+    if (!options_.features.custom_page_sizes_enabled()) {
+      result |= PrintError(loc, "only default page size (64 KiB) is allowed");
+    } else if (page_size != 1) {
+      result |= PrintError(loc, "only page sizes of 1 B or 64 KiB are allowed");
+    }
+  }
+
+  uint64_t absolute_max = WABT_BYTES_TO_MIN_PAGES(
+      (limits.is_64 ? UINT64_MAX : UINT32_MAX), page_size);
+  result |= CheckLimits(loc, limits, absolute_max, "pages");
 
   if (limits.is_shared) {
     if (!options_.features.threads_enabled()) {

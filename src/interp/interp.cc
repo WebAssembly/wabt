@@ -136,6 +136,12 @@ std::unique_ptr<ExternType> MemoryType::Clone() const {
 Result Match(const MemoryType& expected,
              const MemoryType& actual,
              std::string* out_msg) {
+  if (expected.page_size != actual.page_size) {
+    *out_msg = StringPrintf(
+        "page_size mismatch in imported memory, expected %u but got %u.",
+        expected.page_size, actual.page_size);
+    return Result::Error;
+  }
   return Match(expected.limits, actual.limits, out_msg);
 }
 
@@ -576,7 +582,7 @@ Result Table::Copy(Store& store,
 //// Memory ////
 Memory::Memory(class Store&, MemoryType type)
     : Extern(skind), type_(type), pages_(type.limits.initial) {
-  data_.resize(pages_ * WABT_PAGE_SIZE);
+  data_.resize(pages_ * type_.page_size);
 }
 
 void Memory::Mark(class Store&) {}
@@ -597,7 +603,7 @@ Result Memory::Grow(u64 count) {
     auto old_size = data_.size();
 #endif
     pages_ = new_pages;
-    data_.resize(new_pages * WABT_PAGE_SIZE);
+    data_.resize(new_pages * type_.page_size);
 #if WABT_BIG_ENDIAN
     std::move_backward(data_.begin(), data_.begin() + old_size, data_.end());
     std::fill(data_.begin(), data_.end() - old_size, 0);

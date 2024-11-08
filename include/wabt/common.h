@@ -44,14 +44,18 @@
 #define WABT_USE(x) static_cast<void>(x)
 
 // 64k
-#define WABT_PAGE_SIZE 0x10000
-// # of pages that fit in 32-bit address space
-#define WABT_MAX_PAGES32 0x10000
-// # of pages that fit in 64-bit address space
-#define WABT_MAX_PAGES64 0x1000000000000
-#define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
-#define WABT_ALIGN_UP_TO_PAGE(x) \
-  (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
+#define WABT_DEFAULT_PAGE_SIZE 0x10000
+
+inline uint64_t WABT_BYTES_TO_MIN_PAGES(uint64_t num_bytes,
+                                        uint32_t page_size) {
+  if ((page_size == 0) ||
+      (page_size & (page_size - 1))) {  // malformed page sizes
+    WABT_UNREACHABLE;
+    return 0;
+  }
+  uint64_t num_pages = num_bytes / page_size;
+  return (page_size * num_pages == num_bytes) ? num_pages : num_pages + 1;
+}
 
 #define WABT_ENUM_COUNT(name) \
   (static_cast<int>(name::Last) - static_cast<int>(name::First) + 1)

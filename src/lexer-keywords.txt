@@ -556,6 +556,7 @@ nan:canonical, TokenType::NanCanonical
 nop, TokenType::Nop, Opcode::Nop
 offset, TokenType::Offset
 output, TokenType::Output
+pagesize, TokenType::PageSize
 param, TokenType::Param
 ref, TokenType::Ref
 quote, TokenType::Quote

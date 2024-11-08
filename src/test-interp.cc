@@ -491,7 +491,8 @@ TEST_F(InterpTest, Rot13) {
 
   std::string string_data = "Hello, WebAssembly!";
 
-  auto memory = Memory::New(store_, MemoryType{Limits{1}});
+  auto memory =
+      Memory::New(store_, MemoryType{Limits{1}, WABT_DEFAULT_PAGE_SIZE});
 
   auto fill_buf = [&](Thread& thread, const Values& params, Values& results,
                       Trap::Ptr* out_trap) -> Result {
@@ -659,7 +660,7 @@ TEST_F(InterpGCTest, Collect_InstanceImport) {
                          [](Thread& thread, const Values&, Values&,
                             Trap::Ptr*) -> Result { return Result::Ok; });
   auto t = Table::New(store_, TableType{ValueType::FuncRef, Limits{0}});
-  auto m = Memory::New(store_, MemoryType{Limits{0}});
+  auto m = Memory::New(store_, MemoryType{Limits{0}, WABT_DEFAULT_PAGE_SIZE});
   auto g = Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
                        Value::Make(5));
 

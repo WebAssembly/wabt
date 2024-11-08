@@ -37,6 +37,7 @@ options:
       --enable-multi-memory                    Enable Multi-memory
       --enable-extended-const                  Enable Extended constant expressions
       --enable-relaxed-simd                    Enable Relaxed SIMD
+      --enable-custom-page-sizes               Enable Custom page sizes
       --enable-all                             Enable all features
       --inline-exports                         Write all exports inline
       --inline-imports                         Write all imports inline
