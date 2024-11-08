@@ -79,6 +79,7 @@ def DoRoundtrip(wat2wasm, wasm2wat, out_dir, filename, verbose, stdout, skip_rou
         return (OK, '')
     return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
+
 def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
