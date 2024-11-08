@@ -68,12 +68,8 @@ inline MemoryType::MemoryType(Limits limits, uint32_t page_size)
     : ExternType(ExternKind::Memory), limits(limits), page_size(page_size) {
   // Always set max.
   if (!limits.has_max) {
-    this->limits.max =
-        limits.is_64 ? WABT_MAX_DEFAULT_PAGES64 : WABT_MAX_DEFAULT_PAGES32;
-    if (page_size == 1) {
-      this->limits.max = limits.is_64 ? std::numeric_limits<uint64_t>::max()
-                                      : std::numeric_limits<uint32_t>::max();
-    }
+    this->limits.max = WABT_BYTES_TO_MIN_PAGES(
+        (limits.is_64 ? UINT64_MAX : UINT32_MAX), page_size);
   }
 }
 

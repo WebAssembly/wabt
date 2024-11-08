@@ -150,17 +150,9 @@ Result SharedValidator::OnMemory(const Location& loc,
     }
   }
 
-  uint64_t absolute_max;
-  const char* desc = (page_size == 1) ? "single-byte pages" : "pages";
-  if (page_size == 1) {
-    absolute_max = limits.is_64 ? std::numeric_limits<uint64_t>::max()
-                                : std::numeric_limits<uint32_t>::max();
-  } else {
-    absolute_max =
-        limits.is_64 ? WABT_MAX_DEFAULT_PAGES64 : WABT_MAX_DEFAULT_PAGES32;
-  }
-
-  result |= CheckLimits(loc, limits, absolute_max, desc);
+  uint64_t absolute_max = WABT_BYTES_TO_MIN_PAGES(
+      (limits.is_64 ? UINT64_MAX : UINT32_MAX), page_size);
+  result |= CheckLimits(loc, limits, absolute_max, "pages");
 
   if (limits.is_shared) {
     if (!options_.features.threads_enabled()) {

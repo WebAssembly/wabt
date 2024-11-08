@@ -1790,14 +1790,10 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
       ParseTextListOpt(&data_segment.data);
       EXPECT(Rpar);
 
-      bool byte_pages = field->memory.page_size == 1;
-      uint32_t byte_size =
-          byte_pages ? data_segment.data.size()
-                     : WABT_ALIGN_UP_TO_DEFAULT_PAGE(data_segment.data.size());
-      uint32_t page_size =
-          byte_pages ? byte_size : WABT_BYTES_TO_DEFAULT_PAGES(byte_size);
-      field->memory.page_limits.initial = page_size;
-      field->memory.page_limits.max = page_size;
+      uint32_t num_pages = WABT_BYTES_TO_MIN_PAGES(data_segment.data.size(),
+                                                   field->memory.page_size);
+      field->memory.page_limits.initial = num_pages;
+      field->memory.page_limits.max = num_pages;
       field->memory.page_limits.has_max = true;
 
       module->AppendField(std::move(field));
