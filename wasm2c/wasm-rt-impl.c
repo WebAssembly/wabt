@@ -60,6 +60,10 @@ bool wasm_rt_fsgsbase_inst_supported = false;
 #include <asm/prctl.h>    // For ARCH_SET_GS
 #include <sys/syscall.h>  // For SYS_arch_prctl
 #include <unistd.h>       // For syscall
+
+#ifndef HWCAP2_FSGSBASE
+#define HWCAP2_FSGSBASE (1 << 1)
+#endif
 #endif
 
 #if WASM_RT_SEGUE_FREE_SEGMENT
@@ -245,7 +249,7 @@ void wasm_rt_init(void) {
 #if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 18
   // Check for support for userspace wrgsbase instructions
   unsigned long val = getauxval(AT_HWCAP2);
-  wasm_rt_fsgsbase_inst_supported = val & (1 << 1);
+  wasm_rt_fsgsbase_inst_supported = val & HWCAP2_FSGSBASE;
 #endif
 #endif
 
