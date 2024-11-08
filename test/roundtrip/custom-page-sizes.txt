@@ -34,6 +34,10 @@
   (memory i64 73 92 (pagesize 65536))
   (memory i64 (pagesize 65536) (data))
   (memory i64 (pagesize 65536) (data "xyz"))
+
+  (memory 0xFFFF_FFFF (pagesize 1))
+  (memory i64 0xFFFF_FFFF_FFFF_FFFF (pagesize 1))
+  (memory 0x10000 (pagesize 0x10000))
 )
 (;; STDOUT ;;;
 (module
@@ -68,6 +72,9 @@
   (memory (;28;) i64 73 92)
   (memory (;29;) i64 0 0)
   (memory (;30;) i64 1 1)
+  (memory (;31;) 4294967295 (pagesize 1))
+  (memory (;32;) i64 18446744073709551615 (pagesize 1))
+  (memory (;33;) 65536)
   (data (;0;) (memory 14) (i32.const 0) "")
   (data (;1;) (memory 15) (i32.const 0) "xyz")
   (data (;2;) (memory 18) (i32.const 0) "")

@@ -1,0 +1,131 @@
+;;; TOOL: run-interp-spec
+;;; ARGS*: --enable-custom-page-sizes --enable-memory64
+
+;; Page size of zero is malformed
+(assert_malformed
+  (module quote "(memory 0 (pagesize 0))")
+  "invalid custom page size")
+
+;; Maximum memory sizes with pagesize 1 and 65536
+;; These are valid but would instantiate a huge memory,
+;; so test with `assert_unlinkable`.
+
+;; i32 (pagesize 1)
+(assert_unlinkable
+  (module
+    (import "test" "unknown" (func))
+    (memory 0xFFFF_FFFF (pagesize 1)))
+  "unknown import")
+
+;; i64 (pagesize 1)
+(assert_unlinkable
+  (module
+    (import "test" "import" (func))
+    (memory i64 0xFFFF_FFFF_FFFF_FFFF (pagesize 1)))
+  "unknown import")
+
+;; i32 (default pagesize)
+(assert_unlinkable
+  (module
+    (import "test" "unknown" (func))
+    (memory 65536 (pagesize 65536)))
+  "unknown import")
+
+;; i64 (default pagesize)
+(assert_unlinkable
+  (module
+    (import "test" "unknown" (func))
+    (memory i64 0x1_0000_0000_0000 (pagesize 65536)))
+  "unknown import")
+
+;; Memory size just over the maximum.
+;;
+;; These are malformed (for pagesize 1)
+;; or invalid (for other pagesizes).
+
+;; i32 (pagesize 1)
+(assert_malformed
+  (module quote "(memory 0x1_0000_0000 (pagesize 1))")
+  "constant out of range")
+
+;; i64 (pagesize 1)
+(assert_malformed
+  (module quote "(memory i64 0x1_0000_0000_0000_0000 (pagesize 1))")
+  "constant out of range")
+
+;; i32 (default pagesize)
+(assert_invalid
+  (module
+    (memory 65537 (pagesize 65536)))
+  "memory size must be at most")
+
+;; i64 (default pagesize)
+(assert_invalid
+  (module
+    (memory i64 0x1_0000_0000_0001 (pagesize 65536)))
+  "memory size must be at most")
+
+;; Test data abbreviation syntax
+
+(assert_malformed (module quote "(memory (pagesize 0) (data))") "invalid custom page size")
+
+(module
+  (memory (pagesize 1) (data "xyz"))
+  (func (export "size") (result i32)
+    memory.size)
+  (func (export "grow") (param i32) (result i32)
+    (memory.grow (local.get 0)))
+  (func (export "load") (param i32) (result i32)
+    (i32.load8_u (local.get 0))))
+
+(assert_return (invoke "size") (i32.const 3))
+(assert_return (invoke "load" (i32.const 0)) (i32.const 120))
+(assert_return (invoke "load" (i32.const 1)) (i32.const 121))
+(assert_return (invoke "load" (i32.const 2)) (i32.const 122))
+(assert_trap (invoke "load" (i32.const 3)) "out of bounds")
+(assert_return (invoke "grow" (i32.const 1)) (i32.const -1))
+
+(module
+  (memory (pagesize 65536) (data "xyz"))
+  (func (export "size") (result i32)
+        memory.size))
+
+(assert_return (invoke "size") (i32.const 1))
+
+(;; STDOUT ;;;
+out/test/interp/custom-page-sizes.txt:6: assert_malformed passed:
+  out/test/interp/custom-page-sizes/custom-page-sizes.0.wat:1:21: error: malformed custom page size
+  (memory 0 (pagesize 0))
+                      ^
+out/test/interp/custom-page-sizes.txt:15: assert_unlinkable passed:
+  error: invalid import "test.unknown"
+out/test/interp/custom-page-sizes.txt:22: assert_unlinkable passed:
+  error: invalid import "test.import"
+out/test/interp/custom-page-sizes.txt:29: assert_unlinkable passed:
+  error: invalid import "test.unknown"
+out/test/interp/custom-page-sizes.txt:36: assert_unlinkable passed:
+  error: invalid import "test.unknown"
+out/test/interp/custom-page-sizes.txt:48: assert_malformed passed:
+  out/test/interp/custom-page-sizes/custom-page-sizes.5.wat:1:9: error: invalid int "0x1_0000_0000"
+  (memory 0x1_0000_0000 (pagesize 1))
+          ^^^^^^^^^^^^^
+out/test/interp/custom-page-sizes.txt:53: assert_malformed passed:
+  out/test/interp/custom-page-sizes/custom-page-sizes.6.wat:1:13: error: invalid int "0x1_0000_0000_0000_0000"
+  (memory i64 0x1_0000_0000_0000_0000 (pagesize 1))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/interp/custom-page-sizes.txt:58: assert_invalid passed:
+  out/test/interp/custom-page-sizes/custom-page-sizes.7.wasm:000000f: error: initial pages (65537) must be <= (65536)
+  000000f: error: OnMemory callback failed
+out/test/interp/custom-page-sizes.txt:64: assert_invalid passed:
+  out/test/interp/custom-page-sizes/custom-page-sizes.8.wasm:0000013: error: initial pages (281474976710657) must be <= (281474976710656)
+  0000013: error: OnMemory callback failed
+out/test/interp/custom-page-sizes.txt:70: assert_malformed passed:
+  out/test/interp/custom-page-sizes/custom-page-sizes.9.wat:1:19: error: malformed custom page size
+  (memory (pagesize 0) (data))
+                    ^
+  out/test/interp/custom-page-sizes/custom-page-sizes.9.wat:1:28: error: unexpected token ), expected EOF.
+  (memory (pagesize 0) (data))
+                             ^
+out/test/interp/custom-page-sizes.txt:85: assert_trap passed: out of bounds memory access: access at 3+1 >= max value 3
+19/19 tests passed.
+;;; STDOUT ;;)
