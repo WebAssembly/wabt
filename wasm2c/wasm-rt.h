@@ -241,17 +241,17 @@ extern "C" {
 // (3) the compiler supports: intrinsics for (rd|wr)gsbase, "address namespaces"
 //     for accessing pointers, and supports memcpy on pointers with custom
 //     "address namespaces". GCC does not support the memcpy requirement, so
-//     this leaves only clang for now.
+//     this leaves only clang (version 9 or later) for now.
 // (4) The OS provides a way to query if (rd|wr)gsbase is allowed by the kernel
 // or the implementation has to use a syscall for this.
 // (5) The OS doesn't replace the segment register on context switch which
 //     eliminates windows for now
 //
 // While more OS can be supported in the future, we only support linux for now
-#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                      \
-    (defined(__x86_64__) || defined(_M_X64)) && __clang__ &&        \
-    __has_builtin(__builtin_ia32_wrgsbase64) && !defined(_WIN32) && \
-    defined(__linux__)
+#if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                         \
+    (defined(__x86_64__) || defined(_M_X64)) && __clang__ &&           \
+    (__clang_major__ >= 9) && __has_builtin(__builtin_ia32_wrgsbase64) && \
+    !defined(_WIN32) && defined(__linux__)
 #define WASM_RT_USE_SEGUE 1
 #else
 #define WASM_RT_USE_SEGUE 0
