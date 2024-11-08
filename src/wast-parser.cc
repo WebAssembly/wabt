@@ -1168,6 +1168,7 @@ Result WastParser::ParsePageSize(uint32_t* out_page_size) {
     if (*out_page_size > UINT32_MAX || *out_page_size <= 0 ||
         (*out_page_size & (*out_page_size - 1))) {
       Error(GetLocation(), "malformed custom page size");
+      return Result::Error;
     }
     Consume();
     EXPECT(Rpar);
@@ -1776,8 +1777,8 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
       // this is the data abbreviation (no limits)
       CHECK_RESULT(ParsePageSize(&field->memory.page_size));
       if (!PeekMatchLpar(TokenType::Data)) {
-        Error(loc, "Expected inline data segment");
-        return Result::Error;
+        ConsumeIfLpar();
+        return ErrorExpected({"inline data segment"});
       }
     }
     if (MatchLpar(TokenType::Data)) {
