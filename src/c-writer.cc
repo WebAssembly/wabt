@@ -4129,6 +4129,8 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicWait:
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
+      case ExprType::ThrowRef:
+      case ExprType::TryTable:
         UNIMPLEMENTED("...");
         break;
     }
