@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module quote "\7c")
+(;; STDERR ;;;
+out/test/regress/error-quote-module.txt:3:2: error: error in quoted module: @0x100000001: unexpected token "|", expected a module field or a module.
+(module quote "\7c")
+ ^^^^^^
+;;; STDERR ;;)
