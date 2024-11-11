@@ -169,13 +169,17 @@ R"w2c_template(
 )w2c_template"
 R"w2c_template(#define add_overflow(a, b, resptr) __builtin_add_overflow(a, b, resptr)
 )w2c_template"
-R"w2c_template(#else /* MSVC */
+R"w2c_template(#elif defined(_MSC_VER)
 )w2c_template"
 R"w2c_template(static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
 )w2c_template"
 R"w2c_template(  return _addcarry_u64(0, a, b, resptr);
 )w2c_template"
 R"w2c_template(}
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#error "Missing implementation of __builtin_add_overflow or _addcarry_u64"
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
