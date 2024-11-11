@@ -129,7 +129,7 @@ extern "C" {
  * needed (so we can use the guard based range checks below).
  */
 #ifndef WASM_RT_USE_MMAP
-#if UINTPTR_MAX > 0xffffffff && !SUPPORT_MEMORY64
+#if UINTPTR_MAX > 0xffffffff
 #define WASM_RT_USE_MMAP 1
 #else
 #define WASM_RT_USE_MMAP 0
@@ -151,8 +151,7 @@ extern "C" {
  */
 
 /** Check if Guard checks are supported */
-#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && !SUPPORT_MEMORY64 && \
-    !WABT_BIG_ENDIAN
+#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && !WABT_BIG_ENDIAN
 #define WASM_RT_GUARD_PAGES_SUPPORTED 1
 #else
 #define WASM_RT_GUARD_PAGES_SUPPORTED 0

@@ -218,13 +218,23 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
 #define WASM_RT_CHECK_BASE(mem)
 #endif
 
+// MEMCHECK_DEFAULT32 is an "accelerated" MEMCHECK used only for
+// default-page-size, 32-bit memories. It may do nothing at all
+// (if hardware bounds-checking is enabled via guard pages)
+// or it may do a slightly faster RANGE_CHECK.
 #if WASM_RT_MEMCHECK_GUARD_PAGES
-#define MEMCHECK(mem, a, t) WASM_RT_CHECK_BASE(mem);
+#define MEMCHECK_DEFAULT32(mem, a, t) WASM_RT_CHECK_BASE(mem);
 #else
-#define MEMCHECK(mem, a, t) \
-  WASM_RT_CHECK_BASE(mem);  \
-  RANGE_CHECK(mem, a, sizeof(t))
+#define MEMCHECK_DEFAULT32(mem, a, t)                \
+  WASM_RT_CHECK_BASE(mem);                           \
+  if (UNLIKELY(a + (uint64_t)sizeof(t) > mem->size)) \
+    TRAP(OOB);
 #endif
+
+// MEMCHECK_GENERAL can be used for any memory
+#define MEMCHECK_GENERAL(mem, a, t) \
+  WASM_RT_CHECK_BASE(mem);          \
+  RANGE_CHECK(mem, a, sizeof(t));
 
 #ifdef __GNUC__
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
@@ -262,23 +272,62 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     load_data(MEM_ADDR(&m, o, s), i, s); \
   } while (0)
 
-#define DEFINE_LOAD(name, t1, t2, t3, force_read)                  \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {         \
-    MEMCHECK(mem, addr, t1);                                       \
-    t1 result;                                                     \
-    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), \
-                   sizeof(t1));                                    \
-    force_read(result);                                            \
-    return (t3)(t2)result;                                         \
+#define DEF_MEM_CHECKS0(name, shared, mem_type, ret_kw, return_type)         \
+  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+                                             u64 addr) {                     \
+    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+    ret_kw name##_unchecked(mem, addr);                                      \
+  }                                                                          \
+  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr) { \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
+    ret_kw name##_unchecked(mem, addr);                                      \
   }
 
+#define DEF_MEM_CHECKS1(name, shared, mem_type, ret_kw, return_type,         \
+                        val_type1)                                           \
+  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+                                             u64 addr, val_type1 val1) {     \
+    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+    ret_kw name##_unchecked(mem, addr, val1);                                \
+  }                                                                          \
+  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
+                                 val_type1 val1) {                           \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
+    ret_kw name##_unchecked(mem, addr, val1);                                \
+  }
+
+#define DEF_MEM_CHECKS2(name, shared, mem_type, ret_kw, return_type,         \
+                        val_type1, val_type2)                                \
+  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+                                             u64 addr, val_type1 val1,       \
+                                             val_type2 val2) {               \
+    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
+  }                                                                          \
+  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
+                                 val_type1 val1, val_type2 val2) {           \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
+    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
+  }
+
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)                      \
+  static inline t3 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
+    t1 result;                                                         \
+    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),     \
+                   sizeof(t1));                                        \
+    force_read(result);                                                \
+    return (t3)(t2)result;                                             \
+  }                                                                    \
+  DEF_MEM_CHECKS0(name, _, t1, return, t3)
+
 #define DEFINE_STORE(name, t1, t2)                                     \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    MEMCHECK(mem, addr, t1);                                           \
+  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
+                                      t2 value) {                      \
     t1 wrapped = (t1)value;                                            \
     wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,    \
                    sizeof(t1));                                        \
-  }
+  }                                                                    \
+  DEF_MEM_CHECKS1(name, _, t1, , void, t2)
 
 DEFINE_LOAD(i32_load, u32, u32, u32, FORCE_READ_INT)
 DEFINE_LOAD(i64_load, u64, u64, u64, FORCE_READ_INT)
@@ -899,10 +948,10 @@ void w2c_test_0x5Fstart_0(w2c_test* instance) {
   u32 var_i0, var_i1, var_i2, var_i3, var_i4;
   var_i0 = 0u;
   var_i1 = 8u;
-  i32_store(&instance->w2c_memory, (u64)(var_i0), var_i1);
+  i32_store_default32(&instance->w2c_memory, (u64)(var_i0), var_i1);
   var_i0 = 4u;
   var_i1 = 14u;
-  i32_store(&instance->w2c_memory, (u64)(var_i0), var_i1);
+  i32_store_default32(&instance->w2c_memory, (u64)(var_i0), var_i1);
   var_i0 = 1u;
   var_i1 = 0u;
   var_i2 = 1u;
