@@ -1,0 +1,8 @@
+;;; TOOL: wast2json
+;;; ERROR: 1
+(module quote "invalid")
+(;; STDERR ;;;
+out/test/regress/regress-quote.txt:3:2: error: error in quoted module: @0x100000001: unexpected token "invalid", expected a module field or a module.
+(module quote "invalid")
+ ^^^^^^
+;;; STDERR ;;)
