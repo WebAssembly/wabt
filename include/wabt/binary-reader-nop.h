@@ -89,7 +89,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         std::string_view module_name,
                         std::string_view field_name,
                         Index memory_index,
-                        const Limits* page_limits) override {
+                        const Limits* page_limits,
+                        uint32_t page_size) override {
     return Result::Ok;
   }
   Result OnImportGlobal(Index import_index,
@@ -130,7 +131,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Memory section */
   Result BeginMemorySection(Offset size) override { return Result::Ok; }
   Result OnMemoryCount(Index count) override { return Result::Ok; }
-  Result OnMemory(Index index, const Limits* limits) override {
+  Result OnMemory(Index index,
+                  const Limits* limits,
+                  uint32_t page_size) override {
     return Result::Ok;
   }
   Result EndMemorySection() override { return Result::Ok; }

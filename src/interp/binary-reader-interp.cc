@@ -105,7 +105,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
                         std::string_view module_name,
                         std::string_view field_name,
                         Index memory_index,
-                        const Limits* page_limits) override;
+                        const Limits* page_limits,
+                        uint32_t page_size) override;
   Result OnImportGlobal(Index import_index,
                         std::string_view module_name,
                         std::string_view field_name,
@@ -127,7 +128,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
                  const Limits* elem_limits) override;
 
   Result OnMemoryCount(Index count) override;
-  Result OnMemory(Index index, const Limits* limits) override;
+  Result OnMemory(Index index,
+                  const Limits* limits,
+                  uint32_t page_size) override;
 
   Result OnGlobalCount(Index count) override;
   Result BeginGlobal(Index index, Type type, bool mutable_) override;
@@ -537,9 +540,10 @@ Result BinaryReaderInterp::OnImportMemory(Index import_index,
                                           std::string_view module_name,
                                           std::string_view field_name,
                                           Index memory_index,
-                                          const Limits* page_limits) {
-  CHECK_RESULT(validator_.OnMemory(GetLocation(), *page_limits));
-  MemoryType memory_type{*page_limits};
+                                          const Limits* page_limits,
+                                          uint32_t page_size) {
+  CHECK_RESULT(validator_.OnMemory(GetLocation(), *page_limits, page_size));
+  MemoryType memory_type{*page_limits, page_size};
   module_.imports.push_back(ImportDesc{ImportType(
       std::string(module_name), std::string(field_name), memory_type.Clone())});
   memory_types_.push_back(memory_type);
@@ -608,9 +612,11 @@ Result BinaryReaderInterp::OnMemoryCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnMemory(Index index, const Limits* limits) {
-  CHECK_RESULT(validator_.OnMemory(GetLocation(), *limits));
-  MemoryType memory_type{*limits};
+Result BinaryReaderInterp::OnMemory(Index index,
+                                    const Limits* limits,
+                                    uint32_t page_size) {
+  CHECK_RESULT(validator_.OnMemory(GetLocation(), *limits, page_size));
+  MemoryType memory_type{*limits, page_size};
   module_.memories.push_back(MemoryDesc{memory_type});
   memory_types_.push_back(memory_type);
   return Result::Ok;

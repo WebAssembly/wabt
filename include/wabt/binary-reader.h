@@ -125,7 +125,8 @@ class BinaryReaderDelegate {
                                 std::string_view module_name,
                                 std::string_view field_name,
                                 Index memory_index,
-                                const Limits* page_limits) = 0;
+                                const Limits* page_limits,
+                                uint32_t page_size) = 0;
   virtual Result OnImportGlobal(Index import_index,
                                 std::string_view module_name,
                                 std::string_view field_name,
@@ -156,7 +157,9 @@ class BinaryReaderDelegate {
   /* Memory section */
   virtual Result BeginMemorySection(Offset size) = 0;
   virtual Result OnMemoryCount(Index count) = 0;
-  virtual Result OnMemory(Index index, const Limits* limits) = 0;
+  virtual Result OnMemory(Index index,
+                          const Limits* limits,
+                          uint32_t page_size) = 0;
   virtual Result EndMemorySection() = 0;
 
   /* Global section */

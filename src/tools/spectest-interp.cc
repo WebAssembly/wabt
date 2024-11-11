@@ -1313,7 +1313,8 @@ CommandRunner::CommandRunner() : store_(s_features) {
   spectest["table64"] = interp::Table::New(
       store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}});
 
-  spectest["memory"] = interp::Memory::New(store_, MemoryType{Limits{1, 2}});
+  spectest["memory"] = interp::Memory::New(
+      store_, MemoryType{Limits{1, 2}, WABT_DEFAULT_PAGE_SIZE});
 
   spectest["global_i32"] =
       interp::Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},

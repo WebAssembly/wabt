@@ -206,7 +206,7 @@ struct MemoryType : ExternType {
   static const ExternKind skind = ExternKind::Memory;
   static bool classof(const ExternType* type);
 
-  explicit MemoryType(Limits);
+  explicit MemoryType(Limits, uint32_t);
 
   std::unique_ptr<ExternType> Clone() const override;
 
@@ -215,6 +215,7 @@ struct MemoryType : ExternType {
                       std::string* out_msg);
 
   Limits limits;
+  uint32_t page_size;
 };
 
 struct GlobalType : ExternType {

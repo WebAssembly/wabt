@@ -1496,6 +1496,11 @@ void WatWriter::WriteMemory(const Memory& memory) {
   WriteInlineExports(ExternalKind::Memory, memory_index_);
   WriteInlineImport(ExternalKind::Memory, memory_index_);
   WriteLimits(memory.page_limits);
+  if (memory.page_size != WABT_DEFAULT_PAGE_SIZE) {
+    WriteOpenSpace("pagesize");
+    Writef("%u", memory.page_size);
+    WriteCloseSpace();
+  }
   WriteCloseNewline();
   memory_index_++;
 }

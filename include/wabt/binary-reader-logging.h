@@ -74,7 +74,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                         std::string_view module_name,
                         std::string_view field_name,
                         Index memory_index,
-                        const Limits* page_limits) override;
+                        const Limits* page_limits,
+                        uint32_t page_size) override;
   Result OnImportGlobal(Index import_index,
                         std::string_view module_name,
                         std::string_view field_name,
@@ -102,7 +103,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginMemorySection(Offset size) override;
   Result OnMemoryCount(Index count) override;
-  Result OnMemory(Index index, const Limits* limits) override;
+  Result OnMemory(Index index,
+                  const Limits* limits,
+                  uint32_t page_size) override;
   Result EndMemorySection() override;
 
   Result BeginGlobalSection(Offset size) override;

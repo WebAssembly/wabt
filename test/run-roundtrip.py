@@ -55,7 +55,7 @@ def FilesAreEqual(filename1, filename2, verbose=False):
     return (OK, '')
 
 
-def DoRoundtrip(wat2wasm, wasm2wat, out_dir, filename, verbose, stdout):
+def DoRoundtrip(wat2wasm, wasm2wat, out_dir, filename, verbose, stdout, skip_roundtrip_check):
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
     wasm1_file = os.path.join(out_dir, basename_noext + '-1.wasm')
@@ -75,9 +75,9 @@ def DoRoundtrip(wat2wasm, wasm2wat, out_dir, filename, verbose, stdout):
     if stdout:
         with open(wat2_file) as f:
             sys.stdout.write(f.read())
+    if skip_roundtrip_check:
         return (OK, '')
-    else:
-        return FilesAreEqual(wasm1_file, wasm3_file, verbose)
+    return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
 
 def main(args):
@@ -90,7 +90,7 @@ def main(args):
                         default=find_exe.GetDefaultPath(),
                         help='directory to search for all executables.')
     parser.add_argument('--stdout', action='store_true',
-                        help='do one roundtrip and write wat output to stdout')
+                        help='write wat output to stdout')
     parser.add_argument('--no-error-cmdline',
                         help='don\'t display the subprocess\'s commandline when '
                         'an error occurs', dest='error_cmdline',
@@ -100,7 +100,9 @@ def main(args):
                         action='store_true')
     parser.add_argument('--no-check', action='store_true')
     parser.add_argument('--debug-names', action='store_true')
-    parser.add_argument('--generate-names', action='store_true')
+    # --generate-names modifies name section, so skip roundtrip check
+    parser.add_argument('--generate-names', action='store_true',
+                        help="write debug names and skip end-to-end roundtrip check")
     parser.add_argument('--fold-exprs', action='store_true')
     parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-saturating-float-to-int', action='store_true')
@@ -114,7 +116,10 @@ def main(args):
     parser.add_argument('--enable-multi-memory', action='store_true')
     parser.add_argument('--enable-annotations', action='store_true')
     parser.add_argument('--enable-code-metadata', action='store_true')
-    parser.add_argument('--inline-exports', action='store_true')
+    parser.add_argument('--enable-custom-page-sizes', action='store_true')
+    # --inline-exports can reorder exports, so skip roundtrip check
+    parser.add_argument('--inline-exports', action='store_true',
+                        help="write exports inline and skip end-to-end roundtrip check")
     parser.add_argument('--inline-imports', action='store_true')
     parser.add_argument('--reloc', action='store_true')
     parser.add_argument('file', help='test file.')
@@ -138,6 +143,7 @@ def main(args):
         '--enable-multi-memory': options.enable_multi_memory,
         '--enable-annotations': options.enable_annotations,
         '--enable-code-metadata': options.enable_code_metadata,
+        '--enable-custom-page-sizes': options.enable_custom_page_sizes,
         '--reloc': options.reloc,
         '--no-check': options.no_check,
     })
@@ -160,6 +166,7 @@ def main(args):
         '--enable-multi-memory': options.enable_multi_memory,
         '--enable-annotations': options.enable_annotations,
         '--enable-code-metadata': options.enable_code_metadata,
+        '--enable-custom-page-sizes': options.enable_custom_page_sizes,
         '--inline-exports': options.inline_exports,
         '--inline-imports': options.inline_imports,
         '--no-debug-names': not options.debug_names,
@@ -175,9 +182,10 @@ def main(args):
         sys.stderr.write('File not found: %s\n' % filename)
         return ERROR
 
+    skip_roundtrip_check = options.generate_names or options.inline_exports
     with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
         result, msg = DoRoundtrip(wat2wasm, wasm2wat, out_dir, filename,
-                                  options.verbose, options.stdout)
+                                  options.verbose, options.stdout, skip_roundtrip_check)
         if result == ERROR:
             sys.stderr.write(msg)
         return result
