@@ -3481,7 +3481,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       std::unique_ptr<Module> m;
       std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
           filename, qsm->data.data(), qsm->data.size(), &errors);
-      ParseWatModule(lexer.get(), &m, &errors, options_);
+      auto result = ParseWatModule(lexer.get(), &m, &errors, options_);
       for (const auto& error : errors) {
         if (error.loc.offset == kInvalidOffset) {
           Error(qsm->loc, "error in quoted module: %s", error.message.c_str());
@@ -3490,7 +3490,9 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
                 error.loc.offset, error.message.c_str());
         }
       }
-      *module = std::move(*m.get());
+      if (Succeeded(result)) {
+        *module = std::move(*m.get());
+      }
       *out_command = std::move(command);
       break;
   }
