@@ -89,15 +89,15 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
   (CHECK_CALL_INDIRECT(table, ft, x),       \
    DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 
-#if __has_builtin(__builtin_add_overflow)
-#define add_overflow(a, b, resptr) __builtin_add_overflow(a, b, resptr)
-#elif defined(_MSC_VER)
 static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
+#if __has_builtin(__builtin_add_overflow)
+  return __builtin_add_overflow(a, b, resptr);
+#elif defined(_MSC_VER)
   return _addcarry_u64(0, a, b, resptr);
-}
 #else
 #error "Missing implementation of __builtin_add_overflow or _addcarry_u64"
 #endif
+}
 
 #define RANGE_CHECK(mem, offset, len)              \
   do {                                             \

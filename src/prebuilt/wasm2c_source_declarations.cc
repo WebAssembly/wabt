@@ -165,23 +165,23 @@ R"w2c_template(  (CHECK_CALL_INDIRECT(table, ft, x),       \
 R"w2c_template(   DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 )w2c_template"
 R"w2c_template(
-#if __has_builtin(__builtin_add_overflow)
+static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
 )w2c_template"
-R"w2c_template(#define add_overflow(a, b, resptr) __builtin_add_overflow(a, b, resptr)
+R"w2c_template(#if __has_builtin(__builtin_add_overflow)
+)w2c_template"
+R"w2c_template(  return __builtin_add_overflow(a, b, resptr);
 )w2c_template"
 R"w2c_template(#elif defined(_MSC_VER)
 )w2c_template"
-R"w2c_template(static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
-)w2c_template"
 R"w2c_template(  return _addcarry_u64(0, a, b, resptr);
-)w2c_template"
-R"w2c_template(}
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
 R"w2c_template(#error "Missing implementation of __builtin_add_overflow or _addcarry_u64"
 )w2c_template"
 R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(}
 )w2c_template"
 R"w2c_template(
 #define RANGE_CHECK(mem, offset, len)              \
