@@ -75,6 +75,8 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
+  Result BeginTryTableExpr(TryTableExpr*) override;
+  Result EndTryTableExpr(TryTableExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
@@ -438,6 +440,23 @@ Result NameResolver::BeginTryExpr(TryExpr* expr) {
 }
 
 Result NameResolver::EndTryExpr(TryExpr*) {
+  PopLabel();
+  return Result::Ok;
+}
+
+Result NameResolver::BeginTryTableExpr(TryTableExpr* expr) {
+  for (TableCatch& catch_ : expr->catches) {
+    if (!catch_.IsCatchAll()) {
+      ResolveTagVar(&catch_.tag);
+    }
+    ResolveLabelVar(&catch_.target);
+  }
+  PushLabel(expr->block.label);
+  ResolveBlockDeclarationVar(&expr->block.decl);
+  return Result::Ok;
+}
+
+Result NameResolver::EndTryTableExpr(TryTableExpr*) {
   PopLabel();
   return Result::Ok;
 }

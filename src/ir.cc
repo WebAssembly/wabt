@@ -85,7 +85,9 @@ const char* ExprTypeName[] = {
     "TableFill",
     "Ternary",
     "Throw",
+    "ThrowRef",
     "Try",
+    "TryTable",
     "Unary",
     "Unreachable",
 };

@@ -59,6 +59,13 @@ struct TypeMut {
 };
 using TypeMutVector = std::vector<TypeMut>;
 
+struct CatchClause {
+  CatchKind kind;
+  Index tag;
+  Index depth;
+};
+using CatchClauseVector = std::vector<CatchClause>;
+
 class BinaryReaderDelegate {
  public:
   struct State {
@@ -302,7 +309,10 @@ class BinaryReaderDelegate {
                              Address alignment_log2,
                              Address offset) = 0;
   virtual Result OnThrowExpr(Index tag_index) = 0;
+  virtual Result OnThrowRefExpr() = 0;
   virtual Result OnTryExpr(Type sig_type) = 0;
+  virtual Result OnTryTableExpr(Type sig_type,
+                                const CatchClauseVector& catches) = 0;
 
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnTernaryExpr(Opcode opcode) = 0;

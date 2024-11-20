@@ -203,6 +203,7 @@ class WastParser {
   Result ParseBlock(Block*);
   Result ParseExprList(ExprList*);
   Result ParseExpr(ExprList*);
+  Result ParseTryTableCatches(TryTableVector* catches);
   Result ParseCatchInstrList(CatchVector* catches);
   Result ParseCatchExprList(CatchVector* catches);
   Result ParseGlobalType(Global*);

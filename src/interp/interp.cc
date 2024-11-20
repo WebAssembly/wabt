@@ -1978,6 +1978,8 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::Delegate:
     case O::InterpData:
     case O::Invalid:
+    case O::TryTable:
+    case O::ThrowRef:
       WABT_UNREACHABLE;
       break;
   }

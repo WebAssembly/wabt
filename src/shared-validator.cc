@@ -1219,12 +1219,52 @@ Result SharedValidator::OnThrow(const Location& loc, Var tag_var) {
   return result;
 }
 
+Result SharedValidator::OnThrowRef(const Location& loc) {
+  Result result = CheckInstr(Opcode::ThrowRef, loc);
+  result |= typechecker_.OnThrowRef();
+  return result;
+}
+
 Result SharedValidator::OnTry(const Location& loc, Type sig_type) {
   Result result = CheckInstr(Opcode::Try, loc);
   TypeVector param_types, result_types;
   result |= CheckBlockSignature(loc, Opcode::Try, sig_type, &param_types,
                                 &result_types);
   result |= typechecker_.OnTry(param_types, result_types);
+  return result;
+}
+
+Result SharedValidator::BeginTryTable(const Location& loc, Type sig_type) {
+  Result result = CheckInstr(Opcode::TryTable, loc);
+  TypeVector param_types, result_types;
+  result |= CheckBlockSignature(loc, Opcode::TryTable, sig_type, &param_types,
+                                &result_types);
+  result |= typechecker_.BeginTryTable(param_types);
+  return result;
+}
+
+Result SharedValidator::OnTryTableCatch(const Location& loc,
+                                        const TableCatch& catch_) {
+  Result result = Result::Ok;
+  TagType tag_type;
+  expr_loc_ = loc;
+  if (!catch_.IsCatchAll()) {
+    result |= CheckTagIndex(catch_.tag, &tag_type);
+  }
+  if (catch_.IsRef()) {
+    tag_type.params.push_back(Type::ExnRef);
+  }
+  result |=
+      typechecker_.OnTryTableCatch(tag_type.params, catch_.target.index());
+  return result;
+}
+
+Result SharedValidator::EndTryTable(const Location& loc, Type sig_type) {
+  Result result = CheckInstr(Opcode::TryTable, loc);
+  TypeVector param_types, result_types;
+  result |= CheckBlockSignature(loc, Opcode::TryTable, sig_type, &param_types,
+                                &result_types);
+  result |= typechecker_.EndTryTable(param_types, result_types);
   return result;
 }
 

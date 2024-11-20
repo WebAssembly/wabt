@@ -38,6 +38,8 @@ call_ref, TokenType::CallRef, Opcode::CallRef
 call, TokenType::Call, Opcode::Call
 catch, TokenType::Catch, Opcode::Catch
 catch_all, TokenType::CatchAll, Opcode::CatchAll
+catch_ref, TokenType::CatchRef
+catch_all_ref, TokenType::CatchAllRef
 code, TokenType::Code
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data
@@ -584,7 +586,9 @@ table.size, TokenType::TableSize, Opcode::TableSize
 table, TokenType::Table
 then, TokenType::Then
 throw, TokenType::Throw, Opcode::Throw
+throw_ref, TokenType::ThrowRef, Opcode::ThrowRef
 try, TokenType::Try, Opcode::Try
+try_table, TokenType::TryTable, Opcode::TryTable
 type, TokenType::Type
 unreachable, TokenType::Unreachable, Opcode::Unreachable
 v128.andnot, TokenType::Binary, Opcode::V128Andnot

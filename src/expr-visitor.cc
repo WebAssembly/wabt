@@ -90,6 +90,18 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         break;
       }
 
+      case State::TryTable: {
+        auto try_table_expr = cast<TryTableExpr>(expr);
+        auto& iter = expr_iter_stack_.back();
+        if (iter != try_table_expr->block.exprs.end()) {
+          PushDefault(&*iter++);
+        } else {
+          CHECK_RESULT(delegate_->EndTryTableExpr(try_table_expr));
+          PopExprlist();
+        }
+        break;
+      }
+
       case State::Try: {
         auto try_expr = cast<TryExpr>(expr);
         auto& iter = expr_iter_stack_.back();
@@ -385,6 +397,17 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
     case ExprType::Throw:
       CHECK_RESULT(delegate_->OnThrowExpr(cast<ThrowExpr>(expr)));
       break;
+
+    case ExprType::ThrowRef:
+      CHECK_RESULT(delegate_->OnThrowRefExpr(cast<ThrowRefExpr>(expr)));
+      break;
+
+    case ExprType::TryTable: {
+      auto try_table_expr = cast<TryTableExpr>(expr);
+      CHECK_RESULT(delegate_->BeginTryTableExpr(try_table_expr));
+      PushExprlist(State::TryTable, expr, try_table_expr->block.exprs);
+      break;
+    }
 
     case ExprType::Try: {
       auto try_expr = cast<TryExpr>(expr);

@@ -644,7 +644,8 @@ Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {
       "function", "initializer expression", "block", "loop",
-      "if",       "`if false` branch",      "try",   "try catch"};
+      "if",       "`if false` branch",      "try",   "try table",
+      "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -835,6 +836,13 @@ Result TypeChecker::OnThrow(const TypeVector& sig) {
   return result;
 }
 
+Result TypeChecker::OnThrowRef() {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(Type::ExnRef, "throw_ref");
+  CHECK_RESULT(SetUnreachable());
+  return result;
+}
+
 Result TypeChecker::OnReturn() {
   Result result = Result::Ok;
   Label* func_label;
@@ -880,6 +888,31 @@ Result TypeChecker::OnTry(const TypeVector& param_types,
   PushLabel(LabelType::Try, param_types, result_types);
   PushTypes(param_types);
   return result;
+}
+
+Result TypeChecker::BeginTryTable(const TypeVector& param_types) {
+  Result result = PopAndCheckSignature(param_types, "try_table");
+  return result;
+}
+
+Result TypeChecker::OnTryTableCatch(const TypeVector& sig, Index depth) {
+  Result result = Result::Ok;
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  TypeVector& label_sig = label->br_types();
+  result |= CheckTypes(label_sig, sig);
+  if (Failed(result)) {
+    PrintError("catch signature doesn't match target: expected %s, got %s",
+               TypesToString(sig).c_str(), TypesToString(label_sig).c_str());
+  }
+  return result;
+}
+
+Result TypeChecker::EndTryTable(const TypeVector& param_types,
+                                const TypeVector& result_types) {
+  PushLabel(LabelType::TryTable, param_types, result_types);
+  PushTypes(param_types);
+  return Result::Ok;
 }
 
 Result TypeChecker::OnUnary(Opcode opcode) {

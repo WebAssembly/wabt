@@ -394,6 +394,39 @@ Result BinaryReaderLogging::OnTryExpr(Type sig_type) {
   return reader_->OnTryExpr(sig_type);
 }
 
+Result BinaryReaderLogging::OnTryTableExpr(Type sig_type,
+                                           const CatchClauseVector& catches) {
+  LOGF("OnTryTableExpr(sig: ");
+  LogType(sig_type);
+  Index count = catches.size();
+  LOGF_NOINDENT(", n: %" PRIindex ", catches: [", count);
+
+  for (auto& catch_ : catches) {
+    auto tag = catch_.tag;
+    auto depth = catch_.depth;
+    switch (catch_.kind) {
+      case CatchKind::Catch:
+        LOGF_NOINDENT("catch %" PRIindex " %" PRIindex, tag, depth);
+        break;
+      case CatchKind::CatchRef:
+        LOGF_NOINDENT("catch_ref %" PRIindex " %" PRIindex, tag, depth);
+        break;
+      case CatchKind::CatchAll:
+        LOGF_NOINDENT("catch_all %" PRIindex, depth);
+        break;
+      case CatchKind::CatchAllRef:
+        LOGF_NOINDENT("catch_all_ref %" PRIindex, depth);
+        break;
+    }
+    if (--count != 0) {
+      LOGF_NOINDENT(", ");
+    }
+  }
+  LOGF_NOINDENT("])\n");
+
+  return reader_->OnTryTableExpr(sig_type, catches);
+}
+
 Result BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   LOGF("OnSimdLaneOpExpr (lane: %" PRIu64 ")\n", value);
   return reader_->OnSimdLaneOpExpr(opcode, value);
@@ -852,6 +885,7 @@ DEFINE_LOAD_STORE_OPCODE(OnLoadZeroExpr);
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
 DEFINE_INDEX_DESC(OnThrowExpr, "tag_index")
 DEFINE0(OnUnreachableExpr)
+DEFINE0(OnThrowRefExpr)
 DEFINE_OPCODE(OnUnaryExpr)
 DEFINE_OPCODE(OnTernaryExpr)
 DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(OnSimdLoadLaneExpr);

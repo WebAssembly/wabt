@@ -600,10 +600,13 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
+  Result BeginTryTableExpr(TryTableExpr*) override;
+  Result EndTryTableExpr(TryTableExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
+  Result OnThrowRefExpr(ThrowRefExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
   Result OnAtomicFenceExpr(AtomicFenceExpr*) override;
@@ -950,6 +953,52 @@ Result WatWriter::ExprVisitorDelegate::OnUnreachableExpr(
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::BeginTryTableExpr(TryTableExpr* expr) {
+  // copied from WriteBeginBlock, try_table needs to push label *after*
+  // writing catches
+  writer_->WritePutsSpace(Opcode::TryTable_Opcode.GetName());
+  bool has_label = !expr->block.label.empty();
+  if (has_label) {
+    writer_->WriteString(expr->block.label, NextChar::Space);
+  }
+  writer_->WriteTypes(expr->block.decl.sig.param_types, "param");
+  writer_->WriteTypes(expr->block.decl.sig.result_types, "result");
+  if (!has_label) {
+    writer_->Writef(" ;; label = @%" PRIindex, writer_->GetLabelStackSize());
+  }
+  writer_->WriteNewline(FORCE_NEWLINE);
+  writer_->Indent();
+  for (const auto& catch_ : expr->catches) {
+    writer_->WritePuts("(", NextChar::None);
+    switch (catch_.kind) {
+      case CatchKind::Catch:
+        writer_->WritePutsSpace("catch");
+        break;
+      case CatchKind::CatchRef:
+        writer_->WritePutsSpace("catch_ref");
+        break;
+      case CatchKind::CatchAll:
+        writer_->WritePutsSpace("catch_all");
+        break;
+      case CatchKind::CatchAllRef:
+        writer_->WritePutsSpace("catch_all_ref");
+        break;
+    }
+    if (catch_.kind == CatchKind::Catch || catch_.kind == CatchKind::CatchRef) {
+      writer_->WriteVar(catch_.tag, NextChar::Space);
+    }
+    writer_->WriteBrVar(catch_.target, NextChar::None);
+    writer_->WritePuts(")", NextChar::Newline);
+  }
+  writer_->BeginBlock(LabelType::TryTable, expr->block);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::EndTryTableExpr(TryTableExpr* expr) {
+  writer_->WriteEndBlock();
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::BeginTryExpr(TryExpr* expr) {
   writer_->WriteBeginBlock(LabelType::Try, expr->block,
                            Opcode::Try_Opcode.GetName());
@@ -986,6 +1035,11 @@ Result WatWriter::ExprVisitorDelegate::EndTryExpr(TryExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnThrowExpr(ThrowExpr* expr) {
   writer_->WritePutsSpace(Opcode::Throw_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnThrowRefExpr(ThrowRefExpr* expr) {
+  writer_->WritePutsNewline(Opcode::ThrowRef_Opcode.GetName());
   return Result::Ok;
 }
 
@@ -1255,6 +1309,58 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
           // Nothing to do.
           break;
       }
+      WriteCloseNewline();
+      EndBlock();
+      break;
+    }
+
+    case ExprType::TryTable: {
+      auto try_table_expr = cast<TryTableExpr>(expr_tree.expr);
+
+      WritePuts("(", NextChar::None);
+      // copied from WriteBeginBlock, try_table needs to push label *after*
+      // writing catches
+      WritePutsSpace(Opcode::TryTable_Opcode.GetName());
+      bool has_label = !try_table_expr->block.label.empty();
+      if (has_label) {
+        WriteString(try_table_expr->block.label, NextChar::Space);
+      }
+      WriteTypes(try_table_expr->block.decl.sig.param_types, "param");
+      WriteTypes(try_table_expr->block.decl.sig.result_types, "result");
+      if (!has_label) {
+        Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
+      }
+      WriteNewline(FORCE_NEWLINE);
+      Indent();
+
+      for (const auto& catch_ : try_table_expr->catches) {
+        WritePuts("(", NextChar::None);
+        switch (catch_.kind) {
+          case CatchKind::Catch:
+            WritePutsSpace("catch");
+            break;
+          case CatchKind::CatchRef:
+            WritePutsSpace("catch_ref");
+            break;
+          case CatchKind::CatchAll:
+            WritePutsSpace("catch_all");
+            break;
+          case CatchKind::CatchAllRef:
+            WritePutsSpace("catch_all_ref");
+            break;
+        }
+        if (catch_.kind == CatchKind::Catch ||
+            catch_.kind == CatchKind::CatchRef) {
+          WriteVar(catch_.tag, NextChar::Space);
+        }
+        WriteBrVar(catch_.target, NextChar::None);
+        WritePuts(")", NextChar::Newline);
+      }
+
+      BeginBlock(LabelType::TryTable, try_table_expr->block);
+
+      WriteFoldedExprList(try_table_expr->block.exprs);
+      FlushExprTreeStack();
       WriteCloseNewline();
       EndBlock();
       break;
