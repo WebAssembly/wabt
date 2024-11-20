@@ -31,6 +31,7 @@
   (func
     ref.null exn
     throw_ref
+    drop
   ))
 (;; STDOUT ;;;
 (module
@@ -57,6 +58,7 @@
       (return
         (i32.const 0))))
   (func (;4;) (type 1)
-    (throw_ref
-      (ref.null exn))))
+    (drop
+      (throw_ref
+        (ref.null exn)))))
 ;;; STDOUT ;;)
