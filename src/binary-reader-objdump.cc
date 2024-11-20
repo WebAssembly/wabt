@@ -548,7 +548,8 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnOpcodeType(Type type) override;
 
-  Result OnTryTableExpr(Type sig_type, const RawCatchVector& catches) override;
+  Result OnTryTableExpr(Type sig_type,
+                        const CatchClauseVector& catches) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
@@ -906,7 +907,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
 
 Result BinaryReaderObjdumpDisassemble::OnTryTableExpr(
     Type sig_type,
-    const RawCatchVector& catches) {
+    const CatchClauseVector& catches) {
   if (!in_function_body) {
     return Result::Ok;
   }

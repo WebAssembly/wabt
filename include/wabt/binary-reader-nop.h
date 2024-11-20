@@ -321,7 +321,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnThrowExpr(Index depth) override { return Result::Ok; }
   Result OnThrowRefExpr() override { return Result::Ok; }
   Result OnTryExpr(Type sig_type) override { return Result::Ok; }
-  Result OnTryTableExpr(Type sig_type, const RawCatchVector& catches) override {
+  Result OnTryTableExpr(Type sig_type,
+                        const CatchClauseVector& catches) override {
     return Result::Ok;
   }
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }

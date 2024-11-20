@@ -192,7 +192,7 @@ class BinaryReader {
   TypeVector result_types_;
   TypeMutVector fields_;
   std::vector<Index> target_depths_;
-  RawCatchVector catches_;
+  CatchClauseVector catches_;
   const ReadBinaryOptions& options_;
   BinarySection last_known_section_ = BinarySection::Invalid;
   bool did_read_names_section_ = false;
@@ -1546,7 +1546,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
           }
           Index depth;
           CHECK_RESULT(ReadIndex(&depth, "catch depth"));
-          RawCatch catch_;
+          CatchClause catch_;
           catch_.kind = CatchKind(handler);
           catch_.tag = tag;
           catch_.depth = depth;
