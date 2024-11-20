@@ -385,6 +385,7 @@ typedef enum {
   WASM_RT_TRAP_INVALID_CONVERSION, /** Conversion from NaN to integer. */
   WASM_RT_TRAP_UNREACHABLE,        /** Unreachable instruction executed. */
   WASM_RT_TRAP_CALL_INDIRECT,      /** Invalid call_indirect, for any reason. */
+  WASM_RT_TRAP_NULL_REF,           /** Null reference. */
   WASM_RT_TRAP_UNCAUGHT_EXCEPTION, /** Exception thrown and not caught. */
   WASM_RT_TRAP_UNALIGNED,          /** Unaligned atomic instruction executed. */
 #if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
@@ -403,6 +404,7 @@ typedef enum {
   WASM_RT_V128,
   WASM_RT_FUNCREF,
   WASM_RT_EXTERNREF,
+  WASM_RT_EXNREF,
 } wasm_rt_type_t;
 
 /**

@@ -483,10 +483,12 @@ class CWriter {
   void Write(const AtomicRmwExpr& expr);
   void Write(const AtomicRmwCmpxchgExpr& expr);
 
-  size_t BeginTry(const TryExpr& tryexpr);
+  size_t BeginTry(const Block& block);
   void WriteTryCatch(const TryExpr& tryexpr);
   void WriteTryDelegate(const TryExpr& tryexpr);
+  void Write(const TryTableExpr& try_table_expr);
   void Write(const Catch& c);
+  void Write(const TableCatch& c);
   void WriteThrow();
 
   void PushTryCatch(const std::string& name);
@@ -646,6 +648,7 @@ constexpr char CWriter::MangleType(Type type) {
     case Type::V128: return 'o';
     case Type::FuncRef: return 'r';
     case Type::ExternRef: return 'e';
+    case Type::ExnRef: return 'x';
     default:
       WABT_UNREACHABLE;
   }
@@ -1218,6 +1221,7 @@ const char* CWriter::GetCTypeName(const Type& type) {
   case Type::V128: return "v128";
   case Type::FuncRef: return "wasm_rt_funcref_t";
   case Type::ExternRef: return "wasm_rt_externref_t";
+  case Type::ExnRef: return "wasm_rt_exnref_t";
     default:
       WABT_UNREACHABLE;
   }
@@ -1238,6 +1242,7 @@ void CWriter::Write(TypeEnum type) {
     case Type::V128: Write("WASM_RT_V128"); break;
     case Type::FuncRef: Write("WASM_RT_FUNCREF"); break;
     case Type::ExternRef: Write("WASM_RT_EXTERNREF"); break;
+    case Type::ExnRef: Write("WASM_RT_EXNREF"); break;
     default:
       WABT_UNREACHABLE;
   }
@@ -2301,7 +2306,8 @@ void CWriter::WriteElemInitializerDecls() {
       continue;
     }
 
-    if (elem_segment->elem_type == Type::ExternRef) {
+    if (elem_segment->elem_type == Type::ExternRef ||
+        elem_segment->elem_type == Type::ExnRef) {
       // no need to store externref elem initializers because only
       // ref.null is possible
       continue;
@@ -2373,7 +2379,8 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    if (elem_segment->elem_type == Type::ExternRef) {
+    if (elem_segment->elem_type == Type::ExternRef ||
+        elem_segment->elem_type == Type::ExnRef) {
       // no need to store externref elem initializers because only
       // ref.null is possible
       continue;
@@ -2477,7 +2484,8 @@ void CWriter::WriteElemTableInit(bool active_initialization,
                                  const ElemSegment* src_segment,
                                  const Table* dst_table) {
   assert(dst_table->elem_type == Type::FuncRef ||
-         dst_table->elem_type == Type::ExternRef);
+         dst_table->elem_type == Type::ExternRef ||
+         dst_table->elem_type == Type::ExnRef);
   assert(dst_table->elem_type == src_segment->elem_type);
 
   Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
@@ -3125,7 +3133,7 @@ void CWriter::WriteVarsByType(const Vars& vars,
                               const ToDo& todo,
                               bool setjmp_safe) {
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
-                    Type::FuncRef, Type::ExternRef}) {
+                    Type::FuncRef, Type::ExternRef, Type::ExnRef}) {
     Index var_index = 0;
     size_t count = 0;
     for (const auto& var : vars) {
@@ -3269,7 +3277,8 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
       func_->local_types, [](auto x) { return x; },
       [&](Index local_index, Type local_type) {
         Write(DefineParamName(index_to_name[num_params + local_index]), " = ");
-        if (local_type == Type::FuncRef || local_type == Type::ExternRef) {
+        if (local_type == Type::FuncRef || local_type == Type::ExternRef ||
+            local_type == Type::ExnRef) {
           Write(GetReferenceNullValue(local_type));
         } else if (local_type == Type::V128) {
           Write("simde_wasm_i64x2_make(0, 0)");
@@ -3301,27 +3310,27 @@ void CWriter::Write(const Block& block) {
   PushTypes(block.decl.sig.result_types);
 }
 
-size_t CWriter::BeginTry(const TryExpr& tryexpr) {
+size_t CWriter::BeginTry(const Block& block) {
   func_includes_.insert("exceptions");
-  Write(OpenBrace()); /* beginning of try-catch */
-  const std::string tlabel = DefineLabelName(tryexpr.block.label);
+  Write(OpenBrace()); /* beginning of try-catch or try_table */
+  const std::string tlabel = DefineLabelName(block.label);
   Write("WASM_RT_UNWIND_TARGET *", tlabel,
         "_outer_target = wasm_rt_get_unwind_target();", Newline());
   Write("WASM_RT_UNWIND_TARGET ", tlabel, "_unwind_target;", Newline());
   Write("if (!wasm_rt_try(", tlabel, "_unwind_target)) ");
-  Write(OpenBrace()); /* beginning of try block */
-  DropTypes(tryexpr.block.decl.GetNumParams());
+  Write(OpenBrace()); /* beginning of try or try_table block */
+  DropTypes(block.decl.GetNumParams());
   const size_t mark = MarkTypeStack();
-  PushLabel(LabelType::Try, tryexpr.block.label, tryexpr.block.decl.sig);
-  PushTypes(tryexpr.block.decl.sig.param_types);
+  PushLabel(LabelType::Try, block.label, block.decl.sig);
+  PushTypes(block.decl.sig.param_types);
   Write("wasm_rt_set_unwind_target(&", tlabel, "_unwind_target);", Newline());
   PushTryCatch(tlabel);
-  Write(tryexpr.block.exprs);
+  Write(block.exprs);
   ResetTypeStack(mark);
   Write("wasm_rt_set_unwind_target(", tlabel, "_outer_target);", Newline());
-  Write(CloseBrace());          /* end of try block */
+  Write(CloseBrace());          /* end of try or try_table block */
   Write(" else ", OpenBrace()); /* beginning of catch blocks or delegate */
-  assert(label_stack_.back().name == tryexpr.block.label);
+  assert(label_stack_.back().name == block.label);
   assert(label_stack_.back().label_type == LabelType::Try);
   label_stack_.back().label_type = LabelType::Catch;
   if (try_catch_stack_.back().used) {
@@ -3332,7 +3341,7 @@ size_t CWriter::BeginTry(const TryExpr& tryexpr) {
 }
 
 void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
-  const size_t mark = BeginTry(tryexpr);
+  const size_t mark = BeginTry(tryexpr.block);
 
   /* exception has been thrown -- do we catch it? */
 
@@ -3430,7 +3439,7 @@ void CWriter::PopTryCatch() {
 }
 
 void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
-  const size_t mark = BeginTry(tryexpr);
+  const size_t mark = BeginTry(tryexpr.block);
 
   /* exception has been thrown -- where do we delegate it? */
 
@@ -3475,6 +3484,85 @@ void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
   Write(LabelDecl(GetLocalName(tryexpr.block.label, true)));
   PopLabel();
   PushTypes(tryexpr.block.decl.sig.result_types);
+}
+
+void CWriter::Write(const TryTableExpr& try_table_expr) {
+  const size_t mark = BeginTry(try_table_expr.block);
+
+  /* exception has been thrown -- do we catch it? */
+
+  const LabelName tlabel = LabelName(try_table_expr.block.label);
+
+  Write("wasm_rt_set_unwind_target(", tlabel, "_outer_target);", Newline());
+  PopTryCatch();
+
+  ResetTypeStack(mark);
+  assert(!label_stack_.empty());
+  assert(label_stack_.back().name == try_table_expr.block.label);
+  Write(LabelDecl(GetLocalName(try_table_expr.block.label, true)));
+  PopLabel();
+
+  assert(!try_table_expr.catches.empty());
+  bool has_catch_all{};
+  for (auto it = try_table_expr.catches.cbegin();
+       it != try_table_expr.catches.cend(); ++it) {
+    if (it == try_table_expr.catches.cbegin()) {
+      Write(Newline());
+    } else {
+      Write(" else ");
+    }
+    ResetTypeStack(mark);
+    Write(*it);
+    if (it->IsCatchAll()) {
+      has_catch_all = true;
+      break;
+    }
+  }
+  if (!has_catch_all) {
+    /* if not caught, rethrow */
+    Write(" else ", OpenBrace());
+    WriteThrow();
+    Write(CloseBrace(), Newline());
+  }
+  Write(CloseBrace(), Newline()); /* end of catch blocks */
+  Write(CloseBrace(), Newline()); /* end of try-catch */
+
+  ResetTypeStack(mark);
+  PushTypes(try_table_expr.block.decl.sig.result_types);
+}
+
+void CWriter::Write(const TableCatch& c) {
+  if (!c.IsCatchAll()) {
+    Write("if (wasm_rt_exception_tag() == ",
+          TagSymbol(module_->GetTag(c.tag)->name), ") ", OpenBrace());
+
+    const Tag* tag = module_->GetTag(c.tag);
+    const FuncDeclaration& tag_type = tag->decl;
+    const Index num_params = tag_type.GetNumParams();
+    PushTypes(tag_type.sig.param_types);
+    if (num_params == 1) {
+      Write("wasm_rt_memcpy(&", StackVar(0), ", wasm_rt_exception(), sizeof(",
+            tag_type.GetParamType(0), "));", Newline());
+    } else if (num_params > 1) {
+      Write(OpenBrace(), tag_type.sig.param_types, " tmp;", Newline());
+      Write("wasm_rt_memcpy(&tmp, wasm_rt_exception(), sizeof(tmp));",
+            Newline());
+      Unspill(tag_type.sig.param_types);
+      Write(CloseBrace(), Newline());
+    }
+  }
+  if (c.IsRef()) {
+    PushType(Type::ExnRef);
+    Write(StackVar(0), ".tag = wasm_rt_exception_tag();", Newline());
+    Write(StackVar(0), ".size = wasm_rt_exception_size();", Newline());
+    Write("wasm_rt_memcpy(&", StackVar(0),
+          ".data, wasm_rt_exception(), wasm_rt_exception_size());", Newline());
+  }
+
+  Write(GotoLabel(c.target), Newline());
+  if (!c.IsCatchAll()) {
+    Write(CloseBrace());
+  }
 }
 
 void CWriter::Write(const ExprList& exprs) {
@@ -3879,6 +3967,10 @@ void CWriter::Write(const ExprList& exprs) {
                   " == ", GetReferenceNullValue(Type::ExternRef), ");",
                   Newline());
             break;
+          case Type::ExnRef:
+            Write(StackVar(0, Type::I32), " = (", StackVar(0), ".tag == NULL",
+                  ");", Newline());
+            break;
           default:
             WABT_UNREACHABLE;
         }
@@ -3995,7 +4087,19 @@ void CWriter::Write(const ExprList& exprs) {
         }
 
         WriteThrow();
-      } break;
+        // Stop processing this ExprList, since the following are unreachable.
+        return;
+      }
+
+      case ExprType::ThrowRef: {
+        Write("if (", StackVar(0), ".tag == NULL) { TRAP(NULL_REF); }");
+        Write("wasm_rt_load_exception(", StackVar(0), ".tag, ", StackVar(0),
+              ".size, ", StackVar(0), ".data);", Newline());
+        DropTypes(1);
+        WriteThrow();
+        // Stop processing this ExprList, since the following are unreachable.
+        return;
+      }
 
       case ExprType::Rethrow: {
         const RethrowExpr* rethrow = cast<RethrowExpr>(&expr);
@@ -4019,6 +4123,15 @@ void CWriter::Write(const ExprList& exprs) {
           case TryKind::Delegate:
             WriteTryDelegate(tryexpr);
             break;
+        }
+      } break;
+
+      case ExprType::TryTable: {
+        const TryTableExpr& try_table = *cast<TryTableExpr>(&expr);
+        if (try_table.catches.empty()) {
+          Write(try_table.block);
+        } else {
+          Write(try_table);
         }
       } break;
 
@@ -4146,8 +4259,6 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicWait:
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
-      case ExprType::ThrowRef:
-      case ExprType::TryTable:
         UNIMPLEMENTED("...");
         break;
     }
@@ -5998,6 +6109,8 @@ const char* CWriter::GetReferenceTypeName(const Type& type) {
       return "funcref";
     case Type::ExternRef:
       return "externref";
+    case Type::ExnRef:
+      return "exnref";
     default:
       WABT_UNREACHABLE;
   }
@@ -6010,6 +6123,8 @@ const char* CWriter::GetReferenceNullValue(const Type& type) {
       return "wasm_rt_funcref_null_value";
     case Type::ExternRef:
       return "wasm_rt_externref_null_value";
+    case Type::ExnRef:
+      return "wasm_rt_exnref_null_value";
     default:
       WABT_UNREACHABLE;
   }
