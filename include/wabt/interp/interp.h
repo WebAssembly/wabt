@@ -296,6 +296,7 @@ struct LocalDesc {
 struct CatchDesc {
   Index tag_index;
   u32 offset;
+  bool ref = false;
 };
 
 // Handlers for a catch-less `try` or `try-catch` block are included in the
@@ -314,6 +315,7 @@ struct HandlerDesc {
   // Local stack heights at the handler site that need to be restored.
   u32 values;
   u32 exceptions;
+  bool catch_all_ref = false;
 };
 
 struct FuncDesc {

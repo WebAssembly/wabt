@@ -1959,6 +1959,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
                          exceptions_[exceptions_.size() - exn_index - 1]};
       return DoThrow(exn);
     }
+    case O::ThrowRef: {
+      Ref ref = Pop<Ref>();
+      assert(store_.HasValueType(ref, ValueType::ExnRef));
+      // FIXME better error message?
+      TRAP_IF(ref == Ref::Null, "expected exnref, got null");
+      Exception::Ptr exn = store_.UnsafeGet<Exception>(ref);
+      return DoThrow(exn);
+    }
 
     // The following opcodes are either never generated or should never be
     // executed.
@@ -1973,13 +1981,12 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::CallRef:
     case O::Try:
+    case O::TryTable:
     case O::Catch:
     case O::CatchAll:
     case O::Delegate:
     case O::InterpData:
     case O::Invalid:
-    case O::TryTable:
-    case O::ThrowRef:
       WABT_UNREACHABLE;
       break;
   }
@@ -2616,6 +2623,7 @@ RunResult Thread::DoThrow(Exception::Ptr exn) {
   Tag::Ptr exn_tag{store_, exn->tag()};
   bool popped_frame = false;
   bool had_catch_all = false;
+  bool target_exnref = false;
 
   // DoThrow is responsible for unwinding the stack at the point at which an
   // exception is thrown, and also branching to the appropriate catch within
@@ -2653,6 +2661,7 @@ RunResult Thread::DoThrow(Exception::Ptr exn) {
             target_offset = _catch.offset;
             target_values = (*iter).values;
             target_exceptions = (*iter).exceptions;
+            target_exnref = _catch.ref;
             goto found_handler;
           }
         }
@@ -2661,6 +2670,7 @@ RunResult Thread::DoThrow(Exception::Ptr exn) {
           target_values = (*iter).values;
           target_exceptions = (*iter).exceptions;
           had_catch_all = true;
+          target_exnref = handler.catch_all_ref;
           goto found_handler;
         }
       }
@@ -2697,6 +2707,9 @@ found_handler:
   // Also push exception payload values if applicable.
   if (!had_catch_all) {
     PushValues(exn_tag->type().signature, exn->args());
+  }
+  if (target_exnref) {
+    Push(exn.ref());
   }
   return RunResult::Ok;
 }

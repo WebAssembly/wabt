@@ -241,7 +241,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnThrowExpr(Index tag_index) override;
+  Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
+  Result OnTryTableExpr(Type sig_type,
+                        const CatchClauseVector& catches) override;
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
@@ -1072,6 +1075,11 @@ Result BinaryReaderInterp::OnEndExpr() {
     HandlerDesc& desc = func_->handlers[local_label->handler_desc_index];
     desc.try_end_offset = istream_.end();
     assert(desc.catches.size() == 0);
+  } else if (label_type == LabelType::TryTable) {
+    // TryTable blocks need a try_end_offset
+    Label* local_label = TopLabel();
+    HandlerDesc& desc = func_->handlers[local_label->handler_desc_index];
+    desc.try_end_offset = istream_.end();
   } else if (label_type == LabelType::Catch) {
     istream_.EmitCatchDrop(1);
   }
@@ -1518,6 +1526,12 @@ Result BinaryReaderInterp::OnThrowExpr(Index tag_index) {
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnThrowRefExpr() {
+  CHECK_RESULT(validator_.OnThrowRef(GetLocation()));
+  istream_.Emit(Opcode::ThrowRef);
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnRethrowExpr(Index depth) {
   Index catch_depth;
   CHECK_RESULT(validator_.OnRethrow(GetLocation(), Var(depth, GetLocation())));
@@ -1546,6 +1560,80 @@ Result BinaryReaderInterp::OnTryExpr(Type sig_type) {
                                         {Istream::kInvalidOffset},
                                         value_stack_height,
                                         exn_stack_height});
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnTryTableExpr(Type sig_type,
+                                          const CatchClauseVector& catches) {
+  // we can just emit the catch handlers beforehand, so long as we skip over
+  // them when entering the try.
+  CHECK_RESULT(validator_.BeginTryTable(GetLocation(), sig_type));
+
+  u32 exn_stack_height;
+  CHECK_RESULT(
+      validator_.GetCatchCount(label_stack_.size() - 1, &exn_stack_height));
+  // NOTE: *NOT* GetLocalCount. we don't count the parameters, as they're not
+  // part of the frame.
+  u32 value_stack_height = validator_.type_stack_size() + local_count_;
+
+  HandlerDesc desc =
+      HandlerDesc{HandlerKind::Catch,        Istream::kInvalidOffset,
+                  Istream::kInvalidOffset,   {},
+                  {Istream::kInvalidOffset}, value_stack_height,
+                  exn_stack_height};
+
+  istream_.Emit(Opcode::Br);
+  auto offset = istream_.EmitFixupU32();
+
+  bool has_catch_all = false;
+  for (const auto& raw_catch : catches) {
+    TableCatch catch_;
+    catch_.kind = raw_catch.kind;
+    catch_.tag = Var(raw_catch.tag, GetLocation());
+    catch_.target = Var(raw_catch.depth, GetLocation());
+    CHECK_RESULT(validator_.OnTryTableCatch(GetLocation(), catch_));
+    // stop emitting handlers after catch_all - but we must still validate the
+    // handlers we don't emit
+    if (has_catch_all) {
+      continue;
+    }
+    if (catch_.IsCatchAll()) {
+      has_catch_all = true;
+      desc.catch_all_ref = catch_.IsRef();
+      desc.catch_all_offset = istream_.end();
+    } else {
+      desc.catches.push_back(
+          CatchDesc{raw_catch.tag, istream_.end(), catch_.IsRef()});
+    }
+    // we can't use GetBrDropKeepCount because we're not in a real block.
+    SharedValidator::Label* vlabel;
+    CHECK_RESULT(validator_.GetLabel(raw_catch.depth, &vlabel));
+    // we keep the exception's results.
+    // (this has already been validated, above)
+    Index keep_count = vlabel->br_types().size();
+    // we drop everything between the current block and the br target.
+    // (we have already taken the TryTable block parameters into account, in
+    // BeginTryTable)
+    Index drop_count = validator_.type_stack_size() - vlabel->type_stack_limit;
+    Index catch_drop_count;
+    // we use the regular catch count
+    CHECK_RESULT(validator_.GetCatchCount(raw_catch.depth, &catch_drop_count));
+    // but increment, as we are semantically in a catch
+    catch_drop_count++;
+    EmitBr(raw_catch.depth, drop_count, keep_count, catch_drop_count);
+  }
+
+  CHECK_RESULT(validator_.EndTryTable(GetLocation(), sig_type));
+
+  desc.try_start_offset = istream_.end();
+
+  // as usual, the label is pushed after the catch handlers
+  PushLabel(LabelKind::Try, Istream::kInvalidOffset, Istream::kInvalidOffset,
+            func_->handlers.size());
+  func_->handlers.push_back(std::move(desc));
+
+  istream_.ResolveFixupU32(offset);
+
   return Result::Ok;
 }
 
