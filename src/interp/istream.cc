@@ -124,6 +124,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::Nop:
     case Opcode::Return:
     case Opcode::Unreachable:
+    case Opcode::ThrowRef:
     case Opcode::RefNull:
       // 0 immediates, 0 operands.
       instr.kind = InstrKind::Imm_0_Op_0;
@@ -793,9 +794,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::Invalid:
     case Opcode::Loop:
     case Opcode::Try:
-    case Opcode::ReturnCall:
     case Opcode::TryTable:
-    case Opcode::ThrowRef:
+    case Opcode::ReturnCall:
       // Not used.
       break;
   }

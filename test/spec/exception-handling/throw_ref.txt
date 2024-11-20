@@ -1,0 +1,19 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/throw_ref.wast
+;;; ARGS*: --enable-exceptions
+(;; STDOUT ;;;
+out/test/spec/exception-handling/throw_ref.wast:99: assert_exception passed
+out/test/spec/exception-handling/throw_ref.wast:101: assert_exception passed
+out/test/spec/exception-handling/throw_ref.wast:104: assert_exception passed
+out/test/spec/exception-handling/throw_ref.wast:106: assert_exception passed
+out/test/spec/exception-handling/throw_ref.wast:108: assert_exception passed
+out/test/spec/exception-handling/throw_ref.wast:109: assert_exception passed
+out/test/spec/exception-handling/throw_ref.wast:115: assert_exception passed
+out/test/spec/exception-handling/throw_ref.wast:117: assert_invalid passed:
+  out/test/spec/exception-handling/throw_ref/throw_ref.1.wasm:0000018: error: type mismatch in throw_ref, expected [exnref] but got []
+  0000018: error: OnThrowRefExpr callback failed
+out/test/spec/exception-handling/throw_ref.wast:118: assert_invalid passed:
+  out/test/spec/exception-handling/throw_ref/throw_ref.2.wasm:000001a: error: type mismatch in throw_ref, expected [exnref] but got []
+  000001a: error: OnThrowRefExpr callback failed
+15/15 tests passed.
+;;; STDOUT ;;)
