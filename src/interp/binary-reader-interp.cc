@@ -243,7 +243,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnThrowExpr(Index tag_index) override;
   Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
-  Result OnTryTableExpr(Type sig_type, const CatchClauseVector& catches) override;
+  Result OnTryTableExpr(Type sig_type,
+                        const CatchClauseVector& catches) override;
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
