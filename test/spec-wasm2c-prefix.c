@@ -168,6 +168,24 @@ static void error(const char* file, int line, const char* format, ...) {
     }                                                                     \
   } while (0)
 
+#define ASSERT_RETURN_EXNREF(f, expected)                                \
+  do {                                                                   \
+    g_tests_run++;                                                       \
+    int trap_code = wasm_rt_impl_try();                                  \
+    if (trap_code) {                                                     \
+      error(__FILE__, __LINE__, #f " trapped (%s).\n",                   \
+            wasm_rt_strerror(trap_code));                                \
+    } else {                                                             \
+      wasm_rt_exnref_t actual = f;                                       \
+      if (is_equal_wasm_rt_exnref_t(actual, expected)) {                 \
+        g_tests_passed++;                                                \
+      } else {                                                           \
+        error(__FILE__, __LINE__,                                        \
+              "in " #f ": mismatch between expected and actual exnref"); \
+      }                                                                  \
+    }                                                                    \
+  } while (0)
+
 #define ASSERT_RETURN_NAN_T(type, itype, fmt, f, kind)                        \
   do {                                                                        \
     g_tests_run++;                                                            \
@@ -272,6 +290,12 @@ static bool is_equal_wasm_rt_funcref_t(wasm_rt_funcref_t x,
   return is_equal_wasm_rt_func_type_t(x.func_type, y.func_type) &&
          (x.func == y.func) && (x.module_instance == y.module_instance);
 }
+
+#ifdef WASM_EXN_MAX_SIZE
+static bool is_equal_wasm_rt_exnref_t(wasm_rt_exnref_t x, wasm_rt_exnref_t y) {
+  return x.tag == y.tag && x.size == y.size && !memcmp(x.data, y.data, x.size);
+}
+#endif
 
 wasm_rt_externref_t spectest_make_externref(uintptr_t x) {
   return (wasm_rt_externref_t)(x + 1);  // externref(0) is not null
