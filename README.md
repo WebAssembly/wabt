@@ -26,7 +26,6 @@ tools do not aim to provide an optimization platform or a higher-level compiler
 target; instead they aim for full fidelity and compliance with the spec (e.g.
 1:1 round-trips with no changes to instructions).
 
-
 ## Online Demos
 
 Wabt has been compiled to JavaScript via emscripten. Some of the functionality is available in the following demos:
