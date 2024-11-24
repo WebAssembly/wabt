@@ -26,19 +26,6 @@ tools do not aim to provide an optimization platform or a higher-level compiler
 target; instead they aim for full fidelity and compliance with the spec (e.g.
 1:1 round-trips with no changes to instructions).
 
-## Installation
-You can install Wabt command line tools on Linux or macOS using Homebrew:
-```sh
-brew install wabt
-```
-
-On Linux, you can also use a package manager like `apt`:
-```sh
-sudo apt install wabt
-```
-Windows or otherwise interested users can download installers and
-binaries directly from the [GitHub
-Releases](https://github.com/WebAssembly/wabt/releases) page.
 
 ## Online Demos
 
@@ -374,3 +361,16 @@ $ out/clang/Debug/fuzz/wasm2wat_fuzz ...
 
 See the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for
 more information about how to use this tool.
+
+## Installing prebuilt binaries
+
+Wabt is available on many platforms as prepackaged binaries. For example if you use Homebrew you can use:
+```sh
+brew install wabt
+```
+
+And you use an apt-based linux distribution you can use:
+```sh
+sudo apt install wabt
+```
+You can also download prebuilt binaries for many platforms directly from the github releases page.
