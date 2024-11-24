@@ -363,7 +363,8 @@ more information about how to use this tool.
 
 ## Installing prebuilt binaries
 
-Wabt is available on many platforms as prepackaged binaries. For example if you use Homebrew you can use:
+Wabt is available on many platforms as prepackaged binaries. For example, if
+you use Homebrew you can use:
 ```sh
 brew install wabt
 ```
@@ -372,4 +373,6 @@ And you use an apt-based linux distribution you can use:
 ```sh
 sudo apt install wabt
 ```
-You can also download prebuilt binaries for many platforms directly from the github releases page.
+
+You can also download prebuilt binaries for many platforms directly from the
+github releases page.
