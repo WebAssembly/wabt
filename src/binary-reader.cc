@@ -37,17 +37,17 @@
 #include <alloca.h>
 #endif
 
-#define ERROR(...)             \
-  do {                         \
+#define ERROR(...)           \
+  do {                       \
     PrintError(__VA_ARGS__); \
     return Result::Error;    \
   } while (0)
 
-#define ERROR_IF(expr, ...)    \
-  do {                         \
-    if (expr) {                \
-      ERROR(__VA_ARGS__);      \
-    }                          \
+#define ERROR_IF(expr, ...) \
+  do {                      \
+    if (expr) {             \
+      ERROR(__VA_ARGS__);   \
+    }                       \
   } while (0)
 
 #define ERROR_UNLESS(expr, ...) ERROR_IF(!(expr), __VA_ARGS__)
