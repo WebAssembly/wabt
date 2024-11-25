@@ -3102,12 +3102,12 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   CHECK_RESULT(ReadU16(&layer, "layer"));
 
   switch (layer) {
-    case WABT_MODULE_LAYER:
+    case WABT_BINARY_LAYER_MODULE:
       ERROR_UNLESS(version == WABT_BINARY_VERSION,
                    "bad wasm file version: %#x (expected %#x)", version,
                    WABT_BINARY_VERSION);
       break;
-    case WABT_COMPONENT_LAYER:
+    case WABT_BINARY_LAYER_COMPONENT:
       ERROR("wasm components are not yet supported in this tool");
       break;
     default:
