@@ -1,0 +1,7 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+0xd 0 0x1 0
+(;; STDERR ;;;
+0000008: error: wasm components are not yet supported in this tool
+0000008: error: wasm components are not yet supported in this tool
+;;; STDERR ;;)

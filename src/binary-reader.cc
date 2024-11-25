@@ -3104,7 +3104,7 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   switch (layer) {
     case WABT_MODULE_LAYER:
       ERROR_UNLESS(version == WABT_BINARY_VERSION,
-                   "bad wasm module file version: %#x (expected %#x)", version,
+                   "bad wasm file version: %#x (expected %#x)", version,
                    WABT_BINARY_VERSION);
       break;
     case WABT_COMPONENT_LAYER:

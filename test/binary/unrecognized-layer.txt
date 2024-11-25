@@ -1,0 +1,7 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+0xe 0 0x2 0
+(;; STDERR ;;;
+0000008: error: unsupported wasm layer: 0x2
+0000008: error: unsupported wasm layer: 0x2
+;;; STDERR ;;)
