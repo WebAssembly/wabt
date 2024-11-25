@@ -360,3 +360,19 @@ $ out/clang/Debug/fuzz/wasm2wat_fuzz ...
 
 See the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for
 more information about how to use this tool.
+
+## Installing prebuilt binaries
+
+Wabt is available on many platforms as prepackaged binaries. For example, if
+you use Homebrew you can use:
+```sh
+brew install wabt
+```
+
+And you use an apt-based linux distribution you can use:
+```sh
+sudo apt install wabt
+```
+
+You can also download prebuilt binaries for many platforms directly from the
+github releases page.
