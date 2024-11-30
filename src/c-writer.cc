@@ -266,6 +266,7 @@ class CWriter {
   bool IsTopLabelUsed() const;
   void PopLabel();
 
+  static constexpr bool HasNonNullInitializers(Type);
   static constexpr char MangleType(Type);
   static constexpr char MangleField(ModuleFieldType);
   static std::string MangleTypes(const TypeVector&);
@@ -635,6 +636,19 @@ bool CWriter::IsTopLabelUsed() const {
 
 void CWriter::PopLabel() {
   label_stack_.pop_back();
+}
+
+// static
+constexpr bool CWriter::HasNonNullInitializers(Type type) {
+  // clang-format off
+  switch (type) {
+    case Type::FuncRef: return true;
+    case Type::ExternRef: return false;
+    case Type::ExnRef: return false;
+    default:
+      WABT_UNREACHABLE;
+  }
+  // clang-format on
 }
 
 // static
@@ -2306,10 +2320,8 @@ void CWriter::WriteElemInitializerDecls() {
       continue;
     }
 
-    if (elem_segment->elem_type == Type::ExternRef ||
-        elem_segment->elem_type == Type::ExnRef) {
-      // no need to store externref elem initializers because only
-      // ref.null is possible
+    if (!HasNonNullInitializers(elem_segment->elem_type)) {
+      // no need to store these initializers because only ref.null is possible
       continue;
     }
 
@@ -2379,10 +2391,8 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    if (elem_segment->elem_type == Type::ExternRef ||
-        elem_segment->elem_type == Type::ExnRef) {
-      // no need to store externref elem initializers because only
-      // ref.null is possible
+    if (!HasNonNullInitializers(elem_segment->elem_type)) {
+      // no need to store these initializers because only ref.null is possible
       continue;
     }
 
@@ -2483,16 +2493,15 @@ void CWriter::WriteElemInitializers() {
 void CWriter::WriteElemTableInit(bool active_initialization,
                                  const ElemSegment* src_segment,
                                  const Table* dst_table) {
-  assert(dst_table->elem_type == Type::FuncRef ||
-         dst_table->elem_type == Type::ExternRef ||
-         dst_table->elem_type == Type::ExnRef);
+  assert(dst_table->elem_type.IsRef() &&
+         dst_table->elem_type != Type::Reference);
   assert(dst_table->elem_type == src_segment->elem_type);
 
   Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
         ExternalInstancePtr(ModuleFieldType::Table, dst_table->name), ", ");
 
   // elem segment exprs needed only for funcref tables
-  // because externref tables can only be initialized with ref.null
+  // because externref and exnref tables can only be initialized with ref.null
   if (dst_table->elem_type == Type::FuncRef) {
     if (src_segment->elem_exprs.empty()) {
       Write("NULL, ");
@@ -3277,8 +3286,7 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
       func_->local_types, [](auto x) { return x; },
       [&](Index local_index, Type local_type) {
         Write(DefineParamName(index_to_name[num_params + local_index]), " = ");
-        if (local_type == Type::FuncRef || local_type == Type::ExternRef ||
-            local_type == Type::ExnRef) {
+        if (local_type.IsRef()) {
           Write(GetReferenceNullValue(local_type));
         } else if (local_type == Type::V128) {
           Write("simde_wasm_i64x2_make(0, 0)");
