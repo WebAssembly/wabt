@@ -1369,7 +1369,24 @@ static std::string GetMemoryTypeString(const Memory& memory) {
 }
 
 static std::string GetMemoryAPIString(const Memory& memory, std::string api) {
-  return memory.page_limits.is_shared ? (api + "_shared") : api;
+  std::string suffix;
+  if (memory.page_limits.is_shared) {
+    suffix += "_shared";
+  }
+
+  // Memory load and store routines can be optimized for default-page-size,
+  // 32-bit memories (by using hardware to bounds-check memory access).
+  // Append "_default32" to these function names to choose the (possibly) fast
+  // path.
+  //
+  // We don't need to do this for runtime routines; those can check the
+  // wasm_rt_memory_t structure.
+  if (api.substr(0, 8) != "wasm_rt_" &&
+      memory.page_size == WABT_DEFAULT_PAGE_SIZE &&
+      memory.page_limits.is_64 == false) {
+    suffix += "_default32";
+  }
+  return api + suffix;
 }
 
 void CWriter::WriteInitExpr(const ExprList& expr_list) {

@@ -609,7 +609,6 @@ def main(args):
             if IS_WINDOWS:
                 sys.stderr.write('skipping: wasm2c+memory64 is not yet supported under msvc\n')
                 return SKIPPED
-            cflags.append('-DSUPPORT_MEMORY64=1')
 
         use_c11 = options.enable_threads
 
