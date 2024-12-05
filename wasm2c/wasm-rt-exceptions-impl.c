@@ -66,3 +66,8 @@ uint32_t wasm_rt_exception_size(void) {
 void* wasm_rt_exception(void) {
   return g_active_exception;
 }
+
+// Include table operations for exnref
+#define WASM_RT_TABLE_OPS_EXNREF
+#include "wasm-rt-impl-tableops.inc"
+#undef WASM_RT_TABLE_OPS_EXNREF
