@@ -74,23 +74,25 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
   memory->is64 = is64;
   MEMORY_LOCK_VAR_INIT(memory->mem_lock);
 
-#if WASM_RT_USE_MMAP
-  const uint64_t mmap_size =
-      get_alloc_size_for_mmap(memory->max_pages, memory->is64);
-  void* addr = os_mmap(mmap_size);
-  if (!addr) {
-    os_print_last_error("os_mmap failed.");
-    abort();
-  }
-  int ret = os_mprotect(addr, byte_length);
-  if (ret != 0) {
-    os_print_last_error("os_mprotect failed.");
-    abort();
-  }
-  memory->data = addr;
-#else
-  memory->data = calloc(byte_length, 1);
+  if (WASM_RT_USE_MMAP && !is64) {
+#if WASM_RT_USE_MMAP  // mmap-related functions don't exist unless this is set
+    const uint64_t mmap_size =
+        get_alloc_size_for_mmap(memory->max_pages, memory->is64);
+    void* addr = os_mmap(mmap_size);
+    if (!addr) {
+      os_print_last_error("os_mmap failed.");
+      abort();
+    }
+    int ret = os_mprotect(addr, byte_length);
+    if (ret != 0) {
+      os_print_last_error("os_mprotect failed.");
+      abort();
+    }
+    memory->data = addr;
 #endif
+  } else {
+    memory->data = calloc(byte_length, 1);
+  }
 }
 
 static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
@@ -106,21 +108,24 @@ static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
   uint64_t old_size = old_pages * WASM_PAGE_SIZE;
   uint64_t new_size = new_pages * WASM_PAGE_SIZE;
   uint64_t delta_size = delta * WASM_PAGE_SIZE;
+  MEMORY_CELL_TYPE new_data;
+  if (WASM_RT_USE_MMAP && !memory->is64) {
 #if WASM_RT_USE_MMAP
-  MEMORY_CELL_TYPE new_data = memory->data;
-  int ret = os_mprotect((void*)(new_data + old_size), delta_size);
-  if (ret != 0) {
-    return (uint64_t)-1;
-  }
-#else
-  MEMORY_CELL_TYPE new_data = realloc((void*)memory->data, new_size);
-  if (new_data == NULL) {
-    return (uint64_t)-1;
-  }
+    new_data = memory->data;
+    int ret = os_mprotect((void*)(new_data + old_size), delta_size);
+    if (ret != 0) {
+      return (uint64_t)-1;
+    }
+#endif
+  } else {
+    new_data = realloc((void*)memory->data, new_size);
+    if (new_data == NULL) {
+      return (uint64_t)-1;
+    }
 #if !WABT_BIG_ENDIAN
-  memset((void*)(new_data + old_size), 0, delta_size);
+    memset((void*)(new_data + old_size), 0, delta_size);
 #endif
-#endif
+  }
 #if WABT_BIG_ENDIAN
   memmove((void*)(new_data + new_size - old_size), (void*)new_data, old_size);
   memset((void*)new_data, 0, delta_size);
@@ -145,13 +150,15 @@ uint64_t MEMORY_API_NAME(wasm_rt_grow_memory)(MEMORY_TYPE* memory,
 }
 
 void MEMORY_API_NAME(wasm_rt_free_memory)(MEMORY_TYPE* memory) {
+  if (WASM_RT_USE_MMAP && !memory->is64) {
 #if WASM_RT_USE_MMAP
-  const uint64_t mmap_size =
-      get_alloc_size_for_mmap(memory->max_pages, memory->is64);
-  os_munmap((void*)memory->data, mmap_size);  // ignore error
-#else
-  free((void*)memory->data);
+    const uint64_t mmap_size =
+        get_alloc_size_for_mmap(memory->max_pages, memory->is64);
+    os_munmap((void*)memory->data, mmap_size);  // ignore error
 #endif
+  } else {
+    free((void*)memory->data);
+  }
 }
 
 #undef MEMORY_LOCK_RELEASE
