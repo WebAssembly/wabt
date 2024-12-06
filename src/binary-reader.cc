@@ -37,12 +37,17 @@
 #include <alloca.h>
 #endif
 
-#define ERROR_IF(expr, ...)    \
-  do {                         \
-    if (expr) {                \
-      PrintError(__VA_ARGS__); \
-      return Result::Error;    \
-    }                          \
+#define ERROR(...)           \
+  do {                       \
+    PrintError(__VA_ARGS__); \
+    return Result::Error;    \
+  } while (0)
+
+#define ERROR_IF(expr, ...) \
+  do {                      \
+    if (expr) {             \
+      ERROR(__VA_ARGS__);   \
+    }                       \
   } while (0)
 
 #define ERROR_UNLESS(expr, ...) ERROR_IF(!(expr), __VA_ARGS__)
@@ -100,6 +105,7 @@ class BinaryReader {
                              const char* type_name,
                              const char* desc);
   [[nodiscard]] Result ReadU8(uint8_t* out_value, const char* desc);
+  [[nodiscard]] Result ReadU16(uint16_t* out_value, const char* desc);
   [[nodiscard]] Result ReadU32(uint32_t* out_value, const char* desc);
   [[nodiscard]] Result ReadF32(uint32_t* out_value, const char* desc);
   [[nodiscard]] Result ReadF64(uint64_t* out_value, const char* desc);
@@ -298,6 +304,10 @@ Result BinaryReader::ReadT(T* out_value,
 
 Result BinaryReader::ReadU8(uint8_t* out_value, const char* desc) {
   return ReadT(out_value, "uint8_t", desc);
+}
+
+Result BinaryReader::ReadU16(uint16_t* out_value, const char* desc) {
+  return ReadT(out_value, "uint16_t", desc);
 }
 
 Result BinaryReader::ReadU32(uint32_t* out_value, const char* desc) {
@@ -3086,11 +3096,24 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   uint32_t magic = 0;
   CHECK_RESULT(ReadU32(&magic, "magic"));
   ERROR_UNLESS(magic == WABT_BINARY_MAGIC, "bad magic value");
-  uint32_t version = 0;
-  CHECK_RESULT(ReadU32(&version, "version"));
-  ERROR_UNLESS(version == WABT_BINARY_VERSION,
-               "bad wasm file version: %#x (expected %#x)", version,
-               WABT_BINARY_VERSION);
+
+  uint16_t version = 0, layer = 0;
+  CHECK_RESULT(ReadU16(&version, "version"));
+  CHECK_RESULT(ReadU16(&layer, "layer"));
+
+  switch (layer) {
+    case WABT_BINARY_LAYER_MODULE:
+      ERROR_UNLESS(version == WABT_BINARY_VERSION,
+                   "bad wasm file version: %#x (expected %#x)", version,
+                   WABT_BINARY_VERSION);
+      break;
+    case WABT_BINARY_LAYER_COMPONENT:
+      ERROR("wasm components are not yet supported in this tool");
+      break;
+    default:
+      ERROR("unsupported wasm layer: %#x", layer);
+      break;
+  }
 
   CALLBACK(BeginModule, version);
   CHECK_RESULT(ReadSections(ReadSectionsOptions{options.stop_on_first_error}));

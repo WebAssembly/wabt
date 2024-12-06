@@ -41,11 +41,11 @@ out/test/spec/multi-memory/binary.wast:31: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:34: assert_malformed passed:
   0000004: error: bad magic value
 out/test/spec/multi-memory/binary.wast:37: assert_malformed passed:
-  0000004: error: unable to read uint32_t: version
+  0000004: error: unable to read uint16_t: version
 out/test/spec/multi-memory/binary.wast:38: assert_malformed passed:
-  0000004: error: unable to read uint32_t: version
+  0000004: error: unable to read uint16_t: version
 out/test/spec/multi-memory/binary.wast:39: assert_malformed passed:
-  0000004: error: unable to read uint32_t: version
+  0000006: error: unable to read uint16_t: layer
 out/test/spec/multi-memory/binary.wast:40: assert_malformed passed:
   0000008: error: bad wasm file version: 0 (expected 0x1)
 out/test/spec/multi-memory/binary.wast:41: assert_malformed passed:
@@ -55,9 +55,9 @@ out/test/spec/multi-memory/binary.wast:42: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:43: assert_malformed passed:
   0000008: error: bad wasm file version: 0x100 (expected 0x1)
 out/test/spec/multi-memory/binary.wast:44: assert_malformed passed:
-  0000008: error: bad wasm file version: 0x10000 (expected 0x1)
+  0000008: error: wasm components are not yet supported in this tool
 out/test/spec/multi-memory/binary.wast:45: assert_malformed passed:
-  0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
+  0000008: error: unsupported wasm layer: 0x100
 out/test/spec/multi-memory/binary.wast:48: assert_malformed passed:
   000000a: error: invalid section code: 14
 out/test/spec/multi-memory/binary.wast:49: assert_malformed passed:
