@@ -70,6 +70,69 @@ uint32_t wasm_rt_exception_size(void);
  */
 void* wasm_rt_exception(void);
 
+/**
+ * The maximum size of an exception.
+ */
+#define WASM_EXN_MAX_SIZE 256
+
+/**
+ * An exception instance (the runtime representation of a function).
+ * These can be stored in tables of type exnref, or used as values.
+ */
+typedef struct {
+  /** The exceptions's tag. */
+  wasm_rt_tag_t tag;
+  /** The size of the exception. */
+  uint32_t size;
+  /**
+   * The actual contents of the exception are stored inline.
+   */
+  char data[WASM_EXN_MAX_SIZE];
+} wasm_rt_exnref_t;
+
+/** Default (null) value of an exnref */
+#define wasm_rt_exnref_null_value ((wasm_rt_exnref_t){NULL, 0, {0}})
+
+/** A Table of type exnref. */
+typedef struct {
+  /** The table element data, with an element count of `size`. */
+  wasm_rt_exnref_t* data;
+  /**
+   * The maximum element count of this Table object. If there is no maximum,
+   * `max_size` is 0xffffffffu (i.e. UINT32_MAX).
+   */
+  uint32_t max_size;
+  /** The current element count of the table. */
+  uint32_t size;
+} wasm_rt_exnref_table_t;
+
+/**
+ * Initialize an exnref Table object with an element count of `elements` and a
+ * maximum size of `max_elements`.
+ *
+ *  ```
+ *    wasm_rt_exnref_table_t my_table;
+ *    // 5 elements and a maximum of 10 elements.
+ *    wasm_rt_allocate_exnref_table(&my_table, 5, 10);
+ *  ```
+ */
+void wasm_rt_allocate_exnref_table(wasm_rt_exnref_table_t*,
+                                   uint32_t elements,
+                                   uint32_t max_elements);
+
+/** Free an exnref Table object. */
+void wasm_rt_free_exnref_table(wasm_rt_exnref_table_t*);
+
+/**
+ * Grow a Table object by `delta` elements (giving the new elements the value
+ * `init`), and return the previous element count. If this new element count is
+ * greater than the maximum element count, the grow fails and 0xffffffffu
+ * (UINT32_MAX) is returned instead.
+ */
+uint32_t wasm_rt_grow_exnref_table(wasm_rt_exnref_table_t*,
+                                   uint32_t delta,
+                                   wasm_rt_exnref_t init);
+
 #ifdef __cplusplus
 }
 #endif
