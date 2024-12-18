@@ -180,20 +180,24 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
   (CHECK_CALL_INDIRECT(table, ft, x),       \
    DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 
-#ifdef SUPPORT_MEMORY64
+static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
+#if __has_builtin(__builtin_add_overflow)
+  return __builtin_add_overflow(a, b, resptr);
+#elif defined(_MSC_VER)
+  return _addcarry_u64(0, a, b, resptr);
+#else
+#error "Missing implementation of __builtin_add_overflow or _addcarry_u64"
+#endif
+}
+
 #define RANGE_CHECK(mem, offset, len)              \
   do {                                             \
     uint64_t res;                                  \
-    if (__builtin_add_overflow(offset, len, &res)) \
+    if (UNLIKELY(add_overflow(offset, len, &res))) \
       TRAP(OOB);                                   \
     if (UNLIKELY(res > mem->size))                 \
       TRAP(OOB);                                   \
   } while (0);
-#else
-#define RANGE_CHECK(mem, offset, len)               \
-  if (UNLIKELY(offset + (uint64_t)len > mem->size)) \
-    TRAP(OOB);
-#endif
 
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE && WASM_RT_SANITY_CHECKS
 #include <stdio.h>
@@ -206,13 +210,23 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
 #define WASM_RT_CHECK_BASE(mem)
 #endif
 
+// MEMCHECK_DEFAULT32 is an "accelerated" MEMCHECK used only for
+// default-page-size, 32-bit memories. It may do nothing at all
+// (if hardware bounds-checking is enabled via guard pages)
+// or it may do a slightly faster RANGE_CHECK.
 #if WASM_RT_MEMCHECK_GUARD_PAGES
-#define MEMCHECK(mem, a, t) WASM_RT_CHECK_BASE(mem);
+#define MEMCHECK_DEFAULT32(mem, a, t) WASM_RT_CHECK_BASE(mem);
 #else
-#define MEMCHECK(mem, a, t) \
-  WASM_RT_CHECK_BASE(mem);  \
-  RANGE_CHECK(mem, a, sizeof(t))
+#define MEMCHECK_DEFAULT32(mem, a, t)                \
+  WASM_RT_CHECK_BASE(mem);                           \
+  if (UNLIKELY(a + (uint64_t)sizeof(t) > mem->size)) \
+    TRAP(OOB);
 #endif
+
+// MEMCHECK_GENERAL can be used for any memory
+#define MEMCHECK_GENERAL(mem, a, t) \
+  WASM_RT_CHECK_BASE(mem);          \
+  RANGE_CHECK(mem, a, sizeof(t));
 
 #ifdef __GNUC__
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
@@ -250,23 +264,62 @@ static inline void load_data(void* dest, const void* src, size_t n) {
     load_data(MEM_ADDR(&m, o, s), i, s); \
   } while (0)
 
-#define DEFINE_LOAD(name, t1, t2, t3, force_read)                  \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {         \
-    MEMCHECK(mem, addr, t1);                                       \
-    t1 result;                                                     \
-    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), \
-                   sizeof(t1));                                    \
-    force_read(result);                                            \
-    return (t3)(t2)result;                                         \
+#define DEF_MEM_CHECKS0(name, shared, mem_type, ret_kw, return_type)         \
+  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+                                             u64 addr) {                     \
+    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+    ret_kw name##_unchecked(mem, addr);                                      \
+  }                                                                          \
+  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr) { \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
+    ret_kw name##_unchecked(mem, addr);                                      \
   }
 
+#define DEF_MEM_CHECKS1(name, shared, mem_type, ret_kw, return_type,         \
+                        val_type1)                                           \
+  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+                                             u64 addr, val_type1 val1) {     \
+    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+    ret_kw name##_unchecked(mem, addr, val1);                                \
+  }                                                                          \
+  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
+                                 val_type1 val1) {                           \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
+    ret_kw name##_unchecked(mem, addr, val1);                                \
+  }
+
+#define DEF_MEM_CHECKS2(name, shared, mem_type, ret_kw, return_type,         \
+                        val_type1, val_type2)                                \
+  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+                                             u64 addr, val_type1 val1,       \
+                                             val_type2 val2) {               \
+    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
+  }                                                                          \
+  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
+                                 val_type1 val1, val_type2 val2) {           \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
+    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
+  }
+
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)                      \
+  static inline t3 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
+    t1 result;                                                         \
+    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),     \
+                   sizeof(t1));                                        \
+    force_read(result);                                                \
+    return (t3)(t2)result;                                             \
+  }                                                                    \
+  DEF_MEM_CHECKS0(name, _, t1, return, t3)
+
 #define DEFINE_STORE(name, t1, t2)                                     \
-  static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    MEMCHECK(mem, addr, t1);                                           \
+  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
+                                      t2 value) {                      \
     t1 wrapped = (t1)value;                                            \
     wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,    \
                    sizeof(t1));                                        \
-  }
+  }                                                                    \
+  DEF_MEM_CHECKS1(name, _, t1, , void, t2)
 
 DEFINE_LOAD(i32_load, u32, u32, u32, FORCE_READ_INT)
 DEFINE_LOAD(i64_load, u64, u64, u64, FORCE_READ_INT)
@@ -614,16 +667,16 @@ static float wasm_sqrtf(float x) {
   return sqrtf(x);
 }
 
-static inline void memory_fill(wasm_rt_memory_t* mem, u32 d, u32 val, u32 n) {
+static inline void memory_fill(wasm_rt_memory_t* mem, u64 d, u32 val, u64 n) {
   RANGE_CHECK(mem, d, n);
   memset(MEM_ADDR(mem, d, n), val, n);
 }
 
 static inline void memory_copy(wasm_rt_memory_t* dest,
                                const wasm_rt_memory_t* src,
-                               u32 dest_addr,
-                               u32 src_addr,
-                               u32 n) {
+                               u64 dest_addr,
+                               u64 src_addr,
+                               u64 n) {
   RANGE_CHECK(dest, dest_addr, n);
   RANGE_CHECK(src, src_addr, n);
   memmove(MEM_ADDR(dest, dest_addr, n), MEM_ADDR(src, src_addr, n), n);
@@ -632,7 +685,7 @@ static inline void memory_copy(wasm_rt_memory_t* dest,
 static inline void memory_init(wasm_rt_memory_t* dest,
                                const u8* src,
                                u32 src_size,
-                               u32 dest_addr,
+                               u64 dest_addr,
                                u32 src_addr,
                                u32 n) {
   if (UNLIKELY(src_addr + (uint64_t)n > src_size))
@@ -651,14 +704,13 @@ typedef struct {
 static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
                                       const wasm_elem_segment_expr_t* src,
                                       u32 src_size,
-                                      u32 dest_addr,
+                                      u64 dest_addr,
                                       u32 src_addr,
                                       u32 n,
                                       void* module_instance) {
   if (UNLIKELY(src_addr + (uint64_t)n > src_size))
     TRAP(OOB);
-  if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
-    TRAP(OOB);
+  RANGE_CHECK(dest, dest_addr, n);
   for (u32 i = 0; i < n; i++) {
     const wasm_elem_segment_expr_t* const src_expr = &src[src_addr + i];
     wasm_rt_funcref_t* const dest_val = &(dest->data[dest_addr + i]);
@@ -682,13 +734,12 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
 // Currently wasm2c only supports initializing externref tables with ref.null.
 static inline void externref_table_init(wasm_rt_externref_table_t* dest,
                                         u32 src_size,
-                                        u32 dest_addr,
+                                        u64 dest_addr,
                                         u32 src_addr,
                                         u32 n) {
   if (UNLIKELY(src_addr + (uint64_t)n > src_size))
     TRAP(OOB);
-  if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))
-    TRAP(OOB);
+  RANGE_CHECK(dest, dest_addr, n);
   for (u32 i = 0; i < n; i++) {
     dest->data[dest_addr + i] = wasm_rt_externref_null_value;
   }
@@ -697,12 +748,9 @@ static inline void externref_table_init(wasm_rt_externref_table_t* dest,
 #define DEFINE_TABLE_COPY(type)                                              \
   static inline void type##_table_copy(wasm_rt_##type##_table_t* dest,       \
                                        const wasm_rt_##type##_table_t* src,  \
-                                       u32 dest_addr, u32 src_addr, u32 n) { \
-    if (UNLIKELY(dest_addr + (uint64_t)n > dest->size))                      \
-      TRAP(OOB);                                                             \
-    if (UNLIKELY(src_addr + (uint64_t)n > src->size))                        \
-      TRAP(OOB);                                                             \
-                                                                             \
+                                       u64 dest_addr, u64 src_addr, u64 n) { \
+    RANGE_CHECK(dest, dest_addr, n);                                         \
+    RANGE_CHECK(src, src_addr, n);                                           \
     memmove(dest->data + dest_addr, src->data + src_addr,                    \
             n * sizeof(wasm_rt_##type##_t));                                 \
   }
@@ -712,7 +760,7 @@ DEFINE_TABLE_COPY(externref)
 
 #define DEFINE_TABLE_GET(type)                        \
   static inline wasm_rt_##type##_t type##_table_get(  \
-      const wasm_rt_##type##_table_t* table, u32 i) { \
+      const wasm_rt_##type##_table_t* table, u64 i) { \
     if (UNLIKELY(i >= table->size))                   \
       TRAP(OOB);                                      \
     return table->data[i];                            \
@@ -723,7 +771,7 @@ DEFINE_TABLE_GET(externref)
 
 #define DEFINE_TABLE_SET(type)                                               \
   static inline void type##_table_set(const wasm_rt_##type##_table_t* table, \
-                                      u32 i, const wasm_rt_##type##_t val) { \
+                                      u64 i, const wasm_rt_##type##_t val) { \
     if (UNLIKELY(i >= table->size))                                          \
       TRAP(OOB);                                                             \
     table->data[i] = val;                                                    \
@@ -734,10 +782,9 @@ DEFINE_TABLE_SET(externref)
 
 #define DEFINE_TABLE_FILL(type)                                               \
   static inline void type##_table_fill(const wasm_rt_##type##_table_t* table, \
-                                       u32 d, const wasm_rt_##type##_t val,   \
-                                       u32 n) {                               \
-    if (UNLIKELY((uint64_t)d + n > table->size))                              \
-      TRAP(OOB);                                                              \
+                                       u64 d, const wasm_rt_##type##_t val,   \
+                                       u64 n) {                               \
+    RANGE_CHECK(table, d, n);                                                 \
     for (uint32_t i = d; i < d + n; i++) {                                    \
       table->data[i] = val;                                                   \
     }                                                                         \
@@ -880,7 +927,7 @@ u32 w2c_test_f1(w2c_test* instance) {
   FUNC_PROLOGUE;
   u32 var_i0;
   var_i0 = 16u;
-  var_i0 = i32_load(instance->w2c_env_0x5F_linear_memory, (u64)(var_i0));
+  var_i0 = i32_load_default32(instance->w2c_env_0x5F_linear_memory, (u64)(var_i0));
   FUNC_EPILOGUE;
   return var_i0;
 }
