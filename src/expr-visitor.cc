@@ -365,6 +365,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnRefIsNullExpr(cast<RefIsNullExpr>(expr)));
       break;
 
+    case ExprType::RefTest:
+      CHECK_RESULT(delegate_->OnRefTestExpr(cast<RefTestExpr>(expr)));
+      break;
+
     case ExprType::Nop:
       CHECK_RESULT(delegate_->OnNopExpr(cast<NopExpr>(expr)));
       break;

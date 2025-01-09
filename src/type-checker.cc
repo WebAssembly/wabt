@@ -821,6 +821,12 @@ Result TypeChecker::OnRefIsNullExpr() {
   return result;
 }
 
+Result TypeChecker::OnRefTestExpr() {
+  Result result = PopAndCheck1Type(Type::FuncRef, "ref.test");
+  PushType(Type::I32);
+  return result;
+}
+
 Result TypeChecker::OnRethrow(Index depth) {
   Result result = Result::Ok;
   Label* label;

@@ -196,6 +196,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::RefFunc:
     case TokenType::RefNull:
     case TokenType::RefIsNull:
+    case TokenType::RefTest:
     case TokenType::AtomicLoad:
     case TokenType::AtomicStore:
     case TokenType::AtomicRmw:
@@ -2502,6 +2503,14 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<RefFuncExpr>(loc, out_expr));
       break;
+
+    case TokenType::RefTest: {
+      ErrorUnlessOpcodeEnabled(Consume());
+      Var type;
+      CHECK_RESULT(ParseVar(&type));
+      out_expr->reset(new RefTestExpr(type, loc));
+      break;
+    }
 
     case TokenType::RefNull: {
       ErrorUnlessOpcodeEnabled(Consume());

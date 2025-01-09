@@ -297,6 +297,7 @@ class BinaryReaderDelegate {
   virtual Result OnRefFuncExpr(Index func_index) = 0;
   virtual Result OnRefNullExpr(Type type) = 0;
   virtual Result OnRefIsNullExpr() = 0;
+  virtual Result OnRefTestExpr(Type check_type) = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr(Index depth) = 0;
   virtual Result OnReturnExpr() = 0;

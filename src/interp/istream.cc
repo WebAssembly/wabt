@@ -532,6 +532,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::LocalTee:
     case Opcode::MemoryGrow:
     case Opcode::TableGet:
+    case Opcode::RefTest:
       // Index immediate, 1 operand.
       instr.kind = InstrKind::Imm_Index_Op_1;
       instr.imm_u32 = ReadAt<u32>(offset);

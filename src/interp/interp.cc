@@ -1877,6 +1877,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::MemoryAtomicNotify:
     case O::MemoryAtomicWait32:
     case O::MemoryAtomicWait64:
+    case O::RefTest:
       return TRAP("not implemented");
 
     case O::I32AtomicLoad:       return DoAtomicLoad<u32>(instr, out_trap);

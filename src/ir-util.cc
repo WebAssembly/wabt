@@ -186,6 +186,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::RefIsNull:
     case ExprType::LoadSplat:
     case ExprType::LoadZero:
+    case ExprType::RefTest:
       return {1, 1};
 
     case ExprType::Drop:

@@ -63,6 +63,7 @@ const char* ExprTypeName[] = {
     "RefIsNull",
     "RefFunc",
     "RefNull",
+    "RefTest",
     "Rethrow",
     "Return",
     "ReturnCall",

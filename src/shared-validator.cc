@@ -1027,6 +1027,12 @@ Result SharedValidator::OnRefNull(const Location& loc, Type type) {
   return result;
 }
 
+Result SharedValidator::OnRefTest(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::RefTest, loc);
+  result |= typechecker_.OnRefTestExpr();
+  return result;
+}
+
 Result SharedValidator::OnRethrow(const Location& loc, Var depth) {
   Result result = CheckInstr(Opcode::Rethrow, loc);
   result |= typechecker_.OnRethrow(depth.index());
