@@ -24,6 +24,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# 10.13 doesn't support std::optional::value (becuase it depends on
+# std::bad_optional_acces).
+# See: https://github.com/WebAssembly/wabt/issues/2527
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+
 # Check if wabt is being used directly or via add_subdirectory, FetchContent, etc
 string(COMPARE EQUAL "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" PROJECT_IS_TOP_LEVEL)
 
