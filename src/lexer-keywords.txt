@@ -566,6 +566,7 @@ ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
 ref.null, TokenType::RefNull, Opcode::RefNull
+ref.test, TokenType::RefTest, Opcode::RefTest
 register, TokenType::Register
 result, TokenType::Result
 rethrow, TokenType::Rethrow, Opcode::Rethrow

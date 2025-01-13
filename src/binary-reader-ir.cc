@@ -249,6 +249,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
+  Result OnRefTestExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
@@ -1158,6 +1159,13 @@ Result BinaryReaderIR::OnRefNullExpr(Type type) {
 
 Result BinaryReaderIR::OnRefIsNullExpr() {
   return AppendExpr(std::make_unique<RefIsNullExpr>());
+}
+
+Result BinaryReaderIR::OnRefTestExpr(Type type) {
+  assert(type.IsIndex());
+  Index type_index = type.GetIndex();
+  return AppendExpr(
+      std::make_unique<RefTestExpr>(Var(type_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnNopExpr() {

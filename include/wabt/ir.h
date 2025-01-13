@@ -400,6 +400,7 @@ enum class ExprType {
   RefIsNull,
   RefFunc,
   RefNull,
+  RefTest,
   Rethrow,
   Return,
   ReturnCall,
@@ -552,6 +553,14 @@ class RefTypeExpr : public ExprMixin<TypeEnum> {
 
 using RefNullExpr = RefTypeExpr<ExprType::RefNull>;
 using RefIsNullExpr = ExprMixin<ExprType::RefIsNull>;
+
+class RefTestExpr : public ExprMixin<ExprType::RefTest> {
+ public:
+  RefTestExpr(Var type, const Location& loc = Location())
+      : ExprMixin<ExprType::RefTest>(loc), type(type) {}
+
+  Var type;
+};
 
 template <ExprType TypeEnum>
 class OpcodeExpr : public ExprMixin<TypeEnum> {

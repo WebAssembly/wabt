@@ -4148,6 +4148,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::CallRef:
       case ExprType::ThrowRef:
       case ExprType::TryTable:
+      case ExprType::RefTest:
         UNIMPLEMENTED("...");
         break;
     }

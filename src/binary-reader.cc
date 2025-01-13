@@ -1925,6 +1925,13 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         CALLBACK(OnOpcodeBare);
         break;
 
+      case Opcode::RefTest:
+        Type type;
+        CHECK_RESULT(ReadType(&type, "ref.test type"));
+        CALLBACK(OnRefTestExpr, type);
+        CALLBACK(OnOpcodeBare);
+        break;
+
       case Opcode::CallRef:
         CALLBACK(OnCallRefExpr);
         CALLBACK(OnOpcodeBare);

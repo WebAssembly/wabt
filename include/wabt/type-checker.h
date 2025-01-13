@@ -118,6 +118,7 @@ class TypeChecker {
   Result OnRefFuncExpr(Index func_type, bool force_generic_funcref);
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
+  Result OnRefTestExpr();
   Result OnRethrow(Index depth);
   Result OnReturn();
   Result OnSelect(const TypeVector& result_types);

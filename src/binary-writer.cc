@@ -1009,6 +1009,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
       break;
     }
+    case ExprType::RefTest: {
+      WriteOpcode(stream_, Opcode::RefTest);
+      WriteType(stream_,
+                module_->GetFuncTypeIndex(cast<RefTestExpr>(expr)->type),
+                "ref.test type");
+      break;
+    }
     case ExprType::RefNull: {
       WriteOpcode(stream_, Opcode::RefNull);
       WriteType(stream_, cast<RefNullExpr>(expr)->type, "ref.null type");

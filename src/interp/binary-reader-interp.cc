@@ -222,6 +222,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
+  Result OnRefTestExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
@@ -1390,6 +1391,17 @@ Result BinaryReaderInterp::OnRefNullExpr(Type type) {
 Result BinaryReaderInterp::OnRefIsNullExpr() {
   CHECK_RESULT(validator_.OnRefIsNull(GetLocation()));
   istream_.Emit(Opcode::RefIsNull);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnRefTestExpr(Type type) {
+  int type_index = 0;
+  if (type.IsIndex()) {
+    type_index = type.GetIndex();
+  }
+  CHECK_RESULT(
+      validator_.OnRefTest(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::RefTest);
   return Result::Ok;
 }
 

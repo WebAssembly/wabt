@@ -591,6 +591,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
+  Result OnRefTestExpr(RefTestExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
@@ -896,6 +897,12 @@ Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnRefIsNullExpr(RefIsNullExpr* expr) {
   writer_->WritePutsNewline(Opcode::RefIsNull_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnRefTestExpr(RefTestExpr* expr) {
+  writer_->WritePutsSpace(Opcode::RefTest_Opcode.GetName());
+  writer_->WriteVar(expr->type, NextChar::Newline);
   return Result::Ok;
 }
 

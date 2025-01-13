@@ -135,6 +135,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
+  Result OnRefTestExpr(RefTestExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
@@ -500,6 +501,11 @@ Result Validator::OnRefNullExpr(RefNullExpr* expr) {
 
 Result Validator::OnRefIsNullExpr(RefIsNullExpr* expr) {
   result_ |= validator_.OnRefIsNull(expr->loc);
+  return Result::Ok;
+}
+
+Result Validator::OnRefTestExpr(RefTestExpr* expr) {
+  result_ |= validator_.OnRefTest(expr->loc, expr->type);
   return Result::Ok;
 }
 

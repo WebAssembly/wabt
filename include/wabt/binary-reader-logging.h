@@ -221,6 +221,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnRefFuncExpr(Index index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
+  Result OnRefTestExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnCallExpr(Index func_index) override;
