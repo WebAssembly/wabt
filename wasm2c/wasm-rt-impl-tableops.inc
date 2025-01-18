@@ -23,13 +23,13 @@
         defined(WASM_RT_TABLE_OPS_EXNREF) >    \
     1
 #error \
-    "Expected only one of { WASM_RT_TABLE_OPS_FUNCREF, WASM_RT_TABLE_OPS_EXTERNREF } to be defined"
+    "Expected only one of { WASM_RT_TABLE_OPS_FUNCREF, WASM_RT_TABLE_OPS_EXTERNREF, WASM_RT_TABLE_OPS_EXNREF } to be defined"
 #elif defined(WASM_RT_TABLE_OPS_FUNCREF) +     \
         defined(WASM_RT_TABLE_OPS_EXTERNREF) + \
         defined(WASM_RT_TABLE_OPS_EXNREF) <    \
     1
 #error \
-    "Expected one of { WASM_RT_TABLE_OPS_FUNCREF, WASM_RT_TABLE_OPS_EXTERNREF } to be defined"
+    "Expected one of { WASM_RT_TABLE_OPS_FUNCREF, WASM_RT_TABLE_OPS_EXTERNREF, WASM_RT_TABLE_OPS_EXNREF } to be defined"
 #endif
 
 #if defined(WASM_RT_TABLE_OPS_FUNCREF)
