@@ -266,7 +266,7 @@ class CWriter {
   bool IsTopLabelUsed() const;
   void PopLabel();
 
-  static constexpr bool HasNonNullInitializers(Type);
+  static constexpr bool AreInitializersAlwaysNull(Type);
   static constexpr char MangleType(Type);
   static constexpr char MangleField(ModuleFieldType);
   static std::string MangleTypes(const TypeVector&);
@@ -639,12 +639,12 @@ void CWriter::PopLabel() {
 }
 
 // static
-constexpr bool CWriter::HasNonNullInitializers(Type type) {
+constexpr bool CWriter::AreInitializersAlwaysNull(Type type) {
   // clang-format off
   switch (type) {
-    case Type::FuncRef: return true;
-    case Type::ExternRef: return false;
-    case Type::ExnRef: return false;
+    case Type::FuncRef: return false;
+    case Type::ExternRef: return true;
+    case Type::ExnRef: return true;
     default:
       WABT_UNREACHABLE;
   }
@@ -2320,7 +2320,7 @@ void CWriter::WriteElemInitializerDecls() {
       continue;
     }
 
-    if (!HasNonNullInitializers(elem_segment->elem_type)) {
+    if (AreInitializersAlwaysNull(elem_segment->elem_type)) {
       // no need to store these initializers because only ref.null is possible
       continue;
     }
@@ -2391,7 +2391,7 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    if (!HasNonNullInitializers(elem_segment->elem_type)) {
+    if (AreInitializersAlwaysNull(elem_segment->elem_type)) {
       // no need to store these initializers because only ref.null is possible
       continue;
     }
