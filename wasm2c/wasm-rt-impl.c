@@ -344,6 +344,8 @@ const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
       return "Uncaught exception";
     case WASM_RT_TRAP_UNALIGNED:
       return "Unaligned atomic memory access";
+    case WASM_RT_TRAP_NULL_REF:
+      return "Null reference";
   }
   return "invalid trap code";
 }

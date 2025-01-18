@@ -90,7 +90,7 @@ def F64ToC(f64_bits):
 
 def MangleType(t):
     return {'i32': 'i', 'i64': 'j', 'f32': 'f', 'f64': 'd', 'v128': 'o',
-            'externref': 'e', 'funcref': 'r'}[t]
+            'externref': 'e', 'funcref': 'r', 'exnref': 'x'}[t]
 
 
 def MangleTypes(types):
@@ -321,6 +321,7 @@ class CWriter(object):
                     'i64': 'ASSERT_RETURN_I64',
                     'f64': 'ASSERT_RETURN_F64',
                     'externref': 'ASSERT_RETURN_EXTERNREF',
+                    'exnref': 'ASSERT_RETURN_EXNREF',
                     'funcref': 'ASSERT_RETURN_FUNCREF',
                 }
 
@@ -385,6 +386,11 @@ class CWriter(object):
                 return 'wasm_rt_funcref_null_value'
             else:
                 assert False  # can't make an arbitrary funcref from an integer value
+        elif type_ == 'exnref':
+            if value == 'null':
+                return 'wasm_rt_exnref_null_value'
+            else:
+                assert False  # can't make an arbitrary exnref from an integer value
         else:
             assert False
 
