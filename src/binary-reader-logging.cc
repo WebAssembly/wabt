@@ -781,6 +781,12 @@ Result BinaryReaderLogging::OnGenericCustomSection(std::string_view name,
     return reader_->name(opcode, memidx, alignment_log2, offset, value);     \
   }
 
+#define DEFINE_SKIP(name)                                                    \
+  Result BinaryReaderLogging::name(std::vector<uint8_t>& opcode_buffer) { \
+    LOGF(#name " length: %lu""\n", opcode_buffer.size());                     \
+    return reader_->name(opcode_buffer);                                     \
+  }
+
 #define DEFINE0(name)                  \
   Result BinaryReaderLogging::name() { \
     LOGF(#name "\n");                  \
@@ -851,6 +857,8 @@ DEFINE_INDEX_DESC(OnDelegateExpr, "depth");
 DEFINE0(OnDropExpr)
 DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
+DEFINE_SKIP(OnSkipFunctionBodyExpr)
+
 DEFINE_INDEX_DESC(OnGlobalGetExpr, "index")
 DEFINE_INDEX_DESC(OnGlobalSetExpr, "index")
 DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);

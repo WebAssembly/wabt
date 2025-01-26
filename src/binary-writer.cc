@@ -1150,6 +1150,18 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       a.entries.emplace_back(code_offset, meta_expr->data);
       break;
     }
+    case ExprType::OpCodeRaw: {
+        auto* opcode_raw_expr = cast<OpcodeRawExpr>(expr);
+        if (opcode_raw_expr->is_extracted) {
+          WriteExprList(func, opcode_raw_expr->extracted_exprs);
+        } else {
+          auto& opcode_buffer = opcode_raw_expr->opcode_buffer;
+          // Opcode::End 0x0b
+          assert(opcode_buffer[opcode_buffer.size() - 1] == 0x0b);
+          stream_->WriteData(opcode_buffer.data(), opcode_buffer.size() - 1);
+        }
+    }
+
   }
 }
 

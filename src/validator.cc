@@ -166,6 +166,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
   Result OnLoadZeroExpr(LoadZeroExpr*) override;
+  Result OnOpcodeRawExpr(OpcodeRawExpr* expr) override;
 
  private:
   Type GetDeclarationType(const FuncDeclaration&);
@@ -687,6 +688,12 @@ Result Validator::OnLoadZeroExpr(LoadZeroExpr* expr) {
                                    expr->offset);
   return Result::Ok;
 }
+
+Result Validator::OnOpcodeRawExpr(OpcodeRawExpr* expr) {
+  // data read from original wasm file, so just return OK;
+  return Result::Ok;
+}
+
 
 Validator::Validator(Errors* errors,
                      const Module* module,

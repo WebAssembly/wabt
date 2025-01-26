@@ -264,6 +264,7 @@ class BinaryReaderDelegate {
   virtual Result OnDropExpr() = 0;
   virtual Result OnElseExpr() = 0;
   virtual Result OnEndExpr() = 0;
+  virtual Result OnSkipFunctionBodyExpr(std::vector<uint8_t>& opcode_buffer) = 0;
   virtual Result OnF32ConstExpr(uint32_t value_bits) = 0;
   virtual Result OnF64ConstExpr(uint64_t value_bits) = 0;
   virtual Result OnV128ConstExpr(v128 value_bits) = 0;
