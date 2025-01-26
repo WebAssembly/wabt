@@ -162,6 +162,7 @@ class BinaryReader {
   [[nodiscard]] Result ReadFunctionBody(Offset end_offset);
   // ReadInstructions reads until end_offset or the nesting depth reaches zero.
   [[nodiscard]] Result ReadInstructions(Offset end_offset, const char* context);
+  [[nodiscard]] Result ReadSkipedFunctionBody(Offset end_offset);
   [[nodiscard]] Result ReadNameSection(Offset section_size);
   [[nodiscard]] Result ReadRelocSection(Offset section_size);
   [[nodiscard]] Result ReadDylinkSection(Offset section_size);
@@ -1939,6 +1940,17 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
   return Result::Error;
 }
 
+Result BinaryReader::ReadSkipedFunctionBody(Offset end_offset) {
+  std::vector<uint8_t> opcode_buffer;
+  opcode_buffer.resize(end_offset - state_.offset);
+  memcpy(opcode_buffer.data(), state_.data + state_.offset,
+         opcode_buffer.size());
+  CALLBACK(OnSkipFunctionBodyExpr, opcode_buffer);
+  state_.offset = end_offset;
+
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadNameSection(Offset section_size) {
   CALLBACK(BeginNamesSection, section_size);
   Index i = 0;
@@ -2887,7 +2899,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     CALLBACK(EndLocalDecls);
 
     if (options_.skip_function_bodies) {
-      state_.offset = end_offset;
+      CHECK_RESULT(ReadSkipedFunctionBody(end_offset));
     } else {
       CHECK_RESULT(ReadFunctionBody(end_offset));
     }
