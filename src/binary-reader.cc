@@ -2899,7 +2899,12 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     CALLBACK(EndLocalDecls);
 
     if (options_.skip_function_bodies) {
+#ifdef WABT_KEEP_OPCODE_WHEN_SKIP_FUNC_BODY
       CHECK_RESULT(ReadSkippedFunctionBody(end_offset));
+#else
+      state_.offset = end_offset;
+      CALLBACK0(OnEndExpr);
+#endif
     } else {
       CHECK_RESULT(ReadFunctionBody(end_offset));
     }

@@ -430,7 +430,7 @@ enum class ExprType {
 
   First = AtomicLoad,
   Last = Unreachable,
-  OpCodeRaw = Last + 1,  // virual type
+  OpCodeRaw = Last + 1,  // virtual type
 };
 
 const char* GetExprTypeName(ExprType type);
