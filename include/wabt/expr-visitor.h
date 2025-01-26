@@ -225,7 +225,6 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnLoadSplatExpr(LoadSplatExpr*) override { return Result::Ok; }
   Result OnLoadZeroExpr(LoadZeroExpr*) override { return Result::Ok; }
   Result OnOpcodeRawExpr(OpcodeRawExpr*) override { return Result::Ok; }
-
 };
 
 }  // namespace wabt

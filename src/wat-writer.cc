@@ -1162,7 +1162,6 @@ Result WatWriter::ExprVisitorDelegate::OnOpcodeRawExpr(OpcodeRawExpr* expr) {
   return Result::Error;
 }
 
-
 void WatWriter::WriteExpr(const Expr* expr) {
   WABT_TRACE(WriteExprList);
   ExprVisitorDelegate delegate(this);

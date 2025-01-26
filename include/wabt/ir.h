@@ -430,7 +430,7 @@ enum class ExprType {
 
   First = AtomicLoad,
   Last = Unreachable,
-  OpCodeRaw = Last + 1, // virual type
+  OpCodeRaw = Last + 1,  // virual type
 };
 
 const char* GetExprTypeName(ExprType type);
@@ -842,9 +842,13 @@ class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
 
 class OpcodeRawExpr : public ExprMixin<ExprType::OpCodeRaw> {
  public:
-  explicit OpcodeRawExpr(std::vector<uint8_t>&& in_opcode_buffer, FuncSignature& in_func_sig, const Location& loc = Location())
-  : ExprMixin<ExprType::OpCodeRaw>(loc), opcode_buffer(std::move(in_opcode_buffer)), is_extracted(false), func_sig(&in_func_sig) {
-  }
+  explicit OpcodeRawExpr(std::vector<uint8_t>&& in_opcode_buffer,
+                         FuncSignature& in_func_sig,
+                         const Location& loc = Location())
+      : ExprMixin<ExprType::OpCodeRaw>(loc),
+        opcode_buffer(std::move(in_opcode_buffer)),
+        is_extracted(false),
+        func_sig(&in_func_sig) {}
 
   std::vector<uint8_t> opcode_buffer;
   bool is_extracted;

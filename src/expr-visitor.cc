@@ -151,7 +151,8 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
       }
       case State::OpcodeRaw: {
         auto opcode_raw_expr = cast<OpcodeRawExpr>(expr);
-        // ERROR_UNLESS(opcode_raw_expr->is_extracted, "opcode_raw could not compile when in visiting")
+        // ERROR_UNLESS(opcode_raw_expr->is_extracted, "opcode_raw could not
+        // compile when in visiting")
         if (opcode_raw_expr->is_extracted) {
           auto& iter = expr_iter_stack_.back();
           if (iter != opcode_raw_expr->extracted_exprs.end()) {
@@ -160,7 +161,7 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
             PopExprlist();
           }
         }
-        
+
         break;
       }
     }

@@ -1089,7 +1089,8 @@ Result BinaryReaderInterp::OnEndExpr() {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnSkipFunctionBodyExpr(std::vector<uint8_t>& opcode_buffer) {
+Result BinaryReaderInterp::OnSkipFunctionBodyExpr(
+    std::vector<uint8_t>& opcode_buffer) {
   PopLabel();
   return Result::Ok;
 }

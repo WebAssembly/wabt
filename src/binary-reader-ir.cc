@@ -33,16 +33,17 @@ namespace wabt {
 
 #ifdef WABT_OVERRIDE_ALLOC_EXPR
 template <class _Tp, class... _Args>
-inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX23 typename std::__unique_if<_Tp>::__unique_single
-wabt_expr_make_unique(_Args&&... __args) {
-    // static_assert(sizeof(_Tp) <= 128);
-    return std::unique_ptr<_Tp>(new ((wabt::Module*)(nullptr))_Tp(std::forward<_Args>(__args)...));
+inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX23
+    typename std::__unique_if<_Tp>::__unique_single
+    wabt_expr_make_unique(_Args&&... __args) {
+  // static_assert(sizeof(_Tp) <= 128);
+  return std::unique_ptr<_Tp>(new ((wabt::Module*)(nullptr))
+                                  _Tp(std::forward<_Args>(__args)...));
 }
 extern void* operator new(size_t size, wabt::Module* m);
 #else
 #define wabt_expr_make_unique std::make_unique
 #endif
-
 
 namespace {
 
@@ -924,7 +925,8 @@ Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
 }
 
 Result BinaryReaderIR::OnCallExpr(Index func_index) {
-  return AppendExpr(wabt_expr_make_unique<CallExpr>(Var(func_index, GetLocation())));
+  return AppendExpr(
+      wabt_expr_make_unique<CallExpr>(Var(func_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
@@ -1030,12 +1032,15 @@ Result BinaryReaderIR::OnEndExpr() {
   return PopLabel();
 }
 
-Result BinaryReaderIR::OnSkipFunctionBodyExpr(std::vector<uint8_t>& opcode_buffer) {
-  Result result_append = AppendExpr(
-      wabt_expr_make_unique<OpcodeRawExpr>(std::move(opcode_buffer), current_func_->decl.sig, GetLocation()));
+Result BinaryReaderIR::OnSkipFunctionBodyExpr(
+    std::vector<uint8_t>& opcode_buffer) {
+  Result result_append = AppendExpr(wabt_expr_make_unique<OpcodeRawExpr>(
+      std::move(opcode_buffer), current_func_->decl.sig, GetLocation()));
   Result result_pop = PopLabel();
 
-  return (result_append == Result::Ok && result_pop == Result::Ok) ? Result::Ok : Result::Error;
+  return (result_append == Result::Ok && result_pop == Result::Ok)
+             ? Result::Ok
+             : Result::Error;
 }
 
 Result BinaryReaderIR::OnF32ConstExpr(uint32_t value_bits) {
@@ -1124,7 +1129,7 @@ Result BinaryReaderIR::OnMemoryInitExpr(Index segment, Index memidx) {
 
 Result BinaryReaderIR::OnMemorySizeExpr(Index memidx) {
   return AppendExpr(
-     wabt_expr_make_unique<MemorySizeExpr>(Var(memidx, GetLocation())));
+      wabt_expr_make_unique<MemorySizeExpr>(Var(memidx, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTableCopyExpr(Index dst_index, Index src_index) {
@@ -1187,7 +1192,8 @@ Result BinaryReaderIR::OnNopExpr() {
 }
 
 Result BinaryReaderIR::OnRethrowExpr(Index depth) {
-  return AppendExpr(wabt_expr_make_unique<RethrowExpr>(Var(depth, GetLocation())));
+  return AppendExpr(
+      wabt_expr_make_unique<RethrowExpr>(Var(depth, GetLocation())));
 }
 
 Result BinaryReaderIR::OnReturnExpr() {
@@ -1220,7 +1226,8 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
 
 Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
   module_->features_used.exceptions = true;
-  return AppendExpr(wabt_expr_make_unique<ThrowExpr>(Var(tag_index, GetLocation())));
+  return AppendExpr(
+      wabt_expr_make_unique<ThrowExpr>(Var(tag_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnThrowRefExpr() {
@@ -1735,7 +1742,7 @@ Result BinaryReaderIR::OnCodeMetadata(Offset offset,
   std::vector<uint8_t> data_(static_cast<const uint8_t*>(data),
                              static_cast<const uint8_t*>(data) + size);
   auto meta = wabt_expr_make_unique<CodeMetadataExpr>(current_metadata_name_,
-                                                 std::move(data_));
+                                                      std::move(data_));
   meta->loc.offset = offset;
   code_metadata_queue_.push_metadata(std::move(meta));
   return Result::Ok;

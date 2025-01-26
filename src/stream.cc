@@ -229,72 +229,69 @@ Result MemoryStream::TruncateImpl(size_t size) {
   return Result::Ok;
 }
 
-
 Result MemoryAllocStream::WriteDataImpl(size_t dst_offset,
-                            const void* src,
-                            size_t size) {
+                                        const void* src,
+                                        size_t size) {
   if (size == 0) {
-      return wabt::Result::Ok;
+    return wabt::Result::Ok;
   }
   size_t end = dst_offset + size;
   bool needRealloc = false;
   while (end > total_size) {
-      total_size = total_size << 1;
-      needRealloc = true;
+    total_size = total_size << 1;
+    needRealloc = true;
   }
   if (needRealloc) {
-      output_data = static_cast<uint8_t*>(realloc_fn(output_data, total_size));
+    output_data = static_cast<uint8_t*>(realloc_fn(output_data, total_size));
   }
 
   if (end > used_size) {
-      used_size = end;
+    used_size = end;
   }
 
   memcpy(output_data + dst_offset, src, size);
   return wabt::Result::Ok;
-
 }
 
 Result MemoryAllocStream::MoveDataImpl(size_t dst_offset,
-                            size_t src_offset,
-                            size_t size) {
-    if (size == 0) {
-        return wabt::Result::Ok;
-    }
-    size_t src_end = src_offset + size;
-    size_t dst_end = dst_offset + size;
-    size_t end = src_end > dst_end ? src_end : dst_end;
-
-    bool needRealloc = false;
-    while (end > total_size) {
-        total_size = total_size << 1;
-        needRealloc = true;
-    }
-    if (needRealloc) {
-        output_data = static_cast<uint8_t*>(realloc_fn(output_data, total_size));
-    }
-
-      if (end > used_size) {
-        used_size = end;
-    }
-
-    uint8_t* dst = output_data + dst_offset;
-    uint8_t* src = output_data + src_offset;
-    memmove(dst, src, size);
+                                       size_t src_offset,
+                                       size_t size) {
+  if (size == 0) {
     return wabt::Result::Ok;
+  }
+  size_t src_end = src_offset + size;
+  size_t dst_end = dst_offset + size;
+  size_t end = src_end > dst_end ? src_end : dst_end;
 
+  bool needRealloc = false;
+  while (end > total_size) {
+    total_size = total_size << 1;
+    needRealloc = true;
+  }
+  if (needRealloc) {
+    output_data = static_cast<uint8_t*>(realloc_fn(output_data, total_size));
+  }
+
+  if (end > used_size) {
+    used_size = end;
+  }
+
+  uint8_t* dst = output_data + dst_offset;
+  uint8_t* src = output_data + src_offset;
+  memmove(dst, src, size);
+  return wabt::Result::Ok;
 }
 
 Result MemoryAllocStream::TruncateImpl(size_t size) {
-    if (size > used_size) {
-        return wabt::Result::Error;
-    }
-    used_size = size;
+  if (size > used_size) {
+    return wabt::Result::Error;
+  }
+  used_size = size;
 
-    // will not truncate size, we can truncate it at end
-    // output_data = (uint8_t*)realloc_fn(output_data, size);
-    // total_size = size;
-    return wabt::Result::Ok;
+  // will not truncate size, we can truncate it at end
+  // output_data = (uint8_t*)realloc_fn(output_data, size);
+  // total_size = size;
+  return wabt::Result::Ok;
 }
 
 FileStream::FileStream(std::string_view filename, Stream* log_stream)

@@ -781,10 +781,13 @@ Result BinaryReaderLogging::OnGenericCustomSection(std::string_view name,
     return reader_->name(opcode, memidx, alignment_log2, offset, value);     \
   }
 
-#define DEFINE_SKIP(name)                                                    \
+#define DEFINE_SKIP(name)                                                 \
   Result BinaryReaderLogging::name(std::vector<uint8_t>& opcode_buffer) { \
-    LOGF(#name " length: %lu""\n", opcode_buffer.size());                     \
-    return reader_->name(opcode_buffer);                                     \
+    LOGF(#name                                                            \
+         " length: %lu"                                                   \
+         "\n",                                                            \
+         opcode_buffer.size());                                           \
+    return reader_->name(opcode_buffer);                                  \
   }
 
 #define DEFINE0(name)                  \

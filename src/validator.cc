@@ -694,7 +694,6 @@ Result Validator::OnOpcodeRawExpr(OpcodeRawExpr* expr) {
   return Result::Ok;
 }
 
-
 Validator::Validator(Errors* errors,
                      const Module* module,
                      const ValidateOptions& options)
