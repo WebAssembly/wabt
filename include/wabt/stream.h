@@ -195,36 +195,6 @@ class MemoryStream : public Stream {
   std::unique_ptr<OutputBuffer> buf_;
 };
 
-class MemoryAllocStream : public wabt::Stream {
- public:
-  typedef void* (*wabt_realloc)(void* __ptr, size_t __size);
-
-  MemoryAllocStream(uint8_t* _output_data = nullptr,
-                    size_t _total_size = 0,
-                    wabt_realloc _realloc_fn = nullptr)
-      : output_data(_output_data), total_size(_total_size), used_size(0) {
-    if (_realloc_fn) {
-      realloc_fn = _realloc_fn;
-    } else {
-      realloc_fn = std::realloc;
-    }
-  }
-
-  wabt::Result WriteDataImpl(size_t dst_offset, const void* src, size_t size);
-
-  wabt::Result MoveDataImpl(size_t dst_offset, size_t src_offset, size_t size);
-
-  wabt::Result TruncateImpl(size_t size);
-  inline size_t GetSize() const { return used_size; }
-  inline uint8_t* GetData() { return output_data; }
-
- private:
-  uint8_t* output_data;
-  size_t total_size;
-  size_t used_size;
-  wabt_realloc realloc_fn;
-};
-
 class FileStream : public Stream {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(FileStream);

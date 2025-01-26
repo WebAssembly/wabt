@@ -1941,12 +1941,18 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
 }
 
 Result BinaryReader::ReadSkippedFunctionBody(Offset end_offset) {
+#ifdef WABT_KEEP_OPCODE_WHEN_SKIP_FUNC_BODY
   std::vector<uint8_t> opcode_buffer;
   opcode_buffer.resize(end_offset - state_.offset);
   memcpy(opcode_buffer.data(), state_.data + state_.offset,
          opcode_buffer.size());
   CALLBACK(OnSkipFunctionBodyExpr, opcode_buffer);
   state_.offset = end_offset;
+#else
+  // old version with OnEndExpr
+  state_.offset = end_offset;
+  CALLBACK0(OnEndExpr);
+#endif
 
   return Result::Ok;
 }
@@ -2899,12 +2905,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     CALLBACK(EndLocalDecls);
 
     if (options_.skip_function_bodies) {
-#ifdef WABT_KEEP_OPCODE_WHEN_SKIP_FUNC_BODY
       CHECK_RESULT(ReadSkippedFunctionBody(end_offset));
-#else
-      state_.offset = end_offset;
-      CALLBACK0(OnEndExpr);
-#endif
     } else {
       CHECK_RESULT(ReadFunctionBody(end_offset));
     }
