@@ -513,6 +513,10 @@ Result ReadBinary(const void* data,
                   BinaryReaderDelegate* reader,
                   const ReadBinaryOptions& options);
 
+Result ExtractFunctionBody(const void *data, size_t size, Location &loc,
+                           BinaryReaderDelegate *delegate,
+                           const ReadBinaryOptions &options);
+
 size_t ReadU32Leb128(const uint8_t* ptr,
                      const uint8_t* end,
                      uint32_t* out_value);

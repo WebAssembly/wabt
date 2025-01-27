@@ -182,6 +182,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnFunctionBodyCount(Index count) override;
   Result BeginFunctionBody(Index index, Offset size) override;
+  Result BeginExtractFunctionBody(ExprList& extracted_list, Expr* context);
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
   Result OnOpcode(Opcode opcode) override;
@@ -816,6 +817,11 @@ Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
   return PushLabel(LabelType::Func, &current_func_->exprs);
 }
 
+Result BinaryReaderIR::BeginExtractFunctionBody(ExprList &extracted_list,
+                                                Expr *context) {
+  return PushLabel(LabelType::ExtractFunc, &extracted_list, context);
+}
+
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   current_func_->local_types.AppendDecl(type, count);
 
@@ -1025,6 +1031,7 @@ Result BinaryReaderIR::OnEndExpr() {
       case LabelType::InitExpr:
       case LabelType::Func:
       case LabelType::Catch:
+      case LabelType::ExtractFunc:
         break;
     }
   }
@@ -1886,4 +1893,22 @@ Result ReadBinaryIr(const char* filename,
   return ReadBinary(data, size, &reader, options);
 }
 
-}  // namespace wabt
+Result ExtractOpcodeRawExpr(OpcodeRawExpr &expr, Module &module,
+                            const ReadBinaryOptions &options) {
+  if (expr.is_extracted) {
+    return Result::Ok;
+  }
+  Errors errors;
+  BinaryReaderIR reader(&module, expr.loc.filename.data(), &errors);
+  CHECK_RESULT(reader.BeginExtractFunctionBody(expr.extracted_exprs, nullptr));
+  Result result =
+      ExtractFunctionBody(expr.opcode_buffer.data(), expr.opcode_buffer.size(),
+                          expr.loc, &reader, options);
+  if (Succeeded(result)) {
+    expr.is_extracted = true;
+    expr.opcode_buffer.clear();
+  }
+  return result;
+}
+
+} // namespace wabt

@@ -72,6 +72,10 @@ namespace {
 
 class BinaryReader {
  public:
+  friend Result wabt::ExtractFunctionBody(const void *data, size_t size,
+                                          Location &loc,
+                                          BinaryReaderDelegate *delegate,
+                                          const ReadBinaryOptions &options);
   struct ReadModuleOptions {
     bool stop_on_first_error;
   };
@@ -1942,8 +1946,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
 
 Result BinaryReader::ReadSkippedFunctionBody(Offset end_offset) {
 #ifdef WABT_KEEP_OPCODE_WHEN_SKIP_FUNC_BODY
-  std::vector<uint8_t> opcode_buffer;
-  opcode_buffer.resize(end_offset - state_.offset);
+  std::vector<uint8_t> opcode_buffer(end_offset - state_.offset);
   memcpy(opcode_buffer.data(), state_.data + state_.offset,
          opcode_buffer.size());
   CALLBACK(OnSkipFunctionBodyExpr, opcode_buffer);
@@ -3160,4 +3163,14 @@ Result ReadBinary(const void* data,
       BinaryReader::ReadModuleOptions{options.stop_on_first_error});
 }
 
-}  // namespace wabt
+Result ExtractFunctionBody(const void *data, size_t size, Location &loc,
+                           BinaryReaderDelegate *delegate,
+                           const ReadBinaryOptions &options) {
+  BinaryReader reader((void *)((Offset)data - loc.offset), size + loc.offset,
+                      delegate, options);
+  reader.state_.offset = loc.offset;
+  return reader.ReadInstructions(reader.state_.offset + size,
+                                 "extract function body");
+}
+
+} // namespace wabt
