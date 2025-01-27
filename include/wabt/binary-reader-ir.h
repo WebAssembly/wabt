@@ -33,8 +33,9 @@ Result ReadBinaryIr(const char* filename,
                     Module* out_module);
 
 class OpcodeRawExpr;
-Result ExtractOpcodeRawExpr(OpcodeRawExpr &expr, Module &module,
-                            const ReadBinaryOptions &options);
+Result ExtractOpcodeRawExpr(OpcodeRawExpr& expr,
+                            Module& module,
+                            const ReadBinaryOptions& options);
 
 } // namespace wabt
 

@@ -852,7 +852,7 @@ DEFINE0(OnDropExpr)
 DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
 Result BinaryReaderLogging::OnSkipFunctionBodyExpr(
-    std::vector<uint8_t> &opcode_buffer) {
+    std::vector<uint8_t>& opcode_buffer) {
   LOGF("OnSkipFunctionBodyExpr length: %lu\n", opcode_buffer.size());
   return reader_->OnSkipFunctionBodyExpr(opcode_buffer);
 }

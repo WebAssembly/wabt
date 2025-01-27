@@ -817,8 +817,8 @@ Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
   return PushLabel(LabelType::Func, &current_func_->exprs);
 }
 
-Result BinaryReaderIR::BeginExtractFunctionBody(ExprList &extracted_list,
-                                                Expr *context) {
+Result BinaryReaderIR::BeginExtractFunctionBody(ExprList& extracted_list,
+                                                Expr* context) {
   return PushLabel(LabelType::ExtractFunc, &extracted_list, context);
 }
 

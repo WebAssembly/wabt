@@ -72,10 +72,11 @@ namespace {
 
 class BinaryReader {
  public:
-  friend Result wabt::ExtractFunctionBody(const void *data, size_t size,
-                                          Location &loc,
-                                          BinaryReaderDelegate *delegate,
-                                          const ReadBinaryOptions &options);
+  friend Result wabt::ExtractFunctionBody(const void* data,
+                                          size_t size,
+                                          Location& loc,
+                                          BinaryReaderDelegate* delegate,
+                                          const ReadBinaryOptions& options);
   struct ReadModuleOptions {
     bool stop_on_first_error;
   };
@@ -3163,11 +3164,13 @@ Result ReadBinary(const void* data,
       BinaryReader::ReadModuleOptions{options.stop_on_first_error});
 }
 
-Result ExtractFunctionBody(const void *data, size_t size, Location &loc,
-                           BinaryReaderDelegate *delegate,
-                           const ReadBinaryOptions &options) {
-  BinaryReader reader((void *)((Offset)data - loc.offset), size + loc.offset,
-                      delegate, options);
+Result ExtractFunctionBody(const void* data,
+                           size_t size,
+                           Location& loc,
+                           BinaryReaderDelegate* delegate,
+                           const ReadBinaryOptions& options) {
+  BinaryReader reader(static_cast<const uint8_t*>(data) - loc.offset,
+                      size + loc.offset, delegate, options);
   reader.state_.offset = loc.offset;
   return reader.ReadInstructions(reader.state_.offset + size,
                                  "extract function body");
