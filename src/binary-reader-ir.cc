@@ -1893,8 +1893,9 @@ Result ReadBinaryIr(const char* filename,
   return ReadBinary(data, size, &reader, options);
 }
 
-Result ExtractOpcodeRawExpr(OpcodeRawExpr &expr, Module &module,
-                            const ReadBinaryOptions &options) {
+Result ExtractOpcodeRawExpr(OpcodeRawExpr& expr,
+                            Module& module,
+                            const ReadBinaryOptions& options) {
   if (expr.is_extracted) {
     return Result::Ok;
   }
