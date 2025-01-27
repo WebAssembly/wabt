@@ -384,6 +384,9 @@ class BinaryWriter {
   WABT_DISALLOW_COPY_AND_ASSIGN(BinaryWriter);
 
  public:
+  friend Result wabt::PackOpcodeRawExpr(OpcodeRawExpr& expr,
+                                        Module& module,
+                                        const WriteBinaryOptions& options);
   BinaryWriter(Stream*,
                const WriteBinaryOptions& options,
                const Module* module);
@@ -1863,6 +1866,32 @@ Result WriteBinaryModule(Stream* stream,
                          const WriteBinaryOptions& options) {
   BinaryWriter binary_writer(stream, options, module);
   return binary_writer.WriteModule();
+}
+
+Result PackOpcodeRawExpr(OpcodeRawExpr& expr,
+                         Module& module,
+                         const WriteBinaryOptions& options) {
+  if (!expr.is_extracted) {
+    return Result::Ok;
+  }
+
+  MemoryStream stream;
+  BinaryWriter binary_writer(&stream, options, &module);
+
+  binary_writer.WriteExprList(nullptr, expr.extracted_exprs);
+  WriteOpcode(&stream, Opcode::End);
+  auto& ob = stream.output_buffer();
+
+  if (ob.data.size()) {
+    expr.opcode_buffer = std::move(ob.data);
+    stream.ReleaseOutputBuffer();
+    expr.is_extracted = false;
+    expr.extracted_exprs.clear();
+    return Result::Ok;
+  } else {
+    stream.ReleaseOutputBuffer();
+    return Result::Error;
+  }
 }
 
 }  // namespace wabt

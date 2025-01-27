@@ -1911,4 +1911,4 @@ Result ExtractOpcodeRawExpr(OpcodeRawExpr &expr, Module &module,
   return result;
 }
 
-} // namespace wabt
+}  // namespace wabt
