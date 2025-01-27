@@ -3169,11 +3169,11 @@ Result ExtractFunctionBody(const void* data,
                            Location& loc,
                            BinaryReaderDelegate* delegate,
                            const ReadBinaryOptions& options) {
-  BinaryReader reader(static_cast<const uint8_t*>(data) - loc.offset, size + loc.offset,
-                      delegate, options);
+  BinaryReader reader(static_cast<const uint8_t*>(data) - loc.offset,
+                      size + loc.offset, delegate, options);
   reader.state_.offset = loc.offset;
   return reader.ReadInstructions(reader.state_.offset + size,
                                  "extract function body");
 }
 
-} // namespace wabt
+}  // namespace wabt
