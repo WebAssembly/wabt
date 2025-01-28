@@ -471,7 +471,7 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       if (opcode_raw_expr->is_extracted) {
         PushExprlist(State::OpcodeRaw, expr, opcode_raw_expr->extracted_exprs);
       } else {
-        // TODO extract or just skip
+        // just skip
       }
       break;
     }

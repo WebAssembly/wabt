@@ -28,7 +28,9 @@
 #include "wabt/cast.h"
 #include "wabt/common.h"
 #include "wabt/ir.h"
-
+#ifdef WABT_OVERRIDE_ALLOC_EXPR
+extern void* operator new(size_t size, wabt::Module* m);
+#endif
 namespace wabt {
 
 #ifdef WABT_OVERRIDE_ALLOC_EXPR
@@ -37,10 +39,9 @@ inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX23
     typename std::__unique_if<_Tp>::__unique_single
     wabt_expr_make_unique(_Args&&... __args) {
   // static_assert(sizeof(_Tp) <= 128);
-  return std::unique_ptr<_Tp>(new ((wabt::Module*)(nullptr))
+  return std::unique_ptr<_Tp>(new (static_cast<wabt::Module*>(nullptr))
                                   _Tp(std::forward<_Args>(__args)...));
 }
-extern void* operator new(size_t size, wabt::Module* m);
 #else
 #define wabt_expr_make_unique std::make_unique
 #endif
