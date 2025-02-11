@@ -60,8 +60,7 @@ static void ParseOptions(int argc, char** argv) {
                      });
   parser.AddOption('o', "output", "FILE", "output wasm binary file",
                    [](const char* argument) { s_outfile = argument; });
-  parser.AddOption('R', "remove-section", "SECTION NAME",
-                   "Section to remove",
+  parser.AddOption('R', "remove-section", "SECTION NAME", "Section to remove",
                    [](const char* value) {
                      v_sections_to_remove.insert(std::string_view{value});
                    });
@@ -166,7 +165,7 @@ class BinaryReaderObjcopy : public BinaryReaderNop {
 
     if (sections_to_update_.count(section_name) > 0) {
       std::vector<uint8_t> file_data;
-      
+
       return Result::Ok;
     }
 
@@ -233,7 +232,8 @@ int ProgramMain(int argc, char** argv) {
   ReadBinaryOptions options(features, nullptr, kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
 
-  BinaryReaderObjcopy reader(v_sections_to_remove, v_sections_to_add, v_sections_to_update, &errors);
+  BinaryReaderObjcopy reader(v_sections_to_remove, v_sections_to_add,
+                             v_sections_to_update, &errors);
   result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
   FormatErrorsToFile(errors, Location::Type::Binary);
   if (Failed(result)) {
