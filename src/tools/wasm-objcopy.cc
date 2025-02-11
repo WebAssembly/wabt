@@ -164,12 +164,6 @@ class BinaryReaderObjcopy : public BinaryReaderNop {
     }
 
     if (sections_to_update_.count(section_name) > 0) {
-      std::vector<uint8_t> file_data;
-
-      return Result::Ok;
-    }
-
-    if (sections_to_update_.count(section_name) > 0) {
       auto filename = sections_to_update_[section_name];
 
       std::vector<uint8_t> file_data;
