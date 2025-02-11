@@ -570,6 +570,13 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
+  # wasm-objcopy
+  wabt_executable(
+    NAME wasm-objcopy
+    SOURCES src/tools/wasm-objcopy.cc
+    INSTALL
+  )
+
   # wasm-objdump
   wabt_executable(
     NAME wasm-objdump
