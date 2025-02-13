@@ -25,7 +25,7 @@ runs:
         echo "::set-output name=shasum::$SHASUM"
 
     - name: upload tarball to CI
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.archive.outputs.tarball }}
         path: ./${{ steps.archive.outputs.tarball }}
