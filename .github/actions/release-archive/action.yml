@@ -21,8 +21,8 @@ runs:
         mv install wabt-$VERSION
         tar -czf $TARBALL wabt-$VERSION
         scripts/sha256sum.py $TARBALL > $SHASUM
-        echo "::set-output name=tarball::$TARBALL"
-        echo "::set-output name=shasum::$SHASUM"
+        echo "tarball=$TARBALL" >> $GITHUB_OUTPUT
+        echo "shasum=$SHASUM" >> $GITHUB_OUTPUT
 
     - name: upload tarball to CI
       uses: actions/upload-artifact@v4
