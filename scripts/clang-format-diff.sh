@@ -25,7 +25,7 @@ else
 fi
 
 MERGE_BASE=$(git merge-base $BRANCH HEAD)
-FORMAT_MSG=$(git clang-format $MERGE_BASE -q --diff -- src/)
+FORMAT_MSG=$(git clang-format $MERGE_BASE -q --diff -- src/ || true)
 if [ -n "$FORMAT_MSG" -a "$FORMAT_MSG" != "no modified files to format" ]
 then
   echo "Please run git clang-format before committing, or apply this diff:"
