@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/memory64/memory.wast
+;;; STDIN_FILE: test/old-spec/proposals/memory64/memory.wast
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/memory.wast:17: assert_invalid passed:

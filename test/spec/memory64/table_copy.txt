@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_copy.wast
+;;; STDIN_FILE: test/old-spec/proposals/memory64/table_copy.wast
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 test() =>

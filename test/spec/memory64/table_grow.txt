@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_grow.wast
+;;; STDIN_FILE: test/old-spec/proposals/memory64/table_grow.wast
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/table_grow.wast:26: assert_trap passed: out of bounds table access: table.set at 0 >= max value 0

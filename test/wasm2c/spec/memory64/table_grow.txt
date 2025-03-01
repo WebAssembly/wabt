@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_grow.wast
+;;; STDIN_FILE: test/old-spec/proposals/memory64/table_grow.wast
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 62/62 tests passed.

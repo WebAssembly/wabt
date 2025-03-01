@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_set.wast
+;;; STDIN_FILE: test/old-spec/proposals/memory64/table_set.wast
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/table_set.wast:51: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
