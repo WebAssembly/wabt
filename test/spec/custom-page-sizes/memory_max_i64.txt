@@ -1,0 +1,17 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/custom-page-sizes/memory_max_i64.wast
+;;; ARGS*: --enable-custom-page-sizes --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/custom-page-sizes/memory_max_i64.wast:13: assert_unlinkable passed:
+  error: invalid import "test.import"
+out/test/spec/custom-page-sizes/memory_max_i64.wast:20: assert_unlinkable passed:
+  error: invalid import "test.unknown"
+out/test/spec/custom-page-sizes/memory_max_i64.wast:32: assert_malformed passed:
+  out/test/spec/custom-page-sizes/memory_max_i64/memory_max_i64.2.wat:1:13: error: invalid int "0x1_0000_0000_0000_0000"
+  (memory i64 0x1_0000_0000_0000_0000 (pagesize 1))
+              ^^^^^^^^^^^^^^^^^^^^^^^
+out/test/spec/custom-page-sizes/memory_max_i64.wast:37: assert_invalid passed:
+  out/test/spec/custom-page-sizes/memory_max_i64/memory_max_i64.3.wasm:0000013: error: initial pages (281474976710657) must be <= (281474976710656)
+  0000013: error: OnMemory callback failed
+4/4 tests passed.
+;;; STDOUT ;;)

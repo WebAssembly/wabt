@@ -116,7 +116,7 @@ def main(args):
         'threads',
         'annotations',
         'wide-arithmetic',
-        'memory64',
+        'wasm-3.0',
     ])
 
     # sanity check to verify that all flags are valid
