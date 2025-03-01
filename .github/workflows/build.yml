@@ -242,6 +242,8 @@ jobs:
       with:
         platforms: ${{matrix.arch}}
         image: "tonistiigi/binfmt:master"
+    - name: apt-get update
+      run: sudo apt-get update
     - name: install ninja
       run: sudo apt-get install ninja-build
     - name: install the toolchain
