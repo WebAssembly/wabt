@@ -6,58 +6,62 @@ out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:3: assert_malform
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.0.wat:1:21: error: malformed custom page size
   (memory 0 (pagesize 3))
                       ^
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:9: assert_invalid passed:
-  out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.1.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
-  000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:13: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:8: assert_malformed passed:
+  out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.1.wat:1:21: error: malformed custom page size
+  (memory 0 (pagesize 0))
+                      ^
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:14: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.2.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:17: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:18: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.3.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:21: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:22: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.4.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:25: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:26: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.5.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:29: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:30: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.6.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:33: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:34: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.7.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:37: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:38: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.8.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:41: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:42: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.9.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:45: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:46: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.10.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:49: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:50: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.11.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:53: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:54: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.12.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:57: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:58: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.13.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:61: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:62: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.14.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:65: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:66: assert_invalid passed:
   out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.15.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
   000000e: error: OnMemory callback failed
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:71: assert_invalid passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:70: assert_invalid passed:
+  out/test/spec/custom-page-sizes/custom-page-sizes-invalid/custom-page-sizes-invalid.16.wasm:000000e: error: only page sizes of 1 B or 64 KiB are allowed
+  000000e: error: OnMemory callback failed
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:76: assert_invalid passed:
   000000e: error: malformed memory page size
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:78: assert_malformed passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:83: assert_malformed passed:
   000000e: error: malformed memory page size
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:99: assert_unlinkable passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:104: assert_unlinkable passed:
   error: page_size mismatch in imported memory, expected 65536 but got 1.
-out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:106: assert_unlinkable passed:
+out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:111: assert_unlinkable passed:
   error: page_size mismatch in imported memory, expected 1 but got 65536.
-21/21 tests passed.
+22/22 tests passed.
 ;;; STDOUT ;;)

@@ -5,5 +5,13 @@
 out/test/spec/custom-page-sizes/custom-page-sizes.wast:27: assert_trap passed: out of bounds memory access: access at 0+1 >= max value 0
 out/test/spec/custom-page-sizes/custom-page-sizes.wast:34: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
 out/test/spec/custom-page-sizes/custom-page-sizes.wast:41: assert_trap passed: out of bounds memory access: access at 131072+1 >= max value 131072
-34/34 tests passed.
+out/test/spec/custom-page-sizes/custom-page-sizes.wast:113: assert_malformed passed:
+  out/test/spec/custom-page-sizes/custom-page-sizes/custom-page-sizes.10.wat:1:19: error: malformed custom page size
+  (memory (pagesize 0) (data))
+                    ^
+  out/test/spec/custom-page-sizes/custom-page-sizes/custom-page-sizes.10.wat:1:28: error: unexpected token ), expected EOF.
+  (memory (pagesize 0) (data))
+                             ^
+out/test/spec/custom-page-sizes/custom-page-sizes.wast:129: assert_trap passed: out of bounds memory access: access at 3+1 >= max value 3
+44/44 tests passed.
 ;;; STDOUT ;;)

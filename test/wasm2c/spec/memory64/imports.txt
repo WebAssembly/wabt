@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/proposals/memory64/imports.wast
+;;; STDIN_FILE: test/old-spec/proposals/memory64/imports.wast
 ;;; ARGS*: --enable-memory64 --enable-exceptions --enable-multi-memory
 (;; STDOUT ;;;
 spectest.print_i32(13)

@@ -27,6 +27,9 @@ PROPOSALS_DIR = os.path.join(TESTSUITE_DIR, 'proposals')
 SPEC_TEST_DIR = os.path.join(TEST_DIR, 'spec')
 WASM2C_SPEC_TEST_DIR = os.path.join(TEST_DIR, 'wasm2c', 'spec')
 
+# snapshot of older version of proposals where WABT doesn't support current version
+OLD_PROPOSALS_DIR = os.path.join(REPO_ROOT_DIR, 'test', 'old-spec', 'proposals')
+
 options = None
 
 
@@ -69,13 +72,14 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
                 f.write(';;; ARGS*: %s\n' % flags)
 
 
-def ProcessProposalDir(name, flags=None):
+def ProcessProposalDir(name, flags=None, old=False):
+    proposals_dir = OLD_PROPOSALS_DIR if old else PROPOSALS_DIR
     ProcessDir(os.path.join(SPEC_TEST_DIR, name),
-               os.path.join(PROPOSALS_DIR, name),
+               os.path.join(proposals_dir, name),
                'run-interp-spec',
                flags)
     ProcessDir(os.path.join(WASM2C_SPEC_TEST_DIR, name),
-               os.path.join(PROPOSALS_DIR, name),
+               os.path.join(proposals_dir, name),
                'run-spec-wasm2c',
                flags)
 
@@ -93,12 +97,17 @@ def main(args):
     all_proposals = [e.name for e in os.scandir(PROPOSALS_DIR) if e.is_dir()]
 
     flags = {
-        'memory64': '--enable-memory64',
         'multi-memory': '--enable-multi-memory',
         'exception-handling': '--enable-exceptions',
         'extended-const': '--enable-extended-const',
         'tail-call': '--enable-tail-call',
         'relaxed-simd': '--enable-relaxed-simd',
+        'exception-handling': '--enable-exceptions',
+        'custom-page-sizes': '--enable-custom-page-sizes',
+    }
+
+    old_proposal_flags = {
+        'memory64': '--enable-memory64',
     }
 
     unimplemented = set([
@@ -106,6 +115,8 @@ def main(args):
         'function-references',
         'threads',
         'annotations',
+        'wide-arithmetic',
+        'wasm-3.0',
     ])
 
     # sanity check to verify that all flags are valid
@@ -118,6 +129,9 @@ def main(args):
     proposals = [p for p in all_proposals if p not in unimplemented]
     for proposal in proposals:
         ProcessProposalDir(proposal, flags.get(proposal))
+
+    for proposal in old_proposal_flags:
+        ProcessProposalDir(proposal, old_proposal_flags.get(proposal), True)
 
     return 0
 

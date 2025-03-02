@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/memory64/table_get.wast
+;;; STDIN_FILE: test/old-spec/proposals/memory64/table_get.wast
 ;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 init(externref:2) =>
