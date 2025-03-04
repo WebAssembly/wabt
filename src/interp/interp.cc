@@ -1492,9 +1492,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::InterpAlloca:
       values_.resize(values_.size() + instr.imm_u32);
-      // refs_ doesn't need to be updated; We may be allocating space for
-      // references, but they will be initialized to null, so it is OK if we
-      // don't mark them.
+      // refs_ will be marked in InterpMarkRef.
       break;
 
     case O::InterpBrUnless:
