@@ -1511,13 +1511,23 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       auto drop = instr.imm_u32x2.fst;
       auto keep = instr.imm_u32x2.snd;
       // Shift kept refs down.
-      for (auto iter = refs_.rbegin(); iter != refs_.rend(); ++iter) {
+      auto iter = refs_.rbegin();
+      for (; iter != refs_.rend(); ++iter) {
         if (*iter >= values_.size() - keep) {
           *iter -= drop;
         } else {
           break;
         }
       }
+      // Find dropped refs.
+      auto drop_iter = iter;
+      for (; drop_iter != refs_.rend(); ++drop_iter) {
+        if (*iter < values_.size() - keep - drop) {
+          break;
+        }
+      }
+      // Erase dropped refs.
+      refs_.erase(drop_iter.base(), iter.base());
       std::move(values_.end() - keep, values_.end(),
                 values_.end() - drop - keep);
       values_.resize(values_.size() - drop);
