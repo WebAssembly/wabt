@@ -1131,7 +1131,7 @@ T WABT_VECTORCALL Thread::Pop() {
 }
 
 Value Thread::Pop() {
-  if (!refs_.empty() && refs_.back() >= values_.size()) {
+  if (!refs_.empty() && refs_.back() >= values_.size() - 1) {
     refs_.pop_back();
   }
   auto value = values_.back();
