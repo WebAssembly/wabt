@@ -1131,7 +1131,7 @@ T WABT_VECTORCALL Thread::Pop() {
 }
 
 Value Thread::Pop() {
-  if (!refs_.empty() && refs_.back() >= values_.size()) {
+  if (!refs_.empty() && refs_.back() >= values_.size() - 1) {
     refs_.pop_back();
   }
   auto value = values_.back();
@@ -1254,16 +1254,24 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       break;
 
     case O::Select: {
-      // TODO: need to mark whether this is a ref.
       auto cond = Pop<u32>();
+      auto ref = false;
+      // check if either is a ref
+      ref |= !refs_.empty() && refs_.back() == values_.size();
       Value false_ = Pop();
+      ref |= !refs_.empty() && refs_.back() == values_.size();
       Value true_ = Pop();
+      if (ref) {
+        refs_.push_back(values_.size());
+      }
       Push(cond ? true_ : false_);
       break;
     }
 
+    case O::InterpLocalGetRef:
+      refs_.push_back(values_.size());
+      [[fallthrough]];
     case O::LocalGet:
-      // TODO: need to mark whether this is a ref.
       Push(Pick(instr.imm_u32));
       break;
 
@@ -1277,8 +1285,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       Pick(instr.imm_u32) = Pick(1);
       break;
 
+    case O::InterpMarkRef:
+      refs_.push_back(values_.size() - instr.imm_u32);
+      break;
+
+    case O::InterpGlobalGetRef:
+      refs_.push_back(values_.size());
+      [[fallthrough]];
     case O::GlobalGet: {
-      // TODO: need to mark whether this is a ref.
       Global::Ptr global{store_, inst_->globals()[instr.imm_u32]};
       Push(global->Get());
       break;
@@ -1478,9 +1492,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::InterpAlloca:
       values_.resize(values_.size() + instr.imm_u32);
-      // refs_ doesn't need to be updated; We may be allocating space for
-      // references, but they will be initialized to null, so it is OK if we
-      // don't mark them.
+      // refs_ will be marked in InterpMarkRef.
       break;
 
     case O::InterpBrUnless:
@@ -1499,13 +1511,23 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       auto drop = instr.imm_u32x2.fst;
       auto keep = instr.imm_u32x2.snd;
       // Shift kept refs down.
-      for (auto iter = refs_.rbegin(); iter != refs_.rend(); ++iter) {
+      auto iter = refs_.rbegin();
+      for (; iter != refs_.rend(); ++iter) {
         if (*iter >= values_.size() - keep) {
           *iter -= drop;
         } else {
           break;
         }
       }
+      // Find dropped refs.
+      auto drop_iter = iter;
+      for (; drop_iter != refs_.rend(); ++drop_iter) {
+        if (*iter < values_.size() - keep - drop) {
+          break;
+        }
+      }
+      // Erase dropped refs.
+      refs_.erase(drop_iter.base(), iter.base());
       std::move(values_.end() - keep, values_.end(),
                 values_.end() - drop - keep);
       values_.resize(values_.size() - drop);
