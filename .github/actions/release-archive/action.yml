@@ -17,7 +17,8 @@ runs:
           [ubuntu-20.04]="linux-x64",
           [ubuntu-24.04-arm]="linux-arm64",
           [macos-14]="macos-14",
-          [windows-latest]="windows-x64"
+          [windows-latest]="windows-x64",
+          [wasi]="wasi",
         )
         VERSION=${{ github.event.release.tag_name || github.sha }}
         PKGNAME="wabt-$VERSION-${OSNAME[${{ inputs.os }}]}"
