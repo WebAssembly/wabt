@@ -2310,7 +2310,10 @@ void CWriter::WriteDataInitializers() {
   const Memory* memory = module_->memories[0];
 
   Write("LOAD_DATA(",
-        ExternalInstanceRef(ModuleFieldType::Memory, memory->name), ", ");
+        ExternalInstanceRef(ModuleFieldType::Memory, memory->name),
+        ", active_data_segment_offsets[i], active_data_segment_data_ptrs[i], "
+        "active_data_segment_sizes[i]);",
+        Newline());
   Write(CloseBrace(), Newline());
 
   Write(CloseBrace(), Newline());
