@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13, macos-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-13, macos-latest, windows-latest]
     steps:
     - uses: actions/setup-python@v5
       with:
@@ -40,7 +40,7 @@ jobs:
         submodules: true
     - name: install ninja (linux)
       run: sudo apt-get install ninja-build
-      if: matrix.os == 'ubuntu-latest'
+      if: startsWith(matrix.os, 'ubuntu-')
     - name: install ninja (osx)
       run: brew install ninja
       if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
