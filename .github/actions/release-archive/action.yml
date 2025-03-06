@@ -20,7 +20,7 @@ runs:
           [windows-latest]="windows-x64"
         )
         VERSION=${{ github.event.release.tag_name || github.sha }}
-        PKGNAME="wabt-$VERSION-${OSNAME[${{ input.os }}]}"
+        PKGNAME="wabt-$VERSION-${OSNAME[${{ inputs.os }}]}"
         TARBALL=$PKGNAME.tar.gz
         SHASUM=$PKGNAME.tar.gz.sha256
         mv install wabt-$VERSION
