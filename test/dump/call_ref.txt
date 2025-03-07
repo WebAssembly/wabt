@@ -5,13 +5,14 @@
   (func (export "main") (result i32)
     i32.const 10
     ref.func $foo
-    call_ref
+    call_ref 0
   )
   (func $foo (param $x i32) (result i32)
     (i32.add (local.get $x)
              (i32.const 19))
   )
   (elem declare funcref (ref.func $foo))
+  (type (func (param i32) (result i32)))
 )
 
 (;; STDERR ;;;
@@ -23,13 +24,13 @@
 000000a: 02                                        ; num types
 ; func type 0
 000000b: 60                                        ; func
-000000c: 00                                        ; num params
-000000d: 01                                        ; num results
-000000e: 7f                                        ; i32
+000000c: 01                                        ; num params
+000000d: 7f                                        ; i32
+000000e: 01                                        ; num results
+000000f: 7f                                        ; i32
 ; func type 1
-000000f: 60                                        ; func
-0000010: 01                                        ; num params
-0000011: 7f                                        ; i32
+0000010: 60                                        ; func
+0000011: 00                                        ; num params
 0000012: 01                                        ; num results
 0000013: 7f                                        ; i32
 0000009: 0a                                        ; FIXUP section size
@@ -37,8 +38,8 @@
 0000014: 03                                        ; section code
 0000015: 00                                        ; section size (guess)
 0000016: 02                                        ; num functions
-0000017: 00                                        ; function 0 signature index
-0000018: 01                                        ; function 1 signature index
+0000017: 01                                        ; function 0 signature index
+0000018: 00                                        ; function 1 signature index
 0000015: 03                                        ; FIXUP section size
 ; section "Export" (7)
 0000019: 07                                        ; section code
@@ -71,19 +72,20 @@
 0000031: d2                                        ; ref.func
 0000032: 01                                        ; function index
 0000033: 14                                        ; call_ref
-0000034: 0b                                        ; end
-000002d: 07                                        ; FIXUP func body size
+0000034: 00                                        ; signature index
+0000035: 0b                                        ; end
+000002d: 08                                        ; FIXUP func body size
 ; function body 1
-0000035: 00                                        ; func body size (guess)
-0000036: 00                                        ; local decl count
-0000037: 20                                        ; local.get
-0000038: 00                                        ; local index
-0000039: 41                                        ; i32.const
-000003a: 13                                        ; i32 literal
-000003b: 6a                                        ; i32.add
-000003c: 0b                                        ; end
-0000035: 07                                        ; FIXUP func body size
-000002b: 11                                        ; FIXUP section size
+0000036: 00                                        ; func body size (guess)
+0000037: 00                                        ; local decl count
+0000038: 20                                        ; local.get
+0000039: 00                                        ; local index
+000003a: 41                                        ; i32.const
+000003b: 13                                        ; i32 literal
+000003c: 6a                                        ; i32.add
+000003d: 0b                                        ; end
+0000036: 07                                        ; FIXUP func body size
+000002b: 12                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -94,11 +96,11 @@ Code Disassembly:
 00002e func[0] <main>:
  00002f: 41 0a                      | i32.const 10
  000031: d2 01                      | ref.func 1
- 000033: 14                         | call_ref
- 000034: 0b                         | end
-000036 func[1]:
- 000037: 20 00                      | local.get 0
- 000039: 41 13                      | i32.const 19
- 00003b: 6a                         | i32.add
- 00003c: 0b                         | end
+ 000033: 14 00                      | call_ref (ref null 0)
+ 000035: 0b                         | end
+000037 func[1]:
+ 000038: 20 00                      | local.get 0
+ 00003a: 41 13                      | i32.const 19
+ 00003c: 6a                         | i32.add
+ 00003d: 0b                         | end
 ;;; STDOUT ;;)
