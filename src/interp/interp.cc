@@ -1249,6 +1249,13 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       }
     }
 
+    case O::CallRef: {
+      Ref new_func_ref = Pop<Ref>();
+      TRAP_IF(new_func_ref == Ref::Null, "null function reference");
+      Func::Ptr new_func{store_, new_func_ref};
+      return DoCall(new_func, out_trap);
+    }
+
     case O::Drop:
       Pop();
       break;
@@ -1979,7 +1986,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::ReturnCall:
     case O::SelectT:
 
-    case O::CallRef:
     case O::Try:
     case O::TryTable:
     case O::Catch:

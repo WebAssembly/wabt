@@ -591,10 +591,21 @@ void MakeTypeBindingReverseMapping(
 Var::Var() : Var(kInvalidIndex, Location()) {}
 
 Var::Var(Index index, const Location& loc)
-    : loc(loc), type_(VarType::Index), index_(index) {}
+    : loc(loc), type_(VarType::Index), opt_type_(0), index_(index) {}
 
 Var::Var(std::string_view name, const Location& loc)
-    : loc(loc), type_(VarType::Name), name_(name) {}
+    : loc(loc), type_(VarType::Name), opt_type_(0), name_(name) {}
+
+Var::Var(Type type, const Location& loc)
+    : loc(loc), type_(VarType::Index), index_(kInvalidIndex) {
+  assert(static_cast<int32_t>(type) < 0 &&
+         static_cast<int32_t>(type) >= INT16_MIN);
+  opt_type_ = static_cast<int16_t>(type);
+
+  if (type.IsReferenceWithIndex()) {
+    index_ = type.GetReferenceIndex();
+  }
+}
 
 Var::Var(Var&& rhs) : Var() {
   *this = std::move(rhs);
@@ -606,6 +617,7 @@ Var::Var(const Var& rhs) : Var() {
 
 Var& Var::operator=(Var&& rhs) {
   loc = rhs.loc;
+  opt_type_ = rhs.opt_type_;
   if (rhs.is_index()) {
     set_index(rhs.index_);
   } else {
@@ -616,6 +628,7 @@ Var& Var::operator=(Var&& rhs) {
 
 Var& Var::operator=(const Var& rhs) {
   loc = rhs.loc;
+  opt_type_ = rhs.opt_type_;
   if (rhs.is_index()) {
     set_index(rhs.index_);
   } else {
@@ -642,6 +655,21 @@ void Var::set_name(std::string&& name) {
 
 void Var::set_name(std::string_view name) {
   set_name(std::string(name));
+}
+
+void Var::set_opt_type(Type::Enum type) {
+  assert(static_cast<int32_t>(type) < 0 &&
+         static_cast<int32_t>(type) >= INT16_MIN);
+  opt_type_ = static_cast<int16_t>(type);
+}
+
+Type Var::to_type() const {
+  if (opt_type_ == Type::Reference || opt_type_ == Type::Ref ||
+      opt_type_ == Type::RefNull) {
+    return Type(opt_type(), index());
+  }
+
+  return Type(opt_type());
 }
 
 void Var::Destroy() {

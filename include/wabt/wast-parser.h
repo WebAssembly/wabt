@@ -138,7 +138,7 @@ class WastParser {
   Result ParseValueTypeList(
       TypeVector* out_type_list,
       std::unordered_map<uint32_t, std::string>* type_names);
-  Result ParseRefKind(Type* out_type);
+  Result ParseRefKind(Var* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
   Result ParseQuotedText(std::string* text, bool check_utf8 = true);

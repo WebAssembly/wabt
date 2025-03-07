@@ -46,6 +46,8 @@ class Type {
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
     Reference = -0x15,  // 0x6b
+    Ref = -0x1c,        // 0x64
+    RefNull = -0x1d,    // 0x63
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
@@ -63,20 +65,24 @@ class Type {
       : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
   Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
   Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
-    assert(e == Enum::Reference);
+    assert(e == Enum::Reference || e == Enum::Ref ||
+           e == Enum::RefNull || type_index == kInvalidIndex);
   }
   constexpr operator Enum() const { return enum_; }
 
-  bool IsRef() const {
+  bool IsNullableRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
-           enum_ == Type::Reference || enum_ == Type::ExnRef;
+           enum_ == Type::Reference || enum_ == Type::ExnRef ||
+           enum_ == Type::RefNull;
   }
 
-  bool IsReferenceWithIndex() const { return enum_ == Type::Reference; }
+  bool IsRef() const {
+    return IsNullableRef() || enum_ == Type::Ref;
+  }
 
-  bool IsNullableRef() const {
-    // Currently all reftypes are nullable
-    return IsRef();
+  bool IsReferenceWithIndex() const {
+    return enum_ == Type::Reference || enum_ == Type::Ref ||
+           enum_ == Type::RefNull;
   }
 
   std::string GetName() const {
@@ -95,7 +101,10 @@ class Type {
       case Type::Any:       return "any";
       case Type::ExternRef: return "externref";
       case Type::Reference:
+      case Type::Ref:
         return StringPrintf("(ref %d)", type_index_);
+      case Type::RefNull:
+        return StringPrintf("(ref null %d)", type_index_);
       default:
         return StringPrintf("<type_index[%d]>", enum_);
     }
@@ -132,7 +141,7 @@ class Type {
   }
 
   Index GetReferenceIndex() const {
-    assert(enum_ == Enum::Reference);
+    assert(IsReferenceWithIndex());
     return type_index_;
   }
 
@@ -151,6 +160,8 @@ class Type {
       case Type::ExnRef:
       case Type::ExternRef:
       case Type::Reference:
+      case Type::Ref:
+      case Type::RefNull:
         return TypeVector(this, this + 1);
 
       default:

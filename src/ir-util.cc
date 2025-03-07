@@ -140,7 +140,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     }
 
     case ExprType::CallRef: {
-      const Var& var = cast<CallRefExpr>(&expr)->function_type_index;
+      const Var& var = cast<CallRefExpr>(&expr)->sig_type;
       return {GetFuncParamCount(var) + 1, GetFuncResultCount(var)};
     }
 

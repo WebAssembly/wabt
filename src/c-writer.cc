@@ -1515,7 +1515,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
     } break;
 
     case ExprType::RefNull:
-      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type));
+      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type.opt_type()));
       break;
 
     default:
@@ -1815,7 +1815,7 @@ void CWriter::BeginInstance() {
     switch (import->kind()) {
       case ExternalKind::Global: {
         const Global& global = cast<GlobalImport>(import)->global;
-        Write(global.type);
+        Write(global.type.to_type());
         break;
       }
 
@@ -2026,8 +2026,9 @@ static bool func_uses_simd(const FuncSignature& sig) {
 void CWriter::ComputeSimdScope() {
   simd_used_in_header_ =
       module_->features_used.simd &&
-      (std::any_of(module_->globals.begin(), module_->globals.end(),
-                   [](const auto& x) { return x->type == Type::V128; }) ||
+      (std::any_of(
+           module_->globals.begin(), module_->globals.end(),
+           [](const auto& x) { return x->type.opt_type() == Type::V128; }) ||
        std::any_of(module_->imports.begin(), module_->imports.end(),
                    [](const auto& x) {
                      return x->kind() == ExternalKind::Func &&
@@ -2096,11 +2097,12 @@ void CWriter::WriteGlobals() {
 }
 
 void CWriter::WriteGlobal(const Global& global, const std::string& name) {
-  Write(global.type, " ", name, ";");
+  Write(global.type.to_type(), " ", name, ";");
 }
 
 void CWriter::WriteGlobalPtr(const Global& global, const std::string& name) {
-  Write(global.type, "* ", name, "(", ModuleInstanceTypeName(), "* instance)");
+  Write(global.type.to_type(), "* ", name, "(", ModuleInstanceTypeName(),
+        "* instance)");
 }
 
 void CWriter::WriteMemories() {
@@ -3708,7 +3710,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::GlobalGet: {
         const Var& var = cast<GlobalGetExpr>(&expr)->var;
-        PushType(module_->GetGlobal(var)->type);
+        PushType(module_->GetGlobal(var)->type.to_type());
         Write(StackVar(0), " = ", GlobalInstanceVar(var), ";", Newline());
         break;
       }
@@ -3959,10 +3961,10 @@ void CWriter::Write(const ExprList& exprs) {
       } break;
 
       case ExprType::RefNull:
-        PushType(cast<RefNullExpr>(&expr)->type);
+        PushType(cast<RefNullExpr>(&expr)->type.opt_type());
         Write(StackVar(0), " = ",
-              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type), ";",
-              Newline());
+              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type.opt_type()),
+              ";", Newline());
         break;
 
       case ExprType::RefIsNull:
