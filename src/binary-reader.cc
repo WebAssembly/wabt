@@ -113,6 +113,7 @@ class BinaryReader {
   [[nodiscard]] Result ReadU32Leb128(uint32_t* out_value, const char* desc);
   [[nodiscard]] Result ReadU64Leb128(uint64_t* out_value, const char* desc);
   [[nodiscard]] Result ReadS32Leb128(uint32_t* out_value, const char* desc);
+  [[nodiscard]] Result ReadS33Leb128(uint64_t* out_value, const char* desc);
   [[nodiscard]] Result ReadS64Leb128(uint64_t* out_value, const char* desc);
   [[nodiscard]] Result ReadType(Type* out_value, const char* desc);
   [[nodiscard]] Result ReadRefType(Type* out_value, const char* desc);
@@ -145,6 +146,7 @@ class BinaryReader {
   [[nodiscard]] Result ReadCount(Index* index, const char* desc);
   [[nodiscard]] Result ReadField(TypeMut* out_value);
 
+  bool IsGenericReferenceType(Type);
   bool IsConcreteType(Type);
   bool IsBlockType(Type);
 
@@ -353,6 +355,15 @@ Result BinaryReader::ReadS32Leb128(uint32_t* out_value, const char* desc) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadS33Leb128(uint64_t* out_value, const char* desc) {
+  const uint8_t* p = state_.data + state_.offset;
+  const uint8_t* end = state_.data + read_end_;
+  size_t bytes_read = wabt::ReadS33Leb128(p, end, out_value);
+  ERROR_UNLESS(bytes_read > 0, "unable to read i33 leb128: %s", desc);
+  state_.offset += bytes_read;
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
@@ -365,10 +376,22 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   uint32_t type = 0;
   CHECK_RESULT(ReadS32Leb128(&type, desc));
-  if (static_cast<Type::Enum>(type) == Type::Reference) {
-    uint32_t heap_type = 0;
-    CHECK_RESULT(ReadS32Leb128(&heap_type, desc));
-    *out_value = Type(Type::Reference, heap_type);
+  if (static_cast<Type>(type).IsReferenceWithIndex()) {
+    uint64_t heap_type = 0;
+    CHECK_RESULT(ReadS33Leb128(&heap_type, desc));
+    int64_t sig_heap_type = static_cast<int64_t>(heap_type);
+    if (sig_heap_type < 0) {
+      ERROR_UNLESS(
+          sig_heap_type == Type::FuncRef || sig_heap_type == Type::ExternRef,
+          "Reference type is limited to func and extern: %s", desc);
+      type = (static_cast<Type::Enum>(type) == Type::Ref)
+                 ? Type::ReferenceNonNull
+                 : Type::ReferenceOrNull;
+      *out_value = Type(static_cast<Type::Enum>(sig_heap_type), type);
+    } else {
+      *out_value =
+          Type(static_cast<Type::Enum>(type), static_cast<Index>(heap_type));
+    }
   } else {
     *out_value = static_cast<Type>(type);
   }
@@ -376,9 +399,7 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
 }
 
 Result BinaryReader::ReadRefType(Type* out_value, const char* desc) {
-  uint32_t type = 0;
-  CHECK_RESULT(ReadS32Leb128(&type, desc));
-  *out_value = static_cast<Type>(type);
+  CHECK_RESULT(ReadType(out_value, desc));
   ERROR_UNLESS(out_value->IsRef(), "%s must be a reference type", desc);
   return Result::Ok;
 }
@@ -554,6 +575,20 @@ Result BinaryReader::ReadField(TypeMut* out_value) {
   return Result::Ok;
 }
 
+bool BinaryReader::IsGenericReferenceType(Type type) {
+  switch (type) {
+    case Type::FuncRef:
+    case Type::ExternRef:
+      return options_.features.reference_types_enabled();
+
+    case Type::ExnRef:
+      return options_.features.exceptions_enabled();
+
+    default:
+      return false;
+  }
+}
+
 bool BinaryReader::IsConcreteType(Type type) {
   switch (type) {
     case Type::I32:
@@ -565,18 +600,13 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::V128:
       return options_.features.simd_enabled();
 
-    case Type::FuncRef:
-    case Type::ExternRef:
-      return options_.features.reference_types_enabled();
-
-    case Type::ExnRef:
-      return options_.features.exceptions_enabled();
-
     case Type::Reference:
+    case Type::Ref:
+    case Type::RefNull:
       return options_.features.function_references_enabled();
 
     default:
-      return false;
+      return IsGenericReferenceType(type);
   }
 }
 
@@ -1913,8 +1943,21 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       }
 
       case Opcode::RefNull: {
+        uint64_t heap_type;
         Type type;
-        CHECK_RESULT(ReadRefType(&type, "ref.null type"));
+        CHECK_RESULT(ReadS33Leb128(&heap_type, "ref.null type"));
+
+        if (static_cast<int64_t>(heap_type) < 0) {
+          type = Type(static_cast<int32_t>(heap_type));
+          ERROR_UNLESS(IsGenericReferenceType(type),
+                       "expected valid ref.null type (got " PRItypecode ")",
+                       WABT_PRINTF_TYPE_CODE(type));
+        } else {
+          ERROR_UNLESS(options_.features.function_references_enabled(),
+                       "function references are not enabled for ref.null");
+          type = Type(Type::RefNull, static_cast<Index>(heap_type));
+        }
+
         CALLBACK(OnRefNullExpr, type);
         CALLBACK(OnOpcodeType, type);
         break;
@@ -1925,10 +1968,15 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         CALLBACK(OnOpcodeBare);
         break;
 
-      case Opcode::CallRef:
-        CALLBACK(OnCallRefExpr);
-        CALLBACK(OnOpcodeBare);
+      case Opcode::CallRef: {
+        uint32_t type;
+        CHECK_RESULT(ReadU32Leb128(&type, "call_ref type"));
+
+        Type sig_type(Type::RefNull, type);
+        CALLBACK(OnCallRefExpr, sig_type);
+        CALLBACK(OnOpcodeType, sig_type);
         break;
+      }
 
       default:
         return ReportUnexpectedOpcode(opcode);
