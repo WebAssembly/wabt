@@ -1,0 +1,17 @@
+;;; TOOL: wat2wasm
+;;; ARGS*: --enable-function-references
+;;; ERROR: 1
+(module
+  (type $t (func (param (ref null $type))
+                 (result (ref null $other_type))))
+
+  (import "spectest" "badfunc" (func (type $t)))
+)
+(;; STDERR ;;;
+out/test/typecheck/missing-type-ref.txt:5:35: error: Unknown reference: $type
+  (type $t (func (param (ref null $type))
+                                  ^^^^^
+out/test/typecheck/missing-type-ref.txt:6:36: error: Unknown reference: $other_type
+                 (result (ref null $other_type))))
+                                   ^^^^^^^^^^^
+;;; STDERR ;;)
