@@ -183,8 +183,8 @@ f64x2.convert_low_i32x4_u, TokenType::Unary, Opcode::F64X2ConvertLowI32X4U
 f64x2.promote_low_f32x4, TokenType::Unary, Opcode::F64X2PromoteLowF32X4
 f64x2, TokenType::F64X2
 field, TokenType::Field
-funcref, Type::FuncRef
 func, Type::FuncRef, TokenType::Func
+funcref, Type::FuncRef
 function, TokenType::Function
 get, TokenType::Get
 global.get, TokenType::GlobalGet, Opcode::GlobalGet
@@ -556,6 +556,7 @@ mut, TokenType::Mut
 nan:arithmetic, TokenType::NanArithmetic
 nan:canonical, TokenType::NanCanonical
 nop, TokenType::Nop, Opcode::Nop
+null, TokenType::Null
 offset, TokenType::Offset
 output, TokenType::Output
 pagesize, TokenType::PageSize
