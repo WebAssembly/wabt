@@ -2,9 +2,9 @@
 ;;; ARGS: --stdout --enable-function-references --debug-names
 (module
   (type $t0 (func))
+  (type $t1 (func))
 
-  ;; Self reference
-  (type $t1 (func (param (ref $t0) (ref $t1) (ref 1))))
+  (type $t2 (func (param (ref $t0) (ref $t1) (ref 1))))
 
   (func $f1 (param (ref $t0) (ref 0))
     (local (ref $t0) (ref 0)
@@ -14,8 +14,9 @@
 (;; STDOUT ;;;
 (module
   (type $t0 (func))
-  (type $t1 (func (param (ref 0) (ref 1) (ref 1))))
-  (type (;2;) (func (param (ref 0) (ref 0))))
-  (func $f1 (type 2) (param (ref 0) (ref 0))
+  (type $t1 (func))
+  (type $t2 (func (param (ref 0) (ref 1) (ref 1))))
+  (type (;3;) (func (param (ref 0) (ref 0))))
+  (func $f1 (type 3) (param (ref 0) (ref 0))
     (local (ref 0) (ref 0) (ref 1) (ref 1))))
 ;;; STDOUT ;;)
