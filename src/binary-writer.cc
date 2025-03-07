@@ -57,9 +57,12 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type, const char* desc) {
+  if (type.IsNonTypedRef() && !type.IsNullableNonTypedRef()) {
+    WriteS32Leb128(stream, Type::Ref, "type prefix");
+  }
   WriteS32Leb128(stream, type, desc ? desc : type.GetName().c_str());
   if (type.IsReferenceWithIndex()) {
-    WriteS32Leb128(stream, type.GetReferenceIndex(),
+    WriteU32Leb128(stream, type.GetReferenceIndex(),
                    desc ? desc : type.GetName().c_str());
   }
 }
@@ -797,6 +800,10 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     }
     case ExprType::CallRef: {
       WriteOpcode(stream_, Opcode::CallRef);
+      assert(cast<CallRefExpr>(expr)->sig_type.opt_type() == Type::RefNull);
+      Index sig_index = cast<CallRefExpr>(expr)->sig_type.index();
+      WriteU32Leb128WithReloc(sig_index, "signature index",
+                              RelocType::TypeIndexLEB);
       break;
     }
     case ExprType::ReturnCallIndirect: {
@@ -1011,7 +1018,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     }
     case ExprType::RefNull: {
       WriteOpcode(stream_, Opcode::RefNull);
-      WriteType(stream_, cast<RefNullExpr>(expr)->type, "ref.null type");
+      const RefNullExpr* ref_null_expr = cast<RefNullExpr>(expr);
+      Type::Enum type = ref_null_expr->type.opt_type();
+
+      if (type != Type::RefNull) {
+        WriteType(stream_, type, "ref.null type");
+        break;
+      }
+
+      Index index = module_->GetFuncTypeIndex(ref_null_expr->type);
+      WriteU32Leb128WithReloc(index, "heap type index",
+                              RelocType::FuncIndexLEB);
       break;
     }
     case ExprType::RefIsNull:

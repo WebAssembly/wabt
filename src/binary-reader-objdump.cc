@@ -901,7 +901,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  if (current_opcode == Opcode::SelectT) {
+  if (current_opcode == Opcode::SelectT || current_opcode == Opcode::CallRef) {
     LogOpcode(type.GetName().c_str());
   } else {
     LogOpcode(type.GetRefKindName());
