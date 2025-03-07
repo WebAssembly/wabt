@@ -33,7 +33,7 @@ std::string TypesToString(const TypeVector& types,
     Type ty = types[i];
     // NOTE: Reference (and GetName) is also used by (e.g.) objdump, which does
     // not apply validation. do this here so as to not break that.
-    if (ty == Type::Reference && ty.GetReferenceIndex() == kInvalidIndex) {
+    if (ty.IsReferenceWithIndex() && ty.GetReferenceIndex() == kInvalidIndex) {
       result += "reference";
     } else {
       result += types[i].GetName();
@@ -233,10 +233,55 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
     return Result::Ok;
   }
 
-  if (actual != expected) {
+  Type::Enum actual_type = actual;
+  Type::Enum expected_type = expected;
+
+  if (actual_type == expected_type) {
+    switch (actual_type) {
+      case Type::ExternRef:
+      case Type::FuncRef:
+        return (expected.IsNullableNonTypedRef() ||
+                !actual.IsNullableNonTypedRef())
+                   ? Result::Ok
+                   : Result::Error;
+
+      case Type::Reference:
+      case Type::Ref:
+      case Type::RefNull:
+        break;
+
+      default:
+        return Result::Ok;
+    }
+  }
+
+  if (!actual.IsReferenceWithIndex()) {
     return Result::Error;
   }
-  return Result::Ok;
+
+  if (expected_type == Type::FuncRef) {
+    return (actual == Type::Ref || expected.IsNullableNonTypedRef())
+               ? Result::Ok
+               : Result::Error;
+  }
+
+  if (!expected.IsReferenceWithIndex()) {
+    return Result::Error;
+  }
+
+  if (expected_type == Type::Ref && actual_type == Type::RefNull) {
+    return Result::Error;
+  }
+
+  FuncType& actual_func_type = func_types_[actual.GetReferenceIndex()];
+  FuncType& expected_func_type = func_types_[expected.GetReferenceIndex()];
+
+  if (actual_func_type.params == expected_func_type.params &&
+      actual_func_type.results == expected_func_type.results) {
+    return Result::Ok;
+  }
+
+  return Result::Error;
 }
 
 Result TypeChecker::CheckTypes(const TypeVector& actual,
@@ -515,17 +560,8 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
-  Type type;
-  Result result = PeekType(0, &type);
-  if (!type.IsReferenceWithIndex()) {
-    type = Type(Type::Reference, kInvalidIndex);
-  }
-  result |= PopAndCheck1Type(type, "call_ref");
-  if (Succeeded(result)) {
-    *out_index = type.GetReferenceIndex();
-  }
-  return result;
+Result TypeChecker::OnCallRef(Type type) {
+  return PopAndCheck1Type(type, "call_ref");
 }
 
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
@@ -786,17 +822,7 @@ Result TypeChecker::OnTableFill(Type elem_type, const Limits& limits) {
 }
 
 Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
-  /*
-   * In a const expression, treat ref.func as producing a generic funcref.
-   * This avoids having to implement funcref subtyping (for now) and matches
-   * the previous behavior where SharedValidator::OnElemSegmentElemExpr_RefFunc
-   * examined only the validity of the function index.
-   */
-  if (features_.function_references_enabled() && !force_generic_funcref) {
-    PushType(Type(Type::Reference, func_type));
-  } else {
-    PushType(Type::FuncRef);
-  }
+  PushType(Type(Type::Ref, func_type));
   return Result::Ok;
 }
 

@@ -189,13 +189,26 @@ void ScriptValidator::PrintError(const Location* loc, const char* format, ...) {
   errors_->emplace_back(ErrorLevel::Error, *loc, buffer);
 }
 
+static Result CheckType(Type actual, Type expected) {
+  // Script validator (strict) type compare
+  if (expected == Type::Any || actual == Type::Any) {
+    return Result::Ok;
+  }
+
+  if (actual == expected) {
+    return Result::Ok;
+  }
+
+  return Result::Error;
+}
+
 void ScriptValidator::CheckTypeIndex(const Location* loc,
                                      Type actual,
                                      Type expected,
                                      const char* desc,
                                      Index index,
                                      const char* index_kind) {
-  if (Failed(TypeChecker::CheckType(actual, expected))) {
+  if (Failed(CheckType(actual, expected))) {
     PrintError(loc,
                "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
                index_kind, index, desc, actual.GetName().c_str(),
@@ -321,14 +334,8 @@ Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
 }
 
 Result Validator::OnCallRefExpr(CallRefExpr* expr) {
-  Index function_type_index;
-  result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
-  if (Succeeded(result_)) {
-    expr->function_type_index = Var{function_type_index, expr->loc};
-    return Result::Ok;
-  }
-
-  return Result::Error;
+  result_ |= validator_.OnCallRef(expr->loc, expr->sig_type);
+  return Result::Ok;
 }
 
 Result Validator::OnCodeMetadataExpr(CodeMetadataExpr* expr) {

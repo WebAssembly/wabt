@@ -686,6 +686,7 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallRef_Opcode.GetName());
+  writer_->WriteVar(expr->sig_type, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -890,7 +891,12 @@ Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
   writer_->WritePutsSpace(Opcode::RefNull_Opcode.GetName());
-  writer_->WriteRefKind(expr->type, NextChar::Newline);
+  if (expr->type.opt_type() != Type::RefNull) {
+    assert(!Type(expr->type.opt_type()).IsReferenceWithIndex());
+    writer_->WriteRefKind(expr->type.opt_type(), NextChar::Newline);
+  } else {
+    writer_->WriteVar(expr->type, NextChar::Newline);
+  }
   return Result::Ok;
 }
 

@@ -27,19 +27,19 @@
 ; func type 1
 000000e: 60                                        ; func
 000000f: 03                                        ; num params
-0000010: 6b                                        ; (ref 0)
+0000010: 64                                        ; (ref 0)
 0000011: 00                                        ; (ref 0)
-0000012: 6b                                        ; (ref 1)
+0000012: 64                                        ; (ref 1)
 0000013: 01                                        ; (ref 1)
-0000014: 6b                                        ; (ref 1)
+0000014: 64                                        ; (ref 1)
 0000015: 01                                        ; (ref 1)
 0000016: 00                                        ; num results
 ; func type 2
 0000017: 60                                        ; func
 0000018: 02                                        ; num params
-0000019: 6b                                        ; (ref 0)
+0000019: 64                                        ; (ref 0)
 000001a: 00                                        ; (ref 0)
-000001b: 6b                                        ; (ref 0)
+000001b: 64                                        ; (ref 0)
 000001c: 00                                        ; (ref 0)
 000001d: 00                                        ; num results
 0000009: 14                                        ; FIXUP section size
@@ -57,10 +57,10 @@
 0000025: 00                                        ; func body size (guess)
 0000026: 02                                        ; local decl count
 0000027: 02                                        ; local type count
-0000028: 6b                                        ; (ref 0)
+0000028: 64                                        ; (ref 0)
 0000029: 00                                        ; (ref 0)
 000002a: 02                                        ; local type count
-000002b: 6b                                        ; (ref 1)
+000002b: 64                                        ; (ref 1)
 000002c: 01                                        ; (ref 1)
 000002d: 0b                                        ; end
 0000025: 08                                        ; FIXUP func body size
@@ -73,7 +73,7 @@ typed-func-refs-locals.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000026 func[0]:
- 000027: 02 6b 00                   | local[2..3] type=(ref 0)
- 00002a: 02 6b 01                   | local[4..5] type=(ref 1)
+ 000027: 02 64 00                   | local[2..3] type=(ref 0)
+ 00002a: 02 64 01                   | local[4..5] type=(ref 1)
  00002d: 0b                         | end
 ;;; STDOUT ;;)
