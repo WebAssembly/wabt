@@ -1,0 +1,37 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-function-references
+(module
+  (type $ii (func))
+  (func $dummy)
+
+  (global (ref func) ref.func $dummy)
+  (global (ref $ii) ref.func $dummy)
+  (global (ref null func) ref.null $ii)
+  (global (ref null $ii) ref.null $ii)
+
+  (func $f1 (param (ref func) (ref extern) (ref $ii))
+    (local (ref func) (ref func)
+           (ref extern) (ref extern)
+           (ref $ii) (ref $ii))
+  )
+  (func $f2 (param (ref null func) (ref null extern) (ref null $ii))
+    (local (ref null func) (ref null func)
+           (ref null extern) (ref null extern)
+           (ref null $ii) (ref null $ii))
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (type (;1;) (func (param (ref func) (ref extern) (ref 0))))
+  (type (;2;) (func (param funcref externref (ref null 0))))
+  (func (;0;) (type 0))
+  (func (;1;) (type 1) (param (ref func) (ref extern) (ref 0))
+    (local (ref func) (ref func) (ref extern) (ref extern) (ref 0) (ref 0)))
+  (func (;2;) (type 2) (param funcref externref (ref null 0))
+    (local funcref funcref externref externref (ref null 0) (ref null 0)))
+  (global (;0;) (ref func) (ref.func 0))
+  (global (;1;) (ref 0) (ref.func 0))
+  (global (;2;) funcref (ref.null 0))
+  (global (;3;) (ref null 0) (ref.null 0)))
+;;; STDOUT ;;)

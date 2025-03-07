@@ -187,6 +187,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnCallRefExpr(Type sig_type) override;
   Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnDelegateExpr(Index depth) override;
@@ -504,11 +505,11 @@ Result BinaryReaderInterp::OnFuncType(Index index,
                                       Type* param_types,
                                       Index result_count,
                                       Type* result_types) {
-  CHECK_RESULT(validator_.OnFuncType(GetLocation(), param_count, param_types,
-                                     result_count, result_types, index));
+  Result result = validator_.OnFuncType(GetLocation(), param_count, param_types,
+                                        result_count, result_types, index);
   module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
                                         ToInterp(result_count, result_types)));
-  return Result::Ok;
+  return result;
 }
 
 Result BinaryReaderInterp::OnImportFunc(Index import_index,
@@ -1174,6 +1175,14 @@ Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnCallRefExpr(Type sig_type) {
+  CHECK_RESULT(
+      validator_.OnCallRef(GetLocation(), Var(sig_type, GetLocation())));
+  assert(sig_type == Type::RefNull);
+  istream_.Emit(Opcode::CallRef);
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
   CHECK_RESULT(
       validator_.OnReturnCall(GetLocation(), Var(func_index, GetLocation())));
@@ -1404,7 +1413,7 @@ Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
 }
 
 Result BinaryReaderInterp::OnRefNullExpr(Type type) {
-  CHECK_RESULT(validator_.OnRefNull(GetLocation(), type));
+  CHECK_RESULT(validator_.OnRefNull(GetLocation(), Var(type, GetLocation())));
   istream_.Emit(Opcode::RefNull);
   return Result::Ok;
 }
