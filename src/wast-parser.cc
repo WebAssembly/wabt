@@ -952,23 +952,45 @@ bool WastParser::ParseElemExprVarListOpt(ExprListVector* out_list) {
   return !out_list->empty();
 }
 
+Result WastParser::ParseRefDeclaration(Var* out_type) {
+  EXPECT(Lpar);
+  EXPECT(Ref);
+
+  Type::Enum opt_type = Type::Reference;
+
+  if (options_->features.function_references_enabled()) {
+    opt_type = Type::Ref;
+
+    if (Match(TokenType::Null)) {
+      opt_type = Type::RefNull;
+    }
+  }
+
+  if (PeekMatch(TokenType::Func) || PeekMatch(TokenType::Extern)) {
+    TokenType token = Consume().token_type();
+    out_type->set_opt_type(token == TokenType::Func ? Type::FuncRef
+                                                    : Type::ExternRef);
+    out_type->set_index(opt_type == Type::Ref ? Type::ReferenceNonNull
+                                              : Type::ReferenceOrNull);
+  } else {
+    CHECK_RESULT(ParseVar(out_type));
+    out_type->set_opt_type(opt_type);
+  }
+
+  EXPECT(Rpar);
+  return Result::Ok;
+}
+
 Result WastParser::ParseValueType(Var* out_type) {
   WABT_TRACE(ParseValueType);
 
-  const bool is_ref_type = PeekMatchRefType();
-  const bool is_value_type = PeekMatch(TokenType::ValueType);
-
-  if (!is_value_type && !is_ref_type) {
-    return ErrorExpected(
-        {"i32", "i64", "f32", "f64", "v128", "externref", "exnref", "funcref"});
+  if (PeekMatchRefType()) {
+    return ParseRefDeclaration(out_type);
   }
 
-  if (is_ref_type) {
-    EXPECT(Lpar);
-    EXPECT(Ref);
-    CHECK_RESULT(ParseVar(out_type));
-    EXPECT(Rpar);
-    return Result::Ok;
+  if (!PeekMatch(TokenType::ValueType)) {
+    return ErrorExpected(
+        {"i32", "i64", "f32", "f64", "v128", "externref", "exnref", "funcref"});
   }
 
   Token token = Consume();
@@ -995,7 +1017,8 @@ Result WastParser::ParseValueType(Var* out_type) {
     return Result::Error;
   }
 
-  *out_type = Var(type, GetLocation());
+  *out_type = Var(0, GetLocation());
+  out_type->set_opt_type(type);
   return Result::Ok;
 }
 
@@ -1012,26 +1035,30 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list,
     CHECK_RESULT(ParseValueType(&type));
 
     if (type.is_index()) {
-      // TODO: Incorrect values can be misinterpreted by the parser.
-      if (type.index() >= static_cast<Index>(Type::Void)) {
-        out_type_list->push_back(Type(type.index()));
-      } else {
-        out_type_list->push_back(Type(Type::Reference, type.index()));
-      }
+      out_type_list->push_back(type.to_type());
     } else {
       assert(type.is_name());
       assert(options_->features.function_references_enabled());
       uint32_t index = binding_index_offset + out_type_list->size();
       type_vars->push_back(FuncSignature::ReferenceVar(index, type));
-      out_type_list->push_back(Type(Type::Reference, kInvalidIndex));
+      out_type_list->push_back(Type(type.opt_type(), kInvalidIndex));
     }
   }
 
   return Result::Ok;
 }
 
-Result WastParser::ParseRefKind(Type* out_type) {
+Result WastParser::ParseRefKind(Var* out_type) {
   WABT_TRACE(ParseRefKind);
+
+  if (options_->features.function_references_enabled() &&
+      (PeekMatch(TokenType::Nat) || PeekMatch(TokenType::Var))) {
+    CHECK_RESULT(ParseVar(out_type));
+
+    out_type->set_opt_type(Type::RefNull);
+    return Result::Ok;
+  }
+
   if (!IsTokenTypeRefKind(Peek())) {
     return ErrorExpected({"func", "extern", "exn"});
   }
@@ -1047,12 +1074,17 @@ Result WastParser::ParseRefKind(Type* out_type) {
     return Result::Error;
   }
 
-  *out_type = type;
+  *out_type = Var(0, GetLocation());
+  out_type->set_opt_type(type);
   return Result::Ok;
 }
 
-Result WastParser::ParseRefType(Type* out_type) {
+Result WastParser::ParseRefType(Var* out_type) {
   WABT_TRACE(ParseRefType);
+  if (PeekMatchRefType()) {
+    return ParseRefDeclaration(out_type);
+  }
+
   if (!PeekMatch(TokenType::ValueType)) {
     return ErrorExpected({"funcref", "externref", "exnref"});
   }
@@ -1065,12 +1097,19 @@ Result WastParser::ParseRefType(Type* out_type) {
     return Result::Error;
   }
 
-  *out_type = type;
+  *out_type = Var(0, GetLocation());
+  out_type->set_opt_type(type);
   return Result::Ok;
 }
 
-bool WastParser::ParseRefTypeOpt(Type* out_type) {
+bool WastParser::ParseRefTypeOpt(Var* out_type, Result& result) {
   WABT_TRACE(ParseRefTypeOpt);
+
+  if (PeekMatchRefType()) {
+    result |= ParseRefDeclaration(out_type);
+    return true;
+  }
+
   if (!PeekMatch(TokenType::ValueType)) {
     return false;
   }
@@ -1082,7 +1121,8 @@ bool WastParser::ParseRefTypeOpt(Type* out_type) {
     return false;
   }
 
-  *out_type = type;
+  *out_type = Var(Type::ReferenceOrNull, GetLocation());
+  out_type->set_opt_type(type);
   return true;
 }
 
@@ -1490,10 +1530,12 @@ Result WastParser::ParseElemModuleField(Module* module) {
     CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
   }
 
-  if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
+  Result result;
+  if (ParseRefTypeOpt(&field->elem_segment.elem_type, result)) {
+    CHECK_RESULT(result);
     ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
-    field->elem_segment.elem_type = Type::FuncRef;
+    field->elem_segment.elem_type = Var(Type(Type::FuncRef), GetLocation());
     if (PeekMatch(TokenType::Func)) {
       EXPECT(Func);
     }
@@ -1656,13 +1698,13 @@ Result WastParser::ParseField(Field* field) {
       field->mutable_ = true;
       Var type;
       CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.index());
+      field->type = Type(type.opt_type());
       EXPECT(Rpar);
     } else {
       field->mutable_ = false;
       Var type;
       CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.index());
+      field->type = Type(type.opt_type());
     }
     return Result::Ok;
   };
@@ -1913,8 +1955,8 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto field = std::make_unique<TableModuleField>(loc, name);
     auto& table = field->table;
     CHECK_RESULT(ParseLimitsIndex(&table.elem_limits));
-    if (PeekMatch(TokenType::ValueType)) {
-      Type elem_type;
+    if (PeekMatch(TokenType::ValueType) || PeekMatchRefType()) {
+      Var elem_type;
       CHECK_RESULT(ParseRefType(&elem_type));
 
       EXPECT(Lpar);
@@ -2047,13 +2089,13 @@ Result WastParser::ParseBoundValueTypeList(
       bindings->emplace(name,
                         Binding(loc, binding_index_offset + types->size()));
       if (type.is_index()) {
-        types->push_back(Type(type.index()));
+        types->push_back(type.to_type());
       } else {
         assert(type.is_name());
         assert(options_->features.function_references_enabled());
         uint32_t index = binding_index_offset + types->size();
         type_vars->push_back(FuncSignature::ReferenceVar(index, type));
-        types->push_back(Type(Type::Reference, kInvalidIndex));
+        types->push_back(Type(type.opt_type(), kInvalidIndex));
       }
     } else {
       CHECK_RESULT(ParseValueTypeList(types, type_vars, binding_index_offset));
@@ -2361,7 +2403,10 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::CallRef: {
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new CallRefExpr(loc));
+      auto expr = std::make_unique<CallRefExpr>(loc);
+      CHECK_RESULT(ParseVar(&expr->sig_type));
+      expr->sig_type.set_opt_type(Type::RefNull);
+      *out_expr = std::move(expr);
       break;
     }
 
@@ -2557,7 +2602,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::RefNull: {
       ErrorUnlessOpcodeEnabled(Consume());
-      Type type;
+      Var type;
       CHECK_RESULT(ParseRefKind(&type));
       out_expr->reset(new RefNullExpr(type, loc));
       break;
@@ -3003,11 +3048,11 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         break;
       case TokenType::RefNull: {
         auto token = Consume();
-        Type type;
+        Var type;
         CHECK_RESULT(ParseRefKind(&type));
         ErrorUnlessOpcodeEnabled(token);
         const_.loc = GetLocation();
-        const_.set_null(type);
+        const_.set_null(type.opt_type());
         break;
       }
       case TokenType::RefFunc: {
@@ -3409,14 +3454,12 @@ Result WastParser::ParseGlobalType(Global* global) {
   if (MatchLpar(TokenType::Mut)) {
     global->mutable_ = true;
     Var type;
-    CHECK_RESULT(ParseValueType(&type));
-    global->type = Type(type.index());
+    CHECK_RESULT(ParseValueType(&global->type));
     CHECK_RESULT(ErrorIfLpar({"i32", "i64", "f32", "f64"}));
     EXPECT(Rpar);
   } else {
     Var type;
-    CHECK_RESULT(ParseValueType(&type));
-    global->type = Type(type.index());
+    CHECK_RESULT(ParseValueType(&global->type));
   }
 
   return Result::Ok;

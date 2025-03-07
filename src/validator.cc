@@ -189,13 +189,26 @@ void ScriptValidator::PrintError(const Location* loc, const char* format, ...) {
   errors_->emplace_back(ErrorLevel::Error, *loc, buffer);
 }
 
+static Result CheckType(Type actual, Type expected) {
+  // Script validator (strict) type compare
+  if (expected == Type::Any || actual == Type::Any) {
+    return Result::Ok;
+  }
+
+  if (actual == expected) {
+    return Result::Ok;
+  }
+
+  return Result::Error;
+}
+
 void ScriptValidator::CheckTypeIndex(const Location* loc,
                                      Type actual,
                                      Type expected,
                                      const char* desc,
                                      Index index,
                                      const char* index_kind) {
-  if (Failed(TypeChecker::CheckType(actual, expected))) {
+  if (Failed(CheckType(actual, expected))) {
     PrintError(loc,
                "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
                index_kind, index, desc, actual.GetName().c_str(),
@@ -321,14 +334,8 @@ Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
 }
 
 Result Validator::OnCallRefExpr(CallRefExpr* expr) {
-  Index function_type_index;
-  result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
-  if (Succeeded(result_)) {
-    expr->function_type_index = Var{function_type_index, expr->loc};
-    return Result::Ok;
-  }
-
-  return Result::Error;
+  result_ |= validator_.OnCallRef(expr->loc, expr->sig_type);
+  return Result::Ok;
 }
 
 Result Validator::OnCodeMetadataExpr(CodeMetadataExpr* expr) {
@@ -749,8 +756,8 @@ Result Validator::CheckModule() {
 
         case ExternalKind::Table: {
           auto&& table = cast<TableImport>(f->import.get())->table;
-          result_ |=
-              validator_.OnTable(field.loc, table.elem_type, table.elem_limits);
+          result_ |= validator_.OnTable(field.loc, table.elem_type.to_type(),
+                                        table.elem_limits);
           break;
         }
 
@@ -763,7 +770,7 @@ Result Validator::CheckModule() {
 
         case ExternalKind::Global: {
           auto&& global = cast<GlobalImport>(f->import.get())->global;
-          result_ |= validator_.OnGlobalImport(field.loc, global.type,
+          result_ |= validator_.OnGlobalImport(field.loc, global.type.to_type(),
                                                global.mutable_);
           break;
         }
@@ -789,7 +796,7 @@ Result Validator::CheckModule() {
   // Table section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<TableModuleField>(&field)) {
-      result_ |= validator_.OnTable(field.loc, f->table.elem_type,
+      result_ |= validator_.OnTable(field.loc, f->table.elem_type.to_type(),
                                     f->table.elem_limits);
     }
   }
@@ -805,11 +812,11 @@ Result Validator::CheckModule() {
   // Global section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<GlobalModuleField>(&field)) {
-      result_ |=
-          validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
+      result_ |= validator_.OnGlobal(field.loc, f->global.type.to_type(),
+                                     f->global.mutable_);
 
       // Init expr.
-      result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
+      result_ |= validator_.BeginInitExpr(field.loc, f->global.type.to_type());
       ExprVisitor visitor(this);
       result_ |=
           visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
@@ -846,8 +853,8 @@ Result Validator::CheckModule() {
       result_ |= validator_.OnElemSegment(field.loc, f->elem_segment.table_var,
                                           f->elem_segment.kind);
 
-      result_ |= validator_.OnElemSegmentElemType(field.loc,
-                                                  f->elem_segment.elem_type);
+      Type elem_type = f->elem_segment.elem_type.to_type();
+      result_ |= validator_.OnElemSegmentElemType(field.loc, elem_type);
 
       // Init expr.
       if (f->elem_segment.kind == SegmentKind::Active) {
@@ -866,8 +873,7 @@ Result Validator::CheckModule() {
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        result_ |= validator_.BeginInitExpr(elem_expr.front().loc,
-                                            f->elem_segment.elem_type);
+        result_ |= validator_.BeginInitExpr(elem_expr.front().loc, elem_type);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(const_cast<ExprList&>(elem_expr));
         result_ |= validator_.EndInitExpr();
@@ -987,7 +993,7 @@ Result ScriptValidator::CheckGet(const GetAction* action, Type* out_type) {
     return Result::Error;
   }
 
-  *out_type = global->type;
+  *out_type = global->type.to_type();
   return Result::Ok;
 }
 
