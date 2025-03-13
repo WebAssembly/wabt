@@ -831,7 +831,10 @@ Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
   depth_fixups_.Clear();
   label_stack_.clear();
 
-  func_fixups_.Resolve(istream_, defined_index);
+  // The fixups map is keyed by actual function index (not defined_index)
+  // (function imports don't have code and won't appear in the fixups map,
+  // but they still use function indexes)
+  func_fixups_.Resolve(istream_, index);
 
   CHECK_RESULT(validator_.BeginFunctionBody(GetLocation(), index));
 
