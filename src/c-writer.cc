@@ -2242,6 +2242,7 @@ void CWriter::WriteDataInitializers() {
     Write(CloseBrace(), ";", Newline());
   }
 
+  Write("// squk", Newline());
   Write(Newline(),
         "static const u8* active_data_segment_data_ptrs[] = ", OpenBrace());
   for (const DataSegment* data_segment : module_->data_segments) {
@@ -2251,6 +2252,19 @@ void CWriter::WriteDataInitializers() {
     }
     Write("data_segment_data_",
           GlobalName(ModuleFieldType::DataSegment, data_segment->name), ",",
+          Newline());
+  }
+  Write(CloseBrace(), ";", Newline());
+
+  Write(Newline(),
+        "static const size_t active_data_segment_sizes[] = ", OpenBrace());
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->kind != SegmentKind::Active ||
+        data_segment->data.empty()) {
+      continue;
+    }
+    Write(data_segment->data.size(), ",  // data_segment_data_",
+          GlobalName(ModuleFieldType::DataSegment, data_segment->name),
           Newline());
   }
   Write(CloseBrace(), ";", Newline());
@@ -2268,19 +2282,7 @@ void CWriter::WriteDataInitializers() {
           Newline());
   }
   Write(CloseBrace(), ";", Newline());
-
-  Write(Newline(),
-        "static const size_t active_data_segment_sizes[] = ", OpenBrace());
-  for (const DataSegment* data_segment : module_->data_segments) {
-    if (data_segment->kind != SegmentKind::Active ||
-        data_segment->data.empty()) {
-      continue;
-    }
-    Write(data_segment->data.size(), ",  // data_segment_data_",
-          GlobalName(ModuleFieldType::DataSegment, data_segment->name),
-          Newline());
-  }
-  Write(CloseBrace(), ";", Newline());
+  Write("// squk", Newline());
 
   Write(Newline(), "static void init_memories(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
