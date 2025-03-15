@@ -33,7 +33,7 @@
   )
 
   (func (export "main") (result f32)
-    (call_ref
+    (call_ref $f32-f32
       (f32.const 2.0)
       (call $choice (ref.func $square) (ref.func $double) (i32.const 1))
     )
@@ -158,9 +158,10 @@
 0000068: 10                                        ; call
 0000069: 00                                        ; function index
 000006a: 14                                        ; call_ref
-000006b: 0b                                        ; end
-000005b: 10                                        ; FIXUP func body size
-0000038: 33                                        ; FIXUP section size
+000006b: 00                                        ; signature index
+000006c: 0b                                        ; end
+000005b: 11                                        ; FIXUP func body size
+0000038: 34                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -194,6 +195,6 @@ Code Disassembly:
  000064: d2 02                      | ref.func 2
  000066: 41 01                      | i32.const 1
  000068: 10 00                      | call 0
- 00006a: 14                         | call_ref
- 00006b: 0b                         | end
+ 00006a: 14 00                      | call_ref (ref null 0)
+ 00006c: 0b                         | end
 ;;; STDOUT ;;)
