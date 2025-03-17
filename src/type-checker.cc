@@ -361,6 +361,21 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
   return result;
 }
 
+Result TypeChecker::PopAndCheckReference(Type* actual, const char* desc) {
+  *actual = Type::Any;
+  Result result = PeekType(0, actual);
+
+  // Type::Any is a valid value for dead code, and replacing
+  // it with anything might break the syntax checker.
+  if (*actual != Type::Any && !actual->IsRef()) {
+    result = Result::Error;
+  }
+
+  PrintStackIfFailed(result, desc, Type::RefNull);
+  result |= DropTypes(1);
+  return result;
+}
+
 // Some paramater types depend on the memory being used.
 // For example load/store operands, or memory.fill operands.
 static Type GetMemoryParam(Type param, const Limits* limits) {
@@ -511,6 +526,48 @@ Result TypeChecker::OnBrIf(Index depth) {
   return result;
 }
 
+static Type convertRefNullToRef(Type type) {
+  if (type == Type::ExternRef || type == Type::FuncRef) {
+    return Type(type, Type::ReferenceNonNull);
+  }
+
+  assert(type.IsReferenceWithIndex());
+  return Type(Type::Ref, type.GetReferenceIndex());
+}
+
+Result TypeChecker::OnBrOnNonNull(Index depth) {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "br_on_non_null"));
+  if (actual != Type::Any) {
+    PushType(convertRefNullToRef(actual));
+  }
+
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  Result result = PopAndCheckSignature(label->br_types(), "br_on_non_null");
+  PushTypes(label->br_types());
+
+  if (actual != Type::Any) {
+    result |= DropTypes(1);
+  }
+  return result;
+}
+
+Result TypeChecker::OnBrOnNull(Index depth) {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "br_on_null"));
+
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  Result result = PopAndCheckSignature(label->br_types(), "br_on_null");
+  PushTypes(label->br_types());
+
+  if (actual != Type::Any) {
+    PushType(convertRefNullToRef(actual));
+  }
+  return result;
+}
+
 Result TypeChecker::BeginBrTable() {
   br_table_sig_ = nullptr;
   return PopAndCheck1Type(Type::I32, "br_table");
@@ -585,6 +642,10 @@ Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
 
   CHECK_RESULT(SetUnreachable());
   return result;
+}
+
+Result TypeChecker::OnReturnCallRef(Type type) {
+  return PopAndCheck1Type(type, "return_call_ref");
 }
 
 Result TypeChecker::OnCompare(Opcode opcode) {
@@ -816,6 +877,15 @@ Result TypeChecker::OnTableSize(const Limits& limits) {
 Result TypeChecker::OnTableFill(Type elem_type, const Limits& limits) {
   return PopAndCheck3Types(limits.IndexType(), elem_type, limits.IndexType(),
                            "table.fill");
+}
+
+Result TypeChecker::OnRefAsNonNullExpr() {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "ref.as_non_null"));
+  if (actual != Type::Any) {
+    PushType(convertRefNullToRef(actual));
+  }
+  return Result::Ok;
 }
 
 Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
