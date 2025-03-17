@@ -1,4 +1,14 @@
+#if defined(__GNUC__) && defined(__x86_64__)
+#define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
+#elif defined(__GNUC__) && defined(__aarch64__)
+#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
+#elif WASM_RT_MEMCHECK_GUARD_PAGES
+// best-effort using volatile
 #define SIMD_FORCE_READ(var) (void)*(volatile v128*)&var;
+#else
+#define SIMD_FORCE_READ(var)
+#endif
+// TODO: equivalent constraint for ARM and other architectures
 
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t)                             \
   static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
