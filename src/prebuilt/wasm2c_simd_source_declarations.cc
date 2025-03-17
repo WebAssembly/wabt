@@ -1,4 +1,6 @@
-const char* s_simd_source_declarations = R"w2c_template(#if defined(__GNUC__) && defined(__x86_64__)
+const char* s_simd_source_declarations = R"w2c_template(#if WASM_RT_MEMCHECK_GUARD_PAGES
+)w2c_template"
+R"w2c_template(#if defined(__GNUC__) && defined(__x86_64__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
 )w2c_template"
@@ -6,11 +8,13 @@ R"w2c_template(#elif defined(__GNUC__) && defined(__aarch64__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
 )w2c_template"
-R"w2c_template(#elif WASM_RT_MEMCHECK_GUARD_PAGES
+R"w2c_template(#else
 )w2c_template"
 R"w2c_template(// best-effort using volatile
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) (void)*(volatile v128*)&var;
+)w2c_template"
+R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
