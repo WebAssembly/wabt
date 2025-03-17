@@ -2242,7 +2242,6 @@ void CWriter::WriteDataInitializers() {
     Write(CloseBrace(), ";", Newline());
   }
 
-  Write("// squk", Newline());
   Write(Newline(),
         "static const u8* active_data_segment_data_ptrs[] = ", OpenBrace());
   for (const DataSegment* data_segment : module_->data_segments) {
@@ -2282,7 +2281,6 @@ void CWriter::WriteDataInitializers() {
           Newline());
   }
   Write(CloseBrace(), ";", Newline());
-  Write("// squk", Newline());
 
   Write(Newline(), "static void init_memories(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
