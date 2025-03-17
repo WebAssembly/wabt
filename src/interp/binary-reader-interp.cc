@@ -182,6 +182,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnNonNullExpr(Index depth) override;
+  Result OnBrOnNullExpr(Index depth) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
@@ -193,6 +195,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnDelegateExpr(Index depth) override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnReturnCallRefExpr(Type sig_type) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDropExpr() override;
@@ -220,6 +223,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnMemoryFillExpr(Index memidx) override;
   Result OnMemoryInitExpr(Index segment_index, Index memidx) override;
   Result OnMemorySizeExpr(Index memidx) override;
+  Result OnRefAsNonNullExpr() override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
@@ -321,6 +325,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
               Index drop_count,
               Index keep_count,
               Index catch_drop_count);
+
+  Result EmitBrCond(Opcode opcode, Index depth);
+
   void FixupTopLabel();
   u32 GetFuncOffset(Index func_index);
 
@@ -470,6 +477,25 @@ void BinaryReaderInterp::EmitBr(Index depth,
     depth_fixups_.Append(label_stack_.size() - 1 - depth, istream_.end());
   }
   istream_.Emit(offset);
+}
+
+Result BinaryReaderInterp::EmitBrCond(Opcode opcode, Index depth) {
+  Index drop_count, keep_count, catch_drop_count;
+  CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
+  CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
+  // The opcode is flipped so if <cond> is
+  // true it can drop values from the stack.
+  istream_.Emit(opcode);
+  auto fixup = istream_.EmitFixupU32();
+  // The validator for br_on_null keeps the (non-null) reference on
+  // the stack. This reference needs to be ignored when the branch
+  // is executed. Note: opcode contains the flipped value.
+  if (opcode == Opcode::BrOnNonNull && drop_count > 0) {
+    drop_count--;
+  }
+  EmitBr(depth, drop_count, keep_count, catch_drop_count);
+  istream_.ResolveFixupU32(fixup);
+  return Result::Ok;
 }
 
 void BinaryReaderInterp::FixupTopLabel() {
@@ -1107,16 +1133,22 @@ Result BinaryReaderInterp::OnBrExpr(Index depth) {
 }
 
 Result BinaryReaderInterp::OnBrIfExpr(Index depth) {
-  Index drop_count, keep_count, catch_drop_count;
   CHECK_RESULT(validator_.OnBrIf(GetLocation(), Var(depth, GetLocation())));
-  CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
-  CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
-  // Flip the br_if so if <cond> is true it can drop values from the stack.
-  istream_.Emit(Opcode::InterpBrUnless);
-  auto fixup = istream_.EmitFixupU32();
-  EmitBr(depth, drop_count, keep_count, catch_drop_count);
-  istream_.ResolveFixupU32(fixup);
-  return Result::Ok;
+  // Opcode is flipped.
+  return EmitBrCond(Opcode::InterpBrUnless, depth);
+}
+
+Result BinaryReaderInterp::OnBrOnNonNullExpr(Index depth) {
+  CHECK_RESULT(
+      validator_.OnBrOnNonNull(GetLocation(), Var(depth, GetLocation())));
+  // Opcode is flipped.
+  return EmitBrCond(Opcode::BrOnNull, depth);
+}
+
+Result BinaryReaderInterp::OnBrOnNullExpr(Index depth) {
+  CHECK_RESULT(validator_.OnBrOnNull(GetLocation(), Var(depth, GetLocation())));
+  // Opcode is flipped.
+  return EmitBrCond(Opcode::BrOnNonNull, depth);
 }
 
 Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
@@ -1237,6 +1269,14 @@ Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.EmitCatchDrop(catch_drop_count);
   istream_.Emit(Opcode::ReturnCallIndirect, table_index, sig_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnReturnCallRefExpr(Type sig_type) {
+  CHECK_RESULT(
+      validator_.OnReturnCallRef(GetLocation(), Var(sig_type, GetLocation())));
+  assert(sig_type == Type::RefNull);
+  istream_.Emit(Opcode::ReturnCallRef);
   return Result::Ok;
 }
 
@@ -1402,6 +1442,12 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
   CHECK_RESULT(
       validator_.OnTableFill(GetLocation(), Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableFill, table_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnRefAsNonNullExpr() {
+  CHECK_RESULT(validator_.OnRefAsNonNull(Location()));
+  istream_.Emit(Opcode::RefAsNonNull);
   return Result::Ok;
 }
 
