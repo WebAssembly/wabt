@@ -392,6 +392,8 @@ enum class ExprType {
   Block,
   Br,
   BrIf,
+  BrOnNonNull,
+  BrOnNull,
   BrTable,
   Call,
   CallIndirect,
@@ -416,6 +418,7 @@ enum class ExprType {
   MemoryInit,
   MemorySize,
   Nop,
+  RefAsNonNull,
   RefIsNull,
   RefFunc,
   RefNull,
@@ -423,6 +426,7 @@ enum class ExprType {
   Return,
   ReturnCall,
   ReturnCallIndirect,
+  ReturnCallRef,
   Select,
   SimdLaneOp,
   SimdLoadLane,
@@ -586,6 +590,7 @@ using CompareExpr = OpcodeExpr<ExprType::Compare>;
 using ConvertExpr = OpcodeExpr<ExprType::Convert>;
 using UnaryExpr = OpcodeExpr<ExprType::Unary>;
 using TernaryExpr = OpcodeExpr<ExprType::Ternary>;
+using RefAsNonNullExpr = OpcodeExpr<ExprType::RefAsNonNull>;
 
 class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
  public:
@@ -665,6 +670,8 @@ class MemoryVarExpr : public MemoryExpr<TypeEnum> {
 
 using BrExpr = VarExpr<ExprType::Br>;
 using BrIfExpr = VarExpr<ExprType::BrIf>;
+using BrOnNonNullExpr = VarExpr<ExprType::BrOnNonNull>;
+using BrOnNullExpr = VarExpr<ExprType::BrOnNull>;
 using CallExpr = VarExpr<ExprType::Call>;
 using RefFuncExpr = VarExpr<ExprType::RefFunc>;
 using GlobalGetExpr = VarExpr<ExprType::GlobalGet>;
@@ -752,6 +759,14 @@ class CallRefExpr : public ExprMixin<ExprType::CallRef> {
  public:
   explicit CallRefExpr(const Location& loc = Location())
       : ExprMixin<ExprType::CallRef>(loc) {}
+
+  Var sig_type;
+};
+
+class ReturnCallRefExpr : public ExprMixin<ExprType::ReturnCallRef> {
+ public:
+  explicit ReturnCallRefExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::ReturnCallRef>(loc) {}
 
   Var sig_type;
 };
