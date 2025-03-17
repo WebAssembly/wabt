@@ -848,12 +848,12 @@ static const u8* active_data_segment_data_ptrs[] = {
   data_segment_data_w2c_test_d0,
 };
 
-static const u32 active_data_segment_offsets[] = {
-  8u,  // data_segment_data_w2c_test_d0
-};
-
 static const size_t active_data_segment_sizes[] = {
   14,  // data_segment_data_w2c_test_d0
+};
+
+static const u32 active_data_segment_offsets[] = {
+  8u,  // data_segment_data_w2c_test_d0
 };
 
 static void init_memories(w2c_test* instance) {

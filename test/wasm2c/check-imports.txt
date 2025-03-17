@@ -837,10 +837,10 @@ static u32 wrap_w2c_test_f1(void *instance) {
 static const u8* active_data_segment_data_ptrs[] = {
 };
 
-static const u32 active_data_segment_offsets[] = {
+static const size_t active_data_segment_sizes[] = {
 };
 
-static const size_t active_data_segment_sizes[] = {
+static const u32 active_data_segment_offsets[] = {
 };
 
 static void init_memories(w2c_test* instance) {
