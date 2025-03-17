@@ -840,6 +840,22 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         break;
       }
 
+      case Opcode::BrOnNonNull: {
+        Index depth;
+        CHECK_RESULT(ReadIndex(&depth, "br_on_non_null depth"));
+        CALLBACK(OnBrOnNonNullExpr, depth);
+        CALLBACK(OnOpcodeIndex, depth);
+        break;
+      }
+
+      case Opcode::BrOnNull: {
+        Index depth;
+        CHECK_RESULT(ReadIndex(&depth, "br_on_null depth"));
+        CALLBACK(OnBrOnNullExpr, depth);
+        CALLBACK(OnOpcodeIndex, depth);
+        break;
+      }
+
       case Opcode::BrTable: {
         Index num_targets;
         CHECK_RESULT(ReadCount(&num_targets, "br_table target count"));
@@ -1927,6 +1943,11 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         break;
       }
 
+      case Opcode::RefAsNonNull:
+        CALLBACK(OnRefAsNonNullExpr);
+        CALLBACK(OnOpcodeBare);
+        break;
+
       case Opcode::RefFunc: {
         Index func;
         CHECK_RESULT(ReadIndex(&func, "func index"));
@@ -1969,6 +1990,16 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
 
         Type sig_type(Type::RefNull, type);
         CALLBACK(OnCallRefExpr, sig_type);
+        CALLBACK(OnOpcodeType, sig_type);
+        break;
+      }
+
+      case Opcode::ReturnCallRef: {
+        uint32_t type;
+        CHECK_RESULT(ReadU32Leb128(&type, "return_call_ref type"));
+
+        Type sig_type(Type::RefNull, type);
+        CALLBACK(OnReturnCallRefExpr, sig_type);
         CALLBACK(OnOpcodeType, sig_type);
         break;
       }

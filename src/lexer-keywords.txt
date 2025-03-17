@@ -31,6 +31,8 @@ before, TokenType::Before
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
 br_if, TokenType::BrIf, Opcode::BrIf
+br_on_non_null, TokenType::BrOnNonNull, Opcode::BrOnNonNull
+br_on_null, TokenType::BrOnNull, Opcode::BrOnNull
 br_table, TokenType::BrTable, Opcode::BrTable
 br, TokenType::Br, Opcode::Br
 call_indirect, TokenType::CallIndirect, Opcode::CallIndirect
@@ -563,6 +565,7 @@ pagesize, TokenType::PageSize
 param, TokenType::Param
 ref, TokenType::Ref
 quote, TokenType::Quote
+ref.as_non_null, TokenType::RefAsNonNull, Opcode::RefAsNonNull
 ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
@@ -571,6 +574,7 @@ register, TokenType::Register
 result, TokenType::Result
 rethrow, TokenType::Rethrow, Opcode::Rethrow
 return_call_indirect, TokenType::ReturnCallIndirect, Opcode::ReturnCallIndirect
+return_call_ref, TokenType::ReturnCallRef, Opcode::ReturnCallRef
 return_call, TokenType::ReturnCall, Opcode::ReturnCall
 return, TokenType::Return, Opcode::Return
 select, TokenType::Select, Opcode::Select

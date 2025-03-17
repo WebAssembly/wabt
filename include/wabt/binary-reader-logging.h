@@ -174,6 +174,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnNonNullExpr(Index depth) override;
+  Result OnBrOnNullExpr(Index depth) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
@@ -218,12 +220,14 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTableGrowExpr(Index table) override;
   Result OnTableSizeExpr(Index table) override;
   Result OnTableFillExpr(Index table) override;
+  Result OnRefAsNonNullExpr() override;
   Result OnRefFuncExpr(Index index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnCallExpr(Index func_index) override;
+  Result OnReturnCallRefExpr(Type sig_type) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnReturnExpr() override;
   Result OnSelectExpr(Index result_count, Type* result_types) override;
