@@ -762,6 +762,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrIfExpr>(expr)->var),
                      "break depth");
       break;
+    case ExprType::BrOnNonNull:
+      WriteOpcode(stream_, Opcode::BrOnNonNull);
+      WriteU32Leb128(stream_,
+                     GetLabelVarDepth(&cast<BrOnNonNullExpr>(expr)->var),
+                     "break depth");
+      break;
+    case ExprType::BrOnNull:
+      WriteOpcode(stream_, Opcode::BrOnNull);
+      WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrOnNullExpr>(expr)->var),
+                     "break depth");
+      break;
     case ExprType::BrTable: {
       auto* br_table_expr = cast<BrTableExpr>(expr);
       WriteOpcode(stream_, Opcode::BrTable);
@@ -798,14 +809,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteTableNumberWithReloc(table_index, "table index");
       break;
     }
-    case ExprType::CallRef: {
-      WriteOpcode(stream_, Opcode::CallRef);
-      assert(cast<CallRefExpr>(expr)->sig_type.opt_type() == Type::RefNull);
-      Index sig_index = cast<CallRefExpr>(expr)->sig_type.index();
-      WriteU32Leb128WithReloc(sig_index, "signature index",
-                              RelocType::TypeIndexLEB);
-      break;
-    }
     case ExprType::ReturnCallIndirect: {
       Index sig_index =
           module_->GetFuncTypeIndex(cast<ReturnCallIndirectExpr>(expr)->decl);
@@ -815,6 +818,23 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128WithReloc(sig_index, "signature index",
                               RelocType::TypeIndexLEB);
       WriteTableNumberWithReloc(table_index, "table index");
+      break;
+    }
+    case ExprType::CallRef: {
+      WriteOpcode(stream_, Opcode::CallRef);
+      assert(cast<CallRefExpr>(expr)->sig_type.opt_type() == Type::RefNull);
+      Index sig_index = cast<CallRefExpr>(expr)->sig_type.index();
+      WriteU32Leb128WithReloc(sig_index, "signature index",
+                              RelocType::TypeIndexLEB);
+      break;
+    }
+    case ExprType::ReturnCallRef: {
+      WriteOpcode(stream_, Opcode::ReturnCallRef);
+      assert(cast<ReturnCallRefExpr>(expr)->sig_type.opt_type() ==
+             Type::RefNull);
+      Index sig_index = cast<ReturnCallRefExpr>(expr)->sig_type.index();
+      WriteU32Leb128WithReloc(sig_index, "signature index",
+                              RelocType::TypeIndexLEB);
       break;
     }
     case ExprType::Compare:
@@ -1008,6 +1028,10 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       Index index = module_->GetTableIndex(cast<TableFillExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableFill);
       WriteTableNumberWithReloc(index, "table.fill table index");
+      break;
+    }
+    case ExprType::RefAsNonNull: {
+      WriteOpcode(stream_, Opcode::RefAsNonNull);
       break;
     }
     case ExprType::RefFunc: {

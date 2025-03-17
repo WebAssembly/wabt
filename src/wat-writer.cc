@@ -554,6 +554,8 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
+  Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -588,6 +590,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
+  Result OnRefAsNonNullExpr(RefAsNonNullExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
@@ -595,6 +598,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
+  Result OnReturnCallRefExpr(ReturnCallRefExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
@@ -651,6 +655,19 @@ Result WatWriter::ExprVisitorDelegate::OnBrExpr(BrExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnBrIfExpr(BrIfExpr* expr) {
   writer_->WritePutsSpace(Opcode::BrIf_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnBrOnNonNullExpr(
+    BrOnNonNullExpr* expr) {
+  writer_->WritePutsSpace(Opcode::BrOnNonNull_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnBrOnNullExpr(BrOnNullExpr* expr) {
+  writer_->WritePutsSpace(Opcode::BrOnNull_Opcode.GetName());
   writer_->WriteBrVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
@@ -883,6 +900,12 @@ Result WatWriter::ExprVisitorDelegate::OnTableFillExpr(TableFillExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnRefAsNonNullExpr(
+    RefAsNonNullExpr* expr) {
+  writer_->WritePutsNewline(Opcode::RefAsNonNull_Opcode.GetName());
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
   writer_->WritePutsSpace(Opcode::RefFunc_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
@@ -931,6 +954,13 @@ Result WatWriter::ExprVisitorDelegate::OnReturnCallIndirectExpr(
           : Var{writer_->module.GetFuncTypeIndex(expr->decl), expr->loc};
   writer_->WriteVar(type_var, NextChar::Space);
   writer_->WriteCloseNewline();
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnReturnCallRefExpr(
+    ReturnCallRefExpr* expr) {
+  writer_->WritePutsSpace(Opcode::ReturnCallRef_Opcode.GetName());
+  writer_->WriteVar(expr->sig_type, NextChar::Newline);
   return Result::Ok;
 }
 
