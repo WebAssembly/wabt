@@ -3611,6 +3611,21 @@ void CWriter::Write(const ExprList& exprs) {
         Write(GotoLabel(cast<BrIfExpr>(&expr)->var), "}", Newline());
         break;
 
+      case ExprType::BrOnNonNull:
+        Write("if (", StackVar(0), ".func != NULL) {");
+        Write(GotoLabel(cast<BrOnNonNullExpr>(&expr)->var), "}", Newline());
+        DropTypes(1);
+        break;
+
+      case ExprType::BrOnNull: {
+        Write("if (", StackVar(0), ".func == NULL) {");
+        Type type = StackType(0);
+        DropTypes(1);
+        Write(GotoLabel(cast<BrOnNullExpr>(&expr)->var), "}", Newline());
+        PushType(type);
+        break;
+      }
+
       case ExprType::BrTable: {
         const auto* bt_expr = cast<BrTableExpr>(&expr);
         Write("switch (", StackVar(0), ") ", OpenBrace());
@@ -3944,6 +3959,10 @@ void CWriter::Write(const ExprList& exprs) {
               Newline());
         DropTypes(3);
       } break;
+
+      case ExprType::RefAsNonNull:
+        Write("if (", StackVar(0), ".func == NULL) { TRAP(NULL_REF); }");
+        break;
 
       case ExprType::RefFunc: {
         const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
@@ -4283,6 +4302,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicWait:
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
+      case ExprType::ReturnCallRef:
         UNIMPLEMENTED("...");
         break;
     }
