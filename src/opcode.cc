@@ -360,6 +360,10 @@ bool Opcode::IsEnabled(const Features& features) const {
       return features.reference_types_enabled();
 
     case Opcode::CallRef:
+    case Opcode::ReturnCallRef:
+    case Opcode::BrOnNonNull:
+    case Opcode::BrOnNull:
+    case Opcode::RefAsNonNull:
       return features.function_references_enabled();
 
     // Interpreter opcodes are never "enabled".

@@ -120,6 +120,16 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       return {arity + 1, arity};
     }
 
+    case ExprType::BrOnNonNull: {
+      Index arity = GetLabelArity(cast<BrOnNonNullExpr>(&expr)->var);
+      return {arity + 1, arity};
+    }
+
+    case ExprType::BrOnNull: {
+      Index arity = GetLabelArity(cast<BrOnNullExpr>(&expr)->var);
+      return {arity + 1, arity};
+    }
+
     case ExprType::BrTable:
       return {GetLabelArity(cast<BrTableExpr>(&expr)->default_target) + 1, 1,
               true};
@@ -148,6 +158,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       const auto* rci_expr = cast<ReturnCallIndirectExpr>(&expr);
       return {rci_expr->decl.GetNumParams() + 1, rci_expr->decl.GetNumResults(),
               true};
+    }
+
+    case ExprType::ReturnCallRef: {
+      const Var& var = cast<CallRefExpr>(&expr)->sig_type;
+      return {GetFuncParamCount(var) + 1, GetFuncResultCount(var), true};
     }
 
     case ExprType::Const:
@@ -186,6 +201,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::RefIsNull:
     case ExprType::LoadSplat:
     case ExprType::LoadZero:
+    case ExprType::RefAsNonNull:
       return {1, 1};
 
     case ExprType::Drop:

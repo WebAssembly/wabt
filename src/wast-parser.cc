@@ -157,10 +157,13 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Select:
     case TokenType::Br:
     case TokenType::BrIf:
+    case TokenType::BrOnNonNull:
+    case TokenType::BrOnNull:
     case TokenType::BrTable:
     case TokenType::Return:
     case TokenType::ReturnCall:
     case TokenType::ReturnCallIndirect:
+    case TokenType::ReturnCallRef:
     case TokenType::Call:
     case TokenType::CallIndirect:
     case TokenType::CallRef:
@@ -193,6 +196,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Throw:
     case TokenType::ThrowRef:
     case TokenType::Rethrow:
+    case TokenType::RefAsNonNull:
     case TokenType::RefFunc:
     case TokenType::RefNull:
     case TokenType::RefIsNull:
@@ -2402,6 +2406,16 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParsePlainInstrVar<BrIfExpr>(loc, out_expr));
       break;
 
+    case TokenType::BrOnNonNull:
+      Consume();
+      CHECK_RESULT(ParsePlainInstrVar<BrOnNonNullExpr>(loc, out_expr));
+      break;
+
+    case TokenType::BrOnNull:
+      Consume();
+      CHECK_RESULT(ParsePlainInstrVar<BrOnNullExpr>(loc, out_expr));
+      break;
+
     case TokenType::BrTable: {
       Consume();
       auto expr = std::make_unique<BrTableExpr>(loc);
@@ -2452,6 +2466,15 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ParseVarOpt(&expr->table, Var(0, loc));
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
+      *out_expr = std::move(expr);
+      break;
+    }
+
+    case TokenType::ReturnCallRef: {
+      ErrorUnlessOpcodeEnabled(Consume());
+      auto expr = std::make_unique<ReturnCallRefExpr>(loc);
+      CHECK_RESULT(ParseVar(&expr->sig_type));
+      expr->sig_type.set_opt_type(Type::RefNull);
       *out_expr = std::move(expr);
       break;
     }
@@ -2625,6 +2648,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       out_expr->reset(new TableFillExpr(table_index, loc));
       break;
     }
+
+    case TokenType::RefAsNonNull:
+      ErrorUnlessOpcodeEnabled(Consume());
+      out_expr->reset(new RefAsNonNullExpr(Opcode::RefAsNonNull, loc));
+      break;
 
     case TokenType::RefFunc:
       ErrorUnlessOpcodeEnabled(Consume());
