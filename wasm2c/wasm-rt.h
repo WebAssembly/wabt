@@ -246,7 +246,7 @@ extern "C" {
 #if WASM_RT_ALLOW_SEGUE && !WABT_BIG_ENDIAN &&                         \
     (defined(__x86_64__) || defined(_M_X64)) && __clang__ &&           \
     (__clang_major__ >= 9) && __has_builtin(__builtin_ia32_wrgsbase64) && \
-    !defined(_WIN32) && defined(__linux__)
+    !defined(_WIN32) && !defined(__ANDROID__) && (defined(__linux__) || defined(__FreeBSD__))
 #define WASM_RT_USE_SEGUE 1
 #else
 #define WASM_RT_USE_SEGUE 0
