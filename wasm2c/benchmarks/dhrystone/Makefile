@@ -3,7 +3,7 @@ CC=clang
 CFLAGS=-I$(WABT_ROOT)/wasm2c -I $(WABT_ROOT)/third_party/uvwasi/include/ -O3
 CFLAGS_SEGUE=-DWASM_RT_ALLOW_SEGUE=1 -mfsgsbase
 LDFLAGS=-L$(WABT_ROOT)/build/_deps/libuv-build -L$(WABT_ROOT)/build/third_party/uvwasi
-LDLIBS=-luvwasi_a -luv_a -lm
+LDLIBS=-luvwasi_a -luv_a -lm -lpthread
 
 all: benchmark
 
