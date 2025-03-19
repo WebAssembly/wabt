@@ -29,22 +29,6 @@
 extern void WASM_RT_GROW_FAILED_HANDLER();
 #endif
 
-#define C11_MEMORY_LOCK_VAR_INIT(name)                \
-  if (mtx_init(&(name), mtx_plain) != thrd_success) { \
-    fprintf(stderr, "Lock init failed\n");            \
-    abort();                                          \
-  }
-#define C11_MEMORY_LOCK_AQUIRE(name)          \
-  if (mtx_lock(&(name)) != thrd_success) {    \
-    fprintf(stderr, "Lock acquire failed\n"); \
-    abort();                                  \
-  }
-#define C11_MEMORY_LOCK_RELEASE(name)         \
-  if (mtx_unlock(&(name)) != thrd_success) {  \
-    fprintf(stderr, "Lock release failed\n"); \
-    abort();                                  \
-  }
-
 #define PTHREAD_MEMORY_LOCK_VAR_INIT(name)      \
   if (pthread_mutex_init(&(name), NULL) != 0) { \
     fprintf(stderr, "Lock init failed\n");      \

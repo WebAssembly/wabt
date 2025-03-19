@@ -67,14 +67,10 @@ extern "C" {
 #include <windows.h>
 #define WASM_RT_MUTEX CRITICAL_SECTION
 #define WASM_RT_USE_CRITICALSECTION 1
-#elif defined(__APPLE__) || defined(__STDC_NO_THREADS__)
+#else
 #include <pthread.h>
 #define WASM_RT_MUTEX pthread_mutex_t
 #define WASM_RT_USE_PTHREADS 1
-#else
-#include <threads.h>
-#define WASM_RT_MUTEX mtx_t
-#define WASM_RT_USE_C11THREADS 1
 #endif
 
 #endif
