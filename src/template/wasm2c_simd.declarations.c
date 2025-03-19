@@ -1,7 +1,12 @@
+#if WASM_RT_MEMCHECK_GUARD_PAGES
 #if defined(__GNUC__) && defined(__x86_64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
 #elif defined(__GNUC__) && defined(__aarch64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
+#else
+// best-effort using volatile
+#define SIMD_FORCE_READ(var) (void)*(volatile v128*)&var;
+#endif
 #else
 #define SIMD_FORCE_READ(var)
 #endif
