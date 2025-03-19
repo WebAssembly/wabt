@@ -50,20 +50,21 @@ static void* g_sig_handler_handle = 0;
 #endif
 
 #if WASM_RT_USE_SEGUE
-// Currently Segue is used only for linux
-#include <sys/auxv.h>
-#ifdef __GLIBC__
-#include <gnu/libc-version.h>
-#endif
 bool wasm_rt_fsgsbase_inst_supported = false;
-
-#include <asm/prctl.h>    // For ARCH_SET_GS
-#include <sys/syscall.h>  // For SYS_arch_prctl
-#include <unistd.h>       // For syscall
-
-#ifndef HWCAP2_FSGSBASE
-#define HWCAP2_FSGSBASE (1 << 1)
-#endif
+#  ifdef __linux__
+#    include <sys/auxv.h>
+#    ifdef __GLIBC__
+#      include <gnu/libc-version.h>
+#    endif
+#    include <asm/prctl.h>    // For ARCH_SET_GS
+#    include <sys/syscall.h>  // For SYS_arch_prctl
+#    include <unistd.h>       // For syscall
+#    ifndef HWCAP2_FSGSBASE
+#      define HWCAP2_FSGSBASE (1 << 1)
+#    endif
+#  elif defined(__FreeBSD__)
+#    include <machine/sysarch.h> // For amd64_set_gsbase etc.
+#  endif
 #endif
 
 #if WASM_RT_SEGUE_FREE_SEGMENT
@@ -236,6 +237,16 @@ static void os_disable_and_deallocate_altstack(void) {
 
 #endif
 
+#if WASM_RT_USE_SEGUE && defined(__FreeBSD__)
+static void call_cpuid(uint64_t *rax, uint64_t *rbx, uint64_t *rcx, uint64_t *rdx) {
+  __asm__ volatile (
+    "cpuid"
+    : "=a" (*rax), "=b" (*rbx), "=c" (*rcx), "=d" (*rdx) // output operands
+    : "a" (*rax), "c" (*rcx) // input operands
+  );
+}
+#endif
+
 void wasm_rt_init(void) {
   wasm_rt_init_thread();
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
@@ -246,10 +257,26 @@ void wasm_rt_init(void) {
 #endif
 
 #if WASM_RT_USE_SEGUE
-#if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 18
+#if defined(__linux__) && defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 18
   // Check for support for userspace wrgsbase instructions
   unsigned long val = getauxval(AT_HWCAP2);
   wasm_rt_fsgsbase_inst_supported = val & HWCAP2_FSGSBASE;
+#elif defined(__FreeBSD__)
+  // FreeBSD enables fsgsbase on the newer kernels if the hardware supports it.
+  // We just need to check if the hardware supports it by querying the correct
+  // cpuid leaf.
+  uint64_t rax, rbx, rcx, rdx;
+  rax = 0;
+  call_cpuid(&rax, &rbx, &rcx, &rdx);
+
+  if (rax > 7) {
+    rax = 7;
+    rcx = 0;
+    call_cpuid(&rax, &rbx, &rcx, &rdx);
+    if (rbx & 0x1) {
+      wasm_rt_fsgsbase_inst_supported = true;
+    }
+  }
 #endif
 #endif
 
@@ -292,14 +319,30 @@ void wasm_rt_free_thread(void) {
 
 #if WASM_RT_USE_SEGUE
 void wasm_rt_syscall_set_segue_base(void* base) {
-  if (syscall(SYS_arch_prctl, ARCH_SET_GS, base) != 0) {
+  int error_code = 0;
+#ifdef __linux__
+  error_code = syscall(SYS_arch_prctl, ARCH_SET_GS, base);
+#elif defined(__FreeBSD__)
+  error_code = amd64_set_gsbase(base);
+#else
+#  error "Unknown platform"
+#endif
+  if (error_code != 0) {
     perror("wasm_rt_syscall_set_segue_base error");
     abort();
   }
 }
 void* wasm_rt_syscall_get_segue_base() {
   void* base;
-  if (syscall(SYS_arch_prctl, ARCH_GET_GS, &base) != 0) {
+  int error_code = 0;
+#ifdef __linux__
+  error_code = syscall(SYS_arch_prctl, ARCH_GET_GS, &base);
+#elif defined(__FreeBSD__)
+  error_code = amd64_get_gsbase(&base);
+#else
+#  error "Unknown platform"
+#endif
+  if (error_code != 0) {
     perror("wasm_rt_syscall_get_segue_base error");
     abort();
   }
