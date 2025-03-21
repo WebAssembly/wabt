@@ -745,7 +745,7 @@ struct Decompiler {
     for (auto g : mc.module.globals) {
       auto is_import =
           CheckImportExport(s, ExternalKind::Global, global_index, g->name);
-      s += cat("global ", g->name, ":", GetDecompTypeName(g->type));
+      s += cat("global ", g->name, ":", GetDecompTypeName(g->type.to_type()));
       if (!is_import) {
         s += cat(" = ", InitExp(g->init_expr));
       }
