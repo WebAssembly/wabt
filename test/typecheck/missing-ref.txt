@@ -1,0 +1,22 @@
+;;; TOOL: wat2wasm
+;;; ARGS*: --enable-function-references
+;;; ERROR: 1
+(module
+  (func $f (param (ref null $type))
+           (result (ref null $other_type))
+  )
+)
+(;; STDERR ;;;
+out/test/typecheck/missing-ref.txt:5:29: error: Unknown reference: $type
+  (func $f (param (ref null $type))
+                            ^^^^^
+out/test/typecheck/missing-ref.txt:6:30: error: Unknown reference: $other_type
+           (result (ref null $other_type))
+                             ^^^^^^^^^^^
+out/test/typecheck/missing-ref.txt:5:29: error: Unknown reference: $type
+  (func $f (param (ref null $type))
+                            ^^^^^
+out/test/typecheck/missing-ref.txt:6:30: error: Unknown reference: $other_type
+           (result (ref null $other_type))
+                             ^^^^^^^^^^^
+;;; STDERR ;;)

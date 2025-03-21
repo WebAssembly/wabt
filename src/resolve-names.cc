@@ -40,13 +40,17 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
+  Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCallRefExpr(CallRefExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
+  Result OnReturnCallRefExpr(ReturnCallRefExpr*) override;
   Result OnGlobalGetExpr(GlobalGetExpr*) override;
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
@@ -72,6 +76,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
+  Result OnRefNullExpr(RefNullExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
@@ -275,6 +280,16 @@ Result NameResolver::OnBrIfExpr(BrIfExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnBrOnNonNullExpr(BrOnNonNullExpr* expr) {
+  ResolveLabelVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnBrOnNullExpr(BrOnNullExpr* expr) {
+  ResolveLabelVar(&expr->var);
+  return Result::Ok;
+}
+
 Result NameResolver::OnBrTableExpr(BrTableExpr* expr) {
   for (Var& target : expr->targets)
     ResolveLabelVar(&target);
@@ -295,6 +310,11 @@ Result NameResolver::OnCallIndirectExpr(CallIndirectExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnCallRefExpr(CallRefExpr* expr) {
+  ResolveFuncTypeVar(&expr->sig_type);
+  return Result::Ok;
+}
+
 Result NameResolver::OnReturnCallExpr(ReturnCallExpr* expr) {
   ResolveFuncVar(&expr->var);
   return Result::Ok;
@@ -305,6 +325,11 @@ Result NameResolver::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
     ResolveFuncTypeVar(&expr->decl.type_var);
   }
   ResolveTableVar(&expr->table);
+  return Result::Ok;
+}
+
+Result NameResolver::OnReturnCallRefExpr(ReturnCallRefExpr* expr) {
+  ResolveFuncTypeVar(&expr->sig_type);
   return Result::Ok;
 }
 
@@ -428,6 +453,11 @@ Result NameResolver::OnRefFuncExpr(RefFuncExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnRefNullExpr(RefNullExpr* expr) {
+  ResolveFuncTypeVar(&expr->type);
+  return Result::Ok;
+}
+
 Result NameResolver::OnStoreExpr(StoreExpr* expr) {
   ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
@@ -543,6 +573,7 @@ void NameResolver::VisitExport(Export* export_) {
 }
 
 void NameResolver::VisitGlobal(Global* global) {
+  ResolveFuncTypeVar(&global->type);
   visitor_.VisitExprList(global->init_expr);
 }
 

@@ -383,7 +383,7 @@ void BinaryWriterSpec::WriteActionResultType(const Action& action) {
       export_ = module->GetExport(action.name);
       assert(export_->kind == ExternalKind::Global);
       const Global* global = module->GetGlobal(export_->var);
-      WriteTypeObject(global->type);
+      WriteTypeObject(global->type.to_type());
       break;
     }
   }

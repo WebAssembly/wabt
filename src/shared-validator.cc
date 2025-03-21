@@ -27,7 +27,9 @@ TypeVector SharedValidator::ToTypeVector(Index count, const Type* types) {
 }
 
 SharedValidator::SharedValidator(Errors* errors, const ValidateOptions& options)
-    : options_(options), errors_(errors), typechecker_(options.features) {
+    : options_(options),
+      errors_(errors),
+      typechecker_(options.features, func_types_) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }
@@ -189,7 +191,7 @@ Result SharedValidator::CheckType(const Location& loc,
                                   Type actual,
                                   Type expected,
                                   const char* desc) {
-  if (Failed(TypeChecker::CheckType(actual, expected))) {
+  if (Failed(typechecker_.CheckType(actual, expected))) {
     PrintError(loc, "type mismatch at %s. got %s, expected %s", desc,
                actual.GetName().c_str(), expected.GetName().c_str());
     return Result::Error;
@@ -689,6 +691,18 @@ Result SharedValidator::OnBrIf(const Location& loc, Var depth) {
   return result;
 }
 
+Result SharedValidator::OnBrOnNonNull(const Location& loc, Var depth) {
+  Result result = CheckInstr(Opcode::BrOnNonNull, loc);
+  result |= typechecker_.OnBrOnNonNull(depth.index());
+  return result;
+}
+
+Result SharedValidator::OnBrOnNull(const Location& loc, Var depth) {
+  Result result = CheckInstr(Opcode::BrOnNull, loc);
+  result |= typechecker_.OnBrOnNull(depth.index());
+  return result;
+}
+
 Result SharedValidator::BeginBrTable(const Location& loc) {
   Result result = CheckInstr(Opcode::BrTable, loc);
   result |= typechecker_.BeginBrTable();
@@ -734,20 +748,12 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnCallRef(const Location& loc,
-                                  Index* function_type_index) {
+Result SharedValidator::OnCallRef(const Location& loc, Var function_type_var) {
   Result result = CheckInstr(Opcode::CallRef, loc);
-  Index func_index;
-  result |= typechecker_.OnIndexedFuncRef(&func_index);
-  if (Failed(result)) {
-    return result;
-  }
   FuncType func_type;
-  result |= CheckFuncTypeIndex(Var(func_index, loc), &func_type);
+  result |= typechecker_.OnCallRef(function_type_var.to_type());
+  result |= CheckFuncTypeIndex(function_type_var, &func_type);
   result |= typechecker_.OnCall(func_type.params, func_type.results);
-  if (Succeeded(result)) {
-    *function_type_index = func_index;
-  }
   return result;
 }
 
@@ -998,6 +1004,12 @@ Result SharedValidator::OnNop(const Location& loc) {
   return result;
 }
 
+Result SharedValidator::OnRefAsNonNull(const Location& loc) {
+  Result result = CheckInstr(Opcode::Nop, loc);
+  result |= typechecker_.OnRefAsNonNullExpr();
+  return result;
+}
+
 Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
@@ -1021,8 +1033,25 @@ Result SharedValidator::OnRefIsNull(const Location& loc) {
   return result;
 }
 
-Result SharedValidator::OnRefNull(const Location& loc, Type type) {
+Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
   Result result = CheckInstr(Opcode::RefNull, loc);
+
+  Type type = func_type_var.to_type();
+
+  switch (type) {
+    case Type::RefNull:
+      result |= CheckIndex(func_type_var, num_types_, "function type");
+      break;
+    case Type::FuncRef:
+    case Type::ExnRef:
+    case Type::ExternRef:
+      break;
+    default:
+      result |= PrintError(
+          loc, "Only ref, externref, exnref, funcref are allowed for ref.null");
+      break;
+  }
+
   result |= typechecker_.OnRefNullExpr(type);
   return result;
 }
@@ -1056,6 +1085,16 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
   }
   result |=
       typechecker_.OnReturnCallIndirect(func_type.params, func_type.results);
+  return result;
+}
+
+Result SharedValidator::OnReturnCallRef(const Location& loc,
+                                        Var function_type_var) {
+  Result result = CheckInstr(Opcode::ReturnCallRef, loc);
+  FuncType func_type;
+  result |= typechecker_.OnReturnCallRef(function_type_var.to_type());
+  result |= CheckFuncTypeIndex(function_type_var, &func_type);
+  result |= typechecker_.OnReturnCall(func_type.params, func_type.results);
   return result;
 }
 
