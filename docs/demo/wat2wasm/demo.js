@@ -33,6 +33,7 @@ var outputEl = document.getElementById('output');
 var jsLogEl = document.getElementById('js_log');
 var selectEl = document.getElementById('select');
 var downloadEl = document.getElementById('download');
+var runEl = document.getElementById('run');
 var downloadLink = document.getElementById('downloadLink');
 var buildLogEl = document.getElementById('buildLog');
 var base64El = document.getElementById('base64');
@@ -47,16 +48,6 @@ for (const [f, v] of Object.entries(wabt.FEATURES)) {
     features[feature] = event.target.checked;
     onWatChange();
   });
-}
-
-var wasmInstance = null;
-
-var wrappedConsole = Object.create(console);
-
-wrappedConsole.log = (...args) => {
-  let line = args.map(String).join('') + '\n';
-  jsLogEl.textContent += line;
-  console.log(...args);
 }
 
 var watEditor = CodeMirror((elt) => {
@@ -124,17 +115,33 @@ function compile() {
   }
 }
 
+let activeWorker = null;
 function run() {
+  if (activeWorker != null) stop();
+  runEl.textContent = 'Stop';
   jsLogEl.textContent = '';
   if (binaryBuffer === null) return;
-  try {
-    let wasm = new WebAssembly.Module(binaryBuffer);
-    let js = jsEditor.getValue();
-    let fn = new Function('wasmModule', 'console', js + '//# sourceURL=demo.js');
-    fn(wasm, wrappedConsole);
-  } catch (e) {
-    jsLogEl.textContent += String(e);
+  const js = jsEditor.getValue();
+  activeWorker = new Worker('./worker.js');
+  activeWorker.addEventListener('message', function(event) {
+    switch (event.data.type) {
+      case 'log':
+        jsLogEl.textContent += event.data.data;
+        break;
+      case 'done':
+        stop();
+        break;
+    }
+  });
+  activeWorker.postMessage({ binaryBuffer: binaryBuffer.buffer, js }, []);
+}
+
+function stop() {
+  if (activeWorker != null) {
+    activeWorker.terminate();
+    activeWorker = null;
   }
+  runEl.textContent = 'Run';
 }
 
 var onWatChange = debounce(compile, kCompileMinMS);
@@ -150,6 +157,14 @@ function setExample(index) {
 
 function onSelectChanged(e) {
   setExample(this.selectedIndex);
+}
+
+function onRunClicked(e) {
+  if (activeWorker != null) {
+    stop();
+  } else {
+    onJsChange();
+  }
 }
 
 function onDownloadClicked(e) {
@@ -179,6 +194,7 @@ function onBase64Clicked(e) {
 watEditor.on('change', onWatChange);
 jsEditor.on('change', onJsChange);
 selectEl.addEventListener('change', onSelectChanged);
+runEl.addEventListener('click', onRunClicked);
 downloadEl.addEventListener('click', onDownloadClicked);
 buildLogEl.addEventListener('click', onBuildLogClicked );
 base64El.addEventListener('click', onBase64Clicked );
@@ -191,5 +207,6 @@ for (var i = 0; i < examples.length; ++i) {
 }
 selectEl.selectedIndex = 1;
 setExample(selectEl.selectedIndex);
+runEl.classList.remove('disabled');
 
 });
