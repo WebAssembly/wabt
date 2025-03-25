@@ -75,10 +75,10 @@ out/test/spec/extended-const/elem.wast:536: assert_invalid passed:
   0000023: error: OnCallExpr callback failed
 out/test/spec/extended-const/elem.wast:594: assert_trap passed: uninitialized table element
 out/test/spec/extended-const/elem.wast:627: assert_invalid passed:
-  out/test/spec/extended-const/elem/elem.62.wasm:000001f: error: type mismatch at elem segment. got externref, expected funcref
+  out/test/spec/extended-const/elem/elem.62.wasm:000001f: error: type mismatch at elem segment. got funcref, expected externref
   000001f: error: OnElemSegmentElemType callback failed
 out/test/spec/extended-const/elem.wast:632: assert_invalid passed:
-  out/test/spec/extended-const/elem/elem.63.wasm:0000017: error: type mismatch at elem segment. got funcref, expected externref
+  out/test/spec/extended-const/elem/elem.63.wasm:0000017: error: type mismatch at elem segment. got externref, expected funcref
   0000017: error: OnElemSegmentElemType callback failed
 out/test/spec/extended-const/elem.wast:637: assert_invalid passed:
   out/test/spec/extended-const/elem/elem.64.wasm:0000032: error: type mismatch at table.init. got funcref, expected externref

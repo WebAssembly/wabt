@@ -282,7 +282,7 @@ Result SharedValidator::OnElemSegmentElemType(const Location& loc,
   if (elem.is_active) {
     // Check that the type of the elem segment matches the table in which
     // it is active.
-    result |= CheckType(loc, elem.table_type, elem_type, "elem segment");
+    result |= CheckType(loc, elem_type, elem.table_type, "elem segment");
   }
   elem.element = elem_type;
   return result;
