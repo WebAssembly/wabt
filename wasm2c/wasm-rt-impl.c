@@ -221,7 +221,7 @@ static void os_disable_and_deallocate_altstack(void) {
 
   if ((!g_alt_stack) || (ss.ss_flags & SS_DISABLE) ||
       (ss.ss_sp != g_alt_stack) || (ss.ss_size != SIGSTKSZ)) {
-    DEBUG_PRINTF(
+    printf(
         "wasm-rt warning: alternate stack was modified unexpectedly\n");
     return;
   }
