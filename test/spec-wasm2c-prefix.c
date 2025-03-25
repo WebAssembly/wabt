@@ -448,6 +448,7 @@ static void posix_install_signal_handler(void) {
   ss.ss_sp = malloc(SIGSTKSZ);
   ss.ss_flags = 0;
   ss.ss_size = SIGSTKSZ;
+  printf("##sigaltstack specsetup: %p, NULL\n", &ss);
   if (sigaltstack(&ss, NULL) != 0) {
     perror("sigaltstack specsetup failed");
     abort();
@@ -478,6 +479,7 @@ static void posix_cleanup_signal_handler(void) {
   /* disable and free altstack */
   stack_t ss;
   ss.ss_flags = SS_DISABLE;
+  printf("##sigaltstack specshutdown: %p, NULL\n", &ss);
   if (sigaltstack(&ss, NULL) != 0) {
     perror("sigaltstack specshutdown failed");
     abort();
