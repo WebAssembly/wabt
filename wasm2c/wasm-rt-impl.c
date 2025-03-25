@@ -169,7 +169,7 @@ static bool os_has_altstack_installed() {
   /* check for altstack already in place */
   stack_t ss;
   if (sigaltstack(NULL, &ss) != 0) {
-    perror("sigaltstack failed");
+    perror("sigaltstack check failed");
     abort();
   }
 
@@ -199,7 +199,7 @@ static void os_allocate_and_install_altstack(void) {
   ss.ss_flags = 0;
   ss.ss_size = SIGSTKSZ;
   if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
+    perror("sigaltstack install failed");
     abort();
   }
 }
@@ -212,7 +212,7 @@ static void os_disable_and_deallocate_altstack(void) {
   /* verify altstack was still in place */
   stack_t ss;
   if (sigaltstack(NULL, &ss) != 0) {
-    perror("sigaltstack failed");
+    perror("sigaltstack dealloc check failed");
     abort();
   }
 
@@ -226,7 +226,7 @@ static void os_disable_and_deallocate_altstack(void) {
   /* disable and free */
   ss.ss_flags = SS_DISABLE;
   if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
+    perror("sigaltstack free failed");
     abort();
   }
   assert(!os_has_altstack_installed());

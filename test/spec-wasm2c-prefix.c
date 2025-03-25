@@ -449,7 +449,7 @@ static void posix_install_signal_handler(void) {
   ss.ss_flags = 0;
   ss.ss_size = SIGSTKSZ;
   if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
+    perror("sigaltstack specsetup failed");
     abort();
   }
 
@@ -479,7 +479,7 @@ static void posix_cleanup_signal_handler(void) {
   stack_t ss;
   ss.ss_flags = SS_DISABLE;
   if (sigaltstack(&ss, NULL) != 0) {
-    perror("sigaltstack failed");
+    perror("sigaltstack specshutdown failed");
     abort();
   }
   free(ss.ss_sp);
