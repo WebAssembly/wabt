@@ -43,6 +43,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCallRefExpr(CallRefExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
@@ -72,6 +73,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
+  Result OnRefNullExpr(RefNullExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
@@ -105,6 +107,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
+  void VisitTable(Table* table);
   void VisitTag(Tag* tag);
   void VisitElemSegment(ElemSegment* segment);
   void VisitDataSegment(DataSegment* segment);
@@ -295,6 +298,11 @@ Result NameResolver::OnCallIndirectExpr(CallIndirectExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnCallRefExpr(CallRefExpr* expr) {
+  ResolveFuncTypeVar(&expr->sig_type);
+  return Result::Ok;
+}
+
 Result NameResolver::OnReturnCallExpr(ReturnCallExpr* expr) {
   ResolveFuncVar(&expr->var);
   return Result::Ok;
@@ -428,6 +436,11 @@ Result NameResolver::OnRefFuncExpr(RefFuncExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnRefNullExpr(RefNullExpr* expr) {
+  ResolveFuncTypeVar(&expr->type);
+  return Result::Ok;
+}
+
 Result NameResolver::OnStoreExpr(StoreExpr* expr) {
   ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
@@ -543,7 +556,12 @@ void NameResolver::VisitExport(Export* export_) {
 }
 
 void NameResolver::VisitGlobal(Global* global) {
+  ResolveFuncTypeVar(&global->type);
   visitor_.VisitExprList(global->init_expr);
+}
+
+void NameResolver::VisitTable(Table* table) {
+  ResolveFuncTypeVar(&table->elem_type);
 }
 
 void NameResolver::VisitTag(Tag* tag) {
@@ -554,6 +572,7 @@ void NameResolver::VisitTag(Tag* tag) {
 
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
+  ResolveFuncTypeVar(&segment->elem_type);
   visitor_.VisitExprList(segment->offset);
   for (ExprList& elem_expr : segment->elem_exprs) {
     if (elem_expr.size() == 1 &&
@@ -584,6 +603,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitExport(export_);
   for (Global* global : module->globals)
     VisitGlobal(global);
+  for (Table* table : module->tables)
+    VisitTable(table);
   for (Tag* tag : module->tags)
     VisitTag(tag);
   for (ElemSegment* elem_segment : module->elem_segments)

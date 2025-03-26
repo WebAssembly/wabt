@@ -1515,7 +1515,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
     } break;
 
     case ExprType::RefNull:
-      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type));
+      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type.opt_type()));
       break;
 
     default:
@@ -1815,7 +1815,7 @@ void CWriter::BeginInstance() {
     switch (import->kind()) {
       case ExternalKind::Global: {
         const Global& global = cast<GlobalImport>(import)->global;
-        Write(global.type);
+        Write(global.type.to_type());
         break;
       }
 
@@ -1825,7 +1825,7 @@ void CWriter::BeginInstance() {
       }
 
       case ExternalKind::Table:
-        WriteTableType(cast<TableImport>(import)->table.elem_type);
+        WriteTableType(cast<TableImport>(import)->table.elem_type.to_type());
         break;
 
       default:
@@ -1871,7 +1871,7 @@ void CWriter::BeginInstance() {
         const Table& table = cast<TableImport>(import)->table;
         WriteTable(std::string("*") +
                        ExportName(import->module_name, import->field_name),
-                   table.elem_type);
+                   table.elem_type.to_type());
       } break;
 
       default:
@@ -2026,8 +2026,9 @@ static bool func_uses_simd(const FuncSignature& sig) {
 void CWriter::ComputeSimdScope() {
   simd_used_in_header_ =
       module_->features_used.simd &&
-      (std::any_of(module_->globals.begin(), module_->globals.end(),
-                   [](const auto& x) { return x->type == Type::V128; }) ||
+      (std::any_of(
+           module_->globals.begin(), module_->globals.end(),
+           [](const auto& x) { return x->type.opt_type() == Type::V128; }) ||
        std::any_of(module_->imports.begin(), module_->imports.end(),
                    [](const auto& x) {
                      return x->kind() == ExternalKind::Func &&
@@ -2096,11 +2097,12 @@ void CWriter::WriteGlobals() {
 }
 
 void CWriter::WriteGlobal(const Global& global, const std::string& name) {
-  Write(global.type, " ", name, ";");
+  Write(global.type.to_type(), " ", name, ";");
 }
 
 void CWriter::WriteGlobalPtr(const Global& global, const std::string& name) {
-  Write(global.type, "* ", name, "(", ModuleInstanceTypeName(), "* instance)");
+  Write(global.type.to_type(), "* ", name, "(", ModuleInstanceTypeName(),
+        "* instance)");
 }
 
 void CWriter::WriteMemories() {
@@ -2139,7 +2141,7 @@ void CWriter::WriteTables() {
     bool is_import = table_index < module_->num_table_imports;
     if (!is_import) {
       WriteTable(DefineInstanceMemberName(ModuleFieldType::Table, table->name),
-                 table->elem_type);
+                 table->elem_type.to_type());
       Write(Newline());
     }
     ++table_index;
@@ -2152,7 +2154,7 @@ void CWriter::WriteTable(const std::string& name, const wabt::Type& type) {
 }
 
 void CWriter::WriteTablePtr(const std::string& name, const Table& table) {
-  WriteTableType(table.elem_type);
+  WriteTableType(table.elem_type.to_type());
   Write("* ", name, "(", ModuleInstanceTypeName(), "* instance)");
 }
 
@@ -2319,7 +2321,7 @@ void CWriter::WriteElemInitializerDecls() {
       continue;
     }
 
-    if (AreInitializersAlwaysNull(elem_segment->elem_type)) {
+    if (AreInitializersAlwaysNull(elem_segment->elem_type.to_type())) {
       // no need to store these initializers because only ref.null is possible
       continue;
     }
@@ -2390,7 +2392,7 @@ void CWriter::WriteElemInitializers() {
       continue;
     }
 
-    if (AreInitializersAlwaysNull(elem_segment->elem_type)) {
+    if (AreInitializersAlwaysNull(elem_segment->elem_type.to_type())) {
       // no need to store these initializers because only ref.null is possible
       continue;
     }
@@ -2455,9 +2457,10 @@ void CWriter::WriteElemInitializers() {
       const Table* table = module_->tables[i];
       uint32_t max =
           table->elem_limits.has_max ? table->elem_limits.max : UINT32_MAX;
-      Write("wasm_rt_allocate_", GetReferenceTypeName(table->elem_type),
-            "_table(", ExternalInstancePtr(ModuleFieldType::Table, table->name),
-            ", ", table->elem_limits.initial, ", ", max, ");", Newline());
+      Write("wasm_rt_allocate_",
+            GetReferenceTypeName(table->elem_type.to_type()), "_table(",
+            ExternalInstancePtr(ModuleFieldType::Table, table->name), ", ",
+            table->elem_limits.initial, ", ", max, ");", Newline());
     }
   }
 
@@ -2492,16 +2495,17 @@ void CWriter::WriteElemInitializers() {
 void CWriter::WriteElemTableInit(bool active_initialization,
                                  const ElemSegment* src_segment,
                                  const Table* dst_table) {
-  assert(dst_table->elem_type.IsRef() &&
-         dst_table->elem_type != Type::Reference);
-  assert(dst_table->elem_type == src_segment->elem_type);
+  Type elem_type = dst_table->elem_type.to_type();
 
-  Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
+  assert(elem_type.IsRef() && !elem_type.IsReferenceWithIndex());
+  assert(elem_type.IsSame(src_segment->elem_type.to_type()));
+
+  Write(GetReferenceTypeName(elem_type), "_table_init(",
         ExternalInstancePtr(ModuleFieldType::Table, dst_table->name), ", ");
 
   // elem segment exprs needed only for funcref tables
   // because externref and exnref tables can only be initialized with ref.null
-  if (dst_table->elem_type == Type::FuncRef) {
+  if (elem_type == Type::FuncRef) {
     if (src_segment->elem_exprs.empty()) {
       Write("NULL, ");
     } else {
@@ -2526,7 +2530,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
     Write(StackVar(2), ", ", StackVar(1), ", ", StackVar(0));
   }
 
-  if (dst_table->elem_type == Type::FuncRef) {
+  if (elem_type == Type::FuncRef) {
     Write(", instance");
   }
 
@@ -2920,7 +2924,7 @@ void CWriter::WriteFree() {
     for (const Table* table : module_->tables) {
       bool is_import = table_index < module_->num_table_imports;
       if (!is_import) {
-        Write("wasm_rt_free_", GetReferenceTypeName(table->elem_type),
+        Write("wasm_rt_free_", GetReferenceTypeName(table->elem_type.to_type()),
               "_table(",
               ExternalInstancePtr(ModuleFieldType::Table, table->name), ");",
               Newline());
@@ -3708,7 +3712,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::GlobalGet: {
         const Var& var = cast<GlobalGetExpr>(&expr)->var;
-        PushType(module_->GetGlobal(var)->type);
+        PushType(module_->GetGlobal(var)->type.to_type());
         Write(StackVar(0), " = ", GlobalInstanceVar(var), ";", Newline());
         break;
       }
@@ -3872,12 +3876,14 @@ void CWriter::Write(const ExprList& exprs) {
         Table* dest_table =
             module_->tables[module_->GetTableIndex(inst->dst_table)];
         const Table* src_table = module_->GetTable(inst->src_table);
-        if (dest_table->elem_type != src_table->elem_type) {
+        Type elem_type = dest_table->elem_type.to_type();
+
+        if (!elem_type.IsSame(src_table->elem_type.to_type())) {
           WABT_UNREACHABLE;
         }
 
         Write(
-            GetReferenceTypeName(dest_table->elem_type), "_table_copy(",
+            GetReferenceTypeName(elem_type), "_table_copy(",
             ExternalInstancePtr(ModuleFieldType::Table, dest_table->name), ", ",
             ExternalInstancePtr(ModuleFieldType::Table, src_table->name), ", ",
             StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");", Newline());
@@ -3886,17 +3892,18 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::TableGet: {
         const Table* table = module_->GetTable(cast<TableGetExpr>(&expr)->var);
-        Write(StackVar(0, table->elem_type), " = ",
-              GetReferenceTypeName(table->elem_type), "_table_get(",
+        Type elem_type = table->elem_type.to_type();
+        Write(StackVar(0, elem_type), " = ", GetReferenceTypeName(elem_type),
+              "_table_get(",
               ExternalInstancePtr(ModuleFieldType::Table, table->name), ", ",
               StackVar(0), ");", Newline());
         DropTypes(1);
-        PushType(table->elem_type);
+        PushType(elem_type);
       } break;
 
       case ExprType::TableSet: {
         const Table* table = module_->GetTable(cast<TableSetExpr>(&expr)->var);
-        Write(GetReferenceTypeName(table->elem_type), "_table_set(",
+        Write(GetReferenceTypeName(table->elem_type.to_type()), "_table_set(",
               ExternalInstancePtr(ModuleFieldType::Table, table->name), ", ",
               StackVar(1), ", ", StackVar(0), ");", Newline());
         DropTypes(2);
@@ -3905,7 +3912,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::TableGrow: {
         const Table* table = module_->GetTable(cast<TableGrowExpr>(&expr)->var);
         Write(StackVar(1, table->elem_limits.IndexType()), " = wasm_rt_grow_",
-              GetReferenceTypeName(table->elem_type), "_table(",
+              GetReferenceTypeName(table->elem_type.to_type()), "_table(",
               ExternalInstancePtr(ModuleFieldType::Table, table->name), ", ",
               StackVar(0), ", ", StackVar(1), ");", Newline());
         DropTypes(2);
@@ -3923,7 +3930,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::TableFill: {
         const Table* table = module_->GetTable(cast<TableFillExpr>(&expr)->var);
-        Write(GetReferenceTypeName(table->elem_type), "_table_fill(",
+        Write(GetReferenceTypeName(table->elem_type.to_type()), "_table_fill(",
               ExternalInstancePtr(ModuleFieldType::Table, table->name), ", ",
               StackVar(2), ", ", StackVar(1), ", ", StackVar(0), ");",
               Newline());
@@ -3959,10 +3966,10 @@ void CWriter::Write(const ExprList& exprs) {
       } break;
 
       case ExprType::RefNull:
-        PushType(cast<RefNullExpr>(&expr)->type);
+        PushType(cast<RefNullExpr>(&expr)->type.opt_type());
         Write(StackVar(0), " = ",
-              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type), ";",
-              Newline());
+              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type.opt_type()),
+              ";", Newline());
         break;
 
       case ExprType::RefIsNull:

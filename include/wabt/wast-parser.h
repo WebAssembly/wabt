@@ -134,13 +134,15 @@ class WastParser {
   bool ParseElemExprOpt(ExprList* out_elem_expr);
   bool ParseElemExprListOpt(ExprListVector* out_list);
   bool ParseElemExprVarListOpt(ExprListVector* out_list);
+  Result ParseRefDeclaration(Var* out_type);
   Result ParseValueType(Var* out_type);
   Result ParseValueTypeList(
       TypeVector* out_type_list,
-      std::unordered_map<uint32_t, std::string>* type_names);
-  Result ParseRefKind(Type* out_type);
-  Result ParseRefType(Type* out_type);
-  bool ParseRefTypeOpt(Type* out_type);
+      std::unordered_map<uint32_t, Var>* type_names,
+      Index binding_index_offset);
+  Result ParseRefKind(Var* out_type);
+  Result ParseRefType(Var* out_type);
+  bool ParseRefTypeOpt(Var* out_type, Result& result);
   Result ParseQuotedText(std::string* text, bool check_utf8 = true);
   bool ParseOffsetOpt(Address* offset);
   bool ParseAlignOpt(Address* align);
@@ -176,13 +178,13 @@ class WastParser {
   Result ParseBoundValueTypeList(TokenType,
                                  TypeVector*,
                                  BindingHash*,
-                                 std::unordered_map<uint32_t, std::string>*,
+                                 std::unordered_map<uint32_t, Var>*,
                                  Index binding_index_offset = 0);
   Result ParseUnboundValueTypeList(TokenType,
                                    TypeVector*,
-                                   std::unordered_map<uint32_t, std::string>*);
+                                   std::unordered_map<uint32_t, Var>*);
   Result ParseResultList(TypeVector*,
-                         std::unordered_map<uint32_t, std::string>*);
+                         std::unordered_map<uint32_t, Var>*);
   Result ParseInstrList(ExprList*);
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);

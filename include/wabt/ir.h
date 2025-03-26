@@ -36,24 +36,41 @@ namespace wabt {
 
 struct Module;
 
-enum class VarType {
+enum class VarType : uint16_t {
   Index,
   Name,
 };
 
 struct Var {
+  // Var can represent variables or types.
+
+  // Represent a variable:
+  //   has_opt_type() is false
+  //   Only used by wast-parser
+
+  // Represent a type:
+  //   has_opt_type() is true, is_index() is true
+  //   type can be get by to_type()
+  //   Binary reader only constructs this variant
+
+  // Represent both a variable and a type:
+  //   has_opt_type() is true, is_name() is true
+  //   A reference, which index is unknown
+  //   Only used by wast-parser
+
   explicit Var();
   explicit Var(Index index, const Location& loc);
   explicit Var(std::string_view name, const Location& loc);
+  explicit Var(Type type, const Location& loc);
   Var(Var&&);
   Var(const Var&);
   Var& operator=(const Var&);
   Var& operator=(Var&&);
   ~Var();
 
-  VarType type() const { return type_; }
   bool is_index() const { return type_ == VarType::Index; }
   bool is_name() const { return type_ == VarType::Name; }
+  bool has_opt_type() const { return opt_type_ < 0; }
 
   Index index() const {
     assert(is_index());
@@ -63,10 +80,16 @@ struct Var {
     assert(is_name());
     return name_;
   }
+  Type::Enum opt_type() const {
+    assert(has_opt_type());
+    return static_cast<Type::Enum>(opt_type_);
+  }
 
   void set_index(Index);
   void set_name(std::string&&);
   void set_name(std::string_view);
+  void set_opt_type(Type::Enum);
+  Type to_type() const;
 
   Location loc;
 
@@ -74,6 +97,8 @@ struct Var {
   void Destroy();
 
   VarType type_;
+  // Can be set to Type::Enum types, 0 represent no optional type.
+  int16_t opt_type_;
   union {
     Index index_;
     std::string name_;
@@ -259,8 +284,8 @@ struct FuncSignature {
   // So to use this type we need to translate its name into
   // a proper index from the module type section.
   // This is the mapping from parameter/result index to its name.
-  std::unordered_map<uint32_t, std::string> param_type_names;
-  std::unordered_map<uint32_t, std::string> result_type_names;
+  std::unordered_map<uint32_t, Var> param_type_names;
+  std::unordered_map<uint32_t, Var> result_type_names;
 
   Index GetNumParams() const { return param_types.size(); }
   Index GetNumResults() const { return result_types.size(); }
@@ -544,10 +569,10 @@ using MemoryCopyExpr = MemoryBinaryExpr<ExprType::MemoryCopy>;
 template <ExprType TypeEnum>
 class RefTypeExpr : public ExprMixin<TypeEnum> {
  public:
-  RefTypeExpr(Type type, const Location& loc = Location())
+  RefTypeExpr(Var type, const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc), type(type) {}
 
-  Type type;
+  Var type;
 };
 
 using RefNullExpr = RefTypeExpr<ExprType::RefNull>;
@@ -734,9 +759,7 @@ class CallRefExpr : public ExprMixin<ExprType::CallRef> {
   explicit CallRefExpr(const Location& loc = Location())
       : ExprMixin<ExprType::CallRef>(loc) {}
 
-  // This field is setup only during Validate phase,
-  // so keep that in mind when you use it.
-  Var function_type_index;
+  Var sig_type;
 };
 
 template <ExprType TypeEnum>
@@ -924,6 +947,8 @@ struct Func {
 
   std::string name;
   FuncDeclaration decl;
+  // Contains references with unknown indicies.
+  TypeVector local_type_list;
   LocalTypes local_types;
   BindingHash bindings;
   ExprList exprs;
@@ -941,18 +966,18 @@ struct Global {
   explicit Global(std::string_view name) : name(name) {}
 
   std::string name;
-  Type type = Type::Void;
+  Var type;
   bool mutable_ = false;
   ExprList init_expr;
 };
 
 struct Table {
   explicit Table(std::string_view name)
-      : name(name), elem_type(Type::FuncRef) {}
+      : name(name), elem_type(Type::FuncRef, Location()) {}
 
   std::string name;
   Limits elem_limits;
-  Type elem_type;
+  Var elem_type;
 };
 
 using ExprListVector = std::vector<ExprList>;
@@ -964,7 +989,7 @@ struct ElemSegment {
   SegmentKind kind = SegmentKind::Active;
   std::string name;
   Var table_var;
-  Type elem_type;
+  Var elem_type;
   ExprList offset;
   ExprListVector elem_exprs;
 };

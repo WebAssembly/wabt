@@ -233,15 +233,52 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
     return Result::Ok;
   }
 
-  if (expected == Type::Reference && actual == Type::Reference) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
+  if (actual == expected) {
+    switch (actual) {
+      case Type::ExternRef:
+      case Type::FuncRef:
+        return (expected.IsNullableGenericRef() ||
+                !actual.IsNullableGenericRef())
+                   ? Result::Ok
+                   : Result::Error;
+
+      case Type::Reference:
+      case Type::Ref:
+      case Type::RefNull:
+        break;
+
+      default:
+        return Result::Ok;
+    }
+  }
+
+  if (!actual.IsReferenceWithIndex()) {
+    return Result::Error;
+  }
+
+  if (expected == Type::FuncRef) {
+    return (actual == Type::Ref || expected.IsNullableGenericRef())
                ? Result::Ok
                : Result::Error;
   }
-  if (actual != expected) {
+
+  if (!expected.IsReferenceWithIndex()) {
     return Result::Error;
   }
-  return Result::Ok;
+
+  if (expected == Type::Ref && actual == Type::RefNull) {
+    return Result::Error;
+  }
+
+  FuncType& actual_func_type = func_types_[actual.GetReferenceIndex()];
+  FuncType& expected_func_type = func_types_[expected.GetReferenceIndex()];
+
+  if (actual_func_type.params == expected_func_type.params &&
+      actual_func_type.results == expected_func_type.results) {
+    return Result::Ok;
+  }
+
+  return Result::Error;
 }
 
 Result TypeChecker::CheckTypes(const TypeVector& actual,
@@ -520,17 +557,8 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
-  Type type;
-  Result result = PeekType(0, &type);
-  if (!type.IsReferenceWithIndex()) {
-    type = Type::Reference;
-  }
-  result |= PopAndCheck1Type(type, "call_ref");
-  if (Succeeded(result)) {
-    *out_index = type.GetReferenceIndex();
-  }
-  return result;
+Result TypeChecker::OnCallRef(Type type) {
+  return PopAndCheck1Type(type, "call_ref");
 }
 
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
@@ -791,17 +819,7 @@ Result TypeChecker::OnTableFill(Type elem_type, const Limits& limits) {
 }
 
 Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
-  /*
-   * In a const expression, treat ref.func as producing a generic funcref.
-   * This avoids having to implement funcref subtyping (for now) and matches
-   * the previous behavior where SharedValidator::OnElemSegmentElemExpr_RefFunc
-   * examined only the validity of the function index.
-   */
-  if (features_.function_references_enabled() && !force_generic_funcref) {
-    PushType(Type(Type::Reference, func_type));
-  } else {
-    PushType(Type::FuncRef);
-  }
+  PushType(Type(Type::Ref, func_type));
   return Result::Ok;
 }
 
