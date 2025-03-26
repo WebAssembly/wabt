@@ -1,0 +1,25 @@
+;;; TOOL: wat2wasm
+;;; ARGS*: --enable-function-references
+;;; ERROR: 1
+(module
+  (type $t0 (func (param (ref $first_type))))
+
+  (func $f (param (ref $second_type))
+           (result (ref $third_type))
+    (local (ref $fourth_type))
+  )
+)
+(;; STDERR ;;;
+out/test/typecheck/missing-ref.txt:5:31: error: undefined reference type name $first_type
+  (type $t0 (func (param (ref $first_type))))
+                              ^^^^^^^^^^^
+out/test/typecheck/missing-ref.txt:7:24: error: undefined reference type name $second_type
+  (func $f (param (ref $second_type))
+                       ^^^^^^^^^^^^
+out/test/typecheck/missing-ref.txt:8:25: error: undefined reference type name $third_type
+           (result (ref $third_type))
+                        ^^^^^^^^^^^
+out/test/typecheck/missing-ref.txt:9:17: error: undefined reference type name $fourth_type
+    (local (ref $fourth_type))
+                ^^^^^^^^^^^^
+;;; STDERR ;;)

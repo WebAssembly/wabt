@@ -137,7 +137,8 @@ class WastParser {
   Result ParseValueType(Var* out_type);
   Result ParseValueTypeList(
       TypeVector* out_type_list,
-      std::unordered_map<uint32_t, std::string>* type_names);
+      FuncSignature::ReferenceVars* type_vars,
+      Index binding_index_offset);
   Result ParseRefKind(Type* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
@@ -176,13 +177,13 @@ class WastParser {
   Result ParseBoundValueTypeList(TokenType,
                                  TypeVector*,
                                  BindingHash*,
-                                 std::unordered_map<uint32_t, std::string>*,
+                                 FuncSignature::ReferenceVars*,
                                  Index binding_index_offset = 0);
   Result ParseUnboundValueTypeList(TokenType,
                                    TypeVector*,
-                                   std::unordered_map<uint32_t, std::string>*);
+                                   FuncSignature::ReferenceVars*);
   Result ParseResultList(TypeVector*,
-                         std::unordered_map<uint32_t, std::string>*);
+                         FuncSignature::ReferenceVars*);
   Result ParseInstrList(ExprList*);
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);

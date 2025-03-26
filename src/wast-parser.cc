@@ -319,37 +319,59 @@ bool ResolveFuncTypeWithEmptySignature(const Module& module,
   return false;
 }
 
-void ResolveTypeName(
-    const Module& module,
-    Type& type,
-    Index index,
-    const std::unordered_map<uint32_t, std::string>& bindings) {
-  if (type != Type::Reference || type.GetReferenceIndex() != kInvalidIndex) {
-    return;
+Result ResolveRefTypes(const Module& module,
+                       TypeVector& types,
+                       uint32_t base_index,
+                       FuncSignature::ReferenceVars& ref_vars,
+                       Errors* errors) {
+  Result result = Result::Ok;
+  size_t types_size = types.size();
+
+  for (auto& ref_var : ref_vars) {
+    uint32_t index = ref_var.index;
+
+    // The index of resolved variables is converted to kInvalidIndex.
+    if (index == kInvalidIndex || index < base_index ||
+        (index - base_index) >= types_size) {
+      continue;
+    }
+
+    Type type = types[index - base_index];
+    ref_var.index = kInvalidIndex;
+
+    assert(type.IsReferenceWithIndex());
+
+    if (type.GetReferenceIndex() != kInvalidIndex) {
+      continue;
+    }
+
+    const auto type_index = module.type_bindings.FindIndex(ref_var.var.name());
+
+    if (type_index == kInvalidIndex) {
+      errors->emplace_back(ErrorLevel::Error, ref_var.var.loc,
+                           StringPrintf("undefined reference type name %s",
+                                        ref_var.var.name().c_str()));
+      result = Result::Error;
+      continue;
+    }
+
+    types[index - base_index] = Type(static_cast<Type::Enum>(type), type_index);
   }
 
-  const auto name_iterator = bindings.find(index);
-  assert(name_iterator != bindings.cend());
-  const auto type_index = module.type_bindings.FindIndex(name_iterator->second);
-  assert(type_index != kInvalidIndex);
-  type = Type(Type::Reference, type_index);
+  return Result::Ok;
 }
 
-void ResolveTypeNames(const Module& module, FuncDeclaration* decl) {
-  assert(decl);
-  auto& signature = decl->sig;
+Result ResolveTypeNames(const Module& module,
+                        FuncSignature& signature,
+                        Errors* errors) {
+  Result result = Result::Ok;
 
-  for (uint32_t param_index = 0; param_index < signature.GetNumParams();
-       ++param_index) {
-    ResolveTypeName(module, signature.param_types[param_index], param_index,
-                    signature.param_type_names);
-  }
+  result |= ResolveRefTypes(module, signature.param_types, 0,
+                            signature.param_type_vars, errors);
 
-  for (uint32_t result_index = 0; result_index < signature.GetNumResults();
-       ++result_index) {
-    ResolveTypeName(module, signature.result_types[result_index], result_index,
-                    signature.result_type_names);
-  }
+  result |= ResolveRefTypes(module, signature.result_types, 0,
+                            signature.result_type_vars, errors);
+  return result;
 }
 
 void ResolveImplicitlyDefinedFunctionType(const Location& loc,
@@ -457,7 +479,7 @@ class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
       : module_(module), errors_(errors) {}
 
   void ResolveBlockDeclaration(const Location& loc, BlockDeclaration* decl) {
-    ResolveTypeNames(*module_, decl);
+    ResolveTypeNames(*module_, decl->sig, errors_);
     ResolveFuncTypeWithEmptySignature(*module_, decl);
     if (!IsInlinableFuncSignature(decl->sig)) {
       ResolveImplicitlyDefinedFunctionType(loc, module_, *decl);
@@ -529,6 +551,14 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
       } else {
         continue;
       }
+    } else if (auto* type_field = dyn_cast<TypeModuleField>(&field)) {
+      TypeEntry* entry = type_field->type.get();
+
+      if (entry->kind() == TypeEntryKind::Func) {
+        FuncType* func_type = cast<FuncType>(entry);
+        result |= ResolveTypeNames(*module, func_type->sig, errors);
+      }
+      continue;
     } else {
       continue;
     }
@@ -536,7 +566,7 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
     bool has_func_type_and_empty_signature = false;
 
     if (decl) {
-      ResolveTypeNames(*module, decl);
+      result |= ResolveTypeNames(*module, decl->sig, errors);
       has_func_type_and_empty_signature =
           ResolveFuncTypeWithEmptySignature(*module, decl);
       ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
@@ -545,6 +575,15 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
     }
 
     if (func) {
+      if (!func->local_type_list.empty()) {
+        result |= ResolveRefTypes(*module, func->local_type_list,
+                                  func->GetNumParams(),
+                                  decl->sig.param_type_vars, errors);
+
+        func->local_types.Set(func->local_type_list);
+        func->local_type_list.clear();
+      }
+
       if (has_func_type_and_empty_signature) {
         // The call to ResolveFuncTypeWithEmptySignature may have updated the
         // function signature so there are parameters. Since parameters and
@@ -960,9 +999,9 @@ Result WastParser::ParseValueType(Var* out_type) {
   return Result::Ok;
 }
 
-Result WastParser::ParseValueTypeList(
-    TypeVector* out_type_list,
-    std::unordered_map<uint32_t, std::string>* type_names) {
+Result WastParser::ParseValueTypeList(TypeVector* out_type_list,
+                                      FuncSignature::ReferenceVars* type_vars,
+                                      Index binding_index_offset) {
   WABT_TRACE(ParseValueTypeList);
   while (true) {
     if (!PeekMatchRefType() && !PeekMatch(TokenType::ValueType)) {
@@ -973,11 +1012,17 @@ Result WastParser::ParseValueTypeList(
     CHECK_RESULT(ParseValueType(&type));
 
     if (type.is_index()) {
-      out_type_list->push_back(Type(type.index()));
+      // TODO: Incorrect values can be misinterpreted by the parser.
+      if (type.index() >= static_cast<Index>(Type::Void)) {
+        out_type_list->push_back(Type(type.index()));
+      } else {
+        out_type_list->push_back(Type(Type::Reference, type.index()));
+      }
     } else {
       assert(type.is_name());
       assert(options_->features.function_references_enabled());
-      type_names->emplace(out_type_list->size(), type.name());
+      uint32_t index = binding_index_offset + out_type_list->size();
+      type_vars->push_back(FuncSignature::ReferenceVar(index, type));
       out_type_list->push_back(Type(Type::Reference, kInvalidIndex));
     }
   }
@@ -1539,11 +1584,18 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     func.loc = GetLocation();
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
-    TypeVector local_types;
+
+    size_t names_size = func.decl.sig.param_type_vars.size();
     CHECK_RESULT(ParseBoundValueTypeList(
-        TokenType::Local, &local_types, &func.bindings,
-        &func.decl.sig.param_type_names, func.GetNumParams()));
-    func.local_types.Set(local_types);
+        TokenType::Local, &func.local_type_list, &func.bindings,
+        &func.decl.sig.param_type_vars, func.GetNumParams()));
+
+    if (names_size == func.decl.sig.param_type_vars.size()) {
+      // No named references in the list, local types can be processed now.
+      func.local_types.Set(func.local_type_list);
+      func.local_type_list.clear();
+    }
+
     CHECK_RESULT(ParseTerminatingInstrList(&func.exprs));
     module->AppendField(std::move(field));
   }
@@ -1965,16 +2017,16 @@ Result WastParser::ParseFuncSignature(FuncSignature* sig,
                                       BindingHash* param_bindings) {
   WABT_TRACE(ParseFuncSignature);
   CHECK_RESULT(ParseBoundValueTypeList(TokenType::Param, &sig->param_types,
-                                       param_bindings, &sig->param_type_names));
-  CHECK_RESULT(ParseResultList(&sig->result_types, &sig->result_type_names));
+                                       param_bindings, &sig->param_type_vars));
+  CHECK_RESULT(ParseResultList(&sig->result_types, &sig->result_type_vars));
   return Result::Ok;
 }
 
 Result WastParser::ParseUnboundFuncSignature(FuncSignature* sig) {
   WABT_TRACE(ParseUnboundFuncSignature);
   CHECK_RESULT(ParseUnboundValueTypeList(TokenType::Param, &sig->param_types,
-                                         &sig->param_type_names));
-  CHECK_RESULT(ParseResultList(&sig->result_types, &sig->result_type_names));
+                                         &sig->param_type_vars));
+  CHECK_RESULT(ParseResultList(&sig->result_types, &sig->result_type_vars));
   return Result::Ok;
 }
 
@@ -1982,7 +2034,7 @@ Result WastParser::ParseBoundValueTypeList(
     TokenType token,
     TypeVector* types,
     BindingHash* bindings,
-    std::unordered_map<uint32_t, std::string>* type_names,
+    FuncSignature::ReferenceVars* type_vars,
     Index binding_index_offset) {
   WABT_TRACE(ParseBoundValueTypeList);
   while (MatchLpar(token)) {
@@ -1999,11 +2051,12 @@ Result WastParser::ParseBoundValueTypeList(
       } else {
         assert(type.is_name());
         assert(options_->features.function_references_enabled());
-        type_names->emplace(binding_index_offset + types->size(), type.name());
+        uint32_t index = binding_index_offset + types->size();
+        type_vars->push_back(FuncSignature::ReferenceVar(index, type));
         types->push_back(Type(Type::Reference, kInvalidIndex));
       }
     } else {
-      CHECK_RESULT(ParseValueTypeList(types, type_names));
+      CHECK_RESULT(ParseValueTypeList(types, type_vars, binding_index_offset));
     }
     EXPECT(Rpar);
   }
@@ -2013,20 +2066,19 @@ Result WastParser::ParseBoundValueTypeList(
 Result WastParser::ParseUnboundValueTypeList(
     TokenType token,
     TypeVector* types,
-    std::unordered_map<uint32_t, std::string>* type_names) {
+    FuncSignature::ReferenceVars* type_vars) {
   WABT_TRACE(ParseUnboundValueTypeList);
   while (MatchLpar(token)) {
-    CHECK_RESULT(ParseValueTypeList(types, type_names));
+    CHECK_RESULT(ParseValueTypeList(types, type_vars, 0));
     EXPECT(Rpar);
   }
   return Result::Ok;
 }
 
-Result WastParser::ParseResultList(
-    TypeVector* result_types,
-    std::unordered_map<uint32_t, std::string>* type_names) {
+Result WastParser::ParseResultList(TypeVector* result_types,
+                                   FuncSignature::ReferenceVars* type_vars) {
   WABT_TRACE(ParseResultList);
-  return ParseUnboundValueTypeList(TokenType::Result, result_types, type_names);
+  return ParseUnboundValueTypeList(TokenType::Result, result_types, type_vars);
 }
 
 Result WastParser::ParseInstrList(ExprList* exprs) {
