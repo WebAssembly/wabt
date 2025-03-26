@@ -1515,7 +1515,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
     } break;
 
     case ExprType::RefNull:
-      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type));
+      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type.opt_type()));
       break;
 
     default:
@@ -1815,7 +1815,7 @@ void CWriter::BeginInstance() {
     switch (import->kind()) {
       case ExternalKind::Global: {
         const Global& global = cast<GlobalImport>(import)->global;
-        Write(global.type);
+        Write(global.type.to_type());
         break;
       }
 
@@ -2026,8 +2026,9 @@ static bool func_uses_simd(const FuncSignature& sig) {
 void CWriter::ComputeSimdScope() {
   simd_used_in_header_ =
       module_->features_used.simd &&
-      (std::any_of(module_->globals.begin(), module_->globals.end(),
-                   [](const auto& x) { return x->type == Type::V128; }) ||
+      (std::any_of(
+           module_->globals.begin(), module_->globals.end(),
+           [](const auto& x) { return x->type.opt_type() == Type::V128; }) ||
        std::any_of(module_->imports.begin(), module_->imports.end(),
                    [](const auto& x) {
                      return x->kind() == ExternalKind::Func &&
@@ -2096,11 +2097,12 @@ void CWriter::WriteGlobals() {
 }
 
 void CWriter::WriteGlobal(const Global& global, const std::string& name) {
-  Write(global.type, " ", name, ";");
+  Write(global.type.to_type(), " ", name, ";");
 }
 
 void CWriter::WriteGlobalPtr(const Global& global, const std::string& name) {
-  Write(global.type, "* ", name, "(", ModuleInstanceTypeName(), "* instance)");
+  Write(global.type.to_type(), "* ", name, "(", ModuleInstanceTypeName(),
+        "* instance)");
 }
 
 void CWriter::WriteMemories() {
@@ -3596,6 +3598,21 @@ void CWriter::Write(const ExprList& exprs) {
         Write(GotoLabel(cast<BrIfExpr>(&expr)->var), "}", Newline());
         break;
 
+      case ExprType::BrOnNonNull:
+        Write("if (", StackVar(0), ".func != NULL) {");
+        Write(GotoLabel(cast<BrOnNonNullExpr>(&expr)->var), "}", Newline());
+        DropTypes(1);
+        break;
+
+      case ExprType::BrOnNull: {
+        Write("if (", StackVar(0), ".func == NULL) {");
+        Type type = StackType(0);
+        DropTypes(1);
+        Write(GotoLabel(cast<BrOnNullExpr>(&expr)->var), "}", Newline());
+        PushType(type);
+        break;
+      }
+
       case ExprType::BrTable: {
         const auto* bt_expr = cast<BrTableExpr>(&expr);
         Write("switch (", StackVar(0), ") ", OpenBrace());
@@ -3708,7 +3725,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::GlobalGet: {
         const Var& var = cast<GlobalGetExpr>(&expr)->var;
-        PushType(module_->GetGlobal(var)->type);
+        PushType(module_->GetGlobal(var)->type.to_type());
         Write(StackVar(0), " = ", GlobalInstanceVar(var), ";", Newline());
         break;
       }
@@ -3930,6 +3947,10 @@ void CWriter::Write(const ExprList& exprs) {
         DropTypes(3);
       } break;
 
+      case ExprType::RefAsNonNull:
+        Write("if (", StackVar(0), ".func == NULL) { TRAP(NULL_REF); }");
+        break;
+
       case ExprType::RefFunc: {
         const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
         PushType(Type::FuncRef);
@@ -3959,10 +3980,10 @@ void CWriter::Write(const ExprList& exprs) {
       } break;
 
       case ExprType::RefNull:
-        PushType(cast<RefNullExpr>(&expr)->type);
+        PushType(cast<RefNullExpr>(&expr)->type.opt_type());
         Write(StackVar(0), " = ",
-              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type), ";",
-              Newline());
+              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type.opt_type()),
+              ";", Newline());
         break;
 
       case ExprType::RefIsNull:
@@ -4268,6 +4289,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicWait:
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
+      case ExprType::ReturnCallRef:
         UNIMPLEMENTED("...");
         break;
     }

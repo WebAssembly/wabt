@@ -20,6 +20,7 @@
 #include <functional>
 #include <type_traits>
 #include <vector>
+#include <map>
 
 #include "wabt/common.h"
 #include "wabt/feature.h"
@@ -30,6 +31,18 @@ namespace wabt {
 class TypeChecker {
  public:
   using ErrorCallback = std::function<void(const char* msg)>;
+
+  struct FuncType {
+    FuncType() = default;
+    FuncType(const TypeVector& params,
+             const TypeVector& results,
+             Index type_index)
+        : params(params), results(results), type_index(type_index) {}
+
+    TypeVector params;
+    TypeVector results;
+    Index type_index;
+  };
 
   struct Label {
     Label(LabelType,
@@ -48,7 +61,8 @@ class TypeChecker {
     bool unreachable;
   };
 
-  explicit TypeChecker(const Features& features) : features_(features) {}
+  explicit TypeChecker(const Features& features, std::map<Index, FuncType>& func_types)
+    : features_(features), func_types_(func_types) {}
 
   void set_error_callback(const ErrorCallback& error_callback) {
     error_callback_ = error_callback;
@@ -73,6 +87,8 @@ class TypeChecker {
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
+  Result OnBrOnNonNull(Index depth);
+  Result OnBrOnNull(Index depth);
   Result BeginBrTable();
   Result OnBrTableTarget(Index depth);
   Result EndBrTable();
@@ -80,11 +96,12 @@ class TypeChecker {
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types,
                         const Limits& table_limits);
-  Result OnIndexedFuncRef(Index* out_index);
+  Result OnCallRef(Type);
   Result OnReturnCall(const TypeVector& param_types,
                       const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types,
                               const TypeVector& result_types);
+  Result OnReturnCallRef(Type);
   Result OnCatch(const TypeVector& sig);
   Result OnCompare(Opcode);
   Result OnConst(Type);
@@ -115,6 +132,7 @@ class TypeChecker {
   Result OnTableGrow(Type elem_type, const Limits& limits);
   Result OnTableSize(const Limits& limits);
   Result OnTableFill(Type elem_type, const Limits& limits);
+  Result OnRefAsNonNullExpr();
   Result OnRefFuncExpr(Index func_type, bool force_generic_funcref);
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
@@ -141,7 +159,7 @@ class TypeChecker {
   Result BeginInitExpr(Type type);
   Result EndInitExpr();
 
-  static Result CheckType(Type actual, Type expected);
+  Result CheckType(Type actual, Type expected);
 
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* fmt, ...);
@@ -178,6 +196,7 @@ class TypeChecker {
                            Type expected2,
                            Type expected3,
                            const char* desc);
+  Result PopAndCheckReference(Type* actual, const char* desc);
   Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode3(Opcode opcode,
@@ -210,6 +229,7 @@ class TypeChecker {
   // to represent "any".
   TypeVector* br_table_sig_ = nullptr;
   Features features_;
+  std::map<Index, FuncType>& func_types_;
 };
 
 }  // namespace wabt
