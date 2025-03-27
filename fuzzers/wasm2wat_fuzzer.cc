@@ -24,4 +24,3 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   wabt::ReadBinaryIr("dummy filename", data, size, options, &errors, &module);
   return 0;
 }
-
