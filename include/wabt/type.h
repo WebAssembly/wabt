@@ -65,7 +65,21 @@ class Type {
   Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
     assert(e == Enum::Reference);
   }
-  constexpr operator Enum() const { return enum_; }
+  constexpr Enum code() const { return enum_; }
+
+  // TODO: These comparisons could be removed in = default in C++20.
+  bool operator==(const Type& other) const {
+    return enum_ == other.enum_ && type_index_ == other.type_index_;
+  }
+
+  bool operator!=(const Type& other) const {
+    return !(*this == other);
+  }
+
+  bool operator<(const Type& other) const {
+    return (enum_ != other.enum_) ? enum_ < other.enum_
+                                  : type_index_ < other.type_index_;
+  }
 
   bool IsRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||

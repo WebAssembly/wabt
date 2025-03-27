@@ -418,7 +418,7 @@ struct Decompiler {
     switch (n.etype) {
       case ExprType::Const: {
         auto& c = cast<ConstExpr>(n.e)->const_;
-        switch (c.type()) {
+        switch (c.type().code()) {
           case Type::I32:
             return Value{{std::to_string(static_cast<int32_t>(c.u32()))},
                          Precedence::Atomic};

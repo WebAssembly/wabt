@@ -179,7 +179,7 @@ struct ExpectedValue {
 };
 
 int LaneCountFromType(Type type) {
-  switch (type) {
+  switch (type.code()) {
     case Type::I8: return 16;
     case Type::I16: return 8;
     case Type::I32: return 4;
@@ -199,7 +199,7 @@ ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
 
   v128 vec = ev.value.value.Get<v128>();
 
-  switch (ev.lane_type) {
+  switch (ev.lane_type.code()) {
     case Type::I8:
       result.nan[0] = ExpectedNan::None;
       result.value.value.Set<u32>(vec.u8(lane));
@@ -245,7 +245,7 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
 
   v128 vec = tv.value.Get<v128>();
 
-  switch (lane_type) {
+  switch (lane_type.code()) {
     case Type::I8:
       result.value.Set<u32>(vec.u8(lane));
       break;
@@ -744,7 +744,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
                                              AllowExpected allow_expected) {
   v128 v = out_value->value.value.Get<v128>();
 
-  switch (lane_type) {
+  switch (lane_type.code()) {
     case Type::I8: {
       uint32_t value;
       CHECK_RESULT(ParseI32Value(&value, value_str));
@@ -809,7 +809,7 @@ wabt::Result JSONParser::ParseConstValue(Type type,
                                          AllowExpected allow_expected) {
   *out_nan = ExpectedNan::None;
 
-  switch (type) {
+  switch (type.code()) {
     case Type::I32: {
       uint32_t value;
       CHECK_RESULT(ParseI32Value(&value, value_str));
@@ -1809,7 +1809,7 @@ static bool WABT_VECTORCALL IsArithmeticNan(f64 val) {
 
 static std::string ExpectedValueToString(const ExpectedValue& ev) {
   // Extend TypedValueToString to print expected nan values too.
-  switch (ev.value.type) {
+  switch (ev.value.type.code()) {
     case Type::F32:
     case Type::F64:
       switch (ev.nan[0]) {
@@ -1850,7 +1850,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
   assert(expected.value.type == actual.type ||
          IsReference(expected.value.type));
   bool ok = true;
-  switch (expected.value.type) {
+  switch (expected.value.type.code()) {
     case Type::I8:
     case Type::I16:
     case Type::I32:

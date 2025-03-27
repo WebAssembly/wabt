@@ -26,7 +26,7 @@ namespace wabt {
 
 // Names starting with "u" are unsigned, the rest are "signed or doesn't matter"
 inline const char* GetDecompTypeName(Type t) {
-  switch (t) {
+  switch (t.code()) {
     case Type::I8: return "byte";
     case Type::I8U: return "ubyte";
     case Type::I16: return "short";

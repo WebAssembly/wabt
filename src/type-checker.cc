@@ -229,15 +229,10 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
-  if (expected == Type::Any || actual == Type::Any) {
+  if (expected.code() == Type::Any || actual.code() == Type::Any) {
     return Result::Ok;
   }
 
-  if (expected == Type::Reference && actual == Type::Reference) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
   if (actual != expected) {
     return Result::Error;
   }
