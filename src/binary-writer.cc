@@ -57,7 +57,7 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type, const char* desc) {
-  WriteS32Leb128(stream, type, desc ? desc : type.GetName().c_str());
+  WriteS32Leb128(stream, type.code(), desc ? desc : type.GetName().c_str());
   if (type.IsReferenceWithIndex()) {
     WriteS32Leb128(stream, type.GetReferenceIndex(),
                    desc ? desc : type.GetName().c_str());
@@ -815,7 +815,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Const: {
       const Const& const_ = cast<ConstExpr>(expr)->const_;
-      switch (const_.type()) {
+      switch (const_.type().code()) {
         case Type::I32: {
           WriteOpcode(stream_, Opcode::I32Const);
           WriteS32Leb128(stream_, const_.u32(), "i32 literal");

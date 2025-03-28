@@ -348,7 +348,7 @@ static ValueType ToWabtValueType(wasm_valkind_t kind) {
 }
 
 static wasm_valkind_t FromWabtValueType(ValueType type) {
-  switch (type) {
+  switch (type.code()) {
     case ValueType::I32:
       return WASM_I32;
     case ValueType::I64:
@@ -439,7 +439,7 @@ static TypedValue ToWabtValue(const wasm_val_t& value) {
 static wasm_val_t FromWabtValue(Store& store, const TypedValue& tv) {
   TRACE("%s", TypedValueToString(tv).c_str());
   wasm_val_t out_value;
-  switch (tv.type) {
+  switch (tv.type.code()) {
     case Type::I32:
       out_value.kind = WASM_I32;
       out_value.of.i32 = tv.value.Get<s32>();
@@ -469,7 +469,7 @@ static wasm_val_t FromWabtValue(Store& store, const TypedValue& tv) {
       break;
     }
     default:
-      TRACE("unexpected wabt type: %d", static_cast<int>(tv.type));
+      TRACE("unexpected wabt type: %d", tv.type.code());
       assert(false);
   }
   return out_value;

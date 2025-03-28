@@ -935,7 +935,7 @@ Result WastParser::ParseValueType(Var* out_type) {
   Token token = Consume();
   Type type = token.type();
   bool is_enabled;
-  switch (type) {
+  switch (type.code()) {
     case Type::V128:
       is_enabled = options_->features.simd_enabled();
       break;
@@ -956,7 +956,7 @@ Result WastParser::ParseValueType(Var* out_type) {
     return Result::Error;
   }
 
-  *out_type = Var(type, GetLocation());
+  *out_type = Var(type.code(), GetLocation());
   return Result::Ok;
 }
 

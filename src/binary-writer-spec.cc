@@ -211,7 +211,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
 
   /* Always write the values as strings, even though they may be representable
    * as JSON numbers. This way the formatting is consistent. */
-  switch (const_.type()) {
+  switch (const_.type().code()) {
     case Type::I32:
       WriteString("i32");
       WriteSeparator();
@@ -274,7 +274,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       json_stream_->Writef("[");
 
       for (int lane = 0; lane < const_.lane_count(); ++lane) {
-        switch (const_.lane_type()) {
+        switch (const_.lane_type().code()) {
           case Type::I8:
             json_stream_->Writef("\"%u\"", const_.v128_lane<uint8_t>(lane));
             break;

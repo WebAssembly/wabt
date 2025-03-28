@@ -555,7 +555,7 @@ Result BinaryReader::ReadField(TypeMut* out_value) {
 }
 
 bool BinaryReader::IsConcreteType(Type type) {
-  switch (type) {
+  switch (type.code()) {
     case Type::I32:
     case Type::I64:
     case Type::F32:
@@ -687,7 +687,7 @@ Result BinaryReader::ReadGlobalHeader(Type* out_type, bool* out_mutable) {
   uint8_t mutable_ = 0;
   CHECK_RESULT(ReadType(&global_type, "global type"));
   ERROR_UNLESS(IsConcreteType(global_type), "invalid global type: %#x",
-               static_cast<int>(global_type));
+               global_type.code());
 
   CHECK_RESULT(ReadU8(&mutable_, "global mutability"));
   ERROR_UNLESS(mutable_ <= 1, "global mutability must be 0 or 1");
@@ -2540,7 +2540,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
       form = Type::Func;
     }
 
-    switch (form) {
+    switch (form.code()) {
       case Type::Func: {
         Index num_params;
         CHECK_RESULT(ReadCount(&num_params, "function param count"));

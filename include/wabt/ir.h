@@ -109,7 +109,7 @@ struct Const {
   }
 
   int lane_count() const {
-    switch (lane_type()) {
+    switch (lane_type().code()) {
       case Type::I8:  return 16;
       case Type::I16: return 8;
       case Type::I32: return 4;
