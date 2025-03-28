@@ -79,6 +79,11 @@ class Type {
     return IsRef();
   }
 
+  // TODO: remove Enum() auto-casting, then change it to operator ==
+  bool IsEqual(const Type& other) const {
+    return enum_ == other.enum_ && type_index_ == other.type_index_;
+  }
+
   std::string GetName() const {
     switch (enum_) {
       case Type::I32:       return "i32";

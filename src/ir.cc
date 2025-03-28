@@ -181,7 +181,7 @@ void LocalTypes::Set(const TypeVector& types) {
   Type type = types[0];
   Index count = 1;
   for (Index i = 1; i < types.size(); ++i) {
-    if (types[i] != type) {
+    if (!types[i].IsEqual(type)) {
       decls_.emplace_back(type, count);
       type = types[i];
       count = 1;
