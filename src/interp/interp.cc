@@ -235,7 +235,7 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   }
 
   Object* obj = objects_.Get(ref.index);
-  switch (type) {
+  switch (type.code()) {
     case ValueType::FuncRef:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
@@ -1983,7 +1983,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     }
     case O::ThrowRef: {
       Ref ref = Pop<Ref>();
-      assert(store_.HasValueType(ref, ValueType::ExnRef));
+      assert(store_.HasValueType(ref, Type(ValueType::ExnRef)));
       // FIXME better error message?
       TRAP_IF(ref == Ref::Null, "expected exnref, got null");
       Exception::Ptr exn = store_.UnsafeGet<Exception>(ref);
@@ -2775,7 +2775,7 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
     }
   }
 
-  switch (type) {
+  switch (type.code()) {
     case ValueType::I32: return StringPrintf("%u", val.Get<u32>());
     case ValueType::I64: return StringPrintf("%" PRIu64, val.Get<u64>());
     case ValueType::F32: return StringPrintf("%g", val.Get<f32>());

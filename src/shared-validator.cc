@@ -270,8 +270,8 @@ Result SharedValidator::OnElemSegment(const Location& loc,
     result |= CheckTableIndex(table_var, &table_type);
   }
   // Type gets set later in OnElemSegmentElemType.
-  elems_.push_back(
-      ElemType{Type::Void, kind == SegmentKind::Active, table_type.element});
+  elems_.push_back(ElemType{Type(Type::Void), kind == SegmentKind::Active,
+                            table_type.element});
   return result;
 }
 
@@ -913,7 +913,7 @@ Result SharedValidator::OnLoadZero(const Location& loc,
 Result SharedValidator::OnLocalGet(const Location& loc, Var local_var) {
   CHECK_RESULT(CheckInstr(Opcode::LocalGet, loc));
   Result result = Result::Ok;
-  Type type = Type::Any;
+  Type type(Type::Any);
   result |= CheckLocalIndex(local_var, &type);
   result |= typechecker_.OnLocalGet(type);
   return result;
@@ -922,7 +922,7 @@ Result SharedValidator::OnLocalGet(const Location& loc, Var local_var) {
 Result SharedValidator::OnLocalSet(const Location& loc, Var local_var) {
   CHECK_RESULT(CheckInstr(Opcode::LocalSet, loc));
   Result result = Result::Ok;
-  Type type = Type::Any;
+  Type type(Type::Any);
   result |= CheckLocalIndex(local_var, &type);
   result |= typechecker_.OnLocalSet(type);
   return result;
@@ -931,7 +931,7 @@ Result SharedValidator::OnLocalSet(const Location& loc, Var local_var) {
 Result SharedValidator::OnLocalTee(const Location& loc, Var local_var) {
   CHECK_RESULT(CheckInstr(Opcode::LocalTee, loc));
   Result result = Result::Ok;
-  Type type = Type::Any;
+  Type type(Type::Any);
   result |= CheckLocalIndex(local_var, &type);
   result |= typechecker_.OnLocalTee(type);
   return result;
@@ -1252,7 +1252,7 @@ Result SharedValidator::OnTryTableCatch(const Location& loc,
     result |= CheckTagIndex(catch_.tag, &tag_type);
   }
   if (catch_.IsRef()) {
-    tag_type.params.push_back(Type::ExnRef);
+    tag_type.params.push_back(Type(Type::ExnRef));
   }
   result |=
       typechecker_.OnTryTableCatch(tag_type.params, catch_.target.index());

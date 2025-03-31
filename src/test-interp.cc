@@ -277,13 +277,13 @@ TEST_F(InterpTest, HostFunc) {
       0x08, 0x01, 0x06, 0x00, 0x41, 0x01, 0x10, 0x00, 0x0b,
   });
 
-  auto host_func =
-      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-                    [](Thread& thread, const Values& params, Values& results,
-                       Trap::Ptr* out_trap) -> Result {
-                      results[0] = Value::Make(params[0].Get<u32>() + 1);
-                      return Result::Ok;
-                    });
+  auto host_func = HostFunc::New(
+      store_, FuncType{{Type(ValueType::I32)}, {Type(ValueType::I32)}},
+      [](Thread& thread, const Values& params, Values& results,
+         Trap::Ptr* out_trap) -> Result {
+        results[0] = Value::Make(params[0].Get<u32>() + 1);
+        return Result::Ok;
+      });
 
   Instantiate({host_func->self()});
 
@@ -308,7 +308,8 @@ TEST_F(InterpTest, HostFunc_PingPong) {
   });
 
   auto host_func =
-      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+      HostFunc::New(store_,
+                    FuncType{{Type(ValueType::I32)}, {Type(ValueType::I32)}},
                     [&](Thread& thread, const Values& params, Values& results,
                         Trap::Ptr* out_trap) -> Result {
                       auto val = params[0].Get<u32>();
@@ -349,7 +350,8 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
   Thread thread(store_);
 
   auto host_func =
-      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+      HostFunc::New(store_,
+                    FuncType{{Type(ValueType::I32)}, {Type(ValueType::I32)}},
                     [&](Thread& t, const Values& params, Values& results,
                         Trap::Ptr* out_trap) -> Result {
                       auto val = params[0].Get<u32>();
@@ -481,13 +483,13 @@ TEST_F(InterpTest, Rot13) {
       0x41, 0x00, 0x20, 0x00, 0x10, 0x01, 0x0b,
   });
 
-  auto host_func =
-      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-                    [](Thread& thread, const Values& params, Values& results,
-                       Trap::Ptr* out_trap) -> Result {
-                      results[0] = Value::Make(params[0].Get<u32>() + 1);
-                      return Result::Ok;
-                    });
+  auto host_func = HostFunc::New(
+      store_, FuncType{{Type(ValueType::I32)}, {Type(ValueType::I32)}},
+      [](Thread& thread, const Values& params, Values& results,
+         Trap::Ptr* out_trap) -> Result {
+        results[0] = Value::Make(params[0].Get<u32>() + 1);
+        return Result::Ok;
+      });
 
   std::string string_data = "Hello, WebAssembly!";
 
@@ -517,9 +519,11 @@ TEST_F(InterpTest, Rot13) {
     results[0].Set(size);
     return Result::Ok;
   };
-  auto fill_buf_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32, ValueType::I32}, {ValueType::I32}},
-      fill_buf);
+  auto fill_buf_func =
+      HostFunc::New(store_,
+                    FuncType{{Type(ValueType::I32), Type(ValueType::I32)},
+                             {Type(ValueType::I32)}},
+                    fill_buf);
 
   auto buf_done = [&](Thread& thread, const Values& params, Values& results,
                       Trap::Ptr* out_trap) -> Result {
@@ -545,7 +549,8 @@ TEST_F(InterpTest, Rot13) {
     return Result::Ok;
   };
   auto buf_done_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32, ValueType::I32}, {}}, buf_done);
+      store_, FuncType{{Type(ValueType::I32), Type(ValueType::I32)}, {}},
+      buf_done);
 
   Instantiate({memory->self(), fill_buf_func->self(), buf_done_func->self()});
 
@@ -589,7 +594,7 @@ TEST_F(InterpGCTest, Collect_Basic) {
 }
 
 TEST_F(InterpGCTest, Collect_GlobalCycle) {
-  auto gt = GlobalType{ValueType::ExternRef, Mutability::Var};
+  auto gt = GlobalType{Type(ValueType::ExternRef), Mutability::Var};
   auto g1 = Global::New(store_, gt, Value::Make(Ref::Null));
   auto g2 = Global::New(store_, gt, Value::Make(g1->self()));
   g1->Set(store_, g2->self());
@@ -607,7 +612,7 @@ TEST_F(InterpGCTest, Collect_GlobalCycle) {
 }
 
 TEST_F(InterpGCTest, Collect_TableCycle) {
-  auto tt = TableType{ValueType::ExternRef, Limits{2}};
+  auto tt = TableType{Type(ValueType::ExternRef), Limits{2}};
   auto t1 = Table::New(store_, tt);
   auto t2 = Table::New(store_, tt);
   auto t3 = Table::New(store_, tt);
@@ -659,10 +664,11 @@ TEST_F(InterpGCTest, Collect_InstanceImport) {
   auto f = HostFunc::New(store_, FuncType{{}, {}},
                          [](Thread& thread, const Values&, Values&,
                             Trap::Ptr*) -> Result { return Result::Ok; });
-  auto t = Table::New(store_, TableType{ValueType::FuncRef, Limits{0}});
+  auto t = Table::New(store_, TableType{Type(ValueType::FuncRef), Limits{0}});
   auto m = Memory::New(store_, MemoryType{Limits{0}, WABT_DEFAULT_PAGE_SIZE});
-  auto g = Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
-                       Value::Make(5));
+  auto g =
+      Global::New(store_, GlobalType{Type(ValueType::I32), Mutability::Const},
+                  Value::Make(5));
 
   Instantiate({f->self(), t->self(), m->self(), g->self()});
   auto after_new = store_.object_count();
@@ -704,7 +710,7 @@ TEST_F(InterpGCTest, Collect_InstanceExport) {
 TEST_F(InterpGCTest, Collect_DeepRecursion) {
   const size_t table_count = 65;
 
-  TableType tt = TableType{ValueType::ExternRef, Limits{1}};
+  TableType tt = TableType{Type(ValueType::ExternRef), Limits{1}};
 
   // Create a chain of tables, where each contains
   // a single reference to the next table.

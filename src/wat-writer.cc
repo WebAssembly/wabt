@@ -470,7 +470,7 @@ void WatWriter::WriteEndBlock() {
 }
 
 void WatWriter::WriteConst(const Const& const_) {
-  switch (const_.type()) {
+  switch (const_.type().code()) {
     case Type::I32:
       WritePutsSpace(Opcode::I32Const_Opcode.GetName());
       Writef("%d", static_cast<int32_t>(const_.u32()));

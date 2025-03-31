@@ -207,7 +207,7 @@ Type LocalTypes::operator[](Index i) const {
     count += decl.second;
   }
   assert(i < count);
-  return Type::Any;
+  return Type(Type::Any);
 }
 
 Type Func::GetLocalType(Index index) const {

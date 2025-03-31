@@ -555,7 +555,7 @@ Result BinaryReader::ReadField(TypeMut* out_value) {
 }
 
 bool BinaryReader::IsConcreteType(Type type) {
-  switch (type) {
+  switch (type.code()) {
     case Type::I32:
     case Type::I64:
     case Type::F32:
@@ -683,11 +683,11 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits,
 }
 
 Result BinaryReader::ReadGlobalHeader(Type* out_type, bool* out_mutable) {
-  Type global_type = Type::Void;
+  Type global_type(Type::Void);
   uint8_t mutable_ = 0;
   CHECK_RESULT(ReadType(&global_type, "global type"));
   ERROR_UNLESS(IsConcreteType(global_type), "invalid global type: %#x",
-               static_cast<int>(global_type));
+               global_type.code());
 
   CHECK_RESULT(ReadU8(&mutable_, "global mutability"));
   ERROR_UNLESS(mutable_ <= 1, "global mutability must be 0 or 1");
@@ -2537,10 +2537,10 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
       uint8_t type;
       CHECK_RESULT(ReadU8(&type, "type form"));
       ERROR_UNLESS(type == 0x60, "unexpected type form (got %#x)", type);
-      form = Type::Func;
+      form = Type(Type::Func);
     }
 
-    switch (form) {
+    switch (form.code()) {
       case Type::Func: {
         Index num_params;
         CHECK_RESULT(ReadCount(&num_params, "function param count"));
@@ -2803,7 +2803,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
-    Type elem_type = Type::FuncRef;
+    Type elem_type(Type::FuncRef);
 
     CALLBACK(BeginElemSegment, i, table_index, flags);
 
@@ -2823,7 +2823,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
                      elem_type.GetName().c_str());
-        elem_type = Type::FuncRef;
+        elem_type = Type(Type::FuncRef);
       }
     }
 

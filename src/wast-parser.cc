@@ -324,7 +324,8 @@ void ResolveTypeName(
     Type& type,
     Index index,
     const std::unordered_map<uint32_t, std::string>& bindings) {
-  if (type != Type::Reference || type.GetReferenceIndex() != kInvalidIndex) {
+  if (type.code() != Type::Reference ||
+      type.GetReferenceIndex() != kInvalidIndex) {
     return;
   }
 
@@ -935,7 +936,7 @@ Result WastParser::ParseValueType(Var* out_type) {
   Token token = Consume();
   Type type = token.type();
   bool is_enabled;
-  switch (type) {
+  switch (type.code()) {
     case Type::V128:
       is_enabled = options_->features.simd_enabled();
       break;
@@ -956,7 +957,7 @@ Result WastParser::ParseValueType(Var* out_type) {
     return Result::Error;
   }
 
-  *out_type = Var(type, GetLocation());
+  *out_type = Var(type.code(), GetLocation());
   return Result::Ok;
 }
 
@@ -1448,7 +1449,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
-    field->elem_segment.elem_type = Type::FuncRef;
+    field->elem_segment.elem_type = Type(Type::FuncRef);
     if (PeekMatch(TokenType::Func)) {
       EXPECT(Func);
     }

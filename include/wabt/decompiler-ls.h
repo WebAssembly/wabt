@@ -26,7 +26,7 @@ namespace wabt {
 
 // Names starting with "u" are unsigned, the rest are "signed or doesn't matter"
 inline const char* GetDecompTypeName(Type t) {
-  switch (t) {
+  switch (t.code()) {
     case Type::I8: return "byte";
     case Type::I8U: return "ubyte";
     case Type::I16: return "short";
@@ -56,9 +56,9 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
     // FIXME: change into a new column in opcode.def instead?
     auto is_unsigned = name.substr(name.size() - 2) == "_u";
     switch (opc.GetMemorySize()) {
-      case 1: return is_unsigned ? Type::I8U : Type::I8;
-      case 2: return is_unsigned ? Type::I16U : Type::I16;
-      case 4: return is_unsigned ? Type::I32U : Type::I32;
+      case 1: return Type(is_unsigned ? Type::I8U : Type::I8);
+      case 2: return Type(is_unsigned ? Type::I16U : Type::I16);
+      case 4: return Type(is_unsigned ? Type::I32U : Type::I32);
     }
   }
   return operand_type;
@@ -70,7 +70,7 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
 struct LoadStoreTracking {
   struct LSAccess {
     Address byte_size = 0;
-    Type type = Type::Any;
+    Type type = Type(Type::Any);
     Address align = 0;
     uint32_t idx = 0;
     bool is_uniform = true;
@@ -79,7 +79,7 @@ struct LoadStoreTracking {
   struct LSVar {
     std::map<uint64_t, LSAccess> accesses;
     bool struct_layout = true;
-    Type same_type = Type::Any;
+    Type same_type = Type(Type::Any);
     Address same_align = kInvalidAddress;
     Opcode last_opc;
   };
@@ -155,7 +155,7 @@ struct LoadStoreTracking {
       var.same_align = align;
       var.last_opc = opc;
     } else {
-      var.same_type = Type::Void;
+      var.same_type = Type(Type::Void);
       var.same_align = kInvalidAddress;
     }
   }

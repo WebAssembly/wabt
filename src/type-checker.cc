@@ -33,7 +33,8 @@ std::string TypesToString(const TypeVector& types,
     Type ty = types[i];
     // NOTE: Reference (and GetName) is also used by (e.g.) objdump, which does
     // not apply validation. do this here so as to not break that.
-    if (ty == Type::Reference && ty.GetReferenceIndex() == kInvalidIndex) {
+    if (ty.code() == Type::Reference &&
+        ty.GetReferenceIndex() == kInvalidIndex) {
       result += "reference";
     } else {
       result += types[i].GetName();
@@ -182,7 +183,7 @@ Result TypeChecker::PeekType(Index depth, Type* out_type) {
   CHECK_RESULT(TopLabel(&label));
 
   if (label->type_stack_limit + depth >= type_stack_.size()) {
-    *out_type = Type::Any;
+    *out_type = Type(Type::Any);
     return label->unreachable ? Result::Ok : Result::Error;
   }
   *out_type = type_stack_[type_stack_.size() - depth - 1];
@@ -190,7 +191,7 @@ Result TypeChecker::PeekType(Index depth, Type* out_type) {
 }
 
 Result TypeChecker::PeekAndCheckType(Index depth, Type expected) {
-  Type actual = Type::Any;
+  Type actual(Type::Any);
   Result result = PeekType(depth, &actual);
   return result | CheckType(actual, expected);
 }
@@ -233,11 +234,6 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
     return Result::Ok;
   }
 
-  if (expected == Type::Reference && actual == Type::Reference) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
   if (actual != expected) {
     return Result::Error;
   }
@@ -466,7 +462,7 @@ Result TypeChecker::OnBr(Index depth) {
 }
 
 Result TypeChecker::OnBrIf(Index depth) {
-  Result result = PopAndCheck1Type(Type::I32, "br_if");
+  Result result = PopAndCheck1Type(Type(Type::I32), "br_if");
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));
   result |= PopAndCheckSignature(label->br_types(), "br_if");
@@ -476,7 +472,7 @@ Result TypeChecker::OnBrIf(Index depth) {
 
 Result TypeChecker::BeginBrTable() {
   br_table_sig_ = nullptr;
-  return PopAndCheck1Type(Type::I32, "br_table");
+  return PopAndCheck1Type(Type(Type::I32), "br_table");
 }
 
 Result TypeChecker::OnBrTableTarget(Index depth) {
@@ -514,8 +510,8 @@ Result TypeChecker::OnCall(const TypeVector& param_types,
 Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
                                    const TypeVector& result_types,
                                    const Limits& table_limits) {
-  Result result = PopAndCheck1Type(table_limits.is_64 ? Type::I64 : Type::I32,
-                                   "call_indirect");
+  Result result = PopAndCheck1Type(
+      Type(table_limits.is_64 ? Type::I64 : Type::I32), "call_indirect");
   result |= PopAndCheckCall(param_types, result_types, "call_indirect");
   return result;
 }
@@ -524,7 +520,7 @@ Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
   Type type;
   Result result = PeekType(0, &type);
   if (!type.IsReferenceWithIndex()) {
-    type = Type::Reference;
+    type = Type(Type::Reference);
   }
   result |= PopAndCheck1Type(type, "call_ref");
   if (Succeeded(result)) {
@@ -547,7 +543,7 @@ Result TypeChecker::OnReturnCall(const TypeVector& param_types,
 
 Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
                                          const TypeVector& result_types) {
-  Result result = PopAndCheck1Type(Type::I32, "return_call_indirect");
+  Result result = PopAndCheck1Type(Type(Type::I32), "return_call_indirect");
 
   result |= PopAndCheckSignature(param_types, "return_call_indirect");
   Label* func_label;
@@ -610,7 +606,7 @@ Result TypeChecker::OnDelegate(Index depth) {
 Result TypeChecker::OnDrop() {
   Result result = Result::Ok;
   result |= DropTypes(1);
-  PrintStackIfFailed(result, "drop", Type::Any);
+  PrintStackIfFailed(result, "drop", Type(Type::Any));
   return result;
 }
 
@@ -664,7 +660,7 @@ Result TypeChecker::OnEnd() {
 
 Result TypeChecker::OnIf(const TypeVector& param_types,
                          const TypeVector& result_types) {
-  Result result = PopAndCheck1Type(Type::I32, "if");
+  Result result = PopAndCheck1Type(Type(Type::I32), "if");
   result |= PopAndCheckSignature(param_types, "if");
   PushLabel(LabelType::If, param_types, result_types);
   PushTypes(param_types);
@@ -800,7 +796,7 @@ Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
   if (features_.function_references_enabled() && !force_generic_funcref) {
     PushType(Type(Type::Reference, func_type));
   } else {
-    PushType(Type::FuncRef);
+    PushType(Type(Type::FuncRef));
   }
   return Result::Ok;
 }
@@ -814,10 +810,10 @@ Result TypeChecker::OnRefIsNullExpr() {
   Type type;
   Result result = PeekType(0, &type);
   if (!type.IsRef()) {
-    type = Type::Reference;
+    type = Type(Type::Reference);
   }
   result |= PopAndCheck1Type(type, "ref.is_null");
-  PushType(Type::I32);
+  PushType(Type(Type::I32));
   return result;
 }
 
@@ -838,7 +834,7 @@ Result TypeChecker::OnThrow(const TypeVector& sig) {
 
 Result TypeChecker::OnThrowRef() {
   Result result = Result::Ok;
-  result |= PopAndCheck1Type(Type::ExnRef, "throw_ref");
+  result |= PopAndCheck1Type(Type(Type::ExnRef), "throw_ref");
   CHECK_RESULT(SetUnreachable());
   return result;
 }
@@ -854,10 +850,10 @@ Result TypeChecker::OnReturn() {
 
 Result TypeChecker::OnSelect(const TypeVector& expected) {
   Result result = Result::Ok;
-  Type type1 = Type::Any;
-  Type type2 = Type::Any;
-  Type result_type = Type::Any;
-  result |= PeekAndCheckType(0, Type::I32);
+  Type type1(Type::Any);
+  Type type2(Type::Any);
+  Type result_type(Type::Any);
+  result |= PeekAndCheckType(0, Type(Type::I32));
   result |= PeekType(1, &type1);
   result |= PeekType(2, &type2);
   if (expected.empty()) {
@@ -872,7 +868,8 @@ Result TypeChecker::OnSelect(const TypeVector& expected) {
     result |= CheckType(type1, expected[0]);
     result |= CheckType(type2, expected[0]);
   }
-  PrintStackIfFailed(result, "select", result_type, result_type, Type::I32);
+  PrintStackIfFailed(result, "select", result_type, result_type,
+                     Type(Type::I32));
   result |= DropTypes(3);
   PushType(result_type);
   return result;

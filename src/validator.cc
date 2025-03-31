@@ -256,7 +256,7 @@ Type Validator::GetDeclarationType(const FuncDeclaration& decl) {
   }
   if (decl.sig.param_types.empty()) {
     if (decl.sig.result_types.empty()) {
-      return Type::Void;
+      return Type(Type::Void);
     }
     if (decl.sig.result_types.size() == 1) {
       return decl.sig.result_types[0];
@@ -851,11 +851,11 @@ Result Validator::CheckModule() {
 
       // Init expr.
       if (f->elem_segment.kind == SegmentKind::Active) {
-        Type offset_type = Type::I32;
+        Type offset_type(Type::I32);
         Index table_index = module->GetTableIndex(f->elem_segment.table_var);
         if (table_index < module->tables.size() &&
             module->tables[table_index]->elem_limits.is_64) {
-          offset_type = Type::I64;
+          offset_type = Type(Type::I64);
         }
         result_ |= validator_.BeginInitExpr(field.loc, offset_type);
         ExprVisitor visitor(this);
@@ -905,11 +905,11 @@ Result Validator::CheckModule() {
 
       // Init expr.
       if (f->data_segment.kind == SegmentKind::Active) {
-        Type offset_type = Type::I32;
+        Type offset_type(Type::I32);
         Index memory_index = module->GetMemoryIndex(f->data_segment.memory_var);
         if (memory_index < module->memories.size() &&
             module->memories[memory_index]->page_limits.is_64) {
-          offset_type = Type::I64;
+          offset_type = Type(Type::I64);
         }
         result_ |= validator_.BeginInitExpr(field.loc, offset_type);
         ExprVisitor visitor(this);

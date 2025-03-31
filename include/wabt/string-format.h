@@ -29,7 +29,7 @@
 
 #define PRItypecode "%s%#x"
 #define WABT_PRINTF_TYPE_CODE(x) \
-  (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int32_t>(x))
+  ((x).code() < 0 ? "-" : ""), std::abs((x).code())
 
 #define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
 #define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \

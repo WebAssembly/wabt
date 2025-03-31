@@ -137,7 +137,7 @@ struct GlobalInstanceVar {
 };
 
 struct StackVar {
-  explicit StackVar(Index index, Type type = Type::Any)
+  explicit StackVar(Index index, Type type = Type(Type::Any))
       : index(index), type(type) {}
   Index index;
   Type type;
@@ -172,7 +172,7 @@ struct CloseBrace {};
 
 int GetShiftMask(Type type) {
   // clang-format off
-  switch (type) {
+  switch (type.code()) {
     case Type::I32: return 31;
     case Type::I64: return 63;
     default: WABT_UNREACHABLE; return 0;
@@ -641,7 +641,7 @@ void CWriter::PopLabel() {
 // static
 constexpr bool CWriter::AreInitializersAlwaysNull(Type type) {
   // clang-format off
-  switch (type) {
+  switch (type.code()) {
     case Type::FuncRef: return false;
     case Type::ExternRef: return true;
     case Type::ExnRef: return true;
@@ -654,7 +654,7 @@ constexpr bool CWriter::AreInitializersAlwaysNull(Type type) {
 // static
 constexpr char CWriter::MangleType(Type type) {
   // clang-format off
-  switch (type) {
+  switch (type.code()) {
     case Type::I32: return 'i';
     case Type::I64: return 'j';
     case Type::F32: return 'f';
@@ -1227,7 +1227,7 @@ void CWriter::Write(const StackVar& sv) {
 // static
 const char* CWriter::GetCTypeName(const Type& type) {
   // clang-format off
-  switch (type) {
+  switch (type.code()) {
   case Type::I32: return "u32";
   case Type::I64: return "u64";
   case Type::F32: return "f32";
@@ -1248,7 +1248,7 @@ void CWriter::Write(Type type) {
 
 void CWriter::Write(TypeEnum type) {
   // clang-format off
-  switch (type.type) {
+  switch (type.type.code()) {
     case Type::I32: Write("WASM_RT_I32"); break;
     case Type::I64: Write("WASM_RT_I64"); break;
     case Type::F32: Write("WASM_RT_F32"); break;
@@ -1265,7 +1265,7 @@ void CWriter::Write(TypeEnum type) {
 
 void CWriter::Write(SignedType type) {
   // clang-format off
-  switch (type.type) {
+  switch (type.type.code()) {
     case Type::I32: Write("s32"); break;
     case Type::I64: Write("s64"); break;
     default:
@@ -1285,7 +1285,7 @@ void CWriter::Write(const TypeVector& types) {
 }
 
 void CWriter::Write(const Const& const_) {
-  switch (const_.type()) {
+  switch (const_.type().code()) {
     case Type::I32:
       Writef("%uu", static_cast<int32_t>(const_.u32()));
       break;
@@ -2493,7 +2493,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
                                  const ElemSegment* src_segment,
                                  const Table* dst_table) {
   assert(dst_table->elem_type.IsRef() &&
-         dst_table->elem_type != Type::Reference);
+         dst_table->elem_type.code() != Type::Reference);
   assert(dst_table->elem_type == src_segment->elem_type);
 
   Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
@@ -3142,8 +3142,9 @@ void CWriter::WriteVarsByType(const Vars& vars,
                               const TypeOf& typeoffunc,
                               const ToDo& todo,
                               bool setjmp_safe) {
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
-                    Type::FuncRef, Type::ExternRef, Type::ExnRef}) {
+  for (Type type : {Type(Type::I32), Type(Type::I64), Type(Type::F32),
+                    Type(Type::F64), Type(Type::V128), Type(Type::FuncRef),
+                    Type(Type::ExternRef), Type(Type::ExnRef)}) {
     Index var_index = 0;
     size_t count = 0;
     for (const auto& var : vars) {
@@ -3561,7 +3562,7 @@ void CWriter::Write(const TableCatch& c) {
     }
   }
   if (c.IsRef()) {
-    PushType(Type::ExnRef);
+    PushType(Type(Type::ExnRef));
     Write(StackVar(0), ".tag = wasm_rt_exception_tag();", Newline());
     Write(StackVar(0), ".size = wasm_rt_exception_size();", Newline());
     Write("wasm_rt_memcpy(&", StackVar(0),
@@ -3932,7 +3933,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::RefFunc: {
         const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
-        PushType(Type::FuncRef);
+        PushType(Type(Type::FuncRef));
         const FuncDeclaration& decl = func->decl;
 
         assert(decl.has_func_type);
@@ -3966,26 +3967,26 @@ void CWriter::Write(const ExprList& exprs) {
         break;
 
       case ExprType::RefIsNull:
-        switch (StackType(0)) {
+        switch (StackType(0).code()) {
           case Type::FuncRef:
-            Write(StackVar(0, Type::I32), " = (", StackVar(0), ".func == NULL",
-                  ");", Newline());
+            Write(StackVar(0, Type(Type::I32)), " = (", StackVar(0),
+                  ".func == NULL", ");", Newline());
             break;
           case Type::ExternRef:
-            Write(StackVar(0, Type::I32), " = (", StackVar(0),
-                  " == ", GetReferenceNullValue(Type::ExternRef), ");",
+            Write(StackVar(0, Type(Type::I32)), " = (", StackVar(0),
+                  " == ", GetReferenceNullValue(Type(Type::ExternRef)), ");",
                   Newline());
             break;
           case Type::ExnRef:
-            Write(StackVar(0, Type::I32), " = (", StackVar(0), ".tag == NULL",
-                  ");", Newline());
+            Write(StackVar(0, Type(Type::I32)), " = (", StackVar(0),
+                  ".tag == NULL", ");", Newline());
             break;
           default:
             WABT_UNREACHABLE;
         }
 
         DropTypes(1);
-        PushType(Type::I32);
+        PushType(Type(Type::I32));
         break;
 
       case ExprType::MemoryGrow: {
@@ -4237,7 +4238,7 @@ void CWriter::Write(const ExprList& exprs) {
 
         DropTypes(decl.GetNumResults());
         PushTypes(decl.sig.param_types);
-        PushType(Type::I32);
+        PushType(Type(Type::I32));
 
         if (!in_tail_callee_) {
           WriteTailCallStack();
@@ -6113,7 +6114,7 @@ Result CWriter::WriteModule(const Module& module) {
 
 // static
 const char* CWriter::GetReferenceTypeName(const Type& type) {
-  switch (type) {
+  switch (type.code()) {
     case Type::FuncRef:
       return "funcref";
     case Type::ExternRef:
@@ -6127,7 +6128,7 @@ const char* CWriter::GetReferenceTypeName(const Type& type) {
 
 // static
 const char* CWriter::GetReferenceNullValue(const Type& type) {
-  switch (type) {
+  switch (type.code()) {
     case Type::FuncRef:
       return "wasm_rt_funcref_null_value";
     case Type::ExternRef:

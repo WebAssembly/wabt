@@ -179,7 +179,7 @@ struct ExpectedValue {
 };
 
 int LaneCountFromType(Type type) {
-  switch (type) {
+  switch (type.code()) {
     case Type::I8: return 16;
     case Type::I16: return 8;
     case Type::I32: return 4;
@@ -199,7 +199,7 @@ ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
 
   v128 vec = ev.value.value.Get<v128>();
 
-  switch (ev.lane_type) {
+  switch (ev.lane_type.code()) {
     case Type::I8:
       result.nan[0] = ExpectedNan::None;
       result.value.value.Set<u32>(vec.u8(lane));
@@ -245,7 +245,7 @@ TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
 
   v128 vec = tv.value.Get<v128>();
 
-  switch (lane_type) {
+  switch (lane_type.code()) {
     case Type::I8:
       result.value.Set<u32>(vec.u8(lane));
       break;
@@ -616,25 +616,25 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
   CHECK_RESULT(ParseString(&type_str));
 
   if (type_str == "i32") {
-    *out_type = Type::I32;
+    *out_type = Type(Type::I32);
   } else if (type_str == "f32") {
-    *out_type = Type::F32;
+    *out_type = Type(Type::F32);
   } else if (type_str == "i64") {
-    *out_type = Type::I64;
+    *out_type = Type(Type::I64);
   } else if (type_str == "f64") {
-    *out_type = Type::F64;
+    *out_type = Type(Type::F64);
   } else if (type_str == "v128") {
-    *out_type = Type::V128;
+    *out_type = Type(Type::V128);
   } else if (type_str == "i8") {
-    *out_type = Type::I8;
+    *out_type = Type(Type::I8);
   } else if (type_str == "i16") {
-    *out_type = Type::I16;
+    *out_type = Type(Type::I16);
   } else if (type_str == "funcref") {
-    *out_type = Type::FuncRef;
+    *out_type = Type(Type::FuncRef);
   } else if (type_str == "externref") {
-    *out_type = Type::ExternRef;
+    *out_type = Type(Type::ExternRef);
   } else if (type_str == "exnref") {
-    *out_type = Type::ExnRef;
+    *out_type = Type(Type::ExnRef);
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -744,7 +744,7 @@ wabt::Result JSONParser::ParseLaneConstValue(Type lane_type,
                                              AllowExpected allow_expected) {
   v128 v = out_value->value.value.Get<v128>();
 
-  switch (lane_type) {
+  switch (lane_type.code()) {
     case Type::I8: {
       uint32_t value;
       CHECK_RESULT(ParseI32Value(&value, value_str));
@@ -809,7 +809,7 @@ wabt::Result JSONParser::ParseConstValue(Type type,
                                          AllowExpected allow_expected) {
   *out_nan = ExpectedNan::None;
 
-  switch (type) {
+  switch (type.code()) {
     case Type::I32: {
       uint32_t value;
       CHECK_RESULT(ParseI32Value(&value, value_str));
@@ -1286,12 +1286,14 @@ CommandRunner::CommandRunner() : store_(s_features) {
     interp::FuncType type;
   } const print_funcs[] = {
       {"print", interp::FuncType{{}, {}}},
-      {"print_i32", interp::FuncType{{ValueType::I32}, {}}},
-      {"print_i64", interp::FuncType{{ValueType::I64}, {}}},
-      {"print_f32", interp::FuncType{{ValueType::F32}, {}}},
-      {"print_f64", interp::FuncType{{ValueType::F64}, {}}},
-      {"print_i32_f32", interp::FuncType{{ValueType::I32, ValueType::F32}, {}}},
-      {"print_f64_f64", interp::FuncType{{ValueType::F64, ValueType::F64}, {}}},
+      {"print_i32", interp::FuncType{{Type(ValueType::I32)}, {}}},
+      {"print_i64", interp::FuncType{{Type(ValueType::I64)}, {}}},
+      {"print_f32", interp::FuncType{{Type(ValueType::F32)}, {}}},
+      {"print_f64", interp::FuncType{{Type(ValueType::F64)}, {}}},
+      {"print_i32_f32",
+       interp::FuncType{{Type(ValueType::I32), Type(ValueType::F32)}, {}}},
+      {"print_f64_f64",
+       interp::FuncType{{Type(ValueType::F64), Type(ValueType::F64)}, {}}},
   };
 
   for (auto&& print : print_funcs) {
@@ -1307,27 +1309,27 @@ CommandRunner::CommandRunner() : store_(s_features) {
                       });
   }
 
-  spectest["table"] =
-      interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
+  spectest["table"] = interp::Table::New(
+      store_, TableType{Type(ValueType::FuncRef), Limits{10, 20}});
 
   spectest["table64"] = interp::Table::New(
-      store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}});
+      store_, TableType{Type(ValueType::FuncRef), Limits{10, 20, false, true}});
 
   spectest["memory"] = interp::Memory::New(
       store_, MemoryType{Limits{1, 2}, WABT_DEFAULT_PAGE_SIZE});
 
-  spectest["global_i32"] =
-      interp::Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
-                          Value::Make(u32{666}));
-  spectest["global_i64"] =
-      interp::Global::New(store_, GlobalType{ValueType::I64, Mutability::Const},
-                          Value::Make(u64{666}));
-  spectest["global_f32"] =
-      interp::Global::New(store_, GlobalType{ValueType::F32, Mutability::Const},
-                          Value::Make(f32{666.6}));
-  spectest["global_f64"] =
-      interp::Global::New(store_, GlobalType{ValueType::F64, Mutability::Const},
-                          Value::Make(f64{666.6}));
+  spectest["global_i32"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::I32), Mutability::Const},
+      Value::Make(u32{666}));
+  spectest["global_i64"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::I64), Mutability::Const},
+      Value::Make(u64{666}));
+  spectest["global_f32"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::F32), Mutability::Const},
+      Value::Make(f32{666.6}));
+  spectest["global_f64"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::F64), Mutability::Const},
+      Value::Make(f64{666.6}));
 }
 
 wabt::Result CommandRunner::Run(const Script& script) {
@@ -1809,7 +1811,7 @@ static bool WABT_VECTORCALL IsArithmeticNan(f64 val) {
 
 static std::string ExpectedValueToString(const ExpectedValue& ev) {
   // Extend TypedValueToString to print expected nan values too.
-  switch (ev.value.type) {
+  switch (ev.value.type.code()) {
     case Type::F32:
     case Type::F64:
       switch (ev.nan[0]) {
@@ -1850,7 +1852,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
   assert(expected.value.type == actual.type ||
          IsReference(expected.value.type));
   bool ok = true;
-  switch (expected.value.type) {
+  switch (expected.value.type.code()) {
     case Type::I8:
     case Type::I16:
     case Type::I32:

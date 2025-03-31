@@ -59,13 +59,38 @@ class Type {
   };
 
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code)
+  explicit Type(int32_t code)
       : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
-  Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
-  Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
+  explicit Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
+  explicit Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
     assert(e == Enum::Reference);
   }
-  constexpr operator Enum() const { return enum_; }
+  constexpr Enum code() const { return enum_; }
+
+  // TODO: These comparisons could be removed in = default in C++20.
+  bool operator==(const Type& other) const {
+    return enum_ == other.enum_ && type_index_ == other.type_index_;
+  }
+
+  bool operator!=(const Type& other) const {
+    return !(*this == other);
+  }
+
+  bool operator<(const Type& other) const {
+    return (enum_ != other.enum_) ? enum_ < other.enum_
+                                  : type_index_ < other.type_index_;
+  }
+
+  bool operator==(const Type::Enum& other) const {
+    // Disallow non-intended comparisons, where the
+    // other argument should have a valid type_index_.
+    assert(!Type(other).IsReferenceWithIndex());
+    return enum_ == other;
+  }
+
+  bool operator!=(const Type::Enum& other) const {
+    return !(*this == other);
+  }
 
   bool IsRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
