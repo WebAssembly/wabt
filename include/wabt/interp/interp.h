@@ -584,7 +584,7 @@ struct Value {
   void CheckType(ValueType t) const {
     // Sadly we must allow Any here, since locals may be uninitialized.
     // Alternatively we could modify InterpAlloca to set the type.
-    assert(t == type || type == ValueType::Any);
+    assert(t == type || type.code() == ValueType::Any);
   }
   ValueType type;
 #else

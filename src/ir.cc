@@ -207,7 +207,7 @@ Type LocalTypes::operator[](Index i) const {
     count += decl.second;
   }
   assert(i < count);
-  return Type::Any;
+  return Type(Type::Any);
 }
 
 Type Func::GetLocalType(Index index) const {
@@ -656,7 +656,7 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
   switch (kind) {
     case SegmentKind::Active: {
       Index table_index = module->GetTableIndex(table_var);
-      if (elem_type != Type::FuncRef || table_index != 0) {
+      if (elem_type.code() != Type::FuncRef || table_index != 0) {
         flags |= SegExplicitIndex;
       }
       break;
@@ -672,7 +672,7 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
   }
 
   bool all_ref_func =
-      elem_type == Type::FuncRef &&
+      elem_type.code() == Type::FuncRef &&
       std::all_of(elem_exprs.begin(), elem_exprs.end(),
                   [](const ExprList& elem_expr) {
                     return elem_expr.front().type() == ExprType::RefFunc;

@@ -329,17 +329,17 @@ struct wasm_instance_t : wasm_ref_t {
 static ValueType ToWabtValueType(wasm_valkind_t kind) {
   switch (kind) {
     case WASM_I32:
-      return ValueType::I32;
+      return Type(ValueType::I32);
     case WASM_I64:
-      return ValueType::I64;
+      return Type(ValueType::I64);
     case WASM_F32:
-      return ValueType::F32;
+      return Type(ValueType::F32);
     case WASM_F64:
-      return ValueType::F64;
+      return Type(ValueType::F64);
     case WASM_ANYREF:
-      return ValueType::ExternRef;
+      return Type(ValueType::ExternRef);
     case WASM_FUNCREF:
-      return ValueType::FuncRef;
+      return Type(ValueType::FuncRef);
     default:
       TRACE("unexpected wasm_valkind_t: %d", kind);
       WABT_UNREACHABLE;

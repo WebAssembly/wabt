@@ -135,7 +135,7 @@ void OpcodeInfo::Write(Stream& stream) {
       auto type = *GetData<Type>();
       if (type.IsIndex()) {
         stream.Writef(" type:%d", type.GetIndex());
-      } else if (type != Type::Void) {
+      } else if (type.code() != Type::Void) {
         stream.Writef(" %s", type.GetName().c_str());
       }
       break;

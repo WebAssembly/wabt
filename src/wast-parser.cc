@@ -324,7 +324,8 @@ void ResolveTypeName(
     Type& type,
     Index index,
     const std::unordered_map<uint32_t, std::string>& bindings) {
-  if (type != Type::Reference || type.GetReferenceIndex() != kInvalidIndex) {
+  if (type.code() != Type::Reference ||
+      type.GetReferenceIndex() != kInvalidIndex) {
     return;
   }
 
@@ -994,9 +995,9 @@ Result WastParser::ParseRefKind(Type* out_type) {
   Token token = Consume();
   Type type = token.type();
 
-  if ((type == Type::ExternRef &&
+  if ((type.code() == Type::ExternRef &&
        !options_->features.reference_types_enabled()) ||
-      ((type == Type::Struct || type == Type::Array) &&
+      ((type.code() == Type::Struct || type.code() == Type::Array) &&
        !options_->features.gc_enabled())) {
     Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
     return Result::Error;
@@ -1014,7 +1015,7 @@ Result WastParser::ParseRefType(Type* out_type) {
 
   Token token = Consume();
   Type type = token.type();
-  if (type == Type::ExternRef &&
+  if (type.code() == Type::ExternRef &&
       !options_->features.reference_types_enabled()) {
     Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
     return Result::Error;
@@ -1032,7 +1033,7 @@ bool WastParser::ParseRefTypeOpt(Type* out_type) {
 
   Token token = Consume();
   Type type = token.type();
-  if (type == Type::ExternRef &&
+  if (type.code() == Type::ExternRef &&
       !options_->features.reference_types_enabled()) {
     return false;
   }
@@ -1124,10 +1125,10 @@ Result WastParser::ParseLimitsIndex(Limits* out_limits) {
   WABT_TRACE(ParseLimitsIndex);
 
   if (PeekMatch(TokenType::ValueType)) {
-    if (GetToken().type() == Type::I64) {
+    if (GetToken().type().code() == Type::I64) {
       Consume();
       out_limits->is_64 = true;
-    } else if (GetToken().type() == Type::I32) {
+    } else if (GetToken().type().code() == Type::I32) {
       Consume();
       out_limits->is_64 = false;
     }
@@ -1448,7 +1449,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
-    field->elem_segment.elem_type = Type::FuncRef;
+    field->elem_segment.elem_type = Type(Type::FuncRef);
     if (PeekMatch(TokenType::Func)) {
       EXPECT(Func);
     }

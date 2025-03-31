@@ -250,7 +250,7 @@ class SharedValidator {
     TableType() = default;
     TableType(Type element, Limits limits) : element(element), limits(limits) {}
 
-    Type element = Type::Any;
+    Type element = Type(Type::Any);
     Limits limits;
   };
 
@@ -265,7 +265,7 @@ class SharedValidator {
     GlobalType() = default;
     GlobalType(Type type, bool mutable_) : type(type), mutable_(mutable_) {}
 
-    Type type = Type::Any;
+    Type type = Type(Type::Any);
     bool mutable_ = true;
   };
 

@@ -2,10 +2,10 @@ struct TokenInfo {
   TokenInfo(const char* name) : name(name) {}
   TokenInfo(const char* name, TokenType token_type)
       : name(name), token_type(token_type) {}
-  TokenInfo(const char* name, Type value_type)
-      : name(name), token_type(TokenType::ValueType), value_type(value_type) {}
-  TokenInfo(const char* name, Type value_type, TokenType token_type)
-      : name(name), token_type(token_type), value_type(value_type) {}
+  TokenInfo(const char* name, Type::Enum value_type)
+      : name(name), token_type(TokenType::ValueType), value_type(Type(value_type)) {}
+  TokenInfo(const char* name, Type::Enum value_type, TokenType token_type)
+      : name(name), token_type(token_type), value_type(Type(value_type)) {}
   TokenInfo(const char* name, TokenType token_type, Opcode opcode)
       : name(name), token_type(token_type), opcode(opcode) {}
 

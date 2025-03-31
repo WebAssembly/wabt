@@ -59,10 +59,10 @@ class Type {
   };
 
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code)
+  explicit Type(int32_t code)
       : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
-  Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
-  Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
+  explicit Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
+  explicit Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
     assert(e == Enum::Reference);
   }
   constexpr Enum code() const { return enum_; }

@@ -720,14 +720,14 @@ Result BinaryReaderInterp::BeginElemSegment(Index index,
   CHECK_RESULT(validator_.OnElemSegment(GetLocation(),
                                         Var(table_index, GetLocation()), mode));
 
-  ValueType offset_type = ValueType::I32;
+  ValueType offset_type = Type(ValueType::I32);
   if (table_index < table_types_.size() &&
       table_types_[table_index].limits.is_64) {
-    offset_type = ValueType::I64;
+    offset_type = Type(ValueType::I64);
   }
   FuncDesc init_func{
       FuncType{{}, {offset_type}}, {}, Istream::kInvalidOffset, {}};
-  ElemDesc desc{{}, ValueType::Void, mode, table_index, init_func};
+  ElemDesc desc{{}, Type(ValueType::Void), mode, table_index, init_func};
   module_.elems.push_back(desc);
   return Result::Ok;
 }
@@ -789,10 +789,10 @@ Result BinaryReaderInterp::BeginDataSegment(Index index,
   CHECK_RESULT(validator_.OnDataSegment(
       GetLocation(), Var(memory_index, GetLocation()), mode));
 
-  ValueType offset_type = ValueType::I32;
+  ValueType offset_type = Type(ValueType::I32);
   if (memory_index < memory_types_.size() &&
       memory_types_[memory_index].limits.is_64) {
-    offset_type = ValueType::I64;
+    offset_type = Type(ValueType::I64);
   }
   FuncDesc init_func{
       FuncType{{}, {offset_type}}, {}, Istream::kInvalidOffset, {}};
@@ -1250,31 +1250,31 @@ Result BinaryReaderInterp::OnDropExpr() {
 }
 
 Result BinaryReaderInterp::OnI32ConstExpr(uint32_t value) {
-  CHECK_RESULT(validator_.OnConst(GetLocation(), Type::I32));
+  CHECK_RESULT(validator_.OnConst(GetLocation(), Type(Type::I32)));
   istream_.Emit(Opcode::I32Const, value);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnI64ConstExpr(uint64_t value) {
-  CHECK_RESULT(validator_.OnConst(GetLocation(), Type::I64));
+  CHECK_RESULT(validator_.OnConst(GetLocation(), Type(Type::I64)));
   istream_.Emit(Opcode::I64Const, value);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnF32ConstExpr(uint32_t value_bits) {
-  CHECK_RESULT(validator_.OnConst(GetLocation(), Type::F32));
+  CHECK_RESULT(validator_.OnConst(GetLocation(), Type(Type::F32)));
   istream_.Emit(Opcode::F32Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
-  CHECK_RESULT(validator_.OnConst(GetLocation(), Type::F64));
+  CHECK_RESULT(validator_.OnConst(GetLocation(), Type(Type::F64)));
   istream_.Emit(Opcode::F64Const, value_bits);
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
-  CHECK_RESULT(validator_.OnConst(GetLocation(), Type::V128));
+  CHECK_RESULT(validator_.OnConst(GetLocation(), Type(Type::V128)));
   istream_.Emit(Opcode::V128Const, value_bits);
   return Result::Ok;
 }

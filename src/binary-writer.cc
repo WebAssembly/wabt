@@ -527,7 +527,7 @@ Offset BinaryWriter::WriteFixupU32Leb128Size(Offset offset,
 void BinaryWriter::WriteBlockDecl(const BlockDeclaration& decl) {
   if (decl.sig.GetNumParams() == 0 && decl.sig.GetNumResults() <= 1) {
     if (decl.sig.GetNumResults() == 0) {
-      WriteType(stream_, Type::Void);
+      WriteType(stream_, Type(Type::Void));
     } else if (decl.sig.GetNumResults() == 1) {
       WriteType(stream_, decl.sig.GetResultType(0));
     }
@@ -1369,7 +1369,7 @@ Result BinaryWriter::WriteModule() {
           const FuncType* func_type = cast<FuncType>(type);
           const FuncSignature* sig = &func_type->sig;
           WriteHeader("func type", i);
-          WriteType(stream_, Type::Func);
+          WriteType(stream_, Type(Type::Func));
 
           Index num_params = sig->param_types.size();
           Index num_results = sig->result_types.size();
@@ -1388,7 +1388,7 @@ Result BinaryWriter::WriteModule() {
         case TypeEntryKind::Struct: {
           const StructType* struct_type = cast<StructType>(type);
           WriteHeader("struct type", i);
-          WriteType(stream_, Type::Struct);
+          WriteType(stream_, Type(Type::Struct));
           Index num_fields = struct_type->fields.size();
           WriteU32Leb128(stream_, num_fields, "num fields");
           for (size_t j = 0; j < num_fields; ++j) {
@@ -1402,7 +1402,7 @@ Result BinaryWriter::WriteModule() {
         case TypeEntryKind::Array: {
           const ArrayType* array_type = cast<ArrayType>(type);
           WriteHeader("array type", i);
-          WriteType(stream_, Type::Array);
+          WriteType(stream_, Type(Type::Array));
           WriteType(stream_, array_type->field.type);
           stream_->WriteU8(array_type->field.mutable_, "field mutability");
           break;

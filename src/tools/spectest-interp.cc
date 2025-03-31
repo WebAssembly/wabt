@@ -191,7 +191,7 @@ int LaneCountFromType(Type type) {
 }
 
 ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
-  assert(ev.value.type == Type::V128);
+  assert(ev.value.type.code() == Type::V128);
   assert(lane < LaneCountFromType(ev.lane_type));
 
   ExpectedValue result;
@@ -237,7 +237,7 @@ ExpectedValue GetLane(const ExpectedValue& ev, int lane) {
 }
 
 TypedValue GetLane(const TypedValue& tv, Type lane_type, int lane) {
-  assert(tv.type == Type::V128);
+  assert(tv.type.code() == Type::V128);
   assert(lane < LaneCountFromType(lane_type));
 
   TypedValue result;
@@ -616,25 +616,25 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
   CHECK_RESULT(ParseString(&type_str));
 
   if (type_str == "i32") {
-    *out_type = Type::I32;
+    *out_type = Type(Type::I32);
   } else if (type_str == "f32") {
-    *out_type = Type::F32;
+    *out_type = Type(Type::F32);
   } else if (type_str == "i64") {
-    *out_type = Type::I64;
+    *out_type = Type(Type::I64);
   } else if (type_str == "f64") {
-    *out_type = Type::F64;
+    *out_type = Type(Type::F64);
   } else if (type_str == "v128") {
-    *out_type = Type::V128;
+    *out_type = Type(Type::V128);
   } else if (type_str == "i8") {
-    *out_type = Type::I8;
+    *out_type = Type(Type::I8);
   } else if (type_str == "i16") {
-    *out_type = Type::I16;
+    *out_type = Type(Type::I16);
   } else if (type_str == "funcref") {
-    *out_type = Type::FuncRef;
+    *out_type = Type(Type::FuncRef);
   } else if (type_str == "externref") {
-    *out_type = Type::ExternRef;
+    *out_type = Type(Type::ExternRef);
   } else if (type_str == "exnref") {
-    *out_type = Type::ExnRef;
+    *out_type = Type(Type::ExnRef);
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -891,7 +891,7 @@ wabt::Result JSONParser::ParseExpectedValue(ExpectedValue* out_value,
   EXPECT_KEY("type");
   CHECK_RESULT(ParseType(&type));
   EXPECT(",");
-  if (type == Type::V128) {
+  if (type.code() == Type::V128) {
     Type lane_type;
     EXPECT_KEY("lane_type");
     CHECK_RESULT(ParseType(&lane_type));
@@ -1286,12 +1286,14 @@ CommandRunner::CommandRunner() : store_(s_features) {
     interp::FuncType type;
   } const print_funcs[] = {
       {"print", interp::FuncType{{}, {}}},
-      {"print_i32", interp::FuncType{{ValueType::I32}, {}}},
-      {"print_i64", interp::FuncType{{ValueType::I64}, {}}},
-      {"print_f32", interp::FuncType{{ValueType::F32}, {}}},
-      {"print_f64", interp::FuncType{{ValueType::F64}, {}}},
-      {"print_i32_f32", interp::FuncType{{ValueType::I32, ValueType::F32}, {}}},
-      {"print_f64_f64", interp::FuncType{{ValueType::F64, ValueType::F64}, {}}},
+      {"print_i32", interp::FuncType{{Type(ValueType::I32)}, {}}},
+      {"print_i64", interp::FuncType{{Type(ValueType::I64)}, {}}},
+      {"print_f32", interp::FuncType{{Type(ValueType::F32)}, {}}},
+      {"print_f64", interp::FuncType{{Type(ValueType::F64)}, {}}},
+      {"print_i32_f32",
+       interp::FuncType{{Type(ValueType::I32), Type(ValueType::F32)}, {}}},
+      {"print_f64_f64",
+       interp::FuncType{{Type(ValueType::F64), Type(ValueType::F64)}, {}}},
   };
 
   for (auto&& print : print_funcs) {
@@ -1307,27 +1309,27 @@ CommandRunner::CommandRunner() : store_(s_features) {
                       });
   }
 
-  spectest["table"] =
-      interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
+  spectest["table"] = interp::Table::New(
+      store_, TableType{Type(ValueType::FuncRef), Limits{10, 20}});
 
   spectest["table64"] = interp::Table::New(
-      store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}});
+      store_, TableType{Type(ValueType::FuncRef), Limits{10, 20, false, true}});
 
   spectest["memory"] = interp::Memory::New(
       store_, MemoryType{Limits{1, 2}, WABT_DEFAULT_PAGE_SIZE});
 
-  spectest["global_i32"] =
-      interp::Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
-                          Value::Make(u32{666}));
-  spectest["global_i64"] =
-      interp::Global::New(store_, GlobalType{ValueType::I64, Mutability::Const},
-                          Value::Make(u64{666}));
-  spectest["global_f32"] =
-      interp::Global::New(store_, GlobalType{ValueType::F32, Mutability::Const},
-                          Value::Make(f32{666.6}));
-  spectest["global_f64"] =
-      interp::Global::New(store_, GlobalType{ValueType::F64, Mutability::Const},
-                          Value::Make(f64{666.6}));
+  spectest["global_i32"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::I32), Mutability::Const},
+      Value::Make(u32{666}));
+  spectest["global_i64"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::I64), Mutability::Const},
+      Value::Make(u64{666}));
+  spectest["global_f32"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::F32), Mutability::Const},
+      Value::Make(f32{666.6}));
+  spectest["global_f64"] = interp::Global::New(
+      store_, GlobalType{Type(ValueType::F64), Mutability::Const},
+      Value::Make(f64{666.6}));
 }
 
 wabt::Result CommandRunner::Run(const Script& script) {
@@ -1920,7 +1922,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
     case Type::FuncRef:
       // A funcref expectation only requires that the reference be a function,
       // but it doesn't check the actual index.
-      ok = (actual.type == Type::FuncRef);
+      ok = (actual.type == Type(Type::FuncRef));
       break;
 
     case Type::ExternRef:
@@ -1929,7 +1931,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
 
     case Type::ExnRef:
       // FIXME is this correct?
-      ok = (actual.type == Type::ExnRef);
+      ok = (actual.type.code() == Type::ExnRef);
       break;
 
     default:

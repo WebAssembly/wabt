@@ -51,14 +51,14 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
   // That may well not be the biggest deal since that is usually obvious
   // from context, if not, we should probably represent that as a cast around
   // the access, since it should not be part of the field type.
-  if (operand_type == Type::I32 || operand_type == Type::I64) {
+  if (operand_type.code() == Type::I32 || operand_type.code() == Type::I64) {
     auto name = std::string_view(opc.GetName());
     // FIXME: change into a new column in opcode.def instead?
     auto is_unsigned = name.substr(name.size() - 2) == "_u";
     switch (opc.GetMemorySize()) {
-      case 1: return is_unsigned ? Type::I8U : Type::I8;
-      case 2: return is_unsigned ? Type::I16U : Type::I16;
-      case 4: return is_unsigned ? Type::I32U : Type::I32;
+      case 1: return Type(is_unsigned ? Type::I8U : Type::I8);
+      case 2: return Type(is_unsigned ? Type::I16U : Type::I16);
+      case 4: return Type(is_unsigned ? Type::I32U : Type::I32);
     }
   }
   return operand_type;
@@ -70,7 +70,7 @@ inline Type GetMemoryType(Type operand_type, Opcode opc) {
 struct LoadStoreTracking {
   struct LSAccess {
     Address byte_size = 0;
-    Type type = Type::Any;
+    Type type = Type(Type::Any);
     Address align = 0;
     uint32_t idx = 0;
     bool is_uniform = true;
@@ -79,7 +79,7 @@ struct LoadStoreTracking {
   struct LSVar {
     std::map<uint64_t, LSAccess> accesses;
     bool struct_layout = true;
-    Type same_type = Type::Any;
+    Type same_type = Type(Type::Any);
     Address same_align = kInvalidAddress;
     Opcode last_opc;
   };
@@ -149,13 +149,13 @@ struct LoadStoreTracking {
     // Additionally, check if all accesses are to the same type, so
     // if layout check fails, we can at least declare it as pointer to
     // a type.
-    if ((var.same_type == type || var.same_type == Type::Any) &&
+    if ((var.same_type == type || var.same_type.code() == Type::Any) &&
         (var.same_align == align || var.same_align == kInvalidAddress)) {
       var.same_type = type;
       var.same_align = align;
       var.last_opc = opc;
     } else {
-      var.same_type = Type::Void;
+      var.same_type = Type(Type::Void);
       var.same_align = kInvalidAddress;
     }
   }
@@ -229,7 +229,7 @@ struct LoadStoreTracking {
     }
     // We don't have a struct layout, or the struct has just one field,
     // so maybe we can just declare it as a pointer to one type?
-    if (it->second.same_type != Type::Void) {
+    if (it->second.same_type.code() != Type::Void) {
       return cat(GetDecompTypeName(it->second.same_type), "_ptr",
                  GenAlign(it->second.same_align, it->second.last_opc));
     }
@@ -251,7 +251,7 @@ struct LoadStoreTracking {
       return IdxToName(ait->second.idx);
     }
     // Not a struct, see if it is a typed pointer.
-    if (it->second.same_type != Type::Void) {
+    if (it->second.same_type.code() != Type::Void) {
       return "*";
     }
     return "";

@@ -250,10 +250,10 @@ struct Decompiler {
       return false;
     }
     auto& c = cast<ConstExpr>(e)->const_;
-    if (c.type() != Type::I32 && c.type() != Type::I64) {
+    if (c.type().code() != Type::I32 && c.type().code() != Type::I64) {
       return false;
     }
-    dest = c.type() == Type::I32 ? c.u32() : c.u64();
+    dest = c.type().code() == Type::I32 ? c.u32() : c.u64();
     return true;
   }
 
@@ -321,7 +321,7 @@ struct Decompiler {
         auto& const_exp = shift_exp.children[1];
         if (se.opcode == Opcode::I32Shl && const_exp.etype == ExprType::Const) {
           auto& ce = *cast<ConstExpr>(const_exp.e);
-          if (ce.const_.type() == Type::I32 &&
+          if (ce.const_.type().code() == Type::I32 &&
               (1ULL << ce.const_.u32()) == align) {
             // Pfew, case detected :( Lets re-write this in Haskell.
             // TODO: we're decompiling these twice.

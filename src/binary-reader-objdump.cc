@@ -572,7 +572,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 std::string BinaryReaderObjdumpDisassemble::BlockSigToString(Type type) const {
   if (type.IsIndex()) {
     return StringPrintf("type[%d]", type.GetIndex());
-  } else if (type == Type::Void) {
+  } else if (type.code() == Type::Void) {
     return "";
   } else {
     return type.GetName();
@@ -914,7 +914,7 @@ Result BinaryReaderObjdumpDisassemble::OnTryTableExpr(
 
   std::string buffer = std::string();
 
-  if (sig_type != Type::Void) {
+  if (sig_type.code() != Type::Void) {
     buffer.append(BlockSigToString(sig_type).c_str()).append(" ");
   }
 
@@ -1024,7 +1024,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Type sig_type) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  if (sig_type != Type::Void) {
+  if (sig_type.code() != Type::Void) {
     LogOpcode("%s", BlockSigToString(sig_type).c_str());
   } else {
     LogOpcode(nullptr);

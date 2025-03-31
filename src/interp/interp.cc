@@ -227,7 +227,7 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   if (!IsValid(ref)) {
     return false;
   }
-  if (type == ValueType::ExternRef) {
+  if (type.code() == ValueType::ExternRef) {
     return true;
   }
   if (ref == Ref::Null) {
@@ -1983,7 +1983,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     }
     case O::ThrowRef: {
       Ref ref = Pop<Ref>();
-      assert(store_.HasValueType(ref, ValueType::ExnRef));
+      assert(store_.HasValueType(ref, Type(ValueType::ExnRef)));
       // FIXME better error message?
       TRAP_IF(ref == Ref::Null, "expected exnref, got null");
       Exception::Ptr exn = store_.UnsafeGet<Exception>(ref);
@@ -2751,7 +2751,7 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
   // TODO: Instead, record this accurately in opcode.def.
   Index num_operands = 3;
   for (Index i = 3; i >= 1; i--) {
-    if (instr.op.GetParamType(i) == ValueType::Void) {
+    if (instr.op.GetParamType(i).code() == ValueType::Void) {
       num_operands--;
     } else {
       break;
@@ -2760,7 +2760,7 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
   auto type = index > num_operands
                   ? Type(ValueType::Void)
                   : instr.op.GetParamType(num_operands - index + 1);
-  if (type == ValueType::Void) {
+  if (type.code() == ValueType::Void) {
     // Void should never be displayed normally; we only expect to see it when
     // the stack may have different a different type. This is likely to occur
     // with an index; try to see which type we should expect.

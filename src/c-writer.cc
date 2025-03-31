@@ -137,7 +137,7 @@ struct GlobalInstanceVar {
 };
 
 struct StackVar {
-  explicit StackVar(Index index, Type type = Type::Any)
+  explicit StackVar(Index index, Type type = Type(Type::Any))
       : index(index), type(type) {}
   Index index;
   Type type;
@@ -1209,7 +1209,7 @@ void CWriter::Write(const GlobalInstanceVar& var) {
 void CWriter::Write(const StackVar& sv) {
   Index index = type_stack_.size() - 1 - sv.index;
   Type type = sv.type;
-  if (type == Type::Any) {
+  if (type.code() == Type::Any) {
     assert(index < type_stack_.size());
     type = type_stack_[index];
   }
@@ -2018,16 +2018,17 @@ void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
 
 static bool func_uses_simd(const FuncSignature& sig) {
   return std::any_of(sig.param_types.begin(), sig.param_types.end(),
-                     [](auto x) { return x == Type::V128; }) ||
+                     [](auto x) { return x.code() == Type::V128; }) ||
          std::any_of(sig.result_types.begin(), sig.result_types.end(),
-                     [](auto x) { return x == Type::V128; });
+                     [](auto x) { return x.code() == Type::V128; });
 }
 
 void CWriter::ComputeSimdScope() {
   simd_used_in_header_ =
       module_->features_used.simd &&
-      (std::any_of(module_->globals.begin(), module_->globals.end(),
-                   [](const auto& x) { return x->type == Type::V128; }) ||
+      (std::any_of(
+           module_->globals.begin(), module_->globals.end(),
+           [](const auto& x) { return x->type.code() == Type::V128; }) ||
        std::any_of(module_->imports.begin(), module_->imports.end(),
                    [](const auto& x) {
                      return x->kind() == ExternalKind::Func &&
@@ -2493,7 +2494,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
                                  const ElemSegment* src_segment,
                                  const Table* dst_table) {
   assert(dst_table->elem_type.IsRef() &&
-         dst_table->elem_type != Type::Reference);
+         dst_table->elem_type.code() != Type::Reference);
   assert(dst_table->elem_type == src_segment->elem_type);
 
   Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
@@ -2501,7 +2502,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
 
   // elem segment exprs needed only for funcref tables
   // because externref and exnref tables can only be initialized with ref.null
-  if (dst_table->elem_type == Type::FuncRef) {
+  if (dst_table->elem_type.code() == Type::FuncRef) {
     if (src_segment->elem_exprs.empty()) {
       Write("NULL, ");
     } else {
@@ -2526,7 +2527,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
     Write(StackVar(2), ", ", StackVar(1), ", ", StackVar(0));
   }
 
-  if (dst_table->elem_type == Type::FuncRef) {
+  if (dst_table->elem_type.code() == Type::FuncRef) {
     Write(", instance");
   }
 
@@ -3142,8 +3143,9 @@ void CWriter::WriteVarsByType(const Vars& vars,
                               const TypeOf& typeoffunc,
                               const ToDo& todo,
                               bool setjmp_safe) {
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64, Type::V128,
-                    Type::FuncRef, Type::ExternRef, Type::ExnRef}) {
+  for (Type type : {Type(Type::I32), Type(Type::I64), Type(Type::F32),
+                    Type(Type::F64), Type(Type::V128), Type(Type::FuncRef),
+                    Type(Type::ExternRef), Type(Type::ExnRef)}) {
     Index var_index = 0;
     size_t count = 0;
     for (const auto& var : vars) {
@@ -3289,7 +3291,7 @@ void CWriter::WriteLocals(const std::vector<std::string>& index_to_name) {
         Write(DefineParamName(index_to_name[num_params + local_index]), " = ");
         if (local_type.IsRef()) {
           Write(GetReferenceNullValue(local_type));
-        } else if (local_type == Type::V128) {
+        } else if (local_type.code() == Type::V128) {
           Write("simde_wasm_i64x2_make(0, 0)");
         } else {
           Write("0");
@@ -3561,7 +3563,7 @@ void CWriter::Write(const TableCatch& c) {
     }
   }
   if (c.IsRef()) {
-    PushType(Type::ExnRef);
+    PushType(Type(Type::ExnRef));
     Write(StackVar(0), ".tag = wasm_rt_exception_tag();", Newline());
     Write(StackVar(0), ".size = wasm_rt_exception_size();", Newline());
     Write("wasm_rt_memcpy(&", StackVar(0),
@@ -3932,7 +3934,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::RefFunc: {
         const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
-        PushType(Type::FuncRef);
+        PushType(Type(Type::FuncRef));
         const FuncDeclaration& decl = func->decl;
 
         assert(decl.has_func_type);
@@ -3968,24 +3970,24 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::RefIsNull:
         switch (StackType(0).code()) {
           case Type::FuncRef:
-            Write(StackVar(0, Type::I32), " = (", StackVar(0), ".func == NULL",
-                  ");", Newline());
+            Write(StackVar(0, Type(Type::I32)), " = (", StackVar(0),
+                  ".func == NULL", ");", Newline());
             break;
           case Type::ExternRef:
-            Write(StackVar(0, Type::I32), " = (", StackVar(0),
-                  " == ", GetReferenceNullValue(Type::ExternRef), ");",
+            Write(StackVar(0, Type(Type::I32)), " = (", StackVar(0),
+                  " == ", GetReferenceNullValue(Type(Type::ExternRef)), ");",
                   Newline());
             break;
           case Type::ExnRef:
-            Write(StackVar(0, Type::I32), " = (", StackVar(0), ".tag == NULL",
-                  ");", Newline());
+            Write(StackVar(0, Type(Type::I32)), " = (", StackVar(0),
+                  ".tag == NULL", ");", Newline());
             break;
           default:
             WABT_UNREACHABLE;
         }
 
         DropTypes(1);
-        PushType(Type::I32);
+        PushType(Type(Type::I32));
         break;
 
       case ExprType::MemoryGrow: {
@@ -4237,7 +4239,7 @@ void CWriter::Write(const ExprList& exprs) {
 
         DropTypes(decl.GetNumResults());
         PushTypes(decl.sig.param_types);
-        PushType(Type::I32);
+        PushType(Type(Type::I32));
 
         if (!in_tail_callee_) {
           WriteTailCallStack();

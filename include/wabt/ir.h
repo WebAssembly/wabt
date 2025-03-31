@@ -84,27 +84,27 @@ using VarVector = std::vector<Var>;
 struct Const {
   static constexpr uintptr_t kRefNullBits = ~uintptr_t(0);
 
-  Const() : Const(Type::I32, uint32_t(0)) {}
+  Const() : Const(Type(Type::I32), uint32_t(0)) {}
 
   static Const I32(uint32_t val = 0, const Location& loc = Location()) {
-    return Const(Type::I32, val, loc);
+    return Const(Type(Type::I32), val, loc);
   }
   static Const I64(uint64_t val = 0, const Location& loc = Location()) {
-    return Const(Type::I64, val, loc);
+    return Const(Type(Type::I64), val, loc);
   }
   static Const F32(uint32_t val = 0, const Location& loc = Location()) {
-    return Const(Type::F32, val, loc);
+    return Const(Type(Type::F32), val, loc);
   }
   static Const F64(uint64_t val = 0, const Location& loc = Location()) {
-    return Const(Type::F64, val, loc);
+    return Const(Type(Type::F64), val, loc);
   }
   static Const V128(v128 val, const Location& loc = Location()) {
-    return Const(Type::V128, val, loc);
+    return Const(Type(Type::V128), val, loc);
   }
 
   Type type() const { return type_; }
   Type lane_type() const {
-    assert(type_ == Type::V128);
+    assert(type_.code() == Type::V128);
     return lane_type_;
   }
 
@@ -132,17 +132,17 @@ struct Const {
     return data_.To<T>(lane);
   }
 
-  void set_u32(uint32_t x) { From(Type::I32, x); }
-  void set_u64(uint64_t x) { From(Type::I64, x); }
-  void set_f32(uint32_t x) { From(Type::F32, x); }
-  void set_f64(uint64_t x) { From(Type::F64, x); }
+  void set_u32(uint32_t x) { From(Type(Type::I32), x); }
+  void set_u64(uint64_t x) { From(Type(Type::I64), x); }
+  void set_f32(uint32_t x) { From(Type(Type::F32), x); }
+  void set_f64(uint64_t x) { From(Type(Type::F64), x); }
 
-  void set_v128_u8(int lane, uint8_t x) { set_v128_lane(lane, Type::I8, x); }
-  void set_v128_u16(int lane, uint16_t x) { set_v128_lane(lane, Type::I16, x); }
-  void set_v128_u32(int lane, uint32_t x) { set_v128_lane(lane, Type::I32, x); }
-  void set_v128_u64(int lane, uint64_t x) { set_v128_lane(lane, Type::I64, x); }
-  void set_v128_f32(int lane, uint32_t x) { set_v128_lane(lane, Type::F32, x); }
-  void set_v128_f64(int lane, uint64_t x) { set_v128_lane(lane, Type::F64, x); }
+  void set_v128_u8(int lane, uint8_t x) { set_v128_lane(lane, Type(Type::I8), x); }
+  void set_v128_u16(int lane, uint16_t x) { set_v128_lane(lane, Type(Type::I16), x); }
+  void set_v128_u32(int lane, uint32_t x) { set_v128_lane(lane, Type(Type::I32), x); }
+  void set_v128_u64(int lane, uint64_t x) { set_v128_lane(lane, Type(Type::I64), x); }
+  void set_v128_f32(int lane, uint32_t x) { set_v128_lane(lane, Type(Type::F32), x); }
+  void set_v128_f64(int lane, uint64_t x) { set_v128_lane(lane, Type(Type::F64), x); }
 
   // Only used for expectations. (e.g. wast assertions)
   void set_f32(ExpectedNan nan) {
@@ -153,8 +153,8 @@ struct Const {
     set_f64(0);
     set_expected_nan(0, nan);
   }
-  void set_funcref() { From<uintptr_t>(Type::FuncRef, 0); }
-  void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
+  void set_funcref() { From<uintptr_t>(Type(Type::FuncRef), 0); }
+  void set_externref(uintptr_t x) { From(Type(Type::ExternRef), x); }
   void set_null(Type type) { From<uintptr_t>(type, kRefNullBits); }
 
   bool is_expected_nan(int lane = 0) const {
@@ -178,7 +178,7 @@ struct Const {
   template <typename T>
   void set_v128_lane(int lane, Type lane_type, T x) {
     lane_type_ = lane_type;
-    From(Type::V128, x, lane);
+    From(Type(Type::V128), x, lane);
     set_expected_nan(lane, ExpectedNan::None);
   }
 
@@ -322,7 +322,7 @@ class FuncType : public TypeEntry {
 
 struct Field {
   std::string name;
-  Type type = Type::Void;
+  Type type = Type(Type::Void);
   bool mutable_ = false;
 };
 
@@ -941,7 +941,7 @@ struct Global {
   explicit Global(std::string_view name) : name(name) {}
 
   std::string name;
-  Type type = Type::Void;
+  Type type = Type(Type::Void);
   bool mutable_ = false;
   ExprList init_expr;
 };
