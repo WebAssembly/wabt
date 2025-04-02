@@ -33,7 +33,8 @@ std::string TypesToString(const TypeVector& types,
     Type ty = types[i];
     // NOTE: Reference (and GetName) is also used by (e.g.) objdump, which does
     // not apply validation. do this here so as to not break that.
-    if (ty == Type::Reference && ty.GetReferenceIndex() == kInvalidIndex) {
+    if (ty.code() == Type::Reference &&
+        ty.GetReferenceIndex() == kInvalidIndex) {
       result += "reference";
     } else {
       result += types[i].GetName();
@@ -233,11 +234,6 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
     return Result::Ok;
   }
 
-  if (expected == Type::Reference && actual == Type::Reference) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
   if (actual != expected) {
     return Result::Error;
   }
