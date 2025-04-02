@@ -34,7 +34,7 @@ using TypeVector = std::vector<Type>;
 class Type {
  public:
   // Matches binary format, do not change.
-  enum Enum : int32_t {
+  enum Enum : int64_t {
     I32 = -0x01,        // 0x7f
     I64 = -0x02,        // 0x7e
     F32 = -0x03,        // 0x7d
@@ -45,7 +45,7 @@ class Type {
     ExnRef = -0x17,     // 0x69
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
-    Reference = -0x15,  // 0x6b
+    Reference = -0x15,  // 0x6b  : upper 32 bit contains an index
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
@@ -59,20 +59,24 @@ class Type {
   };
 
   Type() = default;  // Provided so Type can be member of a union.
-  Type(int32_t code)
-      : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
-  Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
-  Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
-    assert(e == Enum::Reference);
+  Type(int32_t code) : enum_(code) {}
+  Type(Enum e) : enum_(static_cast<int64_t>(e)) {}
+  Type(Enum e, Index type_index) {
+    assert(Type(e).IsReferenceWithIndex());
+    enum_ = static_cast<uint32_t>(e) | (static_cast<int64_t>(type_index) << 32);
   }
-  constexpr operator Enum() const { return enum_; }
+  // Returns the full type, including any properties (e.g. index or nullable)
+  constexpr operator Enum() const { return static_cast<Enum>(enum_); }
+  // Returns the type only, excluding any properties (e.g. index or nullable).
+  constexpr Enum code() const { return static_cast<Enum>(static_cast<int32_t>(enum_)); }
 
   bool IsRef() const {
-    return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
-           enum_ == Type::Reference || enum_ == Type::ExnRef;
+    Enum type = code();
+    return type == Type::ExternRef || type == Type::FuncRef ||
+           type == Type::Reference || type == Type::ExnRef;
   }
 
-  bool IsReferenceWithIndex() const { return enum_ == Type::Reference; }
+  bool IsReferenceWithIndex() const { return code() == Type::Reference; }
 
   bool IsNullableRef() const {
     // Currently all reftypes are nullable
@@ -80,7 +84,7 @@ class Type {
   }
 
   std::string GetName() const {
-    switch (enum_) {
+    switch (code()) {
       case Type::I32:       return "i32";
       case Type::I64:       return "i64";
       case Type::F32:       return "f32";
@@ -95,14 +99,14 @@ class Type {
       case Type::Any:       return "any";
       case Type::ExternRef: return "externref";
       case Type::Reference:
-        return StringPrintf("(ref %d)", type_index_);
+        return StringPrintf("(ref %d)", GetReferenceIndex());
       default:
-        return StringPrintf("<type_index[%d]>", enum_);
+        return StringPrintf("<type_index[%d]>", static_cast<int>(code()));
     }
   }
 
   const char* GetRefKindName() const {
-    switch (enum_) {
+    switch (code()) {
       case Type::FuncRef:   return "func";
       case Type::ExternRef: return "extern";
       case Type::ExnRef:    return "exn";
@@ -132,13 +136,13 @@ class Type {
   }
 
   Index GetReferenceIndex() const {
-    assert(enum_ == Enum::Reference);
-    return type_index_;
+    assert(IsReferenceWithIndex());
+    return static_cast<Index>(enum_ >> 32);
   }
 
   TypeVector GetInlineVector() const {
     assert(!IsIndex());
-    switch (enum_) {
+    switch (code()) {
       case Type::Void:
         return TypeVector();
 
@@ -159,8 +163,7 @@ class Type {
   }
 
  private:
-  Enum enum_;
-  Index type_index_;  // Only used for for Type::Reference
+  int64_t enum_;
 };
 
 }  // namespace wabt

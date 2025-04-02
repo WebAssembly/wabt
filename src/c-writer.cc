@@ -2493,7 +2493,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
                                  const ElemSegment* src_segment,
                                  const Table* dst_table) {
   assert(dst_table->elem_type.IsRef() &&
-         dst_table->elem_type != Type::Reference);
+         dst_table->elem_type.code() != Type::Reference);
   assert(dst_table->elem_type == src_segment->elem_type);
 
   Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",

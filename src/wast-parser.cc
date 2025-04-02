@@ -324,7 +324,8 @@ void ResolveTypeName(
     Type& type,
     Index index,
     const std::unordered_map<uint32_t, std::string>& bindings) {
-  if (type != Type::Reference || type.GetReferenceIndex() != kInvalidIndex) {
+  if (type.code() != Type::Reference ||
+      type.GetReferenceIndex() != kInvalidIndex) {
     return;
   }
 

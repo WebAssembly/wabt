@@ -24,7 +24,7 @@ namespace wabt {
 namespace interp {
 
 std::string TypedValueToString(const TypedValue& tv) {
-  switch (tv.type) {
+  switch (tv.type.code()) {
     case Type::I32:
       return StringPrintf("i32:%u", tv.value.Get<s32>());
 
