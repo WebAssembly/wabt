@@ -50,11 +50,11 @@ jobs:
     - name: mkdir
       run: mkdir -p out
     - name: cmake
-      run: cmake .. -G Ninja -DWERROR=ON -Werror=dev -Wno-deprecated
+      run: cmake .. -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
       working-directory: out
       if: matrix.os != 'windows-latest'
     - name: cmake (windows)
-      run: cmake .. -DWERROR=ON -Werror=dev
+      run: cmake .. -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
       working-directory: out
       if: matrix.os == 'windows-latest'
     - name: build
@@ -255,7 +255,7 @@ jobs:
     - name: distcc symlink
       run: sudo ln -s /usr/bin/distcc /opt/bin/distcc_symlinks/${{matrix.arch}}-linux-gnu-gcc # only CC is needed
     - name: cmake
-      run: cmake -S . -B out -G Ninja -DCMAKE_TOOLCHAIN_FILE=../scripts/TC-${{matrix.arch}}.cmake -DWERROR=OFF -Werror=dev -Wno-deprecated
+      run: cmake -S . -B out -G Ninja -DCMAKE_TOOLCHAIN_FILE=../scripts/TC-${{matrix.arch}}.cmake -DWERROR=OFF -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
     - name: build
       run: cmake --build out
     - name: check if generated files are up-to-date
