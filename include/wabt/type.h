@@ -60,19 +60,40 @@ class Type {
 
   Type() = default;  // Provided so Type can be member of a union.
   Type(int32_t code)
-      : enum_(static_cast<Enum>(code)), type_index_(kInvalidIndex) {}
-  Type(Enum e) : enum_(e), type_index_(kInvalidIndex) {}
+      : enum_(static_cast<Enum>(code)), type_index_(0) {
+    assert(!EnumIsReferenceWithIndex(enum_));
+  }
+  Type(Enum e) : enum_(e), type_index_(0) {
+    assert(!EnumIsReferenceWithIndex(enum_));
+  }
   Type(Enum e, Index type_index) : enum_(e), type_index_(type_index) {
-    assert(e == Enum::Reference);
+    assert(EnumIsReferenceWithIndex(e));
   }
   constexpr operator Enum() const { return enum_; }
+
+  friend constexpr bool operator==(const Type a, const Type b) {
+    return a.enum_ == b.enum_ && a.type_index_ == b.type_index_;
+  }
+  friend constexpr bool operator!=(const Type a, const Type b) {
+    return !(a == b);
+  }
+  friend constexpr bool operator==(const Type ty, const Enum code) {
+    return ty.enum_ == code;
+  }
+  friend constexpr bool operator!=(const Type ty, const Enum code) {
+    return !(ty == code);
+  }
+  friend constexpr bool operator<(const Type a, const Type b) {
+    return a.enum_ == b.enum_ ? a.type_index_ < b.type_index_
+                              : a.enum_ < b.enum_;
+  }
 
   bool IsRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
            enum_ == Type::Reference || enum_ == Type::ExnRef;
   }
 
-  bool IsReferenceWithIndex() const { return enum_ == Type::Reference; }
+  bool IsReferenceWithIndex() const { return EnumIsReferenceWithIndex(enum_); }
 
   bool IsNullableRef() const {
     // Currently all reftypes are nullable
@@ -159,8 +180,15 @@ class Type {
   }
 
  private:
+  static bool EnumIsReferenceWithIndex(Enum value) {
+    return value == Type::Reference;
+  }
+
   Enum enum_;
-  Index type_index_;  // Only used for for Type::Reference
+  // This index is 0 for non-references, so a zeroed
+  // memory area represents a valid Type::Any type.
+  // It contains an index for references with type index.
+  Index type_index_;
 };
 
 }  // namespace wabt

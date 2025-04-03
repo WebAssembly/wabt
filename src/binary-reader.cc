@@ -376,9 +376,7 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
 }
 
 Result BinaryReader::ReadRefType(Type* out_value, const char* desc) {
-  uint32_t type = 0;
-  CHECK_RESULT(ReadS32Leb128(&type, desc));
-  *out_value = static_cast<Type>(type);
+  CHECK_RESULT(ReadType(out_value, desc));
   ERROR_UNLESS(out_value->IsRef(), "%s must be a reference type", desc);
   return Result::Ok;
 }

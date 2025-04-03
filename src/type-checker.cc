@@ -233,11 +233,6 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
     return Result::Ok;
   }
 
-  if (expected == Type::Reference && actual == Type::Reference) {
-    return expected.GetReferenceIndex() == actual.GetReferenceIndex()
-               ? Result::Ok
-               : Result::Error;
-  }
   if (actual != expected) {
     return Result::Error;
   }
@@ -524,7 +519,7 @@ Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
   Type type;
   Result result = PeekType(0, &type);
   if (!type.IsReferenceWithIndex()) {
-    type = Type::Reference;
+    type = Type(Type::Reference, kInvalidIndex);
   }
   result |= PopAndCheck1Type(type, "call_ref");
   if (Succeeded(result)) {
@@ -814,7 +809,7 @@ Result TypeChecker::OnRefIsNullExpr() {
   Type type;
   Result result = PeekType(0, &type);
   if (!type.IsRef()) {
-    type = Type::Reference;
+    type = Type(Type::Reference, kInvalidIndex);
   }
   result |= PopAndCheck1Type(type, "ref.is_null");
   PushType(Type::I32);

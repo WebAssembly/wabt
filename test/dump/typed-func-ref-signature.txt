@@ -1,0 +1,118 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-function-references
+(module
+  (type $t1 (func))
+  (type $t2 (func))
+  (type $t3 (func))
+
+  (func $f1 (param (ref $t1)) )
+  (func $f2 (param (ref $t2)) )
+  (func $f3 (param (ref $t3)) )
+  (func $f4 (param (ref $t3)) )
+  (func $f5 (param (ref $t2)) )
+  (func $f6 (param (ref $t1)) )
+)
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 06                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+; func type 1
+000000e: 60                                        ; func
+000000f: 00                                        ; num params
+0000010: 00                                        ; num results
+; func type 2
+0000011: 60                                        ; func
+0000012: 00                                        ; num params
+0000013: 00                                        ; num results
+; func type 3
+0000014: 60                                        ; func
+0000015: 01                                        ; num params
+0000016: 6b                                        ; (ref 0)
+0000017: 00                                        ; (ref 0)
+0000018: 00                                        ; num results
+; func type 4
+0000019: 60                                        ; func
+000001a: 01                                        ; num params
+000001b: 6b                                        ; (ref 1)
+000001c: 01                                        ; (ref 1)
+000001d: 00                                        ; num results
+; func type 5
+000001e: 60                                        ; func
+000001f: 01                                        ; num params
+0000020: 6b                                        ; (ref 2)
+0000021: 02                                        ; (ref 2)
+0000022: 00                                        ; num results
+0000009: 19                                        ; FIXUP section size
+; section "Function" (3)
+0000023: 03                                        ; section code
+0000024: 00                                        ; section size (guess)
+0000025: 06                                        ; num functions
+0000026: 03                                        ; function 0 signature index
+0000027: 04                                        ; function 1 signature index
+0000028: 05                                        ; function 2 signature index
+0000029: 05                                        ; function 3 signature index
+000002a: 04                                        ; function 4 signature index
+000002b: 03                                        ; function 5 signature index
+0000024: 07                                        ; FIXUP section size
+; section "Code" (10)
+000002c: 0a                                        ; section code
+000002d: 00                                        ; section size (guess)
+000002e: 06                                        ; num functions
+; function body 0
+000002f: 00                                        ; func body size (guess)
+0000030: 00                                        ; local decl count
+0000031: 0b                                        ; end
+000002f: 02                                        ; FIXUP func body size
+; function body 1
+0000032: 00                                        ; func body size (guess)
+0000033: 00                                        ; local decl count
+0000034: 0b                                        ; end
+0000032: 02                                        ; FIXUP func body size
+; function body 2
+0000035: 00                                        ; func body size (guess)
+0000036: 00                                        ; local decl count
+0000037: 0b                                        ; end
+0000035: 02                                        ; FIXUP func body size
+; function body 3
+0000038: 00                                        ; func body size (guess)
+0000039: 00                                        ; local decl count
+000003a: 0b                                        ; end
+0000038: 02                                        ; FIXUP func body size
+; function body 4
+000003b: 00                                        ; func body size (guess)
+000003c: 00                                        ; local decl count
+000003d: 0b                                        ; end
+000003b: 02                                        ; FIXUP func body size
+; function body 5
+000003e: 00                                        ; func body size (guess)
+000003f: 00                                        ; local decl count
+0000040: 0b                                        ; end
+000003e: 02                                        ; FIXUP func body size
+000002d: 13                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+typed-func-ref-signature.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000030 func[0]:
+ 000031: 0b                         | end
+000033 func[1]:
+ 000034: 0b                         | end
+000036 func[2]:
+ 000037: 0b                         | end
+000039 func[3]:
+ 00003a: 0b                         | end
+00003c func[4]:
+ 00003d: 0b                         | end
+00003f func[5]:
+ 000040: 0b                         | end
+;;; STDOUT ;;)
