@@ -719,10 +719,15 @@ Result BinaryReaderLogging::OnGenericCustomSection(std::string_view name,
     return reader_->name(value);                  \
   }
 
-#define DEFINE_TYPE(name)                         \
-  Result BinaryReaderLogging::name(Type type) {   \
-    LOGF(#name "(%s)\n", type.GetName().c_str()); \
-    return reader_->name(type);                   \
+#define DEFINE_TYPE(name)                                        \
+  Result BinaryReaderLogging::name(Type type) {                  \
+    if (!type.IsReferenceWithIndex()) {                          \
+      LOGF(#name "(%s)\n", type.GetName().c_str());              \
+    } else {                                                     \
+      LOGF(#name "(%s %" PRIindex ")\n", type.GetName().c_str(), \
+           type.GetReferenceIndex());                            \
+    }                                                            \
+    return reader_->name(type);                                  \
   }
 
 #define DEFINE_INDEX_DESC(name, desc)                 \
@@ -842,7 +847,7 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
-DEFINE0(OnCallRefExpr)
+DEFINE_TYPE(OnCallRefExpr)
 DEFINE_INDEX_DESC(OnCatchExpr, "tag_index");
 DEFINE0(OnCatchAllExpr);
 DEFINE_OPCODE(OnCompareExpr)

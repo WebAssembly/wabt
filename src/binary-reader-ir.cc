@@ -207,7 +207,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
-  Result OnCallRefExpr() override;
+  Result OnCallRefExpr(Type sig_type) override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnCompareExpr(Opcode opcode) override;
@@ -616,7 +616,7 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
   import->module_name = module_name;
   import->field_name = field_name;
   import->table.elem_limits = *elem_limits;
-  import->table.elem_type = elem_type;
+  import->table.elem_type = Var(elem_type, GetLocation());
   module_->AppendField(
       std::make_unique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
@@ -650,7 +650,7 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   auto import = std::make_unique<GlobalImport>();
   import->module_name = module_name;
   import->field_name = field_name;
-  import->global.type = type;
+  import->global.type = Var(type, GetLocation());
   import->global.mutable_ = mutable_;
   module_->AppendField(
       std::make_unique<ImportModuleField>(std::move(import), GetLocation()));
@@ -702,7 +702,7 @@ Result BinaryReaderIR::OnTable(Index index,
   auto field = std::make_unique<TableModuleField>(GetLocation());
   Table& table = field->table;
   table.elem_limits = *elem_limits;
-  table.elem_type = elem_type;
+  table.elem_type = Var(elem_type, GetLocation());
   module_->features_used.exceptions |= (elem_type == Type::ExnRef);
   module_->AppendField(std::move(field));
   return Result::Ok;
@@ -739,7 +739,7 @@ Result BinaryReaderIR::OnGlobalCount(Index count) {
 Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
   auto field = std::make_unique<GlobalModuleField>(GetLocation());
   Global& global = field->global;
-  global.type = type;
+  global.type = Var(type, GetLocation());
   global.mutable_ = mutable_;
   module_->AppendField(std::move(field));
   module_->features_used.simd |= (type == Type::V128);
@@ -920,8 +920,10 @@ Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
   return AppendExpr(std::move(expr));
 }
 
-Result BinaryReaderIR::OnCallRefExpr() {
-  return AppendExpr(std::make_unique<CallRefExpr>());
+Result BinaryReaderIR::OnCallRefExpr(Type sig_type) {
+  auto expr = std::make_unique<CallRefExpr>();
+  expr->sig_type = Var(sig_type, GetLocation());
+  return AppendExpr(std::move(expr));
 }
 
 Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
@@ -1153,7 +1155,7 @@ Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
 
 Result BinaryReaderIR::OnRefNullExpr(Type type) {
   module_->features_used.exceptions |= (type == Type::ExnRef);
-  return AppendExpr(std::make_unique<RefNullExpr>(type));
+  return AppendExpr(std::make_unique<RefNullExpr>(Var(type, GetLocation())));
 }
 
 Result BinaryReaderIR::OnRefIsNullExpr() {
@@ -1418,7 +1420,7 @@ Result BinaryReaderIR::EndElemSegmentInitExpr(Index index) {
 Result BinaryReaderIR::OnElemSegmentElemType(Index index, Type elem_type) {
   assert(index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[index];
-  segment->elem_type = elem_type;
+  segment->elem_type = Var(elem_type, GetLocation());
   return Result::Ok;
 }
 

@@ -686,6 +686,7 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallRef_Opcode.GetName());
+  writer_->WriteVar(expr->sig_type, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -890,7 +891,12 @@ Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
   writer_->WritePutsSpace(Opcode::RefNull_Opcode.GetName());
-  writer_->WriteRefKind(expr->type, NextChar::Newline);
+  if (expr->type.opt_type() != Type::RefNull) {
+    assert(!Type(expr->type.opt_type()).IsReferenceWithIndex());
+    writer_->WriteRefKind(expr->type.opt_type(), NextChar::Newline);
+  } else {
+    writer_->WriteVar(expr->type, NextChar::Newline);
+  }
   return Result::Ok;
 }
 
@@ -1495,10 +1501,10 @@ void WatWriter::WriteBeginGlobal(const Global& global) {
   WriteInlineImport(ExternalKind::Global, global_index_);
   if (global.mutable_) {
     WriteOpenSpace("mut");
-    WriteType(global.type, NextChar::Space);
+    WriteType(global.type.to_type(), NextChar::Space);
     WriteCloseSpace();
   } else {
-    WriteType(global.type, NextChar::Space);
+    WriteType(global.type.to_type(), NextChar::Space);
   }
   global_index_++;
 }
@@ -1543,7 +1549,7 @@ void WatWriter::WriteTable(const Table& table) {
   WriteInlineExports(ExternalKind::Table, table_index_);
   WriteInlineImport(ExternalKind::Table, table_index_);
   WriteLimits(table.elem_limits);
-  WriteType(table.elem_type, NextChar::None);
+  WriteType(table.elem_type.to_type(), NextChar::None);
   WriteCloseNewline();
   table_index_++;
 }
@@ -1577,9 +1583,9 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   }
 
   if (flags & SegUseElemExprs) {
-    WriteType(segment.elem_type, NextChar::Space);
+    WriteType(segment.elem_type.to_type(), NextChar::Space);
   } else {
-    assert(segment.elem_type == Type::FuncRef);
+    assert(segment.elem_type.opt_type() == Type::FuncRef);
     WritePuts("func", NextChar::Space);
   }
 
