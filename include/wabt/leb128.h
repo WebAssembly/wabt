@@ -63,6 +63,7 @@ void WriteS32Leb128(Stream* stream, T value, const char* desc) {
 size_t ReadU32Leb128(const uint8_t* p, const uint8_t* end, uint32_t* out_value);
 size_t ReadU64Leb128(const uint8_t* p, const uint8_t* end, uint64_t* out_value);
 size_t ReadS32Leb128(const uint8_t* p, const uint8_t* end, uint32_t* out_value);
+size_t ReadS33Leb128(const uint8_t* p, const uint8_t* end, uint64_t* out_value);
 size_t ReadS64Leb128(const uint8_t* p, const uint8_t* end, uint64_t* out_value);
 
 }  // namespace wabt

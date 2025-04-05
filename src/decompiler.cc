@@ -745,7 +745,7 @@ struct Decompiler {
     for (auto g : mc.module.globals) {
       auto is_import =
           CheckImportExport(s, ExternalKind::Global, global_index, g->name);
-      s += cat("global ", g->name, ":", GetDecompTypeName(g->type));
+      s += cat("global ", g->name, ":", GetDecompTypeName(g->type.to_type()));
       if (!is_import) {
         s += cat(" = ", InitExp(g->init_expr));
       }
@@ -760,7 +760,8 @@ struct Decompiler {
     for (auto tab : mc.module.tables) {
       auto is_import =
           CheckImportExport(s, ExternalKind::Table, table_index, tab->name);
-      s += cat("table ", tab->name, ":", GetDecompTypeName(tab->elem_type));
+      s += cat("table ", tab->name, ":",
+               GetDecompTypeName(tab->elem_type.to_type()));
       if (!is_import) {
         s += cat("(min: ", std::to_string(tab->elem_limits.initial),
                  ", max: ", std::to_string(tab->elem_limits.max), ")");

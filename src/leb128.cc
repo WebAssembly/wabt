@@ -273,13 +273,45 @@ size_t ReadS32Leb128(const uint8_t* p,
     return 4;
   } else if (p + 4 < end && (p[4] & 0x80) == 0) {
     // The top bits should be a sign-extension of the sign bit.
-    bool sign_bit_set = (p[4] & 0x8);
-    int top_bits = p[4] & 0xf0;
-    if ((sign_bit_set && top_bits != 0x70) ||
-        (!sign_bit_set && top_bits != 0)) {
+    int top_bits = p[4] & 0xf8;
+    if (top_bits != 0x78 && top_bits != 0) {
       return 0;
     }
     uint32_t result = LEB128_5(uint32_t);
+    *out_value = result;
+    return 5;
+  } else {
+    // Past the end.
+    return 0;
+  }
+}
+
+size_t ReadS33Leb128(const uint8_t* p,
+                     const uint8_t* end,
+                     uint64_t* out_value) {
+  if (p < end && (p[0] & 0x80) == 0) {
+    uint64_t result = LEB128_1(uint64_t);
+    *out_value = SIGN_EXTEND(int64_t, result, 6);
+    return 1;
+  } else if (p + 1 < end && (p[1] & 0x80) == 0) {
+    uint64_t result = LEB128_2(uint64_t);
+    *out_value = SIGN_EXTEND(int64_t, result, 13);
+    return 2;
+  } else if (p + 2 < end && (p[2] & 0x80) == 0) {
+    uint64_t result = LEB128_3(uint64_t);
+    *out_value = SIGN_EXTEND(int64_t, result, 20);
+    return 3;
+  } else if (p + 3 < end && (p[3] & 0x80) == 0) {
+    uint64_t result = LEB128_4(uint64_t);
+    *out_value = SIGN_EXTEND(int64_t, result, 27);
+    return 4;
+  } else if (p + 4 < end && (p[4] & 0x80) == 0) {
+    // The top bits should be a sign-extension of the sign bit.
+    int top_bits = p[4] & 0xf0;
+    if (top_bits != 0x70 && top_bits != 0) {
+      return 0;
+    }
+    uint64_t result = LEB128_5(uint64_t);
     *out_value = result;
     return 5;
   } else {
@@ -329,10 +361,8 @@ size_t ReadS64Leb128(const uint8_t* p,
     return 9;
   } else if (p + 9 < end && (p[9] & 0x80) == 0) {
     // The top bits should be a sign-extension of the sign bit.
-    bool sign_bit_set = (p[9] & 0x1);
-    int top_bits = p[9] & 0xfe;
-    if ((sign_bit_set && top_bits != 0x7e) ||
-        (!sign_bit_set && top_bits != 0)) {
+    int top_bits = p[9];
+    if (top_bits != 0x7f && top_bits != 0) {
       return 0;
     }
     uint64_t result = LEB128_10(uint64_t);
