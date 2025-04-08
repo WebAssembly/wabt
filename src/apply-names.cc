@@ -102,6 +102,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result VisitGlobal(Global* global);
   Result VisitTag(Tag* tag);
   Result VisitExport(Index export_index, Export* export_);
+  Result VisitTable(Table* table);
   Result VisitElemSegment(Index elem_segment_index, ElemSegment* segment);
   Result VisitDataSegment(Index data_segment_index, DataSegment* segment);
   Result VisitStart(Var* start_var);
@@ -559,6 +560,11 @@ Result NameApplier::VisitExport(Index export_index, Export* export_) {
   return Result::Ok;
 }
 
+Result NameApplier::VisitTable(Table* table) {
+  CHECK_RESULT(visitor_.VisitExprList(table->init_expr));
+  return Result::Ok;
+}
+
 Result NameApplier::VisitElemSegment(Index elem_segment_index,
                                      ElemSegment* segment) {
   CHECK_RESULT(UseNameForTableVar(&segment->table_var));
@@ -594,6 +600,8 @@ Result NameApplier::VisitModule(Module* module) {
     CHECK_RESULT(VisitTag(module->tags[i]));
   for (size_t i = 0; i < module->exports.size(); ++i)
     CHECK_RESULT(VisitExport(i, module->exports[i]));
+  for (size_t i = 0; i < module->tables.size(); ++i)
+    CHECK_RESULT(VisitTable(module->tables[i]));
   for (size_t i = 0; i < module->elem_segments.size(); ++i)
     CHECK_RESULT(VisitElemSegment(i, module->elem_segments[i]));
   for (size_t i = 0; i < module->data_segments.size(); ++i)

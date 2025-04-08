@@ -1596,7 +1596,8 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     Writef("(;%u;)", elem_segment_index_);
   }
 
-  uint8_t flags = segment.GetFlags(&module);
+  uint8_t flags = segment.GetFlags(
+      &module, options_.features.function_references_enabled());
 
   if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
     WriteOpenSpace("table");
