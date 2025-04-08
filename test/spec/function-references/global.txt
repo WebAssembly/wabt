@@ -123,8 +123,8 @@ out/test/spec/function-references/global.wast:585: assert_invalid passed:
   out/test/spec/function-references/global/global.45.wasm:0000027: error: type mismatch in global.set, expected [i32] but got []
   0000027: error: OnGlobalSetExpr callback failed
 out/test/spec/function-references/global.wast:595: assert_invalid passed:
-  out/test/spec/function-references/global/global.46.wasm:000003e: error: type mismatch in global.set, expected [i32] but got []
-  000003e: error: OnGlobalSetExpr callback failed
+  out/test/spec/function-references/global/global.46.wasm:0000040: error: type mismatch in global.set, expected [i32] but got []
+  0000040: error: OnGlobalSetExpr callback failed
 out/test/spec/function-references/global.wast:613: assert_malformed passed:
   out/test/spec/function-references/global/global.47.wat:1:33: error: redefinition of global "$foo"
   (global $foo i32 (i32.const 0))(global $foo i32 (i32.const 0))

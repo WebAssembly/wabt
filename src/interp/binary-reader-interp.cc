@@ -123,9 +123,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnFunction(Index index, Index sig_index) override;
 
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    bool has_init_expr) override;
+  Result BeginTableInitExpr(Index index) override;
+  Result EndTableInitExpr(Index index) override;
 
   Result OnMemoryCount(Index count) override;
   Result OnMemory(Index index,
@@ -558,7 +561,8 @@ Result BinaryReaderInterp::OnImportTable(Index import_index,
                                          Index table_index,
                                          Type elem_type,
                                          const Limits* elem_limits) {
-  CHECK_RESULT(validator_.OnTable(GetLocation(), elem_type, *elem_limits));
+  CHECK_RESULT(
+      validator_.OnTable(GetLocation(), elem_type, *elem_limits, true, false));
   TableType table_type{elem_type, *elem_limits};
   module_.imports.push_back(ImportDesc{ImportType(
       std::string(module_name), std::string(field_name), table_type.Clone())});
@@ -627,13 +631,30 @@ Result BinaryReaderInterp::OnTableCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnTable(Index index,
-                                   Type elem_type,
-                                   const Limits* elem_limits) {
-  CHECK_RESULT(validator_.OnTable(GetLocation(), elem_type, *elem_limits));
+Result BinaryReaderInterp::BeginTable(Index index,
+                                      Type elem_type,
+                                      const Limits* elem_limits,
+                                      bool has_init_expr) {
+  CHECK_RESULT(validator_.OnTable(GetLocation(), elem_type, *elem_limits, false,
+                                  has_init_expr));
   TableType table_type{elem_type, *elem_limits};
-  module_.tables.push_back(TableDesc{table_type});
+  FuncDesc init_func{
+      FuncType{{}, {elem_type}}, {}, Istream::kInvalidOffset, {}};
+  module_.tables.push_back(TableDesc{table_type, init_func});
   table_types_.push_back(table_type);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::BeginTableInitExpr(Index index) {
+  TableDesc& table = module_.tables.back();
+  return BeginInitExpr(&table.init_func);
+}
+
+Result BinaryReaderInterp::EndTableInitExpr(Index index) {
+  FixupTopLabel();
+  CHECK_RESULT(validator_.EndInitExpr());
+  istream_.Emit(Opcode::Return);
+  PopLabel();
   return Result::Ok;
 }
 

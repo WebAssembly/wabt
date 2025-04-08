@@ -264,6 +264,30 @@ Result Match(const TagType& expected,
   return Result::Ok;
 }
 
+//// Types ////
+
+bool TypesMatch(ValueType expected, ValueType actual) {
+  // Currently there is no subtyping, so expected and actual must match
+  // exactly. In the future this may be expanded.
+  if (expected == actual) {
+    return true;
+  }
+
+  if (expected == Type::FuncRef &&
+      (actual == Type::Ref ||
+       (expected.IsNullableNonTypedRef() &&
+        (actual == Type::FuncRef || actual == Type::RefNull)))) {
+    return true;
+  }
+
+  if (actual == Type::Ref && expected == Type::RefNull &&
+      actual.GetReferenceIndex() == expected.GetReferenceIndex()) {
+    return true;
+  }
+
+  return false;
+}
+
 //// Limits ////
 template <typename T>
 bool CanGrow(const Limits& limits, T old_size, T delta, T* new_size) {
@@ -312,6 +336,8 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   Object* obj = objects_.Get(ref.index);
   switch (type) {
     case ValueType::FuncRef:
+    case ValueType::Ref:
+    case ValueType::RefNull:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
     case ValueType::ExnRef:
@@ -549,8 +575,12 @@ Result HostFunc::DoCall(Thread& thread,
 }
 
 //// Table ////
-Table::Table(Store&, TableType type) : Extern(skind), type_(type) {
+Table::Table(Store& store, TableType type, Ref init_ref)
+    : Extern(skind), type_(type) {
   elements_.resize(type.limits.initial);
+  if (init_ref != Ref::Null) {
+    Fill(store, 0, init_ref, type.limits.initial);
+  }
 }
 
 void Table::Mark(Store& store) {
@@ -914,7 +944,16 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
   // Tables.
   for (auto&& desc : mod->desc().tables) {
-    inst->tables_.push_back(Table::New(store, desc.type).ref());
+    Ref ref = Ref::Null;
+    if (desc.init_func.code_offset != Istream::kInvalidOffset) {
+      Ref func_ref = DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+      Value value;
+      if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
+        return {};
+      }
+      ref = value.Get<Ref>();
+    }
+    inst->tables_.push_back(Table::New(store, desc.type, ref).ref());
   }
 
   // Memories.

@@ -11,7 +11,7 @@
     (i32.add (local.get $x)
              (i32.const 19))
   )
-  (elem declare funcref (ref.func $foo))
+  (elem declare func $foo)
   (type (func (param i32) (result i32)))
 )
 
