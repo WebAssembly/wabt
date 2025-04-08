@@ -255,26 +255,6 @@ struct FuncSignature {
   TypeVector param_types;
   TypeVector result_types;
 
-  // Reference types can have names, for example (ref $foo) represents
-  // a type which name is $foo. These types are translated to their
-  // corresponding index after the parsing is completed. The position
-  // and names of these reference types are stored in a ReferenceVars
-  // vector. The names are stored as variables, because the error
-  // message construction requires a location when a name is not found.
-  // TODO: move out this parser specific structure from IR.
-  struct ReferenceVar {
-    ReferenceVar(uint32_t index, Var var)
-      : index(index), var(var) {}
-
-    uint32_t index;
-    Var var;
-  };
-
-  typedef std::vector<ReferenceVar> ReferenceVars;
-
-  ReferenceVars param_type_vars;
-  ReferenceVars result_type_vars;
-
   Index GetNumParams() const { return param_types.size(); }
   Index GetNumResults() const { return result_types.size(); }
   Type GetParamType(Index index) const { return param_types[index]; }
@@ -938,12 +918,6 @@ struct Func {
   std::string name;
   FuncDeclaration decl;
   LocalTypes local_types;
-  // When some locals are named references, the parser keeps the
-  // non-compressed local vector until the module parsing is
-  // completed. After the locals are resolved, local_types are
-  // constructed from this vector, and then this vector is freed.
-  // TODO: move out this parser specific structure from IR.
-  TypeVector local_type_list;
   BindingHash bindings;
   ExprList exprs;
   Location loc;
