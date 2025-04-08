@@ -960,7 +960,8 @@ void wasm_global_set(wasm_global_t* global, const wasm_val_t* val) {
 own wasm_table_t* wasm_table_new(wasm_store_t* store,
                                  const wasm_tabletype_t* type,
                                  wasm_ref_t* init) {
-  return new wasm_table_t{Table::New(store->I, *type->As<TableType>())};
+  return new wasm_table_t{Table::New(store->I, *type->As<TableType>(),
+                                     init ? init->I->self() : Ref::Null)};
 }
 
 own wasm_tabletype_t* wasm_table_type(const wasm_table_t* table) {

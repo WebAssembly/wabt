@@ -703,7 +703,8 @@ void Var::Destroy() {
   }
 }
 
-uint8_t ElemSegment::GetFlags(const Module* module) const {
+uint8_t ElemSegment::GetFlags(const Module* module,
+                              bool function_references_enabled) const {
   uint8_t flags = 0;
 
   switch (kind) {
@@ -724,15 +725,20 @@ uint8_t ElemSegment::GetFlags(const Module* module) const {
       break;
   }
 
-  bool all_ref_func =
-      elem_type == Type::FuncRef &&
-      std::all_of(elem_exprs.begin(), elem_exprs.end(),
-                  [](const ExprList& elem_expr) {
-                    return elem_expr.front().type() == ExprType::RefFunc;
-                  });
-
-  if (!all_ref_func) {
+  if (function_references_enabled &&
+      elem_type != Type(Type::FuncRef, Type::ReferenceNonNull)) {
     flags |= SegUseElemExprs;
+  } else {
+    bool all_ref_func =
+        elem_type == Type::FuncRef &&
+        std::all_of(elem_exprs.begin(), elem_exprs.end(),
+                    [](const ExprList& elem_expr) {
+                      return elem_expr.front().type() == ExprType::RefFunc;
+                    });
+
+    if (!all_ref_func) {
+      flags |= SegUseElemExprs;
+    }
   }
 
   return flags;

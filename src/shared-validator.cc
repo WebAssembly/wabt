@@ -122,7 +122,9 @@ Result SharedValidator::CheckLimits(const Location& loc,
 
 Result SharedValidator::OnTable(const Location& loc,
                                 Type elem_type,
-                                const Limits& limits) {
+                                const Limits& limits,
+                                TableImportStatus import_status,
+                                TableInitExprStatus init_provided) {
   Result result = Result::Ok;
   // Must be checked by parser or binary reader.
   assert(elem_type.IsRef());
@@ -134,18 +136,20 @@ Result SharedValidator::OnTable(const Location& loc,
   if (limits.is_shared) {
     result |= PrintError(loc, "tables may not be shared");
   }
-  if (elem_type != Type::FuncRef &&
-      !options_.features.reference_types_enabled()) {
+  if (options_.features.reference_types_enabled()) {
+    if (!elem_type.IsRef()) {
+      result |= PrintError(loc, "ables may only contain reference types");
+    } else if (import_status == TableImportStatus::TableIsNotImported &&
+               init_provided ==
+                   TableInitExprStatus::TableWithoutInitExpression &&
+               !elem_type.IsNullableRef()) {
+      result |= PrintError(loc, "missing table initializer");
+    }
+  } else if (elem_type != Type::FuncRef) {
     result |= PrintError(loc, "tables must have funcref type");
   }
 
   result |= CheckReferenceType(loc, elem_type, "tables");
-
-  // TODO: support table initializers
-  if (elem_type.IsRef() && !elem_type.IsNullableRef()) {
-    result |=
-        PrintError(loc, "currently non-nullable references are not supported");
-  }
 
   tables_.push_back(TableType{elem_type, limits});
   return result;

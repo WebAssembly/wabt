@@ -66,6 +66,11 @@ struct CatchClause {
 };
 using CatchClauseVector = std::vector<CatchClause>;
 
+enum class TableInitExprStatus {
+  TableWithInitExpression,
+  TableWithoutInitExpression,
+};
+
 class BinaryReaderDelegate {
  public:
   struct State {
@@ -156,9 +161,13 @@ class BinaryReaderDelegate {
   /* Table section */
   virtual Result BeginTableSection(Offset size) = 0;
   virtual Result OnTableCount(Index count) = 0;
-  virtual Result OnTable(Index index,
-                         Type elem_type,
-                         const Limits* elem_limits) = 0;
+  virtual Result BeginTable(Index index,
+                            Type elem_type,
+                            const Limits* elem_limits,
+                            TableInitExprStatus init_provided) = 0;
+  virtual Result BeginTableInitExpr(Index index) = 0;
+  virtual Result EndTableInitExpr(Index index) = 0;
+  virtual Result EndTable(Index index) = 0;
   virtual Result EndTableSection() = 0;
 
   /* Memory section */

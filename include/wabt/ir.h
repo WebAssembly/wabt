@@ -987,13 +987,14 @@ struct Table {
   std::string name;
   Limits elem_limits;
   Type elem_type;
+  ExprList init_expr;
 };
 
 using ExprListVector = std::vector<ExprList>;
 
 struct ElemSegment {
   explicit ElemSegment(std::string_view name) : name(name) {}
-  uint8_t GetFlags(const Module*) const;
+  uint8_t GetFlags(const Module*, bool function_references_enabled) const;
 
   SegmentKind kind = SegmentKind::Active;
   std::string name;

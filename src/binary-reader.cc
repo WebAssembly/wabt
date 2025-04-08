@@ -152,7 +152,7 @@ class BinaryReader {
   Index NumTotalFuncs();
 
   [[nodiscard]] Result ReadInitExpr(Index index);
-  [[nodiscard]] Result ReadTable(Type* out_elem_type, Limits* out_elem_limits);
+  [[nodiscard]] Result ReadTable(Limits* out_elem_limits);
   [[nodiscard]] Result ReadMemory(Limits* out_page_limits,
                                   uint32_t* out_page_size);
   [[nodiscard]] Result ReadGlobalHeader(Type* out_type, bool* out_mutable);
@@ -625,9 +625,7 @@ Result BinaryReader::ReadInitExpr(Index index) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
-  CHECK_RESULT(ReadRefType(out_elem_type, "table elem type"));
-
+Result BinaryReader::ReadTable(Limits* out_elem_limits) {
   uint8_t flags;
   uint32_t initial;
   uint32_t max = 0;
@@ -2715,7 +2713,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       case ExternalKind::Table: {
         Type elem_type;
         Limits elem_limits;
-        CHECK_RESULT(ReadTable(&elem_type, &elem_limits));
+        CHECK_RESULT(ReadRefType(&elem_type, "table elem type"));
+        CHECK_RESULT(ReadTable(&elem_limits));
         CALLBACK(OnImportTable, i, module_name, field_name, num_table_imports_,
                  elem_type, &elem_limits);
         num_table_imports_++;
@@ -2787,8 +2786,42 @@ Result BinaryReader::ReadTableSection(Offset section_size) {
     Index table_index = num_table_imports_ + i;
     Type elem_type;
     Limits elem_limits;
-    CHECK_RESULT(ReadTable(&elem_type, &elem_limits));
-    CALLBACK(OnTable, table_index, elem_type, &elem_limits);
+    TableInitExprStatus init_provided =
+        TableInitExprStatus::TableWithoutInitExpression;
+
+    CHECK_RESULT(ReadType(&elem_type, "table elem type"));
+
+    // Type::Void will never represent a valid type, so it was
+    // choosen to represent the availability of the init expression.
+    if (options_.features.function_references_enabled() &&
+        elem_type == Type::Void) {
+      init_provided = TableInitExprStatus::TableWithInitExpression;
+
+      uint8_t value;
+      CHECK_RESULT(ReadU8(&value, "table init"));
+      // This zero value is reserved for future
+      // extensions, and currently unused.
+      if (value != 0) {
+        PrintError("unsupported table intializer: 0x%x\n",
+                   static_cast<int>(value));
+        return Result::Error;
+      }
+
+      CHECK_RESULT(ReadType(&elem_type, "table elem type"));
+    }
+
+    ERROR_UNLESS(elem_type.IsRef(), "table elem type must be a reference type");
+
+    CHECK_RESULT(ReadTable(&elem_limits));
+    CALLBACK(BeginTable, table_index, elem_type, &elem_limits, init_provided);
+
+    if (init_provided == TableInitExprStatus::TableWithInitExpression) {
+      CALLBACK(BeginTableInitExpr, table_index);
+      CHECK_RESULT(ReadInitExpr(table_index));
+      CALLBACK(EndTableInitExpr, table_index);
+    }
+
+    CALLBACK(EndTable, table_index);
   }
   CALLBACK0(EndTableSection);
   return Result::Ok;
@@ -2879,6 +2912,11 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     }
     Type elem_type = Type::FuncRef;
 
+    if (options_.features.function_references_enabled() &&
+        !(flags & SegUseElemExprs)) {
+      elem_type = Type(Type::FuncRef, Type::ReferenceNonNull);
+    }
+
     CALLBACK(BeginElemSegment, i, table_index, flags);
 
     if (!(flags & SegPassive)) {
@@ -2897,7 +2935,6 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
                      elem_type.GetName().c_str());
-        elem_type = Type::FuncRef;
       }
     }
 
