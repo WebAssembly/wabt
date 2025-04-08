@@ -157,6 +157,10 @@ using u32x2 = Simd<u32, 2>;
 
 //// Types ////
 
+bool TypesMatch(ValueType expected, ValueType actual);
+
+//// Limits ////
+
 bool CanGrow(const Limits&, u32 old_size, u32 delta, u32* new_size);
 Result Match(const Limits& expected,
              const Limits& actual,
@@ -334,6 +338,7 @@ struct FuncDesc {
 
 struct TableDesc {
   TableType type;
+  FuncDesc init_func;
 };
 
 struct MemoryDesc {
@@ -818,7 +823,7 @@ class Table : public Extern {
   static const char* GetTypeName() { return "Table"; }
   using Ptr = RefPtr<Table>;
 
-  static Table::Ptr New(Store&, TableType);
+  static Table::Ptr New(Store&, TableType, Ref);
 
   Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
 
@@ -850,7 +855,7 @@ class Table : public Extern {
 
  private:
   friend Store;
-  explicit Table(Store&, TableType);
+  explicit Table(Store&, TableType, Ref);
   void Mark(Store&) override;
 
   TableType type_;

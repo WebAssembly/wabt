@@ -96,9 +96,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginTableSection(Offset size) override;
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    bool has_init_expr) override;
+  Result BeginTableInitExpr(Index index) override;
+  Result EndTableInitExpr(Index index) override;
+  Result EndTable(Index index) override;
   Result EndTableSection() override;
 
   Result BeginMemorySection(Offset size) override;

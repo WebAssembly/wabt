@@ -25,7 +25,7 @@
     )
   )
 
-  (elem declare funcref (ref.func $square))
+  (elem declare func $square)
 )
 
 (;; STDERR ;;;
