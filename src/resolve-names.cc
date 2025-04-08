@@ -111,6 +111,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
   void VisitTag(Tag* tag);
+  void VisitTable(Table* table);
   void VisitElemSegment(ElemSegment* segment);
   void VisitDataSegment(DataSegment* segment);
   void VisitScriptModule(ScriptModule* script_module);
@@ -582,6 +583,12 @@ void NameResolver::VisitTag(Tag* tag) {
   }
 }
 
+void NameResolver::VisitTable(Table* table) {
+  if (!table->init_expr.empty()) {
+    visitor_.VisitExprList(table->init_expr);
+  }
+}
+
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
@@ -616,6 +623,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitGlobal(global);
   for (Tag* tag : module->tags)
     VisitTag(tag);
+  for (Table* table : module->tables)
+    VisitTable(table);
   for (ElemSegment* elem_segment : module->elem_segments)
     VisitElemSegment(elem_segment);
   for (DataSegment* data_segment : module->data_segments)
