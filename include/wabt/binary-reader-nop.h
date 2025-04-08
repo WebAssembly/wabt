@@ -121,11 +121,15 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Table section */
   Result BeginTableSection(Offset size) override { return Result::Ok; }
   Result OnTableCount(Index count) override { return Result::Ok; }
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override {
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    bool has_init_expr) override {
     return Result::Ok;
   }
+  Result BeginTableInitExpr(Index index) override { return Result::Ok; }
+  Result EndTableInitExpr(Index index) override { return Result::Ok; }
+  Result EndTable(Index index) override { return Result::Ok; }
   Result EndTableSection() override { return Result::Ok; }
 
   /* Memory section */

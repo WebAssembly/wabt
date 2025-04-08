@@ -9,10 +9,10 @@ out/test/spec/table.wast:15: assert_invalid passed:
   0000016: error: BeginElemSegment callback failed
 out/test/spec/table.wast:19: assert_invalid passed:
   out/test/spec/table/table.11.wasm:000000f: error: max elems (0) must be >= initial elems (1)
-  000000f: error: OnTable callback failed
+  000000f: error: BeginTable callback failed
 out/test/spec/table.wast:23: assert_invalid passed:
   out/test/spec/table/table.12.wasm:0000013: error: max elems (0) must be >= initial elems (4294967295)
-  0000013: error: OnTable callback failed
+  0000013: error: BeginTable callback failed
 out/test/spec/table.wast:28: assert_malformed passed:
   out/test/spec/table/table.13.wat:1:8: error: invalid int "0x1_0000_0000"
   (table 0x1_0000_0000 funcref)

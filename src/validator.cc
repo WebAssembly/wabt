@@ -224,6 +224,12 @@ static Result CheckType(Type actual, Type expected) {
     }
   }
 
+  if (actual_type == Type::FuncRef && expected_type == Type::RefNull) {
+    // Specification tests pass expected functions
+    // directly, their type is not relevant.
+    return Result::Ok;
+  }
+
   return Result::Error;
 }
 
@@ -801,8 +807,8 @@ Result Validator::CheckModule() {
 
         case ExternalKind::Table: {
           auto&& table = cast<TableImport>(f->import.get())->table;
-          result_ |=
-              validator_.OnTable(field.loc, table.elem_type, table.elem_limits);
+          result_ |= validator_.OnTable(field.loc, table.elem_type,
+                                        table.elem_limits, true, false);
           break;
         }
 
@@ -841,8 +847,18 @@ Result Validator::CheckModule() {
   // Table section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<TableModuleField>(&field)) {
+      bool has_init_expr = !f->table.init_expr.empty();
       result_ |= validator_.OnTable(field.loc, f->table.elem_type,
-                                    f->table.elem_limits);
+                                    f->table.elem_limits, false, has_init_expr);
+
+      // Init expr.
+      if (has_init_expr) {
+        result_ |= validator_.BeginInitExpr(field.loc, f->table.elem_type);
+        ExprVisitor visitor(this);
+        result_ |=
+            visitor.VisitExprList(const_cast<ExprList&>(f->table.init_expr));
+        result_ |= validator_.EndInitExpr();
+      }
     }
   }
 

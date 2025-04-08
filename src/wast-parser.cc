@@ -1344,7 +1344,7 @@ Result WastParser::ResolveTargetRefType(const Module& module,
   assert(type->IsReferenceWithIndex() && !var.is_index());
 
   if (type->GetReferenceIndex() != kInvalidIndex) {
-    // Resolved earlier.
+    // Index or resolved earlier.
     return Result::Ok;
   }
 
@@ -1538,7 +1538,10 @@ Result WastParser::ParseElemModuleField(Module* module) {
     VarToType(elem_type, &field->elem_segment.elem_type);
     ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
-    field->elem_segment.elem_type = Type::FuncRef;
+    field->elem_segment.elem_type =
+        Type(Type::FuncRef, options_->features.function_references_enabled()
+                                ? Type::ReferenceNonNull
+                                : Type::ReferenceOrNull);
     if (PeekMatch(TokenType::Func)) {
       EXPECT(Func);
     }
@@ -2001,6 +2004,9 @@ Result WastParser::ParseTableModuleField(Module* module) {
       Var elem_type;
       CHECK_RESULT(ParseRefType(&elem_type));
       VarToType(elem_type, &table.elem_type);
+      if (PeekMatch(TokenType::Lpar)) {
+        CHECK_RESULT(ParseTerminatingInstrList(&table.init_expr));
+      }
       module->AppendField(std::move(field));
     }
   }
@@ -3112,10 +3118,12 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
       case TokenType::RefNull: {
         auto token = Consume();
         Var type;
-        CHECK_RESULT(ParseRefKind(&type));
+        if (Peek() != TokenType::Rpar) {
+          CHECK_RESULT(ParseRefKind(&type));
+        }
         ErrorUnlessOpcodeEnabled(token);
         const_.loc = GetLocation();
-        const_.set_null(type.opt_type());
+        const_.set_null(type.has_opt_type() ? type.opt_type() : Type::FuncRef);
         break;
       }
       case TokenType::RefFunc: {

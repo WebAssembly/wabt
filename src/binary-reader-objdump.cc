@@ -1127,9 +1127,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnFunction(Index index, Index sig_index) override;
 
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    bool) override;
 
   Result OnMemoryCount(Index count) override;
   Result OnMemory(Index index,
@@ -1175,6 +1176,14 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   }
 
   Result EndDataSegmentInitExpr(Index index) override { return EndInitExpr(); }
+
+  Result BeginTableInitExpr(Index index) override {
+    reading_table_init_expr_ = true;
+    BeginInitExpr();
+    return Result::Ok;
+  }
+
+  Result EndTableInitExpr(Index index) override { return EndInitExpr(); }
 
   Result BeginGlobalInitExpr(Index index) override {
     reading_global_init_expr_ = true;
@@ -1305,6 +1314,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Index elem_index_ = 0;
   Index table_index_ = 0;
   Index next_data_reloc_ = 0;
+  bool reading_table_init_expr_ = false;
   bool reading_elem_init_expr_ = false;
   bool reading_data_init_expr_ = false;
   bool reading_global_init_expr_ = false;
@@ -1317,8 +1327,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   uint64_t elem_offset_ = 0;
 
   bool ReadingInitExpr() {
-    return reading_elem_init_expr_ || reading_data_init_expr_ ||
-           reading_global_init_expr_ || reading_elem_expr_;
+    return reading_table_init_expr_ || reading_elem_init_expr_ ||
+           reading_data_init_expr_ || reading_global_init_expr_ ||
+           reading_elem_expr_;
   }
 };
 
@@ -1697,9 +1708,10 @@ Result BinaryReaderObjdump::OnTableCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::OnTable(Index index,
-                                    Type elem_type,
-                                    const Limits* elem_limits) {
+Result BinaryReaderObjdump::BeginTable(Index index,
+                                       Type elem_type,
+                                       const Limits* elem_limits,
+                                       bool) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, index,
                elem_type.GetName().c_str(), elem_limits->initial);
   if (elem_limits->has_max) {
@@ -1922,6 +1934,9 @@ Result BinaryReaderObjdump::EndInitExpr() {
   if (reading_data_init_expr_) {
     reading_data_init_expr_ = false;
     InitExprToConstOffset(current_init_expr_, &data_offset_);
+  } else if (reading_table_init_expr_) {
+    reading_table_init_expr_ = false;
+    InitExprToConstOffset(current_init_expr_, &elem_offset_);
   } else if (reading_elem_init_expr_) {
     reading_elem_init_expr_ = false;
     InitExprToConstOffset(current_init_expr_, &elem_offset_);

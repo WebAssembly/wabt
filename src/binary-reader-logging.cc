@@ -255,14 +255,15 @@ Result BinaryReaderLogging::OnImportTag(Index import_index,
                               sig_index);
 }
 
-Result BinaryReaderLogging::OnTable(Index index,
-                                    Type elem_type,
-                                    const Limits* elem_limits) {
+Result BinaryReaderLogging::BeginTable(Index index,
+                                       Type elem_type,
+                                       const Limits* elem_limits,
+                                       bool has_init_expr) {
   char buf[100];
   SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnTable(index: %" PRIindex ", elem_type: %s, %s)\n", index,
        elem_type.GetName().c_str(), buf);
-  return reader_->OnTable(index, elem_type, elem_limits);
+  return reader_->BeginTable(index, elem_type, elem_limits, has_init_expr);
 }
 
 Result BinaryReaderLogging::OnMemory(Index index,
@@ -816,6 +817,9 @@ DEFINE_END(EndFunctionSection)
 
 DEFINE_BEGIN(BeginTableSection)
 DEFINE_INDEX(OnTableCount)
+DEFINE_INDEX(BeginTableInitExpr)
+DEFINE_INDEX(EndTableInitExpr)
+DEFINE_INDEX(EndTable)
 DEFINE_END(EndTableSection)
 
 DEFINE_BEGIN(BeginMemorySection)
