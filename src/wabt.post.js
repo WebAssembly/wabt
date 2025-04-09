@@ -248,7 +248,6 @@ function readWasm(buffer, options) {
 
     var result =
         Module._wabt_read_binary_result_get_result(readBinaryResult_addr);
-    console.log({ check });
     if (check && result !== WABT_OK) {
       throw new Error('readWasm failed:\n' + errors.format());
     }
