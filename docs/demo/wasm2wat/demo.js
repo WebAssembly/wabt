@@ -35,6 +35,7 @@ var uploadInputEl = document.getElementById('uploadInput');
 var generateNamesEl = document.getElementById('generateNames');
 var foldExprsEl = document.getElementById('foldExprs');
 var inlineExportEl = document.getElementById('inlineExport');
+var checkEl = document.getElementById('check');
 var readDebugNamesEl = document.getElementById('readDebugNames');
 var options = {mode: 'wast', lineNumbers: true};
 var editor = CodeMirror.fromTextArea(editorEl, options);
@@ -69,13 +70,14 @@ function compile(contents) {
   }
 
   var readDebugNames = readDebugNamesEl.checked;
+  var check = checkEl.checked;
   var generateNames = generateNamesEl.checked;
   var foldExprs = foldExprsEl.checked;
   var inlineExport = inlineExportEl.checked;
 
   try {
     var module =
-        wabt.readWasm(contents, {readDebugNames: readDebugNames, ...features});
+        wabt.readWasm(contents, {readDebugNames: readDebugNames, check: check, ...features});
     if (generateNames) {
       module.generateNames();
       module.applyNames();

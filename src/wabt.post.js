@@ -238,6 +238,7 @@ function readWasm(buffer, options) {
   var bufferObj = allocateBuffer(buffer);
   var errors = new Errors('binary');
   var readDebugNames = booleanOrDefault(options.readDebugNames, false);
+  var check = booleanOrDefault(options.check, true);
   var features = new Features(options);
 
   try {
@@ -247,7 +248,7 @@ function readWasm(buffer, options) {
 
     var result =
         Module._wabt_read_binary_result_get_result(readBinaryResult_addr);
-    if (result !== WABT_OK) {
+    if (check && result !== WABT_OK) {
       throw new Error('readWasm failed:\n' + errors.format());
     }
 
