@@ -35,6 +35,7 @@ struct WastParseOptions {
 
   Features features;
   bool debug_parsing = false;
+  bool parse_binary_modules = true;
 };
 
 using TokenTypePair = std::array<TokenType, 2>;

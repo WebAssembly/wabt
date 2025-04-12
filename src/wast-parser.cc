@@ -3527,8 +3527,10 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       options.features = options_->features;
       Errors errors;
       const char* filename = "<text>";
-      ReadBinaryIr(filename, bsm->data.data(), bsm->data.size(), options,
-                   &errors, module);
+      if (options_->parse_binary_modules) {
+        ReadBinaryIr(filename, bsm->data.data(), bsm->data.size(), options,
+                     &errors, module);
+      }
       module->name = bsm->name;
       module->loc = bsm->loc;
       for (const auto& error : errors) {
