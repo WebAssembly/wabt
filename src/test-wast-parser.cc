@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "wabt/cast.h"
 #include "wabt/wast-lexer.h"
 #include "wabt/wast-parser.h"
 
@@ -85,4 +86,34 @@ TEST(WastParser, LongTokenSpace) {
   ASSERT_EQ(65545, errors[1].loc.first_column);
   ASSERT_STREQ(R"(unexpected token notmodule, expected EOF.)",
                errors[1].message.c_str());
+}
+
+TEST(WastParser, InvalidBinaryModule) {
+  std::string text = R"((module binary "\00asm\bc\0a\00\00"))";
+  std::vector<uint8_t> expected_data = {
+      0, 'a', 's', 'm', static_cast<uint8_t>('\xbc'), '\x0a', 0, 0};
+
+  Errors errors;
+  auto lexer =
+      WastLexer::CreateBufferLexer("test", text.c_str(), text.size(), &errors);
+  std::unique_ptr<Script> script;
+  Features features;
+  WastParseOptions options(features);
+  options.parse_binary_modules = false;
+  Result result = ParseWastScript(lexer.get(), &script, &errors, &options);
+  EXPECT_EQ(result, Result::Ok);
+  EXPECT_EQ(0u, errors.size());
+  EXPECT_EQ(1u, script->commands.size());
+
+  Command* cmd = script->commands[0].get();
+  EXPECT_TRUE(isa<ScriptModuleCommand>(cmd));
+
+  auto* mod_cmd = cast<ScriptModuleCommand>(cmd);
+  ScriptModule* script_mod = mod_cmd->script_module.get();
+  EXPECT_NE(script_mod, nullptr);
+
+  EXPECT_TRUE(isa<BinaryScriptModule>(script_mod));
+  auto* binary_mod = cast<BinaryScriptModule>(script_mod);
+
+  EXPECT_EQ(expected_data, binary_mod->data);
 }
