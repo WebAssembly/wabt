@@ -1,0 +1,79 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-function-references
+
+(module
+  (type $t0 (func))
+
+  ;; Self reference
+  (type $t1 (func (param (ref $t0) (ref $t1) (ref 1))))
+
+  (func $f1 (param (ref $t0) (ref 0))
+    (local (ref $t0) (ref 0)
+           (ref $t1) (ref 1))
+  )
+)
+
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 03                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+; func type 1
+000000e: 60                                        ; func
+000000f: 03                                        ; num params
+0000010: 6b                                        ; (ref 0)
+0000011: 00                                        ; (ref 0)
+0000012: 6b                                        ; (ref 1)
+0000013: 01                                        ; (ref 1)
+0000014: 6b                                        ; (ref 1)
+0000015: 01                                        ; (ref 1)
+0000016: 00                                        ; num results
+; func type 2
+0000017: 60                                        ; func
+0000018: 02                                        ; num params
+0000019: 6b                                        ; (ref 0)
+000001a: 00                                        ; (ref 0)
+000001b: 6b                                        ; (ref 0)
+000001c: 00                                        ; (ref 0)
+000001d: 00                                        ; num results
+0000009: 14                                        ; FIXUP section size
+; section "Function" (3)
+000001e: 03                                        ; section code
+000001f: 00                                        ; section size (guess)
+0000020: 01                                        ; num functions
+0000021: 02                                        ; function 0 signature index
+000001f: 02                                        ; FIXUP section size
+; section "Code" (10)
+0000022: 0a                                        ; section code
+0000023: 00                                        ; section size (guess)
+0000024: 01                                        ; num functions
+; function body 0
+0000025: 00                                        ; func body size (guess)
+0000026: 02                                        ; local decl count
+0000027: 02                                        ; local type count
+0000028: 6b                                        ; (ref 0)
+0000029: 00                                        ; (ref 0)
+000002a: 02                                        ; local type count
+000002b: 6b                                        ; (ref 1)
+000002c: 01                                        ; (ref 1)
+000002d: 0b                                        ; end
+0000025: 08                                        ; FIXUP func body size
+0000023: 0a                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+typed-func-refs-locals.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000026 func[0]:
+ 000027: 02 6b 00                   | local[2..3] type=(ref 0)
+ 00002a: 02 6b 01                   | local[4..5] type=(ref 1)
+ 00002d: 0b                         | end
+;;; STDOUT ;;)
