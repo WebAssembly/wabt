@@ -56,6 +56,33 @@ class WastParser {
     Expectation,
   };
 
+  struct ReferenceVar {
+    ReferenceVar(uint32_t index, Var var)
+      : index(index), var(var) {}
+
+    uint32_t index;
+    Var var;
+  };
+
+  typedef std::vector<ReferenceVar> ReferenceVars;
+
+  struct ResolveTypes {
+    ResolveTypes(TypeVector* target_types)
+      : target_types(target_types) {}
+
+    TypeVector* target_types;
+    ReferenceVars vars;
+  };
+
+  struct ResolveFuncs {
+    ResolveFuncs(Func* target_func)
+      : target_func(target_func) {}
+
+    Func* target_func;
+    TypeVector types;
+    ReferenceVars vars;
+  };
+
   void ErrorUnlessOpcodeEnabled(const Token&);
 
   // Print an error message listing the expected tokens, as well as an example
@@ -138,7 +165,7 @@ class WastParser {
   Result ParseValueType(Var* out_type);
   Result ParseValueTypeList(
       TypeVector* out_type_list,
-      std::unordered_map<uint32_t, std::string>* type_names);
+      ReferenceVars* type_vars);
   Result ParseRefKind(Type* out_type);
   Result ParseRefType(Type* out_type);
   bool ParseRefTypeOpt(Type* out_type);
@@ -151,6 +178,8 @@ class WastParser {
   Result ParsePageSize(uint32_t*);
   Result ParseNat(uint64_t*, bool is_64);
 
+  static Result ResolveRefTypes(const Module&, TypeVector*,
+                                ReferenceVars*, Errors* errors);
   Result ParseModuleFieldList(Module*);
   Result ParseModuleField(Module*);
   Result ParseDataModuleField(Module*);
@@ -177,13 +206,13 @@ class WastParser {
   Result ParseBoundValueTypeList(TokenType,
                                  TypeVector*,
                                  BindingHash*,
-                                 std::unordered_map<uint32_t, std::string>*,
+                                 ReferenceVars*,
                                  Index binding_index_offset = 0);
   Result ParseUnboundValueTypeList(TokenType,
                                    TypeVector*,
-                                   std::unordered_map<uint32_t, std::string>*);
+                                   ReferenceVars*);
   Result ParseResultList(TypeVector*,
-                         std::unordered_map<uint32_t, std::string>*);
+                         ReferenceVars*);
   Result ParseInstrList(ExprList*);
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
@@ -264,6 +293,20 @@ class WastParser {
   Index last_module_index_ = kInvalidIndex;
   Errors* errors_;
   WastParseOptions* options_;
+
+  // Reference types can have names, for example (ref $foo) represents
+  // a type which name is $foo. These types are translated to their
+  // corresponding index after the parsing is completed. The position
+  // and names of these reference types are stored in a ReferenceVars
+  // vector. The names are stored as variables, because the error
+  // message construction requires a location when a name is not found.
+  std::vector<ResolveTypes> resolve_types_;
+
+  // When some locals are named references, the parser keeps the
+  // non-compressed local vector until the module parsing is
+  // completed. After the locals are resolved, local_types are
+  // constructed from this vector, and then this vector is freed.
+  std::vector<ResolveFuncs> resolve_funcs_;
 
   // two-element queue of upcoming tokens
   class TokenQueue {
