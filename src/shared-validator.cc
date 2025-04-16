@@ -76,6 +76,21 @@ Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
   return Result::Ok;
 }
 
+Result SharedValidator::EndTypeSection() {
+  Result result = Result::Ok;
+
+  for (auto func_type : func_types_) {
+    for (auto type : func_type.second.params) {
+      result |= CheckReferenceType(Location(), type, "params");
+    }
+
+    for (auto type : func_type.second.results) {
+      result |= CheckReferenceType(Location(), type, "results");
+    }
+  }
+  return result;
+}
+
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
   Result result = Result::Ok;
   FuncType type;
@@ -194,6 +209,22 @@ Result SharedValidator::CheckType(const Location& loc,
                actual.GetName().c_str(), expected.GetName().c_str());
     return Result::Error;
   }
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckReferenceType(const Location& loc,
+                                           Type type,
+                                           const char* desc) {
+  if (type.IsReferenceWithIndex()) {
+    Index index = type.GetReferenceIndex();
+    auto iter = func_types_.find(index);
+
+    if (iter == func_types_.end()) {
+      return PrintError(loc, "reference %d is out of range in %s",
+                        static_cast<int>(index), desc);
+    }
+  }
+
   return Result::Ok;
 }
 
@@ -479,6 +510,9 @@ Result SharedValidator::OnLocalDecl(const Location& loc,
     PrintError(loc, "local count must be < 0x10000000");
     return Result::Error;
   }
+
+  CHECK_RESULT(CheckReferenceType(loc, type, "locals"));
+
   locals_.push_back(LocalDecl{type, GetLocalCount() + count});
   return Result::Ok;
 }

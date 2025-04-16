@@ -72,6 +72,7 @@ class SharedValidator {
                     Index type_index);
   Result OnStructType(const Location&, Index field_count, TypeMut* fields);
   Result OnArrayType(const Location&, TypeMut field);
+  Result EndTypeSection();
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&);
@@ -294,6 +295,7 @@ class SharedValidator {
                    Type actual,
                    Type expected,
                    const char* desc);
+  Result CheckReferenceType(const Location&, Type type, const char* desc);
   Result CheckLimits(const Location&,
                      const Limits&,
                      uint64_t absolute_max,
