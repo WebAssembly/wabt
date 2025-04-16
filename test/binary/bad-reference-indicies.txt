@@ -1,0 +1,26 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-function-references
+;;; ARGS2: --enable-function-references
+magic
+version
+section(TYPE) {
+  count[2]
+  function params[1] reference 10 results[1] reference 20
+  function params[0] results[0]
+}
+section(FUNCTION) { count[1] sig[1] }
+section(CODE) {
+  count[1]
+  func {
+    local_decls[1]
+    locals[1] reference 30
+  }
+}
+(;; STDERR ;;;
+0000000: error: reference 10 is out of range in params
+0000000: error: reference 20 is out of range in results
+out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:000001d: error: reference 30 is out of range in locals
+0000000: error: reference 10 is out of range in params
+0000000: error: reference 20 is out of range in results
+out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:000001d: error: reference 30 is out of range in locals
+;;; STDERR ;;)

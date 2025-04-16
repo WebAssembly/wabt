@@ -736,6 +736,8 @@ Result Validator::CheckModule() {
     }
   }
 
+  result_ |= validator_.EndTypeSection();
+
   // Import section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<ImportModuleField>(&field)) {

@@ -1,0 +1,29 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(module
+  ;; Implicit type declarations are not allowed
+  (type $t0 (func (param (ref 2))))
+  (type $t1 (func (param (ref 33)) (result (ref 444))))
+
+  (func $f (param $p1 (ref 5555))
+    (local $p2 (ref 66666))
+  )
+)
+(;; STDERR ;;;
+out/test/parse/bad-references.txt:6:31: error: reference type out of range: 2 (max: 2)
+  (type $t0 (func (param (ref 2))))
+                              ^
+out/test/parse/bad-references.txt:7:31: error: reference type out of range: 33 (max: 2)
+  (type $t1 (func (param (ref 33)) (result (ref 444))))
+                              ^^
+out/test/parse/bad-references.txt:7:49: error: reference type out of range: 444 (max: 2)
+  (type $t1 (func (param (ref 33)) (result (ref 444))))
+                                                ^^^
+out/test/parse/bad-references.txt:9:28: error: reference type out of range: 5555 (max: 2)
+  (func $f (param $p1 (ref 5555))
+                           ^^^^
+out/test/parse/bad-references.txt:10:21: error: reference type out of range: 66666 (max: 2)
+    (local $p2 (ref 66666))
+                    ^^^^^
+;;; STDERR ;;)
