@@ -43,6 +43,7 @@ NAMED_VALUES = {
     'f64': 0x7c,    # -4
     'v128': 0x7b,    # -5
     'funcref': 0x70,    # -0x10
+    'reference': 0x6b,    # -0x15
     'function': 0x60,    # -0x20
     'struct': 0x5f,    # -0x21
     'array': 0x5e,    # -0x22
