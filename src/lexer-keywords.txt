@@ -556,6 +556,7 @@ mut, TokenType::Mut
 nan:arithmetic, TokenType::NanArithmetic
 nan:canonical, TokenType::NanCanonical
 nop, TokenType::Nop, Opcode::Nop
+null, TokenType::Null
 offset, TokenType::Offset
 output, TokenType::Output
 pagesize, TokenType::PageSize

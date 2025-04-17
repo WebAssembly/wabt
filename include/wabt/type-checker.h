@@ -20,6 +20,7 @@
 #include <functional>
 #include <type_traits>
 #include <vector>
+#include <map>
 
 #include "wabt/common.h"
 #include "wabt/feature.h"
@@ -30,6 +31,18 @@ namespace wabt {
 class TypeChecker {
  public:
   using ErrorCallback = std::function<void(const char* msg)>;
+
+  struct FuncType {
+    FuncType() = default;
+    FuncType(const TypeVector& params,
+             const TypeVector& results,
+             Index type_index)
+        : params(params), results(results), type_index(type_index) {}
+
+    TypeVector params;
+    TypeVector results;
+    Index type_index;
+  };
 
   struct Label {
     Label(LabelType,
@@ -48,7 +61,8 @@ class TypeChecker {
     bool unreachable;
   };
 
-  explicit TypeChecker(const Features& features) : features_(features) {}
+  explicit TypeChecker(const Features& features, std::map<Index, FuncType>& func_types)
+    : features_(features), func_types_(func_types) {}
 
   void set_error_callback(const ErrorCallback& error_callback) {
     error_callback_ = error_callback;
@@ -80,7 +94,7 @@ class TypeChecker {
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types,
                         const Limits& table_limits);
-  Result OnIndexedFuncRef(Index* out_index);
+  Result OnCallRef(Type);
   Result OnReturnCall(const TypeVector& param_types,
                       const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types,
@@ -141,7 +155,7 @@ class TypeChecker {
   Result BeginInitExpr(Type type);
   Result EndInitExpr();
 
-  static Result CheckType(Type actual, Type expected);
+  Result CheckType(Type actual, Type expected);
 
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* fmt, ...);
@@ -210,6 +224,7 @@ class TypeChecker {
   // to represent "any".
   TypeVector* br_table_sig_ = nullptr;
   Features features_;
+  std::map<Index, FuncType>& func_types_;
 };
 
 }  // namespace wabt

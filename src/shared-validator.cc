@@ -27,7 +27,9 @@ TypeVector SharedValidator::ToTypeVector(Index count, const Type* types) {
 }
 
 SharedValidator::SharedValidator(Errors* errors, const ValidateOptions& options)
-    : options_(options), errors_(errors), typechecker_(options.features) {
+    : options_(options),
+      errors_(errors),
+      typechecker_(options.features, func_types_) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }
@@ -74,6 +76,21 @@ Result SharedValidator::OnStructType(const Location&,
 Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
   array_types_.emplace(num_types_++, ArrayType{field});
   return Result::Ok;
+}
+
+Result SharedValidator::EndTypeSection() {
+  Result result = Result::Ok;
+
+  for (auto func_type : func_types_) {
+    for (auto type : func_type.second.params) {
+      result |= CheckReferenceType(Location(), type, "params");
+    }
+
+    for (auto type : func_type.second.results) {
+      result |= CheckReferenceType(Location(), type, "results");
+    }
+  }
+  return result;
 }
 
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
@@ -130,6 +147,14 @@ Result SharedValidator::OnTable(const Location& loc,
     result |= PrintError(loc, "tables must have reference types");
   }
 
+  result |= CheckReferenceType(loc, elem_type, "tables");
+
+  // TODO: support table initializers
+  if (elem_type.IsRef() && !elem_type.IsNullableRef()) {
+    result |=
+        PrintError(loc, "currently non-nullable references are not supported");
+  }
+
   tables_.push_back(TableType{elem_type, limits});
   return result;
 }
@@ -181,19 +206,36 @@ Result SharedValidator::OnGlobalImport(const Location& loc,
 Result SharedValidator::OnGlobal(const Location& loc,
                                  Type type,
                                  bool mutable_) {
+  Result result = CheckReferenceType(loc, type, "globals");
   globals_.push_back(GlobalType{type, mutable_});
-  return Result::Ok;
+  return result;
 }
 
 Result SharedValidator::CheckType(const Location& loc,
                                   Type actual,
                                   Type expected,
                                   const char* desc) {
-  if (Failed(TypeChecker::CheckType(actual, expected))) {
+  if (Failed(typechecker_.CheckType(actual, expected))) {
     PrintError(loc, "type mismatch at %s. got %s, expected %s", desc,
                actual.GetName().c_str(), expected.GetName().c_str());
     return Result::Error;
   }
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckReferenceType(const Location& loc,
+                                           Type type,
+                                           const char* desc) {
+  if (type.IsReferenceWithIndex()) {
+    Index index = type.GetReferenceIndex();
+    auto iter = func_types_.find(index);
+
+    if (iter == func_types_.end()) {
+      return PrintError(loc, "reference %d is out of range in %s",
+                        static_cast<int>(index), desc);
+    }
+  }
+
   return Result::Ok;
 }
 
@@ -479,6 +521,9 @@ Result SharedValidator::OnLocalDecl(const Location& loc,
     PrintError(loc, "local count must be < 0x10000000");
     return Result::Error;
   }
+
+  CHECK_RESULT(CheckReferenceType(loc, type, "locals"));
+
   locals_.push_back(LocalDecl{type, GetLocalCount() + count});
   return Result::Ok;
 }
@@ -734,20 +779,12 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnCallRef(const Location& loc,
-                                  Index* function_type_index) {
+Result SharedValidator::OnCallRef(const Location& loc, Var function_type_var) {
   Result result = CheckInstr(Opcode::CallRef, loc);
-  Index func_index;
-  result |= typechecker_.OnIndexedFuncRef(&func_index);
-  if (Failed(result)) {
-    return result;
-  }
   FuncType func_type;
-  result |= CheckFuncTypeIndex(Var(func_index, loc), &func_type);
+  result |= typechecker_.OnCallRef(function_type_var.to_type());
+  result |= CheckFuncTypeIndex(function_type_var, &func_type);
   result |= typechecker_.OnCall(func_type.params, func_type.results);
-  if (Succeeded(result)) {
-    *function_type_index = func_index;
-  }
   return result;
 }
 
@@ -1021,8 +1058,25 @@ Result SharedValidator::OnRefIsNull(const Location& loc) {
   return result;
 }
 
-Result SharedValidator::OnRefNull(const Location& loc, Type type) {
+Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
   Result result = CheckInstr(Opcode::RefNull, loc);
+
+  Type type = func_type_var.to_type();
+
+  switch (type) {
+    case Type::RefNull:
+      result |= CheckIndex(func_type_var, num_types_, "function type");
+      break;
+    case Type::FuncRef:
+    case Type::ExnRef:
+    case Type::ExternRef:
+      break;
+    default:
+      result |= PrintError(
+          loc, "Only ref, externref, exnref, funcref are allowed for ref.null");
+      break;
+  }
+
   result |= typechecker_.OnRefNullExpr(type);
   return result;
 }
