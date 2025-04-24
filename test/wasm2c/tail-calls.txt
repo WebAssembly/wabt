@@ -895,7 +895,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
   
   if (param_count == 2 && result_count == 0) {
     va_start(args, result_count);
-    if (true && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_F32) {
+    if (true && va_arg(args, int) == WASM_RT_I32 && va_arg(args, int) == WASM_RT_F32) {
       va_end(args);
       return w2c_test_i32_f32;
     }
@@ -913,7 +913,7 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
   
   if (param_count == 2 && result_count == 2) {
     va_start(args, result_count);
-    if (true && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_F64 && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_F64) {
+    if (true && va_arg(args, int) == WASM_RT_I32 && va_arg(args, int) == WASM_RT_F64 && va_arg(args, int) == WASM_RT_I32 && va_arg(args, int) == WASM_RT_F64) {
       va_end(args);
       return w2c_test_t2;
     }
