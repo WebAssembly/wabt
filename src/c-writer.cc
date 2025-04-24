@@ -2807,10 +2807,10 @@ void CWriter::WriteGetFuncType() {
     Write("va_start(args, result_count);", Newline());
     Write("if (true");
     for (const auto& t : signature.param_types) {
-      Write(" && va_arg(args, wasm_rt_type_t) == ", TypeEnum(t));
+      Write(" && va_arg(args, int) == ", TypeEnum(t));
     }
     for (const auto& t : signature.result_types) {
-      Write(" && va_arg(args, wasm_rt_type_t) == ", TypeEnum(t));
+      Write(" && va_arg(args, int) == ", TypeEnum(t));
     }
     Write(") ", OpenBrace());
     Write("va_end(args);", Newline());
