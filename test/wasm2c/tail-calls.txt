@@ -693,8 +693,10 @@ static inline void memory_init(wasm_rt_memory_t* dest,
   LOAD_DATA((*dest), dest_addr, src + src_addr, n);
 }
 
+typedef enum { RefFunc, RefNull, GlobalGet } wasm_elem_segment_expr_type_t;
+
 typedef struct {
-  enum { RefFunc, RefNull, GlobalGet } expr_type;
+  wasm_elem_segment_expr_type_t expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
   wasm_rt_tailcallee_t func_tailcallee;

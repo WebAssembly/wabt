@@ -1126,9 +1126,12 @@ R"w2c_template(  LOAD_DATA((*dest), dest_addr, src + src_addr, n);
 R"w2c_template(}
 )w2c_template"
 R"w2c_template(
+typedef enum { RefFunc, RefNull, GlobalGet } wasm_elem_segment_expr_type_t;
+)w2c_template"
+R"w2c_template(
 typedef struct {
 )w2c_template"
-R"w2c_template(  enum { RefFunc, RefNull, GlobalGet } expr_type;
+R"w2c_template(  wasm_elem_segment_expr_type_t expr_type;
 )w2c_template"
 R"w2c_template(  wasm_rt_func_type_t type;
 )w2c_template"
