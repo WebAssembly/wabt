@@ -528,6 +528,8 @@ class CWriter {
   std::vector<const Import*> unique_imports_;
   SymbolSet import_module_set_;       // modules that are imported from
   SymbolSet import_func_module_set_;  // modules that funcs are imported from
+  SymbolMap import_func_module_map_;  // mapping between imported functions and
+                                      // their modules
 
   std::vector<std::pair<std::string, MemoryStream>> func_sections_;
   SymbolSet func_includes_;
@@ -1777,6 +1779,8 @@ void CWriter::ComputeUniqueImports() {
     import_module_set_.insert(import->module_name);
     if (import->kind() == ExternalKind::Func) {
       import_func_module_set_.insert(import->module_name);
+      import_func_module_map_.emplace(cast<FuncImport>(import)->func.name,
+                                      import->module_name);
     }
   }
 
@@ -2351,7 +2355,17 @@ void CWriter::WriteFuncRefWrapper(const Func* func) {
   Write(") ", OpenBrace());
   Write("return ");
   Write(ExternalRef(ModuleFieldType::Func, func->name));
-  Write("(instance");
+
+  std::string target_module_name;
+  if (IsImport(func->name)) {
+    std::string external_module = import_func_module_map_[func->name];
+    assert(external_module != "");
+    target_module_name = ModuleInstanceTypeName(external_module);
+  } else {
+    target_module_name = ModuleInstanceTypeName();
+  }
+
+  Write("((struct ", target_module_name, "*) instance");
   if (func->GetNumParams() != 0) {
     Indent(4);
     for (Index i = 0; i < func->GetNumParams(); ++i) {
