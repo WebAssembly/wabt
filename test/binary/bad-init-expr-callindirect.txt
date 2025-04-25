@@ -1,0 +1,20 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS1: -x
+magic
+version
+section(GLOBAL) {
+  count[1]
+  type[i32] mut[0] init_expr[call_indirect 0 0 end]
+}
+(;; STDOUT ;;;
+
+bad-init-expr-callindirect.wasm:	file format wasm 0x1
+
+Section Details:
+
+Global[1]:
+ - global[0] i32 mutable=0 - init <INVALID>
+
+Code Disassembly:
+
+;;; STDOUT ;;)

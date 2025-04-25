@@ -797,8 +797,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32(uint32_t value) {
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
                                                             uint32_t value2) {
-  if (!in_function_body)
+  if (!in_function_body) {
     return Result::Ok;
+  }
   std::string_view name;
   if (current_opcode == Opcode::MemoryInit &&
       !(name = GetSegmentName(value)).empty()) {
@@ -813,6 +814,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
 Result BinaryReaderObjdumpDisassemble::OnCallIndirectExpr(
     uint32_t sig_index,
     uint32_t table_index) {
+  if (!in_function_body) {
+    return Result::Ok;
+  }
   std::string_view table_name = GetTableName(table_index);
   std::string_view type_name = GetTypeName(sig_index);
   if (!type_name.empty() && !table_name.empty()) {
