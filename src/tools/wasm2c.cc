@@ -90,7 +90,7 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption(
       'n', "module-name", "MODNAME",
       "Unique name for the module being generated. This name is prefixed to\n"
-      "each of the generaed C symbols. By default, the module name from the\n"
+      "each of the generated C symbols. By default, the module name from the\n"
       "names section is used. If that is not present the name of the input\n"
       "file is used as the default.\n",
       [](const char* argument) { s_write_c_options.module_name = argument; });
