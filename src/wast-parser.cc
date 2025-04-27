@@ -542,6 +542,11 @@ void AppendInlineExportFields(Module* module,
   module->AppendFields(fields);
 }
 
+bool IsIndexLikelyType(Index index) {
+  // TODO: Incorrect values can be misinterpreted by the parser.
+  return index >= static_cast<Index>(Type::Void);
+}
+
 }  // End of anonymous namespace
 
 WastParser::WastParser(WastLexer* lexer,
@@ -937,10 +942,10 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list,
     CHECK_RESULT(ParseValueType(&type));
 
     if (type.is_index()) {
-      // TODO: Incorrect values can be misinterpreted by the parser.
-      if (type.index() >= static_cast<Index>(Type::Void)) {
+      if (IsIndexLikelyType(type.index())) {
         out_type_list->push_back(Type(type.index()));
       } else {
+        type_vars->push_back(ReferenceVar(out_type_list->size(), type));
         out_type_list->push_back(Type(Type::Reference, type.index()));
       }
     } else {
@@ -1313,11 +1318,24 @@ Result WastParser::ResolveRefTypes(const Module& module,
 
     assert(type.IsReferenceWithIndex());
 
-    if (type.GetReferenceIndex() != kInvalidIndex) {
+    if (ref_var.var.is_index()) {
+      if (type.GetReferenceIndex() >= module.types.size()) {
+        errors->emplace_back(
+            ErrorLevel::Error, ref_var.var.loc,
+            StringPrintf("reference type out of range: %d (max: %d)",
+                         static_cast<int>(type.GetReferenceIndex()),
+                         static_cast<int>(module.types.size())));
+        result = Result::Error;
+      }
       continue;
     }
 
-    const auto type_index = module.type_bindings.FindIndex(ref_var.var.name());
+    if (type.GetReferenceIndex() != kInvalidIndex) {
+      // Resolved earlier.
+      continue;
+    }
+
+    Index type_index = module.type_bindings.FindIndex(ref_var.var.name());
 
     if (type_index == kInvalidIndex) {
       errors->emplace_back(ErrorLevel::Error, ref_var.var.loc,
@@ -2057,7 +2075,12 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
       bindings->emplace(name,
                         Binding(loc, binding_index_offset + types->size()));
       if (type.is_index()) {
-        types->push_back(Type(type.index()));
+        if (IsIndexLikelyType(type.index())) {
+          types->push_back(Type(type.index()));
+        } else {
+          type_vars->push_back(ReferenceVar(types->size(), type));
+          types->push_back(Type(Type::Reference, type.index()));
+        }
       } else {
         assert(type.is_name());
         assert(options_->features.function_references_enabled());
