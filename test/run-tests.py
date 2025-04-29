@@ -177,6 +177,10 @@ def DiffLines(expected, actual):
 
     expected_lines = [Decode(line) for line in expected.splitlines() if line]
     actual_lines = [Decode(line) for line in actual.splitlines() if line]
+
+    expected_lines = [line for line in expected_lines if not line.startswith("##")]
+    actual_lines = [line for line in actual_lines if not line.startswith("##")]
+
     return list(
         difflib.unified_diff(expected_lines, actual_lines, fromfile='expected',
                              tofile='actual', lineterm=''))
