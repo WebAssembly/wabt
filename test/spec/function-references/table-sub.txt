@@ -1,0 +1,12 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/table-sub.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/table-sub.wast:13: assert_invalid passed:
+  out/test/spec/function-references/table-sub/table-sub.1.wasm:000002a: error: type mismatch at table.copy. got externref, expected funcref
+  000002a: error: OnTableCopyExpr callback failed
+out/test/spec/function-references/table-sub.wast:24: assert_invalid passed:
+  out/test/spec/function-references/table-sub/table-sub.2.wasm:000002d: error: type mismatch at table.init. got externref, expected funcref
+  000002d: error: OnTableInitExpr callback failed
+3/3 tests passed.
+;;; STDOUT ;;)
