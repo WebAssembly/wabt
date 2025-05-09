@@ -94,16 +94,66 @@ std::unique_ptr<ExternType> FuncType::Clone() const {
   return std::make_unique<FuncType>(*this);
 }
 
+static bool RecursiveMatch(const ValueTypes& expected,
+                           std::vector<FuncType>* expected_func_types,
+                           const ValueTypes& actual,
+                           std::vector<FuncType>* actual_func_types) {
+  if (expected_func_types == nullptr || actual_func_types == nullptr) {
+    return false;
+  }
+
+  size_t size = expected.size();
+  if (size != actual.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < size; i++) {
+    if (!expected[i].IsReferenceWithIndex()) {
+      return expected[i] == actual[i];
+    }
+
+    if (static_cast<Type::Enum>(expected[i]) !=
+        static_cast<Type::Enum>(actual[i])) {
+      return false;
+    }
+
+    const FuncType& expected_type =
+        (*expected_func_types)[expected[i].GetReferenceIndex()];
+    const FuncType& actual_type =
+        (*actual_func_types)[actual[i].GetReferenceIndex()];
+
+    assert(expected_type.func_types == expected_func_types);
+    assert(actual_type.func_types == actual_func_types);
+
+    if (!RecursiveMatch(expected_type.params, expected_func_types,
+                        actual_type.params, actual_func_types) ||
+        !RecursiveMatch(expected_type.results, expected_func_types,
+                        actual_type.results, actual_func_types)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 Result Match(const FuncType& expected,
              const FuncType& actual,
              std::string* out_msg) {
-  if (expected.params != actual.params || expected.results != actual.results) {
-    if (out_msg) {
-      *out_msg = "import signature mismatch";
-    }
-    return Result::Error;
+  if (expected.params == actual.params && expected.results == actual.results) {
+    return Result::Ok;
   }
-  return Result::Ok;
+
+  if (RecursiveMatch(expected.params, expected.func_types, actual.params,
+                     actual.func_types) &&
+      RecursiveMatch(expected.results, expected.func_types, actual.results,
+                     actual.func_types)) {
+    return Result::Ok;
+  }
+
+  if (out_msg) {
+    *out_msg = "import signature mismatch";
+  }
+  return Result::Error;
 }
 
 //// TableType ////
@@ -756,10 +806,26 @@ Module::Module(Store&, ModuleDesc desc)
     : Object(skind), desc_(std::move(desc)) {
   for (auto&& import : desc_.imports) {
     import_types_.emplace_back(import.type);
+
+    if (import.type.type->kind == ExternKind::Func) {
+      cast<FuncType>(import.type.type.get())->func_types = &desc_.func_types;
+    }
   }
 
   for (auto&& export_ : desc_.exports) {
     export_types_.emplace_back(export_.type);
+
+    if (export_.type.type->kind == ExternKind::Func) {
+      cast<FuncType>(export_.type.type.get())->func_types = &desc_.func_types;
+    }
+  }
+
+  for (auto& func_type : desc_.func_types) {
+    func_type.func_types = &desc_.func_types;
+  }
+
+  for (auto& func : desc_.funcs) {
+    func.type.func_types = &desc_.func_types;
   }
 }
 
@@ -1208,6 +1274,25 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       }
       break;
 
+    case O::BrOnNonNull: {
+      Ref ref = Pop<Ref>();
+      if (ref != Ref::Null) {
+        Push(ref);
+        pc = instr.imm_u32;
+      }
+      break;
+    }
+
+    case O::BrOnNull: {
+      Ref ref = Pop<Ref>();
+      if (ref == Ref::Null) {
+        pc = instr.imm_u32;
+      } else {
+        Push(ref);
+      }
+      break;
+    }
+
     case O::BrTable: {
       auto key = Pop<u32>();
       if (key >= instr.imm_u32) {
@@ -1243,6 +1328,19 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
           Failed(Match(new_func->type(), func_type, nullptr)),
           "indirect call signature mismatch");  // TODO: don't use "signature"
       if (instr.op == O::ReturnCallIndirect) {
+        return DoReturnCall(new_func, out_trap);
+      } else {
+        return DoCall(new_func, out_trap);
+      }
+    }
+
+    case O::CallRef:
+    case O::ReturnCallRef: {
+      Ref new_func_ref = Pop<Ref>();
+      TRAP_IF(new_func_ref == Ref::Null, "null function reference");
+      Func::Ptr new_func{store_, new_func_ref};
+
+      if (instr.op == O::ReturnCallRef) {
         return DoReturnCall(new_func, out_trap);
       } else {
         return DoCall(new_func, out_trap);
@@ -1581,6 +1679,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::RefIsNull:
       Push(Pop<Ref>() == Ref::Null);
+      break;
+
+    case O::RefAsNonNull:
+      TRAP_IF(Pick(1).Get<Ref>() == Ref::Null, "null reference");
       break;
 
     case O::RefFunc:
@@ -2001,7 +2103,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::ReturnCall:
     case O::SelectT:
 
-    case O::CallRef:
     case O::Try:
     case O::TryTable:
     case O::Catch:

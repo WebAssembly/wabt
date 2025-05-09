@@ -98,6 +98,8 @@ class Validator : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
+  Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -132,6 +134,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
+  Result OnRefAsNonNullExpr(RefAsNonNullExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
@@ -139,6 +142,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
+  Result OnReturnCallRefExpr(ReturnCallRefExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
@@ -189,13 +193,47 @@ void ScriptValidator::PrintError(const Location* loc, const char* format, ...) {
   errors_->emplace_back(ErrorLevel::Error, *loc, buffer);
 }
 
+static Result CheckType(Type actual, Type expected) {
+  // Script validator (strict) type compare
+  if (expected == Type::Any || actual == Type::Any) {
+    return Result::Ok;
+  }
+
+  Type::Enum actual_type = actual;
+  Type::Enum expected_type = expected;
+
+  if (actual_type == expected_type) {
+    switch (actual_type) {
+      case Type::ExternRef:
+      case Type::FuncRef:
+        return (expected.IsNullableNonTypedRef() ||
+                !actual.IsNullableNonTypedRef())
+                   ? Result::Ok
+                   : Result::Error;
+
+      case Type::Reference:
+      case Type::Ref:
+      case Type::RefNull:
+        if (actual == expected) {
+          return Result::Ok;
+        }
+        break;
+
+      default:
+        return Result::Ok;
+    }
+  }
+
+  return Result::Error;
+}
+
 void ScriptValidator::CheckTypeIndex(const Location* loc,
                                      Type actual,
                                      Type expected,
                                      const char* desc,
                                      Index index,
                                      const char* index_kind) {
-  if (Failed(TypeChecker::CheckType(actual, expected))) {
+  if (Failed(CheckType(actual, expected))) {
     PrintError(loc,
                "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
                index_kind, index, desc, actual.GetName().c_str(),
@@ -299,6 +337,16 @@ Result Validator::OnBrIfExpr(BrIfExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnBrOnNonNullExpr(BrOnNonNullExpr* expr) {
+  result_ |= validator_.OnBrOnNonNull(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnBrOnNullExpr(BrOnNullExpr* expr) {
+  result_ |= validator_.OnBrOnNull(expr->loc, expr->var);
+  return Result::Ok;
+}
+
 Result Validator::OnBrTableExpr(BrTableExpr* expr) {
   result_ |= validator_.BeginBrTable(expr->loc);
   for (const Var& var : expr->targets) {
@@ -321,14 +369,8 @@ Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
 }
 
 Result Validator::OnCallRefExpr(CallRefExpr* expr) {
-  Index function_type_index;
-  result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
-  if (Succeeded(result_)) {
-    expr->function_type_index = Var{function_type_index, expr->loc};
-    return Result::Ok;
-  }
-
-  return Result::Error;
+  result_ |= validator_.OnCallRef(expr->loc, expr->sig_type);
+  return Result::Ok;
 }
 
 Result Validator::OnCodeMetadataExpr(CodeMetadataExpr* expr) {
@@ -488,6 +530,11 @@ Result Validator::OnTableFillExpr(TableFillExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnRefAsNonNullExpr(RefAsNonNullExpr* expr) {
+  result_ |= validator_.OnRefAsNonNull(expr->loc);
+  return Result::Ok;
+}
+
 Result Validator::OnRefFuncExpr(RefFuncExpr* expr) {
   result_ |= validator_.OnRefFunc(expr->loc, expr->var);
   return Result::Ok;
@@ -521,6 +568,11 @@ Result Validator::OnReturnCallExpr(ReturnCallExpr* expr) {
 Result Validator::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   result_ |= validator_.OnReturnCallIndirect(
       expr->loc, GetFuncTypeIndex(expr->loc, expr->decl), expr->table);
+  return Result::Ok;
+}
+
+Result Validator::OnReturnCallRefExpr(ReturnCallRefExpr* expr) {
+  result_ |= validator_.OnReturnCallRef(expr->loc, expr->sig_type);
   return Result::Ok;
 }
 

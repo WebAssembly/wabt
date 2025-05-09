@@ -184,6 +184,7 @@ struct FuncType : ExternType {
 
   ValueTypes params;
   ValueTypes results;
+  std::vector<FuncType>* func_types;
 };
 
 struct TableType : ExternType {
