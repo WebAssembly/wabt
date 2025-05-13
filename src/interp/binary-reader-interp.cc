@@ -84,11 +84,20 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndModule() override;
 
   Result OnTypeCount(Index count) override;
+  Result OnRecursiveType(Index first_type_index, Index type_count) override;
   Result OnFuncType(Index index,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override;
+                    Type* result_types,
+                    GCTypeExtension* gc_ext) override;
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields,
+                      GCTypeExtension* gc_ext) override;
+  Result OnArrayType(Index index,
+                     TypeMut field,
+                     GCTypeExtension* gc_ext) override;
 
   Result OnImportFunc(Index import_index,
                       std::string_view module_name,
@@ -528,15 +537,63 @@ Result BinaryReaderInterp::OnTypeCount(Index count) {
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnRecursiveType(Index first_type_index,
+                                           Index type_count) {
+  return validator_.OnRecursiveType(first_type_index, type_count);
+}
+
 Result BinaryReaderInterp::OnFuncType(Index index,
                                       Index param_count,
                                       Type* param_types,
                                       Index result_count,
-                                      Type* result_types) {
-  Result result = validator_.OnFuncType(GetLocation(), param_count, param_types,
-                                        result_count, result_types, index);
+                                      Type* result_types,
+                                      GCTypeExtension* gc_ext) {
+  Result result =
+      validator_.OnFuncType(GetLocation(), param_count, param_types,
+                            result_count, result_types, index, gc_ext);
   module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
                                         ToInterp(result_count, result_types)));
+  return result;
+}
+
+Result BinaryReaderInterp::OnStructType(Index index,
+                                        Index field_count,
+                                        TypeMut* fields,
+                                        GCTypeExtension* gc_ext) {
+  Result result =
+      validator_.OnStructType(GetLocation(), field_count, fields, gc_ext);
+
+  ValueTypes params;
+  ValueTypes results;
+  params.reserve(field_count);
+  results.reserve(field_count);
+
+  for (Index i = 0; i < field_count; i++) {
+    params.push_back(fields[i].type);
+    results.push_back(fields[i].mutable_ ? FuncType::Mutable
+                                         : FuncType::Immutable);
+  }
+
+  module_.func_types.push_back(
+      FuncType(FuncType::TypeKind::Struct, params, results));
+  return result;
+}
+
+Result BinaryReaderInterp::OnArrayType(Index index,
+                                       TypeMut field,
+                                       GCTypeExtension* gc_ext) {
+  Result result = validator_.OnArrayType(GetLocation(), field, gc_ext);
+
+  ValueTypes params;
+  ValueTypes results;
+  params.reserve(1);
+  results.reserve(1);
+
+  params.push_back(field.type);
+  results.push_back(field.mutable_ ? FuncType::Mutable : FuncType::Immutable);
+
+  module_.func_types.push_back(
+      FuncType(FuncType::TypeKind::Array, params, results));
   return result;
 }
 

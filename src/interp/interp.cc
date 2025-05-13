@@ -125,7 +125,8 @@ static bool RecursiveMatch(const ValueTypes& expected,
     assert(expected_type.func_types == expected_func_types);
     assert(actual_type.func_types == actual_func_types);
 
-    if (!RecursiveMatch(expected_type.params, expected_func_types,
+    if (expected_type.kind != actual_type.kind ||
+        !RecursiveMatch(expected_type.params, expected_func_types,
                         actual_type.params, actual_func_types) ||
         !RecursiveMatch(expected_type.results, expected_func_types,
                         actual_type.results, actual_func_types)) {
@@ -139,15 +140,18 @@ static bool RecursiveMatch(const ValueTypes& expected,
 Result Match(const FuncType& expected,
              const FuncType& actual,
              std::string* out_msg) {
-  if (expected.params == actual.params && expected.results == actual.results) {
-    return Result::Ok;
-  }
+  if (expected.kind == actual.kind) {
+    if (expected.params == actual.params &&
+        expected.results == actual.results) {
+      return Result::Ok;
+    }
 
-  if (RecursiveMatch(expected.params, expected.func_types, actual.params,
-                     actual.func_types) &&
-      RecursiveMatch(expected.results, expected.func_types, actual.results,
-                     actual.func_types)) {
-    return Result::Ok;
+    if (RecursiveMatch(expected.params, expected.func_types, actual.params,
+                       actual.func_types) &&
+        RecursiveMatch(expected.results, expected.func_types, actual.results,
+                       actual.func_types)) {
+      return Result::Ok;
+    }
   }
 
   if (out_msg) {
