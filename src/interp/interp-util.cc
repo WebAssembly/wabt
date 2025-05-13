@@ -58,12 +58,32 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::ExnRef:
       return StringPrintf("exnref:%" PRIzd, tv.value.Get<Ref>().index);
 
-    case Type::Reference:
+    case Type::AnyRef:
+      return StringPrintf("anyref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::EqRef:
+      return StringPrintf("eqref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::I31Ref:
+      return StringPrintf("i31ref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::StructRef:
+      return StringPrintf("structref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::ArrayRef:
+      return StringPrintf("arrayref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::NullFuncRef:
+    case Type::NullExternRef:
+    case Type::NullRef:
     case Type::Ref:
     case Type::RefNull:
     case Type::Func:
     case Type::Struct:
     case Type::Array:
+    case Type::Sub:
+    case Type::SubFinal:
+    case Type::Rec:
     case Type::Void:
     case Type::Any:
     case Type::I8U:
