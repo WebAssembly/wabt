@@ -26,11 +26,32 @@
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
 
+#include "wabt/binary-reader.h"  // For TypeMut.
+
 namespace wabt {
 
 class TypeChecker {
  public:
   using ErrorCallback = std::function<void(const char* msg)>;
+
+  struct TypeEntry {
+    explicit TypeEntry(Type::Enum kind, Index map_index, Index canonical_index)
+      : kind(kind),
+        map_index(map_index),
+        canonical_index(canonical_index),
+        is_final_sub_type(true),
+        first_sub_type(kInvalidIndex) {
+      assert(kind == Type::FuncRef || kind == Type::StructRef ||
+             kind == Type::ArrayRef);
+    }
+
+    Type::Enum kind;
+    Index map_index;
+    Index canonical_index;
+    bool is_final_sub_type;
+    // Currently the sub type list is limited to maximum 1 value.
+    Index first_sub_type;
+  };
 
   struct FuncType {
     FuncType() = default;
@@ -42,6 +63,70 @@ class TypeChecker {
     TypeVector params;
     TypeVector results;
     Index type_index;
+  };
+
+  struct StructType {
+    StructType() = default;
+    StructType(const TypeMutVector& fields) : fields(fields) {}
+
+    TypeMutVector fields;
+  };
+
+  struct ArrayType {
+    ArrayType() = default;
+    ArrayType(TypeMut field) : field(field) {}
+
+    TypeMut field;
+  };
+
+  struct RecursiveRange {
+    RecursiveRange(Index start_index, Index type_count)
+        : start_index(start_index), type_count(type_count), hash(0) {}
+
+    Index start_index;
+    Index type_count;
+    uint32_t hash;
+  };
+
+  struct TypeFields {
+    Index NumTypes() {
+      return static_cast<Index>(type_entries.size());
+    }
+
+    void PushFunc(FuncType&& func_type) {
+      Index map_index = static_cast<Index>(func_types.size());
+      type_entries.emplace_back(TypeEntry(Type::FuncRef, map_index,
+                                          NumTypes()));
+      func_types.emplace_back(func_type);
+    }
+
+    void PushStruct(StructType&& struct_type) {
+      Index map_index = static_cast<Index>(struct_types.size());
+      type_entries.emplace_back(TypeEntry(Type::StructRef, map_index,
+                                          NumTypes()));
+      struct_types.emplace_back(struct_type);
+    }
+
+    void PushArray(ArrayType&& array_type) {
+      Index map_index = static_cast<Index>(array_types.size());
+      type_entries.emplace_back(TypeEntry(Type::ArrayRef, map_index,
+                                          NumTypes()));
+      array_types.emplace_back(array_type);
+    }
+
+    Type GetGenericType(Type type) {
+      if (type.IsReferenceWithIndex()) {
+        return Type(type_entries[type.GetReferenceIndex()].kind,
+                    type == Type::RefNull);
+      }
+      return type;
+    }
+
+    std::vector<TypeEntry> type_entries;
+    std::vector<FuncType> func_types;
+    std::vector<StructType> struct_types;
+    std::vector<ArrayType> array_types;
+    std::vector<RecursiveRange> recursive_ranges;
   };
 
   struct Label {
@@ -62,8 +147,8 @@ class TypeChecker {
     std::vector<bool> local_ref_is_set_;
   };
 
-  explicit TypeChecker(const Features& features, std::map<Index, FuncType>& func_types)
-    : features_(features), func_types_(func_types) {}
+  explicit TypeChecker(const Features& features, TypeFields& type_fields)
+    : features_(features), type_fields_(type_fields) {}
 
   void set_error_callback(const ErrorCallback& error_callback) {
     error_callback_ = error_callback;
@@ -160,6 +245,12 @@ class TypeChecker {
   Result BeginInitExpr(Type type);
   Result EndInitExpr();
 
+  uint32_t UpdateHash(uint32_t hash, Index type_index, Index rec_start);
+  bool CheckTypeFields(Index actual,
+                       Index actual_rec_start,
+                       Index expected,
+                       Index expected_rec_start,
+                       bool is_equal);
   Result CheckType(Type actual, Type expected);
 
  private:
@@ -206,6 +297,18 @@ class TypeChecker {
                       const Limits* limits3 = nullptr);
   Result OnEnd(Label* label, const char* sig_desc, const char* end_desc);
 
+  static uint32_t ComputeHash(uint32_t hash, Index value) {
+    // Shift-Add-XOR hash
+    return hash ^ ((hash << 5) + (hash >> 2) + value);
+  }
+
+  uint32_t ComputeHash(uint32_t hash, Type& type, Index rec_start);
+  bool CompareType(Type actual,
+                   Index actual_rec_start,
+                   Type expected,
+                   Index expected_rec_start,
+                   bool is_equal);
+
   template <typename... Args>
   void PrintStackIfFailed(Result result, const char* desc, Args... args) {
     // Assert all args are Type or Type::Enum. If it's a TypeVector then
@@ -230,7 +333,7 @@ class TypeChecker {
   // to represent "any".
   TypeVector* br_table_sig_ = nullptr;
   Features features_;
-  std::map<Index, FuncType>& func_types_;
+  TypeFields& type_fields_;
 };
 
 }  // namespace wabt

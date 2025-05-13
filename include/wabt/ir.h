@@ -297,6 +297,19 @@ enum class TypeEntryKind {
   Array,
 };
 
+struct TypeEntryGCTypeExtension {
+  TypeEntryGCTypeExtension(bool is_final_sub_type)
+      : is_final_sub_type(is_final_sub_type) {}
+
+  void InitSubTypes(Index* sub_type_list, Index sub_type_count);
+
+  bool is_final_sub_type;
+  // The binary/text format allows any number of subtypes,
+  // so parsers must handle them. The validator rejects
+  // lists which size is greater than 1.
+  VarVector sub_types;
+};
+
 class TypeEntry {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(TypeEntry);
@@ -307,12 +320,17 @@ class TypeEntry {
 
   Location loc;
   std::string name;
+  TypeEntryGCTypeExtension gc_ext;
 
  protected:
   explicit TypeEntry(TypeEntryKind kind,
+                     bool is_final_sub_type,
                      std::string_view name = std::string_view(),
                      const Location& loc = Location())
-      : loc(loc), name(name), kind_(kind) {}
+      : loc(loc),
+        name(name),
+        gc_ext(is_final_sub_type),
+        kind_(kind) {}
 
   TypeEntryKind kind_;
 };
@@ -323,8 +341,8 @@ class FuncType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Func;
   }
 
-  explicit FuncType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Func, name) {}
+  explicit FuncType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Func, is_final_sub_type, name) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
@@ -353,8 +371,8 @@ class StructType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Struct;
   }
 
-  explicit StructType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Struct) {}
+  explicit StructType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Struct, is_final_sub_type, name) {}
 
   std::vector<Field> fields;
 };
@@ -365,10 +383,17 @@ class ArrayType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Array;
   }
 
-  explicit ArrayType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Array) {}
+  explicit ArrayType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Array, is_final_sub_type, name) {}
 
   Field field;
+};
+
+struct RecursiveRange {
+  Index first_type_index;
+  Index type_count;
+
+  Index EndTypeIndex() const { return first_type_index + type_count; }
 };
 
 struct FuncDeclaration {
@@ -1107,7 +1132,8 @@ enum class ModuleFieldType {
   Memory,
   DataSegment,
   Start,
-  Tag
+  Tag,
+  EmptyRec
 };
 
 class ModuleField : public intrusive_list_base<ModuleField> {
@@ -1234,6 +1260,12 @@ class TagModuleField : public ModuleFieldMixin<ModuleFieldType::Tag> {
   Tag tag;
 };
 
+class EmptyRecModuleField : public ModuleFieldMixin<ModuleFieldType::EmptyRec> {
+ public:
+  explicit EmptyRecModuleField(const Location& loc = Location())
+      : ModuleFieldMixin<ModuleFieldType::EmptyRec>(loc) {}
+};
+
 class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
  public:
   explicit StartModuleField(Var start = Var(), const Location& loc = Location())
@@ -1293,6 +1325,7 @@ struct Module {
   void AppendField(std::unique_ptr<ExportModuleField>);
   void AppendField(std::unique_ptr<FuncModuleField>);
   void AppendField(std::unique_ptr<TypeModuleField>);
+  void AppendField(std::unique_ptr<EmptyRecModuleField>);
   void AppendField(std::unique_ptr<GlobalModuleField>);
   void AppendField(std::unique_ptr<ImportModuleField>);
   void AppendField(std::unique_ptr<MemoryModuleField>);
@@ -1319,6 +1352,8 @@ struct Module {
   std::vector<Import*> imports;
   std::vector<Export*> exports;
   std::vector<TypeEntry*> types;
+  // Ordered list of recursive ranges.
+  std::vector<RecursiveRange> recursive_ranges;
   std::vector<Table*> tables;
   std::vector<ElemSegment*> elem_segments;
   std::vector<Memory*> memories;

@@ -346,7 +346,24 @@ FuncType* Module::GetFuncType(const Var& var) {
 }
 
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
+  size_t range_index = 0;
+  size_t range_start = types.size();
+
+  if (range_index < recursive_ranges.size()) {
+    range_start = recursive_ranges[range_index].first_type_index;
+  }
+
   for (size_t i = 0; i < types.size(); ++i) {
+    if (i == range_start) {
+      i += recursive_ranges[range_index].type_count - 1;
+      range_index++;
+
+      if (range_index < recursive_ranges.size()) {
+        range_start = recursive_ranges[range_index].first_type_index;
+      }
+      continue;
+    }
+
     if (auto* func_type = dyn_cast<FuncType>(types[i])) {
       if (func_type->sig == sig) {
         return i;
@@ -416,6 +433,10 @@ void Module::AppendField(std::unique_ptr<TypeModuleField> field) {
     type_bindings.emplace(type.name, Binding(field->loc, types.size()));
   }
   types.push_back(&type);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<EmptyRecModuleField> field) {
   fields.push_back(std::move(field));
 }
 
@@ -562,6 +583,10 @@ void Module::AppendField(std::unique_ptr<ModuleField> field) {
     case ModuleFieldType::Tag:
       AppendField(cast<TagModuleField>(std::move(field)));
       break;
+
+    case ModuleFieldType::EmptyRec:
+      AppendField(cast<EmptyRecModuleField>(std::move(field)));
+      break;
   }
 }
 
@@ -700,6 +725,16 @@ Type Var::to_type() const {
 void Var::Destroy() {
   if (is_name()) {
     Destruct(name_);
+  }
+}
+
+void TypeEntryGCTypeExtension::InitSubTypes(Index* sub_type_list,
+                                            Index sub_type_count) {
+  sub_types.clear();
+  sub_types.reserve(sub_type_count);
+
+  for (Index i = 0; i < sub_type_count; i++) {
+    sub_types.push_back(Var(sub_type_list[i], Location()));
   }
 }
 

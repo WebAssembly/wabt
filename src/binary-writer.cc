@@ -1408,53 +1408,127 @@ Result BinaryWriter::WriteModule() {
     CHECK_RESULT(symtab_.Populate(module_));
   }
 
-  if (module_->types.size()) {
+  std::vector<Index> rec_type_counts;
+  Index type_index = 0;
+  Index next_start_index = kInvalidIndex;
+  Index range_index = 0;
+  Index range_count = 0;
+
+  if (!module_->recursive_ranges.empty()) {
+    next_start_index = module_->recursive_ranges[0].first_type_index;
+  }
+
+  for (const ModuleField& field : module_->fields) {
+    if (field.type() == ModuleFieldType::Type) {
+      if (range_count > 0) {
+        range_count--;
+      } else if (next_start_index != type_index) {
+        rec_type_counts.push_back(1);
+      } else {
+        range_count = module_->recursive_ranges[range_index].type_count;
+        rec_type_counts.push_back(range_count--);
+        range_index++;
+        next_start_index = kInvalidIndex;
+        if (range_index < module_->recursive_ranges.size()) {
+          next_start_index =
+              module_->recursive_ranges[range_index].first_type_index;
+        }
+      }
+      type_index++;
+    } else if (field.type() == ModuleFieldType::EmptyRec) {
+      assert(range_count == 0);
+      rec_type_counts.push_back(0);
+    }
+  }
+
+  if (!rec_type_counts.empty()) {
     BeginKnownSection(BinarySection::Type);
-    WriteU32Leb128(stream_, module_->types.size(), "num types");
-    for (size_t i = 0; i < module_->types.size(); ++i) {
-      const TypeEntry* type = module_->types[i];
-      switch (type->kind()) {
-        case TypeEntryKind::Func: {
-          const FuncType* func_type = cast<FuncType>(type);
-          const FuncSignature* sig = &func_type->sig;
-          WriteHeader("func type", i);
-          WriteType(stream_, Type::Func);
 
-          Index num_params = sig->param_types.size();
-          Index num_results = sig->result_types.size();
-          WriteU32Leb128(stream_, num_params, "num params");
-          for (size_t j = 0; j < num_params; ++j) {
-            WriteType(stream_, sig->param_types[j]);
-          }
+    WriteU32Leb128(stream_, rec_type_counts.size(), "num types");
+    type_index = 0;
+    for (auto type_count : rec_type_counts) {
+      if (type_count != 1) {
+        WriteS32Leb128(stream_, Type::Rec, "recursive type");
+        WriteU32Leb128(stream_, type_count, "recursive type count");
+      }
 
-          WriteU32Leb128(stream_, num_results, "num results");
-          for (size_t j = 0; j < num_results; ++j) {
-            WriteType(stream_, sig->result_types[j]);
-          }
-          break;
+      Index end = type_index + type_count;
+      // Safety, should never happen for valid modules.
+      if (end >= module_->types.size()) {
+        end = module_->types.size();
+      }
+
+      while (type_index < end) {
+        const TypeEntry* type = module_->types[type_index];
+
+        switch (type->kind()) {
+          case TypeEntryKind::Func:
+            WriteHeader("func type", type_index);
+            break;
+          case TypeEntryKind::Struct:
+            WriteHeader("struct type", type_index);
+            break;
+          case TypeEntryKind::Array:
+            WriteHeader("array type", type_index);
+            break;
         }
 
-        case TypeEntryKind::Struct: {
-          const StructType* struct_type = cast<StructType>(type);
-          WriteHeader("struct type", i);
-          WriteType(stream_, Type::Struct);
-          Index num_fields = struct_type->fields.size();
-          WriteU32Leb128(stream_, num_fields, "num fields");
-          for (size_t j = 0; j < num_fields; ++j) {
-            const Field& field = struct_type->fields[j];
-            WriteType(stream_, field.type);
-            stream_->WriteU8(field.mutable_, "field mutability");
+        type_index++;
+
+        if (!type->gc_ext.is_final_sub_type ||
+            !type->gc_ext.sub_types.empty()) {
+          WriteS32Leb128(
+              stream_,
+              type->gc_ext.is_final_sub_type ? Type::SubFinal : Type::Sub,
+              "sub type");
+
+          WriteU32Leb128(stream_, type->gc_ext.sub_types.size(),
+                         "num sub types");
+          for (auto it : type->gc_ext.sub_types) {
+            WriteU32Leb128(stream_, it.index(), "sub type");
           }
-          break;
         }
 
-        case TypeEntryKind::Array: {
-          const ArrayType* array_type = cast<ArrayType>(type);
-          WriteHeader("array type", i);
-          WriteType(stream_, Type::Array);
-          WriteType(stream_, array_type->field.type);
-          stream_->WriteU8(array_type->field.mutable_, "field mutability");
-          break;
+        switch (type->kind()) {
+          case TypeEntryKind::Func: {
+            const FuncType* func_type = cast<FuncType>(type);
+            const FuncSignature* sig = &func_type->sig;
+            WriteType(stream_, Type::Func);
+
+            Index num_params = sig->param_types.size();
+            Index num_results = sig->result_types.size();
+            WriteU32Leb128(stream_, num_params, "num params");
+            for (size_t j = 0; j < num_params; ++j) {
+              WriteType(stream_, sig->param_types[j]);
+            }
+
+            WriteU32Leb128(stream_, num_results, "num results");
+            for (size_t j = 0; j < num_results; ++j) {
+              WriteType(stream_, sig->result_types[j]);
+            }
+            break;
+          }
+
+          case TypeEntryKind::Struct: {
+            const StructType* struct_type = cast<StructType>(type);
+            WriteType(stream_, Type::Struct);
+            Index num_fields = struct_type->fields.size();
+            WriteU32Leb128(stream_, num_fields, "num fields");
+            for (size_t j = 0; j < num_fields; ++j) {
+              const Field& field = struct_type->fields[j];
+              WriteType(stream_, field.type);
+              stream_->WriteU8(field.mutable_, "field mutability");
+            }
+            break;
+          }
+
+          case TypeEntryKind::Array: {
+            const ArrayType* array_type = cast<ArrayType>(type);
+            WriteType(stream_, Type::Array);
+            WriteType(stream_, array_type->field.type);
+            stream_->WriteU8(array_type->field.mutable_, "field mutability");
+            break;
+          }
         }
       }
     }
