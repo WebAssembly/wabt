@@ -1,0 +1,45 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-gc
+(module
+  (rec)
+  (rec)
+  (type (func (param i32)))
+  (rec
+    (type (struct))
+    (type (struct (field i32)))
+    (type (array i64))
+  )
+  (rec)
+  (rec)
+  (rec)
+  (rec
+    (type (struct (field f32)))
+    (type (func (result i64)))
+  )
+  (type (struct (field f64)))
+  (rec)
+  (rec)
+  (rec)
+  (rec)
+)
+(;; STDOUT ;;;
+(module
+  (rec)
+  (rec)
+  (type (;0;) (func (param i32)))
+  (rec
+    (type (;1;) (struct))
+    (type (;2;) (struct (field (;0;) i32)))
+    (type (;3;) (array i64)))
+  (rec)
+  (rec)
+  (rec)
+  (rec
+    (type (;4;) (struct (field (;0;) f32)))
+    (type (;5;) (func (result i64))))
+  (type (;6;) (struct (field (;0;) f64)))
+  (rec)
+  (rec)
+  (rec)
+  (rec))
+;;; STDOUT ;;)
