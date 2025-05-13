@@ -52,12 +52,19 @@ struct ReadBinaryOptions {
   bool skip_function_bodies = false;
 };
 
-// TODO: Move somewhere else?
+// TODO: Move both TypeMut and GCTypeInformation somewhere else?
 struct TypeMut {
   Type type;
   bool mutable_;
 };
 using TypeMutVector = std::vector<TypeMut>;
+
+// Garbage Collector specific type information
+struct GCTypeExtension {
+  bool is_final_sub_type;
+  Index sub_type_count;
+  Index* sub_types;
+};
 
 struct CatchClause {
   CatchKind kind;
@@ -99,15 +106,20 @@ class BinaryReaderDelegate {
   /* Type section */
   virtual Result BeginTypeSection(Offset size) = 0;
   virtual Result OnTypeCount(Index count) = 0;
+  virtual Result OnRecursiveType(Index first_type_index, Index type_count) = 0;
   virtual Result OnFuncType(Index index,
                             Index param_count,
                             Type* param_types,
                             Index result_count,
-                            Type* result_types) = 0;
+                            Type* result_types,
+                            GCTypeExtension* gc_ext) = 0;
   virtual Result OnStructType(Index index,
                               Index field_count,
-                              TypeMut* fields) = 0;
-  virtual Result OnArrayType(Index index, TypeMut field) = 0;
+                              TypeMut* fields,
+                              GCTypeExtension* gc_ext) = 0;
+  virtual Result OnArrayType(Index index,
+                             TypeMut field,
+                             GCTypeExtension* gc_ext) = 0;
   virtual Result EndTypeSection() = 0;
 
   /* Import section */

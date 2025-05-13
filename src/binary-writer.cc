@@ -1410,14 +1410,69 @@ Result BinaryWriter::WriteModule() {
 
   if (module_->types.size()) {
     BeginKnownSection(BinarySection::Type);
-    WriteU32Leb128(stream_, module_->types.size(), "num types");
+
+    Index type_count = module_->types.size();
+    for (auto it : module_->recursive_ranges) {
+      if (it.type_count == 0) {
+        type_count++;
+      } else {
+        type_count -= it.type_count - 1;
+      }
+    }
+
+    WriteU32Leb128(stream_, type_count, "num types");
+
+    Index first_type_index = kInvalidIndex;
+    Index range_index = 0;
+
+    if (!module_->recursive_ranges.empty()) {
+      first_type_index = module_->recursive_ranges[0].first_type_index;
+    }
+
     for (size_t i = 0; i < module_->types.size(); ++i) {
+      while (i == first_type_index) {
+        WriteS32Leb128(stream_, Type::Rec, "recursive type");
+        WriteU32Leb128(stream_,
+                       module_->recursive_ranges[range_index].type_count,
+                       "recursive type count");
+
+        first_type_index = kInvalidIndex;
+        if (++range_index < module_->recursive_ranges.size()) {
+          first_type_index =
+              module_->recursive_ranges[range_index].first_type_index;
+        }
+      }
+
       const TypeEntry* type = module_->types[i];
+
+      switch (type->kind()) {
+        case TypeEntryKind::Func:
+          WriteHeader("func type", i);
+          break;
+        case TypeEntryKind::Struct:
+          WriteHeader("struct type", i);
+          break;
+        case TypeEntryKind::Array:
+          WriteHeader("array type", i);
+          break;
+      }
+
+      if (!type->gc_ext.is_final_sub_type || !type->gc_ext.sub_types.empty()) {
+        WriteS32Leb128(
+            stream_,
+            type->gc_ext.is_final_sub_type ? Type::SubFinal : Type::Sub,
+            "sub type");
+
+        WriteU32Leb128(stream_, type->gc_ext.sub_types.size(), "num sub types");
+        for (auto it : type->gc_ext.sub_types) {
+          WriteU32Leb128(stream_, it.index(), "sub type");
+        }
+      }
+
       switch (type->kind()) {
         case TypeEntryKind::Func: {
           const FuncType* func_type = cast<FuncType>(type);
           const FuncSignature* sig = &func_type->sig;
-          WriteHeader("func type", i);
           WriteType(stream_, Type::Func);
 
           Index num_params = sig->param_types.size();
@@ -1436,7 +1491,6 @@ Result BinaryWriter::WriteModule() {
 
         case TypeEntryKind::Struct: {
           const StructType* struct_type = cast<StructType>(type);
-          WriteHeader("struct type", i);
           WriteType(stream_, Type::Struct);
           Index num_fields = struct_type->fields.size();
           WriteU32Leb128(stream_, num_fields, "num fields");
@@ -1450,7 +1504,6 @@ Result BinaryWriter::WriteModule() {
 
         case TypeEntryKind::Array: {
           const ArrayType* array_type = cast<ArrayType>(type);
-          WriteHeader("array type", i);
           WriteType(stream_, Type::Array);
           WriteType(stream_, array_type->field.type);
           stream_->WriteU8(array_type->field.mutable_, "field mutability");
@@ -1458,6 +1511,15 @@ Result BinaryWriter::WriteModule() {
         }
       }
     }
+
+    while (range_index < module_->recursive_ranges.size()) {
+      WriteS32Leb128(stream_, Type::Rec, "recursive type");
+      // Should be 0 for a validated module.
+      WriteU32Leb128(stream_, module_->recursive_ranges[range_index].type_count,
+                     "recursive count");
+      ++range_index;
+    }
+
     EndSection();
   }
 
