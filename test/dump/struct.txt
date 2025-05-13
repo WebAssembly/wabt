@@ -2,8 +2,8 @@
 ;;; ARGS0: --enable-gc
 ;;; ARGS1: -x
 (type (struct))
-(type (struct i32 i64 f32 f64))
-(type (struct i32 (mut i64)))
+(type (struct (field i32 i64 f32 f64)))
+(type (struct (field i32 (mut i64))))
 (;; STDOUT ;;;
 
 struct.wasm:	file format wasm 0x1

@@ -5,10 +5,10 @@
 init(externref:1) =>
 deinit() =>
 out/test/spec/function-references/ref_is_null.wast:79: assert_invalid passed:
-  out/test/spec/function-references/ref_is_null/ref_is_null.2.wasm:000001b: error: type mismatch in ref.is_null, expected [reference] but got [i32]
+  out/test/spec/function-references/ref_is_null/ref_is_null.2.wasm:000001b: error: type mismatch in ref.is_null, expected [funcref] but got [i32]
   000001b: error: OnRefIsNullExpr callback failed
 out/test/spec/function-references/ref_is_null.wast:83: assert_invalid passed:
-  out/test/spec/function-references/ref_is_null/ref_is_null.3.wasm:0000018: error: type mismatch in ref.is_null, expected [reference] but got []
+  out/test/spec/function-references/ref_is_null/ref_is_null.3.wasm:0000018: error: type mismatch in ref.is_null, expected [funcref] but got []
   0000018: error: OnRefIsNullExpr callback failed
 22/22 tests passed.
 ;;; STDOUT ;;)
