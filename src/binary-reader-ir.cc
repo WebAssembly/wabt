@@ -102,13 +102,20 @@ class BinaryReaderIR : public BinaryReaderNop {
   bool OnError(const Error&) override;
 
   Result OnTypeCount(Index count) override;
+  Result OnRecursiveType(Index first_type_index, Index type_count) override;
   Result OnFuncType(Index index,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override;
-  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
-  Result OnArrayType(Index index, TypeMut field) override;
+                    Type* result_types,
+                    SupertypesInfo* supertypes) override;
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields,
+                      SupertypesInfo* supertypes) override;
+  Result OnArrayType(Index index,
+                     TypeMut field,
+                     SupertypesInfo* supertypes) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -523,11 +530,22 @@ Result BinaryReaderIR::OnTypeCount(Index count) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::OnRecursiveType(Index first_type_index,
+                                       Index type_count) {
+  // The type_count == 0 is ignored, because its support is not mandatory
+  if (type_count > 1) {
+    module_->rec_group_ranges.push_back(
+        RecGroupRange{first_type_index, type_count});
+  }
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::OnFuncType(Index index,
                                   Index param_count,
                                   Type* param_types,
                                   Index result_count,
-                                  Type* result_types) {
+                                  Type* result_types,
+                                  SupertypesInfo* supertypes) {
   if (param_count > kMaxFunctionParams) {
     PrintError("FuncType param count exceeds maximum value");
     return Result::Error;
@@ -539,7 +557,9 @@ Result BinaryReaderIR::OnFuncType(Index index,
   }
 
   auto field = std::make_unique<TypeModuleField>(GetLocation());
-  auto func_type = std::make_unique<FuncType>();
+  auto func_type = std::make_unique<FuncType>(supertypes->is_final_sub_type);
+  func_type->supertypes.InitSubTypes(supertypes->sub_types,
+                                     supertypes->sub_type_count);
   func_type->sig.param_types.assign(param_types, param_types + param_count);
   func_type->sig.result_types.assign(result_types, result_types + result_count);
 
@@ -565,9 +585,13 @@ Result BinaryReaderIR::OnFuncType(Index index,
 
 Result BinaryReaderIR::OnStructType(Index index,
                                     Index field_count,
-                                    TypeMut* fields) {
+                                    TypeMut* fields,
+                                    SupertypesInfo* supertypes) {
   auto field = std::make_unique<TypeModuleField>(GetLocation());
-  auto struct_type = std::make_unique<StructType>();
+  auto struct_type =
+      std::make_unique<StructType>(supertypes->is_final_sub_type);
+  struct_type->supertypes.InitSubTypes(supertypes->sub_types,
+                                       supertypes->sub_type_count);
   struct_type->fields.resize(field_count);
   for (Index i = 0; i < field_count; ++i) {
     struct_type->fields[i].type = fields[i].type;
@@ -580,9 +604,13 @@ Result BinaryReaderIR::OnStructType(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnArrayType(Index index, TypeMut type_mut) {
+Result BinaryReaderIR::OnArrayType(Index index,
+                                   TypeMut type_mut,
+                                   SupertypesInfo* supertypes) {
   auto field = std::make_unique<TypeModuleField>(GetLocation());
-  auto array_type = std::make_unique<ArrayType>();
+  auto array_type = std::make_unique<ArrayType>(supertypes->is_final_sub_type);
+  array_type->supertypes.InitSubTypes(supertypes->sub_types,
+                                      supertypes->sub_type_count);
   array_type->field.type = type_mut.type;
   array_type->field.mutable_ = type_mut.mutable_;
   module_->features_used.simd |= (type_mut.type == Type::V128);

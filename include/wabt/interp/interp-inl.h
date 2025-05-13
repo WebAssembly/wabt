@@ -42,7 +42,24 @@ inline bool FuncType::classof(const ExternType* type) {
 }
 
 inline FuncType::FuncType(ValueTypes params, ValueTypes results)
-    : ExternType(ExternKind::Func), params(params), results(results), func_types(nullptr) {}
+    : ExternType(ExternKind::Func),
+      params(params),
+      results(results),
+      func_types(nullptr) {}
+
+inline FuncType::FuncType(TypeKind kind, ValueTypes params, ValueTypes results)
+    : ExternType(ExternKind::Func),
+      kind(kind),
+      canonical_index(kInvalidIndex),
+      canonical_sub_index(kInvalidIndex),
+      is_final_sub_type(true),
+      recursive_start(0),
+      recursive_count(0),
+      params(params),
+      results(results),
+      func_types(nullptr) {
+  assert((kind == TypeKind::Struct || kind == TypeKind::Array) && params.size() == results.size());
+}
 
 //// TableType ////
 // static

@@ -265,7 +265,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override {
+                    Type* result_types,
+                    SupertypesInfo* supertypes) override {
     objdump_state_->function_param_counts[index] = param_count;
     return Result::Ok;
   }
@@ -1089,9 +1090,15 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override;
-  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
-  Result OnArrayType(Index index, TypeMut field) override;
+                    Type* result_types,
+                    SupertypesInfo* supertypes) override;
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields,
+                      SupertypesInfo* supertypes) override;
+  Result OnArrayType(Index index,
+                     TypeMut field,
+                     SupertypesInfo* supertypes) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -1457,15 +1464,31 @@ Result BinaryReaderObjdump::OnTypeCount(Index count) {
   return OnCount(count);
 }
 
+void PrintSupertypesInfo(SupertypesInfo* supertypes) {
+  if (supertypes->is_final_sub_type && supertypes->sub_type_count == 0) {
+    return;
+  }
+
+  printf("(sub%s", supertypes->is_final_sub_type ? " final" : "");
+
+  for (Index i = 0; i < supertypes->sub_type_count; i++) {
+    printf(" %" PRIindex, supertypes->sub_types[i]);
+  }
+  printf(") ");
+}
+
 Result BinaryReaderObjdump::OnFuncType(Index index,
                                        Index param_count,
                                        Type* param_types,
                                        Index result_count,
-                                       Type* result_types) {
+                                       Type* result_types,
+                                       SupertypesInfo* supertypes) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintSupertypesInfo(supertypes);
+  printf("(");
   for (Index i = 0; i < param_count; i++) {
     if (i != 0) {
       printf(", ");
@@ -1497,11 +1520,14 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
 
 Result BinaryReaderObjdump::OnStructType(Index index,
                                          Index field_count,
-                                         TypeMut* fields) {
+                                         TypeMut* fields,
+                                         SupertypesInfo* supertypes) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (struct", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintSupertypesInfo(supertypes);
+  printf("(struct");
   for (Index i = 0; i < field_count; i++) {
     if (fields[i].mutable_) {
       printf(" (mut");
@@ -1515,11 +1541,15 @@ Result BinaryReaderObjdump::OnStructType(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnArrayType(Index index, TypeMut field) {
+Result BinaryReaderObjdump::OnArrayType(Index index,
+                                        TypeMut field,
+                                        SupertypesInfo* supertypes) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (array", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintSupertypesInfo(supertypes);
+  printf("(array");
   if (field.mutable_) {
     printf(" (mut");
   }

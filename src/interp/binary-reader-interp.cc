@@ -84,11 +84,21 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndModule() override;
 
   Result OnTypeCount(Index count) override;
+  Result OnRecursiveType(Index first_type_index, Index type_count) override;
   Result OnFuncType(Index index,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override;
+                    Type* result_types,
+                    SupertypesInfo* supertypes) override;
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields,
+                      SupertypesInfo* supertypes) override;
+  Result OnArrayType(Index index,
+                     TypeMut field,
+                     SupertypesInfo* supertypes) override;
+  Result EndTypeSection() override;
 
   Result OnImportFunc(Index import_index,
                       std::string_view module_name,
@@ -338,6 +348,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   Index num_func_imports() const;
 
+  void UpdateTypeInfo(SupertypesInfo* supertypes);
+
   Errors* errors_ = nullptr;
   ModuleDesc& module_;
   Istream& istream_;
@@ -351,6 +363,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   u32 local_decl_count_;
   u32 local_count_;
+  Index recursive_start_;
+  Index recursive_end_;
 
   std::vector<FuncType> func_types_;      // Includes imported and defined.
   std::vector<TableType> table_types_;    // Includes imported and defined.
@@ -526,19 +540,107 @@ Result BinaryReaderInterp::EndModule() {
 
 Result BinaryReaderInterp::OnTypeCount(Index count) {
   module_.func_types.reserve(count);
+  recursive_end_ = 0;
   return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnRecursiveType(Index first_type_index,
+                                           Index type_count) {
+  CHECK_RESULT(validator_.OnRecursiveType(first_type_index, type_count));
+  if (type_count > 0) {
+    // A non-empty recursive group is found.
+    recursive_start_ = static_cast<Index>(module_.func_types.size());
+    recursive_end_ = recursive_start_ + type_count;
+  }
+  return Result::Ok;
+}
+
+void BinaryReaderInterp::UpdateTypeInfo(SupertypesInfo* supertypes) {
+  FuncType& type = module_.func_types.back();
+  Index index = static_cast<Index>(module_.func_types.size() - 1);
+
+  if (index < recursive_end_) {
+    type.recursive_start = recursive_start_;
+    type.recursive_count = recursive_end_ - recursive_start_;
+  } else {
+    type.recursive_start = index;
+    type.recursive_count = 1;
+  }
+
+  type.is_final_sub_type = supertypes->is_final_sub_type;
+  type.canonical_index = index;
+  if (supertypes->sub_type_count > 0) {
+    type.canonical_sub_index = supertypes->sub_types[0];
+  } else {
+    type.canonical_sub_index = kInvalidIndex;
+  }
 }
 
 Result BinaryReaderInterp::OnFuncType(Index index,
                                       Index param_count,
                                       Type* param_types,
                                       Index result_count,
-                                      Type* result_types) {
-  Result result = validator_.OnFuncType(GetLocation(), param_count, param_types,
-                                        result_count, result_types, index);
+                                      Type* result_types,
+                                      SupertypesInfo* supertypes) {
+  Result result =
+      validator_.OnFuncType(GetLocation(), param_count, param_types,
+                            result_count, result_types, index, supertypes);
   module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
                                         ToInterp(result_count, result_types)));
+  UpdateTypeInfo(supertypes);
   return result;
+}
+
+Result BinaryReaderInterp::OnStructType(Index index,
+                                        Index field_count,
+                                        TypeMut* fields,
+                                        SupertypesInfo* supertypes) {
+  Result result =
+      validator_.OnStructType(GetLocation(), field_count, fields, supertypes);
+
+  ValueTypes params;
+  ValueTypes results;
+  params.reserve(field_count);
+  results.reserve(field_count);
+
+  for (Index i = 0; i < field_count; i++) {
+    params.push_back(fields[i].type);
+    results.push_back(fields[i].mutable_ ? FuncType::Mutable
+                                         : FuncType::Immutable);
+  }
+
+  module_.func_types.push_back(
+      FuncType(FuncType::TypeKind::Struct, params, results));
+  UpdateTypeInfo(supertypes);
+  return result;
+}
+
+Result BinaryReaderInterp::OnArrayType(Index index,
+                                       TypeMut field,
+                                       SupertypesInfo* supertypes) {
+  Result result = validator_.OnArrayType(GetLocation(), field, supertypes);
+
+  ValueTypes params;
+  ValueTypes results;
+  params.reserve(1);
+  results.reserve(1);
+
+  params.push_back(field.type);
+  results.push_back(field.mutable_ ? FuncType::Mutable : FuncType::Immutable);
+
+  module_.func_types.push_back(
+      FuncType(FuncType::TypeKind::Array, params, results));
+  UpdateTypeInfo(supertypes);
+  return result;
+}
+
+Result BinaryReaderInterp::EndTypeSection() {
+  for (auto& it : module_.func_types) {
+    it.canonical_index = validator_.GetCanonicalTypeIndex(it.canonical_index);
+    it.canonical_sub_index =
+        validator_.GetCanonicalTypeIndex(it.canonical_sub_index);
+  }
+  return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnImportFunc(Index import_index,
@@ -615,21 +717,24 @@ Result BinaryReaderInterp::OnImportTag(Index import_index,
 }
 
 Result BinaryReaderInterp::OnFunctionCount(Index count) {
-  module_.funcs.reserve(count);
+  module_.funcs.reserve(std::min(count, 1024u));
   return Result::Ok;
 }
 
 Result BinaryReaderInterp::OnFunction(Index index, Index sig_index) {
-  CHECK_RESULT(
-      validator_.OnFunction(GetLocation(), Var(sig_index, GetLocation())));
-  FuncType& func_type = module_.func_types[sig_index];
+  Result result =
+      validator_.OnFunction(GetLocation(), Var(sig_index, GetLocation()));
+
+  FuncType default_func_type{ValueTypes(), ValueTypes()};
+  FuncType& func_type =
+      Succeeded(result) ? module_.func_types[sig_index] : default_func_type;
   module_.funcs.push_back(FuncDesc{func_type, {}, Istream::kInvalidOffset, {}});
   func_types_.push_back(func_type);
-  return Result::Ok;
+  return result;
 }
 
 Result BinaryReaderInterp::OnTableCount(Index count) {
-  module_.tables.reserve(count);
+  module_.tables.reserve(std::min(count, 1024u));
   return Result::Ok;
 }
 
@@ -820,7 +925,7 @@ Result BinaryReaderInterp::EndElemExpr(Index elem_index, Index expr_index) {
 
 Result BinaryReaderInterp::OnDataCount(Index count) {
   validator_.OnDataCount(count);
-  module_.datas.reserve(count);
+  module_.datas.reserve(std::min(count, 1024u));
   return Result::Ok;
 }
 

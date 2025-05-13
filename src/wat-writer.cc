@@ -196,6 +196,7 @@ class WatWriter : ModuleContext {
   Index table_index_ = 0;
   Index memory_index_ = 0;
   Index type_index_ = 0;
+  Index recursive_range_index_ = 0;
   Index tag_index_ = 0;
   Index data_segment_index_ = 0;
   Index elem_segment_index_ = 0;
@@ -1715,6 +1716,12 @@ void WatWriter::WriteExport(const Export& export_) {
 }
 
 void WatWriter::WriteTypeEntry(const TypeEntry& type) {
+  if (recursive_range_index_ < module.rec_group_ranges.size() &&
+      module.rec_group_ranges[recursive_range_index_].first_type_index ==
+          type_index_) {
+    WriteOpen("rec", NextChar::Newline);
+  }
+
   WriteOpenSpace("type");
   WriteNameOrIndex(type.name, type_index_++, NextChar::Space);
   switch (type.kind()) {
@@ -1748,6 +1755,14 @@ void WatWriter::WriteTypeEntry(const TypeEntry& type) {
     }
   }
   WriteCloseNewline();
+
+  // The type_index_ is increased above.
+  if (recursive_range_index_ < module.rec_group_ranges.size() &&
+      module.rec_group_ranges[recursive_range_index_].EndTypeIndex() ==
+          type_index_) {
+    WriteCloseNewline();
+    recursive_range_index_++;
+  }
 }
 
 void WatWriter::WriteField(const Field& field) {

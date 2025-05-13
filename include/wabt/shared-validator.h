@@ -29,8 +29,6 @@
 #include "wabt/opcode.h"
 #include "wabt/type-checker.h"
 
-#include "wabt/binary-reader.h"  // For TypeMut.
-
 namespace wabt {
 
 struct ValidateOptions {
@@ -48,7 +46,11 @@ enum class TableImportStatus {
 class SharedValidator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(SharedValidator);
+  using TypeEntry = TypeChecker::TypeEntry;
   using FuncType = TypeChecker::FuncType;
+  using StructType = TypeChecker::StructType;
+  using ArrayType = TypeChecker::ArrayType;
+  using RecGroup = TypeChecker::RecGroup;
   SharedValidator(Errors*, const ValidateOptions& options);
 
   // TODO: Move into SharedValidator?
@@ -68,16 +70,28 @@ class SharedValidator {
 
   Index GetLocalCount() const;
 
+  // The canonical index of a type is the index of the first type,
+  // which is equal to the original type. The canonical index is
+  // always less or equal than type_index.
+  Index GetCanonicalTypeIndex(Index type_index);
+
   Result EndModule();
 
+  Result OnRecursiveType(Index first_type_index, Index type_count);
   Result OnFuncType(const Location&,
                     Index param_count,
                     const Type* param_types,
                     Index result_count,
                     const Type* result_types,
-                    Index type_index);
-  Result OnStructType(const Location&, Index field_count, TypeMut* fields);
-  Result OnArrayType(const Location&, TypeMut field);
+                    Index type_index,
+                    SupertypesInfo* supertypes);
+  Result OnStructType(const Location&,
+                      Index field_count,
+                      TypeMut* fields,
+                      SupertypesInfo* supertypes);
+  Result OnArrayType(const Location&,
+                     TypeMut field,
+                     SupertypesInfo* supertypes);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&, TableImportStatus import_status, TableInitExprStatus init_provided);
@@ -230,20 +244,6 @@ class SharedValidator {
   Result OnUnreachable(const Location&);
 
  private:
-  struct StructType {
-    StructType() = default;
-    StructType(const TypeMutVector& fields) : fields(fields) {}
-
-    TypeMutVector fields;
-  };
-
-  struct ArrayType {
-    ArrayType() = default;
-    ArrayType(TypeMut field) : field(field) {}
-
-    TypeMut field;
-  };
-
   struct TableType {
     TableType() = default;
     TableType(Type element, Limits limits) : element(element), limits(limits) {}
@@ -299,7 +299,11 @@ class SharedValidator {
                    Type actual,
                    Type expected,
                    const char* desc);
-  Result CheckReferenceType(const Location&, Type type, const char* desc);
+  Result CheckReferenceType(const Location&,
+                            Type type,
+                            Index end_index,
+                            const char* desc);
+  Result CheckSupertypes(const Location&, SupertypesInfo* supertypes);
   Result CheckLimits(const Location&,
                      const Limits&,
                      uint64_t absolute_max,
@@ -344,6 +348,8 @@ class SharedValidator {
   void RestoreLocalRefs(Result result);
   void IgnoreLocalRefs();
 
+  Index GetEndIndex();
+
   ValidateOptions options_;
   Errors* errors_;
   TypeChecker typechecker_;  // TODO: Move into SharedValidator.
@@ -351,10 +357,7 @@ class SharedValidator {
   Location expr_loc_ = Location(kInvalidOffset);
   bool in_init_expr_ = false;
 
-  Index num_types_ = 0;
-  std::map<Index, FuncType> func_types_;
-  std::map<Index, StructType> struct_types_;
-  std::map<Index, ArrayType> array_types_;
+  TypeChecker::TypeFields type_fields_;
 
   std::vector<FuncType> funcs_;       // Includes imported and defined.
   std::vector<TableType> tables_;     // Includes imported and defined.
@@ -365,6 +368,9 @@ class SharedValidator {
   Index starts_ = 0;
   Index num_imported_globals_ = 0;
   Index data_segments_ = 0;
+  Index last_rec_type_end_ = 0;
+  // Recursive type checks may enter to infinite loop for invalid values.
+  Result type_validation_result_ = Result::Ok;
 
   // Includes parameters, since this is only used for validating
   // local.{get,set,tee} instructions.
