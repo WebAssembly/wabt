@@ -262,6 +262,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
   }
 
   Result OnFuncType(Index index,
+                    GCTypeExtension* gc_ext,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
@@ -1086,12 +1087,18 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   Result OnTypeCount(Index count) override;
   Result OnFuncType(Index index,
+                    GCTypeExtension* gc_ext,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
                     Type* result_types) override;
-  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
-  Result OnArrayType(Index index, TypeMut field) override;
+  Result OnStructType(Index index,
+                      GCTypeExtension* gc_ext,
+                      Index field_count,
+                      TypeMut* fields) override;
+  Result OnArrayType(Index index,
+                     GCTypeExtension* gc_ext,
+                     TypeMut field) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -1457,7 +1464,21 @@ Result BinaryReaderObjdump::OnTypeCount(Index count) {
   return OnCount(count);
 }
 
+void PrintGCTypeExtension(GCTypeExtension* gc_ext) {
+  if (gc_ext->is_final_sub_type && gc_ext->sub_type_count == 0) {
+    return;
+  }
+
+  printf("(sub%s", gc_ext->is_final_sub_type ? " final" : "");
+
+  for (Index i = 0; i < gc_ext->sub_type_count; i++) {
+    printf(" %" PRIindex, gc_ext->sub_types[i]);
+  }
+  printf(") ");
+}
+
 Result BinaryReaderObjdump::OnFuncType(Index index,
+                                       GCTypeExtension* gc_ext,
                                        Index param_count,
                                        Type* param_types,
                                        Index result_count,
@@ -1465,7 +1486,9 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintGCTypeExtension(gc_ext);
+  printf("(");
   for (Index i = 0; i < param_count; i++) {
     if (i != 0) {
       printf(", ");
@@ -1496,12 +1519,15 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
 }
 
 Result BinaryReaderObjdump::OnStructType(Index index,
+                                         GCTypeExtension* gc_ext,
                                          Index field_count,
                                          TypeMut* fields) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (struct", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintGCTypeExtension(gc_ext);
+  printf("(struct");
   for (Index i = 0; i < field_count; i++) {
     if (fields[i].mutable_) {
       printf(" (mut");
@@ -1515,11 +1541,15 @@ Result BinaryReaderObjdump::OnStructType(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnArrayType(Index index, TypeMut field) {
+Result BinaryReaderObjdump::OnArrayType(Index index,
+                                        GCTypeExtension* gc_ext,
+                                        TypeMut field) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (array", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintGCTypeExtension(gc_ext);
+  printf("(array");
   if (field.mutable_) {
     printf(" (mut");
   }

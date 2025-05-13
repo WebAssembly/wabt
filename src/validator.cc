@@ -206,12 +206,16 @@ static Result CheckType(Type actual, Type expected) {
     switch (actual_type) {
       case Type::ExternRef:
       case Type::FuncRef:
+      case Type::AnyRef:
+      case Type::EqRef:
+      case Type::I31Ref:
+      case Type::StructRef:
+      case Type::ArrayRef:
         return (expected.IsNullableNonTypedRef() ||
                 !actual.IsNullableNonTypedRef())
                    ? Result::Ok
                    : Result::Error;
 
-      case Type::Reference:
       case Type::Ref:
       case Type::RefNull:
         if (actual == expected) {
@@ -754,17 +758,57 @@ Validator::Validator(Errors* errors,
       validator_(errors_, options_),
       current_module_(module) {}
 
+static void GetGCTypeExtension(const TypeEntryGCTypeExtension& gc_ext_in,
+                               GCTypeExtension* gc_ext_out,
+                               std::vector<Index>& sub_types) {
+  Index sub_type_count = static_cast<Index>(gc_ext_in.sub_types.size());
+
+  gc_ext_out->is_final_sub_type = gc_ext_in.is_final_sub_type;
+  gc_ext_out->sub_type_count = sub_type_count;
+
+  sub_types.resize(sub_type_count);
+  for (Index i = 0; i < sub_type_count; i++) {
+    sub_types[i] = gc_ext_in.sub_types[i].index();
+  }
+
+  gc_ext_out->sub_types = sub_types.data();
+}
+
 Result Validator::CheckModule() {
   const Module* module = current_module_;
 
   // Type section.
+  Index type_index = 0;
+  Index start_index = kInvalidIndex;
+  Index range_index = 0;
+  GCTypeExtension gc_ext;
+  std::vector<Index> sub_types;
+
+  if (!module->recursive_ranges.empty()) {
+    start_index = module->recursive_ranges[0].start_index;
+  }
+
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<TypeModuleField>(&field)) {
+      while (type_index == start_index) {
+        const RecursiveRange& range = module->recursive_ranges[range_index];
+        validator_.OnRecursiveRange(range.start_index, range.type_count);
+
+        start_index = kInvalidIndex;
+        if (++range_index < module->recursive_ranges.size()) {
+          start_index = module->recursive_ranges[range_index].start_index;
+        }
+      }
+
+      type_index++;
+
       switch (f->type->kind()) {
         case TypeEntryKind::Func: {
           FuncType* func_type = cast<FuncType>(f->type.get());
+          GetGCTypeExtension(func_type->gc_ext, &gc_ext, sub_types);
+
           result_ |= validator_.OnFuncType(
-              field.loc, func_type->sig.param_types.size(),
+              field.loc, &gc_ext, func_type->sig.param_types.size(),
               func_type->sig.param_types.data(),
               func_type->sig.result_types.size(),
               func_type->sig.result_types.data(),
@@ -774,24 +818,33 @@ Result Validator::CheckModule() {
 
         case TypeEntryKind::Struct: {
           StructType* struct_type = cast<StructType>(f->type.get());
+          GetGCTypeExtension(struct_type->gc_ext, &gc_ext, sub_types);
           TypeMutVector type_muts;
           for (auto&& field : struct_type->fields) {
             type_muts.push_back(TypeMut{field.type, field.mutable_});
           }
-          result_ |= validator_.OnStructType(field.loc, type_muts.size(),
-                                             type_muts.data());
+          result_ |= validator_.OnStructType(
+              field.loc, &gc_ext, type_muts.size(), type_muts.data());
           break;
         }
 
         case TypeEntryKind::Array: {
           ArrayType* array_type = cast<ArrayType>(f->type.get());
+          GetGCTypeExtension(array_type->gc_ext, &gc_ext, sub_types);
           result_ |= validator_.OnArrayType(
-              field.loc,
+              field.loc, &gc_ext,
               TypeMut{array_type->field.type, array_type->field.mutable_});
           break;
         }
       }
     }
+  }
+
+  while (range_index < module->recursive_ranges.size()) {
+    // Should be 0 for valid modules.
+    const RecursiveRange& range = module->recursive_ranges[range_index];
+    validator_.OnRecursiveRange(range.start_index, range.type_count);
+    ++range_index;
   }
 
   // Import section.

@@ -703,6 +703,16 @@ void Var::Destroy() {
   }
 }
 
+void TypeEntryGCTypeExtension::InitSubTypes(Index* sub_type_list,
+                                            Index sub_type_count) {
+  sub_types.clear();
+  sub_types.reserve(sub_type_count);
+
+  for (Index i = 0; i < sub_type_count; i++) {
+    sub_types.push_back(Var(sub_types[i]));
+  }
+}
+
 uint8_t ElemSegment::GetFlags(const Module* module,
                               bool function_references_enabled) const {
   uint8_t flags = 0;

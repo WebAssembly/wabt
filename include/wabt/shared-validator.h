@@ -29,8 +29,6 @@
 #include "wabt/opcode.h"
 #include "wabt/type-checker.h"
 
-#include "wabt/binary-reader.h"  // For TypeMut.
-
 namespace wabt {
 
 struct ValidateOptions {
@@ -43,7 +41,11 @@ struct ValidateOptions {
 class SharedValidator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(SharedValidator);
+  using TypeEntry = TypeChecker::TypeEntry;
   using FuncType = TypeChecker::FuncType;
+  using StructType = TypeChecker::StructType;
+  using ArrayType = TypeChecker::ArrayType;
+  using RecursiveRange = TypeChecker::RecursiveRange;
   SharedValidator(Errors*, const ValidateOptions& options);
 
   // TODO: Move into SharedValidator?
@@ -65,14 +67,21 @@ class SharedValidator {
 
   Result EndModule();
 
+  Result OnRecursiveRange(Index start_index, Index type_count);
   Result OnFuncType(const Location&,
+                    GCTypeExtension* gc_ext,
                     Index param_count,
                     const Type* param_types,
                     Index result_count,
                     const Type* result_types,
                     Index type_index);
-  Result OnStructType(const Location&, Index field_count, TypeMut* fields);
-  Result OnArrayType(const Location&, TypeMut field);
+  Result OnStructType(const Location&,
+                      GCTypeExtension* gc_ext,
+                      Index field_count,
+                      TypeMut* fields);
+  Result OnArrayType(const Location&,
+                     GCTypeExtension* gc_ext,
+                     TypeMut field);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&, bool, bool);
@@ -225,20 +234,6 @@ class SharedValidator {
   Result OnUnreachable(const Location&);
 
  private:
-  struct StructType {
-    StructType() = default;
-    StructType(const TypeMutVector& fields) : fields(fields) {}
-
-    TypeMutVector fields;
-  };
-
-  struct ArrayType {
-    ArrayType() = default;
-    ArrayType(TypeMut field) : field(field) {}
-
-    TypeMut field;
-  };
-
   struct TableType {
     TableType() = default;
     TableType(Type element, Limits limits) : element(element), limits(limits) {}
@@ -293,6 +288,11 @@ class SharedValidator {
                    Type expected,
                    const char* desc);
   Result CheckReferenceType(const Location&, Type type, const char* desc);
+  Result CheckRecursiveReferenceType(const Location&,
+                                     Type type,
+                                     Index max_index,
+                                     const char* desc);
+  Result CheckGCInfo(const Location&, GCTypeExtension* gc_ext);
   Result CheckLimits(const Location&,
                      const Limits&,
                      uint64_t absolute_max,
@@ -344,10 +344,7 @@ class SharedValidator {
   Location expr_loc_ = Location(kInvalidOffset);
   bool in_init_expr_ = false;
 
-  Index num_types_ = 0;
-  std::map<Index, FuncType> func_types_;
-  std::map<Index, StructType> struct_types_;
-  std::map<Index, ArrayType> array_types_;
+  TypeChecker::TypeFields type_fields_;
 
   std::vector<FuncType> funcs_;       // Includes imported and defined.
   std::vector<TableType> tables_;     // Includes imported and defined.

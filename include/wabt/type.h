@@ -40,17 +40,27 @@ class Type {
     F32 = -0x03,        // 0x7d
     F64 = -0x04,        // 0x7c
     V128 = -0x05,       // 0x7b
-    I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
-    I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
-    ExnRef = -0x17,     // 0x69
+    I8 = -0x08,         // 0x78  : packed-type only, used in gc and as v128 lane
+    I16 = -0x09,        // 0x77  : packed-type only, used in gc and as v128 lane
+    NullFuncRef = -0x0d, // 0x73
+    NullExternRef = -0x0e, // 0x72
+    NullRef = -0x0f,    // 0x71
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
-    Reference = -0x15,  // 0x6b
+    AnyRef = -0x12,     // 0x6e
+    EqRef = -0x13,      // 0x6d
+    I31Ref = -0x14,     // 0x6c
+    StructRef = -0x15,  // 0x6b
+    ArrayRef = -0x16,   // 0x6a
+    ExnRef = -0x17,     // 0x69
     Ref = -0x1c,        // 0x64
     RefNull = -0x1d,    // 0x63
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
+    Sub = -0x30,        // 0x50
+    SubFinal = -0x31,   // 0x4f
+    Rec = -0x32,        // 0x4e
     Void = -0x40,       // 0x40
     ___ = Void,         // Convenient for the opcode table in opcode.h
 
@@ -98,19 +108,20 @@ class Type {
 
   bool IsRef() const {
     return enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
-           enum_ == Type::Reference || enum_ == Type::ExnRef ||
+           enum_ == Type::ExnRef || enum_ == Type::AnyRef ||
+           enum_ == Type::EqRef || enum_ == Type::I31Ref ||
+           enum_ == Type::StructRef || enum_ == Type::ArrayRef ||
            enum_ == Type::RefNull || enum_ == Type::Ref;
   }
 
   bool IsNullableRef() const {
-    return enum_ == Type::Reference || enum_ == Type::ExnRef ||
-           enum_ == Type::RefNull ||
-           ((enum_ == Type::ExternRef || enum_ == Type::FuncRef) && type_index_ == ReferenceOrNull);
+    return enum_ == Type::ExnRef || enum_ == Type::RefNull ||
+           (EnumIsNonTypedRef(enum_) && type_index_ == ReferenceOrNull);
   }
 
   bool IsNonNullableRef() const {
     return enum_ == Type::Ref ||
-           ((enum_ == Type::ExternRef || enum_ == Type::FuncRef) && type_index_ == ReferenceNonNull);
+           (EnumIsNonTypedRef(enum_) && type_index_ == ReferenceNonNull);
   }
 
   bool IsReferenceWithIndex() const { return EnumIsReferenceWithIndex(enum_); }
@@ -135,13 +146,30 @@ class Type {
       case Type::I16:       return "i16";
       case Type::ExnRef:    return "exnref";
       case Type::Func:      return "func";
+      case Type::Struct:    return "struct";
+      case Type::Array:     return "array";
       case Type::Void:      return "void";
       case Type::Any:       return "any";
+      case Type::NullFuncRef:
+        return type_index_ == ReferenceOrNull ? "nullfuncref" : "(ref nofunc)";
+      case Type::NullExternRef:
+        return type_index_ == ReferenceOrNull ? "nullexternref" : "(ref noextern)";
+      case Type::NullRef:
+        return type_index_ == ReferenceOrNull ? "nullref" : "(ref none)";
       case Type::FuncRef:
         return type_index_ == ReferenceOrNull ? "funcref" : "(ref func)";
       case Type::ExternRef:
         return type_index_ == ReferenceOrNull ? "externref" : "(ref extern)";
-      case Type::Reference:
+      case Type::AnyRef:
+        return type_index_ == ReferenceOrNull ? "anyref" : "(ref any)";
+      case Type::EqRef:
+        return type_index_ == ReferenceOrNull ? "eqref" : "(ref eq)";
+      case Type::I31Ref:
+        return type_index_ == ReferenceOrNull ? "i31ref" : "(ref i31)";
+      case Type::StructRef:
+        return type_index_ == ReferenceOrNull ? "structref" : "(ref struct)";
+      case Type::ArrayRef:
+        return type_index_ == ReferenceOrNull ? "arrayref" : "(ref array)";
       case Type::Ref:
         return StringPrintf("(ref %d)", type_index_);
       case Type::RefNull:
@@ -200,7 +228,11 @@ class Type {
       case Type::FuncRef:
       case Type::ExnRef:
       case Type::ExternRef:
-      case Type::Reference:
+      case Type::AnyRef:
+      case Type::EqRef:
+      case Type::I31Ref:
+      case Type::StructRef:
+      case Type::ArrayRef:
       case Type::Ref:
       case Type::RefNull:
         return TypeVector(this, this + 1);
@@ -211,12 +243,18 @@ class Type {
   }
 
   static bool EnumIsReferenceWithIndex(Enum value) {
-    return value == Type::Reference || value == Type::Ref ||
-           value == Type::RefNull;
+    return value == Type::Ref || value == Type::RefNull;
+  }
+
+  static bool EnumIsNonTypedGCRef(Enum value) {
+    return value == Type::AnyRef || value == Type::EqRef ||
+           value == Type::I31Ref || value == Type::StructRef ||
+           value == Type::ArrayRef;
   }
 
   static bool EnumIsNonTypedRef(Enum value) {
-    return value == Type::ExternRef || value == Type::FuncRef;
+    return value == Type::ExternRef || value == Type::FuncRef ||
+           value == Type::ExnRef || EnumIsNonTypedGCRef(value);
   }
 
  private:

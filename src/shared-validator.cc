@@ -29,7 +29,7 @@ TypeVector SharedValidator::ToTypeVector(Index count, const Type* types) {
 SharedValidator::SharedValidator(Errors* errors, const ValidateOptions& options)
     : options_(options),
       errors_(errors),
-      typechecker_(options.features, func_types_) {
+      typechecker_(options.features, type_fields_) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }
@@ -46,7 +46,14 @@ void SharedValidator::OnTypecheckerError(const char* msg) {
   PrintError(expr_loc_, "%s", msg);
 }
 
+Result SharedValidator::OnRecursiveRange(Index start_index, Index type_count) {
+  type_fields_.recursive_ranges.push_back(
+      RecursiveRange{start_index, type_count});
+  return Result::Ok;
+}
+
 Result SharedValidator::OnFuncType(const Location& loc,
+                                   GCTypeExtension* gc_ext,
                                    Index param_count,
                                    const Type* param_types,
                                    Index result_count,
@@ -58,7 +65,21 @@ Result SharedValidator::OnFuncType(const Location& loc,
                          "multiple result values are not supported without "
                          "multi-value enabled.");
   }
-  if (options_.features.reference_types_enabled()) {
+
+  result |= CheckGCInfo(loc, gc_ext);
+
+  if (options_.features.gc_enabled()) {
+    Index max_index = type_fields_.GetMaxReferenceIndex();
+
+    for (Index i = 0; i < param_count; i++) {
+      result |=
+          CheckRecursiveReferenceType(loc, param_types[i], max_index, "params");
+    }
+    for (Index i = 0; i < result_count; i++) {
+      result |= CheckRecursiveReferenceType(loc, result_types[i], max_index,
+                                            "results");
+    }
+  } else if (options_.features.reference_types_enabled()) {
     for (Index i = 0; i < param_count; i++) {
       result |= CheckReferenceType(loc, param_types[i], "params");
     }
@@ -66,24 +87,40 @@ Result SharedValidator::OnFuncType(const Location& loc,
       result |= CheckReferenceType(loc, result_types[i], "results");
     }
   }
-  func_types_.emplace(
-      num_types_++,
-      FuncType{ToTypeVector(param_count, param_types),
-               ToTypeVector(result_count, result_types), type_index});
+
+  type_fields_.PushFunc(FuncType{ToTypeVector(param_count, param_types),
+                                 ToTypeVector(result_count, result_types),
+                                 type_index});
   return result;
 }
 
-Result SharedValidator::OnStructType(const Location&,
+Result SharedValidator::OnStructType(const Location& loc,
+                                     GCTypeExtension* gc_ext,
                                      Index field_count,
                                      TypeMut* fields) {
-  struct_types_.emplace(num_types_++, StructType{TypeMutVector(
-                                          &fields[0], &fields[field_count])});
-  return Result::Ok;
+  Result result = CheckGCInfo(loc, gc_ext);
+
+  Index max_index = type_fields_.GetMaxReferenceIndex();
+  for (Index i = 0; i < field_count; i++) {
+    result |=
+        CheckRecursiveReferenceType(loc, fields[i].type, max_index, "fields");
+  }
+
+  type_fields_.PushStruct(
+      StructType{TypeMutVector(&fields[0], &fields[field_count])});
+  return result;
 }
 
-Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
-  array_types_.emplace(num_types_++, ArrayType{field});
-  return Result::Ok;
+Result SharedValidator::OnArrayType(const Location& loc,
+                                    GCTypeExtension* gc_ext,
+                                    TypeMut field) {
+  Result result = CheckGCInfo(loc, gc_ext);
+
+  Index max_index = type_fields_.GetMaxReferenceIndex();
+  result |= CheckRecursiveReferenceType(loc, field.type, max_index, "array");
+
+  type_fields_.PushArray(ArrayType{field});
+  return result;
 }
 
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
@@ -217,14 +254,35 @@ Result SharedValidator::CheckType(const Location& loc,
 Result SharedValidator::CheckReferenceType(const Location& loc,
                                            Type type,
                                            const char* desc) {
-  if (type.IsReferenceWithIndex()) {
-    Index index = type.GetReferenceIndex();
-    auto iter = func_types_.find(index);
+  if (type.IsReferenceWithIndex() &&
+      type.GetReferenceIndex() >= type_fields_.NumTypes()) {
+    return PrintError(loc, "reference %" PRIindex " is out of range in %s",
+                      type.GetReferenceIndex(), desc);
+  }
 
-    if (iter == func_types_.end()) {
-      return PrintError(loc, "reference %d is out of range in %s",
-                        static_cast<int>(index), desc);
-    }
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckGCInfo(const Location& loc,
+                                    GCTypeExtension* gc_ext) {
+  if (gc_ext->sub_type_count > 1) {
+    return PrintError(loc, "sub type count %" PRIindex " is limited to 1",
+                      gc_ext->sub_type_count);
+  }
+  if (gc_ext->sub_type_count == 1 &&
+      gc_ext->sub_types[0] >= type_fields_.GetMaxReferenceIndex()) {
+    return PrintError(loc, "invalid sub type %" PRIindex, gc_ext->sub_types[0]);
+  }
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckRecursiveReferenceType(const Location& loc,
+                                                    Type type,
+                                                    Index max_index,
+                                                    const char* desc) {
+  if (type.IsReferenceWithIndex() && type.GetReferenceIndex() > max_index) {
+    return PrintError(loc, "reference %d is out of range in %s",
+                      static_cast<int>(type.GetReferenceIndex()), desc);
   }
 
   return Result::Ok;
@@ -320,9 +378,8 @@ Result SharedValidator::OnElemSegmentElemType(const Location& loc,
 
   if (elem_type.IsReferenceWithIndex()) {
     Index index = elem_type.GetReferenceIndex();
-    auto iter = func_types_.find(index);
 
-    if (iter == func_types_.end()) {
+    if (index >= type_fields_.NumTypes()) {
       result |=
           PrintError(loc, "reference %" PRIindex " is out of range", index);
     }
@@ -402,20 +459,22 @@ Result SharedValidator::CheckLocalIndex(Var local_var, Type* out_type) {
 }
 
 Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
-  Result result = CheckIndex(sig_var, num_types_, "function type");
+  Result result = CheckIndex(sig_var, type_fields_.NumTypes(), "function type");
   if (Failed(result)) {
     *out = FuncType{};
     return Result::Error;
   }
 
-  auto iter = func_types_.find(sig_var.index());
-  if (iter == func_types_.end()) {
+  Index index = sig_var.index();
+  assert(index < type_fields_.NumTypes());
+  if (type_fields_.type_entries[index].kind !=
+      TypeChecker::TypeEntryKind::Func) {
     return PrintError(sig_var.loc, "type %d is not a function",
                       sig_var.index());
   }
 
   if (out) {
-    *out = iter->second;
+    *out = type_fields_.func_types[type_fields_.type_entries[index].map_index];
   }
   return Result::Ok;
 }
@@ -473,9 +532,8 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
   } else {
     if (sig_type.IsReferenceWithIndex()) {
       Index index = sig_type.GetReferenceIndex();
-      auto iter = func_types_.find(index);
 
-      if (iter == func_types_.end()) {
+      if (index >= type_fields_.NumTypes()) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }
@@ -1159,7 +1217,8 @@ Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
 
   switch (type) {
     case Type::RefNull:
-      result |= CheckIndex(func_type_var, num_types_, "function type");
+      result |=
+          CheckIndex(func_type_var, type_fields_.NumTypes(), "function type");
       break;
     case Type::FuncRef:
     case Type::ExnRef:
@@ -1234,9 +1293,10 @@ Result SharedValidator::OnSelect(const Location& loc,
   for (Index i = 0; i < result_count; i++) {
     if (result_types[i].IsReferenceWithIndex()) {
       Index index = result_types[i].GetReferenceIndex();
-      auto iter = func_types_.find(index);
 
-      if (iter == func_types_.end()) {
+      if (index >= type_fields_.NumTypes() ||
+          type_fields_.type_entries[index].kind !=
+              TypeChecker::TypeEntryKind::Func) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }

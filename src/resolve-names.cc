@@ -110,6 +110,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
+  void VisitType(TypeEntry* type);
   void VisitTag(Tag* tag);
   void VisitTable(Table* table);
   void VisitElemSegment(ElemSegment* segment);
@@ -577,6 +578,14 @@ void NameResolver::VisitGlobal(Global* global) {
   visitor_.VisitExprList(global->init_expr);
 }
 
+void NameResolver::VisitType(TypeEntry* type) {
+  size_t size = type->gc_ext.sub_types.size();
+
+  for (size_t i = 0; i < size; i++) {
+    ResolveFuncTypeVar(&type->gc_ext.sub_types[i]);
+  }
+}
+
 void NameResolver::VisitTag(Tag* tag) {
   if (tag->decl.has_func_type) {
     ResolveFuncTypeVar(&tag->decl.type_var);
@@ -621,6 +630,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitExport(export_);
   for (Global* global : module->globals)
     VisitGlobal(global);
+  for (TypeEntry* type : module->types)
+    VisitType(type);
   for (Tag* tag : module->tags)
     VisitTag(tag);
   for (Table* table : module->tables)

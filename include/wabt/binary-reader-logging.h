@@ -44,13 +44,20 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginTypeSection(Offset size) override;
   Result OnTypeCount(Index count) override;
+  Result OnRecursiveRange(Index start_index, Index type_count) override;
   Result OnFuncType(Index index,
+                    GCTypeExtension* gc_ext,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
                     Type* result_types) override;
-  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
-  Result OnArrayType(Index index, TypeMut field) override;
+  Result OnStructType(Index index,
+                      GCTypeExtension* gc_ext,
+                      Index field_count,
+                      TypeMut* fields) override;
+  Result OnArrayType(Index index,
+                     GCTypeExtension* gc_ext,
+                     TypeMut field) override;
   Result EndTypeSection() override;
 
   Result BeginImportSection(Offset size) override;
@@ -432,6 +439,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   void LogType(Type type);
   void LogTypes(Index type_count, Type* types);
   void LogTypes(TypeVector& types);
+  void LogGCInfo(GCTypeExtension* gc_ext);
   void LogField(TypeMut field);
 
   Stream* stream_;

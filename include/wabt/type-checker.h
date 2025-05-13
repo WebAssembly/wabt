@@ -26,11 +26,27 @@
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
 
+#include "wabt/binary-reader.h"  // For TypeMut.
+
 namespace wabt {
 
 class TypeChecker {
  public:
   using ErrorCallback = std::function<void(const char* msg)>;
+
+  enum class TypeEntryKind {
+    Func,
+    Struct,
+    Array,
+  };
+
+  struct TypeEntry {
+    explicit TypeEntry(TypeEntryKind kind, Index map_index)
+      : kind(kind), map_index(map_index) {}
+
+    TypeEntryKind kind;
+    Index map_index;
+  };
 
   struct FuncType {
     FuncType() = default;
@@ -42,6 +58,54 @@ class TypeChecker {
     TypeVector params;
     TypeVector results;
     Index type_index;
+  };
+
+  struct StructType {
+    StructType() = default;
+    StructType(const TypeMutVector& fields) : fields(fields) {}
+
+    TypeMutVector fields;
+  };
+
+  struct ArrayType {
+    ArrayType() = default;
+    ArrayType(TypeMut field) : field(field) {}
+
+    TypeMut field;
+  };
+
+  struct RecursiveRange {
+    Index start_index;
+    Index type_count;
+  };
+
+  struct TypeFields {
+    Index NumTypes() {
+      return static_cast<Index>(type_entries.size());
+    }
+
+    void PushFunc(FuncType&& func_type) {
+      type_entries.emplace_back(TypeEntry(TypeEntryKind::Func, static_cast<Index>(func_types.size())));
+      func_types.emplace_back(func_type);
+    }
+
+    void PushStruct(StructType&& struct_type) {
+      type_entries.emplace_back(TypeEntry(TypeEntryKind::Struct, static_cast<Index>(struct_types.size())));
+      struct_types.emplace_back(struct_type);
+    }
+
+    void PushArray(ArrayType&& array_type) {
+      type_entries.emplace_back(TypeEntry(TypeEntryKind::Array, static_cast<Index>(array_types.size())));
+      array_types.emplace_back(array_type);
+    }
+
+    Index GetMaxReferenceIndex();
+
+    std::vector<TypeEntry> type_entries;
+    std::vector<FuncType> func_types;
+    std::vector<StructType> struct_types;
+    std::vector<ArrayType> array_types;
+    std::vector<RecursiveRange> recursive_ranges;
   };
 
   struct Label {
@@ -62,8 +126,8 @@ class TypeChecker {
     std::vector<bool> local_ref_is_set_;
   };
 
-  explicit TypeChecker(const Features& features, std::map<Index, FuncType>& func_types)
-    : features_(features), func_types_(func_types) {}
+  explicit TypeChecker(const Features& features, TypeFields& type_fields)
+    : features_(features), type_fields_(type_fields) {}
 
   void set_error_callback(const ErrorCallback& error_callback) {
     error_callback_ = error_callback;
@@ -160,6 +224,7 @@ class TypeChecker {
   Result BeginInitExpr(Type type);
   Result EndInitExpr();
 
+  static bool InSameRecursiveRange(std::vector<RecursiveRange>&, Index, Index);
   Result CheckType(Type actual, Type expected);
 
  private:
@@ -182,6 +247,7 @@ class TypeChecker {
   void PushType(Type type);
   void PushTypes(const TypeVector& types);
   Result CheckTypeStackEnd(const char* desc);
+  static bool CompareType(TypeChecker::TypeFields&, Type, Type);
   Result CheckTypes(const TypeVector& actual, const TypeVector& expected);
   Result CheckSignature(const TypeVector& sig, const char* desc);
   Result CheckReturnSignature(const TypeVector& sig,
@@ -230,7 +296,7 @@ class TypeChecker {
   // to represent "any".
   TypeVector* br_table_sig_ = nullptr;
   Features features_;
-  std::map<Index, FuncType>& func_types_;
+  TypeFields& type_fields_;
 };
 
 }  // namespace wabt
