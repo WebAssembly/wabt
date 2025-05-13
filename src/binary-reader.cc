@@ -195,6 +195,7 @@ class BinaryReader {
   BinaryReaderDelegate::State state_;
   BinaryReaderLogging logging_delegate_;
   BinaryReaderDelegate* delegate_ = nullptr;
+  std::vector<Index> sub_types_;
   TypeVector param_types_;
   TypeVector result_types_;
   TypeMutVector fields_;
@@ -374,9 +375,11 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
     if (static_cast<int64_t>(heap_type) < 0 ||
         static_cast<int64_t>(heap_type) >= kInvalidIndex) {
       Type::Enum heap_type_code = static_cast<Type::Enum>(heap_type);
-      ERROR_UNLESS(
-          heap_type_code == Type::FuncRef || heap_type_code == Type::ExternRef,
-          "Reference type is limited to func and extern: %s", desc);
+      ERROR_UNLESS(heap_type_code == Type::FuncRef ||
+                       heap_type_code == Type::ExternRef ||
+                       (options_.features.gc_enabled() &&
+                        Type::EnumIsNonTypedGCRef(heap_type_code)),
+                   "not allowed reference type: %s", desc);
       type = (static_cast<Type::Enum>(type) == Type::Ref)
                  ? Type::ReferenceNonNull
                  : Type::ReferenceOrNull;
@@ -556,7 +559,8 @@ Result BinaryReader::ReadField(TypeMut* out_value) {
   // TODO: Reuse for global header too?
   Type field_type;
   CHECK_RESULT(ReadType(&field_type, "field type"));
-  ERROR_UNLESS(IsConcreteType(field_type),
+  ERROR_UNLESS(IsConcreteType(field_type) || field_type == Type::I8 ||
+                   field_type == Type::I16,
                "expected valid field type (got " PRItypecode ")",
                WABT_PRINTF_TYPE_CODE(field_type));
 
@@ -577,6 +581,16 @@ bool BinaryReader::IsConcreteReferenceType(Type::Enum type) {
     case Type::ExnRef:
       return options_.features.exceptions_enabled();
 
+    case Type::NullFuncRef:
+    case Type::NullExternRef:
+    case Type::NullRef:
+    case Type::AnyRef:
+    case Type::EqRef:
+    case Type::I31Ref:
+    case Type::StructRef:
+    case Type::ArrayRef:
+      return options_.features.gc_enabled();
+
     default:
       return false;
   }
@@ -593,7 +607,6 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::V128:
       return options_.features.simd_enabled();
 
-    case Type::Reference:
     case Type::Ref:
     case Type::RefNull:
       return options_.features.function_references_enabled();
@@ -2603,10 +2616,25 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
   CHECK_RESULT(ReadCount(&num_signatures, "type count"));
   CALLBACK(OnTypeCount, num_signatures);
 
+  Index type_index = 0;
   for (Index i = 0; i < num_signatures; ++i) {
     Type form;
+    uint32_t recursive_count = 1;
+
     if (options_.features.gc_enabled()) {
-      CHECK_RESULT(ReadType(&form, "type form"));
+      CHECK_RESULT(ReadType(&form, "type form or gc info"));
+
+      if (form == Type::Rec) {
+        CHECK_RESULT(ReadU32Leb128(&recursive_count, "recursive count"));
+
+        CALLBACK(OnRecursiveType, type_index, recursive_count);
+
+        if (recursive_count == 0) {
+          continue;
+        }
+
+        CHECK_RESULT(ReadType(&form, "type form or gc info"));
+      }
     } else {
       uint8_t type;
       CHECK_RESULT(ReadU8(&type, "type form"));
@@ -2614,73 +2642,107 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
       form = Type::Func;
     }
 
-    switch (form) {
-      case Type::Func: {
-        Index num_params;
-        CHECK_RESULT(ReadCount(&num_params, "function param count"));
+    while (true) {
+      GCTypeExtension gc_ext;
+      gc_ext.is_final_sub_type = true;
+      gc_ext.sub_type_count = 0;
+      gc_ext.sub_types = nullptr;
 
-        param_types_.resize(num_params);
+      if (options_.features.gc_enabled() &&
+          (form == Type::Sub || form == Type::SubFinal)) {
+        gc_ext.is_final_sub_type = (form == Type::SubFinal);
+        CHECK_RESULT(ReadU32Leb128(&gc_ext.sub_type_count, "sub type count"));
+        sub_types_.resize(gc_ext.sub_type_count);
 
-        for (Index j = 0; j < num_params; ++j) {
-          Type param_type;
-          CHECK_RESULT(ReadType(&param_type, "function param type"));
-          ERROR_UNLESS(IsConcreteType(param_type),
-                       "expected valid param type (got " PRItypecode ")",
-                       WABT_PRINTF_TYPE_CODE(param_type));
-          param_types_[j] = param_type;
+        for (Index i = 0; i < gc_ext.sub_type_count; i++) {
+          Index sub_type;
+          CHECK_RESULT(ReadU32Leb128(&sub_type, "sub type index"));
+          sub_types_[i] = sub_type;
         }
 
-        Index num_results;
-        CHECK_RESULT(ReadCount(&num_results, "function result count"));
-
-        result_types_.resize(num_results);
-
-        for (Index j = 0; j < num_results; ++j) {
-          Type result_type;
-          CHECK_RESULT(ReadType(&result_type, "function result type"));
-          ERROR_UNLESS(IsConcreteType(result_type),
-                       "expected valid result type (got " PRItypecode ")",
-                       WABT_PRINTF_TYPE_CODE(result_type));
-          result_types_[j] = result_type;
+        if (gc_ext.sub_type_count > 0) {
+          gc_ext.sub_types = sub_types_.data();
         }
 
-        Type* param_types = num_params ? param_types_.data() : nullptr;
-        Type* result_types = num_results ? result_types_.data() : nullptr;
+        CHECK_RESULT(ReadType(&form, "type form"));
+      }
 
-        CALLBACK(OnFuncType, i, num_params, param_types, num_results,
-                 result_types);
+      switch (form) {
+        case Type::Func: {
+          Index num_params;
+          CHECK_RESULT(ReadCount(&num_params, "function param count"));
+
+          param_types_.resize(num_params);
+
+          for (Index j = 0; j < num_params; ++j) {
+            Type param_type;
+            CHECK_RESULT(ReadType(&param_type, "function param type"));
+            ERROR_UNLESS(IsConcreteType(param_type),
+                         "expected valid param type (got " PRItypecode ")",
+                         WABT_PRINTF_TYPE_CODE(param_type));
+            param_types_[j] = param_type;
+          }
+
+          Index num_results;
+          CHECK_RESULT(ReadCount(&num_results, "function result count"));
+
+          result_types_.resize(num_results);
+
+          for (Index j = 0; j < num_results; ++j) {
+            Type result_type;
+            CHECK_RESULT(ReadType(&result_type, "function result type"));
+            ERROR_UNLESS(IsConcreteType(result_type),
+                         "expected valid result type (got " PRItypecode ")",
+                         WABT_PRINTF_TYPE_CODE(result_type));
+            result_types_[j] = result_type;
+          }
+
+          Type* param_types = num_params ? param_types_.data() : nullptr;
+          Type* result_types = num_results ? result_types_.data() : nullptr;
+
+          CALLBACK(OnFuncType, type_index, num_params, param_types, num_results,
+                   result_types, &gc_ext);
+          break;
+        }
+
+        case Type::Struct: {
+          ERROR_UNLESS(options_.features.gc_enabled(),
+                       "invalid type form: struct not allowed");
+          Index num_fields;
+          CHECK_RESULT(ReadCount(&num_fields, "field count"));
+
+          fields_.resize(num_fields);
+          for (Index j = 0; j < num_fields; ++j) {
+            CHECK_RESULT(ReadField(&fields_[j]));
+          }
+
+          CALLBACK(OnStructType, type_index, fields_.size(), fields_.data(),
+                   &gc_ext);
+          break;
+        }
+
+        case Type::Array: {
+          ERROR_UNLESS(options_.features.gc_enabled(),
+                       "invalid type form: array not allowed");
+
+          TypeMut field;
+          CHECK_RESULT(ReadField(&field));
+          CALLBACK(OnArrayType, type_index, field, &gc_ext);
+          break;
+        };
+
+        default:
+          PrintError("unexpected type form (got " PRItypecode ")",
+                     WABT_PRINTF_TYPE_CODE(form));
+          return Result::Error;
+      }
+
+      type_index++;
+      if (--recursive_count == 0) {
         break;
       }
 
-      case Type::Struct: {
-        ERROR_UNLESS(options_.features.gc_enabled(),
-                     "invalid type form: struct not allowed");
-        Index num_fields;
-        CHECK_RESULT(ReadCount(&num_fields, "field count"));
-
-        fields_.resize(num_fields);
-        for (Index j = 0; j < num_fields; ++j) {
-          CHECK_RESULT(ReadField(&fields_[j]));
-        }
-
-        CALLBACK(OnStructType, i, fields_.size(), fields_.data());
-        break;
-      }
-
-      case Type::Array: {
-        ERROR_UNLESS(options_.features.gc_enabled(),
-                     "invalid type form: array not allowed");
-
-        TypeMut field;
-        CHECK_RESULT(ReadField(&field));
-        CALLBACK(OnArrayType, i, field);
-        break;
-      };
-
-      default:
-        PrintError("unexpected type form (got " PRItypecode ")",
-                   WABT_PRINTF_TYPE_CODE(form));
-        return Result::Error;
+      CHECK_RESULT(ReadType(&form, "type form or gc info"));
     }
   }
   CALLBACK0(EndTypeSection);
