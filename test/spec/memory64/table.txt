@@ -79,10 +79,10 @@
 (;; STDOUT ;;;
 out/test/spec/memory64/table.txt:17: assert_invalid passed:
   out/test/spec/memory64/table/table.9.wasm:000000f: error: max elems (0) must be >= initial elems (1)
-  000000f: error: OnTable callback failed
+  000000f: error: BeginTable callback failed
 out/test/spec/memory64/table.txt:21: assert_invalid passed:
   out/test/spec/memory64/table/table.10.wasm:0000013: error: max elems (0) must be >= initial elems (4294967295)
-  0000013: error: OnTable callback failed
+  0000013: error: BeginTable callback failed
 out/test/spec/memory64/table.txt:26: assert_invalid passed:
   out/test/spec/memory64/table/table.11.wat:1:8: error: invalid int "0x1_0000_0000"
   (table 0x1_0000_0000 funcref)
@@ -100,10 +100,10 @@ out/test/spec/memory64/table.txt:34: assert_invalid passed:
            ^^^^^^^^^^^^^
 out/test/spec/memory64/table.txt:52: assert_invalid passed:
   out/test/spec/memory64/table/table.23.wasm:000000f: error: max elems (0) must be >= initial elems (1)
-  000000f: error: OnTable callback failed
+  000000f: error: BeginTable callback failed
 out/test/spec/memory64/table.txt:56: assert_invalid passed:
   out/test/spec/memory64/table/table.24.wasm:0000013: error: max elems (0) must be >= initial elems (4294967295)
-  0000013: error: OnTable callback failed
+  0000013: error: BeginTable callback failed
 out/test/spec/memory64/table.txt:62: assert_invalid passed:
   out/test/spec/memory64/table/table.25.wasm:000000c: error: table variable out of range: 0 (max 0)
   000000c: error: BeginElemSegment callback failed

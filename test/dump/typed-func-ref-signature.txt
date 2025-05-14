@@ -34,19 +34,19 @@
 ; func type 3
 0000014: 60                                        ; func
 0000015: 01                                        ; num params
-0000016: 6b                                        ; (ref 0)
+0000016: 64                                        ; (ref 0)
 0000017: 00                                        ; (ref 0)
 0000018: 00                                        ; num results
 ; func type 4
 0000019: 60                                        ; func
 000001a: 01                                        ; num params
-000001b: 6b                                        ; (ref 1)
+000001b: 64                                        ; (ref 1)
 000001c: 01                                        ; (ref 1)
 000001d: 00                                        ; num results
 ; func type 5
 000001e: 60                                        ; func
 000001f: 01                                        ; num params
-0000020: 6b                                        ; (ref 2)
+0000020: 64                                        ; (ref 2)
 0000021: 02                                        ; (ref 2)
 0000022: 00                                        ; num results
 0000009: 19                                        ; FIXUP section size
