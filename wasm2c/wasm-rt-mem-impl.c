@@ -109,6 +109,9 @@ static int os_munmap(void* addr, size_t size) {
 }
 
 static int os_mprotect(void* addr, size_t size) {
+  if (size == 0) {
+    return 0;
+  }
   return mprotect(addr, size, PROT_READ | PROT_WRITE);
 }
 
