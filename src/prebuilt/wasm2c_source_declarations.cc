@@ -285,7 +285,7 @@ R"w2c_template(#define FORCE_READ_FLOAT(var)
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-static inline void load_data(void* dest, const void* src, size_t n) {
+static inline void load_data(u8* dest, const u8* src, size_t n) {
 )w2c_template"
 R"w2c_template(  if (!n) {
 )w2c_template"
@@ -293,21 +293,17 @@ R"w2c_template(    return;
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
-R"w2c_template(  wasm_rt_memcpy(dest, src, n);
-)w2c_template"
 R"w2c_template(#if WABT_BIG_ENDIAN
 )w2c_template"
-R"w2c_template(  u8* dest_chars = dest;
+R"w2c_template(  for (size_t i = 0; i < n; i++) {
 )w2c_template"
-R"w2c_template(  for (size_t i = 0; i < (n >> 1); i++) {
-)w2c_template"
-R"w2c_template(    u8 cursor = dest_chars[i];
-)w2c_template"
-R"w2c_template(    dest_chars[i] = dest_chars[n - i - 1];
-)w2c_template"
-R"w2c_template(    dest_chars[n - i - 1] = cursor;
+R"w2c_template(    dest[i] = src[n - i - 1];
 )w2c_template"
 R"w2c_template(  }
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(  wasm_rt_memcpy(dest, src, n);
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"

@@ -152,18 +152,16 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
 #define FORCE_READ_FLOAT(var)
 #endif
 
-static inline void load_data(void* dest, const void* src, size_t n) {
+static inline void load_data(u8* dest, const u8* src, size_t n) {
   if (!n) {
     return;
   }
-  wasm_rt_memcpy(dest, src, n);
 #if WABT_BIG_ENDIAN
-  u8* dest_chars = dest;
-  for (size_t i = 0; i < (n >> 1); i++) {
-    u8 cursor = dest_chars[i];
-    dest_chars[i] = dest_chars[n - i - 1];
-    dest_chars[n - i - 1] = cursor;
+  for (size_t i = 0; i < n; i++) {
+    dest[i] = src[n - i - 1];
   }
+#else
+  wasm_rt_memcpy(dest, src, n);
 #endif
 }
 
