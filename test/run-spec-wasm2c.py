@@ -665,7 +665,8 @@ def main(args):
 
             # Run the resulting binary
             if options.run:
-                return subprocess.run([main_exe]).returncode
+                test_runner = os.getenv('WASM2C_TEST_RUNNER', '').split()
+                return subprocess.run(test_runner + [main_exe]).returncode
     return 0
 
 
