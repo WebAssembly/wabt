@@ -15,9 +15,9 @@
 // Result:
 // A pointer for an object of size n.
 #if WABT_BIG_ENDIAN
-#define MEM_ADDR(mem, addr, n) &(mem)->data[(mem)->size - (addr) - (n)]
+#define MEM_ADDR(mem, addr, n) ((mem)->data_end - (addr) - (n))
 #else
-#define MEM_ADDR(mem, addr, n) &(mem)->data[addr]
+#define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 #endif
 
 // We can only use Segue for this module if it uses a single unshared imported
@@ -104,7 +104,7 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
     uint64_t res;                                  \
     if (UNLIKELY(add_overflow(offset, len, &res))) \
       TRAP(OOB);                                   \
-    if (UNLIKELY(res > mem->size))                 \
+    if (UNLIKELY(res > (mem)->size))               \
       TRAP(OOB);                                   \
   } while (0);
 
