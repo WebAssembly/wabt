@@ -1,4 +1,4 @@
-[![Github CI Status](https://github.com/WebAssembly/wabt/workflows/CI/badge.svg)](https://github.com/WebAssembly/wabt)
+[![Github CI Status](https://github.com/WebAssembly/wabt/workflows/CI/badge.svg)](https://github.com/WebAssembly/wabt/actions/workflows/build.yml)
 
 # WABT: The WebAssembly Binary Toolkit
 
