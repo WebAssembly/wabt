@@ -31,11 +31,11 @@ R"w2c_template(// A pointer for an object of size n.
 )w2c_template"
 R"w2c_template(#if WABT_BIG_ENDIAN
 )w2c_template"
-R"w2c_template(#define MEM_ADDR(mem, addr, n) &(mem)->data[(mem)->size - (addr) - (n)]
+R"w2c_template(#define MEM_ADDR(mem, addr, n) ((mem)->data_end - (addr) - (n))
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
-R"w2c_template(#define MEM_ADDR(mem, addr, n) &(mem)->data[addr]
+R"w2c_template(#define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
@@ -194,7 +194,7 @@ R"w2c_template(    if (UNLIKELY(add_overflow(offset, len, &res))) \
 )w2c_template"
 R"w2c_template(      TRAP(OOB);                                   \
 )w2c_template"
-R"w2c_template(    if (UNLIKELY(res > mem->size))                 \
+R"w2c_template(    if (UNLIKELY(res > (mem)->size))               \
 )w2c_template"
 R"w2c_template(      TRAP(OOB);                                   \
 )w2c_template"

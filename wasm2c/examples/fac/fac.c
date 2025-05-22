@@ -34,9 +34,9 @@
 // Result:
 // A pointer for an object of size n.
 #if WABT_BIG_ENDIAN
-#define MEM_ADDR(mem, addr, n) &(mem)->data[(mem)->size - (addr) - (n)]
+#define MEM_ADDR(mem, addr, n) ((mem)->data_end - (addr) - (n))
 #else
-#define MEM_ADDR(mem, addr, n) &(mem)->data[addr]
+#define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 #endif
 
 // We can only use Segue for this module if it uses a single unshared imported
@@ -123,7 +123,7 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
     uint64_t res;                                  \
     if (UNLIKELY(add_overflow(offset, len, &res))) \
       TRAP(OOB);                                   \
-    if (UNLIKELY(res > mem->size))                 \
+    if (UNLIKELY(res > (mem)->size))               \
       TRAP(OOB);                                   \
   } while (0);
 
@@ -171,18 +171,16 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
 #define FORCE_READ_FLOAT(var)
 #endif
 
-static inline void load_data(void* dest, const void* src, size_t n) {
+static inline void load_data(u8* dest, const u8* src, size_t n) {
   if (!n) {
     return;
   }
-  wasm_rt_memcpy(dest, src, n);
 #if WABT_BIG_ENDIAN
-  u8* dest_chars = dest;
-  for (size_t i = 0; i < (n >> 1); i++) {
-    u8 cursor = dest_chars[i];
-    dest_chars[i] = dest_chars[n - i - 1];
-    dest_chars[n - i - 1] = cursor;
+  for (size_t i = 0; i < n; i++) {
+    dest[i] = src[n - i - 1];
   }
+#else
+  wasm_rt_memcpy(dest, src, n);
 #endif
 }
 
@@ -621,8 +619,10 @@ static inline void memory_init(wasm_rt_memory_t* dest,
   LOAD_DATA((*dest), dest_addr, src + src_addr, n);
 }
 
+typedef enum { RefFunc, RefNull, GlobalGet } wasm_elem_segment_expr_type_t;
+
 typedef struct {
-  enum { RefFunc, RefNull, GlobalGet } expr_type;
+  wasm_elem_segment_expr_type_t expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
   wasm_rt_tailcallee_t func_tailcallee;
@@ -771,7 +771,7 @@ wasm_rt_func_type_t wasm2c_fac_get_func_type(uint32_t param_count, uint32_t resu
   
   if (param_count == 1 && result_count == 1) {
     va_start(args, result_count);
-    if (true && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_I32) {
+    if (true && va_arg(args, int) == WASM_RT_I32 && va_arg(args, int) == WASM_RT_I32) {
       va_end(args);
       return w2c_fac_t0;
     }
