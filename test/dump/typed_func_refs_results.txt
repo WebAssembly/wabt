@@ -33,13 +33,13 @@
   )
 
   (func (export "main") (result f32)
-    (call_ref
+    (call_ref $f32-f32
       (f32.const 2.0)
       (call $choice (ref.func $square) (ref.func $double) (i32.const 1))
     )
   )
 
-  (elem declare funcref (ref.func $square) (ref.func $double))
+  (elem declare func $square $double)
 )
 
 (;; STDERR ;;;
@@ -58,13 +58,13 @@
 ; func type 1
 0000010: 60                                        ; func
 0000011: 03                                        ; num params
-0000012: 6b                                        ; (ref 0)
+0000012: 64                                        ; (ref 0)
 0000013: 00                                        ; (ref 0)
-0000014: 6b                                        ; (ref 0)
+0000014: 64                                        ; (ref 0)
 0000015: 00                                        ; (ref 0)
 0000016: 7f                                        ; i32
 0000017: 01                                        ; num results
-0000018: 6b                                        ; (ref 0)
+0000018: 64                                        ; (ref 0)
 0000019: 00                                        ; (ref 0)
 ; func type 2
 000001a: 60                                        ; func
@@ -114,7 +114,7 @@
 000003f: 01                                        ; i32 literal
 0000040: 46                                        ; i32.eq
 0000041: 04                                        ; if
-0000042: 6b                                        ; (ref 0)
+0000042: 64                                        ; (ref 0)
 0000043: 00                                        ; (ref 0)
 0000044: 20                                        ; local.get
 0000045: 00                                        ; local index
@@ -158,9 +158,10 @@
 0000068: 10                                        ; call
 0000069: 00                                        ; function index
 000006a: 14                                        ; call_ref
-000006b: 0b                                        ; end
-000005b: 10                                        ; FIXUP func body size
-0000038: 33                                        ; FIXUP section size
+000006b: 00                                        ; signature index
+000006c: 0b                                        ; end
+000005b: 11                                        ; FIXUP func body size
+0000038: 34                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -172,7 +173,7 @@ Code Disassembly:
  00003c: 20 02                      | local.get 2
  00003e: 41 01                      | i32.const 1
  000040: 46                         | i32.eq
- 000041: 04 6b 00                   | if (ref 0)
+ 000041: 04 64 00                   | if (ref 0)
  000044: 20 00                      |   local.get 0
  000046: 05                         | else
  000047: 20 01                      |   local.get 1
@@ -194,6 +195,6 @@ Code Disassembly:
  000064: d2 02                      | ref.func 2
  000066: 41 01                      | i32.const 1
  000068: 10 00                      | call 0
- 00006a: 14                         | call_ref
- 00006b: 0b                         | end
+ 00006a: 14 00                      | call_ref (ref null 0)
+ 00006c: 0b                         | end
 ;;; STDOUT ;;)
