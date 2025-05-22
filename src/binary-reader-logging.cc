@@ -320,6 +320,16 @@ Result BinaryReaderLogging::OnBrIfExpr(Index depth) {
   return reader_->OnBrIfExpr(depth);
 }
 
+Result BinaryReaderLogging::OnBrOnNonNullExpr(Index depth) {
+  LOGF("OnBrOnNonNullExpr(depth: %" PRIindex ")\n", depth);
+  return reader_->OnBrOnNonNullExpr(depth);
+}
+
+Result BinaryReaderLogging::OnBrOnNullExpr(Index depth) {
+  LOGF("OnBrOnNullExpr(depth: %" PRIindex ")\n", depth);
+  return reader_->OnBrOnNullExpr(depth);
+}
+
 Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
                                           Index* target_depths,
                                           Index default_target_depth) {
@@ -719,10 +729,15 @@ Result BinaryReaderLogging::OnGenericCustomSection(std::string_view name,
     return reader_->name(value);                  \
   }
 
-#define DEFINE_TYPE(name)                         \
-  Result BinaryReaderLogging::name(Type type) {   \
-    LOGF(#name "(%s)\n", type.GetName().c_str()); \
-    return reader_->name(type);                   \
+#define DEFINE_TYPE(name)                                        \
+  Result BinaryReaderLogging::name(Type type) {                  \
+    if (!type.IsReferenceWithIndex()) {                          \
+      LOGF(#name "(%s)\n", type.GetName().c_str());              \
+    } else {                                                     \
+      LOGF(#name "(%s %" PRIindex ")\n", type.GetName().c_str(), \
+           type.GetReferenceIndex());                            \
+    }                                                            \
+    return reader_->name(type);                                  \
   }
 
 #define DEFINE_INDEX_DESC(name, desc)                 \
@@ -842,7 +857,7 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
-DEFINE0(OnCallRefExpr)
+DEFINE_TYPE(OnCallRefExpr)
 DEFINE_INDEX_DESC(OnCatchExpr, "tag_index");
 DEFINE0(OnCatchAllExpr);
 DEFINE_OPCODE(OnCompareExpr)
@@ -871,6 +886,7 @@ DEFINE_INDEX(OnTableGetExpr)
 DEFINE_INDEX(OnTableGrowExpr)
 DEFINE_INDEX(OnTableSizeExpr)
 DEFINE_INDEX_DESC(OnTableFillExpr, "table index")
+DEFINE0(OnRefAsNonNullExpr)
 DEFINE_INDEX(OnRefFuncExpr)
 DEFINE_TYPE(OnRefNullExpr)
 DEFINE0(OnRefIsNullExpr)
@@ -879,6 +895,7 @@ DEFINE_INDEX_DESC(OnRethrowExpr, "depth");
 DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")
 
 DEFINE_INDEX_INDEX(OnReturnCallIndirectExpr, "sig_index", "table_index")
+DEFINE_TYPE(OnReturnCallRefExpr)
 DEFINE0(OnReturnExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadSplatExpr);
 DEFINE_LOAD_STORE_OPCODE(OnLoadZeroExpr);
