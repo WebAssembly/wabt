@@ -42,7 +42,12 @@ inline bool FuncType::classof(const ExternType* type) {
 }
 
 inline FuncType::FuncType(ValueTypes params, ValueTypes results)
-    : ExternType(ExternKind::Func), params(params), results(results) {}
+    : ExternType(ExternKind::Func), kind(FuncType::TypeKind::Func), params(params), results(results), func_types(nullptr) {}
+
+inline FuncType::FuncType(TypeKind kind, ValueTypes params, ValueTypes results)
+    : ExternType(ExternKind::Func), kind(kind), params(params), results(results), func_types(nullptr) {
+  assert((kind == TypeKind::Struct || kind == TypeKind::Array) && params.size() == results.size());
+}
 
 //// TableType ////
 // static
@@ -422,12 +427,6 @@ void RequireType(ValueType type) {
   assert(HasType<T>(type));
 }
 
-inline bool TypesMatch(ValueType expected, ValueType actual) {
-  // Currently there is no subtyping, so expected and actual must match
-  // exactly. In the future this may be expanded.
-  return expected == actual;
-}
-
 //// Value ////
 inline Value WABT_VECTORCALL Value::Make(s32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
 inline Value WABT_VECTORCALL Value::Make(u32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
@@ -682,8 +681,8 @@ inline bool Table::classof(const Object* obj) {
 }
 
 // static
-inline Table::Ptr Table::New(Store& store, TableType type) {
-  return store.Alloc<Table>(store, type);
+inline Table::Ptr Table::New(Store& store, TableType type, Ref init_ref) {
+  return store.Alloc<Table>(store, type, init_ref);
 }
 
 inline const ExternType& Table::extern_type() {

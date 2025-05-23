@@ -33,7 +33,7 @@ std::string TypesToString(const TypeVector& types,
     Type ty = types[i];
     // NOTE: Reference (and GetName) is also used by (e.g.) objdump, which does
     // not apply validation. do this here so as to not break that.
-    if (ty == Type::Reference && ty.GetReferenceIndex() == kInvalidIndex) {
+    if (ty.IsReferenceWithIndex() && ty.GetReferenceIndex() == kInvalidIndex) {
       result += "reference";
     } else {
       result += types[i].GetName();
@@ -47,6 +47,19 @@ std::string TypesToString(const TypeVector& types,
 }
 
 }  // end anonymous namespace
+
+Index TypeChecker::TypeFields::GetMaxReferenceIndex() {
+  Index max_index = NumTypes();
+
+  if (!recursive_ranges.empty()) {
+    RecursiveRange& range = recursive_ranges.back();
+
+    if (range.start_index + range.type_count > max_index) {
+      max_index = range.start_index + range.type_count - 1;
+    }
+  }
+  return max_index;
+}
 
 TypeChecker::Label::Label(LabelType label_type,
                           const TypeVector& param_types,
@@ -228,15 +241,145 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
   return result;
 }
 
+bool TypeChecker::CompareType(TypeFields& type_fields,
+                              Type actual,
+                              Type expected) {
+  if (actual == expected) {
+    return true;
+  }
+
+  if (!expected.IsReferenceWithIndex() ||
+      actual != static_cast<Type::Enum>(expected)) {
+    return false;
+  }
+
+  TypeEntry actual_entry = type_fields.type_entries[actual.GetReferenceIndex()];
+  TypeEntry expected_entry =
+      type_fields.type_entries[expected.GetReferenceIndex()];
+
+  if (actual_entry.kind != expected_entry.kind) {
+    return false;
+  }
+
+  switch (actual_entry.kind) {
+    case TypeEntryKind::Func: {
+      FuncType& actual_type = type_fields.func_types[actual_entry.map_index];
+      FuncType& expected_type =
+          type_fields.func_types[expected_entry.map_index];
+
+      if (actual_type.params.size() != expected_type.params.size() ||
+          actual_type.results.size() != expected_type.results.size()) {
+        return false;
+      }
+
+      size_t size = actual_type.params.size();
+      for (size_t i = 0; i < size; i++) {
+        if (!CompareType(type_fields, actual_type.params[i],
+                         expected_type.params[i])) {
+          return false;
+        }
+      }
+
+      size = actual_type.results.size();
+      for (size_t i = 0; i < size; i++) {
+        if (!CompareType(type_fields, actual_type.results[i],
+                         expected_type.results[i])) {
+          return false;
+        }
+      }
+      return true;
+    }
+    case TypeEntryKind::Struct: {
+      StructType& actual_type =
+          type_fields.struct_types[actual_entry.map_index];
+      StructType& expected_type =
+          type_fields.struct_types[expected_entry.map_index];
+
+      if (actual_type.fields.size() != expected_type.fields.size()) {
+        return false;
+      }
+
+      size_t size = actual_type.fields.size();
+      for (size_t i = 0; i < size; i++) {
+        if (actual_type.fields[i].mutable_ !=
+                expected_type.fields[i].mutable_ ||
+            !CompareType(type_fields, actual_type.fields[i].type,
+                         expected_type.fields[i].type)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    default: {
+      assert(actual_entry.kind == TypeEntryKind::Array);
+      ArrayType& actual_type = type_fields.array_types[actual_entry.map_index];
+      ArrayType& expected_type =
+          type_fields.array_types[expected_entry.map_index];
+
+      return actual_type.field.mutable_ == expected_type.field.mutable_ &&
+             CompareType(type_fields, actual_type.field.type,
+                         expected_type.field.type);
+    }
+  }
+}
+
 Result TypeChecker::CheckType(Type actual, Type expected) {
   if (expected == Type::Any || actual == Type::Any) {
     return Result::Ok;
   }
 
-  if (actual != expected) {
+  Type::Enum actual_type = actual;
+  Type::Enum expected_type = expected;
+
+  if (actual_type == expected_type) {
+    switch (actual_type) {
+      case Type::ExternRef:
+      case Type::FuncRef:
+      case Type::AnyRef:
+      case Type::EqRef:
+      case Type::I31Ref:
+      case Type::StructRef:
+      case Type::ArrayRef:
+        return (expected.IsNullableNonTypedRef() ||
+                !actual.IsNullableNonTypedRef())
+                   ? Result::Ok
+                   : Result::Error;
+
+      case Type::Ref:
+      case Type::RefNull:
+        break;
+
+      default:
+        return Result::Ok;
+    }
+  }
+
+  if (!actual.IsReferenceWithIndex()) {
     return Result::Error;
   }
-  return Result::Ok;
+
+  if (expected_type == Type::FuncRef) {
+    return (actual == Type::Ref || expected.IsNullableNonTypedRef())
+               ? Result::Ok
+               : Result::Error;
+  }
+
+  if (!expected.IsReferenceWithIndex()) {
+    return Result::Error;
+  }
+
+  if (expected_type == Type::Ref && actual_type == Type::RefNull) {
+    return Result::Error;
+  }
+
+  Type new_actual = Type(Type::Ref, actual.GetReferenceIndex());
+  Type new_expected = Type(Type::Ref, expected.GetReferenceIndex());
+
+  if (CompareType(type_fields_, new_actual, new_expected)) {
+    return Result::Ok;
+  }
+
+  return Result::Error;
 }
 
 Result TypeChecker::CheckTypes(const TypeVector& actual,
@@ -316,6 +459,21 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
   result |= PeekAndCheckType(2, expected1);
   PrintStackIfFailed(result, desc, expected1, expected2, expected3);
   result |= DropTypes(3);
+  return result;
+}
+
+Result TypeChecker::PopAndCheckReference(Type* actual, const char* desc) {
+  *actual = Type::Any;
+  Result result = PeekType(0, actual);
+
+  // Type::Any is a valid value for dead code, and replacing
+  // it with anything might break the syntax checker.
+  if (*actual != Type::Any && !actual->IsRef()) {
+    result = Result::Error;
+  }
+
+  PrintStackIfFailed(result, desc, Type::RefNull);
+  result |= DropTypes(1);
   return result;
 }
 
@@ -469,6 +627,48 @@ Result TypeChecker::OnBrIf(Index depth) {
   return result;
 }
 
+static Type convertRefNullToRef(Type type) {
+  if (type == Type::ExternRef || type == Type::FuncRef) {
+    return Type(type, Type::ReferenceNonNull);
+  }
+
+  assert(type.IsReferenceWithIndex());
+  return Type(Type::Ref, type.GetReferenceIndex());
+}
+
+Result TypeChecker::OnBrOnNonNull(Index depth) {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "br_on_non_null"));
+  if (actual != Type::Any) {
+    PushType(convertRefNullToRef(actual));
+  }
+
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  Result result = PopAndCheckSignature(label->br_types(), "br_on_non_null");
+  PushTypes(label->br_types());
+
+  if (actual != Type::Any) {
+    result |= DropTypes(1);
+  }
+  return result;
+}
+
+Result TypeChecker::OnBrOnNull(Index depth) {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "br_on_null"));
+
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  Result result = PopAndCheckSignature(label->br_types(), "br_on_null");
+  PushTypes(label->br_types());
+
+  if (actual != Type::Any) {
+    PushType(convertRefNullToRef(actual));
+  }
+  return result;
+}
+
 Result TypeChecker::BeginBrTable() {
   br_table_sig_ = nullptr;
   return PopAndCheck1Type(Type::I32, "br_table");
@@ -515,17 +715,8 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
-  Type type;
-  Result result = PeekType(0, &type);
-  if (!type.IsReferenceWithIndex()) {
-    type = Type(Type::Reference, kInvalidIndex);
-  }
-  result |= PopAndCheck1Type(type, "call_ref");
-  if (Succeeded(result)) {
-    *out_index = type.GetReferenceIndex();
-  }
-  return result;
+Result TypeChecker::OnCallRef(Type type) {
+  return PopAndCheck1Type(type, "call_ref");
 }
 
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
@@ -552,6 +743,10 @@ Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
 
   CHECK_RESULT(SetUnreachable());
   return result;
+}
+
+Result TypeChecker::OnReturnCallRef(Type type) {
+  return PopAndCheck1Type(type, "return_call_ref");
 }
 
 Result TypeChecker::OnCompare(Opcode opcode) {
@@ -785,18 +980,17 @@ Result TypeChecker::OnTableFill(Type elem_type, const Limits& limits) {
                            "table.fill");
 }
 
-Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
-  /*
-   * In a const expression, treat ref.func as producing a generic funcref.
-   * This avoids having to implement funcref subtyping (for now) and matches
-   * the previous behavior where SharedValidator::OnElemSegmentElemExpr_RefFunc
-   * examined only the validity of the function index.
-   */
-  if (features_.function_references_enabled() && !force_generic_funcref) {
-    PushType(Type(Type::Reference, func_type));
-  } else {
-    PushType(Type::FuncRef);
+Result TypeChecker::OnRefAsNonNullExpr() {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "ref.as_non_null"));
+  if (actual != Type::Any) {
+    PushType(convertRefNullToRef(actual));
   }
+  return Result::Ok;
+}
+
+Result TypeChecker::OnRefFuncExpr(Index func_type) {
+  PushType(Type(Type::Ref, func_type));
   return Result::Ok;
 }
 
@@ -809,7 +1003,7 @@ Result TypeChecker::OnRefIsNullExpr() {
   Type type;
   Result result = PeekType(0, &type);
   if (!type.IsRef()) {
-    type = Type(Type::Reference, kInvalidIndex);
+    type = Type(Type::Ref, kInvalidIndex);
   }
   result |= PopAndCheck1Type(type, "ref.is_null");
   PushType(Type::I32);

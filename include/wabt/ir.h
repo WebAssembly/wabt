@@ -36,24 +36,43 @@ namespace wabt {
 
 struct Module;
 
-enum class VarType {
+// VarType (16 bit) and the opt_type_ (16 bit)
+// fields of Var forms a 32 bit field.
+enum class VarType : uint16_t {
   Index,
   Name,
 };
 
 struct Var {
+  // Var can represent variables or types.
+
+  // Represent a variable:
+  //   has_opt_type() is false
+  //   Only used by wast-parser
+
+  // Represent a type:
+  //   has_opt_type() is true, is_index() is true
+  //   type can be get by to_type()
+  //   Binary reader only constructs this variant
+
+  // Represent both a variable and a type:
+  //   has_opt_type() is true, is_name() is true
+  //   A reference, which index is unknown
+  //   Only used by wast-parser
+
   explicit Var();
   explicit Var(Index index, const Location& loc);
   explicit Var(std::string_view name, const Location& loc);
+  explicit Var(Type type, const Location& loc);
   Var(Var&&);
   Var(const Var&);
   Var& operator=(const Var&);
   Var& operator=(Var&&);
   ~Var();
 
-  VarType type() const { return type_; }
   bool is_index() const { return type_ == VarType::Index; }
   bool is_name() const { return type_ == VarType::Name; }
+  bool has_opt_type() const { return opt_type_ < 0; }
 
   Index index() const {
     assert(is_index());
@@ -63,10 +82,16 @@ struct Var {
     assert(is_name());
     return name_;
   }
+  Type::Enum opt_type() const {
+    assert(has_opt_type());
+    return static_cast<Type::Enum>(opt_type_);
+  }
 
   void set_index(Index);
   void set_name(std::string&&);
   void set_name(std::string_view);
+  void set_opt_type(Type::Enum);
+  Type to_type() const;
 
   Location loc;
 
@@ -74,6 +99,8 @@ struct Var {
   void Destroy();
 
   VarType type_;
+  // Can be set to Type::Enum types, Type::Any represent no optional type.
+  int16_t opt_type_;
   union {
     Index index_;
     std::string name_;
@@ -155,6 +182,7 @@ struct Const {
   }
   void set_funcref() { From<uintptr_t>(Type::FuncRef, 0); }
   void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
+  void set_extern(uintptr_t x) { From(Type(Type::ExternRef, Type::ReferenceNonNull), x); }
   void set_null(Type type) { From<uintptr_t>(type, kRefNullBits); }
 
   bool is_expected_nan(int lane = 0) const {
@@ -269,6 +297,20 @@ enum class TypeEntryKind {
   Array,
 };
 
+struct TypeEntryGCTypeExtension {
+  TypeEntryGCTypeExtension(bool is_final_sub_type)
+      : is_final_sub_type(is_final_sub_type) {}
+
+  void InitSubTypes(Index* sub_type_list, Index sub_type_count);
+
+  bool is_final_sub_type;
+  // The binary format allows more subtypes, although
+  // the validator limits the list to maximum 1 value.
+  // Furthermore the text parser must allow future
+  // references although the validator also disallows this.
+  std::vector<Var> sub_types;
+};
+
 class TypeEntry {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(TypeEntry);
@@ -279,12 +321,17 @@ class TypeEntry {
 
   Location loc;
   std::string name;
+  TypeEntryGCTypeExtension gc_ext;
 
  protected:
   explicit TypeEntry(TypeEntryKind kind,
+                     bool is_final_sub_type,
                      std::string_view name = std::string_view(),
                      const Location& loc = Location())
-      : loc(loc), name(name), kind_(kind) {}
+      : loc(loc),
+        name(name),
+        gc_ext(is_final_sub_type),
+        kind_(kind) {}
 
   TypeEntryKind kind_;
 };
@@ -295,8 +342,8 @@ class FuncType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Func;
   }
 
-  explicit FuncType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Func, name) {}
+  explicit FuncType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Func, is_final_sub_type, name) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
@@ -325,8 +372,8 @@ class StructType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Struct;
   }
 
-  explicit StructType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Struct) {}
+  explicit StructType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Struct, is_final_sub_type, name) {}
 
   std::vector<Field> fields;
 };
@@ -337,10 +384,15 @@ class ArrayType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Array;
   }
 
-  explicit ArrayType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Array) {}
+  explicit ArrayType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Array, is_final_sub_type, name) {}
 
   Field field;
+};
+
+struct RecursiveRange {
+  Index start_index;
+  Index type_count;
 };
 
 struct FuncDeclaration {
@@ -366,6 +418,8 @@ enum class ExprType {
   Block,
   Br,
   BrIf,
+  BrOnNonNull,
+  BrOnNull,
   BrTable,
   Call,
   CallIndirect,
@@ -390,6 +444,7 @@ enum class ExprType {
   MemoryInit,
   MemorySize,
   Nop,
+  RefAsNonNull,
   RefIsNull,
   RefFunc,
   RefNull,
@@ -397,6 +452,7 @@ enum class ExprType {
   Return,
   ReturnCall,
   ReturnCallIndirect,
+  ReturnCallRef,
   Select,
   SimdLaneOp,
   SimdLoadLane,
@@ -537,10 +593,10 @@ using MemoryCopyExpr = MemoryBinaryExpr<ExprType::MemoryCopy>;
 template <ExprType TypeEnum>
 class RefTypeExpr : public ExprMixin<TypeEnum> {
  public:
-  RefTypeExpr(Type type, const Location& loc = Location())
+  RefTypeExpr(Var type, const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc), type(type) {}
 
-  Type type;
+  Var type;
 };
 
 using RefNullExpr = RefTypeExpr<ExprType::RefNull>;
@@ -560,6 +616,7 @@ using CompareExpr = OpcodeExpr<ExprType::Compare>;
 using ConvertExpr = OpcodeExpr<ExprType::Convert>;
 using UnaryExpr = OpcodeExpr<ExprType::Unary>;
 using TernaryExpr = OpcodeExpr<ExprType::Ternary>;
+using RefAsNonNullExpr = OpcodeExpr<ExprType::RefAsNonNull>;
 
 class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
  public:
@@ -639,6 +696,8 @@ class MemoryVarExpr : public MemoryExpr<TypeEnum> {
 
 using BrExpr = VarExpr<ExprType::Br>;
 using BrIfExpr = VarExpr<ExprType::BrIf>;
+using BrOnNonNullExpr = VarExpr<ExprType::BrOnNonNull>;
+using BrOnNullExpr = VarExpr<ExprType::BrOnNull>;
 using CallExpr = VarExpr<ExprType::Call>;
 using RefFuncExpr = VarExpr<ExprType::RefFunc>;
 using GlobalGetExpr = VarExpr<ExprType::GlobalGet>;
@@ -662,8 +721,8 @@ using MemoryInitExpr = MemoryVarExpr<ExprType::MemoryInit>;
 
 class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
-  SelectExpr(TypeVector type, const Location& loc = Location())
-      : ExprMixin<ExprType::Select>(loc), result_type(type) {}
+  SelectExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::Select>(loc) {}
   TypeVector result_type;
 };
 
@@ -727,9 +786,15 @@ class CallRefExpr : public ExprMixin<ExprType::CallRef> {
   explicit CallRefExpr(const Location& loc = Location())
       : ExprMixin<ExprType::CallRef>(loc) {}
 
-  // This field is setup only during Validate phase,
-  // so keep that in mind when you use it.
-  Var function_type_index;
+  Var sig_type;
+};
+
+class ReturnCallRefExpr : public ExprMixin<ExprType::ReturnCallRef> {
+ public:
+  explicit ReturnCallRefExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::ReturnCallRef>(loc) {}
+
+  Var sig_type;
 };
 
 template <ExprType TypeEnum>
@@ -946,13 +1011,14 @@ struct Table {
   std::string name;
   Limits elem_limits;
   Type elem_type;
+  ExprList init_expr;
 };
 
 using ExprListVector = std::vector<ExprList>;
 
 struct ElemSegment {
   explicit ElemSegment(std::string_view name) : name(name) {}
-  uint8_t GetFlags(const Module*) const;
+  uint8_t GetFlags(const Module*, bool) const;
 
   SegmentKind kind = SegmentKind::Active;
   std::string name;
@@ -1277,6 +1343,8 @@ struct Module {
   std::vector<Import*> imports;
   std::vector<Export*> exports;
   std::vector<TypeEntry*> types;
+  // Ordered list of recursive ranges. Needed for binary search.
+  std::vector<RecursiveRange> recursive_ranges;
   std::vector<Table*> tables;
   std::vector<ElemSegment*> elem_segments;
   std::vector<Memory*> memories;

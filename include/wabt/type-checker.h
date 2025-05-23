@@ -20,16 +20,93 @@
 #include <functional>
 #include <type_traits>
 #include <vector>
+#include <map>
 
 #include "wabt/common.h"
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
+
+#include "wabt/binary-reader.h"  // For TypeMut.
 
 namespace wabt {
 
 class TypeChecker {
  public:
   using ErrorCallback = std::function<void(const char* msg)>;
+
+  enum class TypeEntryKind {
+    Func,
+    Struct,
+    Array,
+  };
+
+  struct TypeEntry {
+    explicit TypeEntry(TypeEntryKind kind, Index map_index)
+      : kind(kind), map_index(map_index) {}
+
+    TypeEntryKind kind;
+    Index map_index;
+  };
+
+  struct FuncType {
+    FuncType() = default;
+    FuncType(const TypeVector& params,
+             const TypeVector& results,
+             Index type_index)
+        : params(params), results(results), type_index(type_index) {}
+
+    TypeVector params;
+    TypeVector results;
+    Index type_index;
+  };
+
+  struct StructType {
+    StructType() = default;
+    StructType(const TypeMutVector& fields) : fields(fields) {}
+
+    TypeMutVector fields;
+  };
+
+  struct ArrayType {
+    ArrayType() = default;
+    ArrayType(TypeMut field) : field(field) {}
+
+    TypeMut field;
+  };
+
+  struct RecursiveRange {
+    Index start_index;
+    Index type_count;
+  };
+
+  struct TypeFields {
+    Index NumTypes() {
+      return static_cast<Index>(type_entries.size());
+    }
+
+    void PushFunc(FuncType&& func_type) {
+      type_entries.emplace_back(TypeEntry(TypeEntryKind::Func, static_cast<Index>(func_types.size())));
+      func_types.emplace_back(func_type);
+    }
+
+    void PushStruct(StructType&& struct_type) {
+      type_entries.emplace_back(TypeEntry(TypeEntryKind::Struct, static_cast<Index>(struct_types.size())));
+      struct_types.emplace_back(struct_type);
+    }
+
+    void PushArray(ArrayType&& array_type) {
+      type_entries.emplace_back(TypeEntry(TypeEntryKind::Array, static_cast<Index>(array_types.size())));
+      array_types.emplace_back(array_type);
+    }
+
+    Index GetMaxReferenceIndex();
+
+    std::vector<TypeEntry> type_entries;
+    std::vector<FuncType> func_types;
+    std::vector<StructType> struct_types;
+    std::vector<ArrayType> array_types;
+    std::vector<RecursiveRange> recursive_ranges;
+  };
 
   struct Label {
     Label(LabelType,
@@ -46,9 +123,11 @@ class TypeChecker {
     TypeVector result_types;
     size_t type_stack_limit;
     bool unreachable;
+    std::vector<bool> local_ref_is_set_;
   };
 
-  explicit TypeChecker(const Features& features) : features_(features) {}
+  explicit TypeChecker(const Features& features, TypeFields& type_fields)
+    : features_(features), type_fields_(type_fields) {}
 
   void set_error_callback(const ErrorCallback& error_callback) {
     error_callback_ = error_callback;
@@ -73,6 +152,8 @@ class TypeChecker {
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
+  Result OnBrOnNonNull(Index depth);
+  Result OnBrOnNull(Index depth);
   Result BeginBrTable();
   Result OnBrTableTarget(Index depth);
   Result EndBrTable();
@@ -80,11 +161,12 @@ class TypeChecker {
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types,
                         const Limits& table_limits);
-  Result OnIndexedFuncRef(Index* out_index);
+  Result OnCallRef(Type);
   Result OnReturnCall(const TypeVector& param_types,
                       const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types,
                               const TypeVector& result_types);
+  Result OnReturnCallRef(Type);
   Result OnCatch(const TypeVector& sig);
   Result OnCompare(Opcode);
   Result OnConst(Type);
@@ -115,7 +197,8 @@ class TypeChecker {
   Result OnTableGrow(Type elem_type, const Limits& limits);
   Result OnTableSize(const Limits& limits);
   Result OnTableFill(Type elem_type, const Limits& limits);
-  Result OnRefFuncExpr(Index func_type, bool force_generic_funcref);
+  Result OnRefFuncExpr(Index func_type);
+  Result OnRefAsNonNullExpr();
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
   Result OnRethrow(Index depth);
@@ -141,7 +224,8 @@ class TypeChecker {
   Result BeginInitExpr(Type type);
   Result EndInitExpr();
 
-  static Result CheckType(Type actual, Type expected);
+  static bool InSameRecursiveRange(std::vector<RecursiveRange>&, Index, Index);
+  Result CheckType(Type actual, Type expected);
 
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* fmt, ...);
@@ -163,6 +247,7 @@ class TypeChecker {
   void PushType(Type type);
   void PushTypes(const TypeVector& types);
   Result CheckTypeStackEnd(const char* desc);
+  static bool CompareType(TypeChecker::TypeFields&, Type, Type);
   Result CheckTypes(const TypeVector& actual, const TypeVector& expected);
   Result CheckSignature(const TypeVector& sig, const char* desc);
   Result CheckReturnSignature(const TypeVector& sig,
@@ -178,6 +263,7 @@ class TypeChecker {
                            Type expected2,
                            Type expected3,
                            const char* desc);
+  Result PopAndCheckReference(Type* actual, const char* desc);
   Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode3(Opcode opcode,
@@ -210,6 +296,7 @@ class TypeChecker {
   // to represent "any".
   TypeVector* br_table_sig_ = nullptr;
   Features features_;
+  TypeFields& type_fields_;
 };
 
 }  // namespace wabt

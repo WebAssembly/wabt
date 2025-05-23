@@ -45,8 +45,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
 
   /* Type section */
   Result BeginTypeSection(Offset size) override { return Result::Ok; }
+  Result OnRecursiveRange(Index start_index, Index type_count) override {
+    return Result::Ok;
+  }
   Result OnTypeCount(Index count) override { return Result::Ok; }
   Result OnFuncType(Index index,
+                    GCTypeExtension* gc_ext,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
@@ -54,11 +58,16 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnStructType(Index index,
+                      GCTypeExtension* gc_ext,
                       Index field_count,
                       TypeMut* fields) override {
     return Result::Ok;
   }
-  Result OnArrayType(Index index, TypeMut field) override { return Result::Ok; }
+  Result OnArrayType(Index index,
+                     GCTypeExtension* gc_ext,
+                     TypeMut field) override {
+    return Result::Ok;
+  }
   Result EndTypeSection() override { return Result::Ok; }
 
   /* Import section */
@@ -121,11 +130,15 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Table section */
   Result BeginTableSection(Offset size) override { return Result::Ok; }
   Result OnTableCount(Index count) override { return Result::Ok; }
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override {
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    bool has_init_expr) override {
     return Result::Ok;
   }
+  Result BeginTableInitExpr(Index index) override { return Result::Ok; }
+  Result EndTableInitExpr(Index index) override { return Result::Ok; }
+  Result EndTable(Index index) override { return Result::Ok; }
   Result EndTableSection() override { return Result::Ok; }
 
   /* Memory section */
@@ -241,6 +254,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnBlockExpr(Type sig_type) override { return Result::Ok; }
   Result OnBrExpr(Index depth) override { return Result::Ok; }
   Result OnBrIfExpr(Index depth) override { return Result::Ok; }
+  Result OnBrOnNonNullExpr(Index depth) override { return Result::Ok; }
+  Result OnBrOnNullExpr(Index depth) override { return Result::Ok; }
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override {
@@ -250,7 +265,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override {
     return Result::Ok;
   }
-  Result OnCallRefExpr() override { return Result::Ok; }
+  Result OnCallRefExpr(Type sig_type) override { return Result::Ok; }
   Result OnCatchExpr(Index tag_index) override { return Result::Ok; }
   Result OnCatchAllExpr() override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
@@ -299,6 +314,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTableGrowExpr(Index table_index) override { return Result::Ok; }
   Result OnTableSizeExpr(Index table_index) override { return Result::Ok; }
   Result OnTableFillExpr(Index table_index) override { return Result::Ok; }
+  Result OnRefAsNonNullExpr() override { return Result::Ok; }
   Result OnRefFuncExpr(Index func_index) override { return Result::Ok; }
   Result OnRefNullExpr(Type type) override { return Result::Ok; }
   Result OnRefIsNullExpr() override { return Result::Ok; }
@@ -308,6 +324,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override {
     return Result::Ok;
   }
+  Result OnReturnCallRefExpr(Type sig_type) override { return Result::Ok; }
   Result OnReturnExpr() override { return Result::Ok; }
   Result OnSelectExpr(Index result_count, Type* result_types) override {
     return Result::Ok;
