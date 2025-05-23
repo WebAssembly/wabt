@@ -17,10 +17,10 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000000: error: reference 10 is out of range in params
-0000000: error: reference 20 is out of range in results
+out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:0000012: error: reference 10 is out of range in params
+out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:0000012: error: reference 20 is out of range in results
 out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:000001d: error: reference 30 is out of range in locals
-0000000: error: reference 10 is out of range in params
-0000000: error: reference 20 is out of range in results
+out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:0000012: error: reference 10 is out of range in params
+out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:0000012: error: reference 20 is out of range in results
 out/test/binary/bad-reference-indicies/bad-reference-indicies.wasm:000001d: error: reference 30 is out of range in locals
 ;;; STDERR ;;)
