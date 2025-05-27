@@ -154,6 +154,7 @@ struct Const {
     set_expected_nan(0, nan);
   }
   void set_funcref() { From<uintptr_t>(Type::FuncRef, 0); }
+  void set_funcref(uintptr_t x) { From(Type::FuncRef, x); }
   void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
   void set_null(Type type) { From<uintptr_t>(type, kRefNullBits); }
 
