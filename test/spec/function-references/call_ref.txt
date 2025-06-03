@@ -1,0 +1,19 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/call_ref.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/call_ref.wast:97: assert_trap passed: null function reference
+out/test/spec/function-references/call_ref.wast:136: assert_trap passed: unreachable executed
+out/test/spec/function-references/call_ref.wast:149: assert_trap passed: unreachable executed
+out/test/spec/function-references/call_ref.wast:165: assert_trap passed: unreachable executed
+out/test/spec/function-references/call_ref.wast:168: assert_invalid passed:
+  out/test/spec/function-references/call_ref/call_ref.4.wasm:0000042: error: type mismatch in call, expected [i32] but got [i64]
+  0000042: error: OnCallRefExpr callback failed
+out/test/spec/function-references/call_ref.wast:184: assert_invalid passed:
+  out/test/spec/function-references/call_ref/call_ref.5.wasm:0000044: error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000044: error: EndFunctionBody callback failed
+out/test/spec/function-references/call_ref.wast:201: assert_invalid passed:
+  out/test/spec/function-references/call_ref/call_ref.6.wasm:000001f: error: type mismatch in call_ref, expected [(ref null 0)] but got [externref]
+  000001f: error: OnCallRefExpr callback failed
+34/34 tests passed.
+;;; STDOUT ;;)
