@@ -145,6 +145,7 @@ class BinaryReader {
   [[nodiscard]] Result ReadCount(Index* index, const char* desc);
   [[nodiscard]] Result ReadField(TypeMut* out_value);
 
+  bool IsConcreteReferenceType(Type::Enum);
   bool IsConcreteType(Type);
   bool IsBlockType(Type);
 
@@ -365,10 +366,25 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   uint32_t type = 0;
   CHECK_RESULT(ReadS32Leb128(&type, desc));
-  if (static_cast<Type::Enum>(type) == Type::Reference) {
-    uint32_t heap_type = 0;
-    CHECK_RESULT(ReadS32Leb128(&heap_type, desc));
-    *out_value = Type(Type::Reference, heap_type);
+  if (options_.features.reference_types_enabled() &&
+      Type::EnumIsReferenceWithIndex(static_cast<Type::Enum>(type))) {
+    uint64_t heap_type = 0;
+    CHECK_RESULT(ReadS64Leb128(&heap_type, desc));
+
+    if (static_cast<int64_t>(heap_type) < 0 ||
+        static_cast<int64_t>(heap_type) >= kInvalidIndex) {
+      Type::Enum heap_type_code = static_cast<Type::Enum>(heap_type);
+      ERROR_UNLESS(
+          heap_type_code == Type::FuncRef || heap_type_code == Type::ExternRef,
+          "Reference type is limited to func and extern: %s", desc);
+      type = (static_cast<Type::Enum>(type) == Type::Ref)
+                 ? Type::ReferenceNonNull
+                 : Type::ReferenceOrNull;
+      *out_value = Type(heap_type_code, type);
+    } else {
+      *out_value =
+          Type(static_cast<Type::Enum>(type), static_cast<Index>(heap_type));
+    }
   } else {
     *out_value = static_cast<Type>(type);
   }
@@ -552,6 +568,20 @@ Result BinaryReader::ReadField(TypeMut* out_value) {
   return Result::Ok;
 }
 
+bool BinaryReader::IsConcreteReferenceType(Type::Enum type) {
+  switch (type) {
+    case Type::FuncRef:
+    case Type::ExternRef:
+      return options_.features.reference_types_enabled();
+
+    case Type::ExnRef:
+      return options_.features.exceptions_enabled();
+
+    default:
+      return false;
+  }
+}
+
 bool BinaryReader::IsConcreteType(Type type) {
   switch (type) {
     case Type::I32:
@@ -563,18 +593,13 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::V128:
       return options_.features.simd_enabled();
 
-    case Type::FuncRef:
-    case Type::ExternRef:
-      return options_.features.reference_types_enabled();
-
-    case Type::ExnRef:
-      return options_.features.exceptions_enabled();
-
     case Type::Reference:
+    case Type::Ref:
+    case Type::RefNull:
       return options_.features.function_references_enabled();
 
     default:
-      return false;
+      return IsConcreteReferenceType(type);
   }
 }
 
@@ -811,6 +836,22 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         Index depth;
         CHECK_RESULT(ReadIndex(&depth, "br_if depth"));
         CALLBACK(OnBrIfExpr, depth);
+        CALLBACK(OnOpcodeIndex, depth);
+        break;
+      }
+
+      case Opcode::BrOnNonNull: {
+        Index depth;
+        CHECK_RESULT(ReadIndex(&depth, "br_on_non_null depth"));
+        CALLBACK(OnBrOnNonNullExpr, depth);
+        CALLBACK(OnOpcodeIndex, depth);
+        break;
+      }
+
+      case Opcode::BrOnNull: {
+        Index depth;
+        CHECK_RESULT(ReadIndex(&depth, "br_on_null depth"));
+        CALLBACK(OnBrOnNullExpr, depth);
         CALLBACK(OnOpcodeIndex, depth);
         break;
       }
@@ -1902,6 +1943,11 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         break;
       }
 
+      case Opcode::RefAsNonNull:
+        CALLBACK(OnRefAsNonNullExpr);
+        CALLBACK(OnOpcodeBare);
+        break;
+
       case Opcode::RefFunc: {
         Index func;
         CHECK_RESULT(ReadIndex(&func, "func index"));
@@ -1911,8 +1957,23 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       }
 
       case Opcode::RefNull: {
+        uint64_t heap_type;
         Type type;
-        CHECK_RESULT(ReadRefType(&type, "ref.null type"));
+        CHECK_RESULT(ReadS64Leb128(&heap_type, "ref.null type"));
+
+        if (static_cast<int64_t>(heap_type) < 0 ||
+            static_cast<int64_t>(heap_type) >= kInvalidIndex) {
+          Type::Enum type_code = static_cast<Type::Enum>(heap_type);
+          ERROR_UNLESS(IsConcreteReferenceType(type_code),
+                       "expected valid ref.null type (got " PRItypecode ")",
+                       WABT_PRINTF_TYPE_CODE(type_code));
+          type = Type(type_code);
+        } else {
+          ERROR_UNLESS(options_.features.function_references_enabled(),
+                       "function references are not enabled for ref.null");
+          type = Type(Type::RefNull, static_cast<Index>(heap_type));
+        }
+
         CALLBACK(OnRefNullExpr, type);
         CALLBACK(OnOpcodeType, type);
         break;
@@ -1923,10 +1984,25 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         CALLBACK(OnOpcodeBare);
         break;
 
-      case Opcode::CallRef:
-        CALLBACK(OnCallRefExpr);
-        CALLBACK(OnOpcodeBare);
+      case Opcode::CallRef: {
+        uint32_t type;
+        CHECK_RESULT(ReadU32Leb128(&type, "call_ref type"));
+
+        Type sig_type(Type::RefNull, type);
+        CALLBACK(OnCallRefExpr, sig_type);
+        CALLBACK(OnOpcodeType, sig_type);
         break;
+      }
+
+      case Opcode::ReturnCallRef: {
+        uint32_t type;
+        CHECK_RESULT(ReadU32Leb128(&type, "return_call_ref type"));
+
+        Type sig_type(Type::RefNull, type);
+        CALLBACK(OnReturnCallRefExpr, sig_type);
+        CALLBACK(OnOpcodeType, sig_type);
+        break;
+      }
 
       default:
         return ReportUnexpectedOpcode(opcode);
@@ -2711,8 +2787,32 @@ Result BinaryReader::ReadTableSection(Offset section_size) {
     Index table_index = num_table_imports_ + i;
     Type elem_type;
     Limits elem_limits;
+    bool has_init_expr = false;
+
+    if (options_.features.function_references_enabled() &&
+        state_.offset < read_end_ && state_.data[state_.offset] == 0x40) {
+      state_.offset++;
+      has_init_expr = true;
+
+      uint8_t value;
+      CHECK_RESULT(ReadU8(&value, "table init"));
+      if (value != 0) {
+        PrintError("unsupported table intializer: 0x%x\n",
+                   static_cast<int>(value));
+        return Result::Error;
+      }
+    }
+
     CHECK_RESULT(ReadTable(&elem_type, &elem_limits));
-    CALLBACK(OnTable, table_index, elem_type, &elem_limits);
+    CALLBACK(BeginTable, table_index, elem_type, &elem_limits, has_init_expr);
+
+    if (has_init_expr) {
+      CALLBACK(BeginTableInitExpr, table_index);
+      CHECK_RESULT(ReadInitExpr(table_index));
+      CALLBACK(EndTableInitExpr, table_index);
+    }
+
+    CALLBACK(EndTable, table_index);
   }
   CALLBACK0(EndTableSection);
   return Result::Ok;
@@ -2803,6 +2903,11 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     }
     Type elem_type = Type::FuncRef;
 
+    if (options_.features.function_references_enabled() &&
+        !(flags & SegUseElemExprs)) {
+      elem_type = Type(Type::FuncRef, Type::ReferenceNonNull);
+    }
+
     CALLBACK(BeginElemSegment, i, table_index, flags);
 
     if (!(flags & SegPassive)) {
@@ -2821,7 +2926,6 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
                      elem_type.GetName().c_str());
-        elem_type = Type::FuncRef;
       }
     }
 

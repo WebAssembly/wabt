@@ -1517,7 +1517,7 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
     } break;
 
     case ExprType::RefNull:
-      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type));
+      Write(GetReferenceNullValue(cast<RefNullExpr>(expr)->type.opt_type()));
       break;
 
     default:
@@ -2506,16 +2506,17 @@ void CWriter::WriteElemInitializers() {
 void CWriter::WriteElemTableInit(bool active_initialization,
                                  const ElemSegment* src_segment,
                                  const Table* dst_table) {
-  assert(dst_table->elem_type.IsRef() &&
-         dst_table->elem_type != Type::Reference);
-  assert(dst_table->elem_type == src_segment->elem_type);
+  Type elem_type = dst_table->elem_type;
 
-  Write(GetReferenceTypeName(dst_table->elem_type), "_table_init(",
+  assert(elem_type.IsRef() && !elem_type.IsReferenceWithIndex());
+  assert(elem_type == src_segment->elem_type);
+
+  Write(GetReferenceTypeName(elem_type), "_table_init(",
         ExternalInstancePtr(ModuleFieldType::Table, dst_table->name), ", ");
 
   // elem segment exprs needed only for funcref tables
   // because externref and exnref tables can only be initialized with ref.null
-  if (dst_table->elem_type == Type::FuncRef) {
+  if (elem_type == Type::FuncRef) {
     if (src_segment->elem_exprs.empty()) {
       Write("NULL, ");
     } else {
@@ -2540,7 +2541,7 @@ void CWriter::WriteElemTableInit(bool active_initialization,
     Write(StackVar(2), ", ", StackVar(1), ", ", StackVar(0));
   }
 
-  if (dst_table->elem_type == Type::FuncRef) {
+  if (elem_type == Type::FuncRef) {
     Write(", instance");
   }
 
@@ -3610,6 +3611,21 @@ void CWriter::Write(const ExprList& exprs) {
         Write(GotoLabel(cast<BrIfExpr>(&expr)->var), "}", Newline());
         break;
 
+      case ExprType::BrOnNonNull:
+        Write("if (", StackVar(0), ".func != NULL) {");
+        Write(GotoLabel(cast<BrOnNonNullExpr>(&expr)->var), "}", Newline());
+        DropTypes(1);
+        break;
+
+      case ExprType::BrOnNull: {
+        Write("if (", StackVar(0), ".func == NULL) {");
+        Type type = StackType(0);
+        DropTypes(1);
+        Write(GotoLabel(cast<BrOnNullExpr>(&expr)->var), "}", Newline());
+        PushType(type);
+        break;
+      }
+
       case ExprType::BrTable: {
         const auto* bt_expr = cast<BrTableExpr>(&expr);
         Write("switch (", StackVar(0), ") ", OpenBrace());
@@ -3944,6 +3960,10 @@ void CWriter::Write(const ExprList& exprs) {
         DropTypes(3);
       } break;
 
+      case ExprType::RefAsNonNull:
+        Write("if (", StackVar(0), ".func == NULL) { TRAP(NULL_REF); }");
+        break;
+
       case ExprType::RefFunc: {
         const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
         PushType(Type::FuncRef);
@@ -3973,10 +3993,10 @@ void CWriter::Write(const ExprList& exprs) {
       } break;
 
       case ExprType::RefNull:
-        PushType(cast<RefNullExpr>(&expr)->type);
+        PushType(cast<RefNullExpr>(&expr)->type.opt_type());
         Write(StackVar(0), " = ",
-              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type), ";",
-              Newline());
+              GetReferenceNullValue(cast<RefNullExpr>(&expr)->type.opt_type()),
+              ";", Newline());
         break;
 
       case ExprType::RefIsNull:
@@ -4282,6 +4302,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicWait:
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
+      case ExprType::ReturnCallRef:
         UNIMPLEMENTED("...");
         break;
     }
