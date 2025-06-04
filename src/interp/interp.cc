@@ -94,16 +94,139 @@ std::unique_ptr<ExternType> FuncType::Clone() const {
   return std::make_unique<FuncType>(*this);
 }
 
+static bool RecursiveMatch(Type expected,
+                           Index expected_recursive_start,
+                           std::vector<FuncType>* expected_func_types,
+                           Type actual,
+                           Index actual_recursive_start,
+                           std::vector<FuncType>* actual_func_types) {
+  assert(expected_func_types != nullptr && actual_func_types != nullptr);
+
+  if (!expected.IsReferenceWithIndex()) {
+    return expected == actual;
+  } else if (!actual.IsReferenceWithIndex()) {
+    return false;
+  }
+
+  Index expected_index = expected.GetReferenceIndex();
+  Index actual_index = actual.GetReferenceIndex();
+
+  const FuncType& expected_type = (*expected_func_types)[expected_index];
+  const FuncType& actual_type = (*actual_func_types)[actual_index];
+
+  // Relative reference.
+  if (expected_index >= expected_recursive_start) {
+    return (actual_index >= actual_recursive_start &&
+            expected_type.recursive_count == actual_type.recursive_count &&
+            expected_index - expected_recursive_start ==
+                actual_index - actual_recursive_start);
+  } else if (actual_index >= actual_recursive_start) {
+    return false;
+  }
+
+  // Absolute reference.
+  expected_recursive_start = expected_type.recursive_start;
+  actual_recursive_start = actual_type.recursive_start;
+  Index recursive_count = expected_type.recursive_count;
+
+  if (recursive_count != actual_type.recursive_count ||
+      expected_index - expected_recursive_start !=
+          actual_index - actual_recursive_start) {
+    return false;
+  }
+
+  // Recursive match of the whole recursive block.
+  for (Index i = 0; i < recursive_count; i++) {
+    const FuncType& expected_rec_type =
+        (*expected_func_types)[expected_recursive_start + i];
+    const FuncType& actual_rec_type =
+        (*actual_func_types)[actual_recursive_start + i];
+
+    if (expected_rec_type.kind != actual_rec_type.kind ||
+        expected_rec_type.is_final_sub_type !=
+            actual_rec_type.is_final_sub_type) {
+      return false;
+    }
+
+    if (expected_rec_type.canonical_sub_index != kInvalidIndex) {
+      if (actual_rec_type.canonical_sub_index == kInvalidIndex) {
+        return false;
+      }
+
+      Type expected_sub_type(Type::Ref, expected_rec_type.canonical_sub_index);
+      Type actual_sub_type(Type::Ref, actual_rec_type.canonical_sub_index);
+
+      if (!RecursiveMatch(expected_sub_type, expected_recursive_start,
+                          expected_func_types, actual_sub_type,
+                          actual_recursive_start, actual_func_types)) {
+        return false;
+      }
+    } else if (actual_rec_type.canonical_sub_index != kInvalidIndex) {
+      return false;
+    }
+
+    size_t size = expected_rec_type.params.size();
+    if (size != actual_rec_type.params.size()) {
+      return false;
+    }
+
+    for (size_t j = 0; j < size; j++) {
+      if (!RecursiveMatch(expected_rec_type.params[j], expected_recursive_start,
+                          expected_func_types, actual_rec_type.params[j],
+                          actual_recursive_start, actual_func_types)) {
+        return false;
+      }
+    }
+
+    size = expected_rec_type.results.size();
+    if (size != actual_rec_type.results.size()) {
+      return false;
+    }
+
+    for (size_t j = 0; j < size; j++) {
+      if (!RecursiveMatch(expected_rec_type.results[j],
+                          expected_recursive_start, expected_func_types,
+                          actual_rec_type.results[j], actual_recursive_start,
+                          actual_func_types)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 Result Match(const FuncType& expected,
              const FuncType& actual,
              std::string* out_msg) {
-  if (expected.params != actual.params || expected.results != actual.results) {
-    if (out_msg) {
-      *out_msg = "import signature mismatch";
+  if (expected.kind == actual.kind) {
+    if (expected.func_types == nullptr || actual.func_types == nullptr) {
+      // Simple function, can be a callback without module.
+      if (expected.params == actual.params &&
+          expected.results == actual.results) {
+        return Result::Ok;
+      }
+    } else {
+      Type expected_type(Type::Ref, expected.canonical_index);
+      Index actual_index = actual.canonical_index;
+
+      do {
+        Type actual_type(Type::Ref, actual_index);
+
+        if (RecursiveMatch(expected_type, kInvalidIndex, expected.func_types,
+                           actual_type, kInvalidIndex, actual.func_types)) {
+          return Result::Ok;
+        }
+
+        actual_index = ((*actual.func_types)[actual_index]).canonical_sub_index;
+      } while (actual_index != kInvalidIndex);
     }
-    return Result::Error;
   }
-  return Result::Ok;
+
+  if (out_msg) {
+    *out_msg = "import signature mismatch";
+  }
+  return Result::Error;
 }
 
 //// TableType ////
@@ -189,6 +312,30 @@ Result Match(const TagType& expected,
   return Result::Ok;
 }
 
+//// Types ////
+
+bool TypesMatch(ValueType expected, ValueType actual) {
+  // Currently there is no subtyping, so expected and actual must match
+  // exactly. In the future this may be expanded.
+  if (expected == actual) {
+    return true;
+  }
+
+  if (expected == Type::FuncRef &&
+      (actual == Type::Ref ||
+       (expected.IsNullableNonTypedRef() &&
+        (actual == Type::FuncRef || actual == Type::RefNull)))) {
+    return true;
+  }
+
+  if (actual == Type::Ref && expected == Type::RefNull &&
+      actual.GetReferenceIndex() == expected.GetReferenceIndex()) {
+    return true;
+  }
+
+  return false;
+}
+
 //// Limits ////
 template <typename T>
 bool CanGrow(const Limits& limits, T old_size, T delta, T* new_size) {
@@ -237,6 +384,8 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   Object* obj = objects_.Get(ref.index);
   switch (type) {
     case ValueType::FuncRef:
+    case ValueType::Ref:
+    case ValueType::RefNull:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
     case ValueType::ExnRef:
@@ -474,8 +623,12 @@ Result HostFunc::DoCall(Thread& thread,
 }
 
 //// Table ////
-Table::Table(Store&, TableType type) : Extern(skind), type_(type) {
+Table::Table(Store& store, TableType type, Ref init_ref)
+    : Extern(skind), type_(type) {
   elements_.resize(type.limits.initial);
+  if (init_ref != Ref::Null) {
+    Fill(store, 0, init_ref, type.limits.initial);
+  }
 }
 
 void Table::Mark(Store& store) {
@@ -756,10 +909,26 @@ Module::Module(Store&, ModuleDesc desc)
     : Object(skind), desc_(std::move(desc)) {
   for (auto&& import : desc_.imports) {
     import_types_.emplace_back(import.type);
+
+    if (import.type.type->kind == ExternKind::Func) {
+      cast<FuncType>(import.type.type.get())->func_types = &desc_.func_types;
+    }
   }
 
   for (auto&& export_ : desc_.exports) {
     export_types_.emplace_back(export_.type);
+
+    if (export_.type.type->kind == ExternKind::Func) {
+      cast<FuncType>(export_.type.type.get())->func_types = &desc_.func_types;
+    }
+  }
+
+  for (auto& func_type : desc_.func_types) {
+    func_type.func_types = &desc_.func_types;
+  }
+
+  for (auto& func : desc_.funcs) {
+    func.type.func_types = &desc_.func_types;
   }
 }
 
@@ -823,7 +992,16 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
   // Tables.
   for (auto&& desc : mod->desc().tables) {
-    inst->tables_.push_back(Table::New(store, desc.type).ref());
+    Ref ref = Ref::Null;
+    if (desc.init_func.code_offset != Istream::kInvalidOffset) {
+      Ref func_ref = DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+      Value value;
+      if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
+        return {};
+      }
+      ref = value.Get<Ref>();
+    }
+    inst->tables_.push_back(Table::New(store, desc.type, ref).ref());
   }
 
   // Memories.
@@ -1208,6 +1386,25 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       }
       break;
 
+    case O::BrOnNonNull: {
+      Ref ref = Pop<Ref>();
+      if (ref != Ref::Null) {
+        Push(ref);
+        pc = instr.imm_u32;
+      }
+      break;
+    }
+
+    case O::BrOnNull: {
+      Ref ref = Pop<Ref>();
+      if (ref == Ref::Null) {
+        pc = instr.imm_u32;
+      } else {
+        Push(ref);
+      }
+      break;
+    }
+
     case O::BrTable: {
       auto key = Pop<u32>();
       if (key >= instr.imm_u32) {
@@ -1243,6 +1440,19 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
           Failed(Match(new_func->type(), func_type, nullptr)),
           "indirect call signature mismatch");  // TODO: don't use "signature"
       if (instr.op == O::ReturnCallIndirect) {
+        return DoReturnCall(new_func, out_trap);
+      } else {
+        return DoCall(new_func, out_trap);
+      }
+    }
+
+    case O::CallRef:
+    case O::ReturnCallRef: {
+      Ref new_func_ref = Pop<Ref>();
+      TRAP_IF(new_func_ref == Ref::Null, "null function reference");
+      Func::Ptr new_func{store_, new_func_ref};
+
+      if (instr.op == O::ReturnCallRef) {
         return DoReturnCall(new_func, out_trap);
       } else {
         return DoCall(new_func, out_trap);
@@ -1581,6 +1791,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::RefIsNull:
       Push(Pop<Ref>() == Ref::Null);
+      break;
+
+    case O::RefAsNonNull:
+      TRAP_IF(Pick(1).Get<Ref>() == Ref::Null, "null reference");
       break;
 
     case O::RefFunc:
@@ -2001,7 +2215,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::ReturnCall:
     case O::SelectT:
 
-    case O::CallRef:
     case O::Try:
     case O::TryTable:
     case O::Catch:
