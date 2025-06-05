@@ -181,6 +181,13 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
   Result OnOpcode(Opcode opcode) override;
+  Result OnArrayGet(Opcode opcode, Index type_index) override;
+  Result OnArrayNew(Index type_index) override;
+  Result OnArrayNewData(Index type_index, Index data_index) override;
+  Result OnArrayNewDefault(Index type_index) override;
+  Result OnArrayNewElem(Index type_index, Index elem_index) override;
+  Result OnArrayNewFixed(Index type_index, Index count) override;
+  Result OnArraySet(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -271,6 +278,12 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index memidx,
                      Address alignment_log2,
                      Address offset) override;
+  Result OnStructGet(Opcode opcode,
+                     Index type_index,
+                     Index field_index) override;
+  Result OnStructNew(Index type_index) override;
+  Result OnStructNewDefault(Index type_index) override;
+  Result OnStructSet(Index type_index, Index field_index) override;
   Result OnThrowExpr(Index tag_index) override;
   Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
@@ -866,6 +879,41 @@ Result BinaryReaderIR::OnOpcode(Opcode opcode) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::OnArrayGet(Opcode opcode, Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArrayGetExpr>(opcode, Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNew(Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArrayNewExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewData(Index type_index, Index data_index) {
+  return AppendExpr(std::make_unique<ArrayNewDataExpr>(
+      Var(type_index, GetLocation()), Var(data_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewDefault(Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArrayNewDefaultExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewElem(Index type_index, Index elem_index) {
+  return AppendExpr(std::make_unique<ArrayNewElemExpr>(
+      Var(type_index, GetLocation()), Var(elem_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewFixed(Index type_index, Index count) {
+  return AppendExpr(std::make_unique<ArrayNewFixedExpr>(
+      Var(type_index, GetLocation()), count));
+}
+
+Result BinaryReaderIR::OnArraySet(Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArraySetExpr>(Var(type_index, GetLocation())));
+}
+
 Result BinaryReaderIR::OnAtomicLoadExpr(Opcode opcode,
                                         Index memidx,
                                         Address alignment_log2,
@@ -1257,6 +1305,28 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
                                    Address offset) {
   return AppendExpr(std::make_unique<StoreExpr>(
       opcode, Var(memidx, GetLocation()), 1ull << alignment_log2, offset));
+}
+
+Result BinaryReaderIR::OnStructGet(Opcode opcode,
+                                   Index type_index,
+                                   Index field_index) {
+  return AppendExpr(std::make_unique<StructGetExpr>(
+      opcode, Var(type_index, GetLocation()), Var(field_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnStructNew(Index type_index) {
+  return AppendExpr(
+      std::make_unique<StructNewExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnStructNewDefault(Index type_index) {
+  return AppendExpr(
+      std::make_unique<StructNewDefaultExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnStructSet(Index type_index, Index field_index) {
+  return AppendExpr(std::make_unique<StructSetExpr>(
+      Var(type_index, GetLocation()), Var(field_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnThrowExpr(Index tag_index) {

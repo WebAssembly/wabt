@@ -115,6 +115,13 @@ class SharedValidator {
   Result EndFunctionBody(const Location&);
   Result OnLocalDecl(const Location&, Index count, Type type);
 
+  Result OnArrayGet(const Location&, Opcode, Var type);
+  Result OnArrayNew(const Location&, Var type);
+  Result OnArrayNewData(const Location&, Var type, Var data);
+  Result OnArrayNewDefault(const Location&, Var type);
+  Result OnArrayNewElem(const Location&, Var type, Var elem);
+  Result OnArrayNewFixed(const Location&, Var type, Index count);
+  Result OnArraySet(const Location&, Var type);
   Result OnAtomicFence(const Location&, uint32_t consistency_model);
   Result OnAtomicLoad(const Location&,
                       Opcode,
@@ -221,6 +228,10 @@ class SharedValidator {
                  Var memidx,
                  Address align,
                  Address offset);
+  Result OnStructGet(const Location&, Opcode, Var type, Var field);
+  Result OnStructNew(const Location&, Var type);
+  Result OnStructNewDefault(const Location&, Var type);
+  Result OnStructSet(const Location&, Var type, Var field);
   Result OnTableCopy(const Location&, Var dst_var, Var src_var);
   Result OnTableFill(const Location&, Var table_var);
   Result OnTableGet(const Location&, Var table_var);
@@ -312,7 +323,9 @@ class SharedValidator {
                              const std::vector<T>& values,
                              T* out,
                              const char* desc);
-  Result CheckFuncTypeIndex(Var sig_var, FuncType* out = nullptr);
+  Result CheckFuncTypeIndex(Var sig_var, FuncType* out);
+  Result CheckStructTypeIndex(Var type_var, Type* out_ref, StructType* out);
+  Result CheckArrayTypeIndex(Var type_var, Type* out_ref, TypeMut* out);
   Result CheckFuncIndex(Var func_var, FuncType* out = nullptr);
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);

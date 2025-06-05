@@ -1428,6 +1428,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       case Opcode::I32X4RelaxedTruncF32X4U:
       case Opcode::I32X4RelaxedTruncF64X2SZero:
       case Opcode::I32X4RelaxedTruncF64X2UZero:
+      case Opcode::ArrayLen:
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -2014,6 +2015,92 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         Type sig_type(Type::RefNull, type);
         CALLBACK(OnReturnCallRefExpr, sig_type);
         CALLBACK(OnOpcodeType, sig_type);
+        break;
+      }
+
+      case Opcode::ArrayGet:
+      case Opcode::ArrayGetS:
+      case Opcode::ArrayGetU: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArrayGet, opcode, type_index);
+        break;
+      }
+
+      case Opcode::ArrayNew: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArrayNew, type_index);
+        break;
+      }
+
+      case Opcode::ArrayNewData: {
+        uint32_t type_index, data_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&data_index, "data index"));
+        CALLBACK(OnArrayNewData, type_index, data_index);
+        break;
+      }
+
+      case Opcode::ArrayNewDefault: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArrayNewDefault, type_index);
+        break;
+      }
+
+      case Opcode::ArrayNewElem: {
+        uint32_t type_index, elem_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&elem_index, "elem index"));
+        CALLBACK(OnArrayNewElem, type_index, elem_index);
+        break;
+      }
+
+      case Opcode::ArrayNewFixed: {
+        uint32_t type_index, count;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&count, "count"));
+        CALLBACK(OnArrayNewFixed, type_index, count);
+        break;
+      }
+
+      case Opcode::ArraySet: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArraySet, type_index);
+        break;
+      }
+
+      case Opcode::StructGet:
+      case Opcode::StructGetS:
+      case Opcode::StructGetU: {
+        uint32_t type_index, field_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&field_index, "field index"));
+        CALLBACK(OnStructGet, opcode, type_index, field_index);
+        break;
+      }
+
+      case Opcode::StructNew: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnStructNew, type_index);
+        break;
+      }
+
+      case Opcode::StructNewDefault: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnStructNewDefault, type_index);
+        break;
+      }
+
+      case Opcode::StructSet: {
+        uint32_t type_index, field_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&field_index, "field index"));
+        CALLBACK(OnStructSet, type_index, field_index);
         break;
       }
 

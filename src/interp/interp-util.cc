@@ -73,11 +73,15 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::ArrayRef:
       return StringPrintf("arrayref:%" PRIzd, tv.value.Get<Ref>().index);
 
+    case Type::Ref:
+      return StringPrintf("ref:%" PRIindex, tv.type.GetReferenceIndex());
+
+    case Type::RefNull:
+      return StringPrintf("refnull:%" PRIindex, tv.type.GetReferenceIndex());
+
     case Type::NullFuncRef:
     case Type::NullExternRef:
     case Type::NullRef:
-    case Type::Ref:
-    case Type::RefNull:
     case Type::Func:
     case Type::Struct:
     case Type::Array:

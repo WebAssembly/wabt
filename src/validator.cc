@@ -170,6 +170,17 @@ class Validator : public ExprVisitor::Delegate {
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
   Result OnLoadZeroExpr(LoadZeroExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
 
  private:
   Type GetDeclarationType(const FuncDeclaration&);
@@ -232,6 +243,18 @@ static Result CheckType(Type actual, Type expected) {
     // Specification tests pass expected functions
     // directly, their type is not relevant.
     return Result::Ok;
+  }
+
+  if (expected_type == Type::Ref &&
+      (actual_type == Type::ArrayRef || actual_type == Type::EqRef ||
+       actual_type == Type::StructRef)) {
+    return Result::Ok;
+  }
+
+  if (actual_type == Type::StructRef && expected_type == Type::AnyRef) {
+    return (expected.IsNullableNonTypedRef() || !actual.IsNullableNonTypedRef())
+               ? Result::Ok
+               : Result::Error;
   }
 
   return Result::Error;
@@ -747,6 +770,63 @@ Result Validator::OnLoadZeroExpr(LoadZeroExpr* expr) {
   result_ |= validator_.OnLoadZero(expr->loc, expr->opcode, expr->memidx,
                                    expr->opcode.GetAlignment(expr->align),
                                    expr->offset);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayGetExpr(ArrayGetExpr* expr) {
+  result_ |= validator_.OnArrayGet(expr->loc, expr->opcode, expr->comp_type);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewExpr(ArrayNewExpr* expr) {
+  result_ |= validator_.OnArrayNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewDataExpr(ArrayNewDataExpr* expr) {
+  result_ |= validator_.OnArrayNewData(expr->loc, expr->comp_type, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewDefaultExpr(ArrayNewDefaultExpr* expr) {
+  result_ |= validator_.OnArrayNewDefault(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewElemExpr(ArrayNewElemExpr* expr) {
+  result_ |= validator_.OnArrayNewElem(expr->loc, expr->comp_type, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewFixedExpr(ArrayNewFixedExpr* expr) {
+  result_ |=
+      validator_.OnArrayNewFixed(expr->loc, expr->comp_type, expr->count);
+  return Result::Ok;
+}
+
+Result Validator::OnArraySetExpr(ArraySetExpr* expr) {
+  result_ |= validator_.OnArraySet(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructGetExpr(StructGetExpr* expr) {
+  result_ |= validator_.OnStructGet(expr->loc, expr->opcode, expr->comp_type,
+                                    expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructNewExpr(StructNewExpr* expr) {
+  result_ |= validator_.OnStructNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructNewDefaultExpr(StructNewDefaultExpr* expr) {
+  result_ |= validator_.OnStructNewDefault(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructSetExpr(StructSetExpr* expr) {
+  result_ |= validator_.OnStructSet(expr->loc, expr->comp_type, expr->var);
   return Result::Ok;
 }
 

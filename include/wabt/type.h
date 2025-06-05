@@ -216,6 +216,10 @@ class Type {
     return type_index_;
   }
 
+  bool IsPackedType() const {
+    return enum_ == Type::I8 || enum_ == Type::I16;
+  }
+
   TypeVector GetInlineVector() const {
     assert(!IsIndex());
     switch (enum_) {

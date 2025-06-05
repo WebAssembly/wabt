@@ -902,6 +902,53 @@ inline const TagType& Tag::type() const {
   return type_;
 }
 
+//// Array ////
+// static
+inline bool Array::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Array::Ptr Array::New(Store& store,
+                             u32 size,
+                             Index type_index,
+                             Module* mod) {
+  return store.Alloc<Array>(store, size, type_index, mod);
+}
+
+inline Index Array::Size() {
+  return static_cast<Index>(items_.size());
+}
+
+inline Value Array::GetItem(Index idx) {
+  return items_[idx];
+}
+
+inline void Array::SetItem(Index idx, Value value) {
+  items_[idx] = value;
+}
+
+//// Struct ////
+// static
+inline bool Struct::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Struct::Ptr Struct::New(Store& store, Index type_index, Module* mod) {
+  return store.Alloc<Struct>(store, type_index, mod);
+}
+
+inline Index Struct::Size() {
+  return static_cast<Index>(fields_.size());
+}
+
+inline Value Struct::GetField(Index idx) {
+  return fields_[idx];
+}
+
+inline void Struct::SetField(Index idx, Value value) {
+  fields_[idx] = value;
+}
+
 //// ElemSegment ////
 inline void ElemSegment::Drop() {
   elements_.clear();

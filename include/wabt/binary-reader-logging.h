@@ -165,6 +165,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnOpcodeType(Type type) override;
+  Result OnArrayGet(Opcode opcode, Index type_index) override;
+  Result OnArrayNew(Index type_index) override;
+  Result OnArrayNewData(Index type_index, Index data_index) override;
+  Result OnArrayNewDefault(Index type_index) override;
+  Result OnArrayNewElem(Index type_index, Index elem_index) override;
+  Result OnArrayNewFixed(Index type_index, Index count) override;
+  Result OnArraySet(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -246,6 +253,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                      Index memidx,
                      Address alignment_log2,
                      Address offset) override;
+  Result OnStructGet(Opcode opcode,
+                     Index type_index,
+                     Index field_index) override;
+  Result OnStructNew(Index type_index) override;
+  Result OnStructNewDefault(Index type_index) override;
+  Result OnStructSet(Index type_index, Index field_index) override;
   Result OnThrowExpr(Index tag_index) override;
   Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;

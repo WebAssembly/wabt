@@ -219,6 +219,21 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeV128(v128 value) override { return Result::Ok; }
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
   Result OnOpcodeType(Type type) override { return Result::Ok; }
+  Result OnArrayGet(Opcode opcode, Index type_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayNew(Index type_index) override { return Result::Ok; }
+  Result OnArrayNewData(Index type_index, Index data_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayNewDefault(Index type_index) override { return Result::Ok; }
+  Result OnArrayNewElem(Index type_index, Index elem_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayNewFixed(Index type_index, Index count) override {
+    return Result::Ok;
+  }
+  Result OnArraySet(Index type_index) override { return Result::Ok; }
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -335,6 +350,14 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                      Address offset) override {
     return Result::Ok;
   }
+  Result OnStructGet(Opcode opcode,
+                     Index type_index,
+                     Index field_index) override {
+    return Result::Ok;
+  }
+  Result OnStructNew(Index type_index) override { return Result::Ok; }
+  Result OnStructNewDefault(Index type_index) override { return Result::Ok; }
+  Result OnStructSet(Index type_index, Index field_index) override { return Result::Ok; }
   Result OnThrowExpr(Index depth) override { return Result::Ok; }
   Result OnThrowRefExpr() override { return Result::Ok; }
   Result OnTryExpr(Type sig_type) override { return Result::Ok; }

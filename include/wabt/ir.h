@@ -180,9 +180,12 @@ struct Const {
     set_f64(0);
     set_expected_nan(0, nan);
   }
+  void set_arrayref() { From<uintptr_t>(Type(Type::ArrayRef, Type::ReferenceNonNull), 0); }
+  void set_eqref() { From<uintptr_t>(Type(Type::EqRef, Type::ReferenceNonNull), 0); }
   void set_funcref() { From<uintptr_t>(Type::FuncRef, 0); }
   void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
   void set_extern(uintptr_t x) { From(Type(Type::ExternRef, Type::ReferenceNonNull), x); }
+  void set_structref() { From<uintptr_t>(Type(Type::StructRef, Type::ReferenceNonNull), 0); }
   void set_null(Type type) { From<uintptr_t>(type, kRefNullBits); }
 
   bool is_expected_nan(int lane = 0) const {
@@ -406,6 +409,13 @@ struct FuncDeclaration {
 };
 
 enum class ExprType {
+  ArrayGet,
+  ArrayNew,
+  ArrayNewData,
+  ArrayNewDefault,
+  ArrayNewElem,
+  ArrayNewFixed,
+  ArraySet,
   AtomicLoad,
   AtomicRmw,
   AtomicRmwCmpxchg,
@@ -457,6 +467,10 @@ enum class ExprType {
   SimdLoadLane,
   SimdStoreLane,
   SimdShuffleOp,
+  StructGet,
+  StructNew,
+  StructNewDefault,
+  StructSet,
   LoadSplat,
   LoadZero,
   Store,
@@ -693,6 +707,9 @@ class MemoryVarExpr : public MemoryExpr<TypeEnum> {
   Var var;
 };
 
+using ArrayNewExpr = VarExpr<ExprType::ArrayNew>;
+using ArrayNewDefaultExpr = VarExpr<ExprType::ArrayNewDefault>;
+using ArraySetExpr = VarExpr<ExprType::ArraySet>;
 using BrExpr = VarExpr<ExprType::Br>;
 using BrIfExpr = VarExpr<ExprType::BrIf>;
 using BrOnNonNullExpr = VarExpr<ExprType::BrOnNonNull>;
@@ -707,6 +724,8 @@ using LocalTeeExpr = VarExpr<ExprType::LocalTee>;
 using ReturnCallExpr = VarExpr<ExprType::ReturnCall>;
 using ThrowExpr = VarExpr<ExprType::Throw>;
 using RethrowExpr = VarExpr<ExprType::Rethrow>;
+using StructNewExpr = VarExpr<ExprType::StructNew>;
+using StructNewDefaultExpr = VarExpr<ExprType::StructNewDefault>;
 
 using DataDropExpr = VarExpr<ExprType::DataDrop>;
 using ElemDropExpr = VarExpr<ExprType::ElemDrop>;
@@ -895,6 +914,54 @@ class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
 
   uint32_t consistency_model;
 };
+
+template <ExprType TypeEnum>
+class OpcodeTypeExpr : public ExprMixin<TypeEnum> {
+ public:
+  OpcodeTypeExpr(Opcode opcode, const Var& comp_type, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), opcode(opcode), comp_type(comp_type) {}
+
+  Opcode opcode;
+  Var comp_type;
+};
+
+using ArrayGetExpr = OpcodeTypeExpr<ExprType::ArrayGet>;
+
+template <ExprType TypeEnum>
+class TypeVarExpr : public ExprMixin<TypeEnum> {
+ public:
+  TypeVarExpr(const Var& comp_type, const Var& var, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), comp_type(comp_type), var(var) {}
+
+  Var comp_type;
+  Var var;
+};
+
+using ArrayNewDataExpr = TypeVarExpr<ExprType::ArrayNewData>;
+using ArrayNewElemExpr = TypeVarExpr<ExprType::ArrayNewElem>;
+using StructSetExpr = TypeVarExpr<ExprType::StructSet>;
+
+class ArrayNewFixedExpr : public ExprMixin<ExprType::ArrayNewFixed> {
+ public:
+  ArrayNewFixedExpr(const Var& comp_type, Index count, const Location& loc = Location())
+      : ExprMixin<ExprType::ArrayNewFixed>(loc), comp_type(comp_type), count(count) {}
+
+  Var comp_type;
+  Index count;
+};
+
+template <ExprType TypeEnum>
+class OpcodeTypeVarExpr : public ExprMixin<TypeEnum> {
+ public:
+  OpcodeTypeVarExpr(Opcode opcode, const Var& comp_type, const Var& var, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), opcode(opcode), comp_type(comp_type), var(var) {}
+
+  Opcode opcode;
+  Var comp_type;
+  Var var;
+};
+
+using StructGetExpr = OpcodeTypeVarExpr<ExprType::StructGet>;
 
 struct Tag {
   explicit Tag(std::string_view name) : name(name) {}
@@ -1282,6 +1349,10 @@ struct Module {
   Index GetFuncTypeIndex(const FuncSignature&) const;
   const FuncType* GetFuncType(const Var&) const;
   FuncType* GetFuncType(const Var&);
+  const StructType* GetStructType(const Var&) const;
+  StructType* GetStructType(const Var&);
+  const ArrayType* GetArrayType(const Var&) const;
+  ArrayType* GetArrayType(const Var&);
   Index GetFuncIndex(const Var&) const;
   const Func* GetFunc(const Var&) const;
   Func* GetFunc(const Var&);

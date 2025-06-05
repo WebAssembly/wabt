@@ -424,6 +424,11 @@ class BinaryWriter {
   void WriteSimdLoadStoreLaneExpr(const Func* func,
                                   const Expr* expr,
                                   const char* desc);
+  void WriteTypeIndex(Opcode opcode, const Var& type);
+  void WriteTypeIndexIndex(Opcode opcode,
+                           const Var& type,
+                           const Var& var,
+                           const char* desc);
   void WriteExpr(const Func* func, const Expr* expr);
   void WriteExprList(const Func* func, const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
@@ -716,8 +721,55 @@ void BinaryWriter::WriteSimdLoadStoreLaneExpr(const Func* func,
   stream_->WriteU8(static_cast<uint8_t>(typed_expr->val), "Simd Lane literal");
 }
 
+void BinaryWriter::WriteTypeIndex(Opcode opcode, const Var& type) {
+  WriteOpcode(stream_, opcode);
+  Index index = module_->GetFuncTypeIndex(type);
+  WriteU32Leb128WithReloc(index, "type index", RelocType::TypeIndexLEB);
+}
+
+void BinaryWriter::WriteTypeIndexIndex(Opcode opcode,
+                                       const Var& type,
+                                       const Var& var,
+                                       const char* desc) {
+  WriteTypeIndex(opcode, type);
+  WriteU32Leb128(stream_, var.index(), "data");
+}
+
 void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
   switch (expr->type()) {
+    case ExprType::ArrayGet: {
+      auto* array_get_expr = cast<ArrayGetExpr>(expr);
+      WriteTypeIndex(array_get_expr->opcode, array_get_expr->comp_type);
+      break;
+    }
+    case ExprType::ArrayNew:
+      WriteTypeIndex(Opcode::ArrayNew, cast<ArrayNewExpr>(expr)->var);
+      break;
+    case ExprType::ArrayNewData: {
+      auto* array_new_data_expr = cast<ArrayNewDataExpr>(expr);
+      WriteTypeIndexIndex(Opcode::ArrayNewData, array_new_data_expr->comp_type,
+                          array_new_data_expr->var, "data");
+      break;
+    }
+    case ExprType::ArrayNewDefault:
+      WriteTypeIndex(Opcode::ArrayNewDefault,
+                     cast<ArrayNewDefaultExpr>(expr)->var);
+      break;
+    case ExprType::ArrayNewElem: {
+      auto* array_new_elem_expr = cast<ArrayNewElemExpr>(expr);
+      WriteTypeIndexIndex(Opcode::ArrayNewElem, array_new_elem_expr->comp_type,
+                          array_new_elem_expr->var, "elem");
+      break;
+    }
+    case ExprType::ArrayNewFixed: {
+      auto* array_new_fixed_expr = cast<ArrayNewFixedExpr>(expr);
+      WriteTypeIndex(Opcode::ArrayNewFixed, array_new_fixed_expr->comp_type);
+      WriteU32Leb128(stream_, array_new_fixed_expr->count, "count");
+      break;
+    }
+    case ExprType::ArraySet:
+      WriteTypeIndex(Opcode::ArraySet, cast<ArraySetExpr>(expr)->var);
+      break;
     case ExprType::AtomicLoad:
       WriteLoadStoreExpr<AtomicLoadExpr>(func, expr, "memory offset");
       break;
@@ -1086,6 +1138,25 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Store:
       WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;
+    case ExprType::StructGet: {
+      auto* struct_get_expr = cast<StructGetExpr>(expr);
+      WriteTypeIndexIndex(struct_get_expr->opcode, struct_get_expr->comp_type,
+                          struct_get_expr->var, "field");
+      break;
+    }
+    case ExprType::StructNew:
+      WriteTypeIndex(Opcode::StructNew, cast<StructNewExpr>(expr)->var);
+      break;
+    case ExprType::StructNewDefault:
+      WriteTypeIndex(Opcode::StructNewDefault,
+                     cast<StructNewDefaultExpr>(expr)->var);
+      break;
+    case ExprType::StructSet: {
+      auto* struct_set_expr = cast<StructSetExpr>(expr);
+      WriteTypeIndexIndex(Opcode::StructSet, struct_set_expr->comp_type,
+                          struct_set_expr->var, "field");
+      break;
+    }
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);
       WriteU32Leb128(stream_, GetTagVarDepth(&cast<ThrowExpr>(expr)->var),
