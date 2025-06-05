@@ -542,7 +542,7 @@ Result SharedValidator::CheckLocalIndex(Var local_var, Type* out_type) {
 Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
   Result result = CheckIndex(sig_var, type_fields_.NumTypes(), "function type");
   if (Failed(result)) {
-    *out = FuncType{};
+    out->type_index = kInvalidIndex;
     return Result::Error;
   }
 
@@ -553,9 +553,51 @@ Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
                       sig_var.index());
   }
 
-  if (out) {
-    *out = type_fields_.func_types[type_fields_.type_entries[index].map_index];
+  *out = type_fields_.func_types[type_fields_.type_entries[index].map_index];
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckStructTypeIndex(Var type_var,
+                                             Type* out_ref,
+                                             StructType* out) {
+  Result result = CheckIndex(type_var, type_fields_.NumTypes(), "struct type");
+  if (Failed(result)) {
+    return Result::Error;
   }
+
+  Index index = type_var.index();
+  assert(index < type_fields_.NumTypes());
+  if (type_fields_.type_entries[index].kind != Type::StructRef) {
+    return PrintError(type_var.loc, "type %d is not a struct type",
+                      type_var.index());
+  }
+
+  *out_ref =
+      Type(out_ref->IsNullableNonTypedRef() ? Type::RefNull : Type::Ref, index);
+  index = type_fields_.type_entries[index].map_index;
+  *out = type_fields_.struct_types[index];
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckArrayTypeIndex(Var type_var,
+                                            Type* out_ref,
+                                            TypeMut* out) {
+  Result result = CheckIndex(type_var, type_fields_.NumTypes(), "array type");
+  if (Failed(result)) {
+    return Result::Error;
+  }
+
+  Index index = type_var.index();
+  assert(index < type_fields_.NumTypes());
+  if (type_fields_.type_entries[index].kind != Type::ArrayRef) {
+    return PrintError(type_var.loc, "type %d is not an array type",
+                      type_var.index());
+  }
+
+  *out_ref =
+      Type(out_ref->IsNullableNonTypedRef() ? Type::RefNull : Type::Ref, index);
+  index = type_fields_.type_entries[index].map_index;
+  *out = type_fields_.array_types[index].field;
   return Result::Ok;
 }
 
@@ -660,12 +702,13 @@ void SharedValidator::IgnoreLocalRefs() {
 
 Index SharedValidator::GetEndIndex() {
   assert(options_.features.reference_types_enabled());
+  Index num_types = type_fields_.NumTypes();
+
   if (options_.features.gc_enabled()) {
-    return (last_rec_type_end_ != 0) ? last_rec_type_end_
-                                     : type_fields_.NumTypes();
+    return (last_rec_type_end_ > num_types) ? last_rec_type_end_ : num_types;
   }
 
-  return type_fields_.NumTypes() - 1;
+  return num_types - 1;
 }
 
 Result SharedValidator::BeginInitExpr(const Location& loc, Type type) {
@@ -807,6 +850,14 @@ bool SharedValidator::ValidInitOpcode(Opcode opcode) const {
       return true;
     }
   }
+  if (options_.features.gc_enabled()) {
+    if (opcode == Opcode::AnyConvertExtern || opcode == Opcode::ArrayNew ||
+        opcode == Opcode::ArrayNewDefault || opcode == Opcode::ArrayNewFixed ||
+        opcode == Opcode::ExternConvertAny || opcode == Opcode::RefI31 ||
+        opcode == Opcode::StructNew || opcode == Opcode::StructNewDefault) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -820,6 +871,139 @@ Result SharedValidator::CheckInstr(Opcode opcode, const Location& loc) {
     return Result::Error;
   }
   return Result::Ok;
+}
+
+Result SharedValidator::OnArrayCopy(const Location& loc,
+                                    Var dst_type,
+                                    Var src_type) {
+  Result result = CheckInstr(Opcode::ArrayCopy, loc);
+  Type dst_ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  Type src_ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut dst_array_type, src_array_type;
+  result |= CheckArrayTypeIndex(dst_type, &dst_ref_type, &dst_array_type);
+  result |= CheckArrayTypeIndex(src_type, &src_ref_type, &src_array_type);
+  result |= typechecker_.OnArrayCopy(dst_ref_type, dst_array_type, src_ref_type,
+                                     src_array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayFill(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArrayFill, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayFill(ref_type, array_type);
+  return result;
+}
+
+Result SharedValidator::OnArrayGet(const Location& loc,
+                                   Opcode opcode,
+                                   Var type) {
+  Result result = CheckInstr(opcode, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayGet(opcode, ref_type, array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayInitData(const Location& loc,
+                                        Var type,
+                                        Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayInitData, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckDataSegmentIndex(segment_var);
+  result |= typechecker_.OnArrayInitData(ref_type, array_type);
+  return result;
+}
+
+Result SharedValidator::OnArrayInitElem(const Location& loc,
+                                        Var type,
+                                        Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayInitElem, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  ElemType elem_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckElemSegmentIndex(segment_var, &elem_type);
+  result |=
+      typechecker_.OnArrayInitElem(ref_type, array_type, elem_type.element);
+  return result;
+}
+
+Result SharedValidator::OnArrayNew(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArrayNew, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayNew(ref_type, array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewData(const Location& loc,
+                                       Var type,
+                                       Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayNewData, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckDataSegmentIndex(segment_var);
+  result |= typechecker_.OnArrayNewData(ref_type, array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewDefault(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArrayNewDefault, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+
+  if (Succeeded(CheckArrayTypeIndex(type, &ref_type, &array_type))) {
+    if (array_type.type.IsNonNullableRef()) {
+      result = PrintError(loc, "array type has no default value: %" PRIindex,
+                          type.index());
+    }
+  } else {
+    result = Result::Error;
+  }
+
+  result |= typechecker_.OnArrayNewDefault(ref_type);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewElem(const Location& loc,
+                                       Var type,
+                                       Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayNewElem, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  ElemType elem_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckElemSegmentIndex(segment_var, &elem_type);
+  result |=
+      typechecker_.OnArrayNewElem(ref_type, array_type.type, elem_type.element);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewFixed(const Location& loc,
+                                        Var type,
+                                        Index count) {
+  Result result = CheckInstr(Opcode::ArrayNewFixed, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayNewFixed(ref_type, array_type.type, count);
+  return result;
+}
+
+Result SharedValidator::OnArraySet(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArraySet, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArraySet(ref_type, array_type);
+  return result;
 }
 
 Result SharedValidator::OnAtomicFence(const Location& loc,
@@ -944,6 +1128,17 @@ Result SharedValidator::OnBr(const Location& loc, Var depth) {
 Result SharedValidator::OnBrIf(const Location& loc, Var depth) {
   Result result = CheckInstr(Opcode::BrIf, loc);
   result |= typechecker_.OnBrIf(depth.index());
+  return result;
+}
+
+Result SharedValidator::OnBrOnCast(const Location& loc,
+                                   Opcode opcode,
+                                   Var depth,
+                                   Var type1_var,
+                                   Var type2_var) {
+  Result result = CheckInstr(Opcode::BrOnCast, loc);
+  result |= typechecker_.OnBrOnCast(opcode, depth.index(), type1_var.to_type(),
+                                    type2_var.to_type());
   return result;
 }
 
@@ -1089,6 +1284,12 @@ Result SharedValidator::OnEnd(const Location& loc) {
   Result result = CheckInstr(Opcode::End, loc);
   RestoreLocalRefs(result);
   result |= typechecker_.OnEnd();
+  return result;
+}
+
+Result SharedValidator::OnGCUnary(const Location& loc, Opcode opcode) {
+  Result result = CheckInstr(opcode, loc);
+  result |= typechecker_.OnGCUnary(opcode);
   return result;
 }
 
@@ -1291,6 +1492,12 @@ Result SharedValidator::OnRefAsNonNull(const Location& loc) {
   return result;
 }
 
+Result SharedValidator::OnRefCast(const Location& loc, Var type_var) {
+  Result result = CheckInstr(Opcode::RefCast, loc);
+  result |= typechecker_.OnRefCast(type_var.to_type());
+  return result;
+}
+
 Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
@@ -1323,12 +1530,17 @@ Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
     result |=
         CheckIndex(func_type_var, type_fields_.NumTypes(), "function type");
   } else if (!type.IsNonTypedRef()) {
-    result |= PrintError(
-        loc, "Only ref, externref, exnref, funcref are allowed for ref.null");
+    result |= PrintError(loc, "Only nullable reference types are allowed");
   }
 
   assert(!Type::EnumIsNonTypedGCRef(type) || options_.features.gc_enabled());
   result |= typechecker_.OnRefNullExpr(type);
+  return result;
+}
+
+Result SharedValidator::OnRefTest(const Location& loc, Var type_var) {
+  Result result = CheckInstr(Opcode::RefTest, loc);
+  result |= typechecker_.OnRefTest(type_var.to_type());
   return result;
 }
 
@@ -1467,6 +1679,59 @@ Result SharedValidator::OnStore(const Location& loc,
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= CheckOffset(loc, offset, mt.limits);
   result |= typechecker_.OnStore(opcode, mt.limits);
+  return result;
+}
+
+Result SharedValidator::OnStructGet(const Location& loc,
+                                    Opcode opcode,
+                                    Var type,
+                                    Var field) {
+  Result result = CheckInstr(opcode, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceOrNull);
+  StructType struct_type;
+  result |= CheckStructTypeIndex(type, &ref_type, &struct_type);
+  result |=
+      typechecker_.OnStructGet(opcode, ref_type, struct_type, field.index());
+  return result;
+}
+
+Result SharedValidator::OnStructNew(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::StructNew, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceNonNull);
+  StructType struct_type;
+  result |= CheckStructTypeIndex(type, &ref_type, &struct_type);
+  result |= typechecker_.OnStructNew(ref_type, struct_type);
+  return result;
+}
+
+Result SharedValidator::OnStructNewDefault(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::StructNewDefault, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceNonNull);
+  StructType struct_type;
+
+  if (Succeeded(CheckStructTypeIndex(type, &ref_type, &struct_type))) {
+    for (auto it : struct_type.fields) {
+      if (it.type.IsNonNullableRef()) {
+        result =
+            PrintError(loc, "type has field without default value: %" PRIindex,
+                       type.index());
+        break;
+      }
+    }
+  } else {
+    result = Result::Error;
+  }
+
+  result |= typechecker_.OnStructNewDefault(ref_type);
+  return result;
+}
+
+Result SharedValidator::OnStructSet(const Location& loc, Var type, Var field) {
+  Result result = CheckInstr(Opcode::StructSet, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceOrNull);
+  StructType struct_type;
+  result |= CheckStructTypeIndex(type, &ref_type, &struct_type);
+  result |= typechecker_.OnStructSet(ref_type, struct_type, field.index());
   return result;
 }
 

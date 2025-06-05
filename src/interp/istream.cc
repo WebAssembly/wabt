@@ -130,6 +130,9 @@ Instr Istream::Read(Offset* offset) const {
       instr.kind = InstrKind::Imm_0_Op_0;
       break;
 
+    case Opcode::ArrayLen:
+    case Opcode::AnyConvertExtern:
+    case Opcode::ExternConvertAny:
     case Opcode::F32Abs:
     case Opcode::F32Ceil:
     case Opcode::F32ConvertI32S:
@@ -182,6 +185,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I16X8ExtendHighI8X16U:
     case Opcode::I16X8ExtendLowI8X16S:
     case Opcode::I16X8ExtendLowI8X16U:
+    case Opcode::I31GetS:
+    case Opcode::I31GetU:
     case Opcode::I32Clz:
     case Opcode::I32Ctz:
     case Opcode::I32Eqz:
@@ -245,6 +250,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::F64X2ConvertLowI32X4S:
     case Opcode::F64X2ConvertLowI32X4U:
     case Opcode::I8X16Splat:
+    case Opcode::RefI31:
     case Opcode::RefIsNull:
     case Opcode::RefAsNonNull:
     case Opcode::V128Not:
@@ -261,10 +267,12 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I32X4RelaxedTruncF32X4U:
     case Opcode::I32X4RelaxedTruncF64X2SZero:
     case Opcode::I32X4RelaxedTruncF64X2UZero:
+    case Opcode::RefEq:
       // 0 immediates, 1 operand.
       instr.kind = InstrKind::Imm_0_Op_1;
       break;
 
+    case Opcode::ArrayGet:
     case Opcode::F32Add:
     case Opcode::F32Copysign:
     case Opcode::F32Div:
@@ -485,6 +493,7 @@ Instr Istream::Read(Offset* offset) const {
       instr.kind = InstrKind::Imm_0_Op_2;
       break;
 
+    case Opcode::ArraySet:
     case Opcode::Select:
     case Opcode::SelectT:
     case Opcode::F32X4RelaxedMadd:
@@ -498,6 +507,16 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::I32X4DotI8X16I7X16AddS:
       // 0 immediates, 3 operands
       instr.kind = InstrKind::Imm_0_Op_3;
+      break;
+
+    case Opcode::ArrayFill:
+      // 0 immediates, 4 operands
+      instr.kind = InstrKind::Imm_0_Op_4;
+      break;
+
+    case Opcode::ArrayCopy:
+      // 0 immediates, 5 operands
+      instr.kind = InstrKind::Imm_0_Op_5;
       break;
 
     case Opcode::Br:
@@ -526,6 +545,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::DataDrop:
     case Opcode::ElemDrop:
     case Opcode::RefFunc:
+    case Opcode::StructNewDefault:
     case Opcode::Throw:
     case Opcode::Rethrow:
       // Index immediate, 0 operands.
@@ -533,16 +553,22 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_u32 = ReadAt<u32>(offset);
       break;
 
+    case Opcode::ArrayNewDefault:
     case Opcode::GlobalSet:
     case Opcode::LocalSet:
     case Opcode::LocalTee:
     case Opcode::MemoryGrow:
+    case Opcode::StructGet:
     case Opcode::TableGet:
       // Index immediate, 1 operand.
       instr.kind = InstrKind::Imm_Index_Op_1;
       instr.imm_u32 = ReadAt<u32>(offset);
       break;
 
+    case Opcode::ArrayNew:
+    case Opcode::ArrayGetS:
+    case Opcode::ArrayGetU:
+    case Opcode::StructSet:
     case Opcode::TableSet:
     case Opcode::TableGrow:
       // Index immediate, 2 operands.
@@ -557,8 +583,15 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_u32 = ReadAt<u32>(offset);
       break;
 
+    case Opcode::ArrayInitElem:
+      // Index immediate, 3 operands.
+      instr.kind = InstrKind::Imm_Index_Op_4;
+      instr.imm_u32 = ReadAt<u32>(offset);
+      break;
+
     case Opcode::Call:
     case Opcode::InterpCallImport:
+    case Opcode::StructNew:
       instr.kind = InstrKind::Imm_Index_Op_N;
       instr.imm_u32 = ReadAt<u32>(offset);
       break;
@@ -571,11 +604,41 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_u32x2.snd = ReadAt<u32>(offset);
       break;
 
+    case Opcode::ArrayNewFixed:
+    case Opcode::BrOnCast:
+    case Opcode::BrOnCastFail:
+    case Opcode::RefCast:
+    case Opcode::RefCastNull:
+    case Opcode::RefTest:
+    case Opcode::RefTestNull:
+    case Opcode::StructGetS:
+    case Opcode::StructGetU:
+      // Index + index immediates, 1 operand.
+      instr.kind = InstrKind::Imm_Index_Index_Op_1;
+      instr.imm_u32x2.fst = ReadAt<u32>(offset);
+      instr.imm_u32x2.snd = ReadAt<u32>(offset);
+      break;
+
+    case Opcode::ArrayNewData:
+    case Opcode::ArrayNewElem:
+      // Index + index immediates, 2 operands.
+      instr.kind = InstrKind::Imm_Index_Index_Op_2;
+      instr.imm_u32x2.fst = ReadAt<u32>(offset);
+      instr.imm_u32x2.snd = ReadAt<u32>(offset);
+      break;
+
     case Opcode::MemoryInit:
     case Opcode::TableInit:
     case Opcode::MemoryCopy:
     case Opcode::TableCopy:
       // Index + index immediates, 3 operands.
+      instr.kind = InstrKind::Imm_Index_Index_Op_3;
+      instr.imm_u32x2.fst = ReadAt<u32>(offset);
+      instr.imm_u32x2.snd = ReadAt<u32>(offset);
+      break;
+
+    case Opcode::ArrayInitData:
+      // Index + index immediates, 4 operands.
       instr.kind = InstrKind::Imm_Index_Index_Op_3;
       instr.imm_u32x2.fst = ReadAt<u32>(offset);
       instr.imm_u32x2.snd = ReadAt<u32>(offset);
@@ -863,6 +926,20 @@ Istream::Offset Istream::Trace(Stream* stream,
                      source->Pick(1, instr).c_str());
       break;
 
+    case InstrKind::Imm_0_Op_4:
+      stream->Writef(" %s, %s, %s, %s\n", source->Pick(4, instr).c_str(),
+                     source->Pick(3, instr).c_str(),
+                     source->Pick(2, instr).c_str(),
+                     source->Pick(1, instr).c_str());
+      break;
+
+    case InstrKind::Imm_0_Op_5:
+      stream->Writef(
+          " %s, %s, %s, %s, %s\n", source->Pick(5, instr).c_str(),
+          source->Pick(4, instr).c_str(), source->Pick(3, instr).c_str(),
+          source->Pick(2, instr).c_str(), source->Pick(1, instr).c_str());
+      break;
+
     case InstrKind::Imm_Jump_Op_0:
       stream->Writef(" @%u\n", instr.imm_u32);
       break;
@@ -893,13 +970,39 @@ Istream::Offset Istream::Trace(Stream* stream,
           source->Pick(2, instr).c_str(), source->Pick(1, instr).c_str());
       break;
 
+    case InstrKind::Imm_Index_Op_4:
+      stream->Writef(
+          " $%u, %s, %s, %s, %s\n", instr.imm_u32,
+          source->Pick(4, instr).c_str(), source->Pick(3, instr).c_str(),
+          source->Pick(2, instr).c_str(), source->Pick(1, instr).c_str());
+      break;
+
     case InstrKind::Imm_Index_Op_N:
       stream->Writef(" $%u\n", instr.imm_u32);  // TODO param/result count?
+      break;
+
+    case InstrKind::Imm_Index_Index_Op_1:
+      stream->Writef(" $%u, $%u, %s\n", instr.imm_u32x2.fst,
+                     instr.imm_u32x2.snd, source->Pick(1, instr).c_str());
+      break;
+
+    case InstrKind::Imm_Index_Index_Op_2:
+      stream->Writef(" $%u, $%u, %s, %s\n", instr.imm_u32x2.fst,
+                     instr.imm_u32x2.snd, source->Pick(2, instr).c_str(),
+                     source->Pick(1, instr).c_str());
       break;
 
     case InstrKind::Imm_Index_Index_Op_3:
       stream->Writef(" $%u, $%u, %s, %s, %s\n", instr.imm_u32x2.fst,
                      instr.imm_u32x2.snd, source->Pick(3, instr).c_str(),
+                     source->Pick(2, instr).c_str(),
+                     source->Pick(1, instr).c_str());
+      break;
+
+    case InstrKind::Imm_Index_Index_Op_4:
+      stream->Writef(" $%u, $%u, %s, %s, %s, %s\n", instr.imm_u32x2.fst,
+                     instr.imm_u32x2.snd, source->Pick(4, instr).c_str(),
+                     source->Pick(3, instr).c_str(),
                      source->Pick(2, instr).c_str(),
                      source->Pick(1, instr).c_str());
       break;

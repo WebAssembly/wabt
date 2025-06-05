@@ -128,7 +128,7 @@ class WatWriter : ModuleContext {
                                         const Var& destmemidx,
                                         NextChar next_char);
   void WriteBrVar(const Var& var, NextChar next_char);
-  void WriteRefKind(Type type, NextChar next_char);
+  void WriteRef(const Var& var, NextChar next_char);
   void WriteType(Type type, NextChar next_char);
   void WriteTypes(const TypeVector& types, const char* name);
   void WriteFuncSigSpace(const FuncSignature& func_sig);
@@ -419,8 +419,17 @@ void WatWriter::WriteBrVar(const Var& var, NextChar next_char) {
   }
 }
 
-void WatWriter::WriteRefKind(Type type, NextChar next_char) {
-  WritePuts(type.GetRefKindName(), next_char);
+void WatWriter::WriteRef(const Var& var, NextChar next_char) {
+  Type type = var.to_type();
+
+  if (!type.IsReferenceWithIndex()) {
+    WritePuts(type.GetName().c_str(), next_char);
+    return;
+  }
+
+  WritePuts(type == Type::Ref ? "(ref" : "(ref null", NextChar::Space);
+  WriteVar(var, NextChar::None);
+  WritePuts(")", next_char);
 }
 
 void WatWriter::WriteType(Type type, NextChar next_char) {
@@ -555,6 +564,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnCastExpr(BrOnCastExpr*) override;
   Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
   Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
@@ -627,6 +637,24 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
   Result OnLoadZeroExpr(LoadZeroExpr*) override;
+  Result OnArrayCopyExpr(ArrayCopyExpr*) override;
+  Result OnArrayFillExpr(ArrayFillExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayInitDataExpr(ArrayInitDataExpr*) override;
+  Result OnArrayInitElemExpr(ArrayInitElemExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
+  Result OnGCUnaryExpr(GCUnaryExpr*) override;
+  Result OnRefCastExpr(RefCastExpr*) override;
+  Result OnRefTestExpr(RefTestExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
 
  private:
   WatWriter* writer_;
@@ -657,6 +685,14 @@ Result WatWriter::ExprVisitorDelegate::OnBrExpr(BrExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnBrIfExpr(BrIfExpr* expr) {
   writer_->WritePutsSpace(Opcode::BrIf_Opcode.GetName());
   writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnBrOnCastExpr(BrOnCastExpr* expr) {
+  writer_->WritePutsSpace(expr->opcode.GetName());
+  writer_->WriteBrVar(expr->label_var, NextChar::Space);
+  writer_->WriteRef(expr->type1_var, NextChar::Space);
+  writer_->WriteRef(expr->type2_var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -915,9 +951,11 @@ Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
   writer_->WritePutsSpace(Opcode::RefNull_Opcode.GetName());
-  if (expr->type.opt_type() != Type::RefNull) {
-    assert(!Type(expr->type.opt_type()).IsReferenceWithIndex());
-    writer_->WriteRefKind(expr->type.opt_type(), NextChar::Newline);
+  Type type = expr->type.to_type();
+
+  if (type != Type::RefNull) {
+    assert(!type.IsReferenceWithIndex());
+    writer_->WritePuts(type.GetRefKindName(), NextChar::Newline);
   } else {
     writer_->WriteVar(expr->type, NextChar::Newline);
   }
@@ -1190,6 +1228,128 @@ Result WatWriter::ExprVisitorDelegate::OnLoadSplatExpr(LoadSplatExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnLoadZeroExpr(LoadZeroExpr* expr) {
   writer_->WriteLoadStoreExpr<LoadZeroExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayCopyExpr(ArrayCopyExpr* expr) {
+  writer_->WritePuts("array.copy", NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayFillExpr(ArrayFillExpr* expr) {
+  writer_->WritePuts("array.fill", NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayGetExpr(ArrayGetExpr* expr) {
+  writer_->WritePuts(expr->opcode.GetName(), NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayInitDataExpr(
+    ArrayInitDataExpr* expr) {
+  writer_->WritePuts("array.init_data", NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayInitElemExpr(
+    ArrayInitElemExpr* expr) {
+  writer_->WritePuts("array.init_elem", NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayNewExpr(ArrayNewExpr* expr) {
+  writer_->WritePuts("array.new", NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayNewDataExpr(
+    ArrayNewDataExpr* expr) {
+  writer_->WritePuts("array.new_data", NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayNewDefaultExpr(
+    ArrayNewDefaultExpr* expr) {
+  writer_->WritePuts("array.new_default", NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayNewElemExpr(
+    ArrayNewElemExpr* expr) {
+  writer_->WritePuts("array.new_elem", NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArrayNewFixedExpr(
+    ArrayNewFixedExpr* expr) {
+  writer_->WritePuts("array.new_fixed", NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(Var(expr->count, Location()), NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnArraySetExpr(ArraySetExpr* expr) {
+  writer_->WritePuts("array.set", NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnGCUnaryExpr(GCUnaryExpr* expr) {
+  writer_->WritePuts(expr->opcode.GetName(), NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnRefCastExpr(RefCastExpr* expr) {
+  writer_->WritePutsSpace("ref.cast");
+  writer_->WriteRef(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnRefTestExpr(RefTestExpr* expr) {
+  writer_->WritePutsSpace("ref.test");
+  writer_->WriteRef(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnStructGetExpr(StructGetExpr* expr) {
+  writer_->WritePuts(expr->opcode.GetName(), NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnStructNewExpr(StructNewExpr* expr) {
+  writer_->WritePuts("struct.new", NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnStructNewDefaultExpr(
+    StructNewDefaultExpr* expr) {
+  writer_->WritePuts("struct.new_default", NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnStructSetExpr(StructSetExpr* expr) {
+  writer_->WritePuts("struct.set", NextChar::Space);
+  writer_->WriteVar(expr->type_var, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 

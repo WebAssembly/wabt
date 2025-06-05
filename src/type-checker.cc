@@ -48,6 +48,24 @@ std::string TypesToString(const TypeVector& types,
 
 }  // end anonymous namespace
 
+Type TypeChecker::TypeFields::GetGroupType(Type type) {
+  assert(type.IsRef());
+  type = GetGenericType(type);
+
+  switch (type) {
+    case Type::NullFuncRef:
+    case Type::FuncRef:
+      return Type::FuncRef;
+
+    case Type::NullExternRef:
+    case Type::ExternRef:
+      return Type::ExternRef;
+
+    default:
+      return Type::Any;
+  }
+}
+
 TypeChecker::Label::Label(LabelType label_type,
                           const TypeVector& param_types,
                           const TypeVector& result_types,
@@ -626,6 +644,39 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
   return result;
 }
 
+Result TypeChecker::PopAndCheck4Types(Type expected1,
+                                      Type expected2,
+                                      Type expected3,
+                                      Type expected4,
+                                      const char* desc) {
+  Result result = Result::Ok;
+  result |= PeekAndCheckType(0, expected4);
+  result |= PeekAndCheckType(1, expected3);
+  result |= PeekAndCheckType(2, expected2);
+  result |= PeekAndCheckType(3, expected1);
+  PrintStackIfFailed(result, desc, expected1, expected2, expected3, expected4);
+  result |= DropTypes(4);
+  return result;
+}
+
+Result TypeChecker::PopAndCheck5Types(Type expected1,
+                                      Type expected2,
+                                      Type expected3,
+                                      Type expected4,
+                                      Type expected5,
+                                      const char* desc) {
+  Result result = Result::Ok;
+  result |= PeekAndCheckType(0, expected5);
+  result |= PeekAndCheckType(1, expected4);
+  result |= PeekAndCheckType(2, expected3);
+  result |= PeekAndCheckType(3, expected2);
+  result |= PeekAndCheckType(4, expected1);
+  PrintStackIfFailed(result, desc, expected1, expected2, expected3, expected4,
+                     expected5);
+  result |= DropTypes(5);
+  return result;
+}
+
 Result TypeChecker::PopAndCheckReference(Type* actual, const char* desc) {
   Result result = PeekType(0, actual);
 
@@ -735,6 +786,148 @@ Result TypeChecker::BeginFunction(const TypeVector& sig) {
   return Result::Ok;
 }
 
+Result TypeChecker::OnArrayCopy(Type dst_ref_type,
+                                TypeMut& dst_array_type,
+                                Type src_ref_type,
+                                Type src_array_type) {
+  Result result = PopAndCheck5Types(dst_ref_type, Type::I32, src_ref_type,
+                                    Type::I32, Type::I32, "array.copy");
+  if (!dst_array_type.mutable_) {
+    PrintError("array is immutable");
+    result = Result::Error;
+  }
+  if (Failed(CheckType(src_array_type, dst_array_type.type))) {
+    PrintError("type mismatch: array types do not match");
+    result = Result::Error;
+  }
+  return result;
+}
+
+Result TypeChecker::OnArrayFill(Type ref_type, TypeMut& array_type) {
+  Result result =
+      PopAndCheck4Types(ref_type, Type::I32, ToUnpackedType(array_type.type),
+                        Type::I32, "array.fill");
+  if (!array_type.mutable_) {
+    PrintError("array is immutable");
+    result = Result::Error;
+  }
+  return result;
+}
+
+Result TypeChecker::OnArrayGet(Opcode opcode, Type ref_type, Type array_type) {
+  Result result = PopAndCheck2Types(ref_type, Type::I32, "array.get");
+  bool is_packed_get = (opcode != Opcode::ArrayGet);
+
+  if (array_type.IsPackedType() != is_packed_get) {
+    PrintError("array is %spacked", is_packed_get ? "not " : "");
+    result = Result::Error;
+  }
+
+  PushType(ToUnpackedType(array_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayInitData(Type ref_type, TypeMut& array_type) {
+  Result result = PopAndCheck4Types(ref_type, Type::I32, Type::I32, Type::I32,
+                                    "array.init_data");
+  if (!array_type.mutable_) {
+    PrintError("array is immutable");
+    result = Result::Error;
+  }
+  if (array_type.type.IsRef()) {
+    PrintError("type mismatch: array type must be number or vector type");
+    result = Result::Error;
+  }
+  return result;
+}
+
+Result TypeChecker::OnArrayInitElem(Type ref_type,
+                                    TypeMut& array_type,
+                                    Type elem_type) {
+  Result result = PopAndCheck4Types(ref_type, Type::I32, Type::I32, Type::I32,
+                                    "array.init_elem");
+  if (!array_type.mutable_) {
+    PrintError("array is immutable");
+    result = Result::Error;
+  }
+  if (Failed(CheckType(elem_type, array_type.type))) {
+    PrintError("type mismatch: array type does not match to elem type");
+    result = Result::Error;
+  }
+  return result;
+}
+
+Result TypeChecker::OnArrayNew(Type ref_type, Type array_type) {
+  Result result =
+      PopAndCheck2Types(ToUnpackedType(array_type), Type::I32, "array.new");
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewData(Type ref_type, Type array_type) {
+  Result result = PopAndCheck2Types(Type::I32, Type::I32, "array.new_elem");
+  if (array_type.IsRef()) {
+    PrintError("type mismatch: array type must be number or vector type");
+    result = Result::Error;
+  }
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewDefault(Type ref_type) {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_default");
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewElem(Type ref_type,
+                                   Type array_type,
+                                   Type elem_type) {
+  Result result = PopAndCheck2Types(Type::I32, Type::I32, "array.new_elem");
+  if (Failed(CheckType(elem_type, array_type))) {
+    PrintError("type mismatch: array type does not match to elem type");
+    result |= Result::Error;
+  }
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewFixed(Type ref_type,
+                                    Type array_type,
+                                    Index count) {
+  Result result = Result::Ok;
+  array_type = ToUnpackedType(array_type);
+  for (Index i = 0; i < count; ++i) {
+    result |= PeekAndCheckType(count - i - 1, array_type);
+  }
+
+  if (Failed(result)) {
+    // To improve performance, type vector
+    // conversion is only done on error.
+    TypeVector types;
+    types.reserve(count);
+
+    for (size_t i = 0; i < count; ++i) {
+      types.push_back(array_type);
+    }
+    PrintStackIfFailedV(result, "array.new_fixed", types, /*is_end=*/false);
+  }
+
+  result |= DropTypes(count);
+  PushType(ref_type);
+  return result;
+}
+
+Result TypeChecker::OnArraySet(Type ref_type, const TypeMut& field) {
+  Result result = PopAndCheck3Types(ref_type, Type::I32,
+                                    ToUnpackedType(field.type), "array.set");
+  if (!field.mutable_) {
+    PrintError("array is immutable");
+    result = Result::Error;
+  }
+  return result;
+}
+
 Result TypeChecker::OnAtomicLoad(Opcode opcode, const Limits& limits) {
   return CheckOpcode1(opcode, &limits);
 }
@@ -790,6 +983,43 @@ Result TypeChecker::OnBrIf(Index depth) {
   CHECK_RESULT(GetLabel(depth, &label));
   result |= PopAndCheckSignature(label->br_types(), "br_if");
   PushTypes(label->br_types());
+  return result;
+}
+
+Result TypeChecker::OnBrOnCast(Opcode opcode,
+                               Index depth,
+                               Type type1,
+                               Type type2) {
+  Type actual;
+  Result result = PopAndCheckReference(&actual, opcode.GetName());
+  if (Failed(TypeChecker::CheckType(actual, type1))) {
+    PrintError("type mismatch: %s is not a subtype of %s",
+               actual.GetName().c_str(), type1.GetName().c_str());
+    result = Result::Error;
+  }
+
+  if (Failed(TypeChecker::CheckType(type2, type1))) {
+    PrintError("type mismatch: %s is not a subtype of %s",
+               type2.GetName().c_str(), type1.GetName().c_str());
+    result = Result::Error;
+  }
+
+  // The spec expects a type1 \ type2 subtraction operation.
+  // Currently this operation is applied only to the Null value.
+  if (type2.IsNullableRef()) {
+    type1.ConvertRefNullToRef();
+  }
+
+  PushType(opcode == Opcode::BrOnCast ? type2 : type1);
+  Label* label;
+  if (Succeeded(GetLabel(depth, &label))) {
+    result |= PopAndCheckSignature(label->br_types(), opcode.GetName());
+    PushTypes(label->br_types());
+  } else {
+    result = Result::Error;
+  }
+  result |= DropTypes(1);
+  PushType(opcode == Opcode::BrOnCast ? type1 : type2);
   return result;
 }
 
@@ -1015,6 +1245,51 @@ Result TypeChecker::OnIf(const TypeVector& param_types,
   return result;
 }
 
+Result TypeChecker::OnGCUnary(Opcode opcode) {
+  Result result;
+  switch (opcode) {
+    case Opcode::RefEq: {
+      result = PopAndCheck2Types(Type::EqRef, Type::EqRef, "ref.eq");
+      PushType(Type::I32);
+      return result;
+    }
+    case Opcode::ArrayLen:
+      result = PopAndCheck1Type(Type::ArrayRef, "array.len");
+      PushType(Type::I32);
+      return result;
+    case Opcode::AnyConvertExtern: {
+      Type type;
+      // Nullability must be copied.
+      PeekType(0, &type);
+      result = PopAndCheck1Type(Type::ExternRef, "any.convert_extern");
+      PushType(Type(Type::AnyRef, !type.IsNonNullableRef()));
+      return result;
+    }
+    case Opcode::ExternConvertAny: {
+      Type type;
+      // Nullability must be copied.
+      PeekType(0, &type);
+      result = PopAndCheck1Type(Type::AnyRef, "any.convert_extern");
+      PushType(Type(Type::ExternRef, !type.IsNonNullableRef()));
+      return result;
+    }
+    case Opcode::RefI31: {
+      result = PopAndCheck1Type(Type::I32, "ref.i31");
+      PushType(Type(Type::I31Ref, Type::ReferenceNonNull));
+      return result;
+    }
+    case Opcode::I31GetS:
+    case Opcode::I31GetU: {
+      result = PopAndCheck1Type(
+          Type::I31Ref, opcode == Opcode::I31GetS ? "i31.get_s" : "i31.get_u");
+      PushType(Type::I32);
+      return result;
+    }
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
 Result TypeChecker::OnGlobalGet(Type type) {
   PushType(type);
   return Result::Ok;
@@ -1142,8 +1417,39 @@ Result TypeChecker::OnRefAsNonNullExpr() {
   return Result::Ok;
 }
 
+Result TypeChecker::OnRefCast(Type type) {
+  Result result = Result::Ok;
+  if (!type.IsRef()) {
+    PrintError("type mismatch: reference type expected");
+    result = Result::Error;
+  } else {
+    Type expected = Type::Any;
+    result |= PeekType(0, &expected);
+    if (Succeeded(result)) {
+      if (!expected.IsRef()) {
+        PrintError("type mismatch: reference type expected, but got %s",
+                   expected.GetName().c_str());
+        result = Result::Error;
+      } else if (type != Type::NullRef && expected != Type::NullRef &&
+                 type_fields_.GetGroupType(type) !=
+                     type_fields_.GetGroupType(expected)) {
+        PrintError("type mismatch: %s is not a subtype of %s",
+                   type.GetName().c_str(), expected.GetName().c_str());
+        result = Result::Error;
+      }
+    }
+  }
+  DropTypes(1);
+  PushType(type);
+  return Result::Ok;
+}
+
 Result TypeChecker::OnRefFuncExpr(Index func_type) {
-  PushType(Type(Type::Ref, func_type));
+  if (func_type == kInvalidIndex) {
+    PushType(Type(Type::FuncRef, Type::ReferenceNonNull));
+  } else {
+    PushType(Type(Type::Ref, func_type));
+  }
   return Result::Ok;
 }
 
@@ -1161,6 +1467,33 @@ Result TypeChecker::OnRefIsNullExpr() {
   result |= PopAndCheck1Type(type, "ref.is_null");
   PushType(Type::I32);
   return result;
+}
+
+Result TypeChecker::OnRefTest(Type type) {
+  Result result = Result::Ok;
+  if (!type.IsRef()) {
+    PrintError("type mismatch: reference type expected");
+    result = Result::Error;
+  } else {
+    Type expected = Type::Any;
+    result |= PeekType(0, &expected);
+    if (Succeeded(result)) {
+      if (!expected.IsRef()) {
+        PrintError("type mismatch: reference type expected, but got %s",
+                   expected.GetName().c_str());
+        result = Result::Error;
+      } else if (type != Type::NullRef && expected != Type::NullRef &&
+                 type_fields_.GetGroupType(type) !=
+                     type_fields_.GetGroupType(expected)) {
+        PrintError("type mismatch: %s is not a subtype of %s",
+                   type.GetName().c_str(), expected.GetName().c_str());
+        result = Result::Error;
+      }
+    }
+  }
+  DropTypes(1);
+  PushType(Type::I32);
+  return Result::Ok;
 }
 
 Result TypeChecker::OnRethrow(Index depth) {
@@ -1222,6 +1555,80 @@ Result TypeChecker::OnSelect(const TypeVector& expected) {
 
 Result TypeChecker::OnStore(Opcode opcode, const Limits& limits) {
   return CheckOpcode2(opcode, &limits);
+}
+
+Result TypeChecker::OnStructGet(Opcode opcode,
+                                Type ref_type,
+                                const StructType& struct_type,
+                                Index field) {
+  Result result = PopAndCheck1Type(ref_type, "struct.get");
+  if (field >= struct_type.fields.size()) {
+    PrintError("unknown field: %" PRIindex, field);
+    result = Result::Error;
+  } else {
+    Type type = struct_type.fields[field].type;
+    bool is_packed_get = (opcode != Opcode::StructGet);
+
+    if (type.IsPackedType() != is_packed_get) {
+      PrintError("field %" PRIindex " is %spacked", field,
+                 is_packed_get ? "not " : "");
+      result = Result::Error;
+    }
+
+    PushType(ToUnpackedType(type));
+  }
+  return result;
+}
+
+Result TypeChecker::OnStructNew(Type ref_type, const StructType& struct_type) {
+  Result result = Result::Ok;
+  size_t size = struct_type.fields.size();
+
+  for (size_t i = 0; i < size; ++i) {
+    result |= PeekAndCheckType(size - i - 1,
+                               ToUnpackedType(struct_type.fields[i].type));
+  }
+
+  if (Failed(result)) {
+    // To improve performance, type vector
+    // conversion is only done on error.
+    TypeVector types;
+    types.reserve(size);
+
+    for (size_t i = 0; i < size; ++i) {
+      types.push_back(ToUnpackedType(struct_type.fields[i].type));
+    }
+    PrintStackIfFailedV(result, "struct.new", types, /*is_end=*/false);
+  }
+  result |= DropTypes(size);
+  PushType(ref_type);
+  return result;
+}
+
+Result TypeChecker::OnStructNewDefault(Type ref_type) {
+  PushType(ref_type);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnStructSet(Type ref_type,
+                                const StructType& struct_type,
+                                Index field) {
+  Result result = Result::Ok;
+
+  if (field >= struct_type.fields.size() ||
+      !struct_type.fields[field].mutable_) {
+    const char* message = field >= struct_type.fields.size()
+                              ? "unknown field: %" PRIindex
+                              : "field %" PRIindex " is immutable";
+    PrintError(message, field);
+    DropTypes(1);
+    PopAndCheck1Type(ref_type, "struct.set");
+    result = Result::Error;
+  } else {
+    Type expected_type = ToUnpackedType(struct_type.fields[field].type);
+    result |= PopAndCheck2Types(ref_type, expected_type, "struct.set");
+  }
+  return result;
 }
 
 Result TypeChecker::OnTry(const TypeVector& param_types,

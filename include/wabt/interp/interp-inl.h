@@ -32,6 +32,50 @@ inline bool operator!=(Ref lhs, Ref rhs) {
   return lhs.index != rhs.index;
 }
 
+// static
+inline Ref Ref::CreateI31Val(size_t value) {
+  assert((value & 0x7fffffff) < kI31Value);
+  return Ref((value & 0x7fffffff) | kI31Value);
+}
+
+// static
+inline Ref Ref::CreateHostVal(size_t value) {
+  assert(value < kHostValue);
+  return Ref(value | kHostValue);
+}
+
+inline bool Ref::IsI31Val() const {
+  return (index & kI31Value) != 0;
+}
+
+inline bool Ref::IsHostVal() const {
+  return (index & (kI31Value | kHostValue)) == kHostValue;
+}
+
+inline bool Ref::IsI31OrHostVal() const {
+  return (index & (kI31Value | kHostValue)) != 0;
+}
+
+inline u32 Ref::GetS32Val() const {
+  assert(IsI31Val());
+  return static_cast<s32>(static_cast<u32>(index) << 1) >> 1;
+}
+
+inline u32 Ref::GetU32Val() const {
+  assert(IsI31Val());
+  return static_cast<u32>(index & 0x7fffffff);
+}
+
+inline size_t Ref::GetHostVal() const {
+  assert(IsHostVal());
+  return index ^ kHostValue;
+}
+
+inline size_t Ref::IsAnyHostVal() const {
+  assert(IsHostVal());
+  return index == (kHostValue | kAnyHostValue);
+}
+
 //// ExternType ////
 inline ExternType::ExternType(ExternKind kind) : kind(kind) {}
 
@@ -165,6 +209,7 @@ inline Frame::Frame(Ref func,
 //// FreeList ////
 template <>
 inline bool FreeList<Ref>::IsUsed(Index index) const {
+  assert(index < list_.size());
   return (list_[index].index & refFreeBit) == 0;
 }
 
@@ -201,6 +246,7 @@ inline void FreeList<Ref>::Delete(Index index) {
 
 template <typename T>
 bool FreeList<T>::IsUsed(Index index) const {
+  assert(index < list_.size());
   return (reinterpret_cast<uintptr_t>(list_[index]) & ptrFreeBit) == 0;
 }
 
@@ -497,12 +543,13 @@ template <> inline void WABT_VECTORCALL Value::Set<Ref>(Ref val) { ref_ = val; S
 
 //// Store ////
 inline bool Store::IsValid(Ref ref) const {
-  return objects_.IsUsed(ref.index) && objects_.Get(ref.index);
+  return ref.index >= Ref::kHostValue || objects_.IsUsed(ref.index);
 }
 
 template <typename T>
 bool Store::Is(Ref ref) const {
-  return objects_.IsUsed(ref.index) && isa<T>(objects_.Get(ref.index));
+  return ref.index < Ref::kHostValue && objects_.IsUsed(ref.index) &&
+         isa<T>(objects_.Get(ref.index));
 }
 
 template <typename T>
@@ -900,6 +947,73 @@ inline const ExternType& Tag::extern_type() {
 
 inline const TagType& Tag::type() const {
   return type_;
+}
+
+//// Array ////
+// static
+inline bool Array::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Array::Ptr Array::New(Store& store,
+                             u32 size,
+                             Index type_index,
+                             Module* mod) {
+  return store.Alloc<Array>(store, size, type_index, mod);
+}
+
+inline Index Array::Size() const {
+  return static_cast<Index>(items_.size());
+}
+
+inline Value Array::GetItem(Index idx) const {
+  return items_[idx];
+}
+
+inline void Array::SetItem(Index idx, Value value) {
+  items_[idx] = value;
+}
+
+inline Values& Array::GetItems() {
+  return items_;
+}
+
+inline Index Array::GetTypeIndex() const {
+  return type_index_;
+}
+
+inline Ref Array::GetModule() const {
+  return module_;
+}
+
+//// Struct ////
+// static
+inline bool Struct::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Struct::Ptr Struct::New(Store& store, Index type_index, Module* mod) {
+  return store.Alloc<Struct>(store, type_index, mod);
+}
+
+inline Index Struct::Size() const {
+  return static_cast<Index>(fields_.size());
+}
+
+inline Value Struct::GetField(Index idx) const {
+  return fields_[idx];
+}
+
+inline void Struct::SetField(Index idx, Value value) {
+  fields_[idx] = value;
+}
+
+inline Index Struct::GetTypeIndex() const {
+  return type_index_;
+}
+
+inline Ref Struct::GetModule() const {
+  return module_;
 }
 
 //// ElemSegment ////

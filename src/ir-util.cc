@@ -97,6 +97,10 @@ void ModuleContext::EndFunc() {
 
 ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
   switch (expr.type()) {
+    case ExprType::ArrayGet:
+    case ExprType::ArrayNew:
+    case ExprType::ArrayNewData:
+    case ExprType::ArrayNewElem:
     case ExprType::AtomicNotify:
     case ExprType::AtomicRmw:
     case ExprType::Binary:
@@ -107,6 +111,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::AtomicStore:
     case ExprType::Store:
     case ExprType::TableSet:
+    case ExprType::StructSet:
       return {2, 0};
 
     case ExprType::Block:
@@ -118,6 +123,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::BrIf: {
       Index arity = GetLabelArity(cast<BrIfExpr>(&expr)->var);
       return {arity + 1, arity};
+    }
+
+    case ExprType::BrOnCast: {
+      Index arity = GetLabelArity(cast<BrOnCastExpr>(&expr)->label_var);
+      return {arity + 1, arity + 1};
     }
 
     case ExprType::BrOnNonNull: {
@@ -172,6 +182,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::TableSize:
     case ExprType::RefNull:
     case ExprType::RefFunc:
+    case ExprType::StructNewDefault:
       return {0, 1};
 
     case ExprType::Unreachable:
@@ -183,6 +194,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::CodeMetadata:
       return {0, 0};
 
+    case ExprType::ArraySet:
     case ExprType::MemoryInit:
     case ExprType::TableInit:
     case ExprType::MemoryFill:
@@ -191,17 +203,22 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::TableFill:
       return {3, 0};
 
+    case ExprType::ArrayNewDefault:
     case ExprType::AtomicLoad:
     case ExprType::Convert:
+    case ExprType::GCUnary:
     case ExprType::Load:
     case ExprType::LocalTee:
     case ExprType::MemoryGrow:
     case ExprType::Unary:
     case ExprType::TableGet:
+    case ExprType::RefAsNonNull:
+    case ExprType::RefCast:
     case ExprType::RefIsNull:
+    case ExprType::RefTest:
     case ExprType::LoadSplat:
     case ExprType::LoadZero:
-    case ExprType::RefAsNonNull:
+    case ExprType::StructGet:
       return {1, 1};
 
     case ExprType::Drop:
@@ -288,6 +305,27 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
 
     case ExprType::SimdShuffleOp:
       return {2, 1};
+
+    case ExprType::ArrayCopy:
+      return {5, 0};
+
+    case ExprType::ArrayFill:
+    case ExprType::ArrayInitData:
+    case ExprType::ArrayInitElem:
+      return {4, 0};
+
+    case ExprType::ArrayNewFixed: {
+      return {cast<ArrayNewFixedExpr>(&expr)->count, 1};
+    }
+
+    case ExprType::StructNew: {
+      auto struct_new = cast<StructNewExpr>(&expr);
+      Index operand_count = 0;
+      if (const StructType* struct_ = module.GetStructType(struct_new->var)) {
+        operand_count = struct_->fields.size();
+      }
+      return {operand_count, 0};
+    }
   }
 
   WABT_UNREACHABLE;

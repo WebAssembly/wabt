@@ -1,0 +1,22 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/struct.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/struct.wast:16: assert_malformed passed:
+  0:0: error: duplicate field $x
+out/test/spec/gc/struct.wast:37: assert_invalid passed:
+  out/test/spec/gc/struct/struct.3.wasm:0000010: error: reference 1 is out of range in params
+  0000010: error: OnStructType callback failed
+out/test/spec/gc/struct.wast:41: assert_invalid passed:
+  out/test/spec/gc/struct/struct.4.wasm:0000010: error: reference 1 is out of range in params
+  0000010: error: OnStructType callback failed
+out/test/spec/gc/struct.wast:59: assert_invalid passed:
+  out/test/spec/gc/struct/struct.6.wasm:0000029: error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000029: error: EndFunctionBody callback failed
+out/test/spec/gc/struct.wast:133: assert_invalid passed:
+  out/test/spec/gc/struct/struct.8.wasm:000003f: error: field 0 is immutable
+  000003f: error: OnStructSetExpr callback failed
+out/test/spec/gc/struct.wast:155: assert_trap passed: null struct ref
+out/test/spec/gc/struct.wast:156: assert_trap passed: null struct ref
+30/30 tests passed.
+;;; STDOUT ;;)

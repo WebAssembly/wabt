@@ -40,13 +40,87 @@ const char* GetName(ExternKind kind) {
 
 const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
-      "Null",  "Foreign", "Trap",   "Exception", "DefinedFunc", "HostFunc",
-      "Table", "Memory",  "Global", "Tag",       "Module",      "Instance",
+      "Null",     "Foreign", "Trap",   "Exception", "DefinedFunc",
+      "HostFunc", "Table",   "Memory", "Global",    "Tag",
+      "Array",    "Struct",  "Module", "Instance",
   };
 
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(kNames) == kCommandTypeCount);
 
   return kNames[int(kind)];
+}
+
+static u32 GetTypeLog2Size(Type type) {
+  switch (type) {
+    case Type::I8:
+      return 0;
+    case Type::I16:
+      return 1;
+    case Type::I32:
+    case Type::F32:
+      return 2;
+    case Type::I64:
+    case Type::F64:
+      return 3;
+    case Type::V128:
+      return 4;
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+static void ArrayInitFromDataSegment(u32 log2_size,
+                                     Array* dst,
+                                     u32 dst_offset,
+                                     u32 size,
+                                     const u8* src) {
+  // Supports both unaligned access and big endian mode.
+  switch (log2_size) {
+    case 0: {
+      for (u32 i = 0; i < size; i++) {
+        u32 value = *src++;
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 1: {
+      for (u32 i = 0; i < size; i++, src += 2) {
+        u32 value = src[0] | (static_cast<u32>(src[1]) << 8);
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 2: {
+      for (u32 i = 0; i < size; i++, src += 4) {
+        u32 value = src[0];
+        for (u32 j = 1; j < 4; j++) {
+          value |= static_cast<u32>(src[j]) << (j << 3);
+        }
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 3: {
+      for (u32 i = 0; i < size; i++, src += 8) {
+        u64 value = src[0];
+        for (u32 j = 1; j < 8; j++) {
+          value |= static_cast<u64>(src[j]) << (j << 3);
+        }
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 4: {
+      for (u32 i = 0; i < size; i++, src += 16) {
+        v128 value;
+        memcpy(value.v, src, 16);
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    default:
+      WABT_UNREACHABLE;
+  }
 }
 
 //// Refs ////
@@ -321,18 +395,34 @@ bool TypesMatch(ValueType expected, ValueType actual) {
     return true;
   }
 
-  if (expected == Type::FuncRef &&
-      (actual == Type::Ref ||
-       (expected.IsNullableNonTypedRef() &&
-        (actual == Type::FuncRef || actual == Type::RefNull)))) {
-    return true;
+  switch (expected) {
+    case Type::FuncRef:
+      return actual == Type::Ref ||
+             (expected.IsNullableNonTypedRef() &&
+              (actual == Type::FuncRef || actual == Type::RefNull));
+    case Type::RefNull:
+      return actual == Type::Ref &&
+             actual.GetReferenceIndex() == expected.GetReferenceIndex();
+    case Type::AnyRef:
+      if (actual == Type::AnyRef || actual == Type::EqRef ||
+          actual == Type::I31Ref || actual == Type::StructRef ||
+          actual == Type::ArrayRef) {
+        break;
+      }
+      return false;
+    case Type::EqRef:
+      if (actual == Type::EqRef || actual == Type::I31Ref ||
+          actual == Type::StructRef || actual == Type::ArrayRef) {
+        break;
+      }
+      return false;
+    default:
+      return false;
   }
 
-  if (actual == Type::Ref && expected == Type::RefNull &&
-      actual.GetReferenceIndex() == expected.GetReferenceIndex()) {
+  if (expected.IsNullableRef() || actual.IsNonNullableRef()) {
     return true;
   }
-
   return false;
 }
 
@@ -374,22 +464,36 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   if (!IsValid(ref)) {
     return false;
   }
-  if (type == ValueType::ExternRef) {
+  if (ref == Ref::Null || type == ValueType::ExternRef) {
     return true;
   }
-  if (ref == Ref::Null) {
-    return true;
+  if (ref.IsI31OrHostVal()) {
+    if (ref.IsI31Val()) {
+      return type == ValueType::AnyRef || type == ValueType::EqRef ||
+             type == ValueType::I31Ref || type == ValueType::ExternRef;
+    }
+    return type == ValueType::AnyRef;
   }
 
   Object* obj = objects_.Get(ref.index);
   switch (type) {
+    case ValueType::AnyRef:
+      return obj->kind() == ObjectKind::Array ||
+             obj->kind() == ObjectKind::Struct;
+    case ValueType::EqRef:
+      return obj->kind() == ObjectKind::Array ||
+             obj->kind() == ObjectKind::Struct;
     case ValueType::FuncRef:
     case ValueType::Ref:
     case ValueType::RefNull:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
+    case ValueType::ArrayRef:
+      return obj->kind() == ObjectKind::Array;
     case ValueType::ExnRef:
       return obj->kind() == ObjectKind::Exception;
+    case ValueType::StructRef:
+      return obj->kind() == ObjectKind::Struct;
     default:
       return false;
   }
@@ -871,6 +975,52 @@ Result Tag::Match(Store& store,
                   const ImportType& import_type,
                   Trap::Ptr* out_trap) {
   return MatchImpl(store, import_type, type_, out_trap);
+}
+
+//// Array ////
+Array::Array(Store& store, u32 size, Index type_index, Module* mod)
+    : Object(ObjectKind::Array), module_(mod->self()), type_index_(type_index) {
+  items_.resize(size);
+}
+
+bool Array::IsValidRange(u64 offset, u64 size) const {
+  size_t array_size = items_.size();
+  return size <= array_size && offset <= array_size - size;
+}
+
+void Array::Mark(Store& store) {
+  store.Mark(module_);
+
+  RefPtr<Module> mod = store.UnsafeGet<Module>(module_);
+  Type array_type = mod->desc().func_types[type_index_].params[0];
+
+  if (array_type.IsRef()) {
+    for (auto it : items_) {
+      store.Mark(it.Get<Ref>());
+    }
+  }
+}
+
+//// Struct ////
+Struct::Struct(Store& store, Index type_index, Module* mod)
+    : Object(ObjectKind::Struct),
+      module_(mod->self()),
+      type_index_(type_index) {
+  fields_.resize(mod->desc().func_types[type_index].params.size());
+}
+
+void Struct::Mark(Store& store) {
+  store.Mark(module_);
+
+  RefPtr<Module> mod = store.UnsafeGet<Module>(module_);
+  const ValueTypes& field_types = mod->desc().func_types[type_index_].params;
+  size_t size = fields_.size();
+
+  for (size_t i = 0; i < size; i++) {
+    if (field_types[i].IsRef()) {
+      store.Mark(fields_[i].Get<Ref>());
+    }
+  }
 }
 
 //// ElemSegment ////
@@ -1358,6 +1508,94 @@ void Thread::Push(Value value) {
 void Thread::Push(Ref ref) {
   refs_.push_back(values_.size());
   values_.push_back(Value::Make(ref));
+}
+
+bool Thread::CheckRefCast(Ref ref, Type expected) {
+  assert(expected.IsRef());
+
+  // Note: "any" and "extern" types represent the same value
+  // sets in the current implementation, so any.convert_extern
+  // and extern.convert_any are no operations.
+  if (ref.IsI31OrHostVal()) {
+    if (ref.IsI31Val()) {
+      return expected == Type::AnyRef || expected == Type::EqRef ||
+             expected == Type::I31Ref || expected == Type::ExternRef;
+    }
+    return expected == Type::AnyRef || expected == Type::ExternRef;
+  }
+
+  Object* object = store_.UnsafeGet<Object>(ref).get();
+
+  if (!expected.IsReferenceWithIndex()) {
+    if (Func::classof(object)) {
+      return expected == Type::FuncRef;
+    }
+    if (Array::classof(object)) {
+      return expected == Type::ArrayRef || expected == Type::EqRef ||
+             expected == Type::AnyRef || expected == Type::ExternRef;
+    }
+    if (Struct::classof(object)) {
+      return expected == Type::StructRef || expected == Type::EqRef ||
+             expected == Type::AnyRef || expected == Type::ExternRef;
+    }
+    return false;
+  }
+
+  const FuncType& expected_type =
+      mod_->desc().func_types[expected.GetReferenceIndex()];
+  Index expected_type_index = expected_type.canonical_index;
+  Index actual_type_index;
+
+  switch (expected_type.kind) {
+    case FuncType::TypeKind::Func: {
+      if (!Func::classof(object)) {
+        return false;
+      }
+      const FuncType& type = cast<Func>(object)->type();
+      if (type.func_types != &mod_->desc().func_types) {
+        return false;
+      }
+      actual_type_index = type.canonical_index;
+      break;
+    }
+    case FuncType::TypeKind::Array: {
+      if (!Array::classof(object)) {
+        return false;
+      }
+      Array* array = cast<Array>(object);
+      if (array->GetModule() != mod_->self()) {
+        return false;
+      }
+      actual_type_index =
+          mod_->desc().func_types[array->GetTypeIndex()].canonical_index;
+      break;
+    }
+    case FuncType::TypeKind::Struct: {
+      if (!Struct::classof(object)) {
+        return false;
+      }
+      Struct* struct_ = cast<Struct>(object);
+      if (struct_->GetModule() != mod_->self()) {
+        return false;
+      }
+      actual_type_index =
+          mod_->desc().func_types[struct_->GetTypeIndex()].canonical_index;
+      break;
+    }
+    default:
+      WABT_UNREACHABLE;
+  }
+
+  do {
+    if (expected_type_index == actual_type_index) {
+      return true;
+    }
+
+    actual_type_index =
+        mod_->desc().func_types[actual_type_index].canonical_sub_index;
+  } while (actual_type_index != kInvalidIndex);
+
+  return false;
 }
 
 RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
@@ -2180,6 +2418,91 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I64AtomicRmw16CmpxchgU: return DoAtomicRmwCmpxchg<u64, u16>(instr, out_trap);
     case O::I64AtomicRmw32CmpxchgU: return DoAtomicRmwCmpxchg<u64, u32>(instr, out_trap);
 
+    case O::ArrayCopy:     return DoArrayCopy(out_trap);
+    case O::ArrayFill:     return DoArrayFill(out_trap);
+    case O::ArrayGet:      return DoArrayGet(out_trap);
+    case O::ArrayInitElem: return DoArrayInitElem(instr, out_trap);
+    case O::ArrayInitData: return DoArrayInitData(instr, out_trap);
+    case O::ArrayGetS:
+    case O::ArrayGetU:     return DoArrayGetPacked(instr, out_trap);
+    case O::ArrayNew:      return DoArrayNew(instr);
+    case O::ArrayNewData:  return DoArrayNewData(instr, out_trap);
+    case O::ArrayNewElem:  return DoArrayNewElem(instr, out_trap);
+    case O::ArrayNewFixed: return DoArrayNewFixed(instr);
+    case O::ArraySet:      return DoArraySet(out_trap);
+
+    case O::ArrayLen: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      Push(store_.UnsafeGet<Array>(ref)->Size());
+      break;
+    }
+
+    case O::ArrayNewDefault: {
+      Array::Ptr array = Array::New(store_, Pop<u32>(), instr.imm_u32, mod_);
+      Push(array->self());
+      break;
+    }
+
+    case O::BrOnCast:
+    case O::BrOnCastFail: return DoBrOnCast(instr);
+
+    case O::I31GetS: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null i31 ref");
+      Push(ref.GetS32Val());
+      break;
+    }
+
+    case O::I31GetU: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null i31 ref");
+      Push(ref.GetU32Val());
+      break;
+    }
+
+    case O::RefI31: {
+      Push(Ref::CreateI31Val(Pop<u32>()));
+      break;
+    }
+
+    case O::RefCast:
+    case O::RefCastNull: return DoRefCast(instr, out_trap);
+    case O::RefTest:
+    case O::RefTestNull: return DoRefTest(instr);
+
+    case O::RefEq: {
+      Ref ref1 = Pop<Ref>();
+      Ref ref2 = Pop<Ref>();
+      Push(ref1.index == ref2.index);
+      break;
+    }
+
+    case O::StructGetS:
+    case O::StructGetU: return DoStructGetPacked(instr, out_trap);
+    case O::StructNew:  return DoStructNew(instr);
+
+    case O::StructGet: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null struct ref");
+      Push(store_.UnsafeGet<Struct>(ref)->GetField(instr.imm_u32));
+      break;
+    }
+
+    case O::StructNewDefault: {
+      Struct::Ptr struct_ = Struct::New(store_, instr.imm_u32, mod_);
+      Push(struct_->self());
+      break;
+    }
+
+    case O::StructSet: {
+      Value value = Pop();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null struct ref");
+      store_.UnsafeGet<Struct>(ref)->SetField(instr.imm_u32, value);
+      break;
+    }
+
     case O::Throw: {
       u32 tag_index = instr.imm_u32;
       Values params;
@@ -2206,8 +2529,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     // The following opcodes are either never generated or should never be
     // executed.
+    case O::AnyConvertExtern:
     case O::Nop:
     case O::Block:
+    case O::ExternConvertAny:
     case O::Loop:
     case O::If:
     case O::Else:
@@ -2849,6 +3174,255 @@ RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
           StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
                        instr.imm_u32x2.snd));
   Push(static_cast<T>(old));
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayCopy(Trap::Ptr* out_trap) {
+  u32 size = Pop<u32>();
+  u32 src_offset = Pop<u32>();
+  Ref src_ref = Pop<Ref>();
+  u32 dst_offset = Pop<u32>();
+  Ref dst_ref = Pop<Ref>();
+
+  TRAP_IF(src_ref == Ref::Null || dst_ref == Ref::Null, "null array ref");
+  RefPtr<Array> src_array = store_.UnsafeGet<Array>(src_ref);
+  TRAP_IF(!src_array->IsValidRange(src_offset, size), "invalid range");
+  RefPtr<Array> dst_array = store_.UnsafeGet<Array>(dst_ref);
+  TRAP_IF(!dst_array->IsValidRange(dst_offset, size), "invalid range");
+
+  if (src_array.get() == dst_array.get() && src_offset < dst_offset) {
+    std::copy_backward(src_array->GetItems().begin() + src_offset,
+                       src_array->GetItems().begin() + src_offset + size,
+                       dst_array->GetItems().begin() + dst_offset + size);
+  } else {
+    std::copy(src_array->GetItems().begin() + src_offset,
+              src_array->GetItems().begin() + src_offset + size,
+              dst_array->GetItems().begin() + dst_offset);
+  }
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayFill(Trap::Ptr* out_trap) {
+  u32 size = Pop<u32>();
+  Value value = Pop();
+  u32 offset = Pop<u32>();
+  Ref ref = Pop<Ref>();
+
+  TRAP_IF(ref == Ref::Null, "null array ref");
+  RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+  TRAP_IF(!array->IsValidRange(offset, size), "invalid range");
+  std::fill(array->GetItems().begin() + offset,
+            array->GetItems().begin() + offset + size, value);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayGet(Trap::Ptr* out_trap) {
+  u32 index = Pop<u32>();
+  Ref ref = Pop<Ref>();
+
+  TRAP_IF(ref == Ref::Null, "null array ref");
+  RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+  TRAP_IF(index >= array->Size(), "invalid index");
+  Push(array->GetItem(index));
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayInitElem(Instr instr, Trap::Ptr* out_trap) {
+  ElemSegment& segment = inst_->elems()[instr.imm_u32];
+  u32 size = Pop<u32>();
+  u32 src_offset = Pop<u32>();
+  u32 dst_offset = Pop<u32>();
+  Ref ref = Pop<Ref>();
+
+  TRAP_IF(ref == Ref::Null, "null array ref");
+  RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+  TRAP_IF(!array->IsValidRange(dst_offset, size), "invalid range");
+  TRAP_IF(!segment.IsValidRange(src_offset, size), "invalid range");
+  for (size_t i = 0; i < size; i++) {
+    array->SetItem(dst_offset + i,
+                   Value::Make(segment.elements()[src_offset + i]));
+  }
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayInitData(Instr instr, Trap::Ptr* out_trap) {
+  DataSegment& data = inst_->datas()[instr.imm_u32x2.snd];
+  u32 size = Pop<u32>();
+  u32 src_offset = Pop<u32>();
+  u32 dst_offset = Pop<u32>();
+  Ref ref = Pop<Ref>();
+
+  TRAP_IF(ref == Ref::Null, "null array ref");
+  RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+  TRAP_IF(!array->IsValidRange(dst_offset, size), "invalid range");
+  Type array_type = mod_->desc().func_types[instr.imm_u32x2.fst].params[0];
+  u32 log2_size = GetTypeLog2Size(array_type);
+  TRAP_IF(size >= (~static_cast<u32>(0)) >> log2_size, "invalid range");
+  TRAP_IF(!data.IsValidRange(src_offset, size << log2_size), "invalid range");
+  ArrayInitFromDataSegment(log2_size, array.get(), dst_offset, size,
+                           data.desc().data.data() + src_offset);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayGetPacked(Instr instr, Trap::Ptr* out_trap) {
+  u32 index = Pop<u32>();
+  Ref ref = Pop<Ref>();
+
+  TRAP_IF(ref == Ref::Null, "null array ref");
+  RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+  TRAP_IF(index >= array->Size(), "invalid index");
+  Value value = array->GetItem(index);
+
+  if (instr.op == Opcode::ArrayGetS) {
+    if (instr.imm_u32) {
+      value.Set<u32>(static_cast<s16>(value.Get<u32>()));
+    } else {
+      value.Set<u32>(static_cast<s8>(value.Get<u32>()));
+    }
+  } else if (instr.imm_u32) {
+    value.Set<u32>(static_cast<u16>(value.Get<u32>()));
+  } else {
+    value.Set<u32>(static_cast<u8>(value.Get<u32>()));
+  }
+  Push(value);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayNew(Instr instr) {
+  u32 size = Pop<u32>();
+  Value value = Pop();
+  Array::Ptr array = Array::New(store_, size, instr.imm_u32, mod_);
+
+  for (size_t i = array->Size(); i > 0; i--) {
+    array->SetItem(i - 1, value);
+  }
+  Push(array->self());
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayNewData(Instr instr, Trap::Ptr* out_trap) {
+  DataSegment& data = inst_->datas()[instr.imm_u32x2.snd];
+  u32 size = Pop<u32>();
+  u32 offset = Pop<u32>();
+  Type array_type = mod_->desc().func_types[instr.imm_u32x2.fst].params[0];
+  u32 log2_size = GetTypeLog2Size(array_type);
+
+  TRAP_IF(size >= (~static_cast<u32>(0)) >> log2_size, "invalid range");
+  TRAP_IF(!data.IsValidRange(offset, size << log2_size), "invalid range");
+  Array::Ptr array = Array::New(store_, size, instr.imm_u32x2.fst, mod_);
+  ArrayInitFromDataSegment(log2_size, array.get(), 0, size,
+                           data.desc().data.data() + offset);
+  Push(array->self());
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayNewElem(Instr instr, Trap::Ptr* out_trap) {
+  ElemSegment& segment = inst_->elems()[instr.imm_u32x2.snd];
+  u32 size = Pop<u32>();
+  u32 offset = Pop<u32>();
+
+  TRAP_IF(!segment.IsValidRange(offset, size), "invalid range");
+  Array::Ptr array = Array::New(store_, size, instr.imm_u32x2.fst, mod_);
+  for (size_t i = 0; i < size; i++) {
+    array->SetItem(i, Value::Make(segment.elements()[offset + i]));
+  }
+  Push(array->self());
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArrayNewFixed(Instr instr) {
+  u32 size = instr.imm_u32x2.snd;
+  Array::Ptr array = Array::New(store_, size, instr.imm_u32x2.fst, mod_);
+
+  for (size_t i = size; i > 0; i--) {
+    array->SetItem(i - 1, Pop());
+  }
+  Push(array->self());
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoArraySet(Trap::Ptr* out_trap) {
+  Value value = Pop();
+  u32 index = Pop<u32>();
+  Ref ref = Pop<Ref>();
+
+  TRAP_IF(ref == Ref::Null, "null array ref");
+  RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+  TRAP_IF(index >= array->Size(), "invalid index");
+  array->SetItem(index, value);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoBrOnCast(Instr instr) {
+  Ref ref = Pick(1).Get<Ref>();
+  u32 result = 0;
+
+  if (ref == Ref::Null) {
+    result = (instr.op == Opcode::BrOnCast);
+  } else {
+    Type type(static_cast<Type::Enum>(instr.imm_u32x2.fst),
+              instr.imm_u32x2.snd);
+    result = CheckRefCast(ref, type);
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoRefCast(Instr instr, Trap::Ptr* out_trap) {
+  Ref ref = Pick(1).Get<Ref>();
+  if (ref == Ref::Null) {
+    TRAP_IF(instr.op == Opcode::RefCast, "null reference");
+    return RunResult::Ok;
+  }
+
+  Type type(static_cast<Type::Enum>(instr.imm_u32x2.fst), instr.imm_u32x2.snd);
+  TRAP_IF(!CheckRefCast(ref, type), "type error: invalid type cast");
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoRefTest(Instr instr) {
+  Ref ref = Pop<Ref>();
+  u32 result = 0;
+
+  if (ref == Ref::Null) {
+    result = (instr.op == Opcode::RefTestNull);
+  } else {
+    Type type(static_cast<Type::Enum>(instr.imm_u32x2.fst),
+              instr.imm_u32x2.snd);
+    result = CheckRefCast(ref, type);
+  }
+  Push(result);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoStructGetPacked(Instr instr, Trap::Ptr* out_trap) {
+  Ref ref = Pop<Ref>();
+  TRAP_IF(ref == Ref::Null, "null struct ref");
+  Value value = store_.UnsafeGet<Struct>(ref)->GetField(instr.imm_u32x2.fst);
+
+  if (instr.op == Opcode::StructGetS) {
+    if (instr.imm_u32x2.snd) {
+      value.Set<u32>(static_cast<s16>(value.Get<u32>()));
+    } else {
+      value.Set<u32>(static_cast<s8>(value.Get<u32>()));
+    }
+  } else if (instr.imm_u32x2.snd) {
+    value.Set<u32>(static_cast<u16>(value.Get<u32>()));
+  } else {
+    value.Set<u32>(static_cast<u8>(value.Get<u32>()));
+  }
+  Push(value);
+  return RunResult::Ok;
+}
+
+RunResult Thread::DoStructNew(Instr instr) {
+  Struct::Ptr struct_ = Struct::New(store_, instr.imm_u32, mod_);
+  Struct* struct_ptr = struct_.get();
+
+  for (size_t i = struct_ptr->Size(); i > 0; i--) {
+    struct_ptr->SetField(i - 1, Pop());
+  }
+  Push(struct_->self());
   return RunResult::Ok;
 }
 

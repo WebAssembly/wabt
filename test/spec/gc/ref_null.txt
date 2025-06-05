@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/ref_null.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+26/26 tests passed.
+;;; STDOUT ;;)

@@ -219,6 +219,31 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeV128(v128 value) override { return Result::Ok; }
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
   Result OnOpcodeType(Type type) override { return Result::Ok; }
+  Result OnArrayCopyExpr(Index dst_type_index, Index src_type_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayFillExpr(Index type_index) override { return Result::Ok; }
+  Result OnArrayGetExpr(Opcode opcode, Index type_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayInitDataExpr(Index type_index, Index data_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayInitElemExpr(Index type_index, Index elem_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayNewExpr(Index type_index) override { return Result::Ok; }
+  Result OnArrayNewDataExpr(Index type_index, Index data_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayNewDefaultExpr(Index type_index) override { return Result::Ok; }
+  Result OnArrayNewElemExpr(Index type_index, Index elem_index) override {
+    return Result::Ok;
+  }
+  Result OnArrayNewFixedExpr(Index type_index, Index count) override {
+    return Result::Ok;
+  }
+  Result OnArraySetExpr(Index type_index) override { return Result::Ok; }
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -254,6 +279,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnBlockExpr(Type sig_type) override { return Result::Ok; }
   Result OnBrExpr(Index depth) override { return Result::Ok; }
   Result OnBrIfExpr(Index depth) override { return Result::Ok; }
+  Result OnBrOnCastExpr(Opcode opcode,
+                        Index depth,
+                        Type type1,
+                        Type type2) override {
+    return Result::Ok;
+  }
   Result OnBrOnNonNullExpr(Index depth) override { return Result::Ok; }
   Result OnBrOnNullExpr(Index depth) override { return Result::Ok; }
   Result OnBrTableExpr(Index num_targets,
@@ -277,6 +308,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnF32ConstExpr(uint32_t value_bits) override { return Result::Ok; }
   Result OnF64ConstExpr(uint64_t value_bits) override { return Result::Ok; }
   Result OnV128ConstExpr(v128 value_bits) override { return Result::Ok; }
+  Result OnGCUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnGlobalGetExpr(Index global_index) override { return Result::Ok; }
   Result OnGlobalSetExpr(Index global_index) override { return Result::Ok; }
   Result OnI32ConstExpr(uint32_t value) override { return Result::Ok; }
@@ -315,9 +347,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTableSizeExpr(Index table_index) override { return Result::Ok; }
   Result OnTableFillExpr(Index table_index) override { return Result::Ok; }
   Result OnRefAsNonNullExpr() override { return Result::Ok; }
+  Result OnRefCastExpr(Type type) override { return Result::Ok; }
   Result OnRefFuncExpr(Index func_index) override { return Result::Ok; }
   Result OnRefNullExpr(Type type) override { return Result::Ok; }
   Result OnRefIsNullExpr() override { return Result::Ok; }
+  Result OnRefTestExpr(Type type) override { return Result::Ok; }
   Result OnNopExpr() override { return Result::Ok; }
   Result OnRethrowExpr(Index depth) override { return Result::Ok; }
   Result OnReturnCallExpr(Index sig_index) override { return Result::Ok; }
@@ -333,6 +367,18 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                      Index memidx,
                      Address alignment_log2,
                      Address offset) override {
+    return Result::Ok;
+  }
+  Result OnStructGetExpr(Opcode opcode,
+                         Index type_index,
+                         Index field_index) override {
+    return Result::Ok;
+  }
+  Result OnStructNewExpr(Index type_index) override { return Result::Ok; }
+  Result OnStructNewDefaultExpr(Index type_index) override {
+    return Result::Ok;
+  }
+  Result OnStructSetExpr(Index type_index, Index field_index) override {
     return Result::Ok;
   }
   Result OnThrowExpr(Index depth) override { return Result::Ok; }

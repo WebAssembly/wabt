@@ -84,7 +84,7 @@ struct Opcode {
   Address GetAlignment(Address alignment) const;
 
   static bool IsPrefixByte(uint8_t byte) {
-    return byte == kMathPrefix || byte == kThreadsPrefix || byte == kSimdPrefix;
+    return byte == kMathPrefix || byte == kThreadsPrefix || byte == kGarbageCollectionPrefix || byte == kSimdPrefix;
   }
 
   bool IsEnabled(const Features& features) const;
@@ -93,6 +93,7 @@ struct Opcode {
  private:
   static constexpr uint32_t kMathPrefix = 0xfc;
   static constexpr uint32_t kThreadsPrefix = 0xfe;
+  static constexpr uint32_t kGarbageCollectionPrefix = 0xfb;
   static constexpr uint32_t kSimdPrefix = 0xfd;
 
   struct Info {

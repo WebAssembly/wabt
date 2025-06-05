@@ -1,0 +1,23 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/array_init_data.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/array_init_data.wast:6: assert_invalid passed:
+  out/test/spec/gc/array_init_data/array_init_data.0.wasm:0000047: error: data_segment variable out of range: 0 (max 0)
+  out/test/spec/gc/array_init_data/array_init_data.0.wasm:0000047: error: array is immutable
+  0000047: error: OnArrayInitDataExpr callback failed
+out/test/spec/gc/array_init_data.wast:19: assert_invalid passed:
+  out/test/spec/gc/array_init_data/array_init_data.1.wasm:0000047: error: data_segment variable out of range: 0 (max 0)
+  out/test/spec/gc/array_init_data/array_init_data.1.wasm:0000047: error: type mismatch: array type must be number or vector type
+  0000047: error: OnArrayInitDataExpr callback failed
+out/test/spec/gc/array_init_data.wast:68: assert_trap passed: null array ref
+out/test/spec/gc/array_init_data.wast:71: assert_trap passed: invalid range
+out/test/spec/gc/array_init_data.wast:72: assert_trap passed: invalid range
+out/test/spec/gc/array_init_data.wast:75: assert_trap passed: invalid range
+out/test/spec/gc/array_init_data.wast:76: assert_trap passed: invalid range
+out/test/spec/gc/array_init_data.wast:77: assert_trap passed: invalid range
+out/test/spec/gc/array_init_data.wast:88: assert_trap passed: invalid index
+out/test/spec/gc/array_init_data.wast:92: assert_trap passed: invalid index
+out/test/spec/gc/array_init_data.wast:110: assert_trap passed: invalid range
+33/33 tests passed.
+;;; STDOUT ;;)

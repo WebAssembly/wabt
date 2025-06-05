@@ -122,6 +122,8 @@ class TypeChecker {
       return type;
     }
 
+    Type GetGroupType(Type type);
+
     std::vector<TypeEntry> type_entries;
     std::vector<FuncType> func_types;
     std::vector<StructType> struct_types;
@@ -162,6 +164,24 @@ class TypeChecker {
   Result GetCatchCount(Index depth, Index* out_depth);
 
   Result BeginFunction(const TypeVector& sig);
+  Result OnArrayCopy(Type dst_ref_type,
+                     TypeMut& dst_array_type,
+                     Type src_ref_type,
+                     Type src_array_type);
+  Result OnArrayFill(Type ref_type, TypeMut& array_type);
+  Result OnArrayGet(Opcode, Type ref_type, Type array_type);
+  Result OnArrayInitData(Type ref_type, TypeMut& array_type);
+  Result OnArrayInitElem(Type ref_type, TypeMut& array_type, Type elem_type);
+  Result OnArrayNew(Type ref_type, Type array_type);
+  Result OnArrayNewData(Type ref_type, Type array_type);
+  Result OnArrayNewDefault(Type ref_type);
+  Result OnArrayNewElem(Type ref_type,
+                        Type array_type,
+                        Type elem_type);
+  Result OnArrayNewFixed(Type ref_type,
+                         Type array_type,
+                         Index count);
+  Result OnArraySet(Type ref_type, const TypeMut& field);
   Result OnAtomicFence(uint32_t consistency_model);
   Result OnAtomicLoad(Opcode, const Limits& limits);
   Result OnAtomicNotify(Opcode, const Limits& limits);
@@ -173,6 +193,7 @@ class TypeChecker {
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
+  Result OnBrOnCast(Opcode opcode, Index depth, Type type1, Type type2);
   Result OnBrOnNonNull(Index depth);
   Result OnBrOnNull(Index depth);
   Result BeginBrTable();
@@ -196,6 +217,7 @@ class TypeChecker {
   Result OnDrop();
   Result OnElse();
   Result OnEnd();
+  Result OnGCUnary(Opcode);
   Result OnGlobalGet(Type);
   Result OnGlobalSet(Type);
   Result OnIf(const TypeVector& param_types, const TypeVector& result_types);
@@ -220,8 +242,10 @@ class TypeChecker {
   Result OnTableFill(Type elem_type, const Limits& limits);
   Result OnRefFuncExpr(Index func_type);
   Result OnRefAsNonNullExpr();
+  Result OnRefCast(Type type);
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
+  Result OnRefTest(Type type);
   Result OnRethrow(Index depth);
   Result OnReturn();
   Result OnSelect(const TypeVector& result_types);
@@ -230,6 +254,10 @@ class TypeChecker {
   Result OnSimdStoreLane(Opcode, const Limits& limits, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode, const Limits& limits);
+  Result OnStructGet(Opcode, Type ref_type, const StructType&, Index field);
+  Result OnStructNew(Type ref_type, const StructType&);
+  Result OnStructNewDefault(Type ref_type);
+  Result OnStructSet(Type ref_type, const StructType&, Index field);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnThrowRef();
@@ -288,6 +316,17 @@ class TypeChecker {
                            Type expected2,
                            Type expected3,
                            const char* desc);
+  Result PopAndCheck4Types(Type expected1,
+                           Type expected2,
+                           Type expected3,
+                           Type expected4,
+                           const char* desc);
+  Result PopAndCheck5Types(Type expected1,
+                           Type expected2,
+                           Type expected3,
+                           Type expected4,
+                           Type expected5,
+                           const char* desc);
   Result PopAndCheckReference(Type* actual, const char* desc);
   Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
@@ -300,6 +339,13 @@ class TypeChecker {
   static uint32_t ComputeHash(uint32_t hash, Index value) {
     // Shift-Add-XOR hash
     return hash ^ ((hash << 5) + (hash >> 2) + value);
+  }
+
+  static Type ToUnpackedType(Type type) {
+    if (type.IsPackedType()) {
+      return Type::I32;
+    }
+    return type;
   }
 
   uint32_t ComputeHash(uint32_t hash, Type& type, Index rec_start);

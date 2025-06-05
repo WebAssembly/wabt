@@ -116,6 +116,9 @@ class BinaryReader {
   [[nodiscard]] Result ReadS64Leb128(uint64_t* out_value, const char* desc);
   [[nodiscard]] Result ReadType(Type* out_value, const char* desc);
   [[nodiscard]] Result ReadRefType(Type* out_value, const char* desc);
+  [[nodiscard]] Result ReadHeapType(Type* out_value,
+                                    bool is_nullable,
+                                    const char* desc);
   [[nodiscard]] Result ReadExternalKind(ExternalKind* out_value,
                                         const char* desc);
   [[nodiscard]] Result ReadStr(std::string_view* out_str, const char* desc);
@@ -380,10 +383,8 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
                        (options_.features.gc_enabled() &&
                         Type::EnumIsNonTypedGCRef(heap_type_code)),
                    "not allowed reference type: %s", desc);
-      type = (static_cast<Type::Enum>(type) == Type::Ref)
-                 ? Type::ReferenceNonNull
-                 : Type::ReferenceOrNull;
-      *out_value = Type(heap_type_code, type);
+      *out_value =
+          Type(heap_type_code, static_cast<Type::Enum>(type) == Type::RefNull);
     } else {
       *out_value =
           Type(static_cast<Type::Enum>(type), static_cast<Index>(heap_type));
@@ -397,6 +398,28 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
 Result BinaryReader::ReadRefType(Type* out_value, const char* desc) {
   CHECK_RESULT(ReadType(out_value, desc));
   ERROR_UNLESS(out_value->IsRef(), "%s must be a reference type", desc);
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadHeapType(Type* out_value,
+                                  bool is_nullable,
+                                  const char* desc) {
+  uint64_t heap_type;
+  CHECK_RESULT(ReadS64Leb128(&heap_type, "heap type"));
+
+  if (static_cast<int64_t>(heap_type) < 0 ||
+      static_cast<int64_t>(heap_type) >= kInvalidIndex) {
+    Type::Enum type_code = static_cast<Type::Enum>(heap_type);
+    ERROR_UNLESS(IsConcreteReferenceType(type_code),
+                 "expected valid %s type (got " PRItypecode ")", desc,
+                 WABT_PRINTF_TYPE_CODE(type_code));
+    *out_value = Type(type_code, is_nullable);
+  } else {
+    ERROR_UNLESS(options_.features.function_references_enabled(),
+                 "type references are not enabled for %s", desc);
+    *out_value = Type(is_nullable ? Type::RefNull : Type::Ref,
+                      static_cast<Index>(heap_type));
+  }
   return Result::Ok;
 }
 
@@ -1970,23 +1993,8 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       }
 
       case Opcode::RefNull: {
-        uint64_t heap_type;
         Type type;
-        CHECK_RESULT(ReadS64Leb128(&heap_type, "ref.null type"));
-
-        if (static_cast<int64_t>(heap_type) < 0 ||
-            static_cast<int64_t>(heap_type) >= kInvalidIndex) {
-          Type::Enum type_code = static_cast<Type::Enum>(heap_type);
-          ERROR_UNLESS(IsConcreteReferenceType(type_code),
-                       "expected valid ref.null type (got " PRItypecode ")",
-                       WABT_PRINTF_TYPE_CODE(type_code));
-          type = Type(type_code);
-        } else {
-          ERROR_UNLESS(options_.features.function_references_enabled(),
-                       "function references are not enabled for ref.null");
-          type = Type(Type::RefNull, static_cast<Index>(heap_type));
-        }
-
+        CHECK_RESULT(ReadHeapType(&type, true, "ref.null"));
         CALLBACK(OnRefNullExpr, type);
         CALLBACK(OnOpcodeType, type);
         break;
@@ -2014,6 +2022,184 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
         Type sig_type(Type::RefNull, type);
         CALLBACK(OnReturnCallRefExpr, sig_type);
         CALLBACK(OnOpcodeType, sig_type);
+        break;
+      }
+
+      case Opcode::ArrayCopy: {
+        uint32_t dst_type_index, src_type_index;
+        CHECK_RESULT(ReadIndex(&dst_type_index, "dst type index"));
+        CHECK_RESULT(ReadIndex(&src_type_index, "src type index"));
+        CALLBACK(OnArrayCopyExpr, dst_type_index, src_type_index);
+        CALLBACK(OnOpcodeIndexIndex, dst_type_index, src_type_index);
+        break;
+      }
+
+      case Opcode::ArrayFill: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArrayFillExpr, type_index);
+        CALLBACK(OnOpcodeIndex, type_index);
+        break;
+      }
+
+      case Opcode::ArrayGet:
+      case Opcode::ArrayGetS:
+      case Opcode::ArrayGetU: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArrayGetExpr, opcode, type_index);
+        CALLBACK(OnOpcodeIndex, type_index);
+        break;
+      }
+
+      case Opcode::ArrayInitData: {
+        uint32_t type_index, data_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&data_index, "data index"));
+        CALLBACK(OnArrayInitDataExpr, type_index, data_index);
+        CALLBACK(OnOpcodeIndexIndex, type_index, data_index);
+        break;
+      }
+
+      case Opcode::ArrayInitElem: {
+        uint32_t type_index, elem_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&elem_index, "elem index"));
+        CALLBACK(OnArrayInitElemExpr, type_index, elem_index);
+        CALLBACK(OnOpcodeIndexIndex, type_index, elem_index);
+        break;
+      }
+
+      case Opcode::ArrayNew: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArrayNewExpr, type_index);
+        CALLBACK(OnOpcodeIndex, type_index);
+        break;
+      }
+
+      case Opcode::ArrayNewData: {
+        uint32_t type_index, data_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&data_index, "data index"));
+        CALLBACK(OnArrayNewDataExpr, type_index, data_index);
+        CALLBACK(OnOpcodeIndexIndex, type_index, data_index);
+        break;
+      }
+
+      case Opcode::ArrayNewDefault: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArrayNewDefaultExpr, type_index);
+        CALLBACK(OnOpcodeIndex, type_index);
+        break;
+      }
+
+      case Opcode::ArrayNewElem: {
+        uint32_t type_index, elem_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&elem_index, "elem index"));
+        CALLBACK(OnArrayNewElemExpr, type_index, elem_index);
+        CALLBACK(OnOpcodeIndexIndex, type_index, elem_index);
+        break;
+      }
+
+      case Opcode::ArrayNewFixed: {
+        uint32_t type_index, count;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&count, "count"));
+        CALLBACK(OnArrayNewFixedExpr, type_index, count);
+        CALLBACK(OnOpcodeUint32Uint32, type_index, count);
+        break;
+      }
+
+      case Opcode::ArraySet: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnArraySetExpr, type_index);
+        CALLBACK(OnOpcodeIndex, type_index);
+        break;
+      }
+
+      case Opcode::ArrayLen:
+      case Opcode::AnyConvertExtern:
+      case Opcode::ExternConvertAny:
+      case Opcode::RefI31:
+      case Opcode::RefEq:
+      case Opcode::I31GetS:
+      case Opcode::I31GetU:
+        CALLBACK(OnGCUnaryExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
+        break;
+
+      case Opcode::RefCast:
+      case Opcode::RefCastNull: {
+        Type type;
+        CHECK_RESULT(
+            ReadHeapType(&type, opcode == Opcode::RefCastNull, "ref.cast"));
+        CALLBACK(OnRefCastExpr, type);
+        CALLBACK(OnOpcodeType, type);
+        break;
+      }
+
+      case Opcode::RefTest:
+      case Opcode::RefTestNull: {
+        Type type;
+        CHECK_RESULT(
+            ReadHeapType(&type, opcode == Opcode::RefTestNull, "ref.test"));
+        CALLBACK(OnRefTestExpr, type);
+        CALLBACK(OnOpcodeType, type);
+        break;
+      }
+
+      case Opcode::BrOnCast:
+      case Opcode::BrOnCastFail: {
+        Index depth;
+        uint8_t flags;
+        Type type1, type2;
+        CHECK_RESULT(ReadU8(&flags, "br_on_cast flags"));
+        CHECK_RESULT(ReadIndex(&depth, "br_on_cast depth"));
+        CHECK_RESULT(
+            ReadHeapType(&type1, (flags & 0x1) != 0, "br_on_cast type1"));
+        CHECK_RESULT(
+            ReadHeapType(&type2, (flags & 0x2) != 0, "br_on_cast type2"));
+        CALLBACK(OnBrOnCastExpr, opcode, depth, type1, type2);
+        break;
+      }
+
+      case Opcode::StructGet:
+      case Opcode::StructGetS:
+      case Opcode::StructGetU: {
+        uint32_t type_index, field_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&field_index, "field index"));
+        CALLBACK(OnStructGetExpr, opcode, type_index, field_index);
+        CALLBACK(OnOpcodeIndexIndex, type_index, field_index);
+        break;
+      }
+
+      case Opcode::StructNew: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnStructNewExpr, type_index);
+        CALLBACK(OnOpcodeIndex, type_index);
+        break;
+      }
+
+      case Opcode::StructNewDefault: {
+        uint32_t type_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CALLBACK(OnStructNewDefaultExpr, type_index);
+        CALLBACK(OnOpcodeIndex, type_index);
+        break;
+      }
+
+      case Opcode::StructSet: {
+        uint32_t type_index, field_index;
+        CHECK_RESULT(ReadIndex(&type_index, "type index"));
+        CHECK_RESULT(ReadIndex(&field_index, "field index"));
+        CALLBACK(OnStructSetExpr, type_index, field_index);
+        CALLBACK(OnOpcodeIndexIndex, type_index, field_index);
         break;
       }
 

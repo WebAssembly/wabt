@@ -167,6 +167,54 @@ Result ExprVisitor::VisitFunc(Func* func) {
 
 Result ExprVisitor::HandleDefaultState(Expr* expr) {
   switch (expr->type()) {
+    case ExprType::ArrayCopy:
+      CHECK_RESULT(delegate_->OnArrayCopyExpr(cast<ArrayCopyExpr>(expr)));
+      break;
+
+    case ExprType::ArrayFill:
+      CHECK_RESULT(delegate_->OnArrayFillExpr(cast<ArrayFillExpr>(expr)));
+      break;
+
+    case ExprType::ArrayGet:
+      CHECK_RESULT(delegate_->OnArrayGetExpr(cast<ArrayGetExpr>(expr)));
+      break;
+
+    case ExprType::ArrayInitData:
+      CHECK_RESULT(
+          delegate_->OnArrayInitDataExpr(cast<ArrayInitDataExpr>(expr)));
+      break;
+
+    case ExprType::ArrayInitElem:
+      CHECK_RESULT(
+          delegate_->OnArrayInitElemExpr(cast<ArrayInitElemExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNew:
+      CHECK_RESULT(delegate_->OnArrayNewExpr(cast<ArrayNewExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewData:
+      CHECK_RESULT(delegate_->OnArrayNewDataExpr(cast<ArrayNewDataExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewDefault:
+      CHECK_RESULT(
+          delegate_->OnArrayNewDefaultExpr(cast<ArrayNewDefaultExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewElem:
+      CHECK_RESULT(delegate_->OnArrayNewElemExpr(cast<ArrayNewElemExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewFixed:
+      CHECK_RESULT(
+          delegate_->OnArrayNewFixedExpr(cast<ArrayNewFixedExpr>(expr)));
+      break;
+
+    case ExprType::ArraySet:
+      CHECK_RESULT(delegate_->OnArraySetExpr(cast<ArraySetExpr>(expr)));
+      break;
+
     case ExprType::AtomicLoad:
       CHECK_RESULT(delegate_->OnAtomicLoadExpr(cast<AtomicLoadExpr>(expr)));
       break;
@@ -215,6 +263,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnBrIfExpr(cast<BrIfExpr>(expr)));
       break;
 
+    case ExprType::BrOnCast:
+      CHECK_RESULT(delegate_->OnBrOnCastExpr(cast<BrOnCastExpr>(expr)));
+      break;
+
     case ExprType::BrOnNonNull:
       CHECK_RESULT(delegate_->OnBrOnNonNullExpr(cast<BrOnNonNullExpr>(expr)));
       break;
@@ -257,6 +309,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
 
     case ExprType::Drop:
       CHECK_RESULT(delegate_->OnDropExpr(cast<DropExpr>(expr)));
+      break;
+
+    case ExprType::GCUnary:
+      CHECK_RESULT(delegate_->OnGCUnaryExpr(cast<GCUnaryExpr>(expr)));
       break;
 
     case ExprType::GlobalGet:
@@ -365,6 +421,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnRefAsNonNullExpr(cast<RefAsNonNullExpr>(expr)));
       break;
 
+    case ExprType::RefCast:
+      CHECK_RESULT(delegate_->OnRefCastExpr(cast<RefCastExpr>(expr)));
+      break;
+
     case ExprType::RefFunc:
       CHECK_RESULT(delegate_->OnRefFuncExpr(cast<RefFuncExpr>(expr)));
       break;
@@ -375,6 +435,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
 
     case ExprType::RefIsNull:
       CHECK_RESULT(delegate_->OnRefIsNullExpr(cast<RefIsNullExpr>(expr)));
+      break;
+
+    case ExprType::RefTest:
+      CHECK_RESULT(delegate_->OnRefTestExpr(cast<RefTestExpr>(expr)));
       break;
 
     case ExprType::Nop:
@@ -409,6 +473,23 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
 
     case ExprType::Store:
       CHECK_RESULT(delegate_->OnStoreExpr(cast<StoreExpr>(expr)));
+      break;
+
+    case ExprType::StructGet:
+      CHECK_RESULT(delegate_->OnStructGetExpr(cast<StructGetExpr>(expr)));
+      break;
+
+    case ExprType::StructNew:
+      CHECK_RESULT(delegate_->OnStructNewExpr(cast<StructNewExpr>(expr)));
+      break;
+
+    case ExprType::StructNewDefault:
+      CHECK_RESULT(
+          delegate_->OnStructNewDefaultExpr(cast<StructNewDefaultExpr>(expr)));
+      break;
+
+    case ExprType::StructSet:
+      CHECK_RESULT(delegate_->OnStructSetExpr(cast<StructSetExpr>(expr)));
       break;
 
     case ExprType::Throw:

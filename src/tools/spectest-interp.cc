@@ -629,12 +629,24 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
     *out_type = Type::I8;
   } else if (type_str == "i16") {
     *out_type = Type::I16;
-  } else if (type_str == "funcref") {
-    *out_type = Type::FuncRef;
-  } else if (type_str == "externref") {
-    *out_type = Type::ExternRef;
+  } else if (type_str == "anyref") {
+    *out_type = Type::AnyRef;
+  } else if (type_str == "arrayref") {
+    *out_type = Type::ArrayRef;
+  } else if (type_str == "botref") {
+    *out_type = Type::BottomRef();
+  } else if (type_str == "eqref") {
+    *out_type = Type::EqRef;
   } else if (type_str == "exnref") {
     *out_type = Type::ExnRef;
+  } else if (type_str == "externref") {
+    *out_type = Type::ExternRef;
+  } else if (type_str == "funcref") {
+    *out_type = Type::FuncRef;
+  } else if (type_str == "i31ref") {
+    *out_type = Type::I31Ref;
+  } else if (type_str == "structref") {
+    *out_type = Type::StructRef;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -853,15 +865,44 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       }
       break;
 
+    case Type::AnyRef:
     case Type::ExternRef:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else if (value_str == "") {
+        out_value->Set(Ref::CreateHostVal(Ref::kAnyHostValue));
+      } else {
+        uint32_t value;
+        CHECK_RESULT(ParseI32Value(&value, value_str));
+        out_value->Set(Ref::CreateHostVal(value));
+      }
+      break;
+
+    case Type::ArrayRef:
+    case Type::EqRef:
+    case Type::StructRef:
       if (value_str == "null") {
         out_value->Set(Ref::Null);
       } else {
         uint32_t value;
         CHECK_RESULT(ParseI32Value(&value, value_str));
-        // TODO: hack, just whatever ref is at this index; but skip null (which
-        // is always 0).
+        // TODO: these cannot be constructed without a type reference.
         out_value->Set(Ref{value + 1});
+      }
+      break;
+
+    case Type::NullRef:
+      assert(type.IsBottomRef());
+      out_value->Set(Ref::Null);
+      break;
+
+    case Type::I31Ref:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        uint32_t value;
+        CHECK_RESULT(ParseI32Value(&value, value_str));
+        out_value->Set(Ref::CreateI31Val(value));
       }
       break;
 
@@ -1918,14 +1959,100 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       break;
     }
 
-    case Type::FuncRef:
-      // A funcref expectation only requires that the reference be a function,
-      // but it doesn't check the actual index.
-      ok = (actual.type == Type::FuncRef || actual.type == Type::RefNull);
+    case Type::AnyRef:
+      ok = false;
+      if (actual.type == Type::AnyRef || actual.type == Type::NullRef) {
+        Ref actual_ref = actual.value.Get<Ref>();
+        Ref expected_ref = expected.value.value.Get<Ref>();
+        if (expected_ref == Ref::Null) {
+          ok = (actual_ref == Ref::Null);
+        } else if (actual_ref != Ref::Null) {
+          ok = expected_ref.IsAnyHostVal() ||
+               actual_ref.GetHostVal() == expected_ref.GetHostVal();
+        }
+      }
       break;
 
+    case Type::ArrayRef:
+      ok = false;
+      if (actual.type == Type::ArrayRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Array;
+      }
+      break;
+
+    case Type::NullRef:
+      assert(expected.value.type.IsBottomRef());
+      ok = actual.value.Get<Ref>() == Ref::Null;
+      break;
+
+    case Type::EqRef: {
+      ok = false;
+      Ref ref = actual.value.Get<Ref>();
+      if (ref == Ref::Null || ref.IsI31Val()) {
+        ok = true;
+      } else if (!ref.IsHostVal()) {
+        if (actual.type == Type::EqRef || actual.type == Type::StructRef ||
+            actual.type == Type::ArrayRef) {
+          ok = true;
+        } else if (actual.type == Type::AnyRef || actual.type == Type::Ref) {
+          RefPtr<Object> obj = store_.UnsafeGet<Object>(ref);
+          ok = obj->kind() == ObjectKind::Array ||
+               obj->kind() == ObjectKind::Struct;
+        }
+      }
+      break;
+    }
+
     case Type::ExternRef:
-      ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
+      ok = false;
+      if (actual.type == Type::ExternRef ||
+          actual.type == Type::NullExternRef) {
+        Ref actual_ref = actual.value.Get<Ref>();
+        Ref expected_ref = expected.value.value.Get<Ref>();
+        if (expected_ref == Ref::Null) {
+          ok = (actual_ref == Ref::Null);
+        } else if (actual_ref != Ref::Null) {
+          ok = expected_ref.IsAnyHostVal() ||
+               actual_ref.GetHostVal() == expected_ref.GetHostVal();
+        }
+      }
+      break;
+
+    case Type::FuncRef:
+      if (actual.type == Type::NullFuncRef) {
+        ok = actual.value.Get<Ref>() == Ref::Null;
+      } else {
+        // A funcref expectation only requires that the reference be a function,
+        // but it doesn't check the actual index.
+        ok = (actual.type == Type::FuncRef || actual.type == Type::RefNull);
+      }
+      break;
+
+    case Type::I31Ref: {
+      ok = false;
+      Ref ref = actual.value.Get<Ref>();
+      if (actual.type == Type::I31Ref) {
+        ok = ref != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 ref != Ref::Null) {
+        ok = ref.IsI31Val();
+      }
+      break;
+    }
+
+    case Type::StructRef:
+      ok = false;
+      if (actual.type == Type::StructRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Struct;
+      }
       break;
 
     case Type::ExnRef:
