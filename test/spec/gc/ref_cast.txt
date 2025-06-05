@@ -1,0 +1,38 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/ref_cast.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+init(externref:1) =>
+out/test/spec/gc/ref_cast.wast:51: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:56: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:57: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:58: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:61: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:62: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:63: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:64: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:69: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:71: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:72: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:73: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:74: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:75: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:76: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:78: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:79: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:81: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:82: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:83: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:84: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:85: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:87: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:88: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:89: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:91: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/ref_cast.wast:92: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:93: assert_trap passed: null reference
+out/test/spec/gc/ref_cast.wast:94: assert_trap passed: null reference
+test-sub() =>
+test-canon() =>
+45/45 tests passed.
+;;; STDOUT ;;)

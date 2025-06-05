@@ -48,7 +48,7 @@ struct TokenInfo {
     Opcode opcode;
   };
 };
-/* maximum key range = 2646, duplicates = 0 */
+/* maximum key range = 3324, duplicates = 0 */
 
 class Perfect_Hash
 {
@@ -63,32 +63,32 @@ Perfect_Hash::hash (const char *str, size_t len)
 {
   static unsigned short asso_values[] =
     {
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659,    1, 2659, 2659,  656,
-       445,    2,   28,    1,   73,  452,   68, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659,  175,    3,   37,  923,   38,
-        64,    1,  315,    3,  327,  298,    5,    4,    1,   96,
-        15,   71,  763,  907,    2,   14,    5,   75,  547,  646,
-       336,  549,   91, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659, 2659,
-      2659, 2659, 2659, 2659, 2659, 2659, 2659
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337,   85, 3337, 3337,  490,
+       351,    1,  145,    0,  545,  469,  322, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337,   11,    3,    3,  300,  125,
+        42,    6,  432,    4,  598,  204,   21,    2,   20,  131,
+        13,   51,  726,  709,   29,    2,    0,    0,  742,  968,
+       404,  158,   33, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337, 3337,
+      3337, 3337, 3337, 3337, 3337, 3337, 3337
     };
   unsigned int hval = len;
 
@@ -223,11 +223,11 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 632,
+      TOTAL_KEYWORDS = 665,
       MIN_WORD_LENGTH = 2,
       MAX_WORD_LENGTH = 35,
       MIN_HASH_VALUE = 13,
-      MAX_HASH_VALUE = 2658
+      MAX_HASH_VALUE = 3336
     };
 
 #if (defined __GNUC__ && __GNUC__ + (__GNUC_MINOR__ >= 6) > 4) || (defined __clang__ && __clang_major__ >= 3)
@@ -238,1701 +238,1811 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
     {
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""},
-#line 145 "src/lexer-keywords.txt"
-      {"f64.le", TokenType::Compare, Opcode::F64Le},
-#line 84 "src/lexer-keywords.txt"
-      {"f32.le", TokenType::Compare, Opcode::F32Le},
-#line 143 "src/lexer-keywords.txt"
-      {"f64.ge", TokenType::Compare, Opcode::F64Ge},
-#line 82 "src/lexer-keywords.txt"
-      {"f32.ge", TokenType::Compare, Opcode::F32Ge},
-      {""}, {""}, {""}, {""},
-#line 147 "src/lexer-keywords.txt"
-      {"f64.lt", TokenType::Compare, Opcode::F64Lt},
-#line 86 "src/lexer-keywords.txt"
-      {"f32.lt", TokenType::Compare, Opcode::F32Lt},
-#line 144 "src/lexer-keywords.txt"
-      {"f64.gt", TokenType::Compare, Opcode::F64Gt},
-#line 83 "src/lexer-keywords.txt"
-      {"f32.gt", TokenType::Compare, Opcode::F32Gt},
-#line 567 "src/lexer-keywords.txt"
-      {"module", TokenType::Module},
-      {""},
-#line 153 "src/lexer-keywords.txt"
-      {"f64.ne", TokenType::Compare, Opcode::F64Ne},
-#line 92 "src/lexer-keywords.txt"
-      {"f32.ne", TokenType::Compare, Opcode::F32Ne},
-#line 452 "src/lexer-keywords.txt"
-      {"i64.ne", TokenType::Compare, Opcode::I64Ne},
-#line 309 "src/lexer-keywords.txt"
-      {"i32.ne", TokenType::Compare, Opcode::I32Ne},
-      {""}, {""},
-#line 152 "src/lexer-keywords.txt"
-      {"f64.neg", TokenType::Unary, Opcode::F64Neg},
-#line 91 "src/lexer-keywords.txt"
-      {"f32.neg", TokenType::Unary, Opcode::F32Neg},
-#line 160 "src/lexer-keywords.txt"
-      {"f64", Type::F64},
-#line 594 "src/lexer-keywords.txt"
-      {"result", TokenType::Result},
-#line 476 "src/lexer-keywords.txt"
-      {"i64", Type::I64},
-      {""}, {""}, {""}, {""},
-#line 40 "src/lexer-keywords.txt"
-      {"br", TokenType::Br, Opcode::Br},
-      {""}, {""},
-#line 110 "src/lexer-keywords.txt"
-      {"f32x4.le", TokenType::Compare, Opcode::F32X4Le},
-      {""},
-#line 108 "src/lexer-keywords.txt"
-      {"f32x4.ge", TokenType::Compare, Opcode::F32X4Ge},
-      {""}, {""}, {""},
-#line 33 "src/lexer-keywords.txt"
-      {"before", TokenType::Before},
-      {""},
-#line 111 "src/lexer-keywords.txt"
-      {"f32x4.lt", TokenType::Compare, Opcode::F32X4Lt},
-      {""},
-#line 109 "src/lexer-keywords.txt"
-      {"f32x4.gt", TokenType::Compare, Opcode::F32X4Gt},
-      {""}, {""}, {""},
-#line 117 "src/lexer-keywords.txt"
-      {"f32x4.ne", TokenType::Compare, Opcode::F32X4Ne},
-      {""},
-#line 362 "src/lexer-keywords.txt"
-      {"i32x4.ne", TokenType::Compare, Opcode::I32X4Ne},
-#line 116 "src/lexer-keywords.txt"
-      {"f32x4.neg", TokenType::Unary, Opcode::F32X4Neg},
-      {""},
-#line 361 "src/lexer-keywords.txt"
-      {"i32x4.neg", TokenType::Unary, Opcode::I32X4Neg},
-      {""},
-#line 130 "src/lexer-keywords.txt"
-      {"f32x4", TokenType::F32X4},
-      {""},
-#line 376 "src/lexer-keywords.txt"
-      {"i32x4", TokenType::I32X4},
-      {""},
-#line 48 "src/lexer-keywords.txt"
-      {"code", TokenType::Code},
-      {""}, {""},
-#line 603 "src/lexer-keywords.txt"
-      {"struct", Type::StructRef, TokenType::Struct},
-#line 54 "src/lexer-keywords.txt"
-      {"do", TokenType::Do},
-#line 509 "src/lexer-keywords.txt"
-      {"i8", Type::I8},
-#line 345 "src/lexer-keywords.txt"
-      {"i32x4.le_s", TokenType::Compare, Opcode::I32X4LeS},
-      {""},
-#line 341 "src/lexer-keywords.txt"
-      {"i32x4.ge_s", TokenType::Compare, Opcode::I32X4GeS},
-      {""},
-#line 353 "src/lexer-keywords.txt"
-      {"i32x4.lt_s", TokenType::Compare, Opcode::I32X4LtS},
-#line 194 "src/lexer-keywords.txt"
-      {"final", TokenType::Final},
-#line 343 "src/lexer-keywords.txt"
-      {"i32x4.gt_s", TokenType::Compare, Opcode::I32X4GtS},
-      {""},
-#line 115 "src/lexer-keywords.txt"
-      {"f32x4.nearest", TokenType::Unary, Opcode::F32X4Nearest},
-#line 101 "src/lexer-keywords.txt"
-      {"f32x4.ceil", TokenType::Unary, Opcode::F32X4Ceil},
-      {""},
-#line 453 "src/lexer-keywords.txt"
-      {"i64.or", TokenType::Binary, Opcode::I64Or},
-#line 310 "src/lexer-keywords.txt"
-      {"i32.or", TokenType::Binary, Opcode::I32Or},
-#line 151 "src/lexer-keywords.txt"
-      {"f64.nearest", TokenType::Unary, Opcode::F64Nearest},
-#line 90 "src/lexer-keywords.txt"
-      {"f32.nearest", TokenType::Unary, Opcode::F32Nearest},
-      {""}, {""}, {""},
-#line 458 "src/lexer-keywords.txt"
-      {"i64.rotl", TokenType::Binary, Opcode::I64Rotl},
-#line 315 "src/lexer-keywords.txt"
-      {"i32.rotl", TokenType::Binary, Opcode::I32Rotl},
-#line 459 "src/lexer-keywords.txt"
-      {"i64.rotr", TokenType::Binary, Opcode::I64Rotr},
-#line 316 "src/lexer-keywords.txt"
-      {"i32.rotr", TokenType::Binary, Opcode::I32Rotr},
-#line 568 "src/lexer-keywords.txt"
-      {"mut", TokenType::Mut},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 128 "src/lexer-keywords.txt"
-      {"f32x4.trunc", TokenType::Unary, Opcode::F32X4Trunc},
-#line 157 "src/lexer-keywords.txt"
-      {"f64.store", TokenType::Store, Opcode::F64Store},
-#line 95 "src/lexer-keywords.txt"
-      {"f32.store", TokenType::Store, Opcode::F32Store},
-#line 466 "src/lexer-keywords.txt"
-      {"i64.store", TokenType::Store, Opcode::I64Store},
-#line 322 "src/lexer-keywords.txt"
-      {"i32.store", TokenType::Store, Opcode::I32Store},
-      {""}, {""},
-#line 124 "src/lexer-keywords.txt"
-      {"f32x4.replace_lane", TokenType::SimdLaneOp, Opcode::F32X4ReplaceLane},
-#line 51 "src/lexer-keywords.txt"
-      {"declare", TokenType::Declare},
-#line 364 "src/lexer-keywords.txt"
-      {"i32x4.replace_lane", TokenType::SimdLaneOp, Opcode::I32X4ReplaceLane},
-      {""},
-#line 195 "src/lexer-keywords.txt"
-      {"func", Type::FuncRef, TokenType::Func},
-#line 50 "src/lexer-keywords.txt"
+#line 67 "src/lexer-keywords.txt"
       {"data", TokenType::Data},
-#line 592 "src/lexer-keywords.txt"
-      {"ref.null", TokenType::RefNull, Opcode::RefNull},
-#line 585 "src/lexer-keywords.txt"
-      {"rec", TokenType::Rec},
-#line 613 "src/lexer-keywords.txt"
-      {"table", TokenType::Table},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 599 "src/lexer-keywords.txt"
-      {"return", TokenType::Return, Opcode::Return},
-      {""}, {""}, {""}, {""}, {""},
-#line 608 "src/lexer-keywords.txt"
-      {"table.get", TokenType::TableGet, Opcode::TableGet},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 611 "src/lexer-keywords.txt"
-      {"table.set", TokenType::TableSet, Opcode::TableSet},
-      {""}, {""},
-#line 574 "src/lexer-keywords.txt"
-      {"none", Type::NullRef, TokenType::None},
-#line 159 "src/lexer-keywords.txt"
-      {"f64.trunc", TokenType::Unary, Opcode::F64Trunc},
-#line 97 "src/lexer-keywords.txt"
-      {"f32.trunc", TokenType::Unary, Opcode::F32Trunc},
-      {""}, {""},
-#line 53 "src/lexer-keywords.txt"
-      {"delegate", TokenType::Delegate},
-      {""}, {""},
-#line 600 "src/lexer-keywords.txt"
-      {"select", TokenType::Select, Opcode::Select},
-#line 134 "src/lexer-keywords.txt"
-      {"f64.const", TokenType::Const, Opcode::F64Const},
-#line 72 "src/lexer-keywords.txt"
-      {"f32.const", TokenType::Const, Opcode::F32Const},
-#line 425 "src/lexer-keywords.txt"
-      {"i64.const", TokenType::Const, Opcode::I64Const},
-#line 287 "src/lexer-keywords.txt"
-      {"i32.const", TokenType::Const, Opcode::I32Const},
-      {""}, {""}, {""}, {""}, {""},
-#line 43 "src/lexer-keywords.txt"
-      {"call", TokenType::Call, Opcode::Call},
-      {""},
-#line 556 "src/lexer-keywords.txt"
-      {"local", TokenType::Local},
-      {""}, {""}, {""},
-#line 573 "src/lexer-keywords.txt"
-      {"nofunc", Type::NullFuncRef, TokenType::NoFunc},
-#line 576 "src/lexer-keywords.txt"
-      {"null", TokenType::Null},
-      {""}, {""},
-#line 363 "src/lexer-keywords.txt"
-      {"i32x4.relaxed_laneselect", TokenType::Ternary, Opcode::I32X4RelaxedLaneSelect},
-      {""}, {""},
-#line 555 "src/lexer-keywords.txt"
-      {"local.tee", TokenType::LocalTee, Opcode::LocalTee},
-      {""},
-#line 553 "src/lexer-keywords.txt"
-      {"local.get", TokenType::LocalGet, Opcode::LocalGet},
-      {""}, {""}, {""},
-#line 150 "src/lexer-keywords.txt"
-      {"f64.mul", TokenType::Binary, Opcode::F64Mul},
-#line 89 "src/lexer-keywords.txt"
-      {"f32.mul", TokenType::Binary, Opcode::F32Mul},
-#line 451 "src/lexer-keywords.txt"
-      {"i64.mul", TokenType::Binary, Opcode::I64Mul},
-#line 308 "src/lexer-keywords.txt"
-      {"i32.mul", TokenType::Binary, Opcode::I32Mul},
-      {""}, {""}, {""},
-#line 554 "src/lexer-keywords.txt"
-      {"local.set", TokenType::LocalSet, Opcode::LocalSet},
-      {""},
-#line 387 "src/lexer-keywords.txt"
-      {"i64.and", TokenType::Binary, Opcode::I64And},
-#line 258 "src/lexer-keywords.txt"
-      {"i32.and", TokenType::Binary, Opcode::I32And},
-      {""}, {""}, {""},
-#line 346 "src/lexer-keywords.txt"
-      {"i32x4.le_u", TokenType::Compare, Opcode::I32X4LeU},
-      {""},
-#line 342 "src/lexer-keywords.txt"
-      {"i32x4.ge_u", TokenType::Compare, Opcode::I32X4GeU},
-      {""},
-#line 354 "src/lexer-keywords.txt"
-      {"i32x4.lt_u", TokenType::Compare, Opcode::I32X4LtU},
-      {""},
-#line 344 "src/lexer-keywords.txt"
-      {"i32x4.gt_u", TokenType::Compare, Opcode::I32X4GtU},
-      {""}, {""}, {""},
-#line 100 "src/lexer-keywords.txt"
-      {"f32x4.add", TokenType::Binary, Opcode::F32X4Add},
-      {""},
-#line 335 "src/lexer-keywords.txt"
-      {"i32x4.add", TokenType::Binary, Opcode::I32X4Add},
-      {""}, {""}, {""}, {""},
-#line 114 "src/lexer-keywords.txt"
-      {"f32x4.mul", TokenType::Binary, Opcode::F32X4Mul},
-      {""},
-#line 360 "src/lexer-keywords.txt"
-      {"i32x4.mul", TokenType::Binary, Opcode::I32X4Mul},
-#line 122 "src/lexer-keywords.txt"
-      {"f32x4.relaxed_min", TokenType::Binary, Opcode::F32X4RelaxedMin},
-#line 440 "src/lexer-keywords.txt"
-      {"i64.le_s", TokenType::Compare, Opcode::I64LeS},
-#line 299 "src/lexer-keywords.txt"
-      {"i32.le_s", TokenType::Compare, Opcode::I32LeS},
-#line 436 "src/lexer-keywords.txt"
-      {"i64.ge_s", TokenType::Compare, Opcode::I64GeS},
-#line 295 "src/lexer-keywords.txt"
-      {"i32.ge_s", TokenType::Compare, Opcode::I32GeS},
-#line 449 "src/lexer-keywords.txt"
-      {"i64.lt_s", TokenType::Compare, Opcode::I64LtS},
-#line 306 "src/lexer-keywords.txt"
-      {"i32.lt_s", TokenType::Compare, Opcode::I32LtS},
-#line 438 "src/lexer-keywords.txt"
-      {"i64.gt_s", TokenType::Compare, Opcode::I64GtS},
-#line 297 "src/lexer-keywords.txt"
-      {"i32.gt_s", TokenType::Compare, Opcode::I32GtS},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 424 "src/lexer-keywords.txt"
-      {"i64.clz", TokenType::Unary, Opcode::I64Clz},
-#line 286 "src/lexer-keywords.txt"
-      {"i32.clz", TokenType::Unary, Opcode::I32Clz},
-      {""}, {""},
-#line 426 "src/lexer-keywords.txt"
-      {"i64.ctz", TokenType::Unary, Opcode::I64Ctz},
-#line 288 "src/lexer-keywords.txt"
-      {"i32.ctz", TokenType::Unary, Opcode::I32Ctz},
-#line 132 "src/lexer-keywords.txt"
-      {"f64.add", TokenType::Binary, Opcode::F64Add},
-#line 70 "src/lexer-keywords.txt"
-      {"f32.add", TokenType::Binary, Opcode::F32Add},
-#line 386 "src/lexer-keywords.txt"
-      {"i64.add", TokenType::Binary, Opcode::I64Add},
-#line 257 "src/lexer-keywords.txt"
-      {"i32.add", TokenType::Binary, Opcode::I32Add},
-#line 465 "src/lexer-keywords.txt"
-      {"i64.store8", TokenType::Store, Opcode::I64Store8},
-#line 321 "src/lexer-keywords.txt"
-      {"i32.store8", TokenType::Store, Opcode::I32Store8},
-      {""}, {""}, {""},
-#line 146 "src/lexer-keywords.txt"
-      {"f64.load", TokenType::Load, Opcode::F64Load},
-#line 85 "src/lexer-keywords.txt"
-      {"f32.load", TokenType::Load, Opcode::F32Load},
-#line 448 "src/lexer-keywords.txt"
-      {"i64.load", TokenType::Load, Opcode::I64Load},
-#line 305 "src/lexer-keywords.txt"
-      {"i32.load", TokenType::Load, Opcode::I32Load},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-#line 336 "src/lexer-keywords.txt"
-      {"i32x4.all_true", TokenType::Unary, Opcode::I32X4AllTrue},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 416 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw.or", TokenType::AtomicRmw, Opcode::I64AtomicRmwOr},
-#line 279 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw.or", TokenType::AtomicRmw, Opcode::I32AtomicRmwOr},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 423 "src/lexer-keywords.txt"
-      {"i64.atomic.store", TokenType::AtomicStore, Opcode::I64AtomicStore},
-#line 285 "src/lexer-keywords.txt"
-      {"i32.atomic.store", TokenType::AtomicStore, Opcode::I32AtomicStore},
-      {""}, {""}, {""}, {""},
-#line 442 "src/lexer-keywords.txt"
-      {"i64.load16_s", TokenType::Load, Opcode::I64Load16S},
-#line 301 "src/lexer-keywords.txt"
-      {"i32.load16_s", TokenType::Load, Opcode::I32Load16S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 456 "src/lexer-keywords.txt"
-      {"i64.rem_s", TokenType::Binary, Opcode::I64RemS},
-#line 313 "src/lexer-keywords.txt"
-      {"i32.rem_s", TokenType::Binary, Opcode::I32RemS},
-#line 588 "src/lexer-keywords.txt"
-      {"ref.as_non_null", TokenType::RefAsNonNull, Opcode::RefAsNonNull},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 548 "src/lexer-keywords.txt"
-      {"if", TokenType::If, Opcode::If},
-#line 468 "src/lexer-keywords.txt"
-      {"i64.trunc_f32_s", TokenType::Convert, Opcode::I64TruncF32S},
-#line 324 "src/lexer-keywords.txt"
-      {"i32.trunc_f32_s", TokenType::Convert, Opcode::I32TruncF32S},
-#line 59 "src/lexer-keywords.txt"
-      {"else", TokenType::Else, Opcode::Else},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 598 "src/lexer-keywords.txt"
-      {"return_call", TokenType::ReturnCall, Opcode::ReturnCall},
-#line 38 "src/lexer-keywords.txt"
-      {"br_on_null", TokenType::BrOnNull, Opcode::BrOnNull},
-      {""},
-#line 586 "src/lexer-keywords.txt"
-      {"ref", TokenType::Ref},
-      {""}, {""},
-#line 123 "src/lexer-keywords.txt"
-      {"f32x4.relaxed_nmadd", TokenType::Ternary, Opcode::F32X4RelaxedNmadd},
-      {""}, {""},
-#line 441 "src/lexer-keywords.txt"
-      {"i64.le_u", TokenType::Compare, Opcode::I64LeU},
-#line 300 "src/lexer-keywords.txt"
-      {"i32.le_u", TokenType::Compare, Opcode::I32LeU},
-#line 437 "src/lexer-keywords.txt"
-      {"i64.ge_u", TokenType::Compare, Opcode::I64GeU},
-#line 296 "src/lexer-keywords.txt"
-      {"i32.ge_u", TokenType::Compare, Opcode::I32GeU},
-#line 450 "src/lexer-keywords.txt"
-      {"i64.lt_u", TokenType::Compare, Opcode::I64LtU},
-#line 307 "src/lexer-keywords.txt"
-      {"i32.lt_u", TokenType::Compare, Opcode::I32LtU},
-#line 439 "src/lexer-keywords.txt"
-      {"i64.gt_u", TokenType::Compare, Opcode::I64GtU},
-#line 298 "src/lexer-keywords.txt"
-      {"i32.gt_u", TokenType::Compare, Opcode::I32GtU},
-#line 419 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw.xor", TokenType::AtomicRmw, Opcode::I64AtomicRmwXor},
-#line 282 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw.xor", TokenType::AtomicRmw, Opcode::I32AtomicRmwXor},
-#line 133 "src/lexer-keywords.txt"
-      {"f64.ceil", TokenType::Unary, Opcode::F64Ceil},
-#line 71 "src/lexer-keywords.txt"
-      {"f32.ceil", TokenType::Unary, Opcode::F32Ceil},
-      {""}, {""},
-#line 349 "src/lexer-keywords.txt"
-      {"i32x4.relaxed_trunc_f64x2_s_zero", TokenType::Unary, Opcode::I32X4RelaxedTruncF64X2SZero},
-#line 460 "src/lexer-keywords.txt"
-      {"i64.shl", TokenType::Binary, Opcode::I64Shl},
-#line 317 "src/lexer-keywords.txt"
-      {"i32.shl", TokenType::Binary, Opcode::I32Shl},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 457 "src/lexer-keywords.txt"
-      {"i64.rem_u", TokenType::Binary, Opcode::I64RemU},
-#line 314 "src/lexer-keywords.txt"
-      {"i32.rem_u", TokenType::Binary, Opcode::I32RemU},
-      {""}, {""}, {""},
-#line 355 "src/lexer-keywords.txt"
-      {"i32x4.max_s", TokenType::Binary, Opcode::I32X4MaxS},
-      {""}, {""}, {""},
-#line 593 "src/lexer-keywords.txt"
-      {"register", TokenType::Register},
-      {""}, {""}, {""}, {""}, {""},
-#line 446 "src/lexer-keywords.txt"
-      {"i64.load8_s", TokenType::Load, Opcode::I64Load8S},
-#line 303 "src/lexer-keywords.txt"
-      {"i32.load8_s", TokenType::Load, Opcode::I32Load8S},
-#line 120 "src/lexer-keywords.txt"
-      {"f32x4.relaxed_madd", TokenType::Ternary, Opcode::F32X4RelaxedMadd},
-      {""},
-#line 60 "src/lexer-keywords.txt"
-      {"end", TokenType::End, Opcode::End},
-      {""}, {""}, {""},
-#line 365 "src/lexer-keywords.txt"
-      {"i32x4.shl", TokenType::Binary, Opcode::I32X4Shl},
-      {""},
-#line 604 "src/lexer-keywords.txt"
-      {"structref", Type::StructRef},
-      {""}, {""}, {""}, {""},
-#line 470 "src/lexer-keywords.txt"
-      {"i64.trunc_f64_s", TokenType::Convert, Opcode::I64TruncF64S},
-#line 326 "src/lexer-keywords.txt"
-      {"i32.trunc_f64_s", TokenType::Convert, Opcode::I32TruncF64S},
-      {""},
-#line 391 "src/lexer-keywords.txt"
-      {"i64.atomic.load", TokenType::AtomicLoad, Opcode::I64AtomicLoad},
-#line 261 "src/lexer-keywords.txt"
-      {"i32.atomic.load", TokenType::AtomicLoad, Opcode::I32AtomicLoad},
-      {""},
-#line 589 "src/lexer-keywords.txt"
-      {"ref.extern", TokenType::RefExtern},
-#line 56 "src/lexer-keywords.txt"
-      {"either", TokenType::Either},
-      {""}, {""},
-#line 66 "src/lexer-keywords.txt"
-      {"exn", Type::ExnRef, TokenType::Exn},
-      {""}, {""},
-#line 400 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw32.and_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32AndU},
-#line 61 "src/lexer-keywords.txt"
-      {"tag", TokenType::Tag},
-#line 614 "src/lexer-keywords.txt"
-      {"then", TokenType::Then},
-#line 198 "src/lexer-keywords.txt"
-      {"get", TokenType::Get},
-      {""}, {""}, {""},
-#line 443 "src/lexer-keywords.txt"
-      {"i64.load16_u", TokenType::Load, Opcode::I64Load16U},
-#line 302 "src/lexer-keywords.txt"
-      {"i32.load16_u", TokenType::Load, Opcode::I32Load16U},
-#line 350 "src/lexer-keywords.txt"
-      {"i32x4.relaxed_trunc_f64x2_u_zero", TokenType::Unary, Opcode::I32X4RelaxedTruncF64X2UZero},
-#line 414 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw.and", TokenType::AtomicRmw, Opcode::I64AtomicRmwAnd},
-#line 277 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw.and", TokenType::AtomicRmw, Opcode::I32AtomicRmwAnd},
-      {""},
-#line 552 "src/lexer-keywords.txt"
-      {"item", TokenType::Item},
-#line 571 "src/lexer-keywords.txt"
-      {"noexn", Type::NullExnRef, TokenType::NoExn},
-#line 422 "src/lexer-keywords.txt"
-      {"i64.atomic.store8", TokenType::AtomicStore, Opcode::I64AtomicStore8},
-#line 284 "src/lexer-keywords.txt"
-      {"i32.atomic.store8", TokenType::AtomicStore, Opcode::I32AtomicStore8},
-#line 508 "src/lexer-keywords.txt"
-      {"i64.xor", TokenType::Binary, Opcode::I64Xor},
-#line 385 "src/lexer-keywords.txt"
-      {"i32.xor", TokenType::Binary, Opcode::I32Xor},
-      {""},
-#line 402 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw32.or_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32OrU},
-#line 64 "src/lexer-keywords.txt"
-      {"extern", Type::ExternRef, TokenType::Extern},
-      {""},
-#line 356 "src/lexer-keywords.txt"
-      {"i32x4.max_u", TokenType::Binary, Opcode::I32X4MaxU},
-      {""},
-#line 572 "src/lexer-keywords.txt"
-      {"noextern", Type::NullExternRef, TokenType::NoExtern},
-      {""},
-#line 107 "src/lexer-keywords.txt"
-      {"f32x4.floor", TokenType::Unary, Opcode::F32X4Floor},
-#line 149 "src/lexer-keywords.txt"
-      {"f64.min", TokenType::Binary, Opcode::F64Min},
-#line 88 "src/lexer-keywords.txt"
-      {"f32.min", TokenType::Binary, Opcode::F32Min},
-      {""}, {""},
-#line 612 "src/lexer-keywords.txt"
-      {"table.size", TokenType::TableSize, Opcode::TableSize},
-#line 447 "src/lexer-keywords.txt"
-      {"i64.load8_u", TokenType::Load, Opcode::I64Load8U},
-#line 304 "src/lexer-keywords.txt"
-      {"i32.load8_u", TokenType::Load, Opcode::I32Load8U},
-      {""}, {""},
-#line 403 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw32.sub_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32SubU},
-#line 469 "src/lexer-keywords.txt"
-      {"i64.trunc_f32_u", TokenType::Convert, Opcode::I64TruncF32U},
-#line 325 "src/lexer-keywords.txt"
-      {"i32.trunc_f32_u", TokenType::Convert, Opcode::I32TruncF32U},
-#line 106 "src/lexer-keywords.txt"
-      {"f32x4.extract_lane", TokenType::SimdLaneOp, Opcode::F32X4ExtractLane},
-#line 610 "src/lexer-keywords.txt"
-      {"table.init", TokenType::TableInit, Opcode::TableInit},
-#line 340 "src/lexer-keywords.txt"
-      {"i32x4.extract_lane", TokenType::SimdLaneOp, Opcode::I32X4ExtractLane},
-      {""},
-#line 193 "src/lexer-keywords.txt"
-      {"field", TokenType::Field},
-#line 113 "src/lexer-keywords.txt"
-      {"f32x4.min", TokenType::Binary, Opcode::F32X4Min},
-#line 98 "src/lexer-keywords.txt"
-      {"f32", Type::F32},
-      {""},
-#line 332 "src/lexer-keywords.txt"
-      {"i32", Type::I32},
-#line 399 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw32.add_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32AddU},
-      {""}, {""}, {""}, {""},
-#line 170 "src/lexer-keywords.txt"
-      {"f64x2.le", TokenType::Compare, Opcode::F64X2Le},
-      {""},
-#line 168 "src/lexer-keywords.txt"
-      {"f64x2.ge", TokenType::Compare, Opcode::F64X2Ge},
-      {""}, {""},
-#line 413 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw.add", TokenType::AtomicRmw, Opcode::I64AtomicRmwAdd},
-#line 276 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw.add", TokenType::AtomicRmw, Opcode::I32AtomicRmwAdd},
-      {""},
-#line 171 "src/lexer-keywords.txt"
-      {"f64x2.lt", TokenType::Compare, Opcode::F64X2Lt},
-      {""},
-#line 169 "src/lexer-keywords.txt"
-      {"f64x2.gt", TokenType::Compare, Opcode::F64X2Gt},
-      {""},
-#line 142 "src/lexer-keywords.txt"
-      {"f64.floor", TokenType::Unary, Opcode::F64Floor},
-#line 81 "src/lexer-keywords.txt"
-      {"f32.floor", TokenType::Unary, Opcode::F32Floor},
-#line 177 "src/lexer-keywords.txt"
-      {"f64x2.ne", TokenType::Compare, Opcode::F64X2Ne},
-      {""},
-#line 483 "src/lexer-keywords.txt"
-      {"i64x2.ne", TokenType::Binary, Opcode::I64X2Ne},
-#line 176 "src/lexer-keywords.txt"
-      {"f64x2.neg", TokenType::Unary, Opcode::F64X2Neg},
-      {""},
-#line 489 "src/lexer-keywords.txt"
-      {"i64x2.neg", TokenType::Unary, Opcode::I64X2Neg},
-      {""}, {""}, {""}, {""}, {""},
-#line 197 "src/lexer-keywords.txt"
-      {"function", TokenType::Function},
-      {""}, {""}, {""}, {""}, {""},
-#line 486 "src/lexer-keywords.txt"
-      {"i64x2.le_s", TokenType::Binary, Opcode::I64X2LeS},
-      {""},
-#line 487 "src/lexer-keywords.txt"
-      {"i64x2.ge_s", TokenType::Binary, Opcode::I64X2GeS},
-      {""},
-#line 484 "src/lexer-keywords.txt"
-      {"i64x2.lt_s", TokenType::Binary, Opcode::I64X2LtS},
-      {""},
-#line 485 "src/lexer-keywords.txt"
-      {"i64x2.gt_s", TokenType::Binary, Opcode::I64X2GtS},
-      {""},
-#line 175 "src/lexer-keywords.txt"
-      {"f64x2.nearest", TokenType::Unary, Opcode::F64X2Nearest},
-#line 163 "src/lexer-keywords.txt"
-      {"f64x2.ceil", TokenType::Unary, Opcode::F64X2Ceil},
-      {""}, {""}, {""}, {""},
-#line 590 "src/lexer-keywords.txt"
-      {"ref.func", TokenType::RefFunc, Opcode::RefFunc},
-      {""}, {""}, {""}, {""}, {""},
-#line 112 "src/lexer-keywords.txt"
-      {"f32x4.max", TokenType::Binary, Opcode::F32X4Max},
-      {""},
-#line 431 "src/lexer-keywords.txt"
-      {"i64.extend16_s", TokenType::Unary, Opcode::I64Extend16S},
-#line 293 "src/lexer-keywords.txt"
-      {"i32.extend16_s", TokenType::Unary, Opcode::I32Extend16S},
-#line 471 "src/lexer-keywords.txt"
-      {"i64.trunc_f64_u", TokenType::Convert, Opcode::I64TruncF64U},
-#line 327 "src/lexer-keywords.txt"
-      {"i32.trunc_f64_u", TokenType::Convert, Opcode::I32TruncF64U},
-      {""}, {""}, {""},
-#line 188 "src/lexer-keywords.txt"
-      {"f64x2.trunc", TokenType::Unary, Opcode::F64X2Trunc},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 184 "src/lexer-keywords.txt"
-      {"f64x2.replace_lane", TokenType::SimdLaneOp, Opcode::F64X2ReplaceLane},
-      {""},
-#line 497 "src/lexer-keywords.txt"
-      {"i64x2.replace_lane", TokenType::SimdLaneOp, Opcode::I64X2ReplaceLane},
-      {""},
-#line 591 "src/lexer-keywords.txt"
-      {"ref.is_null", TokenType::RefIsNull, Opcode::RefIsNull},
-#line 202 "src/lexer-keywords.txt"
-      {"i16", Type::I16},
-      {""},
-#line 407 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw8.and_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8AndU},
-#line 270 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw8.and_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8AndU},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 461 "src/lexer-keywords.txt"
-      {"i64.shr_s", TokenType::Binary, Opcode::I64ShrS},
-#line 318 "src/lexer-keywords.txt"
-      {"i32.shr_s", TokenType::Binary, Opcode::I32ShrS},
-      {""}, {""},
-#line 233 "src/lexer-keywords.txt"
-      {"i16x8.ne", TokenType::Compare, Opcode::I16X8Ne},
-      {""}, {""},
-#line 231 "src/lexer-keywords.txt"
-      {"i16x8.neg", TokenType::Unary, Opcode::I16X8Neg},
-      {""},
-#line 464 "src/lexer-keywords.txt"
-      {"i64.store32", TokenType::Store, Opcode::I64Store32},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 218 "src/lexer-keywords.txt"
-      {"i16x8.le_s", TokenType::Compare, Opcode::I16X8LeS},
-      {""},
-#line 214 "src/lexer-keywords.txt"
-      {"i16x8.ge_s", TokenType::Compare, Opcode::I16X8GeS},
-      {""},
-#line 222 "src/lexer-keywords.txt"
-      {"i16x8.lt_s", TokenType::Compare, Opcode::I16X8LtS},
-      {""},
-#line 216 "src/lexer-keywords.txt"
-      {"i16x8.gt_s", TokenType::Compare, Opcode::I16X8GtS},
-      {""}, {""}, {""}, {""},
-#line 366 "src/lexer-keywords.txt"
-      {"i32x4.shr_s", TokenType::Binary, Opcode::I32X4ShrS},
-      {""}, {""}, {""}, {""},
-#line 37 "src/lexer-keywords.txt"
-      {"br_on_non_null", TokenType::BrOnNonNull, Opcode::BrOnNonNull},
-      {""},
-#line 406 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw8.add_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8AddU},
-#line 269 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw8.add_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8AddU},
-      {""}, {""}, {""}, {""}, {""},
-#line 496 "src/lexer-keywords.txt"
-      {"i64x2.relaxed_laneselect", TokenType::Ternary, Opcode::I64X2RelaxedLaneSelect},
-      {""}, {""}, {""},
-#line 78 "src/lexer-keywords.txt"
-      {"f32.demote_f64", TokenType::Convert, Opcode::F32DemoteF64},
-      {""}, {""},
-#line 250 "src/lexer-keywords.txt"
-      {"i16x8", TokenType::I16X8},
-      {""}, {""}, {""}, {""}, {""},
-#line 236 "src/lexer-keywords.txt"
-      {"i16x8.replace_lane", TokenType::SimdLaneOp, Opcode::I16X8ReplaceLane},
-      {""}, {""}, {""},
-#line 462 "src/lexer-keywords.txt"
-      {"i64.shr_u", TokenType::Binary, Opcode::I64ShrU},
-#line 319 "src/lexer-keywords.txt"
-      {"i32.shr_u", TokenType::Binary, Opcode::I32ShrU},
-      {""}, {""}, {""}, {""}, {""},
-#line 433 "src/lexer-keywords.txt"
-      {"i64.extend8_s", TokenType::Unary, Opcode::I64Extend8S},
-#line 294 "src/lexer-keywords.txt"
-      {"i32.extend8_s", TokenType::Unary, Opcode::I32Extend8S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 162 "src/lexer-keywords.txt"
-      {"f64x2.add", TokenType::Binary, Opcode::F64X2Add},
-#line 596 "src/lexer-keywords.txt"
-      {"return_call_indirect", TokenType::ReturnCallIndirect, Opcode::ReturnCallIndirect},
-#line 477 "src/lexer-keywords.txt"
-      {"i64x2.add", TokenType::Binary, Opcode::I64X2Add},
-      {""}, {""}, {""},
-#line 357 "src/lexer-keywords.txt"
-      {"i32x4.min_s", TokenType::Binary, Opcode::I32X4MinS},
-#line 174 "src/lexer-keywords.txt"
-      {"f64x2.mul", TokenType::Binary, Opcode::F64X2Mul},
-      {""},
-#line 481 "src/lexer-keywords.txt"
-      {"i64x2.mul", TokenType::Binary, Opcode::I64X2Mul},
-#line 182 "src/lexer-keywords.txt"
-      {"f64x2.relaxed_min", TokenType::Binary, Opcode::F64X2RelaxedMin},
-      {""}, {""},
-#line 569 "src/lexer-keywords.txt"
-      {"nan:arithmetic", TokenType::NanArithmetic},
-#line 367 "src/lexer-keywords.txt"
-      {"i32x4.shr_u", TokenType::Binary, Opcode::I32X4ShrU},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 418 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw.xchg", TokenType::AtomicRmw, Opcode::I64AtomicRmwXchg},
-#line 281 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw.xchg", TokenType::AtomicRmw, Opcode::I32AtomicRmwXchg},
-      {""}, {""}, {""}, {""},
-#line 570 "src/lexer-keywords.txt"
-      {"nan:canonical", TokenType::NanCanonical},
-#line 536 "src/lexer-keywords.txt"
-      {"i8x16.ne", TokenType::Compare, Opcode::I8X16Ne},
-      {""}, {""},
-#line 534 "src/lexer-keywords.txt"
-      {"i8x16.neg", TokenType::Unary, Opcode::I8X16Neg},
-      {""}, {""}, {""},
-#line 52 "src/lexer-keywords.txt"
-      {"definition", TokenType::Definition},
-#line 390 "src/lexer-keywords.txt"
-      {"i64.atomic.load8_u", TokenType::AtomicLoad, Opcode::I64AtomicLoad8U},
-#line 260 "src/lexer-keywords.txt"
-      {"i32.atomic.load8_u", TokenType::AtomicLoad, Opcode::I32AtomicLoad8U},
-#line 551 "src/lexer-keywords.txt"
-      {"invoke", TokenType::Invoke},
-#line 444 "src/lexer-keywords.txt"
-      {"i64.load32_s", TokenType::Load, Opcode::I64Load32S},
-#line 234 "src/lexer-keywords.txt"
-      {"i16x8.relaxed_laneselect", TokenType::Ternary, Opcode::I16X8RelaxedLaneSelect},
-#line 409 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw8.or_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8OrU},
-#line 272 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw8.or_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8OrU},
-#line 524 "src/lexer-keywords.txt"
-      {"i8x16.le_s", TokenType::Compare, Opcode::I8X16LeS},
-      {""},
-#line 520 "src/lexer-keywords.txt"
-      {"i8x16.ge_s", TokenType::Compare, Opcode::I8X16GeS},
-      {""},
-#line 526 "src/lexer-keywords.txt"
-      {"i8x16.lt_s", TokenType::Compare, Opcode::I8X16LtS},
-      {""},
-#line 522 "src/lexer-keywords.txt"
-      {"i8x16.gt_s", TokenType::Compare, Opcode::I8X16GtS},
-      {""},
-#line 36 "src/lexer-keywords.txt"
-      {"br_if", TokenType::BrIf, Opcode::BrIf},
-      {""}, {""}, {""},
-#line 650 "src/lexer-keywords.txt"
-      {"i64.mul_wide_s", TokenType::Binary, Opcode::I64MulWideS},
-      {""},
-#line 490 "src/lexer-keywords.txt"
-      {"i64x2.all_true", TokenType::Unary, Opcode::I64X2AllTrue},
+      {"f64.gt", TokenType::Compare, Opcode::F64Gt},
+#line 101 "src/lexer-keywords.txt"
+      {"f32.gt", TokenType::Compare, Opcode::F32Gt},
+#line 588 "src/lexer-keywords.txt"
+      {"mut", TokenType::Mut},
       {""}, {""}, {""}, {""}, {""},
-#line 219 "src/lexer-keywords.txt"
-      {"i16x8.le_u", TokenType::Compare, Opcode::I16X8LeU},
-#line 45 "src/lexer-keywords.txt"
-      {"catch_all", TokenType::CatchAll, Opcode::CatchAll},
-#line 215 "src/lexer-keywords.txt"
-      {"i16x8.ge_u", TokenType::Compare, Opcode::I16X8GeU},
-#line 358 "src/lexer-keywords.txt"
-      {"i32x4.min_u", TokenType::Binary, Opcode::I32X4MinU},
-#line 223 "src/lexer-keywords.txt"
-      {"i16x8.lt_u", TokenType::Compare, Opcode::I16X8LtU},
+#line 619 "src/lexer-keywords.txt"
+      {"ref.test", TokenType::RefTest, Opcode::RefTest},
+      {""}, {""}, {""},
+#line 161 "src/lexer-keywords.txt"
+      {"f64.ge", TokenType::Compare, Opcode::F64Ge},
+#line 100 "src/lexer-keywords.txt"
+      {"f32.ge", TokenType::Compare, Opcode::F32Ge},
+#line 621 "src/lexer-keywords.txt"
+      {"result", TokenType::Result},
       {""},
-#line 217 "src/lexer-keywords.txt"
-      {"i16x8.gt_u", TokenType::Compare, Opcode::I16X8GtU},
-      {""}, {""}, {""}, {""},
-#line 565 "src/lexer-keywords.txt"
-      {"memory.size", TokenType::MemorySize, Opcode::MemorySize},
-#line 206 "src/lexer-keywords.txt"
-      {"i16x8.add", TokenType::Binary, Opcode::I16X8Add},
-      {""}, {""}, {""}, {""},
-#line 547 "src/lexer-keywords.txt"
-      {"i8x16", TokenType::I8X16},
-#line 539 "src/lexer-keywords.txt"
-      {"i8x16.replace_lane", TokenType::SimdLaneOp, Opcode::I8X16ReplaceLane},
-#line 228 "src/lexer-keywords.txt"
-      {"i16x8.mul", TokenType::Binary, Opcode::I16X8Mul},
+#line 165 "src/lexer-keywords.txt"
+      {"f64.lt", TokenType::Compare, Opcode::F64Lt},
+#line 104 "src/lexer-keywords.txt"
+      {"f32.lt", TokenType::Compare, Opcode::F32Lt},
+      {""}, {""}, {""},
+#line 171 "src/lexer-keywords.txt"
+      {"f64.ne", TokenType::Compare, Opcode::F64Ne},
+#line 110 "src/lexer-keywords.txt"
+      {"f32.ne", TokenType::Compare, Opcode::F32Ne},
+      {""},
+#line 170 "src/lexer-keywords.txt"
+      {"f64.neg", TokenType::Unary, Opcode::F64Neg},
+#line 109 "src/lexer-keywords.txt"
+      {"f32.neg", TokenType::Unary, Opcode::F32Neg},
       {""}, {""},
-#line 347 "src/lexer-keywords.txt"
-      {"i32x4.relaxed_trunc_f32x4_s", TokenType::Unary, Opcode::I32X4RelaxedTruncF32X4S},
-      {""}, {""}, {""},
-#line 196 "src/lexer-keywords.txt"
-      {"funcref", Type::FuncRef},
-      {""}, {""}, {""},
-#line 617 "src/lexer-keywords.txt"
-      {"try", TokenType::Try, Opcode::Try},
+#line 163 "src/lexer-keywords.txt"
+      {"f64.le", TokenType::Compare, Opcode::F64Le},
+#line 102 "src/lexer-keywords.txt"
+      {"f32.le", TokenType::Compare, Opcode::F32Le},
+#line 459 "src/lexer-keywords.txt"
+      {"i64.gt_u", TokenType::Compare, Opcode::I64GtU},
+#line 318 "src/lexer-keywords.txt"
+      {"i32.gt_u", TokenType::Compare, Opcode::I32GtU},
       {""},
-#line 632 "src/lexer-keywords.txt"
-      {"v128", Type::V128},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 58 "src/lexer-keywords.txt"
-      {"elem", TokenType::Elem},
-#line 627 "src/lexer-keywords.txt"
-      {"v128.or", TokenType::Binary, Opcode::V128Or},
-      {""}, {""},
-#line 65 "src/lexer-keywords.txt"
-      {"externref", Type::ExternRef},
-#line 388 "src/lexer-keywords.txt"
-      {"i64.atomic.load16_u", TokenType::AtomicLoad, Opcode::I64AtomicLoad16U},
-#line 259 "src/lexer-keywords.txt"
-      {"i32.atomic.load16_u", TokenType::AtomicLoad, Opcode::I32AtomicLoad16U},
-      {""}, {""}, {""},
-#line 607 "src/lexer-keywords.txt"
-      {"table.fill", TokenType::TableFill, Opcode::TableFill},
-#line 651 "src/lexer-keywords.txt"
-      {"i64.mul_wide_u", TokenType::Binary, Opcode::I64MulWideU},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 631 "src/lexer-keywords.txt"
-      {"v128.store", TokenType::Store, Opcode::V128Store},
-      {""},
-#line 626 "src/lexer-keywords.txt"
-      {"v128.not", TokenType::Unary, Opcode::V128Not},
-#line 183 "src/lexer-keywords.txt"
-      {"f64x2.relaxed_nmadd", TokenType::Ternary, Opcode::F64X2RelaxedNmadd},
-      {""},
-#line 207 "src/lexer-keywords.txt"
-      {"i16x8.all_true", TokenType::Unary, Opcode::I16X8AllTrue},
-      {""}, {""}, {""}, {""}, {""},
-#line 405 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw32.xor_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32XorU},
-      {""}, {""}, {""}, {""},
-#line 538 "src/lexer-keywords.txt"
-      {"i8x16.relaxed_laneselect", TokenType::Ternary, Opcode::I8X16RelaxedLaneSelect},
-      {""},
-#line 383 "src/lexer-keywords.txt"
-      {"i32x4.trunc_sat_f64x2_s_zero", TokenType::Unary, Opcode::I32X4TruncSatF64X2SZero},
-#line 41 "src/lexer-keywords.txt"
-      {"call_indirect", TokenType::CallIndirect, Opcode::CallIndirect},
+#line 618 "src/lexer-keywords.txt"
+      {"ref.struct", TokenType::RefStruct},
+#line 458 "src/lexer-keywords.txt"
+      {"i64.gt_s", TokenType::Compare, Opcode::I64GtS},
+#line 317 "src/lexer-keywords.txt"
+      {"i32.gt_s", TokenType::Compare, Opcode::I32GtS},
+#line 457 "src/lexer-keywords.txt"
+      {"i64.ge_u", TokenType::Compare, Opcode::I64GeU},
+#line 316 "src/lexer-keywords.txt"
+      {"i32.ge_u", TokenType::Compare, Opcode::I32GeU},
+#line 472 "src/lexer-keywords.txt"
+      {"i64.ne", TokenType::Compare, Opcode::I64Ne},
+#line 329 "src/lexer-keywords.txt"
+      {"i32.ne", TokenType::Compare, Opcode::I32Ne},
+#line 456 "src/lexer-keywords.txt"
+      {"i64.ge_s", TokenType::Compare, Opcode::I64GeS},
+#line 315 "src/lexer-keywords.txt"
+      {"i32.ge_s", TokenType::Compare, Opcode::I32GeS},
       {""},
 #line 587 "src/lexer-keywords.txt"
+      {"module", TokenType::Module},
+#line 65 "src/lexer-keywords.txt"
+      {"code", TokenType::Code},
+#line 71 "src/lexer-keywords.txt"
+      {"do", TokenType::Do},
+#line 470 "src/lexer-keywords.txt"
+      {"i64.lt_u", TokenType::Compare, Opcode::I64LtU},
+#line 327 "src/lexer-keywords.txt"
+      {"i32.lt_u", TokenType::Compare, Opcode::I32LtU},
+      {""},
+#line 626 "src/lexer-keywords.txt"
+      {"return", TokenType::Return, Opcode::Return},
+#line 469 "src/lexer-keywords.txt"
+      {"i64.lt_s", TokenType::Compare, Opcode::I64LtS},
+#line 326 "src/lexer-keywords.txt"
+      {"i32.lt_s", TokenType::Compare, Opcode::I32LtS},
+#line 461 "src/lexer-keywords.txt"
+      {"i64.le_u", TokenType::Compare, Opcode::I64LeU},
+#line 320 "src/lexer-keywords.txt"
+      {"i32.le_u", TokenType::Compare, Opcode::I32LeU},
+#line 169 "src/lexer-keywords.txt"
+      {"f64.nearest", TokenType::Unary, Opcode::F64Nearest},
+#line 108 "src/lexer-keywords.txt"
+      {"f32.nearest", TokenType::Unary, Opcode::F32Nearest},
+#line 460 "src/lexer-keywords.txt"
+      {"i64.le_s", TokenType::Compare, Opcode::I64LeS},
+#line 319 "src/lexer-keywords.txt"
+      {"i32.le_s", TokenType::Compare, Opcode::I32LeS},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 617 "src/lexer-keywords.txt"
+      {"ref.null", TokenType::RefNull, Opcode::RefNull},
+      {""}, {""},
+#line 489 "src/lexer-keywords.txt"
+      {"i64.trunc_f32_u", TokenType::Convert, Opcode::I64TruncF32U},
+#line 345 "src/lexer-keywords.txt"
+      {"i32.trunc_f32_u", TokenType::Convert, Opcode::I32TruncF32U},
+      {""}, {""},
+#line 488 "src/lexer-keywords.txt"
+      {"i64.trunc_f32_s", TokenType::Convert, Opcode::I64TruncF32S},
+#line 344 "src/lexer-keywords.txt"
+      {"i32.trunc_f32_s", TokenType::Convert, Opcode::I32TruncF32S},
+      {""}, {""}, {""},
+#line 68 "src/lexer-keywords.txt"
+      {"declare", TokenType::Declare},
+#line 212 "src/lexer-keywords.txt"
+      {"final", TokenType::Final},
+#line 175 "src/lexer-keywords.txt"
+      {"f64.store", TokenType::Store, Opcode::F64Store},
+#line 113 "src/lexer-keywords.txt"
+      {"f32.store", TokenType::Store, Opcode::F32Store},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 594 "src/lexer-keywords.txt"
+      {"none", Type::NullRef, TokenType::None},
+      {""}, {""}, {""},
+#line 609 "src/lexer-keywords.txt"
+      {"ref.as_non_null", TokenType::RefAsNonNull, Opcode::RefAsNonNull},
+      {""},
+#line 486 "src/lexer-keywords.txt"
+      {"i64.store", TokenType::Store, Opcode::I64Store},
+#line 342 "src/lexer-keywords.txt"
+      {"i32.store", TokenType::Store, Opcode::I32Store},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 407 "src/lexer-keywords.txt"
+      {"i64.and", TokenType::Binary, Opcode::I64And},
+#line 278 "src/lexer-keywords.txt"
+      {"i32.and", TokenType::Binary, Opcode::I32And},
+      {""}, {""}, {""},
+#line 630 "src/lexer-keywords.txt"
+      {"struct", Type::StructRef, TokenType::Struct},
+      {""}, {""},
+#line 473 "src/lexer-keywords.txt"
+      {"i64.or", TokenType::Binary, Opcode::I64Or},
+#line 330 "src/lexer-keywords.txt"
+      {"i32.or", TokenType::Binary, Opcode::I32Or},
+      {""}, {""},
+#line 150 "src/lexer-keywords.txt"
+      {"f64.add", TokenType::Binary, Opcode::F64Add},
+#line 88 "src/lexer-keywords.txt"
+      {"f32.add", TokenType::Binary, Opcode::F32Add},
+#line 646 "src/lexer-keywords.txt"
+      {"table", TokenType::Table},
+      {""},
+#line 610 "src/lexer-keywords.txt"
+      {"ref.cast", TokenType::RefCast, Opcode::RefCast},
+      {""}, {""}, {""}, {""},
+#line 478 "src/lexer-keywords.txt"
+      {"i64.rotl", TokenType::Binary, Opcode::I64Rotl},
+#line 335 "src/lexer-keywords.txt"
+      {"i32.rotl", TokenType::Binary, Opcode::I32Rotl},
+      {""},
+#line 178 "src/lexer-keywords.txt"
+      {"f64", Type::F64},
+      {""}, {""}, {""},
+#line 57 "src/lexer-keywords.txt"
+      {"br", TokenType::Br, Opcode::Br},
+#line 406 "src/lexer-keywords.txt"
+      {"i64.add", TokenType::Binary, Opcode::I64Add},
+#line 277 "src/lexer-keywords.txt"
+      {"i32.add", TokenType::Binary, Opcode::I32Add},
+#line 467 "src/lexer-keywords.txt"
+      {"i64.load8_u", TokenType::Load, Opcode::I64Load8U},
+#line 324 "src/lexer-keywords.txt"
+      {"i32.load8_u", TokenType::Load, Opcode::I32Load8U},
+#line 466 "src/lexer-keywords.txt"
+      {"i64.load8_s", TokenType::Load, Opcode::I64Load8S},
+#line 323 "src/lexer-keywords.txt"
+      {"i32.load8_s", TokenType::Load, Opcode::I32Load8S},
+      {""},
+#line 70 "src/lexer-keywords.txt"
+      {"delegate", TokenType::Delegate},
+      {""}, {""},
+#line 479 "src/lexer-keywords.txt"
+      {"i64.rotr", TokenType::Binary, Opcode::I64Rotr},
+#line 336 "src/lexer-keywords.txt"
+      {"i32.rotr", TokenType::Binary, Opcode::I32Rotr},
+#line 496 "src/lexer-keywords.txt"
+      {"i64", Type::I64},
+#line 164 "src/lexer-keywords.txt"
+      {"f64.load", TokenType::Load, Opcode::F64Load},
+#line 103 "src/lexer-keywords.txt"
+      {"f32.load", TokenType::Load, Opcode::F32Load},
+#line 605 "src/lexer-keywords.txt"
+      {"rec", TokenType::Rec},
+      {""}, {""}, {""},
+#line 48 "src/lexer-keywords.txt"
+      {"before", TokenType::Before},
+      {""}, {""}, {""},
+#line 177 "src/lexer-keywords.txt"
+      {"f64.trunc", TokenType::Unary, Opcode::F64Trunc},
+#line 115 "src/lexer-keywords.txt"
+      {"f32.trunc", TokenType::Unary, Opcode::F32Trunc},
+#line 168 "src/lexer-keywords.txt"
+      {"f64.mul", TokenType::Binary, Opcode::F64Mul},
+#line 107 "src/lexer-keywords.txt"
+      {"f32.mul", TokenType::Binary, Opcode::F32Mul},
+#line 213 "src/lexer-keywords.txt"
+      {"func", Type::FuncRef, TokenType::Func},
+      {""}, {""},
+#line 468 "src/lexer-keywords.txt"
+      {"i64.load", TokenType::Load, Opcode::I64Load},
+#line 325 "src/lexer-keywords.txt"
+      {"i32.load", TokenType::Load, Opcode::I32Load},
+      {""}, {""}, {""}, {""}, {""},
+#line 650 "src/lexer-keywords.txt"
+      {"try", TokenType::Try, Opcode::Try},
+      {""}, {""},
+#line 60 "src/lexer-keywords.txt"
+      {"call", TokenType::Call, Opcode::Call},
+      {""},
+#line 471 "src/lexer-keywords.txt"
+      {"i64.mul", TokenType::Binary, Opcode::I64Mul},
+#line 328 "src/lexer-keywords.txt"
+      {"i32.mul", TokenType::Binary, Opcode::I32Mul},
+      {""}, {""}, {""},
+#line 152 "src/lexer-keywords.txt"
+      {"f64.const", TokenType::Const, Opcode::F64Const},
+#line 90 "src/lexer-keywords.txt"
+      {"f32.const", TokenType::Const, Opcode::F32Const},
+#line 596 "src/lexer-keywords.txt"
+      {"null", TokenType::Null},
+#line 477 "src/lexer-keywords.txt"
+      {"i64.rem_u", TokenType::Binary, Opcode::I64RemU},
+#line 334 "src/lexer-keywords.txt"
+      {"i32.rem_u", TokenType::Binary, Opcode::I32RemU},
+#line 476 "src/lexer-keywords.txt"
+      {"i64.rem_s", TokenType::Binary, Opcode::I64RemS},
+#line 333 "src/lexer-keywords.txt"
+      {"i32.rem_s", TokenType::Binary, Opcode::I32RemS},
+      {""}, {""}, {""}, {""},
+#line 55 "src/lexer-keywords.txt"
+      {"br_on_null", TokenType::BrOnNull, Opcode::BrOnNull},
+      {""}, {""},
+#line 576 "src/lexer-keywords.txt"
+      {"local", TokenType::Local},
+#line 446 "src/lexer-keywords.txt"
+      {"i64.ctz", TokenType::Unary, Opcode::I64Ctz},
+#line 308 "src/lexer-keywords.txt"
+      {"i32.ctz", TokenType::Unary, Opcode::I32Ctz},
+#line 445 "src/lexer-keywords.txt"
+      {"i64.const", TokenType::Const, Opcode::I64Const},
+#line 307 "src/lexer-keywords.txt"
+      {"i32.const", TokenType::Const, Opcode::I32Const},
+      {""},
+#line 637 "src/lexer-keywords.txt"
+      {"struct.set", TokenType::StructSet, Opcode::StructSet},
+      {""},
+#line 632 "src/lexer-keywords.txt"
+      {"struct.get", TokenType::StructGet, Opcode::StructGet},
+      {""},
+#line 634 "src/lexer-keywords.txt"
+      {"struct.get_u", TokenType::StructGetU, Opcode::StructGetU},
+      {""}, {""},
+#line 625 "src/lexer-keywords.txt"
+      {"return_call", TokenType::ReturnCall, Opcode::ReturnCall},
+#line 633 "src/lexer-keywords.txt"
+      {"struct.get_s", TokenType::StructGetS, Opcode::StructGetS},
+#line 644 "src/lexer-keywords.txt"
+      {"table.set", TokenType::TableSet, Opcode::TableSet},
+      {""},
+#line 641 "src/lexer-keywords.txt"
+      {"table.get", TokenType::TableGet, Opcode::TableGet},
+      {""},
+#line 608 "src/lexer-keywords.txt"
+      {"ref.array", TokenType::RefArray},
+      {""},
+#line 444 "src/lexer-keywords.txt"
+      {"i64.clz", TokenType::Unary, Opcode::I64Clz},
+#line 306 "src/lexer-keywords.txt"
+      {"i32.clz", TokenType::Unary, Opcode::I32Clz},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 127 "src/lexer-keywords.txt"
+      {"f32x4.gt", TokenType::Compare, Opcode::F32X4Gt},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 126 "src/lexer-keywords.txt"
+      {"f32x4.ge", TokenType::Compare, Opcode::F32X4Ge},
+      {""},
+#line 54 "src/lexer-keywords.txt"
+      {"br_on_non_null", TokenType::BrOnNonNull, Opcode::BrOnNonNull},
+#line 627 "src/lexer-keywords.txt"
+      {"select", TokenType::Select, Opcode::Select},
+#line 129 "src/lexer-keywords.txt"
+      {"f32x4.lt", TokenType::Compare, Opcode::F32X4Lt},
+      {""}, {""},
+#line 364 "src/lexer-keywords.txt"
+      {"i32x4.gt_u", TokenType::Compare, Opcode::I32X4GtU},
+#line 134 "src/lexer-keywords.txt"
+      {"f32x4.neg", TokenType::Unary, Opcode::F32X4Neg},
+#line 135 "src/lexer-keywords.txt"
+      {"f32x4.ne", TokenType::Compare, Opcode::F32X4Ne},
+      {""},
+#line 363 "src/lexer-keywords.txt"
+      {"i32x4.gt_s", TokenType::Compare, Opcode::I32X4GtS},
+      {""},
+#line 362 "src/lexer-keywords.txt"
+      {"i32x4.ge_u", TokenType::Compare, Opcode::I32X4GeU},
+      {""}, {""},
+#line 128 "src/lexer-keywords.txt"
+      {"f32x4.le", TokenType::Compare, Opcode::F32X4Le},
+#line 361 "src/lexer-keywords.txt"
+      {"i32x4.ge_s", TokenType::Compare, Opcode::I32X4GeS},
+      {""}, {""}, {""}, {""}, {""},
+#line 374 "src/lexer-keywords.txt"
+      {"i32x4.lt_u", TokenType::Compare, Opcode::I32X4LtU},
+      {""},
+#line 381 "src/lexer-keywords.txt"
+      {"i32x4.neg", TokenType::Unary, Opcode::I32X4Neg},
+#line 382 "src/lexer-keywords.txt"
+      {"i32x4.ne", TokenType::Compare, Opcode::I32X4Ne},
+#line 373 "src/lexer-keywords.txt"
+      {"i32x4.lt_s", TokenType::Compare, Opcode::I32X4LtS},
+#line 616 "src/lexer-keywords.txt"
+      {"ref.is_null", TokenType::RefIsNull, Opcode::RefIsNull},
+#line 366 "src/lexer-keywords.txt"
+      {"i32x4.le_u", TokenType::Compare, Opcode::I32X4LeU},
+      {""},
+#line 52 "src/lexer-keywords.txt"
+      {"br_on_cast", TokenType::BrOnCast, Opcode::BrOnCast},
+      {""},
+#line 365 "src/lexer-keywords.txt"
+      {"i32x4.le_s", TokenType::Compare, Opcode::I32X4LeS},
+      {""}, {""},
+#line 574 "src/lexer-keywords.txt"
+      {"local.set", TokenType::LocalSet, Opcode::LocalSet},
+      {""},
+#line 573 "src/lexer-keywords.txt"
+      {"local.get", TokenType::LocalGet, Opcode::LocalGet},
+#line 133 "src/lexer-keywords.txt"
+      {"f32x4.nearest", TokenType::Unary, Opcode::F32X4Nearest},
+#line 575 "src/lexer-keywords.txt"
+      {"local.tee", TokenType::LocalTee, Opcode::LocalTee},
+#line 148 "src/lexer-keywords.txt"
+      {"f32x4", TokenType::F32X4},
+      {""}, {""}, {""}, {""},
+#line 629 "src/lexer-keywords.txt"
+      {"start", TokenType::Start},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 396 "src/lexer-keywords.txt"
+      {"i32x4", TokenType::I32X4},
+#line 149 "src/lexer-keywords.txt"
+      {"f64.abs", TokenType::Unary, Opcode::F64Abs},
+#line 87 "src/lexer-keywords.txt"
+      {"f32.abs", TokenType::Unary, Opcode::F32Abs},
+      {""}, {""}, {""}, {""},
+#line 593 "src/lexer-keywords.txt"
+      {"nofunc", Type::NullFuncRef, TokenType::NoFunc},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 118 "src/lexer-keywords.txt"
+      {"f32x4.add", TokenType::Binary, Opcode::F32X4Add},
+      {""}, {""}, {""},
+#line 356 "src/lexer-keywords.txt"
+      {"i32x4.all_true", TokenType::Unary, Opcode::I32X4AllTrue},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 215 "src/lexer-keywords.txt"
+      {"function", TokenType::Function},
+#line 529 "src/lexer-keywords.txt"
+      {"i8", Type::I8},
+      {""}, {""},
+#line 355 "src/lexer-keywords.txt"
+      {"i32x4.add", TokenType::Binary, Opcode::I32X4Add},
+      {""},
+#line 585 "src/lexer-keywords.txt"
+      {"memory.size", TokenType::MemorySize, Opcode::MemorySize},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 116 "src/lexer-keywords.txt"
+      {"f32", Type::F32},
+      {""}, {""}, {""},
+#line 39 "src/lexer-keywords.txt"
+      {"after", TokenType::After},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 651 "src/lexer-keywords.txt"
+      {"try_table", TokenType::TryTable, Opcode::TryTable},
+#line 167 "src/lexer-keywords.txt"
+      {"f64.min", TokenType::Binary, Opcode::F64Min},
+#line 106 "src/lexer-keywords.txt"
+      {"f32.min", TokenType::Binary, Opcode::F32Min},
+      {""}, {""},
+#line 352 "src/lexer-keywords.txt"
+      {"i32", Type::I32},
+#line 586 "src/lexer-keywords.txt"
+      {"memory", TokenType::Memory},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 443 "src/lexer-keywords.txt"
+      {"i64.atomic.store", TokenType::AtomicStore, Opcode::I64AtomicStore},
+#line 305 "src/lexer-keywords.txt"
+      {"i32.atomic.store", TokenType::AtomicStore, Opcode::I32AtomicStore},
+      {""},
+#line 151 "src/lexer-keywords.txt"
+      {"f64.ceil", TokenType::Unary, Opcode::F64Ceil},
+#line 89 "src/lexer-keywords.txt"
+      {"f32.ceil", TokenType::Unary, Opcode::F32Ceil},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 132 "src/lexer-keywords.txt"
+      {"f32x4.mul", TokenType::Binary, Opcode::F32X4Mul},
+#line 628 "src/lexer-keywords.txt"
+      {"shared", TokenType::Shared},
+      {""}, {""}, {""}, {""}, {""},
+#line 276 "src/lexer-keywords.txt"
+      {"i31.get_u", TokenType::GCUnary, Opcode::I31GetU},
+      {""},
+#line 275 "src/lexer-keywords.txt"
+      {"i31.get_s", TokenType::GCUnary, Opcode::I31GetS},
+      {""}, {""},
+#line 684 "src/lexer-keywords.txt"
+      {"i64.mul_wide_u", TokenType::Binary, Opcode::I64MulWideU},
+#line 376 "src/lexer-keywords.txt"
+      {"i32x4.max_u", TokenType::Binary, Opcode::I32X4MaxU},
+#line 683 "src/lexer-keywords.txt"
+      {"i64.mul_wide_s", TokenType::Binary, Opcode::I64MulWideS},
+#line 375 "src/lexer-keywords.txt"
+      {"i32x4.max_s", TokenType::Binary, Opcode::I32X4MaxS},
+      {""},
+#line 380 "src/lexer-keywords.txt"
+      {"i32x4.mul", TokenType::Binary, Opcode::I32X4Mul},
+#line 146 "src/lexer-keywords.txt"
+      {"f32x4.trunc", TokenType::Unary, Opcode::F32X4Trunc},
+      {""}, {""},
+#line 119 "src/lexer-keywords.txt"
+      {"f32x4.ceil", TokenType::Unary, Opcode::F32X4Ceil},
+      {""}, {""}, {""}, {""}, {""},
+#line 410 "src/lexer-keywords.txt"
+      {"i64.atomic.load8_u", TokenType::AtomicLoad, Opcode::I64AtomicLoad8U},
+#line 280 "src/lexer-keywords.txt"
+      {"i32.atomic.load8_u", TokenType::AtomicLoad, Opcode::I32AtomicLoad8U},
+#line 44 "src/lexer-keywords.txt"
+      {"assert_return", TokenType::AssertReturn},
+      {""}, {""}, {""},
+#line 638 "src/lexer-keywords.txt"
+      {"sub", TokenType::Sub},
+      {""}, {""}, {""}, {""},
+#line 623 "src/lexer-keywords.txt"
+      {"return_call_indirect", TokenType::ReturnCallIndirect, Opcode::ReturnCallIndirect},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 141 "src/lexer-keywords.txt"
+      {"f32x4.relaxed_nmadd", TokenType::Ternary, Opcode::F32X4RelaxedNmadd},
+#line 606 "src/lexer-keywords.txt"
+      {"ref", TokenType::Ref},
+#line 76 "src/lexer-keywords.txt"
+      {"else", TokenType::Else, Opcode::Else},
+#line 643 "src/lexer-keywords.txt"
+      {"table.init", TokenType::TableInit, Opcode::TableInit},
+#line 645 "src/lexer-keywords.txt"
+      {"table.size", TokenType::TableSize, Opcode::TableSize},
+      {""}, {""}, {""}, {""},
+#line 647 "src/lexer-keywords.txt"
+      {"then", TokenType::Then},
+#line 411 "src/lexer-keywords.txt"
+      {"i64.atomic.load", TokenType::AtomicLoad, Opcode::I64AtomicLoad},
+#line 281 "src/lexer-keywords.txt"
+      {"i32.atomic.load", TokenType::AtomicLoad, Opcode::I32AtomicLoad},
+#line 187 "src/lexer-keywords.txt"
+      {"f64x2.gt", TokenType::Compare, Opcode::F64X2Gt},
+#line 140 "src/lexer-keywords.txt"
+      {"f32x4.relaxed_min", TokenType::Binary, Opcode::F32X4RelaxedMin},
+      {""},
+#line 568 "src/lexer-keywords.txt"
+      {"if", TokenType::If, Opcode::If},
+      {""}, {""},
+#line 612 "src/lexer-keywords.txt"
+      {"ref.extern", TokenType::RefExtern},
+      {""}, {""}, {""}, {""}, {""},
+#line 186 "src/lexer-keywords.txt"
+      {"f64x2.ge", TokenType::Compare, Opcode::F64X2Ge},
+      {""},
+#line 484 "src/lexer-keywords.txt"
+      {"i64.store32", TokenType::Store, Opcode::I64Store32},
+#line 69 "src/lexer-keywords.txt"
+      {"definition", TokenType::Definition},
+#line 189 "src/lexer-keywords.txt"
+      {"f64x2.lt", TokenType::Compare, Opcode::F64X2Lt},
+      {""},
+#line 423 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw32.sub_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32SubU},
+#line 56 "src/lexer-keywords.txt"
+      {"br_table", TokenType::BrTable, Opcode::BrTable},
+#line 194 "src/lexer-keywords.txt"
+      {"f64x2.neg", TokenType::Unary, Opcode::F64X2Neg},
+#line 195 "src/lexer-keywords.txt"
+      {"f64x2.ne", TokenType::Compare, Opcode::F64X2Ne},
+      {""},
+#line 505 "src/lexer-keywords.txt"
+      {"i64x2.gt_s", TokenType::Binary, Opcode::I64X2GtS},
+      {""}, {""},
+#line 142 "src/lexer-keywords.txt"
+      {"f32x4.replace_lane", TokenType::SimdLaneOp, Opcode::F32X4ReplaceLane},
+      {""},
+#line 188 "src/lexer-keywords.txt"
+      {"f64x2.le", TokenType::Compare, Opcode::F64X2Le},
+#line 507 "src/lexer-keywords.txt"
+      {"i64x2.ge_s", TokenType::Binary, Opcode::I64X2GeS},
+      {""},
+#line 77 "src/lexer-keywords.txt"
+      {"end", TokenType::End, Opcode::End},
+#line 420 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw32.and_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32AndU},
+      {""},
+#line 383 "src/lexer-keywords.txt"
+      {"i32x4.relaxed_laneselect", TokenType::Ternary, Opcode::I32X4RelaxedLaneSelect},
+      {""}, {""},
+#line 509 "src/lexer-keywords.txt"
+      {"i64x2.neg", TokenType::Unary, Opcode::I64X2Neg},
+#line 503 "src/lexer-keywords.txt"
+      {"i64x2.ne", TokenType::Binary, Opcode::I64X2Ne},
+#line 504 "src/lexer-keywords.txt"
+      {"i64x2.lt_s", TokenType::Binary, Opcode::I64X2LtS},
+      {""},
+#line 81 "src/lexer-keywords.txt"
+      {"extern", Type::ExternRef, TokenType::Extern},
+#line 20 "src/lexer-keywords.txt"
+      {"any", Type::AnyRef, TokenType::Any},
+#line 384 "src/lexer-keywords.txt"
+      {"i32x4.replace_lane", TokenType::SimdLaneOp, Opcode::I32X4ReplaceLane},
+      {""},
+#line 506 "src/lexer-keywords.txt"
+      {"i64x2.le_s", TokenType::Binary, Opcode::I64X2LeS},
+      {""},
+#line 84 "src/lexer-keywords.txt"
+      {"exn", Type::ExnRef, TokenType::Exn},
+#line 465 "src/lexer-keywords.txt"
+      {"i64.load32_u", TokenType::Load, Opcode::I64Load32U},
+      {""},
+#line 73 "src/lexer-keywords.txt"
+      {"either", TokenType::Either},
+#line 193 "src/lexer-keywords.txt"
+      {"f64x2.nearest", TokenType::Unary, Opcode::F64X2Nearest},
+#line 464 "src/lexer-keywords.txt"
+      {"i64.load32_s", TokenType::Load, Opcode::I64Load32S},
+#line 453 "src/lexer-keywords.txt"
+      {"i64.extend8_s", TokenType::Unary, Opcode::I64Extend8S},
+#line 314 "src/lexer-keywords.txt"
+      {"i32.extend8_s", TokenType::Unary, Opcode::I32Extend8S},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 419 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw32.add_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32AddU},
+#line 591 "src/lexer-keywords.txt"
+      {"noexn", Type::NullExnRef, TokenType::NoExn},
+      {""}, {""}, {""}, {""}, {""},
+#line 436 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw.or", TokenType::AtomicRmw, Opcode::I64AtomicRmwOr},
+#line 299 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw.or", TokenType::AtomicRmw, Opcode::I32AtomicRmwOr},
+      {""}, {""}, {""},
+#line 211 "src/lexer-keywords.txt"
+      {"field", TokenType::Field},
+      {""},
+#line 49 "src/lexer-keywords.txt"
+      {"binary", TokenType::Bin},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 590 "src/lexer-keywords.txt"
+      {"nan:canonical", TokenType::NanCanonical},
+      {""},
+#line 180 "src/lexer-keywords.txt"
+      {"f64x2.add", TokenType::Binary, Opcode::F64X2Add},
+      {""}, {""}, {""},
+#line 510 "src/lexer-keywords.txt"
+      {"i64x2.all_true", TokenType::Unary, Opcode::I64X2AllTrue},
+#line 528 "src/lexer-keywords.txt"
+      {"i64.xor", TokenType::Binary, Opcode::I64Xor},
+#line 405 "src/lexer-keywords.txt"
+      {"i32.xor", TokenType::Binary, Opcode::I32Xor},
+      {""}, {""}, {""},
+#line 145 "src/lexer-keywords.txt"
+      {"f32x4.sub", TokenType::Binary, Opcode::F32X4Sub},
+#line 422 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw32.or_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32OrU},
+      {""},
+#line 117 "src/lexer-keywords.txt"
+      {"f32x4.abs", TokenType::Unary, Opcode::F32X4Abs},
+      {""}, {""},
+#line 592 "src/lexer-keywords.txt"
+      {"noextern", Type::NullExternRef, TokenType::NoExtern},
+#line 497 "src/lexer-keywords.txt"
+      {"i64x2.add", TokenType::Binary, Opcode::I64X2Add},
+#line 138 "src/lexer-keywords.txt"
+      {"f32x4.relaxed_madd", TokenType::Ternary, Opcode::F32X4RelaxedMadd},
+      {""}, {""}, {""}, {""}, {""},
+#line 434 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw.and", TokenType::AtomicRmw, Opcode::I64AtomicRmwAnd},
+#line 297 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw.and", TokenType::AtomicRmw, Opcode::I32AtomicRmwAnd},
+#line 38 "src/lexer-keywords.txt"
+      {"array.set", TokenType::ArraySet, Opcode::ArraySet},
+#line 389 "src/lexer-keywords.txt"
+      {"i32x4.sub", TokenType::Binary, Opcode::I32X4Sub},
+#line 27 "src/lexer-keywords.txt"
+      {"array.get", TokenType::ArrayGet, Opcode::ArrayGet},
+      {""},
+#line 354 "src/lexer-keywords.txt"
+      {"i32x4.abs", TokenType::Unary, Opcode::I32X4Abs},
+      {""}, {""}, {""}, {""}, {""},
+#line 439 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw.xor", TokenType::AtomicRmw, Opcode::I64AtomicRmwXor},
+#line 302 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw.xor", TokenType::AtomicRmw, Opcode::I32AtomicRmwXor},
+      {""}, {""}, {""},
+#line 29 "src/lexer-keywords.txt"
+      {"array.get_u", TokenType::ArrayGetU, Opcode::ArrayGetU},
+      {""},
+#line 28 "src/lexer-keywords.txt"
+      {"array.get_s", TokenType::ArrayGetS, Opcode::ArrayGetS},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 572 "src/lexer-keywords.txt"
+      {"item", TokenType::Item},
+#line 433 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw.add", TokenType::AtomicRmw, Opcode::I64AtomicRmwAdd},
+#line 296 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw.add", TokenType::AtomicRmw, Opcode::I32AtomicRmwAdd},
+      {""},
+#line 131 "src/lexer-keywords.txt"
+      {"f32x4.min", TokenType::Binary, Opcode::F32X4Min},
+#line 32 "src/lexer-keywords.txt"
+      {"array.len", TokenType::GCUnary, Opcode::ArrayLen},
+      {""},
+#line 34 "src/lexer-keywords.txt"
+      {"array.new_data", TokenType::ArrayNewData, Opcode::ArrayNewData},
+#line 160 "src/lexer-keywords.txt"
+      {"f64.floor", TokenType::Unary, Opcode::F64Floor},
+#line 99 "src/lexer-keywords.txt"
+      {"f32.floor", TokenType::Unary, Opcode::F32Floor},
+#line 35 "src/lexer-keywords.txt"
+      {"array.new_default", TokenType::ArrayNewDefault, Opcode::ArrayNewDefault},
+      {""},
+#line 192 "src/lexer-keywords.txt"
+      {"f64x2.mul", TokenType::Binary, Opcode::F64X2Mul},
+#line 216 "src/lexer-keywords.txt"
+      {"get", TokenType::Get},
+      {""},
+#line 631 "src/lexer-keywords.txt"
+      {"structref", Type::StructRef},
+      {""},
+#line 78 "src/lexer-keywords.txt"
+      {"tag", TokenType::Tag},
+#line 43 "src/lexer-keywords.txt"
+      {"assert_malformed", TokenType::AssertMalformed},
+      {""},
+#line 589 "src/lexer-keywords.txt"
+      {"nan:arithmetic", TokenType::NanArithmetic},
+#line 378 "src/lexer-keywords.txt"
+      {"i32x4.min_u", TokenType::Binary, Opcode::I32X4MinU},
+#line 58 "src/lexer-keywords.txt"
+      {"call_indirect", TokenType::CallIndirect, Opcode::CallIndirect},
+#line 377 "src/lexer-keywords.txt"
+      {"i32x4.min_s", TokenType::Binary, Opcode::I32X4MinS},
+      {""},
+#line 176 "src/lexer-keywords.txt"
+      {"f64.sub", TokenType::Binary, Opcode::F64Sub},
+#line 114 "src/lexer-keywords.txt"
+      {"f32.sub", TokenType::Binary, Opcode::F32Sub},
+      {""}, {""},
+#line 501 "src/lexer-keywords.txt"
+      {"i64x2.mul", TokenType::Binary, Opcode::I64X2Mul},
+#line 206 "src/lexer-keywords.txt"
+      {"f64x2.trunc", TokenType::Unary, Opcode::F64X2Trunc},
+      {""}, {""},
+#line 181 "src/lexer-keywords.txt"
+      {"f64x2.ceil", TokenType::Unary, Opcode::F64X2Ceil},
+      {""},
+#line 23 "src/lexer-keywords.txt"
+      {"array", Type::ArrayRef, TokenType::Array},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 487 "src/lexer-keywords.txt"
+      {"i64.sub", TokenType::Binary, Opcode::I64Sub},
+#line 343 "src/lexer-keywords.txt"
+      {"i32.sub", TokenType::Binary, Opcode::I32Sub},
+      {""}, {""},
+#line 491 "src/lexer-keywords.txt"
+      {"i64.trunc_f64_u", TokenType::Convert, Opcode::I64TruncF64U},
+#line 347 "src/lexer-keywords.txt"
+      {"i32.trunc_f64_u", TokenType::Convert, Opcode::I32TruncF64U},
+      {""}, {""},
+#line 490 "src/lexer-keywords.txt"
+      {"i64.trunc_f64_s", TokenType::Convert, Opcode::I64TruncF64S},
+#line 346 "src/lexer-keywords.txt"
+      {"i32.trunc_f64_s", TokenType::Convert, Opcode::I32TruncF64S},
+      {""}, {""}, {""}, {""}, {""},
+#line 201 "src/lexer-keywords.txt"
+      {"f64x2.relaxed_nmadd", TokenType::Ternary, Opcode::F64X2RelaxedNmadd},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""},
+#line 200 "src/lexer-keywords.txt"
+      {"f64x2.relaxed_min", TokenType::Binary, Opcode::F64X2RelaxedMin},
+      {""}, {""}, {""},
+#line 370 "src/lexer-keywords.txt"
+      {"i32x4.relaxed_trunc_f64x2_u_zero", TokenType::Unary, Opcode::I32X4RelaxedTruncF64X2UZero},
+      {""},
+#line 369 "src/lexer-keywords.txt"
+      {"i32x4.relaxed_trunc_f64x2_s_zero", TokenType::Unary, Opcode::I32X4RelaxedTruncF64X2SZero},
+#line 614 "src/lexer-keywords.txt"
+      {"ref.host", TokenType::RefHost},
+      {""}, {""},
+#line 480 "src/lexer-keywords.txt"
+      {"i64.shl", TokenType::Binary, Opcode::I64Shl},
+#line 337 "src/lexer-keywords.txt"
+      {"i32.shl", TokenType::Binary, Opcode::I32Shl},
+#line 482 "src/lexer-keywords.txt"
+      {"i64.shr_u", TokenType::Binary, Opcode::I64ShrU},
+#line 339 "src/lexer-keywords.txt"
+      {"i32.shr_u", TokenType::Binary, Opcode::I32ShrU},
+#line 481 "src/lexer-keywords.txt"
+      {"i64.shr_s", TokenType::Binary, Opcode::I64ShrS},
+#line 338 "src/lexer-keywords.txt"
+      {"i32.shr_s", TokenType::Binary, Opcode::I32ShrS},
+#line 620 "src/lexer-keywords.txt"
+      {"register", TokenType::Register},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 202 "src/lexer-keywords.txt"
+      {"f64x2.replace_lane", TokenType::SimdLaneOp, Opcode::F64X2ReplaceLane},
+#line 495 "src/lexer-keywords.txt"
+      {"i64.trunc_sat_f64_u", TokenType::Convert, Opcode::I64TruncSatF64U},
+#line 351 "src/lexer-keywords.txt"
+      {"i32.trunc_sat_f64_u", TokenType::Convert, Opcode::I32TruncSatF64U},
+      {""}, {""},
+#line 494 "src/lexer-keywords.txt"
+      {"i64.trunc_sat_f64_s", TokenType::Convert, Opcode::I64TruncSatF64S},
+#line 350 "src/lexer-keywords.txt"
+      {"i32.trunc_sat_f64_s", TokenType::Convert, Opcode::I32TruncSatF64S},
+      {""},
+#line 516 "src/lexer-keywords.txt"
+      {"i64x2.relaxed_laneselect", TokenType::Ternary, Opcode::I64X2RelaxedLaneSelect},
+      {""}, {""},
+#line 463 "src/lexer-keywords.txt"
+      {"i64.load16_u", TokenType::Load, Opcode::I64Load16U},
+#line 322 "src/lexer-keywords.txt"
+      {"i32.load16_u", TokenType::Load, Opcode::I32Load16U},
+      {""}, {""},
+#line 462 "src/lexer-keywords.txt"
+      {"i64.load16_s", TokenType::Load, Opcode::I64Load16S},
+#line 321 "src/lexer-keywords.txt"
+      {"i32.load16_s", TokenType::Load, Opcode::I32Load16S},
+#line 517 "src/lexer-keywords.txt"
+      {"i64x2.replace_lane", TokenType::SimdLaneOp, Opcode::I64X2ReplaceLane},
+      {""},
+#line 46 "src/lexer-keywords.txt"
+      {"assert_unlinkable", TokenType::AssertUnlinkable},
+#line 62 "src/lexer-keywords.txt"
+      {"catch_all", TokenType::CatchAll, Opcode::CatchAll},
+      {""}, {""}, {""}, {""}, {""},
+#line 613 "src/lexer-keywords.txt"
+      {"ref.func", TokenType::RefFunc, Opcode::RefFunc},
+#line 455 "src/lexer-keywords.txt"
+      {"i64.extend_i32_u", TokenType::Convert, Opcode::I64ExtendI32U},
+#line 210 "src/lexer-keywords.txt"
+      {"f64x2", TokenType::F64X2},
+#line 454 "src/lexer-keywords.txt"
+      {"i64.extend_i32_s", TokenType::Convert, Opcode::I64ExtendI32S},
+      {""}, {""}, {""}, {""},
+#line 584 "src/lexer-keywords.txt"
+      {"memory.init", TokenType::MemoryInit, Opcode::MemoryInit},
+#line 639 "src/lexer-keywords.txt"
+      {"table.copy", TokenType::TableCopy, Opcode::TableCopy},
+#line 652 "src/lexer-keywords.txt"
+      {"type", TokenType::Type},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 527 "src/lexer-keywords.txt"
+      {"i64x2", TokenType::I64X2},
+      {""}, {""}, {""},
+#line 602 "src/lexer-keywords.txt"
+      {"output", TokenType::Output},
+      {""}, {""},
+#line 570 "src/lexer-keywords.txt"
+      {"input", TokenType::Input},
+      {""}, {""}, {""}, {""},
+#line 36 "src/lexer-keywords.txt"
+      {"array.new_elem", TokenType::ArrayNewElem, Opcode::ArrayNewElem},
+      {""},
+#line 601 "src/lexer-keywords.txt"
+      {"offset", TokenType::Offset},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 205 "src/lexer-keywords.txt"
+      {"f64x2.sub", TokenType::Binary, Opcode::F64X2Sub},
+#line 174 "src/lexer-keywords.txt"
+      {"f64.sqrt", TokenType::Unary, Opcode::F64Sqrt},
+#line 112 "src/lexer-keywords.txt"
+      {"f32.sqrt", TokenType::Unary, Opcode::F32Sqrt},
+#line 179 "src/lexer-keywords.txt"
+      {"f64x2.abs", TokenType::Unary, Opcode::F64X2Abs},
+      {""}, {""},
+#line 485 "src/lexer-keywords.txt"
+      {"i64.store8", TokenType::Store, Opcode::I64Store8},
+#line 341 "src/lexer-keywords.txt"
+      {"i32.store8", TokenType::Store, Opcode::I32Store8},
+#line 198 "src/lexer-keywords.txt"
+      {"f64x2.relaxed_madd", TokenType::Ternary, Opcode::F64X2RelaxedMadd},
+      {""},
+#line 427 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw8.and_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8AndU},
+#line 290 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw8.and_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8AndU},
+      {""}, {""},
+#line 569 "src/lexer-keywords.txt"
+      {"import", TokenType::Import},
+      {""},
+#line 53 "src/lexer-keywords.txt"
+      {"br_on_cast_fail", TokenType::BrOnCast, Opcode::BrOnCastFail},
+#line 522 "src/lexer-keywords.txt"
+      {"i64x2.sub", TokenType::Binary, Opcode::I64X2Sub},
+      {""}, {""},
+#line 508 "src/lexer-keywords.txt"
+      {"i64x2.abs", TokenType::Unary, Opcode::I64X2Abs},
+#line 607 "src/lexer-keywords.txt"
       {"quote", TokenType::Quote},
+      {""},
+#line 409 "src/lexer-keywords.txt"
+      {"i64.atomic.load32_u", TokenType::AtomicLoad, Opcode::I64AtomicLoad32U},
+      {""}, {""}, {""},
+#line 125 "src/lexer-keywords.txt"
+      {"f32x4.floor", TokenType::Unary, Opcode::F32X4Floor},
+      {""}, {""},
+#line 582 "src/lexer-keywords.txt"
+      {"memory.fill", TokenType::MemoryFill, Opcode::MemoryFill},
+#line 130 "src/lexer-keywords.txt"
+      {"f32x4.max", TokenType::Binary, Opcode::F32X4Max},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 426 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw8.add_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8AddU},
+#line 289 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw8.add_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8AddU},
+      {""},
+#line 429 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw8.or_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8OrU},
+#line 292 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw8.or_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8OrU},
+      {""}, {""},
+#line 191 "src/lexer-keywords.txt"
+      {"f64x2.min", TokenType::Binary, Opcode::F64X2Min},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 450 "src/lexer-keywords.txt"
+      {"i64.eqz", TokenType::Convert, Opcode::I64Eqz},
+#line 312 "src/lexer-keywords.txt"
+      {"i32.eqz", TokenType::Convert, Opcode::I32Eqz},
+      {""},
+#line 368 "src/lexer-keywords.txt"
+      {"i32x4.relaxed_trunc_f32x4_u", TokenType::Unary, Opcode::I32X4RelaxedTruncF32X4U},
+      {""}, {""}, {""},
+#line 367 "src/lexer-keywords.txt"
+      {"i32x4.relaxed_trunc_f32x4_s", TokenType::Unary, Opcode::I32X4RelaxedTruncF32X4S},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 543 "src/lexer-keywords.txt"
+      {"i8x16.gt_u", TokenType::Compare, Opcode::I8X16GtU},
+      {""},
+#line 30 "src/lexer-keywords.txt"
+      {"array.init_data", TokenType::ArrayInitData, Opcode::ArrayInitData},
+      {""},
+#line 542 "src/lexer-keywords.txt"
+      {"i8x16.gt_s", TokenType::Compare, Opcode::I8X16GtS},
+      {""},
+#line 541 "src/lexer-keywords.txt"
+      {"i8x16.ge_u", TokenType::Compare, Opcode::I8X16GeU},
+      {""}, {""},
+#line 96 "src/lexer-keywords.txt"
+      {"f32.demote_f64", TokenType::Convert, Opcode::F32DemoteF64},
+#line 540 "src/lexer-keywords.txt"
+      {"i8x16.ge_s", TokenType::Compare, Opcode::I8X16GeS},
+      {""}, {""}, {""}, {""}, {""},
+#line 547 "src/lexer-keywords.txt"
+      {"i8x16.lt_u", TokenType::Compare, Opcode::I8X16LtU},
+#line 565 "src/lexer-keywords.txt"
+      {"i8x16.sub_sat_u", TokenType::Binary, Opcode::I8X16SubSatU},
+#line 554 "src/lexer-keywords.txt"
+      {"i8x16.neg", TokenType::Unary, Opcode::I8X16Neg},
+#line 556 "src/lexer-keywords.txt"
+      {"i8x16.ne", TokenType::Compare, Opcode::I8X16Ne},
+#line 546 "src/lexer-keywords.txt"
+      {"i8x16.lt_s", TokenType::Compare, Opcode::I8X16LtS},
+#line 564 "src/lexer-keywords.txt"
+      {"i8x16.sub_sat_s", TokenType::Binary, Opcode::I8X16SubSatS},
+#line 545 "src/lexer-keywords.txt"
+      {"i8x16.le_u", TokenType::Compare, Opcode::I8X16LeU},
+#line 452 "src/lexer-keywords.txt"
+      {"i64.extend32_s", TokenType::Unary, Opcode::I64Extend32S},
+      {""}, {""},
+#line 544 "src/lexer-keywords.txt"
+      {"i8x16.le_s", TokenType::Compare, Opcode::I8X16LeS},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 50 "src/lexer-keywords.txt"
+      {"block", TokenType::Block, Opcode::Block},
+      {""},
+#line 124 "src/lexer-keywords.txt"
+      {"f32x4.extract_lane", TokenType::SimdLaneOp, Opcode::F32X4ExtractLane},
+      {""}, {""},
+#line 273 "src/lexer-keywords.txt"
+      {"i31", Type::I31Ref, TokenType::I31},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 387 "src/lexer-keywords.txt"
+      {"i32x4.shr_u", TokenType::Binary, Opcode::I32X4ShrU},
+      {""},
+#line 386 "src/lexer-keywords.txt"
+      {"i32x4.shr_s", TokenType::Binary, Opcode::I32X4ShrS},
+      {""},
+#line 37 "src/lexer-keywords.txt"
+      {"array.new_fixed", TokenType::ArrayNewFixed, Opcode::ArrayNewFixed},
+#line 360 "src/lexer-keywords.txt"
+      {"i32x4.extract_lane", TokenType::SimdLaneOp, Opcode::I32X4ExtractLane},
+      {""},
+#line 385 "src/lexer-keywords.txt"
+      {"i32x4.shl", TokenType::Binary, Opcode::I32X4Shl},
+      {""},
+#line 532 "src/lexer-keywords.txt"
+      {"i8x16.add_sat_u", TokenType::Binary, Opcode::I8X16AddSatU},
+      {""}, {""}, {""},
+#line 531 "src/lexer-keywords.txt"
+      {"i8x16.add_sat_s", TokenType::Binary, Opcode::I8X16AddSatS},
+      {""}, {""},
+#line 493 "src/lexer-keywords.txt"
+      {"i64.trunc_sat_f32_u", TokenType::Convert, Opcode::I64TruncSatF32U},
+#line 349 "src/lexer-keywords.txt"
+      {"i32.trunc_sat_f32_u", TokenType::Convert, Opcode::I32TruncSatF32U},
+#line 534 "src/lexer-keywords.txt"
+      {"i8x16.all_true", TokenType::Unary, Opcode::I8X16AllTrue},
+      {""},
+#line 492 "src/lexer-keywords.txt"
+      {"i64.trunc_sat_f32_s", TokenType::Convert, Opcode::I64TruncSatF32S},
+#line 348 "src/lexer-keywords.txt"
+      {"i32.trunc_sat_f32_s", TokenType::Convert, Opcode::I32TruncSatF32S},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 640 "src/lexer-keywords.txt"
+      {"table.fill", TokenType::TableFill, Opcode::TableFill},
+      {""},
+#line 357 "src/lexer-keywords.txt"
+      {"i32x4.bitmask", TokenType::Unary, Opcode::I32X4Bitmask},
+#line 533 "src/lexer-keywords.txt"
+      {"i8x16.add", TokenType::Binary, Opcode::I8X16Add},
+      {""}, {""}, {""}, {""}, {""},
+#line 235 "src/lexer-keywords.txt"
+      {"i16x8.gt_u", TokenType::Compare, Opcode::I16X8GtU},
+      {""}, {""}, {""},
+#line 234 "src/lexer-keywords.txt"
+      {"i16x8.gt_s", TokenType::Compare, Opcode::I16X8GtS},
+      {""},
+#line 233 "src/lexer-keywords.txt"
+      {"i16x8.ge_u", TokenType::Compare, Opcode::I16X8GeU},
+      {""}, {""}, {""},
+#line 232 "src/lexer-keywords.txt"
+      {"i16x8.ge_s", TokenType::Compare, Opcode::I16X8GeS},
+      {""},
+#line 425 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw32.xor_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32XorU},
+      {""}, {""}, {""},
+#line 241 "src/lexer-keywords.txt"
+      {"i16x8.lt_u", TokenType::Compare, Opcode::I16X8LtU},
+#line 260 "src/lexer-keywords.txt"
+      {"i16x8.sub_sat_u", TokenType::Binary, Opcode::I16X8SubSatU},
+#line 249 "src/lexer-keywords.txt"
+      {"i16x8.neg", TokenType::Unary, Opcode::I16X8Neg},
+#line 251 "src/lexer-keywords.txt"
+      {"i16x8.ne", TokenType::Compare, Opcode::I16X8Ne},
+#line 240 "src/lexer-keywords.txt"
+      {"i16x8.lt_s", TokenType::Compare, Opcode::I16X8LtS},
+#line 259 "src/lexer-keywords.txt"
+      {"i16x8.sub_sat_s", TokenType::Binary, Opcode::I16X8SubSatS},
+#line 237 "src/lexer-keywords.txt"
+      {"i16x8.le_u", TokenType::Compare, Opcode::I16X8LeU},
+      {""}, {""}, {""},
+#line 236 "src/lexer-keywords.txt"
+      {"i16x8.le_s", TokenType::Compare, Opcode::I16X8LeS},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 66 "src/lexer-keywords.txt"
+      {"data.drop", TokenType::DataDrop, Opcode::DataDrop},
+      {""},
+#line 82 "src/lexer-keywords.txt"
+      {"externref", Type::ExternRef},
+      {""}, {""},
+#line 166 "src/lexer-keywords.txt"
+      {"f64.max", TokenType::Binary, Opcode::F64Max},
+#line 105 "src/lexer-keywords.txt"
+      {"f32.max", TokenType::Binary, Opcode::F32Max},
+      {""},
+#line 144 "src/lexer-keywords.txt"
+      {"f32x4.sqrt", TokenType::Unary, Opcode::F32X4Sqrt},
+      {""}, {""},
+#line 416 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw16.sub_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16SubU},
+#line 286 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw16.sub_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16SubU},
+#line 214 "src/lexer-keywords.txt"
+      {"funcref", Type::FuncRef},
+      {""}, {""}, {""},
+#line 549 "src/lexer-keywords.txt"
+      {"i8x16.max_u", TokenType::Binary, Opcode::I8X16MaxU},
+      {""},
+#line 548 "src/lexer-keywords.txt"
+      {"i8x16.max_s", TokenType::Binary, Opcode::I8X16MaxS},
+#line 408 "src/lexer-keywords.txt"
+      {"i64.atomic.load16_u", TokenType::AtomicLoad, Opcode::I64AtomicLoad16U},
+#line 279 "src/lexer-keywords.txt"
+      {"i32.atomic.load16_u", TokenType::AtomicLoad, Opcode::I32AtomicLoad16U},
+      {""},
+#line 223 "src/lexer-keywords.txt"
+      {"i16x8.add_sat_u", TokenType::Binary, Opcode::I16X8AddSatU},
+      {""},
+#line 413 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw16.and_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16AndU},
+#line 283 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw16.and_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16AndU},
+#line 222 "src/lexer-keywords.txt"
+      {"i16x8.add_sat_s", TokenType::Binary, Opcode::I16X8AddSatS},
+      {""},
+#line 143 "src/lexer-keywords.txt"
+      {"f32x4.splat", TokenType::Unary, Opcode::F32X4Splat},
+#line 604 "src/lexer-keywords.txt"
+      {"param", TokenType::Param},
+      {""},
+#line 225 "src/lexer-keywords.txt"
+      {"i16x8.all_true", TokenType::Unary, Opcode::I16X8AllTrue},
+      {""}, {""},
+#line 185 "src/lexer-keywords.txt"
+      {"f64x2.floor", TokenType::Unary, Opcode::F64X2Floor},
+      {""}, {""}, {""},
+#line 190 "src/lexer-keywords.txt"
+      {"f64x2.max", TokenType::Binary, Opcode::F64X2Max},
+      {""}, {""}, {""}, {""}, {""},
+#line 224 "src/lexer-keywords.txt"
+      {"i16x8.add", TokenType::Binary, Opcode::I16X8Add},
+#line 388 "src/lexer-keywords.txt"
+      {"i32x4.splat", TokenType::Unary, Opcode::I32X4Splat},
+      {""}, {""},
+#line 51 "src/lexer-keywords.txt"
+      {"br_if", TokenType::BrIf, Opcode::BrIf},
+#line 424 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw32.xchg_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32XchgU},
+#line 75 "src/lexer-keywords.txt"
+      {"elem", TokenType::Elem},
+      {""}, {""},
+#line 412 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw16.add_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16AddU},
+#line 282 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw16.add_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16AddU},
+      {""},
+#line 430 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw8.sub_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8SubU},
+#line 293 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw8.sub_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8SubU},
+      {""}, {""},
+#line 571 "src/lexer-keywords.txt"
+      {"invoke", TokenType::Invoke},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""},
+#line 442 "src/lexer-keywords.txt"
+      {"i64.atomic.store8", TokenType::AtomicStore, Opcode::I64AtomicStore8},
+#line 304 "src/lexer-keywords.txt"
+      {"i32.atomic.store8", TokenType::AtomicStore, Opcode::I32AtomicStore8},
+      {""}, {""}, {""}, {""},
+#line 448 "src/lexer-keywords.txt"
+      {"i64.div_u", TokenType::Binary, Opcode::I64DivU},
+#line 310 "src/lexer-keywords.txt"
+      {"i32.div_u", TokenType::Binary, Opcode::I32DivU},
+#line 447 "src/lexer-keywords.txt"
+      {"i64.div_s", TokenType::Binary, Opcode::I64DivS},
+#line 309 "src/lexer-keywords.txt"
+      {"i32.div_s", TokenType::Binary, Opcode::I32DivS},
+      {""}, {""}, {""},
+#line 415 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw16.or_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16OrU},
+#line 285 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw16.or_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16OrU},
+#line 220 "src/lexer-keywords.txt"
+      {"i16", Type::I16},
+      {""},
+#line 451 "src/lexer-keywords.txt"
+      {"i64.extend16_s", TokenType::Unary, Opcode::I64Extend16S},
+#line 313 "src/lexer-keywords.txt"
+      {"i32.extend16_s", TokenType::Unary, Opcode::I32Extend16S},
+      {""},
+#line 558 "src/lexer-keywords.txt"
+      {"i8x16.relaxed_laneselect", TokenType::Ternary, Opcode::I8X16RelaxedLaneSelect},
+      {""},
+#line 31 "src/lexer-keywords.txt"
+      {"array.init_elem", TokenType::ArrayInitElem, Opcode::ArrayInitElem},
+      {""},
+#line 25 "src/lexer-keywords.txt"
+      {"array.copy", TokenType::ArrayCopy, Opcode::ArrayCopy},
+      {""}, {""}, {""}, {""},
+#line 559 "src/lexer-keywords.txt"
+      {"i8x16.replace_lane", TokenType::SimdLaneOp, Opcode::I8X16ReplaceLane},
+#line 243 "src/lexer-keywords.txt"
+      {"i16x8.max_u", TokenType::Binary, Opcode::I16X8MaxU},
+      {""},
+#line 242 "src/lexer-keywords.txt"
+      {"i16x8.max_s", TokenType::Binary, Opcode::I16X8MaxS},
+      {""},
+#line 246 "src/lexer-keywords.txt"
+      {"i16x8.mul", TokenType::Binary, Opcode::I16X8Mul},
+      {""}, {""}, {""},
+#line 83 "src/lexer-keywords.txt"
+      {"extern.convert_any", TokenType::GCUnary, Opcode::ExternConvertAny},
+#line 599 "src/lexer-keywords.txt"
+      {"nullexternref", Type::NullExternRef},
+#line 437 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw.sub", TokenType::AtomicRmw, Opcode::I64AtomicRmwSub},
+#line 300 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw.sub", TokenType::AtomicRmw, Opcode::I32AtomicRmwSub},
+      {""}, {""},
+#line 184 "src/lexer-keywords.txt"
+      {"f64x2.extract_lane", TokenType::SimdLaneOp, Opcode::F64X2ExtractLane},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 520 "src/lexer-keywords.txt"
+      {"i64x2.shr_u", TokenType::Binary, Opcode::I64X2ShrU},
+#line 45 "src/lexer-keywords.txt"
+      {"assert_trap", TokenType::AssertTrap},
+#line 519 "src/lexer-keywords.txt"
+      {"i64x2.shr_s", TokenType::Binary, Opcode::I64X2ShrS},
+      {""},
+#line 441 "src/lexer-keywords.txt"
+      {"i64.atomic.store32", TokenType::AtomicStore, Opcode::I64AtomicStore32},
+#line 498 "src/lexer-keywords.txt"
+      {"i64x2.extract_lane", TokenType::SimdLaneOp, Opcode::I64X2ExtractLane},
+      {""},
+#line 518 "src/lexer-keywords.txt"
+      {"i64x2.shl", TokenType::Binary, Opcode::I64X2Shl},
+      {""},
+#line 600 "src/lexer-keywords.txt"
+      {"nullref", Type::NullRef},
+      {""},
+#line 624 "src/lexer-keywords.txt"
+      {"return_call_ref", TokenType::ReturnCallRef, Opcode::ReturnCallRef},
+#line 59 "src/lexer-keywords.txt"
+      {"call_ref", TokenType::CallRef, Opcode::CallRef},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 511 "src/lexer-keywords.txt"
+      {"i64x2.bitmask", TokenType::Unary, Opcode::I64X2Bitmask},
+      {""}, {""},
+#line 398 "src/lexer-keywords.txt"
+      {"i32x4.trunc_sat_f32x4_u", TokenType::Unary, Opcode::I32X4TruncSatF32X4U},
+      {""}, {""}, {""},
+#line 397 "src/lexer-keywords.txt"
+      {"i32x4.trunc_sat_f32x4_s", TokenType::Unary, Opcode::I32X4TruncSatF32X4S},
+      {""}, {""}, {""},
+#line 566 "src/lexer-keywords.txt"
+      {"i8x16.sub", TokenType::Binary, Opcode::I8X16Sub},
+      {""}, {""},
+#line 530 "src/lexer-keywords.txt"
+      {"i8x16.abs", TokenType::Unary, Opcode::I8X16Abs},
+      {""}, {""},
+#line 659 "src/lexer-keywords.txt"
+      {"v128.not", TokenType::Unary, Opcode::V128Not},
+#line 63 "src/lexer-keywords.txt"
+      {"catch_ref", TokenType::CatchRef},
+#line 137 "src/lexer-keywords.txt"
+      {"f32x4.pmin", TokenType::Binary, Opcode::F32X4PMin},
+#line 664 "src/lexer-keywords.txt"
+      {"v128.store", TokenType::Store, Opcode::V128Store},
+      {""},
+#line 252 "src/lexer-keywords.txt"
+      {"i16x8.relaxed_laneselect", TokenType::Ternary, Opcode::I16X8RelaxedLaneSelect},
+      {""}, {""}, {""}, {""},
+#line 64 "src/lexer-keywords.txt"
+      {"catch_all_ref", TokenType::CatchAllRef},
+#line 156 "src/lexer-keywords.txt"
+      {"f64.convert_i64_u", TokenType::Convert, Opcode::F64ConvertI64U},
+#line 94 "src/lexer-keywords.txt"
+      {"f32.convert_i64_u", TokenType::Convert, Opcode::F32ConvertI64U},
+#line 268 "src/lexer-keywords.txt"
+      {"i16x8", TokenType::I16X8},
+#line 254 "src/lexer-keywords.txt"
+      {"i16x8.replace_lane", TokenType::SimdLaneOp, Opcode::I16X8ReplaceLane},
+#line 155 "src/lexer-keywords.txt"
+      {"f64.convert_i64_s", TokenType::Convert, Opcode::F64ConvertI64S},
+#line 93 "src/lexer-keywords.txt"
+      {"f32.convert_i64_s", TokenType::Convert, Opcode::F32ConvertI64S},
+#line 79 "src/lexer-keywords.txt"
+      {"eq", Type::EqRef, TokenType::Eq},
+      {""}, {""}, {""}, {""}, {""},
+#line 483 "src/lexer-keywords.txt"
+      {"i64.store16", TokenType::Store, Opcode::I64Store16},
+#line 340 "src/lexer-keywords.txt"
+      {"i32.store16", TokenType::Store, Opcode::I32Store16},
+      {""},
+#line 557 "src/lexer-keywords.txt"
+      {"i8x16.relaxed_swizzle", TokenType::Binary, Opcode::I8X16RelaxedSwizzle},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 675 "src/lexer-keywords.txt"
+      {"v128.store8_lane", TokenType::SimdStoreLane, Opcode::V128Store8Lane},
+      {""},
+#line 204 "src/lexer-keywords.txt"
+      {"f64x2.sqrt", TokenType::Unary, Opcode::F64X2Sqrt},
+#line 655 "src/lexer-keywords.txt"
+      {"v128.and", TokenType::Binary, Opcode::V128And},
+      {""}, {""}, {""},
+#line 551 "src/lexer-keywords.txt"
+      {"i8x16.min_u", TokenType::Binary, Opcode::I8X16MinU},
+      {""},
+#line 550 "src/lexer-keywords.txt"
+      {"i8x16.min_s", TokenType::Binary, Opcode::I8X16MinS},
+      {""},
+#line 660 "src/lexer-keywords.txt"
+      {"v128.or", TokenType::Binary, Opcode::V128Or},
+      {""}, {""}, {""},
+#line 654 "src/lexer-keywords.txt"
+      {"v128.andnot", TokenType::Binary, Opcode::V128Andnot},
+#line 673 "src/lexer-keywords.txt"
+      {"v128.load32_lane", TokenType::SimdLoadLane, Opcode::V128Load32Lane},
+#line 86 "src/lexer-keywords.txt"
+      {"export", TokenType::Export},
+#line 668 "src/lexer-keywords.txt"
+      {"v128.load32_splat", TokenType::Load, Opcode::V128Load32Splat},
+      {""},
+#line 658 "src/lexer-keywords.txt"
+      {"v128.load", TokenType::Load, Opcode::V128Load},
+      {""}, {""},
+#line 203 "src/lexer-keywords.txt"
+      {"f64x2.splat", TokenType::Unary, Opcode::F64X2Splat},
+      {""}, {""}, {""}, {""},
+#line 432 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw8.xor_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8XorU},
+#line 295 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw8.xor_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8XorU},
+#line 379 "src/lexer-keywords.txt"
+      {"i32x4.dot_i16x8_s", TokenType::Binary, Opcode::I32X4DotI16X8S},
+      {""},
+#line 41 "src/lexer-keywords.txt"
+      {"assert_exhaustion", TokenType::AssertExhaustion},
+      {""}, {""}, {""},
+#line 438 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw.xchg", TokenType::AtomicRmw, Opcode::I64AtomicRmwXchg},
+#line 301 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw.xchg", TokenType::AtomicRmw, Opcode::I32AtomicRmwXchg},
+      {""},
+#line 615 "src/lexer-keywords.txt"
+      {"ref.i31", TokenType::RefI31, Opcode::RefI31},
+#line 521 "src/lexer-keywords.txt"
+      {"i64x2.splat", TokenType::Unary, Opcode::I64X2Splat},
+      {""},
+#line 597 "src/lexer-keywords.txt"
+      {"nullfuncref", Type::NullFuncRef},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 261 "src/lexer-keywords.txt"
+      {"i16x8.sub", TokenType::Binary, Opcode::I16X8Sub},
+#line 21 "src/lexer-keywords.txt"
+      {"anyref", Type::AnyRef},
+      {""},
+#line 221 "src/lexer-keywords.txt"
+      {"i16x8.abs", TokenType::Unary, Opcode::I16X8Abs},
+      {""}, {""}, {""}, {""}, {""},
+#line 514 "src/lexer-keywords.txt"
+      {"i64x2.extend_low_i32x4_u", TokenType::Unary, Opcode::I64X2ExtendLowI32X4U},
+      {""},
+#line 512 "src/lexer-keywords.txt"
+      {"i64x2.extend_low_i32x4_s", TokenType::Unary, Opcode::I64X2ExtendLowI32X4S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 26 "src/lexer-keywords.txt"
+      {"array.fill", TokenType::ArrayFill, Opcode::ArrayFill},
+#line 122 "src/lexer-keywords.txt"
+      {"f32x4.div", TokenType::Binary, Opcode::F32X4Div},
+      {""}, {""},
+#line 139 "src/lexer-keywords.txt"
+      {"f32x4.relaxed_max", TokenType::Binary, Opcode::F32X4RelaxedMax},
+#line 662 "src/lexer-keywords.txt"
+      {"v128.load32_zero", TokenType::Load, Opcode::V128Load32Zero},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 61 "src/lexer-keywords.txt"
+      {"catch", TokenType::Catch, Opcode::Catch},
+      {""}, {""}, {""},
+#line 661 "src/lexer-keywords.txt"
+      {"v128.any_true", TokenType::Unary, Opcode::V128AnyTrue},
+#line 274 "src/lexer-keywords.txt"
+      {"i31ref", Type::I31Ref},
+      {""}, {""}, {""},
+#line 681 "src/lexer-keywords.txt"
+      {"i64.add128", TokenType::Quaternary, Opcode::I64Add128},
+#line 657 "src/lexer-keywords.txt"
+      {"v128.const", TokenType::Const, Opcode::V128Const},
+#line 245 "src/lexer-keywords.txt"
+      {"i16x8.min_u", TokenType::Binary, Opcode::I16X8MinU},
+      {""},
+#line 244 "src/lexer-keywords.txt"
+      {"i16x8.min_s", TokenType::Binary, Opcode::I16X8MinS},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 567 "src/lexer-keywords.txt"
+      {"i8x16", TokenType::I8X16},
+      {""},
+#line 636 "src/lexer-keywords.txt"
+      {"struct.new_default", TokenType::StructNewDefault, Opcode::StructNewDefault},
+#line 40 "src/lexer-keywords.txt"
+      {"assert_exception", TokenType::AssertException},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""},
+#line 678 "src/lexer-keywords.txt"
+      {"v128.store64_lane", TokenType::SimdStoreLane, Opcode::V128Store64Lane},
+      {""}, {""}, {""}, {""},
+#line 665 "src/lexer-keywords.txt"
+      {"v128", Type::V128},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 80 "src/lexer-keywords.txt"
+      {"eqref", Type::EqRef},
+      {""}, {""},
+#line 157 "src/lexer-keywords.txt"
+      {"f64.copysign", TokenType::Binary, Opcode::F64Copysign},
+#line 95 "src/lexer-keywords.txt"
+      {"f32.copysign", TokenType::Binary, Opcode::F32Copysign},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""},
 #line 581 "src/lexer-keywords.txt"
-      {"offset", TokenType::Offset},
-      {""}, {""},
-#line 445 "src/lexer-keywords.txt"
-      {"i64.load32_u", TokenType::Load, Opcode::I64Load32U},
-      {""}, {""}, {""},
-#line 525 "src/lexer-keywords.txt"
-      {"i8x16.le_u", TokenType::Compare, Opcode::I8X16LeU},
+      {"memory.copy", TokenType::MemoryCopy, Opcode::MemoryCopy},
       {""},
-#line 521 "src/lexer-keywords.txt"
-      {"i8x16.ge_u", TokenType::Compare, Opcode::I8X16GeU},
-#line 624 "src/lexer-keywords.txt"
-      {"v128.const", TokenType::Const, Opcode::V128Const},
-#line 527 "src/lexer-keywords.txt"
-      {"i8x16.lt_u", TokenType::Compare, Opcode::I8X16LtU},
+#line 525 "src/lexer-keywords.txt"
+      {"i64x2.extmul_low_i32x4_u", TokenType::Binary, Opcode::I64X2ExtmulLowI32X4U},
       {""},
 #line 523 "src/lexer-keywords.txt"
-      {"i8x16.gt_u", TokenType::Compare, Opcode::I8X16GtU},
-#line 180 "src/lexer-keywords.txt"
-      {"f64x2.relaxed_madd", TokenType::Ternary, Opcode::F64X2RelaxedMadd},
-#line 44 "src/lexer-keywords.txt"
-      {"catch", TokenType::Catch, Opcode::Catch},
-      {""}, {""}, {""},
-#line 513 "src/lexer-keywords.txt"
-      {"i8x16.add", TokenType::Binary, Opcode::I8X16Add},
-#line 498 "src/lexer-keywords.txt"
-      {"i64x2.shl", TokenType::Binary, Opcode::I64X2Shl},
-      {""},
-#line 404 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw32.xchg_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw32XchgU},
-      {""},
-#line 580 "src/lexer-keywords.txt"
-      {"nullref", Type::NullRef},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 35 "src/lexer-keywords.txt"
-      {"block", TokenType::Block, Opcode::Block},
-      {""},
-#line 148 "src/lexer-keywords.txt"
-      {"f64.max", TokenType::Binary, Opcode::F64Max},
-#line 87 "src/lexer-keywords.txt"
-      {"f32.max", TokenType::Binary, Opcode::F32Max},
-      {""}, {""},
-#line 401 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw32.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw32CmpxchgU},
-      {""}, {""}, {""},
-#line 645 "src/lexer-keywords.txt"
-      {"v128.store64_lane", TokenType::SimdStoreLane, Opcode::V128Store64Lane},
-      {""}, {""}, {""},
-#line 412 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw8.xor_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8XorU},
-#line 275 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw8.xor_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8XorU},
-#line 384 "src/lexer-keywords.txt"
-      {"i32x4.trunc_sat_f64x2_u_zero", TokenType::Unary, Opcode::I32X4TruncSatF64X2UZero},
-#line 625 "src/lexer-keywords.txt"
-      {"v128.load", TokenType::Load, Opcode::V128Load},
-#line 348 "src/lexer-keywords.txt"
-      {"i32x4.relaxed_trunc_f32x4_u", TokenType::Unary, Opcode::I32X4RelaxedTruncF32X4U},
-      {""}, {""}, {""}, {""},
-#line 622 "src/lexer-keywords.txt"
-      {"v128.and", TokenType::Binary, Opcode::V128And},
-#line 463 "src/lexer-keywords.txt"
-      {"i64.store16", TokenType::Store, Opcode::I64Store16},
-#line 320 "src/lexer-keywords.txt"
-      {"i32.store16", TokenType::Store, Opcode::I32Store16},
-      {""}, {""}, {""}, {""},
-#line 638 "src/lexer-keywords.txt"
-      {"v128.load8_lane", TokenType::SimdLoadLane, Opcode::V128Load8Lane},
-      {""}, {""}, {""}, {""}, {""},
-#line 167 "src/lexer-keywords.txt"
-      {"f64x2.floor", TokenType::Unary, Opcode::F64X2Floor},
-      {""},
-#line 621 "src/lexer-keywords.txt"
-      {"v128.andnot", TokenType::Binary, Opcode::V128Andnot},
-      {""},
-#line 579 "src/lexer-keywords.txt"
-      {"nullexternref", Type::NullExternRef},
-      {""}, {""}, {""},
-#line 514 "src/lexer-keywords.txt"
-      {"i8x16.all_true", TokenType::Unary, Opcode::I8X16AllTrue},
-#line 224 "src/lexer-keywords.txt"
-      {"i16x8.max_s", TokenType::Binary, Opcode::I16X8MaxS},
-#line 121 "src/lexer-keywords.txt"
-      {"f32x4.relaxed_max", TokenType::Binary, Opcode::F32X4RelaxedMax},
-      {""}, {""},
-#line 166 "src/lexer-keywords.txt"
-      {"f64x2.extract_lane", TokenType::SimdLaneOp, Opcode::F64X2ExtractLane},
-#line 125 "src/lexer-keywords.txt"
-      {"f32x4.splat", TokenType::Unary, Opcode::F32X4Splat},
-#line 478 "src/lexer-keywords.txt"
-      {"i64x2.extract_lane", TokenType::SimdLaneOp, Opcode::I64X2ExtractLane},
-#line 368 "src/lexer-keywords.txt"
-      {"i32x4.splat", TokenType::Unary, Opcode::I32X4Splat},
-      {""},
-#line 173 "src/lexer-keywords.txt"
-      {"f64x2.min", TokenType::Binary, Opcode::F64X2Min},
-#line 643 "src/lexer-keywords.txt"
-      {"v128.store16_lane", TokenType::SimdStoreLane, Opcode::V128Store16Lane},
-#line 241 "src/lexer-keywords.txt"
-      {"i16x8.sub_sat_s", TokenType::Binary, Opcode::I16X8SubSatS},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 237 "src/lexer-keywords.txt"
-      {"i16x8.shl", TokenType::Binary, Opcode::I16X8Shl},
-      {""}, {""},
-#line 474 "src/lexer-keywords.txt"
-      {"i64.trunc_sat_f64_s", TokenType::Convert, Opcode::I64TruncSatF64S},
-#line 330 "src/lexer-keywords.txt"
-      {"i32.trunc_sat_f64_s", TokenType::Convert, Opcode::I32TruncSatF64S},
-#line 204 "src/lexer-keywords.txt"
-      {"i16x8.add_sat_s", TokenType::Binary, Opcode::I16X8AddSatS},
-      {""}, {""}, {""},
-#line 432 "src/lexer-keywords.txt"
-      {"i64.extend32_s", TokenType::Unary, Opcode::I64Extend32S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 637 "src/lexer-keywords.txt"
-      {"v128.load8_splat", TokenType::Load, Opcode::V128Load8Splat},
-#line 192 "src/lexer-keywords.txt"
-      {"f64x2", TokenType::F64X2},
-      {""},
-#line 507 "src/lexer-keywords.txt"
-      {"i64x2", TokenType::I64X2},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 562 "src/lexer-keywords.txt"
-      {"memory.fill", TokenType::MemoryFill, Opcode::MemoryFill},
-      {""}, {""}, {""}, {""}, {""},
-#line 434 "src/lexer-keywords.txt"
-      {"i64.extend_i32_s", TokenType::Convert, Opcode::I64ExtendI32S},
-      {""}, {""}, {""},
-#line 225 "src/lexer-keywords.txt"
-      {"i16x8.max_u", TokenType::Binary, Opcode::I16X8MaxU},
-      {""},
-#line 220 "src/lexer-keywords.txt"
-      {"v128.load8x8_s", TokenType::Load, Opcode::V128Load8X8S},
-      {""}, {""},
-#line 137 "src/lexer-keywords.txt"
-      {"f64.convert_i64_s", TokenType::Convert, Opcode::F64ConvertI64S},
-#line 75 "src/lexer-keywords.txt"
-      {"f32.convert_i64_s", TokenType::Convert, Opcode::F32ConvertI64S},
-#line 550 "src/lexer-keywords.txt"
-      {"input", TokenType::Input},
-#line 172 "src/lexer-keywords.txt"
-      {"f64x2.max", TokenType::Binary, Opcode::F64X2Max},
-#line 582 "src/lexer-keywords.txt"
-      {"output", TokenType::Output},
-#line 549 "src/lexer-keywords.txt"
-      {"import", TokenType::Import},
-      {""}, {""},
-#line 119 "src/lexer-keywords.txt"
-      {"f32x4.pmin", TokenType::Binary, Opcode::F32X4PMin},
-      {""}, {""}, {""},
-#line 577 "src/lexer-keywords.txt"
-      {"nullfuncref", Type::NullFuncRef},
-      {""}, {""}, {""}, {""}, {""},
-#line 602 "src/lexer-keywords.txt"
-      {"start", TokenType::Start},
-      {""},
-#line 156 "src/lexer-keywords.txt"
-      {"f64.sqrt", TokenType::Unary, Opcode::F64Sqrt},
-#line 94 "src/lexer-keywords.txt"
-      {"f32.sqrt", TokenType::Unary, Opcode::F32Sqrt},
-#line 642 "src/lexer-keywords.txt"
-      {"v128.store8_lane", TokenType::SimdStoreLane, Opcode::V128Store8Lane},
-      {""}, {""}, {""}, {""},
-#line 104 "src/lexer-keywords.txt"
-      {"f32x4.div", TokenType::Binary, Opcode::F32X4Div},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 528 "src/lexer-keywords.txt"
-      {"i8x16.max_s", TokenType::Binary, Opcode::I8X16MaxS},
-      {""},
-#line 635 "src/lexer-keywords.txt"
-      {"v128.load32_splat", TokenType::Load, Opcode::V128Load32Splat},
-#line 63 "src/lexer-keywords.txt"
-      {"eqref", Type::EqRef},
-      {""}, {""},
-#line 640 "src/lexer-keywords.txt"
-      {"v128.load32_lane", TokenType::SimdLoadLane, Opcode::V128Load32Lane},
-#line 46 "src/lexer-keywords.txt"
-      {"catch_ref", TokenType::CatchRef},
-#line 605 "src/lexer-keywords.txt"
-      {"sub", TokenType::Sub},
-      {""}, {""},
-#line 544 "src/lexer-keywords.txt"
-      {"i8x16.sub_sat_s", TokenType::Binary, Opcode::I8X16SubSatS},
-#line 648 "src/lexer-keywords.txt"
-      {"i64.add128", TokenType::Quaternary, Opcode::I64Add128},
-      {""},
-#line 126 "src/lexer-keywords.txt"
-      {"f32x4.sqrt", TokenType::Unary, Opcode::F32X4Sqrt},
-#line 42 "src/lexer-keywords.txt"
-      {"call_ref", TokenType::CallRef, Opcode::CallRef},
-#line 435 "src/lexer-keywords.txt"
-      {"i64.extend_i32_u", TokenType::Convert, Opcode::I64ExtendI32U},
-      {""},
-#line 540 "src/lexer-keywords.txt"
-      {"i8x16.shl", TokenType::Binary, Opcode::I8X16Shl},
-      {""}, {""}, {""},
-#line 221 "src/lexer-keywords.txt"
-      {"v128.load8x8_u", TokenType::Load, Opcode::V128Load8X8U},
-#line 511 "src/lexer-keywords.txt"
-      {"i8x16.add_sat_s", TokenType::Binary, Opcode::I8X16AddSatS},
-      {""},
-#line 49 "src/lexer-keywords.txt"
-      {"data.drop", TokenType::DataDrop, Opcode::DataDrop},
-#line 619 "src/lexer-keywords.txt"
-      {"type", TokenType::Type},
-      {""}, {""}, {""}, {""},
-#line 242 "src/lexer-keywords.txt"
-      {"i16x8.sub_sat_u", TokenType::Binary, Opcode::I16X8SubSatU},
-#line 499 "src/lexer-keywords.txt"
-      {"i64x2.shr_s", TokenType::Binary, Opcode::I64X2ShrS},
-      {""}, {""}, {""}, {""}, {""},
-#line 131 "src/lexer-keywords.txt"
-      {"f64.abs", TokenType::Unary, Opcode::F64Abs},
-#line 69 "src/lexer-keywords.txt"
-      {"f32.abs", TokenType::Unary, Opcode::F32Abs},
-      {""},
-#line 475 "src/lexer-keywords.txt"
-      {"i64.trunc_sat_f64_u", TokenType::Convert, Opcode::I64TruncSatF64U},
-#line 331 "src/lexer-keywords.txt"
-      {"i32.trunc_sat_f64_u", TokenType::Convert, Opcode::I32TruncSatF64U},
-#line 205 "src/lexer-keywords.txt"
-      {"i16x8.add_sat_u", TokenType::Binary, Opcode::I16X8AddSatU},
-      {""}, {""},
-#line 24 "src/lexer-keywords.txt"
-      {"after", TokenType::After},
-      {""}, {""}, {""}, {""},
-#line 39 "src/lexer-keywords.txt"
-      {"br_table", TokenType::BrTable, Opcode::BrTable},
-#line 620 "src/lexer-keywords.txt"
-      {"unreachable", TokenType::Unreachable, Opcode::Unreachable},
-      {""}, {""}, {""},
-#line 99 "src/lexer-keywords.txt"
-      {"f32x4.abs", TokenType::Unary, Opcode::F32X4Abs},
-      {""},
-#line 334 "src/lexer-keywords.txt"
-      {"i32x4.abs", TokenType::Unary, Opcode::I32X4Abs},
-      {""}, {""},
-#line 529 "src/lexer-keywords.txt"
-      {"i8x16.max_u", TokenType::Binary, Opcode::I8X16MaxU},
-#line 67 "src/lexer-keywords.txt"
-      {"exnref", Type::ExnRef},
-#line 629 "src/lexer-keywords.txt"
-      {"v128.load32_zero", TokenType::Load, Opcode::V128Load32Zero},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 636 "src/lexer-keywords.txt"
-      {"v128.load64_splat", TokenType::Load, Opcode::V128Load64Splat},
-      {""}, {""}, {""},
-#line 641 "src/lexer-keywords.txt"
-      {"v128.load64_lane", TokenType::SimdLoadLane, Opcode::V128Load64Lane},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 138 "src/lexer-keywords.txt"
-      {"f64.convert_i64_u", TokenType::Convert, Opcode::F64ConvertI64U},
-#line 76 "src/lexer-keywords.txt"
-      {"f32.convert_i64_u", TokenType::Convert, Opcode::F32ConvertI64U},
-      {""}, {""},
-#line 377 "src/lexer-keywords.txt"
-      {"i32x4.trunc_sat_f32x4_s", TokenType::Unary, Opcode::I32X4TruncSatF32X4S},
-      {""}, {""},
-#line 500 "src/lexer-keywords.txt"
-      {"i64x2.shr_u", TokenType::Binary, Opcode::I64X2ShrU},
-#line 127 "src/lexer-keywords.txt"
-      {"f32x4.sub", TokenType::Binary, Opcode::F32X4Sub},
-      {""},
-#line 369 "src/lexer-keywords.txt"
-      {"i32x4.sub", TokenType::Binary, Opcode::I32X4Sub},
-      {""}, {""}, {""},
-#line 393 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw16.and_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16AndU},
-#line 263 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw16.and_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16AndU},
-#line 601 "src/lexer-keywords.txt"
-      {"shared", TokenType::Shared},
-      {""}, {""}, {""},
-#line 238 "src/lexer-keywords.txt"
-      {"i16x8.shr_s", TokenType::Binary, Opcode::I16X8ShrS},
-#line 633 "src/lexer-keywords.txt"
-      {"v128.xor", TokenType::Binary, Opcode::V128Xor},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 338 "src/lexer-keywords.txt"
-      {"i32x4.relaxed_dot_i8x16_i7x16_add_s", TokenType::Ternary, Opcode::I32X4DotI8X16I7X16AddS},
-      {""}, {""}, {""},
-#line 395 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw16.or_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16OrU},
-#line 265 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw16.or_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16OrU},
-      {""}, {""}, {""}, {""},
-#line 256 "src/lexer-keywords.txt"
-      {"i31ref", Type::I31Ref},
-      {""},
-#line 420 "src/lexer-keywords.txt"
-      {"i64.atomic.store16", TokenType::AtomicStore, Opcode::I64AtomicStore16},
-#line 283 "src/lexer-keywords.txt"
-      {"i32.atomic.store16", TokenType::AtomicStore, Opcode::I32AtomicStore16},
-      {""}, {""}, {""},
-#line 545 "src/lexer-keywords.txt"
-      {"i8x16.sub_sat_u", TokenType::Binary, Opcode::I8X16SubSatU},
-#line 630 "src/lexer-keywords.txt"
-      {"v128.load64_zero", TokenType::Load, Opcode::V128Load64Zero},
-      {""}, {""},
-#line 396 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw16.sub_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16SubU},
-#line 266 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw16.sub_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16SubU},
-      {""}, {""}, {""},
-#line 430 "src/lexer-keywords.txt"
-      {"i64.eqz", TokenType::Convert, Opcode::I64Eqz},
-#line 292 "src/lexer-keywords.txt"
-      {"i32.eqz", TokenType::Convert, Opcode::I32Eqz},
-      {""},
-#line 512 "src/lexer-keywords.txt"
-      {"i8x16.add_sat_u", TokenType::Binary, Opcode::I8X16AddSatU},
-#line 389 "src/lexer-keywords.txt"
-      {"i64.atomic.load32_u", TokenType::AtomicLoad, Opcode::I64AtomicLoad32U},
-      {""},
-#line 255 "src/lexer-keywords.txt"
-      {"i31", Type::I31Ref, TokenType::I31},
-#line 392 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw16.add_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16AddU},
-#line 262 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw16.add_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16AddU},
-      {""},
-#line 427 "src/lexer-keywords.txt"
-      {"i64.div_s", TokenType::Binary, Opcode::I64DivS},
-#line 289 "src/lexer-keywords.txt"
-      {"i32.div_s", TokenType::Binary, Opcode::I32DivS},
-#line 359 "src/lexer-keywords.txt"
-      {"i32x4.dot_i16x8_s", TokenType::Binary, Opcode::I32X4DotI16X8S},
-      {""}, {""},
-#line 584 "src/lexer-keywords.txt"
-      {"param", TokenType::Param},
-      {""},
-#line 226 "src/lexer-keywords.txt"
-      {"i16x8.min_s", TokenType::Binary, Opcode::I16X8MinS},
-#line 411 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw8.xchg_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8XchgU},
-#line 274 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw8.xchg_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8XchgU},
-      {""}, {""}, {""}, {""}, {""},
-#line 239 "src/lexer-keywords.txt"
-      {"i16x8.shr_u", TokenType::Binary, Opcode::I16X8ShrU},
-#line 212 "src/lexer-keywords.txt"
-      {"i16x8.extract_lane_s", TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneS},
-      {""}, {""}, {""}, {""}, {""},
-#line 201 "src/lexer-keywords.txt"
-      {"global", TokenType::Global},
-#line 566 "src/lexer-keywords.txt"
-      {"memory", TokenType::Memory},
-      {""}, {""},
-#line 479 "src/lexer-keywords.txt"
-      {"v128.load32x2_s", TokenType::Load, Opcode::V128Load32X2S},
-#line 597 "src/lexer-keywords.txt"
-      {"return_call_ref", TokenType::ReturnCallRef, Opcode::ReturnCallRef},
-      {""},
-#line 618 "src/lexer-keywords.txt"
-      {"try_table", TokenType::TryTable, Opcode::TryTable},
-      {""}, {""}, {""}, {""},
-#line 29 "src/lexer-keywords.txt"
-      {"assert_return", TokenType::AssertReturn},
-      {""}, {""}, {""}, {""},
-#line 199 "src/lexer-keywords.txt"
-      {"global.get", TokenType::GlobalGet, Opcode::GlobalGet},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 578 "src/lexer-keywords.txt"
-      {"nullexnref", Type::NullExnRef},
-      {""},
-#line 200 "src/lexer-keywords.txt"
-      {"global.set", TokenType::GlobalSet, Opcode::GlobalSet},
-      {""}, {""}, {""}, {""}, {""},
-#line 541 "src/lexer-keywords.txt"
-      {"i8x16.shr_s", TokenType::Binary, Opcode::I8X16ShrS},
-      {""}, {""}, {""},
-#line 378 "src/lexer-keywords.txt"
-      {"i32x4.trunc_sat_f32x4_u", TokenType::Unary, Opcode::I32X4TruncSatF32X4U},
-#line 428 "src/lexer-keywords.txt"
-      {"i64.div_u", TokenType::Binary, Opcode::I64DivU},
-#line 290 "src/lexer-keywords.txt"
-      {"i32.div_u", TokenType::Binary, Opcode::I32DivU},
+      {"i64x2.extmul_low_i32x4_s", TokenType::Binary, Opcode::I64X2ExtmulLowI32X4S},
       {""}, {""}, {""},
 #line 421 "src/lexer-keywords.txt"
-      {"i64.atomic.store32", TokenType::AtomicStore, Opcode::I64AtomicStore32},
-      {""},
-#line 227 "src/lexer-keywords.txt"
-      {"i16x8.min_u", TokenType::Binary, Opcode::I16X8MinU},
-      {""},
-#line 47 "src/lexer-keywords.txt"
-      {"catch_all_ref", TokenType::CatchAllRef},
-      {""},
-#line 537 "src/lexer-keywords.txt"
-      {"i8x16.relaxed_swizzle", TokenType::Binary, Opcode::I8X16RelaxedSwizzle},
-      {""}, {""}, {""}, {""},
-#line 213 "src/lexer-keywords.txt"
-      {"i16x8.extract_lane_u", TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneU},
-      {""}, {""}, {""},
-#line 564 "src/lexer-keywords.txt"
-      {"memory.init", TokenType::MemoryInit, Opcode::MemoryInit},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 34 "src/lexer-keywords.txt"
-      {"binary", TokenType::Bin},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 530 "src/lexer-keywords.txt"
-      {"i8x16.min_s", TokenType::Binary, Opcode::I8X16MinS},
-      {""},
-#line 62 "src/lexer-keywords.txt"
-      {"eq", Type::EqRef, TokenType::Eq},
+      {"i64.atomic.rmw32.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw32CmpxchgU},
       {""}, {""}, {""}, {""}, {""},
-#line 542 "src/lexer-keywords.txt"
-      {"i8x16.shr_u", TokenType::Binary, Opcode::I8X16ShrU},
-#line 518 "src/lexer-keywords.txt"
-      {"i8x16.extract_lane_s", TokenType::SimdLaneOp, Opcode::I8X16ExtractLaneS},
-      {""}, {""}, {""}, {""}, {""},
-#line 616 "src/lexer-keywords.txt"
-      {"throw_ref", TokenType::ThrowRef, Opcode::ThrowRef},
-      {""}, {""},
-#line 68 "src/lexer-keywords.txt"
-      {"export", TokenType::Export},
-#line 644 "src/lexer-keywords.txt"
-      {"v128.store32_lane", TokenType::SimdStoreLane, Opcode::V128Store32Lane},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 480 "src/lexer-keywords.txt"
-      {"v128.load32x2_u", TokenType::Load, Opcode::V128Load32X2U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 208 "src/lexer-keywords.txt"
-      {"i16x8.avgr_u", TokenType::Binary, Opcode::I16X8AvgrU},
-      {""},
-#line 181 "src/lexer-keywords.txt"
-      {"f64x2.relaxed_max", TokenType::Binary, Opcode::F64X2RelaxedMax},
-      {""}, {""}, {""},
-#line 185 "src/lexer-keywords.txt"
-      {"f64x2.splat", TokenType::Unary, Opcode::F64X2Splat},
-      {""},
-#line 501 "src/lexer-keywords.txt"
-      {"i64x2.splat", TokenType::Unary, Opcode::I64X2Splat},
-#line 531 "src/lexer-keywords.txt"
-      {"i8x16.min_u", TokenType::Binary, Opcode::I8X16MinU},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 519 "src/lexer-keywords.txt"
-      {"i8x16.extract_lane_u", TokenType::SimdLaneOp, Opcode::I8X16ExtractLaneU},
-      {""}, {""}, {""}, {""},
-#line 472 "src/lexer-keywords.txt"
-      {"i64.trunc_sat_f32_s", TokenType::Convert, Opcode::I64TruncSatF32S},
-#line 328 "src/lexer-keywords.txt"
-      {"i32.trunc_sat_f32_s", TokenType::Convert, Opcode::I32TruncSatF32S},
-#line 646 "src/lexer-keywords.txt"
-      {"i8x16.shuffle", TokenType::SimdShuffleOp, Opcode::I8X16Shuffle},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-#line 563 "src/lexer-keywords.txt"
+#line 583 "src/lexer-keywords.txt"
       {"memory.grow", TokenType::MemoryGrow, Opcode::MemoryGrow},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 408 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw8.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw8CmpxchgU},
-#line 271 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw8.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmw8CmpxchgU},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 606 "src/lexer-keywords.txt"
-      {"table.copy", TokenType::TableCopy, Opcode::TableCopy},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 135 "src/lexer-keywords.txt"
-      {"f64.convert_i32_s", TokenType::Convert, Opcode::F64ConvertI32S},
-#line 73 "src/lexer-keywords.txt"
-      {"f32.convert_i32_s", TokenType::Convert, Opcode::F32ConvertI32S},
-#line 628 "src/lexer-keywords.txt"
-      {"v128.any_true", TokenType::Unary, Opcode::V128AnyTrue},
-      {""}, {""}, {""}, {""},
-#line 179 "src/lexer-keywords.txt"
+#line 197 "src/lexer-keywords.txt"
       {"f64x2.pmin", TokenType::Binary, Opcode::F64X2PMin},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 240 "src/lexer-keywords.txt"
-      {"i16x8.splat", TokenType::Unary, Opcode::I16X8Splat},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 154 "src/lexer-keywords.txt"
+      {"f64.convert_i32_u", TokenType::Convert, Opcode::F64ConvertI32U},
+#line 92 "src/lexer-keywords.txt"
+      {"f32.convert_i32_u", TokenType::Convert, Opcode::F32ConvertI32U},
       {""}, {""},
-#line 28 "src/lexer-keywords.txt"
-      {"assert_malformed", TokenType::AssertMalformed},
-      {""}, {""}, {""}, {""}, {""},
-#line 129 "src/lexer-keywords.txt"
-      {"f32x4.demote_f64x2_zero", TokenType::Unary, Opcode::F32X4DemoteF64X2Zero},
-      {""}, {""},
-#line 164 "src/lexer-keywords.txt"
-      {"f64x2.div", TokenType::Binary, Opcode::F64X2Div},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 515 "src/lexer-keywords.txt"
-      {"i8x16.avgr_u", TokenType::Binary, Opcode::I8X16AvgrU},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 337 "src/lexer-keywords.txt"
-      {"i32x4.bitmask", TokenType::Unary, Opcode::I32X4Bitmask},
+#line 153 "src/lexer-keywords.txt"
+      {"f64.convert_i32_s", TokenType::Convert, Opcode::F64ConvertI32S},
+#line 91 "src/lexer-keywords.txt"
+      {"f32.convert_i32_s", TokenType::Convert, Opcode::F32ConvertI32S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""},
-#line 615 "src/lexer-keywords.txt"
-      {"throw", TokenType::Throw, Opcode::Throw},
-      {""}, {""}, {""}, {""},
-#line 186 "src/lexer-keywords.txt"
-      {"f64x2.sqrt", TokenType::Unary, Opcode::F64X2Sqrt},
+#line 85 "src/lexer-keywords.txt"
+      {"exnref", Type::ExnRef},
       {""}, {""},
-#line 647 "src/lexer-keywords.txt"
+#line 42 "src/lexer-keywords.txt"
+      {"assert_invalid", TokenType::AssertInvalid},
+      {""}, {""}, {""}, {""},
+#line 24 "src/lexer-keywords.txt"
+      {"arrayref", Type::ArrayRef},
+      {""}, {""}, {""}, {""}, {""},
+#line 219 "src/lexer-keywords.txt"
+      {"global", TokenType::Global},
+      {""}, {""}, {""},
+#line 22 "src/lexer-keywords.txt"
+      {"any.convert_extern", TokenType::GCUnary, Opcode::AnyConvertExtern},
+      {""}, {""}, {""}, {""}, {""},
+#line 578 "src/lexer-keywords.txt"
+      {"memory.atomic.notify", TokenType::AtomicNotify, Opcode::MemoryAtomicNotify},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 418 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw16.xor_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16XorU},
+#line 288 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw16.xor_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16XorU},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 562 "src/lexer-keywords.txt"
+      {"i8x16.shr_u", TokenType::Binary, Opcode::I8X16ShrU},
+      {""},
+#line 561 "src/lexer-keywords.txt"
+      {"i8x16.shr_s", TokenType::Binary, Opcode::I8X16ShrS},
+#line 159 "src/lexer-keywords.txt"
+      {"f64.eq", TokenType::Compare, Opcode::F64Eq},
+#line 98 "src/lexer-keywords.txt"
+      {"f32.eq", TokenType::Compare, Opcode::F32Eq},
+#line 611 "src/lexer-keywords.txt"
+      {"ref.eq", TokenType::RefEq, Opcode::RefEq},
+#line 182 "src/lexer-keywords.txt"
+      {"f64x2.div", TokenType::Binary, Opcode::F64X2Div},
+#line 560 "src/lexer-keywords.txt"
+      {"i8x16.shl", TokenType::Binary, Opcode::I8X16Shl},
+      {""},
+#line 199 "src/lexer-keywords.txt"
+      {"f64x2.relaxed_max", TokenType::Binary, Opcode::F64X2RelaxedMax},
+      {""}, {""},
+#line 539 "src/lexer-keywords.txt"
+      {"i8x16.extract_lane_u", TokenType::SimdLaneOp, Opcode::I8X16ExtractLaneU},
+#line 218 "src/lexer-keywords.txt"
+      {"global.set", TokenType::GlobalSet, Opcode::GlobalSet},
+#line 538 "src/lexer-keywords.txt"
+      {"i8x16.extract_lane_s", TokenType::SimdLaneOp, Opcode::I8X16ExtractLaneS},
+#line 217 "src/lexer-keywords.txt"
+      {"global.get", TokenType::GlobalGet, Opcode::GlobalGet},
+      {""}, {""}, {""}, {""},
+#line 449 "src/lexer-keywords.txt"
+      {"i64.eq", TokenType::Compare, Opcode::I64Eq},
+#line 311 "src/lexer-keywords.txt"
+      {"i32.eq", TokenType::Compare, Opcode::I32Eq},
+      {""}, {""}, {""}, {""},
+#line 649 "src/lexer-keywords.txt"
+      {"throw_ref", TokenType::ThrowRef, Opcode::ThrowRef},
+      {""}, {""}, {""},
+#line 536 "src/lexer-keywords.txt"
+      {"i8x16.bitmask", TokenType::Unary, Opcode::I8X16Bitmask},
+#line 72 "src/lexer-keywords.txt"
+      {"drop", TokenType::Drop, Opcode::Drop},
+      {""}, {""}, {""}, {""},
+#line 682 "src/lexer-keywords.txt"
+      {"i64.sub128", TokenType::Quaternary, Opcode::I64Sub128},
+      {""}, {""}, {""},
+#line 670 "src/lexer-keywords.txt"
+      {"v128.load8_splat", TokenType::Load, Opcode::V128Load8Splat},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 417 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw16.xchg_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16XchgU},
+#line 287 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw16.xchg_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16XchgU},
+#line 595 "src/lexer-keywords.txt"
+      {"nop", TokenType::Nop, Opcode::Nop},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 677 "src/lexer-keywords.txt"
+      {"v128.store32_lane", TokenType::SimdStoreLane, Opcode::V128Store32Lane},
+#line 671 "src/lexer-keywords.txt"
+      {"v128.load8_lane", TokenType::SimdLoadLane, Opcode::V128Load8Lane},
+      {""}, {""}, {""},
+#line 402 "src/lexer-keywords.txt"
+      {"i32x4.extend_low_i16x8_u", TokenType::Unary, Opcode::I32X4ExtendLowI16X8U},
+      {""},
+#line 401 "src/lexer-keywords.txt"
+      {"i32x4.extend_low_i16x8_s", TokenType::Unary, Opcode::I32X4ExtendLowI16X8S},
+      {""}, {""}, {""}, {""},
+#line 598 "src/lexer-keywords.txt"
+      {"nullexnref", Type::NullExnRef},
+      {""},
+#line 653 "src/lexer-keywords.txt"
+      {"unreachable", TokenType::Unreachable, Opcode::Unreachable},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 257 "src/lexer-keywords.txt"
+      {"i16x8.shr_u", TokenType::Binary, Opcode::I16X8ShrU},
+      {""},
+#line 256 "src/lexer-keywords.txt"
+      {"i16x8.shr_s", TokenType::Binary, Opcode::I16X8ShrS},
+      {""}, {""}, {""}, {""},
+#line 255 "src/lexer-keywords.txt"
+      {"i16x8.shl", TokenType::Binary, Opcode::I16X8Shl},
+      {""}, {""}, {""}, {""},
+#line 231 "src/lexer-keywords.txt"
+      {"i16x8.extract_lane_u", TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneU},
+      {""},
+#line 230 "src/lexer-keywords.txt"
+      {"i16x8.extract_lane_s", TokenType::SimdLaneOp, Opcode::I16X8ExtractLaneS},
+      {""},
+#line 404 "src/lexer-keywords.txt"
+      {"i32x4.trunc_sat_f64x2_u_zero", TokenType::Unary, Opcode::I32X4TruncSatF64X2UZero},
+      {""},
+#line 403 "src/lexer-keywords.txt"
+      {"i32x4.trunc_sat_f64x2_s_zero", TokenType::Unary, Opcode::I32X4TruncSatF64X2SZero},
+      {""},
+#line 358 "src/lexer-keywords.txt"
+      {"i32x4.relaxed_dot_i8x16_i7x16_add_s", TokenType::Ternary, Opcode::I32X4DotI8X16I7X16AddS},
+      {""},
+#line 33 "src/lexer-keywords.txt"
+      {"array.new", TokenType::ArrayNew, Opcode::ArrayNew},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 500 "src/lexer-keywords.txt"
+      {"v128.load32x2_u", TokenType::Load, Opcode::V128Load32X2U},
+#line 227 "src/lexer-keywords.txt"
+      {"i16x8.bitmask", TokenType::Unary, Opcode::I16X8Bitmask},
+      {""},
+#line 563 "src/lexer-keywords.txt"
+      {"i8x16.splat", TokenType::Unary, Opcode::I8X16Splat},
+#line 499 "src/lexer-keywords.txt"
+      {"v128.load32x2_s", TokenType::Load, Opcode::V128Load32X2S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""},
+#line 603 "src/lexer-keywords.txt"
+      {"pagesize", TokenType::PageSize},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 666 "src/lexer-keywords.txt"
+      {"v128.xor", TokenType::Binary, Opcode::V128Xor},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 656 "src/lexer-keywords.txt"
+      {"v128.bitselect", TokenType::Ternary, Opcode::V128BitSelect},
+      {""}, {""},
+#line 577 "src/lexer-keywords.txt"
+      {"loop", TokenType::Loop, Opcode::Loop},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 535 "src/lexer-keywords.txt"
+      {"i8x16.avgr_u", TokenType::Binary, Opcode::I8X16AvgrU},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 394 "src/lexer-keywords.txt"
+      {"i32x4.extmul_low_i16x8_u", TokenType::Binary, Opcode::I32X4ExtmulLowI16X8U},
+      {""},
+#line 392 "src/lexer-keywords.txt"
+      {"i32x4.extmul_low_i16x8_s", TokenType::Binary, Opcode::I32X4ExtmulLowI16X8S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""},
+#line 258 "src/lexer-keywords.txt"
+      {"i16x8.splat", TokenType::Unary, Opcode::I16X8Splat},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 474 "src/lexer-keywords.txt"
+      {"i64.popcnt", TokenType::Unary, Opcode::I64Popcnt},
+#line 331 "src/lexer-keywords.txt"
+      {"i32.popcnt", TokenType::Unary, Opcode::I32Popcnt},
+      {""}, {""}, {""},
+#line 672 "src/lexer-keywords.txt"
+      {"v128.load16_lane", TokenType::SimdLoadLane, Opcode::V128Load16Lane},
+      {""},
+#line 667 "src/lexer-keywords.txt"
+      {"v128.load16_splat", TokenType::Load, Opcode::V128Load16Splat},
+#line 123 "src/lexer-keywords.txt"
+      {"f32x4.eq", TokenType::Compare, Opcode::F32X4Eq},
+      {""},
+#line 172 "src/lexer-keywords.txt"
+      {"f64.promote_f32", TokenType::Convert, Opcode::F64PromoteF32},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""},
+#line 226 "src/lexer-keywords.txt"
+      {"i16x8.avgr_u", TokenType::Binary, Opcode::I16X8AvgrU},
+#line 359 "src/lexer-keywords.txt"
+      {"i32x4.eq", TokenType::Compare, Opcode::I32X4Eq},
+      {""}, {""}, {""}, {""}, {""},
+#line 676 "src/lexer-keywords.txt"
+      {"v128.store16_lane", TokenType::SimdStoreLane, Opcode::V128Store16Lane},
+      {""}, {""},
+#line 428 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw8.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw8CmpxchgU},
+#line 291 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw8.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmw8CmpxchgU},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 674 "src/lexer-keywords.txt"
+      {"v128.load64_lane", TokenType::SimdLoadLane, Opcode::V128Load64Lane},
+      {""},
+#line 669 "src/lexer-keywords.txt"
+      {"v128.load64_splat", TokenType::Load, Opcode::V128Load64Splat},
+      {""},
+#line 555 "src/lexer-keywords.txt"
+      {"i8x16.popcnt", TokenType::Unary, Opcode::I8X16Popcnt},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 435 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw.cmpxchg", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmwCmpxchg},
+#line 298 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw.cmpxchg", TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmwCmpxchg},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 158 "src/lexer-keywords.txt"
+      {"f64.div", TokenType::Binary, Opcode::F64Div},
+#line 97 "src/lexer-keywords.txt"
+      {"f32.div", TokenType::Binary, Opcode::F32Div},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 147 "src/lexer-keywords.txt"
+      {"f32x4.demote_f64x2_zero", TokenType::Unary, Opcode::F32X4DemoteF64X2Zero},
+      {""}, {""}, {""},
+#line 663 "src/lexer-keywords.txt"
+      {"v128.load64_zero", TokenType::Load, Opcode::V128Load64Zero},
+      {""}, {""}, {""}, {""}, {""},
+#line 239 "src/lexer-keywords.txt"
+      {"v128.load8x8_u", TokenType::Load, Opcode::V128Load8X8U},
+      {""},
+#line 238 "src/lexer-keywords.txt"
+      {"v128.load8x8_s", TokenType::Load, Opcode::V128Load8X8S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 74 "src/lexer-keywords.txt"
+      {"elem.drop", TokenType::ElemDrop, Opcode::ElemDrop},
+      {""},
+#line 253 "src/lexer-keywords.txt"
+      {"i16x8.relaxed_q15mulr_s", TokenType::Binary, Opcode::I16X8RelaxedQ15mulrS},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 414 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw16.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw16CmpxchgU},
+#line 284 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw16.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmw16CmpxchgU},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""},
+#line 431 "src/lexer-keywords.txt"
+      {"i64.atomic.rmw8.xchg_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8XchgU},
+#line 294 "src/lexer-keywords.txt"
+      {"i32.atomic.rmw8.xchg_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8XchgU},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 680 "src/lexer-keywords.txt"
       {"i8x16.swizzle", TokenType::Binary, Opcode::I8X16Swizzle},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 398 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw16.xor_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16XorU},
-#line 268 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw16.xor_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16XorU},
-      {""},
-#line 473 "src/lexer-keywords.txt"
-      {"i64.trunc_sat_f32_u", TokenType::Convert, Opcode::I64TruncSatF32U},
-#line 329 "src/lexer-keywords.txt"
-      {"i32.trunc_sat_f32_u", TokenType::Convert, Opcode::I32TruncSatF32U},
-      {""},
-#line 609 "src/lexer-keywords.txt"
-      {"table.grow", TokenType::TableGrow, Opcode::TableGrow},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 410 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw8.sub_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw8SubU},
-#line 273 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw8.sub_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw8SubU},
-#line 161 "src/lexer-keywords.txt"
-      {"f64x2.abs", TokenType::Unary, Opcode::F64X2Abs},
-      {""},
-#line 488 "src/lexer-keywords.txt"
-      {"i64x2.abs", TokenType::Unary, Opcode::I64X2Abs},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-#line 543 "src/lexer-keywords.txt"
-      {"i8x16.splat", TokenType::Unary, Opcode::I8X16Splat},
-#line 397 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw16.xchg_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16XchgU},
-#line 267 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw16.xchg_u", TokenType::AtomicRmw, Opcode::I32AtomicRmw16XchgU},
-#line 595 "src/lexer-keywords.txt"
-      {"rethrow", TokenType::Rethrow, Opcode::Rethrow},
       {""}, {""},
-#line 136 "src/lexer-keywords.txt"
-      {"f64.convert_i32_u", TokenType::Convert, Opcode::F64ConvertI32U},
-#line 74 "src/lexer-keywords.txt"
-      {"f32.convert_i32_u", TokenType::Convert, Opcode::F32ConvertI32U},
-      {""},
-#line 140 "src/lexer-keywords.txt"
-      {"f64.div", TokenType::Binary, Opcode::F64Div},
-#line 79 "src/lexer-keywords.txt"
-      {"f32.div", TokenType::Binary, Opcode::F32Div},
-      {""}, {""},
-#line 187 "src/lexer-keywords.txt"
-      {"f64x2.sub", TokenType::Binary, Opcode::F64X2Sub},
-      {""},
-#line 502 "src/lexer-keywords.txt"
-      {"i64x2.sub", TokenType::Binary, Opcode::I64X2Sub},
-#line 394 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw16.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw16CmpxchgU},
-#line 264 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw16.cmpxchg_u", TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmw16CmpxchgU},
-#line 415 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw.cmpxchg", TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmwCmpxchg},
-#line 278 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw.cmpxchg", TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmwCmpxchg},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-#line 203 "src/lexer-keywords.txt"
-      {"i16x8.abs", TokenType::Unary, Opcode::I16X8Abs},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 535 "src/lexer-keywords.txt"
-      {"i8x16.popcnt", TokenType::Unary, Opcode::I8X16Popcnt},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 55 "src/lexer-keywords.txt"
-      {"drop", TokenType::Drop, Opcode::Drop},
-      {""}, {""}, {""},
-#line 155 "src/lexer-keywords.txt"
-      {"f64.reinterpret_i64", TokenType::Convert, Opcode::F64ReinterpretI64},
-      {""}, {""}, {""}, {""},
-#line 57 "src/lexer-keywords.txt"
-      {"elem.drop", TokenType::ElemDrop, Opcode::ElemDrop},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 243 "src/lexer-keywords.txt"
-      {"i16x8.sub", TokenType::Binary, Opcode::I16X8Sub},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 455 "src/lexer-keywords.txt"
-      {"i64.reinterpret_f64", TokenType::Convert, Opcode::I64ReinterpretF64},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 210 "src/lexer-keywords.txt"
-      {"i16x8.relaxed_dot_i8x16_i7x16_s", TokenType::Binary, Opcode::I16X8DotI8X16I7X16S},
-      {""}, {""},
-#line 20 "src/lexer-keywords.txt"
-      {"any", Type::AnyRef, TokenType::Any},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 118 "src/lexer-keywords.txt"
-      {"f32x4.pmax", TokenType::Binary, Opcode::F32X4PMax},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 510 "src/lexer-keywords.txt"
-      {"i8x16.abs", TokenType::Unary, Opcode::I8X16Abs},
-      {""},
-#line 492 "src/lexer-keywords.txt"
-      {"i64x2.extend_low_i32x4_s", TokenType::Unary, Opcode::I64X2ExtendLowI32X4S},
-      {""}, {""}, {""},
-#line 634 "src/lexer-keywords.txt"
-      {"v128.load16_splat", TokenType::Load, Opcode::V128Load16Splat},
-      {""}, {""}, {""},
-#line 639 "src/lexer-keywords.txt"
-      {"v128.load16_lane", TokenType::SimdLoadLane, Opcode::V128Load16Lane},
-      {""}, {""}, {""}, {""},
-#line 557 "src/lexer-keywords.txt"
-      {"loop", TokenType::Loop, Opcode::Loop},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 379 "src/lexer-keywords.txt"
-      {"i32x4.extend_high_i16x8_s", TokenType::Unary, Opcode::I32X4ExtendHighI16X8S},
-      {""},
-#line 503 "src/lexer-keywords.txt"
-      {"i64x2.extmul_low_i32x4_s", TokenType::Binary, Opcode::I64X2ExtmulLowI32X4S},
-      {""},
-#line 583 "src/lexer-keywords.txt"
-      {"pagesize", TokenType::PageSize},
-      {""},
-#line 546 "src/lexer-keywords.txt"
-      {"i8x16.sub", TokenType::Binary, Opcode::I8X16Sub},
-      {""},
-#line 21 "src/lexer-keywords.txt"
-      {"anyref", Type::AnyRef},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 454 "src/lexer-keywords.txt"
-      {"i64.popcnt", TokenType::Unary, Opcode::I64Popcnt},
-#line 311 "src/lexer-keywords.txt"
-      {"i32.popcnt", TokenType::Unary, Opcode::I32Popcnt},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 494 "src/lexer-keywords.txt"
-      {"i64x2.extend_low_i32x4_u", TokenType::Unary, Opcode::I64X2ExtendLowI32X4U},
-#line 373 "src/lexer-keywords.txt"
-      {"i32x4.extmul_high_i16x8_s", TokenType::Binary, Opcode::I32X4ExtmulHighI16X8S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 235 "src/lexer-keywords.txt"
-      {"i16x8.relaxed_q15mulr_s", TokenType::Binary, Opcode::I16X8RelaxedQ15mulrS},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 380 "src/lexer-keywords.txt"
-      {"i32x4.extend_high_i16x8_u", TokenType::Unary, Opcode::I32X4ExtendHighI16X8U},
-      {""},
-#line 505 "src/lexer-keywords.txt"
-      {"i64x2.extmul_low_i32x4_u", TokenType::Binary, Opcode::I64X2ExtmulLowI32X4U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 375 "src/lexer-keywords.txt"
-      {"i32x4.extmul_high_i16x8_u", TokenType::Binary, Opcode::I32X4ExtmulHighI16X8U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 575 "src/lexer-keywords.txt"
-      {"nop", TokenType::Nop, Opcode::Nop},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 253 "src/lexer-keywords.txt"
-      {"i16x8.extend_low_i8x16_s", TokenType::Unary, Opcode::I16X8ExtendLowI8X16S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 139 "src/lexer-keywords.txt"
-      {"f64.copysign", TokenType::Binary, Opcode::F64Copysign},
-#line 77 "src/lexer-keywords.txt"
-      {"f32.copysign", TokenType::Binary, Opcode::F32Copysign},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 246 "src/lexer-keywords.txt"
-      {"i16x8.extmul_low_i8x16_s", TokenType::Binary, Opcode::I16X8ExtmulLowI8X16S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 351 "src/lexer-keywords.txt"
-      {"v128.load16x4_s", TokenType::Load, Opcode::V128Load16X4S},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 491 "src/lexer-keywords.txt"
-      {"i64x2.bitmask", TokenType::Unary, Opcode::I64X2Bitmask},
-#line 229 "src/lexer-keywords.txt"
-      {"i16x8.narrow_i32x4_s", TokenType::Binary, Opcode::I16X8NarrowI32X4S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 254 "src/lexer-keywords.txt"
-      {"i16x8.extend_low_i8x16_u", TokenType::Unary, Opcode::I16X8ExtendLowI8X16U},
-      {""}, {""}, {""}, {""}, {""},
-#line 649 "src/lexer-keywords.txt"
-      {"i64.sub128", TokenType::Quaternary, Opcode::I64Sub128},
-#line 333 "src/lexer-keywords.txt"
-      {"i32.wrap_i64", TokenType::Convert, Opcode::I32WrapI64},
-      {""}, {""}, {""},
-#line 141 "src/lexer-keywords.txt"
-      {"f64.eq", TokenType::Compare, Opcode::F64Eq},
-#line 80 "src/lexer-keywords.txt"
-      {"f32.eq", TokenType::Compare, Opcode::F32Eq},
-#line 429 "src/lexer-keywords.txt"
-      {"i64.eq", TokenType::Compare, Opcode::I64Eq},
-#line 291 "src/lexer-keywords.txt"
-      {"i32.eq", TokenType::Compare, Opcode::I32Eq},
-      {""}, {""}, {""}, {""}, {""},
-#line 102 "src/lexer-keywords.txt"
-      {"f32x4.convert_i32x4_s", TokenType::Unary, Opcode::F32X4ConvertI32X4S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 248 "src/lexer-keywords.txt"
-      {"i16x8.extmul_low_i8x16_u", TokenType::Binary, Opcode::I16X8ExtmulLowI8X16U},
-      {""}, {""}, {""}, {""},
-#line 381 "src/lexer-keywords.txt"
-      {"i32x4.extend_low_i16x8_s", TokenType::Unary, Opcode::I32X4ExtendLowI16X8S},
-      {""}, {""}, {""}, {""}, {""},
-#line 105 "src/lexer-keywords.txt"
-      {"f32x4.eq", TokenType::Compare, Opcode::F32X4Eq},
-#line 26 "src/lexer-keywords.txt"
-      {"assert_exhaustion", TokenType::AssertExhaustion},
-#line 339 "src/lexer-keywords.txt"
-      {"i32x4.eq", TokenType::Compare, Opcode::I32X4Eq},
-      {""}, {""},
-#line 230 "src/lexer-keywords.txt"
-      {"i16x8.narrow_i32x4_u", TokenType::Binary, Opcode::I16X8NarrowI32X4U},
-      {""}, {""}, {""},
-#line 370 "src/lexer-keywords.txt"
-      {"i32x4.extadd_pairwise_i16x8_s", TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 209 "src/lexer-keywords.txt"
-      {"i16x8.bitmask", TokenType::Unary, Opcode::I16X8Bitmask},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 372 "src/lexer-keywords.txt"
-      {"i32x4.extmul_low_i16x8_s", TokenType::Binary, Opcode::I32X4ExtmulLowI16X8S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 103 "src/lexer-keywords.txt"
-      {"f32x4.convert_i32x4_u", TokenType::Unary, Opcode::F32X4ConvertI32X4U},
-#line 623 "src/lexer-keywords.txt"
-      {"v128.bitselect", TokenType::Ternary, Opcode::V128BitSelect},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 382 "src/lexer-keywords.txt"
-      {"i32x4.extend_low_i16x8_u", TokenType::Unary, Opcode::I32X4ExtendLowI16X8U},
-      {""}, {""},
-#line 352 "src/lexer-keywords.txt"
-      {"v128.load16x4_u", TokenType::Load, Opcode::V128Load16X4U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 30 "src/lexer-keywords.txt"
-      {"assert_trap", TokenType::AssertTrap},
-#line 371 "src/lexer-keywords.txt"
-      {"i32x4.extadd_pairwise_i16x8_u", TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 561 "src/lexer-keywords.txt"
-      {"memory.copy", TokenType::MemoryCopy, Opcode::MemoryCopy},
-#line 374 "src/lexer-keywords.txt"
-      {"i32x4.extmul_low_i16x8_u", TokenType::Binary, Opcode::I32X4ExtmulLowI16X8U},
-      {""},
-#line 158 "src/lexer-keywords.txt"
-      {"f64.sub", TokenType::Binary, Opcode::F64Sub},
-#line 96 "src/lexer-keywords.txt"
-      {"f32.sub", TokenType::Binary, Opcode::F32Sub},
-#line 467 "src/lexer-keywords.txt"
-      {"i64.sub", TokenType::Binary, Opcode::I64Sub},
-#line 323 "src/lexer-keywords.txt"
-      {"i32.sub", TokenType::Binary, Opcode::I32Sub},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 516 "src/lexer-keywords.txt"
-      {"i8x16.bitmask", TokenType::Unary, Opcode::I8X16Bitmask},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
-#line 178 "src/lexer-keywords.txt"
-      {"f64x2.pmax", TokenType::Binary, Opcode::F64X2PMax},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-#line 25 "src/lexer-keywords.txt"
-      {"assert_exception", TokenType::AssertException},
-      {""}, {""}, {""}, {""},
-#line 493 "src/lexer-keywords.txt"
-      {"i64x2.extend_high_i32x4_s", TokenType::Unary, Opcode::I64X2ExtendHighI32X4S},
-      {""},
-#line 154 "src/lexer-keywords.txt"
-      {"f64.promote_f32", TokenType::Convert, Opcode::F64PromoteF32},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 27 "src/lexer-keywords.txt"
-      {"assert_invalid", TokenType::AssertInvalid},
-      {""}, {""}, {""}, {""}, {""},
-#line 22 "src/lexer-keywords.txt"
-      {"array", Type::ArrayRef, TokenType::Array},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 504 "src/lexer-keywords.txt"
-      {"i64x2.extmul_high_i32x4_s", TokenType::Binary, Opcode::I64X2ExtmulHighI32X4S},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 560 "src/lexer-keywords.txt"
-      {"memory.atomic.wait64", TokenType::AtomicWait, Opcode::MemoryAtomicWait64},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 495 "src/lexer-keywords.txt"
-      {"i64x2.extend_high_i32x4_u", TokenType::Unary, Opcode::I64X2ExtendHighI32X4U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-#line 506 "src/lexer-keywords.txt"
-      {"i64x2.extmul_high_i32x4_u", TokenType::Binary, Opcode::I64X2ExtmulHighI32X4U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
-#line 23 "src/lexer-keywords.txt"
-      {"arrayref", Type::ArrayRef},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 251 "src/lexer-keywords.txt"
-      {"i16x8.extend_high_i8x16_s", TokenType::Unary, Opcode::I16X8ExtendHighI8X16S},
-      {""}, {""}, {""}, {""},
-#line 31 "src/lexer-keywords.txt"
-      {"assert_unlinkable", TokenType::AssertUnlinkable},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 247 "src/lexer-keywords.txt"
-      {"i16x8.extmul_high_i8x16_s", TokenType::Binary, Opcode::I16X8ExtmulHighI8X16S},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 558 "src/lexer-keywords.txt"
-      {"memory.atomic.notify", TokenType::AtomicNotify, Opcode::MemoryAtomicNotify},
-      {""}, {""}, {""}, {""},
-#line 417 "src/lexer-keywords.txt"
-      {"i64.atomic.rmw.sub", TokenType::AtomicRmw, Opcode::I64AtomicRmwSub},
-#line 280 "src/lexer-keywords.txt"
-      {"i32.atomic.rmw.sub", TokenType::AtomicRmw, Opcode::I32AtomicRmwSub},
-      {""}, {""},
-#line 252 "src/lexer-keywords.txt"
-      {"i16x8.extend_high_i8x16_u", TokenType::Unary, Opcode::I16X8ExtendHighI8X16U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-#line 249 "src/lexer-keywords.txt"
-      {"i16x8.extmul_high_i8x16_u", TokenType::Binary, Opcode::I16X8ExtmulHighI8X16U},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
-#line 165 "src/lexer-keywords.txt"
+#line 183 "src/lexer-keywords.txt"
       {"f64x2.eq", TokenType::Compare, Opcode::F64X2Eq},
-      {""},
-#line 482 "src/lexer-keywords.txt"
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 679 "src/lexer-keywords.txt"
+      {"i8x16.shuffle", TokenType::SimdShuffleOp, Opcode::I8X16Shuffle},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 502 "src/lexer-keywords.txt"
       {"i64x2.eq", TokenType::Binary, Opcode::I64X2Eq},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""},
-#line 189 "src/lexer-keywords.txt"
-      {"f64x2.convert_low_i32x4_s", TokenType::Unary, Opcode::F64X2ConvertLowI32X4S},
-      {""}, {""}, {""},
-#line 93 "src/lexer-keywords.txt"
+#line 47 "src/lexer-keywords.txt"
+      {"atomic.fence", TokenType::AtomicFence, Opcode::AtomicFence},
+#line 136 "src/lexer-keywords.txt"
+      {"f32x4.pmax", TokenType::Binary, Opcode::F32X4PMax},
+      {""}, {""}, {""}, {""},
+#line 111 "src/lexer-keywords.txt"
       {"f32.reinterpret_i32", TokenType::Convert, Opcode::F32ReinterpretI32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 312 "src/lexer-keywords.txt"
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 648 "src/lexer-keywords.txt"
+      {"throw", TokenType::Throw, Opcode::Throw},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 440 "src/lexer-keywords.txt"
+      {"i64.atomic.store16", TokenType::AtomicStore, Opcode::I64AtomicStore16},
+#line 303 "src/lexer-keywords.txt"
+      {"i32.atomic.store16", TokenType::AtomicStore, Opcode::I32AtomicStore16},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 272 "src/lexer-keywords.txt"
+      {"i16x8.extend_low_i8x16_u", TokenType::Unary, Opcode::I16X8ExtendLowI8X16U},
+      {""},
+#line 271 "src/lexer-keywords.txt"
+      {"i16x8.extend_low_i8x16_s", TokenType::Unary, Opcode::I16X8ExtendLowI8X16S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 622 "src/lexer-keywords.txt"
+      {"rethrow", TokenType::Rethrow, Opcode::Rethrow},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 372 "src/lexer-keywords.txt"
+      {"v128.load16x4_u", TokenType::Load, Opcode::V128Load16X4U},
+      {""}, {""}, {""},
+#line 371 "src/lexer-keywords.txt"
+      {"v128.load16x4_s", TokenType::Load, Opcode::V128Load16X4S},
+      {""}, {""}, {""}, {""},
+#line 173 "src/lexer-keywords.txt"
+      {"f64.reinterpret_i64", TokenType::Convert, Opcode::F64ReinterpretI64},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 400 "src/lexer-keywords.txt"
+      {"i32x4.extend_high_i16x8_u", TokenType::Unary, Opcode::I32X4ExtendHighI16X8U},
+      {""},
+#line 399 "src/lexer-keywords.txt"
+      {"i32x4.extend_high_i16x8_s", TokenType::Unary, Opcode::I32X4ExtendHighI16X8S},
+      {""}, {""}, {""}, {""},
+#line 266 "src/lexer-keywords.txt"
+      {"i16x8.extmul_low_i8x16_u", TokenType::Binary, Opcode::I16X8ExtmulLowI8X16U},
+      {""},
+#line 264 "src/lexer-keywords.txt"
+      {"i16x8.extmul_low_i8x16_s", TokenType::Binary, Opcode::I16X8ExtmulLowI8X16S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 579 "src/lexer-keywords.txt"
+      {"memory.atomic.wait32", TokenType::AtomicWait, Opcode::MemoryAtomicWait32},
+      {""},
+#line 515 "src/lexer-keywords.txt"
+      {"i64x2.extend_high_i32x4_u", TokenType::Unary, Opcode::I64X2ExtendHighI32X4U},
+      {""},
+#line 513 "src/lexer-keywords.txt"
+      {"i64x2.extend_high_i32x4_s", TokenType::Unary, Opcode::I64X2ExtendHighI32X4S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 196 "src/lexer-keywords.txt"
+      {"f64x2.pmax", TokenType::Binary, Opcode::F64X2PMax},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 332 "src/lexer-keywords.txt"
       {"i32.reinterpret_f32", TokenType::Convert, Opcode::I32ReinterpretF32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 635 "src/lexer-keywords.txt"
+      {"struct.new", TokenType::StructNew, Opcode::StructNew},
+      {""}, {""}, {""}, {""}, {""},
+#line 395 "src/lexer-keywords.txt"
+      {"i32x4.extmul_high_i16x8_u", TokenType::Binary, Opcode::I32X4ExtmulHighI16X8U},
+      {""},
+#line 393 "src/lexer-keywords.txt"
+      {"i32x4.extmul_high_i16x8_s", TokenType::Binary, Opcode::I32X4ExtmulHighI16X8S},
+#line 228 "src/lexer-keywords.txt"
+      {"i16x8.relaxed_dot_i8x16_i7x16_s", TokenType::Binary, Opcode::I16X8DotI8X16I7X16S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""},
+#line 642 "src/lexer-keywords.txt"
+      {"table.grow", TokenType::TableGrow, Opcode::TableGrow},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 526 "src/lexer-keywords.txt"
+      {"i64x2.extmul_high_i32x4_u", TokenType::Binary, Opcode::I64X2ExtmulHighI32X4U},
+      {""},
+#line 524 "src/lexer-keywords.txt"
+      {"i64x2.extmul_high_i32x4_s", TokenType::Binary, Opcode::I64X2ExtmulHighI32X4S},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-#line 211 "src/lexer-keywords.txt"
-      {"i16x8.eq", TokenType::Compare, Opcode::I16X8Eq},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""},
-#line 190 "src/lexer-keywords.txt"
-      {"f64x2.convert_low_i32x4_u", TokenType::Unary, Opcode::F64X2ConvertLowI32X4U},
-      {""}, {""}, {""}, {""},
-#line 244 "src/lexer-keywords.txt"
-      {"i16x8.extadd_pairwise_i8x16_s", TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16S},
-      {""}, {""}, {""}, {""}, {""},
-#line 32 "src/lexer-keywords.txt"
-      {"atomic.fence", TokenType::AtomicFence, Opcode::AtomicFence},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 559 "src/lexer-keywords.txt"
-      {"memory.atomic.wait32", TokenType::AtomicWait, Opcode::MemoryAtomicWait32},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 245 "src/lexer-keywords.txt"
-      {"i16x8.extadd_pairwise_i8x16_u", TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16U},
-      {""}, {""}, {""}, {""},
-#line 232 "src/lexer-keywords.txt"
-      {"i16x8.q15mulr_sat_s", TokenType::Binary, Opcode::I16X8Q15mulrSatS},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
-#line 517 "src/lexer-keywords.txt"
+#line 537 "src/lexer-keywords.txt"
       {"i8x16.eq", TokenType::Compare, Opcode::I8X16Eq},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""},
+#line 353 "src/lexer-keywords.txt"
+      {"i32.wrap_i64", TokenType::Convert, Opcode::I32WrapI64},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 250 "src/lexer-keywords.txt"
+      {"i16x8.q15mulr_sat_s", TokenType::Binary, Opcode::I16X8Q15mulrSatS},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 475 "src/lexer-keywords.txt"
+      {"i64.reinterpret_f64", TokenType::Convert, Opcode::I64ReinterpretF64},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 121 "src/lexer-keywords.txt"
+      {"f32x4.convert_i32x4_u", TokenType::Unary, Opcode::F32X4ConvertI32X4U},
+      {""},
+#line 120 "src/lexer-keywords.txt"
+      {"f32x4.convert_i32x4_s", TokenType::Unary, Opcode::F32X4ConvertI32X4S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 229 "src/lexer-keywords.txt"
+      {"i16x8.eq", TokenType::Compare, Opcode::I16X8Eq},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 580 "src/lexer-keywords.txt"
+      {"memory.atomic.wait64", TokenType::AtomicWait, Opcode::MemoryAtomicWait64},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 391 "src/lexer-keywords.txt"
+      {"i32x4.extadd_pairwise_i16x8_u", TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8U},
+      {""},
+#line 390 "src/lexer-keywords.txt"
+      {"i32x4.extadd_pairwise_i16x8_s", TokenType::Unary, Opcode::I32X4ExtaddPairwiseI16X8S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""},
+#line 248 "src/lexer-keywords.txt"
+      {"i16x8.narrow_i32x4_u", TokenType::Binary, Opcode::I16X8NarrowI32X4U},
+      {""},
+#line 247 "src/lexer-keywords.txt"
+      {"i16x8.narrow_i32x4_s", TokenType::Binary, Opcode::I16X8NarrowI32X4S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""},
+#line 208 "src/lexer-keywords.txt"
+      {"f64x2.convert_low_i32x4_u", TokenType::Unary, Opcode::F64X2ConvertLowI32X4U},
+      {""},
+#line 207 "src/lexer-keywords.txt"
+      {"f64x2.convert_low_i32x4_s", TokenType::Unary, Opcode::F64X2ConvertLowI32X4S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
@@ -1941,8 +2051,15 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 191 "src/lexer-keywords.txt"
-      {"f64x2.promote_low_f32x4", TokenType::Unary, Opcode::F64X2PromoteLowF32X4},
+#line 270 "src/lexer-keywords.txt"
+      {"i16x8.extend_high_i8x16_u", TokenType::Unary, Opcode::I16X8ExtendHighI8X16U},
+      {""},
+#line 269 "src/lexer-keywords.txt"
+      {"i16x8.extend_high_i8x16_s", TokenType::Unary, Opcode::I16X8ExtendHighI8X16S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
@@ -1951,7 +2068,19 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""},
-#line 532 "src/lexer-keywords.txt"
+#line 267 "src/lexer-keywords.txt"
+      {"i16x8.extmul_high_i8x16_u", TokenType::Binary, Opcode::I16X8ExtmulHighI8X16U},
+      {""},
+#line 265 "src/lexer-keywords.txt"
+      {"i16x8.extmul_high_i8x16_s", TokenType::Binary, Opcode::I16X8ExtmulHighI8X16S},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""},
+#line 553 "src/lexer-keywords.txt"
+      {"i8x16.narrow_i16x8_u", TokenType::Binary, Opcode::I8X16NarrowI16X8U},
+#line 209 "src/lexer-keywords.txt"
+      {"f64x2.promote_low_f32x4", TokenType::Unary, Opcode::F64X2PromoteLowF32X4},
+#line 552 "src/lexer-keywords.txt"
       {"i8x16.narrow_i16x8_s", TokenType::Binary, Opcode::I8X16NarrowI16X8S},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
@@ -1959,9 +2088,35 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""},
-#line 533 "src/lexer-keywords.txt"
-      {"i8x16.narrow_i16x8_u", TokenType::Binary, Opcode::I8X16NarrowI16X8U}
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+#line 263 "src/lexer-keywords.txt"
+      {"i16x8.extadd_pairwise_i8x16_u", TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16U},
+      {""},
+#line 262 "src/lexer-keywords.txt"
+      {"i16x8.extadd_pairwise_i8x16_s", TokenType::Unary, Opcode::I16X8ExtaddPairwiseI8X16S}
     };
 #if (defined __GNUC__ && __GNUC__ + (__GNUC_MINOR__ >= 6) > 4) || (defined __clang__ && __clang_major__ >= 3)
 #pragma GCC diagnostic pop
