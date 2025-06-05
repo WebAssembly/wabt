@@ -19,8 +19,23 @@ struct TokenInfo {
 %%
 any, Type::AnyRef, TokenType::Any
 anyref, Type::AnyRef
+any.convert_extern, TokenType::GCUnary, Opcode::AnyConvertExtern
 array, Type::ArrayRef, TokenType::Array
 arrayref, Type::ArrayRef
+array.copy, TokenType::ArrayCopy, Opcode::ArrayCopy
+array.fill, TokenType::ArrayFill, Opcode::ArrayFill
+array.get, TokenType::ArrayGet, Opcode::ArrayGet
+array.get_s, TokenType::ArrayGetS, Opcode::ArrayGetS
+array.get_u, TokenType::ArrayGetU, Opcode::ArrayGetU
+array.init_data, TokenType::ArrayInitData, Opcode::ArrayInitData
+array.init_elem, TokenType::ArrayInitElem, Opcode::ArrayInitElem
+array.len, TokenType::GCUnary, Opcode::ArrayLen
+array.new, TokenType::ArrayNew, Opcode::ArrayNew
+array.new_data, TokenType::ArrayNewData, Opcode::ArrayNewData
+array.new_default, TokenType::ArrayNewDefault, Opcode::ArrayNewDefault
+array.new_elem, TokenType::ArrayNewElem, Opcode::ArrayNewElem
+array.new_fixed, TokenType::ArrayNewFixed, Opcode::ArrayNewFixed
+array.set, TokenType::ArraySet, Opcode::ArraySet
 after, TokenType::After
 assert_exception, TokenType::AssertException
 assert_exhaustion, TokenType::AssertExhaustion
@@ -34,6 +49,8 @@ before, TokenType::Before
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
 br_if, TokenType::BrIf, Opcode::BrIf
+br_on_cast, TokenType::BrOnCast, Opcode::BrOnCast
+br_on_cast_fail, TokenType::BrOnCast, Opcode::BrOnCastFail
 br_on_non_null, TokenType::BrOnNonNull, Opcode::BrOnNonNull
 br_on_null, TokenType::BrOnNull, Opcode::BrOnNull
 br_table, TokenType::BrTable, Opcode::BrTable
@@ -62,6 +79,7 @@ eq, Type::EqRef, TokenType::Eq
 eqref, Type::EqRef
 extern, Type::ExternRef, TokenType::Extern
 externref, Type::ExternRef
+extern.convert_any, TokenType::GCUnary, Opcode::ExternConvertAny
 exn, Type::ExnRef, TokenType::Exn
 exnref, Type::ExnRef
 export, TokenType::Export
@@ -253,6 +271,8 @@ i16x8.extend_low_i8x16_s, TokenType::Unary, Opcode::I16X8ExtendLowI8X16S
 i16x8.extend_low_i8x16_u, TokenType::Unary, Opcode::I16X8ExtendLowI8X16U
 i31, Type::I31Ref, TokenType::I31
 i31ref, Type::I31Ref
+i31.get_s, TokenType::GCUnary, Opcode::I31GetS
+i31.get_u, TokenType::GCUnary, Opcode::I31GetU
 i32.add, TokenType::Binary, Opcode::I32Add
 i32.and, TokenType::Binary, Opcode::I32And
 i32.atomic.load16_u, TokenType::AtomicLoad, Opcode::I32AtomicLoad16U
@@ -582,11 +602,18 @@ param, TokenType::Param
 rec, TokenType::Rec
 ref, TokenType::Ref
 quote, TokenType::Quote
+ref.array, TokenType::RefArray
 ref.as_non_null, TokenType::RefAsNonNull, Opcode::RefAsNonNull
+ref.cast, TokenType::RefCast, Opcode::RefCast
+ref.eq, TokenType::RefEq, Opcode::RefEq
 ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc
+ref.host, TokenType::RefHost
+ref.i31, TokenType::RefI31, Opcode::RefI31
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
 ref.null, TokenType::RefNull, Opcode::RefNull
+ref.struct, TokenType::RefStruct
+ref.test, TokenType::RefTest, Opcode::RefTest
 register, TokenType::Register
 result, TokenType::Result
 rethrow, TokenType::Rethrow, Opcode::Rethrow
@@ -599,6 +626,12 @@ shared, TokenType::Shared
 start, TokenType::Start
 struct, Type::StructRef, TokenType::Struct
 structref, Type::StructRef
+struct.get, TokenType::StructGet, Opcode::StructGet
+struct.get_s, TokenType::StructGetS, Opcode::StructGetS
+struct.get_u, TokenType::StructGetU, Opcode::StructGetU
+struct.new, TokenType::StructNew, Opcode::StructNew
+struct.new_default, TokenType::StructNewDefault, Opcode::StructNewDefault
+struct.set, TokenType::StructSet, Opcode::StructSet
 sub, TokenType::Sub
 table.copy, TokenType::TableCopy, Opcode::TableCopy
 table.fill, TokenType::TableFill, Opcode::TableFill

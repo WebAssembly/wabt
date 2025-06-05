@@ -47,14 +47,20 @@ enum class InstrKind {
   Imm_0_Op_1,                  // i32.eqz
   Imm_0_Op_2,                  // i32.add
   Imm_0_Op_3,                  // select
+  Imm_0_Op_4,                  // array.fill
+  Imm_0_Op_5,                  // array.copy
   Imm_Jump_Op_0,               // br
   Imm_Jump_Op_1,               // br_if
   Imm_Index_Op_0,              // global.get
   Imm_Index_Op_1,              // global.set
   Imm_Index_Op_2,              // table.set
   Imm_Index_Op_3,              // memory.fill
+  Imm_Index_Op_4,              // array.init_elem
   Imm_Index_Op_N,              // call
+  Imm_Index_Index_Op_1,        // struct.get_s
+  Imm_Index_Index_Op_2,        // array.new_data
   Imm_Index_Index_Op_3,        // memory.init
+  Imm_Index_Index_Op_4,        // array.init_data
   Imm_Index_Index_Op_N,        // call_indirect
   Imm_Index_Offset_Op_1,       // i32.load
   Imm_Index_Offset_Op_2,       // i32.store
