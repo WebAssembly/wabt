@@ -21,6 +21,16 @@ any, Type::AnyRef, TokenType::Any
 anyref, Type::AnyRef
 array, Type::ArrayRef, TokenType::Array
 arrayref, Type::ArrayRef
+array.get, TokenType::ArrayGet, Opcode::ArrayGet
+array.get_s, TokenType::ArrayGetS, Opcode::ArrayGetS
+array.get_u, TokenType::ArrayGetU, Opcode::ArrayGetU
+array.len, TokenType::Unary, Opcode::ArrayLen
+array.new, TokenType::ArrayNew, Opcode::ArrayNew
+array.new_data, TokenType::ArrayNewData, Opcode::ArrayNewData
+array.new_default, TokenType::ArrayNewDefault, Opcode::ArrayNewDefault
+array.new_elem, TokenType::ArrayNewElem, Opcode::ArrayNewElem
+array.new_fixed, TokenType::ArrayNewFixed, Opcode::ArrayNewFixed
+array.set, TokenType::ArraySet, Opcode::ArraySet
 after, TokenType::After
 assert_exception, TokenType::AssertException
 assert_exhaustion, TokenType::AssertExhaustion
@@ -582,9 +592,12 @@ param, TokenType::Param
 rec, TokenType::Rec
 ref, TokenType::Ref
 quote, TokenType::Quote
+ref.array, TokenType::RefArray
 ref.as_non_null, TokenType::RefAsNonNull, Opcode::RefAsNonNull
+ref.eq, TokenType::RefEq
 ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc
+ref.struct, TokenType::RefStruct
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
 ref.null, TokenType::RefNull, Opcode::RefNull
 register, TokenType::Register
@@ -599,6 +612,12 @@ shared, TokenType::Shared
 start, TokenType::Start
 struct, Type::StructRef, TokenType::Struct
 structref, Type::StructRef
+struct.get, TokenType::StructGet, Opcode::StructGet
+struct.get_s, TokenType::StructGetS, Opcode::StructGetS
+struct.get_u, TokenType::StructGetU, Opcode::StructGetU
+struct.new, TokenType::StructNew, Opcode::StructNew
+struct.new_default, TokenType::StructNewDefault, Opcode::StructNewDefault
+struct.set, TokenType::StructSet, Opcode::StructSet
 sub, TokenType::Sub
 table.copy, TokenType::TableCopy, Opcode::TableCopy
 table.fill, TokenType::TableFill, Opcode::TableFill

@@ -463,6 +463,53 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       break;
     }
 
+    case ExprType::ArrayGet:
+      CHECK_RESULT(delegate_->OnArrayGetExpr(cast<ArrayGetExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNew:
+      CHECK_RESULT(delegate_->OnArrayNewExpr(cast<ArrayNewExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewData:
+      CHECK_RESULT(delegate_->OnArrayNewDataExpr(cast<ArrayNewDataExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewDefault:
+      CHECK_RESULT(
+          delegate_->OnArrayNewDefaultExpr(cast<ArrayNewDefaultExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewElem:
+      CHECK_RESULT(delegate_->OnArrayNewElemExpr(cast<ArrayNewElemExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewFixed:
+      CHECK_RESULT(
+          delegate_->OnArrayNewFixedExpr(cast<ArrayNewFixedExpr>(expr)));
+      break;
+
+    case ExprType::ArraySet:
+      CHECK_RESULT(delegate_->OnArraySetExpr(cast<ArraySetExpr>(expr)));
+      break;
+
+    case ExprType::StructGet:
+      CHECK_RESULT(delegate_->OnStructGetExpr(cast<StructGetExpr>(expr)));
+      break;
+
+    case ExprType::StructNew:
+      CHECK_RESULT(delegate_->OnStructNewExpr(cast<StructNewExpr>(expr)));
+      break;
+
+    case ExprType::StructNewDefault:
+      CHECK_RESULT(
+          delegate_->OnStructNewDefaultExpr(cast<StructNewDefaultExpr>(expr)));
+      break;
+
+    case ExprType::StructSet:
+      CHECK_RESULT(delegate_->OnStructSetExpr(cast<StructSetExpr>(expr)));
+      break;
+
     case ExprType::Unreachable:
       CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
       break;

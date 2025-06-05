@@ -163,6 +163,19 @@ class TypeChecker {
   Result GetCatchCount(Index depth, Index* out_depth);
 
   Result BeginFunction(const TypeVector& sig);
+  Result OnArrayGet(const Location&, Opcode, Type ref_type, Type array_type);
+  Result OnArrayNew(const Location&, Type ref_type, Type array_type);
+  Result OnArrayNewData(Type ref_type, Type array_type);
+  Result OnArrayNewDefault(Type ref_type);
+  Result OnArrayNewElem(const Location&,
+                        Type ref_type,
+                        Type array_type,
+                        Type elem_type);
+  Result OnArrayNewFixed(const Location&,
+                         Type ref_type,
+                         Type array_type,
+                         Index count);
+  Result OnArraySet(const Location&, Type ref_type, const TypeMut& field);
   Result OnAtomicFence(uint32_t consistency_model);
   Result OnAtomicLoad(Opcode, const Limits& limits);
   Result OnAtomicNotify(Opcode, const Limits& limits);
@@ -231,6 +244,10 @@ class TypeChecker {
   Result OnSimdStoreLane(Opcode, const Limits& limits, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode, const Limits& limits);
+  Result OnStructGet(Opcode, Type ref_type, const StructType&, Index field);
+  Result OnStructNew(Type ref_type, const StructType&);
+  Result OnStructNewDefault(Type ref_type);
+  Result OnStructSet(Type ref_type, const StructType&, Index field);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnThrowRef();
@@ -301,6 +318,13 @@ class TypeChecker {
   static uint32_t ComputeHash(uint32_t hash, Index value) {
     // Shift-Add-XOR hash
     return hash ^ ((hash << 6) + (hash >> 2) + value);
+  }
+
+  static Type ToUnpackedType(Type type) {
+    if (type.IsPackedType()) {
+      return Type::I32;
+    }
+    return type;
   }
 
   uint32_t ComputeHash(uint32_t hash, Type& type, Index rec_start);

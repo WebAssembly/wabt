@@ -366,6 +366,24 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::RefAsNonNull:
       return features.function_references_enabled();
 
+    case Opcode::StructGet:
+    case Opcode::StructGetS:
+    case Opcode::StructGetU:
+    case Opcode::StructNew:
+    case Opcode::StructNewDefault:
+    case Opcode::StructSet:
+    case Opcode::ArrayNew:
+    case Opcode::ArrayNewDefault:
+    case Opcode::ArrayNewFixed:
+    case Opcode::ArrayNewData:
+    case Opcode::ArrayNewElem:
+    case Opcode::ArrayGet:
+    case Opcode::ArrayGetS:
+    case Opcode::ArrayGetU:
+    case Opcode::ArraySet:
+    case Opcode::ArrayLen:
+      return features.gc_enabled();
+
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:
     case Opcode::InterpBrUnless:

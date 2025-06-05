@@ -54,6 +54,8 @@ enum class InstrKind {
   Imm_Index_Op_2,              // table.set
   Imm_Index_Op_3,              // memory.fill
   Imm_Index_Op_N,              // call
+  Imm_Index_Index_Op_1,        // struct.get_s
+  Imm_Index_Index_Op_2,        // array.new_data
   Imm_Index_Index_Op_3,        // memory.init
   Imm_Index_Index_Op_N,        // call_indirect
   Imm_Index_Offset_Op_1,       // i32.load

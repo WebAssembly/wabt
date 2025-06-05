@@ -4303,6 +4303,17 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
       case ExprType::ReturnCallRef:
+      case ExprType::ArrayGet:
+      case ExprType::ArrayNew:
+      case ExprType::ArrayNewData:
+      case ExprType::ArrayNewDefault:
+      case ExprType::ArrayNewElem:
+      case ExprType::ArrayNewFixed:
+      case ExprType::ArraySet:
+      case ExprType::StructGet:
+      case ExprType::StructNew:
+      case ExprType::StructNewDefault:
+      case ExprType::StructSet:
         UNIMPLEMENTED("...");
         break;
     }

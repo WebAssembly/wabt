@@ -165,6 +165,13 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndLocalDecls() override;
 
   Result OnOpcode(Opcode Opcode) override;
+  Result OnArrayGet(Opcode opcode, Index type_index) override;
+  Result OnArrayNew(Index type_index) override;
+  Result OnArrayNewData(Index type_index, Index data_index) override;
+  Result OnArrayNewDefault(Index type_index) override;
+  Result OnArrayNewElem(Index type_index, Index elem_index) override;
+  Result OnArrayNewFixed(Index type_index, Index count) override;
+  Result OnArraySet(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -256,6 +263,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
   Result OnTernaryExpr(Opcode opcode) override;
+  Result OnStructGet(Opcode opcode,
+                     Index type_index,
+                     Index field_index) override;
+  Result OnStructNew(Index type_index) override;
+  Result OnStructNewDefault(Index type_index) override;
+  Result OnStructSet(Index type_index, Index field_index) override;
   Result OnThrowExpr(Index tag_index) override;
   Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
@@ -1130,6 +1143,63 @@ Result BinaryReaderInterp::OnLoadZeroExpr(Opcode opcode,
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnArrayGet(Opcode opcode, Index type_index) {
+  CHECK_RESULT(validator_.OnArrayGet(GetLocation(), opcode,
+                                     Var(type_index, GetLocation())));
+  if (opcode == Opcode::ArrayGet) {
+    istream_.Emit(opcode);
+  } else {
+    Index is_16 = (module_.func_types[type_index].params[0] == Type::I16);
+    istream_.Emit(opcode, is_16);
+  }
+
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNew(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArrayNew(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNew, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewData(Index type_index, Index data_index) {
+  CHECK_RESULT(validator_.OnArrayNewData(GetLocation(),
+                                         Var(type_index, GetLocation()),
+                                         Var(data_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewData, type_index, data_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewDefault(Index type_index) {
+  CHECK_RESULT(validator_.OnArrayNewDefault(GetLocation(),
+                                            Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewDefault, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewElem(Index type_index, Index elem_index) {
+  CHECK_RESULT(validator_.OnArrayNewElem(GetLocation(),
+                                         Var(type_index, GetLocation()),
+                                         Var(elem_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewElem, type_index, elem_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewFixed(Index type_index, Index count) {
+  CHECK_RESULT(validator_.OnArrayNewFixed(
+      GetLocation(), Var(type_index, GetLocation()), count));
+  istream_.Emit(Opcode::ArrayNewFixed, type_index, count);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArraySet(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArraySet(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArraySet);
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
                                             Index memidx,
                                             Address align_log2,
@@ -1704,6 +1774,44 @@ Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
                                       Var(segment_index, GetLocation()),
                                       Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableInit, table_index, segment_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructGet(Opcode opcode,
+                                       Index type_index,
+                                       Index field_index) {
+  CHECK_RESULT(validator_.OnStructGet(GetLocation(), opcode,
+                                      Var(type_index, GetLocation()),
+                                      Var(field_index, GetLocation())));
+  if (opcode == Opcode::StructGet) {
+    istream_.Emit(opcode, field_index);
+  } else {
+    Index is_16 =
+        (module_.func_types[type_index].params[field_index] == Type::I16);
+    istream_.Emit(opcode, field_index, is_16);
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructNew(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnStructNew(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::StructNew, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructNewDefault(Index type_index) {
+  CHECK_RESULT(validator_.OnStructNewDefault(GetLocation(),
+                                             Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::StructNewDefault, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructSet(Index type_index, Index field_index) {
+  CHECK_RESULT(validator_.OnStructSet(GetLocation(),
+                                      Var(type_index, GetLocation()),
+                                      Var(field_index, GetLocation())));
+  istream_.Emit(Opcode::StructSet, field_index);
   return Result::Ok;
 }
 

@@ -740,6 +740,99 @@ Result TypeChecker::BeginFunction(const TypeVector& sig) {
   return Result::Ok;
 }
 
+Result TypeChecker::OnArrayGet(const Location& loc,
+                               Opcode opcode,
+                               Type ref_type,
+                               Type array_type) {
+  Result result = PopAndCheck2Types(ref_type, Type::I32, "array.get");
+  bool is_packed_get = (opcode != Opcode::ArrayGet);
+
+  if (array_type.IsPackedType() != is_packed_get) {
+    PrintError("array is %spacked", is_packed_get ? "not " : "");
+    result = Result::Error;
+  }
+
+  PushType(ToUnpackedType(array_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNew(const Location& loc,
+                               Type ref_type,
+                               Type array_type) {
+  Result result =
+      PopAndCheck2Types(ToUnpackedType(array_type), Type::I32, "array.new");
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewData(Type ref_type, Type array_type) {
+  Result result = PopAndCheck2Types(Type::I32, Type::I32, "array.new_elem");
+  if (array_type.IsRef()) {
+    PrintError("type mismatch: array type must be number or vector type");
+    result = Result::Error;
+  }
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewDefault(Type ref_type) {
+  Result result = PopAndCheck1Type(Type::I32, "array.new_default");
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewElem(const Location& loc,
+                                   Type ref_type,
+                                   Type array_type,
+                                   Type elem_type) {
+  Result result = CheckType(elem_type, array_type);
+  if (Failed(result)) {
+    PrintError("type mismatch: array type does not match to elem type");
+  }
+  result |= PopAndCheck2Types(Type::I32, Type::I32, "array.new_elem");
+  PushType(ToUnpackedType(ref_type));
+  return result;
+}
+
+Result TypeChecker::OnArrayNewFixed(const Location& loc,
+                                    Type ref_type,
+                                    Type array_type,
+                                    Index count) {
+  Result result = Result::Ok;
+  array_type = ToUnpackedType(array_type);
+  for (Index i = 0; i < count; ++i) {
+    result |= PeekAndCheckType(count - i - 1, array_type);
+  }
+
+  if (Failed(result)) {
+    // To improve performance, type vector
+    // conversion is only done on error.
+    TypeVector types;
+    types.reserve(count);
+
+    for (size_t i = 0; i < count; ++i) {
+      types.push_back(array_type);
+    }
+    PrintStackIfFailedV(result, "array.new_fixed", types, /*is_end=*/false);
+  }
+
+  result |= DropTypes(count);
+  PushType(ref_type);
+  return result;
+}
+
+Result TypeChecker::OnArraySet(const Location& loc,
+                               Type ref_type,
+                               const TypeMut& field) {
+  Result result = PopAndCheck3Types(ref_type, Type::I32,
+                                    ToUnpackedType(field.type), "array.set");
+  if (!field.mutable_) {
+    PrintError("array is immutable");
+    result = Result::Error;
+  }
+  return result;
+}
+
 Result TypeChecker::OnAtomicLoad(Opcode opcode, const Limits& limits) {
   return CheckOpcode1(opcode, &limits);
 }
@@ -1161,7 +1254,11 @@ Result TypeChecker::OnRefAsNonNullExpr() {
 }
 
 Result TypeChecker::OnRefFuncExpr(Index func_type) {
-  PushType(Type(Type::Ref, func_type));
+  if (func_type == kInvalidIndex) {
+    PushType(Type(Type::FuncRef, Type::ReferenceNonNull));
+  } else {
+    PushType(Type(Type::Ref, func_type));
+  }
   return Result::Ok;
 }
 
@@ -1240,6 +1337,80 @@ Result TypeChecker::OnSelect(const TypeVector& expected) {
 
 Result TypeChecker::OnStore(Opcode opcode, const Limits& limits) {
   return CheckOpcode2(opcode, &limits);
+}
+
+Result TypeChecker::OnStructGet(Opcode opcode,
+                                Type ref_type,
+                                const StructType& struct_type,
+                                Index field) {
+  Result result = PopAndCheck1Type(ref_type, "struct.get");
+  if (field >= struct_type.fields.size()) {
+    PrintError("unknown field: %" PRIindex, field);
+    result = Result::Error;
+  } else {
+    Type type = struct_type.fields[field].type;
+    bool is_packed_get = (opcode != Opcode::StructGet);
+
+    if (type.IsPackedType() != is_packed_get) {
+      PrintError("field %" PRIindex " is %spacked", field,
+                 is_packed_get ? "not " : "");
+      result = Result::Error;
+    }
+
+    PushType(ToUnpackedType(type));
+  }
+  return result;
+}
+
+Result TypeChecker::OnStructNew(Type ref_type, const StructType& struct_type) {
+  Result result = Result::Ok;
+  size_t size = struct_type.fields.size();
+
+  for (size_t i = 0; i < size; ++i) {
+    result |= PeekAndCheckType(size - i - 1,
+                               ToUnpackedType(struct_type.fields[i].type));
+  }
+
+  if (Failed(result)) {
+    // To improve performance, type vector
+    // conversion is only done on error.
+    TypeVector types;
+    types.reserve(size);
+
+    for (size_t i = 0; i < size; ++i) {
+      types.push_back(ToUnpackedType(struct_type.fields[i].type));
+    }
+    PrintStackIfFailedV(result, "struct.new", types, /*is_end=*/false);
+  }
+  result |= DropTypes(size);
+  PushType(ref_type);
+  return result;
+}
+
+Result TypeChecker::OnStructNewDefault(Type ref_type) {
+  PushType(ref_type);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnStructSet(Type ref_type,
+                                const StructType& struct_type,
+                                Index field) {
+  Result result = Result::Ok;
+
+  if (field >= struct_type.fields.size() ||
+      !struct_type.fields[field].mutable_) {
+    const char* message = field >= struct_type.fields.size()
+                              ? "unknown field: %" PRIindex
+                              : "field %" PRIindex " is immutable";
+    PrintError(message, field);
+    DropTypes(1);
+    PopAndCheck1Type(ref_type, "struct.set");
+    result = Result::Error;
+  } else {
+    Type expected_type = ToUnpackedType(struct_type.fields[field].type);
+    result |= PopAndCheck2Types(ref_type, expected_type, "struct.set");
+  }
+  return result;
 }
 
 Result TypeChecker::OnTry(const TypeVector& param_types,

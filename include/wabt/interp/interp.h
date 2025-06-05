@@ -89,6 +89,8 @@ enum class ObjectKind {
   Memory,
   Global,
   Tag,
+  Array,
+  Struct,
   Module,
   Instance,
 
@@ -997,6 +999,52 @@ class Tag : public Extern {
   void Mark(Store&) override;
 
   TagType type_;
+};
+
+class Array : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Array;
+  static const char* GetTypeName() { return "Array"; }
+  using Ptr = RefPtr<Array>;
+
+  static Array::Ptr New(Store&, u32 size, Index type_index, Module* mod);
+
+  Index Size();
+  Value GetItem(Index idx);
+  void SetItem(Index idx, Value value);
+
+ private:
+  friend Store;
+  explicit Array(Store&, u32 size, Index type_index, Module* mod);
+  void Mark(Store&) override;
+
+  Ref module_;
+  Index type_index_;
+  Values items_;
+};
+
+class Struct : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Struct;
+  static const char* GetTypeName() { return "Struct"; }
+  using Ptr = RefPtr<Struct>;
+
+  static Struct::Ptr New(Store&, Index type_index, Module* mod);
+
+  Index Size();
+  Value GetField(Index idx);
+  void SetField(Index idx, Value value);
+
+ private:
+  friend Store;
+  explicit Struct(Store&, Index type_index, Module* mod);
+  void Mark(Store&) override;
+
+  Ref module_;
+  Index type_index_;
+  Values fields_;
 };
 
 class ElemSegment {

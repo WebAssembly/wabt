@@ -112,8 +112,8 @@ class Type {
            enum_ == Type::ExternRef || enum_ == Type::AnyRef ||
            enum_ == Type::EqRef || enum_ == Type::I31Ref ||
            enum_ == Type::StructRef || enum_ == Type::ArrayRef ||
-           enum_ == Type::ExnRef || enum_ == Type::RefNull ||
-           enum_ == Type::Ref;
+           enum_ == Type::ExnRef || enum_ == Type::Ref ||
+           enum_ == Type::RefNull;
   }
 
   bool IsNullableRef() const {
@@ -214,6 +214,10 @@ class Type {
   Index GetReferenceIndex() const {
     assert(IsReferenceWithIndex());
     return type_index_;
+  }
+
+  bool IsPackedType() const {
+    return enum_ == Type::I8 || enum_ == Type::I16;
   }
 
   TypeVector GetInlineVector() const {

@@ -86,6 +86,17 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
   Result OnSimdStoreLaneExpr(SimdStoreLaneExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -107,6 +118,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
+  void ResolveStructFieldVar(Var* type, Var* var);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
@@ -247,6 +259,34 @@ void NameResolver::ResolveLocalVar(Var* var) {
 void NameResolver::ResolveBlockDeclarationVar(BlockDeclaration* decl) {
   if (decl->has_func_type) {
     ResolveFuncTypeVar(&decl->type_var);
+  }
+}
+
+void NameResolver::ResolveStructFieldVar(Var* type, Var* var) {
+  ResolveFuncTypeVar(type);
+
+  if (type->is_index() && var->is_name()) {
+    // If type is still a name, it cannot be resolved.
+    Index index = type->index();
+
+    if (index < current_module_->types.size() &&
+        current_module_->types[index]->kind() == TypeEntryKind::Struct) {
+      StructType* struct_type = cast<StructType>(current_module_->types[index]);
+
+      Index size = static_cast<Index>(struct_type->fields.size());
+
+      for (Index i = 0; i < size; i++) {
+        if (struct_type->fields[i].name == var->name()) {
+          var->set_index(i);
+          break;
+        }
+      }
+    }
+
+    if (var->is_name()) {
+      PrintError(&var->loc, "undefined struct field \"%s\"",
+                 var->name().c_str());
+    }
   }
 }
 
@@ -533,6 +573,63 @@ Result NameResolver::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnArrayGetExpr(ArrayGetExpr* expr) {
+  ResolveFuncTypeVar(&expr->comp_type);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewExpr(ArrayNewExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewDataExpr(ArrayNewDataExpr* expr) {
+  ResolveFuncTypeVar(&expr->comp_type);
+  ResolveDataSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewDefaultExpr(ArrayNewDefaultExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewElemExpr(ArrayNewElemExpr* expr) {
+  ResolveFuncTypeVar(&expr->comp_type);
+  ResolveElemSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewFixedExpr(ArrayNewFixedExpr* expr) {
+  ResolveFuncTypeVar(&expr->comp_type);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArraySetExpr(ArraySetExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructGetExpr(StructGetExpr* expr) {
+  ResolveStructFieldVar(&expr->comp_type, &expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewExpr(StructNewExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewDefaultExpr(StructNewDefaultExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructSetExpr(StructSetExpr* expr) {
+  ResolveStructFieldVar(&expr->comp_type, &expr->var);
+  return Result::Ok;
+}
+
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
   if (func->decl.has_func_type) {
@@ -602,10 +699,7 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
   for (ExprList& elem_expr : segment->elem_exprs) {
-    if (elem_expr.size() == 1 &&
-        elem_expr.front().type() == ExprType::RefFunc) {
-      ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
-    }
+    visitor_.VisitExprList(elem_expr);
   }
 }
 
