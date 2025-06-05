@@ -432,12 +432,12 @@ static TypedValue ToWabtValue(const wasm_val_t& value) {
       TRACE("unexpected wasm type: %d", value.kind);
       assert(false);
   }
-  TRACE("-> %s", TypedValueToString(out).c_str());
+  TRACE("-> %s", TypedValueToString(nullptr, out).c_str());
   return out;
 }
 
 static wasm_val_t FromWabtValue(Store& store, const TypedValue& tv) {
-  TRACE("%s", TypedValueToString(tv).c_str());
+  TRACE("%s", TypedValueToString(nullptr, tv).c_str());
   wasm_val_t out_value;
   switch (tv.type) {
     case Type::I32:
@@ -575,14 +575,15 @@ void wasm_val_delete(own wasm_val_t* val) {
 }
 
 void wasm_val_copy(own wasm_val_t* out, const wasm_val_t* in) {
-  TRACE("%s", TypedValueToString(ToWabtValue(*in)).c_str());
+  TRACE("%s", TypedValueToString(nullptr, ToWabtValue(*in)).c_str());
   if (wasm_valkind_is_ref(in->kind)) {
     out->kind = in->kind;
     out->of.ref = in->of.ref ? new wasm_ref_t{*in->of.ref} : nullptr;
   } else {
     *out = *in;
   }
-  TRACE("-> %p %s", out, TypedValueToString(ToWabtValue(*out)).c_str());
+  TRACE("-> %p %s", out,
+        TypedValueToString(nullptr, ToWabtValue(*out)).c_str());
 }
 
 // wasm_trap
@@ -929,7 +930,7 @@ own wasm_global_t* wasm_global_new(wasm_store_t* store,
                                    const wasm_val_t* val) {
   assert(store && type);
   TypedValue value = ToWabtValue(*val);
-  TRACE("%s", TypedValueToString(value).c_str());
+  TRACE("%s", TypedValueToString(&store->I, value).c_str());
   return new wasm_global_t{
       Global::New(store->I, *type->As<GlobalType>(), value.value)};
 }
@@ -942,7 +943,7 @@ void wasm_global_get(const wasm_global_t* global, own wasm_val_t* out) {
   assert(global);
   TRACE0();
   TypedValue tv{global->As<Global>()->type().type, global->As<Global>()->Get()};
-  TRACE(" -> %s", TypedValueToString(tv).c_str());
+  TRACE(" -> %s", TypedValueToString(global->I.store(), tv).c_str());
   *out = FromWabtValue(*global->I.store(), tv);
 }
 

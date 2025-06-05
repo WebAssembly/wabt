@@ -165,6 +165,17 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndLocalDecls() override;
 
   Result OnOpcode(Opcode Opcode) override;
+  Result OnArrayCopyExpr(Index dst_type_index, Index src_type_index) override;
+  Result OnArrayFillExpr(Index type_index) override;
+  Result OnArrayGetExpr(Opcode opcode, Index type_index) override;
+  Result OnArrayInitDataExpr(Index type_index, Index data_index) override;
+  Result OnArrayInitElemExpr(Index type_index, Index elem_index) override;
+  Result OnArrayNewExpr(Index type_index) override;
+  Result OnArrayNewDataExpr(Index type_index, Index data_index) override;
+  Result OnArrayNewDefaultExpr(Index type_index) override;
+  Result OnArrayNewElemExpr(Index type_index, Index elem_index) override;
+  Result OnArrayNewFixedExpr(Index type_index, Index count) override;
+  Result OnArraySetExpr(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -216,6 +227,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
   Result OnV128ConstExpr(v128 value_bits) override;
+  Result OnGCUnaryExpr(Opcode opcode) override;
   Result OnGlobalGetExpr(Index global_index) override;
   Result OnGlobalSetExpr(Index global_index) override;
   Result OnI32ConstExpr(uint32_t value) override;
@@ -236,9 +248,11 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnMemoryInitExpr(Index segment_index, Index memidx) override;
   Result OnMemorySizeExpr(Index memidx) override;
   Result OnRefAsNonNullExpr() override;
+  Result OnRefCastExpr(Type type) override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
+  Result OnRefTestExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
@@ -257,6 +271,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
   Result OnTernaryExpr(Opcode opcode) override;
+  Result OnStructGetExpr(Opcode opcode,
+                         Index type_index,
+                         Index field_index) override;
+  Result OnStructNewExpr(Index type_index) override;
+  Result OnStructNewDefaultExpr(Index type_index) override;
+  Result OnStructSetExpr(Index type_index, Index field_index) override;
   Result OnThrowExpr(Index tag_index) override;
   Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
@@ -534,7 +554,7 @@ bool BinaryReaderInterp::OnError(const Error& error) {
 
 Result BinaryReaderInterp::EndModule() {
   CHECK_RESULT(validator_.EndModule());
-  for (auto it : module_.func_types) {
+  for (auto& it : module_.func_types) {
     it.canonical_index = validator_.GetCanonicalTypeIndex(it.canonical_index);
     it.canonical_sub_index =
         validator_.GetCanonicalTypeIndex(it.canonical_sub_index);
@@ -1131,6 +1151,99 @@ Result BinaryReaderInterp::OnLoadZeroExpr(Opcode opcode,
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnArrayCopyExpr(Index dst_type_index,
+                                           Index src_type_index) {
+  CHECK_RESULT(validator_.OnArrayCopy(GetLocation(),
+                                      Var(dst_type_index, GetLocation()),
+                                      Var(src_type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayCopy);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayFillExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArrayFill(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayFill);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayGetExpr(Opcode opcode, Index type_index) {
+  CHECK_RESULT(validator_.OnArrayGet(GetLocation(), opcode,
+                                     Var(type_index, GetLocation())));
+  if (opcode == Opcode::ArrayGet) {
+    istream_.Emit(opcode);
+  } else {
+    Index is_16 = (module_.func_types[type_index].params[0] == Type::I16);
+    istream_.Emit(opcode, is_16);
+  }
+
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayInitDataExpr(Index type_index,
+                                               Index data_index) {
+  CHECK_RESULT(validator_.OnArrayInitData(GetLocation(),
+                                          Var(type_index, GetLocation()),
+                                          Var(data_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayInitData, type_index, data_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayInitElemExpr(Index type_index,
+                                               Index elem_index) {
+  CHECK_RESULT(validator_.OnArrayInitElem(GetLocation(),
+                                          Var(type_index, GetLocation()),
+                                          Var(elem_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayInitElem, elem_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArrayNew(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNew, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewDataExpr(Index type_index,
+                                              Index data_index) {
+  CHECK_RESULT(validator_.OnArrayNewData(GetLocation(),
+                                         Var(type_index, GetLocation()),
+                                         Var(data_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewData, type_index, data_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewDefaultExpr(Index type_index) {
+  CHECK_RESULT(validator_.OnArrayNewDefault(GetLocation(),
+                                            Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewDefault, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewElemExpr(Index type_index,
+                                              Index elem_index) {
+  CHECK_RESULT(validator_.OnArrayNewElem(GetLocation(),
+                                         Var(type_index, GetLocation()),
+                                         Var(elem_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewElem, type_index, elem_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewFixedExpr(Index type_index, Index count) {
+  CHECK_RESULT(validator_.OnArrayNewFixed(
+      GetLocation(), Var(type_index, GetLocation()), count));
+  istream_.Emit(Opcode::ArrayNewFixed, type_index, count);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArraySetExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArraySet(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArraySet);
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
                                             Index memidx,
                                             Address align_log2,
@@ -1446,6 +1559,15 @@ Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnGCUnaryExpr(Opcode opcode) {
+  CHECK_RESULT(validator_.OnGCUnary(GetLocation(), opcode));
+  if (opcode != Opcode::AnyConvertExtern &&
+      opcode != Opcode::ExternConvertAny) {
+    istream_.Emit(opcode);
+  }
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
   CHECK_RESULT(
       validator_.OnGlobalGet(GetLocation(), Var(global_index, GetLocation())));
@@ -1569,6 +1691,15 @@ Result BinaryReaderInterp::OnRefAsNonNullExpr() {
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnRefCastExpr(Type type) {
+  CHECK_RESULT(validator_.OnRefCast(GetLocation(), Var(type, GetLocation())));
+  Opcode opcode = type.IsNullableRef() ? Opcode::RefCastNull : Opcode::RefCast;
+  uint32_t code = static_cast<Type::Enum>(type);
+  uint32_t value = type.IsReferenceWithIndex() ? type.GetReferenceIndex() : 0;
+  istream_.Emit(opcode, code, value);
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   CHECK_RESULT(
       validator_.OnRefFunc(GetLocation(), Var(func_index, GetLocation())));
@@ -1585,6 +1716,15 @@ Result BinaryReaderInterp::OnRefNullExpr(Type type) {
 Result BinaryReaderInterp::OnRefIsNullExpr() {
   CHECK_RESULT(validator_.OnRefIsNull(GetLocation()));
   istream_.Emit(Opcode::RefIsNull);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnRefTestExpr(Type type) {
+  CHECK_RESULT(validator_.OnRefTest(GetLocation(), Var(type, GetLocation())));
+  Opcode opcode = type.IsNullableRef() ? Opcode::RefTestNull : Opcode::RefTest;
+  uint32_t code = static_cast<Type::Enum>(type);
+  uint32_t value = type.IsReferenceWithIndex() ? type.GetReferenceIndex() : 0;
+  istream_.Emit(opcode, code, value);
   return Result::Ok;
 }
 
@@ -1711,6 +1851,45 @@ Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
                                       Var(segment_index, GetLocation()),
                                       Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableInit, table_index, segment_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructGetExpr(Opcode opcode,
+                                           Index type_index,
+                                           Index field_index) {
+  CHECK_RESULT(validator_.OnStructGet(GetLocation(), opcode,
+                                      Var(type_index, GetLocation()),
+                                      Var(field_index, GetLocation())));
+  if (opcode == Opcode::StructGet) {
+    istream_.Emit(opcode, field_index);
+  } else {
+    Index is_16 =
+        (module_.func_types[type_index].params[field_index] == Type::I16);
+    istream_.Emit(opcode, field_index, is_16);
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructNewExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnStructNew(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::StructNew, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructNewDefaultExpr(Index type_index) {
+  CHECK_RESULT(validator_.OnStructNewDefault(GetLocation(),
+                                             Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::StructNewDefault, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructSetExpr(Index type_index,
+                                           Index field_index) {
+  CHECK_RESULT(validator_.OnStructSet(GetLocation(),
+                                      Var(type_index, GetLocation()),
+                                      Var(field_index, GetLocation())));
+  istream_.Emit(Opcode::StructSet, field_index);
   return Result::Ok;
 }
 

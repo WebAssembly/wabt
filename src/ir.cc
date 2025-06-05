@@ -25,12 +25,23 @@
 namespace {
 
 const char* ExprTypeName[] = {
-    "AtomicFence",
+    "ArrayCopy",
+    "ArrayFill",
+    "ArrayGet",
+    "ArrayInitData",
+    "ArrayInitElem",
+    "ArrayNew",
+    "ArrayNewData",
+    "ArrayNewDefault",
+    "ArrayNewElem",
+    "ArrayNewFixed",
+    "ArraySet",
     "AtomicLoad",
     "AtomicRmw",
     "AtomicRmwCmpxchg",
     "AtomicStore",
     "AtomicNotify",
+    "AtomicFence",
     "AtomicWait",
     "Binary",
     "Block",
@@ -47,6 +58,7 @@ const char* ExprTypeName[] = {
     "Const",
     "Convert",
     "Drop",
+    "GCUnary",
     "GlobalGet",
     "GlobalSet",
     "If",
@@ -63,9 +75,11 @@ const char* ExprTypeName[] = {
     "MemorySize",
     "Nop",
     "RefAsNonNull",
+    "RefCast",
     "RefIsNull",
     "RefFunc",
     "RefNull",
+    "RefTest",
     "Rethrow",
     "Return",
     "ReturnCall",
@@ -76,6 +90,10 @@ const char* ExprTypeName[] = {
     "SimdLoadLane",
     "SimdStoreLane",
     "SimdShuffleOp",
+    "StructGet",
+    "StructNew",
+    "StructNewDefault",
+    "StructSet",
     "LoadSplat",
     "LoadZero",
     "Store",
@@ -343,6 +361,30 @@ FuncType* Module::GetFuncType(const Var& var) {
     return nullptr;
   }
   return dyn_cast<FuncType>(types[index]);
+}
+
+const StructType* Module::GetStructType(const Var& var) const {
+  return const_cast<Module*>(this)->GetStructType(var);
+}
+
+StructType* Module::GetStructType(const Var& var) {
+  Index index = type_bindings.FindIndex(var);
+  if (index >= types.size()) {
+    return nullptr;
+  }
+  return dyn_cast<StructType>(types[index]);
+}
+
+const ArrayType* Module::GetArrayType(const Var& var) const {
+  return const_cast<Module*>(this)->GetArrayType(var);
+}
+
+ArrayType* Module::GetArrayType(const Var& var) {
+  Index index = type_bindings.FindIndex(var);
+  if (index >= types.size()) {
+    return nullptr;
+  }
+  return dyn_cast<ArrayType>(types[index]);
 }
 
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {

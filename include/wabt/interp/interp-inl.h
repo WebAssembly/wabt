@@ -902,6 +902,105 @@ inline const TagType& Tag::type() const {
   return type_;
 }
 
+//// ExternValue ////
+// static
+inline bool ExternValue::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline ExternValue::Ptr ExternValue::New(Store& store, u32 value) {
+  return store.Alloc<ExternValue>(store, value);
+}
+
+inline u32 ExternValue::GetValue() const {
+  return value_;
+}
+
+//// Array ////
+// static
+inline bool Array::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Array::Ptr Array::New(Store& store,
+                             u32 size,
+                             Index type_index,
+                             Module* mod) {
+  return store.Alloc<Array>(store, size, type_index, mod);
+}
+
+inline Index Array::Size() const {
+  return static_cast<Index>(items_.size());
+}
+
+inline Value Array::GetItem(Index idx) const {
+  return items_[idx];
+}
+
+inline void Array::SetItem(Index idx, Value value) {
+  items_[idx] = value;
+}
+
+inline Values& Array::GetItems() {
+  return items_;
+}
+
+inline Index Array::GetTypeIndex() const {
+  return type_index_;
+}
+
+inline Ref Array::GetModule() const {
+  return module_;
+}
+
+//// Struct ////
+// static
+inline bool Struct::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Struct::Ptr Struct::New(Store& store, Index type_index, Module* mod) {
+  return store.Alloc<Struct>(store, type_index, mod);
+}
+
+inline Index Struct::Size() const {
+  return static_cast<Index>(fields_.size());
+}
+
+inline Value Struct::GetField(Index idx) const {
+  return fields_[idx];
+}
+
+inline void Struct::SetField(Index idx, Value value) {
+  fields_[idx] = value;
+}
+
+inline Index Struct::GetTypeIndex() const {
+  return type_index_;
+}
+
+inline Ref Struct::GetModule() const {
+  return module_;
+}
+
+//// I31Value ////
+// static
+inline bool I31Value::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline I31Value::Ptr I31Value::New(Store& store, u32 value) {
+  return store.Alloc<I31Value>(store, value);
+}
+
+inline u32 I31Value::GetU32() const {
+  return value_;
+}
+
+inline u32 I31Value::GetS32() const {
+  return static_cast<u32>((static_cast<s32>(value_ << 1)) >> 1);
+}
+
 //// ElemSegment ////
 inline void ElemSegment::Drop() {
   elements_.clear();

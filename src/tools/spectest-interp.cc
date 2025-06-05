@@ -356,7 +356,7 @@ class AssertExceptionCommand
 // format from wat2wasm.
 class JSONParser {
  public:
-  JSONParser() {}
+  JSONParser(Store& store) : store_(store) {}
 
   wabt::Result ReadFile(std::string_view spec_json_filename);
   wabt::Result ParseScript(Script* out_script);
@@ -416,6 +416,7 @@ class JSONParser {
 
   // Parsing info.
   std::vector<uint8_t> json_data_;
+  Store& store_;
   size_t json_offset_ = 0;
   Location loc_;
   Location prev_loc_;
@@ -629,10 +630,18 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
     *out_type = Type::I8;
   } else if (type_str == "i16") {
     *out_type = Type::I16;
-  } else if (type_str == "funcref") {
-    *out_type = Type::FuncRef;
+  } else if (type_str == "arrayref") {
+    *out_type = Type::ArrayRef;
+  } else if (type_str == "eqref") {
+    *out_type = Type::EqRef;
   } else if (type_str == "externref") {
     *out_type = Type::ExternRef;
+  } else if (type_str == "funcref") {
+    *out_type = Type::FuncRef;
+  } else if (type_str == "i31ref") {
+    *out_type = Type::I31Ref;
+  } else if (type_str == "structref") {
+    *out_type = Type::StructRef;
   } else if (type_str == "exnref") {
     *out_type = Type::ExnRef;
   } else {
@@ -853,15 +862,38 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       }
       break;
 
+    case Type::ArrayRef:
+    case Type::EqRef:
+    case Type::StructRef:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        uint32_t value;
+        CHECK_RESULT(ParseI32Value(&value, value_str));
+        // TODO: these cannot be constructed without a type
+        out_value->Set(Ref{value + 1});
+      }
+      break;
+
+    case Type::I31Ref:
+      if (value_str == "null") {
+        out_value->Set(Ref::Null);
+      } else {
+        uint32_t value;
+        CHECK_RESULT(ParseI32Value(&value, value_str));
+        I31Value::Ptr i31 = I31Value::New(store_, value);
+        out_value->Set(i31->self());
+      }
+      break;
+
     case Type::ExternRef:
       if (value_str == "null") {
         out_value->Set(Ref::Null);
       } else {
         uint32_t value;
         CHECK_RESULT(ParseI32Value(&value, value_str));
-        // TODO: hack, just whatever ref is at this index; but skip null (which
-        // is always 0).
-        out_value->Set(Ref{value + 1});
+        ExternValue::Ptr extern_ = ExternValue::New(store_, value);
+        out_value->Set(extern_->self());
       }
       break;
 
@@ -1206,7 +1238,7 @@ struct ActionResult {
 
 class CommandRunner {
  public:
-  CommandRunner();
+  CommandRunner(Store& store);
   wabt::Result Run(const Script& script);
 
   int passed() const { return passed_; }
@@ -1267,7 +1299,7 @@ class CommandRunner {
                                     ModuleType module_type,
                                     const char* desc);
 
-  Store store_;
+  Store& store_;
   Registry registry_;   // Used when importing.
   Registry instances_;  // Used when referencing module by name in invoke.
   ExportMap last_instance_;
@@ -1277,7 +1309,7 @@ class CommandRunner {
   std::string source_filename_;
 };
 
-CommandRunner::CommandRunner() : store_(s_features) {
+CommandRunner::CommandRunner(Store& store) : store_(store) {
   auto&& spectest = registry_["spectest"];
 
   // Initialize print functions for the spec test.
@@ -1301,7 +1333,7 @@ CommandRunner::CommandRunner() : store_(s_features) {
                       [=](Thread& inst, const Values& params, Values& results,
                           Trap::Ptr* trap) -> wabt::Result {
                         printf("called host ");
-                        WriteCall(s_stdout_stream.get(), import_name,
+                        WriteCall(s_stdout_stream.get(), &store_, import_name,
                                   print.type, params, results, *trap);
                         return wabt::Result::Ok;
                       });
@@ -1425,8 +1457,8 @@ ActionResult CommandRunner::RunAction(int line_number,
       assert((ok == Result::Ok) == (!result.trap));
       result.types = func->type().results;
       if (verbose == RunVerbosity::Verbose) {
-        WriteCall(s_stdout_stream.get(), action->field_name, func->type(),
-                  action->args, result.values, result.trap);
+        WriteCall(s_stdout_stream.get(), &store_, action->field_name,
+                  func->type(), action->args, result.values, result.trap);
       }
       break;
     }
@@ -1815,7 +1847,7 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
     case Type::F64:
       switch (ev.nan[0]) {
         case ExpectedNan::None:
-          return TypedValueToString(ev.value);
+          return TypedValueToString(nullptr, ev.value);
 
         case ExpectedNan::Arithmetic:
           return StringPrintf("%s:nan:arithmetic",
@@ -1839,7 +1871,7 @@ static std::string ExpectedValueToString(const ExpectedValue& ev) {
     default:
       break;
   }
-  return TypedValueToString(ev.value);
+  return TypedValueToString(nullptr, ev.value);
 }
 
 wabt::Result CommandRunner::CheckAssertReturnResult(
@@ -1910,7 +1942,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
                        "expected %s, got %s",
                        lane, index,
                        ExpectedValueToString(lane_expected).c_str(),
-                       TypedValueToString(lane_actual).c_str());
+                       TypedValueToString(nullptr, lane_actual).c_str());
           }
           ok = false;
         }
@@ -1918,14 +1950,75 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       break;
     }
 
+    case Type::ArrayRef:
+      ok = false;
+      if (actual.type == Type::ArrayRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Array;
+      }
+      break;
+
+    case Type::EqRef:
+      ok = false;
+      if (actual.type == Type::EqRef || actual.type == Type::I31Ref ||
+          actual.type == Type::StructRef || actual.type == Type::ArrayRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Array ||
+             obj->kind() == ObjectKind::I31 ||
+             obj->kind() == ObjectKind::Struct;
+      }
+      break;
+
+    case Type::ExternRef:
+      ok = false;
+      if (actual.type == Type::ExternRef) {
+        if (expected.value.value.Get<Ref>() == Ref::Null) {
+          ok = (actual.value.Get<Ref>() == Ref::Null);
+        } else if (actual.value.Get<Ref>() != Ref::Null) {
+          RefPtr<Object> actual_obj =
+              store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+          RefPtr<Object> expected_obj =
+              store_.UnsafeGet<Object>(expected.value.value.Get<Ref>());
+          ok = actual_obj->kind() == ObjectKind::Extern &&
+               expected_obj->kind() == ObjectKind::Extern &&
+               cast<ExternValue>(actual_obj.get())->GetValue() ==
+                   cast<ExternValue>(expected_obj.get())->GetValue();
+        }
+      }
+      break;
+
     case Type::FuncRef:
       // A funcref expectation only requires that the reference be a function,
       // but it doesn't check the actual index.
       ok = (actual.type == Type::FuncRef || actual.type == Type::RefNull);
       break;
 
-    case Type::ExternRef:
-      ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
+    case Type::I31Ref:
+      ok = false;
+      if (actual.type == Type::I31Ref) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::I31;
+      }
+      break;
+
+    case Type::StructRef:
+      ok = false;
+      if (actual.type == Type::StructRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Struct;
+      }
       break;
 
     case Type::ExnRef:
@@ -1941,7 +2034,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
     PrintError(command->line,
                "mismatch in result %u of assert_return: expected %s, got %s",
                index, ExpectedValueToString(expected).c_str(),
-               TypedValueToString(actual).c_str());
+               TypedValueToString(&store_, actual).c_str());
   }
   return ok ? wabt::Result::Ok : wabt::Result::Error;
 }
@@ -1977,7 +2070,8 @@ wabt::Result CommandRunner::OnAssertReturnCommand(
                "mismatch in result of assert_return: expected %s (%" PRIzd
                " alternatives), got %s",
                ExpectedValueToString(command->expected[0]).c_str(),
-               command->expected.size(), TypedValueToString(actual).c_str());
+               command->expected.size(),
+               TypedValueToString(&store_, actual).c_str());
     return wabt::Result::Error;
   } else {
     if (action_result.values.size() != command->expected.size()) {
@@ -2051,7 +2145,8 @@ void CommandRunner::TallyCommand(wabt::Result result) {
 }
 
 static int ReadAndRunSpecJSON(std::string_view spec_json_filename) {
-  JSONParser parser;
+  Store store(s_features);
+  JSONParser parser(store);
   if (parser.ReadFile(spec_json_filename) == wabt::Result::Error) {
     return 1;
   }
@@ -2061,7 +2156,7 @@ static int ReadAndRunSpecJSON(std::string_view spec_json_filename) {
     return 1;
   }
 
-  CommandRunner runner;
+  CommandRunner runner(store);
   if (runner.Run(script) == wabt::Result::Error) {
     return 1;
   }

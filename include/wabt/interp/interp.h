@@ -89,6 +89,10 @@ enum class ObjectKind {
   Memory,
   Global,
   Tag,
+  Extern,
+  Array,
+  Struct,
+  I31,
   Module,
   Instance,
 
@@ -999,6 +1003,99 @@ class Tag : public Extern {
   TagType type_;
 };
 
+// Extern references are part of the "any" group.
+class ExternValue : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Extern;
+  static const char* GetTypeName() { return "Extern"; }
+  using Ptr = RefPtr<ExternValue>;
+
+  static ExternValue::Ptr New(Store&, u32 value);
+
+  u32 GetValue() const;
+
+ private:
+  friend Store;
+  explicit ExternValue(Store&, u32 value);
+
+  u32 value_;
+};
+
+class Array : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Array;
+  static const char* GetTypeName() { return "Array"; }
+  using Ptr = RefPtr<Array>;
+
+  static Array::Ptr New(Store&, u32 size, Index type_index, Module* mod);
+
+  bool IsValidRange(u64 offset, u64 size) const;
+
+  Index Size() const;
+  Value GetItem(Index idx) const;
+  void SetItem(Index idx, Value value);
+  Values& GetItems();
+  Index GetTypeIndex() const;
+  Ref GetModule() const;
+
+ private:
+  friend Store;
+  explicit Array(Store&, u32 size, Index type_index, Module* mod);
+  void Mark(Store&) override;
+
+  Ref module_;
+  Index type_index_;
+  Values items_;
+};
+
+class Struct : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Struct;
+  static const char* GetTypeName() { return "Struct"; }
+  using Ptr = RefPtr<Struct>;
+
+  static Struct::Ptr New(Store&, Index type_index, Module* mod);
+
+  Index Size() const;
+  Value GetField(Index idx) const;
+  void SetField(Index idx, Value value);
+  Index GetTypeIndex() const;
+  Ref GetModule() const;
+
+ private:
+  friend Store;
+  explicit Struct(Store&, Index type_index, Module* mod);
+  void Mark(Store&) override;
+
+  Ref module_;
+  Index type_index_;
+  Values fields_;
+};
+
+// This is not an efficient way to store I31 values,
+// but for a simple interpreter, this is acceptable.
+class I31Value : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::I31;
+  static const char* GetTypeName() { return "I31"; }
+  using Ptr = RefPtr<I31Value>;
+
+  static I31Value::Ptr New(Store&, u32 value);
+
+  u32 GetU32() const;
+  u32 GetS32() const;
+
+ private:
+  friend Store;
+  explicit I31Value(Store&, u32 value);
+
+  u32 value_;
+};
+
 class ElemSegment {
  public:
   explicit ElemSegment(Store& store, const ElemDesc*, RefPtr<Instance>&);
@@ -1166,6 +1263,8 @@ class Thread {
   void WABT_VECTORCALL Push(T);
   void Push(Value);
   void Push(Ref);
+
+  bool CheckRefCast(Ref ref, Type expected);
 
   template <typename R, typename T>
   using UnopFunc = R WABT_VECTORCALL(T);

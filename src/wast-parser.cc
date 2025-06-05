@@ -212,6 +212,30 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::SimdLoadLane:
     case TokenType::SimdStoreLane:
     case TokenType::SimdShuffleOp:
+    case TokenType::ArrayCopy:
+    case TokenType::ArrayFill:
+    case TokenType::ArrayGet:
+    case TokenType::ArrayGetS:
+    case TokenType::ArrayGetU:
+    case TokenType::ArrayInitData:
+    case TokenType::ArrayInitElem:
+    case TokenType::ArrayNew:
+    case TokenType::ArrayNewData:
+    case TokenType::ArrayNewDefault:
+    case TokenType::ArrayNewFixed:
+    case TokenType::ArrayNewElem:
+    case TokenType::ArraySet:
+    case TokenType::GCUnary:
+    case TokenType::RefCast:
+    case TokenType::RefEq:
+    case TokenType::RefI31:
+    case TokenType::RefTest:
+    case TokenType::StructGet:
+    case TokenType::StructGetS:
+    case TokenType::StructGetU:
+    case TokenType::StructNew:
+    case TokenType::StructNewDefault:
+    case TokenType::StructSet:
       return true;
     default:
       return false;
@@ -2404,6 +2428,16 @@ Result WastParser::ParsePlainInstrVar(Location loc,
 }
 
 template <typename T>
+Result WastParser::ParsePlainInstrVarVar(Location loc,
+                                         std::unique_ptr<Expr>* out_expr) {
+  Var first_var, second_var;
+  CHECK_RESULT(ParseVar(&first_var));
+  CHECK_RESULT(ParseVar(&second_var));
+  out_expr->reset(new T(first_var, second_var, loc));
+  return Result::Ok;
+}
+
+template <typename T>
 Result WastParser::ParseMemoryInstrVar(Location loc,
                                        std::unique_ptr<Expr>* out_expr) {
   Var memidx;
@@ -2915,6 +2949,152 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
+    case TokenType::ArrayCopy: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayCopyExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayFill: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArrayFillExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayInitData: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayInitDataExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayInitElem: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayInitElemExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayGet:
+    case TokenType::ArrayGetS:
+    case TokenType::ArrayGetU: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      CHECK_RESULT(ParseVar(&type));
+      out_expr->reset(new ArrayGetExpr(token.opcode(), type, loc));
+      break;
+    }
+
+    case TokenType::ArrayNew: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArrayNewExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayNewData: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayNewDataExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayNewDefault: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArrayNewDefaultExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayNewFixed: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      uint64_t count;
+      CHECK_RESULT(ParseVar(&type));
+      CHECK_RESULT(ParseNat(&count, false));
+      out_expr->reset(
+          new ArrayNewFixedExpr(type, static_cast<Index>(count), loc));
+      break;
+    }
+
+    case TokenType::ArrayNewElem: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayNewElemExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArraySet: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArraySetExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::GCUnary:
+    case TokenType::RefEq:
+    case TokenType::RefI31: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      out_expr->reset(new GCUnaryExpr(token.opcode(), loc));
+      break;
+    }
+
+    case TokenType::RefCast: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      CHECK_RESULT(ParseRefType(&type));
+      out_expr->reset(new RefCastExpr(type, loc));
+      break;
+    }
+
+    case TokenType::RefTest: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      CHECK_RESULT(ParseRefType(&type));
+      out_expr->reset(new RefTestExpr(type, loc));
+      break;
+    }
+
+    case TokenType::StructGet:
+    case TokenType::StructGetS:
+    case TokenType::StructGetU: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type, field;
+      CHECK_RESULT(ParseVar(&type));
+      CHECK_RESULT(ParseVar(&field));
+      out_expr->reset(new StructGetExpr(token.opcode(), type, field, loc));
+      break;
+    }
+
+    case TokenType::StructNew: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<StructNewExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::StructNewDefault: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<StructNewDefaultExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::StructSet: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<StructSetExpr>(loc, out_expr));
+      break;
+    }
+
     case TokenType::SimdLaneOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
@@ -3270,9 +3450,12 @@ Result WastParser::ParseExternref(Const* const_) {
 
 Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
   WABT_TRACE(ParseConstList);
-  while (PeekMatchLpar(TokenType::Const) || PeekMatchLpar(TokenType::RefNull) ||
-         PeekMatchLpar(TokenType::RefExtern) ||
-         PeekMatchLpar(TokenType::RefFunc)) {
+  while (
+      PeekMatchLpar(TokenType::Const) || PeekMatchLpar(TokenType::RefNull) ||
+      PeekMatchLpar(TokenType::RefArray) || PeekMatchLpar(TokenType::RefEq) ||
+      PeekMatchLpar(TokenType::RefExtern) || PeekMatchLpar(TokenType::RefI31) ||
+      PeekMatchLpar(TokenType::RefFunc) ||
+      PeekMatchLpar(TokenType::RefStruct)) {
     Consume();
     Const const_;
     switch (Peek()) {
@@ -3290,6 +3473,36 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         const_.set_null(type.has_opt_type() ? type.opt_type() : Type::FuncRef);
         break;
       }
+      case TokenType::RefArray: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.array not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_arrayref();
+        break;
+      }
+      case TokenType::RefEq: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.eq not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_eqref();
+        break;
+      }
+      case TokenType::RefI31: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.i31 not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_i31ref();
+        break;
+      }
       case TokenType::RefFunc: {
         auto token = Consume();
         ErrorUnlessOpcodeEnabled(token);
@@ -3300,6 +3513,16 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
       case TokenType::RefExtern:
         CHECK_RESULT(ParseExternref(&const_));
         break;
+      case TokenType::RefStruct: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.struct not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_structref();
+        break;
+      }
       default:
         assert(!"unreachable");
         return Result::Error;

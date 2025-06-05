@@ -420,6 +420,15 @@ Result BinaryReaderLogging::OnSelectExpr(Index result_count,
   return reader_->OnSelectExpr(result_count, result_types);
 }
 
+Result BinaryReaderLogging::OnStructGetExpr(Opcode opcode,
+                                            Index type_index,
+                                            Index field_index) {
+  LOGF("OnStructGetExpr(opcode: \"%s\" (%u), type_index: %" PRIindex
+       ", field_index: %" PRIindex ")\n",
+       opcode.GetName(), opcode.GetCode(), type_index, field_index);
+  return reader_->OnStructGetExpr(opcode, type_index, field_index);
+}
+
 Result BinaryReaderLogging::OnTryExpr(Type sig_type) {
   LOGF("OnTryExpr(sig: ");
   LogType(sig_type);
@@ -793,6 +802,13 @@ Result BinaryReaderLogging::OnGenericCustomSection(std::string_view name,
     return reader_->name(opcode);                                      \
   }
 
+#define DEFINE_OPCODE_INDEX(name, desc)                            \
+  Result BinaryReaderLogging::name(Opcode opcode, Index index) {   \
+    LOGF(#name "(opcode: \"%s\" (%u), " desc ": %" PRIindex ")\n", \
+         opcode.GetName(), opcode.GetCode(), index);               \
+    return reader_->name(opcode, index);                           \
+  }
+
 #define DEFINE_LOAD_STORE_OPCODE(name)                                        \
   Result BinaryReaderLogging::name(Opcode opcode, Index memidx,               \
                                    Address alignment_log2, Address offset) {  \
@@ -869,6 +885,17 @@ DEFINE_INDEX(OnFunctionBodyCount)
 DEFINE_INDEX(EndFunctionBody)
 DEFINE_INDEX(OnLocalDeclCount)
 DEFINE0(EndLocalDecls)
+DEFINE_INDEX_INDEX(OnArrayCopyExpr, "dst_type_index", "src_type_index")
+DEFINE_INDEX_DESC(OnArrayFillExpr, "type_index")
+DEFINE_OPCODE_INDEX(OnArrayGetExpr, "type_index")
+DEFINE_INDEX_INDEX(OnArrayInitDataExpr, "type_index", "data_index")
+DEFINE_INDEX_INDEX(OnArrayInitElemExpr, "type_index", "elem_index")
+DEFINE_INDEX_DESC(OnArrayNewExpr, "type_index")
+DEFINE_INDEX_INDEX(OnArrayNewDataExpr, "type_index", "data_index")
+DEFINE_INDEX_DESC(OnArrayNewDefaultExpr, "type_index")
+DEFINE_INDEX_INDEX(OnArrayNewElemExpr, "type_index", "elem_index")
+DEFINE_INDEX_INDEX(OnArrayNewFixedExpr, "type_index", "count")
+DEFINE_INDEX_DESC(OnArraySetExpr, "type_index")
 DEFINE_LOAD_STORE_OPCODE(OnAtomicLoadExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwCmpxchgExpr);
@@ -888,6 +915,7 @@ DEFINE_INDEX_DESC(OnDelegateExpr, "depth");
 DEFINE0(OnDropExpr)
 DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
+DEFINE_OPCODE(OnGCUnaryExpr)
 DEFINE_INDEX_DESC(OnGlobalGetExpr, "index")
 DEFINE_INDEX_DESC(OnGlobalSetExpr, "index")
 DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
@@ -909,8 +937,10 @@ DEFINE_INDEX(OnTableGrowExpr)
 DEFINE_INDEX(OnTableSizeExpr)
 DEFINE_INDEX_DESC(OnTableFillExpr, "table index")
 DEFINE0(OnRefAsNonNullExpr)
+DEFINE_TYPE(OnRefCastExpr)
 DEFINE_INDEX(OnRefFuncExpr)
 DEFINE_TYPE(OnRefNullExpr)
+DEFINE_TYPE(OnRefTestExpr)
 DEFINE0(OnRefIsNullExpr)
 DEFINE0(OnNopExpr)
 DEFINE_INDEX_DESC(OnRethrowExpr, "depth");
@@ -922,6 +952,9 @@ DEFINE0(OnReturnExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadSplatExpr);
 DEFINE_LOAD_STORE_OPCODE(OnLoadZeroExpr);
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
+DEFINE_INDEX_DESC(OnStructNewExpr, "type_index")
+DEFINE_INDEX_DESC(OnStructNewDefaultExpr, "type_index")
+DEFINE_INDEX_INDEX(OnStructSetExpr, "type_index", "field_index")
 DEFINE_INDEX_DESC(OnThrowExpr, "tag_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE0(OnThrowRefExpr)
