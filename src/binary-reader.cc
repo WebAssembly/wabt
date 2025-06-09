@@ -2439,7 +2439,7 @@ Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
   Index last_function_index = kInvalidIndex;
   for (Index i = 0; i < num_functions; ++i) {
     Index function_index;
-    CHECK_RESULT(ReadCount(&function_index, "function index"));
+    CHECK_RESULT(ReadIndex(&function_index, "function index"));
     ERROR_UNLESS(function_index >= num_func_imports_,
                  "function import can't have metadata (got %" PRIindex ")",
                  function_index);
