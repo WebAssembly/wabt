@@ -18,9 +18,9 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 
 #if WABT_BIG_ENDIAN
-#define MEM_ADDR(mem, addr, n) &(mem)->data[(mem)->size - (addr) - (n)]
+#define MEM_ADDR(mem, addr, n) ((mem)->data_end - (addr) - (n))
 #else
-#define MEM_ADDR(mem, addr, n) &(mem)->data[addr]
+#define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 #endif
 
 #define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
