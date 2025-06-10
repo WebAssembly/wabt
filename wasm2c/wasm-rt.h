@@ -140,7 +140,7 @@ extern "C" {
  *
  * BOUNDS_CHECK: memory accesses are checked with explicit bounds checks.
  *
- * This defaults to GUARD_PAGES as this is the fasest option, iff the
+ * This defaults to GUARD_PAGES as this is the fastest option, iff the
  * requirements of GUARD_PAGES --- 64-bit platforms, MMAP allocation strategy,
  * no 64-bit memories, no big-endian --- are met. This falls back to BOUNDS
  * otherwise.
@@ -266,13 +266,15 @@ extern "C" {
 /**
  * We need to detect and trap stack overflows. If we use a signal handler on
  * POSIX systems, this can detect call stack overflows. On windows, or platforms
- * without a signal handler, we use stack depth counting.
+ * without a signal handler, we use stack depth counting. The s390x big endian
+ * platform additionally seems to have issues with stack guard pages, so we play
+ * it safe and use stack counting on big endian platforms.
  */
 #if !defined(WASM_RT_STACK_DEPTH_COUNT) &&        \
     !defined(WASM_RT_STACK_EXHAUSTION_HANDLER) && \
     !WASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION
 
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32) && !WABT_BIG_ENDIAN
 #define WASM_RT_STACK_EXHAUSTION_HANDLER 1
 #else
 #define WASM_RT_STACK_DEPTH_COUNT 1
@@ -465,6 +467,8 @@ typedef void* wasm_rt_externref_t;
 typedef struct {
   /** The linear memory data, with a byte length of `size`. */
   uint8_t* data;
+  /** The location after the the reserved space for the linear memory data. */
+  uint8_t* data_end;
   /** The page size for this Memory object
       (always 64 KiB without the custom-page-sizes feature) */
   uint32_t page_size;
@@ -493,6 +497,9 @@ typedef struct {
    * volatile.
    */
   _Atomic volatile uint8_t* data;
+  /** The location one byte after the reserved space for the linear memory data.
+   * This includes any reserved pages that are not yet allocated. */
+  _Atomic volatile uint8_t* data_end;
   /** The page size for this Memory object
       (always 64 KiB without the custom-page-sizes feature) */
   uint32_t page_size;
