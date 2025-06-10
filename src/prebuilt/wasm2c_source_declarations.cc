@@ -624,24 +624,22 @@ R"w2c_template(
 #endif
 )w2c_template"
 R"w2c_template(
-#define DIV_S(ut, min, x, y)                                      \
+#define DIV_S(ut, min, x, y)                                  \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((y) == 0))                                           \
+R"w2c_template(  ((UNLIKELY((y) == 0))                  ? TRAP(DIV_BY_ZERO)  \
 )w2c_template"
-R"w2c_template(       ? TRAP(DIV_BY_ZERO)                                        \
+R"w2c_template(   : (UNLIKELY((x) == min && (y) == -1)) ? TRAP(INT_OVERFLOW) \
 )w2c_template"
-R"w2c_template(       : (UNLIKELY((x) == min && (y) == -1)) ? TRAP(INT_OVERFLOW) \
-)w2c_template"
-R"w2c_template(                                             : (ut)((x) / (y)))
+R"w2c_template(                                         : (ut)((x) / (y)))
 )w2c_template"
 R"w2c_template(
-#define REM_S(ut, min, x, y) \
+#define REM_S(ut, min, x, y)                                 \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((y) == 0))      \
+R"w2c_template(  ((UNLIKELY((y) == 0))                  ? TRAP(DIV_BY_ZERO) \
 )w2c_template"
-R"w2c_template(       ? TRAP(DIV_BY_ZERO)   \
+R"w2c_template(   : (UNLIKELY((x) == min && (y) == -1)) ? 0                 \
 )w2c_template"
-R"w2c_template(       : (UNLIKELY((x) == min && (y) == -1)) ? 0 : (ut)((x) % (y)))
+R"w2c_template(                                         : (ut)((x) % (y)))
 )w2c_template"
 R"w2c_template(
 #define I32_DIV_S(x, y) DIV_S(u32, INT32_MIN, (s32)x, (s32)y)
@@ -681,45 +679,39 @@ R"w2c_template(#define I32_ROTR(x, y) ROTR(x, y, 31)
 R"w2c_template(#define I64_ROTR(x, y) ROTR(x, y, 63)
 )w2c_template"
 R"w2c_template(
-#define FMIN(x, y)                                                     \
+#define FMIN(x, y)                                           \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((x) != (x)))                                              \
+R"w2c_template(  ((UNLIKELY((x) != (x)))             ? NAN                  \
 )w2c_template"
-R"w2c_template(       ? NAN                                                           \
+R"w2c_template(   : (UNLIKELY((y) != (y)))           ? NAN                  \
 )w2c_template"
-R"w2c_template(       : (UNLIKELY((y) != (y)))                                        \
+R"w2c_template(   : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? x : y) \
 )w2c_template"
-R"w2c_template(             ? NAN                                                     \
+R"w2c_template(   : (x < y)                          ? x                    \
 )w2c_template"
-R"w2c_template(             : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? x : y) \
-)w2c_template"
-R"w2c_template(                                                : (x < y) ? x : y)
+R"w2c_template(                                      : y)
 )w2c_template"
 R"w2c_template(
-#define FMAX(x, y)                                                     \
+#define FMAX(x, y)                                           \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((x) != (x)))                                              \
+R"w2c_template(  ((UNLIKELY((x) != (x)))             ? NAN                  \
 )w2c_template"
-R"w2c_template(       ? NAN                                                           \
+R"w2c_template(   : (UNLIKELY((y) != (y)))           ? NAN                  \
 )w2c_template"
-R"w2c_template(       : (UNLIKELY((y) != (y)))                                        \
+R"w2c_template(   : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? y : x) \
 )w2c_template"
-R"w2c_template(             ? NAN                                                     \
+R"w2c_template(   : (x > y)                          ? x                    \
 )w2c_template"
-R"w2c_template(             : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? y : x) \
-)w2c_template"
-R"w2c_template(                                                : (x > y) ? x : y)
+R"w2c_template(                                      : y)
 )w2c_template"
 R"w2c_template(
-#define TRUNC_S(ut, st, ft, min, minop, max, x)                           \
+#define TRUNC_S(ut, st, ft, min, minop, max, x)                             \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((x) != (x)))                                                 \
+R"w2c_template(  ((UNLIKELY((x) != (x)))                        ? TRAP(INVALID_CONVERSION) \
 )w2c_template"
-R"w2c_template(       ? TRAP(INVALID_CONVERSION)                                         \
+R"w2c_template(   : (UNLIKELY(!((x)minop(min) && (x) < (max)))) ? TRAP(INT_OVERFLOW)       \
 )w2c_template"
-R"w2c_template(       : (UNLIKELY(!((x)minop(min) && (x) < (max)))) ? TRAP(INT_OVERFLOW) \
-)w2c_template"
-R"w2c_template(                                                     : (ut)(st)(x))
+R"w2c_template(                                                 : (ut)(st)(x))
 )w2c_template"
 R"w2c_template(
 #define I32_TRUNC_S_F32(x) \
@@ -739,15 +731,13 @@ R"w2c_template(#define I64_TRUNC_S_F64(x) \
 R"w2c_template(  TRUNC_S(u64, s64, f64, (f64)INT64_MIN, >=, (f64)INT64_MAX, x)
 )w2c_template"
 R"w2c_template(
-#define TRUNC_U(ut, ft, max, x)                                          \
+#define TRUNC_U(ut, ft, max, x)                                              \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((x) != (x)))                                                \
+R"w2c_template(  ((UNLIKELY((x) != (x)))                         ? TRAP(INVALID_CONVERSION) \
 )w2c_template"
-R"w2c_template(       ? TRAP(INVALID_CONVERSION)                                        \
+R"w2c_template(   : (UNLIKELY(!((x) > (ft) - 1 && (x) < (max)))) ? TRAP(INT_OVERFLOW)       \
 )w2c_template"
-R"w2c_template(       : (UNLIKELY(!((x) > (ft)-1 && (x) < (max)))) ? TRAP(INT_OVERFLOW) \
-)w2c_template"
-R"w2c_template(                                                    : (ut)(x))
+R"w2c_template(                                                  : (ut)(x))
 )w2c_template"
 R"w2c_template(
 #define I32_TRUNC_U_F32(x) TRUNC_U(u32, f32, 4294967296.f, x)
@@ -761,15 +751,13 @@ R"w2c_template(#define I64_TRUNC_U_F64(x) TRUNC_U(u64, f64, (f64)UINT64_MAX, x)
 R"w2c_template(
 #define TRUNC_SAT_S(ut, st, ft, min, smin, minop, max, smax, x) \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((x) != (x)))                                       \
+R"w2c_template(  ((UNLIKELY((x) != (x)))         ? 0                           \
 )w2c_template"
-R"w2c_template(       ? 0                                                      \
+R"w2c_template(   : (UNLIKELY(!((x)minop(min)))) ? smin                        \
 )w2c_template"
-R"w2c_template(       : (UNLIKELY(!((x)minop(min))))                           \
+R"w2c_template(   : (UNLIKELY(!((x) < (max))))   ? smax                        \
 )w2c_template"
-R"w2c_template(             ? smin                                             \
-)w2c_template"
-R"w2c_template(             : (UNLIKELY(!((x) < (max)))) ? smax : (ut)(st)(x))
+R"w2c_template(                                  : (ut)(st)(x))
 )w2c_template"
 R"w2c_template(
 #define I32_TRUNC_SAT_S_F32(x)                                            \
@@ -797,15 +785,15 @@ R"w2c_template(  TRUNC_SAT_S(u64, s64, f64, (f64)INT64_MIN, INT64_MIN, >=, (f64)
 R"w2c_template(              INT64_MAX, x)
 )w2c_template"
 R"w2c_template(
-#define TRUNC_SAT_U(ut, ft, max, smax, x)               \
+#define TRUNC_SAT_U(ut, ft, max, smax, x) \
 )w2c_template"
-R"w2c_template(  ((UNLIKELY((x) != (x))) ? 0                           \
+R"w2c_template(  ((UNLIKELY((x) != (x)))          ? 0    \
 )w2c_template"
-R"w2c_template(                          : (UNLIKELY(!((x) > (ft)-1))) \
+R"w2c_template(   : (UNLIKELY(!((x) > (ft) - 1))) ? 0    \
 )w2c_template"
-R"w2c_template(                                ? 0                     \
+R"w2c_template(   : (UNLIKELY(!((x) < (max))))    ? smax \
 )w2c_template"
-R"w2c_template(                                : (UNLIKELY(!((x) < (max)))) ? smax : (ut)(x))
+R"w2c_template(                                   : (ut)(x))
 )w2c_template"
 R"w2c_template(
 #define I32_TRUNC_SAT_U_F32(x) \

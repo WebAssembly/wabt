@@ -51,20 +51,20 @@ static void* g_sig_handler_handle = 0;
 
 #if WASM_RT_USE_SEGUE
 bool wasm_rt_fsgsbase_inst_supported = false;
-#  ifdef __linux__
-#    include <sys/auxv.h>
-#    ifdef __GLIBC__
-#      include <gnu/libc-version.h>
-#    endif
-#    include <asm/prctl.h>    // For ARCH_SET_GS
-#    include <sys/syscall.h>  // For SYS_arch_prctl
-#    include <unistd.h>       // For syscall
-#    ifndef HWCAP2_FSGSBASE
-#      define HWCAP2_FSGSBASE (1 << 1)
-#    endif
-#  elif defined(__FreeBSD__)
-#    include <machine/sysarch.h> // For amd64_set_gsbase etc.
-#  endif
+#ifdef __linux__
+#include <sys/auxv.h>
+#ifdef __GLIBC__
+#include <gnu/libc-version.h>
+#endif
+#include <asm/prctl.h>    // For ARCH_SET_GS
+#include <sys/syscall.h>  // For SYS_arch_prctl
+#include <unistd.h>       // For syscall
+#ifndef HWCAP2_FSGSBASE
+#define HWCAP2_FSGSBASE (1 << 1)
+#endif
+#elif defined(__FreeBSD__)
+#include <machine/sysarch.h>  // For amd64_set_gsbase etc.
+#endif
 #endif
 
 #if WASM_RT_SEGUE_FREE_SEGMENT
@@ -238,11 +238,14 @@ static void os_disable_and_deallocate_altstack(void) {
 #endif
 
 #if WASM_RT_USE_SEGUE && defined(__FreeBSD__)
-static void call_cpuid(uint64_t *rax, uint64_t *rbx, uint64_t *rcx, uint64_t *rdx) {
-  __asm__ volatile (
-    "cpuid"
-    : "=a" (*rax), "=b" (*rbx), "=c" (*rcx), "=d" (*rdx) // output operands
-    : "a" (*rax), "c" (*rcx) // input operands
+static void call_cpuid(uint64_t* rax,
+                       uint64_t* rbx,
+                       uint64_t* rcx,
+                       uint64_t* rdx) {
+  __asm__ volatile(
+      "cpuid"
+      : "=a"(*rax), "=b"(*rbx), "=c"(*rcx), "=d"(*rdx)  // output operands
+      : "a"(*rax), "c"(*rcx)                            // input operands
   );
 }
 #endif
@@ -257,7 +260,8 @@ void wasm_rt_init(void) {
 #endif
 
 #if WASM_RT_USE_SEGUE
-#if defined(__linux__) && defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 18
+#if defined(__linux__) && defined(__GLIBC__) && __GLIBC__ >= 2 && \
+    __GLIBC_MINOR__ >= 18
   // Check for support for userspace wrgsbase instructions
   unsigned long val = getauxval(AT_HWCAP2);
   wasm_rt_fsgsbase_inst_supported = val & HWCAP2_FSGSBASE;
@@ -325,7 +329,7 @@ void wasm_rt_syscall_set_segue_base(void* base) {
 #elif defined(__FreeBSD__)
   error_code = amd64_set_gsbase(base);
 #else
-#  error "Unknown platform"
+#error "Unknown platform"
 #endif
   if (error_code != 0) {
     perror("wasm_rt_syscall_set_segue_base error");
@@ -340,7 +344,7 @@ void* wasm_rt_syscall_get_segue_base() {
 #elif defined(__FreeBSD__)
   error_code = amd64_get_gsbase(&base);
 #else
-#  error "Unknown platform"
+#error "Unknown platform"
 #endif
   if (error_code != 0) {
     perror("wasm_rt_syscall_get_segue_base error");
