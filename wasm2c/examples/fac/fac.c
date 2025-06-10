@@ -171,18 +171,16 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
 #define FORCE_READ_FLOAT(var)
 #endif
 
-static inline void load_data(void* dest, const void* src, size_t n) {
+static inline void load_data(u8* dest, const u8* src, size_t n) {
   if (!n) {
     return;
   }
-  wasm_rt_memcpy(dest, src, n);
 #if WABT_BIG_ENDIAN
-  u8* dest_chars = dest;
-  for (size_t i = 0; i < (n >> 1); i++) {
-    u8 cursor = dest_chars[i];
-    dest_chars[i] = dest_chars[n - i - 1];
-    dest_chars[n - i - 1] = cursor;
+  for (size_t i = 0; i < n; i++) {
+    dest[i] = src[n - i - 1];
   }
+#else
+  wasm_rt_memcpy(dest, src, n);
 #endif
 }
 
@@ -353,16 +351,15 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 
 #endif
 
-#define DIV_S(ut, min, x, y)                                      \
-  ((UNLIKELY((y) == 0))                                           \
-       ? TRAP(DIV_BY_ZERO)                                        \
-       : (UNLIKELY((x) == min && (y) == -1)) ? TRAP(INT_OVERFLOW) \
-                                             : (ut)((x) / (y)))
+#define DIV_S(ut, min, x, y)                                  \
+  ((UNLIKELY((y) == 0))                  ? TRAP(DIV_BY_ZERO)  \
+   : (UNLIKELY((x) == min && (y) == -1)) ? TRAP(INT_OVERFLOW) \
+                                         : (ut)((x) / (y)))
 
-#define REM_S(ut, min, x, y) \
-  ((UNLIKELY((y) == 0))      \
-       ? TRAP(DIV_BY_ZERO)   \
-       : (UNLIKELY((x) == min && (y) == -1)) ? 0 : (ut)((x) % (y)))
+#define REM_S(ut, min, x, y)                                 \
+  ((UNLIKELY((y) == 0))                  ? TRAP(DIV_BY_ZERO) \
+   : (UNLIKELY((x) == min && (y) == -1)) ? 0                 \
+                                         : (ut)((x) % (y)))
 
 #define I32_DIV_S(x, y) DIV_S(u32, INT32_MIN, (s32)x, (s32)y)
 #define I64_DIV_S(x, y) DIV_S(u64, INT64_MIN, (s64)x, (s64)y)
@@ -385,27 +382,24 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #define I32_ROTR(x, y) ROTR(x, y, 31)
 #define I64_ROTR(x, y) ROTR(x, y, 63)
 
-#define FMIN(x, y)                                                     \
-  ((UNLIKELY((x) != (x)))                                              \
-       ? NAN                                                           \
-       : (UNLIKELY((y) != (y)))                                        \
-             ? NAN                                                     \
-             : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? x : y) \
-                                                : (x < y) ? x : y)
+#define FMIN(x, y)                                           \
+  ((UNLIKELY((x) != (x)))             ? NAN                  \
+   : (UNLIKELY((y) != (y)))           ? NAN                  \
+   : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? x : y) \
+   : (x < y)                          ? x                    \
+                                      : y)
 
-#define FMAX(x, y)                                                     \
-  ((UNLIKELY((x) != (x)))                                              \
-       ? NAN                                                           \
-       : (UNLIKELY((y) != (y)))                                        \
-             ? NAN                                                     \
-             : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? y : x) \
-                                                : (x > y) ? x : y)
+#define FMAX(x, y)                                           \
+  ((UNLIKELY((x) != (x)))             ? NAN                  \
+   : (UNLIKELY((y) != (y)))           ? NAN                  \
+   : (UNLIKELY((x) == 0 && (y) == 0)) ? (signbit(x) ? y : x) \
+   : (x > y)                          ? x                    \
+                                      : y)
 
-#define TRUNC_S(ut, st, ft, min, minop, max, x)                           \
-  ((UNLIKELY((x) != (x)))                                                 \
-       ? TRAP(INVALID_CONVERSION)                                         \
-       : (UNLIKELY(!((x)minop(min) && (x) < (max)))) ? TRAP(INT_OVERFLOW) \
-                                                     : (ut)(st)(x))
+#define TRUNC_S(ut, st, ft, min, minop, max, x)                             \
+  ((UNLIKELY((x) != (x)))                        ? TRAP(INVALID_CONVERSION) \
+   : (UNLIKELY(!((x)minop(min) && (x) < (max)))) ? TRAP(INT_OVERFLOW)       \
+                                                 : (ut)(st)(x))
 
 #define I32_TRUNC_S_F32(x) \
   TRUNC_S(u32, s32, f32, (f32)INT32_MIN, >=, 2147483648.f, x)
@@ -416,11 +410,10 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #define I64_TRUNC_S_F64(x) \
   TRUNC_S(u64, s64, f64, (f64)INT64_MIN, >=, (f64)INT64_MAX, x)
 
-#define TRUNC_U(ut, ft, max, x)                                          \
-  ((UNLIKELY((x) != (x)))                                                \
-       ? TRAP(INVALID_CONVERSION)                                        \
-       : (UNLIKELY(!((x) > (ft)-1 && (x) < (max)))) ? TRAP(INT_OVERFLOW) \
-                                                    : (ut)(x))
+#define TRUNC_U(ut, ft, max, x)                                              \
+  ((UNLIKELY((x) != (x)))                         ? TRAP(INVALID_CONVERSION) \
+   : (UNLIKELY(!((x) > (ft) - 1 && (x) < (max)))) ? TRAP(INT_OVERFLOW)       \
+                                                  : (ut)(x))
 
 #define I32_TRUNC_U_F32(x) TRUNC_U(u32, f32, 4294967296.f, x)
 #define I64_TRUNC_U_F32(x) TRUNC_U(u64, f32, (f32)UINT64_MAX, x)
@@ -428,11 +421,10 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #define I64_TRUNC_U_F64(x) TRUNC_U(u64, f64, (f64)UINT64_MAX, x)
 
 #define TRUNC_SAT_S(ut, st, ft, min, smin, minop, max, smax, x) \
-  ((UNLIKELY((x) != (x)))                                       \
-       ? 0                                                      \
-       : (UNLIKELY(!((x)minop(min))))                           \
-             ? smin                                             \
-             : (UNLIKELY(!((x) < (max)))) ? smax : (ut)(st)(x))
+  ((UNLIKELY((x) != (x)))         ? 0                           \
+   : (UNLIKELY(!((x)minop(min)))) ? smin                        \
+   : (UNLIKELY(!((x) < (max))))   ? smax                        \
+                                  : (ut)(st)(x))
 
 #define I32_TRUNC_SAT_S_F32(x)                                            \
   TRUNC_SAT_S(u32, s32, f32, (f32)INT32_MIN, INT32_MIN, >=, 2147483648.f, \
@@ -447,11 +439,11 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
   TRUNC_SAT_S(u64, s64, f64, (f64)INT64_MIN, INT64_MIN, >=, (f64)INT64_MAX, \
               INT64_MAX, x)
 
-#define TRUNC_SAT_U(ut, ft, max, smax, x)               \
-  ((UNLIKELY((x) != (x))) ? 0                           \
-                          : (UNLIKELY(!((x) > (ft)-1))) \
-                                ? 0                     \
-                                : (UNLIKELY(!((x) < (max)))) ? smax : (ut)(x))
+#define TRUNC_SAT_U(ut, ft, max, smax, x) \
+  ((UNLIKELY((x) != (x)))          ? 0    \
+   : (UNLIKELY(!((x) > (ft) - 1))) ? 0    \
+   : (UNLIKELY(!((x) < (max))))    ? smax \
+                                   : (ut)(x))
 
 #define I32_TRUNC_SAT_U_F32(x) \
   TRUNC_SAT_U(u32, f32, 4294967296.f, UINT32_MAX, x)
@@ -621,8 +613,10 @@ static inline void memory_init(wasm_rt_memory_t* dest,
   LOAD_DATA((*dest), dest_addr, src + src_addr, n);
 }
 
+typedef enum { RefFunc, RefNull, GlobalGet } wasm_elem_segment_expr_type_t;
+
 typedef struct {
-  enum { RefFunc, RefNull, GlobalGet } expr_type;
+  wasm_elem_segment_expr_type_t expr_type;
   wasm_rt_func_type_t type;
   wasm_rt_function_ptr_t func;
   wasm_rt_tailcallee_t func_tailcallee;
@@ -771,7 +765,7 @@ wasm_rt_func_type_t wasm2c_fac_get_func_type(uint32_t param_count, uint32_t resu
   
   if (param_count == 1 && result_count == 1) {
     va_start(args, result_count);
-    if (true && va_arg(args, wasm_rt_type_t) == WASM_RT_I32 && va_arg(args, wasm_rt_type_t) == WASM_RT_I32) {
+    if (true && va_arg(args, int) == WASM_RT_I32 && va_arg(args, int) == WASM_RT_I32) {
       va_end(args);
       return w2c_fac_t0;
     }
