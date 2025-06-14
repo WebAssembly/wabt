@@ -265,7 +265,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override {
+                    Type* result_types,
+                    GCTypeExtension* gc_ext) override {
     objdump_state_->function_param_counts[index] = param_count;
     return Result::Ok;
   }
@@ -901,7 +902,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  if (current_opcode == Opcode::SelectT) {
+  if (current_opcode == Opcode::SelectT || current_opcode == Opcode::CallRef) {
     LogOpcode(type.GetName().c_str());
   } else {
     LogOpcode(type.GetRefKindName());
@@ -1089,9 +1090,15 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override;
-  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
-  Result OnArrayType(Index index, TypeMut field) override;
+                    Type* result_types,
+                    GCTypeExtension* gc_ext) override;
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields,
+                      GCTypeExtension* gc_ext) override;
+  Result OnArrayType(Index index,
+                     TypeMut field,
+                     GCTypeExtension* gc_ext) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -1127,9 +1134,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnFunction(Index index, Index sig_index) override;
 
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    bool) override;
 
   Result OnMemoryCount(Index count) override;
   Result OnMemory(Index index,
@@ -1175,6 +1183,14 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   }
 
   Result EndDataSegmentInitExpr(Index index) override { return EndInitExpr(); }
+
+  Result BeginTableInitExpr(Index index) override {
+    reading_table_init_expr_ = true;
+    BeginInitExpr();
+    return Result::Ok;
+  }
+
+  Result EndTableInitExpr(Index index) override { return EndInitExpr(); }
 
   Result BeginGlobalInitExpr(Index index) override {
     reading_global_init_expr_ = true;
@@ -1305,6 +1321,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Index elem_index_ = 0;
   Index table_index_ = 0;
   Index next_data_reloc_ = 0;
+  bool reading_table_init_expr_ = false;
   bool reading_elem_init_expr_ = false;
   bool reading_data_init_expr_ = false;
   bool reading_global_init_expr_ = false;
@@ -1317,8 +1334,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   uint64_t elem_offset_ = 0;
 
   bool ReadingInitExpr() {
-    return reading_elem_init_expr_ || reading_data_init_expr_ ||
-           reading_global_init_expr_ || reading_elem_expr_;
+    return reading_table_init_expr_ || reading_elem_init_expr_ ||
+           reading_data_init_expr_ || reading_global_init_expr_ ||
+           reading_elem_expr_;
   }
 };
 
@@ -1446,15 +1464,31 @@ Result BinaryReaderObjdump::OnTypeCount(Index count) {
   return OnCount(count);
 }
 
+void PrintGCTypeExtension(GCTypeExtension* gc_ext) {
+  if (gc_ext->is_final_sub_type && gc_ext->sub_type_count == 0) {
+    return;
+  }
+
+  printf("(sub%s", gc_ext->is_final_sub_type ? " final" : "");
+
+  for (Index i = 0; i < gc_ext->sub_type_count; i++) {
+    printf(" %" PRIindex, gc_ext->sub_types[i]);
+  }
+  printf(") ");
+}
+
 Result BinaryReaderObjdump::OnFuncType(Index index,
                                        Index param_count,
                                        Type* param_types,
                                        Index result_count,
-                                       Type* result_types) {
+                                       Type* result_types,
+                                       GCTypeExtension* gc_ext) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintGCTypeExtension(gc_ext);
+  printf("(");
   for (Index i = 0; i < param_count; i++) {
     if (i != 0) {
       printf(", ");
@@ -1486,11 +1520,14 @@ Result BinaryReaderObjdump::OnFuncType(Index index,
 
 Result BinaryReaderObjdump::OnStructType(Index index,
                                          Index field_count,
-                                         TypeMut* fields) {
+                                         TypeMut* fields,
+                                         GCTypeExtension* gc_ext) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (struct", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintGCTypeExtension(gc_ext);
+  printf("(struct");
   for (Index i = 0; i < field_count; i++) {
     if (fields[i].mutable_) {
       printf(" (mut");
@@ -1504,11 +1541,15 @@ Result BinaryReaderObjdump::OnStructType(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnArrayType(Index index, TypeMut field) {
+Result BinaryReaderObjdump::OnArrayType(Index index,
+                                        TypeMut field,
+                                        GCTypeExtension* gc_ext) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - type[%" PRIindex "] (array", index);
+  printf(" - type[%" PRIindex "] ", index);
+  PrintGCTypeExtension(gc_ext);
+  printf("(array");
   if (field.mutable_) {
     printf(" (mut");
   }
@@ -1697,9 +1738,10 @@ Result BinaryReaderObjdump::OnTableCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::OnTable(Index index,
-                                    Type elem_type,
-                                    const Limits* elem_limits) {
+Result BinaryReaderObjdump::BeginTable(Index index,
+                                       Type elem_type,
+                                       const Limits* elem_limits,
+                                       bool) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, index,
                elem_type.GetName().c_str(), elem_limits->initial);
   if (elem_limits->has_max) {
@@ -1922,6 +1964,9 @@ Result BinaryReaderObjdump::EndInitExpr() {
   if (reading_data_init_expr_) {
     reading_data_init_expr_ = false;
     InitExprToConstOffset(current_init_expr_, &data_offset_);
+  } else if (reading_table_init_expr_) {
+    reading_table_init_expr_ = false;
+    InitExprToConstOffset(current_init_expr_, &elem_offset_);
   } else if (reading_elem_init_expr_) {
     reading_elem_init_expr_ = false;
     InitExprToConstOffset(current_init_expr_, &elem_offset_);

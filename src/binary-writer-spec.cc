@@ -240,6 +240,22 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteF64(const_.f64_bits(), const_.expected_nan());
       break;
 
+    case Type::ArrayRef: {
+      WriteString("arrayref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::EqRef: {
+      WriteString("eqref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
     case Type::FuncRef: {
       WriteString("funcref");
       WriteSeparator();
@@ -250,6 +266,14 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
 
     case Type::ExternRef: {
       WriteString("externref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::StructRef: {
+      WriteString("structref");
       WriteSeparator();
       WriteKey("value");
       WriteRefBits(const_.ref_bits());

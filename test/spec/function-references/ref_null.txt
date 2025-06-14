@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/ref_null.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)

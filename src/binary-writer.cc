@@ -57,9 +57,12 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type, const char* desc) {
+  if (type.IsNonTypedRef() && !type.IsNullableNonTypedRef()) {
+    WriteS32Leb128(stream, Type::Ref, "type prefix");
+  }
   WriteS32Leb128(stream, type, desc ? desc : type.GetName().c_str());
   if (type.IsReferenceWithIndex()) {
-    WriteS32Leb128(stream, type.GetReferenceIndex(),
+    WriteU32Leb128(stream, type.GetReferenceIndex(),
                    desc ? desc : type.GetName().c_str());
   }
 }
@@ -421,6 +424,11 @@ class BinaryWriter {
   void WriteSimdLoadStoreLaneExpr(const Func* func,
                                   const Expr* expr,
                                   const char* desc);
+  void WriteTypeIndex(Opcode opcode, const Var& type);
+  void WriteTypeIndexIndex(Opcode opcode,
+                           const Var& type,
+                           const Var& var,
+                           const char* desc);
   void WriteExpr(const Func* func, const Expr* expr);
   void WriteExprList(const Func* func, const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
@@ -713,8 +721,55 @@ void BinaryWriter::WriteSimdLoadStoreLaneExpr(const Func* func,
   stream_->WriteU8(static_cast<uint8_t>(typed_expr->val), "Simd Lane literal");
 }
 
+void BinaryWriter::WriteTypeIndex(Opcode opcode, const Var& type) {
+  WriteOpcode(stream_, opcode);
+  Index index = module_->GetFuncTypeIndex(type);
+  WriteU32Leb128WithReloc(index, "type index", RelocType::TypeIndexLEB);
+}
+
+void BinaryWriter::WriteTypeIndexIndex(Opcode opcode,
+                                       const Var& type,
+                                       const Var& var,
+                                       const char* desc) {
+  WriteTypeIndex(opcode, type);
+  WriteU32Leb128(stream_, var.index(), "data");
+}
+
 void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
   switch (expr->type()) {
+    case ExprType::ArrayGet: {
+      auto* array_get_expr = cast<ArrayGetExpr>(expr);
+      WriteTypeIndex(array_get_expr->opcode, array_get_expr->comp_type);
+      break;
+    }
+    case ExprType::ArrayNew:
+      WriteTypeIndex(Opcode::ArrayNew, cast<ArrayNewExpr>(expr)->var);
+      break;
+    case ExprType::ArrayNewData: {
+      auto* array_new_data_expr = cast<ArrayNewDataExpr>(expr);
+      WriteTypeIndexIndex(Opcode::ArrayNewData, array_new_data_expr->comp_type,
+                          array_new_data_expr->var, "data");
+      break;
+    }
+    case ExprType::ArrayNewDefault:
+      WriteTypeIndex(Opcode::ArrayNewDefault,
+                     cast<ArrayNewDefaultExpr>(expr)->var);
+      break;
+    case ExprType::ArrayNewElem: {
+      auto* array_new_elem_expr = cast<ArrayNewElemExpr>(expr);
+      WriteTypeIndexIndex(Opcode::ArrayNewElem, array_new_elem_expr->comp_type,
+                          array_new_elem_expr->var, "elem");
+      break;
+    }
+    case ExprType::ArrayNewFixed: {
+      auto* array_new_fixed_expr = cast<ArrayNewFixedExpr>(expr);
+      WriteTypeIndex(Opcode::ArrayNewFixed, array_new_fixed_expr->comp_type);
+      WriteU32Leb128(stream_, array_new_fixed_expr->count, "count");
+      break;
+    }
+    case ExprType::ArraySet:
+      WriteTypeIndex(Opcode::ArraySet, cast<ArraySetExpr>(expr)->var);
+      break;
     case ExprType::AtomicLoad:
       WriteLoadStoreExpr<AtomicLoadExpr>(func, expr, "memory offset");
       break;
@@ -759,6 +814,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrIfExpr>(expr)->var),
                      "break depth");
       break;
+    case ExprType::BrOnNonNull:
+      WriteOpcode(stream_, Opcode::BrOnNonNull);
+      WriteU32Leb128(stream_,
+                     GetLabelVarDepth(&cast<BrOnNonNullExpr>(expr)->var),
+                     "break depth");
+      break;
+    case ExprType::BrOnNull:
+      WriteOpcode(stream_, Opcode::BrOnNull);
+      WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrOnNullExpr>(expr)->var),
+                     "break depth");
+      break;
     case ExprType::BrTable: {
       auto* br_table_expr = cast<BrTableExpr>(expr);
       WriteOpcode(stream_, Opcode::BrTable);
@@ -795,10 +861,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteTableNumberWithReloc(table_index, "table index");
       break;
     }
-    case ExprType::CallRef: {
-      WriteOpcode(stream_, Opcode::CallRef);
-      break;
-    }
     case ExprType::ReturnCallIndirect: {
       Index sig_index =
           module_->GetFuncTypeIndex(cast<ReturnCallIndirectExpr>(expr)->decl);
@@ -808,6 +870,23 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128WithReloc(sig_index, "signature index",
                               RelocType::TypeIndexLEB);
       WriteTableNumberWithReloc(table_index, "table index");
+      break;
+    }
+    case ExprType::CallRef: {
+      WriteOpcode(stream_, Opcode::CallRef);
+      assert(cast<CallRefExpr>(expr)->sig_type.opt_type() == Type::RefNull);
+      Index sig_index = cast<CallRefExpr>(expr)->sig_type.index();
+      WriteU32Leb128WithReloc(sig_index, "signature index",
+                              RelocType::TypeIndexLEB);
+      break;
+    }
+    case ExprType::ReturnCallRef: {
+      WriteOpcode(stream_, Opcode::ReturnCallRef);
+      assert(cast<ReturnCallRefExpr>(expr)->sig_type.opt_type() ==
+             Type::RefNull);
+      Index sig_index = cast<ReturnCallRefExpr>(expr)->sig_type.index();
+      WriteU32Leb128WithReloc(sig_index, "signature index",
+                              RelocType::TypeIndexLEB);
       break;
     }
     case ExprType::Compare:
@@ -1003,6 +1082,10 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteTableNumberWithReloc(index, "table.fill table index");
       break;
     }
+    case ExprType::RefAsNonNull: {
+      WriteOpcode(stream_, Opcode::RefAsNonNull);
+      break;
+    }
     case ExprType::RefFunc: {
       WriteOpcode(stream_, Opcode::RefFunc);
       Index index = module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var);
@@ -1011,7 +1094,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     }
     case ExprType::RefNull: {
       WriteOpcode(stream_, Opcode::RefNull);
-      WriteType(stream_, cast<RefNullExpr>(expr)->type, "ref.null type");
+      const RefNullExpr* ref_null_expr = cast<RefNullExpr>(expr);
+      Type::Enum type = ref_null_expr->type.opt_type();
+
+      if (type != Type::RefNull) {
+        WriteType(stream_, type, "ref.null type");
+        break;
+      }
+
+      Index index = module_->GetFuncTypeIndex(ref_null_expr->type);
+      WriteU32Leb128WithReloc(index, "heap type index",
+                              RelocType::FuncIndexLEB);
       break;
     }
     case ExprType::RefIsNull:
@@ -1045,6 +1138,25 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Store:
       WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;
+    case ExprType::StructGet: {
+      auto* struct_get_expr = cast<StructGetExpr>(expr);
+      WriteTypeIndexIndex(struct_get_expr->opcode, struct_get_expr->comp_type,
+                          struct_get_expr->var, "field");
+      break;
+    }
+    case ExprType::StructNew:
+      WriteTypeIndex(Opcode::StructNew, cast<StructNewExpr>(expr)->var);
+      break;
+    case ExprType::StructNewDefault:
+      WriteTypeIndex(Opcode::StructNewDefault,
+                     cast<StructNewDefaultExpr>(expr)->var);
+      break;
+    case ExprType::StructSet: {
+      auto* struct_set_expr = cast<StructSetExpr>(expr);
+      WriteTypeIndexIndex(Opcode::StructSet, struct_set_expr->comp_type,
+                          struct_set_expr->var, "field");
+      break;
+    }
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);
       WriteU32Leb128(stream_, GetTagVarDepth(&cast<ThrowExpr>(expr)->var),
@@ -1186,9 +1298,17 @@ void BinaryWriter::WriteFunc(const Func* func) {
 }
 
 void BinaryWriter::WriteTable(const Table* table) {
+  if (!table->init_expr.empty()) {
+    stream_->WriteU8(0x40, "initialized table prefix");
+    stream_->WriteU8(0x0, "initialized table prefix");
+  }
   WriteType(stream_, table->elem_type);
   WriteLimitsFlags(stream_, ComputeLimitsFlags(&table->elem_limits));
   WriteLimitsData(stream_, &table->elem_limits);
+
+  if (!table->init_expr.empty()) {
+    WriteInitExpr(table->init_expr);
+  }
 }
 
 void BinaryWriter::WriteMemory(const Memory* memory) {
@@ -1361,14 +1481,69 @@ Result BinaryWriter::WriteModule() {
 
   if (module_->types.size()) {
     BeginKnownSection(BinarySection::Type);
-    WriteU32Leb128(stream_, module_->types.size(), "num types");
+
+    Index type_count = module_->types.size();
+    for (auto it : module_->recursive_ranges) {
+      if (it.type_count == 0) {
+        type_count++;
+      } else {
+        type_count -= it.type_count - 1;
+      }
+    }
+
+    WriteU32Leb128(stream_, type_count, "num types");
+
+    Index first_type_index = kInvalidIndex;
+    Index range_index = 0;
+
+    if (!module_->recursive_ranges.empty()) {
+      first_type_index = module_->recursive_ranges[0].first_type_index;
+    }
+
     for (size_t i = 0; i < module_->types.size(); ++i) {
+      while (i == first_type_index) {
+        WriteS32Leb128(stream_, Type::Rec, "recursive type");
+        WriteU32Leb128(stream_,
+                       module_->recursive_ranges[range_index].type_count,
+                       "recursive type count");
+
+        first_type_index = kInvalidIndex;
+        if (++range_index < module_->recursive_ranges.size()) {
+          first_type_index =
+              module_->recursive_ranges[range_index].first_type_index;
+        }
+      }
+
       const TypeEntry* type = module_->types[i];
+
+      switch (type->kind()) {
+        case TypeEntryKind::Func:
+          WriteHeader("func type", i);
+          break;
+        case TypeEntryKind::Struct:
+          WriteHeader("struct type", i);
+          break;
+        case TypeEntryKind::Array:
+          WriteHeader("array type", i);
+          break;
+      }
+
+      if (!type->gc_ext.is_final_sub_type || !type->gc_ext.sub_types.empty()) {
+        WriteS32Leb128(
+            stream_,
+            type->gc_ext.is_final_sub_type ? Type::SubFinal : Type::Sub,
+            "sub type");
+
+        WriteU32Leb128(stream_, type->gc_ext.sub_types.size(), "num sub types");
+        for (auto it : type->gc_ext.sub_types) {
+          WriteU32Leb128(stream_, it.index(), "sub type");
+        }
+      }
+
       switch (type->kind()) {
         case TypeEntryKind::Func: {
           const FuncType* func_type = cast<FuncType>(type);
           const FuncSignature* sig = &func_type->sig;
-          WriteHeader("func type", i);
           WriteType(stream_, Type::Func);
 
           Index num_params = sig->param_types.size();
@@ -1387,7 +1562,6 @@ Result BinaryWriter::WriteModule() {
 
         case TypeEntryKind::Struct: {
           const StructType* struct_type = cast<StructType>(type);
-          WriteHeader("struct type", i);
           WriteType(stream_, Type::Struct);
           Index num_fields = struct_type->fields.size();
           WriteU32Leb128(stream_, num_fields, "num fields");
@@ -1401,7 +1575,6 @@ Result BinaryWriter::WriteModule() {
 
         case TypeEntryKind::Array: {
           const ArrayType* array_type = cast<ArrayType>(type);
-          WriteHeader("array type", i);
           WriteType(stream_, Type::Array);
           WriteType(stream_, array_type->field.type);
           stream_->WriteU8(array_type->field.mutable_, "field mutability");
@@ -1409,6 +1582,15 @@ Result BinaryWriter::WriteModule() {
         }
       }
     }
+
+    while (range_index < module_->recursive_ranges.size()) {
+      WriteS32Leb128(stream_, Type::Rec, "recursive type");
+      // Should be 0 for a validated module.
+      WriteU32Leb128(stream_, module_->recursive_ranges[range_index].type_count,
+                     "recursive count");
+      ++range_index;
+    }
+
     EndSection();
   }
 
@@ -1575,7 +1757,8 @@ Result BinaryWriter::WriteModule() {
       ElemSegment* segment = module_->elem_segments[i];
       WriteHeader("elem segment header", i);
       // 1. flags
-      uint8_t flags = segment->GetFlags(module_);
+      uint8_t flags = segment->GetFlags(
+          module_, options_.features.function_references_enabled());
       stream_->WriteU8(flags, "segment flags");
       // 2. optional target table
       if (flags & SegExplicitIndex && segment->kind != SegmentKind::Declared) {
