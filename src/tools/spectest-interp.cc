@@ -629,10 +629,16 @@ wabt::Result JSONParser::ParseType(Type* out_type) {
     *out_type = Type::I8;
   } else if (type_str == "i16") {
     *out_type = Type::I16;
+  } else if (type_str == "arrayref") {
+    *out_type = Type::ArrayRef;
+  } else if (type_str == "eqref") {
+    *out_type = Type::EqRef;
   } else if (type_str == "funcref") {
     *out_type = Type::FuncRef;
   } else if (type_str == "externref") {
     *out_type = Type::ExternRef;
+  } else if (type_str == "structref") {
+    *out_type = Type::StructRef;
   } else if (type_str == "exnref") {
     *out_type = Type::ExnRef;
   } else {
@@ -853,7 +859,10 @@ wabt::Result JSONParser::ParseConstValue(Type type,
       }
       break;
 
+    case Type::ArrayRef:
+    case Type::EqRef:
     case Type::ExternRef:
+    case Type::StructRef:
       if (value_str == "null") {
         out_value->Set(Ref::Null);
       } else {
@@ -1307,11 +1316,12 @@ CommandRunner::CommandRunner() : store_(s_features) {
                       });
   }
 
-  spectest["table"] =
-      interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
+  spectest["table"] = interp::Table::New(
+      store_, TableType{ValueType::FuncRef, Limits{10, 20}}, Ref::Null);
 
   spectest["table64"] = interp::Table::New(
-      store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}});
+      store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}},
+      Ref::Null);
 
   spectest["memory"] = interp::Memory::New(
       store_, MemoryType{Limits{1, 2}, WABT_DEFAULT_PAGE_SIZE});
@@ -1917,14 +1927,49 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
       break;
     }
 
+    case Type::ArrayRef:
+      ok = false;
+      if (actual.type == Type::ArrayRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Array;
+      }
+      break;
+
+    case Type::EqRef:
+      ok = false;
+      if (actual.type == Type::EqRef || actual.type == Type::I31Ref ||
+          actual.type == Type::StructRef || actual.type == Type::ArrayRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Array ||
+             obj->kind() == ObjectKind::Struct;
+      }
+      break;
+
     case Type::FuncRef:
       // A funcref expectation only requires that the reference be a function,
       // but it doesn't check the actual index.
-      ok = (actual.type == Type::FuncRef);
+      ok = (actual.type == Type::FuncRef || actual.type == Type::RefNull);
       break;
 
     case Type::ExternRef:
       ok = expected.value.value.Get<Ref>() == actual.value.Get<Ref>();
+      break;
+
+    case Type::StructRef:
+      ok = false;
+      if (actual.type == Type::StructRef) {
+        ok = actual.value.Get<Ref>() != Ref::Null;
+      } else if ((actual.type == Type::AnyRef || actual.type == Type::Ref) &&
+                 actual.value.Get<Ref>() != Ref::Null) {
+        RefPtr<Object> obj = store_.UnsafeGet<Object>(actual.value.Get<Ref>());
+        ok = obj->kind() == ObjectKind::Struct;
+      }
       break;
 
     case Type::ExnRef:

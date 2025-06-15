@@ -215,6 +215,14 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnBrIfExpr(cast<BrIfExpr>(expr)));
       break;
 
+    case ExprType::BrOnNonNull:
+      CHECK_RESULT(delegate_->OnBrOnNonNullExpr(cast<BrOnNonNullExpr>(expr)));
+      break;
+
+    case ExprType::BrOnNull:
+      CHECK_RESULT(delegate_->OnBrOnNullExpr(cast<BrOnNullExpr>(expr)));
+      break;
+
     case ExprType::BrTable:
       CHECK_RESULT(delegate_->OnBrTableExpr(cast<BrTableExpr>(expr)));
       break;
@@ -353,6 +361,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnTableFillExpr(cast<TableFillExpr>(expr)));
       break;
 
+    case ExprType::RefAsNonNull:
+      CHECK_RESULT(delegate_->OnRefAsNonNullExpr(cast<RefAsNonNullExpr>(expr)));
+      break;
+
     case ExprType::RefFunc:
       CHECK_RESULT(delegate_->OnRefFuncExpr(cast<RefFuncExpr>(expr)));
       break;
@@ -384,6 +396,11 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
     case ExprType::ReturnCallIndirect:
       CHECK_RESULT(delegate_->OnReturnCallIndirectExpr(
           cast<ReturnCallIndirectExpr>(expr)));
+      break;
+
+    case ExprType::ReturnCallRef:
+      CHECK_RESULT(
+          delegate_->OnReturnCallRefExpr(cast<ReturnCallRefExpr>(expr)));
       break;
 
     case ExprType::Select:
@@ -445,6 +462,53 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
           delegate_->OnSimdShuffleOpExpr(cast<SimdShuffleOpExpr>(expr)));
       break;
     }
+
+    case ExprType::ArrayGet:
+      CHECK_RESULT(delegate_->OnArrayGetExpr(cast<ArrayGetExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNew:
+      CHECK_RESULT(delegate_->OnArrayNewExpr(cast<ArrayNewExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewData:
+      CHECK_RESULT(delegate_->OnArrayNewDataExpr(cast<ArrayNewDataExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewDefault:
+      CHECK_RESULT(
+          delegate_->OnArrayNewDefaultExpr(cast<ArrayNewDefaultExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewElem:
+      CHECK_RESULT(delegate_->OnArrayNewElemExpr(cast<ArrayNewElemExpr>(expr)));
+      break;
+
+    case ExprType::ArrayNewFixed:
+      CHECK_RESULT(
+          delegate_->OnArrayNewFixedExpr(cast<ArrayNewFixedExpr>(expr)));
+      break;
+
+    case ExprType::ArraySet:
+      CHECK_RESULT(delegate_->OnArraySetExpr(cast<ArraySetExpr>(expr)));
+      break;
+
+    case ExprType::StructGet:
+      CHECK_RESULT(delegate_->OnStructGetExpr(cast<StructGetExpr>(expr)));
+      break;
+
+    case ExprType::StructNew:
+      CHECK_RESULT(delegate_->OnStructNewExpr(cast<StructNewExpr>(expr)));
+      break;
+
+    case ExprType::StructNewDefault:
+      CHECK_RESULT(
+          delegate_->OnStructNewDefaultExpr(cast<StructNewDefaultExpr>(expr)));
+      break;
+
+    case ExprType::StructSet:
+      CHECK_RESULT(delegate_->OnStructSetExpr(cast<StructSetExpr>(expr)));
+      break;
 
     case ExprType::Unreachable:
       CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
