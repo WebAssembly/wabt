@@ -6,6 +6,10 @@ R"w2c_template(#elif defined(__GNUC__) && defined(__aarch64__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
 )w2c_template"
+R"w2c_template(#elif defined(__s390x__)
+)w2c_template"
+R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"d"(var));
+)w2c_template"
 R"w2c_template(#else
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var)

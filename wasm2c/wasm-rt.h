@@ -142,12 +142,11 @@ extern "C" {
  *
  * This defaults to GUARD_PAGES as this is the fastest option, iff the
  * requirements of GUARD_PAGES --- 64-bit platforms, MMAP allocation strategy,
- * no 64-bit memories, no big-endian --- are met. This falls back to BOUNDS
- * otherwise.
+ * no 64-bit memories --- are met. This falls back to BOUNDS otherwise.
  */
 
 /** Check if Guard checks are supported */
-#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && !WABT_BIG_ENDIAN
+#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP
 #define WASM_RT_GUARD_PAGES_SUPPORTED 1
 #else
 #define WASM_RT_GUARD_PAGES_SUPPORTED 0
