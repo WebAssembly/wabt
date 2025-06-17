@@ -1,0 +1,121 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-annotations --enable-code-metadata
+;;; ARGS1: -x -j "metadata.code.branch_hint"
+;; combined from https://github.com/bytecodealliance/wasm-tools/tree/6ed178840fae8599312ab14c2cad6faea9f80bf1/tests/cli/branch-hinting
+(module
+  (func $main (result i32)
+    (local i32 i32 i32 i32)
+    i32.const 0
+    local.tee 2
+    local.set 3
+    loop  ;; label = @1
+      local.get 2
+      i32.const 50000
+      i32.eq
+      (@metadata.code.branch_hint "\00") if  ;; label = @2
+        i32.const 1
+        local.set 3
+      end
+      local.get 2
+      i32.const 1
+      i32.add
+      local.tee 2
+      i32.const 100000
+      i32.ne
+      (@metadata.code.branch_hint "\01") br_if 0 (;@1;)
+    end
+    local.get 3)
+
+  (func
+    i32.const 0
+    (@metadata.code.branch_hint "\00")
+    if
+    end)
+
+
+  (func
+    i32.const 0
+    (@metadata.code.branch_hint "\00")
+    if
+      i32.const 0
+      (@metadata.code.branch_hint "\01")
+      br_if 0
+    end)
+
+  (func
+    i32.const 0
+    (@metadata.code.branch_hint "\01")
+    if
+      i32.const 0
+      (@metadata.code.branch_hint "\00")
+      br_if 0
+    end)
+)
+
+(;; STDOUT ;;;
+branch-hints-valid.wasm:	file format wasm 0x1
+Section Details:
+Custom:
+ - name: "metadata.code.branch_hint"
+   - func[0]:
+    - meta[12]:
+     - 0000000: 00                                       .
+    - meta[25]:
+     - 0000000: 01                                       .
+   - func[1]:
+    - meta[3]:
+     - 0000000: 00                                       .
+   - func[2]:
+    - meta[3]:
+     - 0000000: 00                                       .
+    - meta[7]:
+     - 0000000: 01                                       .
+   - func[3]:
+    - meta[3]:
+     - 0000000: 01                                       .
+    - meta[7]:
+     - 0000000: 00                                       .
+Code Disassembly:
+000057 func[0]:
+ 000058: 04 7f                      | local[0..3] type=i32
+ 00005a: 41 00                      | i32.const 0
+ 00005c: 22 02                      | local.tee 2
+ 00005e: 21 03                      | local.set 3
+ 000060: 03 40                      | loop
+ 000062: 20 02                      |   local.get 2
+ 000064: 41 d0 86 03                |   i32.const 50000
+ 000068: 46                         |   i32.eq
+ 000069: 04 40                      |   if
+ 00006b: 41 01                      |     i32.const 1
+ 00006d: 21 03                      |     local.set 3
+ 00006f: 0b                         |   end
+ 000070: 20 02                      |   local.get 2
+ 000072: 41 01                      |   i32.const 1
+ 000074: 6a                         |   i32.add
+ 000075: 22 02                      |   local.tee 2
+ 000077: 41 a0 8d 06                |   i32.const 100000
+ 00007b: 47                         |   i32.ne
+ 00007c: 0d 00                      |   br_if 0
+ 00007e: 0b                         | end
+ 00007f: 20 03                      | local.get 3
+ 000081: 0b                         | end
+000083 func[1]:
+ 000084: 41 00                      | i32.const 0
+ 000086: 04 40                      | if
+ 000088: 0b                         | end
+ 000089: 0b                         | end
+00008b func[2]:
+ 00008c: 41 00                      | i32.const 0
+ 00008e: 04 40                      | if
+ 000090: 41 00                      |   i32.const 0
+ 000092: 0d 00                      |   br_if 0
+ 000094: 0b                         | end
+ 000095: 0b                         | end
+000097 func[3]:
+ 000098: 41 00                      | i32.const 0
+ 00009a: 04 40                      | if
+ 00009c: 41 00                      |   i32.const 0
+ 00009e: 0d 00                      |   br_if 0
+ 0000a0: 0b                         | end
+ 0000a1: 0b                         | end
+;;; STDOUT ;;)
