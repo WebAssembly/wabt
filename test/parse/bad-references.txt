@@ -11,19 +11,19 @@
   )
 )
 (;; STDERR ;;;
-out/test/parse/bad-references.txt:6:31: error: reference type out of range: 2 (max: 2)
+out/test/parse/bad-references.txt:6:4: error: reference 2 is out of range in params
   (type $t0 (func (param (ref 2))))
-                              ^
-out/test/parse/bad-references.txt:7:31: error: reference type out of range: 33 (max: 2)
+   ^^^^
+out/test/parse/bad-references.txt:7:4: error: reference 33 is out of range in params
   (type $t1 (func (param (ref 33)) (result (ref 444))))
-                              ^^
-out/test/parse/bad-references.txt:7:49: error: reference type out of range: 444 (max: 2)
+   ^^^^
+out/test/parse/bad-references.txt:7:4: error: reference 444 is out of range in results
   (type $t1 (func (param (ref 33)) (result (ref 444))))
-                                                ^^^
-out/test/parse/bad-references.txt:9:28: error: reference type out of range: 5555 (max: 2)
+   ^^^^
+out/test/parse/bad-references.txt:9:4: error: reference 5555 is out of range in params
   (func $f (param $p1 (ref 5555))
-                           ^^^^
-out/test/parse/bad-references.txt:10:21: error: reference type out of range: 66666 (max: 2)
-    (local $p2 (ref 66666))
-                    ^^^^^
+   ^^^^
+out/test/parse/bad-references.txt:9:12: error: reference 66666 is out of range in locals
+  (func $f (param $p1 (ref 5555))
+           ^
 ;;; STDERR ;;)
