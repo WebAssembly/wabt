@@ -273,10 +273,8 @@ size_t ReadS32Leb128(const uint8_t* p,
     return 4;
   } else if (p + 4 < end && (p[4] & 0x80) == 0) {
     // The top bits should be a sign-extension of the sign bit.
-    bool sign_bit_set = (p[4] & 0x8);
-    int top_bits = p[4] & 0xf0;
-    if ((sign_bit_set && top_bits != 0x70) ||
-        (!sign_bit_set && top_bits != 0)) {
+    int top_bits = p[4] & 0xf8;
+    if (top_bits != 0x78 && top_bits != 0) {
       return 0;
     }
     uint32_t result = LEB128_5(uint32_t);
@@ -329,10 +327,8 @@ size_t ReadS64Leb128(const uint8_t* p,
     return 9;
   } else if (p + 9 < end && (p[9] & 0x80) == 0) {
     // The top bits should be a sign-extension of the sign bit.
-    bool sign_bit_set = (p[9] & 0x1);
-    int top_bits = p[9] & 0xfe;
-    if ((sign_bit_set && top_bits != 0x7e) ||
-        (!sign_bit_set && top_bits != 0)) {
+    int top_bits = p[9];
+    if (top_bits != 0x7f && top_bits != 0) {
       return 0;
     }
     uint64_t result = LEB128_10(uint64_t);

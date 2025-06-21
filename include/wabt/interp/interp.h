@@ -184,6 +184,10 @@ struct FuncType : ExternType {
 
   ValueTypes params;
   ValueTypes results;
+  // When params or results contain references, the referenced
+  // types are also needed for type equality comparisons.
+  // An example for these comparisons is import validation.
+  std::vector<FuncType>* func_types;
 };
 
 struct TableType : ExternType {
