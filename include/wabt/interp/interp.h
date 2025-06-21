@@ -157,6 +157,10 @@ using u32x2 = Simd<u32, 2>;
 
 //// Types ////
 
+bool TypesMatch(ValueType expected, ValueType actual);
+
+//// Limits ////
+
 bool CanGrow(const Limits&, u32 old_size, u32 delta, u32* new_size);
 Result Match(const Limits& expected,
              const Limits& actual,
@@ -174,7 +178,21 @@ struct FuncType : ExternType {
   static const ExternKind skind = ExternKind::Func;
   static bool classof(const ExternType* type);
 
+  enum class TypeKind {
+    Func,
+    Struct,
+    Array,
+  };
+
+  // To simplify the implementation, FuncType may also represent
+  // Struct and Array types. To do this, the mutability is stored
+  // in results, which must have the same size as params.
+  // This implementation might change in the future.
+  static const Type::Enum Mutable = Type::I32;
+  static const Type::Enum Immutable = Type::I64;
+
   explicit FuncType(ValueTypes params, ValueTypes results);
+  explicit FuncType(TypeKind kind, ValueTypes params, ValueTypes results);
 
   std::unique_ptr<ExternType> Clone() const override;
 
@@ -182,8 +200,21 @@ struct FuncType : ExternType {
                       const FuncType& actual,
                       std::string* out_msg);
 
+  TypeKind kind;
+  // These two are needed for fast dynamic type comparison.
+  Index canonical_index;
+  Index canonical_sub_index;
+  // These three are needed for type equality comparisons
+  // across different modules (import/export validation).
+  bool is_final_sub_type;
+  Index recursive_start;
+  Index recursive_count;
   ValueTypes params;
   ValueTypes results;
+  // When params or results contain references, the referenced
+  // types are also needed for type equality comparisons.
+  // An example for these comparisons is import validation.
+  std::vector<FuncType>* func_types;
 };
 
 struct TableType : ExternType {
@@ -330,6 +361,7 @@ struct FuncDesc {
 
 struct TableDesc {
   TableType type;
+  FuncDesc init_func;
 };
 
 struct MemoryDesc {
@@ -814,7 +846,7 @@ class Table : public Extern {
   static const char* GetTypeName() { return "Table"; }
   using Ptr = RefPtr<Table>;
 
-  static Table::Ptr New(Store&, TableType);
+  static Table::Ptr New(Store&, TableType, Ref);
 
   Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
 
@@ -846,7 +878,7 @@ class Table : public Extern {
 
  private:
   friend Store;
-  explicit Table(Store&, TableType);
+  explicit Table(Store&, TableType, Ref);
   void Mark(Store&) override;
 
   TableType type_;
