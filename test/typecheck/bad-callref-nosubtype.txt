@@ -1,0 +1,18 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(module
+  (func (export "main") (param (ref $t1))
+    (call_ref $t2 (i64.const 10)
+                  (local.get 0)
+    )
+  )
+
+  (type $t1 (func (param i32)))
+  (type $t2 (func (param i64)))
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-callref-nosubtype.txt:6:6: error: type mismatch in call_ref, expected [(ref null 1)] but got [... (ref 0)]
+    (call_ref $t2 (i64.const 10)
+     ^^^^^^^^
+;;; STDERR ;;)

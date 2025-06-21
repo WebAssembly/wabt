@@ -31,6 +31,8 @@ before, TokenType::Before
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
 br_if, TokenType::BrIf, Opcode::BrIf
+br_on_non_null, TokenType::BrOnNonNull, Opcode::BrOnNonNull
+br_on_null, TokenType::BrOnNull, Opcode::BrOnNull
 br_table, TokenType::BrTable, Opcode::BrTable
 br, TokenType::Br, Opcode::Br
 call_indirect, TokenType::CallIndirect, Opcode::CallIndirect
@@ -183,8 +185,8 @@ f64x2.convert_low_i32x4_u, TokenType::Unary, Opcode::F64X2ConvertLowI32X4U
 f64x2.promote_low_f32x4, TokenType::Unary, Opcode::F64X2PromoteLowF32X4
 f64x2, TokenType::F64X2
 field, TokenType::Field
-funcref, Type::FuncRef
 func, Type::FuncRef, TokenType::Func
+funcref, Type::FuncRef
 function, TokenType::Function
 get, TokenType::Get
 global.get, TokenType::GlobalGet, Opcode::GlobalGet
@@ -556,12 +558,14 @@ mut, TokenType::Mut
 nan:arithmetic, TokenType::NanArithmetic
 nan:canonical, TokenType::NanCanonical
 nop, TokenType::Nop, Opcode::Nop
+null, TokenType::Null
 offset, TokenType::Offset
 output, TokenType::Output
 pagesize, TokenType::PageSize
 param, TokenType::Param
 ref, TokenType::Ref
 quote, TokenType::Quote
+ref.as_non_null, TokenType::RefAsNonNull, Opcode::RefAsNonNull
 ref.extern, TokenType::RefExtern
 ref.func, TokenType::RefFunc, Opcode::RefFunc
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
@@ -570,6 +574,7 @@ register, TokenType::Register
 result, TokenType::Result
 rethrow, TokenType::Rethrow, Opcode::Rethrow
 return_call_indirect, TokenType::ReturnCallIndirect, Opcode::ReturnCallIndirect
+return_call_ref, TokenType::ReturnCallRef, Opcode::ReturnCallRef
 return_call, TokenType::ReturnCall, Opcode::ReturnCall
 return, TokenType::Return, Opcode::Return
 select, TokenType::Select, Opcode::Select
