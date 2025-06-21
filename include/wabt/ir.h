@@ -36,24 +36,43 @@ namespace wabt {
 
 struct Module;
 
-enum class VarType {
+// VarType (16 bit) and the opt_type_ (16 bit)
+// fields of Var forms a 32 bit field.
+enum class VarType : uint16_t {
   Index,
   Name,
 };
 
 struct Var {
+  // Var can represent variables or types.
+
+  // Represent a variable:
+  //   has_opt_type() is false
+  //   Only used by wast-parser
+
+  // Represent a type:
+  //   has_opt_type() is true, is_index() is true
+  //   type can be get by to_type()
+  //   Binary reader only constructs this variant
+
+  // Represent both a variable and a type:
+  //   has_opt_type() is true, is_name() is true
+  //   A reference, which index is unknown
+  //   Only used by wast-parser
+
   explicit Var();
   explicit Var(Index index, const Location& loc);
   explicit Var(std::string_view name, const Location& loc);
+  explicit Var(Type type, const Location& loc);
   Var(Var&&);
   Var(const Var&);
   Var& operator=(const Var&);
   Var& operator=(Var&&);
   ~Var();
 
-  VarType type() const { return type_; }
   bool is_index() const { return type_ == VarType::Index; }
   bool is_name() const { return type_ == VarType::Name; }
+  bool has_opt_type() const { return opt_type_ < 0; }
 
   Index index() const {
     assert(is_index());
@@ -63,10 +82,16 @@ struct Var {
     assert(is_name());
     return name_;
   }
+  Type::Enum opt_type() const {
+    assert(has_opt_type());
+    return static_cast<Type::Enum>(opt_type_);
+  }
 
   void set_index(Index);
   void set_name(std::string&&);
   void set_name(std::string_view);
+  void set_opt_type(Type::Enum);
+  Type to_type() const;
 
   Location loc;
 
@@ -74,6 +99,8 @@ struct Var {
   void Destroy();
 
   VarType type_;
+  // Can be set to Type::Enum types, Type::Any represent no optional type.
+  int16_t opt_type_;
   union {
     Index index_;
     std::string name_;
@@ -153,8 +180,13 @@ struct Const {
     set_f64(0);
     set_expected_nan(0, nan);
   }
-  void set_funcref() { From<uintptr_t>(Type::FuncRef, 0); }
+  void set_arrayref() { From<uintptr_t>(Type(Type::ArrayRef, Type::ReferenceNonNull), 0); }
+  void set_eqref() { From<uintptr_t>(Type(Type::EqRef, Type::ReferenceNonNull), 0); }
   void set_externref(uintptr_t x) { From(Type::ExternRef, x); }
+  void set_extern(uintptr_t x) { From(Type(Type::ExternRef, Type::ReferenceNonNull), x); }
+  void set_funcref() { From<uintptr_t>(Type::FuncRef, 0); }
+  void set_i31ref() { From<uintptr_t>(Type(Type::I31Ref, Type::ReferenceNonNull), 0); }
+  void set_structref() { From<uintptr_t>(Type(Type::StructRef, Type::ReferenceNonNull), 0); }
   void set_null(Type type) { From<uintptr_t>(type, kRefNullBits); }
 
   bool is_expected_nan(int lane = 0) const {
@@ -269,6 +301,19 @@ enum class TypeEntryKind {
   Array,
 };
 
+struct TypeEntryGCTypeExtension {
+  TypeEntryGCTypeExtension(bool is_final_sub_type)
+      : is_final_sub_type(is_final_sub_type) {}
+
+  void InitSubTypes(Index* sub_type_list, Index sub_type_count);
+
+  bool is_final_sub_type;
+  // The binary/text format allows any number of subtypes,
+  // so parsers must handle them. The validator rejects
+  // lists which size is greater than 1.
+  VarVector sub_types;
+};
+
 class TypeEntry {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(TypeEntry);
@@ -279,12 +324,17 @@ class TypeEntry {
 
   Location loc;
   std::string name;
+  TypeEntryGCTypeExtension gc_ext;
 
  protected:
   explicit TypeEntry(TypeEntryKind kind,
+                     bool is_final_sub_type,
                      std::string_view name = std::string_view(),
                      const Location& loc = Location())
-      : loc(loc), name(name), kind_(kind) {}
+      : loc(loc),
+        name(name),
+        gc_ext(is_final_sub_type),
+        kind_(kind) {}
 
   TypeEntryKind kind_;
 };
@@ -295,8 +345,8 @@ class FuncType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Func;
   }
 
-  explicit FuncType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Func, name) {}
+  explicit FuncType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Func, is_final_sub_type, name) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
@@ -325,8 +375,8 @@ class StructType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Struct;
   }
 
-  explicit StructType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Struct) {}
+  explicit StructType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Struct, is_final_sub_type, name) {}
 
   std::vector<Field> fields;
 };
@@ -337,10 +387,15 @@ class ArrayType : public TypeEntry {
     return entry->kind() == TypeEntryKind::Array;
   }
 
-  explicit ArrayType(std::string_view name = std::string_view())
-      : TypeEntry(TypeEntryKind::Array) {}
+  explicit ArrayType(bool is_final_sub_type, std::string_view name = std::string_view())
+      : TypeEntry(TypeEntryKind::Array, is_final_sub_type, name) {}
 
   Field field;
+};
+
+struct RecursiveRange {
+  Index first_type_index;
+  Index type_count;
 };
 
 struct FuncDeclaration {
@@ -355,6 +410,17 @@ struct FuncDeclaration {
 };
 
 enum class ExprType {
+  ArrayCopy,
+  ArrayFill,
+  ArrayGet,
+  ArrayInitData,
+  ArrayInitElem,
+  ArrayNew,
+  ArrayNewData,
+  ArrayNewDefault,
+  ArrayNewElem,
+  ArrayNewFixed,
+  ArraySet,
   AtomicLoad,
   AtomicRmw,
   AtomicRmwCmpxchg,
@@ -366,6 +432,8 @@ enum class ExprType {
   Block,
   Br,
   BrIf,
+  BrOnNonNull,
+  BrOnNull,
   BrTable,
   Call,
   CallIndirect,
@@ -375,6 +443,7 @@ enum class ExprType {
   Const,
   Convert,
   Drop,
+  GCUnary,
   GlobalGet,
   GlobalSet,
   If,
@@ -390,18 +459,26 @@ enum class ExprType {
   MemoryInit,
   MemorySize,
   Nop,
+  RefAsNonNull,
+  RefCast,
   RefIsNull,
   RefFunc,
   RefNull,
+  RefTest,
   Rethrow,
   Return,
   ReturnCall,
   ReturnCallIndirect,
+  ReturnCallRef,
   Select,
   SimdLaneOp,
   SimdLoadLane,
   SimdStoreLane,
   SimdShuffleOp,
+  StructGet,
+  StructNew,
+  StructNewDefault,
+  StructSet,
   LoadSplat,
   LoadZero,
   Store,
@@ -421,7 +498,7 @@ enum class ExprType {
   Unary,
   Unreachable,
 
-  First = AtomicLoad,
+  First = ArrayCopy,
   Last = Unreachable
 };
 
@@ -537,10 +614,10 @@ using MemoryCopyExpr = MemoryBinaryExpr<ExprType::MemoryCopy>;
 template <ExprType TypeEnum>
 class RefTypeExpr : public ExprMixin<TypeEnum> {
  public:
-  RefTypeExpr(Type type, const Location& loc = Location())
+  RefTypeExpr(Var type, const Location& loc = Location())
       : ExprMixin<TypeEnum>(loc), type(type) {}
 
-  Type type;
+  Var type;
 };
 
 using RefNullExpr = RefTypeExpr<ExprType::RefNull>;
@@ -558,8 +635,10 @@ class OpcodeExpr : public ExprMixin<TypeEnum> {
 using BinaryExpr = OpcodeExpr<ExprType::Binary>;
 using CompareExpr = OpcodeExpr<ExprType::Compare>;
 using ConvertExpr = OpcodeExpr<ExprType::Convert>;
+using GCUnaryExpr = OpcodeExpr<ExprType::GCUnary>;
 using UnaryExpr = OpcodeExpr<ExprType::Unary>;
 using TernaryExpr = OpcodeExpr<ExprType::Ternary>;
+using RefAsNonNullExpr = OpcodeExpr<ExprType::RefAsNonNull>;
 
 class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
  public:
@@ -639,6 +718,8 @@ class MemoryVarExpr : public MemoryExpr<TypeEnum> {
 
 using BrExpr = VarExpr<ExprType::Br>;
 using BrIfExpr = VarExpr<ExprType::BrIf>;
+using BrOnNonNullExpr = VarExpr<ExprType::BrOnNonNull>;
+using BrOnNullExpr = VarExpr<ExprType::BrOnNull>;
 using CallExpr = VarExpr<ExprType::Call>;
 using RefFuncExpr = VarExpr<ExprType::RefFunc>;
 using GlobalGetExpr = VarExpr<ExprType::GlobalGet>;
@@ -660,10 +741,19 @@ using TableFillExpr = VarExpr<ExprType::TableFill>;
 
 using MemoryInitExpr = MemoryVarExpr<ExprType::MemoryInit>;
 
+using ArrayFillExpr = VarExpr<ExprType::ArrayFill>;
+using ArrayNewExpr = VarExpr<ExprType::ArrayNew>;
+using ArrayNewDefaultExpr = VarExpr<ExprType::ArrayNewDefault>;
+using ArraySetExpr = VarExpr<ExprType::ArraySet>;
+using RefCastExpr = VarExpr<ExprType::RefCast>;
+using RefTestExpr = VarExpr<ExprType::RefTest>;
+using StructNewExpr = VarExpr<ExprType::StructNew>;
+using StructNewDefaultExpr = VarExpr<ExprType::StructNewDefault>;
+
 class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
-  SelectExpr(TypeVector type, const Location& loc = Location())
-      : ExprMixin<ExprType::Select>(loc), result_type(type) {}
+  SelectExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::Select>(loc) {}
   TypeVector result_type;
 };
 
@@ -727,9 +817,15 @@ class CallRefExpr : public ExprMixin<ExprType::CallRef> {
   explicit CallRefExpr(const Location& loc = Location())
       : ExprMixin<ExprType::CallRef>(loc) {}
 
-  // This field is setup only during Validate phase,
-  // so keep that in mind when you use it.
-  Var function_type_index;
+  Var sig_type;
+};
+
+class ReturnCallRefExpr : public ExprMixin<ExprType::ReturnCallRef> {
+ public:
+  explicit ReturnCallRefExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::ReturnCallRef>(loc) {}
+
+  Var sig_type;
 };
 
 template <ExprType TypeEnum>
@@ -830,6 +926,51 @@ class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
         consistency_model(consistency_model) {}
 
   uint32_t consistency_model;
+};
+
+class ArrayGetExpr : public ExprMixin<ExprType::ArrayGet> {
+ public:
+  ArrayGetExpr(Opcode opcode, const Var& type_var, const Location& loc = Location())
+      : ExprMixin<ExprType::ArrayGet>(loc), opcode(opcode), type_var(type_var) {}
+
+  Opcode opcode;
+  Var type_var;
+};
+
+template <ExprType TypeEnum>
+class TypeVarExpr : public ExprMixin<TypeEnum> {
+ public:
+  TypeVarExpr(const Var& type_var, const Var& var, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), type_var(type_var), var(var) {}
+
+  Var type_var;
+  Var var;
+};
+
+using ArrayCopyExpr = TypeVarExpr<ExprType::ArrayCopy>;
+using ArrayInitDataExpr = TypeVarExpr<ExprType::ArrayInitData>;
+using ArrayInitElemExpr = TypeVarExpr<ExprType::ArrayInitElem>;
+using ArrayNewDataExpr = TypeVarExpr<ExprType::ArrayNewData>;
+using ArrayNewElemExpr = TypeVarExpr<ExprType::ArrayNewElem>;
+using StructSetExpr = TypeVarExpr<ExprType::StructSet>;
+
+class ArrayNewFixedExpr : public ExprMixin<ExprType::ArrayNewFixed> {
+ public:
+  ArrayNewFixedExpr(const Var& type_var, Index count, const Location& loc = Location())
+      : ExprMixin<ExprType::ArrayNewFixed>(loc), type_var(type_var), count(count) {}
+
+  Var type_var;
+  Index count;
+};
+
+class StructGetExpr : public ExprMixin<ExprType::StructGet> {
+ public:
+  StructGetExpr(Opcode opcode, const Var& type_var, const Var& var, const Location& loc = Location())
+      : ExprMixin<ExprType::StructGet>(loc), opcode(opcode), type_var(type_var), var(var) {}
+
+  Opcode opcode;
+  Var type_var;
+  Var var;
 };
 
 struct Tag {
@@ -946,13 +1087,14 @@ struct Table {
   std::string name;
   Limits elem_limits;
   Type elem_type;
+  ExprList init_expr;
 };
 
 using ExprListVector = std::vector<ExprList>;
 
 struct ElemSegment {
   explicit ElemSegment(std::string_view name) : name(name) {}
-  uint8_t GetFlags(const Module*) const;
+  uint8_t GetFlags(const Module*, bool) const;
 
   SegmentKind kind = SegmentKind::Active;
   std::string name;
@@ -1217,6 +1359,10 @@ struct Module {
   Index GetFuncTypeIndex(const FuncSignature&) const;
   const FuncType* GetFuncType(const Var&) const;
   FuncType* GetFuncType(const Var&);
+  const StructType* GetStructType(const Var&) const;
+  StructType* GetStructType(const Var&);
+  const ArrayType* GetArrayType(const Var&) const;
+  ArrayType* GetArrayType(const Var&);
   Index GetFuncIndex(const Var&) const;
   const Func* GetFunc(const Var&) const;
   Func* GetFunc(const Var&);
@@ -1277,6 +1423,8 @@ struct Module {
   std::vector<Import*> imports;
   std::vector<Export*> exports;
   std::vector<TypeEntry*> types;
+  // Ordered list of recursive ranges.
+  std::vector<RecursiveRange> recursive_ranges;
   std::vector<Table*> tables;
   std::vector<ElemSegment*> elem_segments;
   std::vector<Memory*> memories;

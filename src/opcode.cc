@@ -360,7 +360,41 @@ bool Opcode::IsEnabled(const Features& features) const {
       return features.reference_types_enabled();
 
     case Opcode::CallRef:
+    case Opcode::ReturnCallRef:
+    case Opcode::BrOnNonNull:
+    case Opcode::BrOnNull:
+    case Opcode::RefAsNonNull:
       return features.function_references_enabled();
+
+    case Opcode::RefEq:
+    case Opcode::StructNew:
+    case Opcode::StructNewDefault:
+    case Opcode::StructGet:
+    case Opcode::StructGetS:
+    case Opcode::StructGetU:
+    case Opcode::StructSet:
+    case Opcode::ArrayNew:
+    case Opcode::ArrayNewDefault:
+    case Opcode::ArrayNewFixed:
+    case Opcode::ArrayNewData:
+    case Opcode::ArrayNewElem:
+    case Opcode::ArrayGet:
+    case Opcode::ArrayGetS:
+    case Opcode::ArrayGetU:
+    case Opcode::ArraySet:
+    case Opcode::ArrayLen:
+    case Opcode::ArrayFill:
+    case Opcode::ArrayCopy:
+    case Opcode::ArrayInitData:
+    case Opcode::ArrayInitElem:
+    case Opcode::AnyConvertExtern:
+    case Opcode::ExternConvertAny:
+    case Opcode::RefCast:
+    case Opcode::RefI31:
+    case Opcode::RefTest:
+    case Opcode::I31GetS:
+    case Opcode::I31GetU:
+      return features.gc_enabled();
 
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:

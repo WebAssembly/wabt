@@ -23,7 +23,7 @@
 namespace wabt {
 namespace interp {
 
-std::string TypedValueToString(const TypedValue& tv) {
+std::string TypedValueToString(Store* store, const TypedValue& tv) {
   switch (tv.type) {
     case Type::I32:
       return StringPrintf("i32:%u", tv.value.Get<s32>());
@@ -52,16 +52,55 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::FuncRef:
       return StringPrintf("funcref:%" PRIzd, tv.value.Get<Ref>().index);
 
-    case Type::ExternRef:
+    case Type::ExternRef: {
+      if (store != nullptr && tv.value.Get<Ref>() != Ref::Null) {
+        RefPtr<ExternValue> extern_value =
+            store->UnsafeGet<ExternValue>(tv.value.Get<Ref>());
+        return StringPrintf("externref:%d",
+                            static_cast<int>(extern_value->GetValue() + 1));
+      }
       return StringPrintf("externref:%" PRIzd, tv.value.Get<Ref>().index);
+    }
 
     case Type::ExnRef:
       return StringPrintf("exnref:%" PRIzd, tv.value.Get<Ref>().index);
 
-    case Type::Reference:
+    case Type::AnyRef:
+      return StringPrintf("anyref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::EqRef:
+      return StringPrintf("eqref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::I31Ref: {
+      if (store != nullptr && tv.value.Get<Ref>() != Ref::Null) {
+        RefPtr<I31Value> i31_value =
+            store->UnsafeGet<I31Value>(tv.value.Get<Ref>());
+        return StringPrintf("i31ref:%d", static_cast<int>(i31_value->GetU32()));
+      }
+      return StringPrintf("i31ref:%" PRIzd, tv.value.Get<Ref>().index);
+    }
+
+    case Type::StructRef:
+      return StringPrintf("structref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::ArrayRef:
+      return StringPrintf("arrayref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::Ref:
+      return StringPrintf("ref:%" PRIindex, tv.type.GetReferenceIndex());
+
+    case Type::RefNull:
+      return StringPrintf("refnull:%" PRIindex, tv.type.GetReferenceIndex());
+
+    case Type::NullFuncRef:
+    case Type::NullExternRef:
+    case Type::NullRef:
     case Type::Func:
     case Type::Struct:
     case Type::Array:
+    case Type::Sub:
+    case Type::SubFinal:
+    case Type::Rec:
     case Type::Void:
     case Type::Any:
     case Type::I8U:
@@ -73,17 +112,18 @@ std::string TypedValueToString(const TypedValue& tv) {
   WABT_UNREACHABLE;
 }
 
-void WriteValue(Stream* stream, const TypedValue& tv) {
-  std::string s = TypedValueToString(tv);
+void WriteValue(Stream* stream, Store* store, const TypedValue& tv) {
+  std::string s = TypedValueToString(store, tv);
   stream->WriteData(s.data(), s.size());
 }
 
 void WriteValues(Stream* stream,
+                 Store* store,
                  const ValueTypes& types,
                  const Values& values) {
   assert(types.size() == values.size());
   for (size_t i = 0; i < values.size(); ++i) {
-    WriteValue(stream, TypedValue{types[i], values[i]});
+    WriteValue(stream, store, TypedValue{types[i], values[i]});
     if (i != values.size() - 1) {
       stream->Writef(", ");
     }
@@ -95,18 +135,19 @@ void WriteTrap(Stream* stream, const char* desc, const Trap::Ptr& trap) {
 }
 
 void WriteCall(Stream* stream,
+               Store* store,
                std::string_view name,
                const FuncType& func_type,
                const Values& params,
                const Values& results,
                const Trap::Ptr& trap) {
   stream->Writef(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(name));
-  WriteValues(stream, func_type.params, params);
+  WriteValues(stream, store, func_type.params, params);
   stream->Writef(") =>");
   if (!trap) {
     if (!results.empty()) {
       stream->Writef(" ");
-      WriteValues(stream, func_type.results, results);
+      WriteValues(stream, store, func_type.results, results);
     }
     stream->Writef("\n");
   } else {

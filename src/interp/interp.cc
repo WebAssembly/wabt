@@ -40,13 +40,87 @@ const char* GetName(ExternKind kind) {
 
 const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
-      "Null",  "Foreign", "Trap",   "Exception", "DefinedFunc", "HostFunc",
-      "Table", "Memory",  "Global", "Tag",       "Module",      "Instance",
+      "Null",   "Foreign",  "Trap",   "Exception", "DefinedFunc", "HostFunc",
+      "Table",  "Memory",   "Global", "Tag",       "Extern",      "Array",
+      "Struct", "I31Value", "Module", "Instance",
   };
 
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(kNames) == kCommandTypeCount);
 
   return kNames[int(kind)];
+}
+
+static u32 GetTypeLog2Size(Type type) {
+  switch (type) {
+    case Type::I8:
+      return 0;
+    case Type::I16:
+      return 1;
+    case Type::I32:
+    case Type::F32:
+      return 2;
+    case Type::I64:
+    case Type::F64:
+      return 3;
+    case Type::V128:
+      return 4;
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+static void ArrayInitFromDataSegment(u32 log2_size,
+                                     Array* dst,
+                                     u32 dst_offset,
+                                     u32 size,
+                                     const u8* src) {
+  // Supports both unaligned access and big endian mode.
+  switch (log2_size) {
+    case 0: {
+      for (u32 i = 0; i < size; i++) {
+        u32 value = *src++;
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 1: {
+      for (u32 i = 0; i < size; i++, src += 2) {
+        u32 value = src[0] | (static_cast<u32>(src[1]) << 8);
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 2: {
+      for (u32 i = 0; i < size; i++, src += 4) {
+        u32 value = src[0];
+        for (u32 j = 1; j < 3; j++) {
+          value |= static_cast<u32>(src[j]) << (j << 3);
+        }
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 3: {
+      for (u32 i = 0; i < size; i++, src += 8) {
+        u64 value = src[0];
+        for (u32 j = 1; j < 8; j++) {
+          value |= static_cast<u64>(src[j]) << (j << 3);
+        }
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    case 4: {
+      for (u32 i = 0; i < size; i++, src += 16) {
+        v128 value;
+        memcpy(value.v, src, 16);
+        dst->SetItem(dst_offset + i, Value::Make(value));
+      }
+      return;
+    }
+    default:
+      WABT_UNREACHABLE;
+  }
 }
 
 //// Refs ////
@@ -94,16 +168,139 @@ std::unique_ptr<ExternType> FuncType::Clone() const {
   return std::make_unique<FuncType>(*this);
 }
 
+static bool RecursiveMatch(Type expected,
+                           Index expected_recursive_start,
+                           std::vector<FuncType>* expected_func_types,
+                           Type actual,
+                           Index actual_recursive_start,
+                           std::vector<FuncType>* actual_func_types) {
+  assert(expected_func_types != nullptr && actual_func_types != nullptr);
+
+  if (!expected.IsReferenceWithIndex()) {
+    return expected == actual;
+  } else if (!actual.IsReferenceWithIndex()) {
+    return false;
+  }
+
+  Index expected_index = expected.GetReferenceIndex();
+  Index actual_index = actual.GetReferenceIndex();
+
+  const FuncType& expected_type = (*expected_func_types)[expected_index];
+  const FuncType& actual_type = (*actual_func_types)[actual_index];
+
+  // Relative reference.
+  if (expected_index >= expected_recursive_start) {
+    return (actual_index >= actual_recursive_start &&
+            expected_type.recursive_count == actual_type.recursive_count &&
+            expected_index - expected_recursive_start ==
+                actual_index - actual_recursive_start);
+  } else if (actual_index >= actual_recursive_start) {
+    return false;
+  }
+
+  // Absolute reference.
+  expected_recursive_start = expected_type.recursive_start;
+  actual_recursive_start = actual_type.recursive_start;
+  Index recursive_count = expected_type.recursive_count;
+
+  if (recursive_count != actual_type.recursive_count ||
+      expected_index - expected_recursive_start !=
+          actual_index - actual_recursive_start) {
+    return false;
+  }
+
+  // Recursive match of the whole recursive block.
+  for (Index i = 0; i < recursive_count; i++) {
+    const FuncType& expected_rec_type =
+        (*expected_func_types)[expected_recursive_start + i];
+    const FuncType& actual_rec_type =
+        (*actual_func_types)[actual_recursive_start + i];
+
+    if (expected_rec_type.kind != actual_rec_type.kind ||
+        expected_rec_type.is_final_sub_type !=
+            actual_rec_type.is_final_sub_type) {
+      return false;
+    }
+
+    if (expected_rec_type.canonical_sub_index != kInvalidIndex) {
+      if (actual_rec_type.canonical_sub_index == kInvalidIndex) {
+        return false;
+      }
+
+      Type expected_sub_type(Type::Ref, expected_rec_type.canonical_sub_index);
+      Type actual_sub_type(Type::Ref, actual_rec_type.canonical_sub_index);
+
+      if (!RecursiveMatch(expected_sub_type, expected_recursive_start,
+                          expected_func_types, actual_sub_type,
+                          actual_recursive_start, actual_func_types)) {
+        return false;
+      }
+    } else if (actual_rec_type.canonical_sub_index != kInvalidIndex) {
+      return false;
+    }
+
+    size_t size = expected_rec_type.params.size();
+    if (size != actual_rec_type.params.size()) {
+      return false;
+    }
+
+    for (size_t j = 0; j < size; j++) {
+      if (!RecursiveMatch(expected_rec_type.params[j], expected_recursive_start,
+                          expected_func_types, actual_rec_type.params[j],
+                          actual_recursive_start, actual_func_types)) {
+        return false;
+      }
+    }
+
+    size = expected_rec_type.results.size();
+    if (size != actual_rec_type.results.size()) {
+      return false;
+    }
+
+    for (size_t j = 0; j < size; j++) {
+      if (!RecursiveMatch(expected_rec_type.results[j],
+                          expected_recursive_start, expected_func_types,
+                          actual_rec_type.results[j], actual_recursive_start,
+                          actual_func_types)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 Result Match(const FuncType& expected,
              const FuncType& actual,
              std::string* out_msg) {
-  if (expected.params != actual.params || expected.results != actual.results) {
-    if (out_msg) {
-      *out_msg = "import signature mismatch";
+  if (expected.kind == actual.kind) {
+    if (expected.func_types == nullptr || actual.func_types == nullptr) {
+      // Simple function, can be a callback without module.
+      if (expected.params == actual.params &&
+          expected.results == actual.results) {
+        return Result::Ok;
+      }
+    } else {
+      Type expected_type(Type::Ref, expected.canonical_index);
+      Index actual_index = actual.canonical_index;
+
+      do {
+        Type actual_type(Type::Ref, actual_index);
+
+        if (RecursiveMatch(expected_type, kInvalidIndex, expected.func_types,
+                           actual_type, kInvalidIndex, actual.func_types)) {
+          return Result::Ok;
+        }
+
+        actual_index = ((*actual.func_types)[actual_index]).canonical_sub_index;
+      } while (actual_index != kInvalidIndex);
     }
-    return Result::Error;
   }
-  return Result::Ok;
+
+  if (out_msg) {
+    *out_msg = "import signature mismatch";
+  }
+  return Result::Error;
 }
 
 //// TableType ////
@@ -189,6 +386,30 @@ Result Match(const TagType& expected,
   return Result::Ok;
 }
 
+//// Types ////
+
+bool TypesMatch(ValueType expected, ValueType actual) {
+  // Currently there is no subtyping, so expected and actual must match
+  // exactly. In the future this may be expanded.
+  if (expected == actual) {
+    return true;
+  }
+
+  if (expected == Type::FuncRef &&
+      (actual == Type::Ref ||
+       (expected.IsNullableNonTypedRef() &&
+        (actual == Type::FuncRef || actual == Type::RefNull)))) {
+    return true;
+  }
+
+  if (actual == Type::Ref && expected == Type::RefNull &&
+      actual.GetReferenceIndex() == expected.GetReferenceIndex()) {
+    return true;
+  }
+
+  return false;
+}
+
 //// Limits ////
 template <typename T>
 bool CanGrow(const Limits& limits, T old_size, T delta, T* new_size) {
@@ -227,20 +448,38 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
   if (!IsValid(ref)) {
     return false;
   }
-  if (type == ValueType::ExternRef) {
-    return true;
-  }
   if (ref == Ref::Null) {
     return true;
   }
 
   Object* obj = objects_.Get(ref.index);
   switch (type) {
+    case ValueType::AnyRef:
+      return obj->kind() == ObjectKind::Extern ||
+             obj->kind() == ObjectKind::Array ||
+             obj->kind() == ObjectKind::I31 ||
+             obj->kind() == ObjectKind::Struct;
+    case ValueType::EqRef:
+      return obj->kind() == ObjectKind::Array ||
+             obj->kind() == ObjectKind::I31 ||
+             obj->kind() == ObjectKind::Struct;
     case ValueType::FuncRef:
+    case ValueType::Ref:
+    case ValueType::RefNull:
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
+    case ValueType::ArrayRef:
+      return obj->kind() == ObjectKind::Array;
+    case ValueType::ExternRef:
+      return obj->kind() != ObjectKind::Array &&
+             obj->kind() != ObjectKind::I31 &&
+             obj->kind() != ObjectKind::Struct;
     case ValueType::ExnRef:
       return obj->kind() == ObjectKind::Exception;
+    case ValueType::I31Ref:
+      return obj->kind() == ObjectKind::I31;
+    case ValueType::StructRef:
+      return obj->kind() == ObjectKind::Struct;
     default:
       return false;
   }
@@ -474,8 +713,12 @@ Result HostFunc::DoCall(Thread& thread,
 }
 
 //// Table ////
-Table::Table(Store&, TableType type) : Extern(skind), type_(type) {
+Table::Table(Store& store, TableType type, Ref init_ref)
+    : Extern(skind), type_(type) {
   elements_.resize(type.limits.initial);
+  if (init_ref != Ref::Null) {
+    Fill(store, 0, init_ref, type.limits.initial);
+  }
 }
 
 void Table::Mark(Store& store) {
@@ -720,6 +963,60 @@ Result Tag::Match(Store& store,
   return MatchImpl(store, import_type, type_, out_trap);
 }
 
+//// ExternValue ////
+ExternValue::ExternValue(Store&, u32 value)
+    : Object(ObjectKind::Extern), value_(value) {}
+
+//// Array ////
+Array::Array(Store& store, u32 size, Index type_index, Module* mod)
+    : Object(ObjectKind::Array), module_(mod->self()), type_index_(type_index) {
+  items_.resize(size);
+}
+
+bool Array::IsValidRange(u64 offset, u64 size) const {
+  size_t array_size = items_.size();
+  return size <= array_size && offset <= array_size - size;
+}
+
+void Array::Mark(Store& store) {
+  store.Mark(module_);
+
+  RefPtr<Module> mod = store.UnsafeGet<Module>(module_);
+  Type array_type = mod->desc().func_types[type_index_].params[0];
+
+  if (array_type.IsRef()) {
+    for (auto it : items_) {
+      store.Mark(it.Get<Ref>());
+    }
+  }
+}
+
+//// Struct ////
+Struct::Struct(Store& store, Index type_index, Module* mod)
+    : Object(ObjectKind::Struct),
+      module_(mod->self()),
+      type_index_(type_index) {
+  fields_.resize(mod->desc().func_types[type_index].params.size());
+}
+
+void Struct::Mark(Store& store) {
+  store.Mark(module_);
+
+  RefPtr<Module> mod = store.UnsafeGet<Module>(module_);
+  const ValueTypes& field_types = mod->desc().func_types[type_index_].params;
+  size_t size = fields_.size();
+
+  for (size_t i = 0; i < size; i++) {
+    if (field_types[i].IsRef()) {
+      store.Mark(fields_[i].Get<Ref>());
+    }
+  }
+}
+
+//// I31Value ////
+I31Value::I31Value(Store&, u32 value)
+    : Object(ObjectKind::I31), value_(value & 0x7fffffffu) {}
+
 //// ElemSegment ////
 ElemSegment::ElemSegment(Store& store,
                          const ElemDesc* desc,
@@ -756,10 +1053,26 @@ Module::Module(Store&, ModuleDesc desc)
     : Object(skind), desc_(std::move(desc)) {
   for (auto&& import : desc_.imports) {
     import_types_.emplace_back(import.type);
+
+    if (import.type.type->kind == ExternKind::Func) {
+      cast<FuncType>(import.type.type.get())->func_types = &desc_.func_types;
+    }
   }
 
   for (auto&& export_ : desc_.exports) {
     export_types_.emplace_back(export_.type);
+
+    if (export_.type.type->kind == ExternKind::Func) {
+      cast<FuncType>(export_.type.type.get())->func_types = &desc_.func_types;
+    }
+  }
+
+  for (auto& func_type : desc_.func_types) {
+    func_type.func_types = &desc_.func_types;
+  }
+
+  for (auto& func : desc_.funcs) {
+    func.type.func_types = &desc_.func_types;
   }
 }
 
@@ -823,7 +1136,16 @@ Instance::Ptr Instance::Instantiate(Store& store,
 
   // Tables.
   for (auto&& desc : mod->desc().tables) {
-    inst->tables_.push_back(Table::New(store, desc.type).ref());
+    Ref ref = Ref::Null;
+    if (desc.init_func.code_offset != Istream::kInvalidOffset) {
+      Ref func_ref = DefinedFunc::New(store, inst.ref(), desc.init_func).ref();
+      Value value;
+      if (Failed(inst->CallInitFunc(store, func_ref, &value, out_trap))) {
+        return {};
+      }
+      ref = value.Get<Ref>();
+    }
+    inst->tables_.push_back(Table::New(store, desc.type, ref).ref());
   }
 
   // Memories.
@@ -1182,6 +1504,89 @@ void Thread::Push(Ref ref) {
   values_.push_back(Value::Make(ref));
 }
 
+bool Thread::CheckRefCast(Ref ref, Type expected) {
+  assert(expected.IsRef());
+  Object* object = store_.UnsafeGet<Object>(ref).get();
+
+  if (!expected.IsReferenceWithIndex()) {
+    if (Func::classof(object)) {
+      return expected == Type::FuncRef;
+    }
+    if (ExternValue::classof(object)) {
+      return expected == Type::ExternRef || expected == Type::AnyRef;
+    }
+    if (I31Value::classof(object)) {
+      return expected == Type::I31Ref || expected == Type::EqRef ||
+             expected == Type::AnyRef;
+    }
+    if (Array::classof(object)) {
+      return expected == Type::ArrayRef || expected == Type::EqRef ||
+             expected == Type::AnyRef;
+    }
+    if (Struct::classof(object)) {
+      return expected == Type::StructRef || expected == Type::EqRef ||
+             expected == Type::AnyRef;
+    }
+    return false;
+  }
+
+  const FuncType& expected_type =
+      mod_->desc().func_types[expected.GetReferenceIndex()];
+  Index expected_type_index = expected_type.canonical_index;
+  Index actual_type_index;
+
+  switch (expected_type.kind) {
+    case FuncType::TypeKind::Func: {
+      if (!Func::classof(object)) {
+        return false;
+      }
+      const FuncType& type = cast<Func>(object)->type();
+      if (type.func_types != &mod_->desc().func_types) {
+        return false;
+      }
+      actual_type_index = type.canonical_index;
+      break;
+    }
+    case FuncType::TypeKind::Array: {
+      if (!Array::classof(object)) {
+        return false;
+      }
+      Array* array = cast<Array>(object);
+      if (array->GetModule() != mod_->self()) {
+        return false;
+      }
+      actual_type_index =
+          mod_->desc().func_types[array->GetTypeIndex()].canonical_index;
+      break;
+    }
+    case FuncType::TypeKind::Struct: {
+      if (!Struct::classof(object)) {
+        return false;
+      }
+      Struct* struct_ = cast<Struct>(object);
+      if (struct_->GetModule() != mod_->self()) {
+        return false;
+      }
+      actual_type_index =
+          mod_->desc().func_types[struct_->GetTypeIndex()].canonical_index;
+      break;
+    }
+    default:
+      WABT_UNREACHABLE;
+  }
+
+  do {
+    if (expected_type_index == actual_type_index) {
+      return true;
+    }
+
+    actual_type_index =
+        mod_->desc().func_types[actual_type_index].canonical_sub_index;
+  } while (actual_type_index != kInvalidIndex);
+
+  return false;
+}
+
 RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
   using O = Opcode;
 
@@ -1207,6 +1612,25 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
         pc = instr.imm_u32;
       }
       break;
+
+    case O::BrOnNonNull: {
+      Ref ref = Pop<Ref>();
+      if (ref != Ref::Null) {
+        Push(ref);
+        pc = instr.imm_u32;
+      }
+      break;
+    }
+
+    case O::BrOnNull: {
+      Ref ref = Pop<Ref>();
+      if (ref == Ref::Null) {
+        pc = instr.imm_u32;
+      } else {
+        Push(ref);
+      }
+      break;
+    }
 
     case O::BrTable: {
       auto key = Pop<u32>();
@@ -1243,6 +1667,19 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
           Failed(Match(new_func->type(), func_type, nullptr)),
           "indirect call signature mismatch");  // TODO: don't use "signature"
       if (instr.op == O::ReturnCallIndirect) {
+        return DoReturnCall(new_func, out_trap);
+      } else {
+        return DoCall(new_func, out_trap);
+      }
+    }
+
+    case O::CallRef:
+    case O::ReturnCallRef: {
+      Ref new_func_ref = Pop<Ref>();
+      TRAP_IF(new_func_ref == Ref::Null, "null function reference");
+      Func::Ptr new_func{store_, new_func_ref};
+
+      if (instr.op == O::ReturnCallRef) {
         return DoReturnCall(new_func, out_trap);
       } else {
         return DoCall(new_func, out_trap);
@@ -1581,6 +2018,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::RefIsNull:
       Push(Pop<Ref>() == Ref::Null);
+      break;
+
+    case O::RefAsNonNull:
+      TRAP_IF(Pick(1).Get<Ref>() == Ref::Null, "null reference");
       break;
 
     case O::RefFunc:
@@ -1966,6 +2407,299 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::I64AtomicRmw16CmpxchgU: return DoAtomicRmwCmpxchg<u64, u16>(instr, out_trap);
     case O::I64AtomicRmw32CmpxchgU: return DoAtomicRmwCmpxchg<u64, u32>(instr, out_trap);
 
+    case O::ArrayCopy: {
+      u32 size = Pop<u32>();
+      u32 src_offset = Pop<u32>();
+      Ref src_ref = Pop<Ref>();
+      u32 dst_offset = Pop<u32>();
+      Ref dst_ref = Pop<Ref>();
+      TRAP_IF(src_ref == Ref::Null || dst_ref == Ref::Null, "null array ref");
+      RefPtr<Array> src_array = store_.UnsafeGet<Array>(src_ref);
+      TRAP_IF(!src_array->IsValidRange(src_offset, size), "invalid range");
+      RefPtr<Array> dst_array = store_.UnsafeGet<Array>(dst_ref);
+      TRAP_IF(!dst_array->IsValidRange(dst_offset, size), "invalid range");
+
+      if (src_array.get() == dst_array.get() && src_offset < dst_offset) {
+        std::copy_backward(src_array->GetItems().begin() + src_offset,
+                           src_array->GetItems().begin() + src_offset + size,
+                           dst_array->GetItems().begin() + dst_offset + size);
+      } else {
+        std::copy(src_array->GetItems().begin() + src_offset,
+                  src_array->GetItems().begin() + src_offset + size,
+                  dst_array->GetItems().begin() + dst_offset);
+      }
+      break;
+    }
+
+    case O::ArrayFill: {
+      u32 size = Pop<u32>();
+      Value value = Pop();
+      u32 offset = Pop<u32>();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+      TRAP_IF(!array->IsValidRange(offset, size), "invalid range");
+      std::fill(array->GetItems().begin() + offset,
+                array->GetItems().begin() + offset + size, value);
+      break;
+    }
+
+    case O::ArrayGet: {
+      u32 index = Pop<u32>();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+      TRAP_IF(index >= array->Size(), "invalid index");
+      Push(array->GetItem(index));
+      break;
+    }
+
+    case O::ArrayInitElem: {
+      ElemSegment& segment = inst_->elems()[instr.imm_u32];
+      u32 size = Pop<u32>();
+      u32 src_offset = Pop<u32>();
+      u32 dst_offset = Pop<u32>();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+      TRAP_IF(!array->IsValidRange(dst_offset, size), "invalid range");
+      TRAP_IF(!segment.IsValidRange(src_offset, size), "invalid range");
+      for (size_t i = 0; i < size; i++) {
+        array->SetItem(dst_offset + i,
+                       Value::Make(segment.elements()[src_offset + i]));
+      }
+      break;
+    }
+
+    case O::ArrayInitData: {
+      DataSegment& data = inst_->datas()[instr.imm_u32x2.snd];
+      u32 size = Pop<u32>();
+      u32 src_offset = Pop<u32>();
+      u32 dst_offset = Pop<u32>();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+      TRAP_IF(!array->IsValidRange(dst_offset, size), "invalid range");
+      Type array_type = mod_->desc().func_types[instr.imm_u32x2.fst].params[0];
+      u32 log2_size = GetTypeLog2Size(array_type);
+      TRAP_IF(size >= (~static_cast<u32>(0)) >> log2_size, "invalid range");
+      TRAP_IF(!data.IsValidRange(src_offset, size << log2_size), "invalid range");
+      ArrayInitFromDataSegment(log2_size, array.get(), dst_offset, size,
+                               data.desc().data.data() + src_offset);
+      break;
+    }
+
+    case O::ArrayGetS:
+    case O::ArrayGetU: {
+      u32 index = Pop<u32>();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+      TRAP_IF(index >= array->Size(), "invalid index");
+      Value value = array->GetItem(index);
+      if (instr.op == O::ArrayGetS) {
+        if (instr.imm_u32) {
+          value.Set<u32>(static_cast<s16>(value.Get<u32>()));
+        } else {
+          value.Set<u32>(static_cast<s8>(value.Get<u32>()));
+        }
+      } else if (instr.imm_u32) {
+        value.Set<u32>(static_cast<u16>(value.Get<u32>()));
+      } else {
+        value.Set<u32>(static_cast<u8>(value.Get<u32>()));
+      }
+      Push(value);
+      break;
+    }
+
+    case O::ArrayLen: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      Push(store_.UnsafeGet<Array>(ref)->Size());
+      break;
+    }
+
+    case O::ArrayNew: {
+      u32 size = Pop<u32>();
+      Value value = Pop();
+      Array::Ptr array = Array::New(store_, size, instr.imm_u32, mod_);
+      for (size_t i = array->Size(); i > 0; i--) {
+        array->SetItem(i - 1, value);
+      }
+      Push(array->self());
+      break;
+    }
+
+    case O::ArrayNewData: {
+      DataSegment& data = inst_->datas()[instr.imm_u32x2.snd];
+      u32 size = Pop<u32>();
+      u32 offset = Pop<u32>();
+      Type array_type = mod_->desc().func_types[instr.imm_u32x2.fst].params[0];
+      u32 log2_size = GetTypeLog2Size(array_type);
+      TRAP_IF(size >= (~static_cast<u32>(0)) >> log2_size, "invalid range");
+      TRAP_IF(!data.IsValidRange(offset, size << log2_size), "invalid range");
+      Array::Ptr array = Array::New(store_, size, instr.imm_u32x2.fst, mod_);
+      ArrayInitFromDataSegment(log2_size, array.get(), 0, size,
+                               data.desc().data.data() + offset);
+      Push(array->self());
+      break;
+    }
+
+    case O::ArrayNewDefault: {
+      Array::Ptr array = Array::New(store_, Pop<u32>(), instr.imm_u32, mod_);
+      Push(array->self());
+      break;
+    }
+
+    case O::ArrayNewElem: {
+      ElemSegment& segment = inst_->elems()[instr.imm_u32x2.snd];
+      u32 size = Pop<u32>();
+      u32 offset = Pop<u32>();
+      TRAP_IF(!segment.IsValidRange(offset, size), "invalid range");
+      Array::Ptr array = Array::New(store_, size, instr.imm_u32x2.fst, mod_);
+      for (size_t i = 0; i < size; i++) {
+        array->SetItem(i, Value::Make(segment.elements()[offset + i]));
+      }
+      Push(array->self());
+      break;
+    }
+
+    case O::ArrayNewFixed: {
+      u32 size = instr.imm_u32x2.snd;
+      Array::Ptr array = Array::New(store_, size, instr.imm_u32x2.fst, mod_);
+      for (size_t i = size; i > 0; i--) {
+        array->SetItem(i - 1, Pop());
+      }
+      Push(array->self());
+      break;
+    }
+
+    case O::ArraySet: {
+      Value value = Pop();
+      u32 index = Pop<u32>();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null array ref");
+      RefPtr<Array> array = store_.UnsafeGet<Array>(ref);
+      TRAP_IF(index >= array->Size(), "invalid index");
+      array->SetItem(index, value);
+      break;
+    }
+
+    case O::I31GetS: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null i31 ref");
+      Push(store_.UnsafeGet<I31Value>(ref)->GetS32());
+      break;
+    }
+
+    case O::I31GetU: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null i31 ref");
+      Push(store_.UnsafeGet<I31Value>(ref)->GetU32());
+      break;
+    }
+
+    case O::RefCast:
+    case O::RefCastNull: {
+      Ref ref = Pick(1).Get<Ref>();
+      if (ref == Ref::Null) {
+        TRAP_IF(instr.op == O::RefCast, "null reference");
+      } else {
+        Type::Enum code = static_cast<Type::Enum>(instr.imm_u32x2.fst);
+        Type type;
+        if (Type::EnumIsReferenceWithIndex(code)) {
+          type = Type(code, instr.imm_u32x2.snd);
+        } else {
+          type = code;
+        }
+        TRAP_IF(!CheckRefCast(ref, type), "type error: invalid type cast");
+      }
+      break;
+    }
+
+    case O::RefEq: {
+      break;
+    }
+
+    case O::RefTest:
+    case O::RefTestNull: {
+      Ref ref = Pop<Ref>();
+      u32 result = 0;
+
+      if (ref == Ref::Null) {
+        result = (instr.op == O::RefTestNull);
+      } else {
+        Type::Enum code = static_cast<Type::Enum>(instr.imm_u32x2.fst);
+        Type type;
+        if (Type::EnumIsReferenceWithIndex(code)) {
+          type = Type(code, instr.imm_u32x2.snd);
+        } else {
+          type = code;
+        }
+        result = CheckRefCast(ref, type);
+      }
+
+      Push(result);
+      break;
+    }
+
+    case O::RefI31: {
+      I31Value::Ptr i31_value = I31Value::New(store_, Pop<u32>());
+      Push(i31_value->self());
+      break;
+    }
+
+    case O::StructGet: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null struct ref");
+      Push(store_.UnsafeGet<Struct>(ref)->GetField(instr.imm_u32));
+      break;
+    }
+
+    case O::StructGetS:
+    case O::StructGetU: {
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null struct ref");
+      Value value = store_.UnsafeGet<Struct>(ref)->GetField(instr.imm_u32x2.fst);
+      if (instr.op == O::StructGetS) {
+        if (instr.imm_u32x2.snd) {
+          value.Set<u32>(static_cast<s16>(value.Get<u32>()));
+        } else {
+          value.Set<u32>(static_cast<s8>(value.Get<u32>()));
+        }
+      } else if (instr.imm_u32x2.snd) {
+        value.Set<u32>(static_cast<u16>(value.Get<u32>()));
+      } else {
+        value.Set<u32>(static_cast<u8>(value.Get<u32>()));
+      }
+      Push(value);
+      break;
+    }
+
+    case O::StructNew: {
+      Struct::Ptr struct_ = Struct::New(store_, instr.imm_u32, mod_);
+      Struct* struct_ptr = struct_.get();
+      for (size_t i = struct_ptr->Size(); i > 0; i--) {
+        struct_ptr->SetField(i - 1, Pop());
+      }
+      Push(struct_->self());
+      break;
+    }
+
+    case O::StructNewDefault: {
+      Struct::Ptr struct_ = Struct::New(store_, instr.imm_u32, mod_);
+      Push(struct_->self());
+      break;
+    }
+
+    case O::StructSet: {
+      Value value = Pop();
+      Ref ref = Pop<Ref>();
+      TRAP_IF(ref == Ref::Null, "null struct ref");
+      store_.UnsafeGet<Struct>(ref)->SetField(instr.imm_u32, value);
+      break;
+    }
+
     case O::Throw: {
       u32 tag_index = instr.imm_u32;
       Values params;
@@ -1992,8 +2726,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     // The following opcodes are either never generated or should never be
     // executed.
+    case O::AnyConvertExtern:
     case O::Nop:
     case O::Block:
+    case O::ExternConvertAny:
     case O::Loop:
     case O::If:
     case O::Else:
@@ -2001,7 +2737,6 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::ReturnCall:
     case O::SelectT:
 
-    case O::CallRef:
     case O::Try:
     case O::TryTable:
     case O::Catch:

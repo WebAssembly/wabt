@@ -1,0 +1,75 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/table.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/table.wast:22: assert_invalid passed:
+  out/test/spec/function-references/table/table.15.wasm:000000c: error: table variable out of range: 0 (max 0)
+  000000c: error: BeginElemSegment callback failed
+out/test/spec/function-references/table.wast:23: assert_invalid passed:
+  out/test/spec/function-references/table/table.16.wasm:0000016: error: table variable out of range: 0 (max 0)
+  0000016: error: BeginElemSegment callback failed
+out/test/spec/function-references/table.wast:27: assert_invalid passed:
+  out/test/spec/function-references/table/table.17.wasm:000000f: error: max elems (0) must be >= initial elems (1)
+  000000f: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:31: assert_invalid passed:
+  out/test/spec/function-references/table/table.18.wasm:0000013: error: max elems (0) must be >= initial elems (4294967295)
+  0000013: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:36: assert_malformed passed:
+  out/test/spec/function-references/table/table.19.wat:1:8: error: invalid int "0x1_0000_0000"
+  (table 0x1_0000_0000 funcref)
+         ^^^^^^^^^^^^^
+out/test/spec/function-references/table.wast:40: assert_malformed passed:
+  out/test/spec/function-references/table/table.20.wat:1:8: error: invalid int "0x1_0000_0000"
+  (table 0x1_0000_0000 0x1_0000_0000 funcref)
+         ^^^^^^^^^^^^^
+  out/test/spec/function-references/table/table.20.wat:1:22: error: invalid int "0x1_0000_0000"
+  (table 0x1_0000_0000 0x1_0000_0000 funcref)
+                       ^^^^^^^^^^^^^
+out/test/spec/function-references/table.wast:44: assert_malformed passed:
+  out/test/spec/function-references/table/table.21.wat:1:10: error: invalid int "0x1_0000_0000"
+  (table 0 0x1_0000_0000 funcref)
+           ^^^^^^^^^^^^^
+out/test/spec/function-references/table.wast:49: assert_invalid passed:
+  out/test/spec/function-references/table/table.22.wasm:0000012: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  0000013: error: EndTableInitExpr callback failed
+out/test/spec/function-references/table.wast:53: assert_invalid passed:
+  out/test/spec/function-references/table/table.23.wasm:0000013: error: type mismatch in initializer expression, expected [(ref func)] but got [externref]
+  0000014: error: EndTableInitExpr callback failed
+out/test/spec/function-references/table.wast:57: assert_invalid passed:
+  out/test/spec/function-references/table/table.24.wasm:0000019: error: type mismatch in initializer expression, expected [(ref 0)] but got [funcref]
+  000001a: error: EndTableInitExpr callback failed
+out/test/spec/function-references/table.wast:61: assert_invalid passed:
+  out/test/spec/function-references/table/table.25.wasm:0000013: error: type mismatch in initializer expression, expected [(ref func)] but got [funcref]
+  0000014: error: EndTableInitExpr callback failed
+out/test/spec/function-references/table.wast:65: assert_invalid passed:
+  out/test/spec/function-references/table/table.26.wasm:000000f: error: missing table initializer
+  000000f: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:69: assert_invalid passed:
+  out/test/spec/function-references/table/table.27.wasm:000000f: error: missing table initializer
+  000000f: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:73: assert_invalid passed:
+  out/test/spec/function-references/table/table.28.wasm:0000015: error: missing table initializer
+  0000015: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:114: assert_invalid passed:
+  out/test/spec/function-references/table/table.31.wasm:0000015: error: missing table initializer
+  0000015: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:122: assert_invalid passed:
+  out/test/spec/function-references/table/table.32.wasm:0000015: error: missing table initializer
+  0000015: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:130: assert_invalid passed:
+  out/test/spec/function-references/table/table.33.wasm:0000016: error: missing table initializer
+  0000016: error: BeginTable callback failed
+out/test/spec/function-references/table.wast:141: assert_malformed passed:
+  out/test/spec/function-references/table/table.34.wat:1:24: error: redefinition of table "$foo"
+  (table $foo 1 funcref)(table $foo 1 funcref)
+                         ^^^^^
+out/test/spec/function-references/table.wast:148: assert_malformed passed:
+  out/test/spec/function-references/table/table.35.wat:1:39: error: redefinition of table "$foo"
+  (import "" "" (table $foo 1 funcref))(table $foo 1 funcref)
+                                        ^^^^^
+out/test/spec/function-references/table.wast:155: assert_malformed passed:
+  out/test/spec/function-references/table/table.36.wat:1:39: error: redefinition of table "$foo"
+  (import "" "" (table $foo 1 funcref))(import "" "" (table $foo 1 funcref))
+                                        ^^^^^^
+42/42 tests passed.
+;;; STDOUT ;;)

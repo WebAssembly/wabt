@@ -42,7 +42,30 @@ inline bool FuncType::classof(const ExternType* type) {
 }
 
 inline FuncType::FuncType(ValueTypes params, ValueTypes results)
-    : ExternType(ExternKind::Func), params(params), results(results) {}
+    : ExternType(ExternKind::Func),
+      kind(FuncType::TypeKind::Func),
+      canonical_index(kInvalidIndex),
+      canonical_sub_index(kInvalidIndex),
+      is_final_sub_type(true),
+      recursive_start(0),
+      recursive_count(0),
+      params(params),
+      results(results),
+      func_types(nullptr) {}
+
+inline FuncType::FuncType(TypeKind kind, ValueTypes params, ValueTypes results)
+    : ExternType(ExternKind::Func),
+      kind(kind),
+      canonical_index(kInvalidIndex),
+      canonical_sub_index(kInvalidIndex),
+      is_final_sub_type(true),
+      recursive_start(0),
+      recursive_count(0),
+      params(params),
+      results(results),
+      func_types(nullptr) {
+  assert((kind == TypeKind::Struct || kind == TypeKind::Array) && params.size() == results.size());
+}
 
 //// TableType ////
 // static
@@ -422,12 +445,6 @@ void RequireType(ValueType type) {
   assert(HasType<T>(type));
 }
 
-inline bool TypesMatch(ValueType expected, ValueType actual) {
-  // Currently there is no subtyping, so expected and actual must match
-  // exactly. In the future this may be expanded.
-  return expected == actual;
-}
-
 //// Value ////
 inline Value WABT_VECTORCALL Value::Make(s32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
 inline Value WABT_VECTORCALL Value::Make(u32 val) { Value res; res.i32_ = val; res.SetType(ValueType::I32); return res; }
@@ -682,8 +699,8 @@ inline bool Table::classof(const Object* obj) {
 }
 
 // static
-inline Table::Ptr Table::New(Store& store, TableType type) {
-  return store.Alloc<Table>(store, type);
+inline Table::Ptr Table::New(Store& store, TableType type, Ref init_ref) {
+  return store.Alloc<Table>(store, type, init_ref);
 }
 
 inline const ExternType& Table::extern_type() {
@@ -883,6 +900,105 @@ inline const ExternType& Tag::extern_type() {
 
 inline const TagType& Tag::type() const {
   return type_;
+}
+
+//// ExternValue ////
+// static
+inline bool ExternValue::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline ExternValue::Ptr ExternValue::New(Store& store, u32 value) {
+  return store.Alloc<ExternValue>(store, value);
+}
+
+inline u32 ExternValue::GetValue() const {
+  return value_;
+}
+
+//// Array ////
+// static
+inline bool Array::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Array::Ptr Array::New(Store& store,
+                             u32 size,
+                             Index type_index,
+                             Module* mod) {
+  return store.Alloc<Array>(store, size, type_index, mod);
+}
+
+inline Index Array::Size() const {
+  return static_cast<Index>(items_.size());
+}
+
+inline Value Array::GetItem(Index idx) const {
+  return items_[idx];
+}
+
+inline void Array::SetItem(Index idx, Value value) {
+  items_[idx] = value;
+}
+
+inline Values& Array::GetItems() {
+  return items_;
+}
+
+inline Index Array::GetTypeIndex() const {
+  return type_index_;
+}
+
+inline Ref Array::GetModule() const {
+  return module_;
+}
+
+//// Struct ////
+// static
+inline bool Struct::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline Struct::Ptr Struct::New(Store& store, Index type_index, Module* mod) {
+  return store.Alloc<Struct>(store, type_index, mod);
+}
+
+inline Index Struct::Size() const {
+  return static_cast<Index>(fields_.size());
+}
+
+inline Value Struct::GetField(Index idx) const {
+  return fields_[idx];
+}
+
+inline void Struct::SetField(Index idx, Value value) {
+  fields_[idx] = value;
+}
+
+inline Index Struct::GetTypeIndex() const {
+  return type_index_;
+}
+
+inline Ref Struct::GetModule() const {
+  return module_;
+}
+
+//// I31Value ////
+// static
+inline bool I31Value::classof(const Object* obj) {
+  return obj->kind() == skind;
+}
+
+inline I31Value::Ptr I31Value::New(Store& store, u32 value) {
+  return store.Alloc<I31Value>(store, value);
+}
+
+inline u32 I31Value::GetU32() const {
+  return value_;
+}
+
+inline u32 I31Value::GetS32() const {
+  return static_cast<u32>((static_cast<s32>(value_ << 1)) >> 1);
 }
 
 //// ElemSegment ////

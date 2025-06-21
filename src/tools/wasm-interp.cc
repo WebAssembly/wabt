@@ -240,8 +240,8 @@ Result RunSpecificExports(const Instance::Ptr& instance,
         Trap::Ptr trap;
         result |=
             func->Call(s_store, call_.args, results, &trap, s_trace_stream);
-        WriteCall(s_stdout_stream.get(), export_.type.name, *func_type,
-                  call_.args, results, trap);
+        WriteCall(s_stdout_stream.get(), &s_store, export_.type.name,
+                  *func_type, call_.args, results, trap);
       }
     }
   }
@@ -270,8 +270,8 @@ Result RunAllExports(const Instance::Ptr& instance, Errors* errors) {
       Values results;
       Trap::Ptr trap;
       result |= func->Call(s_store, params, results, &trap, s_trace_stream);
-      WriteCall(s_stdout_stream.get(), export_.type.name, *func_type, params,
-                results, trap);
+      WriteCall(s_stdout_stream.get(), &s_store, export_.type.name, *func_type,
+                params, results, trap);
     }
   }
 
@@ -295,7 +295,8 @@ static void BindImports(const Module::Ptr& module, RefVec& imports) {
           [=](Thread& thread, const Values& params, Values& results,
               Trap::Ptr* trap) -> Result {
             printf("called host ");
-            WriteCall(stream, import_name, func_type, params, results, *trap);
+            WriteCall(stream, &s_store, import_name, func_type, params, results,
+                      *trap);
             return Result::Ok;
           });
       imports.push_back(host_func.ref());

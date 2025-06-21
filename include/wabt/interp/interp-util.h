@@ -29,15 +29,17 @@ class Stream;
 
 namespace interp {
 
-std::string TypedValueToString(const TypedValue&);
+// Store can be nullptr for all functions
+std::string TypedValueToString(Store*, const TypedValue&);
 
-void WriteValue(Stream* stream, const TypedValue&);
+void WriteValue(Stream* stream, Store*, const TypedValue&);
 
-void WriteValues(Stream* stream, const ValueTypes&, const Values&);
+void WriteValues(Stream* stream, Store*, const ValueTypes&, const Values&);
 
 void WriteTrap(Stream* stream, const char* desc, const Trap::Ptr&);
 
 void WriteCall(Stream* stream,
+               Store* store,
                std::string_view name,
                const FuncType& func_type,
                const Values& params,
