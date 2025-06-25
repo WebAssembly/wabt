@@ -1598,6 +1598,31 @@ bool Thread::CheckRefCast(Ref ref, Type expected) {
   return false;
 }
 
+bool Thread::CheckRefFunc(Ref ref, Index expected_type_index, Func* new_func) {
+  // Validator checks that the table contains funcrefs.
+  assert(!ref.IsI31OrHostVal());
+  Object* object = store_.UnsafeGet<Object>(ref).get();
+  assert(Func::classof(object));
+
+  const FuncType& type = cast<Func>(object)->type();
+  if (type.func_types != &mod_->desc().func_types) {
+    auto&& func_type = mod_->desc().func_types[expected_type_index];
+    return Succeeded(Match(new_func->type(), func_type, nullptr));
+  }
+  Index actual_type_index = type.canonical_index;
+
+  do {
+    if (expected_type_index == actual_type_index) {
+      return true;
+    }
+
+    actual_type_index =
+        mod_->desc().func_types[actual_type_index].canonical_sub_index;
+  } while (actual_type_index != kInvalidIndex);
+
+  return false;
+}
+
 RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
   using O = Opcode;
 
@@ -1668,15 +1693,14 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
     case O::CallIndirect:
     case O::ReturnCallIndirect: {
       Table::Ptr table{store_, inst_->tables()[instr.imm_u32x2.fst]};
-      auto&& func_type = mod_->desc().func_types[instr.imm_u32x2.snd];
       u64 entry = PopPtr(table);
       TRAP_IF(entry >= table->elements().size(), "undefined table index");
       auto new_func_ref = table->elements()[entry];
       TRAP_IF(new_func_ref == Ref::Null, "uninitialized table element");
       Func::Ptr new_func{store_, new_func_ref};
-      TRAP_IF(
-          Failed(Match(new_func->type(), func_type, nullptr)),
-          "indirect call signature mismatch");  // TODO: don't use "signature"
+      // TODO: don't use "signature"
+      TRAP_IF(!CheckRefFunc(new_func_ref, instr.imm_u32x2.snd, new_func.get()),
+              "indirect call signature mismatch");
       if (instr.op == O::ReturnCallIndirect) {
         return DoReturnCall(new_func, out_trap);
       } else {
