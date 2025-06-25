@@ -161,6 +161,10 @@ void BinaryWriterSpec::WriteVar(const Var& var) {
 void BinaryWriterSpec::WriteTypeObject(Type type) {
   json_stream_->Writef("{");
   WriteKey("type");
+  if (type.IsReferenceWithIndex()) {
+    // This should happen only for invalid modules.
+    type = Type::AnyRef;
+  }
   WriteString(type.GetName().c_str());
   json_stream_->Writef("}");
 }
@@ -284,6 +288,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       break;
     }
 
+    case Type::NullFuncRef:
     case Type::FuncRef: {
       WriteString("funcref");
       WriteSeparator();
