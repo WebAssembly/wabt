@@ -1,0 +1,10 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/br_on_non_null.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/br_on_non_null.wast:37: assert_trap passed: unreachable executed
+out/test/spec/gc/br_on_non_null.wast:78: assert_invalid passed:
+  out/test/spec/gc/br_on_non_null/br_on_non_null.3.wasm:0000031: error: type mismatch in call, expected [(ref null 0)] but got [funcref]
+  0000031: error: OnCallExpr callback failed
+10/10 tests passed.
+;;; STDOUT ;;)
