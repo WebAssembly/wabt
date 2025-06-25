@@ -1237,6 +1237,7 @@ class Thread {
   void Push(Ref);
 
   bool CheckRefCast(Ref ref, Type expected);
+  bool CheckRefFunc(Ref ref, Index expected_index, Func* new_func);
 
   template <typename R, typename T>
   using UnopFunc = R WABT_VECTORCALL(T);
