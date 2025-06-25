@@ -1,0 +1,90 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/elem.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/elem.wast:517: assert_invalid passed:
+  out/test/spec/gc/elem/elem.55.wasm:0000025: error: type mismatch at elem segment. got funcref, expected (ref func)
+  0000025: error: OnElemSegmentElemType callback failed
+out/test/spec/gc/elem.wast:525: assert_invalid passed:
+  out/test/spec/gc/elem/elem.56.wasm:0000025: error: type mismatch at elem segment. got funcref, expected (ref func)
+  0000025: error: OnElemSegmentElemType callback failed
+out/test/spec/gc/elem.wast:706: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/gc/elem.wast:716: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/gc/elem.wast:722: assert_invalid passed:
+  out/test/spec/gc/elem/elem.77.wasm:0000016: error: table variable out of range: 0 (max 0)
+  0000016: error: BeginElemSegment callback failed
+out/test/spec/gc/elem.wast:733: assert_invalid passed:
+  out/test/spec/gc/elem/elem.78.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
+  0000015: error: EndElemSegmentInitExpr callback failed
+out/test/spec/gc/elem.wast:741: assert_invalid passed:
+  out/test/spec/gc/elem/elem.79.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [funcref]
+  0000015: error: EndElemSegmentInitExpr callback failed
+out/test/spec/gc/elem.wast:749: assert_invalid passed:
+  out/test/spec/gc/elem/elem.80.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
+  0000013: error: EndElemSegmentInitExpr callback failed
+out/test/spec/gc/elem.wast:757: assert_invalid passed:
+  out/test/spec/gc/elem/elem.81.wasm:0000016: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000017: error: EndElemSegmentInitExpr callback failed
+out/test/spec/gc/elem.wast:765: assert_invalid passed:
+  out/test/spec/gc/elem/elem.82.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
+out/test/spec/gc/elem.wast:774: assert_invalid passed:
+  out/test/spec/gc/elem/elem.83.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
+out/test/spec/gc/elem.wast:784: assert_invalid passed:
+  out/test/spec/gc/elem/elem.84.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
+  0000015: error: OnUnaryExpr callback failed
+out/test/spec/gc/elem.wast:792: assert_invalid passed:
+  out/test/spec/gc/elem/elem.85.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000013: error: OnNopExpr callback failed
+out/test/spec/gc/elem.wast:800: assert_invalid passed:
+  out/test/spec/gc/elem/elem.86.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000013: error: OnNopExpr callback failed
+out/test/spec/gc/elem.wast:808: assert_invalid passed:
+  out/test/spec/gc/elem/elem.87.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000015: error: OnNopExpr callback failed
+out/test/spec/gc/elem.wast:816: assert_invalid passed:
+  out/test/spec/gc/elem/elem.88.wasm:0000021: error: initializer expression cannot reference a mutable global
+  0000021: error: OnGlobalGetExpr callback failed
+out/test/spec/gc/elem.wast:825: assert_invalid passed:
+  out/test/spec/gc/elem/elem.89.wasm:0000014: error: global variable out of range: 0 (max 0)
+  0000014: error: OnGlobalGetExpr callback failed
+out/test/spec/gc/elem.wast:833: assert_invalid passed:
+  out/test/spec/gc/elem/elem.90.wasm:000002a: error: global variable out of range: 1 (max 1)
+  000002a: error: OnGlobalGetExpr callback failed
+out/test/spec/gc/elem.wast:842: assert_invalid passed:
+  out/test/spec/gc/elem/elem.91.wasm:000002e: error: initializer expression cannot reference a mutable global
+  000002e: error: OnGlobalGetExpr callback failed
+out/test/spec/gc/elem.wast:854: assert_invalid passed:
+  out/test/spec/gc/elem/elem.92.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [externref]
+  0000019: error: EndElemExpr callback failed
+out/test/spec/gc/elem.wast:862: assert_invalid passed:
+  out/test/spec/gc/elem/elem.93.wasm:000001a: error: type mismatch at end of initializer expression, expected [] but got [funcref]
+  000001b: error: EndElemExpr callback failed
+out/test/spec/gc/elem.wast:870: assert_invalid passed:
+  out/test/spec/gc/elem/elem.94.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  0000019: error: EndElemExpr callback failed
+out/test/spec/gc/elem.wast:878: assert_invalid passed:
+  out/test/spec/gc/elem/elem.95.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  0000019: error: EndElemExpr callback failed
+out/test/spec/gc/elem.wast:886: assert_invalid passed:
+  out/test/spec/gc/elem/elem.96.wasm:0000023: error: invalid initializer: instruction not valid in initializer expression: call
+  0000023: error: OnCallExpr callback failed
+out/test/spec/gc/elem.wast:895: assert_invalid passed:
+  out/test/spec/gc/elem/elem.97.wasm:000001b: error: invalid initializer: instruction not valid in initializer expression: i32.add
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/gc/elem.wast:954: assert_trap passed: uninitialized table element
+out/test/spec/gc/elem.wast:987: assert_invalid passed:
+  out/test/spec/gc/elem/elem.103.wasm:000001f: error: type mismatch at elem segment. got (ref func), expected externref
+  000001f: error: OnElemSegmentElemType callback failed
+out/test/spec/gc/elem.wast:992: assert_invalid passed:
+  out/test/spec/gc/elem/elem.104.wasm:0000017: error: type mismatch at elem segment. got externref, expected funcref
+  0000017: error: OnElemSegmentElemType callback failed
+out/test/spec/gc/elem.wast:997: assert_invalid passed:
+  out/test/spec/gc/elem/elem.105.wasm:0000034: error: type mismatch at table.init. got funcref, expected externref
+  0000034: error: OnTableInitExpr callback failed
+out/test/spec/gc/elem.wast:1006: assert_invalid passed:
+  out/test/spec/gc/elem/elem.106.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
+  0000030: error: OnTableInitExpr callback failed
+137/137 tests passed.
+;;; STDOUT ;;)

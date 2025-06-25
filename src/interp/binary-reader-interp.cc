@@ -805,7 +805,7 @@ Result BinaryReaderInterp::OnGlobalCount(Index count) {
 }
 
 Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
-  CHECK_RESULT(validator_.OnGlobal(GetLocation(), type, mutable_));
+  CHECK_RESULT(validator_.BeginGlobal(GetLocation(), type, mutable_));
   GlobalType global_type{type, ToMutability(mutable_)};
   FuncDesc init_func{FuncType{{}, {type}}, {}, Istream::kInvalidOffset, {}};
   module_.globals.push_back(GlobalDesc{global_type, init_func});
@@ -838,6 +838,7 @@ Result BinaryReaderInterp::BeginInitExpr(FuncDesc* func) {
 }
 
 Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
+  CHECK_RESULT(validator_.EndGlobal(GetLocation()));
   return EndInitExpr();
 }
 
@@ -1464,7 +1465,8 @@ Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
   CHECK_RESULT(validator_.OnCallIndirect(GetLocation(),
                                          Var(sig_index, GetLocation()),
                                          Var(table_index, GetLocation())));
-  istream_.Emit(Opcode::CallIndirect, table_index, sig_index);
+  istream_.Emit(Opcode::CallIndirect, table_index,
+                module_.func_types[sig_index].canonical_index);
   return Result::Ok;
 }
 
@@ -1529,7 +1531,8 @@ Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
       Var(table_index, GetLocation())));
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.EmitCatchDrop(catch_drop_count);
-  istream_.Emit(Opcode::ReturnCallIndirect, table_index, sig_index);
+  istream_.Emit(Opcode::ReturnCallIndirect, table_index,
+                module_.func_types[sig_index].canonical_index);
   return Result::Ok;
 }
 

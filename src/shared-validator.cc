@@ -85,8 +85,8 @@ Result SharedValidator::OnFuncType(const Location& loc,
     }
 
     type_validation_result_ |= result;
-    result |= CheckGCTypeExtension(loc, gc_ext);
   }
+  result |= CheckGCTypeExtension(loc, gc_ext);
 
   return result;
 }
@@ -229,16 +229,23 @@ Result SharedValidator::OnGlobalImport(const Location& loc,
     result |= PrintError(loc, "mutable globals cannot be imported");
   }
   globals_.push_back(GlobalType{type, mutable_});
-  ++num_imported_globals_;
+  ++last_initialized_global_;
   return result;
 }
 
-Result SharedValidator::OnGlobal(const Location& loc,
-                                 Type type,
-                                 bool mutable_) {
+Result SharedValidator::BeginGlobal(const Location& loc,
+                                    Type type,
+                                    bool mutable_) {
   CHECK_RESULT(
       CheckReferenceType(loc, type, type_fields_.NumTypes(), "globals"));
   globals_.push_back(GlobalType{type, mutable_});
+  return Result::Ok;
+}
+
+Result SharedValidator::EndGlobal(const Location&) {
+  if (options_.features.gc_enabled()) {
+    last_initialized_global_++;
+  }
   return Result::Ok;
 }
 
@@ -268,8 +275,6 @@ Result SharedValidator::CheckReferenceType(const Location& loc,
 
 Result SharedValidator::CheckGCTypeExtension(const Location& loc,
                                              GCTypeExtension* gc_ext) {
-  assert(options_.features.function_references_enabled());
-
   TypeEntry& entry = type_fields_.type_entries.back();
   Index current_index = type_fields_.NumTypes() - 1;
   Index end_index;
@@ -778,8 +783,7 @@ Index SharedValidator::GetCanonicalTypeIndex(Index type_index) {
     return kInvalidIndex;
   }
 
-  if (options_.features.function_references_enabled() &&
-      Succeeded(type_validation_result_)) {
+  if (Succeeded(type_validation_result_)) {
     return type_fields_.type_entries[type_index].canonical_index;
   }
 
@@ -1190,7 +1194,7 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   TableType table_type;
   result |= CheckFuncTypeIndex(sig_var, &func_type);
   result |= CheckTableIndex(table_var, &table_type);
-  if (table_type.element != Type::FuncRef) {
+  if (Failed(typechecker_.CheckType(table_type.element, Type::FuncRef))) {
     result |= PrintError(
         loc,
         "type mismatch: call_indirect must reference table of funcref type");
@@ -1299,7 +1303,7 @@ Result SharedValidator::OnGlobalGet(const Location& loc, Var global_var) {
   result |= CheckGlobalIndex(global_var, &global_type);
   result |= typechecker_.OnGlobalGet(global_type.type);
   if (Succeeded(result) && in_init_expr_) {
-    if (global_var.index() >= num_imported_globals_) {
+    if (global_var.index() >= last_initialized_global_) {
       result |= PrintError(
           global_var.loc,
           "initializer expression can only reference an imported global");

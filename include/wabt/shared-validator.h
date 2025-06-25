@@ -92,7 +92,8 @@ class SharedValidator {
   Result OnTable(const Location&, Type elem_type, const Limits&, bool, bool);
   Result OnMemory(const Location&, const Limits&, uint32_t page_size);
   Result OnGlobalImport(const Location&, Type type, bool mutable_);
-  Result OnGlobal(const Location&, Type type, bool mutable_);
+  Result BeginGlobal(const Location&, Type type, bool mutable_);
+  Result EndGlobal(const Location&);
   Result OnTag(const Location&, Var sig_var);
 
   Result OnExport(const Location&,
@@ -383,7 +384,7 @@ class SharedValidator {
   std::vector<TagType> tags_;         // Includes imported and defined.
   std::vector<ElemType> elems_;
   Index starts_ = 0;
-  Index num_imported_globals_ = 0;
+  Index last_initialized_global_ = 0;
   Index data_segments_ = 0;
   Index last_rec_type_end_ = 0;
   // Recursive type checks may enter to infinite loop for invalid values.

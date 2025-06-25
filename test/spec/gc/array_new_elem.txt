@@ -1,0 +1,14 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/array_new_elem.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/array_new_elem.wast:24: assert_trap passed: invalid range
+out/test/spec/gc/array_new_elem.wast:25: assert_trap passed: invalid range
+out/test/spec/gc/array_new_elem.wast:26: assert_trap passed: invalid range
+out/test/spec/gc/array_new_elem.wast:27: assert_trap passed: invalid range
+out/test/spec/gc/array_new_elem.wast:72: assert_trap passed: invalid range
+out/test/spec/gc/array_new_elem.wast:73: assert_trap passed: invalid range
+out/test/spec/gc/array_new_elem.wast:74: assert_trap passed: invalid range
+out/test/spec/gc/array_new_elem.wast:75: assert_trap passed: invalid range
+22/22 tests passed.
+;;; STDOUT ;;)
