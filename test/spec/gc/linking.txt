@@ -1,0 +1,110 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/linking.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/linking.wast:28: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/linking.wast:32: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/linking.wast:87: assert_unlinkable passed:
+  error: mutability mismatch in imported global, expected mutable but got immutable.
+out/test/spec/gc/linking.wast:91: assert_unlinkable passed:
+  error: mutability mismatch in imported global, expected immutable but got mutable.
+out/test/spec/gc/linking.wast:133: assert_unlinkable passed:
+  error: type mismatch in imported global, expected funcref but got externref.
+out/test/spec/gc/linking.wast:138: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref func) but got funcref.
+out/test/spec/gc/linking.wast:142: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref func) but got (ref null 0).
+out/test/spec/gc/linking.wast:146: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref func) but got externref.
+out/test/spec/gc/linking.wast:151: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref null 0) but got funcref.
+out/test/spec/gc/linking.wast:155: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref null 0) but got (ref func).
+out/test/spec/gc/linking.wast:159: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref null 0) but got externref.
+out/test/spec/gc/linking.wast:164: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got funcref.
+out/test/spec/gc/linking.wast:168: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got (ref func).
+out/test/spec/gc/linking.wast:172: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got (ref null 0).
+out/test/spec/gc/linking.wast:176: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got externref.
+out/test/spec/gc/linking.wast:182: assert_unlinkable passed:
+  error: type mismatch in imported global, expected funcref but got (ref func).
+out/test/spec/gc/linking.wast:186: assert_unlinkable passed:
+  error: type mismatch in imported global, expected funcref but got (ref null 0).
+out/test/spec/gc/linking.wast:190: assert_unlinkable passed:
+  error: type mismatch in imported global, expected funcref but got (ref 0).
+out/test/spec/gc/linking.wast:194: assert_unlinkable passed:
+  error: type mismatch in imported global, expected funcref but got externref.
+out/test/spec/gc/linking.wast:199: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref func) but got funcref.
+out/test/spec/gc/linking.wast:203: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref func) but got (ref null 0).
+out/test/spec/gc/linking.wast:207: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref func) but got (ref 0).
+out/test/spec/gc/linking.wast:211: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref func) but got externref.
+out/test/spec/gc/linking.wast:216: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref null 0) but got funcref.
+out/test/spec/gc/linking.wast:220: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref null 0) but got (ref func).
+out/test/spec/gc/linking.wast:224: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref null 0) but got (ref 0).
+out/test/spec/gc/linking.wast:228: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref null 0) but got externref.
+out/test/spec/gc/linking.wast:233: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got funcref.
+out/test/spec/gc/linking.wast:237: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got (ref func).
+out/test/spec/gc/linking.wast:241: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got (ref null 0).
+out/test/spec/gc/linking.wast:245: assert_unlinkable passed:
+  error: type mismatch in imported global, expected (ref 0) but got externref.
+out/test/spec/gc/linking.wast:250: assert_unlinkable passed:
+  error: type mismatch in imported global, expected externref but got funcref.
+out/test/spec/gc/linking.wast:254: assert_unlinkable passed:
+  error: type mismatch in imported global, expected externref but got (ref func).
+out/test/spec/gc/linking.wast:258: assert_unlinkable passed:
+  error: type mismatch in imported global, expected externref but got (ref null 0).
+out/test/spec/gc/linking.wast:262: assert_unlinkable passed:
+  error: type mismatch in imported global, expected externref but got (ref 0).
+out/test/spec/gc/linking.wast:308: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:309: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:311: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:313: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:314: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:316: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:318: assert_trap passed: undefined table index
+out/test/spec/gc/linking.wast:319: assert_trap passed: undefined table index
+out/test/spec/gc/linking.wast:320: assert_trap passed: undefined table index
+out/test/spec/gc/linking.wast:321: assert_trap passed: undefined table index
+out/test/spec/gc/linking.wast:324: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/linking.wast:356: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:357: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:359: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:360: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:362: assert_trap passed: undefined table index
+out/test/spec/gc/linking.wast:388: assert_unlinkable passed:
+  error: invalid import "Mt.mem"
+out/test/spec/gc/linking.wast:397: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:411: assert_trap passed: uninitialized table element
+out/test/spec/gc/linking.wast:442: assert_unlinkable passed:
+  error: type mismatch in imported table, expected funcref but got (ref null 0).
+out/test/spec/gc/linking.wast:446: assert_unlinkable passed:
+  error: type mismatch in imported table, expected funcref but got externref.
+out/test/spec/gc/linking.wast:451: assert_unlinkable passed:
+  error: type mismatch in imported table, expected (ref null 0) but got funcref.
+out/test/spec/gc/linking.wast:455: assert_unlinkable passed:
+  error: type mismatch in imported table, expected (ref null 0) but got externref.
+out/test/spec/gc/linking.wast:460: assert_unlinkable passed:
+  error: type mismatch in imported table, expected externref but got funcref.
+out/test/spec/gc/linking.wast:464: assert_unlinkable passed:
+  error: type mismatch in imported table, expected externref but got (ref null 0).
+out/test/spec/gc/linking.wast:542: assert_unlinkable passed:
+  error: invalid import "Mm.tab"
+154/154 tests passed.
+;;; STDOUT ;;)

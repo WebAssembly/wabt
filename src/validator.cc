@@ -1095,7 +1095,7 @@ Result Validator::CheckModule() {
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<GlobalModuleField>(&field)) {
       result_ |=
-          validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
+          validator_.BeginGlobal(field.loc, f->global.type, f->global.mutable_);
 
       // Init expr.
       result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
@@ -1103,6 +1103,7 @@ Result Validator::CheckModule() {
       result_ |=
           visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
       result_ |= validator_.EndInitExpr();
+      result_ |= validator_.EndGlobal(field.loc);
     }
   }
 
