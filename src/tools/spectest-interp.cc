@@ -2030,6 +2030,8 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
           ok = obj->kind() == ObjectKind::Array ||
                obj->kind() == ObjectKind::Struct;
         }
+      } else {
+        ok = expected.value.type == Type::AnyRef;
       }
       break;
     }
