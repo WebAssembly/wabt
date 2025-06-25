@@ -88,8 +88,8 @@ Result SharedValidator::OnFuncType(const Location& loc,
     }
 
     type_validation_result_ |= result;
-    result |= CheckSupertypes(loc, supertypes);
   }
+  result |= CheckSupertypes(loc, supertypes);
 
   return result;
 }
@@ -251,17 +251,24 @@ Result SharedValidator::OnGlobalImport(const Location& loc,
     result |= Result::Error;
   }
   globals_.push_back(GlobalType{type, mutable_});
-  ++num_imported_globals_;
+  ++last_initialized_global_;
   return result;
 }
 
-Result SharedValidator::OnGlobal(const Location& loc,
-                                 Type type,
-                                 bool mutable_) {
+Result SharedValidator::BeginGlobal(const Location& loc,
+                                    Type type,
+                                    bool mutable_) {
   Result result =
       CheckReferenceType(loc, type, type_fields_.NumTypes(), "globals");
   globals_.push_back(GlobalType{type, mutable_});
   return result;
+}
+
+Result SharedValidator::EndGlobal(const Location&) {
+  if (options_.features.gc_enabled()) {
+    last_initialized_global_++;
+  }
+  return Result::Ok;
 }
 
 Result SharedValidator::CheckType(const Location& loc,
@@ -293,8 +300,6 @@ Result SharedValidator::CheckReferenceType(const Location& loc,
 
 Result SharedValidator::CheckSupertypes(const Location& loc,
                                         SupertypesInfo* supertypes) {
-  assert(options_.features.function_references_enabled());
-
   TypeEntry& entry = type_fields_.type_entries.back();
   Index current_index = type_fields_.NumTypes() - 1;
   Index end_index;
@@ -813,8 +818,7 @@ Index SharedValidator::GetCanonicalTypeIndex(Index type_index) {
     return kInvalidIndex;
   }
 
-  if (options_.features.function_references_enabled() &&
-      Succeeded(type_validation_result_)) {
+  if (Succeeded(type_validation_result_)) {
     return type_fields_.type_entries[type_index].canonical_index;
   }
 
@@ -1350,7 +1354,7 @@ Result SharedValidator::OnGlobalGet(const Location& loc, Var global_var) {
   result |= CheckGlobalIndex(global_var, &global_type);
   result |= typechecker_.OnGlobalGet(global_type.type);
   if (Succeeded(result) && in_init_expr_) {
-    if (global_var.index() >= num_imported_globals_) {
+    if (global_var.index() >= last_initialized_global_) {
       PrintError(
           global_var.loc,
           "initializer expression can only reference an imported global");
