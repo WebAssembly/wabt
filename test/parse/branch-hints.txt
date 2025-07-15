@@ -53,7 +53,7 @@
 )
 
 (;; STDOUT ;;;
-branch-hints-valid.wasm:	file format wasm 0x1
+branch-hints.wasm:	file format wasm 0x1
 Section Details:
 Custom:
  - name: "metadata.code.branch_hint"
