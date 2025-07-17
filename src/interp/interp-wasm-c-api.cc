@@ -336,7 +336,7 @@ static ValueType ToWabtValueType(wasm_valkind_t kind) {
       return ValueType::F32;
     case WASM_F64:
       return ValueType::F64;
-    case WASM_ANYREF:
+    case WASM_EXTERNREF:
       return ValueType::ExternRef;
     case WASM_FUNCREF:
       return ValueType::FuncRef;
@@ -358,7 +358,7 @@ static wasm_valkind_t FromWabtValueType(ValueType type) {
     case ValueType::F64:
       return WASM_F64;
     case ValueType::ExternRef:
-      return WASM_ANYREF;
+      return WASM_EXTERNREF;
     case ValueType::FuncRef:
       return WASM_FUNCREF;
     default:
@@ -424,7 +424,7 @@ static TypedValue ToWabtValue(const wasm_val_t& value) {
     case WASM_F64:
       out.value.Set(value.of.f64);
       break;
-    case WASM_ANYREF:
+    case WASM_EXTERNREF:
     case WASM_FUNCREF:
       out.value.Set(value.of.ref ? value.of.ref->I->self() : Ref::Null);
       break;
@@ -464,7 +464,7 @@ static wasm_val_t FromWabtValue(Store& store, const TypedValue& tv) {
     }
     case Type::ExternRef: {
       Ref ref = tv.value.Get<Ref>();
-      out_value.kind = WASM_ANYREF;
+      out_value.kind = WASM_EXTERNREF;
       out_value.of.ref = new wasm_foreign_t(store.UnsafeGet<Foreign>(ref));
       break;
     }
