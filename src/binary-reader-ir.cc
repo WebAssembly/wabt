@@ -1703,8 +1703,11 @@ Result BinaryReaderIR::OnCodeMetadataFuncCount(Index count) {
 }
 
 Result BinaryReaderIR::OnCodeMetadataCount(Index function_index, Index count) {
-  code_metadata_queue_.push_func(module_->funcs[function_index]);
-  return Result::Ok;
+  if (function_index < module_->funcs.size()) {
+    code_metadata_queue_.push_func(module_->funcs[function_index]);
+    return Result::Ok;
+  }
+  return Result::Error;
 }
 
 Result BinaryReaderIR::OnCodeMetadata(Offset offset,
