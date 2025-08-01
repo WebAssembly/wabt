@@ -1,0 +1,16 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/i31.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/i31.wast:53: assert_trap passed: null i31 ref
+out/test/spec/gc/i31.wast:54: assert_trap passed: null i31 ref
+set_global(i32:1234) =>
+fill(i32:2, i32:111, i32:2) =>
+copy(i32:3, i32:0, i32:2) =>
+init(i32:1, i32:0, i32:3) =>
+set_global(i32:0) =>
+fill(i32:2, i32:111, i32:2) =>
+copy(i32:3, i32:0, i32:2) =>
+init(i32:1, i32:0, i32:3) =>
+72/72 tests passed.
+;;; STDOUT ;;)

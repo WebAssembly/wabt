@@ -3,7 +3,7 @@
 ;;; ERROR: 1
 ( elem f64 ( ) ) 
 (;; STDERR ;;;
-out/test/parse/module/bad-element-followed-by-illegal-expression.txt:4:12: error: unexpected token (, expected ).
+out/test/parse/module/bad-element-followed-by-illegal-expression.txt:4:8: error: value type not allowed: f64
 ( elem f64 ( ) ) 
-           ^
+       ^^^
 ;;; STDERR ;;)

@@ -73,6 +73,9 @@ class ExprVisitor::Delegate {
   virtual Result EndBlockExpr(BlockExpr*) = 0;
   virtual Result OnBrExpr(BrExpr*) = 0;
   virtual Result OnBrIfExpr(BrIfExpr*) = 0;
+  virtual Result OnBrOnCastExpr(BrOnCastExpr*) = 0;
+  virtual Result OnBrOnNonNullExpr(BrOnNonNullExpr*) = 0;
+  virtual Result OnBrOnNullExpr(BrOnNullExpr*) = 0;
   virtual Result OnBrTableExpr(BrTableExpr*) = 0;
   virtual Result BeginTryTableExpr(TryTableExpr*) = 0;
   virtual Result EndTryTableExpr(TryTableExpr*) = 0;
@@ -109,6 +112,7 @@ class ExprVisitor::Delegate {
   virtual Result OnTableGrowExpr(TableGrowExpr*) = 0;
   virtual Result OnTableSizeExpr(TableSizeExpr*) = 0;
   virtual Result OnTableFillExpr(TableFillExpr*) = 0;
+  virtual Result OnRefAsNonNullExpr(RefAsNonNullExpr*) = 0;
   virtual Result OnRefFuncExpr(RefFuncExpr*) = 0;
   virtual Result OnRefNullExpr(RefNullExpr*) = 0;
   virtual Result OnRefIsNullExpr(RefIsNullExpr*) = 0;
@@ -116,6 +120,7 @@ class ExprVisitor::Delegate {
   virtual Result OnReturnExpr(ReturnExpr*) = 0;
   virtual Result OnReturnCallExpr(ReturnCallExpr*) = 0;
   virtual Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) = 0;
+  virtual Result OnReturnCallRefExpr(ReturnCallRefExpr*) = 0;
   virtual Result OnSelectExpr(SelectExpr*) = 0;
   virtual Result OnStoreExpr(StoreExpr*) = 0;
   virtual Result OnUnaryExpr(UnaryExpr*) = 0;
@@ -141,6 +146,24 @@ class ExprVisitor::Delegate {
   virtual Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) = 0;
   virtual Result OnLoadSplatExpr(LoadSplatExpr*) = 0;
   virtual Result OnLoadZeroExpr(LoadZeroExpr*) = 0;
+  virtual Result OnArrayCopyExpr(ArrayCopyExpr*) = 0;
+  virtual Result OnArrayFillExpr(ArrayFillExpr*) = 0;
+  virtual Result OnArrayGetExpr(ArrayGetExpr*) = 0;
+  virtual Result OnArrayInitDataExpr(ArrayInitDataExpr*) = 0;
+  virtual Result OnArrayInitElemExpr(ArrayInitElemExpr*) = 0;
+  virtual Result OnArrayNewExpr(ArrayNewExpr*) = 0;
+  virtual Result OnArrayNewDataExpr(ArrayNewDataExpr*) = 0;
+  virtual Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) = 0;
+  virtual Result OnArrayNewElemExpr(ArrayNewElemExpr*) = 0;
+  virtual Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) = 0;
+  virtual Result OnArraySetExpr(ArraySetExpr*) = 0;
+  virtual Result OnGCUnaryExpr(GCUnaryExpr*) = 0;
+  virtual Result OnRefCastExpr(RefCastExpr*) = 0;
+  virtual Result OnRefTestExpr(RefTestExpr*) = 0;
+  virtual Result OnStructGetExpr(StructGetExpr*) = 0;
+  virtual Result OnStructNewExpr(StructNewExpr*) = 0;
+  virtual Result OnStructNewDefaultExpr(StructNewDefaultExpr*) = 0;
+  virtual Result OnStructSetExpr(StructSetExpr*) = 0;
 };
 
 class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
@@ -150,6 +173,9 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override { return Result::Ok; }
   Result OnBrExpr(BrExpr*) override { return Result::Ok; }
   Result OnBrIfExpr(BrIfExpr*) override { return Result::Ok; }
+  Result OnBrOnCastExpr(BrOnCastExpr*) override { return Result::Ok; };
+  Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override { return Result::Ok; };
+  Result OnBrOnNullExpr(BrOnNullExpr*) override { return Result::Ok; };
   Result OnBrTableExpr(BrTableExpr*) override { return Result::Ok; }
   Result BeginTryTableExpr(TryTableExpr*) override { return Result::Ok; }
   Result EndTryTableExpr(TryTableExpr*) override { return Result::Ok; }
@@ -186,6 +212,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnTableGrowExpr(TableGrowExpr*) override { return Result::Ok; }
   Result OnTableSizeExpr(TableSizeExpr*) override { return Result::Ok; }
   Result OnTableFillExpr(TableFillExpr*) override { return Result::Ok; }
+  Result OnRefAsNonNullExpr(RefAsNonNullExpr*) override { return Result::Ok; }
   Result OnRefFuncExpr(RefFuncExpr*) override { return Result::Ok; }
   Result OnRefNullExpr(RefNullExpr*) override { return Result::Ok; }
   Result OnRefIsNullExpr(RefIsNullExpr*) override { return Result::Ok; }
@@ -195,6 +222,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override {
     return Result::Ok;
   }
+  Result OnReturnCallRefExpr(ReturnCallRefExpr*) override { return Result::Ok; }
   Result OnSelectExpr(SelectExpr*) override { return Result::Ok; }
   Result OnStoreExpr(StoreExpr*) override { return Result::Ok; }
   Result OnUnaryExpr(UnaryExpr*) override { return Result::Ok; }
@@ -222,6 +250,28 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override { return Result::Ok; }
   Result OnLoadSplatExpr(LoadSplatExpr*) override { return Result::Ok; }
   Result OnLoadZeroExpr(LoadZeroExpr*) override { return Result::Ok; }
+  Result OnArrayCopyExpr(ArrayCopyExpr*) override { return Result::Ok; }
+  Result OnArrayFillExpr(ArrayFillExpr*) override { return Result::Ok; }
+  Result OnArrayGetExpr(ArrayGetExpr*) override { return Result::Ok; }
+  Result OnArrayInitDataExpr(ArrayInitDataExpr*) override { return Result::Ok; }
+  Result OnArrayInitElemExpr(ArrayInitElemExpr*) override { return Result::Ok; }
+  Result OnArrayNewExpr(ArrayNewExpr*) override { return Result::Ok; }
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override { return Result::Ok; }
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override {
+    return Result::Ok;
+  }
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override { return Result::Ok; }
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override { return Result::Ok; }
+  Result OnArraySetExpr(ArraySetExpr*) override { return Result::Ok; }
+  Result OnGCUnaryExpr(GCUnaryExpr*) override { return Result::Ok; }
+  Result OnRefCastExpr(RefCastExpr*) override { return Result::Ok; }
+  Result OnRefTestExpr(RefTestExpr*) override { return Result::Ok; }
+  Result OnStructGetExpr(StructGetExpr*) override { return Result::Ok; }
+  Result OnStructNewExpr(StructNewExpr*) override { return Result::Ok; }
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override {
+    return Result::Ok;
+  }
+  Result OnStructSetExpr(StructSetExpr*) override { return Result::Ok; }
 };
 
 }  // namespace wabt

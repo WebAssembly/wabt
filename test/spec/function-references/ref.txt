@@ -1,0 +1,43 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/ref.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/ref.wast:28: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.1.wasm:0000010: error: reference 1 is out of range in params
+  0000010: error: OnFuncType callback failed
+out/test/spec/function-references/ref.wast:32: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.2.wasm:0000010: error: reference 1 is out of range in results
+  0000010: error: OnFuncType callback failed
+out/test/spec/function-references/ref.wast:37: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.3.wasm:000000e: error: reference 1 is out of range in globals
+  000000e: error: BeginGlobal callback failed
+out/test/spec/function-references/ref.wast:42: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.4.wasm:000000f: error: reference 1 is out of range in tables
+  000000f: error: BeginTable callback failed
+out/test/spec/function-references/ref.wast:47: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.5.wasm:000000e: error: reference 1 is out of range
+  000000e: error: OnElemSegmentElemType callback failed
+out/test/spec/function-references/ref.wast:52: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.6.wasm:0000010: error: reference 1 is out of range in params
+  0000010: error: OnFuncType callback failed
+out/test/spec/function-references/ref.wast:56: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.7.wasm:0000010: error: reference 1 is out of range in results
+  0000010: error: OnFuncType callback failed
+out/test/spec/function-references/ref.wast:60: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.8.wasm:000001a: error: reference 1 is out of range in locals
+  000001a: error: OnLocalDecl callback failed
+out/test/spec/function-references/ref.wast:65: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.9.wasm:000001a: error: reference 1 is out of range
+  000001a: error: OnBlockExpr callback failed
+out/test/spec/function-references/ref.wast:69: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.10.wasm:000001a: error: reference 1 is out of range
+  000001a: error: OnLoopExpr callback failed
+out/test/spec/function-references/ref.wast:73: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.11.wasm:000001a: error: reference 1 is out of range
+  out/test/spec/function-references/ref/ref.11.wasm:000001a: error: type mismatch in if, expected [i32] but got []
+  000001a: error: OnIfExpr callback failed
+out/test/spec/function-references/ref.wast:78: assert_invalid passed:
+  out/test/spec/function-references/ref/ref.12.wasm:000001c: error: reference 1 is out of range
+  000001c: error: OnSelectExpr callback failed
+13/13 tests passed.
+;;; STDOUT ;;)

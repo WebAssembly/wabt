@@ -89,6 +89,8 @@ enum class ObjectKind {
   Memory,
   Global,
   Tag,
+  Array,
+  Struct,
   Module,
   Instance,
 
@@ -105,9 +107,23 @@ const char* GetName(ObjectKind);
 
 struct Ref {
   static const Ref Null;
+  // The highest two bits represent special values.
+  static const size_t kI31Value = static_cast<size_t>(1) << (sizeof(size_t) * 8 - 1);
+  static const size_t kHostValue = static_cast<size_t>(1) << (sizeof(size_t) * 8 - 2);
+  static const size_t kAnyHostValue = ~static_cast<size_t>(0) >> 2;
 
   Ref() = default;
   explicit Ref(size_t index);
+
+  static Ref CreateI31Val(size_t value);
+  static Ref CreateHostVal(size_t value);
+  bool IsI31Val() const;
+  bool IsHostVal() const;
+  bool IsI31OrHostVal() const;
+  u32 GetS32Val() const;
+  u32 GetU32Val() const;
+  size_t GetHostVal() const;
+  size_t IsAnyHostVal() const;
 
   friend bool operator==(Ref, Ref);
   friend bool operator!=(Ref, Ref);
@@ -157,6 +173,10 @@ using u32x2 = Simd<u32, 2>;
 
 //// Types ////
 
+bool TypesMatch(ValueType expected, ValueType actual);
+
+//// Limits ////
+
 bool CanGrow(const Limits&, u32 old_size, u32 delta, u32* new_size);
 Result Match(const Limits& expected,
              const Limits& actual,
@@ -174,7 +194,21 @@ struct FuncType : ExternType {
   static const ExternKind skind = ExternKind::Func;
   static bool classof(const ExternType* type);
 
+  enum class TypeKind {
+    Func,
+    Struct,
+    Array,
+  };
+
+  // To simplify the implementation, FuncType may also represent
+  // Struct and Array types. To do this, the mutability is stored
+  // in results, which must have the same size as params.
+  // This implementation might change in the future.
+  static const Type::Enum Mutable = Type::I32;
+  static const Type::Enum Immutable = Type::I64;
+
   explicit FuncType(ValueTypes params, ValueTypes results);
+  explicit FuncType(TypeKind kind, ValueTypes params, ValueTypes results);
 
   std::unique_ptr<ExternType> Clone() const override;
 
@@ -182,8 +216,21 @@ struct FuncType : ExternType {
                       const FuncType& actual,
                       std::string* out_msg);
 
+  TypeKind kind;
+  // These two are needed for fast dynamic type comparison.
+  Index canonical_index;
+  Index canonical_sub_index;
+  // These three are needed for type equality comparisons
+  // across different modules (import/export validation).
+  bool is_final_sub_type;
+  Index recursive_start;
+  Index recursive_count;
   ValueTypes params;
   ValueTypes results;
+  // When params or results contain references, the referenced
+  // types are also needed for type equality comparisons.
+  // An example for these comparisons is import validation.
+  std::vector<FuncType>* func_types;
 };
 
 struct TableType : ExternType {
@@ -330,6 +377,7 @@ struct FuncDesc {
 
 struct TableDesc {
   TableType type;
+  FuncDesc init_func;
 };
 
 struct MemoryDesc {
@@ -814,7 +862,7 @@ class Table : public Extern {
   static const char* GetTypeName() { return "Table"; }
   using Ptr = RefPtr<Table>;
 
-  static Table::Ptr New(Store&, TableType);
+  static Table::Ptr New(Store&, TableType, Ref);
 
   Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
 
@@ -846,7 +894,7 @@ class Table : public Extern {
 
  private:
   friend Store;
-  explicit Table(Store&, TableType);
+  explicit Table(Store&, TableType, Ref);
   void Mark(Store&) override;
 
   TableType type_;
@@ -965,6 +1013,59 @@ class Tag : public Extern {
   void Mark(Store&) override;
 
   TagType type_;
+};
+
+class Array : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Array;
+  static const char* GetTypeName() { return "Array"; }
+  using Ptr = RefPtr<Array>;
+
+  static Array::Ptr New(Store&, u32 size, Index type_index, Module* mod);
+
+  bool IsValidRange(u64 offset, u64 size) const;
+
+  Index Size() const;
+  Value GetItem(Index idx) const;
+  void SetItem(Index idx, Value value);
+  Values& GetItems();
+  Index GetTypeIndex() const;
+  Ref GetModule() const;
+
+ private:
+  friend Store;
+  explicit Array(Store&, u32 size, Index type_index, Module* mod);
+  void Mark(Store&) override;
+
+  Ref module_;
+  Index type_index_;
+  Values items_;
+};
+
+class Struct : public Object {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::Struct;
+  static const char* GetTypeName() { return "Struct"; }
+  using Ptr = RefPtr<Struct>;
+
+  static Struct::Ptr New(Store&, Index type_index, Module* mod);
+
+  Index Size() const;
+  Value GetField(Index idx) const;
+  void SetField(Index idx, Value value);
+  Index GetTypeIndex() const;
+  Ref GetModule() const;
+
+ private:
+  friend Store;
+  explicit Struct(Store&, Index type_index, Module* mod);
+  void Mark(Store&) override;
+
+  Ref module_;
+  Index type_index_;
+  Values fields_;
 };
 
 class ElemSegment {
@@ -1135,6 +1236,8 @@ class Thread {
   void Push(Value);
   void Push(Ref);
 
+  bool CheckRefCast(Ref ref, Type expected);
+
   template <typename R, typename T>
   using UnopFunc = R WABT_VECTORCALL(T);
   template <typename R, typename T>
@@ -1237,6 +1340,23 @@ class Thread {
   RunResult DoAtomicRmw(BinopFunc<T, T>, Instr, Trap::Ptr* out_trap);
   template <typename T, typename V = T>
   RunResult DoAtomicRmwCmpxchg(Instr, Trap::Ptr* out_trap);
+
+  RunResult DoArrayCopy(Trap::Ptr* out_trap);
+  RunResult DoArrayFill(Trap::Ptr* out_trap);
+  RunResult DoArrayGet(Trap::Ptr* out_trap);
+  RunResult DoArrayInitElem(Instr, Trap::Ptr* out_trap);
+  RunResult DoArrayInitData(Instr, Trap::Ptr* out_trap);
+  RunResult DoArrayGetPacked(Instr, Trap::Ptr* out_trap);
+  RunResult DoArrayNew(Instr);
+  RunResult DoArrayNewData(Instr, Trap::Ptr* out_trap);
+  RunResult DoArrayNewElem(Instr, Trap::Ptr* out_trap);
+  RunResult DoArrayNewFixed(Instr);
+  RunResult DoArraySet(Trap::Ptr* out_trap);
+  RunResult DoBrOnCast(Instr);
+  RunResult DoRefCast(Instr, Trap::Ptr* out_trap);
+  RunResult DoRefTest(Instr);
+  RunResult DoStructGetPacked(Instr, Trap::Ptr* out_trap);
+  RunResult DoStructNew(Instr);
 
   RunResult DoThrow(Exception::Ptr exn_ref);
 
