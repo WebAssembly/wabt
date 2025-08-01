@@ -608,9 +608,9 @@ TEST_F(InterpGCTest, Collect_GlobalCycle) {
 
 TEST_F(InterpGCTest, Collect_TableCycle) {
   auto tt = TableType{ValueType::ExternRef, Limits{2}};
-  auto t1 = Table::New(store_, tt);
-  auto t2 = Table::New(store_, tt);
-  auto t3 = Table::New(store_, tt);
+  auto t1 = Table::New(store_, tt, Ref::Null);
+  auto t2 = Table::New(store_, tt, Ref::Null);
+  auto t3 = Table::New(store_, tt, Ref::Null);
 
   t1->Set(store_, 0, t1->self());  // t1 references itself.
   t2->Set(store_, 0, t3->self());
@@ -659,7 +659,8 @@ TEST_F(InterpGCTest, Collect_InstanceImport) {
   auto f = HostFunc::New(store_, FuncType{{}, {}},
                          [](Thread& thread, const Values&, Values&,
                             Trap::Ptr*) -> Result { return Result::Ok; });
-  auto t = Table::New(store_, TableType{ValueType::FuncRef, Limits{0}});
+  auto t =
+      Table::New(store_, TableType{ValueType::FuncRef, Limits{0}}, Ref::Null);
   auto m = Memory::New(store_, MemoryType{Limits{0}, WABT_DEFAULT_PAGE_SIZE});
   auto g = Global::New(store_, GlobalType{ValueType::I32, Mutability::Const},
                        Value::Make(5));
@@ -709,10 +710,10 @@ TEST_F(InterpGCTest, Collect_DeepRecursion) {
   // Create a chain of tables, where each contains
   // a single reference to the next table.
 
-  Table::Ptr prev_table = Table::New(store_, tt);
+  Table::Ptr prev_table = Table::New(store_, tt, Ref::Null);
 
   for (size_t i = 1; i < table_count; i++) {
-    Table::Ptr new_table = Table::New(store_, tt);
+    Table::Ptr new_table = Table::New(store_, tt, Ref::Null);
 
     new_table->Set(store_, 0, prev_table->self());
 

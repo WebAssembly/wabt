@@ -1,0 +1,409 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/if.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/if.wast:593: assert_trap passed: undefined table index
+out/test/spec/gc/if.wast:736: assert_malformed passed:
+  out/test/spec/gc/if/if.1.wat:1:95: error: unexpected token "param", expected then block (e.g. (then ...)).
+  ...i32.const 0)  (if (type $sig) (result i32) (param i32) (i32.const 1) (then)))
+                                                 ^^^^^
+  out/test/spec/gc/if/if.1.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (type $sig) (result i32) (param i32) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/gc/if.wast:745: assert_malformed passed:
+  out/test/spec/gc/if/if.2.wat:1:82: error: unexpected token "type", expected then block (e.g. (then ...)).
+  ...nc (i32.const 0)  (if (param i32) (type $sig) (result i32) (i32.const 1) (...
+                                        ^^^^
+  out/test/spec/gc/if/if.2.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (param i32) (type $sig) (result i32) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/gc/if.wast:754: assert_malformed passed:
+  out/test/spec/gc/if/if.3.wat:1:95: error: unexpected token "type", expected then block (e.g. (then ...)).
+  ...i32.const 0)  (if (param i32) (result i32) (type $sig) (i32.const 1) (then)))
+                                                 ^^^^
+  out/test/spec/gc/if/if.3.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (param i32) (result i32) (type $sig) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/gc/if.wast:763: assert_malformed passed:
+  out/test/spec/gc/if/if.4.wat:1:83: error: unexpected token "type", expected then block (e.g. (then ...)).
+  ...c (i32.const 0)  (if (result i32) (type $sig) (param i32) (i32.const 1) (t...
+                                        ^^^^
+  out/test/spec/gc/if/if.4.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (result i32) (type $sig) (param i32) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/gc/if.wast:772: assert_malformed passed:
+  out/test/spec/gc/if/if.5.wat:1:83: error: unexpected token "param", expected then block (e.g. (then ...)).
+  ...c (i32.const 0)  (if (result i32) (param i32) (type $sig) (i32.const 1) (t...
+                                        ^^^^^
+  out/test/spec/gc/if/if.5.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (result i32) (param i32) (type $sig) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/gc/if.wast:781: assert_malformed passed:
+  out/test/spec/gc/if/if.6.wat:1:39: error: unexpected token "param", expected then block (e.g. (then ...)).
+  (func (i32.const 0) (if (result i32) (param i32) (i32.const 1) (then)))
+                                        ^^^^^
+  out/test/spec/gc/if/if.6.wat:1:65: error: unexpected token "then", expected an instr.
+  (func (i32.const 0) (if (result i32) (param i32) (i32.const 1) (then)))
+                                                                  ^^^^
+out/test/spec/gc/if.wast:788: assert_malformed passed:
+  out/test/spec/gc/if/if.7.wat:1:47: error: unexpected token $x, expected ).
+  ...(i32.const 0) (i32.const 1)  (if (param $x i32) (then (drop)) (else (drop))))
+                                             ^^
+  out/test/spec/gc/if/if.7.wat:1:69: error: unexpected token (, expected EOF.
+  ...(i32.const 0) (i32.const 1)  (if (param $x i32) (then (drop)) (else (drop))))
+                                                                   ^
+out/test/spec/gc/if.wast:796: assert_malformed passed:
+  out/test/spec/gc/if/if.8.wat:1:40: error: expected 0 results, got 1
+  (type $sig (func))(func (i32.const 1)  (if (type $sig) (result i32) (then (i3...
+                                         ^
+out/test/spec/gc/if.wast:806: assert_malformed passed:
+  out/test/spec/gc/if/if.9.wat:1:65: error: expected 1 arguments, got 0
+  ...) (result i32)))(func (i32.const 1)  (if (type $sig) (result i32) (then (i...
+                                          ^
+out/test/spec/gc/if.wast:816: assert_malformed passed:
+  out/test/spec/gc/if/if.10.wat:1:79: error: expected 1 results, got 0
+  ...))(func (i32.const 0) (i32.const 1)  (if (type $sig) (param i32) (then (dr...
+                                          ^
+out/test/spec/gc/if.wast:826: assert_malformed passed:
+  out/test/spec/gc/if/if.11.wat:1:83: error: expected 2 arguments, got 1
+  ...))(func (i32.const 0) (i32.const 1)  (if (type $sig) (param i32) (result i...
+                                          ^
+out/test/spec/gc/if.wast:836: assert_invalid passed:
+  out/test/spec/gc/if/if.12.wasm:000001f: error: type mismatch at end of function, expected [] but got [i32]
+  000001f: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:844: assert_invalid passed:
+  out/test/spec/gc/if/if.13.wasm:000001e: error: type mismatch in implicit return, expected [i32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:848: assert_invalid passed:
+  out/test/spec/gc/if/if.14.wasm:000001e: error: type mismatch in implicit return, expected [i64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:852: assert_invalid passed:
+  out/test/spec/gc/if/if.15.wasm:000001e: error: type mismatch in implicit return, expected [f32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:856: assert_invalid passed:
+  out/test/spec/gc/if/if.16.wasm:000001e: error: type mismatch in implicit return, expected [f64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:861: assert_invalid passed:
+  out/test/spec/gc/if/if.17.wasm:000001e: error: type mismatch in implicit return, expected [i32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:865: assert_invalid passed:
+  out/test/spec/gc/if/if.18.wasm:000001e: error: type mismatch in implicit return, expected [i64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:869: assert_invalid passed:
+  out/test/spec/gc/if/if.19.wasm:000001e: error: type mismatch in implicit return, expected [f32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:873: assert_invalid passed:
+  out/test/spec/gc/if/if.20.wasm:000001e: error: type mismatch in implicit return, expected [f64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:878: assert_invalid passed:
+  out/test/spec/gc/if/if.21.wasm:000001e: error: type mismatch at end of `if true` branch, expected [] but got [i32]
+  000001e: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:884: assert_invalid passed:
+  out/test/spec/gc/if/if.22.wasm:000001e: error: type mismatch at end of `if true` branch, expected [] but got [i32]
+  000001e: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:890: assert_invalid passed:
+  out/test/spec/gc/if/if.23.wasm:000001f: error: type mismatch at end of `if false` branch, expected [] but got [i32]
+  000001f: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:896: assert_invalid passed:
+  out/test/spec/gc/if/if.24.wasm:000001d: error: type mismatch at end of `if true` branch, expected [] but got [i32]
+  000001e: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:903: assert_invalid passed:
+  out/test/spec/gc/if/if.25.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32, i32]
+  0000020: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:909: assert_invalid passed:
+  out/test/spec/gc/if/if.26.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32, i32]
+  0000020: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:915: assert_invalid passed:
+  out/test/spec/gc/if/if.27.wasm:0000021: error: type mismatch at end of `if false` branch, expected [] but got [i32, i32]
+  0000021: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:921: assert_invalid passed:
+  out/test/spec/gc/if/if.28.wasm:000001f: error: type mismatch at end of `if true` branch, expected [] but got [i32, i32]
+  0000020: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:928: assert_invalid passed:
+  out/test/spec/gc/if/if.29.wasm:000001c: error: type mismatch in `if true` branch, expected [i32] but got []
+  000001d: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:934: assert_invalid passed:
+  out/test/spec/gc/if/if.30.wasm:000001f: error: type mismatch in `if false` branch, expected [i32] but got []
+  000001f: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:940: assert_invalid passed:
+  out/test/spec/gc/if/if.31.wasm:000001d: error: type mismatch in `if true` branch, expected [i32] but got []
+  000001d: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:947: assert_invalid passed:
+  out/test/spec/gc/if/if.32.wasm:000001d: error: type mismatch in `if true` branch, expected [i32, i32] but got []
+  000001e: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:953: assert_invalid passed:
+  out/test/spec/gc/if/if.33.wasm:0000022: error: type mismatch in `if false` branch, expected [i32, i32] but got []
+  0000022: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:959: assert_invalid passed:
+  out/test/spec/gc/if/if.34.wasm:000001e: error: type mismatch in `if true` branch, expected [i32, i32] but got []
+  000001e: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:966: assert_invalid passed:
+  out/test/spec/gc/if/if.35.wasm:000001f: error: type mismatch in `if false` branch, expected [i32] but got []
+  000001f: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:972: assert_invalid passed:
+  out/test/spec/gc/if/if.36.wasm:0000022: error: type mismatch in `if false` branch, expected [i32, i32] but got []
+  0000022: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:979: assert_invalid passed:
+  out/test/spec/gc/if/if.37.wasm:000001d: error: type mismatch in `if true` branch, expected [i32] but got []
+  000001e: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:985: assert_invalid passed:
+  out/test/spec/gc/if/if.38.wasm:0000021: error: type mismatch in `if false` branch, expected [i32] but got []
+  0000021: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:991: assert_invalid passed:
+  out/test/spec/gc/if/if.39.wasm:000001d: error: type mismatch in `if true` branch, expected [i32] but got []
+  000001e: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:998: assert_invalid passed:
+  out/test/spec/gc/if/if.40.wasm:000001e: error: type mismatch in `if true` branch, expected [i32, i32] but got []
+  000001f: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1004: assert_invalid passed:
+  out/test/spec/gc/if/if.41.wasm:0000024: error: type mismatch in `if false` branch, expected [i32, i32] but got []
+  0000024: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:1010: assert_invalid passed:
+  out/test/spec/gc/if/if.42.wasm:000001e: error: type mismatch in `if true` branch, expected [i32, i32] but got []
+  000001f: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1017: assert_invalid passed:
+  out/test/spec/gc/if/if.43.wasm:000001e: error: type mismatch in `if true` branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1023: assert_invalid passed:
+  out/test/spec/gc/if/if.44.wasm:0000022: error: type mismatch in `if false` branch, expected [i32] but got [i64]
+  0000022: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:1029: assert_invalid passed:
+  out/test/spec/gc/if/if.45.wasm:000001e: error: type mismatch in `if true` branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1036: assert_invalid passed:
+  out/test/spec/gc/if/if.46.wasm:000001f: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
+  0000020: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1042: assert_invalid passed:
+  out/test/spec/gc/if/if.47.wasm:0000025: error: type mismatch in `if false` branch, expected [i32, i32] but got [i32]
+  0000025: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:1048: assert_invalid passed:
+  out/test/spec/gc/if/if.48.wasm:000001f: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
+  0000020: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1055: assert_invalid passed:
+  out/test/spec/gc/if/if.49.wasm:0000021: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
+  0000022: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1062: assert_invalid passed:
+  out/test/spec/gc/if/if.50.wasm:0000027: error: type mismatch in `if false` branch, expected [i32, i32] but got [i32]
+  0000027: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:1069: assert_invalid passed:
+  out/test/spec/gc/if/if.51.wasm:0000021: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
+  0000022: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1077: assert_invalid passed:
+  out/test/spec/gc/if/if.52.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32]
+  0000021: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1083: assert_invalid passed:
+  out/test/spec/gc/if/if.53.wasm:0000024: error: type mismatch at end of `if false` branch, expected [] but got [i32]
+  0000024: error: OnEndExpr callback failed
+out/test/spec/gc/if.wast:1089: assert_invalid passed:
+  out/test/spec/gc/if/if.54.wasm:0000020: error: type mismatch at end of `if true` branch, expected [] but got [i32]
+  0000021: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1096: assert_invalid passed:
+  out/test/spec/gc/if/if.55.wasm:000001e: error: type mismatch in `if true` branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1102: assert_invalid passed:
+  out/test/spec/gc/if/if.56.wasm:0000023: error: type mismatch at end of `if true` branch, expected [] but got [i32]
+  0000024: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1109: assert_invalid passed:
+  out/test/spec/gc/if/if.57.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000025: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:1119: assert_invalid passed:
+  out/test/spec/gc/if/if.58.wasm:0000025: error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000025: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:1129: assert_invalid passed:
+  out/test/spec/gc/if/if.59.wasm:0000027: error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000027: error: EndFunctionBody callback failed
+out/test/spec/gc/if.wast:1140: assert_invalid passed:
+  out/test/spec/gc/if/if.60.wasm:000001e: error: type mismatch in br, expected [i32] but got []
+  000001e: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1146: assert_invalid passed:
+  out/test/spec/gc/if/if.61.wasm:0000021: error: type mismatch in br, expected [i32] but got []
+  0000021: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1152: assert_invalid passed:
+  out/test/spec/gc/if/if.62.wasm:000001f: error: type mismatch in br, expected [i32, i32] but got []
+  000001f: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1158: assert_invalid passed:
+  out/test/spec/gc/if/if.63.wasm:0000024: error: type mismatch in br, expected [i32, i32] but got []
+  0000024: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1165: assert_invalid passed:
+  out/test/spec/gc/if/if.64.wasm:000001e: error: type mismatch in br, expected [i32] but got []
+  000001e: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1174: assert_invalid passed:
+  out/test/spec/gc/if/if.65.wasm:0000021: error: type mismatch in br, expected [i32] but got []
+  0000021: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1183: assert_invalid passed:
+  out/test/spec/gc/if/if.66.wasm:000001f: error: type mismatch in br, expected [i32, i32] but got []
+  000001f: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1192: assert_invalid passed:
+  out/test/spec/gc/if/if.67.wasm:0000024: error: type mismatch in br, expected [i32, i32] but got []
+  0000024: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1202: assert_invalid passed:
+  out/test/spec/gc/if/if.68.wasm:000001f: error: type mismatch in br, expected [i32] but got []
+  000001f: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1211: assert_invalid passed:
+  out/test/spec/gc/if/if.69.wasm:0000022: error: type mismatch in br, expected [i32] but got []
+  0000022: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1220: assert_invalid passed:
+  out/test/spec/gc/if/if.70.wasm:0000020: error: type mismatch in br, expected [i32, i32] but got []
+  0000020: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1229: assert_invalid passed:
+  out/test/spec/gc/if/if.71.wasm:0000025: error: type mismatch in br, expected [i32, i32] but got []
+  0000025: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1239: assert_invalid passed:
+  out/test/spec/gc/if/if.72.wasm:0000020: error: type mismatch in br, expected [i32] but got [i64]
+  0000020: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1248: assert_invalid passed:
+  out/test/spec/gc/if/if.73.wasm:0000023: error: type mismatch in br, expected [i32] but got [i64]
+  0000023: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1257: assert_invalid passed:
+  out/test/spec/gc/if/if.74.wasm:0000021: error: type mismatch in br, expected [i32, i32] but got [i64]
+  0000021: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1266: assert_invalid passed:
+  out/test/spec/gc/if/if.75.wasm:0000026: error: type mismatch in br, expected [i32, i32] but got [i64]
+  0000026: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1275: assert_invalid passed:
+  out/test/spec/gc/if/if.76.wasm:0000023: error: type mismatch in br, expected [i32, i32] but got [i64]
+  0000023: error: OnBrExpr callback failed
+out/test/spec/gc/if.wast:1285: assert_invalid passed:
+  out/test/spec/gc/if/if.77.wasm:0000021: error: type mismatch in `if true` branch, expected [i32, i32] but got [i32]
+  0000022: error: OnElseExpr callback failed
+out/test/spec/gc/if.wast:1296: assert_invalid passed:
+  out/test/spec/gc/if/if.78.wasm:0000019: error: type mismatch in if, expected [i32] but got []
+  0000019: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1304: assert_invalid passed:
+  out/test/spec/gc/if/if.79.wasm:000001d: error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1313: assert_invalid passed:
+  out/test/spec/gc/if/if.80.wasm:000001d: error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1322: assert_invalid passed:
+  out/test/spec/gc/if/if.81.wasm:000001f: error: type mismatch in if, expected [i32] but got []
+  000001f: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1331: assert_invalid passed:
+  out/test/spec/gc/if/if.82.wasm:0000022: error: type mismatch in if, expected [i32] but got []
+  0000022: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1341: assert_invalid passed:
+  out/test/spec/gc/if/if.83.wasm:000001d: error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1350: assert_invalid passed:
+  out/test/spec/gc/if/if.84.wasm:000001d: error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1359: assert_invalid passed:
+  out/test/spec/gc/if/if.85.wasm:000001d: error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1368: assert_invalid passed:
+  out/test/spec/gc/if/if.86.wasm:0000019: error: type mismatch in if, expected [i32] but got []
+  0000019: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1376: assert_invalid passed:
+  out/test/spec/gc/if/if.87.wasm:0000019: error: type mismatch in if, expected [i32] but got []
+  0000019: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1384: assert_invalid passed:
+  out/test/spec/gc/if/if.88.wasm:000001f: error: type mismatch in if, expected [i32] but got []
+  000001f: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1393: assert_invalid passed:
+  out/test/spec/gc/if/if.89.wasm:0000038: error: type mismatch in if, expected [i32] but got []
+  0000038: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1409: assert_invalid passed:
+  out/test/spec/gc/if/if.90.wasm:000001b: error: type mismatch in if, expected [i32] but got []
+  000001b: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1418: assert_invalid passed:
+  out/test/spec/gc/if/if.91.wasm:000001b: error: type mismatch in if, expected [i32] but got []
+  000001b: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1427: assert_invalid passed:
+  out/test/spec/gc/if/if.92.wasm:0000021: error: type mismatch in if, expected [i32] but got []
+  0000021: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1436: assert_invalid passed:
+  out/test/spec/gc/if/if.93.wasm:000001e: error: type mismatch in if, expected [i32] but got []
+  000001e: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1445: assert_invalid passed:
+  out/test/spec/gc/if/if.94.wasm:000001e: error: type mismatch in if, expected [i32] but got []
+  000001e: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1454: assert_invalid passed:
+  out/test/spec/gc/if/if.95.wasm:000001e: error: type mismatch in if, expected [i32] but got []
+  000001e: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1464: assert_invalid passed:
+  out/test/spec/gc/if/if.96.wasm:000001f: error: type mismatch in if, expected [i32] but got []
+  000001f: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1470: assert_invalid passed:
+  out/test/spec/gc/if/if.97.wasm:0000020: error: type mismatch in if, expected [i32, f64] but got []
+  0000020: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1476: assert_invalid passed:
+  out/test/spec/gc/if/if.98.wasm:0000024: error: type mismatch in if, expected [i32] but got [f32]
+  0000024: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1482: assert_invalid passed:
+  out/test/spec/gc/if/if.99.wasm:0000025: error: type mismatch in if, expected [f32, i32] but got [f32]
+  0000025: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1488: assert_invalid passed:
+  out/test/spec/gc/if/if.100.wasm:0000021: error: type mismatch in if, expected [i32] but got []
+  0000021: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1494: assert_invalid passed:
+  out/test/spec/gc/if/if.101.wasm:0000022: error: type mismatch in if, expected [i32, f64] but got []
+  0000022: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1500: assert_invalid passed:
+  out/test/spec/gc/if/if.102.wasm:0000026: error: type mismatch in if, expected [i32] but got [f32]
+  0000026: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1506: assert_invalid passed:
+  out/test/spec/gc/if/if.103.wasm:0000027: error: type mismatch in if, expected [f32, i32] but got [f32]
+  0000027: error: OnIfExpr callback failed
+out/test/spec/gc/if.wast:1513: assert_malformed passed:
+  out/test/spec/gc/if/if.104.wat:1:42: error: unexpected token $x, expected ).
+  (func (param i32) (result i32) if (param $x i32) end)
+                                           ^^
+out/test/spec/gc/if.wast:1517: assert_malformed passed:
+  out/test/spec/gc/if/if.105.wat:1:43: error: unexpected token $x, expected ).
+  (func (param i32) (result i32) (if (param $x i32) (then)))
+                                            ^^
+out/test/spec/gc/if.wast:1522: assert_malformed passed:
+  out/test/spec/gc/if/if.106.wat:1:26: error: unexpected label "$l"
+  (func i32.const 0 if end $l)
+                           ^^
+out/test/spec/gc/if.wast:1526: assert_malformed passed:
+  out/test/spec/gc/if/if.107.wat:1:29: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a end $l)
+                              ^^
+out/test/spec/gc/if.wast:1530: assert_malformed passed:
+  out/test/spec/gc/if/if.108.wat:1:27: error: unexpected label "$l"
+  (func i32.const 0 if else $l end)
+                            ^^
+out/test/spec/gc/if.wast:1534: assert_malformed passed:
+  out/test/spec/gc/if/if.109.wat:1:30: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $l end)
+                               ^^
+out/test/spec/gc/if.wast:1538: assert_malformed passed:
+  out/test/spec/gc/if/if.110.wat:1:31: error: unexpected label "$l"
+  (func i32.const 0 if else end $l)
+                                ^^
+out/test/spec/gc/if.wast:1542: assert_malformed passed:
+  out/test/spec/gc/if/if.111.wat:1:27: error: unexpected label "$l"
+  (func i32.const 0 if else $l end $l)
+                            ^^
+  out/test/spec/gc/if/if.111.wat:1:34: error: unexpected label "$l"
+  (func i32.const 0 if else $l end $l)
+                                   ^^
+out/test/spec/gc/if.wast:1546: assert_malformed passed:
+  out/test/spec/gc/if/if.112.wat:1:27: error: unexpected label "$l1"
+  (func i32.const 0 if else $l1 end $l2)
+                            ^^^
+  out/test/spec/gc/if/if.112.wat:1:35: error: unexpected label "$l2"
+  (func i32.const 0 if else $l1 end $l2)
+                                    ^^^
+out/test/spec/gc/if.wast:1550: assert_malformed passed:
+  out/test/spec/gc/if/if.113.wat:1:34: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else end $l)
+                                   ^^
+out/test/spec/gc/if.wast:1554: assert_malformed passed:
+  out/test/spec/gc/if/if.114.wat:1:37: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $a end $l)
+                                      ^^
+out/test/spec/gc/if.wast:1558: assert_malformed passed:
+  out/test/spec/gc/if/if.115.wat:1:30: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $l end $l)
+                               ^^
+  out/test/spec/gc/if/if.115.wat:1:37: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $l end $l)
+                                      ^^
+out/test/spec/gc/if.wast:1562: assert_malformed passed:
+  out/test/spec/gc/if/if.116.wat:1:11: error: unexpected token i32.const, expected (.
+  (func (if i32.const 0 (then) (else)))
+            ^^^^^^^^^
+241/241 tests passed.
+;;; STDOUT ;;)

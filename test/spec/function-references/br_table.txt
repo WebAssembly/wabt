@@ -1,0 +1,78 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/br_table.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/br_table.wast:1267: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.1.wasm:0000022: error: type mismatch at end of block, expected [] but got [i32]
+  0000022: error: OnEndExpr callback failed
+out/test/spec/function-references/br_table.wast:1274: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.2.wasm:000001d: error: type mismatch in br_table, expected [i32] but got []
+  000001d: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1281: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.3.wasm:0000020: error: type mismatch in br_table, expected [i32] but got []
+  0000020: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1287: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.4.wasm:0000023: error: type mismatch in br_table, expected [i32] but got [i64]
+  0000023: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1295: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.5.wasm:0000026: error: br_table labels have inconsistent types: expected [f32], got []
+  0000026: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1306: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.6.wasm:0000023: error: type mismatch in br_table, expected [i64] but got [i32]
+  0000023: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1317: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.7.wasm:000001f: error: type mismatch in br_table, expected [i32] but got []
+  000001f: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1323: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.8.wasm:000001e: error: type mismatch in br_table, expected [i32] but got [i64]
+  000001e: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1329: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.9.wasm:0000021: error: type mismatch in br_table, expected [i32] but got []
+  0000021: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1335: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.10.wasm:0000023: error: type mismatch in br_table, expected [i32] but got []
+  0000023: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1341: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.11.wasm:0000022: error: type mismatch in br_table, expected [i32] but got [... i64]
+  0000022: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1350: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.12.wasm:0000022: error: type mismatch at end of block, expected [] but got [i32]
+  0000022: error: OnEndExpr callback failed
+out/test/spec/function-references/br_table.wast:1357: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.13.wasm:0000022: error: type mismatch in br_table, expected [i32] but got []
+  0000022: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1369: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.14.wasm:0000024: error: type mismatch in br_table, expected [i32] but got []
+  0000024: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1381: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.15.wasm:000001c: error: type mismatch in br_table, expected [i32] but got []
+  000001c: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1392: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.16.wasm:000001e: error: type mismatch in br_table, expected [i32] but got []
+  000001e: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1404: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.17.wasm:0000025: error: br_table labels have inconsistent types: expected [i32], got []
+  0000025: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1416: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.18.wasm:0000025: error: br_table labels have inconsistent types: expected [], got [i32]
+  0000025: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1430: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.19.wasm:000001f: error: invalid depth: 2 (max 1)
+  000001f: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1436: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.20.wasm:0000021: error: invalid depth: 5 (max 2)
+  0000021: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1442: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.21.wasm:0000024: error: invalid depth: 268435457 (max 1)
+  0000024: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1449: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.22.wasm:000001f: error: invalid depth: 2 (max 1)
+  000001f: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1455: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.23.wasm:0000021: error: invalid depth: 5 (max 2)
+  0000021: error: OnBrTableExpr callback failed
+out/test/spec/function-references/br_table.wast:1461: assert_invalid passed:
+  out/test/spec/function-references/br_table/br_table.24.wasm:0000024: error: invalid depth: 268435457 (max 1)
+  0000024: error: OnBrTableExpr callback failed
+186/186 tests passed.
+;;; STDOUT ;;)

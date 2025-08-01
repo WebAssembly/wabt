@@ -1,0 +1,7 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/br_on_null.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/br_on_null.wast:32: assert_trap passed: unreachable executed
+9/9 tests passed.
+;;; STDOUT ;;)

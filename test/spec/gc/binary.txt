@@ -1,0 +1,238 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/binary.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/binary.wast:6: assert_malformed passed:
+  0000000: error: unable to read uint32_t: magic
+out/test/spec/gc/binary.wast:7: assert_malformed passed:
+  0000000: error: unable to read uint32_t: magic
+out/test/spec/gc/binary.wast:8: assert_malformed passed:
+  0000000: error: unable to read uint32_t: magic
+out/test/spec/gc/binary.wast:9: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:10: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:11: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:12: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:13: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:14: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:15: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:16: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:17: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:18: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:21: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:24: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:25: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:28: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:31: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:34: assert_malformed passed:
+  0000004: error: bad magic value
+out/test/spec/gc/binary.wast:37: assert_malformed passed:
+  0000004: error: unable to read uint16_t: version
+out/test/spec/gc/binary.wast:38: assert_malformed passed:
+  0000004: error: unable to read uint16_t: version
+out/test/spec/gc/binary.wast:39: assert_malformed passed:
+  0000006: error: unable to read uint16_t: layer
+out/test/spec/gc/binary.wast:40: assert_malformed passed:
+  0000008: error: bad wasm file version: 0 (expected 0x1)
+out/test/spec/gc/binary.wast:41: assert_malformed passed:
+  0000008: error: bad wasm file version: 0xd (expected 0x1)
+out/test/spec/gc/binary.wast:42: assert_malformed passed:
+  0000008: error: bad wasm file version: 0xe (expected 0x1)
+out/test/spec/gc/binary.wast:43: assert_malformed passed:
+  0000008: error: bad wasm file version: 0x100 (expected 0x1)
+out/test/spec/gc/binary.wast:44: assert_malformed passed:
+  0000008: error: wasm components are not yet supported in this tool
+out/test/spec/gc/binary.wast:45: assert_malformed passed:
+  0000008: error: unsupported wasm layer: 0x100
+out/test/spec/gc/binary.wast:48: assert_malformed passed:
+  000000a: error: invalid section code: 14
+out/test/spec/gc/binary.wast:49: assert_malformed passed:
+  000000a: error: invalid section code: 127
+out/test/spec/gc/binary.wast:50: assert_malformed passed:
+  000000a: error: invalid section code: 128
+out/test/spec/gc/binary.wast:51: assert_malformed passed:
+  000000a: error: invalid section code: 129
+out/test/spec/gc/binary.wast:52: assert_malformed passed:
+  000000a: error: invalid section code: 255
+out/test/spec/gc/binary.wast:56: assert_malformed passed:
+  000001b: error: function body must end with END opcode
+out/test/spec/gc/binary.wast:77: assert_malformed passed:
+  000001a: error: function body must end with END opcode
+out/test/spec/gc/binary.wast:93: assert_malformed passed:
+  000001a: error: function body must end with END opcode
+out/test/spec/gc/binary.wast:113: assert_malformed passed:
+  0000019: error: init expression must end with END opcode
+out/test/spec/gc/binary.wast:126: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/gc/binary.wast:146: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/gc/binary.wast:166: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/gc/binary.wast:185: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/gc/binary.wast:204: assert_malformed passed:
+  0000020: error: memory.grow reserved value must be 0
+out/test/spec/gc/binary.wast:224: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/gc/binary.wast:243: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/gc/binary.wast:262: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/gc/binary.wast:280: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/gc/binary.wast:298: assert_malformed passed:
+  000001e: error: memory.size reserved value must be 0
+out/test/spec/gc/binary.wast:317: assert_malformed passed:
+  0000017: error: unable to read u32 leb128: local type count
+out/test/spec/gc/binary.wast:334: assert_malformed passed:
+  0000017: error: unable to read u32 leb128: local type count
+out/test/spec/gc/binary.wast:351: assert_malformed passed:
+  000001e: error: local count must be <= 0xffffffff
+out/test/spec/gc/binary.wast:367: assert_malformed passed:
+  0000030: error: local count must be <= 0xffffffff
+out/test/spec/gc/binary.wast:401: assert_malformed passed:
+  0000013: error: function signature count != function body count
+out/test/spec/gc/binary.wast:411: assert_malformed passed:
+  000000b: error: function signature count != function body count
+out/test/spec/gc/binary.wast:420: assert_malformed passed:
+  0000016: error: function signature count != function body count
+out/test/spec/gc/binary.wast:431: assert_malformed passed:
+  0000015: error: function signature count != function body count
+out/test/spec/gc/binary.wast:454: assert_malformed passed:
+  000000e: error: data segment count does not equal count in DataCount section
+out/test/spec/gc/binary.wast:466: assert_malformed passed:
+  000000e: error: data segment count does not equal count in DataCount section
+out/test/spec/gc/binary.wast:478: assert_malformed passed:
+  0000010: error: Data section missing but DataCount non-zero
+out/test/spec/gc/binary.wast:494: assert_malformed passed:
+  0000024: error: memory.init requires data count section
+out/test/spec/gc/binary.wast:517: assert_malformed passed:
+  000001e: error: data.drop requires data count section
+out/test/spec/gc/binary.wast:537: assert_malformed passed:
+  0000024: error: unexpected opcode: 0xf3
+out/test/spec/gc/binary.wast:565: assert_malformed passed:
+  0000022: error: table elem type must be a reference type
+out/test/spec/gc/binary.wast:650: assert_malformed passed:
+  000000a: error: invalid section size: extends past end
+out/test/spec/gc/binary.wast:661: assert_malformed passed:
+  000000e: error: unfinished section (expected end: 0x11)
+out/test/spec/gc/binary.wast:680: assert_malformed passed:
+  000000e: error: invalid import tag kind: exceptions not allowed
+out/test/spec/gc/binary.wast:690: assert_malformed passed:
+  000000e: error: invalid import tag kind: exceptions not allowed
+out/test/spec/gc/binary.wast:701: assert_malformed passed:
+  000000e: error: malformed import kind: 5
+out/test/spec/gc/binary.wast:711: assert_malformed passed:
+  000000e: error: malformed import kind: 5
+out/test/spec/gc/binary.wast:722: assert_malformed passed:
+  000000e: error: malformed import kind: 128
+out/test/spec/gc/binary.wast:732: assert_malformed passed:
+  000000e: error: malformed import kind: 128
+out/test/spec/gc/binary.wast:745: assert_malformed passed:
+  0000027: error: unable to read u32 leb128: string length
+out/test/spec/gc/binary.wast:764: assert_malformed passed:
+  000002b: error: unfinished section (expected end: 0x40)
+out/test/spec/gc/binary.wast:795: assert_malformed passed:
+  000000b: error: invalid table count 1, only 0 bytes left in section
+out/test/spec/gc/binary.wast:805: assert_malformed passed:
+  000000d: error: tables may not be shared
+out/test/spec/gc/binary.wast:814: assert_malformed passed:
+  000000d: error: tables may not be shared
+out/test/spec/gc/binary.wast:824: assert_malformed passed:
+  000000d: error: malformed table limits flag: 129
+out/test/spec/gc/binary.wast:842: assert_malformed passed:
+  000000b: error: invalid memory count 1, only 0 bytes left in section
+out/test/spec/gc/binary.wast:852: assert_malformed passed:
+  000000c: error: memory may not be shared: threads not allowed
+out/test/spec/gc/binary.wast:860: assert_malformed passed:
+  000000c: error: memory may not be shared: threads not allowed
+out/test/spec/gc/binary.wast:869: assert_malformed passed:
+  000000c: error: malformed memory limits flag: 129
+out/test/spec/gc/binary.wast:878: assert_malformed passed:
+  000000c: error: malformed memory limits flag: 129
+out/test/spec/gc/binary.wast:895: assert_malformed passed:
+  0000010: error: unable to read i32 leb128: global type
+out/test/spec/gc/binary.wast:906: assert_malformed passed:
+  0000010: error: unfinished section (expected end: 0x15)
+out/test/spec/gc/binary.wast:929: assert_malformed passed:
+  000001b: error: unable to read u32 leb128: string length
+out/test/spec/gc/binary.wast:950: assert_malformed passed:
+  000001b: error: unfinished section (expected end: 0x20)
+out/test/spec/gc/binary.wast:984: assert_malformed passed:
+  0000021: error: unable to read u32 leb128: elem segment flags
+out/test/spec/gc/binary.wast:1000: assert_malformed passed:
+  0000024: error: init expression must end with END opcode
+out/test/spec/gc/binary.wast:1017: assert_malformed passed:
+  0000021: error: unfinished section (expected end: 0x27)
+out/test/spec/gc/binary.wast:1043: assert_malformed passed:
+  0000016: error: unable to read u32 leb128: data segment flags
+out/test/spec/gc/binary.wast:1056: assert_malformed passed:
+  0000016: error: unfinished section (expected end: 0x1c)
+out/test/spec/gc/binary.wast:1069: assert_malformed passed:
+  0000015: error: unable to read data: data segment data
+out/test/spec/gc/binary.wast:1083: assert_malformed passed:
+  000001a: error: unfinished section (expected end: 0x1b)
+out/test/spec/gc/binary.wast:1114: assert_malformed passed:
+  0000048: error: function body must end with END opcode
+out/test/spec/gc/binary.wast:1161: assert_malformed passed:
+  0000017: error: multiple Start sections
+out/test/spec/gc/binary.wast:1178: assert_malformed passed:
+  0000014: error: multiple Function sections
+out/test/spec/gc/binary.wast:1190: assert_malformed passed:
+  0000016: error: function signature count != function body count
+out/test/spec/gc/binary.wast:1202: assert_malformed passed:
+  000000d: error: multiple DataCount sections
+out/test/spec/gc/binary.wast:1212: assert_malformed passed:
+  000000d: error: multiple Data sections
+out/test/spec/gc/binary.wast:1222: assert_malformed passed:
+  000000d: error: multiple Global sections
+out/test/spec/gc/binary.wast:1232: assert_malformed passed:
+  000000d: error: multiple Export sections
+out/test/spec/gc/binary.wast:1242: assert_malformed passed:
+  000000d: error: multiple Table sections
+out/test/spec/gc/binary.wast:1252: assert_malformed passed:
+  000000d: error: multiple Elem sections
+out/test/spec/gc/binary.wast:1262: assert_malformed passed:
+  000000d: error: multiple Import sections
+out/test/spec/gc/binary.wast:1272: assert_malformed passed:
+  000000d: error: multiple Type sections
+out/test/spec/gc/binary.wast:1282: assert_malformed passed:
+  000000d: error: multiple Memory sections
+out/test/spec/gc/binary.wast:1292: assert_malformed passed:
+  000000d: error: section Type out of order
+out/test/spec/gc/binary.wast:1302: assert_malformed passed:
+  000000d: error: section Import out of order
+out/test/spec/gc/binary.wast:1312: assert_malformed passed:
+  000000d: error: section Function out of order
+out/test/spec/gc/binary.wast:1322: assert_malformed passed:
+  000000d: error: section Table out of order
+out/test/spec/gc/binary.wast:1332: assert_malformed passed:
+  000000d: error: section Memory out of order
+out/test/spec/gc/binary.wast:1342: assert_malformed passed:
+  000000d: error: section Global out of order
+out/test/spec/gc/binary.wast:1352: assert_malformed passed:
+  0000011: error: section Export out of order
+out/test/spec/gc/binary.wast:1363: assert_malformed passed:
+  0000011: error: section Start out of order
+out/test/spec/gc/binary.wast:1374: assert_malformed passed:
+  000000d: error: section Elem out of order
+out/test/spec/gc/binary.wast:1384: assert_malformed passed:
+  000000d: error: section DataCount out of order
+out/test/spec/gc/binary.wast:1394: assert_malformed passed:
+  000000d: error: section Code out of order
+136/136 tests passed.
+;;; STDOUT ;;)

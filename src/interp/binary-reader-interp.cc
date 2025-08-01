@@ -84,11 +84,21 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndModule() override;
 
   Result OnTypeCount(Index count) override;
+  Result OnRecursiveType(Index first_type_index, Index type_count) override;
   Result OnFuncType(Index index,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override;
+                    Type* result_types,
+                    GCTypeExtension* gc_ext) override;
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields,
+                      GCTypeExtension* gc_ext) override;
+  Result OnArrayType(Index index,
+                     TypeMut field,
+                     GCTypeExtension* gc_ext) override;
+  Result EndTypeSection() override;
 
   Result OnImportFunc(Index import_index,
                       std::string_view module_name,
@@ -123,9 +133,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnFunction(Index index, Index sig_index) override;
 
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    bool has_init_expr) override;
+  Result BeginTableInitExpr(Index index) override;
+  Result EndTableInitExpr(Index index) override;
 
   Result OnMemoryCount(Index count) override;
   Result OnMemory(Index index,
@@ -153,6 +166,17 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result EndLocalDecls() override;
 
   Result OnOpcode(Opcode Opcode) override;
+  Result OnArrayCopyExpr(Index dst_type_index, Index src_type_index) override;
+  Result OnArrayFillExpr(Index type_index) override;
+  Result OnArrayGetExpr(Opcode opcode, Index type_index) override;
+  Result OnArrayInitDataExpr(Index type_index, Index data_index) override;
+  Result OnArrayInitElemExpr(Index type_index, Index elem_index) override;
+  Result OnArrayNewExpr(Index type_index) override;
+  Result OnArrayNewDataExpr(Index type_index, Index data_index) override;
+  Result OnArrayNewDefaultExpr(Index type_index) override;
+  Result OnArrayNewElemExpr(Index type_index, Index elem_index) override;
+  Result OnArrayNewFixedExpr(Index type_index, Index count) override;
+  Result OnArraySetExpr(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -182,16 +206,24 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnCastExpr(Opcode opcode,
+                        Index depth,
+                        Type type1,
+                        Type type2) override;
+  Result OnBrOnNonNullExpr(Index depth) override;
+  Result OnBrOnNullExpr(Index depth) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnCallRefExpr(Type sig_type) override;
   Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnDelegateExpr(Index depth) override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnReturnCallRefExpr(Type sig_type) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDropExpr() override;
@@ -200,6 +232,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
   Result OnV128ConstExpr(v128 value_bits) override;
+  Result OnGCUnaryExpr(Opcode opcode) override;
   Result OnGlobalGetExpr(Index global_index) override;
   Result OnGlobalSetExpr(Index global_index) override;
   Result OnI32ConstExpr(uint32_t value) override;
@@ -219,9 +252,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnMemoryFillExpr(Index memidx) override;
   Result OnMemoryInitExpr(Index segment_index, Index memidx) override;
   Result OnMemorySizeExpr(Index memidx) override;
+  Result OnRefAsNonNullExpr() override;
+  Result OnRefCastExpr(Type type) override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
+  Result OnRefTestExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
@@ -240,6 +276,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index, Index table_index) override;
   Result OnTernaryExpr(Opcode opcode) override;
+  Result OnStructGetExpr(Opcode opcode,
+                         Index type_index,
+                         Index field_index) override;
+  Result OnStructNewExpr(Index type_index) override;
+  Result OnStructNewDefaultExpr(Index type_index) override;
+  Result OnStructSetExpr(Index type_index, Index field_index) override;
   Result OnThrowExpr(Index tag_index) override;
   Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
@@ -320,12 +362,17 @@ class BinaryReaderInterp : public BinaryReaderNop {
               Index drop_count,
               Index keep_count,
               Index catch_drop_count);
+
+  Result EmitBrCond(Opcode opcode, Index depth);
+
   void FixupTopLabel();
   u32 GetFuncOffset(Index func_index);
 
   Index TranslateLocalIndex(Index local_index);
 
   Index num_func_imports() const;
+
+  void UpdateTypeInfo(GCTypeExtension* gc_ext);
 
   Errors* errors_ = nullptr;
   ModuleDesc& module_;
@@ -340,6 +387,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   u32 local_decl_count_;
   u32 local_count_;
+  Index recursive_start_;
+  Index recursive_end_;
 
   std::vector<FuncType> func_types_;      // Includes imported and defined.
   std::vector<TableType> table_types_;    // Includes imported and defined.
@@ -471,6 +520,25 @@ void BinaryReaderInterp::EmitBr(Index depth,
   istream_.Emit(offset);
 }
 
+Result BinaryReaderInterp::EmitBrCond(Opcode opcode, Index depth) {
+  Index drop_count, keep_count, catch_drop_count;
+  CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
+  CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
+  // The opcode is flipped so if <cond> is
+  // true it can drop values from the stack.
+  istream_.Emit(opcode);
+  auto fixup = istream_.EmitFixupU32();
+  // The validator for br_on_null keeps the (non-null) reference on
+  // the stack. This reference needs to be ignored when the branch
+  // is executed. Note: opcode contains the flipped value.
+  if (opcode == Opcode::BrOnNonNull && drop_count > 0) {
+    drop_count--;
+  }
+  EmitBr(depth, drop_count, keep_count, catch_drop_count);
+  istream_.ResolveFixupU32(fixup);
+  return Result::Ok;
+}
+
 void BinaryReaderInterp::FixupTopLabel() {
   depth_fixups_.Resolve(istream_, label_stack_.size() - 1);
 }
@@ -496,18 +564,106 @@ Result BinaryReaderInterp::EndModule() {
 
 Result BinaryReaderInterp::OnTypeCount(Index count) {
   module_.func_types.reserve(count);
+  recursive_end_ = 0;
   return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnRecursiveType(Index first_type_index,
+                                           Index type_count) {
+  CHECK_RESULT(validator_.OnRecursiveType(first_type_index, type_count));
+  if (type_count > 0) {
+    // A non-empty recursive group is found.
+    recursive_start_ = static_cast<Index>(module_.func_types.size());
+    recursive_end_ = recursive_start_ + type_count;
+  }
+  return Result::Ok;
+}
+
+void BinaryReaderInterp::UpdateTypeInfo(GCTypeExtension* gc_ext) {
+  FuncType& type = module_.func_types.back();
+  Index index = static_cast<Index>(module_.func_types.size() - 1);
+
+  if (index < recursive_end_) {
+    type.recursive_start = recursive_start_;
+    type.recursive_count = recursive_end_ - recursive_start_;
+  } else {
+    type.recursive_start = index;
+    type.recursive_count = 1;
+  }
+
+  type.is_final_sub_type = gc_ext->is_final_sub_type;
+  type.canonical_index = index;
+  if (gc_ext->sub_type_count > 0) {
+    type.canonical_sub_index = gc_ext->sub_types[0];
+  } else {
+    type.canonical_sub_index = kInvalidIndex;
+  }
 }
 
 Result BinaryReaderInterp::OnFuncType(Index index,
                                       Index param_count,
                                       Type* param_types,
                                       Index result_count,
-                                      Type* result_types) {
-  CHECK_RESULT(validator_.OnFuncType(GetLocation(), param_count, param_types,
-                                     result_count, result_types, index));
+                                      Type* result_types,
+                                      GCTypeExtension* gc_ext) {
+  Result result =
+      validator_.OnFuncType(GetLocation(), param_count, param_types,
+                            result_count, result_types, index, gc_ext);
   module_.func_types.push_back(FuncType(ToInterp(param_count, param_types),
                                         ToInterp(result_count, result_types)));
+  UpdateTypeInfo(gc_ext);
+  return result;
+}
+
+Result BinaryReaderInterp::OnStructType(Index index,
+                                        Index field_count,
+                                        TypeMut* fields,
+                                        GCTypeExtension* gc_ext) {
+  Result result =
+      validator_.OnStructType(GetLocation(), field_count, fields, gc_ext);
+
+  ValueTypes params;
+  ValueTypes results;
+  params.reserve(field_count);
+  results.reserve(field_count);
+
+  for (Index i = 0; i < field_count; i++) {
+    params.push_back(fields[i].type);
+    results.push_back(fields[i].mutable_ ? FuncType::Mutable
+                                         : FuncType::Immutable);
+  }
+
+  module_.func_types.push_back(
+      FuncType(FuncType::TypeKind::Struct, params, results));
+  UpdateTypeInfo(gc_ext);
+  return result;
+}
+
+Result BinaryReaderInterp::OnArrayType(Index index,
+                                       TypeMut field,
+                                       GCTypeExtension* gc_ext) {
+  Result result = validator_.OnArrayType(GetLocation(), field, gc_ext);
+
+  ValueTypes params;
+  ValueTypes results;
+  params.reserve(1);
+  results.reserve(1);
+
+  params.push_back(field.type);
+  results.push_back(field.mutable_ ? FuncType::Mutable : FuncType::Immutable);
+
+  module_.func_types.push_back(
+      FuncType(FuncType::TypeKind::Array, params, results));
+  UpdateTypeInfo(gc_ext);
+  return result;
+}
+
+Result BinaryReaderInterp::EndTypeSection() {
+  for (auto& it : module_.func_types) {
+    it.canonical_index = validator_.GetCanonicalTypeIndex(it.canonical_index);
+    it.canonical_sub_index =
+        validator_.GetCanonicalTypeIndex(it.canonical_sub_index);
+  }
   return Result::Ok;
 }
 
@@ -531,7 +687,8 @@ Result BinaryReaderInterp::OnImportTable(Index import_index,
                                          Index table_index,
                                          Type elem_type,
                                          const Limits* elem_limits) {
-  CHECK_RESULT(validator_.OnTable(GetLocation(), elem_type, *elem_limits));
+  CHECK_RESULT(
+      validator_.OnTable(GetLocation(), elem_type, *elem_limits, true, false));
   TableType table_type{elem_type, *elem_limits};
   module_.imports.push_back(ImportDesc{ImportType(
       std::string(module_name), std::string(field_name), table_type.Clone())});
@@ -600,13 +757,30 @@ Result BinaryReaderInterp::OnTableCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnTable(Index index,
-                                   Type elem_type,
-                                   const Limits* elem_limits) {
-  CHECK_RESULT(validator_.OnTable(GetLocation(), elem_type, *elem_limits));
+Result BinaryReaderInterp::BeginTable(Index index,
+                                      Type elem_type,
+                                      const Limits* elem_limits,
+                                      bool has_init_expr) {
+  CHECK_RESULT(validator_.OnTable(GetLocation(), elem_type, *elem_limits, false,
+                                  has_init_expr));
   TableType table_type{elem_type, *elem_limits};
-  module_.tables.push_back(TableDesc{table_type});
+  FuncDesc init_func{
+      FuncType{{}, {elem_type}}, {}, Istream::kInvalidOffset, {}};
+  module_.tables.push_back(TableDesc{table_type, init_func});
   table_types_.push_back(table_type);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::BeginTableInitExpr(Index index) {
+  TableDesc& table = module_.tables.back();
+  return BeginInitExpr(&table.init_func);
+}
+
+Result BinaryReaderInterp::EndTableInitExpr(Index index) {
+  FixupTopLabel();
+  CHECK_RESULT(validator_.EndInitExpr());
+  istream_.Emit(Opcode::Return);
+  PopLabel();
   return Result::Ok;
 }
 
@@ -631,7 +805,7 @@ Result BinaryReaderInterp::OnGlobalCount(Index count) {
 }
 
 Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
-  CHECK_RESULT(validator_.OnGlobal(GetLocation(), type, mutable_));
+  CHECK_RESULT(validator_.BeginGlobal(GetLocation(), type, mutable_));
   GlobalType global_type{type, ToMutability(mutable_)};
   FuncDesc init_func{FuncType{{}, {type}}, {}, Istream::kInvalidOffset, {}};
   module_.globals.push_back(GlobalDesc{global_type, init_func});
@@ -664,6 +838,7 @@ Result BinaryReaderInterp::BeginInitExpr(FuncDesc* func) {
 }
 
 Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
+  CHECK_RESULT(validator_.EndGlobal(GetLocation()));
   return EndInitExpr();
 }
 
@@ -986,6 +1161,99 @@ Result BinaryReaderInterp::OnLoadZeroExpr(Opcode opcode,
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnArrayCopyExpr(Index dst_type_index,
+                                           Index src_type_index) {
+  CHECK_RESULT(validator_.OnArrayCopy(GetLocation(),
+                                      Var(dst_type_index, GetLocation()),
+                                      Var(src_type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayCopy);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayFillExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArrayFill(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayFill);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayGetExpr(Opcode opcode, Index type_index) {
+  CHECK_RESULT(validator_.OnArrayGet(GetLocation(), opcode,
+                                     Var(type_index, GetLocation())));
+  if (opcode == Opcode::ArrayGet) {
+    istream_.Emit(opcode);
+  } else {
+    Index is_16 = (module_.func_types[type_index].params[0] == Type::I16);
+    istream_.Emit(opcode, is_16);
+  }
+
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayInitDataExpr(Index type_index,
+                                               Index data_index) {
+  CHECK_RESULT(validator_.OnArrayInitData(GetLocation(),
+                                          Var(type_index, GetLocation()),
+                                          Var(data_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayInitData, type_index, data_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayInitElemExpr(Index type_index,
+                                               Index elem_index) {
+  CHECK_RESULT(validator_.OnArrayInitElem(GetLocation(),
+                                          Var(type_index, GetLocation()),
+                                          Var(elem_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayInitElem, elem_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArrayNew(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNew, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewDataExpr(Index type_index,
+                                              Index data_index) {
+  CHECK_RESULT(validator_.OnArrayNewData(GetLocation(),
+                                         Var(type_index, GetLocation()),
+                                         Var(data_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewData, type_index, data_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewDefaultExpr(Index type_index) {
+  CHECK_RESULT(validator_.OnArrayNewDefault(GetLocation(),
+                                            Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewDefault, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewElemExpr(Index type_index,
+                                              Index elem_index) {
+  CHECK_RESULT(validator_.OnArrayNewElem(GetLocation(),
+                                         Var(type_index, GetLocation()),
+                                         Var(elem_index, GetLocation())));
+  istream_.Emit(Opcode::ArrayNewElem, type_index, elem_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArrayNewFixedExpr(Index type_index, Index count) {
+  CHECK_RESULT(validator_.OnArrayNewFixed(
+      GetLocation(), Var(type_index, GetLocation()), count));
+  istream_.Emit(Opcode::ArrayNewFixed, type_index, count);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnArraySetExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnArraySet(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::ArraySet);
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnAtomicLoadExpr(Opcode opcode,
                                             Index memidx,
                                             Address align_log2,
@@ -1106,16 +1374,43 @@ Result BinaryReaderInterp::OnBrExpr(Index depth) {
 }
 
 Result BinaryReaderInterp::OnBrIfExpr(Index depth) {
-  Index drop_count, keep_count, catch_drop_count;
   CHECK_RESULT(validator_.OnBrIf(GetLocation(), Var(depth, GetLocation())));
-  CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
-  CHECK_RESULT(validator_.GetCatchCount(depth, &catch_drop_count));
-  // Flip the br_if so if <cond> is true it can drop values from the stack.
-  istream_.Emit(Opcode::InterpBrUnless);
-  auto fixup = istream_.EmitFixupU32();
-  EmitBr(depth, drop_count, keep_count, catch_drop_count);
-  istream_.ResolveFixupU32(fixup);
-  return Result::Ok;
+  // Opcode is flipped.
+  return EmitBrCond(Opcode::InterpBrUnless, depth);
+}
+
+Result BinaryReaderInterp::OnBrOnCastExpr(Opcode opcode,
+                                          Index depth,
+                                          Type type1,
+                                          Type type2) {
+  CHECK_RESULT(validator_.OnBrOnCast(
+      GetLocation(), opcode, Var(depth, GetLocation()),
+      Var(type1, GetLocation()), Var(type2, GetLocation())));
+  // For simplicity, the reftest result is pushed onto
+  // the stack, and it is processed by a br_if/br_unless.
+  Opcode test_opcode =
+      type2.IsNullableRef() ? Opcode::BrOnCast : Opcode::BrOnCastFail;
+  uint32_t code = static_cast<Type::Enum>(type2);
+  uint32_t value = type2.IsReferenceWithIndex() ? type2.GetReferenceIndex()
+                                                : Type::ReferenceNonNull;
+  istream_.Emit(test_opcode, code, value);
+  // Opcode is flipped.
+  return EmitBrCond(
+      opcode == Opcode::BrOnCast ? Opcode::InterpBrUnless : Opcode::BrIf,
+      depth);
+}
+
+Result BinaryReaderInterp::OnBrOnNonNullExpr(Index depth) {
+  CHECK_RESULT(
+      validator_.OnBrOnNonNull(GetLocation(), Var(depth, GetLocation())));
+  // Opcode is flipped.
+  return EmitBrCond(Opcode::BrOnNull, depth);
+}
+
+Result BinaryReaderInterp::OnBrOnNullExpr(Index depth) {
+  CHECK_RESULT(validator_.OnBrOnNull(GetLocation(), Var(depth, GetLocation())));
+  // Opcode is flipped.
+  return EmitBrCond(Opcode::BrOnNonNull, depth);
 }
 
 Result BinaryReaderInterp::OnBrTableExpr(Index num_targets,
@@ -1170,7 +1465,16 @@ Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index,
   CHECK_RESULT(validator_.OnCallIndirect(GetLocation(),
                                          Var(sig_index, GetLocation()),
                                          Var(table_index, GetLocation())));
-  istream_.Emit(Opcode::CallIndirect, table_index, sig_index);
+  istream_.Emit(Opcode::CallIndirect, table_index,
+                module_.func_types[sig_index].canonical_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnCallRefExpr(Type sig_type) {
+  CHECK_RESULT(
+      validator_.OnCallRef(GetLocation(), Var(sig_type, GetLocation())));
+  assert(sig_type == Type::RefNull);
+  istream_.Emit(Opcode::CallRef);
   return Result::Ok;
 }
 
@@ -1227,7 +1531,16 @@ Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
       Var(table_index, GetLocation())));
   istream_.EmitDropKeep(drop_count, keep_count);
   istream_.EmitCatchDrop(catch_drop_count);
-  istream_.Emit(Opcode::ReturnCallIndirect, table_index, sig_index);
+  istream_.Emit(Opcode::ReturnCallIndirect, table_index,
+                module_.func_types[sig_index].canonical_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnReturnCallRefExpr(Type sig_type) {
+  CHECK_RESULT(
+      validator_.OnReturnCallRef(GetLocation(), Var(sig_type, GetLocation())));
+  assert(sig_type == Type::RefNull);
+  istream_.Emit(Opcode::ReturnCallRef);
   return Result::Ok;
 }
 
@@ -1276,6 +1589,15 @@ Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
 Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
   CHECK_RESULT(validator_.OnConst(GetLocation(), Type::V128));
   istream_.Emit(Opcode::V128Const, value_bits);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnGCUnaryExpr(Opcode opcode) {
+  CHECK_RESULT(validator_.OnGCUnary(GetLocation(), opcode));
+  if (opcode != Opcode::AnyConvertExtern &&
+      opcode != Opcode::ExternConvertAny) {
+    istream_.Emit(opcode);
+  }
   return Result::Ok;
 }
 
@@ -1396,6 +1718,22 @@ Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
   return Result::Ok;
 }
 
+Result BinaryReaderInterp::OnRefAsNonNullExpr() {
+  CHECK_RESULT(validator_.OnRefAsNonNull(Location()));
+  istream_.Emit(Opcode::RefAsNonNull);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnRefCastExpr(Type type) {
+  CHECK_RESULT(validator_.OnRefCast(GetLocation(), Var(type, GetLocation())));
+  Opcode opcode = type.IsNullableRef() ? Opcode::RefCastNull : Opcode::RefCast;
+  uint32_t code = static_cast<Type::Enum>(type);
+  uint32_t value = type.IsReferenceWithIndex() ? type.GetReferenceIndex()
+                                               : Type::ReferenceNonNull;
+  istream_.Emit(opcode, code, value);
+  return Result::Ok;
+}
+
 Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   CHECK_RESULT(
       validator_.OnRefFunc(GetLocation(), Var(func_index, GetLocation())));
@@ -1404,7 +1742,7 @@ Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
 }
 
 Result BinaryReaderInterp::OnRefNullExpr(Type type) {
-  CHECK_RESULT(validator_.OnRefNull(GetLocation(), type));
+  CHECK_RESULT(validator_.OnRefNull(GetLocation(), Var(type, GetLocation())));
   istream_.Emit(Opcode::RefNull);
   return Result::Ok;
 }
@@ -1412,6 +1750,16 @@ Result BinaryReaderInterp::OnRefNullExpr(Type type) {
 Result BinaryReaderInterp::OnRefIsNullExpr() {
   CHECK_RESULT(validator_.OnRefIsNull(GetLocation()));
   istream_.Emit(Opcode::RefIsNull);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnRefTestExpr(Type type) {
+  CHECK_RESULT(validator_.OnRefTest(GetLocation(), Var(type, GetLocation())));
+  Opcode opcode = type.IsNullableRef() ? Opcode::RefTestNull : Opcode::RefTest;
+  uint32_t code = static_cast<Type::Enum>(type);
+  uint32_t value = type.IsReferenceWithIndex() ? type.GetReferenceIndex()
+                                               : Type::ReferenceNonNull;
+  istream_.Emit(opcode, code, value);
   return Result::Ok;
 }
 
@@ -1538,6 +1886,45 @@ Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
                                       Var(segment_index, GetLocation()),
                                       Var(table_index, GetLocation())));
   istream_.Emit(Opcode::TableInit, table_index, segment_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructGetExpr(Opcode opcode,
+                                           Index type_index,
+                                           Index field_index) {
+  CHECK_RESULT(validator_.OnStructGet(GetLocation(), opcode,
+                                      Var(type_index, GetLocation()),
+                                      Var(field_index, GetLocation())));
+  if (opcode == Opcode::StructGet) {
+    istream_.Emit(opcode, field_index);
+  } else {
+    Index is_16 =
+        (module_.func_types[type_index].params[field_index] == Type::I16);
+    istream_.Emit(opcode, field_index, is_16);
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructNewExpr(Index type_index) {
+  CHECK_RESULT(
+      validator_.OnStructNew(GetLocation(), Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::StructNew, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructNewDefaultExpr(Index type_index) {
+  CHECK_RESULT(validator_.OnStructNewDefault(GetLocation(),
+                                             Var(type_index, GetLocation())));
+  istream_.Emit(Opcode::StructNewDefault, type_index);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnStructSetExpr(Index type_index,
+                                           Index field_index) {
+  CHECK_RESULT(validator_.OnStructSet(GetLocation(),
+                                      Var(type_index, GetLocation()),
+                                      Var(field_index, GetLocation())));
+  istream_.Emit(Opcode::StructSet, field_index);
   return Result::Ok;
 }
 

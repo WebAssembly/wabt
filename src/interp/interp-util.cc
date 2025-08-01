@@ -52,16 +52,59 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::FuncRef:
       return StringPrintf("funcref:%" PRIzd, tv.value.Get<Ref>().index);
 
-    case Type::ExternRef:
-      return StringPrintf("externref:%" PRIzd, tv.value.Get<Ref>().index);
+    case Type::ExternRef: {
+      // Backward compatible print.
+      if (tv.value.Get<Ref>() == Ref::Null) {
+        return "externref:0";
+      }
+      return StringPrintf("externref:%" PRIzd,
+                          tv.value.Get<Ref>().GetHostVal() + 1);
+    }
 
     case Type::ExnRef:
       return StringPrintf("exnref:%" PRIzd, tv.value.Get<Ref>().index);
 
-    case Type::Reference:
+    case Type::AnyRef:
+      return StringPrintf("anyref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::ArrayRef:
+      return StringPrintf("arrayref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::NullRef:
+      return StringPrintf("botref:0");
+
+    case Type::NullExternRef:
+      return StringPrintf("externref:0");
+
+    case Type::NullFuncRef:
+      return StringPrintf("funcref:0");
+
+    case Type::EqRef:
+      return StringPrintf("eqref:%" PRIzd, tv.value.Get<Ref>().index);
+
+    case Type::I31Ref: {
+      if (tv.value.Get<Ref>() == Ref::Null) {
+        return "i31ref:null";
+      }
+      return StringPrintf("i31ref:%d",
+                          static_cast<int>(tv.value.Get<Ref>().GetU32Val()));
+    }
+
+    case Type::Ref:
+      return StringPrintf("ref:%" PRIindex, tv.type.GetReferenceIndex());
+
+    case Type::RefNull:
+      return StringPrintf("refnull:%" PRIindex, tv.type.GetReferenceIndex());
+
+    case Type::StructRef:
+      return StringPrintf("structref:%" PRIzd, tv.value.Get<Ref>().index);
+
     case Type::Func:
     case Type::Struct:
     case Type::Array:
+    case Type::Sub:
+    case Type::SubFinal:
+    case Type::Rec:
     case Type::Void:
     case Type::Any:
     case Type::I8U:

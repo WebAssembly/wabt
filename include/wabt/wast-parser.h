@@ -56,6 +56,14 @@ class WastParser {
     Expectation,
   };
 
+  struct ResolveRefType {
+    ResolveRefType(Type* target_type, Var var)
+      : target_type(target_type), var(var) {}
+
+    Type* target_type;
+    Var var;
+  };
+
   struct ReferenceVar {
     ReferenceVar(uint32_t index, Var var)
       : index(index), var(var) {}
@@ -66,20 +74,28 @@ class WastParser {
 
   typedef std::vector<ReferenceVar> ReferenceVars;
 
-  struct ResolveTypes {
-    ResolveTypes(TypeVector* target_types)
-      : target_types(target_types) {}
+  struct ResolveTypeVector {
+    ResolveTypeVector(TypeVector* target_vector)
+      : target_vector(target_vector) {}
 
-    TypeVector* target_types;
+    TypeVector* target_vector;
     ReferenceVars vars;
   };
 
-  struct ResolveFuncs {
-    ResolveFuncs(Func* target_func)
+  struct ResolveFunc {
+    ResolveFunc(Func* target_func)
       : target_func(target_func) {}
 
     Func* target_func;
     TypeVector types;
+    ReferenceVars vars;
+  };
+
+  struct ResolveField {
+    ResolveField(StructType* target_struct)
+      : target_struct(target_struct) {}
+
+    StructType* target_struct;
     ReferenceVars vars;
   };
 
@@ -162,13 +178,14 @@ class WastParser {
   bool ParseElemExprOpt(ExprList* out_elem_expr);
   bool ParseElemExprListOpt(ExprListVector* out_list);
   bool ParseElemExprVarListOpt(ExprListVector* out_list);
-  Result ParseValueType(Var* out_type);
+  Result ParseRefDeclaration(Var* out_type);
+  Result ParseValueType(Var* out_type, bool is_field = false);
   Result ParseValueTypeList(
       TypeVector* out_type_list,
       ReferenceVars* type_vars);
-  Result ParseRefKind(Type* out_type);
-  Result ParseRefType(Type* out_type);
-  bool ParseRefTypeOpt(Type* out_type);
+  Result ParseRefKind(Var* out_type);
+  Result ParseRefType(Var* out_type);
+  bool ParseRefTypeOpt(Var* out_type, Result& result);
   Result ParseQuotedText(std::string* text, bool check_utf8 = true);
   bool ParseOffsetOpt(Address* offset);
   bool ParseAlignOpt(Address* align);
@@ -178,8 +195,11 @@ class WastParser {
   Result ParsePageSize(uint32_t*);
   Result ParseNat(uint64_t*, bool is_64);
 
-  static Result ResolveRefTypes(const Module&, TypeVector*,
-                                ReferenceVars*, Errors* errors);
+  static Result ResolveTargetRefType(const Module&, Type*, const Var&, Errors*);
+  static Result ResolveTargetTypeVector(const Module&, TypeVector*,
+                                        ReferenceVars*, Errors*);
+  static Result ResolveTargetFieldVector(const Module&, StructType*,
+                                         ReferenceVars*, Errors* errors);
   Result ParseModuleFieldList(Module*);
   Result ParseModuleField(Module*);
   Result ParseDataModuleField(Module*);
@@ -188,6 +208,7 @@ class WastParser {
   Result ParseExportModuleField(Module*);
   Result ParseFuncModuleField(Module*);
   Result ParseTypeModuleField(Module*);
+  Result ParseRecTypeModuleField(Module*);
   Result ParseGlobalModuleField(Module*);
   Result ParseImportModuleField(Module*);
   Result ParseMemoryModuleField(Module*);
@@ -238,10 +259,12 @@ class WastParser {
   Result ParseCatchExprList(CatchVector* catches);
   Result ParseGlobalType(Global*);
   Result ParseField(Field*);
-  Result ParseFieldList(std::vector<Field>*);
+  Result ParseFieldList(StructType*);
 
   template <typename T>
   Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParsePlainInstrVarVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
   Result ParseMemoryInstrVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
@@ -288,25 +311,34 @@ class WastParser {
 
   void CheckImportOrdering(Module*);
   bool HasError() const;
+  bool CheckRefType(Type::Enum type);
+  void VarToType(const Var& var, Type* type);
 
   WastLexer* lexer_;
   Index last_module_index_ = kInvalidIndex;
   Errors* errors_;
   WastParseOptions* options_;
 
-  // Reference types can have names, for example (ref $foo) represents
-  // a type which name is $foo. These types are translated to their
-  // corresponding index after the parsing is completed. The position
-  // and names of these reference types are stored in a ReferenceVars
-  // vector. The names are stored as variables, because the error
-  // message construction requires a location when a name is not found.
-  std::vector<ResolveTypes> resolve_types_;
+  // Reference types can have names or indicies. For example (ref $foo)
+  // represents a type which name is $foo, and (ref 5) represents
+  // the fifth type declaration. Both of these variants needs to
+  // be validated after the parsing is completed.
 
-  // When some locals are named references, the parser keeps the
-  // non-compressed local vector until the module parsing is
-  // completed. After the locals are resolved, local_types are
-  // constructed from this vector, and then this vector is freed.
-  std::vector<ResolveFuncs> resolve_funcs_;
+  // Single type references are stored in the following vector.
+  std::vector<ResolveRefType> resolve_ref_types_;
+
+  // Type vectors and their corresponding references are stored in the
+  // following vector. At least one reference must be present for each vector.
+  std::vector<ResolveTypeVector> resolve_type_vectors_;
+
+  // Local vectors and their corresponding references are stored in the
+  // following vector. At least one reference must be present for each vector.
+  std::vector<ResolveFunc> resolve_funcs_;
+
+  // Structure fields and their corresponding references are
+  // stored in the following vector. At least one reference
+  // must be present for each structure.
+  std::vector<ResolveField> resolve_fields_;
 
   // two-element queue of upcoming tokens
   class TokenQueue {

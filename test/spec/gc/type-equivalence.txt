@@ -1,0 +1,9 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/type-equivalence.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/type-equivalence.wast:77: assert_invalid passed:
+  out/test/spec/gc/type-equivalence/type-equivalence.5.wasm:0000010: error: reference 1 is out of range in params
+  0000010: error: OnFuncType callback failed
+26/26 tests passed.
+;;; STDOUT ;;)

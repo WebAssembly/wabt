@@ -1,0 +1,19 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/array_fill.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/array_fill.wast:6: assert_invalid passed:
+  out/test/spec/gc/array_fill/array_fill.0.wasm:0000042: error: array is immutable
+  0000042: error: OnArrayFillExpr callback failed
+out/test/spec/gc/array_fill.wast:17: assert_invalid passed:
+  out/test/spec/gc/array_fill/array_fill.1.wasm:0000042: error: type mismatch in array.fill, expected [(ref null 0), i32, i32, i32] but got [(ref 0), i32, funcref, i32]
+  0000042: error: OnArrayFillExpr callback failed
+out/test/spec/gc/array_fill.wast:28: assert_invalid passed:
+  out/test/spec/gc/array_fill/array_fill.2.wasm:0000042: error: type mismatch in array.fill, expected [(ref null 0), i32, funcref, i32] but got [(ref 0), i32, i32, i32]
+  0000042: error: OnArrayFillExpr callback failed
+out/test/spec/gc/array_fill.wast:59: assert_trap passed: null array ref
+out/test/spec/gc/array_fill.wast:62: assert_trap passed: invalid range
+out/test/spec/gc/array_fill.wast:65: assert_trap passed: invalid range
+out/test/spec/gc/array_fill.wast:74: assert_trap passed: invalid index
+17/17 tests passed.
+;;; STDOUT ;;)

@@ -1,0 +1,37 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/array.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/array.wast:28: assert_invalid passed:
+  out/test/spec/gc/array/array.1.wasm:000000f: error: reference 10 is out of range in params
+  000000f: error: OnArrayType callback failed
+out/test/spec/gc/array.wast:49: assert_invalid passed:
+  out/test/spec/gc/array/array.3.wasm:000000f: error: reference 1 is out of range in params
+  000000f: error: OnArrayType callback failed
+out/test/spec/gc/array.wast:53: assert_invalid passed:
+  out/test/spec/gc/array/array.4.wasm:000000f: error: reference 1 is out of range in params
+  000000f: error: OnArrayType callback failed
+out/test/spec/gc/array.wast:103: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:104: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:148: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:149: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:201: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:202: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:203: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:261: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:262: assert_trap passed: invalid index
+out/test/spec/gc/array.wast:265: assert_invalid passed:
+  out/test/spec/gc/array/array.9.wasm:000003e: error: array is immutable
+  000003e: error: OnArraySetExpr callback failed
+out/test/spec/gc/array.wast:275: assert_invalid passed:
+  out/test/spec/gc/array/array.10.wasm:000001c: error: invalid initializer: instruction not valid in initializer expression: array.new_data
+  out/test/spec/gc/array/array.10.wasm:000001c: error: data_segment variable out of range: 0 (max 0)
+  000001c: error: OnArrayNewDataExpr callback failed
+out/test/spec/gc/array.wast:288: assert_invalid passed:
+  out/test/spec/gc/array/array.11.wasm:0000020: error: invalid initializer: instruction not valid in initializer expression: array.new_elem
+  out/test/spec/gc/array/array.11.wasm:0000020: error: elem_segment variable out of range: 0 (max 0)
+  0000020: error: OnArrayNewElemExpr callback failed
+out/test/spec/gc/array.wast:314: assert_trap passed: null array ref
+out/test/spec/gc/array.wast:315: assert_trap passed: null array ref
+46/46 tests passed.
+;;; STDOUT ;;)

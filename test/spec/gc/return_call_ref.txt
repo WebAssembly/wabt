@@ -1,0 +1,44 @@
+;;; SLOW:
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/return_call_ref.wast
+;;; ARGS*: --enable-gc --enable-tail-call
+(;; STDOUT ;;;
+out/test/spec/gc/return_call_ref.wast:183: assert_trap passed: null function reference
+out/test/spec/gc/return_call_ref.wast:232: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.2.wasm:000002d: error: return signatures have inconsistent types: expected [(ref 0)], got [(ref null 0)]
+  000002d: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:243: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.3.wasm:000002d: error: return signatures have inconsistent types: expected [(ref 0)], got [(ref func)]
+  000002d: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:254: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.4.wasm:000002c: error: return signatures have inconsistent types: expected [(ref 0)], got [funcref]
+  000002c: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:265: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.5.wasm:000002d: error: return signatures have inconsistent types: expected [(ref null 0)], got [(ref func)]
+  000002d: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:276: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.6.wasm:000002c: error: return signatures have inconsistent types: expected [(ref null 0)], got [funcref]
+  000002c: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:287: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.7.wasm:0000029: error: return signatures have inconsistent types: expected [(ref func)], got [funcref]
+  0000029: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:306: assert_trap passed: unreachable executed
+out/test/spec/gc/return_call_ref.wast:319: assert_trap passed: unreachable executed
+out/test/spec/gc/return_call_ref.wast:334: assert_trap passed: unreachable executed
+out/test/spec/gc/return_call_ref.wast:337: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.11.wasm:0000042: error: type mismatch in return_call, expected [i32] but got [i64]
+  0000042: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:353: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.12.wasm:0000043: error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000043: error: EndFunctionBody callback failed
+out/test/spec/gc/return_call_ref.wast:369: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.13.wasm:000001f: error: type mismatch in return_call_ref, expected [(ref null 0)] but got [externref]
+  000001f: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:379: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.14.wasm:000001f: error: type mismatch in return_call_ref, expected [(ref null 0)] but got [funcref]
+  000001f: error: OnReturnCallRefExpr callback failed
+out/test/spec/gc/return_call_ref.wast:389: assert_invalid passed:
+  out/test/spec/gc/return_call_ref/return_call_ref.15.wasm:0000023: error: return signatures have inconsistent types: expected [i32], got [i32, i32]
+  0000023: error: OnReturnCallRefExpr callback failed
+51/51 tests passed.
+;;; STDOUT ;;)
