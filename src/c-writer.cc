@@ -223,9 +223,8 @@ static std::vector<size_t> default_data_segment_name_to_output_file_index(
     typename std::vector<DataSegment*>::const_iterator data_segment_begin,
     typename std::vector<DataSegment*>::const_iterator data_segment_end,
     size_t num_streams) {
-  return default_name_to_output_file_index<DataSegment>(data_segment_begin,
-                                                        data_segment_end,
-                                                        0, num_streams);
+  return default_name_to_output_file_index<DataSegment>(
+      data_segment_begin, data_segment_end, 0, num_streams);
 }
 
 class CWriter {
@@ -2248,8 +2247,7 @@ void CWriter::WriteDataInitializerDecls() {
 }
 
 void CWriter::WriteDataInitializer(const DataSegment* data_segment) {
-  Write(Newline(), InternalSymbolScope(),
-        "const u8 data_segment_data_",
+  Write(Newline(), InternalSymbolScope(), "const u8 data_segment_data_",
         GlobalName(ModuleFieldType::DataSegment, data_segment->name),
         "[] = ", OpenBrace());
   size_t i = 0;
