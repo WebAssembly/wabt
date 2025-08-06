@@ -2353,6 +2353,10 @@ void CWriter::WriteMultiDataInitializers() {
 
     stream_ = c_streams_.at(c_stream_assignment.at(data_segment_index));
 
+    if (stream_->offset() == 0) {
+      WriteMultiCTop();
+    }
+
     WriteDataInitializer(data_segment);
 
     ++data_segment_index;
