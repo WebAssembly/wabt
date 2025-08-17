@@ -28,6 +28,8 @@
 #define WABT_TRACING 0
 #include "wabt/tracing.h"
 
+#include <cmath>
+
 #define EXPECT(token_type) CHECK_RESULT(Expect(TokenType::token_type))
 
 namespace wabt {
@@ -2166,17 +2168,165 @@ Result WastParser::ParseInstr(ExprList* exprs) {
   }
 }
 
+Result WastParser::ParseCodeMetaDataCompilationPriorityAnnotation(
+    ExprList* exprs,
+    std::string_view name,
+    Location loc) {
+  // 1: (@metadata.code.compilation_priority (compilation 1) (optimization 10))
+  // 2: (@metadata.code.compilation_priority (compilation 1))
+  // 3: (@metadata.code.compilation_priority (compilation 1) (run_once))
+  CodeMetadataExpr::CompilationPriority compilation_priority_info;
+  Result result = Result::Ok;
+  {
+    EXPECT(Lpar);
+    EXPECT(Compilation);
+    if (!PeekMatch(TokenType::Nat)) {
+      Error(GetLocation(),
+            "expected compilation priority natural number value");
+      return Result::Error;
+    }
+    const Token prio_token = Consume();
+    result |= ParseInt32(prio_token.literal().text,
+                         &compilation_priority_info.compilation_priority,
+                         ParseIntType::UnsignedOnly);
+    EXPECT(Rpar);
+  }
+  if (PeekMatchLpar(TokenType::Optimization)) {
+    EXPECT(Lpar);
+    EXPECT(Optimization);
+    if (!PeekMatch(TokenType::Nat)) {
+      Error(GetLocation(),
+            "expected optimization priority natural number value");
+      return Result::Error;
+    }
+    const Token opt_prio_token = Consume();
+    uint32_t optimization_priority = 0;
+    result |= ParseInt32(opt_prio_token.literal().text, &optimization_priority,
+                         ParseIntType::UnsignedOnly);
+    compilation_priority_info.optimization_priority = optimization_priority;
+    EXPECT(Rpar);
+  }
+  if (PeekMatchLpar(TokenType::RunOnce)) {
+    EXPECT(Lpar);
+    EXPECT(RunOnce);
+    compilation_priority_info.optimization_priority = 127;
+    EXPECT(Rpar);
+  }
+  exprs->push_back(
+      std::make_unique<CodeMetadataExpr>(name, compilation_priority_info, loc));
+  return result;
+}
+
+Result WastParser::ParseCodeMetaDataInstrFreqAnnotation(ExprList* exprs,
+                                                        std::string_view name,
+                                                        Location loc) {
+  // 1: (@metadata.code.instr_freq (freq 123.45))
+  // 2: (@metadata.code.instr_freq (freq never_opt))
+  // 2: (@metadata.code.instr_freq (freq always_opt))
+  CodeMetadataExpr::InstructionFrequency instr_freq{};
+  std::vector<CodeMetadataExpr::InstructionFrequency> instr_freqs;
+  EXPECT(Lpar);
+  EXPECT(Freq);
+  if (PeekMatch(TokenType::Nat) || PeekMatch(TokenType::Float)) {
+    const Token freq_token = Consume();
+    const auto freq_text = std::string(freq_token.literal().text);
+    char* endptr = nullptr;
+    double value = strtod(freq_text.c_str(), &endptr);
+    if (endptr == freq_text.c_str()) {
+      Error(freq_token.loc, "invalid frequency value");
+      return Result::Error;
+    }
+    instr_freq.frequency =
+        std::max(1u, static_cast<uint32_t>(std::round(std::log2(value))) + 32);
+  } else if (PeekMatch(TokenType::NeverOpt)) {
+    EXPECT(NeverOpt);
+    instr_freq.frequency = 0;
+  } else if (PeekMatch(TokenType::AlwaysOpt)) {
+    EXPECT(AlwaysOpt);
+    instr_freq.frequency = 127;
+  } else {
+    Error(GetLocation(),
+          "expected frequency value or 'never_opt'/'always_opt'");
+    return Result::Error;
+  }
+  EXPECT(Rpar);
+  exprs->push_back(std::make_unique<CodeMetadataExpr>(name, instr_freq, loc));
+  return Result::Ok;
+}
+
+Result WastParser::ParseCodeMetaDataCallTargetsAnnotation(ExprList* exprs,
+                                                          std::string_view name,
+                                                          Location loc) {
+  std::vector<CodeMetadataExpr::CallTarget> targets;
+  while (PeekMatch(TokenType::Lpar)) {
+    EXPECT(Lpar);
+    if (!PeekMatch(TokenType::Target)) {
+      Error(GetLocation(), "expected 'target' in code metadata annotation");
+      return Result::Error;
+    }
+    EXPECT(Target);
+    Var func_var;
+    CHECK_RESULT(ParseVar(&func_var));
+    double frequency = 0.0;
+    if (PeekMatch(TokenType::Float) || PeekMatch(TokenType::Nat)) {
+      const Token freq_token = Consume();
+      const auto freq_text = std::string(freq_token.literal().text);
+      char* endptr = nullptr;
+      frequency = strtod(freq_text.c_str(), &endptr);
+      if (endptr == freq_text.c_str() || frequency > 1.0 || frequency < 0.0) {
+        Error(freq_token.loc, "invalid frequency value");
+        return Result::Error;
+      }
+    } else {
+      Error(GetLocation(), "expected frequency value after function var");
+      return Result::Error;
+    }
+    const auto percent_freq = static_cast<uint32_t>(frequency * 100);
+    targets.push_back({func_var, percent_freq});
+    EXPECT(Rpar);
+  }
+  exprs->push_back(
+      std::make_unique<CodeMetadataExpr>(name, std::move(targets), loc));
+  return Result::Ok;
+}
+
 Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   WABT_TRACE(ParseCodeMetadataAnnotation);
-  Token tk = Consume();
+  const Token tk = Consume();
   std::string_view name = tk.text();
   name.remove_prefix(sizeof("metadata.code.") - 1);
-  std::string data_text;
-  CHECK_RESULT(ParseQuotedText(&data_text, false));
-  std::vector<uint8_t> data(data_text.begin(), data_text.end());
-  exprs->push_back(std::make_unique<CodeMetadataExpr>(name, std::move(data)));
+  const Location loc = tk.loc;
+
+  Result result = Result::Ok;
+  if (PeekMatch(TokenType::Text)) {
+    // parse binary hint data from string (generic format)
+    std::string data_text;
+    CHECK_RESULT(ParseQuotedText(&data_text, false));
+    std::vector<uint8_t> data(data_text.begin(), data_text.end());
+    exprs->push_back(std::make_unique<CodeMetadataExpr>(name, std::move(data)));
+  } else if (PeekMatchLpar(TokenType::Target) && name == "call_targets") {
+    result |= ParseCodeMetaDataCallTargetsAnnotation(exprs, name, loc);
+  } else if (PeekMatchLpar(TokenType::Compilation) &&
+             name == "compilation_priority") {
+    result |= ParseCodeMetaDataCompilationPriorityAnnotation(exprs, name, loc);
+  } else if (PeekMatchLpar(TokenType::Freq) && name == "instr_freq") {
+    result |= ParseCodeMetaDataInstrFreqAnnotation(exprs, name, loc);
+  } else if (PeekMatch(TokenType::NeverOpt) && name == "instr_freq") {
+    EXPECT(NeverOpt);
+    exprs->push_back(std::make_unique<CodeMetadataExpr>(
+        name, CodeMetadataExpr::InstructionFrequency{.frequency = 0}, loc));
+  } else if (PeekMatch(TokenType::AlwaysOpt) && name == "instr_freq") {
+    EXPECT(AlwaysOpt);
+    exprs->push_back(std::make_unique<CodeMetadataExpr>(
+        name, CodeMetadataExpr::InstructionFrequency{.frequency = 127}, loc));
+  } else {
+    Error(GetLocation(),
+          "expected quoted string or structured list in code metadata "
+          "annotation");
+    return Result::Error;
+  }
   EXPECT(Rpar);
-  return Result::Ok;
+  return result;
 }
 
 template <typename T>

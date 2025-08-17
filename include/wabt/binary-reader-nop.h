@@ -489,9 +489,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnCodeMetadataCount(Index function_index, Index count) override {
     return Result::Ok;
   }
-  Result OnCodeMetadata(Offset offset,
-                        const void* data,
-                        Address size) override {
+  Result OnCodeMetadata(const void* data, Address size) override {
+    return Result::Ok;
+  }
+  Result OnCodeMetadataCodeOffset(Offset offset) override { return Result::Ok; }
+  Result OnCodeMetadataCallTarget(Index target_index,
+                                  uint32_t call_frequency) override {
     return Result::Ok;
   }
   Result EndCodeMetadataSection() override { return Result::Ok; }
