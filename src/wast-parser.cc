@@ -2237,7 +2237,7 @@ Result WastParser::ParseCodeMetaDataInstrFreqAnnotation(ExprList* exprs,
       return Result::Error;
     }
     instr_freq.frequency =
-        std::max(1u, static_cast<uint32_t>(std::round(std::log2(value))) + 32);
+        std::max(1u, static_cast<uint32_t>(std::floor(std::log2(value))) + 32);
   } else if (PeekMatch(TokenType::NeverOpt)) {
     EXPECT(NeverOpt);
     instr_freq.frequency = 0;
