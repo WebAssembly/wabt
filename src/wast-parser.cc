@@ -2314,11 +2314,11 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   } else if (PeekMatch(TokenType::NeverOpt) && name == "instr_freq") {
     EXPECT(NeverOpt);
     exprs->push_back(std::make_unique<CodeMetadataExpr>(
-        name, CodeMetadataExpr::InstructionFrequency{.frequency = 0}, loc));
+        name, CodeMetadataExpr::InstructionFrequency{0}, loc));
   } else if (PeekMatch(TokenType::AlwaysOpt) && name == "instr_freq") {
     EXPECT(AlwaysOpt);
     exprs->push_back(std::make_unique<CodeMetadataExpr>(
-        name, CodeMetadataExpr::InstructionFrequency{.frequency = 127}, loc));
+        name, CodeMetadataExpr::InstructionFrequency{127}, loc));
   } else {
     Error(GetLocation(),
           "expected quoted string or structured list in code metadata "
