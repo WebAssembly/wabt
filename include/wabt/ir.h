@@ -778,6 +778,7 @@ class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
     CompilationPriority compilation_priority;
     InstructionFrequency instruction_frequency{};
     std::vector<CallTarget> call_targets;
+    Hint() {}
     ~Hint() {}
   } hint;
 
