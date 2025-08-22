@@ -715,32 +715,26 @@ class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
   struct InstructionFrequency {
     uint32_t frequency;
   };
-  enum class Type {
-    Binary,
-    CompilationHint,
-    InstructionFrequency,
-    CallTargets
-  };
 
-  explicit CodeMetadataExpr(std::string_view name,
-                            std::vector<uint8_t> data,
-                            const Location& loc = Location())
+  CodeMetadataExpr(std::string_view name,
+                   std::vector<uint8_t> data,
+                   const Location& loc = Location())
       : ExprMixin<ExprType::CodeMetadata>(loc), name(name), type(Type::Binary) {
     new (&hint.data) std::vector<uint8_t>(std::move(data));
   }
 
-  explicit CodeMetadataExpr(std::string_view name,
-                            CompilationPriority compilation_priority,
-                            const Location& loc = Location())
+  CodeMetadataExpr(std::string_view name,
+                   CompilationPriority compilation_priority,
+                   const Location& loc = Location())
       : ExprMixin<ExprType::CodeMetadata>(loc),
         name(name),
         type(Type::CompilationHint) {
     new (&hint.compilation_priority) CompilationPriority(compilation_priority);
   }
 
-  explicit CodeMetadataExpr(std::string_view name,
-                            InstructionFrequency instruction_frequency,
-                            const Location& loc = Location())
+  CodeMetadataExpr(std::string_view name,
+                   InstructionFrequency instruction_frequency,
+                   const Location& loc = Location())
       : ExprMixin<ExprType::CodeMetadata>(loc),
         name(name),
         type(Type::InstructionFrequency) {
@@ -748,9 +742,9 @@ class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
         InstructionFrequency(instruction_frequency);
   }
 
-  explicit CodeMetadataExpr(std::string_view name,
-                            std::vector<CallTarget> targets,
-                            const Location& loc = Location())
+  CodeMetadataExpr(std::string_view name,
+                   std::vector<CallTarget> targets,
+                   const Location& loc = Location())
       : ExprMixin<ExprType::CodeMetadata>(loc),
         name(name),
         type(Type::CallTargets) {
@@ -777,7 +771,6 @@ class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
   std::vector<uint8_t> serialize(const Module&) const;
 
   std::string_view name;
-  Type type;
 
  private:
   union Hint {
@@ -785,9 +778,17 @@ class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
     CompilationPriority compilation_priority;
     InstructionFrequency instruction_frequency{};
     std::vector<CallTarget> call_targets;
-    Hint() {}
     ~Hint() {}
   } hint;
+
+  enum class Type {
+    Binary,
+    CompilationHint,
+    InstructionFrequency,
+    CallTargets
+  };
+
+  Type type;
 };
 
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
