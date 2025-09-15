@@ -49,6 +49,10 @@ jobs:
       if: matrix.os == 'windows-latest'
     - name: mkdir
       run: mkdir -p out
+    - name: tool versions
+      run: |
+        cmake --version
+        ninja --version
     - name: cmake
       run: cmake .. -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
       working-directory: out
