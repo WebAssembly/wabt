@@ -265,6 +265,13 @@ class Command(object):
         process = None
         is_timeout = Cell(False)
 
+        cmd = self.args
+        stdout_filename = None
+        # Hacky support for stdout redirection `cmd > output`
+        if len(cmd) > 2 and cmd[-2] == '>':
+            stdout_filename = os.path.join(cwd, cmd[-1])
+            cmd = cmd[:-2]
+
         def KillProcess(timeout=True):
             if process:
                 try:
@@ -289,7 +296,7 @@ class Command(object):
 
             # http://stackoverflow.com/a/10012262: subprocess with a timeout
             # http://stackoverflow.com/a/22582602: kill subprocess and children
-            process = subprocess.Popen(self.args, cwd=cwd, env=env,
+            process = subprocess.Popen(cmd, cwd=cwd, env=env,
                                        stdout=None if console_out else subprocess.PIPE,
                                        stderr=None if console_out else subprocess.PIPE,
                                        stdin=None if not self.stdin else subprocess.PIPE,
@@ -309,6 +316,10 @@ class Command(object):
             raise Error(str(e))
         finally:
             KillProcess(False)
+
+        if stdout_filename:
+            open(stdout_filename, 'wb').write(stdout)
+            stdout = None
 
         return RunResult(self, stdout, stderr, returncode, duration)
 

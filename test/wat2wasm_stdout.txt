@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ARGS: -o - > %(temp_file)s_tmp.wasm
+;;; RUN: %(wasm2wat)s %(temp_file)s_tmp.wasm
+(module
+  (func)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)))
+;;; STDOUT ;;)
