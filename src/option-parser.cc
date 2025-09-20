@@ -208,7 +208,8 @@ void OptionParser::Parse(int argc, char* argv[]) {
             arg[best_length + 2] == '=') {  // +2 to skip "--".
           option_argument = &arg[best_length + 3];
         } else {
-          if (i + 1 == argc || argv[i + 1][0] == '-') {
+          if (i + 1 == argc ||
+              (argv[i + 1][0] == '-' && strlen(argv[i + 1]) > 1)) {
             Errorf("option '--%s' requires argument",
                    best_option.long_name.c_str());
             continue;
@@ -240,7 +241,8 @@ void OptionParser::Parse(int argc, char* argv[]) {
                 break;
               }
 
-              if (i + 1 == argc || argv[i + 1][0] == '-') {
+              if (i + 1 == argc ||
+                  (argv[i + 1][0] == '-' && strlen(argv[i + 1]) > 1)) {
                 Errorf("option '-%c' requires argument", option.short_name);
                 break;
               }
