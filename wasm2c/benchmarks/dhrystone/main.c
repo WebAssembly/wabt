@@ -38,7 +38,8 @@ static inline void memory_fill(wasm_rt_memory_t* mem, u32 d, u32 val, u32 n) {
 
 #define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
 
-#if defined(__GNUC__) && !(defined(_EZ80) || defined(__ez80) || defined(__ez80__))
+#if defined(__GNUC__) && \
+    !(defined(_EZ80) || defined(__ez80) || defined(__ez80__))
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 #else
 #define FORCE_READ_INT(var)
