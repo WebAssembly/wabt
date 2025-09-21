@@ -256,7 +256,7 @@ R"w2c_template(  WASM_RT_CHECK_BASE(mem);          \
 R"w2c_template(  RANGE_CHECK(mem, a, sizeof(t));
 )w2c_template"
 R"w2c_template(
-#if defined(__GNUC__) && __SIZEOF_POINTER__ >= 4
+#if defined(__GNUC__) && !(defined(_EZ80) || defined(__ez80) || defined(__ez80__))
 )w2c_template"
 R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 )w2c_template"

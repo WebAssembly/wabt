@@ -137,7 +137,7 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
   WASM_RT_CHECK_BASE(mem);          \
   RANGE_CHECK(mem, a, sizeof(t));
 
-#if defined(__GNUC__) && __SIZEOF_POINTER__ >= 4
+#if defined(__GNUC__) && !(defined(_EZ80) || defined(__ez80) || defined(__ez80__))
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 // Clang on Mips requires "f" constraints on floats
 // See https://github.com/llvm/llvm-project/issues/64241
