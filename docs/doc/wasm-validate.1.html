@@ -2,17 +2,17 @@
 <html>
 <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     table.head, table.foot { width: 100%; }
     td.head-rtitle, td.foot-os { text-align: right; }
     td.head-vol { text-align: center; }
-    div.Pp { margin: 1ex 0ex; }
-    div.Nd, div.Bf, div.Op { display: inline; }
-    span.Pa, span.Ad { font-style: italic; }
-    span.Ms { font-weight: bold; }
-    dl.Bl-diag > dt { font-weight: bold; }
-    code.Nm, code.Fl, code.Cm, code.Ic, code.In, code.Fd, code.Fn,
-    code.Cd { font-weight: bold; font-family: inherit; }
+    .Nd, .Bf, .Op { display: inline; }
+    .Pa, .Ad { font-style: italic; }
+    .Ms { font-weight: bold; }
+    .Bl-diag > dt { font-weight: bold; }
+    code.Nm, .Fl, .Cm, .Ic, code.In, .Fd, .Fn, .Cd { font-weight: bold;
+      font-family: inherit; }
   </style>
   <title>WABT(1)</title>
 </head>
@@ -27,8 +27,8 @@
 <div class="manual-text">
 <section class="Sh">
 <h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
-<code class="Nm">wasm-validate</code> &#x2014;
-<div class="Nd">validate a file in the WebAssembly binary format</div>
+<p class="Pp"><code class="Nm">wasm-validate</code> &#x2014;
+    <span class="Nd">validate a file in the WebAssembly binary format</span></p>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
@@ -41,40 +41,62 @@
 </section>
 <section class="Sh">
 <h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
-<code class="Nm">wasm-validate</code> reads a file in the WebAssembly binary
-  format and validates it.
+<p class="Pp"><code class="Nm">wasm-validate</code> Read a file in the
+    WebAssembly binary format, and validate it.</p>
 <p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
-  <dt><a class="permalink" href="#v"><code class="Fl" id="v">-v</code></a>,
-    <code class="Fl">-</code><code class="Fl">-verbose</code></dt>
-  <dd>Use multiple times for more info</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-help</code></dt>
+  <dt id="help"><a class="permalink" href="#help"><code class="Fl">--help</code></a></dt>
   <dd>Print this help message</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-enable-exceptions</code></dt>
+  <dt id="version"><a class="permalink" href="#version"><code class="Fl">--version</code></a></dt>
+  <dd>Print version information</dd>
+  <dt id="v"><a class="permalink" href="#v"><code class="Fl">-v</code></a>,
+    <code class="Fl">--verbose</code></dt>
+  <dd>Use multiple times for more info</dd>
+  <dt id="enable-exceptions"><a class="permalink" href="#enable-exceptions"><code class="Fl">--enable-exceptions</code></a></dt>
   <dd>Enable Experimental exception handling</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-disable-mutable-globals</code></dt>
+  <dt id="disable-mutable-globals"><a class="permalink" href="#disable-mutable-globals"><code class="Fl">--disable-mutable-globals</code></a></dt>
   <dd>Disable Import/export mutable globals</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-enable-saturating-float-to-int</code></dt>
-  <dd>Enable Saturating float-to-int operators</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-enable-sign-extension</code></dt>
-  <dd>Enable Sign-extension operators</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-disable-simd</code></dt>
+  <dt id="disable-saturating-float-to-int"><a class="permalink" href="#disable-saturating-float-to-int"><code class="Fl">--disable-saturating-float-to-int</code></a></dt>
+  <dd>Disable Saturating float-to-int operators</dd>
+  <dt id="disable-sign-extension"><a class="permalink" href="#disable-sign-extension"><code class="Fl">--disable-sign-extension</code></a></dt>
+  <dd>Disable Sign-extension operators</dd>
+  <dt id="disable-simd"><a class="permalink" href="#disable-simd"><code class="Fl">--disable-simd</code></a></dt>
   <dd>Disable SIMD support</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-enable-threads</code></dt>
+  <dt id="enable-threads"><a class="permalink" href="#enable-threads"><code class="Fl">--enable-threads</code></a></dt>
   <dd>Enable Threading support</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-enable-multi-value</code></dt>
-  <dd>Enable Multi-value</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-enable-tail-call</code></dt>
+  <dt id="enable-function-references"><a class="permalink" href="#enable-function-references"><code class="Fl">--enable-function-references</code></a></dt>
+  <dd>Enable Typed function references</dd>
+  <dt id="disable-multi-value"><a class="permalink" href="#disable-multi-value"><code class="Fl">--disable-multi-value</code></a></dt>
+  <dd>Disable Multi-value</dd>
+  <dt id="enable-tail-call"><a class="permalink" href="#enable-tail-call"><code class="Fl">--enable-tail-call</code></a></dt>
   <dd>Enable Tail-call support</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-no-debug-names</code></dt>
+  <dt id="disable-bulk-memory"><a class="permalink" href="#disable-bulk-memory"><code class="Fl">--disable-bulk-memory</code></a></dt>
+  <dd>Disable Bulk-memory operations</dd>
+  <dt id="disable-reference-types"><a class="permalink" href="#disable-reference-types"><code class="Fl">--disable-reference-types</code></a></dt>
+  <dd>Disable Reference types (externref)</dd>
+  <dt id="enable-annotations"><a class="permalink" href="#enable-annotations"><code class="Fl">--enable-annotations</code></a></dt>
+  <dd>Enable Custom annotation syntax</dd>
+  <dt id="enable-code-metadata"><a class="permalink" href="#enable-code-metadata"><code class="Fl">--enable-code-metadata</code></a></dt>
+  <dd>Enable Code metadata</dd>
+  <dt id="enable-gc"><a class="permalink" href="#enable-gc"><code class="Fl">--enable-gc</code></a></dt>
+  <dd>Enable Garbage collection</dd>
+  <dt id="enable-memory64"><a class="permalink" href="#enable-memory64"><code class="Fl">--enable-memory64</code></a></dt>
+  <dd>Enable 64-bit memory</dd>
+  <dt id="enable-multi-memory"><a class="permalink" href="#enable-multi-memory"><code class="Fl">--enable-multi-memory</code></a></dt>
+  <dd>Enable Multi-memory</dd>
+  <dt id="enable-extended-const"><a class="permalink" href="#enable-extended-const"><code class="Fl">--enable-extended-const</code></a></dt>
+  <dd>Enable Extended constant expressions</dd>
+  <dt id="enable-all"><a class="permalink" href="#enable-all"><code class="Fl">--enable-all</code></a></dt>
+  <dd>Enable all features</dd>
+  <dt id="no-debug-names"><a class="permalink" href="#no-debug-names"><code class="Fl">--no-debug-names</code></a></dt>
   <dd>Ignore debug names in the binary file</dd>
-  <dt><code class="Fl">-</code><code class="Fl">-ignore-custom-section-errors</code></dt>
+  <dt id="ignore-custom-section-errors"><a class="permalink" href="#ignore-custom-section-errors"><code class="Fl">--ignore-custom-section-errors</code></a></dt>
   <dd>Ignore errors in custom sections</dd>
 </dl>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-Validate binary file test.wasm
+<p class="Pp">Validate binary file test.wasm</p>
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-validate
   test.wasm</code></div>
@@ -82,27 +104,28 @@ Validate binary file test.wasm
 <section class="Sh">
 <h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
   ALSO</a></h1>
-<a class="Xr" href="wasm-interp.1.html">wasm-interp(1)</a>,
-  <a class="Xr" href="wasm-objdump.1.html">wasm-objdump(1)</a>,
-  <a class="Xr" href="wasm-stats.1.html">wasm-stats(1)</a>,
-  <a class="Xr" href="wasm-strip.1.html">wasm-strip(1)</a>,
-  <a class="Xr" href="wasm2c.1.html">wasm2c(1)</a>,
-  <a class="Xr" href="wasm2wat.1.html">wasm2wat(1)</a>,
-  <a class="Xr" href="wast2json.1.html">wast2json(1)</a>,
-  <a class="Xr" href="wat-desugar.1.html">wat-desugar(1)</a>,
-  <a class="Xr" href="wat2wasm.1.html">wat2wasm(1)</a>,
-  <a class="Xr" href="spectest-interp.1.html">spectest-interp(1)</a>
+<p class="Pp"><a class="Xr" href="wasm-decompile.1.html">wasm-decompile(1)</a>,
+    <a class="Xr" href="wasm-interp.1.html">wasm-interp(1)</a>,
+    <a class="Xr" href="wasm-objdump.1.html">wasm-objdump(1)</a>,
+    <a class="Xr" href="wasm-stats.1.html">wasm-stats(1)</a>,
+    <a class="Xr" href="wasm-strip.1.html">wasm-strip(1)</a>,
+    <a class="Xr" href="wasm2c.1.html">wasm2c(1)</a>,
+    <a class="Xr" href="wasm2wat.1.html">wasm2wat(1)</a>,
+    <a class="Xr" href="wast2json.1.html">wast2json(1)</a>,
+    <a class="Xr" href="wat-desugar.1.html">wat-desugar(1)</a>,
+    <a class="Xr" href="wat2wasm.1.html">wat2wasm(1)</a>,
+    <a class="Xr" href="spectest-interp.1.html">spectest-interp(1)</a></p>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="BUGS"><a class="permalink" href="#BUGS">BUGS</a></h1>
-If you find a bug, please report it at
-<br/>
-<a class="Lk" href="https://github.com/WebAssembly/wabt/issues">https://github.com/WebAssembly/wabt/issues</a>.
+<p class="Pp">If you find a bug, please report it at
+  <br/>
+  <a class="Lk" href="https://github.com/WebAssembly/wabt/issues">https://github.com/WebAssembly/wabt/issues</a>.</p>
 </section>
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">October 7, 2021</td>
+    <td class="foot-date">September 23, 2025</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>
