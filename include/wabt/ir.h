@@ -1211,6 +1211,187 @@ struct Custom {
   Location loc;
 };
 
+class Symbol: public SymbolCommon {
+ public:
+  struct Function {
+    static const SymbolType type = SymbolType::Function;
+    Index index;
+  };
+  struct Data {
+    static const SymbolType type = SymbolType::Data;
+    Index index;
+    Offset offset;
+    Address size;
+  };
+  struct Global {
+    static const SymbolType type = SymbolType::Global;
+    Index index;
+  };
+  struct Section {
+    static const SymbolType type = SymbolType::Section;
+    Index section;
+  };
+  struct Tag {
+    static const SymbolType type = SymbolType::Tag;
+    Index index;
+  };
+  struct Table {
+    static const SymbolType type = SymbolType::Table;
+    Index index;
+  };
+
+ private:
+  SymbolType type_;
+  union {
+    Function function_;
+    Data data_;
+    Global global_;
+    Section section_;
+    Tag tag_;
+    Table table_;
+  };
+
+ public:
+  Symbol(const std::string& name, uint32_t flags, const Function& f)
+      : type_(Function::type), SymbolCommon{flags, name}, function_(f) {}
+  Symbol(const std::string& name, uint32_t flags, const Data& d)
+      : type_(Data::type), SymbolCommon{flags, name}, data_(d) {}
+  Symbol(const std::string& name, uint32_t flags, const Global& g)
+      : type_(Global::type), SymbolCommon{flags, name}, global_(g) {}
+  Symbol(const std::string& name, uint32_t flags, const Section& s)
+      : type_(Section::type), SymbolCommon{flags, name}, section_(s) {}
+  Symbol(const std::string& name, uint32_t flags, const Tag& e)
+      : type_(Tag::type), SymbolCommon{flags, name}, tag_(e) {}
+  Symbol(const std::string& name, uint32_t flags, const Table& t)
+  : type_(Table::type), SymbolCommon{flags, name}, table_(t) {}
+
+  template<class F>
+  auto visit(F f) {
+    switch (type()) {
+      case Function::type:
+        return f(AsFunction());
+      case Data::type:
+        return f(AsData());
+      case Global::type:
+        return f(AsGlobal());
+      case Section::type:
+        return f(AsSection());
+      case Tag::type:
+        return f(AsTag());
+      case Table::type:
+        return f(AsTable());
+    }
+  }
+
+  SymbolType type() const { return type_; }
+
+  bool IsFunction() const { return type() == Function::type; }
+  bool IsData() const { return type() == Data::type; }
+  bool IsGlobal() const { return type() == Global::type; }
+  bool IsSection() const { return type() == Section::type; }
+  bool IsTag() const { return type() == Tag::type; }
+  bool IsTable() const { return type() == Table::type; }
+
+  const Function& AsFunction() const {
+    assert(IsFunction());
+    return function_;
+  }
+  const Data& AsData() const {
+    assert(IsData());
+    return data_;
+  }
+  const Global& AsGlobal() const {
+    assert(IsGlobal());
+    return global_;
+  }
+  const Section& AsSection() const {
+    assert(IsSection());
+    return section_;
+  }
+  const Tag& AsTag() const {
+    assert(IsTag());
+    return tag_;
+  }
+  const Table& AsTable() const {
+    assert(IsTable());
+    return table_;
+  }
+};
+
+class SymbolTable {
+  std::vector<Symbol> symbols_;
+
+  // Maps from wasm entities to symbol entry indices
+  std::vector<Index> functions_;
+  std::vector<Index> tables_;
+  std::vector<Index> globals_;
+  std::vector<Index> tags_;
+  std::vector<Index> datas_;
+
+  std::set<std::string_view> seen_names_;
+
+  Result EnsureUnique(const std::string_view& name) {
+    if (seen_names_.count(name)) {
+      fprintf(stderr,
+              "error: duplicate symbol when writing relocatable "
+              "binary: %s\n",
+              &name[0]);
+      return Result::Error;
+    }
+    seen_names_.insert(name);
+    return Result::Ok;
+  };
+
+  template<class T>
+  std::vector<Index>& GetTable() = delete;
+
+  template<class T>
+  auto GetTable() const
+    -> const decltype(std::declval<SymbolTable>().GetTable<T>())& {
+    return const_cast<SymbolTable *>(this)->GetTable<T>();
+  }
+
+  template <typename T>
+  Result AddSymbol(std::string_view name, bool imported, bool exported,
+                   T&& sym);
+
+ public:
+  SymbolTable() {}
+
+  Result Populate(const Module* module);
+
+  Result AddSymbol(Symbol sym);
+
+  std::vector<Symbol>& symbols() { return symbols_; }
+  const std::vector<Symbol>& symbols() const { return symbols_; }
+
+  template<class T>
+  Index SymbolIndex(Index index) const {
+    // For well-formed modules, an index into (e.g.) functions_ will always be
+    // within bounds; the out-of-bounds case here is just to allow --relocatable
+    // to write known-invalid modules.
+    return index < GetTable<T>().size() ? GetTable<T>()[index] : kInvalidIndex;
+  }
+
+  Index FunctionSymbolIndex(Index index) const {
+    return SymbolIndex<Symbol::Function>(index);
+  }
+  Index TableSymbolIndex(Index index) const {
+    return SymbolIndex<Symbol::Table>(index);
+  }
+  Index GlobalSymbolIndex(Index index) const {
+    return SymbolIndex<Symbol::Global>(index);
+  }
+};
+template<>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Function>();
+template<>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Table>();
+template<>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Tag>();
+template<>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Global>();
+
 struct Module {
   Index GetFuncTypeIndex(const Var&) const;
   Index GetFuncTypeIndex(const FuncDeclaration&) const;

@@ -110,6 +110,145 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Function>() {
+  return functions_;
+}
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Table>() {
+  return tables_;
+}
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Global>() {
+  return globals_;
+}
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Tag>() {
+  return tags_;
+}
+template <typename T>
+Result SymbolTable::AddSymbol(std::string_view name,
+                              bool imported,
+                              bool exported,
+                              T&& sym) {
+  uint8_t flags = 0;
+  if (imported) {
+    flags |= WABT_SYMBOL_FLAG_UNDEFINED;
+    // Wabt currently has no way for a user to explicitly specify the name of
+    // an import, so never set the EXPLICIT_NAME flag, and ignore any display
+    // name fabricated by wabt.
+    name = std::string_view();
+  } else {
+    if (name.empty()) {
+      // Definitions without a name are local.
+      flags |= uint8_t(SymbolBinding::Local);
+      flags |= uint8_t(SymbolVisibility::Hidden);
+    } else {
+      // Otherwise, strip the dollar off the name; a definition $foo is
+      // available for linking as "foo".
+      assert(name[0] == '$');
+      name.remove_prefix(1);
+    }
+
+    if (exported) {
+      CHECK_RESULT(EnsureUnique(name));
+      flags |= uint8_t(SymbolVisibility::Hidden);
+      flags |= WABT_SYMBOL_FLAG_NO_STRIP;
+    }
+  }
+  if (exported) {
+    flags |= WABT_SYMBOL_FLAG_EXPORTED;
+  }
+
+  AddSymbol(Symbol{std::string(name), flags, sym});
+  return Result::Ok;
+}
+
+void EnlargeFor(std::vector<Index>& v, Index i) {
+  if (size(v) <= i)
+    v.resize(i + 1, kInvalidIndex);
+}
+
+Result SymbolTable::AddSymbol(Symbol sym) {
+  sym.visit([this](auto type) {
+    using T = decltype(type);
+    if constexpr (!std::is_same_v<T, Symbol::Data> &&
+                  !std::is_same_v<T, Symbol::Section>) {
+      EnlargeFor(GetTable<T>(), type.index);
+      assert(GetTable<T>()[type.index] == kInvalidIndex);
+      GetTable<T>()[type.index] = symbols_.size();
+    }
+  });
+  symbols_.push_back(sym);
+  return Result::Ok;
+}
+Result SymbolTable::Populate(const Module* module) {
+  std::set<Index> exported_funcs;
+  std::set<Index> exported_globals;
+  std::set<Index> exported_tags;
+  std::set<Index> exported_tables;
+  std::set<Index> exported_datas;
+
+  for (const Export* export_ : module->exports) {
+    switch (export_->kind) {
+      case ExternalKind::Func:
+        exported_funcs.insert(module->GetFuncIndex(export_->var));
+        break;
+      case ExternalKind::Table:
+        exported_tables.insert(module->GetTableIndex(export_->var));
+        break;
+      case ExternalKind::Memory:
+        break;
+      case ExternalKind::Global:
+        exported_globals.insert(module->GetGlobalIndex(export_->var));
+        break;
+      case ExternalKind::Tag:
+        exported_tags.insert(module->GetTagIndex(export_->var));
+        break;
+    }
+  }
+
+  for (size_t i = 0; i < module->funcs.size(); ++i) {
+    const Func* func = module->funcs[i];
+    bool imported = i < module->num_func_imports;
+    bool exported = exported_funcs.count(i);
+    CHECK_RESULT(
+        AddSymbol(func->name, imported, exported, Symbol::Function{Index(i)}));
+  }
+
+  for (size_t i = 0; i < module->tables.size(); ++i) {
+    const Table* table = module->tables[i];
+    bool imported = i < module->num_table_imports;
+    bool exported = exported_tables.count(i);
+    CHECK_RESULT(
+        AddSymbol(table->name, imported, exported, Symbol::Table{Index(i)}));
+  }
+
+  for (size_t i = 0; i < module->globals.size(); ++i) {
+    const Global* global = module->globals[i];
+    bool imported = i < module->num_global_imports;
+    bool exported = exported_globals.count(i);
+    CHECK_RESULT(
+        AddSymbol(global->name, imported, exported, Symbol::Global{Index(i)}));
+  }
+  for (size_t i = 0; i < module->tags.size(); ++i) {
+    const Tag* tag = module->tags[i];
+    bool imported = i < module->num_tag_imports;
+    bool exported = exported_tags.count(i);
+    CHECK_RESULT(
+        AddSymbol(tag->name, imported, exported, Symbol::Tag{Index(i)}));
+  }
+  for (size_t i = 0; i < module->data_symbols.size(); ++i) {
+    const DataSym* data = &module->data_symbols[i];
+    bool imported = i < module->num_data_imports;
+    bool exported = data->exported();
+    CHECK_RESULT(
+        AddSymbol(data->name, imported, exported, Symbol::Tag{Index(i)}));
+  }
+
+  return Result::Ok;
+}
+
 const Export* Module::GetExport(std::string_view name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size()) {
