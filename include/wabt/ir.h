@@ -21,11 +21,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#include <map>
 
 #include "wabt/binding-hash.h"
 #include "wabt/common.h"
@@ -202,6 +204,76 @@ struct Const {
   ExpectedNan nan_[4];
 };
 using ConstVector = std::vector<Const>;
+
+struct IrReloc {
+  IrReloc(): type(RelocType::None) {}
+  IrReloc(RelocType type, Var symbol, int32_t addend = 0)
+      : type(type), symbol(symbol), addend(addend) {
+    static constexpr RelocType addend_allowed[] = {
+      RelocType::MemoryAddressI32, RelocType::MemoryAddressI64,
+      RelocType::MemoryAddressLEB, RelocType::MemoryAddressLEB64,
+      RelocType::MemoryAddressSLEB, RelocType::MemoryAddressSLEB64,
+      RelocType::MemoryAddressTLSSLEB, RelocType::MemoryAddressTLSSLEB64,
+      RelocType::MemoryAddressRelSLEB, RelocType::MemoryAddressRelSLEB64,
+      RelocType::MemoryAddressLocRelI32, RelocType::SectionOffsetI32,
+      RelocType::FunctionOffsetI32, RelocType::FunctionOffsetI64,
+    };
+    if (addend) {
+      for (auto allowed_type: addend_allowed)
+        if (allowed_type == this->type)
+          return;
+      assert(!"Forbidden addend for relocation type");
+    }
+  }
+  RelocType type;
+  Var symbol;
+  int32_t addend;
+};
+
+class SymbolCommon {
+  std::string name_;
+  uint32_t flags_;
+public:
+  SymbolCommon(uint32_t flags = 0, std::string name = "")
+      : name_(name), flags_(flags) {}
+  const std::string& name() const { return name_; }
+  uint32_t flags() const { return flags_; }
+
+  SymbolVisibility visibility() const {
+    return static_cast<SymbolVisibility>(flags() & WABT_SYMBOL_MASK_VISIBILITY);
+  }
+  SymbolBinding binding() const {
+    return static_cast<SymbolBinding>(flags() & WABT_SYMBOL_MASK_BINDING);
+  }
+  bool undefined() const { return flags() & WABT_SYMBOL_FLAG_UNDEFINED; }
+  bool defined() const { return !undefined(); }
+  bool exported() const { return flags() & WABT_SYMBOL_FLAG_EXPORTED; }
+  bool explicit_name() const {
+    return flags() & WABT_SYMBOL_FLAG_EXPLICIT_NAME;
+  }
+  bool no_strip() const { return flags() & WABT_SYMBOL_FLAG_NO_STRIP; }
+};
+
+struct DataSym: SymbolCommon {
+  static DataSym MakeForSearch(Index segment, Index idx) {
+    return {{0}, "", segment, idx, 0};
+  }
+  bool imported() const {
+    return segment == kInvalidIndex;
+  }
+  std::string name;
+  Index segment;
+  Address offset;
+  Address size;
+  bool operator<(const DataSym& other) const {
+    if (imported() && other.imported())
+      return offset < other.offset;
+    if (!imported() && !other.imported())
+      return std::tuple(segment, offset) <
+             std::tuple(other.segment, other.offset);
+    return !imported() < !other.imported();
+  };
+};
 
 enum class ExpectationType {
   Values,
@@ -789,6 +861,7 @@ class ConstExpr : public ExprMixin<ExprType::Const> {
       : ExprMixin<ExprType::Const>(loc), const_(c) {}
 
   Const const_;
+  IrReloc reloc;
 };
 
 // TODO(binji): Rename this, it is used for more than loads/stores now.
@@ -808,6 +881,7 @@ class LoadStoreExpr : public MemoryExpr<TypeEnum> {
   Opcode opcode;
   Address align;
   Address offset;
+  IrReloc reloc;
 };
 
 using LoadExpr = LoadStoreExpr<ExprType::Load>;
@@ -832,7 +906,7 @@ class AtomicFenceExpr : public ExprMixin<ExprType::AtomicFence> {
   uint32_t consistency_model;
 };
 
-struct Tag {
+struct Tag: SymbolCommon {
   explicit Tag(std::string_view name) : name(name) {}
 
   std::string name;
@@ -900,7 +974,7 @@ inline bool operator!=(const LocalTypes::const_iterator& lhs,
   return !operator==(lhs, rhs);
 }
 
-struct Func {
+struct Func: SymbolCommon {
   explicit Func(std::string_view name) : name(name) {}
 
   Type GetParamType(Index index) const { return decl.GetParamType(index); }
@@ -928,9 +1002,12 @@ struct Func {
   struct {
     bool tailcall = false;
   } features_used;
+
+  // For relocatable binaries, if a function is an init function, its priority
+  std::optional<uint32_t> priority = {};
 };
 
-struct Global {
+struct Global: SymbolCommon {
   explicit Global(std::string_view name) : name(name) {}
 
   std::string name;
@@ -939,7 +1016,7 @@ struct Global {
   ExprList init_expr;
 };
 
-struct Table {
+struct Table: SymbolCommon {
   explicit Table(std::string_view name)
       : name(name), elem_type(Type::FuncRef) {}
 
@@ -979,6 +1056,8 @@ struct DataSegment {
   Var memory_var;
   ExprList offset;
   std::vector<uint8_t> data;
+  std::vector<std::pair<Offset, IrReloc>> relocs;
+  std::pair<Index, Index> symbol_range = {};
 };
 
 class Import {
@@ -1253,17 +1332,17 @@ class Symbol: public SymbolCommon {
 
  public:
   Symbol(const std::string& name, uint32_t flags, const Function& f)
-      : type_(Function::type), SymbolCommon{flags, name}, function_(f) {}
+      : SymbolCommon{flags, name}, type_(Function::type), function_(f) {}
   Symbol(const std::string& name, uint32_t flags, const Data& d)
-      : type_(Data::type), SymbolCommon{flags, name}, data_(d) {}
+      : SymbolCommon{flags, name}, type_(Data::type), data_(d) {}
   Symbol(const std::string& name, uint32_t flags, const Global& g)
-      : type_(Global::type), SymbolCommon{flags, name}, global_(g) {}
+      : SymbolCommon{flags, name}, type_(Global::type), global_(g) {}
   Symbol(const std::string& name, uint32_t flags, const Section& s)
-      : type_(Section::type), SymbolCommon{flags, name}, section_(s) {}
+      : SymbolCommon{flags, name}, type_(Section::type), section_(s) {}
   Symbol(const std::string& name, uint32_t flags, const Tag& e)
-      : type_(Tag::type), SymbolCommon{flags, name}, tag_(e) {}
+      : SymbolCommon{flags, name}, type_(Tag::type), tag_(e) {}
   Symbol(const std::string& name, uint32_t flags, const Table& t)
-  : type_(Table::type), SymbolCommon{flags, name}, table_(t) {}
+  : SymbolCommon{flags, name}, type_(Table::type), table_(t) {}
 
   template<class F>
   auto visit(F f) {
@@ -1419,6 +1498,8 @@ struct Module {
   const ElemSegment* GetElemSegment(const Var&) const;
   ElemSegment* GetElemSegment(const Var&);
   Index GetElemSegmentIndex(const Var&) const;
+  DataSym* GetDataSym(const Var&);
+  Index GetDataSymIndex(const Var&) const;
 
   bool IsImport(ExternalKind kind, const Var&) const;
   bool IsImport(const Export& export_) const {
@@ -1449,6 +1530,7 @@ struct Module {
   Index num_table_imports = 0;
   Index num_memory_imports = 0;
   Index num_global_imports = 0;
+  Index num_data_imports = 0;
 
   // Cached for convenience; the pointers are shared with values that are
   // stored in either ModuleField or Import.
@@ -1464,6 +1546,7 @@ struct Module {
   std::vector<DataSegment*> data_segments;
   std::vector<Var*> starts;
   std::vector<Custom> customs;
+  std::vector<DataSym> data_symbols;
 
   BindingHash tag_bindings;
   BindingHash func_bindings;
@@ -1474,6 +1557,7 @@ struct Module {
   BindingHash memory_bindings;
   BindingHash data_segment_bindings;
   BindingHash elem_segment_bindings;
+  BindingHash data_symbol_bindings;
 
   // For a subset of features, the BinaryReaderIR tracks whether they are
   // actually used by the module. wasm2c (CWriter) uses this information to

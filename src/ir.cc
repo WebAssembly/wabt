@@ -289,6 +289,10 @@ Index Module::GetElemSegmentIndex(const Var& var) const {
   return elem_segment_bindings.FindIndex(var);
 }
 
+Index Module::GetDataSymIndex(const Var& var) const {
+  return data_symbol_bindings.FindIndex(var);
+}
+
 bool Module::IsImport(ExternalKind kind, const Var& var) const {
   switch (kind) {
     case ExternalKind::Func:
@@ -449,6 +453,14 @@ ElemSegment* Module::GetElemSegment(const Var& var) {
     return nullptr;
   }
   return elem_segments[index];
+}
+
+DataSym* Module::GetDataSym(const Var& var) {
+  Index index = data_symbol_bindings.FindIndex(var);
+  if (index >= elem_segments.size()) {
+    return nullptr;
+  }
+  return &data_symbols[index];
 }
 
 const FuncType* Module::GetFuncType(const Var& var) const {
