@@ -2169,8 +2169,12 @@ Result WastParser::ParseInstr(ExprList* exprs) {
 Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   WABT_TRACE(ParseCodeMetadataAnnotation);
   Token tk = Consume();
+  constexpr std::string_view pfx = "metadata.code.";
   std::string_view name = tk.text();
-  name.remove_prefix(sizeof("metadata.code.") - 1);
+  assert(name.substr(0, size(pfx)) != pfx &&
+         "ParseCodeMetadataAnnotation should only be called with appropriate "
+         "annotation");
+  name.remove_prefix(size(pfx));
   std::string data_text;
   CHECK_RESULT(ParseQuotedText(&data_text, false));
   std::vector<uint8_t> data(data_text.begin(), data_text.end());
