@@ -23,6 +23,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -136,7 +137,7 @@ class WatWriter : ModuleContext {
                        const Block& block,
                        const char* text);
   void WriteEndBlock();
-  void WriteConst(const Const& const_);
+  void WriteConst(const ConstExpr& const_);
   void WriteExpr(const Expr* expr);
   template <typename T>
   void WriteLoadStoreExpr(const Expr* expr);
@@ -149,6 +150,9 @@ class WatWriter : ModuleContext {
                          const T& types,
                          const std::vector<std::string>& index_to_name,
                          Index binding_index_offset = 0);
+  void WriteRelocAttrs(const SymbolCommon& sym);
+  void WriteReloc(const IrReloc& reloc, bool require_type = false);
+  void WriteDataImports();
   void WriteBeginFunc(const Func& func);
   void WriteFunc(const Func& func);
   void WriteBeginGlobal(const Global& global);
@@ -469,17 +473,20 @@ void WatWriter::WriteEndBlock() {
   WritePutsNewline(Opcode::End_Opcode.GetName());
 }
 
-void WatWriter::WriteConst(const Const& const_) {
+void WatWriter::WriteConst(const ConstExpr& expr) {
+  const Const& const_ = expr.const_;
   switch (const_.type()) {
     case Type::I32:
       WritePutsSpace(Opcode::I32Const_Opcode.GetName());
       Writef("%d", static_cast<int32_t>(const_.u32()));
+      WriteReloc(expr.reloc);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case Type::I64:
       WritePutsSpace(Opcode::I64Const_Opcode.GetName());
       Writef("%" PRId64, static_cast<int64_t>(const_.u64()));
+      WriteReloc(expr.reloc);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
@@ -539,6 +546,7 @@ void WatWriter::WriteMemoryLoadStoreExpr(const Expr* expr) {
   if (typed_expr->offset) {
     Writef("offset=%" PRIaddress, typed_expr->offset);
   }
+  WriteReloc(typed_expr->reloc);
   if (!typed_expr->opcode.IsNaturallyAligned(typed_expr->align)) {
     Writef("align=%" PRIaddress, typed_expr->align);
   }
@@ -705,7 +713,7 @@ Result WatWriter::ExprVisitorDelegate::OnCompareExpr(CompareExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnConstExpr(ConstExpr* expr) {
-  writer_->WriteConst(expr->const_);
+  writer_->WriteConst(*expr);
   return Result::Ok;
 }
 
@@ -1435,9 +1443,111 @@ void WatWriter::WriteTypeBindings(const char* prefix,
   }
 }
 
+void WatWriter::WriteRelocAttrs(const SymbolCommon& sym) {
+  if (sym.binding() == SymbolBinding::Weak)
+    WritePutsSpace("weak");
+  if (sym.binding() == SymbolBinding::Local)
+    WritePutsSpace("static");
+  else {
+    if (sym.visibility() == SymbolVisibility::Hidden)
+      WritePutsSpace("hidden");
+  }
+  if (sym.no_strip())
+    WritePutsSpace("retain");
+  if (sym.exported())
+    WritePutsSpace("exported");
+  if (!sym.name().empty()) {
+    WritePuts("name=", NextChar::None);
+    WriteQuotedString(sym.name(), NextChar::Space);
+  }
+}
+
+void WatWriter::WriteReloc(const IrReloc& reloc, bool require_type) {
+  if (reloc.type == RelocType::None)
+    return;
+  WriteOpenSpace("@reloc");
+  switch (kRelocSymbolType[int(reloc.type)]) {
+    case RelocKind::Function:
+      WritePutsSpace("func");
+      break;
+    case RelocKind::Data:
+      WritePutsSpace("data");
+      break;
+    case RelocKind::Global:
+      WritePutsSpace("global");
+      break;
+    case RelocKind::FunctionTbl:
+      WritePutsSpace("functable");
+      break;
+    case RelocKind::Table:
+      WritePutsSpace("table");
+      break;
+    case RelocKind::Tag:
+      WritePutsSpace("tag");
+      break;
+    case RelocKind::Type:
+      WritePutsSpace("type");
+      break;
+    case RelocKind::Text:
+      WritePutsSpace("text");
+      break;
+    case RelocKind::Section:
+      WritePutsSpace("section");
+      break;
+    default:
+      WABT_UNREACHABLE;
+  }
+
+  if (bool(kRelocModifiers[int(reloc.type)] & RelocModifiers::TLS))
+    WritePutsSpace("tls");
+  if (bool(kRelocModifiers[int(reloc.type)] & RelocModifiers::PIC))
+    WritePutsSpace("pic");
+
+  if (require_type)
+    switch (kRelocDataType[int(reloc.type)]) {
+      case RelocDataType::I32:
+        WritePutsSpace("i32");
+        break;
+      case RelocDataType::I64:
+        WritePutsSpace("i64");
+        break;
+      case RelocDataType::LEB:
+        WritePutsSpace("leb");
+        break;
+      case RelocDataType::SLEB:
+        WritePutsSpace("sleb");
+        break;
+      case RelocDataType::LEB64:
+        WritePutsSpace("leb64");
+        break;
+      case RelocDataType::SLEB64:
+        WritePutsSpace("sleb64");
+        break;
+    }
+  WriteVar(reloc.symbol, NextChar::None);
+  if (reloc.addend)
+    Writef("+%u", reloc.addend);
+  WriteCloseSpace();
+}
+void WatWriter::WriteDataImports() {
+  for (Index i = 0; i != module.num_data_imports; ++i) {
+    const DataSym& sym = module.data_symbols[i];
+    WriteOpenSpace("@reloc.import.data");
+    if (!sym.name.empty())
+      WriteName(sym.name, NextChar::Space);
+    WriteRelocAttrs(sym);
+    WriteCloseNewline();
+  }
+}
+
 void WatWriter::WriteBeginFunc(const Func& func) {
   WriteOpenSpace("func");
   WriteNameOrIndex(func.name, func_index_, NextChar::Space);
+  WriteOpenSpace("@sym");
+  WriteRelocAttrs(func);
+  if (func.priority.has_value())
+    Writef("init=%u", *func.priority);
+  WriteCloseSpace();
   WriteInlineExports(ExternalKind::Func, func_index_);
   WriteInlineImport(ExternalKind::Func, func_index_);
   if (func.decl.has_func_type) {
@@ -1491,6 +1601,9 @@ void WatWriter::WriteFunc(const Func& func) {
 void WatWriter::WriteBeginGlobal(const Global& global) {
   WriteOpenSpace("global");
   WriteNameOrIndex(global.name, global_index_, NextChar::Space);
+  WriteOpenSpace("@sym");
+  WriteRelocAttrs(global);
+  WriteCloseSpace();
   WriteInlineExports(ExternalKind::Global, global_index_);
   WriteInlineImport(ExternalKind::Global, global_index_);
   if (global.mutable_) {
@@ -1512,6 +1625,9 @@ void WatWriter::WriteGlobal(const Global& global) {
 void WatWriter::WriteTag(const Tag& tag) {
   WriteOpenSpace("tag");
   WriteNameOrIndex(tag.name, tag_index_, NextChar::Space);
+  WriteOpenSpace("@sym");
+  WriteRelocAttrs(tag);
+  WriteCloseSpace();
   WriteInlineExports(ExternalKind::Tag, tag_index_);
   WriteInlineImport(ExternalKind::Tag, tag_index_);
   if (tag.decl.has_func_type) {
@@ -1540,6 +1656,9 @@ void WatWriter::WriteLimits(const Limits& limits) {
 void WatWriter::WriteTable(const Table& table) {
   WriteOpenSpace("table");
   WriteNameOrIndex(table.name, table_index_, NextChar::Space);
+  WriteOpenSpace("@sym");
+  WriteRelocAttrs(table);
+  WriteCloseSpace();
   WriteInlineExports(ExternalKind::Table, table_index_);
   WriteInlineImport(ExternalKind::Table, table_index_);
   WriteLimits(table.elem_limits);
@@ -1622,7 +1741,40 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
     }
     WriteInitExpr(segment.offset);
   }
-  WriteQuotedData(segment.data.data(), segment.data.size());
+  Offset offset = 0, next_sym = 0, next_reloc = 0;
+  constexpr auto end_offset = std::numeric_limits<Offset>::max();
+  Index curr_sym = segment.symbol_range.first;
+  auto curr_reloc = begin(segment.relocs);
+  for (;;) {
+    next_reloc = curr_reloc != end(segment.relocs)
+                     ? curr_reloc->first +
+                           kRelocDataTypeSize[int(
+                               kRelocDataType[int(curr_reloc->second.type)])]
+                     : end_offset;
+    next_sym = curr_sym != segment.symbol_range.second
+                   ? module.data_symbols[curr_sym].offset
+                   : end_offset;
+    if (offset == next_reloc) {
+      WriteReloc(curr_reloc->second, true);
+      ++curr_reloc;
+      continue;
+    }
+    if (offset == next_sym) {
+      WriteOpenSpace("@sym");
+      WriteName(module.data_symbols[curr_sym].name, NextChar::Space);
+      WriteRelocAttrs(module.data_symbols[curr_sym]);
+      WriteCloseSpace();
+      ++curr_sym;
+      continue;
+    }
+    if (offset == segment.data.size())
+      // if we have no relocs/syms left, and there's also no data, leave
+      break;
+    Offset write_to =
+        std::min(segment.data.size(), std::min(next_reloc, next_sym));
+    WriteQuotedData(segment.data.data() + offset, write_to - offset);
+    offset = write_to;
+  }
   WriteCloseNewline();
   data_segment_index_++;
 }
@@ -1745,6 +1897,7 @@ Result WatWriter::WriteModule() {
   } else {
     WriteName(module.name, NextChar::Newline);
   }
+  WriteDataImports();
   for (const ModuleField& field : module.fields) {
     switch (field.type()) {
       case ModuleFieldType::Func:
