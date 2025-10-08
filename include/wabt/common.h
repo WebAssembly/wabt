@@ -186,6 +186,13 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
+template<class... Fs>
+struct Overload: Fs... {
+  using Fs::operator()...;
+};
+template<class... Fs>
+Overload(Fs...)->Overload<Fs...>;
+
 enum class LabelType {
   Func,
   InitExpr,
