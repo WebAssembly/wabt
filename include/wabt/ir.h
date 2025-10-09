@@ -231,9 +231,9 @@ struct IrReloc {
 };
 
 class SymbolCommon {
+public:
   std::string name_;
   uint32_t flags_;
-public:
   SymbolCommon(uint32_t flags = 0, std::string name = "")
       : name_(name), flags_(flags) {}
   const std::string& name() const { return name_; }
