@@ -1455,7 +1455,7 @@ void WatWriter::WriteRelocAttrs(const SymbolCommon& sym) {
   if (sym.no_strip())
     WritePutsSpace("retain");
   if (sym.exported())
-    WritePutsSpace("exported");
+    WritePutsSpace("export");
   if (!sym.name().empty()) {
     WritePuts("name=", NextChar::None);
     WriteQuotedString(sym.name(), NextChar::Space);
@@ -1466,6 +1466,27 @@ void WatWriter::WriteReloc(const IrReloc& reloc, bool require_type) {
   if (reloc.type == RelocType::None)
     return;
   WriteOpenSpace("@reloc");
+  if (require_type)
+    switch (kRelocDataType[int(reloc.type)]) {
+      case RelocDataType::I32:
+        WritePutsSpace("i32");
+        break;
+      case RelocDataType::I64:
+        WritePutsSpace("i64");
+        break;
+      case RelocDataType::LEB:
+        WritePutsSpace("leb");
+        break;
+      case RelocDataType::SLEB:
+        WritePutsSpace("sleb");
+        break;
+      case RelocDataType::LEB64:
+        WritePutsSpace("leb64");
+        break;
+      case RelocDataType::SLEB64:
+        WritePutsSpace("sleb64");
+        break;
+    }
   switch (kRelocSymbolType[int(reloc.type)]) {
     case RelocKind::Function:
       WritePutsSpace("func");
@@ -1503,27 +1524,6 @@ void WatWriter::WriteReloc(const IrReloc& reloc, bool require_type) {
   if (bool(kRelocModifiers[int(reloc.type)] & RelocModifiers::PIC))
     WritePutsSpace("pic");
 
-  if (require_type)
-    switch (kRelocDataType[int(reloc.type)]) {
-      case RelocDataType::I32:
-        WritePutsSpace("i32");
-        break;
-      case RelocDataType::I64:
-        WritePutsSpace("i64");
-        break;
-      case RelocDataType::LEB:
-        WritePutsSpace("leb");
-        break;
-      case RelocDataType::SLEB:
-        WritePutsSpace("sleb");
-        break;
-      case RelocDataType::LEB64:
-        WritePutsSpace("leb64");
-        break;
-      case RelocDataType::SLEB64:
-        WritePutsSpace("sleb64");
-        break;
-    }
   WriteVar(reloc.symbol, NextChar::None);
   if (reloc.addend)
     Writef("+%u", reloc.addend);
@@ -1532,7 +1532,7 @@ void WatWriter::WriteReloc(const IrReloc& reloc, bool require_type) {
 void WatWriter::WriteDataImports() {
   for (Index i = 0; i != module.num_data_imports; ++i) {
     const DataSym& sym = module.data_symbols[i];
-    WriteOpenSpace("@reloc.import.data");
+    WriteOpenSpace("@sym.import.data");
     if (!sym.name.empty())
       WriteName(sym.name, NextChar::Space);
     WriteRelocAttrs(sym);
