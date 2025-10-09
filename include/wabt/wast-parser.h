@@ -64,6 +64,11 @@ class WastParser {
     Var var;
   };
 
+  struct DatasymAux {
+    Var name;
+    Address size;
+  };
+
   typedef std::vector<ReferenceVar> ReferenceVars;
 
   struct ResolveTypes {
@@ -196,7 +201,13 @@ class WastParser {
 
   Result ParseCustomSectionAnnotation(Module*);
   bool PeekIsCustom();
+  bool PeekIsDataImport();
 
+  Result ParseSymAfterPar(SymbolCommon*,
+                          bool in_import,
+                          DatasymAux* dat_sym = 0);
+  Result ParseSymOpt(SymbolCommon *, bool in_import, DatasymAux *dat_sym = 0);
+  Result ParseDataImport(Module* module);
   Result ParseExportDesc(Export*);
   Result ParseInlineExports(ModuleFieldList*, ExternalKind);
   Result ParseInlineImport(Import*);
@@ -216,6 +227,14 @@ class WastParser {
   Result ParseInstrList(ExprList*);
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
+  Result ParseRejectReloc();
+  Result ParseUnwindReloc(int curr_indent);
+  Result ParseRelocAfterType(IrReloc*, RelocDataType type);
+  Result ParseRelocModifiers(RelocModifiers*);
+  Result ParseRelocKind(RelocKind*);
+  Result ParseRelocDataType(RelocDataType*);
+  Result ParseReloc(IrReloc*);
+  Result ParseReloc(IrReloc*, RelocDataType type);
   Result ParseCodeMetadataAnnotation(ExprList*);
   Result ParsePlainInstr(std::unique_ptr<Expr>*);
   Result ParseF32(Const*, ConstType type);
