@@ -607,6 +607,8 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
 void NameResolver::VisitDataSegment(DataSegment* segment) {
   ResolveMemoryVar(&segment->memory_var);
   visitor_.VisitExprList(segment->offset);
+  for (auto& [offset, reloc] : segment->relocs)
+    ResolveReloc(&reloc);
 }
 
 Result NameResolver::VisitModule(Module* module) {
