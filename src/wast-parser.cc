@@ -1398,6 +1398,7 @@ Result WastParser::ParseSymAfterPar(SymbolCommon* sym,
     } else if (auto sym_name = MatchTextPrefix(TokenType::Reserved, "name=")) {
       check_once(name);
       RemoveEscapes(*sym_name, std::back_inserter(sym->name_));
+      sym->flags_ |= WABT_SYMBOL_FLAG_EXPLICIT_NAME;
     } else if (auto sym_size = MatchTextPrefix(TokenType::Reserved, "size=")) {
       check_once(size);
       CHECK_RESULT(ParseUint64(*sym_size, &data->size));
@@ -2863,9 +2864,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       auto expr = new ConstExpr(const_, loc);
       out_expr->reset(expr);
       if (const_.type() == Type::I64)
-        CHECK_RESULT(ParseReloc(&expr->reloc, RelocDataType::I64));
+        CHECK_RESULT(ParseReloc(&expr->reloc, RelocDataType::SLEB64));
       else if (const_.type() == Type::I32)
-        CHECK_RESULT(ParseReloc(&expr->reloc, RelocDataType::I32));
+        CHECK_RESULT(ParseReloc(&expr->reloc, RelocDataType::SLEB));
       else
         CHECK_RESULT(ParseRejectReloc());
       break;
