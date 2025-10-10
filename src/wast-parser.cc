@@ -658,6 +658,26 @@ bool WastParser::MatchLpar(TokenType type) {
   return false;
 }
 
+bool WastParser::MatchText(TokenType type, std::string_view text) {
+  auto tok = GetToken();
+  if (tok.token_type() == type && tok.text() == text) {
+    Consume();
+    return true;
+  }
+  return false;
+}
+std::optional<std::string_view> WastParser::MatchTextPrefix(
+    TokenType type,
+    std::string_view prefix) {
+  auto tok = GetToken();
+  if (tok.token_type() == type)
+    if (auto rest = TryTrimPfx(tok.text(), prefix)) {
+      Consume();
+      return rest;
+    }
+  return std::nullopt;
+}
+
 Result WastParser::Expect(TokenType type) {
   if (!Match(type)) {
     Token token = Consume();
@@ -692,6 +712,14 @@ Result WastParser::Synchronize(SynchronizeFunc func) {
   }
 
   return Result::Error;
+}
+
+std::optional<std::string_view> WastParser::TryTrimPfx(
+    std::string_view string,
+    std::string_view prefix) {
+  if (string.substr(0, prefix.size()) == prefix)
+    return string.substr(prefix.size());
+  return std::nullopt;
 }
 
 void WastParser::ErrorUnlessOpcodeEnabled(const Token& token) {
@@ -1308,83 +1336,77 @@ bool WastParser::PeekIsDataImport() {
 Result WastParser::ParseSymAfterPar(SymbolCommon* sym,
                                     bool in_import,
                                     DatasymAux* data) {
-  const auto seen = [x = false, this](const char* property) mutable {
-    if (!x) {
-      x = true;
-      return Result::Ok;
+  using OnceProperty = std::pair<std::string_view, std::optional<Location>>;
+  Location last_tok_loc;
+
+  OnceProperty visibility{"visibility", {}};
+  OnceProperty binding{"linkage", {}};
+  OnceProperty retain{"retain", {}};
+  OnceProperty name{"name", {}};
+  OnceProperty size{"size", {}};
+
+  auto check_once = [this, &last_tok_loc](OnceProperty& var) {
+    if (!var.second)
+      var.second = last_tok_loc;
+    else {
+      Error(last_tok_loc, "Symbol's " PRIstringview " already specified",
+            WABT_PRINTF_STRING_VIEW_ARG(var.first));
+      Error(*var.second, "See previous definition");
     }
-    Error(GetLocation(), "Symbol's %s already seen", property);
-    return Result::Error;
   };
+  auto check_seen = [this, &last_tok_loc](OnceProperty& var) {
+    if (!var.second)
+      Error(last_tok_loc, "Must specify " PRIstringview " for this symbol",
+            WABT_PRINTF_STRING_VIEW_ARG(var.first));
+  };
+  auto check_unseen = [this, &last_tok_loc](OnceProperty& var) {
+    if (var.second)
+      Error(*var.second, "Cannot specify " PRIstringview " for this symbol",
+            WABT_PRINTF_STRING_VIEW_ARG(var.first));
+  };
+
+  auto validate = [&] {
+    if (in_import && (sym->flags_ & uint32_t(SymbolBinding::Local))) {
+      Error(*visibility.second, "static symbol cannot be an import");
+    }
+    if (data) {
+      if (!in_import)
+        check_seen(size);
+      check_seen(name);
+    } else {
+      check_unseen(size);
+    }
+  };
+
   if (data) {
     ParseVarOpt(&data->name, data->name);
   }
-
-  auto seen_name = seen;
-  auto seen_size = seen;
-  auto seen_visibility = seen;
-  auto seen_binding = seen;
-  auto seen_retain = seen;
-
   for (;;) {
-    Token tok = GetToken();
-    TokenType tt = tok.token_type();
-    if (tt == TokenType::Rpar) {
-      Consume();
+    last_tok_loc = GetLocation();
+    if (Match(TokenType::Rpar)) {
+      validate();
       return Result::Ok;
-    }
-    if (tt == TokenType::Reserved && tok.text() == "static") {
-      CHECK_RESULT(seen_binding("binding"));
-      if (in_import) {
-        Error(GetLocation(), "static symbol cannot be an import");
-        return Result::Error;
-      }
-      Consume();
+    } else if (MatchText(TokenType::Reserved, "static")) {
+      check_once(binding);
       sym->flags_ |= uint32_t(SymbolBinding::Local);
-      continue;
-    }
-    if (tt == TokenType::Reserved && tok.text() == "weak") {
-      CHECK_RESULT(seen_binding("binding"));
-      Consume();
+    } else if (MatchText(TokenType::Reserved, "weak")) {
+      check_once(binding);
       sym->flags_ |= uint32_t(SymbolBinding::Weak);
-      continue;
-    }
-    if (tt == TokenType::Reserved && tok.text() == "retain") {
-      CHECK_RESULT(seen_retain("retain"));
-      Consume();
+    } else if (MatchText(TokenType::Reserved, "retain")) {
+      check_once(retain);
       sym->flags_ |= WABT_SYMBOL_FLAG_NO_STRIP;
-      continue;
-    }
-    constexpr std::string_view name_pfx = "name=";
-    if (tt == TokenType::Reserved &&
-        tok.text().substr(0, size(name_pfx)) == name_pfx) {
-      CHECK_RESULT(seen_name("name"));
-      Consume();
-      RemoveEscapes(tok.text().substr(size(name_pfx)),
-                    std::back_inserter(sym->name_));
-      continue;
-    }
-    constexpr std::string_view size_pfx = "size=";
-    if (tt == TokenType::Reserved &&
-        tok.text().substr(0, size(size_pfx)) == size_pfx) {
-      CHECK_RESULT(seen_size("size"));
-      if (!data) {
-        Error(GetLocation(), "Can only specify size on data symbols");
-        return Result::Error;
-      }
-      Consume();
-      CHECK_RESULT(ParseUint64(tok.text().substr(size(size_pfx)), &data->size));
-      continue;
-    }
-    if (tt == TokenType::Reserved && tok.text() == "hidden") {
-      CHECK_RESULT(seen_visibility("visibility"));
-      Consume();
+    } else if (auto sym_name = MatchTextPrefix(TokenType::Reserved, "name=")) {
+      check_once(name);
+      RemoveEscapes(*sym_name, std::back_inserter(sym->name_));
+    } else if (auto sym_size = MatchTextPrefix(TokenType::Reserved, "size=")) {
+      check_once(size);
+      CHECK_RESULT(ParseUint64(*sym_size, &data->size));
+    } else if (MatchText(TokenType::Reserved, "hidden")) {
+      check_once(visibility);
       sym->flags_ |= uint32_t(SymbolVisibility::Hidden);
-      continue;
+    } else {
+      ErrorExpected({"symbol attribute", "')'"});
     }
-    Error(GetLocation(), "Expected symbol attribute or ')'");
-    ParseUnwindReloc(1);
-    return Result::Error;
   }
 }
 

@@ -88,6 +88,9 @@ class WastParser {
     ReferenceVars vars;
   };
 
+  static std::optional<std::string_view> TryTrimPfx(std::string_view string,
+                                                    std::string_view prefix);
+
   void ErrorUnlessOpcodeEnabled(const Token&);
 
   // Print an error message listing the expected tokens, as well as an example
@@ -136,6 +139,15 @@ class WastParser {
   // Returns true if the next token's type is equal to '(' and the following
   // token is equal to the parameter. If so, then the token is consumed.
   bool MatchLpar(TokenType);
+
+  // Returns true if the next token's type is equal to the parameter, and if
+  // token's text matches parameter. If so, then the token is consumed.
+  bool MatchText(TokenType, std::string_view);
+
+  // Returns true if the next token's type is equal to the parameter, and if
+  // token's text starts with parameter. If so, then the token is consumed and
+  // the rest of token's text is returned.
+  std::optional<std::string_view> MatchTextPrefix(TokenType, std::string_view);
 
   // Like Match(), but prints an error message if the token doesn't match, and
   // returns Result::Error.
