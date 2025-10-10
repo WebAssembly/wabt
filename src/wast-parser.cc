@@ -1444,9 +1444,10 @@ Result WastParser::ParseDataImport(Module* module) {
   ++module->num_data_imports;
   sym.segment = kInvalidIndex;
   sym.offset = module->num_data_imports;
+  Index sym_idx = module->data_symbols.size();
   if (aux.name.is_name()) {
     module->data_symbol_bindings.insert(
-        {aux.name.name(), {aux.name.loc, module->num_data_imports}});
+        {aux.name.name(), {aux.name.loc, sym_idx}});
     sym.name = aux.name.name();
   }
   module->data_symbols.push_back(sym);
