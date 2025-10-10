@@ -1430,10 +1430,6 @@ class SymbolTable {
     return const_cast<SymbolTable *>(this)->GetTable<T>();
   }
 
-  template <typename T>
-  Result AddSymbol(std::string_view name, bool imported, bool exported,
-                   T&& sym);
-
  public:
   SymbolTable() {}
 
@@ -1461,6 +1457,12 @@ class SymbolTable {
   Index GlobalSymbolIndex(Index index) const {
     return SymbolIndex<Symbol::Global>(index);
   }
+  Index TagSymbolIndex(Index index) const {
+    return SymbolIndex<Symbol::Tag>(index);
+  }
+  Index DataSymbolIndex(Index index) const {
+    return SymbolIndex<Symbol::Data>(index);
+  }
 };
 template<>
 std::vector<Index>& SymbolTable::GetTable<Symbol::Function>();
@@ -1470,6 +1472,8 @@ template<>
 std::vector<Index>& SymbolTable::GetTable<Symbol::Tag>();
 template<>
 std::vector<Index>& SymbolTable::GetTable<Symbol::Global>();
+template<>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Data>();
 
 struct Module {
   Index GetFuncTypeIndex(const Var&) const;
