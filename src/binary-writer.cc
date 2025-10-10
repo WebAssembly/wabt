@@ -161,6 +161,8 @@ class BinaryWriter {
   Index GetLocalIndex(const Func* func, const Var& var);
   Index GetSymbolIndex(RelocType reloc_type, Index index);
   void AddReloc(RelocType reloc_type, Index index);
+  void AddRelocAt(IrReloc, Offset);
+  void AddReloc(IrReloc);
   void WriteBlockDecl(const BlockDeclaration& decl);
   void WriteU32Leb128WithReloc(Index index,
                                const char* desc,
@@ -355,14 +357,20 @@ Index BinaryWriter::GetTagVarDepth(const Var* var) {
 }
 
 Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
-  switch (reloc_type) {
-    case RelocType::FuncIndexLEB:
+  switch (kRelocSymbolType[int(reloc_type)]) {
+    case RelocKind::FunctionTbl:
+    case RelocKind::Function:
+    case RelocKind::Text:
       return symtab_.FunctionSymbolIndex(index);
-    case RelocType::TableNumberLEB:
+    case RelocKind::Table:
       return symtab_.TableSymbolIndex(index);
-    case RelocType::GlobalIndexLEB:
+    case RelocKind::Global:
       return symtab_.GlobalSymbolIndex(index);
-    case RelocType::TypeIndexLEB:
+    case RelocKind::Data:
+      return symtab_.DataSymbolIndex(index);
+    case RelocKind::Tag:
+      return symtab_.TagSymbolIndex(index);
+    case RelocKind::Type:
       // Type indexes don't create entries in the symbol table; instead their
       // index is used directly.
       return index;
@@ -373,7 +381,7 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
   }
 }
 
-void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
+void BinaryWriter::AddRelocAt(IrReloc r, Offset offset) {
   // Add a new reloc section if needed
   if (!current_reloc_section_ ||
       current_reloc_section_->section_index != section_count_) {
@@ -383,16 +391,25 @@ void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
   }
 
   // Add a new relocation to the curent reloc section
-  size_t offset = stream_->offset() - last_section_payload_offset_;
-  Index symbol_index = GetSymbolIndex(reloc_type, index);
+  Index symbol_index = GetSymbolIndex(r.type, r.symbol.index());
   if (symbol_index == kInvalidIndex) {
     // The file is invalid, for example a reference to function 42 where only 10
     // functions are defined.  The user must have already passed --no-check, so
     // no extra warning here is needed.
     return;
   }
-  current_reloc_section_->relocations.emplace_back(reloc_type, offset,
-                                                   symbol_index);
+  current_reloc_section_->relocations.emplace_back(r.type, offset, symbol_index,
+                                                   r.addend);
+}
+
+void BinaryWriter::AddReloc(IrReloc r) {
+  // Add a new relocation to the curent reloc section
+  size_t offset = stream_->offset() - last_section_payload_offset_;
+  return AddRelocAt(r, offset);
+}
+
+void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
+  return AddReloc({reloc_type, Var{index, {}}});
 }
 
 void BinaryWriter::WriteU32Leb128WithReloc(Index index,
@@ -455,7 +472,24 @@ void BinaryWriter::WriteLoadStoreExpr(const Func* func,
   } else {
     stream_->WriteU8(log2_u32(align), "alignment");
   }
-  WriteU64Leb128(stream_, typed_expr->offset, desc);
+  if constexpr (std::is_same_v<T, LoadExpr> || std::is_same_v<T, StoreExpr>) {
+    if (options_.relocatable && typed_expr->reloc.type != RelocType::None) {
+      AddReloc(typed_expr->reloc);
+      switch (kRelocDataType[int(typed_expr->reloc.type)]) {
+        case RelocDataType::LEB64:
+          WriteFixedU64Leb128(stream_, typed_expr->offset, desc);
+          break;
+        case RelocDataType::LEB:
+          WriteFixedU32Leb128(stream_, typed_expr->offset, desc);
+          break;
+        default:
+          WABT_UNREACHABLE;
+      }
+    } else
+      WriteU64Leb128(stream_, typed_expr->offset, desc);
+  } else {
+    WriteU64Leb128(stream_, typed_expr->offset, desc);
+  }
 }
 
 template <typename T>
@@ -568,16 +602,31 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, cast<CompareExpr>(expr)->opcode);
       break;
     case ExprType::Const: {
-      const Const& const_ = cast<ConstExpr>(expr)->const_;
+      const ConstExpr* const_expr = cast<ConstExpr>(expr);
+      const Const& const_ = const_expr->const_;
       switch (const_.type()) {
         case Type::I32: {
           WriteOpcode(stream_, Opcode::I32Const);
-          WriteS32Leb128(stream_, const_.u32(), "i32 literal");
+          if (options_.relocatable &&
+              const_expr->reloc.type != RelocType::None) {
+            assert(kRelocDataType[int(const_expr->reloc.type)] ==
+                   RelocDataType::SLEB);
+            AddReloc(const_expr->reloc);
+            WriteFixedS32Leb128(stream_, const_.u32(), "i32 literal");
+          } else
+            WriteS32Leb128(stream_, const_.u32(), "i32 literal");
           break;
         }
         case Type::I64:
           WriteOpcode(stream_, Opcode::I64Const);
-          WriteS64Leb128(stream_, const_.u64(), "i64 literal");
+          if (options_.relocatable &&
+              const_expr->reloc.type != RelocType::None) {
+            assert(kRelocDataType[int(const_expr->reloc.type)] ==
+                   RelocDataType::SLEB64);
+            AddReloc(const_expr->reloc);
+            WriteFixedS64Leb128(stream_, const_.u64(), "i64 literal");
+          } else
+            WriteS64Leb128(stream_, const_.u64(), "i64 literal");
           break;
         case Type::F32:
           WriteOpcode(stream_, Opcode::F32Const);
@@ -1461,7 +1510,11 @@ Result BinaryWriter::WriteModule() {
       }
       WriteU32Leb128(stream_, segment->data.size(), "data segment size");
       WriteHeader("data segment data", i);
+      size_t start_offset = stream_->offset() - last_section_payload_offset_;
       stream_->WriteData(segment->data, "data segment data");
+      for (auto& [offset, reloc] : segment->relocs) {
+        AddRelocAt(reloc, offset + start_offset);
+      }
     }
     EndSection();
   }
