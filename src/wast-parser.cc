@@ -1324,7 +1324,6 @@ Result WastParser::ParseSymAfterPar(SymbolCommon* sym,
   auto seen_size = seen;
   auto seen_visibility = seen;
   auto seen_binding = seen;
-  auto seen_export = seen;
   auto seen_retain = seen;
 
   for (;;) {
@@ -1381,16 +1380,6 @@ Result WastParser::ParseSymAfterPar(SymbolCommon* sym,
       CHECK_RESULT(seen_visibility("visibility"));
       Consume();
       sym->flags_ |= uint32_t(SymbolVisibility::Hidden);
-      continue;
-    }
-    if (tt == TokenType::Export) {
-      CHECK_RESULT(seen_export("export"));
-      if (!data) {
-        Error(GetLocation(), "Can only export data via attribute");
-        return Result::Error;
-      }
-      Consume();
-      sym->flags_ |= WABT_SYMBOL_FLAG_EXPORTED;
       continue;
     }
     Error(GetLocation(), "Expected symbol attribute or ')'");
