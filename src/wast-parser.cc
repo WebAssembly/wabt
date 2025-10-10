@@ -1543,6 +1543,31 @@ Result WastParser::ParseModuleFieldList(Module* module) {
   CHECK_RESULT(result);
   CHECK_RESULT(ResolveFuncTypes(module, errors_));
   CHECK_RESULT(ResolveNamesModule(module, errors_));
+  for (auto exp : module->exports) {
+    auto patch = [&](auto& fields, const BindingHash& bindings) {
+      Index i = bindings.FindIndex(exp->name);
+      if (i == kInvalidIndex)
+        return;
+      fields[i]->flags_ |= WABT_SYMBOL_FLAG_EXPORTED;
+    };
+    switch (exp->kind) {
+      case ExternalKind::Func:
+        patch(module->funcs, module->func_bindings);
+        break;
+      case ExternalKind::Table:
+        patch(module->tables, module->table_bindings);
+        break;
+      case ExternalKind::Global:
+        patch(module->globals, module->global_bindings);
+        break;
+      case ExternalKind::Tag:
+        patch(module->tags, module->tag_bindings);
+        break;
+      case ExternalKind::Memory:
+        // Memories are not relocatable
+        break;
+    }
+  }
   return Result::Ok;
 }
 
