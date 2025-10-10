@@ -1762,6 +1762,7 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
     if (offset == next_sym) {
       WriteOpenSpace("@sym");
       WriteName(module.data_symbols[curr_sym].name, NextChar::Space);
+      Writef("size=%" PRIaddress, module.data_symbols[curr_sym].size);
       WriteRelocAttrs(module.data_symbols[curr_sym]);
       WriteCloseSpace();
       ++curr_sym;
