@@ -1758,6 +1758,7 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
   constexpr auto end_offset = std::numeric_limits<Offset>::max();
   Index curr_sym = segment.symbol_range.first;
   auto curr_reloc = begin(segment.relocs);
+  bool written_some_data = false;
   for (;;) {
     next_reloc = curr_reloc != end(segment.relocs)
                      ? curr_reloc->first +
@@ -1781,13 +1782,14 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
       ++curr_sym;
       continue;
     }
-    if (offset == segment.data.size())
+    if (offset == segment.data.size() && written_some_data)
       // if we have no relocs/syms left, and there's also no data, leave
       break;
     Offset write_to =
         std::min(segment.data.size(), std::min(next_reloc, next_sym));
     WriteQuotedData(segment.data.data() + offset, write_to - offset);
     offset = write_to;
+    written_some_data = true;
   }
   WriteCloseNewline();
   data_segment_index_++;
