@@ -1657,8 +1657,7 @@ Result WastParser::ParseDataModuleField(Module* module) {
                     std::back_inserter(field->data_segment.data));
       continue;
     }
-    ErrorExpected({"relocation", "symbol definition", "a quoted string"},
-                  "\"foo\"");
+    Expect(TokenType::Rpar);
     return Result::Error;
   }
 
