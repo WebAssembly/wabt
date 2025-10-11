@@ -1850,15 +1850,15 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index,
   assert(index == table.symbols().size());
   Symbol sym = {std::string(name), flags, Symbol::Function{func_index}};
   table.AddSymbol(sym);
-  static_cast<SymbolCommon&>(*module_->funcs[func_index]) = sym;
-  if (name.empty()) {
-    return Result::Ok;
-  }
   if (func_index >= module_->funcs.size()) {
     PrintError("invalid function index: %" PRIindex, func_index);
     return Result::Error;
   }
   Func* func = module_->funcs[func_index];
+  static_cast<SymbolCommon&>(*func) = sym;
+  if (name.empty()) {
+    return Result::Ok;
+  }
   if (!func->name.empty()) {
     // The name section has already named this function.
     return Result::Ok;
@@ -1877,7 +1877,12 @@ Result BinaryReaderIR::OnGlobalSymbol(Index index,
   assert(index == table.symbols().size());
   Symbol sym = {std::string(name), flags, Symbol::Global{global_index}};
   table.AddSymbol(sym);
-  static_cast<SymbolCommon&>(*module_->globals[global_index]) = sym;
+  if (index >= module_->globals.size()) {
+    PrintError("invalid global index: %" PRIindex, index);
+    return Result::Error;
+  }
+  Global* glob = module_->globals[index];
+  static_cast<SymbolCommon&>(*glob) = sym;
   return SetGlobalName(global_index, name);
 }
 
@@ -1896,15 +1901,15 @@ Result BinaryReaderIR::OnTagSymbol(Index index,
   assert(index == table.symbols().size());
   Symbol sym = {std::string(name), flags, Symbol::Tag{tag_index}};
   table.AddSymbol(sym);
-  static_cast<SymbolCommon&>(*module_->tags[tag_index]) = sym;
-  if (name.empty()) {
-    return Result::Ok;
-  }
   if (tag_index >= module_->tags.size()) {
     PrintError("invalid tag index: %" PRIindex, tag_index);
     return Result::Error;
   }
   Tag* tag = module_->tags[tag_index];
+  static_cast<SymbolCommon&>(*tag) = sym;
+  if (name.empty()) {
+    return Result::Ok;
+  }
   std::string dollar_name =
       GetUniqueName(&module_->tag_bindings, MakeDollarName(name));
   tag->name = dollar_name;
@@ -1919,7 +1924,12 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
   assert(index == table.symbols().size());
   Symbol sym = {std::string(name), flags, Symbol::Table{table_index}};
   table.AddSymbol(sym);
-  static_cast<SymbolCommon&>(*module_->tables[table_index]) = sym;
+  if (index >= module_->tables.size()) {
+    PrintError("invalid table index: %" PRIindex, index);
+    return Result::Error;
+  }
+  Table* table = module_->tables[index];
+  static_cast<SymbolCommon&>(*table) = sym;
   return SetTableName(table_index, name);
 }
 
@@ -1995,6 +2005,9 @@ Result BinaryReaderIR::EndModule() {
   size_t i = 0;
   Index range_start = 0, data_segment = -1;
   for (auto& datasym : data_symbols) {
+    if (datasym.segment >= module_->data_segments.size())
+      // all further symbols are invalid
+      break;
     if (datasym.segment != data_segment) {
       if (data_segment != kInvalidIndex) {
         module_->data_segments[data_segment]->symbol_range = {range_start, i};
@@ -2015,12 +2028,17 @@ Result BinaryReaderIR::EndModule() {
 
   auto lookup_reloc = [this](Reloc r) {
     auto maybe_name = [](auto& table, Index idx) {
+      if (idx >= table.size())
+        return Var{kInvalidIndex, {}};
       auto sym = Overload{
           [](auto* x) { return x; },
           [](auto& x) { return &x; },
       }(table[idx]);
       return sym->name.empty() ? Var{idx, {}} : Var{sym->name, {}};
     };
+
+    if (r.index >= size(table.symbols()))
+      return Var{kInvalidIndex, {}};
 
     auto& sym = table.symbols()[r.index];
     switch (sym.type()) {
@@ -2064,8 +2082,12 @@ Result BinaryReaderIR::EndModule() {
   };
 
   for (auto& [index, queue] : reloc_queues) {
-    bool applied_relocation = false;
     for (auto reloc : queue.incoming_relocs) {
+      bool applied_relocation = false;
+      Var sym_id = lookup_reloc(reloc);
+      if (sym_id.is_index() && sym_id.index() == kInvalidIndex)
+        // this reloc points to an invalid symbol and is therefore unapplicable
+        continue;
       auto reloc_size =
           kRelocDataTypeSize[int(kRelocDataType[int(reloc.type)])];
       // We pray that the relocation is always the last operand, and that the
@@ -2074,7 +2096,7 @@ Result BinaryReaderIR::EndModule() {
       queue.traverse([&](auto& insns) {
         auto insn = insns.find(reloc_addr);
         if (insn != end(insns)) {
-          insn->second->reloc = {reloc.type, lookup_reloc(reloc), reloc.addend};
+          insn->second->reloc = {reloc.type, sym_id, reloc.addend};
           assert(insn->second->reloc.type != RelocType::None);
           applied_relocation = true;
         }
@@ -2087,8 +2109,7 @@ Result BinaryReaderIR::EndModule() {
         auto abs_offset = reloc.offset + queue.start;
         if (end >= abs_offset + reloc_size) {
           it->second->relocs.push_back(
-              {abs_offset - it->first,
-               {reloc.type, lookup_reloc(reloc), reloc.addend}});
+              {abs_offset - it->first, {reloc.type, sym_id, reloc.addend}});
           applied_relocation = true;
         }
       }
