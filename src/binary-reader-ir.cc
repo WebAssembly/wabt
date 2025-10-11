@@ -379,7 +379,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result EndModule() override;
 
  private:
-  void MakeQueue();
   Location GetLocation() const;
   void PrintError(const char* format, ...);
   Result PushLabel(LabelType label_type,
@@ -440,11 +439,13 @@ class BinaryReaderIR : public BinaryReaderNop {
     std::map<Offset, DataSegment*> data_segment_starts;
   };
   std::unordered_map<Index, RelocQueue> reloc_queues;
-  decltype(reloc_queues)::iterator active_reloc_section = {};
+  decltype(reloc_queues)::iterator active_reloc_section = end(reloc_queues);
   SymbolTable table;
   std::multiset<DataSym> data_symbols;
 
   Index active_section = kInvalidIndex;
+  void MakeQueue();
+  RelocQueue* GetQueue();
 };
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
@@ -514,13 +515,13 @@ Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
 }
 
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
-  RelocQueue& queue = active_reloc_section->second;
-  queue.traverse([&](auto&& map) {
-    using Value = std::remove_reference_t<decltype(map[0])>;
-    if (auto* ce = dynamic_cast<Value>(expr.get())) {
-      map.insert({state->offset - queue.start, ce});
-    }
-  });
+  if (RelocQueue* queue = GetQueue())
+    queue->traverse([&](auto&& map) {
+      using Value = std::remove_reference_t<decltype(map[0])>;
+      if (auto* ce = dynamic_cast<Value>(expr.get())) {
+        map.insert({state->offset - queue->start, ce});
+      }
+    });
   expr->loc = GetLocation();
   LabelNode* label;
   CHECK_RESULT(TopLabel(&label));
@@ -1534,8 +1535,7 @@ Result BinaryReaderIR::OnDataSegmentData(Index index,
                                          Address size) {
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
-  active_reloc_section->second.data_segment_starts.emplace(state->offset - size,
-                                                           segment);
+  GetQueue()->data_segment_starts.emplace(state->offset - size, segment);
   segment->data.resize(size);
   if (size > 0) {
     memcpy(segment->data.data(), data, size);
@@ -1937,14 +1937,18 @@ Result BinaryReaderIR::OnReloc(RelocType type,
                                Offset offset,
                                Index index,
                                uint32_t addend) {
-  active_reloc_section->second.incoming_relocs.emplace_back(type, offset, index,
-                                                            addend);
+  GetQueue()->incoming_relocs.emplace_back(type, offset, index, addend);
   return Result::Ok;
 }
 void BinaryReaderIR::MakeQueue() {
   assert(active_section != kInvalidIndex);
   active_reloc_section =
       reloc_queues.insert({active_section, RelocQueue{state->offset}}).first;
+}
+BinaryReaderIR::RelocQueue* BinaryReaderIR::GetQueue() {
+  if (active_reloc_section != end(reloc_queues))
+    return &active_reloc_section->second;
+  return nullptr;
 }
 
 Result BinaryReaderIR::BeginCodeSection(Offset size) {
@@ -1968,12 +1972,12 @@ Result BinaryReaderIR::BeginElemSection(Offset size) {
 
 Result BinaryReaderIR::OnRelocCount(Index count, Index section_index) {
   active_reloc_section = reloc_queues.find(section_index);
-  assert(active_reloc_section != end(reloc_queues));
+  assert(GetQueue());
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndRelocSection() {
-  active_reloc_section = {};
+  active_reloc_section = end(reloc_queues);
   return Result::Ok;
 }
 
