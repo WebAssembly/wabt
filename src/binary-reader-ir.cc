@@ -1877,11 +1877,11 @@ Result BinaryReaderIR::OnGlobalSymbol(Index index,
   assert(index == table.symbols().size());
   Symbol sym = {std::string(name), flags, Symbol::Global{global_index}};
   table.AddSymbol(sym);
-  if (index >= module_->globals.size()) {
-    PrintError("invalid global index: %" PRIindex, index);
+  if (global_index >= module_->globals.size()) {
+    PrintError("invalid global index: %" PRIindex, global_index);
     return Result::Error;
   }
-  Global* glob = module_->globals[index];
+  Global* glob = module_->globals[global_index];
   static_cast<SymbolCommon&>(*glob) = sym;
   return SetGlobalName(global_index, name);
 }
