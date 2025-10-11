@@ -2570,7 +2570,7 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   Token tk = Consume();
   constexpr std::string_view pfx = "metadata.code.";
   std::string_view name = tk.text();
-  assert(name.substr(0, size(pfx)) != pfx &&
+  assert(name.substr(0, size(pfx)) == pfx &&
          "ParseCodeMetadataAnnotation should only be called with appropriate "
          "annotation");
   name.remove_prefix(size(pfx));
