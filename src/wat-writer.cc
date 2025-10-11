@@ -1541,13 +1541,17 @@ void WatWriter::WriteDataImports() {
 }
 
 void WatWriter::WriteBeginFunc(const Func& func) {
+  bool import = module.IsImport(ExternalKind::Func, Var(func_index_, {}));
   WriteOpenSpace("func");
   WriteNameOrIndex(func.name, func_index_, NextChar::Space);
-  WriteOpenSpace("@sym");
-  WriteRelocAttrs(func);
-  if (func.priority.has_value())
-    Writef("init=%u", *func.priority);
-  WriteCloseSpace();
+
+  if (func.non_default(import) && !func.priority) {
+    WriteOpenSpace("@sym");
+    WriteRelocAttrs(func);
+    if (func.priority.has_value())
+      Writef("init=%u", *func.priority);
+    WriteCloseSpace();
+  }
   WriteInlineExports(ExternalKind::Func, func_index_);
   WriteInlineImport(ExternalKind::Func, func_index_);
   if (func.decl.has_func_type) {
@@ -1556,7 +1560,7 @@ void WatWriter::WriteBeginFunc(const Func& func) {
     WriteCloseSpace();
   }
 
-  if (module.IsImport(ExternalKind::Func, Var(func_index_, Location()))) {
+  if (import) {
     // Imported functions can be written a few ways:
     //
     //   1. (import "module" "field" (func (type 0)))
@@ -1599,11 +1603,14 @@ void WatWriter::WriteFunc(const Func& func) {
 }
 
 void WatWriter::WriteBeginGlobal(const Global& global) {
+  bool import = module.IsImport(ExternalKind::Global, Var(func_index_, {}));
   WriteOpenSpace("global");
   WriteNameOrIndex(global.name, global_index_, NextChar::Space);
-  WriteOpenSpace("@sym");
-  WriteRelocAttrs(global);
-  WriteCloseSpace();
+  if (global.non_default(import)) {
+    WriteOpenSpace("@sym");
+    WriteRelocAttrs(global);
+    WriteCloseSpace();
+  }
   WriteInlineExports(ExternalKind::Global, global_index_);
   WriteInlineImport(ExternalKind::Global, global_index_);
   if (global.mutable_) {
@@ -1623,11 +1630,14 @@ void WatWriter::WriteGlobal(const Global& global) {
 }
 
 void WatWriter::WriteTag(const Tag& tag) {
+  bool import = module.IsImport(ExternalKind::Tag, Var(func_index_, {}));
   WriteOpenSpace("tag");
   WriteNameOrIndex(tag.name, tag_index_, NextChar::Space);
-  WriteOpenSpace("@sym");
-  WriteRelocAttrs(tag);
-  WriteCloseSpace();
+  if (tag.non_default(import)) {
+    WriteOpenSpace("@sym");
+    WriteRelocAttrs(tag);
+    WriteCloseSpace();
+  }
   WriteInlineExports(ExternalKind::Tag, tag_index_);
   WriteInlineImport(ExternalKind::Tag, tag_index_);
   if (tag.decl.has_func_type) {
@@ -1654,11 +1664,14 @@ void WatWriter::WriteLimits(const Limits& limits) {
 }
 
 void WatWriter::WriteTable(const Table& table) {
+  bool import = module.IsImport(ExternalKind::Table, Var(func_index_, {}));
   WriteOpenSpace("table");
   WriteNameOrIndex(table.name, table_index_, NextChar::Space);
-  WriteOpenSpace("@sym");
-  WriteRelocAttrs(table);
-  WriteCloseSpace();
+  if (table.non_default(import)) {
+    WriteOpenSpace("@sym");
+    WriteRelocAttrs(table);
+    WriteCloseSpace();
+  }
   WriteInlineExports(ExternalKind::Table, table_index_);
   WriteInlineImport(ExternalKind::Table, table_index_);
   WriteLimits(table.elem_limits);

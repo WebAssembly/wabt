@@ -252,6 +252,10 @@ public:
     return flags() & WABT_SYMBOL_FLAG_EXPLICIT_NAME;
   }
   bool no_strip() const { return flags() & WABT_SYMBOL_FLAG_NO_STRIP; }
+  bool non_default(bool imported) const {
+    uint32_t flags = flags_ & ~WABT_SYMBOL_FLAG_EXPORTED;
+    return flags != (imported ? WABT_SYMBOL_FLAG_UNDEFINED : 0);
+  }
 };
 
 struct DataSym: SymbolCommon {
