@@ -1989,7 +1989,16 @@ Result BinaryReaderIR::BeginSection(Index section_index,
 }
 
 Result BinaryReaderIR::OnInitFunction(uint32_t prio, Index sym) {
-  module_->funcs[table.symbols()[sym].AsFunction().index]->priority = prio;
+  if (sym >= table.symbols().size()) {
+    return Result::Ok;
+    // PrintError("invalid init function priority symbol index: %" PRIindex,
+    // sym); return Result::Error;
+  }
+  Index func = table.symbols()[sym].AsFunction().index;
+  if (func >= module_->funcs.size())
+    // We already emitted an error for the invalid symbol
+    return Result::Ok;
+  module_->funcs[func]->priority = prio;
   return Result::Ok;
 }
 
