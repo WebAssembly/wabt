@@ -142,8 +142,10 @@ Result SymbolTable::AddSymbol(Symbol sym) {
     if constexpr (!std::is_same_v<T, Symbol::Data> &&
                   !std::is_same_v<T, Symbol::Section>) {
       EnlargeFor(GetTable<T>(), type.index);
-      assert(GetTable<T>()[type.index] == kInvalidIndex);
-      GetTable<T>()[type.index] = symbols_.size();
+      // This is lossy since multiple symbols are genuinely possible, but apart
+      // from data symbols their semantics is not very clear
+      if (GetTable<T>()[type.index] == kInvalidIndex)
+        GetTable<T>()[type.index] = symbols_.size();
     }
   });
   symbols_.push_back(sym);
