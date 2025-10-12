@@ -1546,8 +1546,8 @@ Result WastParser::ParseModuleFieldList(Module* module) {
   CHECK_RESULT(ResolveNamesModule(module, errors_));
   for (auto exp : module->exports) {
     auto patch = [&](auto& fields, const BindingHash& bindings) {
-      Index i = bindings.FindIndex(exp->name);
-      if (i == kInvalidIndex)
+      Index i = bindings.FindIndex(exp->var);
+      if (i >= fields.size())
         return;
       fields[i]->flags_ |= WABT_SYMBOL_FLAG_EXPORTED;
     };
