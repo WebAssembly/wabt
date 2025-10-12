@@ -1768,6 +1768,8 @@ Result WastParser::ParseTagModuleField(Module* module) {
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<TagModuleField>(loc, name);
+    if (!name.empty() && !field->tag.explicit_name())
+      field->tag.name_ = name.substr(1);
     CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
     CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
     module->AppendField(std::move(field));
@@ -1819,6 +1821,8 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     Func& func = field->func;
     func.loc = GetLocation();
     CHECK_RESULT(ParseSymOpt(&func, false));
+    if (!name.empty() && !func.explicit_name())
+      func.name_ = name.substr(1);
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
 
@@ -1948,6 +1952,8 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<GlobalModuleField>(loc, name);
+    if (!name.empty() && !field->global.explicit_name())
+      field->global.name_ = name.substr(1);
     CHECK_RESULT(ParseGlobalType(&field->global));
     CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr));
     module->AppendField(std::move(field));
@@ -2157,6 +2163,8 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto field = std::make_unique<TableModuleField>(loc, name);
     auto& table = field->table;
     CHECK_RESULT(ParseSymOpt(&table, false));
+    if (!name.empty() && !table.explicit_name())
+      table.name_ = name.substr(1);
     CHECK_RESULT(ParseLimitsIndex(&table.elem_limits));
     if (PeekMatch(TokenType::ValueType)) {
       Type elem_type;
