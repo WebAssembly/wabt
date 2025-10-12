@@ -1768,8 +1768,10 @@ Result WastParser::ParseTagModuleField(Module* module) {
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<TagModuleField>(loc, name);
-    if (!name.empty() && !field->tag.explicit_name())
-      field->tag.name_ = name.substr(1);
+    Tag& tag = field->tag;
+    CHECK_RESULT(ParseSymOpt(&tag, false));
+    if (!name.empty() && !tag.explicit_name())
+      tag.name_ = name.substr(1);
     CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
     CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
     module->AppendField(std::move(field));
@@ -1952,8 +1954,10 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<GlobalModuleField>(loc, name);
-    if (!name.empty() && !field->global.explicit_name())
-      field->global.name_ = name.substr(1);
+    Global& global = field->global;
+    CHECK_RESULT(ParseSymOpt(&global, false));
+    if (!name.empty() && !global.explicit_name())
+      global.name_ = name.substr(1);
     CHECK_RESULT(ParseGlobalType(&field->global));
     CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr));
     module->AppendField(std::move(field));
