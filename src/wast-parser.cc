@@ -1977,6 +1977,11 @@ Result WastParser::ParseImportModuleField(Module* module) {
   CHECK_RESULT(ParseQuotedText(&field_name));
   EXPECT(Lpar);
 
+  auto inject_name = [&](SymbolCommon& sym) {
+    if (!sym.explicit_name())
+      sym.name_ = field_name;
+  };
+
   std::unique_ptr<ImportModuleField> field;
   std::string name;
 
@@ -1991,6 +1996,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
           ParseFuncSignature(&import->func.decl.sig, &import->func.bindings));
       CHECK_RESULT(ErrorIfLpar({"param", "result"}));
       EXPECT(Rpar);
+      inject_name(import->func);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
@@ -2004,6 +2010,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       CHECK_RESULT(ParseLimits(&import->table.elem_limits));
       CHECK_RESULT(ParseRefType(&import->table.elem_type));
       EXPECT(Rpar);
+      inject_name(import->table);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
@@ -2028,6 +2035,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       CHECK_RESULT(ParseSymOpt(&import->global, true));
       CHECK_RESULT(ParseGlobalType(&import->global));
       EXPECT(Rpar);
+      inject_name(import->global);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
@@ -2040,6 +2048,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
       EXPECT(Rpar);
+      inject_name(import->tag);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
