@@ -1549,8 +1549,12 @@ Result WastParser::ParseModuleFieldList(Module* module) {
       Index i = bindings.FindIndex(exp->var);
       if (i >= fields.size())
         return;
-      fields[i]->flags_ |=
-          WABT_SYMBOL_FLAG_EXPORTED | WABT_SYMBOL_FLAG_NO_STRIP;
+      SymbolCommon& sym = *fields[i];
+      sym.flags_ |= WABT_SYMBOL_FLAG_EXPORTED | WABT_SYMBOL_FLAG_NO_STRIP;
+      if (sym.name_.empty() && sym.defined()) {
+        sym.name_ = exp->name;
+        sym.flags_ |= WABT_SYMBOL_FLAG_EXPLICIT_NAME;
+      }
     };
     switch (exp->kind) {
       case ExternalKind::Func:
