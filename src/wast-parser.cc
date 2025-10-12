@@ -1574,6 +1574,21 @@ Result WastParser::ParseModuleFieldList(Module* module) {
         break;
     }
   }
+  auto validize_flags = [](SymbolCommon* sym) {
+    if (!sym->undefined() && !sym->exported() && sym->name().empty()) {
+      sym->flags_ |= uint32_t(SymbolVisibility::Hidden);
+      sym->flags_ &= ~WABT_SYMBOL_MASK_BINDING;
+      sym->flags_ |= uint32_t(SymbolBinding::Local);
+    }
+  };
+  for (auto sym : module->funcs)
+    validize_flags(sym);
+  for (auto sym : module->globals)
+    validize_flags(sym);
+  for (auto sym : module->tables)
+    validize_flags(sym);
+  for (auto sym : module->tags)
+    validize_flags(sym);
   return Result::Ok;
 }
 

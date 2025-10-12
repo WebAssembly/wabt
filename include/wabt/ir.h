@@ -253,8 +253,11 @@ public:
   }
   bool no_strip() const { return flags() & WABT_SYMBOL_FLAG_NO_STRIP; }
   bool non_default(bool imported) const {
-    uint32_t flags = flags_ & ~WABT_SYMBOL_FLAG_EXPORTED;
-    return flags != (imported ? WABT_SYMBOL_FLAG_UNDEFINED : 0);
+    uint32_t flags =
+      flags_ & ~WABT_SYMBOL_FLAG_EXPORTED & ~WABT_SYMBOL_FLAG_UNDEFINED;
+    if (!undefined() && !exported() && name().empty())
+      flags &= ~WABT_SYMBOL_MASK_BINDING & ~WABT_SYMBOL_MASK_VISIBILITY;
+    return flags != 0;
   }
 };
 
