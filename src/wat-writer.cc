@@ -1463,7 +1463,7 @@ void WatWriter::WriteRelocAttrs(const SymbolCommon& sym) {
 }
 
 void WatWriter::WriteReloc(const IrReloc& reloc, bool require_type) {
-  if (reloc.type == RelocType::None)
+  if (reloc.type == RelocType::None || !options_.relocatable)
     return;
   WriteOpenSpace("@reloc");
   if (require_type)
@@ -1545,7 +1545,7 @@ void WatWriter::WriteBeginFunc(const Func& func) {
   WriteOpenSpace("func");
   WriteNameOrIndex(func.name, func_index_, NextChar::Space);
 
-  if (func.non_default(import) && !func.priority) {
+  if ((func.non_default(import) || func.priority) && options_.relocatable) {
     WriteOpenSpace("@sym");
     WriteRelocAttrs(func);
     if (func.priority.has_value())
@@ -1606,7 +1606,7 @@ void WatWriter::WriteBeginGlobal(const Global& global) {
   bool import = module.IsImport(ExternalKind::Global, Var(func_index_, {}));
   WriteOpenSpace("global");
   WriteNameOrIndex(global.name, global_index_, NextChar::Space);
-  if (global.non_default(import)) {
+  if (global.non_default(import) && options_.relocatable) {
     WriteOpenSpace("@sym");
     WriteRelocAttrs(global);
     WriteCloseSpace();
@@ -1633,7 +1633,7 @@ void WatWriter::WriteTag(const Tag& tag) {
   bool import = module.IsImport(ExternalKind::Tag, Var(func_index_, {}));
   WriteOpenSpace("tag");
   WriteNameOrIndex(tag.name, tag_index_, NextChar::Space);
-  if (tag.non_default(import)) {
+  if (tag.non_default(import) && options_.relocatable) {
     WriteOpenSpace("@sym");
     WriteRelocAttrs(tag);
     WriteCloseSpace();
@@ -1667,7 +1667,7 @@ void WatWriter::WriteTable(const Table& table) {
   bool import = module.IsImport(ExternalKind::Table, Var(func_index_, {}));
   WriteOpenSpace("table");
   WriteNameOrIndex(table.name, table_index_, NextChar::Space);
-  if (table.non_default(import)) {
+  if (table.non_default(import) && options_.relocatable) {
     WriteOpenSpace("@sym");
     WriteRelocAttrs(table);
     WriteCloseSpace();
@@ -1760,12 +1760,12 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
   auto curr_reloc = begin(segment.relocs);
   bool written_some_data = false;
   for (;;) {
-    next_reloc = curr_reloc != end(segment.relocs)
+    next_reloc = curr_reloc != end(segment.relocs) && options_.relocatable
                      ? curr_reloc->first +
                            kRelocDataTypeSize[int(
                                kRelocDataType[int(curr_reloc->second.type)])]
                      : end_offset;
-    next_sym = curr_sym != segment.symbol_range.second
+    next_sym = curr_sym != segment.symbol_range.second && options_.relocatable
                    ? module.data_symbols[curr_sym].offset
                    : end_offset;
     if (offset == next_reloc) {
