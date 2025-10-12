@@ -1924,11 +1924,11 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
   assert(index == table.symbols().size());
   Symbol sym = {std::string(name), flags, Symbol::Table{table_index}};
   table.AddSymbol(sym);
-  if (index >= module_->tables.size()) {
-    PrintError("invalid table index: %" PRIindex, index);
+  if (table_index >= module_->tables.size()) {
+    PrintError("invalid table index: %" PRIindex, table_index);
     return Result::Error;
   }
-  Table* table = module_->tables[index];
+  Table* table = module_->tables[table_index];
   static_cast<SymbolCommon&>(*table) = sym;
   return SetTableName(table_index, name);
 }
