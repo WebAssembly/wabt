@@ -1359,7 +1359,7 @@ Result WastParser::ParseSymAfterPar(SymbolCommon* sym,
       Error(last_tok_loc, "Must specify " PRIstringview " for this symbol",
             WABT_PRINTF_STRING_VIEW_ARG(var.first));
   };
-  auto check_unseen = [this, &last_tok_loc](OnceProperty& var) {
+  auto check_unseen = [this](OnceProperty& var) {
     if (var.second)
       Error(*var.second, "Cannot specify " PRIstringview " for this symbol",
             WABT_PRINTF_STRING_VIEW_ARG(var.first));
