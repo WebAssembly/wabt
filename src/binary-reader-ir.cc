@@ -1818,7 +1818,8 @@ Result BinaryReaderIR::OnDataSymbol(Index index,
   data_symbols.emplace(sym);
   assert(index == table.symbols().size());
   table.AddSymbol(
-      {name2, flags, Symbol::Data{sym.segment, sym.offset, sym.size}});
+      {name2, flags,
+       Symbol::Data{sym.segment, static_cast<Offset>(sym.offset), sym.size}});
   if (name.empty()) {
     return Result::Ok;
   }

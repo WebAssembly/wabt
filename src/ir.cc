@@ -165,8 +165,10 @@ Result SymbolTable::Populate(const Module* module) {
   add(module->tags, [](Index i, auto&) { return Symbol::Tag{i}; });
   for (size_t i = 0; i < module->data_symbols.size(); ++i) {
     auto& sym = module->data_symbols[i];
-    CHECK_RESULT(AddSymbol({sym.name_, sym.flags_,
-                            Symbol::Data{sym.segment, sym.offset, sym.size}}));
+    CHECK_RESULT(
+        AddSymbol({sym.name_, sym.flags_,
+                   Symbol::Data{sym.segment, static_cast<Offset>(sym.offset),
+                                sym.size}}));
     EnlargeFor(datas_, i);
     datas_[i] = symbols().size() - 1;
   }
