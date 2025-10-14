@@ -138,14 +138,13 @@ void EnlargeFor(std::vector<Index>& v, Index i) {
 
 Result SymbolTable::AddSymbol(Symbol sym) {
   sym.visit([this](auto type) {
-    using T = decltype(type);
-    if constexpr (!std::is_same_v<T, Symbol::Data> &&
-                  !std::is_same_v<T, Symbol::Section>) {
-      EnlargeFor(GetTable<T>(), type.index);
+    if constexpr (!std::is_same_v<decltype(type), Symbol::Data> &&
+                  !std::is_same_v<decltype(type), Symbol::Section>) {
+      EnlargeFor(GetTable<decltype(type)>(), type.index);
       // This is lossy since multiple symbols are genuinely possible, but apart
       // from data symbols their semantics is not very clear
-      if (GetTable<T>()[type.index] == kInvalidIndex)
-        GetTable<T>()[type.index] = symbols_.size();
+      if (GetTable<decltype(type)>()[type.index] == kInvalidIndex)
+        GetTable<decltype(type)>()[type.index] = symbols_.size();
     }
   });
   symbols_.push_back(sym);
