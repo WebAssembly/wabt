@@ -1973,7 +1973,19 @@ Result BinaryReaderIR::BeginElemSection(Offset size) {
 
 Result BinaryReaderIR::OnRelocCount(Index count, Index section_index) {
   active_reloc_section = reloc_queues.find(section_index);
-  assert(GetQueue());
+  if (!GetQueue()) {
+    if (active_section < section_index) {
+      PrintError(
+          "Relocation section [%d] does not follow its target section [%d]",
+          active_section, section_index);
+    } else {
+      PrintError(
+          "The target section for the relocation section [%d] does not have a "
+          "valid index [%d]",
+          active_section, section_index);
+    }
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
