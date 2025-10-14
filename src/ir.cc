@@ -140,11 +140,12 @@ Result SymbolTable::AddSymbol(Symbol sym) {
   sym.visit([this](auto type) {
     if constexpr (!std::is_same_v<decltype(type), Symbol::Data> &&
                   !std::is_same_v<decltype(type), Symbol::Section>) {
-      EnlargeFor(GetTable<decltype(type)>(), type.index);
+      auto& table = this->GetTable<decltype(type)>();
+      EnlargeFor(table, type.index);
       // This is lossy since multiple symbols are genuinely possible, but apart
       // from data symbols their semantics is not very clear
-      if (GetTable<decltype(type)>()[type.index] == kInvalidIndex)
-        GetTable<decltype(type)>()[type.index] = symbols_.size();
+      if (table[type.index] == kInvalidIndex)
+        table[type.index] = symbols_.size();
     }
   });
   symbols_.push_back(sym);
