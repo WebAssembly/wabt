@@ -418,8 +418,14 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   // Queue instructions to patch
   struct RelocQueue {
-    RelocQueue(Offset start)
-        : start(start), incoming_relocs(), entries(), data_segment_starts() {}
+    enum Type {
+      CODE,
+      DATA,
+      CUSTOM,
+    };
+
+    RelocQueue(Offset start, Type type)
+        : start(start), type(type), incoming_relocs(), entries(), data_segment_starts() {}
 
     template <class... Types>
     using Entries = std::tuple<std::unordered_map<Offset, Types*>...>;
@@ -434,6 +440,7 @@ class BinaryReaderIR : public BinaryReaderNop {
     }
 
     Offset start;
+    Type type;
     std::vector<Reloc> incoming_relocs;
     Entries<ConstExpr, LoadExpr, StoreExpr> entries;
     std::map<Offset, DataSegment*> data_segment_starts;
@@ -444,7 +451,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   std::multiset<DataSym> data_symbols;
 
   Index active_section = kInvalidIndex;
-  void MakeQueue();
+  void MakeQueue(RelocQueue::Type);
   RelocQueue* GetQueue();
 };
 
@@ -1941,10 +1948,10 @@ Result BinaryReaderIR::OnReloc(RelocType type,
   GetQueue()->incoming_relocs.emplace_back(type, offset, index, addend);
   return Result::Ok;
 }
-void BinaryReaderIR::MakeQueue() {
+void BinaryReaderIR::MakeQueue(RelocQueue::Type t) {
   assert(active_section != kInvalidIndex);
   active_reloc_section =
-      reloc_queues.insert({active_section, RelocQueue{state->offset}}).first;
+      reloc_queues.insert({active_section, RelocQueue{state->offset, t}}).first;
 }
 BinaryReaderIR::RelocQueue* BinaryReaderIR::GetQueue() {
   if (active_reloc_section != end(reloc_queues))
@@ -1953,21 +1960,21 @@ BinaryReaderIR::RelocQueue* BinaryReaderIR::GetQueue() {
 }
 
 Result BinaryReaderIR::BeginCodeSection(Offset size) {
-  MakeQueue();
+  MakeQueue(RelocQueue::CODE);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::BeginDataSection(Offset size) {
-  MakeQueue();
+  MakeQueue(RelocQueue::DATA);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::BeginGenericCustomSection(Offset size) {
+  MakeQueue(RelocQueue::CUSTOM);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::BeginElemSection(Offset size) {
-  MakeQueue();
   return Result::Ok;
 }
 
@@ -2119,6 +2126,19 @@ Result BinaryReaderIR::EndModule() {
       // We pray that the relocation is always the last operand, and that the
       // operand is an overlong leb already
       auto reloc_addr = reloc.offset + reloc_size;
+      if (queue.type == RelocQueue::CODE && kRelocDataType[int(reloc.type)] == RelocDataType::LEB) {
+        switch (kRelocSymbolType[int(reloc.type)]) {
+          case RelocKind::Global:
+          case RelocKind::Type:
+          case RelocKind::Table:
+          case RelocKind::Function:
+            // Assume all relocations of primary shape are valid, we have no way
+            // to check
+            continue;
+          default:
+            break;
+        }
+      }
       queue.traverse([&](auto& insns) {
         auto insn = insns.find(reloc_addr);
         if (insn != end(insns)) {
