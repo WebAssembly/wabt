@@ -1953,6 +1953,10 @@ Result WatWriter::WriteModule() {
   }
   if (options_.features.annotations_enabled()) {
     for (const Custom& custom : module.customs) {
+      if (custom.name == "linking")
+        continue;
+      if (std::string_view{custom.name}.substr(0, 6) == "reloc." && options_.relocatable)
+        continue;
       WriteCustom(custom);
     }
   }
