@@ -2031,7 +2031,7 @@ Result BinaryReaderIR::EndModule() {
   size_t i = 0;
   Index range_start = 0, data_segment = -1;
   for (auto& datasym : data_symbols) {
-    if (datasym.segment >= module_->data_segments.size())
+    if (datasym.segment >= module_->data_segments.size() && datasym.segment != kInvalidIndex)
       // all further symbols are invalid
       break;
     if (datasym.segment != data_segment) {
