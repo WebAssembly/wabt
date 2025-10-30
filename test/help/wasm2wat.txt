@@ -45,4 +45,5 @@ options:
       --ignore-custom-section-errors           Ignore errors in custom sections
       --generate-names                         Give auto-generated names to non-named functions, types, etc.
       --no-check                               Don't check for invalid modules
+  -r, --relocatable                            Generate relocation annotations
 ;;; STDOUT ;;)

@@ -141,6 +141,22 @@ void WriteU64Leb128(Stream* stream, uint64_t value, const char* desc) {
   stream->WriteData(data, length, desc);
 }
 
+void WriteFixedU64Leb128(Stream* stream, uint64_t value, const char* desc) {
+  uint8_t data[MAX_U64_LEB128_BYTES];
+  Offset length = 0;
+  LEB128_LOOP_UNTIL(length == MAX_U64_LEB128_BYTES);
+  stream->WriteData(data, length, desc);
+}
+void WriteFixedS64Leb128(Stream* stream, int64_t value, const char* desc) {
+  uint8_t data[MAX_U64_LEB128_BYTES];
+  Offset length = 0;
+  LEB128_LOOP_UNTIL(length == MAX_U64_LEB128_BYTES);
+  stream->WriteData(data, length, desc);
+}
+void WriteFixedS64Leb128(Stream* stream, uint64_t value, const char* desc) {
+  WriteS64Leb128(stream, Bitcast<int64_t>(value), desc);
+}
+
 void WriteS64Leb128(Stream* stream, uint64_t value, const char* desc) {
   WriteS64Leb128(stream, Bitcast<int64_t>(value), desc);
 }

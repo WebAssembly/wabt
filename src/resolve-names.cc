@@ -81,6 +81,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
   Result OnSimdStoreLaneExpr(SimdStoreLaneExpr*) override;
+  Result OnConstExpr(ConstExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -100,7 +101,9 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveTagVar(Var* var);
   void ResolveDataSegmentVar(Var* var);
   void ResolveElemSegmentVar(Var* var);
+  void ResolveDataVar(Var* var);
   void ResolveLocalVar(Var* var);
+  void ResolveReloc(IrReloc* reloc);
   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
@@ -219,6 +222,9 @@ void NameResolver::ResolveDataSegmentVar(Var* var) {
 void NameResolver::ResolveElemSegmentVar(Var* var) {
   ResolveVar(&current_module_->elem_segment_bindings, var, "elem segment");
 }
+void NameResolver::ResolveDataVar(Var* var) {
+  ResolveVar(&current_module_->data_symbol_bindings, var, "data symbol");
+}
 
 void NameResolver::ResolveLocalVar(Var* var) {
   if (var->is_name()) {
@@ -234,6 +240,35 @@ void NameResolver::ResolveLocalVar(Var* var) {
     }
 
     var->set_index(index);
+  }
+}
+void NameResolver::ResolveReloc(IrReloc* reloc) {
+  if (reloc->type == RelocType::None)
+    return;
+  switch (kRelocSymbolType[int(reloc->type)]) {
+    case RelocKind::Text:
+    case RelocKind::Function:
+    case RelocKind::FunctionTbl:
+      ResolveFuncVar(&reloc->symbol);
+      break;
+    case RelocKind::Data:
+      ResolveDataVar(&reloc->symbol);
+      break;
+    case RelocKind::Type:
+      ResolveFuncTypeVar(&reloc->symbol);
+      break;
+    case RelocKind::Table:
+      ResolveTableVar(&reloc->symbol);
+      break;
+    case RelocKind::Global:
+      ResolveGlobalVar(&reloc->symbol);
+      break;
+    case RelocKind::Tag:
+      ResolveTagVar(&reloc->symbol);
+      break;
+    case RelocKind::Section:
+      // Do nothing for now
+      break;
   }
 }
 
@@ -331,6 +366,7 @@ Result NameResolver::EndIfExpr(IfExpr* expr) {
 
 Result NameResolver::OnLoadExpr(LoadExpr* expr) {
   ResolveMemoryVar(&expr->memidx);
+  ResolveReloc(&expr->reloc);
   return Result::Ok;
 }
 
@@ -430,6 +466,7 @@ Result NameResolver::OnRefFuncExpr(RefFuncExpr* expr) {
 
 Result NameResolver::OnStoreExpr(StoreExpr* expr) {
   ResolveMemoryVar(&expr->memidx);
+  ResolveReloc(&expr->reloc);
   return Result::Ok;
 }
 
@@ -500,6 +537,10 @@ Result NameResolver::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
   ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
 }
+Result NameResolver::OnConstExpr(ConstExpr* expr) {
+  ResolveReloc(&expr->reloc);
+  return Result::Ok;
+}
 
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
@@ -566,6 +607,8 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
 void NameResolver::VisitDataSegment(DataSegment* segment) {
   ResolveMemoryVar(&segment->memory_var);
   visitor_.VisitExprList(segment->offset);
+  for (auto& [offset, reloc] : segment->relocs)
+    ResolveReloc(&reloc);
 }
 
 Result NameResolver::VisitModule(Module* module) {
