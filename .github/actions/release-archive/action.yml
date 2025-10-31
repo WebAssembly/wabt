@@ -13,9 +13,15 @@ runs:
       id: archive
       shell: bash
       run: |
-        OSNAME=$(echo ${{ inputs.os }} | sed 's/-latest//')
+        declare -A OSNAME=(
+          [ubuntu-20.04]="linux-x64",
+          [ubuntu-24.04-arm]="linux-arm64",
+          [macos-14]="macos-14",
+          [windows-latest]="windows-x64",
+          [wasi]="wasi",
+        )
         VERSION=${{ github.event.release.tag_name || github.sha }}
-        PKGNAME="wabt-$VERSION-$OSNAME"
+        PKGNAME="wabt-$VERSION-${OSNAME[${{ inputs.os }}]}"
         TARBALL=$PKGNAME.tar.gz
         SHASUM=$PKGNAME.tar.gz.sha256
         mv install wabt-$VERSION
