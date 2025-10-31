@@ -3,9 +3,10 @@
 (module
   (import "" "foo" (func $foo (param i32) (result i32)))
   (func (export "main") (result i32)
-    (call_ref (i32.const 10)
-              (ref.func $foo)
+    (call_ref $t (i32.const 10)
+                 (ref.func $foo)
     )
   )
   (elem declare funcref (ref.func $foo))
+  (type $t (func (param i32) (result i32)))
 )

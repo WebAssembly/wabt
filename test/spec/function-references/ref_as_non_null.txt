@@ -1,0 +1,11 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/ref_as_non_null.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/ref_as_non_null.wast:25: assert_trap passed: unreachable executed
+out/test/spec/function-references/ref_as_non_null.wast:27: assert_trap passed: null reference
+out/test/spec/function-references/ref_as_non_null.wast:32: assert_invalid passed:
+  out/test/spec/function-references/ref_as_non_null/ref_as_non_null.1.wasm:000002c: error: type mismatch in call, expected [(ref 0)] but got [(ref null 0)]
+  000002c: error: OnCallExpr callback failed
+7/7 tests passed.
+;;; STDOUT ;;)
