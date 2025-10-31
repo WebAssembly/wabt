@@ -1,0 +1,12 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/type-equivalence.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/type-equivalence.wast:31: assert_invalid passed:
+  out/test/spec/function-references/type-equivalence/type-equivalence.2.wasm:0000010: error: reference 0 is out of range in results
+  0000010: error: OnFuncType callback failed
+out/test/spec/function-references/type-equivalence.wast:38: assert_invalid passed:
+  out/test/spec/function-references/type-equivalence/type-equivalence.3.wasm:0000010: error: reference 1 is out of range in params
+  0000010: error: OnFuncType callback failed
+12/12 tests passed.
+;;; STDOUT ;;)
