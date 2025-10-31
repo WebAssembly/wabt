@@ -2246,6 +2246,46 @@ void CWriter::WriteDataInitializers() {
     Write(CloseBrace(), ";", Newline());
   }
 
+  Write(Newline(),
+        "static const u8* active_data_segment_data_ptrs[] = ", OpenBrace());
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->kind != SegmentKind::Active ||
+        data_segment->data.empty()) {
+      continue;
+    }
+    Write("data_segment_data_",
+          GlobalName(ModuleFieldType::DataSegment, data_segment->name), ",",
+          Newline());
+  }
+  Write(CloseBrace(), ";", Newline());
+
+  Write(Newline(),
+        "static const size_t active_data_segment_sizes[] = ", OpenBrace());
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->kind != SegmentKind::Active ||
+        data_segment->data.empty()) {
+      continue;
+    }
+    Write(data_segment->data.size(), ",  // data_segment_data_",
+          GlobalName(ModuleFieldType::DataSegment, data_segment->name),
+          Newline());
+  }
+  Write(CloseBrace(), ";", Newline());
+
+  Write(Newline(),
+        "static const u32 active_data_segment_offsets[] = ", OpenBrace());
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->kind != SegmentKind::Active ||
+        data_segment->data.empty()) {
+      continue;
+    }
+    WriteInitExpr(data_segment->offset);
+    Write(",  // data_segment_data_",
+          GlobalName(ModuleFieldType::DataSegment, data_segment->name),
+          Newline());
+  }
+  Write(CloseBrace(), ";", Newline());
+
   Write(Newline(), "static void init_memories(", ModuleInstanceTypeName(),
         "* instance) ", OpenBrace());
   if (module_->memories.size() > module_->num_memory_imports) {
@@ -2266,24 +2306,19 @@ void CWriter::WriteDataInitializers() {
     }
   }
 
-  for (const DataSegment* data_segment : module_->data_segments) {
-    if (data_segment->kind != SegmentKind::Active) {
-      continue;
-    }
-    const Memory* memory =
-        module_->memories[module_->GetMemoryIndex(data_segment->memory_var)];
-    Write("LOAD_DATA(",
-          ExternalInstanceRef(ModuleFieldType::Memory, memory->name), ", ");
-    WriteInitExpr(data_segment->offset);
-    if (data_segment->data.empty()) {
-      Write(", NULL, 0");
-    } else {
-      Write(", data_segment_data_",
-            GlobalName(ModuleFieldType::DataSegment, data_segment->name), ", ",
-            data_segment->data.size());
-    }
-    Write(");", Newline());
-  }
+  Write(
+      "for (int i = 0; i < sizeof(active_data_segment_data_ptrs) / "
+      "sizeof(active_data_segment_data_ptrs[0]); i++) ",
+      OpenBrace(), Newline());
+
+  const Memory* memory = module_->memories[0];
+
+  Write("LOAD_DATA(",
+        ExternalInstanceRef(ModuleFieldType::Memory, memory->name),
+        ", active_data_segment_offsets[i], active_data_segment_data_ptrs[i], "
+        "active_data_segment_sizes[i]);",
+        Newline());
+  Write(CloseBrace(), Newline());
 
   Write(CloseBrace(), Newline());
 
