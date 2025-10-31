@@ -196,6 +196,7 @@ class WatWriter : ModuleContext {
   Index table_index_ = 0;
   Index memory_index_ = 0;
   Index type_index_ = 0;
+  Index recursive_range_index_ = 0;
   Index tag_index_ = 0;
   Index data_segment_index_ = 0;
   Index elem_segment_index_ = 0;
@@ -554,6 +555,8 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
+  Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -588,6 +591,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
   Result OnTableFillExpr(TableFillExpr*) override;
+  Result OnRefAsNonNullExpr(RefAsNonNullExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
@@ -595,6 +599,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
+  Result OnReturnCallRefExpr(ReturnCallRefExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
@@ -655,6 +660,19 @@ Result WatWriter::ExprVisitorDelegate::OnBrIfExpr(BrIfExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnBrOnNonNullExpr(
+    BrOnNonNullExpr* expr) {
+  writer_->WritePutsSpace(Opcode::BrOnNonNull_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnBrOnNullExpr(BrOnNullExpr* expr) {
+  writer_->WritePutsSpace(Opcode::BrOnNull_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::OnBrTableExpr(BrTableExpr* expr) {
   writer_->WritePutsSpace(Opcode::BrTable_Opcode.GetName());
   for (const Var& var : expr->targets) {
@@ -686,6 +704,7 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallRef_Opcode.GetName());
+  writer_->WriteVar(expr->sig_type, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -882,6 +901,12 @@ Result WatWriter::ExprVisitorDelegate::OnTableFillExpr(TableFillExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnRefAsNonNullExpr(
+    RefAsNonNullExpr* expr) {
+  writer_->WritePutsNewline(Opcode::RefAsNonNull_Opcode.GetName());
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
   writer_->WritePutsSpace(Opcode::RefFunc_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
@@ -890,7 +915,12 @@ Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
   writer_->WritePutsSpace(Opcode::RefNull_Opcode.GetName());
-  writer_->WriteRefKind(expr->type, NextChar::Newline);
+  if (expr->type.opt_type() != Type::RefNull) {
+    assert(!Type(expr->type.opt_type()).IsReferenceWithIndex());
+    writer_->WriteRefKind(expr->type.opt_type(), NextChar::Newline);
+  } else {
+    writer_->WriteVar(expr->type, NextChar::Newline);
+  }
   return Result::Ok;
 }
 
@@ -925,6 +955,13 @@ Result WatWriter::ExprVisitorDelegate::OnReturnCallIndirectExpr(
           : Var{writer_->module.GetFuncTypeIndex(expr->decl), expr->loc};
   writer_->WriteVar(type_var, NextChar::Space);
   writer_->WriteCloseNewline();
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnReturnCallRefExpr(
+    ReturnCallRefExpr* expr) {
+  writer_->WritePutsSpace(Opcode::ReturnCallRef_Opcode.GetName());
+  writer_->WriteVar(expr->sig_type, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -1560,7 +1597,8 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     Writef("(;%u;)", elem_segment_index_);
   }
 
-  uint8_t flags = segment.GetFlags(&module);
+  uint8_t flags = segment.GetFlags(
+      &module, options_.features.function_references_enabled());
 
   if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
     WriteOpenSpace("table");
@@ -1678,6 +1716,12 @@ void WatWriter::WriteExport(const Export& export_) {
 }
 
 void WatWriter::WriteTypeEntry(const TypeEntry& type) {
+  if (recursive_range_index_ < module.recursive_ranges.size() &&
+      module.recursive_ranges[recursive_range_index_].first_type_index ==
+          type_index_) {
+    WriteOpen("rec", NextChar::Newline);
+  }
+
   WriteOpenSpace("type");
   WriteNameOrIndex(type.name, type_index_++, NextChar::Space);
   switch (type.kind()) {
@@ -1711,6 +1755,14 @@ void WatWriter::WriteTypeEntry(const TypeEntry& type) {
     }
   }
   WriteCloseNewline();
+
+  // The type_index_ is increased above.
+  if (recursive_range_index_ < module.recursive_ranges.size() &&
+      module.recursive_ranges[recursive_range_index_].EndTypeIndex() ==
+          type_index_) {
+    WriteCloseNewline();
+    recursive_range_index_++;
+  }
 }
 
 void WatWriter::WriteField(const Field& field) {
@@ -1776,6 +1828,9 @@ Result WatWriter::WriteModule() {
         break;
       case ModuleFieldType::Type:
         WriteTypeEntry(*cast<TypeModuleField>(&field)->type);
+        break;
+      case ModuleFieldType::EmptyRec:
+        WritePuts("(rec)", NextChar::Newline);
         break;
       case ModuleFieldType::Start:
         WriteStartFunction(cast<StartModuleField>(&field)->start);
