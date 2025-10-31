@@ -56,6 +56,7 @@ WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x11, CallIndirect, "call_indirect
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x12, ReturnCall, "return_call", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x13, ReturnCallIndirect, "return_call_indirect", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x14, CallRef, "call_ref", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x15, ReturnCallRef, "return_call_ref", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x18, Delegate, "delegate", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x19, CatchAll, "catch_all", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x1a, Drop, "drop", "")
@@ -267,6 +268,9 @@ WABT_OPCODE(___,  I32,  ___,  I32,  0,  0xfc, 0x11, TableFill, "table.fill", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd0, RefNull, "ref.null", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd1, RefIsNull, "ref.is_null", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd2, RefFunc, "ref.func", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd4, RefAsNonNull, "ref.as_non_null", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd5, BrOnNull, "br_on_null", "")
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd6, BrOnNonNull, "br_on_non_null", "")
 
 /* Simd opcodes */
 WABT_OPCODE(V128, I32,  ___,  ___,  16, 0xfd, 0x00, V128Load, "v128.load", "")

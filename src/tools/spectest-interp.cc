@@ -1307,11 +1307,12 @@ CommandRunner::CommandRunner() : store_(s_features) {
                       });
   }
 
-  spectest["table"] =
-      interp::Table::New(store_, TableType{ValueType::FuncRef, Limits{10, 20}});
+  spectest["table"] = interp::Table::New(
+      store_, TableType{ValueType::FuncRef, Limits{10, 20}}, Ref::Null);
 
   spectest["table64"] = interp::Table::New(
-      store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}});
+      store_, TableType{ValueType::FuncRef, Limits{10, 20, false, true}},
+      Ref::Null);
 
   spectest["memory"] = interp::Memory::New(
       store_, MemoryType{Limits{1, 2}, WABT_DEFAULT_PAGE_SIZE});
@@ -1920,7 +1921,7 @@ wabt::Result CommandRunner::CheckAssertReturnResult(
     case Type::FuncRef:
       // A funcref expectation only requires that the reference be a function,
       // but it doesn't check the actual index.
-      ok = (actual.type == Type::FuncRef);
+      ok = (actual.type == Type::FuncRef || actual.type == Type::RefNull);
       break;
 
     case Type::ExternRef:
