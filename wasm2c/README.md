@@ -720,3 +720,16 @@ void w2c_host_buf_done(w2c_host* instance, u32 ptr, u32 size) {
   printf("%s -> %.*s\n", instance->input, (int)size, &instance->memory.data[ptr]);
 }
 ```
+## Troubleshooting
+
+```
+error: No definition for WASM_RT_THREAD_LOCAL for this platform.
+```
+
+If you see the above error, wasm2c does not know how to define thread_local variables in your platform. You can address this in one of three ways
+
+1. If your compiler supports C11, pass in `-std=c11` as a compilation flag. Otherwise, you can either
+
+2. If you know how to define thread local variables in your compiler, define `WASM_RT_THREAD_LOCAL` macro as a compilation flag with the correct thread_local keywords. e.g., `-DWASM_RT_THREAD_LOCAL=__thread`
+
+3. If you can guarantee that at most one thread of your application will be running wasm2c sandboxes at any given time, you can pass the flag `-DWASM_RT_SINGLE_THREAD_ONLY` to simply define thread_local variables as global values.
