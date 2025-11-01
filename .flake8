@@ -1,5 +1,5 @@
 [flake8]
-ignore =
-  E501, # line too long
-  W504  # line break after binary operator
+# E501: line too long
+# W504: line break after binary operator
+ignore = E501,W504
 exclude = ./third_party ./out
