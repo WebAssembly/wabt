@@ -224,6 +224,9 @@ jobs:
 
   build-cross:
     runs-on: ubuntu-latest
+    # Temporatily disabled until we can get it fixed:
+    # https://github.com/WebAssembly/wabt/issues/2655
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
