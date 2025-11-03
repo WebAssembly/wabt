@@ -498,9 +498,10 @@ class BinaryReaderDelegate {
                                           Offset size) = 0;
   virtual Result OnCodeMetadataFuncCount(Index count) = 0;
   virtual Result OnCodeMetadataCount(Index function_index, Index count) = 0;
-  virtual Result OnCodeMetadata(Offset offset,
-                                const void* data,
-                                Address size) = 0;
+  virtual Result OnCodeMetadata(const void* data, Address size) = 0;
+  virtual Result OnCodeMetadataCodeOffset(Offset offset) = 0;
+  virtual Result OnCodeMetadataCallTarget(Index target_index,
+                                          uint32_t call_frequency) = 0;
   virtual Result EndCodeMetadataSection() = 0;
 
   const State* state = nullptr;

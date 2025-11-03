@@ -2467,11 +2467,26 @@ Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
           last_code_offset == kInvalidOffset || code_offset > last_code_offset,
           "code offset out of order: %" PRIzx, code_offset);
       last_code_offset = code_offset;
+      CALLBACK(OnCodeMetadataCodeOffset, code_offset);
 
-      Address data_size;
-      const void* data;
-      CHECK_RESULT(ReadBytes(&data, &data_size, "instance data"));
-      CALLBACK(OnCodeMetadata, code_offset, data, data_size);
+      if (name == "call_targets") {
+        uint32_t hint_size;
+        CHECK_RESULT(ReadU32Leb128(&hint_size, "call targets hint size"));
+        Offset end = state_.offset + hint_size;
+        while (state_.offset < end) {
+          Index target_index;
+          CHECK_RESULT(ReadIndex(&target_index, "call target index"));
+          uint32_t call_frequency;
+          CHECK_RESULT(ReadU32Leb128(&call_frequency, "call frequency"));
+          CALLBACK(OnCodeMetadataCallTarget, target_index, call_frequency);
+        }
+        assert(state_.offset == end);
+      } else {
+        Address data_size;
+        const void* data;
+        CHECK_RESULT(ReadBytes(&data, &data_size, "instance data"));
+        CALLBACK(OnCodeMetadata, data, data_size);
+      }
     }
   }
 
