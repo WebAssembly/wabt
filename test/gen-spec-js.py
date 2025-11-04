@@ -318,7 +318,7 @@ class ModuleExtender(object):
         # When checking for canonical NaNs, the value can differ only in the sign
         # bit from +nan. For arithmetic NaNs, the sign bit and the rest of the tag
         # can differ as well.
-        assert(type_ in ('f32', 'f64'))
+        assert type_ in ('f32', 'f64')
         if not canonical:
             return self._QuietNan(type_)
 
@@ -329,7 +329,7 @@ class ModuleExtender(object):
         self.lines.append(line)
 
     def _QuietNan(self, type_):
-        assert(type_ in ('f32', 'f64'))
+        assert type_ in ('f32', 'f64')
         if type_ == 'f32':
             line = 'i32.const 0x%x' % F32_QUIET_NAN
         else:
