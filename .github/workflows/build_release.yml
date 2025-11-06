@@ -17,10 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             arch: x86_64
             name: linux-x64
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-22.04-arm
             arch: aarch64
             name: linux-arm64
           - os: macos-14
