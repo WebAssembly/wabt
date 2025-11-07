@@ -250,7 +250,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override {
     return Result::Ok;
   }
-  Result OnCallRefExpr() override { return Result::Ok; }
+  Result OnCallRefExpr(Type sig_type) override { return Result::Ok; }
   Result OnCatchExpr(Index tag_index) override { return Result::Ok; }
   Result OnCatchAllExpr() override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }

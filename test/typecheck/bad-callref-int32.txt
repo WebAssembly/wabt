@@ -2,14 +2,16 @@
 ;;; ARGS: --enable-function-references
 ;;; ERROR: 1
 (module
+  (type $t (func))
+
   (func (export "main") (result i32)
-    (call_ref (i32.const 10)
-              (i32.const 13)
+    (call_ref $t (i32.const 10)
+                 (i32.const 13)
     )
   )
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-callref-int32.txt:6:6: error: type mismatch in call_ref, expected [reference] but got [... i32]
-    (call_ref (i32.const 10)
+out/test/typecheck/bad-callref-int32.txt:8:6: error: type mismatch in call_ref, expected [(ref null 0)] but got [... i32]
+    (call_ref $t (i32.const 10)
      ^^^^^^^^
 ;;; STDERR ;;)

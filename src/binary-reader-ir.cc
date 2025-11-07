@@ -207,7 +207,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
-  Result OnCallRefExpr() override;
+  Result OnCallRefExpr(Type sig_type) override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnCompareExpr(Opcode opcode) override;
@@ -920,8 +920,10 @@ Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
   return AppendExpr(std::move(expr));
 }
 
-Result BinaryReaderIR::OnCallRefExpr() {
-  return AppendExpr(std::make_unique<CallRefExpr>());
+Result BinaryReaderIR::OnCallRefExpr(Type sig_type) {
+  auto expr = std::make_unique<CallRefExpr>();
+  expr->sig_type = Var(sig_type, GetLocation());
+  return AppendExpr(std::move(expr));
 }
 
 Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
@@ -1153,7 +1155,7 @@ Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
 
 Result BinaryReaderIR::OnRefNullExpr(Type type) {
   module_->features_used.exceptions |= (type == Type::ExnRef);
-  return AppendExpr(std::make_unique<RefNullExpr>(type));
+  return AppendExpr(std::make_unique<RefNullExpr>(Var(type, GetLocation())));
 }
 
 Result BinaryReaderIR::OnRefIsNullExpr() {
@@ -1173,9 +1175,9 @@ Result BinaryReaderIR::OnReturnExpr() {
 }
 
 Result BinaryReaderIR::OnSelectExpr(Index result_count, Type* result_types) {
-  TypeVector results;
-  results.assign(result_types, result_types + result_count);
-  return AppendExpr(std::make_unique<SelectExpr>(results));
+  auto expr_ptr = std::make_unique<SelectExpr>();
+  expr_ptr->result_type.assign(result_types, result_types + result_count);
+  return AppendExpr(std::move(expr_ptr));
 }
 
 Result BinaryReaderIR::OnGlobalSetExpr(Index global_index) {
