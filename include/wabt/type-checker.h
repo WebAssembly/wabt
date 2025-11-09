@@ -97,12 +97,16 @@ class TypeChecker {
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types,
                         const Limits& table_limits);
-  Result OnCallRef(Type);
+  Result OnCallRef(Type type,
+                   const TypeVector& param_types,
+                   const TypeVector& result_types);
   Result OnReturnCall(const TypeVector& param_types,
                       const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types,
                               const TypeVector& result_types);
-  Result OnReturnCallRef(Type);
+  Result OnReturnCallRef(Type type,
+                         const TypeVector& param_types,
+                         const TypeVector& result_types);
   Result OnCatch(const TypeVector& sig);
   Result OnCompare(Opcode);
   Result OnConst(Type);
@@ -191,6 +195,8 @@ class TypeChecker {
   Result PopAndCheckCall(const TypeVector& param_types,
                          const TypeVector& result_types,
                          const char* desc);
+  Result PopAndCheckReturnCall(const TypeVector& result_types,
+                               const char* desc);
   Result PopAndCheck1Type(Type expected, const char* desc);
   Result PopAndCheck2Types(Type expected1, Type expected2, const char* desc);
   Result PopAndCheck3Types(Type expected1,

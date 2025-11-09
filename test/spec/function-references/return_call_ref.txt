@@ -26,7 +26,7 @@ out/test/spec/function-references/return_call_ref.wast:306: assert_trap passed: 
 out/test/spec/function-references/return_call_ref.wast:319: assert_trap passed: unreachable executed
 out/test/spec/function-references/return_call_ref.wast:334: assert_trap passed: unreachable executed
 out/test/spec/function-references/return_call_ref.wast:337: assert_invalid passed:
-  out/test/spec/function-references/return_call_ref/return_call_ref.11.wasm:0000042: error: type mismatch in return_call, expected [i32] but got [i64]
+  out/test/spec/function-references/return_call_ref/return_call_ref.11.wasm:0000042: error: type mismatch in return_call_ref, expected [i32] but got [i64]
   0000042: error: OnReturnCallRefExpr callback failed
 out/test/spec/function-references/return_call_ref.wast:353: assert_invalid passed:
   out/test/spec/function-references/return_call_ref/return_call_ref.12.wasm:0000043: error: type mismatch in implicit return, expected [i32] but got [i64]

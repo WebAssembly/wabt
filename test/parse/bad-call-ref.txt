@@ -1,0 +1,35 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(module
+  ;; Implicit type declarations are not allowed
+  (type $t0 (func (param f32 f32)))
+
+  (func $f1
+    i32.const 1
+    i32.const 2
+    i32.const 3
+    call_ref $t0
+  )
+
+  (func $f2
+    i32.const 1
+    i32.const 2
+    i32.const 3
+    return_call_ref $t0
+  )
+)
+(;; STDERR ;;;
+out/test/parse/bad-call-ref.txt:12:5: error: type mismatch in call_ref, expected [(ref null 0)] but got [... i32]
+    call_ref $t0
+    ^^^^^^^^
+out/test/parse/bad-call-ref.txt:12:5: error: type mismatch in call_ref, expected [f32, f32] but got [i32, i32]
+    call_ref $t0
+    ^^^^^^^^
+out/test/parse/bad-call-ref.txt:19:5: error: type mismatch in return_call_ref, expected [(ref null 0)] but got [... i32]
+    return_call_ref $t0
+    ^^^^^^^^^^^^^^^
+out/test/parse/bad-call-ref.txt:19:5: error: type mismatch in return_call_ref, expected [f32, f32] but got [i32, i32]
+    return_call_ref $t0
+    ^^^^^^^^^^^^^^^
+;;; STDERR ;;)
