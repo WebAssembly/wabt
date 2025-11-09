@@ -40,6 +40,8 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
+  Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
@@ -345,6 +347,18 @@ Result NameApplier::OnBrExpr(BrExpr* expr) {
 }
 
 Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
+  std::string_view label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
+  return Result::Ok;
+}
+
+Result NameApplier::OnBrOnNonNullExpr(BrOnNonNullExpr* expr) {
+  std::string_view label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
+  return Result::Ok;
+}
+
+Result NameApplier::OnBrOnNullExpr(BrOnNullExpr* expr) {
   std::string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;

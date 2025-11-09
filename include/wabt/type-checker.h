@@ -88,6 +88,8 @@ class TypeChecker {
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
+  Result OnBrOnNonNull(Index depth);
+  Result OnBrOnNull(Index depth);
   Result BeginBrTable();
   Result OnBrTableTarget(Index depth);
   Result EndBrTable();
@@ -100,6 +102,7 @@ class TypeChecker {
                       const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types,
                               const TypeVector& result_types);
+  Result OnReturnCallRef(Type);
   Result OnCatch(const TypeVector& sig);
   Result OnCompare(Opcode);
   Result OnConst(Type);
@@ -131,6 +134,7 @@ class TypeChecker {
   Result OnTableSize(const Limits& limits);
   Result OnTableFill(Type elem_type, const Limits& limits);
   Result OnRefFuncExpr(Index func_type);
+  Result OnRefAsNonNullExpr();
   Result OnRefNullExpr(Type type);
   Result OnRefIsNullExpr();
   Result OnRethrow(Index depth);
@@ -193,6 +197,7 @@ class TypeChecker {
                            Type expected2,
                            Type expected3,
                            const char* desc);
+  Result PopAndCheckReference(Type* actual, const char* desc);
   Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode3(Opcode opcode,

@@ -246,6 +246,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::F64X2ConvertLowI32X4U:
     case Opcode::I8X16Splat:
     case Opcode::RefIsNull:
+    case Opcode::RefAsNonNull:
     case Opcode::V128Not:
     case Opcode::V128AnyTrue:
     case Opcode::I8X16Abs:
@@ -506,6 +507,8 @@ Instr Istream::Read(Offset* offset) const {
       break;
 
     case Opcode::BrIf:
+    case Opcode::BrOnNonNull:
+    case Opcode::BrOnNull:
     case Opcode::BrTable:
     case Opcode::InterpBrUnless:
       // Jump target immediate, 1 operand.
@@ -785,8 +788,8 @@ Instr Istream::Read(Offset* offset) const {
       instr.imm_v128 = ReadAt<v128>(offset);
       break;
 
-    case Opcode::CallRef:
     case Opcode::Block:
+    case Opcode::CallRef:
     case Opcode::Catch:
     case Opcode::CatchAll:
     case Opcode::Delegate:
@@ -799,6 +802,7 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::Try:
     case Opcode::TryTable:
     case Opcode::ReturnCall:
+    case Opcode::ReturnCallRef:
       // Not used.
       break;
   }

@@ -786,6 +786,18 @@ Result SharedValidator::OnBrIf(const Location& loc, Var depth) {
   return result;
 }
 
+Result SharedValidator::OnBrOnNonNull(const Location& loc, Var depth) {
+  Result result = CheckInstr(Opcode::BrOnNonNull, loc);
+  result |= typechecker_.OnBrOnNonNull(depth.index());
+  return result;
+}
+
+Result SharedValidator::OnBrOnNull(const Location& loc, Var depth) {
+  Result result = CheckInstr(Opcode::BrOnNull, loc);
+  result |= typechecker_.OnBrOnNull(depth.index());
+  return result;
+}
+
 Result SharedValidator::BeginBrTable(const Location& loc) {
   Result result = CheckInstr(Opcode::BrTable, loc);
   result |= typechecker_.BeginBrTable();
@@ -1112,6 +1124,12 @@ Result SharedValidator::OnNop(const Location& loc) {
   return result;
 }
 
+Result SharedValidator::OnRefAsNonNull(const Location& loc) {
+  Result result = CheckInstr(Opcode::Nop, loc);
+  result |= typechecker_.OnRefAsNonNullExpr();
+  return result;
+}
+
 Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
@@ -1189,6 +1207,16 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
   result |=
       typechecker_.OnReturnCallIndirect(func_type.params, func_type.results);
   IgnoreLocalRefs();
+  return result;
+}
+
+Result SharedValidator::OnReturnCallRef(const Location& loc,
+                                        Var function_type_var) {
+  Result result = CheckInstr(Opcode::ReturnCallRef, loc);
+  FuncType func_type;
+  result |= typechecker_.OnReturnCallRef(function_type_var.to_type());
+  result |= CheckFuncTypeIndex(function_type_var, &func_type);
+  result |= typechecker_.OnReturnCall(func_type.params, func_type.results);
   return result;
 }
 

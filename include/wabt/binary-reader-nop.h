@@ -241,6 +241,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnBlockExpr(Type sig_type) override { return Result::Ok; }
   Result OnBrExpr(Index depth) override { return Result::Ok; }
   Result OnBrIfExpr(Index depth) override { return Result::Ok; }
+  Result OnBrOnNonNullExpr(Index depth) override { return Result::Ok; }
+  Result OnBrOnNullExpr(Index depth) override { return Result::Ok; }
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override {
@@ -299,6 +301,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTableGrowExpr(Index table_index) override { return Result::Ok; }
   Result OnTableSizeExpr(Index table_index) override { return Result::Ok; }
   Result OnTableFillExpr(Index table_index) override { return Result::Ok; }
+  Result OnRefAsNonNullExpr() override { return Result::Ok; }
   Result OnRefFuncExpr(Index func_index) override { return Result::Ok; }
   Result OnRefNullExpr(Type type) override { return Result::Ok; }
   Result OnRefIsNullExpr() override { return Result::Ok; }
@@ -308,6 +311,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override {
     return Result::Ok;
   }
+  Result OnReturnCallRefExpr(Type sig_type) override { return Result::Ok; }
   Result OnReturnExpr() override { return Result::Ok; }
   Result OnSelectExpr(Index result_count, Type* result_types) override {
     return Result::Ok;
