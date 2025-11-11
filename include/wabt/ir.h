@@ -1368,6 +1368,8 @@ class ScriptModule {
   ScriptModuleType type() const { return type_; }
   virtual const Location& location() const = 0;
 
+  bool is_definition = false;
+
  protected:
   explicit ScriptModule(ScriptModuleType type) : type_(type) {}
 
