@@ -13,7 +13,7 @@ out/test/spec/function-references/ref.wast:37: assert_invalid passed:
   000000e: error: BeginGlobal callback failed
 out/test/spec/function-references/ref.wast:42: assert_invalid passed:
   out/test/spec/function-references/ref/ref.4.wasm:000000f: error: reference 1 is out of range (max: 0) in tables
-  000000f: error: OnTable callback failed
+  000000f: error: BeginTable callback failed
 out/test/spec/function-references/ref.wast:47: assert_invalid passed:
   out/test/spec/function-references/ref/ref.5.wasm:000000e: error: reference 1 is out of range
   000000e: error: OnElemSegmentElemType callback failed

@@ -224,6 +224,12 @@ static Result CheckType(Type actual, Type expected) {
     }
   }
 
+  if (actual_type == Type::FuncRef && expected_type == Type::RefNull) {
+    // The ref.null constant should be a valid value to any
+    // (ref null...) definition, regarless of its actual type.
+    return Result::Ok;
+  }
+
   return Result::Error;
 }
 
@@ -801,8 +807,10 @@ Result Validator::CheckModule() {
 
         case ExternalKind::Table: {
           auto&& table = cast<TableImport>(f->import.get())->table;
-          result_ |=
-              validator_.OnTable(field.loc, table.elem_type, table.elem_limits);
+          result_ |= validator_.OnTable(
+              field.loc, table.elem_type, table.elem_limits,
+              TableImportStatus::TableIsImported,
+              TableInitExprStatus::TableWithoutInitExpression);
           break;
         }
 
@@ -841,8 +849,22 @@ Result Validator::CheckModule() {
   // Table section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<TableModuleField>(&field)) {
-      result_ |= validator_.OnTable(field.loc, f->table.elem_type,
-                                    f->table.elem_limits);
+      TableInitExprStatus init_provided =
+          f->table.init_expr.empty()
+              ? TableInitExprStatus::TableWithoutInitExpression
+              : TableInitExprStatus::TableWithInitExpression;
+      result_ |= validator_.OnTable(
+          field.loc, f->table.elem_type, f->table.elem_limits,
+          TableImportStatus::TableIsNotImported, init_provided);
+
+      // Init expr.
+      if (init_provided == TableInitExprStatus::TableWithInitExpression) {
+        result_ |= validator_.BeginInitExpr(field.loc, f->table.elem_type);
+        ExprVisitor visitor(this);
+        result_ |=
+            visitor.VisitExprList(const_cast<ExprList&>(f->table.init_expr));
+        result_ |= validator_.EndInitExpr();
+      }
     }
   }
 

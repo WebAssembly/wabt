@@ -104,6 +104,7 @@ def main(args):
         'relaxed-simd': '--enable-relaxed-simd',
         'exception-handling': '--enable-exceptions',
         'custom-page-sizes': '--enable-custom-page-sizes',
+        'function-references': '--enable-function-references',
     }
 
     old_proposal_flags = {
@@ -112,7 +113,6 @@ def main(args):
 
     unimplemented = set([
         'gc',
-        'function-references',
         'threads',
         'annotations',
         'wide-arithmetic',

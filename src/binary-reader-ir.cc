@@ -144,9 +144,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnFunction(Index index, Index sig_index) override;
 
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    TableInitExprStatus init_provided) override;
+  Result BeginTableInitExpr(Index index) override;
+  Result EndTableInitExpr(Index index) override;
 
   Result OnMemoryCount(Index count) override;
   Result OnMemory(Index index,
@@ -700,9 +703,10 @@ Result BinaryReaderIR::OnTableCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnTable(Index index,
-                               Type elem_type,
-                               const Limits* elem_limits) {
+Result BinaryReaderIR::BeginTable(Index index,
+                                  Type elem_type,
+                                  const Limits* elem_limits,
+                                  TableInitExprStatus) {
   auto field = std::make_unique<TableModuleField>(GetLocation());
   Table& table = field->table;
   table.elem_limits = *elem_limits;
@@ -710,6 +714,16 @@ Result BinaryReaderIR::OnTable(Index index,
   module_->features_used.exceptions |= (elem_type == Type::ExnRef);
   module_->AppendField(std::move(field));
   return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginTableInitExpr(Index index) {
+  assert(index == module_->tables.size() - 1);
+  Table* table = module_->tables[index];
+  return BeginInitExpr(&table->init_expr);
+}
+
+Result BinaryReaderIR::EndTableInitExpr(Index index) {
+  return EndInitExpr();
 }
 
 Result BinaryReaderIR::OnMemoryCount(Index count) {
