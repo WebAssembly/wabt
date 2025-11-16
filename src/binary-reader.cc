@@ -2415,6 +2415,9 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
               CALLBACK(OnSectionSymbol, i, flags, index);
               break;
             }
+            default:
+              PrintError("Unknown symbol type: %d", static_cast<int>(sym_type));
+              return Result::Error;
           }
         }
         break;
