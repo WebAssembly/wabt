@@ -372,6 +372,17 @@ Result TypeChecker::PopAndCheckCall(const TypeVector& param_types,
   return result;
 }
 
+Result TypeChecker::PopAndCheckReturnCall(const TypeVector& result_types,
+                                          const char* desc) {
+  Label* func_label;
+  CHECK_RESULT(GetThisFunctionLabel(&func_label));
+  Result result =
+      CheckReturnSignature(result_types, func_label->result_types, desc);
+
+  CHECK_RESULT(SetUnreachable());
+  return result;
+}
+
 Result TypeChecker::PopAndCheck1Type(Type expected, const char* desc) {
   Result result = Result::Ok;
   result |= PeekAndCheckType(0, expected);
@@ -658,19 +669,18 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnCallRef(Type type) {
-  return PopAndCheck1Type(type, "call_ref");
+Result TypeChecker::OnCallRef(Type type,
+                              const TypeVector& param_types,
+                              const TypeVector& result_types) {
+  Result result = PopAndCheck1Type(type, "call_ref");
+  result |= PopAndCheckCall(param_types, result_types, "call_ref");
+  return result;
 }
 
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
                                  const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "return_call");
-  Label* func_label;
-  CHECK_RESULT(GetThisFunctionLabel(&func_label));
-  result |= CheckReturnSignature(result_types, func_label->result_types,
-                                 "return_call");
-
-  CHECK_RESULT(SetUnreachable());
+  result |= PopAndCheckReturnCall(result_types, "return_call");
   return result;
 }
 
@@ -679,17 +689,18 @@ Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
   Result result = PopAndCheck1Type(Type::I32, "return_call_indirect");
 
   result |= PopAndCheckSignature(param_types, "return_call_indirect");
-  Label* func_label;
-  CHECK_RESULT(GetThisFunctionLabel(&func_label));
-  result |= CheckReturnSignature(result_types, func_label->result_types,
-                                 "return_call_indirect");
-
-  CHECK_RESULT(SetUnreachable());
+  result |= PopAndCheckReturnCall(result_types, "return_call_indirect");
   return result;
 }
 
-Result TypeChecker::OnReturnCallRef(Type type) {
-  return PopAndCheck1Type(type, "return_call_ref");
+Result TypeChecker::OnReturnCallRef(Type type,
+                                    const TypeVector& param_types,
+                                    const TypeVector& result_types) {
+  Result result = PopAndCheck1Type(type, "return_call_ref");
+
+  result |= PopAndCheckSignature(param_types, "return_call_ref");
+  result |= PopAndCheckReturnCall(result_types, "return_call_ref");
+  return result;
 }
 
 Result TypeChecker::OnCompare(Opcode opcode) {

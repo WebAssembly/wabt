@@ -851,9 +851,9 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
 Result SharedValidator::OnCallRef(const Location& loc, Var function_type_var) {
   Result result = CheckInstr(Opcode::CallRef, loc);
   FuncType func_type;
-  result |= typechecker_.OnCallRef(function_type_var.to_type());
   result |= CheckFuncTypeIndex(function_type_var, &func_type);
-  result |= typechecker_.OnCall(func_type.params, func_type.results);
+  result |= typechecker_.OnCallRef(function_type_var.to_type(),
+                                   func_type.params, func_type.results);
   return result;
 }
 
@@ -1218,9 +1218,9 @@ Result SharedValidator::OnReturnCallRef(const Location& loc,
                                         Var function_type_var) {
   Result result = CheckInstr(Opcode::ReturnCallRef, loc);
   FuncType func_type;
-  result |= typechecker_.OnReturnCallRef(function_type_var.to_type());
   result |= CheckFuncTypeIndex(function_type_var, &func_type);
-  result |= typechecker_.OnReturnCall(func_type.params, func_type.results);
+  result |= typechecker_.OnReturnCallRef(function_type_var.to_type(),
+                                         func_type.params, func_type.results);
   return result;
 }
 
