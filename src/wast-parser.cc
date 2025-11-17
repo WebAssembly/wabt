@@ -2952,7 +2952,7 @@ Result WastParser::ParseF32(Const* const_, ConstType const_type) {
   }
 
   auto literal = token.literal();
-  uint32_t f32_bits;
+  uint32_t f32_bits = 0;
   Result result = ParseFloat(literal.type, literal.text, &f32_bits);
   const_->set_f32(f32_bits);
   return result;
@@ -2972,7 +2972,7 @@ Result WastParser::ParseF64(Const* const_, ConstType const_type) {
   }
 
   auto literal = token.literal();
-  uint64_t f64_bits;
+  uint64_t f64_bits = 0;
   Result result = ParseDouble(literal.type, literal.text, &f64_bits);
   const_->set_f64(f64_bits);
   return result;
