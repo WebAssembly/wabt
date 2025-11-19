@@ -178,7 +178,21 @@ struct FuncType : ExternType {
   static const ExternKind skind = ExternKind::Func;
   static bool classof(const ExternType* type);
 
+  enum class TypeKind {
+    Func,
+    Struct,
+    Array,
+  };
+
+  // To simplify the implementation, FuncType may also represent
+  // Struct and Array types. To do this, the mutability is stored
+  // in results, which must have the same size as params.
+  // This implementation might change in the future.
+  static const Type::Enum Mutable = Type::I32;
+  static const Type::Enum Immutable = Type::I64;
+
   explicit FuncType(ValueTypes params, ValueTypes results);
+  explicit FuncType(TypeKind kind, ValueTypes params, ValueTypes results);
 
   std::unique_ptr<ExternType> Clone() const override;
 
@@ -186,6 +200,15 @@ struct FuncType : ExternType {
                       const FuncType& actual,
                       std::string* out_msg);
 
+  TypeKind kind;
+  // These two are needed for fast dynamic type comparison.
+  Index canonical_index;
+  Index canonical_sub_index;
+  // These three are needed for type equality comparisons
+  // across different modules (import/export validation).
+  bool is_final_sub_type;
+  Index recursive_start;
+  Index recursive_count;
   ValueTypes params;
   ValueTypes results;
   // When params or results contain references, the referenced
