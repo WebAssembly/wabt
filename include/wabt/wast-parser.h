@@ -160,6 +160,7 @@ class WastParser {
   Result Synchronize(SynchronizeFunc);
 
   bool ParseBindVarOpt(std::string* name);
+  bool ParseDefinitionOpt();
   Result ParseVar(Var* out_var);
   bool ParseVarOpt(Var* out_var, Var default_var = Var());
   Result ParseOffsetExpr(ExprList* out_expr_list);
