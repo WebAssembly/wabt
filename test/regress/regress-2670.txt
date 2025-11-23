@@ -6,7 +6,11 @@
 ;; save/restore operations was missing for try tables
 
 (module
-  (func (local (ref func)))
+  (func (local (ref func) (ref func)))
+  (func
+    (local (ref func))
+    try_table
+    end)
   (func
     unreachable
     try_table
@@ -16,8 +20,12 @@
 (module
   (type $t0 (func))
   (func $f0 (type $t0)
-    (local $l0 (ref func)))
+    (local $l0 (ref func)) (local $l1 (ref func)))
   (func $f1 (type $t0)
+    (local $l0 (ref func))
+    (try_table $T0
+    ))
+  (func $f2 (type $t0)
     (unreachable)
     (try_table $T0
     )))
