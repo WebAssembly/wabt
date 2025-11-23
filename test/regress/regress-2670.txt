@@ -1,0 +1,24 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --generate-names --enable-function-references --enable-exceptions
+
+;; This test was failed because the "local is set" bitvector
+;; was not cleared in BeginFunctionBody, and the bitvector
+;; save/restore operations was missing for try tables
+
+(module
+  (func (local (ref func)))
+  (func
+    unreachable
+    try_table
+    end))
+
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0)
+    (local $l0 (ref func)))
+  (func $f1 (type $t0)
+    (unreachable)
+    (try_table $T0
+    )))
+;;; STDOUT ;;)

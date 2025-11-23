@@ -540,6 +540,8 @@ Result SharedValidator::BeginFunctionBody(const Location& loc,
                                           Index func_index) {
   expr_loc_ = loc;
   locals_.clear();
+  local_ref_is_set_.clear();
+  local_refs_map_.clear();
   if (func_index < funcs_.size()) {
     for (Type type : funcs_[func_index].params) {
       // TODO: Coalesce parameters of the same type?
@@ -1420,6 +1422,7 @@ Result SharedValidator::BeginTryTable(const Location& loc, Type sig_type) {
   result |= CheckBlockSignature(loc, Opcode::TryTable, sig_type, &param_types,
                                 &result_types);
   result |= typechecker_.BeginTryTable(param_types);
+  SaveLocalRefs();
   return result;
 }
 
@@ -1444,6 +1447,7 @@ Result SharedValidator::EndTryTable(const Location& loc, Type sig_type) {
   TypeVector param_types, result_types;
   result |= CheckBlockSignature(loc, Opcode::TryTable, sig_type, &param_types,
                                 &result_types);
+  RestoreLocalRefs(result);
   result |= typechecker_.EndTryTable(param_types, result_types);
   return result;
 }
