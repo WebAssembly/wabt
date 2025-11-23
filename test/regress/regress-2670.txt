@@ -8,6 +8,9 @@
 (module
   (func (local (ref func)))
   (func
+    try_table
+    end)
+  (func
     unreachable
     try_table
     end))
@@ -18,6 +21,9 @@
   (func $f0 (type $t0)
     (local $l0 (ref func)))
   (func $f1 (type $t0)
+    (try_table $T0
+    ))
+  (func $f2 (type $t0)
     (unreachable)
     (try_table $T0
     )))

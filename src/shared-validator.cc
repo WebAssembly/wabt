@@ -1447,7 +1447,6 @@ Result SharedValidator::EndTryTable(const Location& loc, Type sig_type) {
   TypeVector param_types, result_types;
   result |= CheckBlockSignature(loc, Opcode::TryTable, sig_type, &param_types,
                                 &result_types);
-  RestoreLocalRefs(result);
   result |= typechecker_.EndTryTable(param_types, result_types);
   return result;
 }
