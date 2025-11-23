@@ -27,7 +27,7 @@ Custom:
  - name: "linking"
   - symbol table [count=2]
    - 0: F <env.b> func=0 [ undefined binding=global vis=default ]
-   - 1: F <a> func=1 [ exported no_strip binding=global vis=hidden ]
+   - 1: F <a> func=1 [ exported no_strip binding=global vis=default ]
 Custom:
  - name: "reloc.Code"
   - relocations for section: 4 (Code) [1]
