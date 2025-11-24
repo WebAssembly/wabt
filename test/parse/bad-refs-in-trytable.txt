@@ -1,0 +1,32 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references --enable-exceptions
+;;; ERROR: 1
+(module
+  (func (param (ref func))
+    (local (ref func) (ref func))
+    local.get 0
+    local.set 1
+    try_table
+      try_table
+        local.get 0
+        local.set 2
+      end
+      local.get 1
+      local.set 0
+      local.get 2
+      local.set 0
+    end
+    local.get 1
+    local.set 0
+    local.get 2
+    local.set 0
+  )
+)
+(;; STDERR ;;;
+out/test/parse/bad-refs-in-trytable.txt:16:17: error: uninitialized local reference
+      local.get 2
+                ^
+out/test/parse/bad-refs-in-trytable.txt:21:15: error: uninitialized local reference
+    local.get 2
+              ^
+;;; STDERR ;;)
