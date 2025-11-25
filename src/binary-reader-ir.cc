@@ -368,6 +368,23 @@ class BinaryReaderIR : public BinaryReaderNop {
                        std::string_view name,
                        Index table_index) override;
 
+  /* Relocation handling */
+  Result OnReloc(RelocType type,
+                 Offset offset,
+                 Index index,
+                 uint32_t addend) override;
+  Result BeginCodeSection(Offset size) override;
+  Result BeginDataSection(Offset size) override;
+  Result BeginGenericCustomSection(Offset size) override;
+  Result BeginElemSection(Offset size) override;
+  Result OnRelocCount(Index count, Index section_index) override;
+  Result EndRelocSection() override;
+  Result BeginSection(Index section_index,
+                      BinarySection section_type,
+                      Offset size) override;
+  Result OnInitFunction(uint32_t priority, Index sym) override;
+  Result EndModule() override;
+
  private:
   Location GetLocation() const;
   void PrintError(const char* format, ...);
@@ -405,6 +422,44 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   CodeMetadataExprQueue code_metadata_queue_;
   std::string_view current_metadata_name_;
+
+  // Queue instructions to patch
+  struct RelocQueue {
+    enum Type {
+      CODE,
+      DATA,
+      CUSTOM,
+    };
+
+    RelocQueue(Offset start, Type type)
+        : start(start), type(type), incoming_relocs(), entries(), data_segment_starts() {}
+
+    template <class... Types>
+    using Entries = std::tuple<std::unordered_map<Offset, Types*>...>;
+
+    template <class T>
+    decltype(auto) get() {
+      return std::get<std::unordered_map<Offset, T*>>(entries);
+    }
+    template <class F>
+    void traverse(F f) {
+      std::apply([&f](auto&&... vs) { (f(vs), ...); }, entries);
+    }
+
+    Offset start;
+    Type type;
+    std::vector<Reloc> incoming_relocs;
+    Entries<ConstExpr, LoadExpr, StoreExpr> entries;
+    std::map<Offset, DataSegment*> data_segment_starts;
+  };
+  std::unordered_map<Index, RelocQueue> reloc_queues;
+  decltype(reloc_queues)::iterator active_reloc_section = end(reloc_queues);
+  SymbolTable table;
+  std::multiset<DataSym> data_symbols;
+
+  Index active_section = kInvalidIndex;
+  void MakeQueue(RelocQueue::Type);
+  RelocQueue* GetQueue();
 };
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
@@ -474,6 +529,13 @@ Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
 }
 
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
+  if (RelocQueue* queue = GetQueue())
+    queue->traverse([&](auto&& map) {
+      using Value = std::remove_reference_t<decltype(map[0])>;
+      if (auto* ce = dynamic_cast<Value>(expr.get())) {
+        map.insert({state->offset - queue->start, ce});
+      }
+    });
   expr->loc = GetLocation();
   LabelNode* label;
   CHECK_RESULT(TopLabel(&label));
@@ -1520,6 +1582,7 @@ Result BinaryReaderIR::OnDataSegmentData(Index index,
                                          Address size) {
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
+  GetQueue()->data_segment_starts.emplace(state->offset - size, segment);
   segment->data.resize(size);
   if (size > 0) {
     memcpy(segment->data.data(), data, size);
@@ -1790,6 +1853,20 @@ Result BinaryReaderIR::OnDataSymbol(Index index,
                                     Index segment,
                                     uint32_t offset,
                                     uint32_t size) {
+  bool undef = flags & WABT_SYMBOL_FLAG_UNDEFINED;
+  if (undef)
+    ++module_->num_data_imports;
+  std::string name2{name};
+  SymbolCommon common = {flags, name2};
+  DataSym sym =
+      undef ? DataSym{common, MakeDollarName(name), kInvalidIndex,
+                      module_->num_data_imports, 0}
+            : DataSym{common, MakeDollarName(name), segment, offset, size};
+  data_symbols.emplace(sym);
+  assert(index == table.symbols().size());
+  table.AddSymbol(
+      {name2, flags,
+       Symbol::Data{sym.segment, static_cast<Offset>(sym.offset), sym.size}});
   if (name.empty()) {
     return Result::Ok;
   }
@@ -1818,14 +1895,18 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index,
                                         uint32_t flags,
                                         std::string_view name,
                                         Index func_index) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  assert(index == table.symbols().size());
+  Symbol sym = {std::string(name), flags, Symbol::Function{func_index}};
+  table.AddSymbol(sym);
   if (func_index >= module_->funcs.size()) {
     PrintError("invalid function index: %" PRIindex, func_index);
     return Result::Error;
   }
   Func* func = module_->funcs[func_index];
+  static_cast<SymbolCommon&>(*func) = sym;
+  if (name.empty()) {
+    return Result::Ok;
+  }
   if (!func->name.empty()) {
     // The name section has already named this function.
     return Result::Ok;
@@ -1841,12 +1922,23 @@ Result BinaryReaderIR::OnGlobalSymbol(Index index,
                                       uint32_t flags,
                                       std::string_view name,
                                       Index global_index) {
+  assert(index == table.symbols().size());
+  Symbol sym = {std::string(name), flags, Symbol::Global{global_index}};
+  table.AddSymbol(sym);
+  if (global_index >= module_->globals.size()) {
+    PrintError("invalid global index: %" PRIindex, global_index);
+    return Result::Error;
+  }
+  Global* glob = module_->globals[global_index];
+  static_cast<SymbolCommon&>(*glob) = sym;
   return SetGlobalName(global_index, name);
 }
 
 Result BinaryReaderIR::OnSectionSymbol(Index index,
                                        uint32_t flags,
                                        Index section_index) {
+  assert(index == table.symbols().size());
+  table.AddSymbol({"", flags, Symbol::Section{section_index}});
   return Result::Ok;
 }
 
@@ -1854,14 +1946,18 @@ Result BinaryReaderIR::OnTagSymbol(Index index,
                                    uint32_t flags,
                                    std::string_view name,
                                    Index tag_index) {
-  if (name.empty()) {
-    return Result::Ok;
-  }
+  assert(index == table.symbols().size());
+  Symbol sym = {std::string(name), flags, Symbol::Tag{tag_index}};
+  table.AddSymbol(sym);
   if (tag_index >= module_->tags.size()) {
     PrintError("invalid tag index: %" PRIindex, tag_index);
     return Result::Error;
   }
   Tag* tag = module_->tags[tag_index];
+  static_cast<SymbolCommon&>(*tag) = sym;
+  if (name.empty()) {
+    return Result::Ok;
+  }
   std::string dollar_name =
       GetUniqueName(&module_->tag_bindings, MakeDollarName(name));
   tag->name = dollar_name;
@@ -1873,7 +1969,97 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
                                      uint32_t flags,
                                      std::string_view name,
                                      Index table_index) {
+  assert(index == table.symbols().size());
+  Symbol sym = {std::string(name), flags, Symbol::Table{table_index}};
+  table.AddSymbol(sym);
+  if (table_index >= module_->tables.size()) {
+    PrintError("invalid table index: %" PRIindex, table_index);
+    return Result::Error;
+  }
+  Table* table = module_->tables[table_index];
+  static_cast<SymbolCommon&>(*table) = sym;
   return SetTableName(table_index, name);
+}
+
+Result BinaryReaderIR::OnReloc(RelocType type,
+                               Offset offset,
+                               Index index,
+                               uint32_t addend) {
+  GetQueue()->incoming_relocs.emplace_back(type, offset, index, addend);
+  return Result::Ok;
+}
+void BinaryReaderIR::MakeQueue(RelocQueue::Type t) {
+  assert(active_section != kInvalidIndex);
+  active_reloc_section =
+      reloc_queues.insert({active_section, RelocQueue{state->offset, t}}).first;
+}
+BinaryReaderIR::RelocQueue* BinaryReaderIR::GetQueue() {
+  if (active_reloc_section != end(reloc_queues))
+    return &active_reloc_section->second;
+  return nullptr;
+}
+
+Result BinaryReaderIR::BeginCodeSection(Offset size) {
+  MakeQueue(RelocQueue::CODE);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginDataSection(Offset size) {
+  MakeQueue(RelocQueue::DATA);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginGenericCustomSection(Offset size) {
+  MakeQueue(RelocQueue::CUSTOM);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginElemSection(Offset size) {
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnRelocCount(Index count, Index section_index) {
+  active_reloc_section = reloc_queues.find(section_index);
+  if (!GetQueue()) {
+    if (active_section < section_index) {
+      PrintError(
+          "Relocation section [%d] does not follow its target section [%d]",
+          active_section, section_index);
+    } else {
+      PrintError(
+          "The target section for the relocation section [%d] does not have a "
+          "valid index [%d]",
+          active_section, section_index);
+    }
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::EndRelocSection() {
+  active_reloc_section = end(reloc_queues);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginSection(Index section_index,
+                                    BinarySection section_type,
+                                    Offset size) {
+  active_section = section_index;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnInitFunction(uint32_t prio, Index sym) {
+  if (sym >= table.symbols().size()) {
+    return Result::Ok;
+    // PrintError("invalid init function priority symbol index: %" PRIindex,
+    // sym); return Result::Error;
+  }
+  Index func = table.symbols()[sym].AsFunction().index;
+  if (func >= module_->funcs.size())
+    // We already emitted an error for the invalid symbol
+    return Result::Ok;
+  module_->funcs[func]->priority = prio;
+  return Result::Ok;
 }
 
 Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
@@ -1885,6 +2071,138 @@ Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
     memcpy(custom.data.data(), data, size);
   }
   module_->customs.push_back(std::move(custom));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::EndModule() {
+  size_t i = 0;
+  Index range_start = 0, data_segment = -1;
+  for (auto& datasym : data_symbols) {
+    if (datasym.segment >= module_->data_segments.size() && datasym.segment != kInvalidIndex)
+      // all further symbols are invalid
+      break;
+    if (datasym.segment != data_segment) {
+      if (data_segment != kInvalidIndex) {
+        module_->data_segments[data_segment]->symbol_range = {range_start, i};
+      }
+      range_start = i;
+      data_segment = datasym.segment;
+    }
+    module_->data_symbols.push_back(datasym);
+    if (!datasym.name.empty()) {
+      module_->data_symbols[i].name = datasym.name;
+      module_->data_symbol_bindings.emplace(datasym.name, i);
+    }
+    ++i;
+  }
+  if (data_segment != kInvalidIndex) {
+    module_->data_segments[data_segment]->symbol_range = {range_start, i};
+  }
+
+  auto lookup_reloc = [this](Reloc r) {
+    auto maybe_name = [](auto& table, Index idx) {
+      if (idx >= table.size())
+        return Var{kInvalidIndex, {}};
+      auto sym = Overload{
+          [](auto* x) { return x; },
+          [](auto& x) { return &x; },
+      }(table[idx]);
+      return sym->name.empty() ? Var{idx, {}} : Var{sym->name, {}};
+    };
+
+    if (r.index >= size(table.symbols()))
+      return Var{kInvalidIndex, {}};
+
+    auto& sym = table.symbols()[r.index];
+    switch (sym.type()) {
+      case SymbolType::Data: {
+        auto& data = sym.AsData();
+        auto&& syms = module_->data_symbols;
+        auto res =
+            std::lower_bound(syms.begin(), syms.end(),
+                             DataSym::MakeForSearch(data.index, data.offset));
+        Index sym = res - syms.begin();
+        return maybe_name(module_->data_symbols, sym);
+      }
+      // Sure would've been nice to have a feature that would allow one to write
+      // a piece of code and stamp it out multiple times, but with different
+      // types and stuff. Better yet, maybe use that to yield different data for
+      // different types. And call that feature templates, that'd be a great
+      // name for it!
+      case SymbolType::Section: {
+        auto idx = sym.AsSection().section;
+        return maybe_name(module_->customs, idx);
+      }
+      case SymbolType::Function: {
+        auto idx = sym.AsFunction().index;
+        return maybe_name(module_->funcs, idx);
+      }
+      case SymbolType::Global: {
+        auto idx = sym.AsGlobal().index;
+        return maybe_name(module_->globals, idx);
+      }
+      case SymbolType::Table: {
+        auto idx = sym.AsTable().index;
+        return maybe_name(module_->tables, idx);
+      }
+      case SymbolType::Tag: {
+        auto idx = sym.AsTag().index;
+        return maybe_name(module_->tags, idx);
+      }
+      default:
+        WABT_UNREACHABLE;
+    }
+  };
+
+  for (auto& [index, queue] : reloc_queues) {
+    for (auto reloc : queue.incoming_relocs) {
+      bool applied_relocation = false;
+      Var sym_id = lookup_reloc(reloc);
+      if (sym_id.is_index() && sym_id.index() == kInvalidIndex)
+        // this reloc points to an invalid symbol and is therefore unapplicable
+        continue;
+      auto reloc_size =
+          kRelocDataTypeSize[int(kRelocDataType[int(reloc.type)])];
+      // We pray that the relocation is always the last operand, and that the
+      // operand is an overlong leb already
+      auto reloc_addr = reloc.offset + reloc_size;
+      if (queue.type == RelocQueue::CODE && kRelocDataType[int(reloc.type)] == RelocDataType::LEB) {
+        switch (kRelocSymbolType[int(reloc.type)]) {
+          case RelocKind::Global:
+          case RelocKind::Type:
+          case RelocKind::Table:
+          case RelocKind::Function:
+            // Assume all relocations of primary shape are valid, we have no way
+            // to check
+            continue;
+          default:
+            break;
+        }
+      }
+      queue.traverse([&](auto& insns) {
+        auto insn = insns.find(reloc_addr);
+        if (insn != end(insns)) {
+          insn->second->reloc = {reloc.type, sym_id, reloc.addend};
+          assert(insn->second->reloc.type != RelocType::None);
+          applied_relocation = true;
+        }
+      });
+      if (applied_relocation)
+        continue;
+      auto it = queue.data_segment_starts.lower_bound(reloc.offset);
+      if (it != end(queue.data_segment_starts)) {
+        auto end = it->first + it->second->data.size();
+        auto abs_offset = reloc.offset + queue.start;
+        if (end >= abs_offset + reloc_size) {
+          it->second->relocs.push_back(
+              {abs_offset - it->first, {reloc.type, sym_id, reloc.addend}});
+          applied_relocation = true;
+        }
+      }
+      assert(applied_relocation && "Unable to apply relocation");
+    }
+  }
+
   return Result::Ok;
 }
 

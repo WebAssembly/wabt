@@ -46,6 +46,7 @@ static bool s_read_debug_names = true;
 static bool s_fail_on_custom_section_error = true;
 static std::unique_ptr<FileStream> s_log_stream;
 static bool s_validate = true;
+static bool s_relocatable = false;
 
 static const char s_description[] =
     R"(  Read a file in the WebAssembly binary format, and convert it to
@@ -96,6 +97,8 @@ static void ParseOptions(int argc, char** argv) {
                        s_infile = argument;
                        ConvertBackslashToSlash(&s_infile);
                      });
+  parser.AddOption('r', "relocatable", "Generate relocation annotations",
+                   []() { s_relocatable = true; });
   parser.Parse(argc, argv);
 }
 
@@ -138,6 +141,7 @@ int ProgramMain(int argc, char** argv) {
         wat_options.fold_exprs = s_fold_exprs;
         wat_options.inline_import = s_inline_import;
         wat_options.inline_export = s_inline_export;
+        wat_options.relocatable = s_relocatable;
         FileStream stream(!s_outfile.empty() ? FileStream(s_outfile)
                                              : FileStream(stdout));
         result = WriteWat(&stream, &module, wat_options);

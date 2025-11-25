@@ -34,6 +34,8 @@ void WriteU64Leb128(Stream* stream, uint64_t value, const char* desc);
 void WriteS64Leb128(Stream* stream, uint64_t value, const char* desc);
 void WriteFixedS32Leb128(Stream* stream, uint32_t value, const char* desc);
 void WriteFixedU32Leb128(Stream* stream, uint32_t value, const char* desc);
+void WriteFixedS64Leb128(Stream* stream, uint64_t value, const char* desc);
+void WriteFixedU64Leb128(Stream* stream, uint64_t value, const char* desc);
 
 Offset WriteU32Leb128At(Stream* stream,
                         Offset offset,
