@@ -215,6 +215,14 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnBrIfExpr(cast<BrIfExpr>(expr)));
       break;
 
+    case ExprType::BrOnNonNull:
+      CHECK_RESULT(delegate_->OnBrOnNonNullExpr(cast<BrOnNonNullExpr>(expr)));
+      break;
+
+    case ExprType::BrOnNull:
+      CHECK_RESULT(delegate_->OnBrOnNullExpr(cast<BrOnNullExpr>(expr)));
+      break;
+
     case ExprType::BrTable:
       CHECK_RESULT(delegate_->OnBrTableExpr(cast<BrTableExpr>(expr)));
       break;
@@ -353,6 +361,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnTableFillExpr(cast<TableFillExpr>(expr)));
       break;
 
+    case ExprType::RefAsNonNull:
+      CHECK_RESULT(delegate_->OnRefAsNonNullExpr(cast<RefAsNonNullExpr>(expr)));
+      break;
+
     case ExprType::RefFunc:
       CHECK_RESULT(delegate_->OnRefFuncExpr(cast<RefFuncExpr>(expr)));
       break;
@@ -384,6 +396,11 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
     case ExprType::ReturnCallIndirect:
       CHECK_RESULT(delegate_->OnReturnCallIndirectExpr(
           cast<ReturnCallIndirectExpr>(expr)));
+      break;
+
+    case ExprType::ReturnCallRef:
+      CHECK_RESULT(
+          delegate_->OnReturnCallRefExpr(cast<ReturnCallRefExpr>(expr)));
       break;
 
     case ExprType::Select:

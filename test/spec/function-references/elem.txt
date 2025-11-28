@@ -1,0 +1,90 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/function-references/elem.wast
+;;; ARGS*: --enable-function-references
+(;; STDOUT ;;;
+out/test/spec/function-references/elem.wast:508: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.53.wasm:0000025: error: type mismatch at elem segment. got funcref, expected (ref func)
+  0000025: error: OnElemSegmentElemType callback failed
+out/test/spec/function-references/elem.wast:516: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.54.wasm:0000025: error: type mismatch at elem segment. got funcref, expected (ref func)
+  0000025: error: OnElemSegmentElemType callback failed
+out/test/spec/function-references/elem.wast:697: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/function-references/elem.wast:707: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/function-references/elem.wast:713: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.75.wasm:0000016: error: table variable out of range: 0 (max 0)
+  0000016: error: BeginElemSegment callback failed
+out/test/spec/function-references/elem.wast:724: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.76.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [i64]
+  0000015: error: EndElemSegmentInitExpr callback failed
+out/test/spec/function-references/elem.wast:732: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.77.wasm:0000014: error: type mismatch in initializer expression, expected [i32] but got [funcref]
+  0000015: error: EndElemSegmentInitExpr callback failed
+out/test/spec/function-references/elem.wast:740: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.78.wasm:0000012: error: type mismatch in initializer expression, expected [i32] but got []
+  0000013: error: EndElemSegmentInitExpr callback failed
+out/test/spec/function-references/elem.wast:748: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.79.wasm:0000016: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  0000017: error: EndElemSegmentInitExpr callback failed
+out/test/spec/function-references/elem.wast:756: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.80.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
+out/test/spec/function-references/elem.wast:765: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.81.wasm:000002c: error: type mismatch at end of initializer expression, expected [] but got [i32]
+  000002d: error: EndElemSegmentInitExpr callback failed
+out/test/spec/function-references/elem.wast:775: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.82.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: i32.ctz
+  0000015: error: OnUnaryExpr callback failed
+out/test/spec/function-references/elem.wast:783: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.83.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000013: error: OnNopExpr callback failed
+out/test/spec/function-references/elem.wast:791: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.84.wasm:0000013: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000013: error: OnNopExpr callback failed
+out/test/spec/function-references/elem.wast:799: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.85.wasm:0000015: error: invalid initializer: instruction not valid in initializer expression: nop
+  0000015: error: OnNopExpr callback failed
+out/test/spec/function-references/elem.wast:807: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.86.wasm:0000021: error: initializer expression cannot reference a mutable global
+  0000021: error: OnGlobalGetExpr callback failed
+out/test/spec/function-references/elem.wast:816: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.87.wasm:0000014: error: global variable out of range: 0 (max 0)
+  0000014: error: OnGlobalGetExpr callback failed
+out/test/spec/function-references/elem.wast:824: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.88.wasm:000002a: error: global variable out of range: 1 (max 1)
+  000002a: error: OnGlobalGetExpr callback failed
+out/test/spec/function-references/elem.wast:833: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.89.wasm:000002e: error: initializer expression cannot reference a mutable global
+  000002e: error: OnGlobalGetExpr callback failed
+out/test/spec/function-references/elem.wast:845: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.90.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [externref]
+  0000019: error: EndElemExpr callback failed
+out/test/spec/function-references/elem.wast:853: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.91.wasm:000001a: error: type mismatch at end of initializer expression, expected [] but got [funcref]
+  000001b: error: EndElemExpr callback failed
+out/test/spec/function-references/elem.wast:861: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.92.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  0000019: error: EndElemExpr callback failed
+out/test/spec/function-references/elem.wast:869: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.93.wasm:0000018: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  0000019: error: EndElemExpr callback failed
+out/test/spec/function-references/elem.wast:877: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.94.wasm:0000023: error: invalid initializer: instruction not valid in initializer expression: call
+  0000023: error: OnCallExpr callback failed
+out/test/spec/function-references/elem.wast:886: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.95.wasm:000001b: error: invalid initializer: instruction not valid in initializer expression: i32.add
+  000001b: error: OnBinaryExpr callback failed
+out/test/spec/function-references/elem.wast:945: assert_trap passed: uninitialized table element
+out/test/spec/function-references/elem.wast:978: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.101.wasm:000001f: error: type mismatch at elem segment. got (ref func), expected externref
+  000001f: error: OnElemSegmentElemType callback failed
+out/test/spec/function-references/elem.wast:983: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.102.wasm:0000017: error: type mismatch at elem segment. got externref, expected funcref
+  0000017: error: OnElemSegmentElemType callback failed
+out/test/spec/function-references/elem.wast:988: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.103.wasm:0000034: error: type mismatch at table.init. got funcref, expected externref
+  0000034: error: OnTableInitExpr callback failed
+out/test/spec/function-references/elem.wast:997: assert_invalid passed:
+  out/test/spec/function-references/elem/elem.104.wasm:0000030: error: type mismatch at table.init. got externref, expected funcref
+  0000030: error: OnTableInitExpr callback failed
+135/135 tests passed.
+;;; STDOUT ;;)

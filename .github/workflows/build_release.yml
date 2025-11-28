@@ -14,8 +14,21 @@ jobs:
     name: build
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-14, windows-latest]
+        include:
+          - os: ubuntu-22.04
+            arch: x86_64
+            name: linux-x64
+          - os: ubuntu-22.04-arm
+            arch: aarch64
+            name: linux-arm64
+          - os: macos-14
+            arch: aarch64
+            name: macos-arm64
+          - os: windows-latest
+            arch: x86_64
+            name: windows-x64
     defaults:
       run:
         shell: bash
@@ -29,7 +42,7 @@ jobs:
 
     - name: install ninja (linux)
       run: sudo apt-get install ninja-build
-      if: startsWith(matrix.os, 'ubuntu-')
+      if: contains(matrix.os, 'ubuntu')
 
     - name: install ninja (osx)
       run: brew install ninja
@@ -60,7 +73,7 @@ jobs:
 
     - uses: ./.github/actions/release-archive
       with:
-        os: ${{ matrix.os }}
+        os: ${{ matrix.name }}
         upload_to_release: true
 
   build-wasi:
