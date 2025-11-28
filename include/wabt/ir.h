@@ -32,6 +32,8 @@
 #include "wabt/intrusive-list.h"
 #include "wabt/opcode.h"
 
+#include <optional>
+
 namespace wabt {
 
 struct Module;
@@ -737,15 +739,92 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
 
 class CodeMetadataExpr : public ExprMixin<ExprType::CodeMetadata> {
  public:
-  explicit CodeMetadataExpr(std::string_view name,
-                            std::vector<uint8_t> data,
-                            const Location& loc = Location())
+  struct CallTarget {
+    Var func;
+    uint32_t frequency;
+  };
+  struct CompilationPriority {
+    uint32_t compilation_priority;
+    std::optional<uint32_t> optimization_priority;
+  };
+  struct InstructionFrequency {
+    uint32_t frequency;
+  };
+
+  CodeMetadataExpr(std::string_view name,
+                   std::vector<uint8_t> data,
+                   const Location& loc = Location())
+      : ExprMixin<ExprType::CodeMetadata>(loc), name(name), type(Type::Binary) {
+    new (&hint.data) std::vector<uint8_t>(std::move(data));
+  }
+
+  CodeMetadataExpr(std::string_view name,
+                   CompilationPriority compilation_priority,
+                   const Location& loc = Location())
       : ExprMixin<ExprType::CodeMetadata>(loc),
-        name(std::move(name)),
-        data(std::move(data)) {}
+        name(name),
+        type(Type::CompilationHint) {
+    new (&hint.compilation_priority) CompilationPriority(compilation_priority);
+  }
+
+  CodeMetadataExpr(std::string_view name,
+                   InstructionFrequency instruction_frequency,
+                   const Location& loc = Location())
+      : ExprMixin<ExprType::CodeMetadata>(loc),
+        name(name),
+        type(Type::InstructionFrequency) {
+    new (&hint.instruction_frequency)
+        InstructionFrequency(instruction_frequency);
+  }
+
+  CodeMetadataExpr(std::string_view name,
+                   std::vector<CallTarget> targets,
+                   const Location& loc = Location())
+      : ExprMixin<ExprType::CodeMetadata>(loc),
+        name(name),
+        type(Type::CallTargets) {
+    new (&hint.call_targets) std::vector<CallTarget>(std::move(targets));
+  }
+
+  ~CodeMetadataExpr() override {
+    switch (type) {
+      case Type::Binary:
+        hint.data.~vector();
+        break;
+      case Type::CallTargets:
+        hint.call_targets.~vector();
+        break;
+      default:
+        // CompilationHint and InstructionFrequency do not allocate memory.;
+        break;
+    }
+  }
+
+  bool is_function_annotation() const { return type == Type::CompilationHint; }
+
+  // convert non-binary hints to binary
+  std::vector<uint8_t> serialize(const Module&) const;
 
   std::string_view name;
-  std::vector<uint8_t> data;
+
+ private:
+  union Hint {
+    std::vector<uint8_t> data;
+    CompilationPriority compilation_priority;
+    InstructionFrequency instruction_frequency{};
+    std::vector<CallTarget> call_targets;
+    Hint() {}
+    ~Hint() {}
+  } hint;
+
+  enum class Type {
+    Binary,
+    CompilationHint,
+    InstructionFrequency,
+    CallTargets
+  };
+
+  Type type;
 };
 
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {

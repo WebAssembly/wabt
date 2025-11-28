@@ -1295,9 +1295,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnRefNullExpr(Type type) override;
   Result OnGlobalGetExpr(Index global_index) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
-  Result OnCodeMetadata(Offset code_offset,
-                        const void* data,
-                        Address size) override;
+  Result OnCodeMetadataCodeOffset(Offset code_offset) override;
+  Result OnCodeMetadata(const void* data, Address size) override;
+  Result OnCodeMetadataCallTarget(Index target_index,
+                                  uint32_t call_frequency) override;
 
  private:
   Result EndInitExpr();
@@ -2461,25 +2462,43 @@ Result BinaryReaderObjdump::OnCodeMetadataCount(Index function_index,
     return Result::Ok;
   }
   printf("   - func[%" PRIindex "]", function_index);
-  auto name = GetFunctionName(function_index);
+  const auto name = GetFunctionName(function_index);
   if (!name.empty()) {
     printf(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   printf(":\n");
   return Result::Ok;
 }
-Result BinaryReaderObjdump::OnCodeMetadata(Offset code_offset,
-                                           const void* data,
-                                           Address size) {
+Result BinaryReaderObjdump::OnCodeMetadataCodeOffset(const Offset code_offset) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
   printf("    - meta[%" PRIzx "]:\n", code_offset);
-
+  return Result::Ok;
+}
+Result BinaryReaderObjdump::OnCodeMetadata(const void* data,
+                                           const Address size) {
+  if (!ShouldPrintDetails()) {
+    return Result::Ok;
+  }
   out_stream_->WriteMemoryDump(data, size, 0, PrintChars::Yes, "     - ");
   return Result::Ok;
 }
+Result BinaryReaderObjdump::OnCodeMetadataCallTarget(
+    const Index target_index,
+    const uint32_t call_frequency) {
+  if (!ShouldPrintDetails()) {
+    return Result::Ok;
+  }
 
+  printf("     - target [%" PRIindex "]", target_index);
+  const auto name = GetFunctionName(target_index);
+  if (!name.empty()) {
+    printf(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+  }
+  printf(": %" PRIu32 "%%\n", call_frequency);
+  return Result::Ok;
+}
 }  // end anonymous namespace
 
 std::string_view ObjdumpNames::Get(Index index) const {

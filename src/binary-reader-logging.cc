@@ -692,13 +692,23 @@ Result BinaryReaderLogging::BeginCodeMetadataSection(std::string_view name,
   Indent();
   return reader_->BeginCodeMetadataSection(name, size);
 }
-Result BinaryReaderLogging::OnCodeMetadata(Offset code_offset,
-                                           const void* data,
-                                           Address size) {
-  std::string_view content(static_cast<const char*>(data), size);
-  LOGF("OnCodeMetadata(offset: %" PRIzd ", data: \"" PRIstringview "\")\n",
-       code_offset, WABT_PRINTF_STRING_VIEW_ARG(content));
-  return reader_->OnCodeMetadata(code_offset, data, size);
+Result BinaryReaderLogging::OnCodeMetadataCodeOffset(const Offset code_offset) {
+  LOGF("OnCodeMetadataCodeOffset(offset: %" PRIzd ")\n", code_offset);
+  return reader_->OnCodeMetadataCodeOffset(code_offset);
+}
+Result BinaryReaderLogging::OnCodeMetadata(const void* data,
+                                           const Address size) {
+  const std::string_view content(static_cast<const char*>(data), size);
+  LOGF("OnCodeMetadata(data: \"" PRIstringview "\")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(content));
+  return reader_->OnCodeMetadata(data, size);
+}
+Result BinaryReaderLogging::OnCodeMetadataCallTarget(
+    const Index target_index,
+    const uint32_t call_frequency) {
+  LOGF("OnCodeMetadataCallTarget(target_index: %u, call_frequency: %u)\n",
+       target_index, call_frequency);
+  return reader_->OnCodeMetadataCallTarget(target_index, call_frequency);
 }
 
 Result BinaryReaderLogging::OnGenericCustomSection(std::string_view name,

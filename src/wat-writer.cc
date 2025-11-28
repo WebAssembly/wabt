@@ -712,7 +712,8 @@ Result WatWriter::ExprVisitorDelegate::OnCodeMetadataExpr(
   writer_->WriteOpen("@metadata.code.", NextChar::None);
   writer_->WriteDataWithNextChar(expr->name.data(), expr->name.size());
   writer_->WritePutc(' ');
-  writer_->WriteQuotedData(expr->data.data(), expr->data.size());
+  const auto data = expr->serialize(this->writer_->module);
+  writer_->WriteQuotedData(data.data(), data.size());
   writer_->WriteCloseSpace();
   return Result::Ok;
 }

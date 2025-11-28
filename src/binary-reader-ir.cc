@@ -357,7 +357,8 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result BeginCodeMetadataSection(std::string_view name, Offset size) override;
   Result OnCodeMetadataFuncCount(Index count) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
-  Result OnCodeMetadata(Offset offset, const void* data, Address size) override;
+  Result OnCodeMetadataCodeOffset(Offset offset) override;
+  Result OnCodeMetadata(const void* data, Address size) override;
 
   Result OnTagSymbol(Index index,
                      uint32_t flags,
@@ -405,6 +406,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   CodeMetadataExprQueue code_metadata_queue_;
   std::string_view current_metadata_name_;
+  Offset current_metadata_offset_;
 };
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
@@ -1750,15 +1752,18 @@ Result BinaryReaderIR::OnCodeMetadataCount(Index function_index, Index count) {
   return Result::Error;
 }
 
-Result BinaryReaderIR::OnCodeMetadata(Offset offset,
-                                      const void* data,
-                                      Address size) {
+Result BinaryReaderIR::OnCodeMetadata(const void* data, const Address size) {
   std::vector<uint8_t> data_(static_cast<const uint8_t*>(data),
                              static_cast<const uint8_t*>(data) + size);
   auto meta = std::make_unique<CodeMetadataExpr>(current_metadata_name_,
                                                  std::move(data_));
-  meta->loc.offset = offset;
+  meta->loc.offset = current_metadata_offset_;
   code_metadata_queue_.push_metadata(std::move(meta));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCodeMetadataCodeOffset(const Offset offset) {
+  current_metadata_offset_ = offset;
   return Result::Ok;
 }
 

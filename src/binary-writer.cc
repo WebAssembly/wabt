@@ -1187,8 +1187,12 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
         s.entries.emplace_back(cur_func_index_);
       }
       auto& a = s.entries.back();
-      Offset code_offset = stream_->offset() - cur_func_start_offset_;
-      a.entries.emplace_back(code_offset, meta_expr->data);
+      Offset code_offset;
+      if (meta_expr->is_function_annotation())
+        code_offset = 0;
+      else
+        code_offset = stream_->offset() - cur_func_start_offset_;
+      a.entries.emplace_back(code_offset, meta_expr->serialize(*module_));
       break;
     }
   }

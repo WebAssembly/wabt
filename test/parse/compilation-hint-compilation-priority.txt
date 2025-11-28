@@ -1,0 +1,124 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-annotations --enable-code-metadata
+;;; ARGS1: -x -j "metadata.code.compilation_priority"
+(module
+  (type $sig (func (result i32)))
+
+  ;; High priority function with optimization priority
+  (func $init (type $sig) (result i32)
+    (@metadata.code.compilation_priority (compilation 0) (optimization 5))
+    i32.const 42)
+
+  ;; Medium priority function with optimization priority
+  (func $main_loop (type $sig) (result i32)
+    (@metadata.code.compilation_priority (compilation 1) (optimization 2))
+    i32.const 1)
+
+  ;; Low priority function with optimization priority
+  (func $cleanup (type $sig) (result i32)
+    (@metadata.code.compilation_priority (compilation 2) (optimization 15))
+    i32.const 2)
+
+  ;; Function with run_once optimization (special value 127)
+  (func $startup (type $sig) (result i32)
+    (@metadata.code.compilation_priority (compilation 0) (run_once))
+    i32.const 3)
+
+  ;; Function with only compilation priority (no optimization priority)
+  (func $helper (type $sig) (result i32)
+    (@metadata.code.compilation_priority (compilation 3))
+    i32.const 4)
+
+  ;; Function with binary hint representation
+  (func $binary_hint (type $sig) (result i32)
+    (@metadata.code.compilation_priority "\02\0C")
+    i32.const 5)
+
+  ;; Function without any compilation priority hints (should be compiled last/lazily)
+  (func $no_hints (type $sig) (result i32)
+    i32.const 6)
+
+  (func $main (result i32)
+    call $init
+    call $main_loop
+    call $cleanup
+    call $startup
+    call $helper
+    call $binary_hint
+    call $no_hints
+    i32.add
+    i32.add
+    i32.add
+    i32.add
+    i32.add
+    i32.add
+  )
+
+  (export "main" (func $main))
+)
+
+(;; STDOUT ;;;
+compilation-hint-compilation-priority.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "metadata.code.compilation_priority"
+   - func[0]:
+    - meta[0]:
+     - 0000000: 0005                                     ..
+   - func[1]:
+    - meta[0]:
+     - 0000000: 0102                                     ..
+   - func[2]:
+    - meta[0]:
+     - 0000000: 020f                                     ..
+   - func[3]:
+    - meta[0]:
+     - 0000000: 007f                                     ..
+   - func[4]:
+    - meta[0]:
+     - 0000000: 03                                       .
+   - func[5]:
+    - meta[1]:
+     - 0000000: 020c                                     ..
+
+Code Disassembly:
+
+000071 func[0]:
+ 000072: 41 2a                      | i32.const 42
+ 000074: 0b                         | end
+000076 func[1]:
+ 000077: 41 01                      | i32.const 1
+ 000079: 0b                         | end
+00007b func[2]:
+ 00007c: 41 02                      | i32.const 2
+ 00007e: 0b                         | end
+000080 func[3]:
+ 000081: 41 03                      | i32.const 3
+ 000083: 0b                         | end
+000085 func[4]:
+ 000086: 41 04                      | i32.const 4
+ 000088: 0b                         | end
+00008a func[5]:
+ 00008b: 41 05                      | i32.const 5
+ 00008d: 0b                         | end
+00008f func[6]:
+ 000090: 41 06                      | i32.const 6
+ 000092: 0b                         | end
+000094 func[7] <main>:
+ 000095: 10 00                      | call 0
+ 000097: 10 01                      | call 1
+ 000099: 10 02                      | call 2
+ 00009b: 10 03                      | call 3
+ 00009d: 10 04                      | call 4
+ 00009f: 10 05                      | call 5
+ 0000a1: 10 06                      | call 6
+ 0000a3: 6a                         | i32.add
+ 0000a4: 6a                         | i32.add
+ 0000a5: 6a                         | i32.add
+ 0000a6: 6a                         | i32.add
+ 0000a7: 6a                         | i32.add
+ 0000a8: 6a                         | i32.add
+ 0000a9: 0b                         | end
+;;; STDOUT ;;)

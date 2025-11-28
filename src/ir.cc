@@ -15,6 +15,7 @@
  */
 
 #include "wabt/ir.h"
+#include "wabt/stream.h"
 
 #include <cassert>
 #include <cstddef>
@@ -191,6 +192,37 @@ bool Module::IsImport(ExternalKind kind, const Var& var) const {
     default:
       return false;
   }
+}
+
+std::vector<uint8_t> CodeMetadataExpr::serialize(const Module& module) const {
+  MemoryStream stream;
+  switch (type) {
+    case Type::Binary:
+      return hint.data;
+    case Type::CompilationHint: {
+      WriteU32Leb128(&stream, hint.compilation_priority.compilation_priority,
+                     "compilation priority");
+      if (hint.compilation_priority.optimization_priority.has_value())
+        WriteU32Leb128(&stream,
+                       *hint.compilation_priority.optimization_priority,
+                       "optimization priority");
+      break;
+    }
+    case Type::InstructionFrequency: {
+      WriteU32Leb128(&stream, hint.instruction_frequency.frequency,
+                     "instruction frequency");
+      break;
+    }
+    case Type::CallTargets: {
+      for (const auto& [func, freq] : hint.call_targets) {
+        const uint32_t func_idx = module.GetFuncIndex(func);
+        WriteU32Leb128(&stream, func_idx, "call target function index");
+        WriteU32Leb128(&stream, freq, "call target offset");
+      }
+      break;
+    }
+  }
+  return stream.ReleaseOutputBuffer()->data;
 }
 
 void LocalTypes::Set(const TypeVector& types) {
