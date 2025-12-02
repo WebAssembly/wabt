@@ -1034,4 +1034,8 @@ Result BinaryReaderLogging::OnOpcodeType(Type type) {
   return reader_->OnOpcodeType(type);
 }
 
+Result BinaryReaderLogging::OnOpcodeTypeIndex(Type type, Index index) {
+  return reader_->OnOpcodeTypeIndex(type, index);
+}
+
 }  // namespace wabt

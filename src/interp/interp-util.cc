@@ -69,7 +69,7 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::I8U:
     case Type::I16U:
     case Type::I32U:
-      // These types are not concrete types and should never exist as a value
+     // These types are not concrete types and should never exist as a value
       WABT_UNREACHABLE;
   }
   WABT_UNREACHABLE;

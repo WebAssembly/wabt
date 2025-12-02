@@ -109,7 +109,8 @@ bool BinaryReaderObjdumpBase::OnError(const Error&) {
   // Tell the BinaryReader that this error is "handled" for all passes other
   // than the prepass. When the error is handled the default message will be
   // suppressed.
-  return options_->mode != ObjdumpMode::Prepass;
+	return false;
+  //return options_->mode != ObjdumpMode::Prepass;
 }
 
 Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
@@ -547,6 +548,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnOpcodeType(Type type) override;
+  Result OnOpcodeTypeIndex(Type type, Index index) override;
 
   Result OnTryTableExpr(Type sig_type,
                         const CatchClauseVector& catches) override;
@@ -588,6 +590,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
     const char* opcode_name = opcode.GetName();
     err_stream_->Writef("on_opcode: %#" PRIzx ": %s\n", state->offset,
                         opcode_name);
+    if(opcode.IsInvalid()){
+	    err_stream_->Writef("invalid %02x %08x\n", opcode.GetPrefix(), opcode.GetCode());
+    }
   }
 
   if (last_opcode_end) {
@@ -747,22 +752,36 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
     return Result::Ok;
   }
   std::string_view name;
-  if (current_opcode == Opcode::Call &&
-      !(name = GetFunctionName(value)).empty()) {
-    LogOpcode("%d <" PRIstringview ">", value,
-              WABT_PRINTF_STRING_VIEW_ARG(name));
-  } else if (current_opcode == Opcode::Throw &&
-             !(name = GetTagName(value)).empty()) {
-    LogOpcode("%d <" PRIstringview ">", value,
-              WABT_PRINTF_STRING_VIEW_ARG(name));
-  } else if ((current_opcode == Opcode::GlobalGet ||
-              current_opcode == Opcode::GlobalSet) &&
-             !(name = GetGlobalName(value)).empty()) {
-    LogOpcode("%d <" PRIstringview ">", value,
-              WABT_PRINTF_STRING_VIEW_ARG(name));
-  } else if ((current_opcode == Opcode::LocalGet ||
-              current_opcode == Opcode::LocalSet) &&
-             !(name = GetLocalName(current_function_index, value)).empty()) {
+  switch(current_opcode) {
+    case Opcode::Call: 
+       name = GetFunctionName(value);
+       break; 
+    case Opcode::Throw: 
+       name = GetTagName(value);
+       break;
+    case Opcode::GlobalGet:
+    case Opcode::GlobalSet:
+       name = GetGlobalName(value);
+       break;
+    case Opcode::LocalGet: 
+    case Opcode::LocalSet:
+       name = GetLocalName(current_function_index, value);
+       break;
+    case Opcode::StructNew:
+    case Opcode::StructNewDefault:
+    case Opcode::ArrayNew:
+    case Opcode::ArrayNewDefault:
+    case Opcode::ArrayGet:
+    case Opcode::ArrayGetS:
+    case Opcode::ArrayGetU:
+    case Opcode::ArraySet:
+    case Opcode::ArrayFill:
+       name = GetTypeName(value);
+       break;
+    default:
+       break;
+  }			 
+  if (!name.empty()){
     LogOpcode("%d <" PRIstringview ">", value,
               WABT_PRINTF_STRING_VIEW_ARG(name));
   } else {
@@ -776,7 +795,28 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndexIndex(Index value,
   if (!in_function_body) {
     return Result::Ok;
   }
-  LogOpcode("%" PRIindex " %" PRIindex, value, value2);
+  std::string_view name;
+  switch(current_opcode) {
+    case Opcode::StructGet:
+    case Opcode::StructGetS:
+    case Opcode::StructGetU:
+    case Opcode::StructSet:
+    case Opcode::ArrayNewFixed:
+    case Opcode::ArrayNewData:
+    case Opcode::ArrayNewElem:
+    case Opcode::ArrayInitData:
+    case Opcode::ArrayInitElem:
+       name = GetTypeName(value);
+       break;
+    default:
+       break;
+  }			 
+  if (!name.empty()){
+    LogOpcode("%d <" PRIstringview "> %" PRIindex, value,
+              WABT_PRINTF_STRING_VIEW_ARG(name), value2);
+  } else {
+    LogOpcode("%" PRIindex " %" PRIindex, value, value2);
+  }
   return Result::Ok;
 }
 
@@ -901,11 +941,40 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeType(Type type) {
   if (!in_function_body) {
     return Result::Ok;
   }
-  if (current_opcode == Opcode::SelectT || current_opcode == Opcode::CallRef) {
-    LogOpcode(type.GetName().c_str());
-  } else {
-    LogOpcode(type.GetRefKindName());
+  std::string name;
+  switch(current_opcode) {
+     case Opcode::SelectT:
+     case Opcode::CallRef:
+       name = type.GetName();
+       break;
+     case Opcode::RefNull:
+     case Opcode::RefTest:
+     case Opcode::RefTestNull:
+     case Opcode::RefCast:
+     case Opcode::RefCastNull:
+       if (type.IsIndex()) {
+         name = GetTypeName(type.GetIndex());
+       } else if (type == Type::Ref) {
+	       name = "ref " + GetTypeName(type.GetReferenceIndex());
+	      } else if (type == Type::RefNull) {
+		      name = "ref null " + GetTypeName(type.GetReferenceIndex());
+       } else {
+         name = type.GetName();
+       }
+       break;
+     default:
+       name = type.GetRefKindName();
+       break;
   }
+  LogOpcode(name.c_str());
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnOpcodeTypeIndex(Type type, Index index) {
+  if (!in_function_body) {
+    return Result::Ok;
+  }
+  LogOpcode("%s %d", type.GetRefKindName(), index);
   return Result::Ok;
 }
 

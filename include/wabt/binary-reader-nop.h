@@ -210,6 +210,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeV128(v128 value) override { return Result::Ok; }
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
   Result OnOpcodeType(Type type) override { return Result::Ok; }
+  Result OnOpcodeTypeIndex(Type type, Index index) override { return Result::Ok; }
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,

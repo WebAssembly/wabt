@@ -230,6 +230,7 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeV128(v128 value) = 0;
   virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
   virtual Result OnOpcodeType(Type type) = 0;
+  virtual Result OnOpcodeTypeIndex(Type type, Index index) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   Index memidx,
                                   Address alignment_log2,

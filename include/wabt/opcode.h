@@ -84,13 +84,14 @@ struct Opcode {
   Address GetAlignment(Address alignment) const;
 
   static bool IsPrefixByte(uint8_t byte) {
-    return byte == kMathPrefix || byte == kThreadsPrefix || byte == kSimdPrefix;
+    return byte == kMathPrefix || byte == kThreadsPrefix || byte == kSimdPrefix || byte == kXXPrefix;
   }
 
   bool IsEnabled(const Features& features) const;
   bool IsInvalid() const { return enum_ >= Invalid; }
 
  private:
+  static constexpr uint32_t kXXPrefix = 0xfb;
   static constexpr uint32_t kMathPrefix = 0xfc;
   static constexpr uint32_t kThreadsPrefix = 0xfe;
   static constexpr uint32_t kSimdPrefix = 0xfd;

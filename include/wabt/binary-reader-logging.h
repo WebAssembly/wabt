@@ -158,6 +158,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnOpcodeType(Type type) override;
+  Result OnOpcodeTypeIndex(Type type, Index index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,

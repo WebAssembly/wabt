@@ -40,18 +40,30 @@ class Type {
     F32 = -0x03,        // 0x7d
     F64 = -0x04,        // 0x7c
     V128 = -0x05,       // 0x7b
-    I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
-    I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
-    ExnRef = -0x17,     // 0x69
+    //I8 = -0x06,         // 0x7a  : packed-type only, used in gc and as v128 lane
+    //I16 = -0x07,        // 0x79  : packed-type only, used in gc and as v128 lane
+    I8 = -0x08,         // 0x78  : packed-type only, used in gc and as v128 lane
+    I16 = -0x09,        // 0x77  : packed-type only, used in gc and as v128 lane
+    NoFunc = -0x0d, // 0x73
+    NoExtern = -0x0e, // 0x72
+    NoneRef = -0x0f, // 0x71
     FuncRef = -0x10,    // 0x70
     ExternRef = -0x11,  // 0x6f
+AnyRef=-0x12, // 0x6e
+EqRef=-0x13,
+I32Ref=-0x14,
     Reference = -0x15,  // 0x6b
+ArrayRef=-0x14,
+    ExnRef = -0x17,     // 0x69
     Ref = -0x1c,        // 0x64
     RefNull = -0x1d,    // 0x63
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
-    Void = -0x40,       // 0x40
+    Sub=-0x30,
+    SubFinal=-0x31,
+    Rec=-0x32,
+    Void = -0x40,       // 0x40 // Result Type
     ___ = Void,         // Convenient for the opcode table in opcode.h
 
     Any = 0,   // Not actually specified, but useful for type-checking
@@ -135,10 +147,16 @@ class Type {
       case Type::V128:      return "v128";
       case Type::I8:        return "i8";
       case Type::I16:       return "i16";
+      case Type::NoFunc: return "no func";
+      case Type::NoExtern: return "no extern";
+      case Type::NoneRef: return "none";
+//      case Type::FuncRef:      return "func";
+      case Type::AnyRef:       return "any";
+      case Type::EqRef: return "eq";
+//      case Type::I31: return "i31";
+
       case Type::ExnRef:    return "exnref";
-      case Type::Func:      return "func";
       case Type::Void:      return "void";
-      case Type::Any:       return "any";
       case Type::FuncRef:
         return type_index_ == ReferenceOrNull ? "funcref" : "(ref func)";
       case Type::ExternRef:
@@ -160,6 +178,8 @@ class Type {
       case Type::ExnRef:    return "exn";
       case Type::Struct:    return "struct";
       case Type::Array:     return "array";
+      case Type::AnyRef: return "any";
+      case Type::NoneRef: return "none";
       default:              return "<invalid>";
     }
   }
@@ -218,7 +238,7 @@ class Type {
   }
 
   static bool EnumIsNonTypedRef(Enum value) {
-    return value == Type::ExternRef || value == Type::FuncRef;
+    return value == Type::ExternRef || value == Type::FuncRef || value == Type::AnyRef;
   }
 
  private:
