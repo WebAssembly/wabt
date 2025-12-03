@@ -57,9 +57,12 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type, const char* desc) {
+  if (type.IsNonTypedRef() && !type.IsNullableNonTypedRef()) {
+    WriteS32Leb128(stream, Type::Ref, "type prefix");
+  }
   WriteS32Leb128(stream, type, desc ? desc : type.GetName().c_str());
   if (type.IsReferenceWithIndex()) {
-    WriteS32Leb128(stream, type.GetReferenceIndex(),
+    WriteU32Leb128(stream, type.GetReferenceIndex(),
                    desc ? desc : type.GetName().c_str());
   }
 }
@@ -759,6 +762,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrIfExpr>(expr)->var),
                      "break depth");
       break;
+    case ExprType::BrOnNonNull:
+      WriteOpcode(stream_, Opcode::BrOnNonNull);
+      WriteU32Leb128(stream_,
+                     GetLabelVarDepth(&cast<BrOnNonNullExpr>(expr)->var),
+                     "break depth");
+      break;
+    case ExprType::BrOnNull:
+      WriteOpcode(stream_, Opcode::BrOnNull);
+      WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrOnNullExpr>(expr)->var),
+                     "break depth");
+      break;
     case ExprType::BrTable: {
       auto* br_table_expr = cast<BrTableExpr>(expr);
       WriteOpcode(stream_, Opcode::BrTable);
@@ -795,10 +809,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteTableNumberWithReloc(table_index, "table index");
       break;
     }
-    case ExprType::CallRef: {
-      WriteOpcode(stream_, Opcode::CallRef);
-      break;
-    }
     case ExprType::ReturnCallIndirect: {
       Index sig_index =
           module_->GetFuncTypeIndex(cast<ReturnCallIndirectExpr>(expr)->decl);
@@ -808,6 +818,23 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128WithReloc(sig_index, "signature index",
                               RelocType::TypeIndexLEB);
       WriteTableNumberWithReloc(table_index, "table index");
+      break;
+    }
+    case ExprType::CallRef: {
+      WriteOpcode(stream_, Opcode::CallRef);
+      assert(cast<CallRefExpr>(expr)->sig_type.opt_type() == Type::RefNull);
+      Index sig_index = cast<CallRefExpr>(expr)->sig_type.index();
+      WriteU32Leb128WithReloc(sig_index, "signature index",
+                              RelocType::TypeIndexLEB);
+      break;
+    }
+    case ExprType::ReturnCallRef: {
+      WriteOpcode(stream_, Opcode::ReturnCallRef);
+      assert(cast<ReturnCallRefExpr>(expr)->sig_type.opt_type() ==
+             Type::RefNull);
+      Index sig_index = cast<ReturnCallRefExpr>(expr)->sig_type.index();
+      WriteU32Leb128WithReloc(sig_index, "signature index",
+                              RelocType::TypeIndexLEB);
       break;
     }
     case ExprType::Compare:
@@ -1003,6 +1030,10 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteTableNumberWithReloc(index, "table.fill table index");
       break;
     }
+    case ExprType::RefAsNonNull: {
+      WriteOpcode(stream_, Opcode::RefAsNonNull);
+      break;
+    }
     case ExprType::RefFunc: {
       WriteOpcode(stream_, Opcode::RefFunc);
       Index index = module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var);
@@ -1011,7 +1042,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     }
     case ExprType::RefNull: {
       WriteOpcode(stream_, Opcode::RefNull);
-      WriteType(stream_, cast<RefNullExpr>(expr)->type, "ref.null type");
+      const RefNullExpr* ref_null_expr = cast<RefNullExpr>(expr);
+      Type::Enum type = ref_null_expr->type.opt_type();
+
+      if (type != Type::RefNull) {
+        WriteType(stream_, type, "ref.null type");
+        break;
+      }
+
+      Index index = module_->GetFuncTypeIndex(ref_null_expr->type);
+      WriteU32Leb128WithReloc(index, "heap type index",
+                              RelocType::FuncIndexLEB);
       break;
     }
     case ExprType::RefIsNull:
@@ -1186,9 +1227,18 @@ void BinaryWriter::WriteFunc(const Func* func) {
 }
 
 void BinaryWriter::WriteTable(const Table* table) {
+  if (!table->init_expr.empty()) {
+    // BinaryReader::ReadTableSection provides information about these values.
+    WriteType(stream_, Type::Void, "initialized table prefix");
+    stream_->WriteU8(0x0, "initialized table prefix");
+  }
   WriteType(stream_, table->elem_type);
   WriteLimitsFlags(stream_, ComputeLimitsFlags(&table->elem_limits));
   WriteLimitsData(stream_, &table->elem_limits);
+
+  if (!table->init_expr.empty()) {
+    WriteInitExpr(table->init_expr);
+  }
 }
 
 void BinaryWriter::WriteMemory(const Memory* memory) {
@@ -1575,7 +1625,8 @@ Result BinaryWriter::WriteModule() {
       ElemSegment* segment = module_->elem_segments[i];
       WriteHeader("elem segment header", i);
       // 1. flags
-      uint8_t flags = segment->GetFlags(module_);
+      uint8_t flags = segment->GetFlags(
+          module_, options_.features.function_references_enabled());
       stream_->WriteU8(flags, "segment flags");
       // 2. optional target table
       if (flags & SegExplicitIndex && segment->kind != SegmentKind::Declared) {

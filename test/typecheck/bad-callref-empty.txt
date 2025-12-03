@@ -2,13 +2,15 @@
 ;;; ARGS: --enable-function-references
 ;;; ERROR: 1
 (module
+  (type (func))
+
   (func (export "main")
-    (call_ref
+    (call_ref 0
     )
   )
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-callref-empty.txt:6:6: error: type mismatch in call_ref, expected [reference] but got []
-    (call_ref
+out/test/typecheck/bad-callref-empty.txt:8:6: error: type mismatch in call_ref, expected [(ref null 0)] but got []
+    (call_ref 0
      ^^^^^^^^
 ;;; STDERR ;;)

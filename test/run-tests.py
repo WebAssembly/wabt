@@ -168,7 +168,7 @@ class NoRoundtripError(Error):
 
 
 def Indent(s, spaces):
-    return ''.join(' ' * spaces + l for l in s.splitlines(1))
+    return ''.join(' ' * spaces + line for line in s.splitlines(1))
 
 
 def DiffLines(expected, actual):
@@ -676,7 +676,7 @@ class Status(object):
             sys.stderr.write('\n')
 
     def _PrintShortStatus(self, info):
-        assert(self.isatty)
+        assert self.isatty
         total_duration = time.time() - self.start_time
         name = info.GetName() if info else ''
         if self.total - self.skipped:
@@ -691,7 +691,7 @@ class Status(object):
         sys.stderr.flush()
 
     def _Clear(self):
-        assert(self.isatty)
+        assert self.isatty
         sys.stderr.write('\r%s\r' % (' ' * self.last_length))
 
 

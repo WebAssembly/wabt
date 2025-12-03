@@ -144,9 +144,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnFunction(Index index, Index sig_index) override;
 
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    TableInitExprStatus init_provided) override;
+  Result BeginTableInitExpr(Index index) override;
+  Result EndTableInitExpr(Index index) override;
 
   Result OnMemoryCount(Index count) override;
   Result OnMemory(Index index,
@@ -200,6 +203,8 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnNonNullExpr(Index depth) override;
+  Result OnBrOnNullExpr(Index depth) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
@@ -207,9 +212,10 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
-  Result OnCallRefExpr() override;
+  Result OnCallRefExpr(Type sig_type) override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnReturnCallRefExpr(Type sig_type) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDelegateExpr(Index depth) override;
@@ -246,6 +252,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTableGrowExpr(Index table_index) override;
   Result OnTableSizeExpr(Index table_index) override;
   Result OnTableFillExpr(Index table_index) override;
+  Result OnRefAsNonNullExpr() override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
@@ -696,9 +703,10 @@ Result BinaryReaderIR::OnTableCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnTable(Index index,
-                               Type elem_type,
-                               const Limits* elem_limits) {
+Result BinaryReaderIR::BeginTable(Index index,
+                                  Type elem_type,
+                                  const Limits* elem_limits,
+                                  TableInitExprStatus) {
   auto field = std::make_unique<TableModuleField>(GetLocation());
   Table& table = field->table;
   table.elem_limits = *elem_limits;
@@ -706,6 +714,16 @@ Result BinaryReaderIR::OnTable(Index index,
   module_->features_used.exceptions |= (elem_type == Type::ExnRef);
   module_->AppendField(std::move(field));
   return Result::Ok;
+}
+
+Result BinaryReaderIR::BeginTableInitExpr(Index index) {
+  assert(index == module_->tables.size() - 1);
+  Table* table = module_->tables[index];
+  return BeginInitExpr(&table->init_expr);
+}
+
+Result BinaryReaderIR::EndTableInitExpr(Index index) {
+  return EndInitExpr();
 }
 
 Result BinaryReaderIR::OnMemoryCount(Index count) {
@@ -897,6 +915,15 @@ Result BinaryReaderIR::OnBrIfExpr(Index depth) {
   return AppendExpr(std::make_unique<BrIfExpr>(Var(depth, GetLocation())));
 }
 
+Result BinaryReaderIR::OnBrOnNonNullExpr(Index depth) {
+  return AppendExpr(
+      std::make_unique<BrOnNonNullExpr>(Var(depth, GetLocation())));
+}
+
+Result BinaryReaderIR::OnBrOnNullExpr(Index depth) {
+  return AppendExpr(std::make_unique<BrOnNullExpr>(Var(depth, GetLocation())));
+}
+
 Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
                                      Index* target_depths,
                                      Index default_target_depth) {
@@ -920,8 +947,10 @@ Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
   return AppendExpr(std::move(expr));
 }
 
-Result BinaryReaderIR::OnCallRefExpr() {
-  return AppendExpr(std::make_unique<CallRefExpr>());
+Result BinaryReaderIR::OnCallRefExpr(Type sig_type) {
+  auto expr = std::make_unique<CallRefExpr>();
+  expr->sig_type = Var(sig_type, GetLocation());
+  return AppendExpr(std::move(expr));
 }
 
 Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
@@ -948,6 +977,12 @@ Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index,
   if (type) {
     type->features_used.tailcall = true;
   }
+  return AppendExpr(std::move(expr));
+}
+
+Result BinaryReaderIR::OnReturnCallRefExpr(Type sig_type) {
+  auto expr = std::make_unique<ReturnCallRefExpr>();
+  expr->sig_type = Var(sig_type, GetLocation());
   return AppendExpr(std::move(expr));
 }
 
@@ -1145,6 +1180,11 @@ Result BinaryReaderIR::OnTableFillExpr(Index table_index) {
       std::make_unique<TableFillExpr>(Var(table_index, GetLocation())));
 }
 
+Result BinaryReaderIR::OnRefAsNonNullExpr() {
+  return AppendExpr(
+      std::make_unique<RefAsNonNullExpr>(Opcode::RefAsNonNull, GetLocation()));
+}
+
 Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
   module_->used_func_refs.insert(func_index);
   return AppendExpr(
@@ -1153,7 +1193,7 @@ Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
 
 Result BinaryReaderIR::OnRefNullExpr(Type type) {
   module_->features_used.exceptions |= (type == Type::ExnRef);
-  return AppendExpr(std::make_unique<RefNullExpr>(type));
+  return AppendExpr(std::make_unique<RefNullExpr>(Var(type, GetLocation())));
 }
 
 Result BinaryReaderIR::OnRefIsNullExpr() {
@@ -1173,9 +1213,9 @@ Result BinaryReaderIR::OnReturnExpr() {
 }
 
 Result BinaryReaderIR::OnSelectExpr(Index result_count, Type* result_types) {
-  TypeVector results;
-  results.assign(result_types, result_types + result_count);
-  return AppendExpr(std::make_unique<SelectExpr>(results));
+  auto expr_ptr = std::make_unique<SelectExpr>();
+  expr_ptr->result_type.assign(result_types, result_types + result_count);
+  return AppendExpr(std::move(expr_ptr));
 }
 
 Result BinaryReaderIR::OnGlobalSetExpr(Index global_index) {

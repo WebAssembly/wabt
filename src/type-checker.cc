@@ -33,7 +33,7 @@ std::string TypesToString(const TypeVector& types,
     Type ty = types[i];
     // NOTE: Reference (and GetName) is also used by (e.g.) objdump, which does
     // not apply validation. do this here so as to not break that.
-    if (ty == Type::Reference && ty.GetReferenceIndex() == kInvalidIndex) {
+    if (ty.IsReferenceWithIndex() && ty.GetReferenceIndex() == kInvalidIndex) {
       result += "reference";
     } else {
       result += types[i].GetName();
@@ -228,15 +228,100 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
   return result;
 }
 
+static bool CompareTypeVector(
+    const std::map<Index, TypeChecker::FuncType>& func_types,
+    const TypeVector& left,
+    const TypeVector& right) {
+  size_t size = left.size();
+
+  if (size != right.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < size; i++) {
+    const Type& left_type = left[i];
+    const Type& right_type = right[i];
+
+    if (left_type != right_type) {
+      if (!left_type.IsReferenceWithIndex() ||
+          left_type != static_cast<Type::Enum>(right_type)) {
+        return false;
+      }
+
+      const TypeChecker::FuncType& left_func_type =
+          func_types.at(left_type.GetReferenceIndex());
+      const TypeChecker::FuncType& right_func_type =
+          func_types.at(right_type.GetReferenceIndex());
+
+      // Circular references were checked during validation.
+      if (!CompareTypeVector(func_types, left_func_type.params,
+                             right_func_type.params) ||
+          !CompareTypeVector(func_types, left_func_type.results,
+                             right_func_type.results)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 Result TypeChecker::CheckType(Type actual, Type expected) {
   if (expected == Type::Any || actual == Type::Any) {
     return Result::Ok;
   }
 
-  if (actual != expected) {
+  Type::Enum actual_type = actual;
+  Type::Enum expected_type = expected;
+
+  if (actual_type == expected_type) {
+    switch (actual_type) {
+      case Type::ExternRef:
+      case Type::FuncRef:
+        return (expected.IsNullableNonTypedRef() ||
+                !actual.IsNullableNonTypedRef())
+                   ? Result::Ok
+                   : Result::Error;
+
+      case Type::Reference:
+      case Type::Ref:
+      case Type::RefNull:
+        break;
+
+      default:
+        return Result::Ok;
+    }
+  }
+
+  if (!actual.IsReferenceWithIndex()) {
     return Result::Error;
   }
-  return Result::Ok;
+
+  if (expected_type == Type::FuncRef) {
+    return (actual == Type::Ref || expected.IsNullableNonTypedRef())
+               ? Result::Ok
+               : Result::Error;
+  }
+
+  if (!expected.IsReferenceWithIndex()) {
+    return Result::Error;
+  }
+
+  if (expected_type == Type::Ref && actual_type == Type::RefNull) {
+    return Result::Error;
+  }
+
+  FuncType& actual_func_type = func_types_[actual.GetReferenceIndex()];
+  FuncType& expected_func_type = func_types_[expected.GetReferenceIndex()];
+
+  if (CompareTypeVector(func_types_, actual_func_type.params,
+                        expected_func_type.params) &&
+      CompareTypeVector(func_types_, actual_func_type.results,
+                        expected_func_type.results)) {
+    return Result::Ok;
+  }
+
+  return Result::Error;
 }
 
 Result TypeChecker::CheckTypes(const TypeVector& actual,
@@ -287,6 +372,17 @@ Result TypeChecker::PopAndCheckCall(const TypeVector& param_types,
   return result;
 }
 
+Result TypeChecker::PopAndCheckReturnCall(const TypeVector& result_types,
+                                          const char* desc) {
+  Label* func_label;
+  CHECK_RESULT(GetThisFunctionLabel(&func_label));
+  Result result =
+      CheckReturnSignature(result_types, func_label->result_types, desc);
+
+  CHECK_RESULT(SetUnreachable());
+  return result;
+}
+
 Result TypeChecker::PopAndCheck1Type(Type expected, const char* desc) {
   Result result = Result::Ok;
   result |= PeekAndCheckType(0, expected);
@@ -316,6 +412,21 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
   result |= PeekAndCheckType(2, expected1);
   PrintStackIfFailed(result, desc, expected1, expected2, expected3);
   result |= DropTypes(3);
+  return result;
+}
+
+Result TypeChecker::PopAndCheckReference(Type* actual, const char* desc) {
+  *actual = Type::Any;
+  Result result = PeekType(0, actual);
+
+  // Type::Any is a valid value for dead code, and replacing
+  // it with anything might break the syntax checker.
+  if (*actual != Type::Any && !actual->IsRef()) {
+    result = Result::Error;
+  }
+
+  PrintStackIfFailed(result, desc, Type::FuncRef);
+  result |= DropTypes(1);
   return result;
 }
 
@@ -469,6 +580,49 @@ Result TypeChecker::OnBrIf(Index depth) {
   return result;
 }
 
+static Type convertRefNullToRef(Type type) {
+  if (type == Type::ExternRef || type == Type::FuncRef) {
+    return Type(type, Type::ReferenceNonNull);
+  }
+
+  assert(type.IsReferenceWithIndex());
+  return Type(Type::Ref, type.GetReferenceIndex());
+}
+
+Result TypeChecker::OnBrOnNonNull(Index depth) {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "br_on_non_null"));
+  if (actual != Type::Any) {
+    PushType(convertRefNullToRef(actual));
+  }
+
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  Result result = PopAndCheckSignature(label->br_types(), "br_on_non_null");
+  PushTypes(label->br_types());
+
+  if (actual != Type::Any) {
+    result |= DropTypes(1);
+  }
+  return result;
+}
+
+Result TypeChecker::OnBrOnNull(Index depth) {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "br_on_null"));
+
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  Result result = PopAndCheckSignature(label->br_types(), "br_on_null");
+  PushTypes(label->br_types());
+
+  if (actual != Type::Any) {
+    actual = convertRefNullToRef(actual);
+  }
+  PushType(actual);
+  return result;
+}
+
 Result TypeChecker::BeginBrTable() {
   br_table_sig_ = nullptr;
   return PopAndCheck1Type(Type::I32, "br_table");
@@ -515,28 +669,18 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnIndexedFuncRef(Index* out_index) {
-  Type type;
-  Result result = PeekType(0, &type);
-  if (!type.IsReferenceWithIndex()) {
-    type = Type(Type::Reference, kInvalidIndex);
-  }
-  result |= PopAndCheck1Type(type, "call_ref");
-  if (Succeeded(result)) {
-    *out_index = type.GetReferenceIndex();
-  }
+Result TypeChecker::OnCallRef(Type type,
+                              const TypeVector& param_types,
+                              const TypeVector& result_types) {
+  Result result = PopAndCheck1Type(type, "call_ref");
+  result |= PopAndCheckCall(param_types, result_types, "call_ref");
   return result;
 }
 
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
                                  const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "return_call");
-  Label* func_label;
-  CHECK_RESULT(GetThisFunctionLabel(&func_label));
-  result |= CheckReturnSignature(result_types, func_label->result_types,
-                                 "return_call");
-
-  CHECK_RESULT(SetUnreachable());
+  result |= PopAndCheckReturnCall(result_types, "return_call");
   return result;
 }
 
@@ -545,12 +689,17 @@ Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
   Result result = PopAndCheck1Type(Type::I32, "return_call_indirect");
 
   result |= PopAndCheckSignature(param_types, "return_call_indirect");
-  Label* func_label;
-  CHECK_RESULT(GetThisFunctionLabel(&func_label));
-  result |= CheckReturnSignature(result_types, func_label->result_types,
-                                 "return_call_indirect");
+  result |= PopAndCheckReturnCall(result_types, "return_call_indirect");
+  return result;
+}
 
-  CHECK_RESULT(SetUnreachable());
+Result TypeChecker::OnReturnCallRef(Type type,
+                                    const TypeVector& param_types,
+                                    const TypeVector& result_types) {
+  Result result = PopAndCheck1Type(type, "return_call_ref");
+
+  result |= PopAndCheckSignature(param_types, "return_call_ref");
+  result |= PopAndCheckReturnCall(result_types, "return_call_ref");
   return result;
 }
 
@@ -785,18 +934,18 @@ Result TypeChecker::OnTableFill(Type elem_type, const Limits& limits) {
                            "table.fill");
 }
 
-Result TypeChecker::OnRefFuncExpr(Index func_type, bool force_generic_funcref) {
-  /*
-   * In a const expression, treat ref.func as producing a generic funcref.
-   * This avoids having to implement funcref subtyping (for now) and matches
-   * the previous behavior where SharedValidator::OnElemSegmentElemExpr_RefFunc
-   * examined only the validity of the function index.
-   */
-  if (features_.function_references_enabled() && !force_generic_funcref) {
-    PushType(Type(Type::Reference, func_type));
-  } else {
-    PushType(Type::FuncRef);
+Result TypeChecker::OnRefAsNonNullExpr() {
+  Type actual;
+  CHECK_RESULT(PopAndCheckReference(&actual, "ref.as_non_null"));
+  if (actual != Type::Any) {
+    actual = convertRefNullToRef(actual);
   }
+  PushType(actual);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnRefFuncExpr(Index func_type) {
+  PushType(Type(Type::Ref, func_type));
   return Result::Ok;
 }
 

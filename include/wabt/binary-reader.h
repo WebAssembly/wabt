@@ -66,6 +66,11 @@ struct CatchClause {
 };
 using CatchClauseVector = std::vector<CatchClause>;
 
+enum class TableInitExprStatus {
+  TableWithInitExpression,
+  TableWithoutInitExpression,
+};
+
 class BinaryReaderDelegate {
  public:
   struct State {
@@ -156,9 +161,13 @@ class BinaryReaderDelegate {
   /* Table section */
   virtual Result BeginTableSection(Offset size) = 0;
   virtual Result OnTableCount(Index count) = 0;
-  virtual Result OnTable(Index index,
-                         Type elem_type,
-                         const Limits* elem_limits) = 0;
+  virtual Result BeginTable(Index index,
+                            Type elem_type,
+                            const Limits* elem_limits,
+                            TableInitExprStatus init_provided) = 0;
+  virtual Result BeginTableInitExpr(Index index) = 0;
+  virtual Result EndTableInitExpr(Index index) = 0;
+  virtual Result EndTable(Index index) = 0;
   virtual Result EndTableSection() = 0;
 
   /* Memory section */
@@ -250,12 +259,14 @@ class BinaryReaderDelegate {
   virtual Result OnBlockExpr(Type sig_type) = 0;
   virtual Result OnBrExpr(Index depth) = 0;
   virtual Result OnBrIfExpr(Index depth) = 0;
+  virtual Result OnBrOnNonNullExpr(Index depth) = 0;
+  virtual Result OnBrOnNullExpr(Index depth) = 0;
   virtual Result OnBrTableExpr(Index num_targets,
                                Index* target_depths,
                                Index default_target_depth) = 0;
   virtual Result OnCallExpr(Index func_index) = 0;
   virtual Result OnCallIndirectExpr(Index sig_index, Index table_index) = 0;
-  virtual Result OnCallRefExpr() = 0;
+  virtual Result OnCallRefExpr(Type sig_type) = 0;
   virtual Result OnCatchExpr(Index tag_index) = 0;
   virtual Result OnCatchAllExpr() = 0;
   virtual Result OnCompareExpr(Opcode opcode) = 0;
@@ -294,6 +305,7 @@ class BinaryReaderDelegate {
   virtual Result OnTableGrowExpr(Index table_index) = 0;
   virtual Result OnTableSizeExpr(Index table_index) = 0;
   virtual Result OnTableFillExpr(Index table_index) = 0;
+  virtual Result OnRefAsNonNullExpr() = 0;
   virtual Result OnRefFuncExpr(Index func_index) = 0;
   virtual Result OnRefNullExpr(Type type) = 0;
   virtual Result OnRefIsNullExpr() = 0;
@@ -303,6 +315,7 @@ class BinaryReaderDelegate {
   virtual Result OnReturnCallExpr(Index func_index) = 0;
   virtual Result OnReturnCallIndirectExpr(Index sig_index,
                                           Index table_index) = 0;
+  virtual Result OnReturnCallRefExpr(Type sig_type) = 0;
   virtual Result OnSelectExpr(Index result_count, Type* result_types) = 0;
   virtual Result OnStoreExpr(Opcode opcode,
                              Index memidx,

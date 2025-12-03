@@ -96,9 +96,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginTableSection(Offset size) override;
   Result OnTableCount(Index count) override;
-  Result OnTable(Index index,
-                 Type elem_type,
-                 const Limits* elem_limits) override;
+  Result BeginTable(Index index,
+                    Type elem_type,
+                    const Limits* elem_limits,
+                    TableInitExprStatus init_provided) override;
+  Result BeginTableInitExpr(Index index) override;
+  Result EndTableInitExpr(Index index) override;
+  Result EndTable(Index index) override;
   Result EndTableSection() override;
 
   Result BeginMemorySection(Offset size) override;
@@ -174,6 +178,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnNonNullExpr(Index depth) override;
+  Result OnBrOnNullExpr(Index depth) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
@@ -181,7 +187,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
-  Result OnCallRefExpr() override;
+  Result OnCallRefExpr(Type sig_type) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDelegateExpr(Index depth) override;
@@ -218,12 +224,14 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTableGrowExpr(Index table) override;
   Result OnTableSizeExpr(Index table) override;
   Result OnTableFillExpr(Index table) override;
+  Result OnRefAsNonNullExpr() override;
   Result OnRefFuncExpr(Index index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnCallExpr(Index func_index) override;
+  Result OnReturnCallRefExpr(Type sig_type) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnReturnExpr() override;
   Result OnSelectExpr(Index result_count, Type* result_types) override;
