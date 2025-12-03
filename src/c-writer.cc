@@ -187,9 +187,10 @@ int GetShiftMask(Type type) {
  * their names, and then divides all non-imported functions into equal-sized
  * buckets (# of non-imported functions / # of .c outputs) based on the sorting.
  */
-static std::vector<size_t> default_name_to_output_file_index(
-    std::vector<Func*>::const_iterator func_begin,
-    std::vector<Func*>::const_iterator func_end,
+template <typename F>
+std::vector<size_t> default_name_to_output_file_index(
+    typename std::vector<F*>::const_iterator func_begin,
+    typename std::vector<F*>::const_iterator func_end,
     size_t num_imports,
     size_t num_streams) {
   std::vector<size_t> result;
@@ -218,6 +219,14 @@ static std::vector<size_t> default_name_to_output_file_index(
   return result;
 }
 
+static std::vector<size_t> default_data_segment_name_to_output_file_index(
+    typename std::vector<DataSegment*>::const_iterator data_segment_begin,
+    typename std::vector<DataSegment*>::const_iterator data_segment_end,
+    size_t num_streams) {
+  return default_name_to_output_file_index<DataSegment>(
+      data_segment_begin, data_segment_end, 0, num_streams);
+}
+
 class CWriter {
  public:
   CWriter(std::vector<Stream*>&& c_streams,
@@ -236,7 +245,15 @@ class CWriter {
     if (c_streams_.size() != 1 && options.name_to_output_file_index) {
       name_to_output_file_index_ = options.name_to_output_file_index;
     } else {
-      name_to_output_file_index_ = default_name_to_output_file_index;
+      name_to_output_file_index_ = default_name_to_output_file_index<Func>;
+    }
+    if (c_streams_.size() != 1 &&
+        options.data_segment_name_to_output_file_index) {
+      data_segment_name_to_output_file_index_ =
+          options.data_segment_name_to_output_file_index;
+    } else {
+      data_segment_name_to_output_file_index_ =
+          default_data_segment_name_to_output_file_index;
     }
   }
 
@@ -407,7 +424,9 @@ class CWriter {
   void WriteElemInstances();
   void WriteGlobalInitializers();
   void WriteDataInitializerDecls();
+  void WriteDataInitializer(const DataSegment* data_segment);
   void WriteDataInitializers();
+  void WriteMultiDataInitializers();
   void WriteElemInitializerDecls();
   void WriteElemInitializers();
   void WriteFuncRefWrappers();
@@ -541,6 +560,11 @@ class CWriter {
                                     size_t,
                                     size_t)>
       name_to_output_file_index_;
+
+  std::function<std::vector<size_t>(std::vector<DataSegment*>::const_iterator,
+                                    std::vector<DataSegment*>::const_iterator,
+                                    size_t)>
+      data_segment_name_to_output_file_index_;
 
   bool simd_used_in_header_;
 
@@ -2222,28 +2246,34 @@ void CWriter::WriteDataInitializerDecls() {
   }
 }
 
+void CWriter::WriteDataInitializer(const DataSegment* data_segment) {
+  Write(Newline(), InternalSymbolScope(), "const u8 data_segment_data_",
+        GlobalName(ModuleFieldType::DataSegment, data_segment->name),
+        "[] = ", OpenBrace());
+  size_t i = 0;
+  for (uint8_t x : data_segment->data) {
+    Writef("0x%02x, ", x);
+    if ((++i % 12) == 0)
+      Write(Newline());
+  }
+  if (i > 0)
+    Write(Newline());
+  Write(CloseBrace(), ";", Newline());
+}
+
 void CWriter::WriteDataInitializers() {
   if (module_->memories.empty()) {
     return;
   }
 
-  for (const DataSegment* data_segment : module_->data_segments) {
-    if (data_segment->data.empty()) {
-      continue;
-    }
+  if (c_streams_.size() == 1) {
+    for (const DataSegment* data_segment : module_->data_segments) {
+      if (data_segment->data.empty()) {
+        continue;
+      }
 
-    Write(Newline(), InternalSymbolScope(), "const u8 data_segment_data_",
-          GlobalName(ModuleFieldType::DataSegment, data_segment->name),
-          "[] = ", OpenBrace());
-    size_t i = 0;
-    for (uint8_t x : data_segment->data) {
-      Writef("0x%02x, ", x);
-      if ((++i % 12) == 0)
-        Write(Newline());
+      WriteDataInitializer(data_segment);
     }
-    if (i > 0)
-      Write(Newline());
-    Write(CloseBrace(), ";", Newline());
   }
 
   Write(Newline(), "static void init_memories(", ModuleInstanceTypeName(),
@@ -2300,6 +2330,36 @@ void CWriter::WriteDataInitializers() {
     }
 
     Write(CloseBrace(), Newline());
+  }
+}
+
+void CWriter::WriteMultiDataInitializers() {
+  if (c_streams_.size() == 1 || module_->memories.empty()) {
+    return;
+  }
+
+  std::vector<size_t> c_stream_assignment =
+      data_segment_name_to_output_file_index_(module_->data_segments.begin(),
+                                              module_->data_segments.end(),
+                                              c_streams_.size());
+
+  Index data_segment_index = 0;
+
+  for (const DataSegment* data_segment : module_->data_segments) {
+    if (data_segment->data.empty()) {
+      ++data_segment_index;
+      continue;
+    }
+
+    stream_ = c_streams_.at(c_stream_assignment.at(data_segment_index));
+
+    if (stream_->offset() == 0) {
+      WriteMultiCTop();
+    }
+
+    WriteDataInitializer(data_segment);
+
+    ++data_segment_index;
   }
 }
 
@@ -6133,6 +6193,12 @@ void CWriter::WriteCSource() {
 
   /* Write function bodies across the different output streams */
   WriteFuncs();
+
+  /*
+   * Write data segments across the different output streams if there's more
+   * than one output stream
+   */
+  WriteMultiDataInitializers();
 
   /* For any empty .c output, write a dummy typedef to avoid gcc warning */
   WriteMultiCTopEmpty();
