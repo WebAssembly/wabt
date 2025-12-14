@@ -1,3 +1,6 @@
+// This worker runs the generated WebAssembly module and sends console.log
+// output back to the main thread in order to prevent infinite loops from
+// locking up the main thread.
 let wrappedConsole = Object.create(console);
 
 wrappedConsole.log = (...args) => {
